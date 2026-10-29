@@ -98,6 +98,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   and E-field components, plus PNG export of the current pattern view.
 - Custom straight-wire antennas with a coordinate editor, persistence, and
   simulation flow; optimization is disabled for custom designs.
+- Practical NEC-2 deck import (GW, EX, FR, GE/GN, LD 0/1) into custom designs,
+  with warnings for unsupported cards.
 - Series and parallel RLC loads on wires: validation, load editor,
   design/persistence support, NEC `LD 0`/`LD 1` export, and
   report/construction-sheet rows.

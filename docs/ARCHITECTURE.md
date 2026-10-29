@@ -207,7 +207,7 @@ limit, and offers simulation-history compaction.
 
 ## Not implemented yet
 
-- NEC import and measurement import adapters.
+- Measurement import adapters.
 - Multi-objective optimization, bandwidth/gain objectives, and space
   constraints beyond the min/max length bounds.
 - Measurement records and VNA CSV import.

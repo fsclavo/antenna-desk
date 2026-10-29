@@ -24,7 +24,8 @@ environment, and loads, so the solver does not need a new geometry path.
    single length/circumference.
 5. Reuse the existing simulation, load, report, comparison, persistence, and
    export paths.
-6. Do not implement NEC import in this decision; it remains a follow-up.
+6. Add a practical NEC-2 subset importer (GW, EX, FR, GE/GN, LD 0/1) that
+   creates custom wire designs and reports unsupported cards.
 
 ## Consequences
 
@@ -39,10 +40,10 @@ Limitations:
 - Wire editing is coordinate-based, not a 3D drawing tool.
 - There is no automatic junction/crossing validation beyond the canonical model.
 - Custom designs cannot use length optimization.
-- NEC import is still pending.
+- NEC import supports only a practical subset; unsupported cards are reported.
 
 ## Follow-ups
 
-- Add a safe NEC subset importer.
+- Extend the NEC importer with GM/GR transformations and more source types.
 - Add wire/load selection in the geometry view.
 - Add reference cases from imported models.

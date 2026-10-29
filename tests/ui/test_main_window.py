@@ -664,3 +664,29 @@ def test_new_custom_antenna_is_editable_and_simulatable(
     assert window._results._table.rowCount() == 1
     assert window._status_label.text() == "Simulation completed"
     window._dirty = False
+
+
+def test_import_nec_deck_creates_a_custom_project(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "imported.nec"
+    path.write_text(
+        "GW 1 5 -5 0 8 5 0 8 0.001\nGN 0 0 0 0 13 0.005\nFR 0 1 0 0 7.1 0\nEX 0 1 3 0 1\nEN\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        QFileDialog,
+        "getOpenFileName",
+        lambda *args, **kwargs: (str(path), ""),
+    )
+
+    window.import_nec_deck()
+
+    assert window._project is not None
+    assert window._project.name == "imported"
+    assert window._project.designs[0].antenna_type == "custom"
+    assert len(window._project.designs[0].antenna.wires) == 1
+    assert window._design_stack.currentWidget() is window._custom_panel
+    window._dirty = False

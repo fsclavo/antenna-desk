@@ -75,6 +75,7 @@ from ..domain.simulation.segmentation import (
     aligned_policy_for_model,
 )
 from ..domain.simulation.spec import SimulationSpec
+from ..importers.nec2_deck import parse_nec2_deck
 from ..persistence.constants import MAX_PROJECT_SIZE_BYTES, PROJECT_SIZE_WARNING_BYTES
 from ..reporting.csv_export import write_csv, write_pattern_csv
 from ..reporting.html_report import write_html_report
@@ -137,6 +138,8 @@ class MainWindow(QMainWindow):
         self._new_action.triggered.connect(lambda: self.new_antenna())
         self._new_custom_action = QAction(self)
         self._new_custom_action.triggered.connect(lambda: self.new_custom_antenna())
+        self._import_nec_action = QAction(self)
+        self._import_nec_action.triggered.connect(lambda: self.import_nec_deck())
 
         self._open_action = QAction(self)
         self._open_action.setShortcut(QKeySequence.StandardKey.Open)
@@ -342,6 +345,7 @@ class MainWindow(QMainWindow):
         self._file_menu = self.menuBar().addMenu("")
         self._file_menu.addAction(self._new_action)
         self._file_menu.addAction(self._new_custom_action)
+        self._file_menu.addAction(self._import_nec_action)
         self._file_menu.addAction(self._open_action)
         self._file_menu.addAction(self._save_action)
         self._file_menu.addAction(self._save_as_action)
@@ -387,6 +391,7 @@ class MainWindow(QMainWindow):
         self._update_title()
         self._new_action.setText(self._translator.t("action.new"))
         self._new_custom_action.setText(self._translator.t("action.new_custom"))
+        self._import_nec_action.setText(self._translator.t("action.import_nec"))
         self._open_action.setText(self._translator.t("action.open"))
         self._save_action.setText(self._translator.t("action.save"))
         self._save_as_action.setText(self._translator.t("action.save_as"))
@@ -500,6 +505,7 @@ class MainWindow(QMainWindow):
         self._loads_action.setEnabled(idle and has_project)
         self._edit_custom_action.setEnabled(idle and has_project and is_custom)
         self._new_custom_action.setEnabled(idle)
+        self._import_nec_action.setEnabled(idle)
         self._export_csv_action.setEnabled(idle and has_result)
         self._export_pattern_csv_action.setEnabled(idle and has_result)
         self._export_pattern_png_action.setEnabled(idle and has_result)
@@ -879,6 +885,42 @@ class MainWindow(QMainWindow):
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
         self._set_project(project, project.designs[0].id, path=None, dirty=True)
+
+    def import_nec_deck(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        filename, _ = QFileDialog.getOpenFileName(
+            self,
+            self._translator.t("dialog.nec_title"),
+            str(Path.home()),
+            self._translator.t("dialog.nec_filter"),
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        try:
+            result = parse_nec2_deck(path.read_text(encoding="utf-8", errors="strict"))
+            project = CreateDipoleProject().execute(
+                CreateDipoleProjectCommand(
+                    project_name=path.stem,
+                    variant_name="Imported",
+                    parameters=result.parameters,
+                )
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.import_nec", message=str(exc)))
+            return
+        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+        if result.warnings:
+            QMessageBox.warning(
+                self,
+                self._translator.t("dialog.nec_title"),
+                self._translator.t(
+                    "dialog.nec_warnings",
+                    count=len(result.warnings),
+                    details="\n".join(result.warnings[:12]),
+                ),
+            )
 
     def edit_custom_wires(self) -> None:
         if self._project is None or self._design_id is None:

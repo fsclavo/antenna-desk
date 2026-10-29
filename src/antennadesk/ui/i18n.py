@@ -412,6 +412,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Save pattern CSV",
         Language.SPANISH: "Guardar CSV de patrón",
     },
+    "dialog.nec_title": {
+        Language.ENGLISH: "Import NEC deck",
+        Language.SPANISH: "Importar archivo NEC",
+    },
+    "dialog.nec_filter": {
+        Language.ENGLISH: "NEC decks (*.nec *.NEC *.txt);;All files (*)",
+        Language.SPANISH: "Archivos NEC (*.nec *.NEC *.txt);;Todos los archivos (*)",
+    },
+    "dialog.nec_warnings": {
+        Language.ENGLISH: "Imported with {count} warning(s):\n{details}",
+        Language.SPANISH: "Importado con {count} advertencia(s):\n{details}",
+    },
     "dialog.pattern_png_title": {
         Language.ENGLISH: "Save pattern image",
         Language.SPANISH: "Guardar imagen de patrón",
@@ -632,6 +644,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "action.new_custom": {
         Language.ENGLISH: "New Custom Antenna...",
         Language.SPANISH: "Nueva antena personalizada...",
+    },
+    "action.import_nec": {
+        Language.ENGLISH: "Import NEC Deck...",
+        Language.SPANISH: "Importar archivo NEC...",
     },
     "action.edit_custom": {
         Language.ENGLISH: "Edit Custom Wires...",

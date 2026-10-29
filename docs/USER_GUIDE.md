@@ -186,6 +186,8 @@ canonical meters and hertz.
   independent impedance references and VNA CSV import are not implemented yet.
 - Series and parallel RLC loads are supported on one wire segment. General
   networks, transmission lines, and radial ground screens are not implemented.
+- NEC import supports a practical subset (GW, EX, FR, GE/GN, LD 0/1), not the
+  full language; unsupported cards are reported.
 - Project files store normalized results and raw solver text; many long runs
   can reach the 10 MB project limit.
 - Simulation reports and construction sheets have native PDF export; HTML
