@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QMainWindow,
@@ -30,11 +31,23 @@ from PySide6.QtWidgets import (
 from ..application.cancellation import EventCancelToken
 from ..application.ports.antenna_solver import AntennaSolver
 from ..application.ports.project_repository import ProjectRepository
+from ..application.use_cases.add_design_variant import (
+    AddDesignVariant,
+    AddDesignVariantCommand,
+)
 from ..application.use_cases.create_dipole_project import (
     CreateDipoleProject,
     CreateDipoleProjectCommand,
 )
+from ..application.use_cases.delete_design_variant import (
+    DeleteDesignVariant,
+    DeleteDesignVariantCommand,
+)
 from ..application.use_cases.open_project import OpenProject
+from ..application.use_cases.rename_design_variant import (
+    RenameDesignVariant,
+    RenameDesignVariantCommand,
+)
 from ..application.use_cases.save_project import SaveProject
 from ..application.use_cases.update_dipole_design import (
     UpdateDipoleDesign,
@@ -42,9 +55,12 @@ from ..application.use_cases.update_dipole_design import (
 )
 from ..domain.antennas.dipole import DipoleParameters
 from ..domain.environment.ground import GroundModel
-from ..domain.projects.project import Project
+from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.result import SimulationResult, SimulationStatus
+from ..reporting.csv_export import write_csv
+from ..reporting.html_report import write_html_report
 from ..simulation.nec2.solver import Nec2cSolver
+from .dialogs.comparison_dialog import ComparisonDialog
 from .i18n import Language, Translator
 from .units import UnitSystem
 from .widgets.dipole_form import DipoleForm
@@ -73,9 +89,13 @@ class MainWindow(QMainWindow):
         self._design_id: UUID | None = None
         self._current_path: Path | None = None
         self._dirty = False
+        self._form_dirty = False
         self._project_name_updating = False
+        self._updating_variants = False
         self._simulating = False
         self._last_result: SimulationResult | None = None
+        self._simulation_results: dict[UUID, SimulationResult] = {}
+        self._simulation_design_id: UUID | None = None
         self._last_status_key = "status.ready"
         self._thread: QThread | None = None
         self._worker: SimulationWorker | None = None
@@ -112,6 +132,19 @@ class MainWindow(QMainWindow):
 
         self._about_action = QAction(self)
         self._about_action.triggered.connect(lambda: self.show_about())
+
+        self._new_variant_action = QAction(self)
+        self._new_variant_action.triggered.connect(lambda: self.new_variant())
+        self._rename_variant_action = QAction(self)
+        self._rename_variant_action.triggered.connect(lambda: self.rename_variant())
+        self._delete_variant_action = QAction(self)
+        self._delete_variant_action.triggered.connect(lambda: self.delete_variant())
+        self._compare_action = QAction(self)
+        self._compare_action.triggered.connect(lambda: self.compare_variants())
+        self._export_csv_action = QAction(self)
+        self._export_csv_action.triggered.connect(lambda: self.export_csv())
+        self._export_html_action = QAction(self)
+        self._export_html_action.triggered.connect(lambda: self.export_html_report())
 
         self._simulate_action = QAction(self)
         self._simulate_action.setShortcut(QKeySequence("F5"))
@@ -224,6 +257,14 @@ class MainWindow(QMainWindow):
         self._project_name.textChanged.connect(self._project_name_changed)
         toolbar.addWidget(self._project_name)
         toolbar.addSeparator()
+        self._variant_label = QLabel(self)
+        toolbar.addWidget(self._variant_label)
+        self._variant_combo = QComboBox(self)
+        self._variant_combo.setMinimumWidth(170)
+        self._variant_combo.currentIndexChanged.connect(self._on_variant_changed)
+        toolbar.addWidget(self._variant_combo)
+        toolbar.addAction(self._new_variant_action)
+        toolbar.addSeparator()
         toolbar.addAction(self._simulate_action)
         toolbar.addAction(self._cancel_action)
 
@@ -232,6 +273,15 @@ class MainWindow(QMainWindow):
         self._file_menu.addAction(self._open_action)
         self._file_menu.addAction(self._save_action)
         self._file_menu.addAction(self._save_as_action)
+        self._file_menu.addSeparator()
+        self._file_menu.addAction(self._new_variant_action)
+        self._file_menu.addAction(self._rename_variant_action)
+        self._file_menu.addAction(self._delete_variant_action)
+        self._file_menu.addSeparator()
+        self._file_menu.addAction(self._compare_action)
+        self._file_menu.addSeparator()
+        self._file_menu.addAction(self._export_csv_action)
+        self._file_menu.addAction(self._export_html_action)
         self._file_menu.addSeparator()
         self._file_menu.addAction(self._locate_solver_action)
         self._file_menu.addSeparator()
@@ -262,6 +312,12 @@ class MainWindow(QMainWindow):
         self._locate_solver_action.setText(self._translator.t("action.locate_solver"))
         self._exit_action.setText(self._translator.t("action.exit"))
         self._about_action.setText(self._translator.t("action.about"))
+        self._new_variant_action.setText(self._translator.t("action.new_variant"))
+        self._rename_variant_action.setText(self._translator.t("action.rename_variant"))
+        self._delete_variant_action.setText(self._translator.t("action.delete_variant"))
+        self._compare_action.setText(self._translator.t("action.compare"))
+        self._export_csv_action.setText(self._translator.t("action.export_csv"))
+        self._export_html_action.setText(self._translator.t("action.export_html"))
         self._simulate_action.setText(self._translator.t("action.simulate"))
         self._cancel_action.setText(self._translator.t("action.cancel"))
         self._english_action.setText(self._translator.t("action.english"))
@@ -273,6 +329,7 @@ class MainWindow(QMainWindow):
         self._units_menu.setTitle(self._translator.t("menu.units"))
         self._help_menu.setTitle(self._translator.t("menu.help"))
         self._project_name_label.setText(self._translator.t("field.project_name"))
+        self._variant_label.setText(self._translator.t("variant.label"))
         self._view_label.setText(self._translator.t("geometry.view"))
         self._view_combo.setItemText(0, self._translator.t("geometry.view_elevation"))
         self._view_combo.setItemText(1, self._translator.t("geometry.view_plan"))
@@ -292,21 +349,16 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"{name}{marker} — AntennaDesk")
 
     def _update_status_text(self) -> None:
-        if self._simulating:
-            self._status_label.setText(self._translator.t("status.simulating"))
-        elif self._last_result is not None:
-            self._status_label.setText(self._result_status_text(self._last_result.status))
-        else:
-            self._status_label.setText(self._translator.t("status.ready"))
+        key = "status.simulating" if self._simulating else self._last_status_key
+        self._status_label.setText(self._translator.t(key))
 
-    def _result_status_text(self, status: SimulationStatus) -> str:
-        key = {
+    def _result_status_key(self, status: SimulationStatus) -> str:
+        return {
             SimulationStatus.COMPLETED: "status.completed",
             SimulationStatus.CANCELLED: "status.cancelled",
             SimulationStatus.PARTIAL: "status.partial",
             SimulationStatus.ERROR: "status.error",
         }[status]
-        return self._translator.t(key)
 
     def _update_solver_status(self) -> None:
         if self._solver is None:
@@ -331,16 +383,92 @@ class MainWindow(QMainWindow):
     def _update_actions(self) -> None:
         idle = not self._simulating
         has_project = self._project is not None and self._design_id is not None
+        has_designs = self._project is not None and len(self._project.designs) > 0
+        has_multiple = self._project is not None and len(self._project.designs) > 1
+        has_result = self._design_id is not None and self._design_id in self._simulation_results
         self._new_action.setEnabled(idle)
         self._open_action.setEnabled(idle)
         self._save_action.setEnabled(idle and has_project)
         self._save_as_action.setEnabled(idle and has_project)
         self._locate_solver_action.setEnabled(idle)
         self._exit_action.setEnabled(idle)
+        self._new_variant_action.setEnabled(idle and has_designs)
+        self._rename_variant_action.setEnabled(idle and has_designs)
+        self._delete_variant_action.setEnabled(idle and has_multiple)
+        self._compare_action.setEnabled(idle and has_multiple)
+        self._export_csv_action.setEnabled(idle and has_result)
+        self._export_html_action.setEnabled(idle and has_result)
         self._simulate_action.setEnabled(idle and has_project and self._solver is not None)
         self._cancel_action.setEnabled(self._simulating and self._cancel_token is not None)
         self._form.setEnabled(idle and has_project)
         self._project_name.setEnabled(idle and has_project)
+        self._variant_combo.setEnabled(idle and has_designs)
+
+    def _populate_variants(self, target_id: UUID | None = None) -> None:
+        if self._project is None:
+            return
+        target = target_id if target_id is not None else self._design_id
+        self._updating_variants = True
+        self._variant_combo.blockSignals(True)
+        self._variant_combo.clear()
+        for design in self._project.designs:
+            self._variant_combo.addItem(design.name, str(design.id))
+        self._variant_combo.blockSignals(False)
+        self._updating_variants = False
+        if target is not None:
+            self._set_variant_combo(target)
+
+    def _set_variant_combo(self, design_id: UUID) -> None:
+        index = self._variant_combo.findData(str(design_id))
+        if index < 0:
+            return
+        previous = self._updating_variants
+        self._updating_variants = True
+        self._variant_combo.blockSignals(True)
+        self._variant_combo.setCurrentIndex(index)
+        self._variant_combo.blockSignals(False)
+        self._updating_variants = previous
+
+    def _select_design(self, design_id: UUID) -> None:
+        if self._project is None:
+            return
+        design = self._project.design_by_id(design_id)
+        self._design_id = design_id
+        self._form_dirty = False
+        self._form.set_parameters(design.parameters, reset_sweep=True)
+        self._geometry.set_model(design.antenna)
+        self._set_variant_combo(design_id)
+        result = self._simulation_results.get(design_id)
+        self._last_result = result
+        self._results.set_result(result)
+        self._last_status_key = (
+            self._result_status_key(result.status) if result is not None else "status.ready"
+        )
+        self._update_status_text()
+        self._update_actions()
+
+    def _on_variant_changed(self) -> None:
+        if self._updating_variants or self._project is None:
+            return
+        value = self._variant_combo.currentData()
+        if not isinstance(value, str):
+            return
+        try:
+            design_id = UUID(value)
+        except ValueError:
+            return
+        if design_id == self._design_id:
+            return
+        previous_id = self._design_id
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                if previous_id is not None:
+                    self._set_variant_combo(previous_id)
+                return
+        self._select_design(design_id)
 
     def _create_default_project(self) -> None:
         parameters = DipoleParameters(
@@ -380,18 +508,18 @@ class MainWindow(QMainWindow):
         self._design_id = design_id
         self._current_path = path
         self._dirty = dirty
+        self._form_dirty = False
         self._last_result = None
+        self._simulation_results.clear()
+        self._simulation_design_id = None
         self._results.set_result(None)
-        design = project.design_by_id(design_id)
-        self._form.set_parameters(design.parameters, reset_sweep=True)
-        self._geometry.set_model(design.antenna)
         self._project_name_updating = True
         self._project_name.setText(project.name)
         self._project_name_updating = False
+        self._populate_variants(design_id)
+        self._select_design(design_id)
         self._update_title()
         self._update_actions()
-        self._last_status_key = "status.ready"
-        self._update_status_text()
 
     def _apply_fields(self) -> Project:
         if self._project is None or self._design_id is None:
@@ -414,6 +542,8 @@ class MainWindow(QMainWindow):
         self._project_name_updating = True
         self._project_name.setText(project_name)
         self._project_name_updating = False
+        self._simulation_results.pop(self._design_id, None)
+        self._form_dirty = False
         self._dirty = True
         self._last_result = None
         self._results.set_result(None)
@@ -448,6 +578,7 @@ class MainWindow(QMainWindow):
 
         self._last_result = None
         self._results.set_result(None)
+        self._simulation_design_id = self._design_id
         self._cancel_token = EventCancelToken()
         self._simulating = True
         self._last_status_key = "status.simulating"
@@ -477,7 +608,11 @@ class MainWindow(QMainWindow):
     def _on_simulation_finished(self, result: SimulationResult) -> None:
         self._simulating = False
         self._cancel_token = None
+        if self._simulation_design_id is not None:
+            self._simulation_results[self._simulation_design_id] = result
+        self._simulation_design_id = None
         self._last_result = result
+        self._last_status_key = self._result_status_key(result.status)
         self._results.set_result(result)
         self._update_actions()
         self._update_status_text()
@@ -495,6 +630,8 @@ class MainWindow(QMainWindow):
     def _on_simulation_failed(self, message: str) -> None:
         self._simulating = False
         self._cancel_token = None
+        self._simulation_design_id = None
+        self._last_status_key = "status.error"
         self._update_actions()
         self._status_label.setText(self._translator.t("status.error"))
         self._show_error(self._translator.t("error.simulation", message=message))
@@ -508,7 +645,7 @@ class MainWindow(QMainWindow):
             return
         self._cancel_token.cancel()
         self._last_status_key = "status.cancelling"
-        self._update_status_text()
+        self._status_label.setText(self._translator.t("status.cancelling"))
         self._cancel_action.setEnabled(False)
 
     def new_dipole(self) -> None:
@@ -632,6 +769,200 @@ class MainWindow(QMainWindow):
             return self.save_project()
         return answer == QMessageBox.StandardButton.Discard
 
+    def new_variant(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        source = self._project.design_by_id(self._design_id)
+        default_name = self._unique_variant_name(
+            self._translator.t("variant.copy_name", name=source.name)
+        )
+        name, accepted = QInputDialog.getText(
+            self,
+            self._translator.t("variant.new_title"),
+            self._translator.t("variant.name"),
+            text=default_name,
+        )
+        if not accepted:
+            return
+        try:
+            updated = AddDesignVariant().execute(
+                AddDesignVariantCommand(
+                    project=self._project,
+                    source_design_id=source.id,
+                    name=name,
+                )
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        new_id = updated.designs[-1].id
+        self._project = updated
+        self._dirty = True
+        self._populate_variants(new_id)
+        self._select_design(new_id)
+        self._update_title()
+        self._update_actions()
+
+    def rename_variant(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        design = self._project.design_by_id(self._design_id)
+        name, accepted = QInputDialog.getText(
+            self,
+            self._translator.t("variant.rename_title"),
+            self._translator.t("variant.name"),
+            text=design.name,
+        )
+        if not accepted:
+            return
+        try:
+            updated = RenameDesignVariant().execute(
+                RenameDesignVariantCommand(
+                    project=self._project,
+                    design_id=design.id,
+                    name=name,
+                )
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._project = updated
+        self._dirty = True
+        self._populate_variants(self._design_id)
+        self._update_title()
+        self._update_actions()
+
+    def delete_variant(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if len(self._project.designs) <= 1:
+            self._show_error(self._translator.t("variant.last_cannot_delete"))
+            return
+        design = self._project.design_by_id(self._design_id)
+        answer = QMessageBox.question(
+            self,
+            self._translator.t("variant.delete_title"),
+            self._translator.t("variant.delete_confirm", name=design.name),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            updated = DeleteDesignVariant().execute(
+                DeleteDesignVariantCommand(
+                    project=self._project,
+                    design_id=design.id,
+                )
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._simulation_results.pop(design.id, None)
+        self._project = updated
+        self._dirty = True
+        new_id = updated.designs[0].id
+        self._populate_variants(new_id)
+        self._select_design(new_id)
+        self._update_title()
+        self._update_actions()
+
+    def compare_variants(self) -> None:
+        if self._project is None or len(self._project.designs) < 2:
+            return
+        dialog = ComparisonDialog(
+            self._translator,
+            self._project,
+            self._simulation_results,
+            self,
+        )
+        dialog.exec()
+
+    def _current_export_data(
+        self,
+    ) -> tuple[Project, DesignVariant, SimulationResult] | None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return None
+        result = self._simulation_results.get(self._design_id)
+        if result is None:
+            self._show_error(self._translator.t("error.no_result"))
+            return None
+        return self._project, self._project.design_by_id(self._design_id), result
+
+    def export_csv(self) -> None:
+        data = self._current_export_data()
+        if data is None:
+            return
+        project, design, result = data
+        suggested = f"{self._safe_file_name(project.name)}-{self._safe_file_name(design.name)}.csv"
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            self._translator.t("dialog.csv_title"),
+            str(Path.home() / suggested),
+            self._translator.t("dialog.csv_filter"),
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.lower() != ".csv":
+            path = path.with_suffix(".csv")
+        try:
+            write_csv(result, path)
+        except Exception as exc:
+            self._show_error(self._translator.t("error.export", message=str(exc)))
+            return
+        self._last_status_key = "status.exported"
+        self._update_status_text()
+
+    def export_html_report(self) -> None:
+        data = self._current_export_data()
+        if data is None:
+            return
+        project, design, result = data
+        suggested = f"{self._safe_file_name(project.name)}-{self._safe_file_name(design.name)}.html"
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            self._translator.t("dialog.html_title"),
+            str(Path.home() / suggested),
+            self._translator.t("dialog.html_filter"),
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.lower() not in {".html", ".htm"}:
+            path = path.with_suffix(".html")
+        try:
+            write_html_report(project, design, result, path)
+        except Exception as exc:
+            self._show_error(self._translator.t("error.export", message=str(exc)))
+            return
+        self._last_status_key = "status.exported"
+        self._update_status_text()
+
+    def _unique_variant_name(self, base: str) -> str:
+        assert self._project is not None
+        names = {design.name for design in self._project.designs}
+        if base not in names:
+            return base
+        index = 2
+        while f"{base} {index}" in names:
+            index += 1
+        return f"{base} {index}"
+
+    @staticmethod
+    def _safe_file_name(value: str) -> str:
+        return value.replace("/", "-").replace("\\", "-").replace(":", "-")
+
     def locate_solver(self) -> None:
         filename, _ = QFileDialog.getOpenFileName(
             self,
@@ -680,6 +1011,7 @@ class MainWindow(QMainWindow):
     def _on_form_changed(self) -> None:
         if self._project is None or self._simulating:
             return
+        self._form_dirty = True
         self._dirty = True
         self._update_title()
         self._update_actions()

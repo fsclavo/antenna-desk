@@ -75,7 +75,21 @@ UI tests use `pytest-qt` with the Qt offscreen platform:
 - Metric/imperial switching preserves the physical length.
 - The wizard builds a valid dipole and review page state.
 
-The suite currently has 191 tests with the solver enabled. The nine solver
+## Phase 4 — comparison and reports
+
+Phase 4 adds tests for:
+
+- Series resonance detection from impedance sweeps, including exact zeros and
+  no-crossing cases.
+- Adding, renaming, and deleting design variants while preserving at least one.
+- Currents tab population and resonance markers in the results view.
+- A/B comparison dialog metrics, missing-result handling, SWR overlay, and
+  pattern overlay.
+- CSV export, SVG chart generation, HTML report rendering, and HTML escaping
+  of user-provided text.
+- UI wiring for variant actions and CSV/HTML export.
+
+The suite currently has 214 tests with the solver enabled. The nine solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.
@@ -113,7 +127,10 @@ engine version, configuration, and explicit tolerances.
   emitted when `SimulationSpec.include_conductor_losses` is true.
 - Far-field values are NEC power gains in dB. Realized gain is not computed.
 - No loads, networks, transmission lines, or radial ground screens.
-- Simulation results are not persisted in the project file yet.
+- Simulation results are not persisted in the project file; comparison and
+  reports use the current session's cached results.
 - The GUI only edits horizontal center-fed dipoles.
+- Native PDF export is deferred; HTML reports can be printed to PDF by a
+  browser.
 - PySide6 is pinned below 6.10 because 6.12 triggered a shutdown refcount
   crash with pyqtgraph in the test environment.

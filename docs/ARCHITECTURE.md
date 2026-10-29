@@ -14,7 +14,8 @@ presentation
 application
   ports: ProjectRepository, AntennaSolver, CancelToken
   use cases: CreateDipoleProject, SaveProject, OpenProject,
-             EditDipoleLength, RunSimulation
+             EditDipoleLength, UpdateDipoleDesign, AddDesignVariant,
+             RenameDesignVariant, DeleteDesignVariant, RunSimulation
         │
 domain
   common: units, identifiers, time, validation
@@ -30,6 +31,7 @@ adapters
   persistence: JsonProjectRepository, Pydantic schema, migrations, atomic writes
   simulation/nec2: input writer, parser, process runner, normalization
   simulation: discretization, SWR normalization, fingerprint
+  reporting: CSV, self-contained HTML, dependency-free SVG charts
 ```
 
 ## Dependency rules
@@ -97,8 +99,30 @@ MainWindow
   ├─ UpdateDipoleDesign / CreateDipoleProject ──► immutable Project
   ├─ GeometryView (canonical AntennaModel snapshot)
   ├─ SimulationWorker (QThread) ──► RunSimulation ──► AntennaSolver
-  └─ ResultsView (impedance, SWR, pattern, diagnostics, raw data)
+  ├─ ResultsView (impedance, SWR, pattern, currents, diagnostics, raw data)
+  ├─ ComparisonDialog (A/B metrics, SWR, pattern)
+  └─ Export CSV / HTML report
 ```
+
+Simulation results are cached in the window by design-variant ID for the
+current session. They are immutable snapshots with a model/spec fingerprint,
+but they are not yet written to the project file. Editing a design removes its
+cached result; switching variants restores the last result for that variant.
+
+## Phase 4 flow
+
+```text
+Selected DesignVariant ──► RunSimulation ──► SimulationResult
+        │                                      │
+        ├─ Add/Rename/Delete variant            ├─ ComparisonDialog (A/B)
+        ├─ ResultsView (impedance/SWR/pattern/currents)
+        └─ CSV / HTML report ──► reproducible artifact
+```
+
+Reports are generated from the immutable result and the project snapshot. The
+HTML report includes the fingerprint, solver version, specification,
+diagnostics, impedance table, resonance points, and SVG charts.
+
 
 The UI is bilingual through `ui/i18n.py` and supports metric or imperial
 presentation units. Project files and the domain remain in canonical units.
@@ -129,7 +153,7 @@ add a schema version and migration for stored simulation runs.
 
 - Persistence of simulation runs in the project file.
 - 3D visualization.
-- Variant comparison and reports.
-- Import/export adapters.
+- Native PDF report export (HTML can be printed to PDF).
+- NEC import and measurement import adapters.
 - Optimization.
-- Measurement records and reports.
+- Measurement records.

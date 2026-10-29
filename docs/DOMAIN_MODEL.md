@@ -209,11 +209,16 @@ Phase 2 adds solver-independent simulation types:
   power budget for one frequency.
 - `CurrentSample`, `FarFieldPoint`, and `PowerBudget`: normalized output
   records.
+- `ResonancePoint` and `find_resonances()`: series reactance zero crossings
+  from a frequency sweep.
 
 The far-field values are NEC power gains in dB. They are not realized gain or
 directivity unless the model and losses justify that interpretation; the
 adapter documents this explicitly.
 
 Simulation results are immutable and carry a deterministic fingerprint of the
-model and spec. They are not yet stored in the `.antennadesk` project file;
-that will require a schema version and migration in a later phase.
+model and spec. They are cached in the GUI by design-variant ID for the current
+session and are not yet stored in the `.antennadesk` project file; that will
+require a schema version and migration in a later phase. Editing a design
+removes its cached result. A project can contain multiple design variants; the
+GUI edits the selected variant.

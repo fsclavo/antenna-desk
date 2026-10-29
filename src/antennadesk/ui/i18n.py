@@ -182,6 +182,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "tab.impedance": {Language.ENGLISH: "Impedance / SWR", Language.SPANISH: "Impedancia / ROE"},
     "tab.pattern": {Language.ENGLISH: "Pattern", Language.SPANISH: "Patrón"},
+    "tab.currents": {Language.ENGLISH: "Currents", Language.SPANISH: "Corrientes"},
     "tab.diagnostics": {Language.ENGLISH: "Diagnostics", Language.SPANISH: "Diagnósticos"},
     "tab.raw": {Language.ENGLISH: "Raw data", Language.SPANISH: "Datos crudos"},
     "table.frequency": {Language.ENGLISH: "Frequency (MHz)", Language.SPANISH: "Frecuencia (MHz)"},
@@ -198,6 +199,112 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "pattern.none": {
         Language.ENGLISH: "No far-field pattern available.",
         Language.SPANISH: "No hay patrón de campo lejano disponible.",
+    },
+    "currents.frequency": {Language.ENGLISH: "Frequency", Language.SPANISH: "Frecuencia"},
+    "compare.title": {Language.ENGLISH: "Compare Variants", Language.SPANISH: "Comparar variantes"},
+    "compare.variant_a": {Language.ENGLISH: "Variant A", Language.SPANISH: "Variante A"},
+    "compare.variant_b": {Language.ENGLISH: "Variant B", Language.SPANISH: "Variante B"},
+    "compare.metric": {Language.ENGLISH: "Metric", Language.SPANISH: "Métrica"},
+    "compare.swr": {Language.ENGLISH: "SWR comparison", Language.SPANISH: "Comparación de ROE"},
+    "compare.pattern": {
+        Language.ENGLISH: "Pattern comparison",
+        Language.SPANISH: "Comparación de patrón",
+    },
+    "compare.max_gain": {
+        Language.ENGLISH: "Max power gain (dBi)",
+        Language.SPANISH: "Ganancia máxima de potencia (dBi)",
+    },
+    "compare.efficiency": {Language.ENGLISH: "Efficiency (%)", Language.SPANISH: "Eficiencia (%)"},
+    "compare.no_result": {
+        Language.ENGLISH: "Simulate a variant to include it in the comparison.",
+        Language.SPANISH: "Simulá una variante para incluirla en la comparación.",
+    },
+    "action.compare": {
+        Language.ENGLISH: "Compare Variants...",
+        Language.SPANISH: "Comparar variantes...",
+    },
+    "action.new_variant": {
+        Language.ENGLISH: "New Variant...",
+        Language.SPANISH: "Nueva variante...",
+    },
+    "action.rename_variant": {
+        Language.ENGLISH: "Rename Variant...",
+        Language.SPANISH: "Renombrar variante...",
+    },
+    "action.delete_variant": {
+        Language.ENGLISH: "Delete Variant",
+        Language.SPANISH: "Eliminar variante",
+    },
+    "action.export_csv": {Language.ENGLISH: "Export CSV...", Language.SPANISH: "Exportar CSV..."},
+    "action.export_html": {
+        Language.ENGLISH: "Export HTML Report...",
+        Language.SPANISH: "Exportar informe HTML...",
+    },
+    "variant.label": {Language.ENGLISH: "Variant", Language.SPANISH: "Variante"},
+    "variant.name": {Language.ENGLISH: "Variant name", Language.SPANISH: "Nombre de la variante"},
+    "variant.new_title": {Language.ENGLISH: "New Variant", Language.SPANISH: "Nueva variante"},
+    "variant.rename_title": {
+        Language.ENGLISH: "Rename Variant",
+        Language.SPANISH: "Renombrar variante",
+    },
+    "variant.delete_title": {
+        Language.ENGLISH: "Delete Variant",
+        Language.SPANISH: "Eliminar variante",
+    },
+    "variant.delete_confirm": {
+        Language.ENGLISH: "Delete variant “{name}”?",
+        Language.SPANISH: "¿Eliminar la variante “{name}”?",
+    },
+    "variant.last_cannot_delete": {
+        Language.ENGLISH: "A project must keep at least one design variant.",
+        Language.SPANISH: "Un proyecto debe conservar al menos una variante.",
+    },
+    "dialog.csv_title": {
+        Language.ENGLISH: "Export simulation CSV",
+        Language.SPANISH: "Exportar CSV de simulación",
+    },
+    "dialog.html_title": {
+        Language.ENGLISH: "Export HTML report",
+        Language.SPANISH: "Exportar informe HTML",
+    },
+    "dialog.csv_filter": {
+        Language.ENGLISH: "CSV files (*.csv);;All files (*)",
+        Language.SPANISH: "Archivos CSV (*.csv);;Todos los archivos (*)",
+    },
+    "dialog.html_filter": {
+        Language.ENGLISH: "HTML files (*.html);;All files (*)",
+        Language.SPANISH: "Archivos HTML (*.html);;Todos los archivos (*)",
+    },
+    "status.exported": {
+        Language.ENGLISH: "Export complete.",
+        Language.SPANISH: "Exportación completada.",
+    },
+    "variant.copy_name": {Language.ENGLISH: "{name} copy", Language.SPANISH: "{name} copia"},
+    "error.no_result": {
+        Language.ENGLISH: "Simulate the current variant before exporting.",
+        Language.SPANISH: "Simulá la variante actual antes de exportar.",
+    },
+    "error.export": {
+        Language.ENGLISH: "Could not export: {message}",
+        Language.SPANISH: "No se pudo exportar: {message}",
+    },
+    "currents.none": {
+        Language.ENGLISH: "No current data.",
+        Language.SPANISH: "Sin datos de corriente.",
+    },
+    "currents.segment": {Language.ENGLISH: "Segment", Language.SPANISH: "Segmento"},
+    "currents.magnitude": {Language.ENGLISH: "Current (A)", Language.SPANISH: "Corriente (A)"},
+    "resonance.label": {
+        Language.ENGLISH: "Resonance: {frequency} MHz, R={resistance} Ω",
+        Language.SPANISH: "Resonancia: {frequency} MHz, R={resistance} Ω",
+    },
+    "resonance.none": {
+        Language.ENGLISH: "No resonance in the sweep.",
+        Language.SPANISH: "Sin resonancia en el barrido.",
+    },
+    "plot.currents": {
+        Language.ENGLISH: "Segment current",
+        Language.SPANISH: "Corriente por segmento",
     },
     "plot.impedance": {Language.ENGLISH: "Impedance", Language.SPANISH: "Impedancia"},
     "plot.impedance_axis": {Language.ENGLISH: "Impedance (Ω)", Language.SPANISH: "Impedancia (Ω)"},

@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from PySide6.QtWidgets import QFileDialog, QInputDialog, QMessageBox
 from pytestqt.qtbot import QtBot
 
 from antennadesk.application.ports.antenna_solver import ProgressCallback
@@ -172,3 +173,111 @@ def test_height_exaggeration_control(window: MainWindow) -> None:
     window._height_combo.setCurrentIndex(2)
 
     assert window._geometry._height_exaggeration == pytest.approx(2.0)
+
+
+def test_new_variant_switches_to_the_copy(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Second", True))
+
+    window.new_variant()
+
+    assert window._project is not None
+    assert len(window._project.designs) == 2
+    assert window._variant_combo.count() == 2
+    assert window._design_id == window._project.designs[-1].id
+    window._dirty = False
+
+
+def test_rename_variant_updates_the_selector(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Renamed", True))
+
+    window.rename_variant()
+
+    assert window._project is not None
+    assert window._project.designs[0].name == "Renamed"
+    assert window._variant_combo.itemText(0) == "Renamed"
+    window._dirty = False
+
+
+def test_delete_variant_keeps_one_design(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Second", True))
+    window.new_variant()
+    monkeypatch.setattr(
+        QMessageBox,
+        "question",
+        lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
+    )
+
+    window.delete_variant()
+
+    assert window._project is not None
+    assert len(window._project.designs) == 1
+    assert window._variant_combo.count() == 1
+    window._dirty = False
+
+
+def test_export_csv_and_html_from_the_current_result(
+    window: MainWindow,
+    qtbot: QtBot,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window.simulate()
+    qtbot.waitUntil(
+        lambda: not window._simulating and window._thread is None,
+        timeout=5_000,
+    )
+    assert window._export_csv_action.isEnabled() is True
+    assert window._export_html_action.isEnabled() is True
+
+    csv_path = tmp_path / "result.csv"
+    html_path = tmp_path / "report.html"
+    paths = iter((str(csv_path), str(html_path)))
+    monkeypatch.setattr(
+        QFileDialog,
+        "getSaveFileName",
+        lambda *args, **kwargs: (next(paths), ""),
+    )
+
+    window.export_csv()
+    window.export_html_report()
+
+    assert csv_path.is_file()
+    assert csv_path.read_text(encoding="utf-8").startswith("frequency_hz,")
+    assert html_path.is_file()
+    assert "<!DOCTYPE html>" in html_path.read_text(encoding="utf-8")
+    window._dirty = False
+
+
+def test_variant_switch_restores_the_cached_result(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window.simulate()
+    qtbot.waitUntil(
+        lambda: not window._simulating and window._thread is None,
+        timeout=5_000,
+    )
+    assert window._results._table.rowCount() == 1
+    assert window._export_csv_action.isEnabled() is True
+
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Second", True))
+    window.new_variant()
+
+    assert window._results._table.rowCount() == 0
+    assert window._export_csv_action.isEnabled() is False
+
+    window._variant_combo.setCurrentIndex(0)
+
+    assert window._results._table.rowCount() == 1
+    assert window._export_csv_action.isEnabled() is True
+    window._dirty = False

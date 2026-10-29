@@ -39,6 +39,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   scale bar, and azimuth compass.
 - Elevation and plan view modes, plus optional vertical exaggeration for
   low-height layouts.
+- Phase 4 design-variant management: add, rename, delete, and switch variants.
+- A/B comparison dialog with metrics, SWR overlay, and gain-pattern overlay.
+- Currents tab and resonance markers on impedance/SWR sweeps.
+- CSV export and self-contained HTML reports with inline SVG charts.
 - Solver integration jobs on Linux and Windows.
 
 ### Changed

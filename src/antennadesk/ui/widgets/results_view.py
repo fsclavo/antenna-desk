@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.common.validation import Severity
+from ...domain.simulation.resonance import find_resonances
 from ...domain.simulation.result import SimulationResult, SimulationStatus
 from ..i18n import Translator
 
@@ -37,6 +38,7 @@ class ResultsView(QWidget):
         self._tabs = QTabWidget(self)
         self._impedance_tab = QWidget(self)
         self._pattern_tab = QWidget(self)
+        self._currents_tab = QWidget(self)
         self._diagnostics_tab = QWidget(self)
         self._raw_tab = QWidget(self)
 
@@ -45,6 +47,8 @@ class ResultsView(QWidget):
         self._impedance_plot = self._make_plot()
         self._impedance_plot.addLegend()
         self._swr_plot = self._make_plot()
+        self._resonance_label = QLabel(self._impedance_tab)
+        self._resonance_label.setWordWrap(True)
 
         impedance_splitter = QSplitter(Qt.Orientation.Vertical, self._impedance_tab)
         impedance_splitter.addWidget(self._table)
@@ -55,6 +59,7 @@ class ResultsView(QWidget):
         impedance_splitter.setStretchFactor(2, 2)
         impedance_layout = QVBoxLayout(self._impedance_tab)
         impedance_layout.setContentsMargins(0, 0, 0, 0)
+        impedance_layout.addWidget(self._resonance_label)
         impedance_layout.addWidget(impedance_splitter)
 
         self._pattern_frequency = QComboBox(self._pattern_tab)
@@ -68,6 +73,18 @@ class ResultsView(QWidget):
         pattern_layout.setContentsMargins(0, 0, 0, 0)
         pattern_layout.addLayout(pattern_controls)
         pattern_layout.addWidget(self._pattern_plot)
+
+        self._currents_frequency = QComboBox(self._currents_tab)
+        self._currents_frequency_label = QLabel(self._currents_tab)
+        self._currents_plot = self._make_plot()
+        currents_controls = QHBoxLayout()
+        currents_controls.addWidget(self._currents_frequency_label)
+        currents_controls.addWidget(self._currents_frequency)
+        currents_controls.addStretch(1)
+        currents_layout = QVBoxLayout(self._currents_tab)
+        currents_layout.setContentsMargins(0, 0, 0, 0)
+        currents_layout.addLayout(currents_controls)
+        currents_layout.addWidget(self._currents_plot)
 
         self._summary = QLabel(self._diagnostics_tab)
         self._summary.setWordWrap(True)
@@ -92,6 +109,7 @@ class ResultsView(QWidget):
 
         self._tabs.addTab(self._impedance_tab, "")
         self._tabs.addTab(self._pattern_tab, "")
+        self._tabs.addTab(self._currents_tab, "")
         self._tabs.addTab(self._diagnostics_tab, "")
         self._tabs.addTab(self._raw_tab, "")
 
@@ -100,6 +118,7 @@ class ResultsView(QWidget):
         layout.addWidget(self._tabs)
 
         self._pattern_frequency.currentIndexChanged.connect(self._render_pattern)
+        self._currents_frequency.currentIndexChanged.connect(self._render_currents)
         self.retranslate()
 
     @staticmethod
@@ -130,21 +149,23 @@ class ResultsView(QWidget):
 
     def set_result(self, result: SimulationResult | None) -> None:
         self._result = result
-        self._pattern_frequency.blockSignals(True)
-        self._pattern_frequency.clear()
-        if result is not None:
-            for frequency in result.frequencies:
-                self._pattern_frequency.addItem(f"{frequency.frequency_hz / 1e6:g} MHz")
-        self._pattern_frequency.blockSignals(False)
-        if self._pattern_frequency.count() > 0:
-            self._pattern_frequency.setCurrentIndex(0)
+        for combo in (self._pattern_frequency, self._currents_frequency):
+            combo.blockSignals(True)
+            combo.clear()
+            if result is not None:
+                for frequency in result.frequencies:
+                    combo.addItem(f"{frequency.frequency_hz / 1e6:g} MHz")
+            combo.blockSignals(False)
+            if combo.count() > 0:
+                combo.setCurrentIndex(0)
         self._render()
 
     def retranslate(self) -> None:
         self._tabs.setTabText(0, self._translator.t("tab.impedance"))
         self._tabs.setTabText(1, self._translator.t("tab.pattern"))
-        self._tabs.setTabText(2, self._translator.t("tab.diagnostics"))
-        self._tabs.setTabText(3, self._translator.t("tab.raw"))
+        self._tabs.setTabText(2, self._translator.t("tab.currents"))
+        self._tabs.setTabText(3, self._translator.t("tab.diagnostics"))
+        self._tabs.setTabText(4, self._translator.t("tab.raw"))
         self._table.setHorizontalHeaderLabels(
             [
                 self._translator.t("table.frequency"),
@@ -162,6 +183,7 @@ class ResultsView(QWidget):
             ]
         )
         self._pattern_frequency_label.setText(self._translator.t("pattern.frequency"))
+        self._currents_frequency_label.setText(self._translator.t("currents.frequency"))
         self._raw_tabs.setTabText(0, self._translator.t("raw.input"))
         self._raw_tabs.setTabText(1, self._translator.t("raw.output"))
         self._render()
@@ -169,6 +191,7 @@ class ResultsView(QWidget):
     def _render(self) -> None:
         self._render_impedance()
         self._render_pattern()
+        self._render_currents()
         self._render_diagnostics()
         self._render_raw()
 
@@ -179,6 +202,8 @@ class ResultsView(QWidget):
 
         if self._result is None or not self._result.frequencies:
             self._table.setRowCount(0)
+            self._resonance_label.setText("")
+            self._resonance_label.setVisible(False)
             self._impedance_plot.setTitle(self._translator.t("results.none"), color="#333333")
             self._swr_plot.setTitle(self._translator.t("results.none"), color="#333333")
             return
@@ -243,6 +268,87 @@ class ResultsView(QWidget):
                 symbol="o",
                 symbolSize=5,
             )
+
+        if len(frequencies) < 2:
+            resonances = ()
+            self._resonance_label.setText("")
+            self._resonance_label.setVisible(False)
+        else:
+            resonances = find_resonances(
+                [frequency.frequency_hz for frequency in frequencies],
+                [frequency.impedance_ohm for frequency in frequencies],
+            )
+            self._resonance_label.setVisible(True)
+        if resonances:
+            self._resonance_label.setText(
+                " · ".join(
+                    self._translator.t(
+                        "resonance.label",
+                        frequency=f"{point.frequency_hz / 1e6:.3f}",
+                        resistance=f"{point.impedance_ohm.real:.2f}",
+                    )
+                    for point in resonances
+                )
+            )
+            for point in resonances:
+                self._impedance_plot.addItem(
+                    pg.InfiniteLine(
+                        pos=point.frequency_hz / 1e6,
+                        angle=90,
+                        pen=pg.mkPen("#777777", style=Qt.PenStyle.DashLine),
+                        label=f"{point.frequency_hz / 1e6:.3f} MHz",
+                        labelOpts={"position": 0.96, "color": "#555555"},
+                    )
+                )
+                self._swr_plot.addItem(
+                    pg.InfiniteLine(
+                        pos=point.frequency_hz / 1e6,
+                        angle=90,
+                        pen=pg.mkPen("#777777", style=Qt.PenStyle.DashLine),
+                    )
+                )
+        else:
+            self._resonance_label.setText(self._translator.t("resonance.none"))
+
+    def _render_currents(self) -> None:
+        self._currents_plot.clear()
+        if self._result is None or not self._result.frequencies:
+            self._currents_plot.setTitle(self._translator.t("results.none"), color="#333333")
+            return
+        index = self._currents_frequency.currentIndex()
+        if index < 0 or index >= len(self._result.frequencies):
+            return
+        frequency = self._result.frequencies[index]
+        currents = frequency.currents
+        if not currents:
+            self._currents_plot.setTitle(self._translator.t("currents.none"), color="#333333")
+            return
+
+        segments = [current.segment for current in currents]
+        magnitudes = [current.magnitude_a for current in currents]
+        self._currents_plot.setTitle(self._translator.t("plot.currents"), color="#333333")
+        self._currents_plot.setLabel(
+            "bottom", self._translator.t("currents.segment"), color="#333333"
+        )
+        self._currents_plot.setLabel(
+            "left", self._translator.t("currents.magnitude"), color="#333333"
+        )
+        self._currents_plot.plot(
+            segments,
+            magnitudes,
+            pen=pg.mkPen("#1f5fa8", width=2),
+            symbol="o",
+            symbolSize=4,
+        )
+        self._currents_plot.addItem(
+            pg.InfiniteLine(
+                pos=frequency.feed_segment,
+                angle=90,
+                pen=pg.mkPen("#c0392b", style=Qt.PenStyle.DashLine),
+                label=self._translator.t("geometry.feed"),
+                labelOpts={"position": 0.95, "color": "#c0392b"},
+            )
+        )
 
     def _render_pattern(self) -> None:
         self._pattern_plot.clear()

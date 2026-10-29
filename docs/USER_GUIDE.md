@@ -53,16 +53,40 @@ After creation, adjust the design panel and press **Apply design** or
 
 ## Read the results
 
-- **Impedance & SWR**: table of frequency, resistance, reactance, magnitude,
-  and SWR, plus charts of impedance and SWR over the sweep.
+- **Impedance / SWR**: table of frequency, resistance, reactance, magnitude,
+  and SWR, plus charts of impedance and SWR over the sweep. Resonance points
+  where the reactance crosses zero are marked and listed above the table.
 - **Pattern**: elevation cut of NEC power gain for each simulated frequency.
   Power gain is not realized gain.
+- **Currents**: segment current magnitude for the selected frequency, with the
+  feed segment marked.
 - **Diagnostics**: solver version, status, duration, fingerprint, and warnings
   or errors.
 - **Raw data**: the generated NEC input deck and the raw solver output.
 
 SWR is computed with the reference impedance in the design panel (default
 50 Ω). A low SWR does not prove high efficiency or a useful pattern.
+
+## Variants and comparison
+
+Use **File → New Variant...** to duplicate the current design, **Rename
+Variant...** to change its name, and **Delete Variant** to remove it. The
+variant selector in the toolbar switches between designs. Each variant keeps
+its own last simulation result for the current session.
+
+Simulate the variants you want to compare, then use **File → Compare
+Variants...**. The dialog shows design and result metrics side by side, an SWR
+overlay, and a gain-pattern overlay for the frequency nearest each variant's
+design frequency. Missing results are reported in the dialog.
+
+## Export results
+
+Use **File → Export CSV...** for the frequency sweep table, or **File → Export
+HTML Report...** for a self-contained report with design parameters,
+configuration, solver metadata, fingerprint, diagnostics, impedance,
+resonance, and charts. The HTML report can be printed to PDF from a browser.
+Results are not stored in the project file, so export before closing the
+session.
 
 ## Cancel and errors
 
@@ -87,7 +111,10 @@ canonical meters and hertz.
 - Only horizontal center-fed dipoles are implemented in the GUI.
 - The GUI currently edits the first design variant in a project.
 - No loads, networks, transmission lines, or radial ground screens.
-- Simulation results are not saved inside the project yet.
+- Simulation results are not saved inside the project; comparison and export
+  use results from the current session.
+- Native PDF export is deferred; use the browser print dialog for the HTML
+  report.
 - Relative permeability is not emitted to NEC; conductor conductivity is.
 - Domain and solver diagnostic messages are currently reported in English.
 - A simulation is a prediction conditioned by the model. Unmodeled buildings,

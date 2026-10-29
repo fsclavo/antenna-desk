@@ -4,8 +4,8 @@ Desktop application for designing, simulating, and building antennas for
 amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
 
-**Status:** Phase 3 complete (guided MVP and GUI). Phase 4 (comparison and
-reports) is next.
+**Status:** Phase 4 complete (variant comparison and reports). Phase 5
+(optimization and construction) is next.
 
 ## Launch the GUI
 
@@ -45,6 +45,7 @@ immediately. Use **File → New Dipole...** for the guided wizard.
 - [User guide](docs/USER_GUIDE.md)
 - [Confirmed project decisions](docs/PROJECT_DECISIONS.md)
 - [ADR-0001 — MVP engine](docs/ADR/0001-solver-selection.md)
+- [ADR-0002 — Report and export formats](docs/ADR/0002-report-formats.md)
 - [NEC engine evaluation](docs/spikes/phase0-solver-evaluation.md)
 - [Phase 0 reproducible spike](spikes/phase0/README.md)
 - [Agent instructions](AGENTS.md)
@@ -56,7 +57,12 @@ immediately. Use **File → New Dipole...** for the guided wizard.
   construction-sketch geometry (elevation and plan views), and results tabs.
 - Asynchronous simulation with cancellation, timeouts, and diagnostics.
 - Impedance, SWR, frequency-sweep, and far-field pattern charts.
-- Save/open of versioned `.antennadesk` projects.
+- Save/open of versioned `.antennadesk` projects with multiple design
+  variants.
+- A/B variant comparison with metrics, SWR charts, and pattern overlays.
+- Currents tab and resonance markers on impedance/SWR sweeps.
+- CSV export and self-contained HTML reports (use the browser print dialog for
+  PDF).
 - English and Spanish UI, plus metric and imperial presentation units.
 - Immutable domain model for units, geometry, conductors, feed points, ground
   models, environments, and horizontal half-wave dipoles.
@@ -100,11 +106,12 @@ uv run python scripts/run_reference_simulation.py \
 - Only horizontal center-fed dipoles are implemented in the wizard and design
   panel.
 - No loads, networks, transmission lines, or radial ground screens.
-- Simulation results are not persisted in the project file yet.
-- The GUI currently edits the first design variant in a project; variant
-  comparison is a later phase.
+- Simulation results are session-only. Reopening a project clears them;
+  comparison and reports require results simulated in the current session.
 - Relative permeability is not emitted to NEC. Conductor conductivity is
   emitted when `SimulationSpec.include_conductor_losses` is true.
+- Native PDF export is deferred; HTML reports can be saved as PDF from a
+  browser.
 - The segmentation policy is a documented heuristic; explicit counts are used
   for reference cases.
 - Domain and solver diagnostic messages are currently reported in English;
