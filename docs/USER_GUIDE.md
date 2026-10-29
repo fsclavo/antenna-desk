@@ -79,6 +79,27 @@ Variants...**. The dialog shows design and result metrics side by side, an SWR
 overlay, and a gain-pattern overlay for the frequency nearest each variant's
 design frequency. Missing results are reported in the dialog.
 
+## Optimize the length
+
+Use **Optimize Length...** in the design panel or the File menu. Set the
+minimum and maximum physical length, the target reactance (0 Ω for series
+resonance), the maximum number of solver evaluations, and the reactance
+tolerance. The dialog evaluates the dipole at the design frequency, shows every
+evaluation, and reports the best length. A sensitivity table evaluates the best
+length at ±10 mm and ±25 mm so construction tolerances are visible.
+
+Press **Apply best length** to update the design; the application then runs the
+full sweep/pattern simulation with the current settings. The optimizer is
+bounded by the length range and evaluation limit; it is not a multi-objective
+optimizer.
+
+## Construction sheet
+
+Use **File → Construction Sheet...** for a printable sheet with target
+frequency, total wire length, left and right leg lengths, feed position, height,
+wire, ground, simulated impedance/SWR, resonance, and construction notes.
+**Save HTML...** writes the sheet; use the browser print dialog for PDF.
+
 ## Export results
 
 Use **File → Export CSV...** for the frequency sweep table, or **File → Export
@@ -111,10 +132,13 @@ canonical meters and hertz.
 - Only horizontal center-fed dipoles are implemented in the GUI.
 - The GUI currently edits the first design variant in a project.
 - No loads, networks, transmission lines, or radial ground screens.
-- Simulation results are not saved inside the project; comparison and export
-  use results from the current session.
+- Simulation results are not saved inside the project; comparison, export, and
+  the construction sheet use results from the current session.
 - Native PDF export is deferred; use the browser print dialog for the HTML
-  report.
+  report and construction sheet.
+- Optimization is one-dimensional length adjustment against a single reactance
+  target; bandwidth, gain, efficiency, and multi-objective optimization are not
+  implemented yet.
 - Relative permeability is not emitted to NEC; conductor conductivity is.
 - Domain and solver diagnostic messages are currently reported in English.
 - A simulation is a prediction conditioned by the model. Unmodeled buildings,

@@ -67,6 +67,7 @@ known-first-party = ["antennadesk"]
 # Translation tables and HTML templates naturally contain long strings.
 "src/antennadesk/ui/i18n.py" = ["E501"]
 "src/antennadesk/reporting/html_report.py" = ["E501"]
+"src/antennadesk/reporting/construction_sheet.py" = ["E501"]
 
 [tool.ruff.format]
 quote-style = "double"

@@ -12,6 +12,7 @@ from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QKeySequence
 from PySide6.QtWidgets import (
     QComboBox,
+    QDialog,
     QFileDialog,
     QHBoxLayout,
     QInputDialog,
@@ -61,6 +62,8 @@ from ..reporting.csv_export import write_csv
 from ..reporting.html_report import write_html_report
 from ..simulation.nec2.solver import Nec2cSolver
 from .dialogs.comparison_dialog import ComparisonDialog
+from .dialogs.construction_dialog import ConstructionDialog
+from .dialogs.optimization_dialog import OptimizationDialog
 from .i18n import Language, Translator
 from .units import UnitSystem
 from .widgets.dipole_form import DipoleForm
@@ -141,6 +144,10 @@ class MainWindow(QMainWindow):
         self._delete_variant_action.triggered.connect(lambda: self.delete_variant())
         self._compare_action = QAction(self)
         self._compare_action.triggered.connect(lambda: self.compare_variants())
+        self._optimize_action = QAction(self)
+        self._optimize_action.triggered.connect(lambda: self.optimize_length())
+        self._construction_action = QAction(self)
+        self._construction_action.triggered.connect(lambda: self.show_construction_sheet())
         self._export_csv_action = QAction(self)
         self._export_csv_action.triggered.connect(lambda: self.export_csv())
         self._export_html_action = QAction(self)
@@ -193,6 +200,7 @@ class MainWindow(QMainWindow):
 
         self._form = DipoleForm(self._translator, self._unit_system)
         self._form.apply_requested.connect(lambda: self.apply_design())
+        self._form.optimize_requested.connect(lambda: self.optimize_length())
         self._form.changed.connect(self._on_form_changed)
         form_scroll = QScrollArea(self)
         form_scroll.setWidgetResizable(True)
@@ -279,6 +287,8 @@ class MainWindow(QMainWindow):
         self._file_menu.addAction(self._delete_variant_action)
         self._file_menu.addSeparator()
         self._file_menu.addAction(self._compare_action)
+        self._file_menu.addAction(self._optimize_action)
+        self._file_menu.addAction(self._construction_action)
         self._file_menu.addSeparator()
         self._file_menu.addAction(self._export_csv_action)
         self._file_menu.addAction(self._export_html_action)
@@ -316,6 +326,8 @@ class MainWindow(QMainWindow):
         self._rename_variant_action.setText(self._translator.t("action.rename_variant"))
         self._delete_variant_action.setText(self._translator.t("action.delete_variant"))
         self._compare_action.setText(self._translator.t("action.compare"))
+        self._optimize_action.setText(self._translator.t("action.optimize"))
+        self._construction_action.setText(self._translator.t("action.construction"))
         self._export_csv_action.setText(self._translator.t("action.export_csv"))
         self._export_html_action.setText(self._translator.t("action.export_html"))
         self._simulate_action.setText(self._translator.t("action.simulate"))
@@ -396,6 +408,7 @@ class MainWindow(QMainWindow):
         self._rename_variant_action.setEnabled(idle and has_designs)
         self._delete_variant_action.setEnabled(idle and has_multiple)
         self._compare_action.setEnabled(idle and has_multiple)
+        self._optimize_action.setEnabled(idle and has_project and self._solver is not None)
         self._export_csv_action.setEnabled(idle and has_result)
         self._export_html_action.setEnabled(idle and has_result)
         self._simulate_action.setEnabled(idle and has_project and self._solver is not None)
@@ -875,6 +888,64 @@ class MainWindow(QMainWindow):
         self._select_design(new_id)
         self._update_title()
         self._update_actions()
+
+    def optimize_length(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._solver is None:
+            self._show_error(self._translator.t("error.solver"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        design = self._project.design_by_id(self._design_id)
+        base_spec = self._form.simulation_spec()
+        dialog = OptimizationDialog(
+            self._translator,
+            self._unit_system,
+            self._solver,
+            design.parameters,
+            base_spec,
+            self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        length = dialog.selected_length_m()
+        if length is None:
+            return
+        try:
+            parameters = design.parameters.with_length(length)
+            self._form.set_parameters(parameters, reset_sweep=False)
+            self._apply_fields()
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self.simulate()
+
+    def show_construction_sheet(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        design = self._project.design_by_id(self._design_id)
+        result = self._simulation_results.get(self._design_id)
+        dialog = ConstructionDialog(
+            self._translator,
+            self._project,
+            design,
+            result,
+            self,
+        )
+        dialog.exec()
 
     def compare_variants(self) -> None:
         if self._project is None or len(self._project.designs) < 2:

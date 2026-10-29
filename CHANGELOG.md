@@ -43,6 +43,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - A/B comparison dialog with metrics, SWR overlay, and gain-pattern overlay.
 - Currents tab and resonance markers on impedance/SWR sweeps.
 - CSV export and self-contained HTML reports with inline SVG charts.
+- Phase 5 bounded dipole length optimization with min/max limits, target
+  reactance, evaluation log, and ±10/25 mm sensitivity probes.
+- Optimization dialog with worker thread, cancellation, and apply-best-length
+  flow.
+- Printable/HTML construction sheet with leg lengths, feed position, simulated
+  result, resonance, and construction notes.
 - Solver integration jobs on Linux and Windows.
 
 ### Changed

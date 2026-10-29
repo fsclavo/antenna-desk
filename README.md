@@ -4,8 +4,8 @@ Desktop application for designing, simulating, and building antennas for
 amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
 
-**Status:** Phase 4 complete (variant comparison and reports). Phase 5
-(optimization and construction) is next.
+**Status:** Phase 5 complete (length optimization and construction sheet).
+Phase 6 (new antenna types and measurements) is next.
 
 ## Launch the GUI
 
@@ -61,6 +61,10 @@ immediately. Use **File → New Dipole...** for the guided wizard.
   variants.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - Currents tab and resonance markers on impedance/SWR sweeps.
+- Bounded dipole length optimization for a resonance or target reactance, with
+  an evaluation log and length-sensitivity table.
+- Printable/HTML construction sheet with leg lengths, feed position, and
+  simulated result.
 - CSV export and self-contained HTML reports (use the browser print dialog for
   PDF).
 - English and Spanish UI, plus metric and imperial presentation units.
@@ -107,7 +111,11 @@ uv run python scripts/run_reference_simulation.py \
   panel.
 - No loads, networks, transmission lines, or radial ground screens.
 - Simulation results are session-only. Reopening a project clears them;
-  comparison and reports require results simulated in the current session.
+  comparison, reports, and the construction sheet use results from the current
+  session.
+- Optimization is limited to one dipole length against a single reactance
+  target. It does not optimize bandwidth, gain, efficiency, or multi-objective
+  trade-offs yet.
 - Relative permeability is not emitted to NEC. Conductor conductivity is
   emitted when `SimulationSpec.include_conductor_losses` is true.
 - Native PDF export is deferred; HTML reports can be saved as PDF from a

@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from PySide6.QtWidgets import QFileDialog, QInputDialog, QMessageBox
+from PySide6.QtWidgets import QDialog, QFileDialog, QInputDialog, QMessageBox
 from pytestqt.qtbot import QtBot
 
 from antennadesk.application.ports.antenna_solver import ProgressCallback
@@ -21,6 +21,7 @@ from antennadesk.domain.simulation.result import (
 from antennadesk.domain.simulation.solver import SolverCapabilities, SolverMetadata
 from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
 from antennadesk.ui.units import UnitSystem
@@ -280,4 +281,39 @@ def test_variant_switch_restores_the_cached_result(
 
     assert window._results._table.rowCount() == 1
     assert window._export_csv_action.isEnabled() is True
+    window._dirty = False
+
+
+def test_optimize_length_applies_and_simulates(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeOptimizationDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def selected_length_m(self) -> float:
+            return 19.8
+
+    monkeypatch.setattr(
+        main_window_module,
+        "OptimizationDialog",
+        FakeOptimizationDialog,
+    )
+
+    assert window._optimize_action.isEnabled() is True
+    window.optimize_length()
+    qtbot.waitUntil(
+        lambda: not window._simulating and window._thread is None,
+        timeout=5_000,
+    )
+
+    assert window._form.parameters().total_length_m == pytest.approx(19.8)
+    assert window._project is not None
+    assert window._project.designs[0].parameters.total_length_m == pytest.approx(19.8)
+    assert window._results._table.rowCount() == 1
     window._dirty = False

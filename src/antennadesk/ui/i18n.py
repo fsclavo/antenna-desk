@@ -288,6 +288,115 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Could not export: {message}",
         Language.SPANISH: "No se pudo exportar: {message}",
     },
+    "action.optimize": {
+        Language.ENGLISH: "Optimize Length...",
+        Language.SPANISH: "Optimizar longitud...",
+    },
+    "action.construction": {
+        Language.ENGLISH: "Construction Sheet...",
+        Language.SPANISH: "Hoja de construcción...",
+    },
+    "construction.title": {
+        Language.ENGLISH: "Construction Sheet",
+        Language.SPANISH: "Hoja de construcción",
+    },
+    "construction.save": {
+        Language.ENGLISH: "Save HTML...",
+        Language.SPANISH: "Guardar HTML...",
+    },
+    "dialog.construction_title": {
+        Language.ENGLISH: "Save construction sheet",
+        Language.SPANISH: "Guardar hoja de construcción",
+    },
+    "optimize.title": {
+        Language.ENGLISH: "Optimize Dipole Length",
+        Language.SPANISH: "Optimizar longitud del dipolo",
+    },
+    "optimize.min_length": {
+        Language.ENGLISH: "Minimum length",
+        Language.SPANISH: "Longitud mínima",
+    },
+    "optimize.max_length": {
+        Language.ENGLISH: "Maximum length",
+        Language.SPANISH: "Longitud máxima",
+    },
+    "optimize.target_reactance": {
+        Language.ENGLISH: "Target reactance (Ω)",
+        Language.SPANISH: "Reactancia objetivo (Ω)",
+    },
+    "optimize.max_evaluations": {
+        Language.ENGLISH: "Maximum evaluations",
+        Language.SPANISH: "Evaluaciones máximas",
+    },
+    "optimize.tolerance": {
+        Language.ENGLISH: "Reactance tolerance (Ω)",
+        Language.SPANISH: "Tolerancia de reactancia (Ω)",
+    },
+    "optimize.run": {
+        Language.ENGLISH: "Run optimization",
+        Language.SPANISH: "Ejecutar optimización",
+    },
+    "optimize.cancel_run": {
+        Language.ENGLISH: "Cancel optimization",
+        Language.SPANISH: "Cancelar optimización",
+    },
+    "optimize.apply": {
+        Language.ENGLISH: "Apply best length",
+        Language.SPANISH: "Aplicar longitud óptima",
+    },
+    "optimize.running": {
+        Language.ENGLISH: "Running optimization...",
+        Language.SPANISH: "Ejecutando optimización...",
+    },
+    "optimize.summary": {
+        Language.ENGLISH: "Status: {status} · Best length: {length} · X={reactance} Ω · SWR={swr}",
+        Language.SPANISH: "Estado: {status} · Mejor longitud: {length} · X={reactance} Ω · ROE={swr}",
+    },
+    "optimize.no_best": {
+        Language.ENGLISH: "No valid length was found.",
+        Language.SPANISH: "No se encontró una longitud válida.",
+    },
+    "optimize.evaluations": {
+        Language.ENGLISH: "Evaluations",
+        Language.SPANISH: "Evaluaciones",
+    },
+    "optimize.sensitivity": {
+        Language.ENGLISH: "Sensitivity",
+        Language.SPANISH: "Sensibilidad",
+    },
+    "optimize.iteration": {Language.ENGLISH: "#", Language.SPANISH: "#"},
+    "optimize.length": {Language.ENGLISH: "Length", Language.SPANISH: "Longitud"},
+    "optimize.offset": {Language.ENGLISH: "Offset", Language.SPANISH: "Desvío"},
+    "optimize.message": {Language.ENGLISH: "Message", Language.SPANISH: "Mensaje"},
+    "optimize.apply_hint": {
+        Language.ENGLISH: "Apply the best length and simulate to validate the full sweep.",
+        Language.SPANISH: "Aplicá la mejor longitud y simulá para validar el barrido completo.",
+    },
+    "optimize.close_optimization": {
+        Language.ENGLISH: "Cancel the running optimization before closing.",
+        Language.SPANISH: "Cancelá la optimización en curso antes de cerrar.",
+    },
+    "optimize_status.converged": {
+        Language.ENGLISH: "converged",
+        Language.SPANISH: "convergió",
+    },
+    "optimize_status.max_evaluations": {
+        Language.ENGLISH: "maximum evaluations reached",
+        Language.SPANISH: "máximo de evaluaciones alcanzado",
+    },
+    "optimize_status.no_bracket": {
+        Language.ENGLISH: "target not bracketed",
+        Language.SPANISH: "objetivo fuera del intervalo",
+    },
+    "optimize_status.cancelled": {
+        Language.ENGLISH: "cancelled",
+        Language.SPANISH: "cancelada",
+    },
+    "optimize_status.error": {Language.ENGLISH: "error", Language.SPANISH: "error"},
+    "error.optimize": {
+        Language.ENGLISH: "Optimization failed: {message}",
+        Language.SPANISH: "Falló la optimización: {message}",
+    },
     "currents.none": {
         Language.ENGLISH: "No current data.",
         Language.SPANISH: "Sin datos de corriente.",

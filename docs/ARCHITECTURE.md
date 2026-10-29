@@ -15,7 +15,8 @@ application
   ports: ProjectRepository, AntennaSolver, CancelToken
   use cases: CreateDipoleProject, SaveProject, OpenProject,
              EditDipoleLength, UpdateDipoleDesign, AddDesignVariant,
-             RenameDesignVariant, DeleteDesignVariant, RunSimulation
+             RenameDesignVariant, DeleteDesignVariant, RunSimulation,
+             OptimizeDipoleLength
         │
 domain
   common: units, identifiers, time, validation
@@ -31,7 +32,8 @@ adapters
   persistence: JsonProjectRepository, Pydantic schema, migrations, atomic writes
   simulation/nec2: input writer, parser, process runner, normalization
   simulation: discretization, SWR normalization, fingerprint
-  reporting: CSV, self-contained HTML, dependency-free SVG charts
+  optimization: bounded length search, evaluation log, sensitivity
+  reporting: CSV, self-contained HTML, construction sheet, SVG charts
 ```
 
 ## Dependency rules
@@ -123,6 +125,28 @@ Reports are generated from the immutable result and the project snapshot. The
 HTML report includes the fingerprint, solver version, specification,
 diagnostics, impedance table, resonance points, and SVG charts.
 
+## Phase 5 flow
+
+```text
+DipoleParameters + base SimulationSpec
+        │
+        ▼
+OptimizeDipoleLength
+  ├─ single-frequency, no-pattern evaluation spec at the design frequency
+  ├─ bounded reactance search (endpoints, coarse scan, interpolation)
+  ├─ evaluation log
+  └─ ±10/25 mm sensitivity probes
+        │
+        ▼
+OptimizationDialog ── Apply best length ──► design update ──► full simulation
+        │
+        └─ ConstructionDialog / construction sheet (dimensions + last result)
+```
+
+Optimization runs in a worker thread. The final full-sweep/pattern simulation is
+performed after applying the length so the normal result/report path remains
+the single source of truth.
+
 
 The UI is bilingual through `ui/i18n.py` and supports metric or imperial
 presentation units. Project files and the domain remain in canonical units.
@@ -155,5 +179,6 @@ add a schema version and migration for stored simulation runs.
 - 3D visualization.
 - Native PDF report export (HTML can be printed to PDF).
 - NEC import and measurement import adapters.
-- Optimization.
+- Multi-objective optimization, bandwidth/gain objectives, and space
+  constraints beyond the min/max length bounds.
 - Measurement records.

@@ -211,6 +211,12 @@ Phase 2 adds solver-independent simulation types:
   records.
 - `ResonancePoint` and `find_resonances()`: series reactance zero crossings
   from a frequency sweep.
+- `LengthOptimizationSpec`: min/max length, target reactance, evaluation and
+  tolerance limits, and sensitivity offsets.
+- `LengthEvaluation`: length, impedance, SWR, error, and iteration index.
+- `LengthSensitivityPoint`: length offset and resulting impedance/SWR.
+- `LengthOptimizationResult`: status, best length/impedance/SWR, evaluation
+  log, and sensitivity points.
 
 The far-field values are NEC power gains in dB. They are not realized gain or
 directivity unless the model and losses justify that interpretation; the
@@ -222,3 +228,9 @@ session and are not yet stored in the `.antennadesk` project file; that will
 require a schema version and migration in a later phase. Editing a design
 removes its cached result. A project can contain multiple design variants; the
 GUI edits the selected variant.
+
+Length optimization is a bounded one-dimensional search over the dipole length
+at the design frequency. It uses the solver through the same application port,
+logs every evaluation, and computes ±10/25 mm sensitivity probes around the
+best length. The final full-sweep/pattern simulation is run separately after
+the user applies the optimized length.

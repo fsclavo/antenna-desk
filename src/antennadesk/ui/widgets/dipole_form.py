@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QGridLayout,
     QGroupBox,
+    QHBoxLayout,
     QLabel,
     QPushButton,
     QSpinBox,
@@ -45,6 +46,7 @@ MATERIALS = (COPPER, ALUMINUM)
 
 class DipoleForm(QWidget):
     apply_requested = Signal()
+    optimize_requested = Signal()
     changed = Signal()
 
     def __init__(
@@ -116,6 +118,8 @@ class DipoleForm(QWidget):
 
         self._apply = QPushButton(self)
         self._apply.clicked.connect(self.apply_requested)
+        self._optimize = QPushButton(self)
+        self._optimize.clicked.connect(self.optimize_requested)
 
         form = QFormLayout()
         form.addRow(self._label("field.frequency"), self._frequency)
@@ -141,7 +145,10 @@ class DipoleForm(QWidget):
         group_layout = QVBoxLayout(self._group)
         group_layout.addLayout(form)
         group_layout.addWidget(self._sweep_group)
-        group_layout.addWidget(self._apply)
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(self._apply)
+        button_layout.addWidget(self._optimize)
+        group_layout.addLayout(button_layout)
 
         layout = QVBoxLayout(self)
         layout.addWidget(self._group)
@@ -207,6 +214,7 @@ class DipoleForm(QWidget):
         self._sweep_group.setTitle(self._translator.t("field.sweep"))
         self._sweep.setText(self._translator.t("field.sweep_enabled"))
         self._apply.setText(self._translator.t("action.apply"))
+        self._optimize.setText(self._translator.t("action.optimize"))
         labels = self._labels()
         for key, label in labels.items():
             label.setText(self._translator.t(key))
