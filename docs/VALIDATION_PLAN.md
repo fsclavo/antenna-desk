@@ -143,10 +143,12 @@ Phase 6 adds tests for:
 - Type-aware construction sheets, HTML reports, and mixed-type comparison.
 - Primary-dimension helpers and optimization for folded-dipole element length
   and loop circumference, including the dialog and apply/simulate flow.
+- Minimum-SWR objective: domain search, max-evaluation/boundary behavior, and
+  dialog objective switching.
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 317 tests with the solver enabled. The twelve solver
+The suite currently has 321 tests with the solver enabled. The twelve solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.
@@ -192,7 +194,7 @@ engine version, configuration, and explicit tolerances.
 - Reports and construction sheets have native PDF export; HTML versions are
   also available.
 - Optimization is limited to a single primary dimension and a single reactance
-  target; bandwidth, gain, efficiency, and multi-objective optimization are
-  not implemented yet.
+  or SWR objective; bandwidth, gain, efficiency, and multi-objective
+  optimization are not implemented yet.
 - PySide6 is pinned below 6.10 because 6.12 triggered a shutdown refcount
   crash with pyqtgraph in the test environment.

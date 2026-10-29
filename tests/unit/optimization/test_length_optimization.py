@@ -8,6 +8,7 @@ from antennadesk.domain.optimization.length import (
     LengthEvaluation,
     LengthOptimizationSpec,
     LengthOptimizationStatus,
+    OptimizationObjective,
     optimize_length,
 )
 
@@ -115,3 +116,57 @@ def test_reports_solver_failure() -> None:
 
     assert result.status is LengthOptimizationStatus.ERROR
     assert result.message == "solver failed"
+
+
+def _swr_evaluator(
+    *,
+    minimum_length_m: float = 20.3,
+    minimum_swr: float = 1.0,
+) -> object:
+    def evaluate(length_m: float) -> LengthEvaluation:
+        swr = minimum_swr + abs(length_m - minimum_length_m)
+        return LengthEvaluation(
+            length_m=length_m,
+            impedance_ohm=complex(50.0, 0.0),
+            swr=swr,
+        )
+
+    return evaluate
+
+
+def test_minimizes_swr_within_the_bounds() -> None:
+    spec = LengthOptimizationSpec(
+        min_length_m=18.0,
+        max_length_m=22.0,
+        objective=OptimizationObjective.MIN_SWR,
+    )
+    result = optimize_length(_swr_evaluator(), spec)  # type: ignore[arg-type]
+
+    assert result.status is LengthOptimizationStatus.CONVERGED
+    assert result.best_length_m == pytest.approx(20.3, abs=0.05)
+    assert result.best_swr == pytest.approx(1.0, abs=0.05)
+
+
+def test_swr_search_stops_at_max_evaluations() -> None:
+    spec = LengthOptimizationSpec(
+        min_length_m=18.0,
+        max_length_m=22.0,
+        objective=OptimizationObjective.MIN_SWR,
+        max_evaluations=3,
+    )
+    result = optimize_length(_swr_evaluator(), spec)  # type: ignore[arg-type]
+
+    assert result.status is LengthOptimizationStatus.MAX_EVALUATIONS
+    assert len(result.evaluations) == 3
+
+
+def test_swr_search_reports_a_boundary_optimum() -> None:
+    spec = LengthOptimizationSpec(
+        min_length_m=21.0,
+        max_length_m=22.0,
+        objective=OptimizationObjective.MIN_SWR,
+    )
+    result = optimize_length(_swr_evaluator(), spec)  # type: ignore[arg-type]
+
+    assert result.status is LengthOptimizationStatus.CONVERGED
+    assert result.best_length_m == pytest.approx(21.0)

@@ -65,7 +65,7 @@ class AnalyticalSolver:
                     feed_tag=1,
                     feed_segment=11,
                     impedance_ohm=complex(70.0, 5.0 * (length - self.resonance_length_m)),
-                    swr=2.0,
+                    swr=1.0 + abs(length - self.resonance_length_m),
                     input_power_w=0.001,
                 ),
             ),
@@ -143,3 +143,35 @@ def test_optimization_dialog_handles_a_loop_circumference(qtbot: QtBot) -> None:
     assert dialog._result.status is LengthOptimizationStatus.CONVERGED
     assert dialog.selected_dimension_m() == pytest.approx(41.2, abs=0.02)
     assert dialog._apply.isEnabled() is True
+
+
+def test_optimization_dialog_minimizes_swr(qtbot: QtBot) -> None:
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    )
+    base_spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(7_100_000.0),
+        far_field=FarFieldRequest(enabled=True),
+    )
+    dialog = OptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalSolver(),
+        parameters,
+        base_spec,
+    )
+    qtbot.addWidget(dialog)
+    dialog._objective.setCurrentIndex(1)
+    dialog._min_length.setValue(18.0)
+    dialog._max_length.setValue(22.0)
+    dialog.show()
+
+    dialog._run.click()
+    qtbot.waitUntil(lambda: dialog._thread is None, timeout=5_000)
+
+    assert dialog._result is not None
+    assert dialog._result.status is LengthOptimizationStatus.CONVERGED
+    assert dialog.selected_dimension_m() == pytest.approx(20.3, abs=0.05)
+    assert dialog._target.isVisible() is False

@@ -104,6 +104,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Length optimization is generalized to the primary dimension: wire/folded
   element length or loop circumference. `EditDipoleLength` remains limited to
   wire dipoles.
+- Optimization objective selector: target reactance or minimum SWR, with
+  objective-specific tolerances.
 
 - Documentation and README are now in English.
 

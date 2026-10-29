@@ -13,6 +13,11 @@ from enum import StrEnum
 from ..common.units import ensure_finite, ensure_positive
 
 
+class OptimizationObjective(StrEnum):
+    REACTANCE = "reactance"
+    MIN_SWR = "min_swr"
+
+
 class LengthOptimizationStatus(StrEnum):
     CONVERGED = "converged"
     MAX_EVALUATIONS = "max_evaluations"
@@ -25,9 +30,11 @@ class LengthOptimizationStatus(StrEnum):
 class LengthOptimizationSpec:
     min_length_m: float
     max_length_m: float
+    objective: OptimizationObjective = OptimizationObjective.REACTANCE
     target_reactance_ohm: float = 0.0
     max_evaluations: int = 12
     reactance_tolerance_ohm: float = 0.1
+    swr_tolerance: float = 0.05
     length_tolerance_m: float = 0.001
     sensitivity_offsets_m: tuple[float, ...] = (0.01, 0.025)
 
@@ -40,6 +47,7 @@ class LengthOptimizationSpec:
         if self.max_evaluations < 3:
             raise ValueError("max_evaluations must be at least 3")
         ensure_positive(self.reactance_tolerance_ohm, name="reactance_tolerance_ohm")
+        ensure_positive(self.swr_tolerance, name="swr_tolerance")
         ensure_positive(self.length_tolerance_m, name="length_tolerance_m")
         for offset in self.sensitivity_offsets_m:
             ensure_positive(offset, name="sensitivity offset")
@@ -104,6 +112,8 @@ def optimize_length(
     *,
     cancel_check: CancelCheck | None = None,
 ) -> LengthOptimizationResult:
+    if spec.objective is OptimizationObjective.MIN_SWR:
+        return optimize_swr(evaluate, spec, cancel_check=cancel_check)
     evaluations: list[LengthEvaluation] = []
 
     def cancelled() -> bool:
@@ -223,3 +233,121 @@ def optimize_length(
         LengthOptimizationStatus.MAX_EVALUATIONS,
         "maximum number of evaluations reached",
     )
+
+
+def _best_swr_evaluation(evaluations: list[LengthEvaluation]) -> LengthEvaluation | None:
+    valid = [
+        evaluation
+        for evaluation in evaluations
+        if evaluation.impedance_ohm is not None
+        and evaluation.swr is not None
+        and math.isfinite(evaluation.swr)
+    ]
+    if not valid:
+        return None
+    return min(valid, key=lambda evaluation: (evaluation.swr or math.inf, evaluation.length_m))
+
+
+def optimize_swr(
+    evaluate: LengthEvaluator,
+    spec: LengthOptimizationSpec,
+    *,
+    cancel_check: CancelCheck | None = None,
+) -> LengthOptimizationResult:
+    evaluations: list[LengthEvaluation] = []
+
+    def cancelled() -> bool:
+        return bool(cancel_check is not None and cancel_check())
+
+    def probe(length: float) -> LengthEvaluation:
+        raw = evaluate(length)
+        evaluation = replace(raw, index=len(evaluations) + 1)
+        evaluations.append(evaluation)
+        return evaluation
+
+    def finish(status: LengthOptimizationStatus, message: str = "") -> LengthOptimizationResult:
+        best = _best_swr_evaluation(evaluations)
+        return LengthOptimizationResult(
+            status=status,
+            best_length_m=None if best is None else best.length_m,
+            best_impedance_ohm=None if best is None else best.impedance_ohm,
+            best_swr=None if best is None else best.swr,
+            evaluations=tuple(evaluations),
+            message=message,
+        )
+
+    if cancelled():
+        return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
+
+    coarse_count = min(7, max(3, spec.max_evaluations))
+    coarse_points = [
+        spec.min_length_m + (spec.max_length_m - spec.min_length_m) * index / (coarse_count - 1)
+        for index in range(coarse_count)
+    ]
+    for length in coarse_points:
+        if len(evaluations) >= spec.max_evaluations or cancelled():
+            break
+        evaluation = probe(length)
+        if evaluation.cancelled:
+            return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
+        if evaluation.impedance_ohm is None or evaluation.swr is None:
+            return finish(
+                LengthOptimizationStatus.ERROR,
+                evaluation.error or "solver evaluation failed",
+            )
+
+    ordered = sorted(evaluations, key=lambda evaluation: evaluation.length_m)
+    best = _best_swr_evaluation(ordered)
+    if best is None:
+        return finish(LengthOptimizationStatus.ERROR, "no valid SWR evaluation")
+    if best.swr is not None and best.swr <= 1.0 + spec.swr_tolerance:
+        return finish(LengthOptimizationStatus.CONVERGED, "SWR target reached")
+
+    best_index = ordered.index(best)
+    if best_index == 0 or best_index == len(ordered) - 1:
+        return finish(
+            LengthOptimizationStatus.CONVERGED,
+            "best SWR is at a dimension bound",
+        )
+
+    left = ordered[best_index - 1].length_m
+    right = ordered[best_index + 1].length_m
+    if len(evaluations) >= spec.max_evaluations:
+        return finish(
+            LengthOptimizationStatus.MAX_EVALUATIONS,
+            "maximum number of evaluations reached",
+        )
+    while len(evaluations) < spec.max_evaluations and right - left > spec.length_tolerance_m:
+        if cancelled():
+            return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
+        first = left + (right - left) / 3.0
+        second = right - (right - left) / 3.0
+        first_evaluation = probe(first)
+        if first_evaluation.cancelled:
+            return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
+        if len(evaluations) >= spec.max_evaluations:
+            break
+        second_evaluation = probe(second)
+        if second_evaluation.cancelled:
+            return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
+        if first_evaluation.swr is None or second_evaluation.swr is None:
+            return finish(
+                LengthOptimizationStatus.ERROR,
+                first_evaluation.error or second_evaluation.error or "solver evaluation failed",
+            )
+        if first_evaluation.swr <= second_evaluation.swr:
+            right = second
+        else:
+            left = first
+
+    final = _best_swr_evaluation(evaluations)
+    if final is None:
+        return finish(LengthOptimizationStatus.ERROR, "no valid SWR evaluation")
+    if final.swr is not None and final.swr <= 1.0 + spec.swr_tolerance:
+        return finish(LengthOptimizationStatus.CONVERGED, "SWR target reached")
+    if len(evaluations) >= spec.max_evaluations and right - left > spec.length_tolerance_m:
+        return finish(
+            LengthOptimizationStatus.MAX_EVALUATIONS,
+            "maximum number of evaluations reached",
+        )
+    return finish(LengthOptimizationStatus.CONVERGED, "length tolerance reached")

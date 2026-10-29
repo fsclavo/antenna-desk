@@ -115,14 +115,14 @@ design frequency. Missing results are reported in the dialog.
 
 ## Optimize the length
 
-Use **Optimize Dimension...** in the design panel or the File menu. Set the
-minimum and maximum dimension, the target reactance (0 Ω for series
-resonance), the maximum number of solver evaluations, and the reactance
-tolerance. The optimized dimension is the total length for a wire dipole or
-folded-dipole element, and the circumference for a loop. The dialog evaluates
-the design at the design frequency, shows every evaluation, and reports the
-best dimension. A sensitivity table evaluates the best dimension at ±10 mm and
-±25 mm so construction tolerances are visible.
+Use **Optimize Dimension...** in the design panel or the File menu. Choose the
+objective: **target reactance** (0 Ω for series resonance) or **minimum SWR**.
+Set the minimum and maximum dimension, the maximum number of solver
+evaluations, and the objective tolerance. The optimized dimension is the total
+length for a wire dipole or folded-dipole element, and the circumference for a
+loop. The dialog evaluates the design at the design frequency, shows every
+evaluation, and reports the best dimension. A sensitivity table evaluates the
+best dimension at ±10 mm and ±25 mm so construction tolerances are visible.
 
 Press **Apply best dimension** to update the design; the application then runs
 the full sweep/pattern simulation with the current settings. The optimizer is
@@ -178,8 +178,8 @@ canonical meters and hertz.
 - Simulation reports and construction sheets have native PDF export; HTML
   versions remain available for browser printing.
 - Optimization is one-dimensional adjustment of the primary dimension against
-  a single reactance target; bandwidth, gain, efficiency, and multi-objective
-  optimization are not implemented yet.
+  a single reactance or SWR objective; bandwidth, gain, efficiency, and
+  multi-objective optimization are not implemented yet.
 - Relative permeability is not emitted to NEC; conductor conductivity is.
 - Known diagnostic codes are localized; the raw solver detail remains in
   English in the tooltip and raw-output tab.

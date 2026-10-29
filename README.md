@@ -69,9 +69,9 @@ between those types.
   variants; schema v3 adds persisted simulation runs and migrates older files.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - Currents tab and resonance markers on impedance/SWR sweeps.
-- Bounded antenna-dimension optimization for a resonance or target reactance:
-  wire-dipole and folded-dipole element length, or loop circumference, with an
-  evaluation log and sensitivity table.
+- Bounded antenna-dimension optimization for a target reactance or minimum
+  SWR: wire-dipole and folded-dipole element length, or loop circumference,
+  with an evaluation log and sensitivity table.
 - Printable/HTML construction sheet with type-aware dimensions, feed position,
   and simulated result.
 - CSV export and self-contained HTML reports (use the browser print dialog for
@@ -126,8 +126,8 @@ uv run python scripts/run_reference_simulation.py \
   native project size limit is 10 MB. Use Compact Simulation History to keep
   only the latest run per variant.
 - Optimization is limited to one primary dimension per design against a single
-  reactance target. It does not optimize bandwidth, gain, efficiency, or
-  multi-objective trade-offs yet.
+  reactance or SWR objective. It does not optimize bandwidth, gain, efficiency,
+  or multi-objective trade-offs yet.
 - Relative permeability is not emitted to NEC. Conductor conductivity is
   emitted when `SimulationSpec.include_conductor_losses` is true.
 - Simulation reports and construction sheets have native PDF export; HTML

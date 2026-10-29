@@ -9,6 +9,7 @@ import math
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
+    QComboBox,
     QDialog,
     QDoubleSpinBox,
     QFormLayout,
@@ -37,6 +38,7 @@ from ...domain.optimization.length import (
     LengthEvaluation,
     LengthOptimizationResult,
     LengthOptimizationSpec,
+    OptimizationObjective,
 )
 from ...domain.simulation.spec import SimulationSpec
 from ..i18n import Translator
@@ -81,6 +83,11 @@ class OptimizationDialog(QDialog):
         default_min = max(base_dimension_m * 0.9, 0.5)
         default_max = max(base_dimension_m * 1.1, default_min + 0.5)
 
+        self._objective = QComboBox(self)
+        self._objective.addItem("", OptimizationObjective.REACTANCE.value)
+        self._objective.addItem("", OptimizationObjective.MIN_SWR.value)
+        self._objective.currentIndexChanged.connect(self._objective_changed)
+
         self._min_length = QDoubleSpinBox(self)
         self._min_length.setRange(length_min, length_max)
         self._min_length.setDecimals(3)
@@ -109,17 +116,19 @@ class OptimizationDialog(QDialog):
         self._tolerance.setValue(0.1)
         self._tolerance.setSuffix(" Ω")
 
+        self._label_objective = QLabel(translator.t("optimize.objective"), self)
         self._label_min = QLabel(translator.t("optimize.min_length"), self)
         self._label_max = QLabel(translator.t("optimize.max_length"), self)
         self._label_target = QLabel(translator.t("optimize.target_reactance"), self)
         self._label_evaluations = QLabel(translator.t("optimize.max_evaluations"), self)
         self._label_tolerance = QLabel(translator.t("optimize.tolerance"), self)
-        form = QFormLayout()
-        form.addRow(self._label_min, self._min_length)
-        form.addRow(self._label_max, self._max_length)
-        form.addRow(self._label_target, self._target)
-        form.addRow(self._label_evaluations, self._max_evaluations)
-        form.addRow(self._label_tolerance, self._tolerance)
+        self._form_layout = QFormLayout()
+        self._form_layout.addRow(self._label_objective, self._objective)
+        self._form_layout.addRow(self._label_min, self._min_length)
+        self._form_layout.addRow(self._label_max, self._max_length)
+        self._form_layout.addRow(self._label_target, self._target)
+        self._form_layout.addRow(self._label_evaluations, self._max_evaluations)
+        self._form_layout.addRow(self._label_tolerance, self._tolerance)
 
         self._evaluations_label = QLabel(translator.t("optimize.evaluations"), self)
         self._evaluations = QTableWidget(0, 7, self)
@@ -155,7 +164,7 @@ class OptimizationDialog(QDialog):
         buttons.addWidget(self._close)
 
         layout = QVBoxLayout(self)
-        layout.addLayout(form)
+        layout.addLayout(self._form_layout)
         layout.addWidget(self._evaluations_label)
         layout.addWidget(self._evaluations, 1)
         layout.addWidget(self._sensitivity_label)
@@ -165,6 +174,7 @@ class OptimizationDialog(QDialog):
         layout.addLayout(buttons)
 
         self._retranslate_tables()
+        self._objective_changed()
         self._update_controls()
 
     @staticmethod
@@ -177,6 +187,9 @@ class OptimizationDialog(QDialog):
 
     def _retranslate_tables(self) -> None:
         t = self._translator.t
+        self._label_objective.setText(t("optimize.objective"))
+        self._objective.setItemText(0, t("optimize.reactance_objective"))
+        self._objective.setItemText(1, t("optimize.min_swr_objective"))
         self._evaluations.setHorizontalHeaderLabels(
             [
                 t("optimize.iteration"),
@@ -208,13 +221,35 @@ class OptimizationDialog(QDialog):
         unit = self._translator.t(length_unit_key(self._unit_system))
         return f"{value:+.3f} {unit}"
 
+    def _objective_value(self) -> OptimizationObjective:
+        return OptimizationObjective(self._objective.currentData())
+
+    def _objective_changed(self) -> None:
+        objective = self._objective_value()
+        is_swr = objective is OptimizationObjective.MIN_SWR
+        self._target.setVisible(not is_swr)
+        self._label_target.setVisible(not is_swr)
+        if is_swr:
+            self._label_tolerance.setText(self._translator.t("optimize.swr_tolerance"))
+            self._tolerance.setDecimals(3)
+            self._tolerance.setValue(0.05)
+            self._tolerance.setSuffix("")
+        else:
+            self._label_tolerance.setText(self._translator.t("optimize.tolerance"))
+            self._tolerance.setDecimals(3)
+            self._tolerance.setValue(0.1)
+            self._tolerance.setSuffix(" Ω")
+
     def _optimization_spec(self) -> LengthOptimizationSpec:
+        objective = self._objective_value()
         return LengthOptimizationSpec(
             min_length_m=length_to_m(self._min_length.value(), self._unit_system),
             max_length_m=length_to_m(self._max_length.value(), self._unit_system),
+            objective=objective,
             target_reactance_ohm=self._target.value(),
             max_evaluations=self._max_evaluations.value(),
             reactance_tolerance_ohm=self._tolerance.value(),
+            swr_tolerance=self._tolerance.value(),
         )
 
     def _start(self) -> None:
@@ -290,6 +325,7 @@ class OptimizationDialog(QDialog):
     def _update_controls(self) -> None:
         running = self._thread is not None
         for widget in (
+            self._objective,
             self._min_length,
             self._max_length,
             self._target,

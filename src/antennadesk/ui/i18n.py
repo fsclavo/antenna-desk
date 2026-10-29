@@ -538,6 +538,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Maximum dimension",
         Language.SPANISH: "Dimensión máxima",
     },
+    "optimize.objective": {
+        Language.ENGLISH: "Objective",
+        Language.SPANISH: "Objetivo",
+    },
+    "optimize.reactance_objective": {
+        Language.ENGLISH: "Target reactance",
+        Language.SPANISH: "Reactancia objetivo",
+    },
+    "optimize.min_swr_objective": {
+        Language.ENGLISH: "Minimum SWR",
+        Language.SPANISH: "SWR mínimo",
+    },
     "optimize.target_reactance": {
         Language.ENGLISH: "Target reactance (Ω)",
         Language.SPANISH: "Reactancia objetivo (Ω)",
@@ -549,6 +561,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize.tolerance": {
         Language.ENGLISH: "Reactance tolerance (Ω)",
         Language.SPANISH: "Tolerancia de reactancia (Ω)",
+    },
+    "optimize.swr_tolerance": {
+        Language.ENGLISH: "SWR tolerance",
+        Language.SPANISH: "Tolerancia de SWR",
     },
     "optimize.run": {
         Language.ENGLISH: "Run optimization",
