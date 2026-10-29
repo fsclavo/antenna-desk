@@ -53,7 +53,8 @@ between those types.
 - [ADR-0003 — Project schema v2 and dipole orientation](docs/ADR/0003-project-schema-v2.md)
 - [ADR-0004 — Simulation run persistence](docs/ADR/0004-simulation-run-persistence.md)
 - [ADR-0005 — Folded dipole and loop templates](docs/ADR/0005-new-wire-geometries.md)
-- [ADR-0006 — Series RLC loads](docs/ADR/0006-series-loads.md)
+- [ADR-0006 — Series and parallel RLC loads](docs/ADR/0006-series-loads.md)
+- [ADR-0007 — Custom wire designs](docs/ADR/0007-custom-wire-designs.md)
 - [NEC engine evaluation](docs/spikes/phase0-solver-evaluation.md)
 - [Phase 0 reproducible spike](spikes/phase0/README.md)
 - [Agent instructions](AGENTS.md)
@@ -75,8 +76,8 @@ between those types.
 - Bounded antenna-dimension optimization for a target reactance, minimum SWR,
   or maximum SWR bandwidth: wire-dipole and folded-dipole element length, or
   loop circumference, with an evaluation log and sensitivity table.
-- Series and parallel RLC loads on wires, with a load editor, NEC `LD 0`/`LD 1`
-  export, and report rows.
+- Custom straight-wire antennas with a coordinate editor, plus series/parallel
+  RLC loads, NEC `LD 0`/`LD 1` export, and report rows.
 - Printable/HTML construction sheet with type-aware dimensions, feed position,
   loads, and simulated result.
 - CSV/PNG export for sweep results and far-field patterns, plus

@@ -611,3 +611,56 @@ def test_edit_loads_applies_series_loads(
 def test_geometry_view_has_a_3d_option(window: MainWindow) -> None:
     assert window._view_combo.count() == 3
     assert window._view_combo.itemData(2) == "3d"
+
+
+def test_new_custom_antenna_is_editable_and_simulatable(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.custom import CustomAntennaParameters
+    from antennadesk.domain.antennas.feed import FeedPoint
+    from antennadesk.domain.antennas.geometry import Point3D
+    from antennadesk.domain.antennas.materials import COPPER
+    from antennadesk.domain.antennas.wire import Wire
+
+    parameters = CustomAntennaParameters(
+        frequency_hz=7_100_000.0,
+        wires=(
+            Wire(
+                id="wire-1",
+                start=Point3D(-5.0, 0.0, 8.0),
+                end=Point3D(5.0, 0.0, 8.0),
+                radius_m=0.001,
+                material=COPPER,
+            ),
+        ),
+        feed=FeedPoint("wire-1", 5.0),
+    )
+
+    class FakeCustomDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> CustomAntennaParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "CustomAntennaDialog", FakeCustomDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Custom", True))
+
+    window.new_custom_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "Custom"
+    assert window._project.designs[0].antenna_type == "custom"
+    assert window._design_stack.currentWidget() is window._custom_panel
+
+    window.simulate()
+    qtbot.waitUntil(lambda: not window._simulating and window._thread is None, timeout=5_000)
+
+    assert window._results._table.rowCount() == 1
+    assert window._status_label.text() == "Simulation completed"
+    window._dirty = False

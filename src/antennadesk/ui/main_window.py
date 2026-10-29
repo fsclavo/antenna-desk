@@ -20,8 +20,10 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMainWindow,
     QMessageBox,
+    QPushButton,
     QScrollArea,
     QSplitter,
+    QStackedWidget,
     QStyle,
     QToolBar,
     QVBoxLayout,
@@ -58,19 +60,28 @@ from ..application.use_cases.update_dipole_design import (
     UpdateDipoleDesign,
     UpdateDipoleDesignCommand,
 )
+from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.design import with_primary_dimension
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
-from ..domain.antennas.load import SeriesLoad
+from ..domain.antennas.load import LumpedLoad
 from ..domain.common.time import utc_now
 from ..domain.environment.ground import GroundModel
 from ..domain.projects.project import DesignVariant, Project
+from ..domain.simulation.far_field import FarFieldRequest
+from ..domain.simulation.frequency import FrequencyPlan
 from ..domain.simulation.result import SimulationResult, SimulationStatus
+from ..domain.simulation.segmentation import (
+    SegmentationPolicy,
+    aligned_policy_for_model,
+)
+from ..domain.simulation.spec import SimulationSpec
 from ..persistence.constants import MAX_PROJECT_SIZE_BYTES, PROJECT_SIZE_WARNING_BYTES
 from ..reporting.csv_export import write_csv, write_pattern_csv
 from ..reporting.html_report import write_html_report
 from ..simulation.nec2.solver import Nec2cSolver
 from .dialogs.comparison_dialog import ComparisonDialog
 from .dialogs.construction_dialog import ConstructionDialog
+from .dialogs.custom_antenna_dialog import CustomAntennaDialog
 from .dialogs.loads_dialog import LoadsDialog
 from .dialogs.optimization_dialog import OptimizationDialog
 from .i18n import Language, Translator
@@ -109,7 +120,7 @@ class MainWindow(QMainWindow):
         self._last_result: SimulationResult | None = None
         self._simulation_results: dict[UUID, SimulationResult] = {}
         self._simulation_design_id: UUID | None = None
-        self._loads: tuple[SeriesLoad, ...] = ()
+        self._loads: tuple[LumpedLoad, ...] = ()
         self._last_status_key = "status.ready"
         self._thread: QThread | None = None
         self._worker: SimulationWorker | None = None
@@ -124,6 +135,8 @@ class MainWindow(QMainWindow):
         self._new_action = QAction(self)
         self._new_action.setShortcut(QKeySequence.StandardKey.New)
         self._new_action.triggered.connect(lambda: self.new_antenna())
+        self._new_custom_action = QAction(self)
+        self._new_custom_action.triggered.connect(lambda: self.new_custom_antenna())
 
         self._open_action = QAction(self)
         self._open_action.setShortcut(QKeySequence.StandardKey.Open)
@@ -161,6 +174,8 @@ class MainWindow(QMainWindow):
         self._construction_action.triggered.connect(lambda: self.show_construction_sheet())
         self._loads_action = QAction(self)
         self._loads_action.triggered.connect(lambda: self.edit_loads())
+        self._edit_custom_action = QAction(self)
+        self._edit_custom_action.triggered.connect(lambda: self.edit_custom_wires())
         self._export_csv_action = QAction(self)
         self._export_csv_action.triggered.connect(lambda: self.export_csv())
         self._export_pattern_csv_action = QAction(self)
@@ -223,11 +238,27 @@ class MainWindow(QMainWindow):
         self._form.apply_requested.connect(lambda: self.apply_design())
         self._form.optimize_requested.connect(lambda: self.optimize_length())
         self._form.changed.connect(self._on_form_changed)
-        form_scroll = QScrollArea(self)
+        self._form_scroll = QScrollArea(self)
+        form_scroll = self._form_scroll
         form_scroll.setWidgetResizable(True)
         form_scroll.setWidget(self._form)
         form_scroll.setMinimumWidth(340)
         form_scroll.setMaximumWidth(480)
+        self._custom_panel = QWidget(self)
+        custom_layout = QVBoxLayout(self._custom_panel)
+        self._custom_title = QLabel(self._custom_panel)
+        self._custom_title.setStyleSheet("font-weight: bold;")
+        self._custom_summary = QLabel(self._custom_panel)
+        self._custom_summary.setWordWrap(True)
+        self._custom_edit = QPushButton(self._custom_panel)
+        self._custom_edit.clicked.connect(lambda: self.edit_custom_wires())
+        custom_layout.addWidget(self._custom_title)
+        custom_layout.addWidget(self._custom_summary)
+        custom_layout.addWidget(self._custom_edit)
+        custom_layout.addStretch(1)
+        self._design_stack = QStackedWidget(self)
+        self._design_stack.addWidget(form_scroll)
+        self._design_stack.addWidget(self._custom_panel)
 
         self._geometry = GeometryView(self._translator, self._unit_system)
         self._geometry.setMinimumHeight(300)
@@ -275,7 +306,7 @@ class MainWindow(QMainWindow):
         right_splitter.setSizes([400, 600])
 
         main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
-        main_splitter.addWidget(form_scroll)
+        main_splitter.addWidget(self._design_stack)
         main_splitter.addWidget(right_splitter)
         main_splitter.setStretchFactor(0, 0)
         main_splitter.setStretchFactor(1, 1)
@@ -310,6 +341,7 @@ class MainWindow(QMainWindow):
 
         self._file_menu = self.menuBar().addMenu("")
         self._file_menu.addAction(self._new_action)
+        self._file_menu.addAction(self._new_custom_action)
         self._file_menu.addAction(self._open_action)
         self._file_menu.addAction(self._save_action)
         self._file_menu.addAction(self._save_as_action)
@@ -322,6 +354,7 @@ class MainWindow(QMainWindow):
         self._file_menu.addAction(self._optimize_action)
         self._file_menu.addAction(self._construction_action)
         self._file_menu.addAction(self._loads_action)
+        self._file_menu.addAction(self._edit_custom_action)
         self._file_menu.addSeparator()
         self._file_menu.addAction(self._export_csv_action)
         self._file_menu.addAction(self._export_pattern_csv_action)
@@ -353,6 +386,7 @@ class MainWindow(QMainWindow):
     def retranslate(self) -> None:
         self._update_title()
         self._new_action.setText(self._translator.t("action.new"))
+        self._new_custom_action.setText(self._translator.t("action.new_custom"))
         self._open_action.setText(self._translator.t("action.open"))
         self._save_action.setText(self._translator.t("action.save"))
         self._save_as_action.setText(self._translator.t("action.save_as"))
@@ -366,6 +400,9 @@ class MainWindow(QMainWindow):
         self._optimize_action.setText(self._translator.t("action.optimize"))
         self._construction_action.setText(self._translator.t("action.construction"))
         self._loads_action.setText(self._translator.t("action.loads"))
+        self._edit_custom_action.setText(self._translator.t("action.edit_custom"))
+        self._custom_title.setText(self._translator.t("custom.panel_title"))
+        self._custom_edit.setText(self._translator.t("action.edit_custom"))
         self._export_csv_action.setText(self._translator.t("action.export_csv"))
         self._export_pattern_csv_action.setText(self._translator.t("action.export_pattern_csv"))
         self._export_pattern_png_action.setText(self._translator.t("action.export_pattern_png"))
@@ -453,8 +490,16 @@ class MainWindow(QMainWindow):
         self._rename_variant_action.setEnabled(idle and has_designs)
         self._delete_variant_action.setEnabled(idle and has_multiple)
         self._compare_action.setEnabled(idle and has_multiple)
-        self._optimize_action.setEnabled(idle and has_project and self._solver is not None)
+        parameters = None
+        if self._project is not None and self._design_id is not None:
+            parameters = self._project.design_by_id(self._design_id).parameters
+        is_custom = isinstance(parameters, CustomAntennaParameters)
+        self._optimize_action.setEnabled(
+            idle and has_project and not is_custom and self._solver is not None
+        )
         self._loads_action.setEnabled(idle and has_project)
+        self._edit_custom_action.setEnabled(idle and has_project and is_custom)
+        self._new_custom_action.setEnabled(idle)
         self._export_csv_action.setEnabled(idle and has_result)
         self._export_pattern_csv_action.setEnabled(idle and has_result)
         self._export_pattern_png_action.setEnabled(idle and has_result)
@@ -466,7 +511,9 @@ class MainWindow(QMainWindow):
         self._compact_history_action.setEnabled(idle and has_history)
         self._simulate_action.setEnabled(idle and has_project and self._solver is not None)
         self._cancel_action.setEnabled(self._simulating and self._cancel_token is not None)
-        self._form.setEnabled(idle and has_project)
+        self._form.setEnabled(idle and has_project and not is_custom)
+        self._design_stack.setEnabled(idle and has_project)
+        self._custom_edit.setEnabled(idle and has_project and is_custom)
         self._project_name.setEnabled(idle and has_project)
         self._variant_combo.setEnabled(idle and has_designs)
 
@@ -502,7 +549,18 @@ class MainWindow(QMainWindow):
         self._design_id = design_id
         self._form_dirty = False
         self._loads = design.antenna.loads
-        self._form.set_parameters(design.parameters, reset_sweep=True)
+        if isinstance(design.parameters, CustomAntennaParameters):
+            self._design_stack.setCurrentWidget(self._custom_panel)
+            self._custom_summary.setText(
+                self._translator.t(
+                    "custom.summary",
+                    count=len(design.antenna.wires),
+                    length=f"{sum(wire.length_m for wire in design.antenna.wires):.3f} m",
+                )
+            )
+        else:
+            self._design_stack.setCurrentWidget(self._form_scroll)
+            self._form.set_parameters(design.parameters, reset_sweep=True)
         self._results.set_design(design)
         self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
         self._auto_select_view(design)
@@ -607,6 +665,21 @@ class MainWindow(QMainWindow):
         if not project_name:
             raise ValueError("project name must not be empty")
         previous_design = self._project.design_by_id(self._design_id)
+        if isinstance(previous_design.parameters, CustomAntennaParameters):
+            design = previous_design
+            if design.antenna.loads != self._loads:
+                design = design.with_loads(self._loads)
+                self._project = self._project.with_design(design, updated_at=utc_now())
+            self._project = replace(self._project, name=project_name)
+            self._results.set_design(design)
+            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._auto_select_view(design)
+            self._form_dirty = False
+            self._dirty = True
+            self._update_title()
+            self._update_actions()
+            self._update_height_control()
+            return self._project
         parameters = self._form.parameters()
         updated = UpdateDipoleDesign().execute(
             UpdateDipoleDesignCommand(
@@ -661,7 +734,11 @@ class MainWindow(QMainWindow):
             if self._design_id is None:
                 raise ValueError(self._translator.t("error.no_project"))
             design = project.design_by_id(self._design_id)
-            spec = self._form.simulation_spec()
+            spec = (
+                self._custom_simulation_spec(design.parameters)
+                if isinstance(design.parameters, CustomAntennaParameters)
+                else self._form.simulation_spec()
+            )
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
@@ -751,6 +828,98 @@ class MainWindow(QMainWindow):
         self._last_status_key = "status.cancelling"
         self._status_label.setText(self._translator.t("status.cancelling"))
         self._cancel_action.setEnabled(False)
+
+    def _custom_simulation_spec(
+        self,
+        parameters: CustomAntennaParameters,
+    ) -> SimulationSpec:
+        model = parameters.to_antenna(name="Custom")
+        far_field = FarFieldRequest(
+            enabled=True,
+            theta_start_deg=0.0,
+            theta_stop_deg=(180.0 if parameters.ground.kind.value == "free_space" else 90.0),
+            theta_count=19 if parameters.ground.kind.value == "free_space" else 10,
+            phi_start_deg=0.0,
+            phi_stop_deg=360.0,
+            phi_count=37,
+        )
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
+            segmentation=aligned_policy_for_model(
+                model,
+                parameters.frequency_hz,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field,
+        )
+
+    def new_custom_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        name, accepted = QInputDialog.getText(
+            self,
+            self._translator.t("custom.title"),
+            self._translator.t("field.project_name"),
+            text="Custom antenna",
+        )
+        if not accepted:
+            return
+        dialog = CustomAntennaDialog(self._translator, self._unit_system, parent=self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            project = CreateDipoleProject().execute(
+                CreateDipoleProjectCommand(
+                    project_name=name.strip() or "Custom antenna",
+                    variant_name="Initial",
+                    parameters=dialog.result_parameters(),
+                )
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+
+    def edit_custom_wires(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        design = self._project.design_by_id(self._design_id)
+        if not isinstance(design.parameters, CustomAntennaParameters):
+            self._show_error(
+                self._translator.t("error.invalid_design", message="not a custom antenna")
+            )
+            return
+        dialog = CustomAntennaDialog(
+            self._translator,
+            self._unit_system,
+            design.parameters,
+            self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            updated_design = design.with_parameters(dialog.result_parameters())
+            self._project = self._project.with_design(updated_design, updated_at=utc_now())
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._loads = updated_design.antenna.loads
+        self._form_dirty = False
+        self._dirty = True
+        self._simulation_results.pop(self._design_id, None)
+        self._results.set_result(None)
+        self._results.set_design(updated_design)
+        self._geometry.set_model(updated_design.antenna, antenna_type=updated_design.antenna_type)
+        self._custom_summary.setText(
+            self._translator.t(
+                "custom.summary",
+                count=len(updated_design.antenna.wires),
+                length=f"{sum(wire.length_m for wire in updated_design.antenna.wires):.3f} m",
+            )
+        )
+        self._update_title()
+        self._update_actions()
 
     def new_antenna(self) -> None:
         if not self._maybe_save_changes():

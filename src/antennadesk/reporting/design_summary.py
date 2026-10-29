@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
@@ -27,6 +28,21 @@ def design_summary_rows(
     rows: list[tuple[str, str]] = [
         ("Frequency", f"{parameters.frequency_hz / 1e6:.6f} MHz"),
     ]
+    if isinstance(parameters, CustomAntennaParameters):
+        heights = [point.z_m for wire in parameters.wires for point in (wire.start, wire.end)]
+        materials = ", ".join(sorted({wire.material.name for wire in parameters.wires}))
+        rows.extend(
+            [
+                ("Type", "custom wires"),
+                ("Wires", str(len(parameters.wires))),
+                ("Total conductor", f"{sum(wire.length_m for wire in parameters.wires):.4f} m"),
+                ("Min height", f"{min(heights):.4f} m"),
+                ("Max height", f"{max(heights):.4f} m"),
+                ("Materials", materials),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        return tuple(rows)
     if isinstance(parameters, DipoleParameters):
         height_label = (
             "Base height" if parameters.orientation is DipoleOrientation.VERTICAL else "Wire height"

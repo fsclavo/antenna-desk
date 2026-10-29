@@ -160,3 +160,31 @@ def test_parallel_load_round_trips_with_kind() -> None:
 
     assert document.project.designs[0].antenna.loads[0].kind.value == "parallel"
     assert restored.designs[0].antenna.loads == (load,)
+
+
+def test_custom_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.custom import CustomAntennaParameters
+    from antennadesk.domain.antennas.feed import FeedPoint
+    from antennadesk.domain.antennas.geometry import Point3D
+    from antennadesk.domain.antennas.materials import COPPER
+    from antennadesk.domain.antennas.wire import Wire
+
+    wire = Wire(
+        id="wire-1",
+        start=Point3D(-5.0, 0.0, 8.0),
+        end=Point3D(5.0, 0.0, 8.0),
+        radius_m=0.001,
+        material=COPPER,
+    )
+    parameters = CustomAntennaParameters(
+        frequency_hz=7_100_000.0,
+        wires=(wire,),
+        feed=FeedPoint("wire-1", 5.0),
+    )
+    original = _project(parameters, "Custom")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "custom"

@@ -144,6 +144,8 @@ Phase 6 adds tests for:
   equal-conductor folded-dipole gain/pattern and 4× resistance properties.
 - Pattern CSV export with one row per far-field point and PNG export of the
   current pattern view.
+- Custom wire parameters, design consistency, persistence round trip, editor,
+  and custom-project simulation flow.
 - Isometric 3D geometry rendering and the 3D view selector.
 - Polar lobe rendering from far-field points, with selectable azimuth and
   elevation cuts, plus the projected 3D pattern wireframe.
@@ -159,7 +161,7 @@ Phase 6 adds tests for:
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 349 tests with the solver enabled. The twelve solver
+The suite currently has 356 tests with the solver enabled. The twelve solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.

@@ -12,6 +12,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..domain.antennas.antenna import AntennaModel
+from ..domain.antennas.custom import ANTENNA_TYPE_CUSTOM, CustomAntennaParameters
 from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import (
     ANTENNA_TYPE_WIRE_DIPOLE,
@@ -160,6 +161,14 @@ class LoopParametersPayload(StrictModel):
     ground: GroundPayload
 
 
+class CustomParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    wires: list[WirePayload] = Field(min_length=1)
+    feed: FeedPayload
+    ground: GroundPayload
+    loads: list[LoadPayload] = Field(default_factory=list)
+
+
 class FrequencyPlanPayload(StrictModel):
     start_hz: float = Field(gt=0.0)
     stop_hz: float = Field(gt=0.0)
@@ -283,7 +292,12 @@ class SimulationRunPayload(StrictModel):
     result: SimulationResultPayload
 
 
-ParameterPayload = DipoleParametersPayload | FoldedDipoleParametersPayload | LoopParametersPayload
+ParameterPayload = (
+    DipoleParametersPayload
+    | FoldedDipoleParametersPayload
+    | LoopParametersPayload
+    | CustomParametersPayload
+)
 
 
 def _payload_antenna_type(value: ParameterPayload) -> str:
@@ -291,6 +305,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_WIRE_DIPOLE
     if isinstance(value, FoldedDipoleParametersPayload):
         return ANTENNA_TYPE_FOLDED_DIPOLE
+    if isinstance(value, CustomParametersPayload):
+        return ANTENNA_TYPE_CUSTOM
     return ANTENNA_TYPE_LOOP
 
 
@@ -301,6 +317,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return FoldedDipoleParametersPayload
     if antenna_type == ANTENNA_TYPE_LOOP:
         return LoopParametersPayload
+    if antenna_type == ANTENNA_TYPE_CUSTOM:
+        return CustomParametersPayload
     return None
 
 
@@ -488,7 +506,21 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _folded_parameters_from_domain(value)
     if isinstance(value, LoopParameters):
         return _loop_parameters_from_domain(value)
+    if isinstance(value, CustomAntennaParameters):
+        return _custom_parameters_from_domain(value)
     raise TypeError(f"unsupported antenna parameters: {type(value)!r}")
+
+
+def _custom_parameters_from_domain(
+    value: CustomAntennaParameters,
+) -> CustomParametersPayload:
+    return CustomParametersPayload(
+        frequency_hz=value.frequency_hz,
+        wires=[_wire_from_domain(wire) for wire in value.wires],
+        feed=_feed_from_domain(value.feed),
+        ground=_ground_from_domain(value.ground),
+        loads=[_load_from_domain(load) for load in value.loads],
+    )
 
 
 def _frequency_plan_from_domain(value: FrequencyPlan) -> FrequencyPlanPayload:
@@ -790,7 +822,21 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, LoopParametersPayload):
             raise ValueError("loop parameters have the wrong shape")
         return _loop_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_CUSTOM:
+        if not isinstance(value.parameters, CustomParametersPayload):
+            raise ValueError("custom parameters have the wrong shape")
+        return _custom_parameters_to_domain(value.parameters)
     raise ValueError(f"unsupported antenna type: {value.antenna_type}")
+
+
+def _custom_parameters_to_domain(value: CustomParametersPayload) -> CustomAntennaParameters:
+    return CustomAntennaParameters(
+        frequency_hz=value.frequency_hz,
+        wires=tuple(_wire_to_domain(wire) for wire in value.wires),
+        feed=_feed_to_domain(value.feed),
+        ground=_ground_to_domain(value.ground),
+        loads=tuple(_load_to_domain(load) for load in value.loads),
+    )
 
 
 def _frequency_plan_to_domain(value: FrequencyPlanPayload) -> FrequencyPlan:

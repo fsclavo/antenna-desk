@@ -135,11 +135,19 @@ closed polygon in a vertical plane. `height_m` is the bottom above ground;
 around the vertical axis. The feed is at the midpoint of the first side. A
 square loop uses four sides; a larger side count approximates a circular loop.
 
+### CustomAntennaParameters
+
+User-defined straight wires with a frequency, feed, ground, and optional loads.
+It is the escape hatch for geometries outside the guided templates. It has no
+single primary dimension, so length optimization is not available. Its wire,
+feed, and load rules are validated by `AntennaModel`.
+
 ### AntennaDesignParameters
 
 `AntennaDesignParameters` is the union of `DipoleParameters`,
-`FoldedDipoleParameters`, and `LoopParameters`. `antenna_type_for()` maps a
-parameter object to `wire_dipole`, `folded_dipole`, or `loop`.
+`FoldedDipoleParameters`, `LoopParameters`, and `CustomAntennaParameters`.
+`antenna_type_for()` maps a parameter object to `wire_dipole`, `folded_dipole`,
+`loop`, or `custom`.
 
 ### DesignVariant
 

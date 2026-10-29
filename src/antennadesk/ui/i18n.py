@@ -597,6 +597,54 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Save construction sheet",
         Language.SPANISH: "Guardar hoja de construcción",
     },
+    "custom.title": {
+        Language.ENGLISH: "Custom wire antenna",
+        Language.SPANISH: "Antena de hilos personalizada",
+    },
+    "custom.metric_hint": {
+        Language.ENGLISH: "Coordinates use the application length unit; wire radius is in mm.",
+        Language.SPANISH: "Las coordenadas usan la unidad de longitud de la aplicación; el radio está en mm.",
+    },
+    "custom.id": {Language.ENGLISH: "ID", Language.SPANISH: "ID"},
+    "custom.start_x": {Language.ENGLISH: "Start X", Language.SPANISH: "Inicio X"},
+    "custom.start_y": {Language.ENGLISH: "Start Y", Language.SPANISH: "Inicio Y"},
+    "custom.start_z": {Language.ENGLISH: "Start Z", Language.SPANISH: "Inicio Z"},
+    "custom.end_x": {Language.ENGLISH: "End X", Language.SPANISH: "Fin X"},
+    "custom.end_y": {Language.ENGLISH: "End Y", Language.SPANISH: "Fin Y"},
+    "custom.end_z": {Language.ENGLISH: "End Z", Language.SPANISH: "Fin Z"},
+    "custom.radius": {Language.ENGLISH: "Radius (mm)", Language.SPANISH: "Radio (mm)"},
+    "custom.add_wire": {
+        Language.ENGLISH: "Add wire",
+        Language.SPANISH: "Agregar hilo",
+    },
+    "custom.remove_wire": {
+        Language.ENGLISH: "Remove wires",
+        Language.SPANISH: "Quitar hilos",
+    },
+    "custom.feed_wire": {
+        Language.ENGLISH: "Feed wire",
+        Language.SPANISH: "Hilo de alimentación",
+    },
+    "custom.feed_offset": {
+        Language.ENGLISH: "Feed offset",
+        Language.SPANISH: "Posición de alimentación",
+    },
+    "action.new_custom": {
+        Language.ENGLISH: "New Custom Antenna...",
+        Language.SPANISH: "Nueva antena personalizada...",
+    },
+    "action.edit_custom": {
+        Language.ENGLISH: "Edit Custom Wires...",
+        Language.SPANISH: "Editar hilos personalizados...",
+    },
+    "custom.panel_title": {
+        Language.ENGLISH: "Custom wires",
+        Language.SPANISH: "Hilos personalizados",
+    },
+    "custom.summary": {
+        Language.ENGLISH: "{count} wires · {length} total conductor",
+        Language.SPANISH: "{count} hilos · {length} de conductor total",
+    },
     "loads.title": {
         Language.ENGLISH: "Series Loads",
         Language.SPANISH: "Cargas en serie",
