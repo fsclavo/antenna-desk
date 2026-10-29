@@ -36,6 +36,18 @@ values.
 A straight conductor with an identifier, start point, end point, radius, and
 material. The wire must have non-zero length and a positive radius.
 
+### SeriesLoad
+
+A series RLC load at a position along a wire:
+
+- `id`
+- `wire_id`
+- `offset_m` from the wire start
+- `resistance_ohm`, `inductance_h`, `capacitance_f` (non-negative)
+- At least one of R, L, or C must be non-zero.
+
+The load is mapped to one solver segment by the NEC adapter.
+
 ### FeedPoint
 
 A feed point on a wire, expressed as an offset in meters from the wire start.
@@ -65,6 +77,7 @@ frequency, one or more wires, one feed point, and an environment. Invariants:
 - Unique wire identifiers.
 - The feed references an existing wire.
 - The feed offset is inside the wire.
+- Every load references an existing wire and is inside that wire.
 - All numeric values are finite.
 
 ### DipoleParameters
@@ -233,6 +246,8 @@ the application writes version 3.
   SWR is stored as `null` when it is infinite.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
+- Series RLC loads are an optional antenna list in version 3; missing loads
+  deserialize as an empty list.
 - Unknown fields are rejected.
 - Unknown formats are rejected.
 - Future schema versions are rejected with a clear error.
@@ -242,7 +257,8 @@ the application writes version 3.
 ## Current limitations
 
 - Wire dipoles, folded dipoles, and regular-polygon loops are implemented.
-- No loads, networks, radials, or free-form conductors.
+- Series RLC loads are supported on one wire segment; no networks, radials, or
+  free-form conductors.
 - Folded and loop geometry are parametric templates; free-form wire editing is
   not implemented.
 - VNA CSV import and measurement records are not implemented yet.

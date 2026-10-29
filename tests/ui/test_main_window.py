@@ -579,3 +579,30 @@ def test_save_warns_and_can_cancel_a_large_project(
     assert window._save_to(path) is False
     assert path.exists() is False
     window._dirty = False
+
+
+def test_edit_loads_applies_series_loads(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.load import SeriesLoad
+
+    load = SeriesLoad("load-1", "radiator", 10.0, resistance_ohm=50.0)
+
+    class FakeLoadsDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def loads(self) -> tuple[SeriesLoad, ...]:
+            return (load,)
+
+    monkeypatch.setattr(main_window_module, "LoadsDialog", FakeLoadsDialog)
+    window.edit_loads()
+
+    assert window._project is not None
+    assert window._project.designs[0].antenna.loads == (load,)
+    assert window._dirty is True
+    window._dirty = False

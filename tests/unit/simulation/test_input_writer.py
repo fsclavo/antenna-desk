@@ -148,3 +148,20 @@ def test_conductor_loss_card_is_emitted() -> None:
     )
 
     assert "LD 5 1 0 0 58000000.000000000" in deck.text
+
+
+def test_series_load_card_is_emitted_on_the_mapped_segment() -> None:
+    from antennadesk.domain.antennas.load import SeriesLoad
+
+    load = SeriesLoad(
+        id="load-1",
+        wire_id="radiator",
+        offset_m=0.25,
+        resistance_ohm=25.0,
+        inductance_h=12e-6,
+        capacitance_f=30e-12,
+    )
+    model = _manual_model().with_loads((load,))
+    deck = write_nec2_input(model, _spec(segments=7))
+
+    assert "LD 0 1 4 4 25.000000000 0.000012000 0.000000000030" in deck.text

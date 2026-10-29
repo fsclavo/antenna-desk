@@ -138,6 +138,8 @@ Phase 6 adds tests for:
   tooltip.
 - Native PDF construction-sheet and simulation-report output with valid PDF
   headers, chart images, tables, and non-trivial page content.
+- Series-load domain validation, design consistency, NEC `LD 0` export,
+  persistence round trip, load editor, report rows, and UI application.
 - Compaction of simulation history to keep the latest run per design, plus a
   save-time warning near the project size limit.
 - Type-aware construction sheets, HTML reports, and mixed-type comparison.
@@ -150,7 +152,7 @@ Phase 6 adds tests for:
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 325 tests with the solver enabled. The twelve solver
+The suite currently has 340 tests with the solver enabled. The twelve solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.
@@ -187,7 +189,8 @@ engine version, configuration, and explicit tolerances.
 - Relative permeability is not emitted to NEC. Conductor conductivity is
   emitted when `SimulationSpec.include_conductor_losses` is true.
 - Far-field values are NEC power gains in dB. Realized gain is not computed.
-- No loads, networks, transmission lines, or radial ground screens.
+- Series RLC loads are supported on one segment. Networks, transmission lines,
+  and radial ground screens are not implemented.
 - Project files store normalized results and raw solver text; many long runs
   can reach the 10 MB project-size limit.
 - The GUI supports wire dipoles, folded dipoles, and regular-polygon loops.

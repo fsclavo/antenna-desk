@@ -79,6 +79,19 @@ def write_nec2_input(model: AntennaModel, spec: SimulationSpec) -> Nec2Deck:
                 f"{_format(segmentation.wire.material.conductivity_s_per_m)}"
             )
 
+    for load in model.loads:
+        segmentation = layout.wire_segmentation(load.wire_id)
+        index = int(load.offset_m / segmentation.segment_length_m)
+        index = min(max(index, 0), segmentation.segments - 1)
+        segment = segmentation.first_segment + index
+        lines.append(
+            "LD 0 "
+            f"{segmentation.tag} {segment} {segment} "
+            f"{_format(load.resistance_ohm)} "
+            f"{_format(load.inductance_h)} "
+            f"{_format(load.capacitance_f, 12)}"
+        )
+
     frequency_plan = spec.frequency_plan
     lines.append(
         "FR 0 "

@@ -24,6 +24,7 @@ from ..domain.antennas.folded_dipole import (
     FoldedDipoleParameters,
 )
 from ..domain.antennas.geometry import Point3D
+from ..domain.antennas.load import SeriesLoad
 from ..domain.antennas.loop import (
     ANTENNA_TYPE_LOOP,
     MAX_SIDES,
@@ -107,12 +108,22 @@ class EnvironmentPayload(StrictModel):
     ground: GroundPayload
 
 
+class LoadPayload(StrictModel):
+    id: str = Field(min_length=1)
+    wire_id: str = Field(min_length=1)
+    offset_m: float = Field(ge=0.0)
+    resistance_ohm: float = Field(default=0.0, ge=0.0)
+    inductance_h: float = Field(default=0.0, ge=0.0)
+    capacitance_f: float = Field(default=0.0, ge=0.0)
+
+
 class AntennaPayload(StrictModel):
     name: str = Field(min_length=1)
     design_frequency_hz: float = Field(gt=0.0)
     wires: list[WirePayload] = Field(min_length=1)
     feed: FeedPayload
     environment: EnvironmentPayload
+    loads: list[LoadPayload] = Field(default_factory=list)
 
 
 class DipoleParametersPayload(StrictModel):
@@ -405,6 +416,17 @@ def _environment_from_domain(value: Environment) -> EnvironmentPayload:
     return EnvironmentPayload(ground=_ground_from_domain(value.ground))
 
 
+def _load_from_domain(value: SeriesLoad) -> LoadPayload:
+    return LoadPayload(
+        id=value.id,
+        wire_id=value.wire_id,
+        offset_m=value.offset_m,
+        resistance_ohm=value.resistance_ohm,
+        inductance_h=value.inductance_h,
+        capacitance_f=value.capacitance_f,
+    )
+
+
 def _antenna_from_domain(value: AntennaModel) -> AntennaPayload:
     return AntennaPayload(
         name=value.name,
@@ -412,6 +434,7 @@ def _antenna_from_domain(value: AntennaModel) -> AntennaPayload:
         wires=[_wire_from_domain(wire) for wire in value.wires],
         feed=_feed_from_domain(value.feed),
         environment=_environment_from_domain(value.environment),
+        loads=[_load_from_domain(load) for load in value.loads],
     )
 
 
@@ -688,6 +711,17 @@ def _environment_to_domain(value: EnvironmentPayload) -> Environment:
     return Environment(ground=_ground_to_domain(value.ground))
 
 
+def _load_to_domain(value: LoadPayload) -> SeriesLoad:
+    return SeriesLoad(
+        id=value.id,
+        wire_id=value.wire_id,
+        offset_m=value.offset_m,
+        resistance_ohm=value.resistance_ohm,
+        inductance_h=value.inductance_h,
+        capacitance_f=value.capacitance_f,
+    )
+
+
 def _antenna_to_domain(value: AntennaPayload) -> AntennaModel:
     return AntennaModel(
         name=value.name,
@@ -695,6 +729,7 @@ def _antenna_to_domain(value: AntennaPayload) -> AntennaModel:
         wires=tuple(_wire_to_domain(wire) for wire in value.wires),
         feed=_feed_to_domain(value.feed),
         environment=_environment_to_domain(value.environment),
+        loads=tuple(_load_to_domain(load) for load in value.loads),
     )
 
 

@@ -90,8 +90,8 @@ The normalizer:
   execution failures.
 
 The far-field values are NEC **power gains** in dB. With a perfect conductor
-and no loads, power gain equals directivity. When conductor losses are
-enabled, power gain includes them. Realized gain is not computed in Phase 2.
+and no lossy loads, power gain equals directivity. Conductor and resistive-load
+losses are included when enabled. Realized gain is not computed in Phase 2.
 
 ## Reference validation
 
@@ -111,7 +111,8 @@ impedance against the computed value `2.351965` at 50 Ω.
   `SimulationSpec.include_conductor_losses` is true (the default). Set it to
   false to reproduce perfect-conductor reference cases. Relative permeability
   is not emitted.
-- No loads, networks, transmission lines, or radial ground screens.
+- Series RLC loads are emitted as `LD 0` on one segment. Networks,
+  transmission lines, and radial ground screens are not implemented.
 - Only free-space, perfect, and finite ground models are emitted.
 - The segmentation policy is a documented heuristic with optional per-wire
   overrides; explicit segment counts

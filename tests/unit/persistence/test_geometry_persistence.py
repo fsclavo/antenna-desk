@@ -9,6 +9,7 @@ from antennadesk.application.use_cases.create_dipole_project import (
     CreateDipoleProjectCommand,
 )
 from antennadesk.domain.antennas.design import AntennaDesignParameters
+from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.projects.project import Project
@@ -99,3 +100,33 @@ def test_schema_rejects_an_unknown_antenna_type() -> None:
 
     with pytest.raises(ValueError, match="unsupported antenna type"):
         ProjectDocument.model_validate(document)
+
+
+def test_series_loads_round_trip_through_the_schema() -> None:
+    from antennadesk.domain.antennas.load import SeriesLoad
+
+    load = SeriesLoad(
+        id="load-1",
+        wire_id="radiator",
+        offset_m=10.0,
+        resistance_ohm=25.0,
+        inductance_h=12e-6,
+        capacitance_f=30e-12,
+    )
+    original = _project(
+        DipoleParameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=20.0,
+            height_m=8.0,
+        ),
+        "Loaded",
+    )
+    design = original.designs[0].with_loads((load,))
+    project = original.with_design(design, updated_at=original.updated_at)
+
+    document = document_from_project(project)
+    restored = project_from_document(document)
+
+    assert document.project.designs[0].antenna.loads[0].capacitance_f == pytest.approx(30e-12)
+    assert restored.designs[0].antenna.loads == (load,)
+    assert restored == project

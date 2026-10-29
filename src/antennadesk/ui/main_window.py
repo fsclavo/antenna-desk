@@ -60,6 +60,7 @@ from ..application.use_cases.update_dipole_design import (
 )
 from ..domain.antennas.design import with_primary_dimension
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
+from ..domain.antennas.load import SeriesLoad
 from ..domain.common.time import utc_now
 from ..domain.environment.ground import GroundModel
 from ..domain.projects.project import DesignVariant, Project
@@ -70,6 +71,7 @@ from ..reporting.html_report import write_html_report
 from ..simulation.nec2.solver import Nec2cSolver
 from .dialogs.comparison_dialog import ComparisonDialog
 from .dialogs.construction_dialog import ConstructionDialog
+from .dialogs.loads_dialog import LoadsDialog
 from .dialogs.optimization_dialog import OptimizationDialog
 from .i18n import Language, Translator
 from .report_pdf import write_report_pdf
@@ -107,6 +109,7 @@ class MainWindow(QMainWindow):
         self._last_result: SimulationResult | None = None
         self._simulation_results: dict[UUID, SimulationResult] = {}
         self._simulation_design_id: UUID | None = None
+        self._loads: tuple[SeriesLoad, ...] = ()
         self._last_status_key = "status.ready"
         self._thread: QThread | None = None
         self._worker: SimulationWorker | None = None
@@ -156,6 +159,8 @@ class MainWindow(QMainWindow):
         self._optimize_action.triggered.connect(lambda: self.optimize_length())
         self._construction_action = QAction(self)
         self._construction_action.triggered.connect(lambda: self.show_construction_sheet())
+        self._loads_action = QAction(self)
+        self._loads_action.triggered.connect(lambda: self.edit_loads())
         self._export_csv_action = QAction(self)
         self._export_csv_action.triggered.connect(lambda: self.export_csv())
         self._export_html_action = QAction(self)
@@ -311,6 +316,7 @@ class MainWindow(QMainWindow):
         self._file_menu.addAction(self._compare_action)
         self._file_menu.addAction(self._optimize_action)
         self._file_menu.addAction(self._construction_action)
+        self._file_menu.addAction(self._loads_action)
         self._file_menu.addSeparator()
         self._file_menu.addAction(self._export_csv_action)
         self._file_menu.addAction(self._export_html_action)
@@ -352,6 +358,7 @@ class MainWindow(QMainWindow):
         self._compare_action.setText(self._translator.t("action.compare"))
         self._optimize_action.setText(self._translator.t("action.optimize"))
         self._construction_action.setText(self._translator.t("action.construction"))
+        self._loads_action.setText(self._translator.t("action.loads"))
         self._export_csv_action.setText(self._translator.t("action.export_csv"))
         self._export_html_action.setText(self._translator.t("action.export_html"))
         self._export_pdf_action.setText(self._translator.t("action.export_pdf"))
@@ -437,6 +444,7 @@ class MainWindow(QMainWindow):
         self._delete_variant_action.setEnabled(idle and has_multiple)
         self._compare_action.setEnabled(idle and has_multiple)
         self._optimize_action.setEnabled(idle and has_project and self._solver is not None)
+        self._loads_action.setEnabled(idle and has_project)
         self._export_csv_action.setEnabled(idle and has_result)
         self._export_html_action.setEnabled(idle and has_result)
         self._export_pdf_action.setEnabled(idle and has_result)
@@ -481,6 +489,7 @@ class MainWindow(QMainWindow):
         design = self._project.design_by_id(design_id)
         self._design_id = design_id
         self._form_dirty = False
+        self._loads = design.antenna.loads
         self._form.set_parameters(design.parameters, reset_sweep=True)
         self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
         self._auto_select_view(design)
@@ -596,13 +605,18 @@ class MainWindow(QMainWindow):
         updated = replace(updated, name=project_name)
         self._project = updated
         design = updated.design_by_id(self._design_id)
+        if design.antenna.loads != self._loads:
+            design = design.with_loads(self._loads)
+            updated = updated.with_design(design, updated_at=updated.updated_at)
+            self._project = updated
         self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
         self._auto_select_view(design)
         self._project_name_updating = True
         self._project_name.setText(project_name)
         self._project_name_updating = False
         parameters_changed = parameters != previous_design.parameters
-        if parameters_changed:
+        loads_changed = self._loads != previous_design.antenna.loads
+        if parameters_changed or loads_changed:
             self._simulation_results.pop(self._design_id, None)
             self._last_result = None
             self._results.set_result(None)
@@ -1014,6 +1028,33 @@ class MainWindow(QMainWindow):
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
         self.simulate()
+
+    def edit_loads(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        design = self._project.design_by_id(self._design_id)
+        dialog = LoadsDialog(
+            self._translator,
+            self._unit_system,
+            {wire.id: wire.length_m for wire in design.antenna.wires},
+            design.antenna.loads,
+            self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._loads = dialog.loads()
+        self._form_dirty = True
+        self._dirty = True
+        self.apply_design()
+        self._last_status_key = "status.design_changed"
+        self._update_status_text()
 
     def show_construction_sheet(self) -> None:
         if self._project is None or self._design_id is None:

@@ -167,13 +167,14 @@ The second slice adds two multi-wire templates:
 parameters. The canonical model remains the shared `AntennaModel`, so the
 solver adapter does not need geometry-specific branches. Schema version 3 is
 kept: the new payloads are additive, and old `wire_dipole` documents are
-unchanged.
+unchanged. Series RLC loads are optional antenna payloads and are emitted as
+`LD 0` cards by the solver adapter.
 
 The form exposes an antenna-type selector with conditional spacing/sides
 fields. Multi-wire designs switch the geometry view to Plan, where construction
 dimensions live; Elevation shows installation data (height above ground, feed
-height, feed height, and ground line, plus a folded-conductor section). Reports, construction sheets, and comparison
-use type-aware dimensions.
+height, and ground line, plus a folded-conductor section). Reports,
+construction sheets, and comparison use type-aware dimensions.
 
 
 The UI is bilingual through `ui/i18n.py` and supports metric or imperial

@@ -174,7 +174,8 @@ canonical meters and hertz.
 - Horizontal and vertical wire dipoles, folded dipoles, and regular-polygon
   loops are supported. Folded and loop geometry use theoretical sanity checks;
   independent impedance references and VNA CSV import are not implemented yet.
-- No loads, networks, transmission lines, or radial ground screens.
+- Series RLC loads are supported on one wire segment. Networks, transmission
+  lines, and radial ground screens are not implemented.
 - Project files store normalized results and raw solver text; many long runs
   can reach the 10 MB project limit.
 - Simulation reports and construction sheets have native PDF export; HTML

@@ -526,6 +526,33 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Save construction sheet",
         Language.SPANISH: "Guardar hoja de construcción",
     },
+    "loads.title": {
+        Language.ENGLISH: "Series Loads",
+        Language.SPANISH: "Cargas en serie",
+    },
+    "loads.add": {Language.ENGLISH: "Add", Language.SPANISH: "Agregar"},
+    "loads.remove": {Language.ENGLISH: "Remove", Language.SPANISH: "Quitar"},
+    "loads.wire": {Language.ENGLISH: "Wire", Language.SPANISH: "Hilo"},
+    "loads.offset": {
+        Language.ENGLISH: "Position",
+        Language.SPANISH: "Posición",
+    },
+    "loads.resistance": {
+        Language.ENGLISH: "Resistance (Ω)",
+        Language.SPANISH: "Resistencia (Ω)",
+    },
+    "loads.inductance": {
+        Language.ENGLISH: "Inductance (µH)",
+        Language.SPANISH: "Inductancia (µH)",
+    },
+    "loads.capacitance": {
+        Language.ENGLISH: "Capacitance (pF)",
+        Language.SPANISH: "Capacitancia (pF)",
+    },
+    "action.loads": {
+        Language.ENGLISH: "Edit Series Loads...",
+        Language.SPANISH: "Editar cargas en serie...",
+    },
     "optimize.title": {
         Language.ENGLISH: "Optimize Antenna Dimension",
         Language.SPANISH: "Optimizar dimensión de antena",

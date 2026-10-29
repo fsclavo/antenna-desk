@@ -10,6 +10,7 @@ from uuid import UUID
 
 from ..antennas.antenna import AntennaModel
 from ..antennas.design import AntennaDesignParameters, antenna_type_for
+from ..antennas.load import SeriesLoad
 from ..common.time import ensure_utc
 from ..common.validation import Diagnostic, Severity, raise_if_errors
 from ..simulation.run import SimulationRun
@@ -36,7 +37,7 @@ class DesignVariant:
                 f"antenna_type {self.antenna_type!r} does not match "
                 f"the parameter type {expected_type!r}"
             )
-        expected = self.parameters.to_antenna(name=self.antenna.name)
+        expected = self.parameters.to_antenna(name=self.antenna.name).with_loads(self.antenna.loads)
         if expected != self.antenna:
             raise ValueError("antenna geometry is inconsistent with its design parameters")
 
@@ -44,13 +45,16 @@ class DesignVariant:
         self,
         parameters: AntennaDesignParameters,
     ) -> DesignVariant:
-        antenna = parameters.to_antenna(name=self.antenna.name)
+        antenna = parameters.to_antenna(name=self.antenna.name).with_loads(self.antenna.loads)
         return replace(
             self,
             antenna_type=antenna_type_for(parameters),
             parameters=parameters,
             antenna=antenna,
         )
+
+    def with_loads(self, loads: tuple[SeriesLoad, ...]) -> DesignVariant:
+        return replace(self, antenna=self.antenna.with_loads(loads))
 
 
 @dataclass(frozen=True, slots=True)

@@ -11,7 +11,7 @@ from pathlib import Path
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import SimulationResult
-from .design_summary import design_summary_rows
+from .design_summary import design_summary_rows, load_summary_rows
 from .svg_chart import SvgSeries, line_chart_svg
 
 CSS = """
@@ -111,7 +111,10 @@ def render_html_report(
     parameters = design.parameters
     design_rows = "".join(
         f"<tr><th>{_escape(label)}</th><td>{_escape(value)}</td></tr>"
-        for label, value in design_summary_rows(parameters)
+        for label, value in (
+            *design_summary_rows(parameters),
+            *load_summary_rows(design.antenna.loads),
+        )
     )
     spec = result.spec
     segmentation = spec.segmentation

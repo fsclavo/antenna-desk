@@ -137,3 +137,15 @@ def test_loop_construction_sheet(sample_project: Project) -> None:
     assert "Feed side" in sheet
     assert "5.0000 m" in sheet
     assert "8 equal sides" in sheet
+
+
+def test_construction_sheet_lists_series_loads(sample_project: Project) -> None:
+    from antennadesk.domain.antennas.load import SeriesLoad
+
+    load = SeriesLoad("load-1", "radiator", 10.0, resistance_ohm=50.0)
+    design = sample_project.designs[0].with_loads((load,))
+    sheet = render_construction_sheet(sample_project, design, None)
+
+    assert "Load 1" in sheet
+    assert "radiator @ 10.000 m" in sheet
+    assert "R=50 Ω" in sheet

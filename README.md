@@ -53,6 +53,7 @@ between those types.
 - [ADR-0003 — Project schema v2 and dipole orientation](docs/ADR/0003-project-schema-v2.md)
 - [ADR-0004 — Simulation run persistence](docs/ADR/0004-simulation-run-persistence.md)
 - [ADR-0005 — Folded dipole and loop templates](docs/ADR/0005-new-wire-geometries.md)
+- [ADR-0006 — Series RLC loads](docs/ADR/0006-series-loads.md)
 - [NEC engine evaluation](docs/spikes/phase0-solver-evaluation.md)
 - [Phase 0 reproducible spike](spikes/phase0/README.md)
 - [Agent instructions](AGENTS.md)
@@ -72,8 +73,10 @@ between those types.
 - Bounded antenna-dimension optimization for a target reactance, minimum SWR,
   or maximum SWR bandwidth: wire-dipole and folded-dipole element length, or
   loop circumference, with an evaluation log and sensitivity table.
+- Series RLC loads on wires, with a load editor, NEC `LD 0` export, and report
+  rows.
 - Printable/HTML construction sheet with type-aware dimensions, feed position,
-  and simulated result.
+  loads, and simulated result.
 - CSV export and self-contained HTML reports (use the browser print dialog for
   PDF).
 - English and Spanish UI, plus metric and imperial presentation units.
@@ -121,7 +124,8 @@ uv run python scripts/run_reference_simulation.py \
   regular-polygon loops are implemented. Folded and loop templates currently
   have theoretical sanity tests but no published independent impedance
   reference; VNA CSV import and measurement records are not implemented yet.
-- No loads, networks, transmission lines, or radial ground screens.
+- Series RLC loads are supported on one wire segment; networks, transmission
+  lines, and radial ground screens are not implemented.
 - Simulation runs are stored in the project, including raw solver text; the
   native project size limit is 10 MB. Use Compact Simulation History to keep
   only the latest run per variant.
