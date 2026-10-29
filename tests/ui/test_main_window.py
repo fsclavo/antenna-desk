@@ -606,3 +606,8 @@ def test_edit_loads_applies_series_loads(
     assert window._project.designs[0].antenna.loads == (load,)
     assert window._dirty is True
     window._dirty = False
+
+
+def test_geometry_view_has_a_3d_option(window: MainWindow) -> None:
+    assert window._view_combo.count() == 3
+    assert window._view_combo.itemData(2) == "3d"

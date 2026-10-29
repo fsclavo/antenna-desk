@@ -34,6 +34,7 @@ from ..units import UnitSystem, length_from_m, length_unit_key
 class GeometryViewMode(StrEnum):
     ELEVATION = "elevation"
     PLAN = "plan"
+    THREE_D = "3d"
 
 
 class GeometryView(QWidget):
@@ -212,11 +213,143 @@ class GeometryView(QWidget):
         painter.translate(self._pan)
         if self._mode is GeometryViewMode.PLAN:
             self._paint_plan(painter, rect)
+        elif self._mode is GeometryViewMode.THREE_D:
+            self._paint_three_d(painter, rect)
         else:
             self._paint_elevation(painter, rect)
         painter.restore()
         self._suppress_header = False
         self._draw_header(painter, rect, self._last_summary)
+
+    def _paint_three_d(self, painter: QPainter, rect: QRectF) -> None:
+        assert self._model is not None
+        xs = [point.x_m for wire in self._model.wires for point in (wire.start, wire.end)]
+        ys = [point.y_m for wire in self._model.wires for point in (wire.start, wire.end)]
+        zs = [point.z_m for wire in self._model.wires for point in (wire.start, wire.end)]
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+        max_z = max(zs)
+        unit = self._translator.t(length_unit_key(self._unit_system))
+        type_label = self._type_label()
+        summary = self._translator.t(
+            "geometry.3d_summary",
+            type=type_label or self._translator.t("antenna_type.wire_dipole"),
+            count=len(self._model.wires),
+            height=f"{length_from_m(max_z, self._unit_system):.2f} {unit}",
+        )
+        self._draw_header(painter, rect, summary)
+
+        draw_rect = QRectF(
+            rect.left() + 72.0,
+            rect.top() + 82.0,
+            rect.width() - 72.0 - 88.0,
+            rect.height() - 82.0 - 82.0,
+        )
+        if draw_rect.width() < 80.0 or draw_rect.height() < 50.0:
+            return
+        yaw = math.radians(42.0)
+        pitch = math.radians(24.0)
+        cos_yaw, sin_yaw = math.cos(yaw), math.sin(yaw)
+        cos_pitch, sin_pitch = math.cos(pitch), math.sin(pitch)
+
+        projected: list[tuple[float, float]] = []
+        for wire in self._model.wires:
+            for point in (wire.start, wire.end):
+                projected.append(
+                    self._project_3d(
+                        point.x_m, point.y_m, point.z_m, cos_yaw, sin_yaw, cos_pitch, sin_pitch
+                    )
+                )
+        projected.extend(
+            [
+                self._project_3d(min_x, min_y, 0.0, cos_yaw, sin_yaw, cos_pitch, sin_pitch),
+                self._project_3d(max_x, min_y, 0.0, cos_yaw, sin_yaw, cos_pitch, sin_pitch),
+                self._project_3d(min_x, max_y, 0.0, cos_yaw, sin_yaw, cos_pitch, sin_pitch),
+                self._project_3d(max_x, max_y, 0.0, cos_yaw, sin_yaw, cos_pitch, sin_pitch),
+            ]
+        )
+        proj_x = [point[0] for point in projected]
+        proj_y = [point[1] for point in projected]
+        span_x = max(max(proj_x) - min(proj_x), 1e-9)
+        span_y = max(max(proj_y) - min(proj_y), 1e-9)
+        scale = min(draw_rect.width() / span_x, draw_rect.height() / span_y) * 0.76 * self._zoom
+        if scale <= 0.0:
+            return
+        center_proj_x = (min(proj_x) + max(proj_x)) / 2.0
+        center_proj_y = (min(proj_y) + max(proj_y)) / 2.0
+        center = draw_rect.center()
+
+        def screen(x_m: float, y_m: float, z_m: float) -> QPointF:
+            px, py = self._project_3d(x_m, y_m, z_m, cos_yaw, sin_yaw, cos_pitch, sin_pitch)
+            return QPointF(
+                center.x() + (px - center_proj_x) * scale,
+                center.y() - (py - center_proj_y) * scale,
+            )
+
+        painter.setPen(QPen(self._colors.light_line, 1.0, Qt.PenStyle.DotLine))
+        for index in range(5):
+            ratio = index / 4.0
+            x = min_x + (max_x - min_x) * ratio
+            y = min_y + (max_y - min_y) * ratio
+            painter.drawLine(screen(x, min_y, 0.0), screen(x, max_y, 0.0))
+            painter.drawLine(screen(min_x, y, 0.0), screen(max_x, y, 0.0))
+
+        painter.setPen(QPen(self._colors.wire, 2.5))
+        for wire in self._model.wires:
+            painter.drawLine(
+                screen(wire.start.x_m, wire.start.y_m, wire.start.z_m),
+                screen(wire.end.x_m, wire.end.y_m, wire.end.z_m),
+            )
+
+        feed_wire = self._model.feed_wire
+        feed_ratio = min(max(self._model.feed.offset_m / feed_wire.length_m, 0.0), 1.0)
+        feed = screen(
+            feed_wire.start.x_m + (feed_wire.end.x_m - feed_wire.start.x_m) * feed_ratio,
+            feed_wire.start.y_m + (feed_wire.end.y_m - feed_wire.start.y_m) * feed_ratio,
+            feed_wire.start.z_m + (feed_wire.end.z_m - feed_wire.start.z_m) * feed_ratio,
+        )
+        painter.setPen(QPen(self._colors.feed, 2.0))
+        painter.setBrush(self._colors.feed)
+        painter.drawEllipse(feed, 4.0, 4.0)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        self._draw_centered_label(
+            painter,
+            QPointF(feed.x() + 20.0, feed.y() - 12.0),
+            self._translator.t("geometry.feed"),
+            color=self._colors.feed,
+        )
+
+        origin = screen(0.0, 0.0, 0.0)
+        painter.setPen(QPen(self._colors.axis, 1.5))
+        for end, label in (
+            (screen(1.0, 0.0, 0.0), "X"),
+            (screen(0.0, 1.0, 0.0), "Y"),
+            (screen(0.0, 0.0, 1.0), "Z"),
+        ):
+            painter.drawLine(origin, end)
+            self._draw_centered_label(painter, end, label, font_size=7)
+
+        self._draw_scale_bar(
+            painter,
+            x_left=rect.left() + 96.0,
+            bar_y=rect.bottom() - 38.0,
+            scale=scale,
+            unit=unit,
+        )
+
+    @staticmethod
+    def _project_3d(
+        x_m: float,
+        y_m: float,
+        z_m: float,
+        cos_yaw: float,
+        sin_yaw: float,
+        cos_pitch: float,
+        sin_pitch: float,
+    ) -> tuple[float, float]:
+        rotated_x = x_m * cos_yaw - y_m * sin_yaw
+        rotated_y = x_m * sin_yaw + y_m * cos_yaw
+        return rotated_x, rotated_y * sin_pitch - z_m * cos_pitch
 
     def _paint_elevation(self, painter: QPainter, rect: QRectF) -> None:
         assert self._model is not None

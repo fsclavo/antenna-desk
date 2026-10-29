@@ -124,6 +124,11 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "geometry.view": {Language.ENGLISH: "View", Language.SPANISH: "Vista"},
     "geometry.view_elevation": {Language.ENGLISH: "Elevation", Language.SPANISH: "Alzado"},
     "geometry.view_plan": {Language.ENGLISH: "Plan", Language.SPANISH: "Planta"},
+    "geometry.view_3d": {Language.ENGLISH: "3D", Language.SPANISH: "3D"},
+    "geometry.3d_summary": {
+        Language.ENGLISH: "{type} · {count} wires · max height {height}",
+        Language.SPANISH: "{type} · {count} hilos · altura máxima {height}",
+    },
     "geometry.vertical_scale": {
         Language.ENGLISH: "Vertical scale",
         Language.SPANISH: "Escala vertical",

@@ -62,8 +62,8 @@ between those types.
 ## What exists today
 
 - Guided antenna wizard and a main window with a design panel, construction
-  dimensions in Plan view, installation/height details in Elevation view, and
-  results tabs.
+  dimensions in Plan view, installation/height details in Elevation view, an
+  isometric 3D view, and results tabs.
 - Asynchronous simulation with cancellation, timeouts, and diagnostics.
 - Impedance, SWR, frequency-sweep, and far-field pattern charts.
 - Save/open of versioned `.antennadesk` projects with multiple design

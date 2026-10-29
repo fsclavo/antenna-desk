@@ -140,6 +140,7 @@ Phase 6 adds tests for:
   headers, chart images, tables, and non-trivial page content.
 - Series-load domain validation, design consistency, NEC `LD 0` export,
   persistence round trip, load editor, report rows, and UI application.
+- Isometric 3D geometry rendering and the 3D view selector.
 - Compaction of simulation history to keep the latest run per design, plus a
   save-time warning near the project size limit.
 - Type-aware construction sheets, HTML reports, and mixed-type comparison.
@@ -152,7 +153,7 @@ Phase 6 adds tests for:
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 340 tests with the solver enabled. The twelve solver
+The suite currently has 342 tests with the solver enabled. The twelve solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.

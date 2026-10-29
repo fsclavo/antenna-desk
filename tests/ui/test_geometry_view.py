@@ -195,3 +195,11 @@ def test_geometry_view_pans_while_dragging(qtbot: QtBot) -> None:
 
     assert view._pan.x() == pytest.approx(30.0)
     assert view._pan.y() == pytest.approx(25.0)
+
+
+def test_geometry_view_renders_three_d(qtbot: QtBot) -> None:
+    view = _make_view(qtbot)
+    view.set_view_mode(GeometryViewMode.THREE_D)
+    pixmap = view.grab()
+
+    assert _non_white_pixels(pixmap) > 50

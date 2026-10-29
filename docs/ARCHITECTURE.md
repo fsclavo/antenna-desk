@@ -207,7 +207,6 @@ limit, and offers simulation-history compaction.
 
 ## Not implemented yet
 
-- 3D visualization.
 - NEC import and measurement import adapters.
 - Multi-objective optimization, bandwidth/gain objectives, and space
   constraints beyond the min/max length bounds.

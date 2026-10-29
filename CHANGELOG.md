@@ -94,6 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   10 MB native-file limit.
 - Series RLC loads on wires: validation, load editor, design/persistence
   support, NEC `LD 0` export, and report/construction-sheet rows.
+- Isometric 3D geometry view with ground grid, feed marker, axes, and scale.
 - Per-wire segmentation overrides and a feed-aligned count heuristic; the UI
   derives counts from the selected model, gives short folded connectors at
   least three segments, and persists the overrides additively in schema v3.

@@ -56,6 +56,7 @@ the **View** selector to switch between:
   edge-on as a vertical line with its diameter; Plan shows the loop in its own
   plane as a circle with diameter, circumference, and side count. Construction
   dimensions stay in Plan.
+- **3D**: isometric wireframe with ground grid, feed marker, axes, and scale.
 
 Multi-wire designs switch to Plan automatically. A vertical dipole is a point
 in Plan, so its elevation keeps the vertical construction dimensions. The

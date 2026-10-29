@@ -237,6 +237,7 @@ class MainWindow(QMainWindow):
         self._view_combo = QComboBox(self)
         self._view_combo.addItem("", GeometryViewMode.ELEVATION.value)
         self._view_combo.addItem("", GeometryViewMode.PLAN.value)
+        self._view_combo.addItem("", GeometryViewMode.THREE_D.value)
         self._height_label = QLabel(self)
         self._height_combo = QComboBox(self)
         for factor in (1.0, 1.5, 2.0, 3.0):
@@ -378,6 +379,7 @@ class MainWindow(QMainWindow):
         self._view_label.setText(self._translator.t("geometry.view"))
         self._view_combo.setItemText(0, self._translator.t("geometry.view_elevation"))
         self._view_combo.setItemText(1, self._translator.t("geometry.view_plan"))
+        self._view_combo.setItemText(2, self._translator.t("geometry.view_3d"))
         self._height_label.setText(self._translator.t("geometry.vertical_scale"))
         self._zoom_label.setText(self._translator.t("geometry.zoom"))
         self._zoom_combo.setToolTip(self._translator.t("geometry.zoom_hint"))
