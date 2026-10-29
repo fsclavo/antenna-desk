@@ -45,6 +45,10 @@ from ..application.use_cases.delete_design_variant import (
     DeleteDesignVariantCommand,
 )
 from ..application.use_cases.open_project import OpenProject
+from ..application.use_cases.record_simulation_run import (
+    RecordSimulationRun,
+    RecordSimulationRunCommand,
+)
 from ..application.use_cases.rename_design_variant import (
     RenameDesignVariant,
     RenameDesignVariantCommand,
@@ -452,6 +456,11 @@ class MainWindow(QMainWindow):
         self._geometry.set_model(design.antenna)
         self._set_variant_combo(design_id)
         result = self._simulation_results.get(design_id)
+        if result is None and self._project is not None:
+            latest_run = self._project.latest_simulation_run(design_id)
+            if latest_run is not None:
+                result = latest_run.result
+                self._simulation_results[design_id] = result
         self._last_result = result
         self._results.set_result(result)
         self._last_status_key = (
@@ -524,7 +533,11 @@ class MainWindow(QMainWindow):
         self._dirty = dirty
         self._form_dirty = False
         self._last_result = None
-        self._simulation_results.clear()
+        self._simulation_results = {}
+        for project_design in project.designs:
+            latest_run = project.latest_simulation_run(project_design.id)
+            if latest_run is not None:
+                self._simulation_results[project_design.id] = latest_run.result
         self._simulation_design_id = None
         self._results.set_result(None)
         self._project_name_updating = True
@@ -541,6 +554,7 @@ class MainWindow(QMainWindow):
         project_name = self._project_name.text().strip()
         if not project_name:
             raise ValueError("project name must not be empty")
+        previous_design = self._project.design_by_id(self._design_id)
         parameters = self._form.parameters()
         updated = UpdateDipoleDesign().execute(
             UpdateDipoleDesignCommand(
@@ -556,11 +570,13 @@ class MainWindow(QMainWindow):
         self._project_name_updating = True
         self._project_name.setText(project_name)
         self._project_name_updating = False
-        self._simulation_results.pop(self._design_id, None)
+        parameters_changed = parameters != previous_design.parameters
+        if parameters_changed:
+            self._simulation_results.pop(self._design_id, None)
+            self._last_result = None
+            self._results.set_result(None)
         self._form_dirty = False
         self._dirty = True
-        self._last_result = None
-        self._results.set_result(None)
         self._update_title()
         self._update_actions()
         self._update_height_control()
@@ -623,8 +639,22 @@ class MainWindow(QMainWindow):
     def _on_simulation_finished(self, result: SimulationResult) -> None:
         self._simulating = False
         self._cancel_token = None
-        if self._simulation_design_id is not None:
-            self._simulation_results[self._simulation_design_id] = result
+        design_id = self._simulation_design_id
+        if design_id is not None:
+            self._simulation_results[design_id] = result
+            if self._project is not None and result.status in {
+                SimulationStatus.COMPLETED,
+                SimulationStatus.PARTIAL,
+            }:
+                self._project = RecordSimulationRun().execute(
+                    RecordSimulationRunCommand(
+                        project=self._project,
+                        design_id=design_id,
+                        result=result,
+                    )
+                )
+                self._dirty = True
+                self._update_title()
         self._simulation_design_id = None
         self._last_result = result
         self._last_status_key = self._result_status_key(result.status)

@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import math
 from datetime import datetime
 from typing import Self
 from uuid import UUID
@@ -20,9 +21,24 @@ from ..domain.antennas.feed import FeedPoint
 from ..domain.antennas.geometry import Point3D
 from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.wire import Wire
+from ..domain.common.validation import Diagnostic, Severity
 from ..domain.environment.environment import Environment
 from ..domain.environment.ground import GroundKind, GroundModel
 from ..domain.projects.project import DesignVariant, Project
+from ..domain.simulation.far_field import FarFieldRequest
+from ..domain.simulation.frequency import FrequencyPlan
+from ..domain.simulation.result import (
+    CurrentSample,
+    FarFieldPoint,
+    FrequencyResult,
+    PowerBudget,
+    SimulationResult,
+    SimulationStatus,
+)
+from ..domain.simulation.run import SimulationRun
+from ..domain.simulation.segmentation import SegmentationPolicy
+from ..domain.simulation.solver import SolverMetadata
+from ..domain.simulation.spec import SimulationSpec
 from .constants import PROJECT_FORMAT, SCHEMA_VERSION
 
 
@@ -99,6 +115,123 @@ class DipoleParametersPayload(StrictModel):
     ground: GroundPayload
 
 
+class FrequencyPlanPayload(StrictModel):
+    start_hz: float = Field(gt=0.0)
+    stop_hz: float = Field(gt=0.0)
+    count: int = Field(ge=1, le=10_000)
+
+
+class SegmentationPolicyPayload(StrictModel):
+    segments_per_wire: int | None = Field(default=None, ge=1)
+    target_segment_length_wavelengths: float = Field(default=0.02, gt=0.0)
+    min_segments_per_wire: int = Field(default=1, ge=1)
+    max_segments_per_wire: int = Field(default=1_000, ge=1)
+
+
+class FarFieldRequestPayload(StrictModel):
+    enabled: bool = True
+    theta_start_deg: float = 0.0
+    theta_stop_deg: float = 180.0
+    theta_count: int = Field(default=19, ge=1, le=1_000)
+    phi_start_deg: float = 0.0
+    phi_stop_deg: float = 0.0
+    phi_count: int = Field(default=1, ge=1, le=1_000)
+
+
+class SimulationSpecPayload(StrictModel):
+    frequency_plan: FrequencyPlanPayload
+    segmentation: SegmentationPolicyPayload = Field(default_factory=SegmentationPolicyPayload)
+    reference_impedance_ohm: float = Field(default=50.0, gt=0.0)
+    extended_thin_wire_kernel: bool = False
+    include_conductor_losses: bool = True
+    far_field: FarFieldRequestPayload = Field(default_factory=FarFieldRequestPayload)
+    timeout_s: float = Field(default=60.0, gt=0.0)
+
+
+class SolverMetadataPayload(StrictModel):
+    name: str = Field(min_length=1)
+    version: str = Field(min_length=1)
+    executable: str | None = None
+
+
+class DiagnosticPayload(StrictModel):
+    code: str = Field(min_length=1)
+    severity: Severity
+    message: str = Field(min_length=1)
+    field: str | None = None
+
+
+class PowerBudgetPayload(StrictModel):
+    input_w: float
+    radiated_w: float
+    structure_loss_w: float
+    network_loss_w: float
+    efficiency_percent: float
+
+
+class CurrentSamplePayload(StrictModel):
+    segment: int
+    tag: int
+    x_m: float
+    y_m: float
+    z_m: float
+    length_m: float
+    current_real_a: float
+    current_imag_a: float
+    magnitude_a: float
+    phase_deg: float
+
+
+class FarFieldPointPayload(StrictModel):
+    theta_deg: float
+    phi_deg: float
+    gain_vertical_db: float | None = None
+    gain_horizontal_db: float | None = None
+    gain_total_db: float | None = None
+    axial_ratio: float
+    tilt_deg: float
+    polarization: str | None = None
+    e_theta_magnitude_v_per_m: float | None = None
+    e_theta_phase_deg: float | None = None
+    e_phi_magnitude_v_per_m: float | None = None
+    e_phi_phase_deg: float | None = None
+
+
+class FrequencyResultPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    feed_tag: int
+    feed_segment: int
+    impedance_real_ohm: float
+    impedance_imag_ohm: float
+    swr: float | None = None
+    input_power_w: float
+    currents: list[CurrentSamplePayload] = Field(default_factory=list)
+    far_field: list[FarFieldPointPayload] = Field(default_factory=list)
+    power_budget: PowerBudgetPayload | None = None
+
+
+class SimulationResultPayload(StrictModel):
+    status: SimulationStatus
+    spec: SimulationSpecPayload
+    model_fingerprint: str = Field(min_length=1)
+    solver: SolverMetadataPayload
+    frequencies: list[FrequencyResultPayload] = Field(default_factory=list)
+    diagnostics: list[DiagnosticPayload] = Field(default_factory=list)
+    raw_input: str = ""
+    raw_output: str = ""
+    stderr: str = ""
+    duration_s: float = 0.0
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+
+
+class SimulationRunPayload(StrictModel):
+    id: UUID
+    design_id: UUID
+    created_at: datetime
+    result: SimulationResultPayload
+
+
 class DesignPayload(StrictModel):
     id: UUID
     name: str = Field(min_length=1)
@@ -114,6 +247,7 @@ class ProjectPayload(StrictModel):
     created_at: datetime
     updated_at: datetime
     designs: list[DesignPayload] = Field(default_factory=list)
+    simulation_runs: list[SimulationRunPayload] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _validate_timestamps(self) -> Self:
@@ -206,6 +340,153 @@ def _dipole_parameters_from_domain(value: DipoleParameters) -> DipoleParametersP
     )
 
 
+def _frequency_plan_from_domain(value: FrequencyPlan) -> FrequencyPlanPayload:
+    return FrequencyPlanPayload(
+        start_hz=value.start_hz,
+        stop_hz=value.stop_hz,
+        count=value.count,
+    )
+
+
+def _segmentation_from_domain(
+    value: SegmentationPolicy,
+) -> SegmentationPolicyPayload:
+    return SegmentationPolicyPayload(
+        segments_per_wire=value.segments_per_wire,
+        target_segment_length_wavelengths=value.target_segment_length_wavelengths,
+        min_segments_per_wire=value.min_segments_per_wire,
+        max_segments_per_wire=value.max_segments_per_wire,
+    )
+
+
+def _far_field_from_domain(value: FarFieldRequest) -> FarFieldRequestPayload:
+    return FarFieldRequestPayload(
+        enabled=value.enabled,
+        theta_start_deg=value.theta_start_deg,
+        theta_stop_deg=value.theta_stop_deg,
+        theta_count=value.theta_count,
+        phi_start_deg=value.phi_start_deg,
+        phi_stop_deg=value.phi_stop_deg,
+        phi_count=value.phi_count,
+    )
+
+
+def _simulation_spec_from_domain(value: SimulationSpec) -> SimulationSpecPayload:
+    return SimulationSpecPayload(
+        frequency_plan=_frequency_plan_from_domain(value.frequency_plan),
+        segmentation=_segmentation_from_domain(value.segmentation),
+        reference_impedance_ohm=value.reference_impedance_ohm,
+        extended_thin_wire_kernel=value.extended_thin_wire_kernel,
+        include_conductor_losses=value.include_conductor_losses,
+        far_field=_far_field_from_domain(value.far_field),
+        timeout_s=value.timeout_s,
+    )
+
+
+def _solver_from_domain(value: SolverMetadata) -> SolverMetadataPayload:
+    return SolverMetadataPayload(
+        name=value.name,
+        version=value.version,
+        executable=value.executable,
+    )
+
+
+def _diagnostic_from_domain(value: Diagnostic) -> DiagnosticPayload:
+    return DiagnosticPayload(
+        code=value.code,
+        severity=value.severity,
+        message=value.message,
+        field=value.field,
+    )
+
+
+def _power_budget_from_domain(value: PowerBudget) -> PowerBudgetPayload:
+    return PowerBudgetPayload(
+        input_w=value.input_w,
+        radiated_w=value.radiated_w,
+        structure_loss_w=value.structure_loss_w,
+        network_loss_w=value.network_loss_w,
+        efficiency_percent=value.efficiency_percent,
+    )
+
+
+def _current_from_domain(value: CurrentSample) -> CurrentSamplePayload:
+    return CurrentSamplePayload(
+        segment=value.segment,
+        tag=value.tag,
+        x_m=value.x_m,
+        y_m=value.y_m,
+        z_m=value.z_m,
+        length_m=value.length_m,
+        current_real_a=value.current_a.real,
+        current_imag_a=value.current_a.imag,
+        magnitude_a=value.magnitude_a,
+        phase_deg=value.phase_deg,
+    )
+
+
+def _far_field_point_from_domain(value: FarFieldPoint) -> FarFieldPointPayload:
+    return FarFieldPointPayload(
+        theta_deg=value.theta_deg,
+        phi_deg=value.phi_deg,
+        gain_vertical_db=value.gain_vertical_db,
+        gain_horizontal_db=value.gain_horizontal_db,
+        gain_total_db=value.gain_total_db,
+        axial_ratio=value.axial_ratio,
+        tilt_deg=value.tilt_deg,
+        polarization=value.polarization,
+        e_theta_magnitude_v_per_m=value.e_theta_magnitude_v_per_m,
+        e_theta_phase_deg=value.e_theta_phase_deg,
+        e_phi_magnitude_v_per_m=value.e_phi_magnitude_v_per_m,
+        e_phi_phase_deg=value.e_phi_phase_deg,
+    )
+
+
+def _frequency_result_from_domain(value: FrequencyResult) -> FrequencyResultPayload:
+    return FrequencyResultPayload(
+        frequency_hz=value.frequency_hz,
+        feed_tag=value.feed_tag,
+        feed_segment=value.feed_segment,
+        impedance_real_ohm=value.impedance_ohm.real,
+        impedance_imag_ohm=value.impedance_ohm.imag,
+        swr=None if math.isinf(value.swr) else value.swr,
+        input_power_w=value.input_power_w,
+        currents=[_current_from_domain(current) for current in value.currents],
+        far_field=[_far_field_point_from_domain(point) for point in value.far_field],
+        power_budget=(
+            _power_budget_from_domain(value.power_budget)
+            if value.power_budget is not None
+            else None
+        ),
+    )
+
+
+def _simulation_result_from_domain(value: SimulationResult) -> SimulationResultPayload:
+    return SimulationResultPayload(
+        status=value.status,
+        spec=_simulation_spec_from_domain(value.spec),
+        model_fingerprint=value.model_fingerprint,
+        solver=_solver_from_domain(value.solver),
+        frequencies=[_frequency_result_from_domain(f) for f in value.frequencies],
+        diagnostics=[_diagnostic_from_domain(diagnostic) for diagnostic in value.diagnostics],
+        raw_input=value.raw_input,
+        raw_output=value.raw_output,
+        stderr=value.stderr,
+        duration_s=value.duration_s,
+        started_at=value.started_at,
+        finished_at=value.finished_at,
+    )
+
+
+def _simulation_run_from_domain(value: SimulationRun) -> SimulationRunPayload:
+    return SimulationRunPayload(
+        id=value.id,
+        design_id=value.design_id,
+        created_at=value.created_at,
+        result=_simulation_result_from_domain(value.result),
+    )
+
+
 def _design_from_domain(value: DesignVariant) -> DesignPayload:
     return DesignPayload(
         id=value.id,
@@ -224,6 +505,7 @@ def _project_from_domain(value: Project) -> ProjectPayload:
         created_at=value.created_at,
         updated_at=value.updated_at,
         designs=[_design_from_domain(design) for design in value.designs],
+        simulation_runs=[_simulation_run_from_domain(run) for run in value.simulation_runs],
     )
 
 
@@ -299,6 +581,149 @@ def _dipole_parameters_to_domain(value: DipoleParametersPayload) -> DipoleParame
     )
 
 
+def _frequency_plan_to_domain(value: FrequencyPlanPayload) -> FrequencyPlan:
+    return FrequencyPlan(
+        start_hz=value.start_hz,
+        stop_hz=value.stop_hz,
+        count=value.count,
+    )
+
+
+def _segmentation_to_domain(
+    value: SegmentationPolicyPayload,
+) -> SegmentationPolicy:
+    return SegmentationPolicy(
+        segments_per_wire=value.segments_per_wire,
+        target_segment_length_wavelengths=value.target_segment_length_wavelengths,
+        min_segments_per_wire=value.min_segments_per_wire,
+        max_segments_per_wire=value.max_segments_per_wire,
+    )
+
+
+def _far_field_to_domain(value: FarFieldRequestPayload) -> FarFieldRequest:
+    return FarFieldRequest(
+        enabled=value.enabled,
+        theta_start_deg=value.theta_start_deg,
+        theta_stop_deg=value.theta_stop_deg,
+        theta_count=value.theta_count,
+        phi_start_deg=value.phi_start_deg,
+        phi_stop_deg=value.phi_stop_deg,
+        phi_count=value.phi_count,
+    )
+
+
+def _simulation_spec_to_domain(value: SimulationSpecPayload) -> SimulationSpec:
+    return SimulationSpec(
+        frequency_plan=_frequency_plan_to_domain(value.frequency_plan),
+        segmentation=_segmentation_to_domain(value.segmentation),
+        reference_impedance_ohm=value.reference_impedance_ohm,
+        extended_thin_wire_kernel=value.extended_thin_wire_kernel,
+        include_conductor_losses=value.include_conductor_losses,
+        far_field=_far_field_to_domain(value.far_field),
+        timeout_s=value.timeout_s,
+    )
+
+
+def _solver_to_domain(value: SolverMetadataPayload) -> SolverMetadata:
+    return SolverMetadata(
+        name=value.name,
+        version=value.version,
+        executable=value.executable,
+    )
+
+
+def _diagnostic_to_domain(value: DiagnosticPayload) -> Diagnostic:
+    return Diagnostic(
+        code=value.code,
+        severity=value.severity,
+        message=value.message,
+        field=value.field,
+    )
+
+
+def _power_budget_to_domain(value: PowerBudgetPayload) -> PowerBudget:
+    return PowerBudget(
+        input_w=value.input_w,
+        radiated_w=value.radiated_w,
+        structure_loss_w=value.structure_loss_w,
+        network_loss_w=value.network_loss_w,
+        efficiency_percent=value.efficiency_percent,
+    )
+
+
+def _current_to_domain(value: CurrentSamplePayload) -> CurrentSample:
+    return CurrentSample(
+        segment=value.segment,
+        tag=value.tag,
+        x_m=value.x_m,
+        y_m=value.y_m,
+        z_m=value.z_m,
+        length_m=value.length_m,
+        current_a=complex(value.current_real_a, value.current_imag_a),
+        magnitude_a=value.magnitude_a,
+        phase_deg=value.phase_deg,
+    )
+
+
+def _far_field_point_to_domain(value: FarFieldPointPayload) -> FarFieldPoint:
+    return FarFieldPoint(
+        theta_deg=value.theta_deg,
+        phi_deg=value.phi_deg,
+        gain_vertical_db=value.gain_vertical_db,
+        gain_horizontal_db=value.gain_horizontal_db,
+        gain_total_db=value.gain_total_db,
+        axial_ratio=value.axial_ratio,
+        tilt_deg=value.tilt_deg,
+        polarization=value.polarization,
+        e_theta_magnitude_v_per_m=value.e_theta_magnitude_v_per_m,
+        e_theta_phase_deg=value.e_theta_phase_deg,
+        e_phi_magnitude_v_per_m=value.e_phi_magnitude_v_per_m,
+        e_phi_phase_deg=value.e_phi_phase_deg,
+    )
+
+
+def _frequency_result_to_domain(value: FrequencyResultPayload) -> FrequencyResult:
+    return FrequencyResult(
+        frequency_hz=value.frequency_hz,
+        feed_tag=value.feed_tag,
+        feed_segment=value.feed_segment,
+        impedance_ohm=complex(value.impedance_real_ohm, value.impedance_imag_ohm),
+        swr=math.inf if value.swr is None else value.swr,
+        input_power_w=value.input_power_w,
+        currents=tuple(_current_to_domain(current) for current in value.currents),
+        far_field=tuple(_far_field_point_to_domain(point) for point in value.far_field),
+        power_budget=(
+            _power_budget_to_domain(value.power_budget) if value.power_budget is not None else None
+        ),
+    )
+
+
+def _simulation_result_to_domain(value: SimulationResultPayload) -> SimulationResult:
+    return SimulationResult(
+        status=value.status,
+        spec=_simulation_spec_to_domain(value.spec),
+        model_fingerprint=value.model_fingerprint,
+        solver=_solver_to_domain(value.solver),
+        frequencies=tuple(_frequency_result_to_domain(f) for f in value.frequencies),
+        diagnostics=tuple(_diagnostic_to_domain(diagnostic) for diagnostic in value.diagnostics),
+        raw_input=value.raw_input,
+        raw_output=value.raw_output,
+        stderr=value.stderr,
+        duration_s=value.duration_s,
+        started_at=value.started_at,
+        finished_at=value.finished_at,
+    )
+
+
+def _simulation_run_to_domain(value: SimulationRunPayload) -> SimulationRun:
+    return SimulationRun(
+        id=value.id,
+        design_id=value.design_id,
+        created_at=value.created_at,
+        result=_simulation_result_to_domain(value.result),
+    )
+
+
 def _design_to_domain(value: DesignPayload) -> DesignVariant:
     if value.antenna_type != ANTENNA_TYPE_WIRE_DIPOLE:
         raise ValueError(f"unsupported antenna type: {value.antenna_type}")
@@ -319,4 +744,7 @@ def project_from_document(document: ProjectDocument) -> Project:
         created_at=document.project.created_at,
         updated_at=document.project.updated_at,
         designs=tuple(_design_to_domain(design) for design in document.project.designs),
+        simulation_runs=tuple(
+            _simulation_run_to_domain(run) for run in document.project.simulation_runs
+        ),
     )

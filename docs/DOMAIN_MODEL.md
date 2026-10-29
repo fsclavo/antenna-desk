@@ -111,7 +111,7 @@ The native format is versioned JSON:
 ```json
 {
   "format": "antennadesk-project",
-  "schema_version": 2,
+  "schema_version": 3,
   "project": {
     "id": "11111111-1111-4111-8111-111111111111",
     "name": "40 m dipole",
@@ -167,7 +167,8 @@ The native format is versioned JSON:
           }
         }
       }
-    ]
+    ],
+    "simulation_runs": []
   }
 }
 ```
@@ -179,9 +180,12 @@ the application writes version 2.
 
 ## Schema policy
 
-- Current version: `2`.
+- Current version: `3`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
+- Version 2 files are migrated by adding an empty `simulation_runs` list.
+- Version 3 persists normalized simulation runs, including raw solver text.
+  SWR is stored as `null` when it is infinite.
 - Unknown fields are rejected.
 - Unknown formats are rejected.
 - Future schema versions are rejected with a clear error.
@@ -226,17 +230,19 @@ Phase 2 adds solver-independent simulation types:
 - `LengthSensitivityPoint`: length offset and resulting impedance/SWR.
 - `LengthOptimizationResult`: status, best length/impedance/SWR, evaluation
   log, and sensitivity points.
+- `SimulationRun`: immutable snapshot linked to a design, with creation time
+  and the normalized `SimulationResult`.
 
 The far-field values are NEC power gains in dB. They are not realized gain or
 directivity unless the model and losses justify that interpretation; the
 adapter documents this explicitly.
 
 Simulation results are immutable and carry a deterministic fingerprint of the
-model and spec. They are cached in the GUI by design-variant ID for the current
-session and are not yet stored in the `.antennadesk` project file; that will
-require a schema version and migration in a later phase. Editing a design
-removes its cached result. A project can contain multiple design variants; the
-GUI edits the selected variant.
+model and spec. Completed and partial runs are stored in the project as
+`SimulationRun` snapshots and reloaded by the GUI. The latest run per design is
+shown when a project is opened. Editing a design removes its current result
+view, but earlier run snapshots remain in the project. A project can contain
+multiple design variants; the GUI edits the selected variant.
 
 Length optimization is a bounded one-dimensional search over the dipole length
 at the design frequency. It uses the solver through the same application port,

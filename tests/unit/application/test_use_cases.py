@@ -198,3 +198,54 @@ def test_cannot_delete_last_design_variant(sample_project: Project) -> None:
                 design_id=sample_project.designs[0].id,
             )
         )
+
+
+def test_record_simulation_run(sample_project: Project) -> None:
+    from uuid import uuid4
+
+    from antennadesk.application.use_cases.record_simulation_run import (
+        RecordSimulationRun,
+        RecordSimulationRunCommand,
+    )
+    from antennadesk.domain.simulation.frequency import FrequencyPlan
+    from antennadesk.domain.simulation.result import (
+        FrequencyResult,
+        SimulationResult,
+        SimulationStatus,
+    )
+    from antennadesk.domain.simulation.solver import SolverMetadata
+    from antennadesk.domain.simulation.spec import SimulationSpec
+
+    design = sample_project.designs[0]
+    spec = SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0))
+    result = SimulationResult(
+        status=SimulationStatus.COMPLETED,
+        spec=spec,
+        model_fingerprint="a" * 64,
+        solver=SolverMetadata(name="nec2c", version="1.3.3"),
+        frequencies=(
+            FrequencyResult(
+                frequency_hz=7_100_000.0,
+                feed_tag=1,
+                feed_segment=11,
+                impedance_ohm=complex(50.0, 0.0),
+                swr=1.0,
+                input_power_w=0.001,
+            ),
+        ),
+    )
+    run_id = uuid4()
+
+    project = RecordSimulationRun().execute(
+        RecordSimulationRunCommand(
+            project=sample_project,
+            design_id=design.id,
+            result=result,
+            run_id=run_id,
+            created_at=sample_project.updated_at,
+        )
+    )
+
+    assert len(project.simulation_runs) == 1
+    assert project.simulation_runs[0].id == run_id
+    assert project.simulation_runs[0].design_id == design.id

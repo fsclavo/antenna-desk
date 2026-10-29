@@ -114,8 +114,11 @@ The first Phase 6 slice adds tests for:
 - Vertical project save/open round trip.
 - Orientation controls in the form and wizard, vertical geometry rendering,
   and orientation-aware construction-sheet dimensions and feed height.
+- Simulation-run domain invariants, recording use case, schema v2 to v3
+  migration, rich result round trip (currents, pattern, diagnostics, raw text,
+  infinite SWR), and save/reopen in the UI.
 
-The suite currently has 236 tests with the solver enabled. The ten solver
+The suite currently has 242 tests with the solver enabled. The ten solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.
@@ -153,8 +156,8 @@ engine version, configuration, and explicit tolerances.
   emitted when `SimulationSpec.include_conductor_losses` is true.
 - Far-field values are NEC power gains in dB. Realized gain is not computed.
 - No loads, networks, transmission lines, or radial ground screens.
-- Simulation results are not persisted in the project file; comparison and
-  reports use the current session's cached results.
+- Project files store normalized results and raw solver text; many long runs
+  can reach the 10 MB project-size limit.
 - The GUI supports horizontal and vertical center-fed dipoles only. Loops,
   folded dipoles, VNA CSV import, and measurement records are not implemented
   yet.

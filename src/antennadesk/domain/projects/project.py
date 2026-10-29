@@ -12,6 +12,7 @@ from ..antennas.antenna import AntennaModel
 from ..antennas.dipole import DipoleParameters
 from ..common.time import ensure_utc
 from ..common.validation import Diagnostic, Severity, raise_if_errors
+from ..simulation.run import SimulationRun
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,9 +49,11 @@ class Project:
     created_at: datetime
     updated_at: datetime
     designs: tuple[DesignVariant, ...] = field(default_factory=tuple)
+    simulation_runs: tuple[SimulationRun, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "designs", tuple(self.designs))
+        object.__setattr__(self, "simulation_runs", tuple(self.simulation_runs))
         raise_if_errors(self._invariants())
 
     def _invariants(self) -> tuple[Diagnostic, ...]:
@@ -121,6 +124,29 @@ class Project:
                 )
             seen_names.add(design.name)
 
+        design_ids = {design.id for design in self.designs}
+        seen_run_ids: set[UUID] = set()
+        for run in self.simulation_runs:
+            if run.id in seen_run_ids:
+                diagnostics.append(
+                    Diagnostic(
+                        code="project.simulation_run.duplicate_id",
+                        severity=Severity.ERROR,
+                        message=f"duplicate simulation run id: {run.id}",
+                        field="simulation_runs",
+                    )
+                )
+            seen_run_ids.add(run.id)
+            if run.design_id not in design_ids:
+                diagnostics.append(
+                    Diagnostic(
+                        code="project.simulation_run.unknown_design",
+                        severity=Severity.ERROR,
+                        message=(f"simulation run references an unknown design: {run.design_id}"),
+                        field="simulation_runs",
+                    )
+                )
+
         return tuple(diagnostics)
 
     def validate(self) -> tuple[Diagnostic, ...]:
@@ -131,6 +157,25 @@ class Project:
             if design.id == design_id:
                 return design
         raise KeyError(f"unknown design id: {design_id}")
+
+    def with_simulation_run(
+        self,
+        run: SimulationRun,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        return replace(
+            self,
+            simulation_runs=(*self.simulation_runs, run),
+            updated_at=updated_at,
+        )
+
+    def latest_simulation_run(self, design_id: UUID) -> SimulationRun | None:
+        latest: SimulationRun | None = None
+        for run in self.simulation_runs:
+            if run.design_id == design_id:
+                latest = run
+        return latest
 
     def with_design(self, design: DesignVariant, *, updated_at: datetime) -> Project:
         replaced = False

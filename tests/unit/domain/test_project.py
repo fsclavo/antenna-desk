@@ -124,3 +124,64 @@ def test_project_with_new_design_appends(sample_project: Project) -> None:
 def test_missing_design_raises_key_error(sample_project: Project) -> None:
     with pytest.raises(KeyError):
         sample_project.design_by_id(uuid4())
+
+
+def _simulation_run(project: Project, *, run_id: object | None = None) -> object:
+    from antennadesk.domain.simulation.frequency import FrequencyPlan
+    from antennadesk.domain.simulation.result import (
+        FrequencyResult,
+        SimulationResult,
+        SimulationStatus,
+    )
+    from antennadesk.domain.simulation.run import SimulationRun
+    from antennadesk.domain.simulation.solver import SolverMetadata
+    from antennadesk.domain.simulation.spec import SimulationSpec
+
+    design = project.designs[0]
+    spec = SimulationSpec(frequency_plan=FrequencyPlan.single(design.parameters.frequency_hz))
+    return SimulationRun(
+        id=run_id if run_id is not None else uuid4(),  # type: ignore[arg-type]
+        design_id=design.id,
+        created_at=project.updated_at,
+        result=SimulationResult(
+            status=SimulationStatus.COMPLETED,
+            spec=spec,
+            model_fingerprint="a" * 64,
+            solver=SolverMetadata(name="nec2c", version="1.3.3"),
+            frequencies=(
+                FrequencyResult(
+                    frequency_hz=design.parameters.frequency_hz,
+                    feed_tag=1,
+                    feed_segment=11,
+                    impedance_ohm=complex(50.0, 0.0),
+                    swr=1.0,
+                    input_power_w=0.001,
+                ),
+            ),
+        ),
+    )
+
+
+def test_project_with_simulation_run(sample_project: Project) -> None:
+    run = _simulation_run(sample_project)
+    project = sample_project.with_simulation_run(  # type: ignore[arg-type]
+        run,
+        updated_at=sample_project.updated_at + timedelta(hours=1),
+    )
+
+    assert len(project.simulation_runs) == 1
+    assert project.latest_simulation_run(sample_project.designs[0].id) == run
+    assert len(sample_project.simulation_runs) == 0
+
+
+def test_project_rejects_run_for_unknown_design(sample_project: Project) -> None:
+    from dataclasses import replace
+
+    run = _simulation_run(sample_project)
+    invalid = replace(run, design_id=uuid4())  # type: ignore[arg-type]
+
+    with pytest.raises(ValueError, match="unknown design"):
+        sample_project.with_simulation_run(  # type: ignore[arg-type]
+            invalid,
+            updated_at=sample_project.updated_at + timedelta(hours=1),
+        )

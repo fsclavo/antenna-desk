@@ -100,6 +100,23 @@ def test_v1_migration_adds_horizontal_orientation() -> None:
 
     migrated = migrate_document(document)
 
-    assert migrated["schema_version"] == 2
+    assert migrated["schema_version"] == SCHEMA_VERSION
     assert migrated["project"]["designs"][0]["parameters"]["orientation"] == "horizontal"
+    assert migrated["project"]["simulation_runs"] == []
     assert "orientation" not in document["project"]["designs"][0]["parameters"]
+
+
+def test_v2_migration_adds_simulation_runs() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 2,
+        "project": {
+            "designs": [],
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == 3
+    assert migrated["project"]["simulation_runs"] == []
+    assert "simulation_runs" not in document["project"]

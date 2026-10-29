@@ -125,3 +125,4 @@ def test_example_project_migrates_to_the_current_schema(
 
     project = OpenProject(repository).execute(EXAMPLE_PROJECT)
     assert project.designs[0].parameters.orientation is DipoleOrientation.HORIZONTAL
+    assert project.simulation_runs == ()

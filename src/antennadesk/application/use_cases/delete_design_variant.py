@@ -28,9 +28,13 @@ class DeleteDesignVariant:
         )
         if not remaining:
             raise ValueError("cannot delete the last design variant")
+        runs = tuple(
+            run for run in command.project.simulation_runs if run.design_id != command.design_id
+        )
         timestamp = command.updated_at if command.updated_at is not None else utc_now()
         return replace(
             command.project,
             designs=remaining,
+            simulation_runs=runs,
             updated_at=timestamp,
         )

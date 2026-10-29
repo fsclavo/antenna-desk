@@ -48,6 +48,7 @@ immediately. Use **File → New Dipole...** for the guided wizard.
 - [ADR-0001 — MVP engine](docs/ADR/0001-solver-selection.md)
 - [ADR-0002 — Report and export formats](docs/ADR/0002-report-formats.md)
 - [ADR-0003 — Project schema v2 and dipole orientation](docs/ADR/0003-project-schema-v2.md)
+- [ADR-0004 — Simulation run persistence](docs/ADR/0004-simulation-run-persistence.md)
 - [NEC engine evaluation](docs/spikes/phase0-solver-evaluation.md)
 - [Phase 0 reproducible spike](spikes/phase0/README.md)
 - [Agent instructions](AGENTS.md)
@@ -109,12 +110,11 @@ uv run python scripts/run_reference_simulation.py \
 
 ## Known limitations
 
-- Only horizontal center-fed dipoles are implemented in the wizard and design
-  panel.
+- Horizontal and vertical center-fed dipoles are implemented; loops, folded
+  dipoles, VNA CSV import, and measurement records are not implemented yet.
 - No loads, networks, transmission lines, or radial ground screens.
-- Simulation results are session-only. Reopening a project clears them;
-  comparison, reports, and the construction sheet use results from the current
-  session.
+- Simulation runs are stored in the project, including raw solver text; the
+  native project size limit is 10 MB.
 - Optimization is limited to one dipole length against a single reactance
   target. It does not optimize bandwidth, gain, efficiency, or multi-objective
   trade-offs yet.

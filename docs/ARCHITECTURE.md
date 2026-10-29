@@ -106,10 +106,12 @@ MainWindow
   └─ Export CSV / HTML report
 ```
 
-Simulation results are cached in the window by design-variant ID for the
-current session. They are immutable snapshots with a model/spec fingerprint,
-but they are not yet written to the project file. Editing a design removes its
-cached result; switching variants restores the last result for that variant.
+Simulation results are immutable snapshots with a model/spec fingerprint.
+Completed and partial runs are stored in the project as `SimulationRun`
+objects. The window caches the latest run per design; opening a project reloads
+them, and comparison/report/construction actions work across sessions. Editing
+a design clears its current result view, but earlier run snapshots remain in
+the project.
 
 ## Phase 4 flow
 
@@ -181,15 +183,15 @@ untrusted files.
 
 Project files use the `antennadesk-project` format with a schema version.
 Saves are atomic: write a temporary file in the target directory, flush and
-`fsync`, then replace the destination with `os.replace`. Schema version 2 adds
-the dipole orientation; version 1 documents are migrated explicitly.
+`fsync`, then replace the destination with `os.replace`. Schema version 2 added
+dipole orientation, version 3 adds persisted simulation runs, and older
+documents are migrated explicitly.
 
-Simulation results are not persisted in the project file yet. Phase 3/4 will
-add a schema version and migration for stored simulation runs.
+Simulation runs are persisted in schema version 3. Raw solver text is stored
+with the normalized result; the project file-size limit still applies.
 
 ## Not implemented yet
 
-- Persistence of simulation runs in the project file.
 - 3D visualization.
 - Native PDF report export (HTML can be printed to PDF).
 - NEC import and measurement import adapters.

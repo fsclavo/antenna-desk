@@ -31,7 +31,20 @@ def _migrate_v1_to_v2(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
-MIGRATIONS: dict[int, Migration] = {1: _migrate_v1_to_v2}
+def _migrate_v2_to_v3(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the simulation-run list to schema version 2 projects."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if isinstance(project, dict) and "simulation_runs" not in project:
+        project["simulation_runs"] = []
+    return migrated
+
+
+MIGRATIONS: dict[int, Migration] = {
+    1: _migrate_v1_to_v2,
+    2: _migrate_v2_to_v3,
+}
 
 
 def migrate_document(

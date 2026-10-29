@@ -333,3 +333,43 @@ def test_orientation_control_updates_parameters(window: MainWindow) -> None:
     assert window._form.parameters().orientation is DipoleOrientation.HORIZONTAL
     assert window._form._azimuth.isEnabled() is True
     window._dirty = False
+
+
+def test_simulation_results_persist_across_save_and_open(
+    window: MainWindow,
+    qtbot: QtBot,
+    tmp_path: Path,
+) -> None:
+    from antennadesk.application.use_cases.open_project import OpenProject
+
+    window.simulate()
+    qtbot.waitUntil(
+        lambda: not window._simulating and window._thread is None,
+        timeout=5_000,
+    )
+    assert window._project is not None
+    assert len(window._project.simulation_runs) == 1
+
+    path = tmp_path / "with-result.antennadesk"
+    assert window._save_to(path) is True
+    assert window._results._table.rowCount() == 1
+
+    loaded = OpenProject(JsonProjectRepository()).execute(path)
+    reopened = MainWindow(
+        JsonProjectRepository(),
+        FakeSolver(),
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+    )
+    qtbot.addWidget(reopened)
+    reopened._set_project(
+        loaded,
+        loaded.designs[0].id,
+        path=path,
+        dirty=False,
+    )
+
+    assert reopened._results._table.rowCount() == 1
+    assert reopened._export_csv_action.isEnabled() is True
+    window._dirty = False
+    reopened._dirty = False

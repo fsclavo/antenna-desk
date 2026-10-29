@@ -55,6 +55,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   migration.
 - Vertical geometry sketch, orientation-aware construction sheet, and NEC-2
   Example 3 reference validation.
+- Persisted simulation runs in project schema version 3, including normalized
+  results, diagnostics, and raw solver text; v2 projects migrate to an empty
+  run list.
+- Simulation save/reopen flow: the latest run per variant is restored for
+  comparison, reports, and construction sheets across sessions.
 - Solver integration jobs on Linux and Windows.
 
 ### Changed

@@ -75,8 +75,9 @@ SWR is computed with the reference impedance in the design panel (default
 
 Use **File → New Variant...** to duplicate the current design, **Rename
 Variant...** to change its name, and **Delete Variant** to remove it. The
-variant selector in the toolbar switches between designs. Each variant keeps
-its own last simulation result for the current session.
+variant selector in the toolbar switches between designs. Completed runs are
+stored in the project; the latest run for each variant is shown when you switch
+or reopen the project.
 
 Simulate the variants you want to compare, then use **File → Compare
 Variants...**. The dialog shows design and result metrics side by side, an SWR
@@ -110,8 +111,8 @@ Use **File → Export CSV...** for the frequency sweep table, or **File → Expo
 HTML Report...** for a self-contained report with design parameters,
 configuration, solver metadata, fingerprint, diagnostics, impedance,
 resonance, and charts. The HTML report can be printed to PDF from a browser.
-Results are not stored in the project file, so export before closing the
-session.
+Simulation runs are stored when you save the project, including raw solver
+text. The project size limit is 10 MB.
 
 ## Cancel and errors
 
@@ -137,8 +138,8 @@ canonical meters and hertz.
   dipoles, VNA CSV import, and measurement records are not implemented yet.
 - The GUI currently edits the first design variant in a project.
 - No loads, networks, transmission lines, or radial ground screens.
-- Simulation results are not saved inside the project; comparison, export, and
-  the construction sheet use results from the current session.
+- Project files store normalized results and raw solver text; many long runs
+  can reach the 10 MB project limit.
 - Native PDF export is deferred; use the browser print dialog for the HTML
   report and construction sheet.
 - Optimization is one-dimensional length adjustment against a single reactance

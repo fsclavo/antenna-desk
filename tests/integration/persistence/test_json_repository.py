@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import replace
 from datetime import timedelta
 from pathlib import Path
@@ -11,6 +12,7 @@ from typing import Any
 import pytest
 
 from antennadesk.domain.projects.project import Project
+from antennadesk.domain.simulation.result import SimulationResult
 from antennadesk.persistence import json_repository
 from antennadesk.persistence.constants import (
     MAX_PROJECT_SIZE_BYTES,
@@ -61,6 +63,7 @@ def test_saved_document_envelope(
     assert document["format"] == PROJECT_FORMAT
     assert document["schema_version"] == SCHEMA_VERSION
     assert document["project"]["name"] == "40 m dipole"
+    assert document["project"]["simulation_runs"] == []
     design = document["project"]["designs"][0]
     assert design["antenna_type"] == "wire_dipole"
     assert design["parameters"]["total_length_m"] == pytest.approx(20.0)
@@ -306,3 +309,126 @@ def test_invalid_ground_is_rejected(
 
     with pytest.raises(ProjectFormatError, match="invalid project file"):
         repository.load(path)
+
+
+def _rich_result() -> SimulationResult:
+    from datetime import UTC, datetime
+
+    from antennadesk.domain.common.validation import Diagnostic, Severity
+    from antennadesk.domain.simulation.far_field import FarFieldRequest
+    from antennadesk.domain.simulation.frequency import FrequencyPlan
+    from antennadesk.domain.simulation.result import (
+        CurrentSample,
+        FarFieldPoint,
+        FrequencyResult,
+        PowerBudget,
+        SimulationStatus,
+    )
+    from antennadesk.domain.simulation.segmentation import SegmentationPolicy
+    from antennadesk.domain.simulation.solver import SolverMetadata
+    from antennadesk.domain.simulation.spec import SimulationSpec
+
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.sweep(6_900_000.0, 7_100_000.0, 2),
+        segmentation=SegmentationPolicy(segments_per_wire=21),
+        far_field=FarFieldRequest(),
+    )
+    current = CurrentSample(
+        segment=1,
+        tag=1,
+        x_m=-1.0,
+        y_m=0.0,
+        z_m=8.0,
+        length_m=1.0,
+        current_a=complex(0.1, -0.05),
+        magnitude_a=0.1118,
+        phase_deg=-26.565,
+    )
+    far_field = FarFieldPoint(
+        theta_deg=0.0,
+        phi_deg=0.0,
+        gain_vertical_db=2.14,
+        gain_horizontal_db=None,
+        gain_total_db=2.14,
+        axial_ratio=0.0,
+        tilt_deg=0.0,
+        polarization="LINEAR",
+        e_theta_magnitude_v_per_m=0.67,
+        e_theta_phase_deg=-122.0,
+        e_phi_magnitude_v_per_m=0.0,
+        e_phi_phase_deg=0.0,
+    )
+    frequencies = (
+        FrequencyResult(
+            frequency_hz=6_900_000.0,
+            feed_tag=1,
+            feed_segment=11,
+            impedance_ohm=complex(60.0, -10.0),
+            swr=2.0,
+            input_power_w=0.001,
+            currents=(current,),
+            far_field=(far_field,),
+            power_budget=PowerBudget(0.001, 0.0009, 0.0001, 0.0, 90.0),
+        ),
+        FrequencyResult(
+            frequency_hz=7_100_000.0,
+            feed_tag=1,
+            feed_segment=11,
+            impedance_ohm=complex(70.0, 0.0),
+            swr=math.inf,
+            input_power_w=0.002,
+        ),
+    )
+    return SimulationResult(
+        status=SimulationStatus.COMPLETED,
+        spec=spec,
+        model_fingerprint="a" * 64,
+        solver=SolverMetadata(name="nec2c", version="1.3.3", executable="nec2c"),
+        frequencies=frequencies,
+        diagnostics=(
+            Diagnostic(
+                code="test.warning",
+                severity=Severity.WARNING,
+                message="test warning",
+                field="test",
+            ),
+        ),
+        raw_input="GW 1 21 ...\n",
+        raw_output="FREQUENCY ...\n",
+        stderr="",
+        duration_s=0.25,
+        started_at=datetime(2026, 10, 29, tzinfo=UTC),
+        finished_at=datetime(2026, 10, 29, tzinfo=UTC),
+    )
+
+
+def test_round_trip_with_a_simulation_run(
+    repository: JsonProjectRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    from antennadesk.application.use_cases.record_simulation_run import (
+        RecordSimulationRun,
+        RecordSimulationRunCommand,
+    )
+
+    project = RecordSimulationRun().execute(
+        RecordSimulationRunCommand(
+            project=sample_project,
+            design_id=sample_project.designs[0].id,
+            result=_rich_result(),
+            created_at=sample_project.updated_at,
+        )
+    )
+    path = tmp_path / "with-run.antennadesk"
+
+    repository.save(project, path)
+    loaded = repository.load(path)
+
+    assert loaded == project
+    assert len(loaded.simulation_runs) == 1
+    run = loaded.simulation_runs[0]
+    assert run.design_id == sample_project.designs[0].id
+    assert run.result.raw_output == "FREQUENCY ...\n"
+    assert run.result.frequencies[0].impedance_ohm == complex(60.0, -10.0)
+    assert math.isinf(run.result.frequencies[1].swr)
