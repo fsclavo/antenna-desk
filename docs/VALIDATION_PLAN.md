@@ -142,7 +142,7 @@ Phase 6 adds tests for:
   persistence round trip, load editor, report rows, and UI application.
 - Isometric 3D geometry rendering and the 3D view selector.
 - Polar lobe rendering from far-field points, with selectable azimuth and
-  elevation cuts.
+  elevation cuts, plus the projected 3D pattern wireframe.
 - Compaction of simulation history to keep the latest run per design, plus a
   save-time warning near the project size limit.
 - Type-aware construction sheets, HTML reports, and mixed-type comparison.

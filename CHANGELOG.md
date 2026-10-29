@@ -97,6 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Isometric 3D geometry view with ground grid, feed marker, axes, and scale.
 - Polar pattern diagram in the Pattern tab with selectable azimuth/elevation
   cuts, alongside the existing line chart. The UI requests a full phi sweep.
+- Projected 3D radiation-pattern wireframe in a separate Pattern sub-tab.
 - Per-wire segmentation overrides and a feed-aligned count heuristic; the UI
   derives counts from the selected model, gives short folded connectors at
   least three segments, and persists the overrides additively in schema v3.

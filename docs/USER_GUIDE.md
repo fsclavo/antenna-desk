@@ -87,9 +87,10 @@ After creation, adjust the design panel and press **Apply design** or
   and SWR, plus charts of impedance and SWR over the sweep. Resonance points
   where the reactance crosses zero are marked and listed above the table.
 - **Pattern**: selectable **Azimuth** or **Elevation** cuts of NEC power gain
-  for each simulated frequency, with a line chart and a polar lobe diagram.
-  Azimuth is the default view; use the cut selector to inspect another plane.
-  Power gain is not realized gain.
+  for each simulated frequency. The **Cuts** tab shows a line chart and a polar
+  lobe diagram; the **3D lobe** tab shows a projected wireframe of the complete
+  pattern. Azimuth is the default cut view; use the selectors to inspect
+  another plane. Power gain is not realized gain.
 - **Currents**: segment current magnitude for the selected frequency, with the
   feed segment marked.
 - **Diagnostics**: solver version, status, duration, fingerprint, and warnings

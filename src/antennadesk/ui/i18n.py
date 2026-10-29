@@ -304,6 +304,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Azimuth lobes",
         Language.SPANISH: "Lóbulos de azimut",
     },
+    "pattern.cut_tab": {
+        Language.ENGLISH: "Cuts",
+        Language.SPANISH: "Cortes",
+    },
+    "pattern.3d_tab": {
+        Language.ENGLISH: "3D lobe",
+        Language.SPANISH: "Lóbulo 3D",
+    },
+    "pattern.3d_polar": {
+        Language.ENGLISH: "3D radiation pattern",
+        Language.SPANISH: "Patrón de radiación 3D",
+    },
     "pattern.elevation": {Language.ENGLISH: "Elevation θ (°)", Language.SPANISH: "Elevación θ (°)"},
     "pattern.gain": {
         Language.ENGLISH: "Power gain (dBi)",

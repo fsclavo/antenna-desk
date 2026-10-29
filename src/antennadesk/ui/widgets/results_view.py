@@ -29,6 +29,7 @@ from ...domain.simulation.result import SimulationResult, SimulationStatus
 from ..i18n import Translator
 from ..theme import theme_colors
 from .polar_pattern_view import PolarPatternView
+from .radiation_pattern_3d_view import RadiationPattern3DView
 
 
 class ResultsView(QWidget):
@@ -75,6 +76,7 @@ class ResultsView(QWidget):
         self._pattern_cut_label = QLabel(self._pattern_tab)
         self._pattern_plot = self._make_plot()
         self._polar_pattern = PolarPatternView(translator, self._pattern_tab)
+        self._pattern_3d = RadiationPattern3DView(translator, self._pattern_tab)
         pattern_controls = QHBoxLayout()
         pattern_controls.addWidget(self._pattern_frequency_label)
         pattern_controls.addWidget(self._pattern_frequency)
@@ -93,7 +95,14 @@ class ResultsView(QWidget):
         pattern_splitter.addWidget(self._polar_pattern)
         pattern_splitter.setStretchFactor(0, 1)
         pattern_splitter.setStretchFactor(1, 1)
-        pattern_layout.addWidget(pattern_splitter)
+        cut_tab = QWidget(self._pattern_tab)
+        cut_layout = QVBoxLayout(cut_tab)
+        cut_layout.setContentsMargins(0, 0, 0, 0)
+        cut_layout.addWidget(pattern_splitter)
+        self._pattern_view_tabs = QTabWidget(self._pattern_tab)
+        self._pattern_view_tabs.addTab(cut_tab, "")
+        self._pattern_view_tabs.addTab(self._pattern_3d, "")
+        pattern_layout.addWidget(self._pattern_view_tabs)
 
         self._currents_frequency = QComboBox(self._currents_tab)
         self._currents_frequency_label = QLabel(self._currents_tab)
@@ -168,6 +177,7 @@ class ResultsView(QWidget):
             if legend is not None:
                 legend.setLabelTextColor(self._colors.text)
         self._polar_pattern.update()
+        self._pattern_3d.update()
 
     def changeEvent(self, event: QEvent) -> None:
         if event.type() == QEvent.Type.PaletteChange:
@@ -211,6 +221,8 @@ class ResultsView(QWidget):
         self._tabs.setTabText(2, self._translator.t("tab.currents"))
         self._tabs.setTabText(3, self._translator.t("tab.diagnostics"))
         self._tabs.setTabText(4, self._translator.t("tab.raw"))
+        self._pattern_view_tabs.setTabText(0, self._translator.t("pattern.cut_tab"))
+        self._pattern_view_tabs.setTabText(1, self._translator.t("pattern.3d_tab"))
         self._table.setHorizontalHeaderLabels(
             [
                 self._translator.t("table.frequency"),
@@ -470,6 +482,7 @@ class ResultsView(QWidget):
         if self._result is None or not self._result.frequencies:
             self._pattern_plot.setTitle(self._translator.t("results.none"), color=self._colors.text)
             self._polar_pattern.set_points(())
+            self._pattern_3d.set_points(())
             return
         index = self._pattern_frequency.currentIndex()
         if index < 0 or index >= len(self._result.frequencies):
@@ -491,6 +504,7 @@ class ResultsView(QWidget):
         if not points:
             self._pattern_plot.setTitle(self._translator.t("pattern.none"), color=self._colors.text)
             self._polar_pattern.set_points(())
+            self._pattern_3d.set_points(())
             return
         theta = [value[0] for value in points]
         gain = [value[1] for value in points]
@@ -527,6 +541,13 @@ class ResultsView(QWidget):
             )
         )
         self._polar_pattern.set_points(tuple(zip(theta, gain, strict=True)))
+        self._pattern_3d.set_points(
+            tuple(
+                (point.theta_deg, point.phi_deg, point.gain_total_db)
+                for point in frequency.far_field
+                if point.gain_total_db is not None
+            )
+        )
 
     def _render_diagnostics(self) -> None:
         self._diagnostics.setRowCount(0)

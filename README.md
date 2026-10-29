@@ -66,7 +66,8 @@ between those types.
   isometric 3D view, and results tabs.
 - Asynchronous simulation with cancellation, timeouts, and diagnostics.
 - Impedance, SWR, frequency-sweep, and far-field pattern charts, including
-  selectable azimuth/elevation cuts and polar lobe diagrams.
+  selectable azimuth/elevation cuts, polar lobe diagrams, and an isometric 3D
+  radiation-pattern wireframe.
 - Save/open of versioned `.antennadesk` projects with multiple design
   variants; schema v3 adds persisted simulation runs and migrates older files.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
