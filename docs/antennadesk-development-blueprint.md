@@ -1,120 +1,142 @@
 # AntennaDesk — Development Blueprint
-## Aplicación de diseño, simulación y construcción de antenas para radioaficionados
+## Antenna design, simulation, and construction application for amateur radio
 
-**Versión:** 1.0 · **Estado:** blueprint inicial para OpenCode · **Nombre provisional:** AntennaDesk  
-**Plataformas objetivo:** Linux y Windows · **Idioma inicial:** español, preparado para inglés  
-**Tipo:** aplicación de escritorio, local-first, con motor electromagnético externo
-
----
-
-## 1. Resumen ejecutivo
-
-AntennaDesk busca hacer accesible el diseño de antenas sin sacrificar rigor técnico. El usuario debe poder partir de una intención —por ejemplo, «un dipolo para 40 metros, con una altura máxima de 8 m y un espacio disponible de 18 m»—, generar un modelo, simularlo, explorar sus resultados y producir una ficha construible.
-
-La ventaja competitiva no será reimplementar toda la física electromagnética, sino ofrecer un flujo guiado, modelos paramétricos, diagnósticos claros, optimización con restricciones prácticas y trazabilidad entre diseño, simulación y medición.
-
-### Principios
-
-1. **Modelo de dominio propio:** geometría e intención de diseño no dependen de la GUI ni de NEC.
-2. **Separación por dominios:** dominio, casos de uso, solver, persistencia, visualización e intercambio son módulos independientes.
-3. **Motor existente al principio:** evaluar NEC-2/nec2c y opciones relacionadas; no escribir un solver propio en el MVP.
-4. **Diseño guiado primero:** el usuario no debe conocer tarjetas NEC ni segmentación para crear un dipolo.
-5. **Rigor y limitaciones visibles:** toda simulación guarda condiciones, versión del motor, advertencias y datos de origen.
-6. **Construibilidad:** permitir restricciones físicas y explicar los compromisos.
-7. **Local-first:** sin cuentas, nube ni telemetría obligatoria.
-8. **Incremental:** cada fase debe dejar una aplicación funcional, probada y documentada.
-
-### No objetivos del MVP
-
-- Reemplazar herramientas electromagnéticas generales para toda geometría y frecuencia.
-- Crear un motor electromagnético propio.
-- Simular con precisión edificios, árboles, mástiles, cables de alimentación y cualquier entorno real sin modelarlos.
-- Incluir control directo de NanoVNA u otros instrumentos.
-- Optimizar exclusivamente por ROE.
-- Incluir antenas dieléctricas complejas, arrays masivos o análisis full-wave 3D avanzado.
-- Crear cuentas, sincronización cloud o colaboración multiusuario.
+**Version:** 1.0 · **Status:** initial blueprint for OpenCode · **Working name:** AntennaDesk  
+**Target platforms:** Linux and Windows · **Initial UI language:** Spanish, prepared for English  
+**Type:** desktop application, local-first, with an external electromagnetic engine
 
 ---
 
-## 2. Usuarios y alcance
+## 1. Executive summary
 
-### Usuarios
+AntennaDesk aims to make antenna design accessible without sacrificing
+technical rigor. The user should be able to start from an intent — for example,
+“a dipole for 40 meters, with a maximum height of 8 m and 18 m of available
+space” — generate a model, simulate it, explore the results, and produce a
+buildable design sheet.
 
-- Radioaficionados que construyen dipolos, verticales, loops y antenas de hilo.
-- Constructores que quieren comparar variantes antes de cortar material.
-- Clubes que enseñan antenas y electromagnetismo aplicado.
-- Usuarios avanzados que necesitan un editor geométrico, sin que sea la puerta de entrada obligatoria.
+The competitive advantage will not be reimplementing all electromagnetic
+physics, but offering a guided workflow, parametric models, clear diagnostics,
+optimization with practical constraints, and traceability between design,
+simulation, and measurement.
+
+### Principles
+
+1. **Own domain model:** geometry and design intent do not depend on the GUI or
+   NEC.
+2. **Separation by domain:** domain, use cases, solver, persistence,
+   visualization, and interchange are independent modules.
+3. **Existing engine first:** evaluate NEC-2/nec2c and related options; do not
+   write a custom solver in the MVP.
+4. **Guided design first:** the user should not need to know NEC cards or
+   segmentation to create a dipole.
+5. **Visible rigor and limitations:** every simulation stores conditions,
+   engine version, warnings, and provenance.
+6. **Buildability:** allow physical constraints and explain the trade-offs.
+7. **Local-first:** no accounts, cloud, or mandatory telemetry.
+8. **Incremental:** each phase must leave a functional, tested, documented
+   application.
+
+### MVP non-goals
+
+- Replace general electromagnetic tools for every geometry and frequency.
+- Create a custom electromagnetic engine.
+- Accurately simulate buildings, trees, masts, feed lines, and any real
+  environment without modeling them.
+- Include direct control of a NanoVNA or other instruments.
+- Optimize exclusively for SWR.
+- Include complex dielectric antennas, massive arrays, or advanced full-wave
+  3D analysis.
+- Create accounts, cloud synchronization, or multi-user collaboration.
+
+---
+
+## 2. Users and scope
+
+### Users
+
+- Amateur radio operators who build dipoles, verticals, loops, and wire
+  antennas.
+- Builders who want to compare variants before cutting material.
+- Clubs that teach antennas and applied electromagnetics.
+- Advanced users who need a geometry editor, without it being the mandatory
+  entry point.
 
 ### MVP
 
-- Asistente de diseño para dipolo de media onda.
-- Modelo paramétrico de conductores rectos.
-- Frecuencia objetivo, longitud, altura, orientación y diámetro.
-- Modelo básico de suelo compatible con el solver elegido.
-- Simulación mediante un motor NEC-2 integrado por adaptador.
-- Impedancia de entrada, ROE respecto de una impedancia de referencia explícita, barrido de frecuencia, corriente y patrón de campo lejano cuando el motor lo permita.
-- Vista geométrica básica.
-- Guardar/abrir proyecto nativo versionado.
-- Exportar archivo de entrada NEC, resultados CSV y reporte.
-- Diagnósticos antes y después de simular.
-- Pruebas automatizadas y CI en Linux/Windows.
+- Guided design wizard for a half-wave dipole.
+- Parametric model of straight conductors.
+- Target frequency, length, height, orientation, and diameter.
+- Basic ground model compatible with the selected solver.
+- Simulation through a NEC-2 engine integrated through an adapter.
+- Input impedance, SWR with respect to an explicit reference impedance,
+  frequency sweep, current, and far-field pattern when the engine supports it.
+- Basic geometry view.
+- Save/open a versioned native project.
+- Export NEC input file, CSV results, and report.
+- Diagnostics before and after simulation.
+- Automated tests and CI on Linux/Windows.
 
-### Evolución funcional
+### Functional evolution
 
-| Etapa | Funcionalidad |
+| Stage | Functionality |
 |---|---|
-| 0.1 | Dipolo guiado, motor NEC, resultados y proyecto nativo |
-| 0.2 | Comparación de variantes, exportación e informes |
-| 0.3 | Optimización de longitud y restricciones físicas |
-| 0.4 | Dipolo plegado, vertical simple, loop y cargas admitidas |
-| 0.5 | Importación de modelos NEC y mediciones CSV de VNA |
-| 0.6+ | Yagi, editor avanzado, optimización multiobjetivo y nuevos motores |
+| 0.1 | Guided dipole, NEC engine, results, and native project |
+| 0.2 | Variant comparison, export, and reports |
+| 0.3 | Length optimization and physical constraints |
+| 0.4 | Folded dipole, simple vertical, loop, and supported loads |
+| 0.5 | NEC model import and VNA CSV measurements |
+| 0.6+ | Yagi, advanced editor, multi-objective optimization, and new engines |
 
-No incorporar un tipo de antena hasta contar con pruebas de referencia y una explicación de sus limitaciones.
+Do not add an antenna type until reference tests and an explanation of its
+limitations exist.
 
 ---
 
-## 3. Arquitectura
+## 3. Architecture
 
-Aplicar una arquitectura modular inspirada en **Hexagonal Architecture / Ports and Adapters**. No usar microservicios: es una aplicación de escritorio local.
+Apply a modular architecture inspired by **Hexagonal Architecture / Ports and
+Adapters**. Do not use microservices: this is a local desktop application.
 
 ```text
 ┌────────────────────────────────────────────────────────┐
-│ Presentación: PySide6                                  │
-│ Wizard · editor geométrico · gráficos · diagnósticos   │
+│ Presentation: PySide6                                  │
+│ Wizard · geometry editor · charts · diagnostics        │
 └─────────────────────────┬──────────────────────────────┘
-                          │ comandos / consultas
+                          │ commands / queries
 ┌─────────────────────────▼──────────────────────────────┐
-│ Aplicación: casos de uso                                │
+│ Application: use cases                                 │
 │ CreateProject · EditAntenna · RunSimulation · Optimize │
 │ CompareVariants · ImportMeasurement · ExportReport     │
 └───────────────┬─────────────────────────┬───────────────┘
                 │                         │
 ┌───────────────▼────────────┐  ┌─────────▼──────────────┐
-│ Dominio                    │  │ Puertos / interfaces   │
+│ Domain                     │  │ Ports / interfaces     │
 │ Project, Antenna, Geometry │  │ Solver, Repository,    │
 │ Feed, Ground, Results      │  │ Importer, Exporter     │
 └────────────────────────────┘  └─────────┬──────────────┘
                                           │
                               ┌───────────▼──────────────┐
-                              │ Adaptadores              │
+                              │ Adapters                 │
                               │ NEC-2 · JSON · CSV · PDF │
                               └──────────────────────────┘
 ```
 
-### Reglas de dependencia
+### Dependency rules
 
-- `domain/` no importa PySide6, SciPy ni bibliotecas concretas del solver.
-- La GUI no ejecuta cálculos electromagnéticos ni conoce la sintaxis NEC.
-- La aplicación depende de interfaces, no de implementaciones concretas.
-- El adaptador traduce el modelo canónico a NEC y normaliza su salida.
-- Los datos crudos del solver se conservan para diagnóstico; la aplicación consume resultados normalizados.
-- La simulación nunca se ejecuta en el hilo principal de Qt.
-- Una simulación representa una instantánea inmutable del modelo, no una referencia a un objeto que luego cambia.
-- La persistencia se versiona y migra explícitamente.
-- No introducir abstracciones sin una frontera de cambio real.
+- `domain/` does not import PySide6, SciPy, or concrete solver libraries.
+- The GUI does not perform electromagnetic calculations or know NEC syntax.
+- The application depends on interfaces, not concrete implementations.
+- The adapter translates the canonical model to NEC and normalizes its output.
+- Raw solver data is preserved for diagnostics; the application consumes
+  normalized results.
+- Simulation never runs on the Qt main thread.
+- A simulation represents an immutable snapshot of the model, not a reference
+  to an object that changes later.
+- Persistence is versioned and migrated explicitly.
+- Do not introduce abstractions without a real change boundary.
 
-### Estructura sugerida
+### Suggested structure
 
 ```text
 antennadesk/
@@ -129,29 +151,29 @@ antennadesk/
 │   ├── bootstrap.py
 │   ├── config/
 │   ├── domain/
-│   │   ├── common/          # unidades, IDs, validación
-│   │   ├── projects/        # proyecto, variantes, revisiones
-│   │   ├── antennas/        # geometría, conductores, fuentes, cargas
-│   │   ├── environment/     # suelo y condiciones ambientales
-│   │   ├── simulation/      # especificación, resultados, diagnósticos
-│   │   ├── optimization/    # objetivos y restricciones
-│   │   └── measurements/    # registros y contexto de medición
+│   │   ├── common/          # units, IDs, validation
+│   │   ├── projects/        # project, variants, revisions
+│   │   ├── antennas/        # geometry, conductors, sources, loads
+│   │   ├── environment/     # ground and environmental conditions
+│   │   ├── simulation/      # specification, results, diagnostics
+│   │   ├── optimization/    # objectives and constraints
+│   │   └── measurements/    # measurement records and context
 │   ├── application/
-│   │   ├── ports/           # interfaces de solver, repositorio, import/export
+│   │   ├── ports/           # solver, repository, import/export interfaces
 │   │   ├── use_cases/
 │   │   ├── commands/
 │   │   ├── queries/
 │   │   └── dto/
-│   ├── geometry/            # transformaciones y validación geométrica
+│   ├── geometry/            # transformations and geometric validation
 │   ├── simulation/
 │   │   ├── solver_registry.py
 │   │   ├── discretization.py
 │   │   ├── normalization.py
 │   │   └── nec2/            # adapter, input writer, parser, capabilities
 │   ├── optimization/
-│   ├── persistence/         # JSON, schema, migraciones
-│   ├── interchange/         # NEC, CSV, datos VNA
-│   ├── reporting/           # modelo de informe, HTML/PDF
+│   ├── persistence/         # JSON, schema, migrations
+│   ├── interchange/         # NEC, CSV, VNA data
+│   ├── reporting/           # report model, HTML/PDF
 │   ├── ui/
 │   │   ├── viewmodels/
 │   │   ├── wizard/
@@ -179,67 +201,82 @@ antennadesk/
 └── packaging/
 ```
 
-No crear todos los archivos vacíos al inicio. Incorporar módulos al implementar funcionalidad real.
+Do not create all empty files at the beginning. Add modules when implementing
+real functionality.
 
 ---
 
-## 4. Dominios y responsabilidades
+## 4. Domains and responsibilities
 
 ### 4.1 Projects
 
-Entidades: `Project`, `DesignVariant`, `ProjectMetadata`, `ProjectRevision`.
+Entities: `Project`, `DesignVariant`, `ProjectMetadata`, `ProjectRevision`.
 
-Responsabilidades:
-- Crear, renombrar, guardar y duplicar proyectos.
-- Mantener variantes comparables.
-- Guardar instantáneas exactas de modelos y simulaciones.
-- Registrar versión de esquema y aplicación.
+Responsibilities:
 
-Regla crítica: editar un diseño no modifica los resultados de simulaciones anteriores.
+- Create, rename, save, and duplicate projects.
+- Keep comparable variants.
+- Store exact snapshots of models and simulations.
+- Record schema and application versions.
 
-### 4.2 Antenna Model
+Critical rule: editing a design does not modify the results of previous
+simulations.
 
-Entidades/objetos: `AntennaModel`, `Wire`, `Point3D`, `ConductorMaterial`, `FeedPoint`, `LumpedLoad`, `GroundModel`, `Environment`, `FrequencyPlan`, `AntennaTemplate`, `DesignConstraint`.
+### 4.2 Antenna model
 
-Unidades canónicas:
-- Longitud: metros.
-- Frecuencia: Hz.
-- Impedancia: ohmios.
-- Conductividad: S/m cuando aplique.
-- Convención angular única, convertida en los límites del sistema.
-- La UI muestra siempre la unidad y convierte explícitamente.
+Entities/objects: `AntennaModel`, `Wire`, `Point3D`, `ConductorMaterial`,
+`FeedPoint`, `LumpedLoad`, `GroundModel`, `Environment`, `FrequencyPlan`,
+`AntennaTemplate`, `DesignConstraint`.
 
-Los parámetros de diseño (p. ej. longitud total) deben estar separados de la geometría derivada (coordenadas), de la discretización numérica del solver y de los resultados.
+Canonical units:
+
+- Length: meters.
+- Frequency: Hz.
+- Impedance: ohms.
+- Conductivity: S/m when applicable.
+- Single angular convention, converted at system boundaries.
+- The UI always shows the unit and converts explicitly.
+
+Design parameters (for example, total length) must be separated from derived
+geometry (coordinates), from solver numerical discretization, and from
+results.
 
 ### 4.3 Geometry
 
-Funciones:
-- Transformar, rotar y trasladar geometrías.
-- Calcular longitudes y límites.
-- Detectar coordenadas no finitas, conductores de longitud cero, duplicados, uniones y cruces problemáticos.
-- Generar una vista previa.
-- Proponer discretización, sin confundir segmentos numéricos con conductores físicos.
+Functions:
+
+- Transform, rotate, and translate geometries.
+- Compute lengths and bounds.
+- Detect non-finite coordinates, zero-length conductors, duplicates,
+  junctions, and problematic crossings.
+- Generate a preview.
+- Propose discretization, without confusing numerical segments with physical
+  conductors.
 
 ### 4.4 Simulation
 
-`SimulationSpec` contiene frecuencia o barrido, suelo, configuración de cálculo, discretización y solver/version.
+`SimulationSpec` contains frequency or sweep, ground, calculation
+configuration, discretization, and solver/version.
 
-`SimulationResult` normalizado contiene:
-- Estado: completado, cancelado, parcial o error.
-- Frecuencias calculadas.
-- Impedancia compleja de alimentación.
-- ROE con impedancia de referencia explícita.
-- Corrientes por elemento/segmento si están disponibles.
-- Patrón, polarización y resultados de campo lejano según capacidades del motor.
-- Convenciones de ganancia/directividad claramente documentadas.
-- Advertencias, versión del solver, huella del modelo y duración.
-- Referencias a entrada/salida cruda.
+Normalized `SimulationResult` contains:
 
-No usar un único campo ambiguo `gain`: distinguir ganancia, ganancia realizada y directividad cuando corresponda.
+- Status: completed, cancelled, partial, or error.
+- Computed frequencies.
+- Complex feed-point impedance.
+- SWR with an explicit reference impedance.
+- Currents per element/segment when available.
+- Pattern, polarization, and far-field results according to engine
+  capabilities.
+- Clearly documented gain/directivity conventions.
+- Warnings, solver version, model fingerprint, and duration.
+- References to raw input/output.
 
-### 4.5 Solver Adapter
+Do not use a single ambiguous `gain` field: distinguish gain, realized gain,
+and directivity when applicable.
 
-Interfaz conceptual:
+### 4.5 Solver adapter
+
+Conceptual interface:
 
 ```python
 class AntennaSolver(Protocol):
@@ -249,55 +286,66 @@ class AntennaSolver(Protocol):
     def version(self) -> SolverVersion: ...
 ```
 
-El adaptador debe:
-1. Validar capacidades y entradas.
-2. Traducir geometría y condiciones al formato del motor.
-3. Generar entrada reproducible.
-4. Ejecutar el proceso de forma controlada.
-5. Capturar stdout, stderr y código de salida.
-6. Parsear la salida con reglas explícitas.
-7. Normalizar unidades, signos y convenciones.
-8. Conservar archivos crudos.
-9. Emitir diagnósticos con contexto.
-10. Cancelar sin dejar procesos huérfanos.
+The adapter must:
+
+1. Validate capabilities and inputs.
+2. Translate geometry and conditions to the engine format.
+3. Generate a reproducible input.
+4. Execute the process in a controlled way.
+5. Capture stdout, stderr, and exit code.
+6. Parse output with explicit rules.
+7. Normalize units, signs, and conventions.
+8. Preserve raw files.
+9. Emit diagnostics with context.
+10. Cancel without leaving orphan processes.
 
 ### 4.6 Optimization
 
-Primera función: ajustar longitud de un dipolo dentro de límites físicos para aproximar una resonancia o reactancia objetivo.
+First function: adjust the length of a dipole within physical limits to
+approach a resonance or target reactance.
 
-Requisitos:
-- Intervalo y límites explícitos.
-- Registro de evaluaciones y función objetivo.
-- Límites de tiempo/iteraciones.
-- Explicación de los parámetros modificados.
-- Re-simular y validar la solución final.
-- No usar ROE mínima como objetivo universal: la ROE no prueba eficiencia ni un patrón útil.
+Requirements:
 
-Más adelante: ancho de banda, ganancia en dirección objetivo, restricciones de espacio, coste/complejidad de construcción y optimización multiobjetivo.
+- Explicit interval and limits.
+- Record of evaluations and objective function.
+- Time/iteration limits.
+- Explanation of the modified parameters.
+- Re-simulate and validate the final solution.
+- Do not use minimum SWR as a universal objective: SWR does not prove
+  efficiency or a useful pattern.
+
+Later: bandwidth, gain in a target direction, space constraints, construction
+cost/complexity, and multi-objective optimization.
 
 ### 4.7 Measurements
 
-Registrar instrumento, fecha, archivo original/hash, rango de frecuencia, tipo de dato, estado de calibración informado, plano de referencia, coaxial/accesorios, antena/variante, altura, orientación, entorno y notas.
+Record instrument, date, original file/hash, frequency range, data type,
+reported calibration state, reference plane, coax/accessories,
+antenna/variant, height, orientation, environment, and notes.
 
-El MVP importa CSV documentado. No asumir que todos los CSV de VNA tienen el mismo formato ni que una medición en un plano de referencia es directamente comparable con la impedancia de una fuente ideal en otro plano.
+The MVP imports documented CSV. Do not assume all VNA CSV files have the same
+format, or that a measurement at one reference plane is directly comparable
+with the impedance of an ideal source at another plane.
 
 ### 4.8 Reporting
 
-El informe incluye:
-- Proyecto/variante y dimensiones.
-- Frecuencia y condiciones del entorno.
-- Motor, versión y configuración.
-- Resultados y gráficos con unidades.
-- Advertencias y limitaciones.
-- Parámetros de optimización.
-- Datos de medición asociados.
-- Fecha y huella de simulación.
+The report includes:
 
-Usar un modelo de reporte común. HTML puede ser la base; PDF se añade cuando la salida sea reproducible.
+- Project/variant and dimensions.
+- Frequency and environment conditions.
+- Engine, version, and configuration.
+- Results and charts with units.
+- Warnings and limitations.
+- Optimization parameters.
+- Associated measurement data.
+- Date and simulation fingerprint.
+
+Use a common report model. HTML can be the base; PDF is added when output is
+reproducible.
 
 ---
 
-## 5. Modelo de dominio e invariantes
+## 5. Domain model and invariants
 
 ```text
 Project
@@ -317,150 +365,168 @@ Project
  └── ReportReference
 ```
 
-Invariantes:
-- Todas las magnitudes numéricas son finitas.
-- Ningún conductor tiene longitud cero.
-- La fuente referencia una ubicación válida y compatible con el solver.
-- Frecuencias positivas y barridos válidos, acotados en tamaño.
-- El archivo guardado se valida al abrirse.
-- Los resultados se vinculan a una instantánea inmutable.
-- La conversión al solver produce diagnósticos ante elementos no representables.
-- Las aproximaciones y simplificaciones nunca se ocultan.
+Invariants:
 
-Las plantillas (dipolo, vertical, loop) generan el mismo `AntennaModel` canónico; no deben crear caminos de simulación independientes.
+- All numeric magnitudes are finite.
+- No conductor has zero length.
+- The source references a valid location compatible with the solver.
+- Frequencies are positive and sweeps are valid and bounded in size.
+- The saved file is validated when opened.
+- Results are linked to an immutable snapshot.
+- Conversion to the solver produces diagnostics for non-representable
+  elements.
+- Approximations and simplifications are never hidden.
 
----
-
-## 6. Motor electromagnético y riesgos numéricos
-
-### Decisión inicial
-
-Evaluar NEC-2/nec2c y opciones como NEC2++/PyNEC. Realizar un spike técnico antes de comprometer arquitectura:
-- Licencia y obligaciones de redistribución.
-- Integración como biblioteca o proceso externo.
-- Funcionamiento en Linux y Windows.
-- Dependencias nativas y empaquetado.
-- Disponibilidad de impedancia, corriente, patrón y barridos.
-- Calidad del mantenimiento y formatos de salida.
-- Limitaciones de geometría, suelo y cargas.
-- Caso de referencia ejecutable.
-
-No asumir que una biblioteca GPL puede distribuirse sin consecuencias para la licencia final del producto. Documentar la decisión en un ADR. Xnec2c puede servir como referencia técnica y de UX, aunque no necesariamente como dependencia embebida.
-
-### Discretización
-
-La discretización es una fuente importante de errores. El usuario define conductores físicos; el adaptador crea segmentos numéricos para el motor.
-
-Debe haber:
-- Política de segmentación documentada.
-- Diagnóstico de segmentos demasiado cortos/largos según recomendaciones del motor.
-- Validación de fuentes, uniones y cruces.
-- Visualización de segmentos en modo avanzado.
-- Persistencia de la configuración numérica.
-- Advertencias si la geometría cae fuera de las recomendaciones conocidas.
-
-No convertir una regla de segmentación en verdad universal: basarse en la documentación del solver y validarla con casos concretos.
-
-### Limitaciones físicas
-
-La aplicación debe explicar que:
-- Una ROE baja no demuestra alta eficiencia.
-- El suelo real puede diferir del modelo.
-- La alimentación física puede introducir modo común.
-- Edificios, árboles, mástiles y cables no modelados pueden alterar resultados.
-- Los diámetros, materiales y dimensiones reales tienen tolerancias.
-- La ganancia, ganancia realizada y directividad no son intercambiables.
-- La simulación es una predicción condicionada por el modelo, no una garantía de rendimiento real.
+Templates (dipole, vertical, loop) generate the same canonical `AntennaModel`;
+they must not create independent simulation paths.
 
 ---
 
-## 7. UX: diseño guiado y modo avanzado
+## 6. Electromagnetic engine and numerical risks
 
-### Ventana principal
+### Initial decision
 
-- Barra superior: proyecto, variante, guardar, deshacer/rehacer y simular.
-- Panel de diseño: parámetros de antena y restricciones.
-- Centro: geometría 2D/3D.
-- Panel de resumen: advertencias y estado.
-- Resultados en pestañas: impedancia/ROE, patrón, corrientes, diagnósticos y datos crudos.
+Evaluate NEC-2/nec2c and options such as NEC2++/PyNEC. Perform a technical
+spike before committing architecture:
 
-Evitar saturar el MVP. Mostrar funciones avanzadas progresivamente.
+- License and redistribution obligations.
+- Integration as a library or external process.
+- Operation on Linux and Windows.
+- Native dependencies and packaging.
+- Availability of impedance, current, pattern, and sweeps.
+- Maintenance quality and output formats.
+- Geometry, ground, and load limitations.
+- Executable reference case.
 
-### Asistente de dipolo
+Do not assume that a GPL library can be distributed without consequences for
+the final product license. Document the decision in an ADR. Xnec2c can serve
+as a technical and UX reference, although not necessarily as an embedded
+dependency.
 
-1. Elegir banda o introducir frecuencia.
-2. Indicar orientación y espacio disponible.
-3. Introducir altura.
-4. Elegir conductor/diámetro.
-5. Revisar condiciones de suelo y supuestos.
-6. Generar modelo inicial.
-7. Simular.
-8. Interpretar resonancia, impedancia, ROE y patrón.
-9. Ajustar longitud con control guiado.
-10. Exportar ficha de construcción.
+### Discretization
 
-La longitud inicial debe presentarse como aproximación, no como longitud final universal.
+Discretization is an important source of errors. The user defines physical
+conductors; the adapter creates numerical segments for the engine.
 
-### Principios UX
+There must be:
 
-- Mostrar primero la intención, después los detalles numéricos.
-- Unidades visibles, tooltips y explicaciones breves.
-- Errores accionables.
-- Separar claramente estimaciones analíticas, simulaciones y mediciones.
-- Advertir antes de simular si el modelo es dudoso.
-- Accesibilidad por teclado.
-- Idioma inicial español, preparado para inglés.
+- Documented segmentation policy.
+- Diagnostics for segments that are too short/long according to engine
+  recommendations.
+- Validation of sources, junctions, and crossings.
+- Segment visualization in advanced mode.
+- Persistence of numerical configuration.
+- Warnings if the geometry falls outside known recommendations.
+
+Do not turn a segmentation rule into universal truth: base it on the solver
+documentation and validate it with concrete cases.
+
+### Physical limitations
+
+The application must explain that:
+
+- Low SWR does not prove high efficiency.
+- Real ground may differ from the model.
+- Physical feeding can introduce common mode.
+- Unmodeled buildings, trees, masts, and cables can alter results.
+- Real diameters, materials, and dimensions have tolerances.
+- Gain, realized gain, and directivity are not interchangeable.
+- Simulation is a prediction conditioned by the model, not a guarantee of
+  real-world performance.
 
 ---
 
-## 8. Stack tecnológico
+## 7. UX: guided design and advanced mode
 
-| Área | Elección propuesta | Uso |
+### Main window
+
+- Top bar: project, variant, save, undo/redo, and simulate.
+- Design panel: antenna parameters and constraints.
+- Center: 2D/3D geometry.
+- Summary panel: warnings and status.
+- Results in tabs: impedance/SWR, pattern, currents, diagnostics, and raw data.
+
+Avoid overloading the MVP. Show advanced features progressively.
+
+### Dipole wizard
+
+1. Choose a band or enter a frequency.
+2. Specify orientation and available space.
+3. Enter height.
+4. Choose conductor/diameter.
+5. Review ground conditions and assumptions.
+6. Generate the initial model.
+7. Simulate.
+8. Interpret resonance, impedance, SWR, and pattern.
+9. Adjust length with a guided control.
+10. Export the construction sheet.
+
+The initial length must be presented as an approximation, not as a universal
+final length.
+
+### UX principles
+
+- Show intent first, then numerical details.
+- Visible units, tooltips, and brief explanations.
+- Actionable errors.
+- Clearly separate analytical estimates, simulations, and measurements.
+- Warn before simulating if the model is questionable.
+- Keyboard accessibility.
+- Initial language Spanish, prepared for English.
+
+---
+
+## 8. Technology stack
+
+| Area | Proposed choice | Use |
 |---|---|---|
-| Lenguaje | Python 3.11+ | Lógica, integración y ecosistema científico |
-| GUI | PySide6 / Qt Widgets | Escritorio multiplataforma |
-| Entorno/dependencias | `uv` + `uv.lock` | Reproducibilidad |
-| Tipado | type hints + mypy | Contratos y mantenimiento |
-| Lint/format | Ruff | Calidad y estilo |
-| Tests | pytest | Unitarios, integración, aceptación |
-| Cálculo | NumPy, SciPy | Optimización y cálculos auxiliares |
-| Gráficos interactivos | PyQtGraph | Barridos y curvas |
-| Informes | Matplotlib opcional + HTML/PDF | Gráficos estáticos e informes |
-| Solver | NEC-2 por adaptador | Simulación electromagnética |
-| Proyecto nativo | JSON versionado | Portabilidad y transparencia |
-| Medidas | CSV documentado | Importación inicial |
-| Linux | AppImage tras validación | Distribución |
-| Windows | PyInstaller inicialmente | Ejecutable |
-| CI | GitHub Actions | Tests y builds |
+| Language | Python 3.11+ | Logic, integration, and scientific ecosystem |
+| GUI | PySide6 / Qt Widgets | Cross-platform desktop |
+| Environment/dependencies | `uv` + `uv.lock` | Reproducibility |
+| Typing | type hints + mypy | Contracts and maintenance |
+| Lint/format | Ruff | Quality and style |
+| Tests | pytest | Unit, integration, acceptance |
+| Computation | NumPy, SciPy | Optimization and auxiliary calculations |
+| Interactive charts | PyQtGraph | Sweeps and curves |
+| Reports | Optional Matplotlib + HTML/PDF | Static charts and reports |
+| Solver | NEC-2 through an adapter | Electromagnetic simulation |
+| Native project | Versioned JSON | Portability and transparency |
+| Measurements | Documented CSV | Initial import |
+| Linux | AppImage after validation | Distribution |
+| Windows | PyInstaller initially | Executable |
+| CI | GitHub Actions | Tests and builds |
 
-### Decisiones que no hay que anticipar
+### Decisions not to anticipate
 
-- No usar scikit-rf como modelo de dominio: puede ayudar a manejar datos de redes en una fase futura, pero no representa la geometría de una antena.
-- No añadir PyVista/VTK hasta demostrar que una vista 3D ligera es insuficiente.
-- No introducir una base de datos en el MVP si JSON satisface el caso de uso.
-- No usar `pickle` para archivos de proyecto.
-- No ejecutar el solver desde widgets.
-- No añadir servicios cloud ni telemetría por defecto.
-- No agregar dependencias sin justificar coste, licencia y beneficio.
+- Do not use scikit-rf as the domain model: it can help manage network data
+  in a future phase, but it does not represent antenna geometry.
+- Do not add PyVista/VTK until a lightweight 3D view is proven insufficient.
+- Do not introduce a database in the MVP if JSON satisfies the use case.
+- Do not use `pickle` for project files.
+- Do not run the solver from widgets.
+- Do not add cloud services or telemetry by default.
+- Do not add dependencies without justifying cost, license, and benefit.
 
 ---
 
-## 9. Persistencia e interoperabilidad
+## 9. Persistence and interoperability
 
-### Formato nativo
+### Native format
 
-Usar JSON con `schema_version`, validación y migraciones. Guardado atómico mediante archivo temporal y reemplazo tras confirmar éxito. No ejecutar contenido del archivo ni aceptar deserialización arbitraria.
+Use JSON with `schema_version`, validation, and migrations. Atomic save through
+a temporary file and replacement after confirming success. Do not execute file
+content or accept arbitrary deserialization.
 
-Ejemplo ilustrativo:
+Illustrative example:
 
 ```json
 {
   "format": "antennadesk-project",
   "schema_version": 1,
-  "project": {"id": "uuid", "name": "Dipolo 40 m", "units": "metric"},
+  "project": {"id": "uuid", "name": "40 m dipole", "units": "metric"},
   "designs": [{
     "id": "uuid",
-    "name": "Inicial",
+    "name": "Initial",
     "antenna_type": "wire_dipole",
     "parameters": {
       "target_frequency_hz": 7100000,
@@ -474,86 +540,106 @@ Ejemplo ilustrativo:
 
 ### NEC
 
-- Exportar entrada NEC reproducible.
-- Importar sólo un subconjunto documentado al comienzo.
-- Advertir por elementos ignorados/no soportados.
-- No descartar tarjetas desconocidas en silencio.
-- No prometer round-trip perfecto hasta tener pruebas.
+- Export reproducible NEC input.
+- Import only a documented subset at the beginning.
+- Warn about ignored/unsupported elements.
+- Do not silently discard unknown cards.
+- Do not promise perfect round-trip until tests exist.
 
-### CSV y VNA
+### CSV and VNA
 
-Documentar columnas, unidades, separadores, decimales, convención de fase y datos faltantes. Implementar adaptadores por formato de archivo; no tratar todos los CSV como iguales. En primera instancia, importar archivos; control directo del instrumento queda fuera del MVP.
-
----
-
-## 10. Validación científica y pruebas
-
-### Tres niveles que no deben confundirse
-
-1. **Prueba de software:** la implementación hace lo previsto.
-2. **Validación numérica:** coincide con referencias independientes dentro de tolerancias documentadas.
-3. **Validación experimental:** se compara con mediciones reales considerando incertidumbre y entorno.
-
-### Casos de referencia iniciales
-
-- Dipolo recto en espacio libre.
-- Dipolo con barrido de frecuencia.
-- Dipolo horizontal sobre suelo a distintas alturas.
-- Vertical con modelo de tierra/radiales que admita el motor.
-- Loop y cargas cuando se implementen.
-- Modelos inválidos para probar diagnósticos.
-
-Las referencias deben proceder de una fuente técnica trazable, una herramienta independiente o cálculo contrastado. No crear valores esperados usando la misma implementación que se prueba.
-
-### Pruebas
-
-**Unitarias:** unidades, geometría, validaciones, ROE a partir de impedancia compleja, serialización, migraciones y normalización.
-
-**Integración:** adaptador del solver, parseo de salida real, errores, cancelación, importación CSV, reportes y reapertura de proyectos.
-
-**Aceptación:** crear dipolo sin coordenadas; simular; modificar longitud sin alterar resultados previos; guardar/reabrir; exportar informe; recibir error accionable ante un modelo inválido.
-
-**Regresión numérica:** fixtures versionados, tolerancias explícitas, metadatos de versión/configuración y revisión manual de cambios de resultados. No actualizar snapshots automáticamente sin análisis.
+Document columns, units, separators, decimals, phase convention, and missing
+data. Implement adapters per file format; do not treat all CSV files as equal.
+Initially, import files; direct instrument control is outside the MVP.
 
 ---
 
-## 11. Ejecución, robustez y seguridad
+## 10. Scientific validation and testing
 
-- Ejecutar simulaciones fuera del hilo principal usando `QProcess`, `QThreadPool` u opción validada en el spike.
-- Mantener UI responsiva.
-- Mostrar progreso sólo si el motor proporciona datos reales.
-- Permitir cancelar y limpiar procesos temporales.
-- Limitar concurrencia, duración e iteraciones de optimización.
-- Registrar logs por simulación.
-- Cachear sólo con una clave que incluya modelo, configuración y versión del solver.
-- Tratar archivos importados como datos no confiables.
-- Evitar comandos de shell construidos concatenando entradas del usuario.
-- Validar rutas y tamaños de archivos.
-- No ejecutar scripts embebidos.
-- No descargar/ejecutar automáticamente motores sin un mecanismo explícito y verificable.
-- Fallos del solver no deben cerrar la aplicación.
+### Three levels that must not be confused
+
+1. **Software test:** the implementation does what is intended.
+2. **Numerical validation:** it matches independent references within
+   documented tolerances.
+3. **Experimental validation:** it is compared with real measurements,
+   considering uncertainty and environment.
+
+### Initial reference cases
+
+- Straight dipole in free space.
+- Dipole with frequency sweep.
+- Horizontal dipole over ground at different heights.
+- Vertical with ground/radial model supported by the engine.
+- Loop and loads when implemented.
+- Invalid models to test diagnostics.
+
+References must come from a traceable technical source, an independent tool,
+or a cross-checked calculation. Do not create expected values using the same
+implementation under test.
+
+### Tests
+
+**Unit:** units, geometry, validations, SWR from complex impedance,
+serialization, migrations, and normalization.
+
+**Integration:** solver adapter, real output parsing, errors, cancellation,
+CSV import, reports, and project reopening.
+
+**Acceptance:** create a dipole without coordinates; simulate; modify length
+without altering previous results; save/reopen; export a report; receive an
+actionable error for an invalid model.
+
+**Numerical regression:** versioned fixtures, explicit tolerances, version/
+configuration metadata, and manual review of result changes. Do not update
+snapshots automatically without analysis.
 
 ---
 
-## 12. Reporting y documentación
+## 11. Execution, robustness, and security
 
-Informes HTML como base y PDF cuando el formato sea estable. Incluir geometría, dimensiones, condiciones, motor/versión, resultados con unidades, advertencias, parámetros de optimización y datos de medición relacionados.
-
-Documentación inicial:
-- Primer proyecto: dipolo HF.
-- Cómo interpretar impedancia y ROE.
-- Qué puede y qué no puede decir una simulación.
-- Cómo comparar variantes.
-- Cómo importar mediciones VNA.
-- Diagnóstico de errores comunes.
-
-Mantener glosario: resonancia, reactancia, ROE, impedancia, ganancia, directividad, polarización, suelo, segmento, fuente y carga.
+- Run simulations outside the main thread using `QProcess`, `QThreadPool`, or
+  an option validated in the spike.
+- Keep the UI responsive.
+- Show progress only if the engine provides real data.
+- Allow cancellation and cleanup of temporary processes.
+- Limit concurrency, duration, and optimization iterations.
+- Log each simulation.
+- Cache only with a key that includes model, configuration, and solver
+  version.
+- Treat imported files as untrusted data.
+- Avoid shell commands built by concatenating user input.
+- Validate paths and file sizes.
+- Do not execute embedded scripts.
+- Do not download/execute engines automatically without an explicit,
+  verifiable mechanism.
+- Solver failures must not close the application.
 
 ---
 
-## 13. OpenCode y disciplina de desarrollo
+## 12. Reporting and documentation
 
-Crear y mantener:
+HTML reports as the base and PDF when the format is stable. Include geometry,
+dimensions, conditions, engine/version, results with units, warnings,
+optimization parameters, and related measurement data.
+
+Initial documentation:
+
+- First project: HF dipole.
+- How to interpret impedance and SWR.
+- What a simulation can and cannot say.
+- How to compare variants.
+- How to import VNA measurements.
+- Diagnosis of common errors.
+
+Maintain a glossary: resonance, reactance, SWR, impedance, gain, directivity,
+polarization, ground, segment, source, and load.
+
+---
+
+## 13. OpenCode and development discipline
+
+Create and maintain:
+
 - `AGENTS.md`
 - `docs/DEVELOPMENT_BLUEPRINT.md`
 - `docs/ARCHITECTURE.md`
@@ -562,7 +648,7 @@ Crear y mantener:
 - `docs/VALIDATION_PLAN.md`
 - `docs/ADR/`
 
-### Contenido sugerido para `AGENTS.md`
+### Suggested `AGENTS.md` content
 
 ```markdown
 # Project instructions
@@ -585,229 +671,248 @@ Crear y mantener:
 - Implement one coherent milestone at a time; do not scaffold the whole roadmap.
 ```
 
-### Flujo de trabajo recomendado
+### Recommended workflow
 
-Para cada tarea, OpenCode debe:
-1. Leer blueprint y código existente.
-2. Identificar dominios afectados y dependencias.
-3. Proponer plan corto y archivos a modificar.
-4. Implementar alcance mínimo.
-5. Añadir pruebas.
-6. Ejecutar tests, lint y type checking relevantes.
-7. Revisar límites arquitectónicos.
-8. Actualizar documentación.
-9. Informar cambios, decisiones, pruebas y limitaciones.
+For each task, OpenCode must:
 
-No pedirle que implemente todo el producto de una vez.
+1. Read the blueprint and existing code.
+2. Identify affected domains and dependencies.
+3. Propose a short plan and the files to modify.
+4. Implement the minimum scope.
+5. Add tests.
+6. Run relevant tests, lint, and type checking.
+7. Review architectural boundaries.
+8. Update documentation.
+9. Report changes, decisions, tests, and limitations.
+
+Do not ask it to implement the entire product at once.
 
 ---
 
-## 14. CI/CD y distribución
+## 14. CI/CD and distribution
 
 ### CI
 
-En cada PR:
-- Instalar dependencias desde `uv.lock`.
+On every PR:
+
+- Install dependencies from `uv.lock`.
 - Ruff.
-- mypy sobre módulos definidos.
+- mypy on defined modules.
 - pytest.
-- Tests de dominio sin depender del solver.
-- Integración del solver donde esté disponible.
-- Construcción del paquete.
-- Validación de ejemplos y proyectos de referencia.
+- Domain tests without solver dependency.
+- Solver integration where available.
+- Package build.
+- Validation of examples and reference projects.
 
-### Linux y Windows
+### Linux and Windows
 
-Linux: probar primero ejecución reproducible; empaquetar AppImage sólo tras verificar bibliotecas nativas, licencia y dependencias; probar en distribuciones representativas.
+Linux: first test reproducible execution; package an AppImage only after
+verifying native libraries, license, and dependencies; test on representative
+distributions.
 
-Windows: PyInstaller como primera opción, tras validar integración con el solver; probar en instalación limpia sin Python; documentar dependencias y avisos de seguridad habituales sin recomendar desactivar protecciones.
+Windows: PyInstaller as the first option, after validating solver integration;
+test on a clean installation without Python; document dependencies and usual
+security notices without recommending disabling protections.
 
-La distribución del motor puede ser el principal riesgo de empaquetado. Resolverlo en Fase 0, no al final.
+Engine distribution may be the main packaging risk. Resolve it in Phase 0, not
+at the end.
 
 ---
 
-## 15. Riesgos principales
+## 15. Main risks
 
-| Riesgo | Mitigación |
+| Risk | Mitigation |
 |---|---|
-| Licencia del solver no compatible | Spike temprano y ADR antes de integrarlo |
-| Resultados erróneos o mal interpretados | Casos de referencia independientes y validación física |
-| Geometría/discretización inadecuada | Diagnósticos y validación previa |
-| Alcance excesivo | MVP limitado a dipolo y conductores rectos |
-| UX que oculta supuestos físicos | Mostrar condiciones, advertencias y glosario |
-| Dependencia externa sin mantenimiento | Adaptador propio y alternativa evaluada |
-| Diferencias Linux/Windows | CI y prueba de paquete limpio |
-| Comparación incorrecta con VNA | Guardar calibración, plano de referencia y accesorios |
-| Optimización poco construible | Restricciones físicas y objetivos explícitos |
-| Pérdida de proyectos antiguos | Esquema versionado y migraciones probadas |
+| Solver license incompatible | Early spike and ADR before integration |
+| Wrong or misinterpreted results | Independent reference cases and physical validation |
+| Inadequate geometry/discretization | Diagnostics and prior validation |
+| Excessive scope | MVP limited to dipole and straight conductors |
+| UX that hides physical assumptions | Show conditions, warnings, and glossary |
+| Unmaintained external dependency | Custom adapter and evaluated alternative |
+| Linux/Windows differences | CI and clean-package testing |
+| Incorrect VNA comparison | Store calibration, reference plane, and accessories |
+| Hard-to-build optimization | Physical constraints and explicit objectives |
+| Loss of old projects | Versioned schema and tested migrations |
 
 ---
 
-## 16. Roadmap con criterios de salida
+## 16. Roadmap with exit criteria
 
-### Fase 0 — Spike técnico (P0)
+### Phase 0 — Technical spike (P0)
 
-- Comparar NEC-2/nec2c, NEC2++/PyNEC y opciones pertinentes.
-- Revisar licencia, redistribución, integración Python/proceso externo y portabilidad.
-- Ejecutar un caso simple en Linux y Windows.
-- Inspeccionar entrada/salida y disponibilidad de resultados.
-- Crear ADR con decisión y riesgos.
+- Compare NEC-2/nec2c, NEC2++/PyNEC, and relevant options.
+- Review license, redistribution, Python/process integration, and portability.
+- Run a simple case on Linux and Windows.
+- Inspect input/output and result availability.
+- Create an ADR with the decision and risks.
 
-**Salida:** motor elegido con evidencia y caso reproducible. No iniciar la GUI antes de resolver el riesgo de distribución.
+**Exit:** engine selected with evidence and a reproducible case. Do not start
+the GUI before resolving the distribution risk.
 
-### Fase 1 — Dominio y persistencia (P0)
+### Phase 1 — Domain and persistence (P0)
 
-- Estructura, tooling y `AGENTS.md`.
-- Unidades, geometría, conductor, fuente y entorno mínimos.
-- Validaciones.
-- JSON versionado y guardado atómico.
-- Tests de dominio y migraciones.
+- Structure, tooling, and `AGENTS.md`.
+- Minimum units, geometry, conductor, source, and environment.
+- Validations.
+- Versioned JSON and atomic save.
+- Domain and migration tests.
 
-**Salida:** crear, validar, guardar y reabrir un dipolo sin GUI ni solver.
+**Exit:** create, validate, save, and reopen a dipole without GUI or solver.
 
-### Fase 2 — Adaptador y referencias (P0)
+### Phase 2 — Adapter and references (P0)
 
-- Generación de entrada.
-- Ejecución, captura de errores y cancelación.
-- Parseo y normalización.
-- Casos de referencia con tolerancias.
-- Logs y advertencias.
+- Input generation.
+- Execution, error capture, and cancellation.
+- Parsing and normalization.
+- Reference cases with tolerances.
+- Logs and warnings.
 
-**Salida:** dipolo de referencia simulado reproduciblemente y comparado con fuente independiente.
+**Exit:** reference dipole simulated reproducibly and compared with an
+independent source.
 
-### Fase 3 — MVP guiado (P0)
+### Phase 3 — Guided MVP (P0)
 
-- Ventana principal y wizard.
-- Parámetros de frecuencia, longitud, altura y diámetro.
-- Geometría generada automáticamente.
-- Simulación asíncrona.
-- Impedancia, ROE, barrido y patrón básico.
-- Guardar/abrir proyectos.
+- Main window and wizard.
+- Frequency, length, height, and diameter parameters.
+- Automatically generated geometry.
+- Asynchronous simulation.
+- Impedance, SWR, sweep, and basic pattern.
+- Save/open projects.
 
-**Salida:** un usuario simula un dipolo sin editar coordenadas ni archivos NEC.
+**Exit:** a user simulates a dipole without editing coordinates or NEC files.
 
-### Fase 4 — Comparación e informes (P1)
+### Phase 4 — Comparison and reports (P1)
 
-- Vista geométrica mejorada.
-- Comparación A/B.
-- Corrientes si el motor las soporta.
-- CSV y reportes HTML/PDF.
-- Marcadores de resonancia.
+- Improved geometry view.
+- A/B comparison.
+- Currents if the engine supports them.
+- CSV and HTML/PDF reports.
+- Resonance markers.
 
-**Salida:** variantes comparables e informe reproducible.
+**Exit:** comparable variants and a reproducible report.
 
-### Fase 5 — Optimización y construcción (P1)
+### Phase 5 — Optimization and construction (P1)
 
-- Ajuste de longitud con límites.
-- Registro de iteraciones y objetivo.
-- Restricciones de espacio.
-- Hoja de construcción y análisis de sensibilidad.
+- Length adjustment with limits.
+- Iteration and objective logging.
+- Space constraints.
+- Construction sheet and sensitivity analysis.
 
-**Salida:** el usuario ajusta un dipolo a un objetivo y entiende los cambios.
+**Exit:** the user adjusts a dipole to a target and understands the changes.
 
-### Fase 6 — Nuevas antenas y mediciones (P1/P2)
+### Phase 6 — New antennas and measurements (P1/P2)
 
-- Incorporar vertical, loop o dipolo plegado según demanda.
-- Importación CSV de VNA por adaptadores.
-- Registro de condiciones de medición.
-- Comparación simulación/medición.
-- Validación con antena física.
+- Add vertical, loop, or folded dipole according to demand.
+- VNA CSV import through adapters.
+- Measurement condition records.
+- Simulation/measurement comparison.
+- Physical antenna validation.
 
-**Salida:** cada nueva geometría tiene tests de referencia y limitaciones documentadas.
+**Exit:** each new geometry has reference tests and documented limitations.
 
-### Fase 7 — Editor avanzado (P2)
+### Phase 7 — Advanced editor (P2)
 
-- Editor libre de conductores.
-- Importación de subconjunto NEC.
-- Fuentes/cargas avanzadas.
-- Optimización multiobjetivo.
-- Otros motores sólo ante necesidad demostrada.
+- Free conductor editor.
+- NEC subset import.
+- Advanced sources/loads.
+- Multi-objective optimization.
+- Other engines only when a need is demonstrated.
 
-**Salida:** los usuarios avanzados pueden extender diseños sin perjudicar el flujo guiado.
+**Exit:** advanced users can extend designs without harming the guided flow.
 
 ---
 
-## 17. Primer milestone recomendado
+## 17. Recommended first milestone
 
-No empezar por una interfaz atractiva. Crear primero una prueba vertical:
+Do not start with an attractive interface. First create a vertical slice:
 
-1. Construir un modelo de dipolo desde parámetros.
-2. Validarlo y generar diagnósticos.
-3. Convertirlo a entrada NEC.
-4. Ejecutar el motor y capturar salida.
-5. Normalizar impedancia y patrón.
-6. Comparar con referencia independiente.
-7. Guardar modelo, configuración y resultado.
-8. Reabrir el proyecto y generar un reporte mínimo.
+1. Build a dipole model from parameters.
+2. Validate it and generate diagnostics.
+3. Convert it to NEC input.
+4. Run the engine and capture output.
+5. Normalize impedance and pattern.
+6. Compare with an independent reference.
+7. Save the model, configuration, and result.
+8. Reopen the project and generate a minimal report.
 
-Después de validar esta ruta, implementar el wizard y la GUI.
+After validating this path, implement the wizard and the GUI.
 
 ---
 
 ## 18. Definition of Done
 
-Una funcionalidad está terminada cuando:
-- Cumple criterios de aceptación.
-- Tiene pruebas adecuadas al riesgo.
-- Respeta límites de dominio.
-- Usa unidades y convenciones explícitas.
-- Expone errores y limitaciones.
-- Actualiza documentación.
-- No bloquea la UI en operaciones largas.
-- Pasa tests/lint/type checks pertinentes.
-- No introduce dependencias sin justificar.
-- Mantiene compatibilidad de proyectos o incluye migración.
-- Declara limitaciones pendientes.
+A feature is complete when:
 
-Una función de simulación no está terminada porque el motor devuelva un número: necesita validación, interpretación y advertencias.
+- It meets acceptance criteria.
+- It has tests appropriate to the risk.
+- It respects domain boundaries.
+- It uses explicit units and conventions.
+- It exposes errors and limitations.
+- It updates documentation.
+- It does not block the UI during long operations.
+- It passes relevant tests/lint/type checks.
+- It does not introduce dependencies without justification.
+- It maintains project compatibility or includes a migration.
+- It states remaining limitations.
 
----
-
-## 19. Métricas de salud
-
-- Casos de referencia que pasan.
-- Regresiones numéricas investigadas y resueltas.
-- Cobertura de pruebas del dominio y adaptadores.
-- Flujos principales con pruebas de aceptación.
-- Responsividad de UI durante simulación.
-- Proyectos de ejemplo que abren en cada release.
-- Builds limpios Linux/Windows.
-- Formatos de importación con fixtures y tests.
-
-La cobertura de código es una señal auxiliar, no una prueba de validez electromagnética.
+A simulation feature is not complete because the engine returns a number: it
+needs validation, interpretation, and warnings.
 
 ---
 
-## 20. ADRs iniciales
+## 19. Health metrics
 
-Crear decisiones breves con contexto, alternativas, decisión y consecuencias:
-1. Motor y licencia.
-2. Arquitectura y límites de dominios.
-3. Unidades y convenciones angulares.
-4. Formato de proyecto y migraciones.
-5. Ejecución/cancelación de simulaciones.
-6. Estrategia de visualización 3D.
-7. Formatos de importación/exportación.
-8. Licencia del producto.
-9. Empaquetado Linux/Windows.
+- Reference cases passing.
+- Numerical regressions investigated and resolved.
+- Test coverage of the domain and adapters.
+- Main flows with acceptance tests.
+- UI responsiveness during simulation.
+- Example projects that open in every release.
+- Clean Linux/Windows builds.
+- Import formats with fixtures and tests.
 
----
-
-## 21. Instrucción inicial para OpenCode
-
-Usar este documento como guía, no como orden para implementar todo a la vez.
-
-**Primera tarea:** realizar exclusivamente la Fase 0. Comparar opciones de motor NEC en cuanto a licencia, integración, portabilidad, resultados disponibles, mantenimiento y distribución. Crear una tabla comparativa, un spike reproducible y un ADR recomendado. No implementar aún la GUI ni el modelo completo.
-
-Después de aprobar esa decisión, avanzar a Fase 1. Si una tarea puntual contradice el blueprint, explicar el conflicto antes de modificar la arquitectura.
+Code coverage is an auxiliary signal, not proof of electromagnetic validity.
 
 ---
 
-## 22. Referencias técnicas iniciales
+## 20. Initial ADRs
+
+Create short decisions with context, alternatives, decision, and consequences:
+
+1. Engine and license.
+2. Architecture and domain boundaries.
+3. Units and angular conventions.
+4. Project format and migrations.
+5. Simulation execution/cancellation.
+6. 3D visualization strategy.
+7. Import/export formats.
+8. Product license.
+9. Linux/Windows packaging.
+
+---
+
+## 21. Initial instruction for OpenCode
+
+Use this document as a guide, not as an order to implement everything at once.
+
+**First task:** perform only Phase 0. Compare NEC engine options in terms of
+license, integration, portability, available results, maintenance, and
+distribution. Create a comparison table, a reproducible spike, and a
+recommended ADR. Do not implement the GUI or the complete model yet.
+
+After that decision is approved, move to Phase 1. If a specific task
+contradicts the blueprint, explain the conflict before changing the
+architecture.
+
+---
+
+## 22. Initial technical references
 
 - Qt for Python / PySide6: https://doc.qt.io/qtforpython-6/
 - PyNEC: https://pypi.org/project/PyNEC/
 - Xnec2c, manual: https://www.xnec2c.org/
-- Xnec2c, repositorio: https://github.com/KJ7LNW/xnec2c
+- Xnec2c, repository: https://github.com/KJ7LNW/xnec2c
 
-Son puntos de partida, no una aprobación definitiva. Confirmar versión, mantenimiento, compatibilidad, licencia y condiciones de redistribución al elegir el motor.
+These are starting points, not definitive approval. Confirm version,
+maintenance, compatibility, license, and redistribution conditions when
+choosing the engine.

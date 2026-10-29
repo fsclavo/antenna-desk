@@ -1,130 +1,128 @@
 # Phase 0 — Solver spike
 
-Este directorio contiene el spike reproducible de la Fase 0 del
-[blueprint](../../docs/antennadesk-development-blueprint.md). Su objetivo es
-demostrar que un motor NEC-2 puede integrarse, ejecutarse y validarse en Linux
-y Windows antes de comprometer la arquitectura de AntennaDesk.
+This directory contains the reproducible Phase 0 spike from the
+[development blueprint](../../docs/antennadesk-development-blueprint.md). Its
+goal is to prove that a NEC-2 engine can be integrated, executed, and
+validated on Linux and Windows before committing to the AntennaDesk
+architecture.
 
-## Resultado corto
+## Short result
 
-- Motor recomendado para el MVP: **nec2c 1.3.3** como **proceso externo**.
-- Fuente fijada: commit `55be1e0e3fe5ee9dad4ce6050711450d19c562fd` de
+- Recommended MVP engine: **nec2c 1.3.3** as an **external process**.
+- Pinned source: commit `55be1e0e3fe5ee9dad4ce6050711450d19c562fd` from
   [`KJ7LNW/nec2c`](https://github.com/KJ7LNW/nec2c).
-- Licencia: el `nec2c` original es de dominio público; el fork declara
-  GPL-3.0. AntennaDesk es GPL-3.0-or-later, por lo que es compatible.
-- Se reproduce el valor impreso del **NEC-2 User's Guide, Ejemplo 1**
-  (`82.6979 + j46.3060 Ω` a 299.8 MHz) con diferencia menor a `0.001 Ω`.
-- Se reproducen los ejemplos de suelo perfecto y finito del **Ejemplo 3**
-  con diferencia menor a `0.01 Ω`.
-- El binario Windows x86-64 se compiló y ejecutó correctamente; los 19 checks
-  pasan también a través del binario PE (probado con Wine en Linux).
+- License: original nec2c is public domain; the fork declares GPL-3.0.
+  AntennaDesk is GPL-3.0-or-later, so it is compatible.
+- Reproduces the printed **NEC-2 User's Guide, Example 1** value
+  (`82.6979 + j46.3060 Ω` at 299.8 MHz) with a difference below `0.001 Ω`.
+- Reproduces the perfect-ground and finite-ground examples from **Example 3**
+  with a difference below `0.01 Ω`.
+- The Windows x86-64 binary builds and runs correctly; all 19 checks pass on
+  the PE binary as well (tested with Wine on Linux and in native Windows CI).
 
-La decisión y sus consecuencias están en
+The decision and its consequences are in
 [`docs/ADR/0001-solver-selection.md`](../../docs/ADR/0001-solver-selection.md).
-La comparación completa está en
+The full comparison is in
 [`docs/spikes/phase0-solver-evaluation.md`](../../docs/spikes/phase0-solver-evaluation.md).
 
-## Estructura
+## Structure
 
 ```text
 spikes/phase0/
-├── cases/       # Decks NEC de entrada
-├── expected/    # Valores publicados y tolerancias
-├── patches/     # Parche de portabilidad Windows para nec2c
-├── scripts/     # Build, ejecución y parseo
-├── .cache/      # Fuente descargada (ignorada por git)
-└── build/       # Binarios compilados (ignorados por git)
+├── cases/       # NEC input decks
+├── expected/    # Published values and tolerances
+├── patches/     # Windows portability patch for nec2c
+├── scripts/     # Build, execution, and parsing
+├── .cache/      # Downloaded source (git-ignored)
+└── build/       # Compiled binaries (git-ignored)
 ```
 
-## Requisitos
+## Requirements
 
-- Linux/macOS: `bash`, `curl`, `sha256sum`, compilador C (`cc`/`gcc`), Python 3.11+.
-- Windows nativo con MSYS2/MinGW64: `gcc`, `make`, `patch`, `curl`, Python.
-- Alternativa de cross-build desde Linux: `zig` o `x86_64-w64-mingw32-gcc`.
+- Linux: `bash`, `curl`, `sha256sum`, C compiler (`cc`/`gcc`), Python 3.11+.
+- Native Windows with MSYS2/MinGW64: `gcc`, `make`, `patch`, `curl`, Python.
+- Cross-build from Linux: `zig` or `x86_64-w64-mingw32-gcc`.
 
-No se necesita Fortran ni NumPy/SciPy para este spike.
+Fortran and NumPy/SciPy are not required for this spike.
 
-## Reproducir en Linux
+## Reproduce on Linux
 
 ```bash
 bash spikes/phase0/scripts/build_nec2c.sh
 python3 spikes/phase0/scripts/run_reference.py --nec2c spikes/phase0/build/nec2c
 ```
 
-Salida esperada: `19/19 checks passed`.
+Expected output: `19/19 checks passed`.
 
-## Reproducir en Windows
+## Reproduce on Windows
 
-En MSYS2/MinGW64:
+In MSYS2/MinGW64:
 
 ```bash
 bash spikes/phase0/scripts/build_nec2c_windows.sh
 python spikes/phase0/scripts/run_reference.py --nec2c spikes/phase0/build/nec2c.exe
 ```
 
-Cross-build desde Linux con Zig:
+Cross-build from Linux with Zig:
 
 ```bash
 CC="zig cc -target x86_64-windows-gnu" \
   bash spikes/phase0/scripts/build_nec2c_windows.sh
 ```
 
-El `.exe` resultante es un PE32+ x86-64. En Linux se puede ejecutar con Wine
-para una verificación adicional; la validación nativa se ejecutó en GitHub
-Actions (`.github/workflows/solver-spike.yml`): Linux y Windows, `19/19` checks.
+The resulting `.exe` is a PE32+ x86-64 binary. On Linux it can be run with
+Wine for an additional check; native validation runs in GitHub Actions
+(`.github/workflows/solver-spike.yml`): Linux and Windows, `19/19` checks.
 
-## Casos de referencia
+## Reference cases
 
-Los valores esperados se transcribieron del **NEC-2 User's Guide, Part III**
-(Burke y Poggio), no se generaron con nec2c:
+Expected values were transcribed from the **NEC-2 User's Guide, Part III**
+(Burke and Poggio), not generated by nec2c:
 
-| Caso | Frecuencia | Valor esperado | Fuente |
+| Case | Frequency | Expected value | Source |
 |---|---:|---:|---|
-| `nec2_manual_example1` | 299.8 MHz | `82.6979 + j46.3060 Ω` | Ejemplo 1, espacio libre |
-| `nec2_manual_example3_perfect` | 30 MHz | `106.437 + j9.90578 Ω` | Ejemplo 3, suelo perfecto |
-| `nec2_manual_example3_finite` | 30 MHz | `111.117 + j11.0075 Ω` | Ejemplo 3, suelo finito (`εr=6`, `σ=1e-3 S/m`) |
-| `scaled_example1_7mhz` | 7.1 MHz | mismo que Ejemplo 1, tolerancia `0.1 Ω` | Escalado en frecuencia |
+| `nec2_manual_example1` | 299.8 MHz | `82.6979 + j46.3060 Ω` | Example 1, free space |
+| `nec2_manual_example3_perfect` | 30 MHz | `106.437 + j9.90578 Ω` | Example 3, perfect ground |
+| `nec2_manual_example3_finite` | 30 MHz | `111.117 + j11.0075 Ω` | Example 3, finite ground (`εr=6`, `σ=1e-3 S/m`) |
+| `scaled_example1_7mhz` | 7.1 MHz | same as Example 1, `0.1 Ω` tolerance | Frequency scaling |
 
-Tolerancia global: `0.05 Ω` absolutos por componente. El caso escalado usa
-`0.1 Ω` por el redondeo de coordenadas y radio.
+Global tolerance: `0.05 Ω` absolute per component. The scaled case uses
+`0.1 Ω` because of coordinate and radius rounding.
 
-El caso `dipole_sweep_pattern` no tiene referencia numérica independiente: se
-usa como smoke test de 21 frecuencias, 21 cortes de patrón y 21 secciones de
-corrientes.
+The `dipole_sweep_pattern` case has no independent numerical reference; it is
+a smoke test for 21 frequencies, 21 pattern cuts, and 21 current sections.
 
-## Hallazgos relevantes
+## Relevant findings
 
-1. **Salida suficiente:** nec2c entrega impedancia de entrada, corrientes por
-   segmento, presupuesto de potencia y patrón de campo lejano en texto estable.
-2. **Rendimiento:** el barrido de 21 frecuencias con patrón y corrientes se
-   ejecutó en aproximadamente 6 ms en el equipo de prueba.
-3. **Portabilidad Windows:** nec2c usa `getopt`, `sigaction`, `times()` y
-   `sys/times.h`; el parche de `patches/nec2c-windows.patch` reemplaza esas
-   dependencias. Es pequeño y mantenible, pero debe reaplicarse al actualizar
-   la versión.
-4. **Nombres de archivo:** nec2c limita el nombre de entrada a ~80 caracteres.
-   El adaptador debe ejecutar en un directorio de trabajo corto y usar nombres
-   relativos, no rutas absolutas largas.
-5. **Formato de texto:** es estable dentro de una versión, pero no es un
-   contrato formal. Hay que fijar la versión del motor y cubrir el parser con
-   fixtures.
-6. **Diferencias entre motores:** `nec2c` y `nec2++` coinciden dentro de
-   ~0.02 % en los casos probados. No son bit-a-bit idénticos.
+1. **Sufficient output:** nec2c provides input impedance, segment currents,
+   power budget, and far-field patterns in stable text.
+2. **Performance:** the 21-frequency sweep with pattern and currents ran in
+   approximately 6 ms on the test machine.
+3. **Windows portability:** nec2c uses `getopt`, `sigaction`, `times()`, and
+   `sys/times.h`; `patches/nec2c-windows.patch` replaces those dependencies. It
+   is small and maintainable but must be reapplied when upgrading the engine.
+4. **File names:** nec2c limits the input file name to about 80 characters.
+   The adapter must run in a short working directory and use relative names,
+   not long absolute paths.
+5. **Text format:** stable within a version, but not a formal contract. The
+   engine version must be pinned and the parser covered by fixtures.
+6. **Engine differences:** `nec2c` and `nec2++` agree within about `0.02 %` on
+   the tested cases. They are not bit-for-bit identical.
 
-## Limitaciones de este spike
+## Spike limitations
 
-- No se probó una instalación limpia de Windows sin MSYS2; eso queda para el
-  pipeline de empaquetado.
-- No se validaron aún antenas con cargas, redes, radiales ni geometrías
-  complejas.
-- No se implementó cancelación, límites de tiempo ni captura de stderr en un
-  adaptador de producción.
-- Los valores de referencia cubren solo dos ejemplos del manual y un caso
-  escalado. La validación científica completa pertenece a la Fase 2.
+- A clean Windows installation without MSYS2 was not tested; that belongs to
+  the packaging pipeline.
+- Antennas with loads, networks, radials, or complex geometries were not
+  validated yet.
+- Cancellation, time limits, and stderr capture were not implemented in a
+  production adapter.
+- Reference values cover only two manual examples and one scaled case. Full
+  scientific validation belongs to Phase 2.
 
-## Próximos pasos
+## Next steps
 
-1. Aprobar el ADR y fijar `nec2c` como motor del MVP.
-2. Pasar a Fase 1 (dominio, persistencia, tooling) sin introducir GUI todavía.
-3. En Fase 2, convertir estos scripts en el adaptador real, con parser probado,
-   cancelación, logs y casos de regresión numérica.
+1. Keep `nec2c` pinned as the MVP engine (ADR-0001 accepted).
+2. Move to Phase 1 (domain, persistence, tooling) without introducing the GUI.
+3. In Phase 2, turn these scripts into the real adapter with a tested parser,
+   cancellation, logs, and numerical regression cases.

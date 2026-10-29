@@ -1,79 +1,80 @@
-# Decisiones de proyecto confirmadas
+# Confirmed project decisions
 
-**Fecha:** 2026-10-28  
-**Responsable:** Fernando Sclavo  
-**Estado:** decisiones iniciales confirmadas para arrancar el proyecto
+**Date:** 2026-10-28  
+**Owner:** Fernando Sclavo  
+**Status:** initial decisions confirmed to start the project
 
-Este registro conserva las respuestas dadas antes de la Fase 0. No sustituye
-a los ADR: cuando una decisión tenga alternativas técnicas y consecuencias
-arquitectónicas, se documentará en `docs/ADR/`.
+This record preserves the answers given before Phase 0. It does not replace
+ADRs: when a decision has technical alternatives and architectural
+consequences, it is documented in `docs/ADR/`.
 
-## Licencia y propiedad
+## License and ownership
 
-- Licencia del proyecto: **GPL-3.0-or-later**.
+- Project license: **GPL-3.0-or-later**.
 - Copyright: **2026 Fernando Sclavo**.
-- Cabeceras SPDX breves en archivos fuente.
-- Documentación bajo la misma licencia GPL-3.0-or-later.
-- Distribución de binarios con fuentes y scripts de empaquetado.
-- Contribuciones con **DCO** (`Signed-off-by`), sin CLA.
-- Dependencias permitidas: solo licencias compatibles con GPLv3 (MIT, BSD,
-  Apache-2.0, LGPLv3, GPLv3); nada propietario ni GPLv2-only.
+- Short SPDX headers in source files.
+- Documentation under the same GPL-3.0-or-later license.
+- Binary distribution includes sources and packaging scripts.
+- Contributions use **DCO** (`Signed-off-by`), without a CLA.
+- Allowed dependencies: GPLv3-compatible licenses only (MIT, BSD, Apache-2.0,
+  LGPLv3, GPLv3); no proprietary or GPLv2-only code.
 
-## Motor y validación
+## Engine and validation
 
-- Motor del MVP: **nec2c 1.3.3** como proceso externo, con versión fijada por
-  commit y parche Windows mantenido. Ver `docs/ADR/0001-solver-selection.md`.
-- Alternativa de contraste: **NEC2++/PyNEC**, no como dependencia de runtime.
-- **xnec2c** se usa solo como referencia técnica y de UX.
-- Fuentes independientes disponibles: samples de **MMANA-GAL** y el
-  **ARRL Antenna Book**; se usarán para ampliar la validación en Fase 2.
+- MVP engine: **nec2c 1.3.3** as an external process, pinned by commit and
+  kept with a maintained Windows patch. See
+  `docs/ADR/0001-solver-selection.md`.
+- Cross-check alternative: **NEC2++/PyNEC**, not a runtime dependency.
+- **xnec2c** is used only as a technical and UX reference.
+- Independent sources available: **MMANA-GAL** samples and the **ARRL Antenna
+  Book**; they will be used to expand validation in Phase 2.
 
-## Plataformas y entorno
+## Platforms and environment
 
-- Linux y Windows.
-- Validación local en Linux; Windows en GitHub Actions.
-- Python `>=3.11`; CI con matriz 3.11–3.13.
-- Entorno y dependencias con `uv` + `uv.lock`.
-- CI en GitHub Actions desde el inicio.
+- Linux and Windows.
+- Local validation on Linux; Windows validation in GitHub Actions.
+- Python `>=3.11`; CI matrix 3.11–3.13.
+- Environment and dependencies with `uv` + `uv.lock`.
+- GitHub Actions CI from the start.
 
-## Arquitectura y dominio
+## Architecture and domain
 
-- Arquitectura hexagonal / ports and adapters.
-- Dominio sin PySide6, SciPy ni bibliotecas concretas del solver.
-- Persistencia: **dataclasses** en dominio; **Pydantic v2** solo en el borde de
-  persistencia/validación de esquema.
-- Convención geométrica interna: ejes derecho, **Z arriba**, azimut desde el
-  Norte, elevación sobre el horizonte; mapeo explícito a theta/phi de NEC.
-- Unidades: **métrico e imperial seleccionable en preferencias**; el dominio
-  usa unidades canónicas (metros, Hz, ohmios).
-- Paquete Python: `antennadesk`.
-- Formato de proyecto: `.antennadesk` (JSON versionado).
-- Bandas: **HF, VHF y UHF desde el inicio**, sin prometer precisión fuera del
-  modelo admitido por el motor.
+- Hexagonal architecture / ports and adapters.
+- Domain code must not import PySide6, SciPy, or concrete solver libraries.
+- Persistence: **dataclasses** in the domain; **Pydantic v2** only at the
+  persistence/schema-validation boundary.
+- Internal geometry convention: right-handed axes, **Z up**, azimuth from
+  North, elevation above the horizon; explicit mapping to NEC theta/phi.
+- Units: **metric and imperial selectable in preferences**; the domain uses
+  canonical units (meters, Hz, ohms).
+- Python package: `antennadesk`.
+- Project format: `.antennadesk` (versioned JSON).
+- Bands: **HF, VHF, and UHF from the start**, without promising accuracy
+  outside the model supported by the engine.
 
-## Producto y UX
+## Product and UX
 
-- UI en **español e inglés**; identificadores y código en inglés.
-- Documentación en español.
-- i18n con `tr()` desde el inicio.
-- Local-first, sin cuentas, nube ni telemetría obligatoria.
+- UI in **Spanish and English**; identifiers and code in English.
+- Documentation and README in English.
+- i18n with `tr()` from the start.
+- Local-first, with no accounts, cloud, or mandatory telemetry.
 
-## Calidad y flujo de trabajo
+## Quality and workflow
 
-- `mypy` estricto en dominio y aplicación.
-- `Ruff` para lint/format.
-- `pytest` para unitarias, integración y aceptación.
-- Cobertura como señal auxiliar, no como prueba de validez electromagnética.
-- Ramas cortas + pull request.
+- Strict `mypy` for domain and application code.
+- `Ruff` for lint and formatting.
+- `pytest` for unit, integration, and acceptance tests.
+- Coverage is a supporting signal, not proof of electromagnetic validity.
+- Short-lived branches and pull requests.
 - **Conventional Commits**.
-- Fase 0 antes de la GUI; no scaffoldear todo el roadmap.
+- Phase 0 before the GUI; do not scaffold the whole roadmap.
 
-## Próximas decisiones que requerirán ADR
+## Decisions still requiring an ADR
 
-- Arquitectura y límites definitivos.
-- Unidades y convenciones angulares (implementación concreta).
-- Formato de proyecto y migraciones.
-- Ejecución/cancelación de simulaciones.
-- Estrategia de visualización 3D.
-- Formatos de importación/exportación.
-- Empaquetado Linux/Windows.
+- Final architecture and boundaries.
+- Units and angular conventions (concrete implementation).
+- Project format and migrations.
+- Simulation execution and cancellation.
+- 3D visualization strategy.
+- Import/export formats.
+- Linux/Windows packaging.
