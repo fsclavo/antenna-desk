@@ -583,6 +583,9 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "loads.add": {Language.ENGLISH: "Add", Language.SPANISH: "Agregar"},
     "loads.remove": {Language.ENGLISH: "Remove", Language.SPANISH: "Quitar"},
+    "loads.kind": {Language.ENGLISH: "Type", Language.SPANISH: "Tipo"},
+    "loads.series": {Language.ENGLISH: "Series", Language.SPANISH: "Serie"},
+    "loads.parallel": {Language.ENGLISH: "Parallel", Language.SPANISH: "Paralelo"},
     "loads.wire": {Language.ENGLISH: "Wire", Language.SPANISH: "Hilo"},
     "loads.offset": {
         Language.ENGLISH: "Position",

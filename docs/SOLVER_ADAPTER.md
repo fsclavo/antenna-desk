@@ -111,8 +111,9 @@ impedance against the computed value `2.351965` at 50 Ω.
   `SimulationSpec.include_conductor_losses` is true (the default). Set it to
   false to reproduce perfect-conductor reference cases. Relative permeability
   is not emitted.
-- Series RLC loads are emitted as `LD 0` on one segment. Networks,
-  transmission lines, and radial ground screens are not implemented.
+- Series and parallel RLC loads are emitted as `LD 0`/`LD 1` on one segment.
+  General networks, transmission lines, and radial ground screens are not
+  implemented.
 - Only free-space, perfect, and finite ground models are emitted.
 - The segmentation policy is a documented heuristic with optional per-wire
   overrides; explicit segment counts

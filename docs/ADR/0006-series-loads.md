@@ -1,4 +1,4 @@
-# ADR-0006 — Series RLC loads on wires
+# ADR-0006 — Series and parallel RLC loads on wires
 
 - **Status:** Accepted
 - **Date:** 2026-10-29
@@ -16,16 +16,17 @@ Loads also need to survive template changes, persistence, reports, and edits.
 
 ## Decision
 
-1. Add `SeriesLoad` with a stable identifier, wire identifier, position along
-   the wire, and non-negative `R`, `L`, and `C`. At least one element must be
-   non-zero.
+1. Add `SeriesLoad` and `ParallelLoad` with a stable identifier, wire
+   identifier, position along the wire, and non-negative `R`, `L`, and `C`. At
+   least one element must be non-zero.
 2. Store loads on `AntennaModel`. `DesignVariant` compares the generated
    geometry plus the design's loads, and `with_parameters()` preserves loads
    when the wire identifiers still exist.
 3. Persist loads as an optional list in the existing schema v3 antenna payload.
    Older projects load with an empty list; no migration is required.
-4. Map a load position to the containing segment and emit one `LD 0` card.
-   The mapping is explicit and visible in the generated NEC input.
+4. Map a load position to the containing segment and emit one `LD 0` (series)
+   or `LD 1` (parallel) card. The mapping is explicit and visible in the
+   generated NEC input.
 5. Provide a load editor in the UI. Inductance is entered in µH and
    capacitance in pF; the domain and project file remain in henries and farads.
 6. Include loads in HTML/PDF reports and construction sheets.

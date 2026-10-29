@@ -24,7 +24,7 @@ from ..domain.antennas.folded_dipole import (
     FoldedDipoleParameters,
 )
 from ..domain.antennas.geometry import Point3D
-from ..domain.antennas.load import SeriesLoad
+from ..domain.antennas.load import LoadKind, LumpedLoad, ParallelLoad, SeriesLoad
 from ..domain.antennas.loop import (
     ANTENNA_TYPE_LOOP,
     MAX_SIDES,
@@ -112,6 +112,7 @@ class LoadPayload(StrictModel):
     id: str = Field(min_length=1)
     wire_id: str = Field(min_length=1)
     offset_m: float = Field(ge=0.0)
+    kind: LoadKind = LoadKind.SERIES
     resistance_ohm: float = Field(default=0.0, ge=0.0)
     inductance_h: float = Field(default=0.0, ge=0.0)
     capacitance_f: float = Field(default=0.0, ge=0.0)
@@ -416,11 +417,12 @@ def _environment_from_domain(value: Environment) -> EnvironmentPayload:
     return EnvironmentPayload(ground=_ground_from_domain(value.ground))
 
 
-def _load_from_domain(value: SeriesLoad) -> LoadPayload:
+def _load_from_domain(value: LumpedLoad) -> LoadPayload:
     return LoadPayload(
         id=value.id,
         wire_id=value.wire_id,
         offset_m=value.offset_m,
+        kind=(LoadKind.PARALLEL if isinstance(value, ParallelLoad) else LoadKind.SERIES),
         resistance_ohm=value.resistance_ohm,
         inductance_h=value.inductance_h,
         capacitance_f=value.capacitance_f,
@@ -711,8 +713,9 @@ def _environment_to_domain(value: EnvironmentPayload) -> Environment:
     return Environment(ground=_ground_to_domain(value.ground))
 
 
-def _load_to_domain(value: LoadPayload) -> SeriesLoad:
-    return SeriesLoad(
+def _load_to_domain(value: LoadPayload) -> SeriesLoad | ParallelLoad:
+    load_class = ParallelLoad if value.kind is LoadKind.PARALLEL else SeriesLoad
+    return load_class(
         id=value.id,
         wire_id=value.wire_id,
         offset_m=value.offset_m,

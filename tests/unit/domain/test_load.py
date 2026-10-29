@@ -6,7 +6,7 @@ import pytest
 
 from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.dipole import DipoleParameters
-from antennadesk.domain.antennas.load import SeriesLoad
+from antennadesk.domain.antennas.load import ParallelLoad, SeriesLoad
 
 
 def test_series_load_accepts_rlc_values() -> None:
@@ -89,3 +89,15 @@ def test_with_loads_preserves_the_original_model() -> None:
 
     assert loaded.loads == (load,)
     assert model.loads == ()
+
+
+def test_parallel_load_accepts_rlc_values() -> None:
+    load = ParallelLoad(
+        id="load-1",
+        wire_id="radiator",
+        offset_m=10.0,
+        inductance_h=12e-6,
+        capacitance_f=30e-12,
+    )
+
+    assert load.offset_m == pytest.approx(10.0)

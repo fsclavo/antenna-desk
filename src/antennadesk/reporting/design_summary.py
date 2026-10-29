@@ -7,7 +7,7 @@ from __future__ import annotations
 from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
-from ..domain.antennas.load import SeriesLoad
+from ..domain.antennas.load import LumpedLoad, ParallelLoad
 from ..domain.antennas.loop import LoopParameters
 from ..domain.environment.ground import GroundModel
 
@@ -81,12 +81,13 @@ def design_summary_rows(
     return tuple(rows)
 
 
-def load_summary_rows(loads: tuple[SeriesLoad, ...]) -> tuple[tuple[str, str], ...]:
+def load_summary_rows(loads: tuple[LumpedLoad, ...]) -> tuple[tuple[str, str], ...]:
     rows: list[tuple[str, str]] = []
     for index, load in enumerate(loads, start=1):
+        kind = "parallel" if isinstance(load, ParallelLoad) else "series"
         rows.append(
             (
-                f"Load {index}",
+                f"Load {index} ({kind})",
                 (
                     f"{load.wire_id} @ {load.offset_m:.3f} m · "
                     f"R={load.resistance_ohm:g} Ω · "

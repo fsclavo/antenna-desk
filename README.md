@@ -75,8 +75,8 @@ between those types.
 - Bounded antenna-dimension optimization for a target reactance, minimum SWR,
   or maximum SWR bandwidth: wire-dipole and folded-dipole element length, or
   loop circumference, with an evaluation log and sensitivity table.
-- Series RLC loads on wires, with a load editor, NEC `LD 0` export, and report
-  rows.
+- Series and parallel RLC loads on wires, with a load editor, NEC `LD 0`/`LD 1`
+  export, and report rows.
 - Printable/HTML construction sheet with type-aware dimensions, feed position,
   loads, and simulated result.
 - CSV export and self-contained HTML reports (use the browser print dialog for
@@ -126,8 +126,8 @@ uv run python scripts/run_reference_simulation.py \
   regular-polygon loops are implemented. Folded and loop templates currently
   have theoretical sanity tests but no published independent impedance
   reference; VNA CSV import and measurement records are not implemented yet.
-- Series RLC loads are supported on one wire segment; networks, transmission
-  lines, and radial ground screens are not implemented.
+- Series and parallel RLC loads are supported on one wire segment; general
+  networks, transmission lines, and radial ground screens are not implemented.
 - Simulation runs are stored in the project, including raw solver text; the
   native project size limit is 10 MB. Use Compact Simulation History to keep
   only the latest run per variant.

@@ -130,3 +130,33 @@ def test_series_loads_round_trip_through_the_schema() -> None:
     assert document.project.designs[0].antenna.loads[0].capacitance_f == pytest.approx(30e-12)
     assert restored.designs[0].antenna.loads == (load,)
     assert restored == project
+
+
+def test_parallel_load_round_trips_with_kind() -> None:
+    from antennadesk.domain.antennas.load import ParallelLoad
+
+    load = ParallelLoad(
+        id="trap-1",
+        wire_id="radiator",
+        offset_m=10.0,
+        inductance_h=12e-6,
+        capacitance_f=30e-12,
+    )
+    original = _project(
+        DipoleParameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=20.0,
+            height_m=8.0,
+        ),
+        "Trap",
+    )
+    project = original.with_design(
+        original.designs[0].with_loads((load,)),
+        updated_at=original.updated_at,
+    )
+
+    document = document_from_project(project)
+    restored = project_from_document(document)
+
+    assert document.project.designs[0].antenna.loads[0].kind.value == "parallel"
+    assert restored.designs[0].antenna.loads == (load,)

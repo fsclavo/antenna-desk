@@ -10,7 +10,7 @@ from uuid import UUID
 
 from ..antennas.antenna import AntennaModel
 from ..antennas.design import AntennaDesignParameters, antenna_type_for
-from ..antennas.load import SeriesLoad
+from ..antennas.load import LumpedLoad
 from ..common.time import ensure_utc
 from ..common.validation import Diagnostic, Severity, raise_if_errors
 from ..simulation.run import SimulationRun
@@ -53,7 +53,7 @@ class DesignVariant:
             antenna=antenna,
         )
 
-    def with_loads(self, loads: tuple[SeriesLoad, ...]) -> DesignVariant:
+    def with_loads(self, loads: tuple[LumpedLoad, ...]) -> DesignVariant:
         return replace(self, antenna=self.antenna.with_loads(loads))
 
 

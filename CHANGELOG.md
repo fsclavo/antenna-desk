@@ -92,8 +92,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   reducing project size.
 - Save-time warning when a project exceeds 8 MB and a clear block above the
   10 MB native-file limit.
-- Series RLC loads on wires: validation, load editor, design/persistence
-  support, NEC `LD 0` export, and report/construction-sheet rows.
+- Series and parallel RLC loads on wires: validation, load editor,
+  design/persistence support, NEC `LD 0`/`LD 1` export, and
+  report/construction-sheet rows.
 - Isometric 3D geometry view with ground grid, feed marker, axes, and scale.
 - Polar pattern diagram in the Pattern tab with selectable azimuth/elevation
   cuts, alongside the existing line chart. The UI requests a full phi sweep.

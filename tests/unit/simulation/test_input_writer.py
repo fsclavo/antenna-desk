@@ -165,3 +165,18 @@ def test_series_load_card_is_emitted_on_the_mapped_segment() -> None:
     deck = write_nec2_input(model, _spec(segments=7))
 
     assert "LD 0 1 4 4 25.000000000 0.000012000 0.000000000030" in deck.text
+
+
+def test_parallel_load_card_is_emitted_as_ld1() -> None:
+    from antennadesk.domain.antennas.load import ParallelLoad
+
+    load = ParallelLoad(
+        id="load-1",
+        wire_id="radiator",
+        offset_m=0.25,
+        inductance_h=12e-6,
+        capacitance_f=30e-12,
+    )
+    deck = write_nec2_input(_manual_model().with_loads((load,)), _spec(segments=7))
+
+    assert "LD 1 1 4 4 0.000000000 0.000012000 0.000000000030" in deck.text

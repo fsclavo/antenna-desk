@@ -36,9 +36,9 @@ values.
 A straight conductor with an identifier, start point, end point, radius, and
 material. The wire must have non-zero length and a positive radius.
 
-### SeriesLoad
+### SeriesLoad and ParallelLoad
 
-A series RLC load at a position along a wire:
+A series or parallel RLC load at a position along a wire:
 
 - `id`
 - `wire_id`
@@ -46,7 +46,8 @@ A series RLC load at a position along a wire:
 - `resistance_ohm`, `inductance_h`, `capacitance_f` (non-negative)
 - At least one of R, L, or C must be non-zero.
 
-The load is mapped to one solver segment by the NEC adapter.
+The load kind is stored as `series` or `parallel`. The load is mapped to one
+solver segment by the NEC adapter (`LD 0` or `LD 1`).
 
 ### FeedPoint
 
@@ -257,8 +258,8 @@ the application writes version 3.
 ## Current limitations
 
 - Wire dipoles, folded dipoles, and regular-polygon loops are implemented.
-- Series RLC loads are supported on one wire segment; no networks, radials, or
-  free-form conductors.
+- Series and parallel RLC loads are supported on one wire segment; no general
+  networks, radials, or free-form conductors.
 - Folded and loop geometry are parametric templates; free-form wire editing is
   not implemented.
 - VNA CSV import and measurement records are not implemented yet.

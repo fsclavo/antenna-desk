@@ -28,6 +28,13 @@ def test_loads_dialog_adds_and_removes_series_loads(qtbot: QtBot) -> None:
     assert dialog.loads()[1].resistance_ohm == 50.0
     assert dialog.loads()[1].inductance_h == 12e-6
 
+    dialog._kind.setCurrentIndex(1)
+    dialog._capacitance.setValue(30.0)
+    dialog._add.click()
+    from antennadesk.domain.antennas.load import ParallelLoad
+
+    assert isinstance(dialog.loads()[2], ParallelLoad)
+
     dialog._table.selectRow(0)
     dialog._remove.click()
-    assert [load.id for load in dialog.loads()] == ["load-2"]
+    assert [load.id for load in dialog.loads()] == ["load-2", "load-3"]

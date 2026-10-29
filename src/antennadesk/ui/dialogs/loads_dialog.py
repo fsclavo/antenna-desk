@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...domain.antennas.load import SeriesLoad
+from ...domain.antennas.load import LoadKind, ParallelLoad, SeriesLoad
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
 
@@ -43,11 +43,15 @@ class LoadsDialog(QDialog):
         self.setWindowTitle(translator.t("loads.title"))
         self.resize(720, 480)
 
-        self._table = QTableWidget(0, 5, self)
+        self._table = QTableWidget(0, 6, self)
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self._table.verticalHeader().setVisible(False)
         self._table.setAlternatingRowColors(True)
+
+        self._kind = QComboBox(self)
+        self._kind.addItem("", LoadKind.SERIES.value)
+        self._kind.addItem("", LoadKind.PARALLEL.value)
 
         self._wire = QComboBox(self)
         for wire_id in sorted(self._wire_lengths_m):
@@ -79,6 +83,7 @@ class LoadsDialog(QDialog):
         )
 
         form = QFormLayout()
+        form.addRow(translator.t("loads.kind"), self._kind)
         form.addRow(translator.t("loads.wire"), self._wire)
         form.addRow(translator.t("loads.offset"), self._offset)
         form.addRow(translator.t("loads.resistance"), self._resistance)
@@ -103,6 +108,7 @@ class LoadsDialog(QDialog):
 
         self._table.setHorizontalHeaderLabels(
             [
+                translator.t("loads.kind"),
                 translator.t("loads.wire"),
                 translator.t("loads.offset"),
                 translator.t("loads.resistance"),
@@ -128,6 +134,11 @@ class LoadsDialog(QDialog):
         self._table.setRowCount(len(self._loads))
         for row, load in enumerate(self._loads):
             values = [
+                (
+                    self._translator.t("loads.parallel")
+                    if isinstance(load, ParallelLoad)
+                    else self._translator.t("loads.series")
+                ),
                 load.wire_id,
                 f"{length_from_m(load.offset_m, self._unit_system):.3f} {unit}",
                 f"{load.resistance_ohm:.3f}",
@@ -142,8 +153,11 @@ class LoadsDialog(QDialog):
         wire_id = self._wire.currentData()
         if not isinstance(wire_id, str):
             return
+        load_class = (
+            ParallelLoad if self._kind.currentData() == LoadKind.PARALLEL.value else SeriesLoad
+        )
         try:
-            load = SeriesLoad(
+            load = load_class(
                 id=self._next_id(),
                 wire_id=wire_id,
                 offset_m=length_to_m(self._offset.value(), self._unit_system),

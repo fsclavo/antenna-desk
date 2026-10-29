@@ -11,7 +11,7 @@ from ..common.units import ensure_positive
 from ..common.validation import Diagnostic, Severity, raise_if_errors
 from ..environment.environment import Environment
 from .feed import FeedPoint
-from .load import SeriesLoad
+from .load import LumpedLoad
 from .wire import Wire
 
 
@@ -24,7 +24,7 @@ class AntennaModel:
     wires: tuple[Wire, ...]
     feed: FeedPoint
     environment: Environment = field(default_factory=Environment)
-    loads: tuple[SeriesLoad, ...] = field(default_factory=tuple)
+    loads: tuple[LumpedLoad, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "wires", tuple(self.wires))
@@ -190,5 +190,5 @@ class AntennaModel:
     def feed_wire(self) -> Wire:
         return self.wire_by_id(self.feed.wire_id)
 
-    def with_loads(self, loads: tuple[SeriesLoad, ...]) -> AntennaModel:
+    def with_loads(self, loads: tuple[LumpedLoad, ...]) -> AntennaModel:
         return replace(self, loads=loads)

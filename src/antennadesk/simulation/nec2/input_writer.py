@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ...domain.antennas.antenna import AntennaModel
+from ...domain.antennas.load import ParallelLoad
 from ...domain.environment.ground import GroundKind
 from ...domain.simulation.spec import SimulationSpec
 from ..discretization import SegmentLayout, build_segment_layout
@@ -85,7 +86,7 @@ def write_nec2_input(model: AntennaModel, spec: SimulationSpec) -> Nec2Deck:
         index = min(max(index, 0), segmentation.segments - 1)
         segment = segmentation.first_segment + index
         lines.append(
-            "LD 0 "
+            f"LD {1 if isinstance(load, ParallelLoad) else 0} "
             f"{segmentation.tag} {segment} {segment} "
             f"{_format(load.resistance_ohm)} "
             f"{_format(load.inductance_h)} "
