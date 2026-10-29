@@ -23,6 +23,7 @@ from ...reporting.construction_sheet import (
     render_construction_sheet,
     write_construction_sheet,
 )
+from ..construction_pdf import write_construction_pdf
 from ..i18n import Translator
 
 
@@ -48,12 +49,15 @@ class ConstructionDialog(QDialog):
         self._browser.setHtml(render_construction_sheet(project, design, result))
 
         self._save = QPushButton(translator.t("construction.save"), self)
+        self._save_pdf = QPushButton(translator.t("construction.save_pdf"), self)
         self._close = QPushButton(translator.t("action.close"), self)
         self._save.clicked.connect(self._save_html)
+        self._save_pdf.clicked.connect(self._save_pdf_file)
         self._close.clicked.connect(self.accept)
         buttons = QHBoxLayout()
         buttons.addStretch(1)
         buttons.addWidget(self._save)
+        buttons.addWidget(self._save_pdf)
         buttons.addWidget(self._close)
 
         layout = QVBoxLayout(self)
@@ -77,6 +81,42 @@ class ConstructionDialog(QDialog):
             path = path.with_suffix(".html")
         try:
             write_construction_sheet(self._project, self._design, self._result, path)
+        except Exception as exc:
+            QMessageBox.critical(
+                self,
+                self._translator.t("construction.title"),
+                self._translator.t("error.export", message=str(exc)),
+            )
+            return
+        QMessageBox.information(
+            self,
+            self._translator.t("construction.title"),
+            self._translator.t("status.exported"),
+        )
+
+    def _save_pdf_file(self) -> None:
+        suggested = f"{self._project.name}-{self._design.name}-construction.pdf".replace(
+            "/", "-"
+        ).replace("\\", "-")
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            self._translator.t("dialog.pdf_title"),
+            str(Path.home() / suggested),
+            self._translator.t("dialog.pdf_filter"),
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.lower() != ".pdf":
+            path = path.with_suffix(".pdf")
+        try:
+            write_construction_pdf(
+                self._translator,
+                self._project,
+                self._design,
+                self._result,
+                path,
+            )
         except Exception as exc:
             QMessageBox.critical(
                 self,

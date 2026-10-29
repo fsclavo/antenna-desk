@@ -63,3 +63,47 @@ def test_comparison_dialog_reports_missing_results(
     dialog.show()
 
     assert dialog._note.isVisible() is True
+
+
+def test_comparison_dialog_supports_mixed_geometry(
+    qtbot: QtBot,
+    sample_project: Project,
+) -> None:
+    from dataclasses import replace
+    from uuid import uuid4
+
+    from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
+    from antennadesk.domain.projects.project import DesignVariant
+
+    source = sample_project.designs[0]
+    parameters = FoldedDipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        spacing_m=0.2,
+    )
+    folded = DesignVariant(
+        id=uuid4(),
+        name="Folded",
+        antenna_type="folded_dipole",
+        parameters=parameters,
+        antenna=parameters.to_antenna(name="Folded"),
+    )
+    project = replace(
+        sample_project,
+        designs=(source, folded),
+    )
+    results = {design.id: make_completed_result() for design in project.designs}
+    dialog = ComparisonDialog(
+        Translator(Language.ENGLISH),
+        project,
+        results,
+    )
+    qtbot.addWidget(dialog)
+    dialog.show()
+
+    labels = [dialog._table.item(row, 0).text() for row in range(dialog._table.rowCount())]
+    assert "Main dimension" in labels
+    assert "Secondary dimension" in labels
+    assert dialog._table.item(0, 1).text() == "Wire dipole"
+    assert dialog._table.item(0, 2).text() == "Folded dipole"

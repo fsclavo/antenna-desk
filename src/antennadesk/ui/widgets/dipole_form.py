@@ -20,12 +20,25 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...domain.antennas.dipole import DipoleOrientation, DipoleParameters
+from ...domain.antennas.design import AntennaDesignParameters
+from ...domain.antennas.dipole import (
+    ANTENNA_TYPE_WIRE_DIPOLE,
+    DipoleOrientation,
+    DipoleParameters,
+)
+from ...domain.antennas.folded_dipole import (
+    ANTENNA_TYPE_FOLDED_DIPOLE,
+    FoldedDipoleParameters,
+)
+from ...domain.antennas.loop import ANTENNA_TYPE_LOOP, LoopParameters
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.environment.ground import GroundKind, GroundModel
 from ...domain.simulation.far_field import FarFieldRequest
 from ...domain.simulation.frequency import FrequencyPlan
-from ...domain.simulation.segmentation import SegmentationPolicy
+from ...domain.simulation.segmentation import (
+    SegmentationPolicy,
+    aligned_policy_for_model,
+)
 from ...domain.simulation.spec import SimulationSpec
 from ..i18n import Translator
 from ..units import (
@@ -67,11 +80,21 @@ class DipoleForm(QWidget):
         self._frequency.setValue(7.1)
         self._frequency.setSuffix(" MHz")
 
+        self._type = QComboBox(self)
+        self._type.addItem("", ANTENNA_TYPE_WIRE_DIPOLE)
+        self._type.addItem("", ANTENNA_TYPE_FOLDED_DIPOLE)
+        self._type.addItem("", ANTENNA_TYPE_LOOP)
+
         self._orientation = QComboBox(self)
         self._orientation.addItem("", DipoleOrientation.HORIZONTAL.value)
         self._orientation.addItem("", DipoleOrientation.VERTICAL.value)
 
         self._length = QDoubleSpinBox(self)
+        self._spacing = QDoubleSpinBox(self)
+        self._spacing.setValue(0.1)
+        self._sides = QSpinBox(self)
+        self._sides.setRange(3, 128)
+        self._sides.setValue(16)
         self._height = QDoubleSpinBox(self)
         self._azimuth = QDoubleSpinBox(self)
         self._azimuth.setRange(0.0, 360.0)
@@ -125,10 +148,14 @@ class DipoleForm(QWidget):
         self._optimize = QPushButton(self)
         self._optimize.clicked.connect(self.optimize_requested)
 
-        form = QFormLayout()
+        self._form_layout = QFormLayout()
+        form = self._form_layout
         form.addRow(self._label("field.frequency"), self._frequency)
+        form.addRow(self._label("field.antenna_type"), self._type)
         form.addRow(self._label("field.orientation"), self._orientation)
         form.addRow(self._label("field.length"), self._length)
+        form.addRow(self._label("field.spacing"), self._spacing)
+        form.addRow(self._label("field.sides"), self._sides)
         form.addRow(self._label("field.height"), self._height)
         form.addRow(self._label("field.azimuth"), self._azimuth)
         form.addRow(self._label("field.diameter"), self._diameter)
@@ -162,11 +189,13 @@ class DipoleForm(QWidget):
         self._ground.currentIndexChanged.connect(self._update_ground_controls)
         self._sweep.toggled.connect(self._update_sweep_controls)
         self._frequency.valueChanged.connect(self._on_frequency_changed)
+        self._type.currentIndexChanged.connect(self._on_type_changed)
         self._orientation.currentIndexChanged.connect(self._update_orientation_labels)
 
         for spin in (
             self._frequency,
             self._length,
+            self._spacing,
             self._height,
             self._azimuth,
             self._diameter,
@@ -178,14 +207,17 @@ class DipoleForm(QWidget):
         ):
             spin.valueChanged.connect(self._emit_changed)
         self._sweep_points.valueChanged.connect(self._emit_changed)
+        self._sides.valueChanged.connect(self._emit_changed)
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._emit_changed)
         self._sweep.toggled.connect(self._emit_changed)
+        self._type.currentIndexChanged.connect(self._emit_changed)
         self._orientation.currentIndexChanged.connect(self._emit_changed)
 
         self._apply_unit_system()
         self._update_ground_controls()
         self._update_sweep_controls()
+        self._update_type_controls()
         self.set_parameters(
             DipoleParameters(
                 frequency_hz=7_100_000.0,
@@ -232,19 +264,23 @@ class DipoleForm(QWidget):
         self._ground.setItemText(2, self._translator.t("ground.finite"))
         self._orientation.setItemText(0, self._translator.t("orientation.horizontal"))
         self._orientation.setItemText(1, self._translator.t("orientation.vertical"))
+        self._type.setItemText(0, self._translator.t("antenna_type.wire_dipole"))
+        self._type.setItemText(1, self._translator.t("antenna_type.folded_dipole"))
+        self._type.setItemText(2, self._translator.t("antenna_type.loop"))
         self._apply_unit_system()
-        self._update_orientation_labels()
+        self._update_type_controls()
 
     def _apply_unit_system(
         self,
         length_m: float | None = None,
         height_m: float | None = None,
         diameter_m: float | None = None,
+        spacing_m: float | None = None,
     ) -> None:
         previous_updating = self._updating
         self._updating = True
         try:
-            self._apply_unit_system_values(length_m, height_m, diameter_m)
+            self._apply_unit_system_values(length_m, height_m, diameter_m, spacing_m)
         finally:
             self._updating = previous_updating
 
@@ -253,6 +289,7 @@ class DipoleForm(QWidget):
         length_m: float | None = None,
         height_m: float | None = None,
         diameter_m: float | None = None,
+        spacing_m: float | None = None,
     ) -> None:
         length_min, length_max = length_bounds(self._unit_system)
         height_min, height_max = height_bounds(self._unit_system)
@@ -261,23 +298,31 @@ class DipoleForm(QWidget):
         current_length_m = length_m if length_m is not None else self._length_to_m_current()
         current_height_m = height_m if height_m is not None else self._height_to_m_current()
         current_diameter_m = diameter_m if diameter_m is not None else self._diameter_to_m_current()
+        current_spacing_m = spacing_m if spacing_m is not None else self._spacing_to_m_current()
 
         self._length.setRange(length_min, length_max)
+        self._spacing.setRange(length_min, length_max)
         self._height.setRange(height_min, height_max)
         self._diameter.setRange(diameter_min, diameter_max)
         self._length.setDecimals(3)
+        self._spacing.setDecimals(3)
         self._height.setDecimals(3)
         self._diameter.setDecimals(3 if self._unit_system is UnitSystem.METRIC else 4)
         self._length.setSuffix(f" {self._translator.t(length_unit_key(self._unit_system))}")
+        self._spacing.setSuffix(f" {self._translator.t(length_unit_key(self._unit_system))}")
         self._height.setSuffix(f" {self._translator.t(length_unit_key(self._unit_system))}")
         self._diameter.setSuffix(f" {self._translator.t(diameter_unit_key(self._unit_system))}")
 
         self._length.setValue(length_from_m(current_length_m, self._unit_system))
+        self._spacing.setValue(length_from_m(current_spacing_m, self._unit_system))
         self._height.setValue(length_from_m(current_height_m, self._unit_system))
         self._diameter.setValue(diameter_from_m(current_diameter_m, self._unit_system))
 
     def _length_to_m_current(self) -> float:
         return length_to_m(self._length.value(), self._unit_system)
+
+    def _spacing_to_m_current(self) -> float:
+        return length_to_m(self._spacing.value(), self._unit_system)
 
     def _height_to_m_current(self) -> float:
         return length_to_m(self._height.value(), self._unit_system)
@@ -291,12 +336,13 @@ class DipoleForm(QWidget):
         length_m = self._length_to_m_current()
         height_m = self._height_to_m_current()
         diameter_m = self._diameter_to_m_current()
+        spacing_m = self._spacing_to_m_current()
         self._unit_system = unit_system
-        self._apply_unit_system(length_m, height_m, diameter_m)
+        self._apply_unit_system(length_m, height_m, diameter_m, spacing_m)
 
     def set_parameters(
         self,
-        parameters: DipoleParameters,
+        parameters: AntennaDesignParameters,
         *,
         reset_sweep: bool = True,
     ) -> None:
@@ -309,12 +355,30 @@ class DipoleForm(QWidget):
 
     def _set_parameters(
         self,
-        parameters: DipoleParameters,
+        parameters: AntennaDesignParameters,
         *,
         reset_sweep: bool = True,
     ) -> None:
+        if isinstance(parameters, FoldedDipoleParameters):
+            antenna_type = ANTENNA_TYPE_FOLDED_DIPOLE
+            length_m = parameters.total_length_m
+            self._spacing.setValue(length_from_m(parameters.spacing_m, self._unit_system))
+        elif isinstance(parameters, LoopParameters):
+            antenna_type = ANTENNA_TYPE_LOOP
+            length_m = parameters.circumference_m
+            self._sides.setValue(parameters.sides)
+        else:
+            antenna_type = ANTENNA_TYPE_WIRE_DIPOLE
+            length_m = parameters.total_length_m
+            orientation_index = self._orientation.findData(parameters.orientation.value)
+            if orientation_index >= 0:
+                self._orientation.setCurrentIndex(orientation_index)
+
+        type_index = self._type.findData(antenna_type)
+        if type_index >= 0:
+            self._type.setCurrentIndex(type_index)
         self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
-        self._length.setValue(length_from_m(parameters.total_length_m, self._unit_system))
+        self._length.setValue(length_from_m(length_m, self._unit_system))
         self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
         self._azimuth.setValue(parameters.azimuth_deg)
         self._diameter.setValue(diameter_from_m(parameters.wire_radius_m * 2.0, self._unit_system))
@@ -341,8 +405,9 @@ class DipoleForm(QWidget):
             self._sweep.setChecked(True)
         self._update_ground_controls()
         self._update_sweep_controls()
+        self._update_type_controls()
 
-    def parameters(self) -> DipoleParameters:
+    def parameters(self) -> AntennaDesignParameters:
         material = self._material.currentData()
         if not isinstance(material, ConductorMaterial):
             raise ValueError("invalid conductor material")
@@ -361,17 +426,36 @@ class DipoleForm(QWidget):
             raise ValueError("invalid ground model")
 
         diameter_m = diameter_to_m(self._diameter.value(), self._unit_system)
-        orientation = DipoleOrientation(self._orientation.currentData())
+        common = {
+            "frequency_hz": self._frequency.value() * 1_000_000.0,
+            "height_m": length_to_m(self._height.value(), self._unit_system),
+            "azimuth_deg": self._azimuth.value(),
+            "wire_radius_m": diameter_m / 2.0,
+            "material": material,
+            "ground": ground,
+        }
+        antenna_type = self._type.currentData()
+        if antenna_type == ANTENNA_TYPE_FOLDED_DIPOLE:
+            return FoldedDipoleParameters(
+                total_length_m=length_to_m(self._length.value(), self._unit_system),
+                spacing_m=length_to_m(self._spacing.value(), self._unit_system),
+                **common,
+            )
+        if antenna_type == ANTENNA_TYPE_LOOP:
+            return LoopParameters(
+                circumference_m=length_to_m(self._length.value(), self._unit_system),
+                sides=self._sides.value(),
+                **common,
+            )
         return DipoleParameters(
-            frequency_hz=self._frequency.value() * 1_000_000.0,
             total_length_m=length_to_m(self._length.value(), self._unit_system),
-            height_m=length_to_m(self._height.value(), self._unit_system),
-            orientation=orientation,
-            azimuth_deg=self._azimuth.value(),
-            wire_radius_m=diameter_m / 2.0,
-            material=material,
-            ground=ground,
+            orientation=DipoleOrientation(self._orientation.currentData()),
+            **common,
         )
+
+    def antenna_type(self) -> str:
+        value = self._type.currentData()
+        return value if isinstance(value, str) else ANTENNA_TYPE_WIRE_DIPOLE
 
     def simulation_spec(self) -> SimulationSpec:
         parameters = self.parameters()
@@ -402,15 +486,50 @@ class DipoleForm(QWidget):
                 phi_count=1,
             )
 
+        segmentation = aligned_policy_for_model(
+            parameters.to_antenna(name="Segmentation preview"),
+            frequency_plan.stop_hz,
+            SegmentationPolicy(min_segments_per_wire=3),
+        )
         return SimulationSpec(
             frequency_plan=frequency_plan,
-            segmentation=SegmentationPolicy(),
+            segmentation=segmentation,
             reference_impedance_ohm=self._reference.value(),
             far_field=far_field,
         )
 
+    def _on_type_changed(self, *_args: object) -> None:
+        self._update_type_controls()
+
+    def _set_row_visible(self, field: QWidget, visible: bool) -> None:
+        label = self._form_layout.labelForField(field)
+        if label is not None:
+            label.setVisible(visible)
+        field.setVisible(visible)
+
+    def _update_type_controls(self) -> None:
+        antenna_type = self._type.currentData()
+        is_dipole = antenna_type == ANTENNA_TYPE_WIRE_DIPOLE
+        is_folded = antenna_type == ANTENNA_TYPE_FOLDED_DIPOLE
+        is_loop = antenna_type == ANTENNA_TYPE_LOOP
+        self._set_row_visible(self._orientation, is_dipole)
+        self._set_row_visible(self._spacing, is_folded)
+        self._set_row_visible(self._sides, is_loop)
+        self._optimize.setVisible(True)
+        labels = self._labels()
+        length_label = labels.get("field.length")
+        if length_label is not None:
+            if is_folded:
+                length_label.setText(self._translator.t("field.element_length"))
+            elif is_loop:
+                length_label.setText(self._translator.t("field.circumference"))
+            else:
+                length_label.setText(self._translator.t("field.length"))
+        self._update_orientation_labels()
+
     def _update_orientation_labels(self) -> None:
-        vertical = self._orientation.currentData() == DipoleOrientation.VERTICAL.value
+        is_dipole = self._type.currentData() == ANTENNA_TYPE_WIRE_DIPOLE
+        vertical = is_dipole and self._orientation.currentData() == DipoleOrientation.VERTICAL.value
         self._azimuth.setEnabled(not vertical)
         labels = self._labels()
         height_label = labels.get("field.height")

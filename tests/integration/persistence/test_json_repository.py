@@ -330,7 +330,9 @@ def _rich_result() -> SimulationResult:
 
     spec = SimulationSpec(
         frequency_plan=FrequencyPlan.sweep(6_900_000.0, 7_100_000.0, 2),
-        segmentation=SegmentationPolicy(segments_per_wire=21),
+        segmentation=SegmentationPolicy(
+            wire_segments=(("radiator", 21),),
+        ),
         far_field=FarFieldRequest(),
     )
     current = CurrentSample(
@@ -432,3 +434,16 @@ def test_round_trip_with_a_simulation_run(
     assert run.result.raw_output == "FREQUENCY ...\n"
     assert run.result.frequencies[0].impedance_ohm == complex(60.0, -10.0)
     assert math.isinf(run.result.frequencies[1].swr)
+    assert run.result.spec.segmentation.wire_segments == (("radiator", 21),)
+
+
+def test_serialized_size_matches_written_file(
+    repository: JsonProjectRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "dipole.antennadesk"
+
+    repository.save(sample_project, path)
+
+    assert repository.serialized_size(sample_project) == path.stat().st_size

@@ -22,14 +22,21 @@ from .schema import ProjectDocument, document_from_project, project_from_documen
 class JsonProjectRepository:
     """Read and write versioned ``.antennadesk`` project files."""
 
-    def save(self, project: Project, path: Path) -> None:
+    @staticmethod
+    def _serialize(project: Project) -> str:
         document = document_from_project(project)
         text = json.dumps(
             document.model_dump(mode="json"),
             indent=2,
             ensure_ascii=False,
         )
-        text += "\n"
+        return text + "\n"
+
+    def serialized_size(self, project: Project) -> int:
+        return len(self._serialize(project).encode("utf-8"))
+
+    def save(self, project: Project, path: Path) -> None:
+        text = self._serialize(project)
         size = len(text.encode("utf-8"))
         if size > MAX_PROJECT_SIZE_BYTES:
             raise ProjectTooLargeError(

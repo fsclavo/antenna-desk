@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Fernando Sclavo
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Create a project containing a horizontal half-wave dipole."""
+"""Create a project containing one antenna design."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from ...domain.antennas.dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
+from ...domain.antennas.design import AntennaDesignParameters, antenna_type_for
 from ...domain.common.ids import new_id
 from ...domain.common.time import utc_now
 from ...domain.projects.project import DesignVariant, Project
@@ -18,13 +18,13 @@ from ...domain.projects.project import DesignVariant, Project
 class CreateDipoleProjectCommand:
     project_name: str
     variant_name: str
-    parameters: DipoleParameters
+    parameters: AntennaDesignParameters
     description: str = ""
 
 
 @dataclass(frozen=True, slots=True)
 class CreateDipoleProject:
-    """Build a new project from user-facing dipole parameters."""
+    """Build a new project from user-facing antenna parameters."""
 
     def execute(
         self,
@@ -46,7 +46,7 @@ class CreateDipoleProject:
         design = DesignVariant(
             id=design_id if design_id is not None else new_id(),
             name=variant_name,
-            antenna_type=ANTENNA_TYPE_WIRE_DIPOLE,
+            antenna_type=antenna_type_for(command.parameters),
             parameters=command.parameters,
             antenna=antenna,
         )
@@ -59,3 +59,7 @@ class CreateDipoleProject:
             updated_at=timestamp,
             designs=(design,),
         )
+
+
+CreateAntennaProjectCommand = CreateDipoleProjectCommand
+CreateAntennaProject = CreateDipoleProject

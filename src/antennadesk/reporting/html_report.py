@@ -11,6 +11,7 @@ from pathlib import Path
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import SimulationResult
+from .design_summary import design_summary_rows
 from .svg_chart import SvgSeries, line_chart_svg
 
 CSS = """
@@ -41,16 +42,6 @@ def _format_swr(value: float) -> str:
 
 def _format_impedance(value: complex) -> str:
     return f"{value.real:.3f} {value.imag:+.3f}j"
-
-
-def _ground_label(result: SimulationResult, design: DesignVariant) -> str:
-    ground = design.antenna.environment.ground
-    if ground.relative_permittivity is not None and ground.conductivity_s_per_m is not None:
-        return (
-            f"{ground.kind.value} (eps_r={ground.relative_permittivity:g}, "
-            f"sigma={ground.conductivity_s_per_m:g} S/m)"
-        )
-    return ground.kind.value
 
 
 def _frequency_series(result: SimulationResult) -> tuple[SvgSeries, ...]:
@@ -118,6 +109,10 @@ def render_html_report(
     result: SimulationResult,
 ) -> str:
     parameters = design.parameters
+    design_rows = "".join(
+        f"<tr><th>{_escape(label)}</th><td>{_escape(value)}</td></tr>"
+        for label, value in design_summary_rows(parameters)
+    )
     spec = result.spec
     segmentation = spec.segmentation
     if segmentation.segments_per_wire is not None:
@@ -221,13 +216,7 @@ status <strong>{_escape(result.status.value)}</strong>.
 
 <h2>Design</h2>
 <table>
-<tr><th>Frequency</th><td>{parameters.frequency_hz / 1e6:.6f} MHz</td></tr>
-<tr><th>Total length</th><td>{parameters.total_length_m:.4f} m</td></tr>
-<tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
-<tr><th>Azimuth</th><td>{parameters.azimuth_deg:.1f}°</td></tr>
-<tr><th>Wire diameter</th><td>{parameters.wire_radius_m * 2000.0:.3f} mm</td></tr>
-<tr><th>Material</th><td>{_escape(parameters.material.name)} ({parameters.material.conductivity_s_per_m:.3g} S/m)</td></tr>
-<tr><th>Ground</th><td>{_escape(_ground_label(result, design))}</td></tr>
+{design_rows}
 </table>
 
 <h2>Simulation configuration</h2>

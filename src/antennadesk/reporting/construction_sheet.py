@@ -8,9 +8,13 @@ import html
 import math
 from pathlib import Path
 
+from ..domain.antennas.dipole import DipoleParameters
+from ..domain.antennas.folded_dipole import FoldedDipoleParameters
+from ..domain.antennas.loop import LoopParameters
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import FrequencyResult, SimulationResult
+from .design_summary import design_summary_rows
 
 CSS = """
 body { font-family: system-ui, sans-serif; margin: 28px; color: #222; background: #fff; }
@@ -82,12 +86,8 @@ def render_construction_sheet(
     antenna = design.antenna
     feed_wire = antenna.feed_wire
     feed_offset_m = antenna.feed.offset_m
-    other_leg_m = max(feed_wire.length_m - feed_offset_m, 0.0)
     feed_ratio = feed_offset_m / feed_wire.length_m if feed_wire.length_m > 0 else 0.0
     feed_height_m = feed_wire.start.z_m + (feed_wire.end.z_m - feed_wire.start.z_m) * feed_ratio
-    azimuth_text = (
-        f"{parameters.azimuth_deg:.1f}°" if parameters.orientation.value == "horizontal" else "—"
-    )
     frequency = _nearest_frequency(result, parameters.frequency_hz) if result else None
     max_gain = _max_gain(result)
     efficiency = (
@@ -95,13 +95,45 @@ def render_construction_sheet(
         if frequency is not None and frequency.power_budget is not None
         else None
     )
-    ground = design.antenna.environment.ground
-    ground_text = ground.kind.value
-    if ground.relative_permittivity is not None and ground.conductivity_s_per_m is not None:
-        ground_text = (
-            f"{ground_text} (eps_r={ground.relative_permittivity:g}, "
-            f"sigma={ground.conductivity_s_per_m:g} S/m)"
-        )
+
+    dimension_rows = "".join(
+        f"<tr><th>{_escape(label)}</th><td>{_escape(value)}</td></tr>"
+        for label, value in design_summary_rows(parameters)
+    )
+    if isinstance(parameters, DipoleParameters):
+        other_leg_m = max(feed_wire.length_m - feed_offset_m, 0.0)
+        feed_rows = f"""
+<tr><th>First leg (from wire start)</th><td>{feed_offset_m:.4f} m</td></tr>
+<tr><th>Second leg (from feed)</th><td>{other_leg_m:.4f} m</td></tr>
+<tr><th>Wire height at start</th><td>{feed_wire.start.z_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Cut the two legs to the dimensions above, leaving a small feed gap at the
+center. The feed point is {feed_offset_m:.4f} m from the start of the wire
+and {other_leg_m:.4f} m from the end.</p>"""
+    elif isinstance(parameters, FoldedDipoleParameters):
+        feed_rows = f"""
+<tr><th>Driven element length</th><td>{parameters.total_length_m:.4f} m</td></tr>
+<tr><th>End connector length</th><td>{parameters.spacing_m:.4f} m</td></tr>
+<tr><th>Feed location</th><td>center of driven element</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Cut two equal driven elements of {parameters.total_length_m:.4f} m
+and two end connectors of {parameters.spacing_m:.4f} m. Join them at both
+ends and feed the center of one element. The total conductor length is
+{parameters.total_conductor_length_m:.4f} m.</p>"""
+    elif isinstance(parameters, LoopParameters):
+        feed_rows = f"""
+<tr><th>Side length</th><td>{parameters.side_length_m:.4f} m</td></tr>
+<tr><th>Feed side</th><td>{_escape(antenna.feed.wire_id)}</td></tr>
+<tr><th>Feed location</th><td>midpoint of the first side</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Cut one conductor to {parameters.circumference_m:.4f} m and
+close it into {parameters.sides} equal sides of {parameters.side_length_m:.4f} m.
+Feed the midpoint of the first side.</p>"""
+    else:
+        raise TypeError(f"unsupported antenna parameters: {type(parameters)!r}")
 
     simulation_rows = ""
     if result is not None and frequency is not None:
@@ -132,17 +164,8 @@ def render_construction_sheet(
 
 <h2>Dimensions</h2>
 <table>
-<tr><th>Target frequency</th><td>{parameters.frequency_hz / 1e6:.6f} MHz</td></tr>
-<tr><th>Orientation</th><td>{_escape(parameters.orientation.value)}</td></tr>
-<tr><th>Total wire length</th><td>{parameters.total_length_m:.4f} m</td></tr>
-<tr><th>First leg (from wire start)</th><td>{feed_offset_m:.4f} m</td></tr>
-<tr><th>Second leg (from feed)</th><td>{other_leg_m:.4f} m</td></tr>
-<tr><th>Wire height at start</th><td>{feed_wire.start.z_m:.4f} m</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
-<tr><th>Azimuth</th><td>{azimuth_text}</td></tr>
-<tr><th>Wire diameter</th><td>{parameters.wire_radius_m * 2000.0:.3f} mm</td></tr>
-<tr><th>Material</th><td>{_escape(parameters.material.name)} ({parameters.material.conductivity_s_per_m:.3g} S/m)</td></tr>
-<tr><th>Ground</th><td>{_escape(ground_text)}</td></tr>
+{dimension_rows}
+{feed_rows}
 </table>
 
 <h2>Simulation</h2>
@@ -152,9 +175,7 @@ def render_construction_sheet(
 
 <h2>Construction notes</h2>
 <div class="notes">
-<p>Cut the two legs to the dimensions above, leaving a small feed gap at the
-center. The feed point is {feed_offset_m:.4f} m from the start of the wire
-and {other_leg_m:.4f} m from the end.</p>
+{construction_note}
 <p>Trim and re-measure after installation. Real ground, supports, feed line,
 and nearby objects can shift the result. A low SWR does not prove high
 efficiency or a useful radiation pattern.</p>

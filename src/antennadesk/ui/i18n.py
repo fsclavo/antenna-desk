@@ -29,7 +29,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "menu.language": {Language.ENGLISH: "Language", Language.SPANISH: "Idioma"},
     "menu.help": {Language.ENGLISH: "Help", Language.SPANISH: "Ayuda"},
     "menu.units": {Language.ENGLISH: "Units", Language.SPANISH: "Unidades"},
-    "action.new": {Language.ENGLISH: "New Dipole...", Language.SPANISH: "Nuevo dipolo..."},
+    "action.new": {Language.ENGLISH: "New Antenna...", Language.SPANISH: "Nueva antena..."},
     "action.open": {Language.ENGLISH: "Open Project...", Language.SPANISH: "Abrir proyecto..."},
     "action.save": {Language.ENGLISH: "Save", Language.SPANISH: "Guardar"},
     "action.save_as": {Language.ENGLISH: "Save As...", Language.SPANISH: "Guardar como..."},
@@ -85,12 +85,53 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Length {length} · Azimuth {azimuth}°",
         Language.SPANISH: "Longitud {length} · Azimut {azimuth}°",
     },
+    "geometry.plan_summary_multi": {
+        Language.ENGLISH: "{count} wires · {width} x {depth}",
+        Language.SPANISH: "{count} hilos · {width} x {depth}",
+    },
+    "geometry.plan_summary_folded": {
+        Language.ENGLISH: "Folded dipole · element {element} · spacing {spacing} · total conductor {total}",
+        Language.SPANISH: "Dipolo plegado · elemento {element} · separación {spacing} · conductor total {total}",
+    },
+    "geometry.plan_summary_loop": {
+        Language.ENGLISH: "Loop · circumference {circumference} · diameter {diameter} · {sides} sides",
+        Language.SPANISH: "Lazo · circunferencia {circumference} · diámetro {diameter} · {sides} lados",
+    },
+    "geometry.elevation_summary": {
+        Language.ENGLISH: "Height {height} · feed height {feed}",
+        Language.SPANISH: "Altura {height} · altura de alimentación {feed}",
+    },
+    "geometry.elevation_summary_typed": {
+        Language.ENGLISH: "{type} · height {height} · feed height {feed}",
+        Language.SPANISH: "{type} · altura {height} · altura de alimentación {feed}",
+    },
+    "geometry.loop_elevation_summary": {
+        Language.ENGLISH: "Loop · bottom {bottom} · diameter {diameter}",
+        Language.SPANISH: "Lazo · base {bottom} · diámetro {diameter}",
+    },
+    "geometry.spacing_exaggerated": {
+        Language.ENGLISH: "Spacing exaggerated for clarity",
+        Language.SPANISH: "Separación exagerada para mayor claridad",
+    },
+    "geometry.section": {Language.ENGLISH: "Section", Language.SPANISH: "Sección"},
+    "geometry.two_conductors": {
+        Language.ENGLISH: "2 conductors",
+        Language.SPANISH: "2 conductores",
+    },
+    "geometry.diameter": {Language.ENGLISH: "Diameter", Language.SPANISH: "Diámetro"},
+    "geometry.width": {Language.ENGLISH: "Width", Language.SPANISH: "Ancho"},
+    "geometry.depth": {Language.ENGLISH: "Depth", Language.SPANISH: "Profundidad"},
     "geometry.view": {Language.ENGLISH: "View", Language.SPANISH: "Vista"},
     "geometry.view_elevation": {Language.ENGLISH: "Elevation", Language.SPANISH: "Alzado"},
     "geometry.view_plan": {Language.ENGLISH: "Plan", Language.SPANISH: "Planta"},
     "geometry.vertical_scale": {
         Language.ENGLISH: "Vertical scale",
         Language.SPANISH: "Escala vertical",
+    },
+    "geometry.zoom": {Language.ENGLISH: "Zoom", Language.SPANISH: "Zoom"},
+    "geometry.zoom_hint": {
+        Language.ENGLISH: "Mouse wheel zooms; drag pans; double-click resets.",
+        Language.SPANISH: "La rueda hace zoom; arrastrá para desplazar; doble clic restablece.",
     },
     "geometry.vertical_exaggeration": {
         Language.ENGLISH: "vertical x{factor}",
@@ -103,6 +144,43 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "field.frequency": {Language.ENGLISH: "Frequency (MHz)", Language.SPANISH: "Frecuencia (MHz)"},
     "field.length": {Language.ENGLISH: "Total length", Language.SPANISH: "Longitud total"},
+    "field.element_length": {
+        Language.ENGLISH: "Element length",
+        Language.SPANISH: "Longitud del elemento",
+    },
+    "field.circumference": {
+        Language.ENGLISH: "Circumference",
+        Language.SPANISH: "Circunferencia",
+    },
+    "field.antenna_type": {
+        Language.ENGLISH: "Antenna type",
+        Language.SPANISH: "Tipo de antena",
+    },
+    "field.spacing": {Language.ENGLISH: "Spacing", Language.SPANISH: "Separación"},
+    "field.sides": {Language.ENGLISH: "Sides", Language.SPANISH: "Lados"},
+    "field.primary_dimension": {
+        Language.ENGLISH: "Main dimension",
+        Language.SPANISH: "Dimensión principal",
+    },
+    "field.secondary_dimension": {
+        Language.ENGLISH: "Secondary dimension",
+        Language.SPANISH: "Dimensión secundaria",
+    },
+    "antenna_type.wire_dipole": {
+        Language.ENGLISH: "Wire dipole",
+        Language.SPANISH: "Dipolo de hilo",
+    },
+    "antenna_type.folded_dipole": {
+        Language.ENGLISH: "Folded dipole",
+        Language.SPANISH: "Dipolo plegado",
+    },
+    "antenna_type.loop": {Language.ENGLISH: "Loop", Language.SPANISH: "Lazo"},
+    "wizard.name_wire": {Language.ENGLISH: "dipole", Language.SPANISH: "dipolo"},
+    "wizard.name_folded": {
+        Language.ENGLISH: "folded dipole",
+        Language.SPANISH: "dipolo plegado",
+    },
+    "wizard.name_loop": {Language.ENGLISH: "loop", Language.SPANISH: "lazo"},
     "field.height": {Language.ENGLISH: "Height", Language.SPANISH: "Altura"},
     "field.base_height": {Language.ENGLISH: "Base height", Language.SPANISH: "Altura de base"},
     "field.orientation": {Language.ENGLISH: "Orientation", Language.SPANISH: "Orientación"},
@@ -244,6 +322,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Export HTML Report...",
         Language.SPANISH: "Exportar informe HTML...",
     },
+    "action.export_pdf": {
+        Language.ENGLISH: "Export PDF Report...",
+        Language.SPANISH: "Exportar informe PDF...",
+    },
+    "action.compact_history": {
+        Language.ENGLISH: "Compact Simulation History...",
+        Language.SPANISH: "Compactar historial de simulaciones...",
+    },
     "variant.label": {Language.ENGLISH: "Variant", Language.SPANISH: "Variante"},
     "variant.name": {Language.ENGLISH: "Variant name", Language.SPANISH: "Nombre de la variante"},
     "variant.new_title": {Language.ENGLISH: "New Variant", Language.SPANISH: "Nueva variante"},
@@ -283,6 +369,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Export complete.",
         Language.SPANISH: "Exportación completada.",
     },
+    "status.compacted": {
+        Language.ENGLISH: "Simulation history compacted.",
+        Language.SPANISH: "Historial de simulaciones compactado.",
+    },
     "variant.copy_name": {Language.ENGLISH: "{name} copy", Language.SPANISH: "{name} copia"},
     "error.no_result": {
         Language.ENGLISH: "Simulate the current variant before exporting.",
@@ -293,8 +383,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "No se pudo exportar: {message}",
     },
     "action.optimize": {
-        Language.ENGLISH: "Optimize Length...",
-        Language.SPANISH: "Optimizar longitud...",
+        Language.ENGLISH: "Optimize Dimension...",
+        Language.SPANISH: "Optimizar dimensión...",
     },
     "action.construction": {
         Language.ENGLISH: "Construction Sheet...",
@@ -308,21 +398,145 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Save HTML...",
         Language.SPANISH: "Guardar HTML...",
     },
+    "construction.save_pdf": {
+        Language.ENGLISH: "Save PDF...",
+        Language.SPANISH: "Guardar PDF...",
+    },
+    "construction.pdf_subtitle": {
+        Language.ENGLISH: "AntennaDesk construction sheet · SI units",
+        Language.SPANISH: "Hoja de construcción de AntennaDesk · unidades SI",
+    },
+    "construction.dimensions": {
+        Language.ENGLISH: "Dimensions",
+        Language.SPANISH: "Dimensiones",
+    },
+    "construction.feed_height": {
+        Language.ENGLISH: "Feed height above ground",
+        Language.SPANISH: "Altura de alimentación sobre el suelo",
+    },
+    "construction.simulation": {
+        Language.ENGLISH: "Simulation",
+        Language.SPANISH: "Simulación",
+    },
+    "construction.no_result": {
+        Language.ENGLISH: "No result yet.",
+        Language.SPANISH: "Todavía no hay resultado.",
+    },
+    "construction.solver": {Language.ENGLISH: "Solver", Language.SPANISH: "Solver"},
+    "construction.fingerprint": {
+        Language.ENGLISH: "Fingerprint",
+        Language.SPANISH: "Huella",
+    },
+    "construction.simulated_frequency": {
+        Language.ENGLISH: "Simulated frequency",
+        Language.SPANISH: "Frecuencia simulada",
+    },
+    "construction.impedance": {
+        Language.ENGLISH: "Impedance",
+        Language.SPANISH: "Impedancia",
+    },
+    "construction.max_gain": {
+        Language.ENGLISH: "Max power gain",
+        Language.SPANISH: "Ganancia máxima de potencia",
+    },
+    "construction.efficiency": {
+        Language.ENGLISH: "Efficiency",
+        Language.SPANISH: "Eficiencia",
+    },
+    "construction.resonance": {
+        Language.ENGLISH: "Resonance",
+        Language.SPANISH: "Resonancia",
+    },
+    "construction.no_resonance": {
+        Language.ENGLISH: "No resonance in the sweep.",
+        Language.SPANISH: "No hay resonancia en el barrido.",
+    },
+    "construction.notes": {
+        Language.ENGLISH: "Construction notes",
+        Language.SPANISH: "Notas de construcción",
+    },
+    "construction.pdf_notes": {
+        Language.ENGLISH: "Trim and re-measure after installation. Real ground, supports, feed line, and nearby objects can shift the result. A low SWR does not prove high efficiency or a useful radiation pattern.",
+        Language.SPANISH: "Recortá y volvé a medir después de la instalación. El suelo real, los soportes, la línea de alimentación y los objetos cercanos pueden modificar el resultado. Una ROE baja no garantiza alta eficiencia ni un patrón útil.",
+    },
+    "construction.pdf_footer": {
+        Language.ENGLISH: "AntennaDesk · GPL-3.0-or-later",
+        Language.SPANISH: "AntennaDesk · GPL-3.0-or-later",
+    },
+    "report.pdf_subtitle": {
+        Language.ENGLISH: "AntennaDesk simulation report · finished {finished}",
+        Language.SPANISH: "Informe de simulación de AntennaDesk · finalizado {finished}",
+    },
+    "report.not_recorded": {
+        Language.ENGLISH: "not recorded",
+        Language.SPANISH: "sin registrar",
+    },
+    "report.reproducibility": {
+        Language.ENGLISH: "Reproducibility",
+        Language.SPANISH: "Reproducibilidad",
+    },
+    "report.configuration": {
+        Language.ENGLISH: "Simulation configuration",
+        Language.SPANISH: "Configuración de la simulación",
+    },
+    "report.frequency_plan": {
+        Language.ENGLISH: "Frequency plan",
+        Language.SPANISH: "Plan de frecuencia",
+    },
+    "report.reference_impedance": {
+        Language.ENGLISH: "Reference impedance",
+        Language.SPANISH: "Impedancia de referencia",
+    },
+    "report.conductor_losses": {
+        Language.ENGLISH: "Conductor losses",
+        Language.SPANISH: "Pérdidas en conductores",
+    },
+    "report.far_field": {
+        Language.ENGLISH: "Far field",
+        Language.SPANISH: "Campo lejano",
+    },
+    "report.enabled": {Language.ENGLISH: "enabled", Language.SPANISH: "habilitado"},
+    "report.disabled": {Language.ENGLISH: "disabled", Language.SPANISH: "deshabilitado"},
+    "report.resonance": {
+        Language.ENGLISH: "Resonance",
+        Language.SPANISH: "Resonancia",
+    },
+    "report.charts": {Language.ENGLISH: "Charts", Language.SPANISH: "Gráficos"},
+    "dialog.pdf_title": {
+        Language.ENGLISH: "Save PDF",
+        Language.SPANISH: "Guardar PDF",
+    },
+    "dialog.pdf_filter": {
+        Language.ENGLISH: "PDF files (*.pdf)",
+        Language.SPANISH: "Archivos PDF (*.pdf)",
+    },
+    "dialog.large_project": {
+        Language.ENGLISH: "Project is {size:.1f} MB. Save anyway? Use Compact Simulation History to reduce it.",
+        Language.SPANISH: "El proyecto pesa {size:.1f} MB. ¿Guardar igualmente? Usá Compactar historial para reducirlo.",
+    },
+    "dialog.project_too_large": {
+        Language.ENGLISH: "Project is {size:.1f} MB and exceeds the 10 MB limit. Compact Simulation History or remove designs.",
+        Language.SPANISH: "El proyecto pesa {size:.1f} MB y supera el límite de 10 MB. Compactá el historial o eliminá diseños.",
+    },
+    "dialog.compact_history": {
+        Language.ENGLISH: "Remove older simulation runs? {count} runs will be reduced to the latest run per design ({keep} kept).",
+        Language.SPANISH: "¿Eliminar corridas antiguas? {count} corridas se reducirán a la última por diseño ({keep} conservadas).",
+    },
     "dialog.construction_title": {
         Language.ENGLISH: "Save construction sheet",
         Language.SPANISH: "Guardar hoja de construcción",
     },
     "optimize.title": {
-        Language.ENGLISH: "Optimize Dipole Length",
-        Language.SPANISH: "Optimizar longitud del dipolo",
+        Language.ENGLISH: "Optimize Antenna Dimension",
+        Language.SPANISH: "Optimizar dimensión de antena",
     },
     "optimize.min_length": {
-        Language.ENGLISH: "Minimum length",
-        Language.SPANISH: "Longitud mínima",
+        Language.ENGLISH: "Minimum dimension",
+        Language.SPANISH: "Dimensión mínima",
     },
     "optimize.max_length": {
-        Language.ENGLISH: "Maximum length",
-        Language.SPANISH: "Longitud máxima",
+        Language.ENGLISH: "Maximum dimension",
+        Language.SPANISH: "Dimensión máxima",
     },
     "optimize.target_reactance": {
         Language.ENGLISH: "Target reactance (Ω)",
@@ -345,20 +559,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Cancelar optimización",
     },
     "optimize.apply": {
-        Language.ENGLISH: "Apply best length",
-        Language.SPANISH: "Aplicar longitud óptima",
+        Language.ENGLISH: "Apply best dimension",
+        Language.SPANISH: "Aplicar dimensión óptima",
     },
     "optimize.running": {
         Language.ENGLISH: "Running optimization...",
         Language.SPANISH: "Ejecutando optimización...",
     },
     "optimize.summary": {
-        Language.ENGLISH: "Status: {status} · Best length: {length} · X={reactance} Ω · SWR={swr}",
-        Language.SPANISH: "Estado: {status} · Mejor longitud: {length} · X={reactance} Ω · ROE={swr}",
+        Language.ENGLISH: "Status: {status} · Best dimension: {length} · X={reactance} Ω · SWR={swr}",
+        Language.SPANISH: "Estado: {status} · Mejor dimensión: {length} · X={reactance} Ω · ROE={swr}",
     },
     "optimize.no_best": {
-        Language.ENGLISH: "No valid length was found.",
-        Language.SPANISH: "No se encontró una longitud válida.",
+        Language.ENGLISH: "No valid dimension was found.",
+        Language.SPANISH: "No se encontró una dimensión válida.",
     },
     "optimize.evaluations": {
         Language.ENGLISH: "Evaluations",
@@ -369,12 +583,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Sensibilidad",
     },
     "optimize.iteration": {Language.ENGLISH: "#", Language.SPANISH: "#"},
-    "optimize.length": {Language.ENGLISH: "Length", Language.SPANISH: "Longitud"},
+    "optimize.length": {Language.ENGLISH: "Dimension", Language.SPANISH: "Dimensión"},
     "optimize.offset": {Language.ENGLISH: "Offset", Language.SPANISH: "Desvío"},
     "optimize.message": {Language.ENGLISH: "Message", Language.SPANISH: "Mensaje"},
     "optimize.apply_hint": {
-        Language.ENGLISH: "Apply the best length and simulate to validate the full sweep.",
-        Language.SPANISH: "Aplicá la mejor longitud y simulá para validar el barrido completo.",
+        Language.ENGLISH: "Apply the best dimension and simulate to validate the full sweep.",
+        Language.SPANISH: "Aplicá la mejor dimensión y simulá para validar el barrido completo.",
     },
     "optimize.close_optimization": {
         Language.ENGLISH: "Cancel the running optimization before closing.",
@@ -434,6 +648,118 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "diagnostic.code": {Language.ENGLISH: "Code", Language.SPANISH: "Código"},
     "diagnostic.message": {Language.ENGLISH: "Message", Language.SPANISH: "Mensaje"},
     "diagnostic.none": {Language.ENGLISH: "No diagnostics.", Language.SPANISH: "Sin diagnósticos."},
+    "diagnostic.antenna.feed.at_wire_end": {
+        Language.ENGLISH: "The feed is at the end of its wire.",
+        Language.SPANISH: "La alimentación está en el extremo del hilo.",
+    },
+    "diagnostic.antenna.feed.out_of_range": {
+        Language.ENGLISH: "The feed offset is outside its wire.",
+        Language.SPANISH: "La posición de alimentación está fuera del hilo.",
+    },
+    "diagnostic.antenna.feed.unknown_wire": {
+        Language.ENGLISH: "The feed references an unknown wire.",
+        Language.SPANISH: "La alimentación referencia un hilo inexistente.",
+    },
+    "diagnostic.antenna.frequency.invalid": {
+        Language.ENGLISH: "The antenna frequency is invalid.",
+        Language.SPANISH: "La frecuencia de la antena es inválida.",
+    },
+    "diagnostic.antenna.name.empty": {
+        Language.ENGLISH: "The antenna name is empty.",
+        Language.SPANISH: "El nombre de la antena está vacío.",
+    },
+    "diagnostic.antenna.wire.duplicate_id": {
+        Language.ENGLISH: "Two wires use the same identifier.",
+        Language.SPANISH: "Dos hilos usan el mismo identificador.",
+    },
+    "diagnostic.antenna.wires.empty": {
+        Language.ENGLISH: "The antenna has no wires.",
+        Language.SPANISH: "La antena no tiene hilos.",
+    },
+    "diagnostic.far_field.below_ground": {
+        Language.ENGLISH: "The far-field request goes below ground.",
+        Language.SPANISH: "La solicitud de campo lejano llega debajo del suelo.",
+    },
+    "diagnostic.normalization.feed_segment_missing": {
+        Language.ENGLISH: "The feed segment was not found in the solver output.",
+        Language.SPANISH: "No se encontró el segmento de alimentación en la salida del solver.",
+    },
+    "diagnostic.normalization.impedance_missing": {
+        Language.ENGLISH: "The solver output has no impedance data.",
+        Language.SPANISH: "La salida del solver no tiene datos de impedancia.",
+    },
+    "diagnostic.project.design.duplicate_id": {
+        Language.ENGLISH: "Two designs use the same identifier.",
+        Language.SPANISH: "Dos diseños usan el mismo identificador.",
+    },
+    "diagnostic.project.design.duplicate_name": {
+        Language.ENGLISH: "Two designs use the same name.",
+        Language.SPANISH: "Dos diseños usan el mismo nombre.",
+    },
+    "diagnostic.project.name.empty": {
+        Language.ENGLISH: "The project name is empty.",
+        Language.SPANISH: "El nombre del proyecto está vacío.",
+    },
+    "diagnostic.project.simulation_run.duplicate_id": {
+        Language.ENGLISH: "Two simulation runs use the same identifier.",
+        Language.SPANISH: "Dos corridas usan el mismo identificador.",
+    },
+    "diagnostic.project.simulation_run.unknown_design": {
+        Language.ENGLISH: "A simulation run references an unknown design.",
+        Language.SPANISH: "Una corrida referencia un diseño inexistente.",
+    },
+    "diagnostic.project.timestamp.invalid": {
+        Language.ENGLISH: "A project timestamp is invalid.",
+        Language.SPANISH: "Una marca de tiempo del proyecto es inválida.",
+    },
+    "diagnostic.project.timestamp.order": {
+        Language.ENGLISH: "The project timestamps are out of order.",
+        Language.SPANISH: "Las marcas de tiempo del proyecto están fuera de orden.",
+    },
+    "diagnostic.segmentation.feed_offset": {
+        Language.ENGLISH: "The feed is not centered on a segment; the delta gap is approximate.",
+        Language.SPANISH: "La alimentación no está centrada en un segmento; el gap delta es aproximado.",
+    },
+    "diagnostic.segmentation.few_segments": {
+        Language.ENGLISH: "A wire uses too few segments for an accurate current distribution.",
+        Language.SPANISH: "Un hilo usa muy pocos segmentos para una distribución de corriente precisa.",
+    },
+    "diagnostic.segmentation.segment_too_long": {
+        Language.ENGLISH: "A segment is longer than lambda/10; NEC accuracy may degrade.",
+        Language.SPANISH: "Un segmento supera lambda/10; la precisión de NEC puede degradarse.",
+    },
+    "diagnostic.segmentation.segment_too_thin": {
+        Language.ENGLISH: "A segment is shorter than twice the wire radius.",
+        Language.SPANISH: "Un segmento es más corto que dos veces el radio del hilo.",
+    },
+    "diagnostic.solver.cancelled": {
+        Language.ENGLISH: "Simulation cancelled.",
+        Language.SPANISH: "Simulación cancelada.",
+    },
+    "diagnostic.solver.execution_error": {
+        Language.ENGLISH: "The solver process failed.",
+        Language.SPANISH: "El proceso del solver falló.",
+    },
+    "diagnostic.solver.exit_code": {
+        Language.ENGLISH: "The solver exited with an error.",
+        Language.SPANISH: "El solver terminó con error.",
+    },
+    "diagnostic.solver.input_error": {
+        Language.ENGLISH: "The solver rejected the input.",
+        Language.SPANISH: "El solver rechazó la entrada.",
+    },
+    "diagnostic.solver.not_available": {
+        Language.ENGLISH: "The NEC2C executable is not available.",
+        Language.SPANISH: "El ejecutable NEC2C no está disponible.",
+    },
+    "diagnostic.solver.permeability_unsupported": {
+        Language.ENGLISH: "Relative permeability is not emitted to NEC.",
+        Language.SPANISH: "La permeabilidad relativa no se envía a NEC.",
+    },
+    "diagnostic.solver.timeout": {
+        Language.ENGLISH: "The solver timed out.",
+        Language.SPANISH: "El solver agotó el tiempo de espera.",
+    },
     "severity.info": {Language.ENGLISH: "Info", Language.SPANISH: "Información"},
     "severity.warning": {Language.ENGLISH: "Warning", Language.SPANISH: "Advertencia"},
     "severity.error": {Language.ENGLISH: "Error", Language.SPANISH: "Error"},
@@ -504,7 +830,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Cancel the running simulation before closing the window.",
         Language.SPANISH: "Cancelá la simulación en curso antes de cerrar la ventana.",
     },
-    "wizard.title": {Language.ENGLISH: "New Dipole", Language.SPANISH: "Nuevo dipolo"},
+    "wizard.title": {Language.ENGLISH: "New Antenna", Language.SPANISH: "Nueva antena"},
     "wizard.project_page": {Language.ENGLISH: "Frequency", Language.SPANISH: "Frecuencia"},
     "wizard.project_page_desc": {
         Language.ENGLISH: "Choose a project name, a band, or a custom frequency.",
@@ -512,8 +838,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "wizard.geometry_page": {Language.ENGLISH: "Geometry", Language.SPANISH: "Geometría"},
     "wizard.geometry_page_desc": {
-        Language.ENGLISH: "The initial length is a half-wave approximation, not a universal final length.",
-        Language.SPANISH: "La longitud inicial es una aproximación de media onda, no una longitud final universal.",
+        Language.ENGLISH: "Suggested dimensions are starting heuristics, not universal final values.",
+        Language.SPANISH: "Las dimensiones sugeridas son heurísticas iniciales, no valores finales universales.",
     },
     "wizard.conductor_page": {Language.ENGLISH: "Conductor", Language.SPANISH: "Conductor"},
     "wizard.conductor_page_desc": {
@@ -533,12 +859,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "wizard.band": {Language.ENGLISH: "Band", Language.SPANISH: "Banda"},
     "wizard.custom": {Language.ENGLISH: "Custom", Language.SPANISH: "Personalizada"},
     "wizard.suggest_length": {
-        Language.ENGLISH: "Suggest half-wave length",
-        Language.SPANISH: "Sugerir longitud de media onda",
+        Language.ENGLISH: "Suggest starting length",
+        Language.SPANISH: "Sugerir longitud inicial",
     },
     "wizard.review": {
-        Language.ENGLISH: "Project: {project}\nFrequency: {frequency} MHz\nLength: {length}\nHeight: {height}\nAzimuth: {azimuth}°\nWire: {diameter} {material}\nGround: {ground}",
-        Language.SPANISH: "Proyecto: {project}\nFrecuencia: {frequency} MHz\nLongitud: {length}\nAltura: {height}\nAzimut: {azimuth}°\nHilo: {diameter} {material}\nSuelo: {ground}",
+        Language.ENGLISH: "Project: {project}\nType: {type}\nFrequency: {frequency} MHz\n{primary_label}: {primary}\n{secondary_label}: {secondary}\n{height_label}: {height}\nAzimuth: {azimuth}°\nWire: {diameter} {material}\nGround: {ground}",
+        Language.SPANISH: "Proyecto: {project}\nTipo: {type}\nFrecuencia: {frequency} MHz\n{primary_label}: {primary}\n{secondary_label}: {secondary}\n{height_label}: {height}\nAzimut: {azimuth}°\nHilo: {diameter} {material}\nSuelo: {ground}",
     },
     "unit.m": {Language.ENGLISH: "m", Language.SPANISH: "m"},
     "unit.ft": {Language.ENGLISH: "ft", Language.SPANISH: "ft"},

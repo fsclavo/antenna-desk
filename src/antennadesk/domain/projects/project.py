@@ -9,7 +9,7 @@ from datetime import datetime
 from uuid import UUID
 
 from ..antennas.antenna import AntennaModel
-from ..antennas.dipole import DipoleParameters
+from ..antennas.design import AntennaDesignParameters, antenna_type_for
 from ..common.time import ensure_utc
 from ..common.validation import Diagnostic, Severity, raise_if_errors
 from ..simulation.run import SimulationRun
@@ -22,7 +22,7 @@ class DesignVariant:
     id: UUID
     name: str
     antenna_type: str
-    parameters: DipoleParameters
+    parameters: AntennaDesignParameters
     antenna: AntennaModel
 
     def __post_init__(self) -> None:
@@ -30,13 +30,27 @@ class DesignVariant:
             raise ValueError("design name must not be empty")
         if not self.antenna_type.strip():
             raise ValueError("antenna_type must not be empty")
+        expected_type = antenna_type_for(self.parameters)
+        if self.antenna_type != expected_type:
+            raise ValueError(
+                f"antenna_type {self.antenna_type!r} does not match "
+                f"the parameter type {expected_type!r}"
+            )
         expected = self.parameters.to_antenna(name=self.antenna.name)
         if expected != self.antenna:
             raise ValueError("antenna geometry is inconsistent with its design parameters")
 
-    def with_parameters(self, parameters: DipoleParameters) -> DesignVariant:
+    def with_parameters(
+        self,
+        parameters: AntennaDesignParameters,
+    ) -> DesignVariant:
         antenna = parameters.to_antenna(name=self.antenna.name)
-        return replace(self, parameters=parameters, antenna=antenna)
+        return replace(
+            self,
+            antenna_type=antenna_type_for(parameters),
+            parameters=parameters,
+            antenna=antenna,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -176,6 +190,14 @@ class Project:
             if run.design_id == design_id:
                 latest = run
         return latest
+
+    def with_latest_simulation_runs_only(self, *, updated_at: datetime) -> Project:
+        latest_runs = tuple(
+            run
+            for design in self.designs
+            if (run := self.latest_simulation_run(design.id)) is not None
+        )
+        return replace(self, simulation_runs=latest_runs, updated_at=updated_at)
 
     def with_design(self, design: DesignVariant, *, updated_at: datetime) -> Project:
         replaced = False

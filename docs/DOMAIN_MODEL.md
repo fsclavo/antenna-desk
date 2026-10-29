@@ -1,8 +1,9 @@
 # Domain model
 
-This document describes the Phase 1 domain. It is intentionally smaller than
-the full blueprint: only horizontal half-wave dipoles, straight wires, one feed
-point, and basic ground models are implemented.
+This document describes the current domain. It covers straight-wire dipoles,
+folded dipoles, regular-polygon loops, one feed point per antenna, and basic
+ground models. The full blueprint contains additional antenna types and
+measurements that are not implemented yet.
 
 ## Units and coordinates
 
@@ -68,7 +69,7 @@ frequency, one or more wires, one feed point, and an environment. Invariants:
 
 ### DipoleParameters
 
-User-facing parameters for a horizontal center-fed dipole:
+User-facing parameters for a center-fed wire dipole:
 
 - `frequency_hz`
 - `total_length_m`
@@ -84,13 +85,57 @@ runs from `(-L/2 cos A, -L/2 sin A, H)` to `(L/2 cos A, L/2 sin A, H)`, where
 vertical dipole the wire runs from `(0, 0, H)` to `(0, 0, H + L)`, where `H` is
 the base height; the azimuth is ignored. The feed is always at the center.
 
+### FoldedDipoleParameters
+
+User-facing parameters for a horizontal two-wire folded dipole:
+
+- `frequency_hz`
+- `total_length_m`: length of each parallel element
+- `height_m`: wire height above ground
+- `spacing_m`: center-to-center spacing between the elements
+- `azimuth_deg`
+- `wire_radius_m`
+- `material`
+- `ground`
+
+`to_antenna()` generates four wires: two parallel elements and two end
+connectors. The feed is at the center of the driven element. The total
+conductor length is `2 * total_length_m + 2 * spacing_m`.
+
+### LoopParameters
+
+User-facing parameters for a vertical regular-polygon loop:
+
+- `frequency_hz`
+- `circumference_m`: total conductor length
+- `height_m`: bottom of the loop above ground
+- `sides`: 3–128 straight sides
+- `azimuth_deg`
+- `wire_radius_m`
+- `material`
+- `ground`
+
+`to_antenna()` generates one wire per side, connected end-to-start into a
+closed polygon in a vertical plane. `height_m` is the bottom above ground;
+`top_height_m` is `height_m + diameter_m`. `azimuth_deg` rotates the loop plane
+around the vertical axis. The feed is at the midpoint of the first side. A
+square loop uses four sides; a larger side count approximates a circular loop.
+
+### AntennaDesignParameters
+
+`AntennaDesignParameters` is the union of `DipoleParameters`,
+`FoldedDipoleParameters`, and `LoopParameters`. `antenna_type_for()` maps a
+parameter object to `wire_dipole`, `folded_dipole`, or `loop`.
+
 ### DesignVariant
 
-A named design with an identifier, an antenna type (`wire_dipole`), the
-generating parameters, and the derived `AntennaModel`. Construction validates
-that the derived geometry matches the parameters.
+A named design with an identifier, an antenna type (`wire_dipole`,
+`folded_dipole`, or `loop`), the generating parameters, and the derived
+`AntennaModel`. Construction validates that the antenna type matches the
+parameters and that the derived geometry matches both.
 
-`with_parameters()` returns a new variant; it never mutates the original.
+`with_parameters()` returns a new variant and updates both the antenna type and
+the derived model; it never mutates the original.
 
 ### Project
 
@@ -176,7 +221,7 @@ The native format is versioned JSON:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 2.
+the application writes version 3.
 
 ## Schema policy
 
@@ -186,6 +231,8 @@ the application writes version 2.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
 - Version 3 persists normalized simulation runs, including raw solver text.
   SWR is stored as `null` when it is infinite.
+- Folded dipole and loop parameters are additive in version 3; existing
+  `wire_dipole` documents do not change.
 - Unknown fields are rejected.
 - Unknown formats are rejected.
 - Future schema versions are rejected with a clear error.
@@ -194,14 +241,15 @@ the application writes version 2.
 
 ## Current limitations
 
-- Only horizontal center-fed dipoles are implemented.
+- Wire dipoles, folded dipoles, and regular-polygon loops are implemented.
 - No loads, networks, radials, or free-form conductors.
-- The GUI supports horizontal and vertical center-fed dipoles; loops and folded
-  dipoles are not implemented yet.
+- Folded and loop geometry are parametric templates; free-form wire editing is
+  not implemented.
 - VNA CSV import and measurement records are not implemented yet.
 - No numerical discretization in the domain; the segmentation policy is a
-  configuration value and the solver adapter builds the actual layout.
-- Simulation results are not persisted yet.
+  configuration value, including optional per-wire overrides, and the solver
+  adapter builds the actual layout.
+- Simulation results are persisted as immutable runs in schema version 3.
 - Relative permeability is not emitted to NEC. Conductor conductivity is
   emitted when `SimulationSpec.include_conductor_losses` is true.
 
@@ -211,7 +259,9 @@ Phase 2 adds solver-independent simulation types:
 
 - `FrequencyPlan`: a single frequency or a uniformly spaced sweep.
 - `FarFieldRequest`: angular sampling for the far-field pattern.
-- `SegmentationPolicy`: explicit segment count or a documented heuristic.
+- `SegmentationPolicy`: explicit global counts, a documented heuristic, or
+  per-wire overrides; `aligned_policy_for_model()` aligns the feed wire to a
+  segment center and gives short connector wires a sensible minimum.
 - `SimulationSpec`: frequency plan, segmentation, reference impedance,
   extended-kernel flag, conductor-loss flag, far-field request, and timeout.
 - `SolverMetadata`: engine name, version, and executable.
@@ -244,8 +294,9 @@ shown when a project is opened. Editing a design removes its current result
 view, but earlier run snapshots remain in the project. A project can contain
 multiple design variants; the GUI edits the selected variant.
 
-Length optimization is a bounded one-dimensional search over the dipole length
+Dimension optimization is a bounded one-dimensional search over the primary
+dimension (dipole/folded element length or loop circumference)
 at the design frequency. It uses the solver through the same application port,
 logs every evaluation, and computes ±10/25 mm sensitivity probes around the
-best length. The final full-sweep/pattern simulation is run separately after
-the user applies the optimized length.
+best dimension. The final full-sweep/pattern simulation is run separately after
+the user applies the optimized dimension.

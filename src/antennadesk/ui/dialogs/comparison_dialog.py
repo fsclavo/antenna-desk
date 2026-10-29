@@ -9,6 +9,7 @@ from collections.abc import Mapping
 from uuid import UUID
 
 import pyqtgraph as pg
+from PySide6.QtCore import QEvent
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -22,12 +23,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ...domain.antennas.dipole import DipoleParameters
+from ...domain.antennas.folded_dipole import FoldedDipoleParameters
+from ...domain.antennas.loop import LoopParameters
 from ...domain.projects.project import DesignVariant, Project
 from ...domain.simulation.result import FrequencyResult, SimulationResult
 from ..i18n import Translator
-
-COLOR_A = "#1f5fa8"
-COLOR_B = "#d07b1f"
+from ..theme import theme_colors
 
 
 class ComparisonDialog(QDialog):
@@ -42,6 +44,7 @@ class ComparisonDialog(QDialog):
         self._translator = translator
         self._project = project
         self._results = results
+        self._colors = theme_colors(self.palette())
         self.setWindowTitle(translator.t("compare.title"))
         self.resize(960, 780)
 
@@ -98,17 +101,32 @@ class ComparisonDialog(QDialog):
 
         self._combo_a.currentIndexChanged.connect(self._refresh)
         self._combo_b.currentIndexChanged.connect(self._refresh)
+        self._apply_theme()
         self._refresh()
 
     @staticmethod
     def _make_plot() -> pg.PlotWidget:
         plot = pg.PlotWidget()
-        plot.setBackground("w")
         plot.showGrid(x=True, y=True, alpha=0.3)
-        for axis in ("left", "bottom"):
-            plot.getAxis(axis).setPen("#333333")
-            plot.getAxis(axis).setTextPen("#333333")
         return plot
+
+    def _apply_theme(self) -> None:
+        self._colors = theme_colors(self.palette())
+        for plot in (self._swr_plot, self._pattern_plot):
+            plot.setBackground(self._colors.plot_background)
+            for axis_name in ("left", "bottom"):
+                axis = plot.getAxis(axis_name)
+                axis.setPen(self._colors.axis)
+                axis.setTextPen(self._colors.axis)
+            legend = plot.plotItem.legend
+            if legend is not None:
+                legend.setLabelTextColor(self._colors.text)
+
+    def changeEvent(self, event: QEvent) -> None:
+        if event.type() == QEvent.Type.PaletteChange:
+            self._apply_theme()
+            self._refresh()
+        super().changeEvent(event)
 
     def _design_for(self, combo: QComboBox) -> DesignVariant | None:
         value = combo.currentData()
@@ -160,12 +178,30 @@ class ComparisonDialog(QDialog):
             if frequency is not None and frequency.power_budget is not None
             else None
         )
+        parameters = design.parameters
+        if isinstance(parameters, FoldedDipoleParameters):
+            primary = f"{parameters.total_length_m:.3f} m"
+            secondary = f"{parameters.spacing_m:.3f} m"
+        elif isinstance(parameters, LoopParameters):
+            primary = f"{parameters.circumference_m:.3f} m"
+            secondary = str(parameters.sides)
+        elif isinstance(parameters, DipoleParameters):
+            primary = f"{parameters.total_length_m:.3f} m"
+            secondary = "—"
+        else:
+            primary = "—"
+            secondary = "—"
         return [
-            (t("field.frequency"), f"{design.parameters.frequency_hz / 1e6:.6f} MHz"),
-            (t("field.length"), f"{design.parameters.total_length_m:.3f} m"),
-            (t("field.height"), f"{design.parameters.height_m:.3f} m"),
-            (t("field.azimuth"), f"{design.parameters.azimuth_deg:.1f}°"),
-            (t("field.diameter"), f"{design.parameters.wire_radius_m * 2000.0:.3f} mm"),
+            (
+                t("field.antenna_type"),
+                t(f"antenna_type.{design.antenna_type}"),
+            ),
+            (t("field.frequency"), f"{parameters.frequency_hz / 1e6:.6f} MHz"),
+            (t("field.primary_dimension"), primary),
+            (t("field.secondary_dimension"), secondary),
+            (t("field.height"), f"{parameters.height_m:.3f} m"),
+            (t("field.azimuth"), f"{parameters.azimuth_deg:.1f}°"),
+            (t("field.diameter"), f"{parameters.wire_radius_m * 2000.0:.3f} mm"),
             (t("table.resistance"), f"{frequency.impedance_ohm.real:.3f}" if frequency else "—"),
             (t("table.reactance"), f"{frequency.impedance_ohm.imag:+.3f}" if frequency else "—"),
             (t("table.impedance"), f"{abs(frequency.impedance_ohm):.3f}" if frequency else "—"),
@@ -225,18 +261,22 @@ class ComparisonDialog(QDialog):
     ) -> None:
         self._swr_plot.clear()
         self._pattern_plot.clear()
-        self._swr_plot.setTitle(self._translator.t("compare.swr"), color="#333333")
-        self._swr_plot.setLabel("bottom", self._translator.t("table.frequency"), color="#333333")
-        self._swr_plot.setLabel("left", self._translator.t("table.swr"), color="#333333")
-        self._pattern_plot.setTitle(self._translator.t("compare.pattern"), color="#333333")
-        self._pattern_plot.setLabel(
-            "bottom", self._translator.t("pattern.elevation"), color="#333333"
+        self._swr_plot.setTitle(self._translator.t("compare.swr"), color=self._colors.text)
+        self._swr_plot.setLabel(
+            "bottom", self._translator.t("table.frequency"), color=self._colors.text
         )
-        self._pattern_plot.setLabel("left", self._translator.t("pattern.gain"), color="#333333")
+        self._swr_plot.setLabel("left", self._translator.t("table.swr"), color=self._colors.text)
+        self._pattern_plot.setTitle(self._translator.t("compare.pattern"), color=self._colors.text)
+        self._pattern_plot.setLabel(
+            "bottom", self._translator.t("pattern.elevation"), color=self._colors.text
+        )
+        self._pattern_plot.setLabel(
+            "left", self._translator.t("pattern.gain"), color=self._colors.text
+        )
 
         for label, result, color in (
-            ("A", result_a, COLOR_A),
-            ("B", result_b, COLOR_B),
+            ("A", result_a, self._colors.series_a),
+            ("B", result_b, self._colors.series_b),
         ):
             if result is None:
                 continue

@@ -61,8 +61,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Simulation save/reopen flow: the latest run per variant is restored for
   comparison, reports, and construction sheets across sessions.
 - Solver integration jobs on Linux and Windows.
+- Phase 6 second slice: parametric folded-dipole and regular-polygon loop
+  templates, antenna-type union, and type/geometry consistency validation.
+- Antenna-type selector with conditional spacing/sides fields; design
+  conversion updates the derived geometry and switches multi-wire designs to
+  Plan view.
+- Generic New Antenna wizard with type selection, type-aware geometry and
+  review pages, and the current design type as the initial choice.
+- Additive schema v3 payloads for folded dipole and loop parameters, with
+  round-trip and mismatch tests; existing wire-dipole documents are unchanged.
+- Multi-wire geometry rendering, type-aware construction sheets and HTML
+  reports, and mixed-geometry comparison.
+- Geometry-view roles clarified: Plan carries construction dimensions (including
+  feed legs and folded/loop measurements); Elevation shows installation height,
+  feed height, and ground for all geometries. Folded plans show two elements
+  with exaggerated spacing, and elevation adds a two-conductor section; loop
+  plans show a circle with diameter, circumference, and side count fitted to
+  the view, and loop elevation shows a vertical edge-on line with bottom height
+  and diameter.
+- Folded dipole and loop solver integration tests run against `nec2c`; these
+  currently provide topology and sanity coverage, not independent impedance
+  references.
+- UI diagnostics for known stable codes are localized; the raw English
+  solver message remains in the tooltip.
+- Native PDF construction sheet with type-aware dimensions, simulation rows,
+  notes, and footer.
+- Native PDF simulation report with design/configuration tables, impedance
+  table, resonance, SVG-derived charts, diagnostics, and footer.
+- Compact simulation history action that keeps only the latest run per design,
+  reducing project size.
+- Save-time warning when a project exceeds 8 MB and a clear block above the
+  10 MB native-file limit.
+- Per-wire segmentation overrides and a feed-aligned count heuristic; the UI
+  derives counts from the selected model, gives short folded connectors at
+  least three segments, and persists the overrides additively in schema v3.
+- Palette-aware diagram theme: the geometry sketch and pyqtgraph charts follow
+  the GUI light/dark palette, including backgrounds, axes, labels, grids, and
+  series colors, with runtime updates when the palette changes.
 
 ### Changed
+
+- Length optimization is generalized to the primary dimension: wire/folded
+  element length or loop circumference. `EditDipoleLength` remains limited to
+  wire dipoles.
 
 - Documentation and README are now in English.
 

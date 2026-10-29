@@ -7,7 +7,7 @@ from __future__ import annotations
 import math
 
 import pyqtgraph as pg
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QEvent, Qt
 from PySide6.QtGui import QFontDatabase
 from PySide6.QtWidgets import (
     QComboBox,
@@ -23,16 +23,18 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...domain.common.validation import Severity
+from ...domain.common.validation import Diagnostic, Severity
 from ...domain.simulation.resonance import find_resonances
 from ...domain.simulation.result import SimulationResult, SimulationStatus
 from ..i18n import Translator
+from ..theme import theme_colors
 
 
 class ResultsView(QWidget):
     def __init__(self, translator: Translator, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._translator = translator
+        self._colors = theme_colors(self.palette())
         self._result: SimulationResult | None = None
 
         self._tabs = QTabWidget(self)
@@ -119,17 +121,37 @@ class ResultsView(QWidget):
 
         self._pattern_frequency.currentIndexChanged.connect(self._render_pattern)
         self._currents_frequency.currentIndexChanged.connect(self._render_currents)
+        self._apply_theme()
         self.retranslate()
 
     @staticmethod
     def _make_plot() -> pg.PlotWidget:
         plot = pg.PlotWidget()
-        plot.setBackground("w")
         plot.showGrid(x=True, y=True, alpha=0.3)
-        for axis in ("left", "bottom"):
-            plot.getAxis(axis).setPen("#333333")
-            plot.getAxis(axis).setTextPen("#333333")
         return plot
+
+    def _apply_theme(self) -> None:
+        self._colors = theme_colors(self.palette())
+        for plot in (
+            self._impedance_plot,
+            self._swr_plot,
+            self._pattern_plot,
+            self._currents_plot,
+        ):
+            plot.setBackground(self._colors.plot_background)
+            for axis_name in ("left", "bottom"):
+                axis = plot.getAxis(axis_name)
+                axis.setPen(self._colors.axis)
+                axis.setTextPen(self._colors.axis)
+            legend = plot.plotItem.legend
+            if legend is not None:
+                legend.setLabelTextColor(self._colors.text)
+
+    def changeEvent(self, event: QEvent) -> None:
+        if event.type() == QEvent.Type.PaletteChange:
+            self._apply_theme()
+            self._render()
+        super().changeEvent(event)
 
     @staticmethod
     def _configure_table(table: QTableWidget) -> None:
@@ -204,8 +226,10 @@ class ResultsView(QWidget):
             self._table.setRowCount(0)
             self._resonance_label.setText("")
             self._resonance_label.setVisible(False)
-            self._impedance_plot.setTitle(self._translator.t("results.none"), color="#333333")
-            self._swr_plot.setTitle(self._translator.t("results.none"), color="#333333")
+            self._impedance_plot.setTitle(
+                self._translator.t("results.none"), color=self._colors.text
+            )
+            self._swr_plot.setTitle(self._translator.t("results.none"), color=self._colors.text)
             return
 
         frequencies = self._result.frequencies
@@ -227,17 +251,17 @@ class ResultsView(QWidget):
         x = [frequency.frequency_hz / 1e6 for frequency in frequencies]
         resistance = [frequency.impedance_ohm.real for frequency in frequencies]
         reactance = [frequency.impedance_ohm.imag for frequency in frequencies]
-        self._impedance_plot.setTitle(self._translator.t("plot.impedance"), color="#333333")
+        self._impedance_plot.setTitle(self._translator.t("plot.impedance"), color=self._colors.text)
         self._impedance_plot.setLabel(
-            "bottom", self._translator.t("table.frequency"), color="#333333"
+            "bottom", self._translator.t("table.frequency"), color=self._colors.text
         )
         self._impedance_plot.setLabel(
-            "left", self._translator.t("plot.impedance_axis"), color="#333333"
+            "left", self._translator.t("plot.impedance_axis"), color=self._colors.text
         )
         self._impedance_plot.plot(
             x,
             resistance,
-            pen=pg.mkPen("#1f5fa8", width=2),
+            pen=pg.mkPen(self._colors.resistance, width=2),
             symbol="o",
             symbolSize=5,
             name=self._translator.t("table.resistance"),
@@ -245,7 +269,7 @@ class ResultsView(QWidget):
         self._impedance_plot.plot(
             x,
             reactance,
-            pen=pg.mkPen("#d07b1f", width=2),
+            pen=pg.mkPen(self._colors.reactance, width=2),
             symbol="o",
             symbolSize=5,
             name=self._translator.t("table.reactance"),
@@ -257,14 +281,16 @@ class ResultsView(QWidget):
             if math.isfinite(frequency.swr):
                 swr_x.append(frequency.frequency_hz / 1e6)
                 swr_y.append(frequency.swr)
-        self._swr_plot.setTitle(self._translator.t("plot.swr"), color="#333333")
-        self._swr_plot.setLabel("bottom", self._translator.t("table.frequency"), color="#333333")
-        self._swr_plot.setLabel("left", self._translator.t("table.swr"), color="#333333")
+        self._swr_plot.setTitle(self._translator.t("plot.swr"), color=self._colors.text)
+        self._swr_plot.setLabel(
+            "bottom", self._translator.t("table.frequency"), color=self._colors.text
+        )
+        self._swr_plot.setLabel("left", self._translator.t("table.swr"), color=self._colors.text)
         if swr_x:
             self._swr_plot.plot(
                 swr_x,
                 swr_y,
-                pen=pg.mkPen("#2e8b57", width=2),
+                pen=pg.mkPen(self._colors.swr, width=2),
                 symbol="o",
                 symbolSize=5,
             )
@@ -295,16 +321,16 @@ class ResultsView(QWidget):
                     pg.InfiniteLine(
                         pos=point.frequency_hz / 1e6,
                         angle=90,
-                        pen=pg.mkPen("#777777", style=Qt.PenStyle.DashLine),
+                        pen=pg.mkPen(self._colors.grid, style=Qt.PenStyle.DashLine),
                         label=f"{point.frequency_hz / 1e6:.3f} MHz",
-                        labelOpts={"position": 0.96, "color": "#555555"},
+                        labelOpts={"position": 0.96, "color": self._colors.secondary_text},
                     )
                 )
                 self._swr_plot.addItem(
                     pg.InfiniteLine(
                         pos=point.frequency_hz / 1e6,
                         angle=90,
-                        pen=pg.mkPen("#777777", style=Qt.PenStyle.DashLine),
+                        pen=pg.mkPen(self._colors.grid, style=Qt.PenStyle.DashLine),
                     )
                 )
         else:
@@ -313,7 +339,9 @@ class ResultsView(QWidget):
     def _render_currents(self) -> None:
         self._currents_plot.clear()
         if self._result is None or not self._result.frequencies:
-            self._currents_plot.setTitle(self._translator.t("results.none"), color="#333333")
+            self._currents_plot.setTitle(
+                self._translator.t("results.none"), color=self._colors.text
+            )
             return
         index = self._currents_frequency.currentIndex()
         if index < 0 or index >= len(self._result.frequencies):
@@ -321,22 +349,24 @@ class ResultsView(QWidget):
         frequency = self._result.frequencies[index]
         currents = frequency.currents
         if not currents:
-            self._currents_plot.setTitle(self._translator.t("currents.none"), color="#333333")
+            self._currents_plot.setTitle(
+                self._translator.t("currents.none"), color=self._colors.text
+            )
             return
 
         segments = [current.segment for current in currents]
         magnitudes = [current.magnitude_a for current in currents]
-        self._currents_plot.setTitle(self._translator.t("plot.currents"), color="#333333")
+        self._currents_plot.setTitle(self._translator.t("plot.currents"), color=self._colors.text)
         self._currents_plot.setLabel(
-            "bottom", self._translator.t("currents.segment"), color="#333333"
+            "bottom", self._translator.t("currents.segment"), color=self._colors.text
         )
         self._currents_plot.setLabel(
-            "left", self._translator.t("currents.magnitude"), color="#333333"
+            "left", self._translator.t("currents.magnitude"), color=self._colors.text
         )
         self._currents_plot.plot(
             segments,
             magnitudes,
-            pen=pg.mkPen("#1f5fa8", width=2),
+            pen=pg.mkPen(self._colors.resistance, width=2),
             symbol="o",
             symbolSize=4,
         )
@@ -344,16 +374,16 @@ class ResultsView(QWidget):
             pg.InfiniteLine(
                 pos=frequency.feed_segment,
                 angle=90,
-                pen=pg.mkPen("#c0392b", style=Qt.PenStyle.DashLine),
+                pen=pg.mkPen(self._colors.feed, style=Qt.PenStyle.DashLine),
                 label=self._translator.t("geometry.feed"),
-                labelOpts={"position": 0.95, "color": "#c0392b"},
+                labelOpts={"position": 0.95, "color": self._colors.feed},
             )
         )
 
     def _render_pattern(self) -> None:
         self._pattern_plot.clear()
         if self._result is None or not self._result.frequencies:
-            self._pattern_plot.setTitle(self._translator.t("results.none"), color="#333333")
+            self._pattern_plot.setTitle(self._translator.t("results.none"), color=self._colors.text)
             return
         index = self._pattern_frequency.currentIndex()
         if index < 0 or index >= len(self._result.frequencies):
@@ -365,19 +395,21 @@ class ResultsView(QWidget):
             if point.gain_total_db is not None
         ]
         if not points:
-            self._pattern_plot.setTitle(self._translator.t("pattern.none"), color="#333333")
+            self._pattern_plot.setTitle(self._translator.t("pattern.none"), color=self._colors.text)
             return
         theta = [value[0] for value in points]
         gain = [value[1] for value in points]
-        self._pattern_plot.setTitle(self._translator.t("plot.pattern"), color="#333333")
+        self._pattern_plot.setTitle(self._translator.t("plot.pattern"), color=self._colors.text)
         self._pattern_plot.setLabel(
-            "bottom", self._translator.t("pattern.elevation"), color="#333333"
+            "bottom", self._translator.t("pattern.elevation"), color=self._colors.text
         )
-        self._pattern_plot.setLabel("left", self._translator.t("pattern.gain"), color="#333333")
+        self._pattern_plot.setLabel(
+            "left", self._translator.t("pattern.gain"), color=self._colors.text
+        )
         self._pattern_plot.plot(
             theta,
             gain,
-            pen=pg.mkPen("#7b4ea3", width=2),
+            pen=pg.mkPen(self._colors.pattern, width=2),
             symbol="o",
             symbolSize=4,
         )
@@ -412,7 +444,9 @@ class ResultsView(QWidget):
                 QTableWidgetItem(self._severity_text(diagnostic.severity)),
             )
             self._diagnostics.setItem(row, 1, QTableWidgetItem(diagnostic.code))
-            self._diagnostics.setItem(row, 2, QTableWidgetItem(diagnostic.message))
+            message = QTableWidgetItem(self._diagnostic_message(diagnostic))
+            message.setToolTip(diagnostic.message)
+            self._diagnostics.setItem(row, 2, message)
         self._diagnostics.resizeColumnsToContents()
         self._diagnostics.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         self._diagnostics_empty.setText(self._translator.t("diagnostic.none"))
@@ -431,3 +465,8 @@ class ResultsView(QWidget):
 
     def _severity_text(self, severity: Severity) -> str:
         return self._translator.t(f"severity.{severity.value}")
+
+    def _diagnostic_message(self, diagnostic: Diagnostic) -> str:
+        key = f"diagnostic.{diagnostic.code}"
+        translated = self._translator.t(key)
+        return diagnostic.message if translated == key else translated

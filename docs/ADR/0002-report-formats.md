@@ -1,6 +1,6 @@
 # ADR-0002 — Report and data export formats
 
-- **Status:** Accepted
+- **Status:** Accepted; native PDF added later (see Update)
 - **Date:** 2026-10-29
 - **Deciders:** Fernando Sclavo, development
 - **Phase:** 4 — Comparison and reports
@@ -41,7 +41,7 @@ not store simulation runs yet.
 
 ### Negative
 
-- Native PDF export is not available yet.
+- Native PDF export was not available when this decision was made.
 - The HTML report does not include the raw solver files.
 - The SVG chart implementation is intentionally basic.
 - Reports require a simulation result from the current session.
@@ -52,6 +52,14 @@ not store simulation runs yet.
   domain.
 - Persisting simulation runs would allow reports to be regenerated after
   reopening a project; that is a separate schema change.
+
+## Update — native PDF implemented
+
+The HTML structure stabilized, simulation runs were persisted in schema v3, and
+the application now has native PDF construction sheets and simulation reports.
+The PDF adapter draws the report directly with `QPdfWriter`/`QPainter` and
+rasterizes the existing SVG charts; no Matplotlib or HTML rendering dependency
+was added. The HTML report remains available for browser printing.
 
 ## Alternatives considered
 

@@ -28,26 +28,51 @@ the `NEC2C` environment variable.
 ## First simulation
 
 The application opens with a 40 m horizontal dipole loaded. Press **Simulate**
-(or F5). The design panel on the left shows frequency, orientation, length,
+(or F5). The design panel on the left shows antenna type, frequency, geometry,
 height, wire diameter, material, ground, reference impedance, and the frequency
-sweep. Choose **Vertical** for a vertical center-fed dipole; in that case the
-height field is the base height above ground and the azimuth is disabled.
-The center shows a dimensioned construction sketch with the wire, feed point,
-center, ends, height, total length, per-leg lengths, ground line, and a separate
-scale bar. Use the **View** selector above the sketch to switch between
-**Elevation** and **Plan**. The **Vertical scale** selector can exaggerate the
-height (1x, 1.5x, 2x, 3x) for low horizontal antennas; it is disabled for
-vertical dipoles and plan view. The elevation view draws vertical dipoles with
-base-height and total-length dimensions.
+sweep.
+
+Choose the antenna type first:
+
+- **Wire dipole**: one straight wire; choose horizontal or vertical. For a
+  vertical dipole the height is the base height and the azimuth is disabled.
+- **Folded dipole**: two parallel elements and two end connectors; set the
+  element length and spacing.
+- **Loop**: a vertical regular polygon; set the circumference, the number of
+  sides, and the bottom height above ground.
+
+Changing the type converts the current design when you press **Apply design**
+or **Simulate**. The center shows a dimensioned sketch with a ground line and scale bar. Use
+the **View** selector to switch between:
+
+- **Plan**: construction dimensions. For a wire dipole it shows the total
+  length, both feed legs, feed position, ends, azimuth, and scale. For a
+  folded dipole it shows both elements with exaggerated spacing for clarity,
+  element length, spacing, and total conductor length. For a loop it shows a
+  circle with diameter, circumference, side count, and feed position.
+- **Elevation**: installation and position above ground. It shows the antenna
+  height, feed height, ground line, and scale. A folded dipole also includes a
+  small section symbol showing its two conductors and spacing. A loop is shown
+  edge-on as a vertical line with its diameter; Plan shows the loop in its own
+  plane as a circle with diameter, circumference, and side count. Construction
+  dimensions stay in Plan.
+
+Multi-wire designs switch to Plan automatically. A vertical dipole is a point
+in Plan, so its elevation keeps the vertical construction dimensions. The
+**Zoom** selector scales the sketch (0.5x, 1x, 2x, 4x, 8x); the mouse wheel
+steps through those values, dragging pans, and double-click resets zoom and pan. The **Vertical scale**
+selector can exaggerate the height (1x, 1.5x, 2x, 3x) for low horizontal
+antennas.
 
 ## Create a dipole with the wizard
 
-Use **File → New Dipole...**. The wizard asks for:
+Use **File → New Antenna...**. The wizard starts with the antenna type
+currently selected in the design panel. It asks for:
 
-1. Project name, band, and frequency.
-2. Orientation, total length, height, and azimuth. For a vertical dipole the
-   height is the base height. The suggested length is a half-wave
-   approximation, not a universal final length.
+1. Project name, antenna type, band, and frequency.
+2. Geometry for the selected type: wire dipole length/orientation, folded
+   dipole element length/spacing, or loop circumference/side count. The
+   suggested length is a heuristic, not a universal final dimension.
 3. Wire material and diameter.
 4. Ground model. Finite ground asks for relative permittivity and conductivity.
 5. A summary before creating the project.
@@ -68,6 +93,10 @@ After creation, adjust the design panel and press **Apply design** or
   or errors.
 - **Raw data**: the generated NEC input deck and the raw solver output.
 
+Diagrams and charts follow the application's light or dark Qt palette. The
+geometry sketch, chart backgrounds, axes, labels, and series colors update when
+the palette changes.
+
 SWR is computed with the reference impedance in the design panel (default
 50 Ω). A low SWR does not prove high efficiency or a useful pattern.
 
@@ -86,33 +115,39 @@ design frequency. Missing results are reported in the dialog.
 
 ## Optimize the length
 
-Use **Optimize Length...** in the design panel or the File menu. Set the
-minimum and maximum physical length, the target reactance (0 Ω for series
+Use **Optimize Dimension...** in the design panel or the File menu. Set the
+minimum and maximum dimension, the target reactance (0 Ω for series
 resonance), the maximum number of solver evaluations, and the reactance
-tolerance. The dialog evaluates the dipole at the design frequency, shows every
-evaluation, and reports the best length. A sensitivity table evaluates the best
-length at ±10 mm and ±25 mm so construction tolerances are visible.
+tolerance. The optimized dimension is the total length for a wire dipole or
+folded-dipole element, and the circumference for a loop. The dialog evaluates
+the design at the design frequency, shows every evaluation, and reports the
+best dimension. A sensitivity table evaluates the best dimension at ±10 mm and
+±25 mm so construction tolerances are visible.
 
-Press **Apply best length** to update the design; the application then runs the
-full sweep/pattern simulation with the current settings. The optimizer is
-bounded by the length range and evaluation limit; it is not a multi-objective
-optimizer.
+Press **Apply best dimension** to update the design; the application then runs
+the full sweep/pattern simulation with the current settings. The optimizer is
+bounded by the dimension range and evaluation limit; it is not a
+multi-objective optimizer.
 
 ## Construction sheet
 
 Use **File → Construction Sheet...** for a printable sheet with target
-frequency, total wire length, left and right leg lengths, feed position, height,
-wire, ground, simulated impedance/SWR, resonance, and construction notes.
-**Save HTML...** writes the sheet; use the browser print dialog for PDF.
+frequency, type-aware dimensions, feed position, height, wire, ground,
+simulated impedance/SWR, resonance, and construction notes. Dipoles show first
+and second leg lengths; folded dipoles show element and connector lengths;
+loops show side length, circumference, side count, and feed side.
+**Save HTML...** writes the sheet and **Save PDF...** writes a native PDF.
 
 ## Export results
 
-Use **File → Export CSV...** for the frequency sweep table, or **File → Export
-HTML Report...** for a self-contained report with design parameters,
-configuration, solver metadata, fingerprint, diagnostics, impedance,
-resonance, and charts. The HTML report can be printed to PDF from a browser.
+Use **File → Export CSV...** for the frequency sweep table, **File → Export
+HTML Report...** for a self-contained HTML report, or **File → Export PDF
+Report...** for a native PDF with design parameters, configuration, solver
+metadata, fingerprint, diagnostics, impedance, resonance, and charts.
 Simulation runs are stored when you save the project, including raw solver
-text. The project size limit is 10 MB.
+text. The project size limit is 10 MB; saving above 8 MB shows a warning, and
+**File → Compact Simulation History...** keeps only the latest run per
+variant.
 
 ## Cancel and errors
 
@@ -134,18 +169,19 @@ canonical meters and hertz.
 
 ## Current limitations
 
-- The GUI supports horizontal and vertical center-fed dipoles; loops, folded
-  dipoles, VNA CSV import, and measurement records are not implemented yet.
-- The GUI currently edits the first design variant in a project.
+- Horizontal and vertical wire dipoles, folded dipoles, and regular-polygon
+  loops are supported. Folded and loop geometry use theoretical sanity checks;
+  independent impedance references and VNA CSV import are not implemented yet.
 - No loads, networks, transmission lines, or radial ground screens.
 - Project files store normalized results and raw solver text; many long runs
   can reach the 10 MB project limit.
-- Native PDF export is deferred; use the browser print dialog for the HTML
-  report and construction sheet.
-- Optimization is one-dimensional length adjustment against a single reactance
-  target; bandwidth, gain, efficiency, and multi-objective optimization are not
-  implemented yet.
+- Simulation reports and construction sheets have native PDF export; HTML
+  versions remain available for browser printing.
+- Optimization is one-dimensional adjustment of the primary dimension against
+  a single reactance target; bandwidth, gain, efficiency, and multi-objective
+  optimization are not implemented yet.
 - Relative permeability is not emitted to NEC; conductor conductivity is.
-- Domain and solver diagnostic messages are currently reported in English.
+- Known diagnostic codes are localized; the raw solver detail remains in
+  English in the tooltip and raw-output tab.
 - A simulation is a prediction conditioned by the model. Unmodeled buildings,
   trees, masts, feed lines, and real ground can change measured performance.

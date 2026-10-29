@@ -113,7 +113,8 @@ impedance against the computed value `2.351965` at 50 Ω.
   is not emitted.
 - No loads, networks, transmission lines, or radial ground screens.
 - Only free-space, perfect, and finite ground models are emitted.
-- The segmentation policy is a documented heuristic; explicit segment counts
+- The segmentation policy is a documented heuristic with optional per-wire
+  overrides; explicit segment counts
   are used for reference cases.
 - Results are not persisted in the project file yet.
 - No progress reporting, because nec2c does not provide real progress data.

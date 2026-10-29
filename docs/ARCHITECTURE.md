@@ -130,37 +130,50 @@ diagnostics, impedance table, resonance points, and SVG charts.
 ## Phase 5 flow
 
 ```text
-DipoleParameters + base SimulationSpec
+AntennaDesignParameters + base SimulationSpec
         │
         ▼
-OptimizeDipoleLength
+OptimizeAntennaDimension
   ├─ single-frequency, no-pattern evaluation spec at the design frequency
   ├─ bounded reactance search (endpoints, coarse scan, interpolation)
   ├─ evaluation log
   └─ ±10/25 mm sensitivity probes
         │
         ▼
-OptimizationDialog ── Apply best length ──► design update ──► full simulation
+OptimizationDialog ── Apply best dimension ──► design update ──► full simulation
         │
         └─ ConstructionDialog / construction sheet (dimensions + last result)
 ```
 
 Optimization runs in a worker thread. The final full-sweep/pattern simulation is
-performed after applying the length so the normal result/report path remains
+performed after applying the dimension so the normal result/report path remains
 the single source of truth.
 
 ## Phase 6 — new geometry (in progress)
 
-The first Phase 6 slice adds a vertical center-fed dipole to the existing
+Phase 6 starts with a vertical center-fed dipole in the existing
 `wire_dipole` model. `DipoleParameters.orientation` selects horizontal or
 vertical geometry; the vertical template uses `height_m` as the base height.
-The solver adapter needs no changes because the canonical model is still a
-single straight wire. The project schema is version 2, with a version 1 to 2
-migration adding the default horizontal orientation. The geometry view,
-construction sheet, and wizard handle both orientations.
 
-Loops, folded dipoles, VNA CSV import, and measurement records remain for later
-slices.
+The second slice adds two multi-wire templates:
+
+- `FoldedDipoleParameters`: two parallel elements, two end connectors, and a
+  center feed on the driven element.
+- `LoopParameters`: a vertical regular polygon with 3–128 sides and a feed at
+  the midpoint of the first side.
+
+`AntennaDesignParameters` is the union of the three parameter types.
+`DesignVariant` stores the union and validates that `antenna_type` matches the
+parameters. The canonical model remains the shared `AntennaModel`, so the
+solver adapter does not need geometry-specific branches. Schema version 3 is
+kept: the new payloads are additive, and old `wire_dipole` documents are
+unchanged.
+
+The form exposes an antenna-type selector with conditional spacing/sides
+fields. Multi-wire designs switch the geometry view to Plan, where construction
+dimensions live; Elevation shows installation data (height above ground, feed
+height, feed height, and ground line, plus a folded-conductor section). Reports, construction sheets, and comparison
+use type-aware dimensions.
 
 
 The UI is bilingual through `ui/i18n.py` and supports metric or imperial
@@ -188,13 +201,13 @@ dipole orientation, version 3 adds persisted simulation runs, and older
 documents are migrated explicitly.
 
 Simulation runs are persisted in schema version 3. Raw solver text is stored
-with the normalized result; the project file-size limit still applies.
+with the normalized result. The UI warns at 8 MB, blocks files above the 10 MB
+limit, and offers simulation-history compaction.
 
 ## Not implemented yet
 
 - 3D visualization.
-- Native PDF report export (HTML can be printed to PDF).
 - NEC import and measurement import adapters.
 - Multi-objective optimization, bandwidth/gain objectives, and space
   constraints beyond the min/max length bounds.
-- Measurement records.
+- Measurement records and VNA CSV import.

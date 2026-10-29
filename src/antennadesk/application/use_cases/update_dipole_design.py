@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Fernando Sclavo
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Replace a dipole design's parameters without mutating previous snapshots."""
+"""Replace a design's parameters without mutating previous snapshots."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from ...domain.antennas.dipole import DipoleParameters
+from ...domain.antennas.design import AntennaDesignParameters
 from ...domain.common.time import utc_now
 from ...domain.projects.project import Project
 
@@ -17,7 +17,7 @@ from ...domain.projects.project import Project
 class UpdateDipoleDesignCommand:
     project: Project
     design_id: UUID
-    parameters: DipoleParameters
+    parameters: AntennaDesignParameters
     updated_at: datetime | None = None
 
 
@@ -28,3 +28,7 @@ class UpdateDipoleDesign:
         updated_design = design.with_parameters(command.parameters)
         timestamp = command.updated_at if command.updated_at is not None else utc_now()
         return command.project.with_design(updated_design, updated_at=timestamp)
+
+
+UpdateDesignVariantCommand = UpdateDipoleDesignCommand
+UpdateDesignVariant = UpdateDipoleDesign

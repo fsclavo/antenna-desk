@@ -58,10 +58,13 @@ from ..application.use_cases.update_dipole_design import (
     UpdateDipoleDesign,
     UpdateDipoleDesignCommand,
 )
+from ..domain.antennas.design import with_primary_dimension
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
+from ..domain.common.time import utc_now
 from ..domain.environment.ground import GroundModel
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.result import SimulationResult, SimulationStatus
+from ..persistence.constants import MAX_PROJECT_SIZE_BYTES, PROJECT_SIZE_WARNING_BYTES
 from ..reporting.csv_export import write_csv
 from ..reporting.html_report import write_html_report
 from ..simulation.nec2.solver import Nec2cSolver
@@ -69,6 +72,7 @@ from .dialogs.comparison_dialog import ComparisonDialog
 from .dialogs.construction_dialog import ConstructionDialog
 from .dialogs.optimization_dialog import OptimizationDialog
 from .i18n import Language, Translator
+from .report_pdf import write_report_pdf
 from .units import UnitSystem
 from .widgets.dipole_form import DipoleForm
 from .widgets.geometry_view import GeometryView, GeometryViewMode
@@ -116,7 +120,7 @@ class MainWindow(QMainWindow):
     def _build_actions(self) -> None:
         self._new_action = QAction(self)
         self._new_action.setShortcut(QKeySequence.StandardKey.New)
-        self._new_action.triggered.connect(lambda: self.new_dipole())
+        self._new_action.triggered.connect(lambda: self.new_antenna())
 
         self._open_action = QAction(self)
         self._open_action.setShortcut(QKeySequence.StandardKey.Open)
@@ -156,6 +160,10 @@ class MainWindow(QMainWindow):
         self._export_csv_action.triggered.connect(lambda: self.export_csv())
         self._export_html_action = QAction(self)
         self._export_html_action.triggered.connect(lambda: self.export_html_report())
+        self._export_pdf_action = QAction(self)
+        self._export_pdf_action.triggered.connect(lambda: self.export_pdf_report())
+        self._compact_history_action = QAction(self)
+        self._compact_history_action.triggered.connect(lambda: self.compact_simulation_history())
 
         self._simulate_action = QAction(self)
         self._simulate_action.setShortcut(QKeySequence("F5"))
@@ -228,16 +236,26 @@ class MainWindow(QMainWindow):
         self._height_combo = QComboBox(self)
         for factor in (1.0, 1.5, 2.0, 3.0):
             self._height_combo.addItem(f"{factor:g}x", factor)
+        self._zoom_label = QLabel(self)
+        self._zoom_combo = QComboBox(self)
+        for factor in (0.5, 1.0, 2.0, 4.0, 8.0):
+            self._zoom_combo.addItem(f"{factor:g}x", factor)
+        self._zoom_combo.setCurrentIndex(1)
+        self._zoom_combo.setToolTip(self._translator.t("geometry.zoom_hint"))
         geometry_controls.addStretch(1)
         geometry_controls.addWidget(self._view_label)
         geometry_controls.addWidget(self._view_combo)
         geometry_controls.addWidget(self._height_label)
         geometry_controls.addWidget(self._height_combo)
+        geometry_controls.addWidget(self._zoom_label)
+        geometry_controls.addWidget(self._zoom_combo)
         geometry_layout.addLayout(geometry_controls)
         geometry_layout.addWidget(self._geometry, 1)
         geometry_container.setMinimumHeight(330)
         self._view_combo.currentIndexChanged.connect(self._on_view_mode_changed)
         self._height_combo.currentIndexChanged.connect(self._on_height_scale_changed)
+        self._zoom_combo.currentIndexChanged.connect(self._on_zoom_changed)
+        self._geometry.zoom_changed.connect(self._sync_zoom_combo)
 
         right_splitter = QSplitter(Qt.Orientation.Vertical, self)
         right_splitter.addWidget(geometry_container)
@@ -296,6 +314,8 @@ class MainWindow(QMainWindow):
         self._file_menu.addSeparator()
         self._file_menu.addAction(self._export_csv_action)
         self._file_menu.addAction(self._export_html_action)
+        self._file_menu.addAction(self._export_pdf_action)
+        self._file_menu.addAction(self._compact_history_action)
         self._file_menu.addSeparator()
         self._file_menu.addAction(self._locate_solver_action)
         self._file_menu.addSeparator()
@@ -334,6 +354,8 @@ class MainWindow(QMainWindow):
         self._construction_action.setText(self._translator.t("action.construction"))
         self._export_csv_action.setText(self._translator.t("action.export_csv"))
         self._export_html_action.setText(self._translator.t("action.export_html"))
+        self._export_pdf_action.setText(self._translator.t("action.export_pdf"))
+        self._compact_history_action.setText(self._translator.t("action.compact_history"))
         self._simulate_action.setText(self._translator.t("action.simulate"))
         self._cancel_action.setText(self._translator.t("action.cancel"))
         self._english_action.setText(self._translator.t("action.english"))
@@ -350,6 +372,8 @@ class MainWindow(QMainWindow):
         self._view_combo.setItemText(0, self._translator.t("geometry.view_elevation"))
         self._view_combo.setItemText(1, self._translator.t("geometry.view_plan"))
         self._height_label.setText(self._translator.t("geometry.vertical_scale"))
+        self._zoom_label.setText(self._translator.t("geometry.zoom"))
+        self._zoom_combo.setToolTip(self._translator.t("geometry.zoom_hint"))
         self._form.retranslate()
         self._geometry.retranslate()
         self._results.retranslate()
@@ -415,6 +439,11 @@ class MainWindow(QMainWindow):
         self._optimize_action.setEnabled(idle and has_project and self._solver is not None)
         self._export_csv_action.setEnabled(idle and has_result)
         self._export_html_action.setEnabled(idle and has_result)
+        self._export_pdf_action.setEnabled(idle and has_result)
+        has_history = self._project is not None and len(self._project.simulation_runs) > len(
+            self._project.designs
+        )
+        self._compact_history_action.setEnabled(idle and has_history)
         self._simulate_action.setEnabled(idle and has_project and self._solver is not None)
         self._cancel_action.setEnabled(self._simulating and self._cancel_token is not None)
         self._form.setEnabled(idle and has_project)
@@ -453,7 +482,8 @@ class MainWindow(QMainWindow):
         self._design_id = design_id
         self._form_dirty = False
         self._form.set_parameters(design.parameters, reset_sweep=True)
-        self._geometry.set_model(design.antenna)
+        self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+        self._auto_select_view(design)
         self._set_variant_combo(design_id)
         result = self._simulation_results.get(design_id)
         if result is None and self._project is not None:
@@ -566,7 +596,8 @@ class MainWindow(QMainWindow):
         updated = replace(updated, name=project_name)
         self._project = updated
         design = updated.design_by_id(self._design_id)
-        self._geometry.set_model(design.antenna)
+        self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+        self._auto_select_view(design)
         self._project_name_updating = True
         self._project_name.setText(project_name)
         self._project_name_updating = False
@@ -693,7 +724,7 @@ class MainWindow(QMainWindow):
         self._status_label.setText(self._translator.t("status.cancelling"))
         self._cancel_action.setEnabled(False)
 
-    def new_dipole(self) -> None:
+    def new_antenna(self) -> None:
         if not self._maybe_save_changes():
             return
         initial_frequency = 7_100_000.0
@@ -703,6 +734,7 @@ class MainWindow(QMainWindow):
             self._translator,
             self._unit_system,
             initial_frequency_hz=initial_frequency,
+            initial_antenna_type=self._form.antenna_type(),
             parent=self,
         )
         if wizard.exec() != QWizard.DialogCode.Accepted:
@@ -725,6 +757,9 @@ class MainWindow(QMainWindow):
             path=None,
             dirty=True,
         )
+
+    def new_dipole(self) -> None:
+        self.new_antenna()
 
     def open_project(self) -> None:
         if not self._maybe_save_changes():
@@ -786,6 +821,28 @@ class MainWindow(QMainWindow):
     def _save_to(self, path: Path) -> bool:
         try:
             project = self._apply_fields()
+            size = self._repository.serialized_size(project)
+            if size > MAX_PROJECT_SIZE_BYTES:
+                self._show_error(
+                    self._translator.t(
+                        "dialog.project_too_large",
+                        size=size / (1024 * 1024),
+                    )
+                )
+                return False
+            if size > PROJECT_SIZE_WARNING_BYTES:
+                answer = QMessageBox.warning(
+                    self,
+                    self._translator.t("app.title"),
+                    self._translator.t(
+                        "dialog.large_project",
+                        size=size / (1024 * 1024),
+                    ),
+                    QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Cancel,
+                    QMessageBox.StandardButton.Save,
+                )
+                if answer != QMessageBox.StandardButton.Save:
+                    return False
             SaveProject(self._repository).execute(project, path)
         except Exception as exc:
             self._show_error(self._translator.t("error.save", message=str(exc)))
@@ -946,11 +1003,11 @@ class MainWindow(QMainWindow):
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        length = dialog.selected_length_m()
-        if length is None:
+        dimension = dialog.selected_dimension_m()
+        if dimension is None:
             return
         try:
-            parameters = design.parameters.with_length(length)
+            parameters = with_primary_dimension(design.parameters, dimension)
             self._form.set_parameters(parameters, reset_sweep=False)
             self._apply_fields()
         except Exception as exc:
@@ -1062,6 +1119,57 @@ class MainWindow(QMainWindow):
             index += 1
         return f"{base} {index}"
 
+    def compact_simulation_history(self) -> None:
+        if self._project is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if len(self._project.simulation_runs) <= len(self._project.designs):
+            return
+        answer = QMessageBox.question(
+            self,
+            self._translator.t("app.title"),
+            self._translator.t(
+                "dialog.compact_history",
+                count=len(self._project.simulation_runs),
+                keep=len(self._project.designs),
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        self._project = self._project.with_latest_simulation_runs_only(updated_at=utc_now())
+        self._dirty = True
+        self._last_status_key = "status.compacted"
+        self._update_title()
+        self._update_actions()
+        self._update_status_text()
+
+    def export_pdf_report(self) -> None:
+        data = self._current_export_data()
+        if data is None:
+            return
+        project, design, result = data
+        suggested = f"{self._safe_file_name(project.name)}-{self._safe_file_name(design.name)}.pdf"
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            self._translator.t("dialog.pdf_title"),
+            str(Path.home() / suggested),
+            self._translator.t("dialog.pdf_filter"),
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.lower() != ".pdf":
+            path = path.with_suffix(".pdf")
+        try:
+            write_report_pdf(self._translator, project, design, result, path)
+        except Exception as exc:
+            self._show_error(self._translator.t("error.export", message=str(exc)))
+            return
+        self._last_status_key = "status.exported"
+        self._update_status_text()
+
     @staticmethod
     def _safe_file_name(value: str) -> str:
         return value.replace("/", "-").replace("\\", "-").replace(":", "-")
@@ -1106,20 +1214,46 @@ class MainWindow(QMainWindow):
         self._geometry.set_view_mode(mode)
         self._update_height_control()
 
+    def _auto_select_view(self, design: DesignVariant) -> None:
+        if len(design.antenna.wires) > 1:
+            index = self._view_combo.findData(GeometryViewMode.PLAN.value)
+            if index >= 0 and self._view_combo.currentIndex() != index:
+                self._view_combo.setCurrentIndex(index)
+
     def _update_height_control(self) -> None:
         mode = self._view_combo.currentData()
         vertical = False
+        multi_wire = False
         if self._project is not None and self._design_id is not None:
-            vertical = (
-                self._project.design_by_id(self._design_id).parameters.orientation
-                is DipoleOrientation.VERTICAL
-            )
-        self._height_combo.setEnabled(mode == GeometryViewMode.ELEVATION.value and not vertical)
+            design = self._project.design_by_id(self._design_id)
+            multi_wire = len(design.antenna.wires) > 1
+            parameters = design.parameters
+            if isinstance(parameters, DipoleParameters):
+                vertical = parameters.orientation is DipoleOrientation.VERTICAL
+        self._height_combo.setEnabled(
+            mode == GeometryViewMode.ELEVATION.value and not vertical and not multi_wire
+        )
 
     def _on_height_scale_changed(self) -> None:
         value = self._height_combo.currentData()
         if isinstance(value, (int, float)):
             self._geometry.set_height_exaggeration(float(value))
+
+    def _on_zoom_changed(self) -> None:
+        value = self._zoom_combo.currentData()
+        if isinstance(value, (int, float)):
+            self._geometry.set_zoom(float(value))
+
+    def _sync_zoom_combo(self, factor: float) -> None:
+        index = min(
+            range(self._zoom_combo.count()),
+            key=lambda item: abs(float(self._zoom_combo.itemData(item)) - factor),
+        )
+        if index == self._zoom_combo.currentIndex():
+            return
+        self._zoom_combo.blockSignals(True)
+        self._zoom_combo.setCurrentIndex(index)
+        self._zoom_combo.blockSignals(False)
 
     def _on_form_changed(self) -> None:
         if self._project is None or self._simulating:

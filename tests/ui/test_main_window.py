@@ -296,7 +296,7 @@ def test_optimize_length_applies_and_simulates(
         def exec(self) -> QDialog.DialogCode:
             return QDialog.DialogCode.Accepted
 
-        def selected_length_m(self) -> float:
+        def selected_dimension_m(self) -> float:
             return 19.8
 
     monkeypatch.setattr(
@@ -373,3 +373,209 @@ def test_simulation_results_persist_across_save_and_open(
     assert reopened._export_csv_action.isEnabled() is True
     window._dirty = False
     reopened._dirty = False
+
+
+def test_switching_to_a_folded_dipole_updates_the_design_and_view(
+    window: MainWindow,
+) -> None:
+    from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
+
+    window._form._type.setCurrentIndex(1)
+    assert window._form.parameters().spacing_m > 0.0
+    window._form._length.setValue(20.0)
+    window._form._spacing.setValue(0.2)
+    window.apply_design()
+
+    assert window._project is not None
+    parameters = window._project.designs[0].parameters
+    assert isinstance(parameters, FoldedDipoleParameters)
+    assert parameters.spacing_m == pytest.approx(0.2, abs=1e-6)
+    assert len(window._project.designs[0].antenna.wires) == 4
+    assert window._view_combo.currentData() == "plan"
+    assert window._geometry._mode.value == "plan"
+    assert window._optimize_action.isEnabled() is True
+    window._dirty = False
+
+
+def test_switching_to_a_loop_updates_the_design(window: MainWindow) -> None:
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    window._form._type.setCurrentIndex(2)
+    window._form._length.setValue(40.0)
+    window._form._sides.setValue(8)
+    window.apply_design()
+
+    assert window._project is not None
+    parameters = window._project.designs[0].parameters
+    assert isinstance(parameters, LoopParameters)
+    assert parameters.sides == 8
+    assert len(window._project.designs[0].antenna.wires) == 8
+    assert window._view_combo.currentData() == "plan"
+    assert window._form._sides.isHidden() is False
+    assert window._form._spacing.isHidden() is True
+    window._dirty = False
+
+
+def test_new_antenna_uses_the_current_antenna_type(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    class FakeWizard:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            captured.update(kwargs)
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Rejected
+
+    monkeypatch.setattr(main_window_module, "DipoleWizard", FakeWizard)
+    window._form._type.setCurrentIndex(2)
+    window._dirty = False
+
+    window.new_antenna()
+
+    assert captured["initial_antenna_type"] == "loop"
+    assert window._new_action.text() == "New Antenna..."
+
+
+def test_new_dipole_alias_still_opens_the_wizard(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    called: list[bool] = []
+
+    def fake_new_antenna() -> None:
+        called.append(True)
+
+    monkeypatch.setattr(window, "new_antenna", fake_new_antenna)
+    window.new_dipole()
+
+    assert called == [True]
+
+
+def test_optimize_loop_applies_circumference_and_simulates(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    class FakeOptimizationDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def selected_dimension_m(self) -> float:
+            return 41.2
+
+    monkeypatch.setattr(
+        main_window_module,
+        "OptimizationDialog",
+        FakeOptimizationDialog,
+    )
+    window._form._type.setCurrentIndex(2)
+    window._form._length.setValue(40.0)
+    window._form._sides.setValue(4)
+    window.apply_design()
+    assert window._optimize_action.isEnabled() is True
+
+    window.optimize_length()
+    qtbot.waitUntil(
+        lambda: not window._simulating and window._thread is None,
+        timeout=5_000,
+    )
+
+    assert window._project is not None
+    parameters = window._project.designs[0].parameters
+    assert isinstance(parameters, LoopParameters)
+    assert parameters.circumference_m == pytest.approx(41.2, abs=1e-6)
+    assert window._results._table.rowCount() == 1
+    window._dirty = False
+
+
+def test_zoom_control_scales_the_geometry_view(window: MainWindow) -> None:
+    assert window._geometry._zoom == pytest.approx(1.0)
+    index = window._zoom_combo.findData(2.0)
+    window._zoom_combo.setCurrentIndex(index)
+
+    assert window._geometry._zoom == pytest.approx(2.0)
+
+    index = window._zoom_combo.findData(1.0)
+    window._zoom_combo.setCurrentIndex(index)
+    assert window._geometry._zoom == pytest.approx(1.0)
+
+
+def test_simulation_spec_uses_feed_aligned_per_wire_segmentation(
+    window: MainWindow,
+) -> None:
+    spec = window._form.simulation_spec()
+    overrides = dict(spec.segmentation.wire_segments)
+
+    assert overrides["radiator"] % 2 == 1
+    assert spec.segmentation.segments_per_wire is None
+
+
+def test_loop_simulation_spec_has_connector_and_feed_overrides(
+    window: MainWindow,
+) -> None:
+    window._form._type.setCurrentIndex(2)
+    window._form._length.setValue(20.0)
+    window._form._sides.setValue(16)
+    spec = window._form.simulation_spec()
+    overrides = dict(spec.segmentation.wire_segments)
+
+    assert len(overrides) == 16
+    assert all(segments >= 3 for segments in overrides.values())
+    assert overrides["loop-0"] % 2 == 1
+    window._dirty = False
+
+
+def test_compacting_simulation_history_keeps_the_latest_run(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window.simulate()
+    qtbot.waitUntil(lambda: not window._simulating and window._thread is None, timeout=5_000)
+    window.simulate()
+    qtbot.waitUntil(lambda: not window._simulating and window._thread is None, timeout=5_000)
+    assert window._project is not None
+    assert len(window._project.simulation_runs) == 2
+    assert window._compact_history_action.isEnabled() is True
+
+    monkeypatch.setattr(
+        QMessageBox,
+        "question",
+        lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
+    )
+    window.compact_simulation_history()
+
+    assert len(window._project.simulation_runs) == 1
+    assert window._dirty is True
+    assert window._status_label.text() == "Simulation history compacted."
+    window._dirty = False
+
+
+def test_save_warns_and_can_cancel_a_large_project(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "large.antennadesk"
+    monkeypatch.setattr(
+        window._repository,
+        "serialized_size",
+        lambda project: 9 * 1024 * 1024,
+    )
+    monkeypatch.setattr(
+        QMessageBox,
+        "warning",
+        lambda *args, **kwargs: QMessageBox.StandardButton.Cancel,
+    )
+
+    assert window._save_to(path) is False
+    assert path.exists() is False
+    window._dirty = False

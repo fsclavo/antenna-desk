@@ -54,3 +54,28 @@ def test_results_view_shows_currents_and_resonance(qtbot: QtBot) -> None:
     assert view._currents_frequency.count() == 3
     assert len(view._currents_plot.listDataItems()) >= 1
     assert "Resonance" in view._resonance_label.text()
+
+
+def test_results_view_localizes_known_diagnostics(qtbot: QtBot) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.common.validation import Diagnostic, Severity
+
+    result = replace(
+        _make_result(),
+        diagnostics=(
+            Diagnostic(
+                code="solver.timeout",
+                severity=Severity.ERROR,
+                message="nec2c timed out after 30 s",
+            ),
+        ),
+    )
+    view = ResultsView(Translator(Language.SPANISH))
+    qtbot.addWidget(view)
+
+    view.set_result(result)
+
+    message_item = view._diagnostics.item(0, 2)
+    assert message_item.text() == "El solver agotó el tiempo de espera."
+    assert message_item.toolTip() == "nec2c timed out after 30 s"

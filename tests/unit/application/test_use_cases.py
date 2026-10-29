@@ -249,3 +249,49 @@ def test_record_simulation_run(sample_project: Project) -> None:
     assert len(project.simulation_runs) == 1
     assert project.simulation_runs[0].id == run_id
     assert project.simulation_runs[0].design_id == design.id
+
+
+def test_edit_length_rejects_a_folded_dipole(sample_project: Project) -> None:
+    from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
+
+    design = sample_project.designs[0].with_parameters(
+        FoldedDipoleParameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=20.0,
+            height_m=8.0,
+        )
+    )
+    project = sample_project.with_design(design, updated_at=sample_project.updated_at)
+
+    with pytest.raises(ValueError, match="wire dipoles"):
+        EditDipoleLength().execute(
+            EditDipoleLengthCommand(
+                project=project,
+                design_id=design.id,
+                total_length_m=19.5,
+            )
+        )
+
+
+def test_update_design_accepts_a_loop(sample_project: Project) -> None:
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    design = sample_project.designs[0]
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=40.0,
+        height_m=8.0,
+        sides=8,
+    )
+
+    updated = UpdateDipoleDesign().execute(
+        UpdateDipoleDesignCommand(
+            project=sample_project,
+            design_id=design.id,
+            parameters=parameters,
+        )
+    )
+
+    assert updated.designs[0].antenna_type == "loop"
+    assert updated.designs[0].parameters is parameters
+    assert len(updated.designs[0].antenna.wires) == 8

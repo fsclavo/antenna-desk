@@ -18,3 +18,6 @@ class ProjectRepository(Protocol):
 
     def load(self, path: Path) -> Project:
         """Read and validate a project from *path*."""
+
+    def serialized_size(self, project: Project) -> int:
+        """Return the approximate native-file size in bytes."""

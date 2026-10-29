@@ -119,3 +119,56 @@ def test_optimizes_length_and_computes_sensitivity() -> None:
     assert all(spec.far_field.enabled is False for spec in solver.specs)
     assert min(solver.lengths) == pytest.approx(18.0)
     assert max(solver.lengths) == pytest.approx(22.0)
+
+
+def test_optimizes_a_folded_dipole_element_length() -> None:
+    from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
+
+    solver = AnalyticalDipoleSolver()
+    parameters = FoldedDipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        spacing_m=0.2,
+    )
+    result = OptimizeDipoleLength(solver).execute(
+        OptimizeDipoleLengthCommand(
+            parameters=parameters,
+            base_spec=SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0)),
+            optimization_spec=LengthOptimizationSpec(
+                min_length_m=18.0,
+                max_length_m=22.0,
+                max_evaluations=12,
+            ),
+        )
+    )
+
+    assert result.status is LengthOptimizationStatus.CONVERGED
+    assert result.best_length_m == pytest.approx(20.3, abs=0.01)
+
+
+def test_optimizes_a_loop_circumference() -> None:
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    solver = AnalyticalDipoleSolver(resonance_length_m=10.3)
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=40.0,
+        height_m=8.0,
+        sides=4,
+    )
+    result = OptimizeDipoleLength(solver).execute(
+        OptimizeDipoleLengthCommand(
+            parameters=parameters,
+            base_spec=SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0)),
+            optimization_spec=LengthOptimizationSpec(
+                min_length_m=36.0,
+                max_length_m=44.0,
+                max_evaluations=12,
+            ),
+        )
+    )
+
+    assert result.status is LengthOptimizationStatus.CONVERGED
+    assert result.best_length_m == pytest.approx(41.2, abs=0.02)
+    assert max(solver.lengths) == pytest.approx(11.0)

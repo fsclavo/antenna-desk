@@ -80,3 +80,33 @@ def test_html_report_escapes_user_text(sample_project: Project) -> None:
 
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in report
     assert "<script>alert(1)</script>" not in report
+
+
+def test_html_report_supports_new_geometry_summaries(sample_project: Project) -> None:
+    from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    design = sample_project.designs[0]
+    folded = design.with_parameters(
+        FoldedDipoleParameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=20.0,
+            height_m=8.0,
+            spacing_m=0.2,
+        )
+    )
+    folded_report = render_html_report(sample_project, folded, make_result(sample_project))
+    assert "folded dipole" in folded_report
+    assert "Element length" in folded_report
+
+    loop = design.with_parameters(
+        LoopParameters(
+            frequency_hz=7_100_000.0,
+            circumference_m=40.0,
+            height_m=8.0,
+            sides=8,
+        )
+    )
+    loop_report = render_html_report(sample_project, loop, make_result(sample_project))
+    assert "loop" in loop_report
+    assert "Circumference" in loop_report

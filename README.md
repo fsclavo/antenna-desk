@@ -4,9 +4,9 @@ Desktop application for designing, simulating, and building antennas for
 amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
 
-**Status:** Phase 6 in progress. Horizontal and vertical center-fed dipoles
-are supported, with schema v2 persistence and migration. VNA CSV import and
-measurement comparison are next.
+**Status:** Phase 6 in progress. Horizontal and vertical center-fed dipoles,
+folded dipoles, and regular-polygon loops are supported, with schema v3
+persistence and migration. VNA CSV import and measurement comparison are next.
 
 ## Launch the GUI
 
@@ -34,7 +34,10 @@ The application looks for `nec2c` in `NEC2C`, on `PATH`, and in
 select the executable.
 
 On first launch, a 40 m dipole is loaded so you can press **Simulate**
-immediately. Use **File → New Dipole...** for the guided wizard.
+immediately. Use **File → New Antenna...** for the guided wizard. The wizard
+starts with the antenna type currently selected in the design panel and offers
+wire dipole, folded dipole, and loop. The panel also converts an existing design
+between those types.
 
 ## Documentation
 
@@ -49,6 +52,7 @@ immediately. Use **File → New Dipole...** for the guided wizard.
 - [ADR-0002 — Report and export formats](docs/ADR/0002-report-formats.md)
 - [ADR-0003 — Project schema v2 and dipole orientation](docs/ADR/0003-project-schema-v2.md)
 - [ADR-0004 — Simulation run persistence](docs/ADR/0004-simulation-run-persistence.md)
+- [ADR-0005 — Folded dipole and loop templates](docs/ADR/0005-new-wire-geometries.md)
 - [NEC engine evaluation](docs/spikes/phase0-solver-evaluation.md)
 - [Phase 0 reproducible spike](spikes/phase0/README.md)
 - [Agent instructions](AGENTS.md)
@@ -56,23 +60,26 @@ immediately. Use **File → New Dipole...** for the guided wizard.
 
 ## What exists today
 
-- Guided dipole wizard and a main window with a design panel, dimensioned
-  construction-sketch geometry (elevation and plan views), and results tabs.
+- Guided antenna wizard and a main window with a design panel, construction
+  dimensions in Plan view, installation/height details in Elevation view, and
+  results tabs.
 - Asynchronous simulation with cancellation, timeouts, and diagnostics.
 - Impedance, SWR, frequency-sweep, and far-field pattern charts.
 - Save/open of versioned `.antennadesk` projects with multiple design
-  variants; schema v2 adds dipole orientation and migrates v1 files.
+  variants; schema v3 adds persisted simulation runs and migrates older files.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - Currents tab and resonance markers on impedance/SWR sweeps.
-- Bounded dipole length optimization for a resonance or target reactance, with
-  an evaluation log and length-sensitivity table.
-- Printable/HTML construction sheet with leg lengths, feed position, and
-  simulated result.
+- Bounded antenna-dimension optimization for a resonance or target reactance:
+  wire-dipole and folded-dipole element length, or loop circumference, with an
+  evaluation log and sensitivity table.
+- Printable/HTML construction sheet with type-aware dimensions, feed position,
+  and simulated result.
 - CSV export and self-contained HTML reports (use the browser print dialog for
   PDF).
 - English and Spanish UI, plus metric and imperial presentation units.
 - Immutable domain model for units, geometry, conductors, feed points, ground
-  models, environments, and horizontal or vertical center-fed dipoles.
+  models, environments, wire dipoles, folded dipoles, and regular-polygon
+  loops.
 - Versioned JSON persistence with atomic saves and a migration framework.
 - A `nec2c` solver adapter with input generation, output parsing, SWR
   normalization, currents, power budget, and far-field patterns.
@@ -110,22 +117,26 @@ uv run python scripts/run_reference_simulation.py \
 
 ## Known limitations
 
-- Horizontal and vertical center-fed dipoles are implemented; loops, folded
-  dipoles, VNA CSV import, and measurement records are not implemented yet.
+- Horizontal and vertical center-fed dipoles, folded dipoles, and
+  regular-polygon loops are implemented. Folded and loop templates currently
+  have theoretical sanity tests but no published independent impedance
+  reference; VNA CSV import and measurement records are not implemented yet.
 - No loads, networks, transmission lines, or radial ground screens.
 - Simulation runs are stored in the project, including raw solver text; the
-  native project size limit is 10 MB.
-- Optimization is limited to one dipole length against a single reactance
-  target. It does not optimize bandwidth, gain, efficiency, or multi-objective
-  trade-offs yet.
+  native project size limit is 10 MB. Use Compact Simulation History to keep
+  only the latest run per variant.
+- Optimization is limited to one primary dimension per design against a single
+  reactance target. It does not optimize bandwidth, gain, efficiency, or
+  multi-objective trade-offs yet.
 - Relative permeability is not emitted to NEC. Conductor conductivity is
   emitted when `SimulationSpec.include_conductor_losses` is true.
-- Native PDF export is deferred; HTML reports can be saved as PDF from a
-  browser.
+- Simulation reports and construction sheets have native PDF export; HTML
+  versions remain available.
 - The segmentation policy is a documented heuristic; explicit counts are used
-  for reference cases.
-- Domain and solver diagnostic messages are currently reported in English;
-  their codes are stable and can be translated in a later phase.
+  for reference cases. The UI derives per-wire counts and aligns the feed wire
+  to a segment center.
+- Known diagnostic codes are localized in the UI; the raw solver detail
+  remains available in English in the tooltip and raw-output tab.
 - PySide6 is pinned below 6.10 because 6.12 triggered a shutdown refcount
   crash with pyqtgraph in this environment.
 

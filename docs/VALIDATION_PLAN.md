@@ -105,7 +105,7 @@ Phase 5 adds tests for:
 
 ## Phase 6 — new geometry and measurements (in progress)
 
-The first Phase 6 slice adds tests for:
+Phase 6 adds tests for:
 
 - Vertical dipole template geometry and center feed.
 - Vertical dipole over perfect ground against the NEC-2 User's Guide Example 3
@@ -117,8 +117,36 @@ The first Phase 6 slice adds tests for:
 - Simulation-run domain invariants, recording use case, schema v2 to v3
   migration, rich result round trip (currents, pattern, diagnostics, raw text,
   infinite SWR), and save/reopen in the UI.
+- Folded dipole and loop topology, parameters, azimuth, validation, and
+  type/geometry consistency.
+- Schema round trips and rejection of mismatched payloads for the new
+  parameter types; schema version 3 remains additive.
+- UI type switching, conditional spacing/sides fields, automatic Plan view,
+  multi-wire rendering, and optimization being limited to wire dipoles.
+- Generic New Antenna wizard with type selection, type-aware geometry and
+  review pages, and inheritance of the current design type.
+- Palette-aware diagram colors: light and dark backgrounds, axis/text/line
+  contrast, and runtime updates when the Qt palette changes.
+- Geometry-view roles: Plan carries total/leg/feed construction dimensions and
+  folded/loop measurements; Elevation carries height, feed height, and ground
+  installation data for single- and multi-wire designs.
+- Zoom control, drag panning, double-click reset, and fit-to-view scaling for
+  vertical loop plans.
+- Per-wire segmentation overrides, feed-aligned counts, connector minimums,
+  persistence round trip, and UI spec generation.
+- Localized known diagnostic messages with the original solver text kept as a
+  tooltip.
+- Native PDF construction-sheet and simulation-report output with valid PDF
+  headers, chart images, tables, and non-trivial page content.
+- Compaction of simulation history to keep the latest run per design, plus a
+  save-time warning near the project size limit.
+- Type-aware construction sheets, HTML reports, and mixed-type comparison.
+- Primary-dimension helpers and optimization for folded-dipole element length
+  and loop circumference, including the dialog and apply/simulate flow.
+- Multi-wire solver integration for folded dipole and loop with the real
+  `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 242 tests with the solver enabled. The ten solver
+The suite currently has 317 tests with the solver enabled. The twelve solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.
@@ -158,12 +186,12 @@ engine version, configuration, and explicit tolerances.
 - No loads, networks, transmission lines, or radial ground screens.
 - Project files store normalized results and raw solver text; many long runs
   can reach the 10 MB project-size limit.
-- The GUI supports horizontal and vertical center-fed dipoles only. Loops,
-  folded dipoles, VNA CSV import, and measurement records are not implemented
-  yet.
-- Native PDF export is deferred; HTML reports can be printed to PDF by a
-  browser.
-- Optimization is limited to a single dipole length and a single reactance
+- The GUI supports wire dipoles, folded dipoles, and regular-polygon loops.
+  Folded and loop templates still need independent impedance references; VNA
+  CSV import and measurement records are not implemented yet.
+- Reports and construction sheets have native PDF export; HTML versions are
+  also available.
+- Optimization is limited to a single primary dimension and a single reactance
   target; bandwidth, gain, efficiency, and multi-objective optimization are
   not implemented yet.
 - PySide6 is pinned below 6.10 because 6.12 triggered a shutdown refcount

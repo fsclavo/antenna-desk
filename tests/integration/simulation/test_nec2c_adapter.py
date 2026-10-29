@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import math
 import os
 from pathlib import Path
 
@@ -251,3 +252,59 @@ def test_vertical_dipole_template_matches_manual_example3(solver: Nec2cSolver) -
     frequency = result.frequencies[0]
     assert frequency.impedance_ohm.real == pytest.approx(106.437, abs=0.05)
     assert frequency.impedance_ohm.imag == pytest.approx(9.90578, abs=0.05)
+
+
+def _multi_wire_spec(frequency_hz: float, reference_ohm: float) -> SimulationSpec:
+    return SimulationSpec(
+        frequency_plan=FrequencyPlan.single(frequency_hz),
+        segmentation=SegmentationPolicy(segments_per_wire=11),
+        reference_impedance_ohm=reference_ohm,
+        include_conductor_losses=False,
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+
+def test_folded_dipole_multi_wire_simulation(solver: Nec2cSolver) -> None:
+    from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
+
+    parameters = FoldedDipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        spacing_m=0.2,
+    )
+    result = solver.run(
+        parameters.to_antenna(name="Folded dipole"),
+        _multi_wire_spec(7_100_000.0, 300.0),
+    )
+
+    assert result.status is SimulationStatus.COMPLETED
+    frequency = result.frequencies[0]
+    assert math.isfinite(frequency.impedance_ohm.real)
+    assert math.isfinite(frequency.impedance_ohm.imag)
+    assert frequency.impedance_ohm.real > 0.0
+    assert len(frequency.currents) == 44
+    assert not any(d.severity.value == "error" for d in result.diagnostics)
+
+
+def test_loop_multi_wire_simulation(solver: Nec2cSolver) -> None:
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=40.0,
+        height_m=8.0,
+        sides=4,
+    )
+    result = solver.run(
+        parameters.to_antenna(name="Loop"),
+        _multi_wire_spec(7_100_000.0, 100.0),
+    )
+
+    assert result.status is SimulationStatus.COMPLETED
+    frequency = result.frequencies[0]
+    assert math.isfinite(frequency.impedance_ohm.real)
+    assert math.isfinite(frequency.impedance_ohm.imag)
+    assert frequency.impedance_ohm.real > 0.0
+    assert len(frequency.currents) == 44
+    assert not any(d.severity.value == "error" for d in result.diagnostics)

@@ -1,12 +1,15 @@
 # SPDX-FileCopyrightText: 2026 Fernando Sclavo
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Optimize a dipole length against a reactance target."""
+"""Optimize an antenna primary dimension against a reactance target."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
-from ...domain.antennas.dipole import DipoleParameters
+from ...domain.antennas.design import (
+    AntennaDesignParameters,
+    with_primary_dimension,
+)
 from ...domain.common.validation import Severity
 from ...domain.optimization.length import (
     LengthEvaluation,
@@ -19,7 +22,6 @@ from ...domain.optimization.length import (
 from ...domain.simulation.far_field import FarFieldRequest
 from ...domain.simulation.frequency import FrequencyPlan
 from ...domain.simulation.result import SimulationStatus
-from ...domain.simulation.segmentation import SegmentationPolicy
 from ...domain.simulation.spec import SimulationSpec
 from ..ports.antenna_solver import AntennaSolver
 from ..ports.cancellation import CancelToken
@@ -28,7 +30,7 @@ from .run_simulation import RunSimulation, RunSimulationCommand
 
 @dataclass(frozen=True, slots=True)
 class OptimizeDipoleLengthCommand:
-    parameters: DipoleParameters
+    parameters: AntennaDesignParameters
     base_spec: SimulationSpec
     optimization_spec: LengthOptimizationSpec
     cancel_token: CancelToken | None = None
@@ -41,20 +43,17 @@ class OptimizeDipoleLength:
     def execute(self, command: OptimizeDipoleLengthCommand) -> LengthOptimizationResult:
         optimization_spec = command.optimization_spec
         base_model = command.parameters.to_antenna(name="Optimization")
-        segments = command.base_spec.segmentation.segments_for(
-            base_model.wires[0],
-            command.base_spec.frequency_plan.stop_hz,
-        )
         evaluation_spec = replace(
             command.base_spec,
             frequency_plan=FrequencyPlan.single(command.parameters.frequency_hz),
-            segmentation=SegmentationPolicy(segments_per_wire=segments),
             far_field=FarFieldRequest(enabled=False),
         )
 
         def evaluate(length_m: float) -> LengthEvaluation:
             try:
-                model = command.parameters.with_length(length_m).to_antenna(name=base_model.name)
+                model = with_primary_dimension(command.parameters, length_m).to_antenna(
+                    name=base_model.name
+                )
                 result = RunSimulation(self.solver).execute(
                     RunSimulationCommand(
                         model=model,
@@ -121,3 +120,7 @@ class OptimizeDipoleLength:
                     )
                 )
         return replace(result, sensitivity=tuple(sensitivity))
+
+
+OptimizeAntennaDimensionCommand = OptimizeDipoleLengthCommand
+OptimizeAntennaDimension = OptimizeDipoleLength

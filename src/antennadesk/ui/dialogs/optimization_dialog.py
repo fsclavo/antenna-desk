@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Fernando Sclavo
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Dialog for bounded dipole length optimization."""
+"""Dialog for bounded antenna-dimension optimization."""
 
 from __future__ import annotations
 
@@ -27,9 +27,12 @@ from PySide6.QtWidgets import (
 from ...application.cancellation import EventCancelToken
 from ...application.ports.antenna_solver import AntennaSolver
 from ...application.use_cases.optimize_dipole_length import (
-    OptimizeDipoleLengthCommand,
+    OptimizeAntennaDimensionCommand,
 )
-from ...domain.antennas.dipole import DipoleParameters
+from ...domain.antennas.design import (
+    AntennaDesignParameters,
+    primary_dimension_m,
+)
 from ...domain.optimization.length import (
     LengthEvaluation,
     LengthOptimizationResult,
@@ -53,7 +56,7 @@ class OptimizationDialog(QDialog):
         translator: Translator,
         unit_system: UnitSystem,
         solver: AntennaSolver,
-        base_parameters: DipoleParameters,
+        base_parameters: AntennaDesignParameters,
         base_spec: SimulationSpec,
         parent: QWidget | None = None,
     ) -> None:
@@ -74,8 +77,9 @@ class OptimizationDialog(QDialog):
 
         unit = translator.t(length_unit_key(unit_system))
         length_min, length_max = length_bounds(unit_system)
-        default_min = max(base_parameters.total_length_m * 0.9, 0.5)
-        default_max = max(base_parameters.total_length_m * 1.1, default_min + 0.5)
+        base_dimension_m = primary_dimension_m(base_parameters)
+        default_min = max(base_dimension_m * 0.9, 0.5)
+        default_max = max(base_dimension_m * 1.1, default_min + 0.5)
 
         self._min_length = QDoubleSpinBox(self)
         self._min_length.setRange(length_min, length_max)
@@ -233,7 +237,7 @@ class OptimizationDialog(QDialog):
         self._summary.setText(self._translator.t("optimize.running"))
         self._apply.setEnabled(False)
         self._cancel_token = EventCancelToken()
-        command = OptimizeDipoleLengthCommand(
+        command = OptimizeAntennaDimensionCommand(
             parameters=self._base_parameters,
             base_spec=self._base_spec,
             optimization_spec=spec,
@@ -390,6 +394,9 @@ class OptimizationDialog(QDialog):
         if self._selected_length_m is None:
             return
         self.accept()
+
+    def selected_dimension_m(self) -> float | None:
+        return self._selected_length_m
 
     def selected_length_m(self) -> float | None:
         return self._selected_length_m

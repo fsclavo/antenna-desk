@@ -8,6 +8,10 @@ from uuid import uuid4
 
 import pytest
 
+from antennadesk.application.use_cases.create_dipole_project import (
+    CreateDipoleProject,
+    CreateDipoleProjectCommand,
+)
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.projects.project import DesignVariant, Project
 
@@ -185,3 +189,111 @@ def test_project_rejects_run_for_unknown_design(sample_project: Project) -> None
             invalid,
             updated_at=sample_project.updated_at + timedelta(hours=1),
         )
+
+
+def test_design_variant_accepts_a_folded_dipole() -> None:
+    from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
+
+    parameters = FoldedDipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        spacing_m=0.2,
+    )
+    design = DesignVariant(
+        id=uuid4(),
+        name="Folded",
+        antenna_type="folded_dipole",
+        parameters=parameters,
+        antenna=parameters.to_antenna(name="Folded"),
+    )
+
+    assert design.parameters is parameters
+    assert len(design.antenna.wires) == 4
+
+
+def test_design_variant_accepts_a_loop() -> None:
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=40.0,
+        height_m=8.0,
+        sides=8,
+    )
+    design = DesignVariant(
+        id=uuid4(),
+        name="Loop",
+        antenna_type="loop",
+        parameters=parameters,
+        antenna=parameters.to_antenna(name="Loop"),
+    )
+
+    assert design.parameters is parameters
+    assert len(design.antenna.wires) == 8
+
+
+def test_design_variant_rejects_a_mismatched_antenna_type() -> None:
+    from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
+
+    parameters = FoldedDipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    )
+
+    with pytest.raises(ValueError, match="does not match"):
+        DesignVariant(
+            id=uuid4(),
+            name="Wrong type",
+            antenna_type="wire_dipole",
+            parameters=parameters,
+            antenna=parameters.to_antenna(name="Wrong type"),
+        )
+
+
+def test_with_parameters_updates_the_antenna_type() -> None:
+    from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
+
+    original = CreateDipoleProject().execute(
+        CreateDipoleProjectCommand(
+            project_name="40 m dipole",
+            variant_name="Initial",
+            parameters=DipoleParameters(
+                frequency_hz=7_100_000.0,
+                total_length_m=20.0,
+                height_m=8.0,
+            ),
+        )
+    )
+    parameters = FoldedDipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        spacing_m=0.2,
+    )
+
+    design = original.designs[0].with_parameters(parameters)
+
+    assert design.antenna_type == "folded_dipole"
+    assert design.parameters is parameters
+    assert len(design.antenna.wires) == 4
+
+
+def test_compaction_keeps_only_the_latest_run_per_design(sample_project: Project) -> None:
+    first = _simulation_run(sample_project)
+    second = _simulation_run(sample_project)
+    updated_at = sample_project.updated_at + timedelta(hours=1)
+    project = sample_project.with_simulation_run(  # type: ignore[arg-type]
+        first,
+        updated_at=updated_at,
+    ).with_simulation_run(  # type: ignore[arg-type]
+        second,
+        updated_at=updated_at + timedelta(hours=1),
+    )
+
+    compacted = project.with_latest_simulation_runs_only(updated_at=updated_at + timedelta(hours=2))
+
+    assert len(project.simulation_runs) == 2
+    assert compacted.simulation_runs == (second,)
+    assert compacted.updated_at == updated_at + timedelta(hours=2)

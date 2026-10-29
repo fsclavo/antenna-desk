@@ -187,3 +187,60 @@ def test_centered_feed_does_not_warn() -> None:
     codes = {diagnostic.code for diagnostic in validate_segmentation(model, spec)}
 
     assert "segmentation.feed_offset" not in codes
+
+
+def test_wire_specific_segment_override_takes_precedence() -> None:
+    model = _model(_wire(length_m=20.0), feed_offset_m=10.0)
+    policy = SegmentationPolicy(wire_segments=(("radiator", 7),))
+
+    assert policy.segments_for(model.wires[0], 7_100_000.0) == 7
+
+
+def test_wire_specific_segment_override_is_validated() -> None:
+    with pytest.raises(ValueError, match="duplicate"):
+        SegmentationPolicy(wire_segments=(("a", 7), ("a", 9)))
+    with pytest.raises(ValueError, match="below"):
+        SegmentationPolicy(min_segments_per_wire=3, wire_segments=(("a", 1),))
+    with pytest.raises(ValueError, match="exceeds"):
+        SegmentationPolicy(max_segments_per_wire=5, wire_segments=(("a", 6),))
+
+
+def test_aligned_policy_centers_the_feed() -> None:
+    from antennadesk.domain.simulation.segmentation import aligned_policy_for_model
+
+    model = _model(_wire(length_m=20.0), feed_offset_m=10.0)
+    policy = aligned_policy_for_model(
+        model,
+        7_100_000.0,
+        SegmentationPolicy(min_segments_per_wire=3),
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(7_100_000.0),
+        segmentation=policy,
+        far_field=FarFieldRequest(enabled=False),
+    )
+    codes = {diagnostic.code for diagnostic in validate_segmentation(model, spec)}
+
+    assert "segmentation.feed_offset" not in codes
+    assert dict(policy.wire_segments)["radiator"] % 2 == 1
+
+
+def test_aligned_policy_gives_short_connectors_at_least_three_segments() -> None:
+    from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
+    from antennadesk.domain.simulation.segmentation import aligned_policy_for_model
+
+    parameters = FoldedDipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        spacing_m=0.2,
+    )
+    model = parameters.to_antenna()
+    policy = aligned_policy_for_model(
+        model,
+        7_100_000.0,
+        SegmentationPolicy(min_segments_per_wire=3),
+    )
+
+    assert len(policy.wire_segments) == 4
+    assert all(segments >= 3 for _, segments in policy.wire_segments)

@@ -7,13 +7,20 @@ from pathlib import Path
 
 import pytest
 
+from antennadesk.application.use_cases.create_dipole_project import (
+    CreateDipoleProject,
+    CreateDipoleProjectCommand,
+)
 from antennadesk.application.use_cases.edit_dipole_length import (
     EditDipoleLength,
     EditDipoleLengthCommand,
 )
 from antennadesk.application.use_cases.open_project import OpenProject
 from antennadesk.application.use_cases.save_project import SaveProject
+from antennadesk.domain.antennas.design import AntennaDesignParameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
+from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
+from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.projects.project import Project
 from antennadesk.persistence.json_repository import JsonProjectRepository
 
@@ -126,3 +133,48 @@ def test_example_project_migrates_to_the_current_schema(
     project = OpenProject(repository).execute(EXAMPLE_PROJECT)
     assert project.designs[0].parameters.orientation is DipoleOrientation.HORIZONTAL
     assert project.simulation_runs == ()
+
+
+@pytest.mark.parametrize(
+    "parameters",
+    [
+        pytest.param(
+            FoldedDipoleParameters(
+                frequency_hz=7_100_000.0,
+                total_length_m=20.0,
+                height_m=8.0,
+                spacing_m=0.2,
+            ),
+            id="folded",
+        ),
+        pytest.param(
+            LoopParameters(
+                frequency_hz=7_100_000.0,
+                circumference_m=40.0,
+                height_m=8.0,
+                sides=8,
+            ),
+            id="loop",
+        ),
+    ],
+)
+def test_new_geometry_project_round_trip(
+    repository: JsonProjectRepository,
+    tmp_path: Path,
+    parameters: AntennaDesignParameters,
+) -> None:
+    project = CreateDipoleProject().execute(
+        CreateDipoleProjectCommand(
+            project_name="Geometry",
+            variant_name="Initial",
+            parameters=parameters,
+        )
+    )
+    path = tmp_path / "geometry.antennadesk"
+
+    SaveProject(repository).execute(project, path)
+    loaded = OpenProject(repository).execute(path)
+
+    assert loaded == project
+    assert loaded.designs[0].antenna_type == project.designs[0].antenna_type
+    assert len(loaded.designs[0].antenna.wires) == len(project.designs[0].antenna.wires)

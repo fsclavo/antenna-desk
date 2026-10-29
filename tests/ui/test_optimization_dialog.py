@@ -25,6 +25,9 @@ from antennadesk.ui.units import UnitSystem
 
 
 class AnalyticalSolver:
+    def __init__(self, resonance_length_m: float = 20.3) -> None:
+        self.resonance_length_m = resonance_length_m
+
     def capabilities(self) -> SolverCapabilities:
         return SolverCapabilities(
             name="analytical",
@@ -61,7 +64,7 @@ class AnalyticalSolver:
                     frequency_hz=model.design_frequency_hz,
                     feed_tag=1,
                     feed_segment=11,
-                    impedance_ohm=complex(70.0, 5.0 * (length - 20.3)),
+                    impedance_ohm=complex(70.0, 5.0 * (length - self.resonance_length_m)),
                     swr=2.0,
                     input_power_w=0.001,
                 ),
@@ -106,3 +109,37 @@ def test_optimization_dialog_runs_and_selects_length(qtbot: QtBot) -> None:
 
     dialog._apply.click()
     assert dialog.result() == QDialog.DialogCode.Accepted
+
+
+def test_optimization_dialog_handles_a_loop_circumference(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=40.0,
+        height_m=8.0,
+        sides=4,
+    )
+    base_spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(7_100_000.0),
+        far_field=FarFieldRequest(enabled=True),
+    )
+    dialog = OptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalSolver(resonance_length_m=10.3),
+        parameters,
+        base_spec,
+    )
+    qtbot.addWidget(dialog)
+    dialog._min_length.setValue(36.0)
+    dialog._max_length.setValue(44.0)
+    dialog.show()
+
+    dialog._run.click()
+    qtbot.waitUntil(lambda: dialog._thread is None, timeout=5_000)
+
+    assert dialog._result is not None
+    assert dialog._result.status is LengthOptimizationStatus.CONVERGED
+    assert dialog.selected_dimension_m() == pytest.approx(41.2, abs=0.02)
+    assert dialog._apply.isEnabled() is True

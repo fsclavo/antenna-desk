@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Fernando Sclavo
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Run length optimization off the GUI thread."""
+"""Run antenna-dimension optimization off the GUI thread."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 from ...application.ports.antenna_solver import AntennaSolver
 from ...application.use_cases.optimize_dipole_length import (
-    OptimizeDipoleLength,
-    OptimizeDipoleLengthCommand,
+    OptimizeAntennaDimension,
+    OptimizeAntennaDimensionCommand,
 )
 
 
@@ -20,7 +20,7 @@ class OptimizationWorker(QObject):
     def __init__(
         self,
         solver: AntennaSolver,
-        command: OptimizeDipoleLengthCommand,
+        command: OptimizeAntennaDimensionCommand,
         parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
@@ -30,7 +30,7 @@ class OptimizationWorker(QObject):
     @Slot()
     def run(self) -> None:
         try:
-            result = OptimizeDipoleLength(self._solver).execute(self._command)
+            result = OptimizeAntennaDimension(self._solver).execute(self._command)
         except Exception as exc:
             self.failed.emit(str(exc))
             return

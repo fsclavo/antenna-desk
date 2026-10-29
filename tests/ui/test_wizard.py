@@ -52,7 +52,7 @@ def test_wizard_supports_spanish_and_imperial(qtbot: QtBot) -> None:
     )
     qtbot.addWidget(wizard)
 
-    assert wizard.windowTitle() == "Nuevo dipolo"
+    assert wizard.windowTitle() == "Nueva antena"
     assert wizard.build_parameters().total_length_m > 9.0
 
 
@@ -74,3 +74,72 @@ def test_wizard_builds_a_vertical_dipole(qtbot: QtBot) -> None:
     antenna = parameters.to_antenna()
     assert antenna.wires[0].start.z_m == pytest.approx(8.0)
     assert antenna.wires[0].end.z_m > 8.0
+
+
+def test_wizard_builds_a_loop(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.loop import ANTENNA_TYPE_LOOP, LoopParameters
+
+    wizard = DipoleWizard(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        initial_frequency_hz=7_100_000.0,
+        initial_antenna_type=ANTENNA_TYPE_LOOP,
+    )
+    qtbot.addWidget(wizard)
+    wizard.geometry_page.initializePage()
+
+    parameters = wizard.build_parameters()
+
+    assert wizard.project_page.antenna_type() == ANTENNA_TYPE_LOOP
+    assert wizard.windowTitle() == "New Antenna"
+    assert wizard.project_name() == "40 m loop"
+    assert isinstance(parameters, LoopParameters)
+    assert parameters.circumference_m > 35.0
+    assert parameters.sides == 16
+    assert len(parameters.to_antenna().wires) == 16
+
+
+def test_wizard_builds_a_folded_dipole(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.folded_dipole import (
+        ANTENNA_TYPE_FOLDED_DIPOLE,
+        FoldedDipoleParameters,
+    )
+
+    wizard = DipoleWizard(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        initial_frequency_hz=7_100_000.0,
+        initial_antenna_type=ANTENNA_TYPE_FOLDED_DIPOLE,
+    )
+    qtbot.addWidget(wizard)
+    wizard.geometry_page.initializePage()
+
+    parameters = wizard.build_parameters()
+
+    assert wizard.project_page.antenna_type() == ANTENNA_TYPE_FOLDED_DIPOLE
+    assert wizard.project_name() == "40 m folded dipole"
+    assert isinstance(parameters, FoldedDipoleParameters)
+    assert parameters.total_length_m > 19.0
+    assert parameters.spacing_m == pytest.approx(0.1)
+    assert len(parameters.to_antenna().wires) == 4
+
+
+def test_wizard_antenna_type_list_is_populated(qtbot: QtBot) -> None:
+    wizard = DipoleWizard(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(wizard)
+    combo = wizard.project_page._type
+
+    texts = [combo.itemText(index) for index in range(combo.count())]
+
+    assert texts == ["Wire dipole", "Folded dipole", "Loop"]
+    assert all(texts)
+
+
+def test_wizard_antenna_type_list_is_translated(qtbot: QtBot) -> None:
+    wizard = DipoleWizard(Translator(Language.SPANISH), UnitSystem.METRIC)
+    qtbot.addWidget(wizard)
+    combo = wizard.project_page._type
+
+    texts = [combo.itemText(index) for index in range(combo.count())]
+
+    assert texts == ["Dipolo de hilo", "Dipolo plegado", "Lazo"]

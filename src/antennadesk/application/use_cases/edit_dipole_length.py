@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
+from ...domain.antennas.dipole import DipoleParameters
 from ...domain.common.time import utc_now
 from ...domain.projects.project import Project
 
@@ -26,6 +27,8 @@ class EditDipoleLength:
 
     def execute(self, command: EditDipoleLengthCommand) -> Project:
         design = command.project.design_by_id(command.design_id)
+        if not isinstance(design.parameters, DipoleParameters):
+            raise ValueError("length editing is only available for wire dipoles")
         parameters = design.parameters.with_length(command.total_length_m)
         updated_design = design.with_parameters(parameters)
         timestamp = command.updated_at if command.updated_at is not None else utc_now()

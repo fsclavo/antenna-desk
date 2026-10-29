@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Fernando Sclavo
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Guided dipole creation wizard."""
+"""Guided antenna creation wizard."""
 
 from __future__ import annotations
 
@@ -11,12 +11,24 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QSpinBox,
     QVBoxLayout,
+    QWidget,
     QWizard,
     QWizardPage,
 )
 
-from ...domain.antennas.dipole import DipoleOrientation, DipoleParameters
+from ...domain.antennas.design import AntennaDesignParameters
+from ...domain.antennas.dipole import (
+    ANTENNA_TYPE_WIRE_DIPOLE,
+    DipoleOrientation,
+    DipoleParameters,
+)
+from ...domain.antennas.folded_dipole import (
+    ANTENNA_TYPE_FOLDED_DIPOLE,
+    FoldedDipoleParameters,
+)
+from ...domain.antennas.loop import ANTENNA_TYPE_LOOP, LoopParameters
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.common import units
 from ...domain.environment.ground import GroundKind, GroundModel
@@ -62,6 +74,14 @@ class ProjectPage(QWizardPage):
         self._name = QLineEdit(self)
         self._name.setPlaceholderText("40 m dipole")
         self._name.textChanged.connect(self.completeChanged)
+        self._name_edited = False
+        self._name.textEdited.connect(self._on_name_edited)
+
+        self._type = QComboBox(self)
+        self._type.addItem(translator.t("antenna_type.wire_dipole"), ANTENNA_TYPE_WIRE_DIPOLE)
+        self._type.addItem(translator.t("antenna_type.folded_dipole"), ANTENNA_TYPE_FOLDED_DIPOLE)
+        self._type.addItem(translator.t("antenna_type.loop"), ANTENNA_TYPE_LOOP)
+        self._type.currentIndexChanged.connect(self._type_changed)
 
         self._band = QComboBox(self)
         for label, frequency in BANDS:
@@ -80,8 +100,11 @@ class ProjectPage(QWizardPage):
 
         form = QFormLayout(self)
         form.addRow(self._label("field.project_name"), self._name)
+        form.addRow(self._label("field.antenna_type"), self._type)
         form.addRow(self._label("wizard.band"), self._band)
         form.addRow(self._label("field.frequency"), self._frequency)
+
+        self._name.setText(self._default_name())
 
         self.setTitle(translator.t("wizard.project_page"))
         self.setSubTitle(translator.t("wizard.project_page_desc"))
@@ -93,9 +116,19 @@ class ProjectPage(QWizardPage):
 
     def set_project_name(self, name: str) -> None:
         self._name.setText(name)
+        self._name_edited = True
 
     def set_frequency_hz(self, frequency_hz: float) -> None:
         self._frequency.setValue(frequency_hz / 1_000_000.0)
+
+    def set_antenna_type(self, antenna_type: str) -> None:
+        index = self._type.findData(antenna_type)
+        if index >= 0:
+            self._type.setCurrentIndex(index)
+
+    def antenna_type(self) -> str:
+        value = self._type.currentData()
+        return value if isinstance(value, str) else ANTENNA_TYPE_WIRE_DIPOLE
 
     def project_name(self) -> str:
         return self._name.text().strip()
@@ -106,13 +139,39 @@ class ProjectPage(QWizardPage):
     def isComplete(self) -> bool:
         return bool(self.project_name()) and self._frequency.value() > 0.0
 
+    def _on_name_edited(self, _text: str) -> None:
+        self._name_edited = True
+
+    def _type_label(self) -> str:
+        key = {
+            ANTENNA_TYPE_WIRE_DIPOLE: "wizard.name_wire",
+            ANTENNA_TYPE_FOLDED_DIPOLE: "wizard.name_folded",
+            ANTENNA_TYPE_LOOP: "wizard.name_loop",
+        }[self.antenna_type()]
+        return self._translator.t(key)
+
+    def _default_name(self) -> str:
+        band = self._band.currentText()
+        if self._band.currentData() is None:
+            band = f"{self._frequency.value():g} MHz"
+        return f"{band} {self._type_label()}"
+
+    def _update_default_name(self) -> None:
+        if not self._name_edited:
+            self._name.setText(self._default_name())
+
+    def _type_changed(self) -> None:
+        self._update_default_name()
+
     def _band_changed(self) -> None:
         frequency = self._band.currentData()
         if frequency is None:
+            self._update_default_name()
             return
         self._setting_frequency = True
         self._frequency.setValue(float(frequency))
         self._setting_frequency = False
+        self._update_default_name()
 
     def _frequency_changed(self) -> None:
         if self._setting_frequency:
@@ -123,10 +182,12 @@ class ProjectPage(QWizardPage):
                 self._band.blockSignals(True)
                 self._band.setCurrentIndex(index)
                 self._band.blockSignals(False)
+                self._update_default_name()
                 return
         self._band.blockSignals(True)
         self._band.setCurrentIndex(self._band.count() - 1)
         self._band.blockSignals(False)
+        self._update_default_name()
 
 
 class GeometryPage(QWizardPage):
@@ -156,6 +217,16 @@ class GeometryPage(QWizardPage):
         self._length.setSuffix(f" {unit}")
         self._length.setValue(length_from_m(20.0, unit_system))
 
+        self._spacing = QDoubleSpinBox(self)
+        self._spacing.setRange(length_min, length_max)
+        self._spacing.setDecimals(3)
+        self._spacing.setSuffix(f" {unit}")
+        self._spacing.setValue(length_from_m(0.1, unit_system))
+
+        self._sides = QSpinBox(self)
+        self._sides.setRange(3, 128)
+        self._sides.setValue(16)
+
         self._height = QDoubleSpinBox(self)
         self._height.setRange(height_min, height_max)
         self._height.setDecimals(3)
@@ -170,9 +241,12 @@ class GeometryPage(QWizardPage):
         self._suggest = QPushButton(self)
         self._suggest.clicked.connect(self._suggest_length)
 
-        form = QFormLayout(self)
+        self._form_layout = QFormLayout(self)
+        form = self._form_layout
         form.addRow(self._label("field.orientation"), self._orientation)
         form.addRow(self._label("field.length"), self._length)
+        form.addRow(self._label("field.spacing"), self._spacing)
+        form.addRow(self._label("field.sides"), self._sides)
         form.addRow(self._label("field.height"), self._height)
         form.addRow(self._label("field.azimuth"), self._azimuth)
         form.addRow(self._suggest)
@@ -195,17 +269,50 @@ class GeometryPage(QWizardPage):
         self._orientation.setItemText(0, self._translator.t("orientation.horizontal"))
         self._orientation.setItemText(1, self._translator.t("orientation.vertical"))
         self._update_orientation_labels()
+        self._update_type_labels()
 
     def _orientation_changed(self) -> None:
         self._update_orientation_labels()
 
+    def antenna_type(self) -> str:
+        wizard = self.wizard()
+        if isinstance(wizard, DipoleWizard):
+            return wizard.project_page.antenna_type()
+        return ANTENNA_TYPE_WIRE_DIPOLE
+
+    def _set_row_visible(self, field: QWidget, visible: bool) -> None:
+        label = self._form_layout.labelForField(field)
+        if label is not None:
+            label.setVisible(visible)
+        field.setVisible(visible)
+
+    def _update_type_labels(self) -> None:
+        antenna_type = self.antenna_type()
+        is_wire = antenna_type == ANTENNA_TYPE_WIRE_DIPOLE
+        self._set_row_visible(self._orientation, is_wire)
+        self._set_row_visible(self._spacing, antenna_type == ANTENNA_TYPE_FOLDED_DIPOLE)
+        self._set_row_visible(self._sides, antenna_type == ANTENNA_TYPE_LOOP)
+        length_key = {
+            ANTENNA_TYPE_WIRE_DIPOLE: "field.length",
+            ANTENNA_TYPE_FOLDED_DIPOLE: "field.element_length",
+            ANTENNA_TYPE_LOOP: "field.circumference",
+        }[antenna_type]
+        for label in self.findChildren(QLabel):
+            if label.objectName() == "field.length":
+                label.setText(self._translator.t(length_key))
+                break
+        self._update_orientation_labels()
+
     def _update_orientation_labels(self) -> None:
-        vertical = self._orientation.currentData() == DipoleOrientation.VERTICAL.value
+        antenna_type = self.antenna_type()
+        is_wire = antenna_type == ANTENNA_TYPE_WIRE_DIPOLE
+        vertical = is_wire and self._orientation.currentData() == DipoleOrientation.VERTICAL.value
         self._azimuth.setEnabled(not vertical)
+        base_height = vertical or antenna_type == ANTENNA_TYPE_LOOP
         for label in self.findChildren(QLabel):
             if label.objectName() == "field.height":
                 label.setText(
-                    self._translator.t("field.base_height" if vertical else "field.height")
+                    self._translator.t("field.base_height" if base_height else "field.height")
                 )
                 break
 
@@ -213,16 +320,20 @@ class GeometryPage(QWizardPage):
         return DipoleOrientation(self._orientation.currentData())
 
     def initializePage(self) -> None:
-        if not self._initialized:
+        antenna_type = self.antenna_type()
+        if not self._initialized or antenna_type != getattr(self, "_last_type", None):
             self._initialized = True
+            self._last_type = antenna_type
             self._suggest_length()
+        self._update_type_labels()
 
     def _suggest_length(self) -> None:
         wizard = self.wizard()
         if not isinstance(wizard, DipoleWizard):
             return
         wavelength = units.wavelength_m(wizard.frequency_hz())
-        suggested_m = wavelength * 0.5 * 0.95
+        factor = 1.0 if self.antenna_type() == ANTENNA_TYPE_LOOP else 0.5
+        suggested_m = wavelength * factor * 0.95
         self._length.setValue(length_from_m(suggested_m, self._unit_system))
 
     def length_m(self) -> float:
@@ -230,6 +341,12 @@ class GeometryPage(QWizardPage):
 
     def height_m(self) -> float:
         return length_to_m(self._height.value(), self._unit_system)
+
+    def spacing_m(self) -> float:
+        return length_to_m(self._spacing.value(), self._unit_system)
+
+    def sides(self) -> int:
+        return self._sides.value()
 
     def azimuth_deg(self) -> float:
         return self._azimuth.value()
@@ -405,19 +522,43 @@ class ReviewPage(QWizardPage):
             GroundKind.PERFECT: "ground.perfect",
             GroundKind.FINITE: "ground.finite",
         }[parameters.ground.kind]
+
+        if isinstance(parameters, FoldedDipoleParameters):
+            primary_label = self._translator.t("field.element_length")
+            primary = f"{length_from_m(parameters.total_length_m, self._unit_system):.3f} {unit}"
+            secondary_label = self._translator.t("field.spacing")
+            secondary = f"{length_from_m(parameters.spacing_m, self._unit_system):.3f} {unit}"
+            height_label = self._translator.t("field.height")
+            azimuth = f"{parameters.azimuth_deg:.1f}"
+        elif isinstance(parameters, LoopParameters):
+            primary_label = self._translator.t("field.circumference")
+            primary = f"{length_from_m(parameters.circumference_m, self._unit_system):.3f} {unit}"
+            secondary_label = self._translator.t("field.sides")
+            secondary = str(parameters.sides)
+            height_label = self._translator.t("field.base_height")
+            azimuth = f"{parameters.azimuth_deg:.1f}"
+        else:
+            primary_label = self._translator.t("field.length")
+            primary = f"{length_from_m(parameters.total_length_m, self._unit_system):.3f} {unit}"
+            secondary_label = self._translator.t("field.orientation")
+            secondary = self._translator.t(f"orientation.{parameters.orientation.value}")
+            vertical = parameters.orientation is DipoleOrientation.VERTICAL
+            height_label = self._translator.t("field.base_height" if vertical else "field.height")
+            azimuth = "—" if vertical else f"{parameters.azimuth_deg:.1f}"
+
         self._summary.setText(
             self._translator.t(
                 "wizard.review",
                 project=wizard.project_name(),
+                type=self._translator.t(f"antenna_type.{wizard.project_page.antenna_type()}"),
                 frequency=parameters.frequency_hz / 1e6,
-                orientation=self._translator.t(f"orientation.{parameters.orientation.value}"),
-                length=f"{length_from_m(parameters.total_length_m, self._unit_system):.3f} {unit}",
+                primary_label=primary_label,
+                primary=primary,
+                secondary_label=secondary_label,
+                secondary=secondary,
+                height_label=height_label,
                 height=f"{length_from_m(parameters.height_m, self._unit_system):.3f} {unit}",
-                azimuth=(
-                    f"{parameters.azimuth_deg:.1f}"
-                    if parameters.orientation is DipoleOrientation.HORIZONTAL
-                    else "—"
-                ),
+                azimuth=azimuth,
                 diameter=(
                     f"{diameter_from_m(parameters.wire_radius_m * 2.0, self._unit_system):.3f} "
                     f"{diameter_unit}"
@@ -437,6 +578,7 @@ class DipoleWizard(QWizard):
         translator: Translator,
         unit_system: UnitSystem,
         initial_frequency_hz: float = 7_100_000.0,
+        initial_antenna_type: str = ANTENNA_TYPE_WIRE_DIPOLE,
         parent: QWizard | None = None,
     ) -> None:
         super().__init__(parent)
@@ -459,8 +601,8 @@ class DipoleWizard(QWizard):
         self.setPage(3, self.ground_page)
         self.setPage(4, self.review_page)
 
+        self.project_page.set_antenna_type(initial_antenna_type)
         self.project_page.set_frequency_hz(initial_frequency_hz)
-        self.project_page.set_project_name("40 m dipole")
 
         self.setButtonText(
             QWizard.WizardButton.NextButton,
@@ -485,14 +627,30 @@ class DipoleWizard(QWizard):
     def frequency_hz(self) -> float:
         return self.project_page.frequency_hz()
 
-    def build_parameters(self) -> DipoleParameters:
+    def build_parameters(self) -> AntennaDesignParameters:
+        common = {
+            "frequency_hz": self.frequency_hz(),
+            "height_m": self.geometry_page.height_m(),
+            "azimuth_deg": self.geometry_page.azimuth_deg(),
+            "wire_radius_m": self.conductor_page.radius_m(),
+            "material": self.conductor_page.material(),
+            "ground": self.ground_page.ground(),
+        }
+        antenna_type = self.project_page.antenna_type()
+        if antenna_type == ANTENNA_TYPE_FOLDED_DIPOLE:
+            return FoldedDipoleParameters(
+                total_length_m=self.geometry_page.length_m(),
+                spacing_m=self.geometry_page.spacing_m(),
+                **common,
+            )
+        if antenna_type == ANTENNA_TYPE_LOOP:
+            return LoopParameters(
+                circumference_m=self.geometry_page.length_m(),
+                sides=self.geometry_page.sides(),
+                **common,
+            )
         return DipoleParameters(
-            frequency_hz=self.frequency_hz(),
             total_length_m=self.geometry_page.length_m(),
-            height_m=self.geometry_page.height_m(),
             orientation=self.geometry_page.orientation(),
-            azimuth_deg=self.geometry_page.azimuth_deg(),
-            wire_radius_m=self.conductor_page.radius_m(),
-            material=self.conductor_page.material(),
-            ground=self.ground_page.ground(),
+            **common,
         )

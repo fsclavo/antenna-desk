@@ -6,19 +6,30 @@ from __future__ import annotations
 
 import math
 from datetime import datetime
-from typing import Self
+from typing import Any, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..domain.antennas.antenna import AntennaModel
+from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import (
     ANTENNA_TYPE_WIRE_DIPOLE,
     DipoleOrientation,
     DipoleParameters,
 )
 from ..domain.antennas.feed import FeedPoint
+from ..domain.antennas.folded_dipole import (
+    ANTENNA_TYPE_FOLDED_DIPOLE,
+    FoldedDipoleParameters,
+)
 from ..domain.antennas.geometry import Point3D
+from ..domain.antennas.loop import (
+    ANTENNA_TYPE_LOOP,
+    MAX_SIDES,
+    MIN_SIDES,
+    LoopParameters,
+)
 from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.wire import Wire
 from ..domain.common.validation import Diagnostic, Severity
@@ -115,10 +126,37 @@ class DipoleParametersPayload(StrictModel):
     ground: GroundPayload
 
 
+class FoldedDipoleParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    total_length_m: float = Field(gt=0.0)
+    height_m: float = Field(ge=0.0)
+    spacing_m: float = Field(gt=0.0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class LoopParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    circumference_m: float = Field(gt=0.0)
+    height_m: float = Field(ge=0.0)
+    sides: int = Field(default=16, ge=MIN_SIDES, le=MAX_SIDES)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
 class FrequencyPlanPayload(StrictModel):
     start_hz: float = Field(gt=0.0)
     stop_hz: float = Field(gt=0.0)
     count: int = Field(ge=1, le=10_000)
+
+
+class WireSegmentsPayload(StrictModel):
+    wire_id: str = Field(min_length=1)
+    segments: int = Field(ge=1)
 
 
 class SegmentationPolicyPayload(StrictModel):
@@ -126,6 +164,7 @@ class SegmentationPolicyPayload(StrictModel):
     target_segment_length_wavelengths: float = Field(default=0.02, gt=0.0)
     min_segments_per_wire: int = Field(default=1, ge=1)
     max_segments_per_wire: int = Field(default=1_000, ge=1)
+    wire_segments: list[WireSegmentsPayload] = Field(default_factory=list)
 
 
 class FarFieldRequestPayload(StrictModel):
@@ -232,12 +271,61 @@ class SimulationRunPayload(StrictModel):
     result: SimulationResultPayload
 
 
+ParameterPayload = DipoleParametersPayload | FoldedDipoleParametersPayload | LoopParametersPayload
+
+
+def _payload_antenna_type(value: ParameterPayload) -> str:
+    if isinstance(value, DipoleParametersPayload):
+        return ANTENNA_TYPE_WIRE_DIPOLE
+    if isinstance(value, FoldedDipoleParametersPayload):
+        return ANTENNA_TYPE_FOLDED_DIPOLE
+    return ANTENNA_TYPE_LOOP
+
+
+def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | None:
+    if antenna_type == ANTENNA_TYPE_WIRE_DIPOLE:
+        return DipoleParametersPayload
+    if antenna_type == ANTENNA_TYPE_FOLDED_DIPOLE:
+        return FoldedDipoleParametersPayload
+    if antenna_type == ANTENNA_TYPE_LOOP:
+        return LoopParametersPayload
+    return None
+
+
 class DesignPayload(StrictModel):
     id: UUID
     name: str = Field(min_length=1)
     antenna_type: str = Field(min_length=1)
-    parameters: DipoleParametersPayload
+    parameters: ParameterPayload
     antenna: AntennaPayload
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_parameters(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        antenna_type = data.get("antenna_type")
+        if not isinstance(antenna_type, str):
+            return data
+        payload_class = _parameters_payload_class(antenna_type)
+        if payload_class is None:
+            raise ValueError(f"unsupported antenna type: {antenna_type}")
+        parameters = data.get("parameters")
+        if not isinstance(parameters, dict):
+            return data
+        coerced = dict(data)
+        coerced["parameters"] = payload_class.model_validate(parameters)
+        return coerced
+
+    @model_validator(mode="after")
+    def _validate_antenna_type(self) -> Self:
+        payload_type = _payload_antenna_type(self.parameters)
+        if payload_type != self.antenna_type:
+            raise ValueError(
+                f"antenna_type {self.antenna_type!r} does not match "
+                f"the parameter type {payload_type!r}"
+            )
+        return self
 
 
 class ProjectPayload(StrictModel):
@@ -340,6 +428,44 @@ def _dipole_parameters_from_domain(value: DipoleParameters) -> DipoleParametersP
     )
 
 
+def _folded_parameters_from_domain(
+    value: FoldedDipoleParameters,
+) -> FoldedDipoleParametersPayload:
+    return FoldedDipoleParametersPayload(
+        frequency_hz=value.frequency_hz,
+        total_length_m=value.total_length_m,
+        height_m=value.height_m,
+        spacing_m=value.spacing_m,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _loop_parameters_from_domain(value: LoopParameters) -> LoopParametersPayload:
+    return LoopParametersPayload(
+        frequency_hz=value.frequency_hz,
+        circumference_m=value.circumference_m,
+        height_m=value.height_m,
+        sides=value.sides,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
+    if isinstance(value, DipoleParameters):
+        return _dipole_parameters_from_domain(value)
+    if isinstance(value, FoldedDipoleParameters):
+        return _folded_parameters_from_domain(value)
+    if isinstance(value, LoopParameters):
+        return _loop_parameters_from_domain(value)
+    raise TypeError(f"unsupported antenna parameters: {type(value)!r}")
+
+
 def _frequency_plan_from_domain(value: FrequencyPlan) -> FrequencyPlanPayload:
     return FrequencyPlanPayload(
         start_hz=value.start_hz,
@@ -356,6 +482,10 @@ def _segmentation_from_domain(
         target_segment_length_wavelengths=value.target_segment_length_wavelengths,
         min_segments_per_wire=value.min_segments_per_wire,
         max_segments_per_wire=value.max_segments_per_wire,
+        wire_segments=[
+            WireSegmentsPayload(wire_id=wire_id, segments=segments)
+            for wire_id, segments in value.wire_segments
+        ],
     )
 
 
@@ -492,7 +622,7 @@ def _design_from_domain(value: DesignVariant) -> DesignPayload:
         id=value.id,
         name=value.name,
         antenna_type=value.antenna_type,
-        parameters=_dipole_parameters_from_domain(value.parameters),
+        parameters=_parameters_from_domain(value.parameters),
         antenna=_antenna_from_domain(value.antenna),
     )
 
@@ -581,6 +711,50 @@ def _dipole_parameters_to_domain(value: DipoleParametersPayload) -> DipoleParame
     )
 
 
+def _folded_parameters_to_domain(
+    value: FoldedDipoleParametersPayload,
+) -> FoldedDipoleParameters:
+    return FoldedDipoleParameters(
+        frequency_hz=value.frequency_hz,
+        total_length_m=value.total_length_m,
+        height_m=value.height_m,
+        spacing_m=value.spacing_m,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _loop_parameters_to_domain(value: LoopParametersPayload) -> LoopParameters:
+    return LoopParameters(
+        frequency_hz=value.frequency_hz,
+        circumference_m=value.circumference_m,
+        height_m=value.height_m,
+        sides=value.sides,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
+    if value.antenna_type == ANTENNA_TYPE_WIRE_DIPOLE:
+        if not isinstance(value.parameters, DipoleParametersPayload):
+            raise ValueError("wire dipole parameters have the wrong shape")
+        return _dipole_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_FOLDED_DIPOLE:
+        if not isinstance(value.parameters, FoldedDipoleParametersPayload):
+            raise ValueError("folded dipole parameters have the wrong shape")
+        return _folded_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_LOOP:
+        if not isinstance(value.parameters, LoopParametersPayload):
+            raise ValueError("loop parameters have the wrong shape")
+        return _loop_parameters_to_domain(value.parameters)
+    raise ValueError(f"unsupported antenna type: {value.antenna_type}")
+
+
 def _frequency_plan_to_domain(value: FrequencyPlanPayload) -> FrequencyPlan:
     return FrequencyPlan(
         start_hz=value.start_hz,
@@ -597,6 +771,7 @@ def _segmentation_to_domain(
         target_segment_length_wavelengths=value.target_segment_length_wavelengths,
         min_segments_per_wire=value.min_segments_per_wire,
         max_segments_per_wire=value.max_segments_per_wire,
+        wire_segments=tuple((wire.wire_id, wire.segments) for wire in value.wire_segments),
     )
 
 
@@ -725,13 +900,11 @@ def _simulation_run_to_domain(value: SimulationRunPayload) -> SimulationRun:
 
 
 def _design_to_domain(value: DesignPayload) -> DesignVariant:
-    if value.antenna_type != ANTENNA_TYPE_WIRE_DIPOLE:
-        raise ValueError(f"unsupported antenna type: {value.antenna_type}")
     return DesignVariant(
         id=value.id,
         name=value.name,
         antenna_type=value.antenna_type,
-        parameters=_dipole_parameters_to_domain(value.parameters),
+        parameters=_parameters_to_domain(value),
         antenna=_antenna_to_domain(value.antenna),
     )
 
