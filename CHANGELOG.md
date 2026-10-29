@@ -34,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - PySide6 and PyQtGraph dependencies, with PySide6 pinned below 6.10 to avoid a
   shutdown crash observed with 6.12.
 - Offscreen UI tests with `pytest-qt`.
+- Dimensioned construction-sketch geometry view with total and per-leg
+  dimensions, height dimension, feed/center/end markers, ground hatching,
+  scale bar, and azimuth compass.
 - Solver integration jobs on Linux and Windows.
 
 ### Changed

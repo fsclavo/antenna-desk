@@ -153,7 +153,7 @@ class MainWindow(QMainWindow):
         self._locate_solver_action.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_DirOpenIcon))
 
     def _build_ui(self) -> None:
-        self.setMinimumSize(1_100, 750)
+        self.setMinimumSize(1_100, 800)
 
         self._form = DipoleForm(self._translator, self._unit_system)
         self._form.apply_requested.connect(lambda: self.apply_design())
@@ -165,6 +165,7 @@ class MainWindow(QMainWindow):
         form_scroll.setMaximumWidth(480)
 
         self._geometry = GeometryView(self._translator, self._unit_system)
+        self._geometry.setMinimumHeight(300)
         self._results = ResultsView(self._translator)
 
         right_splitter = QSplitter(Qt.Orientation.Vertical, self)
@@ -172,6 +173,7 @@ class MainWindow(QMainWindow):
         right_splitter.addWidget(self._results)
         right_splitter.setStretchFactor(0, 1)
         right_splitter.setStretchFactor(1, 2)
+        right_splitter.setSizes([400, 600])
 
         main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
         main_splitter.addWidget(form_scroll)
