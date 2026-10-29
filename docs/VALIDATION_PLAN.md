@@ -75,7 +75,7 @@ UI tests use `pytest-qt` with the Qt offscreen platform:
 - Metric/imperial switching preserves the physical length.
 - The wizard builds a valid dipole and review page state.
 
-The suite currently has 187 tests with the solver enabled. The nine solver
+The suite currently has 191 tests with the solver enabled. The nine solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.

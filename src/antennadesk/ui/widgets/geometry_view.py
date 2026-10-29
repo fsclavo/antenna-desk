@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import math
+from enum import StrEnum
 
 from PySide6.QtCore import QPointF, QRectF, QSize, Qt
 from PySide6.QtGui import (
@@ -33,6 +34,11 @@ SECONDARY_TEXT_COLOR = QColor("#666666")
 BACKGROUND_COLOR = QColor("#ffffff")
 
 
+class GeometryViewMode(StrEnum):
+    ELEVATION = "elevation"
+    PLAN = "plan"
+
+
 class GeometryView(QWidget):
     """A dimensioned side elevation that reads like a construction sketch."""
 
@@ -46,6 +52,8 @@ class GeometryView(QWidget):
         self._translator = translator
         self._unit_system = unit_system
         self._model: AntennaModel | None = None
+        self._mode = GeometryViewMode.ELEVATION
+        self._height_exaggeration = 1.0
         self.setMinimumHeight(280)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
@@ -63,6 +71,20 @@ class GeometryView(QWidget):
         if unit_system is self._unit_system:
             return
         self._unit_system = unit_system
+        self.update()
+
+    def set_view_mode(self, mode: GeometryViewMode) -> None:
+        if mode is self._mode:
+            return
+        self._mode = mode
+        self.update()
+
+    def set_height_exaggeration(self, factor: float) -> None:
+        if not math.isfinite(factor) or factor <= 0.0:
+            raise ValueError("height exaggeration must be positive and finite")
+        if math.isclose(factor, self._height_exaggeration):
+            return
+        self._height_exaggeration = factor
         self.update()
 
     def retranslate(self) -> None:
@@ -87,6 +109,13 @@ class GeometryView(QWidget):
             )
             return
 
+        if self._mode is GeometryViewMode.PLAN:
+            self._paint_plan(painter, rect)
+        else:
+            self._paint_elevation(painter, rect)
+
+    def _paint_elevation(self, painter: QPainter, rect: QRectF) -> None:
+        assert self._model is not None
         wire = self._model.wires[0]
         dx = wire.end.x_m - wire.start.x_m
         dy = wire.end.y_m - wire.start.y_m
@@ -106,6 +135,15 @@ class GeometryView(QWidget):
             height=f"{height_display:.2f} {unit}",
             azimuth=f"{azimuth:.1f}",
         )
+        if not math.isclose(self._height_exaggeration, 1.0):
+            summary = (
+                summary
+                + " · "
+                + self._translator.t(
+                    "geometry.vertical_exaggeration",
+                    factor=f"{self._height_exaggeration:g}",
+                )
+            )
         self._draw_header(painter, rect, summary)
         self._draw_compass(painter, rect, azimuth)
         feed_ratio = self._model.feed.offset_m / wire.length_m
@@ -115,10 +153,191 @@ class GeometryView(QWidget):
             rect,
             wire,
             horizontal=horizontal,
-            height_m=height_m,
+            height_m=height_m * self._height_exaggeration,
             length_display=length_display,
             height_display=height_display,
             feed_ratio=feed_ratio,
+            unit=unit,
+        )
+
+    def _paint_plan(self, painter: QPainter, rect: QRectF) -> None:
+        assert self._model is not None
+        wire = self._model.wires[0]
+        dx = wire.end.x_m - wire.start.x_m
+        dy = wire.end.y_m - wire.start.y_m
+        horizontal = math.hypot(dx, dy)
+        if horizontal < 1e-9:
+            self._draw_vertical_fallback(painter, rect, wire)
+            return
+
+        azimuth = math.degrees(math.atan2(dy, dx)) % 360.0
+        length_display = length_from_m(horizontal, self._unit_system)
+        unit = self._translator.t(length_unit_key(self._unit_system))
+        summary = self._translator.t(
+            "geometry.plan_summary",
+            length=f"{length_display:.2f} {unit}",
+            azimuth=f"{azimuth:.1f}",
+        )
+        self._draw_header(painter, rect, summary)
+        self._draw_compass(painter, rect, azimuth)
+
+        draw_rect = QRectF(
+            rect.left() + 86.0,
+            rect.top() + 82.0,
+            rect.width() - 86.0 - 92.0,
+            rect.height() - 82.0 - 106.0,
+        )
+        if draw_rect.width() < 80.0 or draw_rect.height() < 50.0:
+            return
+
+        scale_candidates: list[float] = []
+        if abs(dx) > 1e-9:
+            scale_candidates.append(draw_rect.width() * 0.78 / abs(dx))
+        if abs(dy) > 1e-9:
+            scale_candidates.append(draw_rect.height() * 0.78 / abs(dy))
+        scale = min(scale_candidates) if scale_candidates else 1.0
+        if scale <= 0.0:
+            return
+
+        center = draw_rect.center()
+        mid_x = dx / 2.0
+        mid_y = dy / 2.0
+        start = QPointF(center.x() - mid_x * scale, center.y() + mid_y * scale)
+        end = QPointF(center.x() + mid_x * scale, center.y() - mid_y * scale)
+        line = end - start
+        line_length = math.hypot(line.x(), line.y())
+        if line_length < 1.0:
+            return
+        ux = line.x() / line_length
+        uy = line.y() / line_length
+        perp = QPointF(-uy, ux)
+        label_dir = perp if perp.y() < 0.0 else QPointF(-perp.x(), -perp.y())
+        dim_dir = QPointF(-label_dir.x(), -label_dir.y())
+
+        painter.setPen(QPen(LIGHT_LINE_COLOR, 1.0, Qt.PenStyle.DashDotLine))
+        painter.drawLine(
+            QPointF(center.x() - 16.0, center.y()),
+            QPointF(center.x() + 16.0, center.y()),
+        )
+        painter.drawLine(
+            QPointF(center.x(), center.y() - 16.0),
+            QPointF(center.x(), center.y() + 16.0),
+        )
+
+        feed_ratio = self._model.feed.offset_m / wire.length_m
+        feed_ratio = min(max(feed_ratio, 0.0), 1.0)
+        feed = QPointF(
+            start.x() + line.x() * feed_ratio,
+            start.y() + line.y() * feed_ratio,
+        )
+        gap = 9.0
+        left_end = QPointF(feed.x() - ux * gap / 2.0, feed.y() - uy * gap / 2.0)
+        right_start = QPointF(feed.x() + ux * gap / 2.0, feed.y() + uy * gap / 2.0)
+
+        pen = QPen(WIRE_COLOR, 3.0)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        painter.setPen(pen)
+        painter.drawLine(start, left_end)
+        painter.drawLine(right_start, end)
+
+        painter.setPen(QPen(WIRE_COLOR, 2.0))
+        painter.drawLine(
+            QPointF(start.x() - perp.x() * 7.0, start.y() - perp.y() * 7.0),
+            QPointF(start.x() + perp.x() * 7.0, start.y() + perp.y() * 7.0),
+        )
+        painter.drawLine(
+            QPointF(end.x() - perp.x() * 7.0, end.y() - perp.y() * 7.0),
+            QPointF(end.x() + perp.x() * 7.0, end.y() + perp.y() * 7.0),
+        )
+
+        painter.setPen(QPen(FEED_COLOR, 2.0))
+        painter.drawLine(
+            QPointF(
+                left_end.x() - perp.x() * 8.0,
+                left_end.y() - perp.y() * 8.0,
+            ),
+            QPointF(
+                left_end.x() + perp.x() * 8.0,
+                left_end.y() + perp.y() * 8.0,
+            ),
+        )
+        painter.drawLine(
+            QPointF(
+                right_start.x() - perp.x() * 8.0,
+                right_start.y() - perp.y() * 8.0,
+            ),
+            QPointF(
+                right_start.x() + perp.x() * 8.0,
+                right_start.y() + perp.y() * 8.0,
+            ),
+        )
+        painter.setBrush(FEED_COLOR)
+        painter.setPen(QPen(FEED_COLOR, 1.0))
+        painter.drawEllipse(
+            QPointF(feed.x() + label_dir.x() * 10.0, feed.y() + label_dir.y() * 10.0),
+            3.0,
+            3.0,
+        )
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+
+        self._draw_centered_label(
+            painter,
+            QPointF(feed.x() + label_dir.x() * 20.0, feed.y() + label_dir.y() * 20.0),
+            self._translator.t("geometry.feed"),
+            color=FEED_COLOR,
+        )
+        if abs(feed_ratio - 0.5) < 1e-9:
+            self._draw_centered_label(
+                painter,
+                QPointF(
+                    feed.x() - label_dir.x() * 20.0,
+                    feed.y() - label_dir.y() * 20.0,
+                ),
+                self._translator.t("geometry.center"),
+            )
+        self._draw_centered_label(
+            painter,
+            QPointF(start.x() + label_dir.x() * 17.0, start.y() + label_dir.y() * 17.0),
+            self._translator.t("geometry.end"),
+        )
+        self._draw_centered_label(
+            painter,
+            QPointF(end.x() + label_dir.x() * 17.0, end.y() + label_dir.y() * 17.0),
+            self._translator.t("geometry.end"),
+        )
+
+        dim_offset = 30.0
+        dim_start = QPointF(
+            start.x() + dim_dir.x() * dim_offset,
+            start.y() + dim_dir.y() * dim_offset,
+        )
+        dim_end = QPointF(
+            end.x() + dim_dir.x() * dim_offset,
+            end.y() + dim_dir.y() * dim_offset,
+        )
+        painter.setPen(QPen(LIGHT_LINE_COLOR, 1.0))
+        painter.drawLine(start, dim_start)
+        painter.drawLine(end, dim_end)
+        painter.setPen(QPen(DIMENSION_COLOR, 1.0))
+        painter.drawLine(dim_start, dim_end)
+        self._draw_arrowhead(painter, dim_start, QPointF(-ux, -uy))
+        self._draw_arrowhead(painter, dim_end, QPointF(ux, uy))
+        angle = math.degrees(math.atan2(dim_end.y() - dim_start.y(), dim_end.x() - dim_start.x()))
+        self._draw_rotated_label(
+            painter,
+            QPointF(
+                (dim_start.x() + dim_end.x()) / 2.0 + dim_dir.x() * 10.0,
+                (dim_start.y() + dim_end.y()) / 2.0 + dim_dir.y() * 10.0,
+            ),
+            f"{length_display:.2f} {unit}",
+            angle,
+        )
+
+        self._draw_scale_bar(
+            painter,
+            x_left=rect.left() + 110.0,
+            bar_y=rect.bottom() - 42.0,
+            scale=scale,
             unit=unit,
         )
 
@@ -218,7 +437,7 @@ class GeometryView(QWidget):
         self._draw_scale_bar(
             painter,
             x_left=x_left,
-            ground_y=ground_y,
+            bar_y=ground_y + 40.0,
             scale=scale,
             unit=unit,
         )
@@ -397,7 +616,7 @@ class GeometryView(QWidget):
         painter: QPainter,
         *,
         x_left: float,
-        ground_y: float,
+        bar_y: float,
         scale: float,
         unit: str,
     ) -> None:
@@ -409,7 +628,6 @@ class GeometryView(QWidget):
             fitting = [candidates[0]]
         ideal = min(fitting, key=lambda value: abs(value * px_per_display_unit - 110.0))
         bar_length = ideal * px_per_display_unit
-        bar_y = ground_y + 40.0
 
         painter.setPen(QPen(DIMENSION_COLOR, 1.0))
         painter.drawLine(QPointF(x_left, bar_y), QPointF(x_left + bar_length, bar_y))
@@ -487,6 +705,38 @@ class GeometryView(QWidget):
             Qt.AlignmentFlag.AlignCenter,
             text,
         )
+
+    def _draw_rotated_label(
+        self,
+        painter: QPainter,
+        center: QPointF,
+        text: str,
+        angle: float,
+        *,
+        color: QColor = TEXT_COLOR,
+        font_size: int = 8,
+    ) -> None:
+        while angle > 90.0:
+            angle -= 180.0
+        while angle < -90.0:
+            angle += 180.0
+        font = QFont("Sans Serif", font_size)
+        painter.save()
+        painter.translate(center)
+        painter.rotate(angle)
+        painter.setFont(font)
+        metrics = QFontMetricsF(font)
+        text_rect = metrics.boundingRect(text)
+        background = QRectF(
+            -text_rect.width() / 2.0 - 3.0,
+            -text_rect.height() / 2.0 - 1.0,
+            text_rect.width() + 6.0,
+            text_rect.height() + 2.0,
+        )
+        painter.fillRect(background, BACKGROUND_COLOR)
+        painter.setPen(color)
+        painter.drawText(background, Qt.AlignmentFlag.AlignCenter, text)
+        painter.restore()
 
     def _draw_arrowhead(
         self,

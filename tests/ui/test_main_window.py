@@ -153,3 +153,22 @@ def test_unit_switch_does_not_mark_project_dirty(window: MainWindow) -> None:
     window._set_unit_system(UnitSystem.IMPERIAL)
 
     assert window._dirty is False
+
+
+def test_geometry_view_mode_controls(window: MainWindow) -> None:
+    assert window._view_combo.currentData() == "elevation"
+    assert window._height_combo.isEnabled() is True
+
+    window._view_combo.setCurrentIndex(1)
+    assert window._geometry._mode.value == "plan"
+    assert window._height_combo.isEnabled() is False
+
+    window._view_combo.setCurrentIndex(0)
+    assert window._geometry._mode.value == "elevation"
+    assert window._height_combo.isEnabled() is True
+
+
+def test_height_exaggeration_control(window: MainWindow) -> None:
+    window._height_combo.setCurrentIndex(2)
+
+    assert window._geometry._height_exaggeration == pytest.approx(2.0)

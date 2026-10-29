@@ -81,6 +81,21 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Length {length} · Height {height} · Azimuth {azimuth}°",
         Language.SPANISH: "Longitud {length} · Altura {height} · Azimut {azimuth}°",
     },
+    "geometry.plan_summary": {
+        Language.ENGLISH: "Length {length} · Azimuth {azimuth}°",
+        Language.SPANISH: "Longitud {length} · Azimut {azimuth}°",
+    },
+    "geometry.view": {Language.ENGLISH: "View", Language.SPANISH: "Vista"},
+    "geometry.view_elevation": {Language.ENGLISH: "Elevation", Language.SPANISH: "Alzado"},
+    "geometry.view_plan": {Language.ENGLISH: "Plan", Language.SPANISH: "Planta"},
+    "geometry.vertical_scale": {
+        Language.ENGLISH: "Vertical scale",
+        Language.SPANISH: "Escala vertical",
+    },
+    "geometry.vertical_exaggeration": {
+        Language.ENGLISH: "vertical x{factor}",
+        Language.SPANISH: "vertical x{factor}",
+    },
     "panel.results": {Language.ENGLISH: "Results", Language.SPANISH: "Resultados"},
     "field.project_name": {
         Language.ENGLISH: "Project name",

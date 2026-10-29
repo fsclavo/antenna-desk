@@ -30,7 +30,12 @@ the `NEC2C` environment variable.
 The application opens with a 40 m dipole loaded. Press **Simulate** (or F5).
 The design panel on the left shows frequency, length, height, orientation,
 wire diameter, material, ground, reference impedance, and the frequency sweep.
-The center shows the wire and feed point. The lower panel shows the results.
+The center shows a dimensioned construction sketch with the wire, feed point,
+center, ends, height, total length, per-leg lengths, ground line, and a separate
+scale bar. Use the **View** selector above the sketch to switch between
+**Elevation** and **Plan**. The **Vertical scale** selector can exaggerate the
+height (1x, 1.5x, 2x, 3x) when the antenna is low relative to its length; the
+summary notes when vertical exaggeration is active.
 
 ## Create a dipole with the wizard
 

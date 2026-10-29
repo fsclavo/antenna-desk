@@ -52,8 +52,8 @@ immediately. Use **File → New Dipole...** for the guided wizard.
 
 ## What exists today
 
-- Guided dipole wizard and a main window with a design panel, 2D geometry view,
-  and results tabs.
+- Guided dipole wizard and a main window with a design panel, dimensioned
+  construction-sketch geometry (elevation and plan views), and results tabs.
 - Asynchronous simulation with cancellation, timeouts, and diagnostics.
 - Impedance, SWR, frequency-sweep, and far-field pattern charts.
 - Save/open of versioned `.antennadesk` projects.

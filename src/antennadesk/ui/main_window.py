@@ -11,7 +11,9 @@ from uuid import UUID
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QKeySequence
 from PySide6.QtWidgets import (
+    QComboBox,
     QFileDialog,
+    QHBoxLayout,
     QLabel,
     QLineEdit,
     QMainWindow,
@@ -20,6 +22,7 @@ from PySide6.QtWidgets import (
     QSplitter,
     QStyle,
     QToolBar,
+    QVBoxLayout,
     QWidget,
     QWizard,
 )
@@ -45,7 +48,7 @@ from ..simulation.nec2.solver import Nec2cSolver
 from .i18n import Language, Translator
 from .units import UnitSystem
 from .widgets.dipole_form import DipoleForm
-from .widgets.geometry_view import GeometryView
+from .widgets.geometry_view import GeometryView, GeometryViewMode
 from .widgets.results_view import ResultsView
 from .wizard.dipole_wizard import DipoleWizard
 from .workers.simulation_worker import SimulationWorker
@@ -168,8 +171,31 @@ class MainWindow(QMainWindow):
         self._geometry.setMinimumHeight(300)
         self._results = ResultsView(self._translator)
 
+        geometry_container = QWidget(self)
+        geometry_layout = QVBoxLayout(geometry_container)
+        geometry_layout.setContentsMargins(0, 0, 0, 0)
+        geometry_controls = QHBoxLayout()
+        self._view_label = QLabel(self)
+        self._view_combo = QComboBox(self)
+        self._view_combo.addItem("", GeometryViewMode.ELEVATION.value)
+        self._view_combo.addItem("", GeometryViewMode.PLAN.value)
+        self._height_label = QLabel(self)
+        self._height_combo = QComboBox(self)
+        for factor in (1.0, 1.5, 2.0, 3.0):
+            self._height_combo.addItem(f"{factor:g}x", factor)
+        geometry_controls.addStretch(1)
+        geometry_controls.addWidget(self._view_label)
+        geometry_controls.addWidget(self._view_combo)
+        geometry_controls.addWidget(self._height_label)
+        geometry_controls.addWidget(self._height_combo)
+        geometry_layout.addLayout(geometry_controls)
+        geometry_layout.addWidget(self._geometry, 1)
+        geometry_container.setMinimumHeight(330)
+        self._view_combo.currentIndexChanged.connect(self._on_view_mode_changed)
+        self._height_combo.currentIndexChanged.connect(self._on_height_scale_changed)
+
         right_splitter = QSplitter(Qt.Orientation.Vertical, self)
-        right_splitter.addWidget(self._geometry)
+        right_splitter.addWidget(geometry_container)
         right_splitter.addWidget(self._results)
         right_splitter.setStretchFactor(0, 1)
         right_splitter.setStretchFactor(1, 2)
@@ -247,6 +273,10 @@ class MainWindow(QMainWindow):
         self._units_menu.setTitle(self._translator.t("menu.units"))
         self._help_menu.setTitle(self._translator.t("menu.help"))
         self._project_name_label.setText(self._translator.t("field.project_name"))
+        self._view_label.setText(self._translator.t("geometry.view"))
+        self._view_combo.setItemText(0, self._translator.t("geometry.view_elevation"))
+        self._view_combo.setItemText(1, self._translator.t("geometry.view_plan"))
+        self._height_label.setText(self._translator.t("geometry.vertical_scale"))
         self._form.retranslate()
         self._geometry.retranslate()
         self._results.retranslate()
@@ -633,6 +663,19 @@ class MainWindow(QMainWindow):
         self._imperial_action.setChecked(unit_system is UnitSystem.IMPERIAL)
         self._form.set_unit_system(unit_system)
         self._geometry.set_unit_system(unit_system)
+
+    def _on_view_mode_changed(self) -> None:
+        value = self._view_combo.currentData()
+        if not isinstance(value, str):
+            return
+        mode = GeometryViewMode(value)
+        self._geometry.set_view_mode(mode)
+        self._height_combo.setEnabled(mode is GeometryViewMode.ELEVATION)
+
+    def _on_height_scale_changed(self) -> None:
+        value = self._height_combo.currentData()
+        if isinstance(value, (int, float)):
+            self._geometry.set_height_exaggeration(float(value))
 
     def _on_form_changed(self) -> None:
         if self._project is None or self._simulating:

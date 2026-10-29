@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Dimensioned construction-sketch geometry view with total and per-leg
   dimensions, height dimension, feed/center/end markers, ground hatching,
   scale bar, and azimuth compass.
+- Elevation and plan view modes, plus optional vertical exaggeration for
+  low-height layouts.
 - Solver integration jobs on Linux and Windows.
 
 ### Changed
