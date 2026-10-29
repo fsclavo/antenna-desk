@@ -141,7 +141,8 @@ Phase 6 adds tests for:
 - Series-load domain validation, design consistency, NEC `LD 0` export,
   persistence round trip, load editor, report rows, and UI application.
 - Isometric 3D geometry rendering and the 3D view selector.
-- Polar elevation-lobe rendering from far-field points.
+- Polar lobe rendering from far-field points, with selectable azimuth and
+  elevation cuts.
 - Compaction of simulation history to keep the latest run per design, plus a
   save-time warning near the project size limit.
 - Type-aware construction sheets, HTML reports, and mixed-type comparison.

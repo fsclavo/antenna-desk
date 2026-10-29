@@ -23,6 +23,10 @@ class PolarPatternView(QWidget):
         super().__init__(parent)
         self._translator = translator
         self._points: tuple[tuple[float, float], ...] = ()
+        self._cut_phi: float | None = None
+        self._cut_symbol = "φ"
+        self._mirror = True
+        self._title: str | None = None
         self._colors = theme_colors(self.palette())
         self.setMinimumHeight(220)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -32,6 +36,19 @@ class PolarPatternView(QWidget):
 
     def set_points(self, points: tuple[tuple[float, float], ...]) -> None:
         self._points = points
+        self.update()
+
+    def set_cut(self, cut_deg: float | None, *, symbol: str = "φ") -> None:
+        self._cut_phi = cut_deg
+        self._cut_symbol = symbol
+        self.update()
+
+    def set_mirror(self, mirror: bool) -> None:
+        self._mirror = mirror
+        self.update()
+
+    def set_title(self, title: str | None) -> None:
+        self._title = title
         self.update()
 
     def changeEvent(self, event: QEvent) -> None:
@@ -91,7 +108,7 @@ class PolarPatternView(QWidget):
             )
             self._draw_label(painter, label, f"{angle_deg}°")
 
-        mirror = max(theta for theta, _ in points) <= 180.0
+        mirror = self._mirror and max(theta for theta, _ in points) <= 180.0
         if mirror:
             mirrored = [(-theta, gain) for theta, gain in points if theta > 0.0]
             points = points + mirrored
@@ -133,9 +150,12 @@ class PolarPatternView(QWidget):
 
         painter.setPen(self._colors.secondary_text)
         painter.setFont(QFont("Sans Serif", 8))
+        title = self._title or self._translator.t("pattern.polar")
+        if self._cut_phi is not None:
+            title = f"{title} · {self._cut_symbol}={self._cut_phi:g}°"
         painter.drawText(
             QRectF(rect.left() + 14.0, rect.top() + 8.0, rect.width() - 28.0, 18.0),
-            self._translator.t("pattern.polar"),
+            title,
         )
         painter.drawText(
             QRectF(rect.left() + 14.0, rect.bottom() - 22.0, rect.width() - 28.0, 16.0),

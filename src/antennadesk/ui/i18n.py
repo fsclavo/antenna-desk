@@ -278,6 +278,32 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "table.impedance": {Language.ENGLISH: "|Z| (Ω)", Language.SPANISH: "|Z| (Ω)"},
     "table.swr": {Language.ENGLISH: "SWR", Language.SPANISH: "ROE"},
     "pattern.frequency": {Language.ENGLISH: "Frequency", Language.SPANISH: "Frecuencia"},
+    "pattern.cut_phi": {
+        Language.ENGLISH: "Plane φ",
+        Language.SPANISH: "Plano φ",
+    },
+    "pattern.cut_theta": {
+        Language.ENGLISH: "Elevation θ",
+        Language.SPANISH: "Elevación θ",
+    },
+    "pattern.mode": {Language.ENGLISH: "Pattern", Language.SPANISH: "Patrón"},
+    "pattern.mode_azimuth": {
+        Language.ENGLISH: "Azimuth",
+        Language.SPANISH: "Azimut",
+    },
+    "pattern.mode_elevation": {
+        Language.ENGLISH: "Elevation",
+        Language.SPANISH: "Elevación",
+    },
+    "pattern.azimuth": {Language.ENGLISH: "Azimuth φ (°)", Language.SPANISH: "Azimut φ (°)"},
+    "pattern.polar_elevation": {
+        Language.ENGLISH: "Elevation lobes",
+        Language.SPANISH: "Lóbulos de elevación",
+    },
+    "pattern.polar_azimuth": {
+        Language.ENGLISH: "Azimuth lobes",
+        Language.SPANISH: "Lóbulos de azimut",
+    },
     "pattern.elevation": {Language.ENGLISH: "Elevation θ (°)", Language.SPANISH: "Elevación θ (°)"},
     "pattern.gain": {
         Language.ENGLISH: "Power gain (dBi)",

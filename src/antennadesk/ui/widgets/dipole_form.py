@@ -475,7 +475,9 @@ class DipoleForm(QWidget):
                 theta_start_deg=0.0,
                 theta_stop_deg=180.0,
                 theta_count=19,
-                phi_count=1,
+                phi_start_deg=0.0,
+                phi_stop_deg=360.0,
+                phi_count=37,
             )
         else:
             far_field = FarFieldRequest(
@@ -483,7 +485,9 @@ class DipoleForm(QWidget):
                 theta_start_deg=0.0,
                 theta_stop_deg=90.0,
                 theta_count=10,
-                phi_count=1,
+                phi_start_deg=0.0,
+                phi_stop_deg=360.0,
+                phi_count=37,
             )
 
         segmentation = aligned_policy_for_model(

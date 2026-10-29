@@ -67,11 +67,23 @@ class ResultsView(QWidget):
 
         self._pattern_frequency = QComboBox(self._pattern_tab)
         self._pattern_frequency_label = QLabel(self._pattern_tab)
+        self._pattern_mode = QComboBox(self._pattern_tab)
+        self._pattern_mode.addItem("", "azimuth")
+        self._pattern_mode.addItem("", "elevation")
+        self._pattern_mode_label = QLabel(self._pattern_tab)
+        self._pattern_cut = QComboBox(self._pattern_tab)
+        self._pattern_cut_label = QLabel(self._pattern_tab)
         self._pattern_plot = self._make_plot()
         self._polar_pattern = PolarPatternView(translator, self._pattern_tab)
         pattern_controls = QHBoxLayout()
         pattern_controls.addWidget(self._pattern_frequency_label)
         pattern_controls.addWidget(self._pattern_frequency)
+        pattern_controls.addSpacing(12)
+        pattern_controls.addWidget(self._pattern_mode_label)
+        pattern_controls.addWidget(self._pattern_mode)
+        pattern_controls.addSpacing(12)
+        pattern_controls.addWidget(self._pattern_cut_label)
+        pattern_controls.addWidget(self._pattern_cut)
         pattern_controls.addStretch(1)
         pattern_layout = QVBoxLayout(self._pattern_tab)
         pattern_layout.setContentsMargins(0, 0, 0, 0)
@@ -126,7 +138,9 @@ class ResultsView(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self._tabs)
 
-        self._pattern_frequency.currentIndexChanged.connect(self._render_pattern)
+        self._pattern_frequency.currentIndexChanged.connect(self._on_pattern_frequency_changed)
+        self._pattern_mode.currentIndexChanged.connect(self._on_pattern_mode_changed)
+        self._pattern_cut.currentIndexChanged.connect(self._render_pattern)
         self._currents_frequency.currentIndexChanged.connect(self._render_currents)
         self._apply_theme()
         self.retranslate()
@@ -188,6 +202,7 @@ class ResultsView(QWidget):
             combo.blockSignals(False)
             if combo.count() > 0:
                 combo.setCurrentIndex(0)
+        self._populate_cut_values()
         self._render()
 
     def retranslate(self) -> None:
@@ -213,6 +228,10 @@ class ResultsView(QWidget):
             ]
         )
         self._pattern_frequency_label.setText(self._translator.t("pattern.frequency"))
+        self._pattern_mode_label.setText(self._translator.t("pattern.mode"))
+        self._pattern_mode.setItemText(0, self._translator.t("pattern.mode_azimuth"))
+        self._pattern_mode.setItemText(1, self._translator.t("pattern.mode_elevation"))
+        self._update_cut_label()
         self._currents_frequency_label.setText(self._translator.t("currents.frequency"))
         self._raw_tabs.setTabText(0, self._translator.t("raw.input"))
         self._raw_tabs.setTabText(1, self._translator.t("raw.output"))
@@ -388,6 +407,64 @@ class ResultsView(QWidget):
             )
         )
 
+    def _on_pattern_frequency_changed(self) -> None:
+        self._populate_cut_values()
+        self._render_pattern()
+
+    def _on_pattern_mode_changed(self) -> None:
+        self._populate_cut_values()
+        self._render_pattern()
+
+    def _pattern_mode_value(self) -> str:
+        value = self._pattern_mode.currentData()
+        return value if isinstance(value, str) else "azimuth"
+
+    def _update_cut_label(self) -> None:
+        key = (
+            "pattern.cut_phi" if self._pattern_mode_value() == "elevation" else "pattern.cut_theta"
+        )
+        self._pattern_cut_label.setText(self._translator.t(key))
+
+    def _populate_cut_values(self) -> None:
+        points = []
+        if self._result is not None:
+            index = self._pattern_frequency.currentIndex()
+            if 0 <= index < len(self._result.frequencies):
+                points = [
+                    point
+                    for point in self._result.frequencies[index].far_field
+                    if point.gain_total_db is not None
+                ]
+        mode = self._pattern_mode_value()
+        current = self._pattern_cut.currentData()
+        candidates: dict[float, list[float]] = {}
+        for point in points:
+            key = point.phi_deg if mode == "elevation" else point.theta_deg
+            candidates.setdefault(key, []).append(
+                point.gain_total_db if point.gain_total_db is not None else -999.0
+            )
+        self._pattern_cut.blockSignals(True)
+        self._pattern_cut.clear()
+        for value in sorted(candidates):
+            label = f"φ={value:g}°" if mode == "elevation" else f"θ={value:g}°"
+            self._pattern_cut.addItem(label, value)
+        self._pattern_cut.blockSignals(False)
+        self._update_cut_label()
+        if not candidates:
+            return
+        if isinstance(current, (int, float)) and float(current) in candidates:
+            default = float(current)
+        elif mode == "elevation":
+            default = max(
+                candidates,
+                key=lambda value: max(candidates[value]) - min(candidates[value]),
+            )
+        else:
+            default = min(candidates, key=lambda value: abs(value - 90.0))
+        self._pattern_cut.blockSignals(True)
+        self._pattern_cut.setCurrentIndex(self._pattern_cut.findData(default))
+        self._pattern_cut.blockSignals(False)
+
     def _render_pattern(self) -> None:
         self._pattern_plot.clear()
         if self._result is None or not self._result.frequencies:
@@ -398,10 +475,18 @@ class ResultsView(QWidget):
         if index < 0 or index >= len(self._result.frequencies):
             return
         frequency = self._result.frequencies[index]
+        mode = self._pattern_mode_value()
+        selected_cut = self._pattern_cut.currentData()
+        selected = float(selected_cut) if isinstance(selected_cut, (int, float)) else None
         points = [
-            (point.theta_deg, point.gain_total_db)
+            (
+                point.theta_deg if mode == "elevation" else point.phi_deg,
+                point.gain_total_db,
+            )
             for point in frequency.far_field
             if point.gain_total_db is not None
+            and selected is not None
+            and abs((point.phi_deg if mode == "elevation" else point.theta_deg) - selected) < 1e-6
         ]
         if not points:
             self._pattern_plot.setTitle(self._translator.t("pattern.none"), color=self._colors.text)
@@ -409,10 +494,17 @@ class ResultsView(QWidget):
             return
         theta = [value[0] for value in points]
         gain = [value[1] for value in points]
-        self._pattern_plot.setTitle(self._translator.t("plot.pattern"), color=self._colors.text)
-        self._pattern_plot.setLabel(
-            "bottom", self._translator.t("pattern.elevation"), color=self._colors.text
+        axis_label = (
+            self._translator.t("pattern.elevation")
+            if mode == "elevation"
+            else self._translator.t("pattern.azimuth")
         )
+        cut_symbol = "φ" if mode == "elevation" else "θ"
+        cut_title = self._translator.t("plot.pattern")
+        if selected is not None:
+            cut_title = f"{cut_title} · {cut_symbol}={selected:g}°"
+        self._pattern_plot.setTitle(cut_title, color=self._colors.text)
+        self._pattern_plot.setLabel("bottom", axis_label, color=self._colors.text)
         self._pattern_plot.setLabel(
             "left", self._translator.t("pattern.gain"), color=self._colors.text
         )
@@ -424,6 +516,16 @@ class ResultsView(QWidget):
             symbolSize=4,
         )
         self._pattern_plot.setXRange(min(theta), max(theta), padding=0.02)
+        self._polar_pattern.set_cut(
+            selected,
+            symbol="φ" if mode == "elevation" else "θ",
+        )
+        self._polar_pattern.set_mirror(mode == "elevation")
+        self._polar_pattern.set_title(
+            self._translator.t(
+                "pattern.polar_elevation" if mode == "elevation" else "pattern.polar_azimuth"
+            )
+        )
         self._polar_pattern.set_points(tuple(zip(theta, gain, strict=True)))
 
     def _render_diagnostics(self) -> None:
