@@ -15,3 +15,6 @@ dist/
 spikes/phase0/.cache/
 spikes/phase0/build/
 spikes/phase0/results/
+
+# External reference material (copyrighted / not part of the repo)
+reference_data/
