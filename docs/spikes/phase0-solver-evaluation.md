@@ -88,8 +88,8 @@ oferta válida de fuente. Esto debe revisarse legalmente antes del release.
 | macOS | Compila con `cc` | CMake | Wheel ARM |
 
 El PE Windows se compiló con Zig 0.13 (clang) y con MinGW-w64 GCC 13; ambos
-builds pasaron los 19 checks bajo Wine. La validación nativa se ejecuta en
-GitHub Actions.
+builds pasaron los 19 checks bajo Wine. La validación nativa se ejecutó en
+GitHub Actions: Linux y Windows, `19/19` checks.
 
 El parche Windows de nec2c reemplaza:
 

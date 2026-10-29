@@ -19,7 +19,7 @@ modelo de dominio todavía no están implementados.
 
 El MVP usará **nec2c 1.3.3** como proceso externo, con versión fijada por
 commit y un parche de portabilidad Windows. La validación reproduce los
-ejemplos del NEC-2 User's Guide y se ejecuta en Linux y Windows.
+ejemplos del NEC-2 User's Guide y se ejecuta en Linux y Windows (CI: 19/19).
 
 ## Reproducir el spike
 

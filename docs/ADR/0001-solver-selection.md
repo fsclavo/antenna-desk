@@ -84,7 +84,8 @@ referencia técnica y de UX.
   tolerancias.
 - `spikes/phase0/scripts/run_reference.py`: 19 checks, todos pasan en Linux y
   en el binario Windows.
-- `.github/workflows/solver-spike.yml`: CI Linux/Windows.
+- `.github/workflows/solver-spike.yml`: CI Linux/Windows ejecutada el
+  2026-10-29, `19/19` checks en ambas plataformas.
 
 Resultado del spike:
 

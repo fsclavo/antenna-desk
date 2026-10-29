@@ -70,8 +70,8 @@ CC="zig cc -target x86_64-windows-gnu" \
 ```
 
 El `.exe` resultante es un PE32+ x86-64. En Linux se puede ejecutar con Wine
-para una verificación adicional; la validación nativa se hace en GitHub
-Actions (`.github/workflows/solver-spike.yml`).
+para una verificación adicional; la validación nativa se ejecutó en GitHub
+Actions (`.github/workflows/solver-spike.yml`): Linux y Windows, `19/19` checks.
 
 ## Casos de referencia
 
