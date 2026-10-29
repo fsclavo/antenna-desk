@@ -86,8 +86,9 @@ After creation, adjust the design panel and press **Apply design** or
 - **Impedance / SWR**: table of frequency, resistance, reactance, magnitude,
   and SWR, plus charts of impedance and SWR over the sweep. Resonance points
   where the reactance crosses zero are marked and listed above the table.
-- **Pattern**: elevation cut of NEC power gain for each simulated frequency.
-  Power gain is not realized gain.
+- **Pattern**: elevation cut of NEC power gain for each simulated frequency,
+  with a line chart and a mirrored polar lobe diagram. Power gain is not
+  realized gain.
 - **Currents**: segment current magnitude for the selected frequency, with the
   feed segment marked.
 - **Diagnostics**: solver version, status, duration, fingerprint, and warnings

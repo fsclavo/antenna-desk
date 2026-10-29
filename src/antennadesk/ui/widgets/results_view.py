@@ -28,6 +28,7 @@ from ...domain.simulation.resonance import find_resonances
 from ...domain.simulation.result import SimulationResult, SimulationStatus
 from ..i18n import Translator
 from ..theme import theme_colors
+from .polar_pattern_view import PolarPatternView
 
 
 class ResultsView(QWidget):
@@ -67,6 +68,7 @@ class ResultsView(QWidget):
         self._pattern_frequency = QComboBox(self._pattern_tab)
         self._pattern_frequency_label = QLabel(self._pattern_tab)
         self._pattern_plot = self._make_plot()
+        self._polar_pattern = PolarPatternView(translator, self._pattern_tab)
         pattern_controls = QHBoxLayout()
         pattern_controls.addWidget(self._pattern_frequency_label)
         pattern_controls.addWidget(self._pattern_frequency)
@@ -74,7 +76,12 @@ class ResultsView(QWidget):
         pattern_layout = QVBoxLayout(self._pattern_tab)
         pattern_layout.setContentsMargins(0, 0, 0, 0)
         pattern_layout.addLayout(pattern_controls)
-        pattern_layout.addWidget(self._pattern_plot)
+        pattern_splitter = QSplitter(Qt.Orientation.Vertical, self._pattern_tab)
+        pattern_splitter.addWidget(self._pattern_plot)
+        pattern_splitter.addWidget(self._polar_pattern)
+        pattern_splitter.setStretchFactor(0, 1)
+        pattern_splitter.setStretchFactor(1, 1)
+        pattern_layout.addWidget(pattern_splitter)
 
         self._currents_frequency = QComboBox(self._currents_tab)
         self._currents_frequency_label = QLabel(self._currents_tab)
@@ -146,6 +153,7 @@ class ResultsView(QWidget):
             legend = plot.plotItem.legend
             if legend is not None:
                 legend.setLabelTextColor(self._colors.text)
+        self._polar_pattern.update()
 
     def changeEvent(self, event: QEvent) -> None:
         if event.type() == QEvent.Type.PaletteChange:
@@ -384,6 +392,7 @@ class ResultsView(QWidget):
         self._pattern_plot.clear()
         if self._result is None or not self._result.frequencies:
             self._pattern_plot.setTitle(self._translator.t("results.none"), color=self._colors.text)
+            self._polar_pattern.set_points(())
             return
         index = self._pattern_frequency.currentIndex()
         if index < 0 or index >= len(self._result.frequencies):
@@ -396,6 +405,7 @@ class ResultsView(QWidget):
         ]
         if not points:
             self._pattern_plot.setTitle(self._translator.t("pattern.none"), color=self._colors.text)
+            self._polar_pattern.set_points(())
             return
         theta = [value[0] for value in points]
         gain = [value[1] for value in points]
@@ -414,6 +424,7 @@ class ResultsView(QWidget):
             symbolSize=4,
         )
         self._pattern_plot.setXRange(min(theta), max(theta), padding=0.02)
+        self._polar_pattern.set_points(tuple(zip(theta, gain, strict=True)))
 
     def _render_diagnostics(self) -> None:
         self._diagnostics.setRowCount(0)

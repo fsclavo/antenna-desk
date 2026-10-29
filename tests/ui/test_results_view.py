@@ -79,3 +79,44 @@ def test_results_view_localizes_known_diagnostics(qtbot: QtBot) -> None:
     message_item = view._diagnostics.item(0, 2)
     assert message_item.text() == "El solver agotó el tiempo de espera."
     assert message_item.toolTip() == "nec2c timed out after 30 s"
+
+
+def test_results_view_builds_a_polar_lobe_plot(qtbot: QtBot) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.simulation.result import FarFieldPoint
+
+    points = tuple(
+        FarFieldPoint(
+            theta_deg=float(theta),
+            phi_deg=0.0,
+            gain_vertical_db=gain,
+            gain_horizontal_db=None,
+            gain_total_db=gain,
+            axial_ratio=None,
+            tilt_deg=None,
+            polarization="LINEAR",
+            e_theta_magnitude_v_per_m=None,
+            e_theta_phase_deg=None,
+            e_phi_magnitude_v_per_m=None,
+            e_phi_phase_deg=None,
+        )
+        for theta, gain in ((0.0, 2.0), (45.0, 1.0), (90.0, -2.0), (180.0, -8.0))
+    )
+    result = replace(
+        _make_result(),
+        frequencies=(
+            replace(
+                _make_result().frequencies[0],
+                far_field=points,
+            ),
+        ),
+    )
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+
+    view.set_result(result)
+    view._pattern_frequency.setCurrentIndex(0)
+
+    assert len(view._polar_pattern._points) == 4
+    assert view._polar_pattern.grab().isNull() is False

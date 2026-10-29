@@ -444,7 +444,8 @@ The application must explain that:
 - Design panel: antenna parameters and constraints.
 - Center: 2D/3D geometry.
 - Summary panel: warnings and status.
-- Results in tabs: impedance/SWR, pattern, currents, diagnostics, and raw data.
+- Results in tabs: impedance/SWR, pattern (line and polar lobes), currents,
+  diagnostics, and raw data.
 
 Avoid overloading the MVP. Show advanced features progressively.
 

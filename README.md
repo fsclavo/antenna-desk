@@ -65,7 +65,8 @@ between those types.
   dimensions in Plan view, installation/height details in Elevation view, an
   isometric 3D view, and results tabs.
 - Asynchronous simulation with cancellation, timeouts, and diagnostics.
-- Impedance, SWR, frequency-sweep, and far-field pattern charts.
+- Impedance, SWR, frequency-sweep, and far-field pattern charts, including a
+  polar elevation-lobe diagram.
 - Save/open of versioned `.antennadesk` projects with multiple design
   variants; schema v3 adds persisted simulation runs and migrates older files.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.

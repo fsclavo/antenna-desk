@@ -287,6 +287,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "No far-field pattern available.",
         Language.SPANISH: "No hay patrón de campo lejano disponible.",
     },
+    "pattern.polar": {
+        Language.ENGLISH: "Elevation lobes",
+        Language.SPANISH: "Lóbulos de elevación",
+    },
     "currents.frequency": {Language.ENGLISH: "Frequency", Language.SPANISH: "Frecuencia"},
     "compare.title": {Language.ENGLISH: "Compare Variants", Language.SPANISH: "Comparar variantes"},
     "compare.variant_a": {Language.ENGLISH: "Variant A", Language.SPANISH: "Variante A"},
