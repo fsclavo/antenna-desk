@@ -1,0 +1,9 @@
+CM NEC-2 User's Guide Example 1 (first run)
+CM Center-fed linear antenna, free space
+CM 7 segments, 0.5 m, radius 1 mm, default frequency 299.8 MHz
+CE
+GW 0 7 0. 0. -.25 0. 0. .25 .001
+GE
+EX 0 0 4 0 1.
+XQ
+EN

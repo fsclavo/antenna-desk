@@ -1,0 +1,64 @@
+name: Phase 0 solver spike
+
+on:
+  push:
+    paths:
+      - "spikes/phase0/**"
+      - ".github/workflows/solver-spike.yml"
+  pull_request:
+    paths:
+      - "spikes/phase0/**"
+      - ".github/workflows/solver-spike.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: nec2c reference (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build nec2c
+        run: bash spikes/phase0/scripts/build_nec2c.sh
+
+      - name: Run reference cases
+        run: python spikes/phase0/scripts/run_reference.py --nec2c spikes/phase0/build/nec2c
+
+  windows:
+    name: nec2c reference (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: false
+          install: mingw-w64-x86_64-gcc make patch
+
+      - name: Build nec2c for Windows
+        shell: msys2 {0}
+        env:
+          CC: gcc
+        run: bash spikes/phase0/scripts/build_nec2c_windows.sh
+
+      - name: Run reference cases
+        run: python spikes/phase0/scripts/run_reference.py --nec2c spikes/phase0/build/nec2c.exe

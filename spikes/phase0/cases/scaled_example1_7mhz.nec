@@ -1,0 +1,9 @@
+CM Scaled version of NEC-2 User's Guide Example 1
+CM 7.1 MHz, 0.5 lambda dipole, radius/lambda = 0.001, 7 segments
+CE
+GW 0 7 0.0 0.0 -10.556072 0.0 0.0 10.556072 0.042224
+GE
+EX 0 0 4 0 1.0
+FR 0 1 0 0 7.1
+XQ
+EN

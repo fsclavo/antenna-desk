@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Phase 0 spike artifacts
+spikes/phase0/.cache/
+spikes/phase0/build/
+spikes/phase0/results/

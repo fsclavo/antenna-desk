@@ -1,0 +1,11 @@
+CM AntennaDesk Phase 0 practical case
+CM 40 m band center-fed dipole in free space
+CM 21 segments, 1 mm radius, frequency sweep 6.9-7.3 MHz
+CE
+GW 1 21 0.0 0.0 -10.556072 0.0 0.0 10.556072 0.001
+GE 0
+FR 0 21 0 0 6.9 0.02
+EX 0 1 11 0 1.0
+RP 0 37 1 1000 0.0 0.0 10.0 90.0
+XQ
+EN

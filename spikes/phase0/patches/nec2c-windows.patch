@@ -1,0 +1,134 @@
+# SPDX-FileCopyrightText: 2026 Fernando Sclavo
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Windows portability patch for nec2c 1.3.3 (KJ7LNW/nec2c).
+# Apply from the source root with: patch -p1 < nec2c-windows.patch
+--- a/nec2c.h
++++ b/nec2c.h
+@@ -6,13 +6,17 @@
+ #include <signal.h>
+ #include <math.h>
+ #include <stdlib.h>
++#ifndef _WIN32
+ #include <unistd.h>
++#endif
+ #include <string.h>
+ #include <fcntl.h>
+ #include <errno.h>
+ #include <time.h>
+ #include <sys/types.h>
++#ifndef _WIN32
+ #include <sys/times.h>
++#endif
+ 
+ #ifndef	TRUE
+ #define	TRUE	1
+--- a/misc.c
++++ b/misc.c
+@@ -77,12 +77,16 @@
+ /* Returns process time (user+system) BUT in _msec_ */
+ void secnds( double *x)
+ {
++#ifdef _WIN32
++  *x = 1000.0 * (double)clock() / (double)CLOCKS_PER_SEC;
++#else
+   struct tms buffer;
+   double clk_tck;
+ 
+   times(&buffer);
+   clk_tck = sysconf( _SC_CLK_TCK );
+   *x = 1000.0 * (double)(buffer.tms_utime + buffer.tms_stime) / clk_tck;
++#endif
+ 
+   return;
+ }
+--- a/main.c
++++ b/main.c
+@@ -30,6 +30,65 @@
+ #include "nec2c.h"
+ #include "shared.h"
+ 
++#ifdef _WIN32
++/* Minimal getopt() replacement for the Windows build.  Supports the
++   option forms used by nec2c: -i FILE, -iFILE, -o FILE, -oFILE, -h, -v. */
++static char *optarg = NULL;
++static int optind = 1;
++
++static int getopt(int argc, char **argv, const char *optstring)
++{
++  const char *arg;
++  const char *p;
++  char opt;
++
++  if (optind >= argc)
++    return -1;
++
++  arg = argv[optind];
++  if (arg[0] != '-' || arg[1] == '\0')
++    return -1;
++  if (strcmp(arg, "--") == 0)
++  {
++    optind++;
++    return -1;
++  }
++
++  opt = arg[1];
++  p = strchr(optstring, opt);
++  if (p == NULL || opt == ':')
++  {
++    optind++;
++    return '?';
++  }
++
++  if (p[1] == ':')
++  {
++    if (arg[2] != '\0')
++    {
++      optarg = (char *)&arg[2];
++      optind++;
++    }
++    else if (optind + 1 < argc)
++    {
++      optarg = argv[optind + 1];
++      optind += 2;
++    }
++    else
++    {
++      optind++;
++      return '?';
++    }
++  }
++  else
++  {
++    optind++;
++  }
++
++  return opt;
++}
++#endif
++
+ /* signal handler */
+ static void sig_handler( int signal );
+ 
+@@ -80,6 +139,13 @@
+   int option;
+ 
+   /*** signal handler related code ***/
++#ifdef _WIN32
++  signal( SIGINT,  sig_handler );
++  signal( SIGSEGV, sig_handler );
++  signal( SIGFPE,  sig_handler );
++  signal( SIGTERM, sig_handler );
++  signal( SIGABRT, sig_handler );
++#else
+   /* new and old actions for sigaction() */
+   struct sigaction sa_new, sa_old;
+ 
+@@ -95,6 +161,7 @@
+   sigaction( SIGFPE,  &sa_new, 0 );
+   sigaction( SIGTERM, &sa_new, 0 );
+   sigaction( SIGABRT, &sa_new, 0 );
++#endif
+ 
+   /*** command line arguments handler ***/
+   if( argc == 1 )
