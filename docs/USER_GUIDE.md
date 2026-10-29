@@ -151,7 +151,8 @@ loops show side length, circumference, side count, and feed side.
 
 Use **File → Export CSV...** for the frequency sweep table, **File → Export
 Pattern CSV...** for the far-field grid (frequency, θ, φ, gains,
-polarization, and E-field components), **File → Export HTML Report...** for a
+polarization, and E-field components), **File → Export Pattern PNG...** for
+the current cut/3D pattern image, **File → Export HTML Report...** for a
 self-contained HTML report, or **File → Export PDF Report...** for a native
 PDF with design parameters, configuration, solver metadata, fingerprint,
 diagnostics, impedance, resonance, and charts.

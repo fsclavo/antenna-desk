@@ -373,6 +373,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Export Pattern CSV...",
         Language.SPANISH: "Exportar CSV de patrón...",
     },
+    "action.export_pattern_png": {
+        Language.ENGLISH: "Export Pattern PNG...",
+        Language.SPANISH: "Exportar PNG de patrón...",
+    },
     "action.export_html": {
         Language.ENGLISH: "Export HTML Report...",
         Language.SPANISH: "Exportar informe HTML...",
@@ -408,6 +412,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Save pattern CSV",
         Language.SPANISH: "Guardar CSV de patrón",
     },
+    "dialog.pattern_png_title": {
+        Language.ENGLISH: "Save pattern image",
+        Language.SPANISH: "Guardar imagen de patrón",
+    },
     "dialog.csv_title": {
         Language.ENGLISH: "Export simulation CSV",
         Language.SPANISH: "Exportar CSV de simulación",
@@ -415,6 +423,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "dialog.html_title": {
         Language.ENGLISH: "Export HTML report",
         Language.SPANISH: "Exportar informe HTML",
+    },
+    "dialog.png_filter": {
+        Language.ENGLISH: "PNG images (*.png)",
+        Language.SPANISH: "Imágenes PNG (*.png)",
     },
     "dialog.csv_filter": {
         Language.ENGLISH: "CSV files (*.csv);;All files (*)",

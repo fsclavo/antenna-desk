@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import math
+from pathlib import Path
 
 import pyqtgraph as pg
 from PySide6.QtCore import QEvent, Qt
@@ -202,6 +203,14 @@ class ResultsView(QWidget):
         view.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         view.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
         return view
+
+    def save_pattern_image(self, path: Path) -> None:
+        widget = (
+            self._pattern_3d if self._pattern_view_tabs.currentIndex() == 1 else self._polar_pattern
+        )
+        pixmap = widget.grab()
+        if pixmap.isNull() or not pixmap.save(str(path), "PNG"):
+            raise OSError(f"could not write pattern image: {path}")
 
     def set_design(self, design: DesignVariant | None) -> None:
         self._design = design

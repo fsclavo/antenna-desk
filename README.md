@@ -79,8 +79,8 @@ between those types.
   export, and report rows.
 - Printable/HTML construction sheet with type-aware dimensions, feed position,
   loads, and simulated result.
-- CSV export for sweep results and far-field patterns, plus self-contained
-  HTML/PDF reports.
+- CSV/PNG export for sweep results and far-field patterns, plus
+  self-contained HTML/PDF reports.
 - English and Spanish UI, plus metric and imperial presentation units.
 - Immutable domain model for units, geometry, conductors, feed points, ground
   models, environments, wire dipoles, folded dipoles, and regular-polygon

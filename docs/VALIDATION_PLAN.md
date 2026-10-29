@@ -142,7 +142,8 @@ Phase 6 adds tests for:
   export, persistence round trip, load editor, report rows, and UI application.
 - ARRL Antenna Book, 24th edition, free-space dipole gain reference and the
   equal-conductor folded-dipole gain/pattern and 4× resistance properties.
-- Pattern CSV export with one row per far-field point.
+- Pattern CSV export with one row per far-field point and PNG export of the
+  current pattern view.
 - Isometric 3D geometry rendering and the 3D view selector.
 - Polar lobe rendering from far-field points, with selectable azimuth and
   elevation cuts, plus the projected 3D pattern wireframe.

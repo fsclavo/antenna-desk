@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 from pytestqt.qtbot import QtBot
@@ -82,7 +83,7 @@ def test_results_view_localizes_known_diagnostics(qtbot: QtBot) -> None:
     assert message_item.toolTip() == "nec2c timed out after 30 s"
 
 
-def test_results_view_builds_a_polar_lobe_plot(qtbot: QtBot) -> None:
+def test_results_view_builds_a_polar_lobe_plot(qtbot: QtBot, tmp_path: Path) -> None:
     from dataclasses import replace
 
     from antennadesk.domain.simulation.result import FarFieldPoint
@@ -134,3 +135,8 @@ def test_results_view_builds_a_polar_lobe_plot(qtbot: QtBot) -> None:
     assert len(view._pattern_3d._points) == 8
     view._pattern_view_tabs.setCurrentIndex(1)
     assert view._pattern_3d.grab().isNull() is False
+
+    image_path = tmp_path / "pattern.png"
+    view._pattern_view_tabs.setCurrentIndex(0)
+    view.save_pattern_image(image_path)
+    assert image_path.read_bytes().startswith(b"\x89PNG")
