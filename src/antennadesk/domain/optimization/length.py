@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import itertools
 import math
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from enum import StrEnum
 
@@ -16,6 +16,7 @@ from ..common.units import ensure_finite, ensure_positive
 class OptimizationObjective(StrEnum):
     REACTANCE = "reactance"
     MIN_SWR = "min_swr"
+    MAX_BANDWIDTH = "max_bandwidth"
 
 
 class LengthOptimizationStatus(StrEnum):
@@ -35,6 +36,7 @@ class LengthOptimizationSpec:
     max_evaluations: int = 12
     reactance_tolerance_ohm: float = 0.1
     swr_tolerance: float = 0.05
+    swr_limit: float = 2.0
     length_tolerance_m: float = 0.001
     sensitivity_offsets_m: tuple[float, ...] = (0.01, 0.025)
 
@@ -48,6 +50,8 @@ class LengthOptimizationSpec:
             raise ValueError("max_evaluations must be at least 3")
         ensure_positive(self.reactance_tolerance_ohm, name="reactance_tolerance_ohm")
         ensure_positive(self.swr_tolerance, name="swr_tolerance")
+        if self.swr_limit <= 1.0:
+            raise ValueError("swr_limit must be greater than 1")
         ensure_positive(self.length_tolerance_m, name="length_tolerance_m")
         for offset in self.sensitivity_offsets_m:
             ensure_positive(offset, name="sensitivity offset")
@@ -61,6 +65,7 @@ class LengthEvaluation:
     error: str | None = None
     cancelled: bool = False
     index: int = 0
+    bandwidth_hz: float | None = None
 
     @property
     def reactance_ohm(self) -> float | None:
@@ -74,6 +79,7 @@ class LengthSensitivityPoint:
     impedance_ohm: complex | None
     swr: float | None = None
     error: str | None = None
+    bandwidth_hz: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,6 +89,7 @@ class LengthOptimizationResult:
     best_impedance_ohm: complex | None
     best_swr: float | None
     evaluations: tuple[LengthEvaluation, ...]
+    best_bandwidth_hz: float | None = None
     sensitivity: tuple[LengthSensitivityPoint, ...] = ()
     message: str = ""
 
@@ -114,6 +121,8 @@ def optimize_length(
 ) -> LengthOptimizationResult:
     if spec.objective is OptimizationObjective.MIN_SWR:
         return optimize_swr(evaluate, spec, cancel_check=cancel_check)
+    if spec.objective is OptimizationObjective.MAX_BANDWIDTH:
+        return optimize_bandwidth(evaluate, spec, cancel_check=cancel_check)
     evaluations: list[LengthEvaluation] = []
 
     def cancelled() -> bool:
@@ -133,6 +142,7 @@ def optimize_length(
             best_impedance_ohm=None if best is None else best.impedance_ohm,
             best_swr=None if best is None else best.swr,
             evaluations=tuple(evaluations),
+            best_bandwidth_hz=None if best is None else best.bandwidth_hz,
             message=message,
         )
 
@@ -273,6 +283,7 @@ def optimize_swr(
             best_impedance_ohm=None if best is None else best.impedance_ohm,
             best_swr=None if best is None else best.swr,
             evaluations=tuple(evaluations),
+            best_bandwidth_hz=None if best is None else best.bandwidth_hz,
             message=message,
         )
 
@@ -351,3 +362,119 @@ def optimize_swr(
             "maximum number of evaluations reached",
         )
     return finish(LengthOptimizationStatus.CONVERGED, "length tolerance reached")
+
+
+def measure_bandwidth_hz(
+    frequencies_hz: Sequence[float],
+    swr_values: Sequence[float],
+    *,
+    center_hz: float,
+    swr_limit: float,
+) -> float:
+    """Return the contiguous SWR-limited bandwidth around a center frequency."""
+
+    if len(frequencies_hz) != len(swr_values) or not frequencies_hz:
+        return 0.0
+    ordered = sorted(zip(frequencies_hz, swr_values, strict=True))
+    passing = [
+        index for index, (_, swr) in enumerate(ordered) if math.isfinite(swr) and swr <= swr_limit
+    ]
+    if not passing:
+        return 0.0
+    center_index = min(
+        range(len(ordered)),
+        key=lambda index: abs(ordered[index][0] - center_hz),
+    )
+    if center_index not in passing:
+        return 0.0
+    first = center_index
+    while first - 1 in passing:
+        first -= 1
+    last = center_index
+    while last + 1 in passing:
+        last += 1
+
+    def boundary(pass_index: int, fail_index: int) -> float:
+        pass_frequency, pass_swr = ordered[pass_index]
+        fail_frequency, fail_swr = ordered[fail_index]
+        if not math.isfinite(fail_swr) or math.isclose(pass_swr, fail_swr):
+            return pass_frequency
+        ratio = (swr_limit - pass_swr) / (fail_swr - pass_swr)
+        return pass_frequency + (fail_frequency - pass_frequency) * min(max(ratio, 0.0), 1.0)
+
+    lower = ordered[first][0] if first == 0 else boundary(first, first - 1)
+    upper = ordered[last][0] if last == len(ordered) - 1 else boundary(last, last + 1)
+    return max(upper - lower, 0.0)
+
+
+def _best_bandwidth_evaluation(
+    evaluations: list[LengthEvaluation],
+) -> LengthEvaluation | None:
+    valid = [
+        evaluation
+        for evaluation in evaluations
+        if evaluation.impedance_ohm is not None
+        and evaluation.bandwidth_hz is not None
+        and math.isfinite(evaluation.bandwidth_hz)
+    ]
+    if not valid:
+        return None
+    return max(valid, key=lambda evaluation: (evaluation.bandwidth_hz or 0.0, -evaluation.length_m))
+
+
+def optimize_bandwidth(
+    evaluate: LengthEvaluator,
+    spec: LengthOptimizationSpec,
+    *,
+    cancel_check: CancelCheck | None = None,
+) -> LengthOptimizationResult:
+    evaluations: list[LengthEvaluation] = []
+
+    def cancelled() -> bool:
+        return bool(cancel_check is not None and cancel_check())
+
+    def probe(length: float) -> LengthEvaluation:
+        raw = evaluate(length)
+        evaluation = replace(raw, index=len(evaluations) + 1)
+        evaluations.append(evaluation)
+        return evaluation
+
+    def finish(status: LengthOptimizationStatus, message: str = "") -> LengthOptimizationResult:
+        best = _best_bandwidth_evaluation(evaluations)
+        return LengthOptimizationResult(
+            status=status,
+            best_length_m=None if best is None else best.length_m,
+            best_impedance_ohm=None if best is None else best.impedance_ohm,
+            best_swr=None if best is None else best.swr,
+            evaluations=tuple(evaluations),
+            best_bandwidth_hz=None if best is None else best.bandwidth_hz,
+            message=message,
+        )
+
+    if cancelled():
+        return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
+
+    count = spec.max_evaluations
+    for index in range(count):
+        if cancelled():
+            return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
+        ratio = index / (count - 1)
+        length = spec.min_length_m + (spec.max_length_m - spec.min_length_m) * ratio
+        evaluation = probe(length)
+        if evaluation.cancelled:
+            return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
+        if evaluation.impedance_ohm is None or evaluation.bandwidth_hz is None:
+            return finish(
+                LengthOptimizationStatus.ERROR,
+                evaluation.error or "solver evaluation failed",
+            )
+
+    best = _best_bandwidth_evaluation(evaluations)
+    if best is None:
+        return finish(LengthOptimizationStatus.ERROR, "no valid bandwidth evaluation")
+    if (best.bandwidth_hz or 0.0) <= 0.0:
+        return finish(
+            LengthOptimizationStatus.NO_BRACKET,
+            "SWR limit is not met anywhere in the sweep",
+        )
+    return finish(LengthOptimizationStatus.CONVERGED, "grid search completed")

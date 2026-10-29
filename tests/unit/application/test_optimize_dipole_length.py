@@ -172,3 +172,88 @@ def test_optimizes_a_loop_circumference() -> None:
     assert result.status is LengthOptimizationStatus.CONVERGED
     assert result.best_length_m == pytest.approx(41.2, abs=0.02)
     assert max(solver.lengths) == pytest.approx(11.0)
+
+
+class BandwidthSolver:
+    def capabilities(self) -> SolverCapabilities:
+        return SolverCapabilities(
+            name="bandwidth",
+            supports_frequency_sweep=True,
+            supports_currents=True,
+            supports_far_field=True,
+            supports_perfect_ground=True,
+            supports_finite_ground=True,
+            supports_extended_thin_wire_kernel=True,
+        )
+
+    def validate(self, model: object, spec: SimulationSpec) -> tuple[Diagnostic, ...]:
+        return ()
+
+    def version(self) -> SolverMetadata:
+        return SolverMetadata(name="bandwidth", version="1.0")
+
+    def run(
+        self,
+        model: object,
+        spec: SimulationSpec,
+        *,
+        progress_callback: object = None,
+        cancel_token: object = None,
+    ) -> SimulationResult:
+        from antennadesk.domain.antennas.antenna import AntennaModel
+
+        assert isinstance(model, AntennaModel)
+        length = model.wires[0].length_m
+        half_width = max(0.0, 200_000.0 - abs(length - 20.3) * 100_000.0)
+        frequencies = tuple(
+            FrequencyResult(
+                frequency_hz=frequency_hz,
+                feed_tag=1,
+                feed_segment=11,
+                impedance_ohm=complex(50.0, 0.0),
+                swr=1.5 if abs(frequency_hz - 7_100_000.0) <= half_width else 3.0,
+                input_power_w=0.001,
+            )
+            for frequency_hz in spec.frequency_plan.frequencies_hz
+        )
+        return SimulationResult(
+            status=SimulationStatus.COMPLETED,
+            spec=spec,
+            model_fingerprint="a" * 64,
+            solver=self.version(),
+            frequencies=frequencies,
+        )
+
+
+def test_optimizes_for_maximum_swr_bandwidth() -> None:
+    from antennadesk.domain.optimization.length import OptimizationObjective
+
+    solver = BandwidthSolver()
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    )
+    result = OptimizeDipoleLength(solver).execute(
+        OptimizeDipoleLengthCommand(
+            parameters=parameters,
+            base_spec=SimulationSpec(
+                frequency_plan=FrequencyPlan.sweep(6_800_000.0, 7_400_000.0, 13)
+            ),
+            optimization_spec=LengthOptimizationSpec(
+                min_length_m=18.0,
+                max_length_m=22.0,
+                objective=OptimizationObjective.MAX_BANDWIDTH,
+                swr_limit=2.0,
+                max_evaluations=40,
+                length_tolerance_m=0.02,
+            ),
+        )
+    )
+
+    assert result.status is LengthOptimizationStatus.CONVERGED
+    assert result.best_length_m is not None
+    assert 19.5 <= result.best_length_m <= 21.0
+    assert result.best_bandwidth_hz is not None
+    assert result.best_bandwidth_hz > 250_000.0
+    assert solver is not None

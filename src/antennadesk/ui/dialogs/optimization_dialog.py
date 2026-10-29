@@ -86,6 +86,7 @@ class OptimizationDialog(QDialog):
         self._objective = QComboBox(self)
         self._objective.addItem("", OptimizationObjective.REACTANCE.value)
         self._objective.addItem("", OptimizationObjective.MIN_SWR.value)
+        self._objective.addItem("", OptimizationObjective.MAX_BANDWIDTH.value)
         self._objective.currentIndexChanged.connect(self._objective_changed)
 
         self._min_length = QDoubleSpinBox(self)
@@ -106,6 +107,11 @@ class OptimizationDialog(QDialog):
         self._target.setValue(0.0)
         self._target.setSuffix(" Ω")
 
+        self._swr_limit = QDoubleSpinBox(self)
+        self._swr_limit.setRange(1.01, 10.0)
+        self._swr_limit.setDecimals(2)
+        self._swr_limit.setValue(2.0)
+
         self._max_evaluations = QSpinBox(self)
         self._max_evaluations.setRange(3, 50)
         self._max_evaluations.setValue(12)
@@ -120,6 +126,7 @@ class OptimizationDialog(QDialog):
         self._label_min = QLabel(translator.t("optimize.min_length"), self)
         self._label_max = QLabel(translator.t("optimize.max_length"), self)
         self._label_target = QLabel(translator.t("optimize.target_reactance"), self)
+        self._label_swr_limit = QLabel(translator.t("optimize.swr_limit"), self)
         self._label_evaluations = QLabel(translator.t("optimize.max_evaluations"), self)
         self._label_tolerance = QLabel(translator.t("optimize.tolerance"), self)
         self._form_layout = QFormLayout()
@@ -127,16 +134,17 @@ class OptimizationDialog(QDialog):
         self._form_layout.addRow(self._label_min, self._min_length)
         self._form_layout.addRow(self._label_max, self._max_length)
         self._form_layout.addRow(self._label_target, self._target)
+        self._form_layout.addRow(self._label_swr_limit, self._swr_limit)
         self._form_layout.addRow(self._label_evaluations, self._max_evaluations)
         self._form_layout.addRow(self._label_tolerance, self._tolerance)
 
         self._evaluations_label = QLabel(translator.t("optimize.evaluations"), self)
-        self._evaluations = QTableWidget(0, 7, self)
+        self._evaluations = QTableWidget(0, 8, self)
         self._configure_table(self._evaluations)
-        self._evaluations.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)
+        self._evaluations.horizontalHeader().setSectionResizeMode(7, QHeaderView.ResizeMode.Stretch)
 
         self._sensitivity_label = QLabel(translator.t("optimize.sensitivity"), self)
-        self._sensitivity = QTableWidget(0, 5, self)
+        self._sensitivity = QTableWidget(0, 6, self)
         self._configure_table(self._sensitivity)
         self._sensitivity.horizontalHeader().setStretchLastSection(True)
 
@@ -190,6 +198,7 @@ class OptimizationDialog(QDialog):
         self._label_objective.setText(t("optimize.objective"))
         self._objective.setItemText(0, t("optimize.reactance_objective"))
         self._objective.setItemText(1, t("optimize.min_swr_objective"))
+        self._objective.setItemText(2, t("optimize.max_bandwidth_objective"))
         self._evaluations.setHorizontalHeaderLabels(
             [
                 t("optimize.iteration"),
@@ -198,6 +207,7 @@ class OptimizationDialog(QDialog):
                 t("table.reactance"),
                 t("table.impedance"),
                 t("table.swr"),
+                t("optimize.bandwidth"),
                 t("optimize.message"),
             ]
         )
@@ -208,6 +218,7 @@ class OptimizationDialog(QDialog):
                 t("table.resistance"),
                 t("table.reactance"),
                 t("table.swr"),
+                t("optimize.bandwidth"),
             ]
         )
 
@@ -224,11 +235,23 @@ class OptimizationDialog(QDialog):
     def _objective_value(self) -> OptimizationObjective:
         return OptimizationObjective(self._objective.currentData())
 
+    def _set_row_visible(self, field: QWidget, visible: bool) -> None:
+        label = self._form_layout.labelForField(field)
+        if label is not None:
+            label.setVisible(visible)
+        field.setVisible(visible)
+
     def _objective_changed(self) -> None:
         objective = self._objective_value()
         is_swr = objective is OptimizationObjective.MIN_SWR
-        self._target.setVisible(not is_swr)
-        self._label_target.setVisible(not is_swr)
+        is_bandwidth = objective is OptimizationObjective.MAX_BANDWIDTH
+        self._target.setVisible(objective is OptimizationObjective.REACTANCE)
+        self._label_target.setVisible(objective is OptimizationObjective.REACTANCE)
+        self._swr_limit.setVisible(is_bandwidth)
+        self._label_swr_limit.setVisible(is_bandwidth)
+        self._set_row_visible(self._tolerance, not is_bandwidth)
+        if is_bandwidth and self._max_evaluations.value() < 21:
+            self._max_evaluations.setValue(41)
         if is_swr:
             self._label_tolerance.setText(self._translator.t("optimize.swr_tolerance"))
             self._tolerance.setDecimals(3)
@@ -250,10 +273,21 @@ class OptimizationDialog(QDialog):
             max_evaluations=self._max_evaluations.value(),
             reactance_tolerance_ohm=self._tolerance.value(),
             swr_tolerance=self._tolerance.value(),
+            swr_limit=self._swr_limit.value(),
         )
 
     def _start(self) -> None:
         if self._thread is not None:
+            return
+        if (
+            self._objective_value() is OptimizationObjective.MAX_BANDWIDTH
+            and self._base_spec.frequency_plan.count < 2
+        ):
+            QMessageBox.critical(
+                self,
+                self._translator.t("optimize.title"),
+                self._translator.t("optimize.bandwidth_needs_sweep"),
+            )
             return
         try:
             spec = self._optimization_spec()
@@ -329,6 +363,7 @@ class OptimizationDialog(QDialog):
             self._min_length,
             self._max_length,
             self._target,
+            self._swr_limit,
             self._max_evaluations,
             self._tolerance,
         ):
@@ -365,17 +400,22 @@ class OptimizationDialog(QDialog):
                     if evaluation.swr is not None and math.isinf(evaluation.swr)
                     else (f"{evaluation.swr:.3f}" if evaluation.swr is not None else "—")
                 ),
+                (
+                    f"{evaluation.bandwidth_hz / 1e6:.3f}"
+                    if evaluation.bandwidth_hz is not None
+                    else "—"
+                ),
                 evaluation.error or "",
             ]
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
-                if column in {2, 3, 4, 5}:
+                if column in {2, 3, 4, 5, 6}:
                     item.setTextAlignment(
                         Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
                     )
                 self._evaluations.setItem(row, column, item)
         self._evaluations.resizeColumnsToContents()
-        self._evaluations.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)
+        self._evaluations.horizontalHeader().setSectionResizeMode(7, QHeaderView.ResizeMode.Stretch)
 
     def _populate_sensitivity(self, result: LengthOptimizationResult) -> None:
         self._sensitivity.setRowCount(len(result.sensitivity))
@@ -390,10 +430,11 @@ class OptimizationDialog(QDialog):
                     if point.swr is not None and math.isinf(point.swr)
                     else (f"{point.swr:.3f}" if point.swr is not None else "—")
                 ),
+                (f"{point.bandwidth_hz / 1e6:.3f}" if point.bandwidth_hz is not None else "—"),
             ]
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
-                if column in {2, 3, 4}:
+                if column in {2, 3, 4, 5}:
                     item.setTextAlignment(
                         Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
                     )
@@ -422,6 +463,15 @@ class OptimizationDialog(QDialog):
                 reactance=reactance,
                 swr=swr,
             )
+            if result.best_bandwidth_hz is not None:
+                text = (
+                    text
+                    + " · "
+                    + self._translator.t(
+                        "optimize.bandwidth_result",
+                        value=f"{result.best_bandwidth_hz / 1e6:.3f}",
+                    )
+                )
         if result.message:
             text = f"{text} · {result.message}"
         return text

@@ -17,6 +17,8 @@ from ...domain.optimization.length import (
     LengthOptimizationSpec,
     LengthOptimizationStatus,
     LengthSensitivityPoint,
+    OptimizationObjective,
+    measure_bandwidth_hz,
     optimize_length,
 )
 from ...domain.simulation.far_field import FarFieldRequest
@@ -43,11 +45,19 @@ class OptimizeDipoleLength:
     def execute(self, command: OptimizeDipoleLengthCommand) -> LengthOptimizationResult:
         optimization_spec = command.optimization_spec
         base_model = command.parameters.to_antenna(name="Optimization")
-        evaluation_spec = replace(
-            command.base_spec,
-            frequency_plan=FrequencyPlan.single(command.parameters.frequency_hz),
-            far_field=FarFieldRequest(enabled=False),
-        )
+        if optimization_spec.objective is OptimizationObjective.MAX_BANDWIDTH:
+            if command.base_spec.frequency_plan.count < 2:
+                raise ValueError("bandwidth optimization requires a frequency sweep")
+            evaluation_spec = replace(
+                command.base_spec,
+                far_field=FarFieldRequest(enabled=False),
+            )
+        else:
+            evaluation_spec = replace(
+                command.base_spec,
+                frequency_plan=FrequencyPlan.single(command.parameters.frequency_hz),
+                far_field=FarFieldRequest(enabled=False),
+            )
 
         def evaluate(length_m: float) -> LengthEvaluation:
             try:
@@ -66,11 +76,23 @@ class OptimizeDipoleLength:
             if result.status is SimulationStatus.CANCELLED:
                 return LengthEvaluation(length_m, None, error="cancelled", cancelled=True)
             if result.status is SimulationStatus.COMPLETED and result.frequencies:
-                frequency = result.frequencies[0]
+                frequency = min(
+                    result.frequencies,
+                    key=lambda item: abs(item.frequency_hz - command.parameters.frequency_hz),
+                )
+                bandwidth_hz = None
+                if optimization_spec.objective is OptimizationObjective.MAX_BANDWIDTH:
+                    bandwidth_hz = measure_bandwidth_hz(
+                        [item.frequency_hz for item in result.frequencies],
+                        [item.swr for item in result.frequencies],
+                        center_hz=command.parameters.frequency_hz,
+                        swr_limit=optimization_spec.swr_limit,
+                    )
                 return LengthEvaluation(
                     length_m=length_m,
                     impedance_ohm=frequency.impedance_ohm,
                     swr=frequency.swr,
+                    bandwidth_hz=bandwidth_hz,
                 )
             message = next(
                 (
@@ -116,6 +138,7 @@ class OptimizeDipoleLength:
                         offset_m=sign * offset,
                         impedance_ohm=evaluation.impedance_ohm,
                         swr=evaluation.swr,
+                        bandwidth_hz=evaluation.bandwidth_hz,
                         error=evaluation.error,
                     )
                 )

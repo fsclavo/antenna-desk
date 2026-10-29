@@ -170,3 +170,65 @@ def test_swr_search_reports_a_boundary_optimum() -> None:
 
     assert result.status is LengthOptimizationStatus.CONVERGED
     assert result.best_length_m == pytest.approx(21.0)
+
+
+def _bandwidth_evaluator(
+    *,
+    optimum_length_m: float = 20.3,
+    peak_hz: float = 300_000.0,
+) -> object:
+    def evaluate(length_m: float) -> LengthEvaluation:
+        bandwidth_hz = max(0.0, peak_hz - abs(length_m - optimum_length_m) * 100_000.0)
+        return LengthEvaluation(
+            length_m=length_m,
+            impedance_ohm=complex(50.0, 0.0),
+            swr=1.2,
+            bandwidth_hz=bandwidth_hz,
+        )
+
+    return evaluate
+
+
+def test_measures_contiguous_bandwidth_around_center() -> None:
+    from antennadesk.domain.optimization.length import measure_bandwidth_hz
+
+    assert measure_bandwidth_hz(
+        [6.9e6, 7.0e6, 7.1e6, 7.2e6, 7.3e6],
+        [3.0, 2.0, 1.5, 2.0, 3.0],
+        center_hz=7.1e6,
+        swr_limit=2.0,
+    ) == pytest.approx(200_000.0)
+
+
+def test_maximizes_bandwidth() -> None:
+    spec = LengthOptimizationSpec(
+        min_length_m=18.0,
+        max_length_m=22.0,
+        objective=OptimizationObjective.MAX_BANDWIDTH,
+        max_evaluations=30,
+        length_tolerance_m=0.01,
+    )
+    result = optimize_length(_bandwidth_evaluator(), spec)  # type: ignore[arg-type]
+
+    assert result.best_length_m == pytest.approx(20.3, abs=0.05)
+    assert result.best_bandwidth_hz is not None
+    assert result.best_bandwidth_hz > 250_000.0
+
+
+def test_bandwidth_without_a_pass_band_is_no_bracket() -> None:
+    def evaluate(length_m: float) -> LengthEvaluation:
+        return LengthEvaluation(
+            length_m=length_m,
+            impedance_ohm=complex(50.0, 0.0),
+            swr=3.0,
+            bandwidth_hz=0.0,
+        )
+
+    spec = LengthOptimizationSpec(
+        min_length_m=18.0,
+        max_length_m=22.0,
+        objective=OptimizationObjective.MAX_BANDWIDTH,
+    )
+    result = optimize_length(evaluate, spec)
+
+    assert result.status is LengthOptimizationStatus.NO_BRACKET

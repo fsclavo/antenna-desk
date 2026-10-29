@@ -550,6 +550,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Minimum SWR",
         Language.SPANISH: "SWR mínimo",
     },
+    "optimize.max_bandwidth_objective": {
+        Language.ENGLISH: "Maximum SWR bandwidth",
+        Language.SPANISH: "Máximo ancho de banda de SWR",
+    },
     "optimize.target_reactance": {
         Language.ENGLISH: "Target reactance (Ω)",
         Language.SPANISH: "Reactancia objetivo (Ω)",
@@ -565,6 +569,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize.swr_tolerance": {
         Language.ENGLISH: "SWR tolerance",
         Language.SPANISH: "Tolerancia de SWR",
+    },
+    "optimize.swr_limit": {
+        Language.ENGLISH: "SWR limit for bandwidth",
+        Language.SPANISH: "Límite de SWR para ancho de banda",
+    },
+    "optimize.bandwidth": {
+        Language.ENGLISH: "Bandwidth (MHz)",
+        Language.SPANISH: "Ancho de banda (MHz)",
+    },
+    "optimize.bandwidth_result": {
+        Language.ENGLISH: "Bandwidth {value} MHz",
+        Language.SPANISH: "Ancho de banda {value} MHz",
+    },
+    "optimize.bandwidth_needs_sweep": {
+        Language.ENGLISH: "Bandwidth optimization requires a frequency sweep.",
+        Language.SPANISH: "La optimización por ancho de banda requiere un barrido de frecuencia.",
     },
     "optimize.run": {
         Language.ENGLISH: "Run optimization",

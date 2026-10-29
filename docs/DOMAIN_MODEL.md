@@ -274,8 +274,9 @@ Phase 2 adds solver-independent simulation types:
   records.
 - `ResonancePoint` and `find_resonances()`: series reactance zero crossings
   from a frequency sweep.
-- `LengthOptimizationSpec`: min/max length, objective (reactance or minimum
-  SWR), target reactance, evaluation/tolerance limits, and sensitivity offsets.
+- `LengthOptimizationSpec`: min/max length, objective (reactance, minimum SWR,
+  or maximum SWR bandwidth), target reactance, SWR limit, evaluation/tolerance
+  limits, and sensitivity offsets.
 - `LengthEvaluation`: length, impedance, SWR, error, and iteration index.
 - `LengthSensitivityPoint`: length offset and resulting impedance/SWR.
 - `LengthOptimizationResult`: status, best length/impedance/SWR, evaluation
