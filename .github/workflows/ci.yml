@@ -1,0 +1,152 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "examples/**"
+      - "spikes/phase0/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/ci.yml"
+      - "README.md"
+      - "AGENTS.md"
+  pull_request:
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "examples/**"
+      - "spikes/phase0/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/ci.yml"
+      - "README.md"
+      - "AGENTS.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Quality (Linux, Python 3.12)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: python -m pip install --upgrade pip uv
+
+      - name: Sync locked environment
+        run: uv sync --locked --python 3.12
+
+      - name: Ruff
+        run: uv run ruff check .
+
+      - name: Ruff format
+        run: uv run ruff format --check .
+
+      - name: mypy
+        run: uv run mypy
+
+      - name: pytest
+        run: uv run pytest
+
+  tests:
+    name: Tests (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        run: python -m pip install --upgrade pip uv
+
+      - name: Sync locked environment
+        run: uv sync --locked --python ${{ matrix.python-version }}
+
+      - name: pytest
+        run: uv run pytest
+
+  solver-linux:
+    name: Solver integration (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: python -m pip install --upgrade pip uv
+
+      - name: Build nec2c
+        run: bash spikes/phase0/scripts/build_nec2c.sh
+
+      - name: Sync locked environment
+        run: uv sync --locked --python 3.12
+
+      - name: Solver integration tests
+        env:
+          NEC2C: ${{ github.workspace }}/spikes/phase0/build/nec2c
+        run: uv run pytest tests/integration/simulation -q
+
+  solver-windows:
+    name: Solver integration (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: python -m pip install --upgrade pip uv
+
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: false
+          install: mingw-w64-ucrt-x86_64-gcc make patch
+
+      - name: Build nec2c for Windows
+        shell: msys2 {0}
+        env:
+          CC: gcc
+        run: bash spikes/phase0/scripts/build_nec2c_windows.sh
+
+      - name: Sync locked environment
+        run: uv sync --locked --python 3.12
+
+      - name: Solver integration tests
+        env:
+          NEC2C: ${{ github.workspace }}/spikes/phase0/build/nec2c.exe
+        run: uv run pytest tests/integration/simulation -q

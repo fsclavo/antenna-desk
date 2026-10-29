@@ -85,15 +85,9 @@ def parse_output(path: str | Path) -> dict[str, Any]:
         "path": str(path),
         "frequencies_hz": frequencies_hz,
         "input_impedances": impedances,
-        "radiation_pattern_sections": sum(
-            1 for line in lines if "RADIATION PATTERNS" in line
-        ),
-        "current_sections": sum(
-            1 for line in lines if "CURRENTS AND LOCATION" in line
-        ),
-        "power_budget_sections": sum(
-            1 for line in lines if "POWER BUDGET" in line
-        ),
+        "radiation_pattern_sections": sum(1 for line in lines if "RADIATION PATTERNS" in line),
+        "current_sections": sum(1 for line in lines if "CURRENTS AND LOCATION" in line),
+        "power_budget_sections": sum(1 for line in lines if "POWER BUDGET" in line),
         "has_run_time": "TOTAL RUN TIME" in text,
     }
 

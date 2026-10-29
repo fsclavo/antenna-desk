@@ -1,0 +1,1 @@
+"""Ground and environmental conditions."""

@@ -1,0 +1,144 @@
+"""Projects and design variants."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field, replace
+from datetime import datetime
+from uuid import UUID
+
+from ..antennas.antenna import AntennaModel
+from ..antennas.dipole import DipoleParameters
+from ..common.time import ensure_utc
+from ..common.validation import Diagnostic, Severity, raise_if_errors
+
+
+@dataclass(frozen=True, slots=True)
+class DesignVariant:
+    """A named antenna design and its derived canonical model."""
+
+    id: UUID
+    name: str
+    antenna_type: str
+    parameters: DipoleParameters
+    antenna: AntennaModel
+
+    def __post_init__(self) -> None:
+        if not self.name.strip():
+            raise ValueError("design name must not be empty")
+        if not self.antenna_type.strip():
+            raise ValueError("antenna_type must not be empty")
+        expected = self.parameters.to_antenna(name=self.antenna.name)
+        if expected != self.antenna:
+            raise ValueError("antenna geometry is inconsistent with its design parameters")
+
+    def with_parameters(self, parameters: DipoleParameters) -> DesignVariant:
+        antenna = parameters.to_antenna(name=self.antenna.name)
+        return replace(self, parameters=parameters, antenna=antenna)
+
+
+@dataclass(frozen=True, slots=True)
+class Project:
+    """An immutable project containing one or more design variants."""
+
+    id: UUID
+    name: str
+    description: str
+    created_at: datetime
+    updated_at: datetime
+    designs: tuple[DesignVariant, ...] = field(default_factory=tuple)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "designs", tuple(self.designs))
+        raise_if_errors(self._invariants())
+
+    def _invariants(self) -> tuple[Diagnostic, ...]:
+        diagnostics: list[Diagnostic] = []
+
+        if not self.name.strip():
+            diagnostics.append(
+                Diagnostic(
+                    code="project.name.empty",
+                    severity=Severity.ERROR,
+                    message="project name must not be empty",
+                    field="name",
+                )
+            )
+
+        for field_name, value in (
+            ("created_at", self.created_at),
+            ("updated_at", self.updated_at),
+        ):
+            try:
+                ensure_utc(value, name=field_name)
+            except ValueError as exc:
+                diagnostics.append(
+                    Diagnostic(
+                        code="project.timestamp.invalid",
+                        severity=Severity.ERROR,
+                        message=str(exc),
+                        field=field_name,
+                    )
+                )
+
+        if (
+            self.created_at.tzinfo is not None
+            and self.updated_at.tzinfo is not None
+            and self.updated_at < self.created_at
+        ):
+            diagnostics.append(
+                Diagnostic(
+                    code="project.timestamp.order",
+                    severity=Severity.ERROR,
+                    message="updated_at must not be earlier than created_at",
+                    field="updated_at",
+                )
+            )
+
+        seen_ids: set[UUID] = set()
+        seen_names: set[str] = set()
+        for design in self.designs:
+            if design.id in seen_ids:
+                diagnostics.append(
+                    Diagnostic(
+                        code="project.design.duplicate_id",
+                        severity=Severity.ERROR,
+                        message=f"duplicate design id: {design.id}",
+                        field="designs",
+                    )
+                )
+            seen_ids.add(design.id)
+
+            if design.name in seen_names:
+                diagnostics.append(
+                    Diagnostic(
+                        code="project.design.duplicate_name",
+                        severity=Severity.ERROR,
+                        message=f"duplicate design name: {design.name}",
+                        field="designs",
+                    )
+                )
+            seen_names.add(design.name)
+
+        return tuple(diagnostics)
+
+    def validate(self) -> tuple[Diagnostic, ...]:
+        return self._invariants()
+
+    def design_by_id(self, design_id: UUID) -> DesignVariant:
+        for design in self.designs:
+            if design.id == design_id:
+                return design
+        raise KeyError(f"unknown design id: {design_id}")
+
+    def with_design(self, design: DesignVariant, *, updated_at: datetime) -> Project:
+        replaced = False
+        designs: list[DesignVariant] = []
+        for current in self.designs:
+            if current.id == design.id:
+                designs.append(design)
+                replaced = True
+            else:
+                designs.append(current)
+        if not replaced:
+            designs.append(design)
+        return replace(self, designs=tuple(designs), updated_at=updated_at)
