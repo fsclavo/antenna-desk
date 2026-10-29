@@ -316,6 +316,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "3D radiation pattern",
         Language.SPANISH: "Patrón de radiación 3D",
     },
+    "pattern.antenna": {
+        Language.ENGLISH: "Antenna",
+        Language.SPANISH: "Antena",
+    },
     "pattern.elevation": {Language.ENGLISH: "Elevation θ (°)", Language.SPANISH: "Elevación θ (°)"},
     "pattern.gain": {
         Language.ENGLISH: "Power gain (dBi)",

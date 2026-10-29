@@ -26,6 +26,9 @@ class PolarPatternView(QWidget):
         self._cut_phi: float | None = None
         self._cut_symbol = "φ"
         self._mirror = True
+        self._closed = True
+        self._antenna_azimuth: float | None = None
+        self._antenna_vertical = False
         self._title: str | None = None
         self._colors = theme_colors(self.palette())
         self.setMinimumHeight(220)
@@ -45,6 +48,15 @@ class PolarPatternView(QWidget):
 
     def set_mirror(self, mirror: bool) -> None:
         self._mirror = mirror
+        self.update()
+
+    def set_closed(self, closed: bool) -> None:
+        self._closed = closed
+        self.update()
+
+    def set_antenna(self, azimuth_deg: float | None, *, vertical: bool = False) -> None:
+        self._antenna_azimuth = azimuth_deg
+        self._antenna_vertical = vertical
         self.update()
 
     def set_title(self, title: str | None) -> None:
@@ -111,7 +123,7 @@ class PolarPatternView(QWidget):
         mirror = self._mirror and max(theta for theta, _ in points) <= 180.0
         if mirror:
             mirrored = [(-theta, gain) for theta, gain in points if theta > 0.0]
-            points = points + mirrored
+            points = sorted([*points, *mirrored], key=lambda item: item[0])
 
         def to_xy(theta_deg: float, gain: float) -> QPointF:
             ratio = (gain - min_gain) / (max_gain - min_gain)
@@ -124,16 +136,55 @@ class PolarPatternView(QWidget):
 
         polygon = QPolygonF([to_xy(theta, gain) for theta, gain in points])
         painter.setPen(QPen(self._colors.pattern, 2.0))
-        painter.setBrush(
-            QColor(
-                self._colors.pattern.red(),
-                self._colors.pattern.green(),
-                self._colors.pattern.blue(),
-                35,
+        if self._closed:
+            painter.setBrush(
+                QColor(
+                    self._colors.pattern.red(),
+                    self._colors.pattern.green(),
+                    self._colors.pattern.blue(),
+                    35,
+                )
             )
-        )
-        painter.drawPolygon(polygon)
-        painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawPolygon(polygon)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+        else:
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawPolyline(polygon)
+
+        if self._antenna_azimuth is not None:
+            antenna_angle = math.radians(self._antenna_azimuth)
+            length = radius * 0.72
+            start = QPointF(
+                center.x() - math.sin(antenna_angle) * length,
+                center.y() + math.cos(antenna_angle) * length,
+            )
+            end = QPointF(
+                center.x() + math.sin(antenna_angle) * length,
+                center.y() - math.cos(antenna_angle) * length,
+            )
+            painter.setPen(QPen(self._colors.text, 2.0, Qt.PenStyle.DashLine))
+            painter.drawLine(start, end)
+            label_center = QPointF(
+                center.x() + math.sin(antenna_angle) * length * 0.48 + 12.0,
+                center.y() - math.cos(antenna_angle) * length * 0.48 - 12.0,
+            )
+            self._draw_label(
+                painter,
+                label_center,
+                self._translator.t("pattern.antenna"),
+                color=self._colors.text,
+            )
+        elif self._antenna_vertical:
+            painter.setPen(QPen(self._colors.text, 1.5))
+            painter.setBrush(self._colors.text)
+            painter.drawEllipse(center, 3.0, 3.0)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            self._draw_label(
+                painter,
+                QPointF(center.x() + 14.0, center.y() - 10.0),
+                self._translator.t("pattern.antenna"),
+                color=self._colors.text,
+            )
 
         best_theta, best_gain = max(points, key=lambda item: item[1])
         best = to_xy(best_theta, best_gain)

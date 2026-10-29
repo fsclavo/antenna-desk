@@ -493,6 +493,7 @@ class MainWindow(QMainWindow):
         self._form_dirty = False
         self._loads = design.antenna.loads
         self._form.set_parameters(design.parameters, reset_sweep=True)
+        self._results.set_design(design)
         self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
         self._auto_select_view(design)
         self._set_variant_combo(design_id)
@@ -611,6 +612,7 @@ class MainWindow(QMainWindow):
             design = design.with_loads(self._loads)
             updated = updated.with_design(design, updated_at=updated.updated_at)
             self._project = updated
+        self._results.set_design(design)
         self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
         self._auto_select_view(design)
         self._project_name_updating = True

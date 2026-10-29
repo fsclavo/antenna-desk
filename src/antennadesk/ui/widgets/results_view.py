@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.common.validation import Diagnostic, Severity
+from ...domain.projects.project import DesignVariant
 from ...domain.simulation.resonance import find_resonances
 from ...domain.simulation.result import SimulationResult, SimulationStatus
 from ..i18n import Translator
@@ -38,6 +39,7 @@ class ResultsView(QWidget):
         self._translator = translator
         self._colors = theme_colors(self.palette())
         self._result: SimulationResult | None = None
+        self._design: DesignVariant | None = None
 
         self._tabs = QTabWidget(self)
         self._impedance_tab = QWidget(self)
@@ -200,6 +202,10 @@ class ResultsView(QWidget):
         view.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         view.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
         return view
+
+    def set_design(self, design: DesignVariant | None) -> None:
+        self._design = design
+        self._render_pattern()
 
     def set_result(self, result: SimulationResult | None) -> None:
         self._result = result
@@ -535,6 +541,15 @@ class ResultsView(QWidget):
             symbol="φ" if mode == "elevation" else "θ",
         )
         self._polar_pattern.set_mirror(mode == "elevation")
+        self._polar_pattern.set_closed(mode == "azimuth" or max(theta) >= 180.0)
+        parameters = self._design.parameters if self._design is not None else None
+        azimuth = getattr(parameters, "azimuth_deg", None)
+        orientation = getattr(parameters, "orientation", None)
+        vertical = getattr(orientation, "value", orientation) == "vertical"
+        if mode == "azimuth" and azimuth is not None and not vertical:
+            self._polar_pattern.set_antenna(float(azimuth))
+        else:
+            self._polar_pattern.set_antenna(None, vertical=vertical)
         self._polar_pattern.set_title(
             self._translator.t(
                 "pattern.polar_elevation" if mode == "elevation" else "pattern.polar_azimuth"
