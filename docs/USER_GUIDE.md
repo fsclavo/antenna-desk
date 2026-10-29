@@ -90,7 +90,8 @@ After creation, adjust the design panel and press **Apply design** or
   for each simulated frequency. The **Cuts** tab shows a line chart and a polar
   lobe diagram; the **3D lobe** tab shows a projected wireframe of the complete
   pattern. Azimuth is the default cut view; use the selectors to inspect
-  another plane. The azimuth diagram includes a dashed line showing the antenna
+  another plane. The default azimuth cut is chosen at the elevation with the
+  highest gain; the azimuth diagram includes a dashed line showing the antenna
   orientation. Above-ground elevation cuts are drawn as open arcs rather than
   closed lobes. Power gain is not realized gain.
 - **Currents**: segment current magnitude for the selected frequency, with the

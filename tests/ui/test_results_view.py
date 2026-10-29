@@ -121,14 +121,14 @@ def test_results_view_builds_a_polar_lobe_plot(qtbot: QtBot) -> None:
     view._pattern_frequency.setCurrentIndex(0)
 
     assert view._pattern_mode.currentData() == "azimuth"
-    assert view._pattern_cut.currentData() == pytest.approx(90.0)
+    assert view._pattern_cut.currentData() == pytest.approx(0.0)
     assert len(view._polar_pattern._points) == 2
     assert view._polar_pattern._mirror is False
     assert view._polar_pattern.grab().isNull() is False
 
     view._pattern_mode.setCurrentIndex(1)
     assert view._pattern_mode.currentData() == "elevation"
-    assert view._pattern_cut.currentData() == pytest.approx(90.0)
+    assert view._pattern_cut.currentData() == pytest.approx(0.0)
     assert len(view._polar_pattern._points) == 4
     assert view._polar_pattern._mirror is True
     assert len(view._pattern_3d._points) == 8

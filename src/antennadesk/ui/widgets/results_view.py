@@ -478,7 +478,7 @@ class ResultsView(QWidget):
                 key=lambda value: max(candidates[value]) - min(candidates[value]),
             )
         else:
-            default = min(candidates, key=lambda value: abs(value - 90.0))
+            default = max(candidates, key=lambda value: max(candidates[value]))
         self._pattern_cut.blockSignals(True)
         self._pattern_cut.setCurrentIndex(self._pattern_cut.findData(default))
         self._pattern_cut.blockSignals(False)
