@@ -27,6 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   reference cases.
 - Reference validation against the NEC-2 User's Guide examples.
 - A reproducible reference-simulation script for the production adapter.
+- Phase 3 guided GUI: main window, dipole wizard, design panel, 2D geometry
+  view, asynchronous simulation with cancellation, results charts, and
+  diagnostics.
+- English/Spanish UI and metric/imperial presentation units.
+- PySide6 and PyQtGraph dependencies, with PySide6 pinned below 6.10 to avoid a
+  shutdown crash observed with 6.12.
+- Offscreen UI tests with `pytest-qt`.
 - Solver integration jobs on Linux and Windows.
 
 ### Changed

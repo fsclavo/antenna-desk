@@ -8,7 +8,8 @@ ports.
 ## Current layers
 
 ```text
-presentation (not implemented yet)
+presentation
+  ui/app.py, main_window.py, wizard, widgets, workers, i18n
         │
 application
   ports: ProjectRepository, AntennaSolver, CancelToken
@@ -41,8 +42,10 @@ adapters
 - `simulation/nec2/` implements the `AntennaSolver` port. It imports the
   domain and application ports, but the domain and application do not import
   it.
-- The GUI will depend on application use cases, never on solver or persistence
-  details.
+- The GUI depends on application use cases and ports, never on solver or
+  persistence details.
+- UI widgets never perform electromagnetic calculations. Simulation runs in a
+  `QThread` worker and returns a normalized `SimulationResult`.
 
 ## Phase 1 flow
 
@@ -86,6 +89,20 @@ contains the raw input and output text. Expected runtime failures
 represented as a result with status `error` or `cancelled` and structured
 diagnostics, rather than escaping into the UI.
 
+## Phase 3 flow
+
+```text
+MainWindow
+  ├─ DipoleWizard / DipoleForm ──► DipoleParameters
+  ├─ UpdateDipoleDesign / CreateDipoleProject ──► immutable Project
+  ├─ GeometryView (canonical AntennaModel snapshot)
+  ├─ SimulationWorker (QThread) ──► RunSimulation ──► AntennaSolver
+  └─ ResultsView (impedance, SWR, pattern, diagnostics, raw data)
+```
+
+The UI is bilingual through `ui/i18n.py` and supports metric or imperial
+presentation units. Project files and the domain remain in canonical units.
+
 ## Immutability and snapshots
 
 Domain objects are frozen dataclasses. Editing a design returns a new
@@ -111,8 +128,8 @@ add a schema version and migration for stored simulation runs.
 ## Not implemented yet
 
 - Persistence of simulation runs in the project file.
-- 2D/3D visualization.
-- GUI and wizard.
+- 3D visualization.
+- Variant comparison and reports.
 - Import/export adapters.
 - Optimization.
 - Measurement records and reports.

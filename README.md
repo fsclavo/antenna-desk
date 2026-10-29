@@ -4,8 +4,36 @@ Desktop application for designing, simulating, and building antennas for
 amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
 
-**Status:** Phase 2 complete (solver adapter and numerical references). Phase 3
-(guided MVP and GUI) is next. The GUI is not implemented yet.
+**Status:** Phase 3 complete (guided MVP and GUI). Phase 4 (comparison and
+reports) is next.
+
+## Launch the GUI
+
+The GUI uses `nec2c` for simulation. Build it once:
+
+```bash
+bash spikes/phase0/scripts/build_nec2c.sh
+```
+
+On Windows, build it with the MSYS2/UCRT64 script:
+
+```bash
+bash spikes/phase0/scripts/build_nec2c_windows.sh
+```
+
+Install the Python environment and launch the application:
+
+```bash
+uv sync
+uv run python -m antennadesk
+```
+
+The application looks for `nec2c` in `NEC2C`, on `PATH`, and in
+`spikes/phase0/build/`. If it is not found, use **File → Locate NEC2C...** to
+select the executable.
+
+On first launch, a 40 m dipole is loaded so you can press **Simulate**
+immediately. Use **File → New Dipole...** for the guided wizard.
 
 ## Documentation
 
@@ -14,6 +42,7 @@ electromagnetic engine.
 - [Domain model](docs/DOMAIN_MODEL.md)
 - [Solver adapter](docs/SOLVER_ADAPTER.md)
 - [Validation plan](docs/VALIDATION_PLAN.md)
+- [User guide](docs/USER_GUIDE.md)
 - [Confirmed project decisions](docs/PROJECT_DECISIONS.md)
 - [ADR-0001 — MVP engine](docs/ADR/0001-solver-selection.md)
 - [NEC engine evaluation](docs/spikes/phase0-solver-evaluation.md)
@@ -23,18 +52,19 @@ electromagnetic engine.
 
 ## What exists today
 
+- Guided dipole wizard and a main window with a design panel, 2D geometry view,
+  and results tabs.
+- Asynchronous simulation with cancellation, timeouts, and diagnostics.
+- Impedance, SWR, frequency-sweep, and far-field pattern charts.
+- Save/open of versioned `.antennadesk` projects.
+- English and Spanish UI, plus metric and imperial presentation units.
 - Immutable domain model for units, geometry, conductors, feed points, ground
   models, environments, and horizontal half-wave dipoles.
-- Validated project and design-variant model.
-- Versioned `.antennadesk` JSON format with atomic saves and a migration
-  framework.
-- Use cases to create, save, open, and edit a dipole length.
-- A [40 m dipole example](examples/dipole_40m.antennadesk).
-- A `nec2c` solver adapter with input generation, process execution,
-  cancellation, timeouts, output parsing, SWR normalization, currents,
-  power budget, and far-field patterns.
+- Versioned JSON persistence with atomic saves and a migration framework.
+- A `nec2c` solver adapter with input generation, output parsing, SWR
+  normalization, currents, power budget, and far-field patterns.
 - Numerical validation against the NEC-2 User's Guide examples.
-- Unit, integration, and acceptance tests.
+- Unit, integration, UI, and acceptance tests.
 
 ## Development
 
@@ -47,6 +77,8 @@ uv run ruff check .
 uv run ruff format --check .
 uv run mypy
 ```
+
+The UI tests run offscreen through `pytest-qt`; no display is required.
 
 To run the real solver integration tests, build `nec2c` and point `NEC2C` at
 the executable:
@@ -63,25 +95,22 @@ uv run python scripts/run_reference_simulation.py \
   --nec2c spikes/phase0/build/nec2c
 ```
 
-## Phase 0 engine spike
-
-The MVP uses **nec2c 1.3.3** as an external process, pinned by commit and
-shipped with a maintained Windows portability patch. The validation reproduces
-the examples printed in the NEC-2 User's Guide and runs on Linux and Windows
-(CI: 19/19 checks).
-
-```bash
-bash spikes/phase0/scripts/build_nec2c.sh
-python3 spikes/phase0/scripts/run_reference.py --nec2c spikes/phase0/build/nec2c
-```
-
 ## Known limitations
 
-- The GUI is not implemented.
-- Relative permeability is not emitted to NEC. Conductor conductivity is
-  emitted when `SimulationSpec.include_conductor_losses` is true.
+- Only horizontal center-fed dipoles are implemented in the wizard and design
+  panel.
 - No loads, networks, transmission lines, or radial ground screens.
 - Simulation results are not persisted in the project file yet.
+- The GUI currently edits the first design variant in a project; variant
+  comparison is a later phase.
+- Relative permeability is not emitted to NEC. Conductor conductivity is
+  emitted when `SimulationSpec.include_conductor_losses` is true.
+- The segmentation policy is a documented heuristic; explicit counts are used
+  for reference cases.
+- Domain and solver diagnostic messages are currently reported in English;
+  their codes are stable and can be translated in a later phase.
+- PySide6 is pinned below 6.10 because 6.12 triggered a shutdown refcount
+  crash with pyqtgraph in this environment.
 
 ## License
 

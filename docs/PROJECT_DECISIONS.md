@@ -56,7 +56,8 @@ consequences, it is documented in `docs/ADR/`.
 
 - UI in **Spanish and English**; identifiers and code in English.
 - Documentation and README in English.
-- i18n with `tr()` from the start.
+- i18n through `ui/i18n.py` in Phase 3; migrate to Qt Linguist `.ts`/`.qm`
+  if the string catalog grows.
 - Local-first, with no accounts, cloud, or mandatory telemetry.
 
 ## Quality and workflow

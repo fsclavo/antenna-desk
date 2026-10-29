@@ -21,6 +21,18 @@ amateur radio. The project is GPL-3.0-or-later.
 - A simulation is an immutable snapshot, never a live reference to a mutable
   model.
 
+## UI
+
+- Use PySide6 for the desktop UI and PyQtGraph for charts.
+- Route user-visible strings through `ui/i18n.py`; keep English and Spanish in
+  sync. UI strings are English by default, with Spanish translations.
+- Keep metric/imperial conversion at the presentation boundary. Domain and
+  project files use canonical meters.
+- Run simulations in a worker thread; never block the Qt event loop.
+- UI tests use `pytest-qt` with the offscreen platform.
+- PySide6 is pinned below 6.10 because 6.12 triggered a shutdown refcount crash
+  with pyqtgraph. Re-evaluate the pin deliberately.
+
 ## Correctness and science
 
 - Do not invent numerical reference values.

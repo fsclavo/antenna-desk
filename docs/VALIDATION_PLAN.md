@@ -64,9 +64,21 @@ The half-wave dipole maximum power gain of approximately `2.15 dBi` is a
 standard antenna-theory value. It is used as a sanity check for pattern
 parsing and normalization, not as a substitute for impedance validation.
 
-The suite currently has 175 tests with the solver enabled. The nine solver
+## Phase 3 — guided MVP and GUI
+
+UI tests use `pytest-qt` with the Qt offscreen platform:
+
+- Main window starts with a valid default dipole.
+- A simulation runs on a worker thread and populates the results table.
+- Saving writes a valid `.antennadesk` file.
+- Language switching updates actions.
+- Metric/imperial switching preserves the physical length.
+- The wizard builds a valid dipole and review page state.
+
+The suite currently has 186 tests with the solver enabled. The nine solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
-3.12, and 3.13 on Linux and Windows through GitHub Actions.
+3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
+offscreen and do not require a display.
 
 Reproducible adapter check:
 
@@ -102,3 +114,6 @@ engine version, configuration, and explicit tolerances.
 - Far-field values are NEC power gains in dB. Realized gain is not computed.
 - No loads, networks, transmission lines, or radial ground screens.
 - Simulation results are not persisted in the project file yet.
+- The GUI only edits horizontal center-fed dipoles.
+- PySide6 is pinned below 6.10 because 6.12 triggered a shutdown refcount
+  crash with pyqtgraph in the test environment.

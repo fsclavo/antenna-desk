@@ -1,4 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Fernando Sclavo
+# SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
+
+import os
+
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from datetime import UTC, datetime
 from uuid import UUID

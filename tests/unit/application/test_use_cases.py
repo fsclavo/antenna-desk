@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Fernando Sclavo
+# SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -12,6 +14,10 @@ from antennadesk.application.use_cases.create_dipole_project import (
 from antennadesk.application.use_cases.edit_dipole_length import (
     EditDipoleLength,
     EditDipoleLengthCommand,
+)
+from antennadesk.application.use_cases.update_dipole_design import (
+    UpdateDipoleDesign,
+    UpdateDipoleDesignCommand,
 )
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.projects.project import Project
@@ -70,3 +76,20 @@ def test_edit_length_rejects_unknown_design(sample_project: Project) -> None:
                 total_length_m=19.5,
             )
         )
+
+
+def test_update_dipole_design_returns_new_project(sample_project: Project) -> None:
+    design = sample_project.designs[0]
+    parameters = design.parameters.with_length(19.5)
+
+    updated = UpdateDipoleDesign().execute(
+        UpdateDipoleDesignCommand(
+            project=sample_project,
+            design_id=design.id,
+            parameters=parameters,
+        )
+    )
+
+    assert updated is not sample_project
+    assert updated.designs[0].parameters.total_length_m == pytest.approx(19.5)
+    assert sample_project.designs[0].parameters.total_length_m == pytest.approx(20.0)
