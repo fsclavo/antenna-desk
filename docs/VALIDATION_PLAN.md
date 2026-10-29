@@ -103,7 +103,19 @@ Phase 5 adds tests for:
   simulation.
 - Construction-sheet dimensions, simulated-result rows, and HTML escaping.
 
-The suite currently has 227 tests with the solver enabled. The nine solver
+## Phase 6 — new geometry and measurements (in progress)
+
+The first Phase 6 slice adds tests for:
+
+- Vertical dipole template geometry and center feed.
+- Vertical dipole over perfect ground against the NEC-2 User's Guide Example 3
+  value (`106.437 + j9.90578 Ω`).
+- Version 1 to version 2 project migration adding horizontal orientation.
+- Vertical project save/open round trip.
+- Orientation controls in the form and wizard, vertical geometry rendering,
+  and orientation-aware construction-sheet dimensions and feed height.
+
+The suite currently has 236 tests with the solver enabled. The ten solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.
@@ -143,7 +155,9 @@ engine version, configuration, and explicit tolerances.
 - No loads, networks, transmission lines, or radial ground screens.
 - Simulation results are not persisted in the project file; comparison and
   reports use the current session's cached results.
-- The GUI only edits horizontal center-fed dipoles.
+- The GUI supports horizontal and vertical center-fed dipoles only. Loops,
+  folded dipoles, VNA CSV import, and measurement records are not implemented
+  yet.
 - Native PDF export is deferred; HTML reports can be printed to PDF by a
   browser.
 - Optimization is limited to a single dipole length and a single reactance

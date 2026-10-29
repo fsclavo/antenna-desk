@@ -27,22 +27,26 @@ the `NEC2C` environment variable.
 
 ## First simulation
 
-The application opens with a 40 m dipole loaded. Press **Simulate** (or F5).
-The design panel on the left shows frequency, length, height, orientation,
-wire diameter, material, ground, reference impedance, and the frequency sweep.
+The application opens with a 40 m horizontal dipole loaded. Press **Simulate**
+(or F5). The design panel on the left shows frequency, orientation, length,
+height, wire diameter, material, ground, reference impedance, and the frequency
+sweep. Choose **Vertical** for a vertical center-fed dipole; in that case the
+height field is the base height above ground and the azimuth is disabled.
 The center shows a dimensioned construction sketch with the wire, feed point,
 center, ends, height, total length, per-leg lengths, ground line, and a separate
 scale bar. Use the **View** selector above the sketch to switch between
 **Elevation** and **Plan**. The **Vertical scale** selector can exaggerate the
-height (1x, 1.5x, 2x, 3x) when the antenna is low relative to its length; the
-summary notes when vertical exaggeration is active.
+height (1x, 1.5x, 2x, 3x) for low horizontal antennas; it is disabled for
+vertical dipoles and plan view. The elevation view draws vertical dipoles with
+base-height and total-length dimensions.
 
 ## Create a dipole with the wizard
 
 Use **File → New Dipole...**. The wizard asks for:
 
 1. Project name, band, and frequency.
-2. Total length, height, and azimuth. The suggested length is a half-wave
+2. Orientation, total length, height, and azimuth. For a vertical dipole the
+   height is the base height. The suggested length is a half-wave
    approximation, not a universal final length.
 3. Wire material and diameter.
 4. Ground model. Finite ground asks for relative permittivity and conductivity.
@@ -129,7 +133,8 @@ canonical meters and hertz.
 
 ## Current limitations
 
-- Only horizontal center-fed dipoles are implemented in the GUI.
+- The GUI supports horizontal and vertical center-fed dipoles; loops, folded
+  dipoles, VNA CSV import, and measurement records are not implemented yet.
 - The GUI currently edits the first design variant in a project.
 - No loads, networks, transmission lines, or radial ground screens.
 - Simulation results are not saved inside the project; comparison, export, and

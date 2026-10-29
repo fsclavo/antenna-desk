@@ -103,3 +103,24 @@ def test_finite_ground_is_preserved(dipole_parameters: DipoleParameters) -> None
         ground=ground,
     )
     assert parameters.to_antenna().environment.ground == ground
+
+
+def test_vertical_dipole_generates_a_base_height_wire() -> None:
+    from antennadesk.domain.antennas.dipole import DipoleOrientation
+
+    parameters = DipoleParameters(
+        frequency_hz=30_000_000.0,
+        total_length_m=5.0,
+        height_m=2.0,
+        orientation=DipoleOrientation.VERTICAL,
+        wire_radius_m=0.3,
+    )
+    antenna = parameters.to_antenna()
+    wire = antenna.wires[0]
+
+    assert wire.start.x_m == pytest.approx(0.0)
+    assert wire.start.y_m == pytest.approx(0.0)
+    assert wire.start.z_m == pytest.approx(2.0)
+    assert wire.end.z_m == pytest.approx(7.0)
+    assert wire.length_m == pytest.approx(5.0)
+    assert antenna.feed.offset_m == pytest.approx(2.5)

@@ -49,6 +49,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   flow.
 - Printable/HTML construction sheet with leg lengths, feed position, simulated
   result, resonance, and construction notes.
+- Phase 6 first slice: vertical center-fed dipole template and orientation
+  selector in the form and wizard.
+- Project schema version 2 with dipole orientation and an explicit v1 to v2
+  migration.
+- Vertical geometry sketch, orientation-aware construction sheet, and NEC-2
+  Example 3 reference validation.
 - Solver integration jobs on Linux and Windows.
 
 ### Changed

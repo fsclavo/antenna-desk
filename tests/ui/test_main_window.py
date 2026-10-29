@@ -317,3 +317,19 @@ def test_optimize_length_applies_and_simulates(
     assert window._project.designs[0].parameters.total_length_m == pytest.approx(19.8)
     assert window._results._table.rowCount() == 1
     window._dirty = False
+
+
+def test_orientation_control_updates_parameters(window: MainWindow) -> None:
+    from antennadesk.domain.antennas.dipole import DipoleOrientation
+
+    window._form._orientation.setCurrentIndex(1)
+    parameters = window._form.parameters()
+
+    assert parameters.orientation is DipoleOrientation.VERTICAL
+    assert window._form._azimuth.isEnabled() is False
+    assert window._form._labels()["field.height"].text() == "Base height"
+
+    window._form._orientation.setCurrentIndex(0)
+    assert window._form.parameters().orientation is DipoleOrientation.HORIZONTAL
+    assert window._form._azimuth.isEnabled() is True
+    window._dirty = False

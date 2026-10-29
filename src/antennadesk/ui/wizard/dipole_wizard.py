@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QWizardPage,
 )
 
-from ...domain.antennas.dipole import DipoleParameters
+from ...domain.antennas.dipole import DipoleOrientation, DipoleParameters
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.common import units
 from ...domain.environment.ground import GroundKind, GroundModel
@@ -145,6 +145,11 @@ class GeometryPage(QWizardPage):
         height_min, height_max = height_bounds(unit_system)
         unit = translator.t(length_unit_key(unit_system))
 
+        self._orientation = QComboBox(self)
+        self._orientation.addItem("", DipoleOrientation.HORIZONTAL.value)
+        self._orientation.addItem("", DipoleOrientation.VERTICAL.value)
+        self._orientation.currentIndexChanged.connect(self._orientation_changed)
+
         self._length = QDoubleSpinBox(self)
         self._length.setRange(length_min, length_max)
         self._length.setDecimals(3)
@@ -166,6 +171,7 @@ class GeometryPage(QWizardPage):
         self._suggest.clicked.connect(self._suggest_length)
 
         form = QFormLayout(self)
+        form.addRow(self._label("field.orientation"), self._orientation)
         form.addRow(self._label("field.length"), self._length)
         form.addRow(self._label("field.height"), self._height)
         form.addRow(self._label("field.azimuth"), self._azimuth)
@@ -186,6 +192,25 @@ class GeometryPage(QWizardPage):
             if key:
                 label.setText(self._translator.t(key))
         self._suggest.setText(self._translator.t("wizard.suggest_length"))
+        self._orientation.setItemText(0, self._translator.t("orientation.horizontal"))
+        self._orientation.setItemText(1, self._translator.t("orientation.vertical"))
+        self._update_orientation_labels()
+
+    def _orientation_changed(self) -> None:
+        self._update_orientation_labels()
+
+    def _update_orientation_labels(self) -> None:
+        vertical = self._orientation.currentData() == DipoleOrientation.VERTICAL.value
+        self._azimuth.setEnabled(not vertical)
+        for label in self.findChildren(QLabel):
+            if label.objectName() == "field.height":
+                label.setText(
+                    self._translator.t("field.base_height" if vertical else "field.height")
+                )
+                break
+
+    def orientation(self) -> DipoleOrientation:
+        return DipoleOrientation(self._orientation.currentData())
 
     def initializePage(self) -> None:
         if not self._initialized:
@@ -385,9 +410,14 @@ class ReviewPage(QWizardPage):
                 "wizard.review",
                 project=wizard.project_name(),
                 frequency=parameters.frequency_hz / 1e6,
+                orientation=self._translator.t(f"orientation.{parameters.orientation.value}"),
                 length=f"{length_from_m(parameters.total_length_m, self._unit_system):.3f} {unit}",
                 height=f"{length_from_m(parameters.height_m, self._unit_system):.3f} {unit}",
-                azimuth=parameters.azimuth_deg,
+                azimuth=(
+                    f"{parameters.azimuth_deg:.1f}"
+                    if parameters.orientation is DipoleOrientation.HORIZONTAL
+                    else "—"
+                ),
                 diameter=(
                     f"{diameter_from_m(parameters.wire_radius_m * 2.0, self._unit_system):.3f} "
                     f"{diameter_unit}"
@@ -460,6 +490,7 @@ class DipoleWizard(QWizard):
             frequency_hz=self.frequency_hz(),
             total_length_m=self.geometry_page.length_m(),
             height_m=self.geometry_page.height_m(),
+            orientation=self.geometry_page.orientation(),
             azimuth_deg=self.geometry_page.azimuth_deg(),
             wire_radius_m=self.conductor_page.radius_m(),
             material=self.conductor_page.material(),

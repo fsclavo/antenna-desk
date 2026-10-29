@@ -11,7 +11,11 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..domain.antennas.antenna import AntennaModel
-from ..domain.antennas.dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
+from ..domain.antennas.dipole import (
+    ANTENNA_TYPE_WIRE_DIPOLE,
+    DipoleOrientation,
+    DipoleParameters,
+)
 from ..domain.antennas.feed import FeedPoint
 from ..domain.antennas.geometry import Point3D
 from ..domain.antennas.materials import ConductorMaterial
@@ -88,6 +92,7 @@ class DipoleParametersPayload(StrictModel):
     frequency_hz: float = Field(gt=0.0)
     total_length_m: float = Field(gt=0.0)
     height_m: float = Field(ge=0.0)
+    orientation: DipoleOrientation = DipoleOrientation.HORIZONTAL
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
@@ -193,6 +198,7 @@ def _dipole_parameters_from_domain(value: DipoleParameters) -> DipoleParametersP
         frequency_hz=value.frequency_hz,
         total_length_m=value.total_length_m,
         height_m=value.height_m,
+        orientation=value.orientation,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
@@ -285,6 +291,7 @@ def _dipole_parameters_to_domain(value: DipoleParametersPayload) -> DipoleParame
         frequency_hz=value.frequency_hz,
         total_length_m=value.total_length_m,
         height_m=value.height_m,
+        orientation=value.orientation,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),

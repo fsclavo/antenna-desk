@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import copy
 from collections.abc import Callable, Mapping
 from typing import Any
 
@@ -11,7 +12,26 @@ from .constants import PROJECT_FORMAT, SCHEMA_VERSION
 from .errors import ProjectFormatError, UnsupportedSchemaVersion
 
 Migration = Callable[[dict[str, Any]], dict[str, Any]]
-MIGRATIONS: dict[int, Migration] = {}
+
+
+def _migrate_v1_to_v2(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the dipole orientation field to schema version 1 designs."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if isinstance(project, dict):
+        designs = project.get("designs")
+        if isinstance(designs, list):
+            for design in designs:
+                if not isinstance(design, dict):
+                    continue
+                parameters = design.get("parameters")
+                if isinstance(parameters, dict) and "orientation" not in parameters:
+                    parameters["orientation"] = "horizontal"
+    return migrated
+
+
+MIGRATIONS: dict[int, Migration] = {1: _migrate_v1_to_v2}
 
 
 def migrate_document(

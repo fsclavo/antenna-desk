@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 
+from antennadesk.persistence.constants import SCHEMA_VERSION
 from antennadesk.persistence.errors import ProjectFormatError, UnsupportedSchemaVersion
 from antennadesk.persistence.migrations import migrate_document
 
@@ -19,7 +20,7 @@ def _document(version: int) -> dict[str, Any]:
 
 
 def test_current_version_is_an_identity() -> None:
-    document = _document(1)
+    document = _document(SCHEMA_VERSION)
     assert migrate_document(document) == document
 
 
@@ -52,9 +53,12 @@ def test_migrations_are_applied_in_order() -> None:
 
 def test_future_version_is_rejected() -> None:
     with pytest.raises(UnsupportedSchemaVersion) as error:
-        migrate_document(_document(2), target_version=1)
-    assert error.value.found == 2
-    assert error.value.supported == 1
+        migrate_document(
+            _document(SCHEMA_VERSION + 1),
+            target_version=SCHEMA_VERSION,
+        )
+    assert error.value.found == SCHEMA_VERSION + 1
+    assert error.value.supported == SCHEMA_VERSION
 
 
 def test_missing_migration_is_rejected() -> None:
@@ -75,3 +79,27 @@ def test_invalid_schema_versions_are_rejected(version: object) -> None:
     document["schema_version"] = version
     with pytest.raises(ProjectFormatError, match="schema_version"):
         migrate_document(document)
+
+
+def test_v1_migration_adds_horizontal_orientation() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 1,
+        "project": {
+            "designs": [
+                {
+                    "parameters": {
+                        "frequency_hz": 7_100_000.0,
+                        "total_length_m": 20.0,
+                        "height_m": 8.0,
+                    }
+                }
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == 2
+    assert migrated["project"]["designs"][0]["parameters"]["orientation"] == "horizontal"
+    assert "orientation" not in document["project"]["designs"][0]["parameters"]

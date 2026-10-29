@@ -78,9 +78,11 @@ User-facing parameters for a horizontal center-fed dipole:
 - `material`
 - `ground`
 
-`to_antenna()` generates the canonical model. The wire runs from
-`(-L/2 cos A, -L/2 sin A, H)` to `(L/2 cos A, L/2 sin A, H)`, where `L` is the
-total length, `A` the azimuth, and `H` the height. The feed is at the center.
+`to_antenna()` generates the canonical model. For a horizontal dipole the wire
+runs from `(-L/2 cos A, -L/2 sin A, H)` to `(L/2 cos A, L/2 sin A, H)`, where
+`L` is the total length, `A` the azimuth, and `H` the wire height. For a
+vertical dipole the wire runs from `(0, 0, H)` to `(0, 0, H + L)`, where `H` is
+the base height; the azimuth is ignored. The feed is always at the center.
 
 ### DesignVariant
 
@@ -109,7 +111,7 @@ The native format is versioned JSON:
 ```json
 {
   "format": "antennadesk-project",
-  "schema_version": 1,
+  "schema_version": 2,
   "project": {
     "id": "11111111-1111-4111-8111-111111111111",
     "name": "40 m dipole",
@@ -125,6 +127,7 @@ The native format is versioned JSON:
           "frequency_hz": 7100000.0,
           "total_length_m": 20.0,
           "height_m": 8.0,
+          "orientation": "horizontal",
           "azimuth_deg": 0.0,
           "wire_radius_m": 0.001,
           "material": {
@@ -170,22 +173,28 @@ The native format is versioned JSON:
 ```
 
 The complete example lives in
-[`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk).
+[`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
+kept as a version 1 fixture so the migration path is exercised; saving it from
+the application writes version 2.
 
 ## Schema policy
 
-- Current version: `1`.
+- Current version: `2`.
+- Version 1 files are migrated by adding the dipole `orientation` field with a
+  default of `horizontal`.
 - Unknown fields are rejected.
 - Unknown formats are rejected.
 - Future schema versions are rejected with a clear error.
-- Older versions are migrated through an explicit registry; the registry is
-  empty until a second schema version exists.
+- Older versions are migrated through an explicit registry.
 - Saves are atomic and files are size-limited.
 
 ## Current limitations
 
 - Only horizontal center-fed dipoles are implemented.
 - No loads, networks, radials, or free-form conductors.
+- The GUI supports horizontal and vertical center-fed dipoles; loops and folded
+  dipoles are not implemented yet.
+- VNA CSV import and measurement records are not implemented yet.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value and the solver adapter builds the actual layout.
 - Simulation results are not persisted yet.

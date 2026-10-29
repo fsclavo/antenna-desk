@@ -54,3 +54,23 @@ def test_wizard_supports_spanish_and_imperial(qtbot: QtBot) -> None:
 
     assert wizard.windowTitle() == "Nuevo dipolo"
     assert wizard.build_parameters().total_length_m > 9.0
+
+
+def test_wizard_builds_a_vertical_dipole(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.dipole import DipoleOrientation
+
+    wizard = DipoleWizard(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        initial_frequency_hz=7_100_000.0,
+    )
+    qtbot.addWidget(wizard)
+    wizard.geometry_page._orientation.setCurrentIndex(1)
+    wizard.geometry_page.initializePage()
+
+    parameters = wizard.build_parameters()
+
+    assert parameters.orientation is DipoleOrientation.VERTICAL
+    antenna = parameters.to_antenna()
+    assert antenna.wires[0].start.z_m == pytest.approx(8.0)
+    assert antenna.wires[0].end.z_m > 8.0

@@ -4,8 +4,9 @@ Desktop application for designing, simulating, and building antennas for
 amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
 
-**Status:** Phase 5 complete (length optimization and construction sheet).
-Phase 6 (new antenna types and measurements) is next.
+**Status:** Phase 6 in progress. Horizontal and vertical center-fed dipoles
+are supported, with schema v2 persistence and migration. VNA CSV import and
+measurement comparison are next.
 
 ## Launch the GUI
 
@@ -46,6 +47,7 @@ immediately. Use **File → New Dipole...** for the guided wizard.
 - [Confirmed project decisions](docs/PROJECT_DECISIONS.md)
 - [ADR-0001 — MVP engine](docs/ADR/0001-solver-selection.md)
 - [ADR-0002 — Report and export formats](docs/ADR/0002-report-formats.md)
+- [ADR-0003 — Project schema v2 and dipole orientation](docs/ADR/0003-project-schema-v2.md)
 - [NEC engine evaluation](docs/spikes/phase0-solver-evaluation.md)
 - [Phase 0 reproducible spike](spikes/phase0/README.md)
 - [Agent instructions](AGENTS.md)
@@ -58,7 +60,7 @@ immediately. Use **File → New Dipole...** for the guided wizard.
 - Asynchronous simulation with cancellation, timeouts, and diagnostics.
 - Impedance, SWR, frequency-sweep, and far-field pattern charts.
 - Save/open of versioned `.antennadesk` projects with multiple design
-  variants.
+  variants; schema v2 adds dipole orientation and migrates v1 files.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - Currents tab and resonance markers on impedance/SWR sweeps.
 - Bounded dipole length optimization for a resonance or target reactance, with
@@ -69,7 +71,7 @@ immediately. Use **File → New Dipole...** for the guided wizard.
   PDF).
 - English and Spanish UI, plus metric and imperial presentation units.
 - Immutable domain model for units, geometry, conductors, feed points, ground
-  models, environments, and horizontal half-wave dipoles.
+  models, environments, and horizontal or vertical center-fed dipoles.
 - Versioned JSON persistence with atomic saves and a migration framework.
 - A `nec2c` solver adapter with input generation, output parsing, SWR
   normalization, currents, power budget, and far-field patterns.

@@ -147,6 +147,19 @@ Optimization runs in a worker thread. The final full-sweep/pattern simulation is
 performed after applying the length so the normal result/report path remains
 the single source of truth.
 
+## Phase 6 — new geometry (in progress)
+
+The first Phase 6 slice adds a vertical center-fed dipole to the existing
+`wire_dipole` model. `DipoleParameters.orientation` selects horizontal or
+vertical geometry; the vertical template uses `height_m` as the base height.
+The solver adapter needs no changes because the canonical model is still a
+single straight wire. The project schema is version 2, with a version 1 to 2
+migration adding the default horizontal orientation. The geometry view,
+construction sheet, and wizard handle both orientations.
+
+Loops, folded dipoles, VNA CSV import, and measurement records remain for later
+slices.
+
 
 The UI is bilingual through `ui/i18n.py` and supports metric or imperial
 presentation units. Project files and the domain remain in canonical units.
@@ -168,7 +181,8 @@ untrusted files.
 
 Project files use the `antennadesk-project` format with a schema version.
 Saves are atomic: write a temporary file in the target directory, flush and
-`fsync`, then replace the destination with `os.replace`.
+`fsync`, then replace the destination with `os.replace`. Schema version 2 adds
+the dipole orientation; version 1 documents are migrated explicitly.
 
 Simulation results are not persisted in the project file yet. Phase 3/4 will
 add a schema version and migration for stored simulation runs.

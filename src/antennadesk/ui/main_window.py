@@ -54,7 +54,7 @@ from ..application.use_cases.update_dipole_design import (
     UpdateDipoleDesign,
     UpdateDipoleDesignCommand,
 )
-from ..domain.antennas.dipole import DipoleParameters
+from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
 from ..domain.environment.ground import GroundModel
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.result import SimulationResult, SimulationStatus
@@ -459,6 +459,7 @@ class MainWindow(QMainWindow):
         )
         self._update_status_text()
         self._update_actions()
+        self._update_height_control()
 
     def _on_variant_changed(self) -> None:
         if self._updating_variants or self._project is None:
@@ -562,6 +563,7 @@ class MainWindow(QMainWindow):
         self._results.set_result(None)
         self._update_title()
         self._update_actions()
+        self._update_height_control()
         return updated
 
     def apply_design(self) -> None:
@@ -1072,7 +1074,17 @@ class MainWindow(QMainWindow):
             return
         mode = GeometryViewMode(value)
         self._geometry.set_view_mode(mode)
-        self._height_combo.setEnabled(mode is GeometryViewMode.ELEVATION)
+        self._update_height_control()
+
+    def _update_height_control(self) -> None:
+        mode = self._view_combo.currentData()
+        vertical = False
+        if self._project is not None and self._design_id is not None:
+            vertical = (
+                self._project.design_by_id(self._design_id).parameters.orientation
+                is DipoleOrientation.VERTICAL
+            )
+        self._height_combo.setEnabled(mode == GeometryViewMode.ELEVATION.value and not vertical)
 
     def _on_height_scale_changed(self) -> None:
         value = self._height_combo.currentData()

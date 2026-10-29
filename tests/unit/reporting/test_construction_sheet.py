@@ -71,3 +71,29 @@ def test_construction_sheet_escapes_user_text(sample_project: Project) -> None:
 
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in sheet
     assert "<script>alert(1)</script>" not in sheet
+
+
+def test_vertical_construction_sheet_uses_feed_height(sample_project: Project) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.dipole import DipoleOrientation
+
+    design = sample_project.designs[0]
+    parameters = replace(
+        design.parameters,
+        orientation=DipoleOrientation.VERTICAL,
+        total_length_m=5.0,
+        height_m=2.0,
+        wire_radius_m=0.3,
+        frequency_hz=30_000_000.0,
+    )
+    vertical_design = design.with_parameters(parameters)
+    sheet = render_construction_sheet(sample_project, vertical_design, None)
+
+    assert "<td>vertical</td>" in sheet
+    assert "First leg (from wire start)" in sheet
+    assert "2.5000 m" in sheet
+    assert "Wire height at start" in sheet
+    assert "Feed height above ground" in sheet
+    assert "4.5000 m" in sheet
+    assert "Azimuth" in sheet

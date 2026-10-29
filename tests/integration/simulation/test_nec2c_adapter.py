@@ -224,3 +224,30 @@ def test_run_simulation_use_case(solver: Nec2cSolver) -> None:
 
     assert result.status is SimulationStatus.COMPLETED
     assert result.frequencies[0].impedance_ohm.real == pytest.approx(82.6979, abs=0.05)
+
+
+def test_vertical_dipole_template_matches_manual_example3(solver: Nec2cSolver) -> None:
+    from antennadesk.domain.antennas.dipole import DipoleOrientation
+
+    parameters = DipoleParameters(
+        frequency_hz=30_000_000.0,
+        total_length_m=5.0,
+        height_m=2.0,
+        orientation=DipoleOrientation.VERTICAL,
+        wire_radius_m=0.3,
+        ground=GroundModel.perfect(),
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(30_000_000.0),
+        segmentation=SegmentationPolicy(segments_per_wire=9),
+        extended_thin_wire_kernel=True,
+        include_conductor_losses=False,
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+    result = solver.run(parameters.to_antenna(), spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    frequency = result.frequencies[0]
+    assert frequency.impedance_ohm.real == pytest.approx(106.437, abs=0.05)
+    assert frequency.impedance_ohm.imag == pytest.approx(9.90578, abs=0.05)

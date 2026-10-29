@@ -57,3 +57,24 @@ def test_geometry_view_exaggerated_height_renders(qtbot: QtBot) -> None:
     pixmap = view.grab()
 
     assert _non_white_pixels(pixmap) > 50
+
+
+def test_geometry_view_vertical_renders(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.dipole import DipoleOrientation, DipoleParameters
+
+    model = DipoleParameters(
+        frequency_hz=30_000_000.0,
+        total_length_m=5.0,
+        height_m=2.0,
+        orientation=DipoleOrientation.VERTICAL,
+        wire_radius_m=0.3,
+    ).to_antenna()
+    view = GeometryView(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(view)
+    view.resize(900, 340)
+    view.set_model(model)
+    view.show()
+
+    pixmap = view.grab()
+
+    assert _non_white_pixels(pixmap) > 50

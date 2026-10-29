@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...domain.antennas.dipole import DipoleParameters
+from ...domain.antennas.dipole import DipoleOrientation, DipoleParameters
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.environment.ground import GroundKind, GroundModel
 from ...domain.simulation.far_field import FarFieldRequest
@@ -66,6 +66,10 @@ class DipoleForm(QWidget):
         self._frequency.setDecimals(6)
         self._frequency.setValue(7.1)
         self._frequency.setSuffix(" MHz")
+
+        self._orientation = QComboBox(self)
+        self._orientation.addItem("", DipoleOrientation.HORIZONTAL.value)
+        self._orientation.addItem("", DipoleOrientation.VERTICAL.value)
 
         self._length = QDoubleSpinBox(self)
         self._height = QDoubleSpinBox(self)
@@ -123,6 +127,7 @@ class DipoleForm(QWidget):
 
         form = QFormLayout()
         form.addRow(self._label("field.frequency"), self._frequency)
+        form.addRow(self._label("field.orientation"), self._orientation)
         form.addRow(self._label("field.length"), self._length)
         form.addRow(self._label("field.height"), self._height)
         form.addRow(self._label("field.azimuth"), self._azimuth)
@@ -157,6 +162,7 @@ class DipoleForm(QWidget):
         self._ground.currentIndexChanged.connect(self._update_ground_controls)
         self._sweep.toggled.connect(self._update_sweep_controls)
         self._frequency.valueChanged.connect(self._on_frequency_changed)
+        self._orientation.currentIndexChanged.connect(self._update_orientation_labels)
 
         for spin in (
             self._frequency,
@@ -175,6 +181,7 @@ class DipoleForm(QWidget):
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._emit_changed)
         self._sweep.toggled.connect(self._emit_changed)
+        self._orientation.currentIndexChanged.connect(self._emit_changed)
 
         self._apply_unit_system()
         self._update_ground_controls()
@@ -223,7 +230,10 @@ class DipoleForm(QWidget):
         self._ground.setItemText(0, self._translator.t("ground.free_space"))
         self._ground.setItemText(1, self._translator.t("ground.perfect"))
         self._ground.setItemText(2, self._translator.t("ground.finite"))
+        self._orientation.setItemText(0, self._translator.t("orientation.horizontal"))
+        self._orientation.setItemText(1, self._translator.t("orientation.vertical"))
         self._apply_unit_system()
+        self._update_orientation_labels()
 
     def _apply_unit_system(
         self,
@@ -351,10 +361,12 @@ class DipoleForm(QWidget):
             raise ValueError("invalid ground model")
 
         diameter_m = diameter_to_m(self._diameter.value(), self._unit_system)
+        orientation = DipoleOrientation(self._orientation.currentData())
         return DipoleParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
             total_length_m=length_to_m(self._length.value(), self._unit_system),
             height_m=length_to_m(self._height.value(), self._unit_system),
+            orientation=orientation,
             azimuth_deg=self._azimuth.value(),
             wire_radius_m=diameter_m / 2.0,
             material=material,
@@ -396,6 +408,16 @@ class DipoleForm(QWidget):
             reference_impedance_ohm=self._reference.value(),
             far_field=far_field,
         )
+
+    def _update_orientation_labels(self) -> None:
+        vertical = self._orientation.currentData() == DipoleOrientation.VERTICAL.value
+        self._azimuth.setEnabled(not vertical)
+        labels = self._labels()
+        height_label = labels.get("field.height")
+        if height_label is not None:
+            height_label.setText(
+                self._translator.t("field.base_height" if vertical else "field.height")
+            )
 
     def _update_ground_controls(self) -> None:
         finite = self._ground.currentData() == GroundKind.FINITE.value

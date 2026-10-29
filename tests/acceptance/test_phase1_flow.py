@@ -82,3 +82,46 @@ def test_example_project_opens(repository: JsonProjectRepository) -> None:
     assert len(project.designs) == 1
     assert project.designs[0].parameters.total_length_m == pytest.approx(20.0)
     assert project.designs[0].antenna.wires[0].length_m == pytest.approx(20.0)
+
+
+def test_vertical_dipole_project_round_trip(
+    repository: JsonProjectRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.dipole import DipoleOrientation
+
+    design = sample_project.designs[0]
+    parameters = replace(
+        design.parameters,
+        orientation=DipoleOrientation.VERTICAL,
+        total_length_m=5.0,
+        height_m=2.0,
+        wire_radius_m=0.3,
+        frequency_hz=30_000_000.0,
+    )
+    vertical_design = design.with_parameters(parameters)
+    project = sample_project.with_design(
+        vertical_design,
+        updated_at=sample_project.updated_at + timedelta(hours=1),
+    )
+    path = tmp_path / "vertical.antennadesk"
+
+    SaveProject(repository).execute(project, path)
+    loaded = OpenProject(repository).execute(path)
+
+    loaded_design = loaded.designs[0]
+    assert loaded_design.parameters.orientation is DipoleOrientation.VERTICAL
+    assert loaded_design.antenna.wires[0].start.z_m == pytest.approx(2.0)
+    assert loaded_design.antenna.wires[0].end.z_m == pytest.approx(7.0)
+
+
+def test_example_project_migrates_to_the_current_schema(
+    repository: JsonProjectRepository,
+) -> None:
+    from antennadesk.domain.antennas.dipole import DipoleOrientation
+
+    project = OpenProject(repository).execute(EXAMPLE_PROJECT)
+    assert project.designs[0].parameters.orientation is DipoleOrientation.HORIZONTAL

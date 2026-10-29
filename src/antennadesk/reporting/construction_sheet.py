@@ -83,6 +83,11 @@ def render_construction_sheet(
     feed_wire = antenna.feed_wire
     feed_offset_m = antenna.feed.offset_m
     other_leg_m = max(feed_wire.length_m - feed_offset_m, 0.0)
+    feed_ratio = feed_offset_m / feed_wire.length_m if feed_wire.length_m > 0 else 0.0
+    feed_height_m = feed_wire.start.z_m + (feed_wire.end.z_m - feed_wire.start.z_m) * feed_ratio
+    azimuth_text = (
+        f"{parameters.azimuth_deg:.1f}°" if parameters.orientation.value == "horizontal" else "—"
+    )
     frequency = _nearest_frequency(result, parameters.frequency_hz) if result else None
     max_gain = _max_gain(result)
     efficiency = (
@@ -128,11 +133,13 @@ def render_construction_sheet(
 <h2>Dimensions</h2>
 <table>
 <tr><th>Target frequency</th><td>{parameters.frequency_hz / 1e6:.6f} MHz</td></tr>
+<tr><th>Orientation</th><td>{_escape(parameters.orientation.value)}</td></tr>
 <tr><th>Total wire length</th><td>{parameters.total_length_m:.4f} m</td></tr>
-<tr><th>Left leg (from wire start)</th><td>{feed_offset_m:.4f} m</td></tr>
-<tr><th>Right leg (from feed)</th><td>{other_leg_m:.4f} m</td></tr>
-<tr><th>Feed height above ground</th><td>{parameters.height_m:.4f} m</td></tr>
-<tr><th>Azimuth</th><td>{parameters.azimuth_deg:.1f}°</td></tr>
+<tr><th>First leg (from wire start)</th><td>{feed_offset_m:.4f} m</td></tr>
+<tr><th>Second leg (from feed)</th><td>{other_leg_m:.4f} m</td></tr>
+<tr><th>Wire height at start</th><td>{feed_wire.start.z_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Azimuth</th><td>{azimuth_text}</td></tr>
 <tr><th>Wire diameter</th><td>{parameters.wire_radius_m * 2000.0:.3f} mm</td></tr>
 <tr><th>Material</th><td>{_escape(parameters.material.name)} ({parameters.material.conductivity_s_per_m:.3g} S/m)</td></tr>
 <tr><th>Ground</th><td>{_escape(ground_text)}</td></tr>

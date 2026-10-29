@@ -121,7 +121,7 @@ class GeometryView(QWidget):
         dy = wire.end.y_m - wire.start.y_m
         horizontal = math.hypot(dx, dy)
         if horizontal < 1e-9:
-            self._draw_vertical_fallback(painter, rect, wire)
+            self._draw_vertical_sketch(painter, rect, wire)
             return
 
         azimuth = math.degrees(math.atan2(dy, dx)) % 360.0
@@ -167,7 +167,7 @@ class GeometryView(QWidget):
         dy = wire.end.y_m - wire.start.y_m
         horizontal = math.hypot(dx, dy)
         if horizontal < 1e-9:
-            self._draw_vertical_fallback(painter, rect, wire)
+            self._draw_vertical_plan_message(painter, rect, wire)
             return
 
         azimuth = math.degrees(math.atan2(dy, dx)) % 360.0
@@ -767,7 +767,132 @@ class GeometryView(QWidget):
         painter.drawPolygon(polygon)
         painter.setBrush(Qt.BrushStyle.NoBrush)
 
-    def _draw_vertical_fallback(
+    def _draw_vertical_sketch(
+        self,
+        painter: QPainter,
+        rect: QRectF,
+        wire: Wire,
+    ) -> None:
+        base_z = min(wire.start.z_m, wire.end.z_m)
+        top_z = max(wire.start.z_m, wire.end.z_m)
+        length = wire.length_m
+        if length <= 0.0:
+            return
+        feed_ratio = min(max(self._model.feed.offset_m / length, 0.0), 1.0)
+        feed_z = wire.start.z_m + (wire.end.z_m - wire.start.z_m) * feed_ratio
+        unit = self._translator.t(length_unit_key(self._unit_system))
+        length_display = length_from_m(length, self._unit_system)
+        base_display = length_from_m(base_z, self._unit_system)
+        summary = self._translator.t(
+            "geometry.summary",
+            length=f"{length_display:.2f} {unit}",
+            height=f"{base_display:.2f} {unit}",
+            azimuth="—",
+        )
+        self._draw_header(painter, rect, summary)
+
+        draw_rect = QRectF(
+            rect.left() + 110.0,
+            rect.top() + 74.0,
+            rect.width() - 110.0 - 110.0,
+            rect.height() - 74.0 - 84.0,
+        )
+        if draw_rect.width() < 80.0 or draw_rect.height() < 60.0:
+            return
+        scale = (draw_rect.height() - 52.0) / max(top_z, 0.5)
+        if scale <= 0.0:
+            return
+        ground_y = draw_rect.bottom()
+        x_center = draw_rect.center().x()
+        base_y = ground_y - base_z * scale
+        top_y = ground_y - top_z * scale
+        feed_y = ground_y - feed_z * scale
+
+        self._draw_ground(painter, x_center - 70.0, x_center + 70.0, ground_y)
+
+        if base_y < ground_y - 2.0:
+            dim_x = x_center - 42.0
+            painter.setPen(QPen(LIGHT_LINE_COLOR, 1.0))
+            painter.drawLine(QPointF(x_center, base_y), QPointF(dim_x - 4.0, base_y))
+            painter.drawLine(QPointF(dim_x, ground_y), QPointF(dim_x, base_y))
+            painter.setPen(QPen(DIMENSION_COLOR, 1.0))
+            painter.drawLine(QPointF(dim_x, ground_y), QPointF(dim_x, base_y))
+            self._draw_arrowhead(painter, QPointF(dim_x, base_y), QPointF(0.0, -1.0))
+            self._draw_arrowhead(painter, QPointF(dim_x, ground_y), QPointF(0.0, 1.0))
+            self._draw_centered_label(
+                painter,
+                QPointF(dim_x - 38.0, (ground_y + base_y) / 2.0),
+                f"{base_display:.2f} {unit}",
+            )
+
+        dim_x = x_center + 54.0
+        painter.setPen(QPen(LIGHT_LINE_COLOR, 1.0))
+        painter.drawLine(QPointF(x_center, base_y), QPointF(dim_x + 4.0, base_y))
+        painter.drawLine(QPointF(x_center, top_y), QPointF(dim_x + 4.0, top_y))
+        painter.setPen(QPen(DIMENSION_COLOR, 1.0))
+        painter.drawLine(QPointF(dim_x, base_y), QPointF(dim_x, top_y))
+        self._draw_arrowhead(painter, QPointF(dim_x, top_y), QPointF(0.0, -1.0))
+        self._draw_arrowhead(painter, QPointF(dim_x, base_y), QPointF(0.0, 1.0))
+        self._draw_rotated_label(
+            painter,
+            QPointF(dim_x + 12.0, (base_y + top_y) / 2.0),
+            f"{length_display:.2f} {unit}",
+            90.0,
+        )
+
+        gap = 9.0
+        lower_end = feed_y + gap / 2.0
+        upper_start = feed_y - gap / 2.0
+        pen = QPen(WIRE_COLOR, 3.0)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        painter.setPen(pen)
+        painter.drawLine(QPointF(x_center, base_y), QPointF(x_center, lower_end))
+        painter.drawLine(QPointF(x_center, upper_start), QPointF(x_center, top_y))
+
+        painter.setPen(QPen(WIRE_COLOR, 2.0))
+        painter.drawLine(QPointF(x_center - 7.0, base_y), QPointF(x_center + 7.0, base_y))
+        painter.drawLine(QPointF(x_center - 7.0, top_y), QPointF(x_center + 7.0, top_y))
+
+        painter.setPen(QPen(FEED_COLOR, 2.0))
+        painter.drawLine(QPointF(x_center - 8.0, lower_end), QPointF(x_center + 8.0, lower_end))
+        painter.drawLine(QPointF(x_center - 8.0, upper_start), QPointF(x_center + 8.0, upper_start))
+        painter.setBrush(FEED_COLOR)
+        painter.setPen(QPen(FEED_COLOR, 1.0))
+        painter.drawEllipse(QPointF(x_center + 15.0, feed_y), 3.0, 3.0)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+
+        self._draw_centered_label(
+            painter,
+            QPointF(x_center + 30.0, feed_y),
+            self._translator.t("geometry.feed"),
+            color=FEED_COLOR,
+        )
+        if abs(feed_ratio - 0.5) < 1e-9:
+            self._draw_centered_label(
+                painter,
+                QPointF(x_center - 28.0, feed_y),
+                self._translator.t("geometry.center"),
+            )
+        self._draw_centered_label(
+            painter,
+            QPointF(x_center - 24.0, base_y),
+            self._translator.t("geometry.end"),
+        )
+        self._draw_centered_label(
+            painter,
+            QPointF(x_center - 24.0, top_y),
+            self._translator.t("geometry.end"),
+        )
+
+        self._draw_scale_bar(
+            painter,
+            x_left=rect.left() + 110.0,
+            bar_y=rect.bottom() - 42.0,
+            scale=scale,
+            unit=unit,
+        )
+
+    def _draw_vertical_plan_message(
         self,
         painter: QPainter,
         rect: QRectF,
