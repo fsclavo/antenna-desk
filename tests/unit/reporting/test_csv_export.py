@@ -15,7 +15,12 @@ from antennadesk.domain.simulation.result import (
 from antennadesk.domain.simulation.segmentation import SegmentationPolicy
 from antennadesk.domain.simulation.solver import SolverMetadata
 from antennadesk.domain.simulation.spec import SimulationSpec
-from antennadesk.reporting.csv_export import CSV_HEADER, result_to_csv
+from antennadesk.reporting.csv_export import (
+    CSV_HEADER,
+    PATTERN_HEADER,
+    pattern_to_csv,
+    result_to_csv,
+)
 
 
 def make_result() -> SimulationResult:
@@ -68,3 +73,13 @@ def test_csv_header_and_rows() -> None:
     assert len(lines) == 3
     assert lines[1].startswith("6900000.000000,6.900000000,60.000000,-10.000000")
     assert lines[2].startswith("7100000.000000,7.100000000,70.000000,0.000000")
+
+
+def test_pattern_csv_has_one_row_per_far_field_point() -> None:
+    text = pattern_to_csv(make_result())
+    lines = text.strip().splitlines()
+
+    assert lines[0] == PATTERN_HEADER
+    assert len(lines) == 3
+    assert lines[1].startswith("6900000.000000,6.900000000,0.000000,0.000000,2.000000")
+    assert lines[2].startswith("7100000.000000,7.100000000,0.000000,0.000000,2.100000")

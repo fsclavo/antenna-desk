@@ -43,3 +43,49 @@ def result_to_csv(result: SimulationResult) -> str:
 
 def write_csv(result: SimulationResult, path: Path) -> None:
     path.write_text(result_to_csv(result), encoding="utf-8", newline="\n")
+
+
+PATTERN_HEADER = (
+    "frequency_hz,frequency_mhz,theta_deg,phi_deg,"
+    "gain_vertical_db,gain_horizontal_db,gain_total_db,"
+    "axial_ratio,tilt_deg,polarization,"
+    "e_theta_magnitude_v_per_m,e_theta_phase_deg,"
+    "e_phi_magnitude_v_per_m,e_phi_phase_deg"
+)
+
+
+def _optional(value: float | None) -> str:
+    if value is None or value <= -100.0:
+        return ""
+    return f"{value:.6f}"
+
+
+def pattern_to_csv(result: SimulationResult) -> str:
+    lines = [PATTERN_HEADER]
+    for frequency in result.frequencies:
+        for point in frequency.far_field:
+            lines.append(
+                ",".join(
+                    [
+                        f"{frequency.frequency_hz:.6f}",
+                        f"{frequency.frequency_hz / 1e6:.9f}",
+                        f"{point.theta_deg:.6f}",
+                        f"{point.phi_deg:.6f}",
+                        _optional(point.gain_vertical_db),
+                        _optional(point.gain_horizontal_db),
+                        _optional(point.gain_total_db),
+                        _optional(point.axial_ratio),
+                        _optional(point.tilt_deg),
+                        point.polarization or "",
+                        _optional(point.e_theta_magnitude_v_per_m),
+                        _optional(point.e_theta_phase_deg),
+                        _optional(point.e_phi_magnitude_v_per_m),
+                        _optional(point.e_phi_phase_deg),
+                    ]
+                )
+            )
+    return "\n".join(lines) + "\n"
+
+
+def write_pattern_csv(result: SimulationResult, path: Path) -> None:
+    path.write_text(pattern_to_csv(result), encoding="utf-8", newline="\n")

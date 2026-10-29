@@ -66,7 +66,7 @@ from ..domain.environment.ground import GroundModel
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.result import SimulationResult, SimulationStatus
 from ..persistence.constants import MAX_PROJECT_SIZE_BYTES, PROJECT_SIZE_WARNING_BYTES
-from ..reporting.csv_export import write_csv
+from ..reporting.csv_export import write_csv, write_pattern_csv
 from ..reporting.html_report import write_html_report
 from ..simulation.nec2.solver import Nec2cSolver
 from .dialogs.comparison_dialog import ComparisonDialog
@@ -163,6 +163,8 @@ class MainWindow(QMainWindow):
         self._loads_action.triggered.connect(lambda: self.edit_loads())
         self._export_csv_action = QAction(self)
         self._export_csv_action.triggered.connect(lambda: self.export_csv())
+        self._export_pattern_csv_action = QAction(self)
+        self._export_pattern_csv_action.triggered.connect(lambda: self.export_pattern_csv())
         self._export_html_action = QAction(self)
         self._export_html_action.triggered.connect(lambda: self.export_html_report())
         self._export_pdf_action = QAction(self)
@@ -320,6 +322,7 @@ class MainWindow(QMainWindow):
         self._file_menu.addAction(self._loads_action)
         self._file_menu.addSeparator()
         self._file_menu.addAction(self._export_csv_action)
+        self._file_menu.addAction(self._export_pattern_csv_action)
         self._file_menu.addAction(self._export_html_action)
         self._file_menu.addAction(self._export_pdf_action)
         self._file_menu.addAction(self._compact_history_action)
@@ -361,6 +364,7 @@ class MainWindow(QMainWindow):
         self._construction_action.setText(self._translator.t("action.construction"))
         self._loads_action.setText(self._translator.t("action.loads"))
         self._export_csv_action.setText(self._translator.t("action.export_csv"))
+        self._export_pattern_csv_action.setText(self._translator.t("action.export_pattern_csv"))
         self._export_html_action.setText(self._translator.t("action.export_html"))
         self._export_pdf_action.setText(self._translator.t("action.export_pdf"))
         self._compact_history_action.setText(self._translator.t("action.compact_history"))
@@ -448,6 +452,7 @@ class MainWindow(QMainWindow):
         self._optimize_action.setEnabled(idle and has_project and self._solver is not None)
         self._loads_action.setEnabled(idle and has_project)
         self._export_csv_action.setEnabled(idle and has_result)
+        self._export_pattern_csv_action.setEnabled(idle and has_result)
         self._export_html_action.setEnabled(idle and has_result)
         self._export_pdf_action.setEnabled(idle and has_result)
         has_history = self._project is not None and len(self._project.simulation_runs) > len(
@@ -1123,6 +1128,33 @@ class MainWindow(QMainWindow):
             path = path.with_suffix(".csv")
         try:
             write_csv(result, path)
+        except Exception as exc:
+            self._show_error(self._translator.t("error.export", message=str(exc)))
+            return
+        self._last_status_key = "status.exported"
+        self._update_status_text()
+
+    def export_pattern_csv(self) -> None:
+        data = self._current_export_data()
+        if data is None:
+            return
+        project, design, result = data
+        suggested = (
+            f"{self._safe_file_name(project.name)}-{self._safe_file_name(design.name)}-pattern.csv"
+        )
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            self._translator.t("dialog.pattern_csv_title"),
+            str(Path.home() / suggested),
+            self._translator.t("dialog.csv_filter"),
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.lower() != ".csv":
+            path = path.with_suffix(".csv")
+        try:
+            write_pattern_csv(result, path)
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))
             return

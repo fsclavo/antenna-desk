@@ -369,6 +369,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Eliminar variante",
     },
     "action.export_csv": {Language.ENGLISH: "Export CSV...", Language.SPANISH: "Exportar CSV..."},
+    "action.export_pattern_csv": {
+        Language.ENGLISH: "Export Pattern CSV...",
+        Language.SPANISH: "Exportar CSV de patrón...",
+    },
     "action.export_html": {
         Language.ENGLISH: "Export HTML Report...",
         Language.SPANISH: "Exportar informe HTML...",
@@ -399,6 +403,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "variant.last_cannot_delete": {
         Language.ENGLISH: "A project must keep at least one design variant.",
         Language.SPANISH: "Un proyecto debe conservar al menos una variante.",
+    },
+    "dialog.pattern_csv_title": {
+        Language.ENGLISH: "Save pattern CSV",
+        Language.SPANISH: "Guardar CSV de patrón",
     },
     "dialog.csv_title": {
         Language.ENGLISH: "Export simulation CSV",
