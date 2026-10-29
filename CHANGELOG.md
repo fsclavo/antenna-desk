@@ -92,6 +92,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   reducing project size.
 - Save-time warning when a project exceeds 8 MB and a clear block above the
   10 MB native-file limit.
+- Independent ARRL Antenna Book reference checks for free-space dipole gain
+  and the folded-dipole gain/pattern/resistance relationship.
 - Series and parallel RLC loads on wires: validation, load editor,
   design/persistence support, NEC `LD 0`/`LD 1` export, and
   report/construction-sheet rows.

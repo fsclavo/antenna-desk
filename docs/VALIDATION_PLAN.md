@@ -140,6 +140,8 @@ Phase 6 adds tests for:
   headers, chart images, tables, and non-trivial page content.
 - Series/parallel-load domain validation, design consistency, NEC `LD 0`/`LD 1`
   export, persistence round trip, load editor, report rows, and UI application.
+- ARRL Antenna Book, 24th edition, free-space dipole gain reference and the
+  equal-conductor folded-dipole gain/pattern and 4× resistance properties.
 - Isometric 3D geometry rendering and the 3D view selector.
 - Polar lobe rendering from far-field points, with selectable azimuth and
   elevation cuts, plus the projected 3D pattern wireframe.
@@ -155,7 +157,7 @@ Phase 6 adds tests for:
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 346 tests with the solver enabled. The twelve solver
+The suite currently has 348 tests with the solver enabled. The twelve solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.
@@ -186,6 +188,19 @@ Independent sources available for later validation:
 Reference values must be traceable. Do not create expected values with the
 same implementation under test. Numerical regression fixtures must include
 engine version, configuration, and explicit tolerances.
+
+## ARRL reference checks
+
+The ARRL Antenna Book, 24th edition, Chapter 2 (printed pages 2.12–2.13)
+provides two independent properties:
+
+- A 100-foot free-space dipole at 4.8 MHz has 2.14 dBi gain (Figure 2.16).
+- An equal-conductor folded dipole has the same gain/pattern as a single-wire
+  dipole, with four times the feed-point resistance.
+
+Tolerances are ±0.15 dB for gain, ±2 Ω for the single-dipole resistance, and
+±0.5 for the folded/single resistance ratio. These tests are integration tests
+and require `NEC2C`.
 
 ## Known limitations
 

@@ -98,6 +98,8 @@ losses are included when enabled. Realized gain is not computed in Phase 2.
 The adapter is validated against the printed NEC-2 User's Guide values:
 
 - Example 1, free space: `82.6979 + j46.3060 Ω` at 299.8 MHz.
+- ARRL Antenna Book 24th ed., Figure 2.16: 100-foot free-space dipole at
+  4.8 MHz, 2.14 dBi (integration tolerance ±0.15 dB).
 - Example 3, perfect ground: `106.437 + j9.90578 Ω` at 30 MHz.
 - Example 3, finite ground: `111.117 + j11.0075 Ω` at 30 MHz.
 

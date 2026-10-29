@@ -88,7 +88,8 @@ between those types.
 - Versioned JSON persistence with atomic saves and a migration framework.
 - A `nec2c` solver adapter with input generation, output parsing, SWR
   normalization, currents, power budget, and far-field patterns.
-- Numerical validation against the NEC-2 User's Guide examples.
+- Numerical validation against NEC-2 User's Guide examples and selected ARRL
+  Antenna Book properties.
 - Unit, integration, UI, and acceptance tests.
 
 ## Development
