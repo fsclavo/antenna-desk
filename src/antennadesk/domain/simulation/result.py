@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Fernando Sclavo
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Normalized simulation results."""
 
 from __future__ import annotations

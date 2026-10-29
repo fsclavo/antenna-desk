@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Fernando Sclavo
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Edit the length of a dipole without mutating previous project snapshots."""
 
 from __future__ import annotations

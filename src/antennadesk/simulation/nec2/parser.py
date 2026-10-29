@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Fernando Sclavo
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Parse the text output produced by nec2c.
 
 The parser is intentionally strict about the sections it needs and tolerant of

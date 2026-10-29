@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Fernando Sclavo
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Map parsed nec2c output to normalized domain results."""
 
 from __future__ import annotations

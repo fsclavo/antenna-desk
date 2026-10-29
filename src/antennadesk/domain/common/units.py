@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Fernando Sclavo
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Canonical units and explicit conversions.
 
 The domain stores lengths in meters, frequencies in hertz, impedance in ohms,
