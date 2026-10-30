@@ -963,3 +963,42 @@ def test_main_menu_is_grouped_by_task(window: MainWindow) -> None:
     assert "Edit Series Loads..." in design_titles
     assert "Simulate" in simulation_titles
     assert "Feed Line..." in simulation_titles
+
+
+def test_new_moxon_creates_a_first_class_design(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.moxon import MoxonParameters
+
+    parameters = MoxonParameters(
+        frequency_hz=14_100_000.0,
+        width_m=10.6,
+        depth_m=2.5,
+        reflector_tip_m=1.0,
+        driven_tip_m=1.0,
+        height_m=10.0,
+    )
+
+    class FakeMoxonDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> MoxonParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "MoxonDialog", FakeMoxonDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Moxon", True))
+
+    window.new_moxon_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "Moxon"
+    assert window._project.designs[0].antenna_type == "moxon"
+    assert window._design_stack.currentWidget() is window._moxon_scroll
+    assert window._moxon_form.parameters() == parameters
+    window._dirty = False

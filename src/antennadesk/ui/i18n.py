@@ -100,6 +100,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Inverted-V",
         Language.SPANISH: "V invertida",
     },
+    "catalog.moxon": {
+        Language.ENGLISH: "Moxon rectangle",
+        Language.SPANISH: "Rectángulo Moxon",
+    },
+    "catalog.moxon.description": {
+        Language.ENGLISH: "Two-element rectangle with bent reflector and driven tips.",
+        Language.SPANISH: "Rectángulo de dos elementos con reflector y puntas dobladas.",
+    },
     "catalog.ocfd": {
         Language.ENGLISH: "Off-center-fed dipole",
         Language.SPANISH: "Dipolo con alimentación descentrada",
@@ -866,6 +874,54 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "inverted_v.title": {
         Language.ENGLISH: "Inverted-V Generator",
         Language.SPANISH: "Generador de V invertida",
+    },
+    "moxon.title": {
+        Language.ENGLISH: "Moxon Generator",
+        Language.SPANISH: "Generador Moxon",
+    },
+    "moxon.width": {
+        Language.ENGLISH: "Element width",
+        Language.SPANISH: "Ancho del elemento",
+    },
+    "moxon.depth": {
+        Language.ENGLISH: "Element spacing",
+        Language.SPANISH: "Separación entre elementos",
+    },
+    "moxon.reflector_tip": {
+        Language.ENGLISH: "Reflector tip",
+        Language.SPANISH: "Punta del reflector",
+    },
+    "moxon.driven_tip": {
+        Language.ENGLISH: "Driven tip",
+        Language.SPANISH: "Punta del elemento alimentado",
+    },
+    "moxon.wire_radius": {
+        Language.ENGLISH: "Wire radius (mm)",
+        Language.SPANISH: "Radio del hilo (mm)",
+    },
+    "moxon.geometry": {
+        Language.ENGLISH: "Tip gap {gap} {unit}",
+        Language.SPANISH: "Separación de puntas {gap} {unit}",
+    },
+    "moxon.hint": {
+        Language.ENGLISH: (
+            "The generator creates a reflector and driven element with bent tips. "
+            "The generated antenna is an editable first-class design."
+        ),
+        Language.SPANISH: (
+            "El generador crea un reflector y un elemento alimentado con puntas "
+            "dobladas. La antena generada es un diseño editable de primera clase."
+        ),
+    },
+    "moxon.evidence": {
+        Language.ENGLISH: (
+            "Experimental generator: geometry is tested, but there is no "
+            "independent numerical reference for this configuration."
+        ),
+        Language.SPANISH: (
+            "Generador experimental: se prueba la geometría, pero no hay una "
+            "referencia numérica independiente para esta configuración."
+        ),
     },
     "ocfd.title": {
         Language.ENGLISH: "Off-Center-Fed Dipole Generator",

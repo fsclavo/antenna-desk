@@ -72,6 +72,7 @@ from ..domain.antennas.family import antenna_family
 from ..domain.antennas.feed_line import FeedLine
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.load import LumpedLoad
+from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
@@ -97,6 +98,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_FOLDED_DIPOLE,
     CATALOG_TYPE_INVERTED_V,
     CATALOG_TYPE_LOOP,
+    CATALOG_TYPE_MOXON,
     CATALOG_TYPE_OCFD,
     CATALOG_TYPE_QUAD_LOOP,
     CATALOG_TYPE_VERTICAL,
@@ -110,6 +112,7 @@ from .dialogs.custom_antenna_dialog import CustomAntennaDialog
 from .dialogs.feed_line_dialog import FeedLineDialog
 from .dialogs.inverted_v_dialog import InvertedVDialog
 from .dialogs.loads_dialog import LoadsDialog
+from .dialogs.moxon_dialog import MoxonDialog
 from .dialogs.ocfd_dialog import OCFDDialog
 from .dialogs.optimization_dialog import OptimizationDialog
 from .dialogs.vertical_dialog import VerticalDialog
@@ -121,6 +124,7 @@ from .units import UnitSystem
 from .widgets.dipole_form import DipoleForm
 from .widgets.geometry_view import GeometryView, GeometryViewMode
 from .widgets.inverted_v_form import InvertedVForm
+from .widgets.moxon_form import MoxonForm
 from .widgets.ocfd_form import OCFDForm
 from .widgets.results_view import ResultsView
 from .widgets.vertical_form import VerticalForm
@@ -323,6 +327,14 @@ class MainWindow(QMainWindow):
         self._yagi_scroll.setMinimumWidth(340)
         self._yagi_scroll.setMaximumWidth(520)
 
+        self._moxon_form = MoxonForm(self._translator, self._unit_system, parent=self)
+        self._moxon_form.changed.connect(self._on_form_changed)
+        self._moxon_scroll = QScrollArea(self)
+        self._moxon_scroll.setWidgetResizable(True)
+        self._moxon_scroll.setWidget(self._moxon_form)
+        self._moxon_scroll.setMinimumWidth(340)
+        self._moxon_scroll.setMaximumWidth(480)
+
         self._custom_panel = QWidget(self)
         custom_layout = QVBoxLayout(self._custom_panel)
         self._custom_title = QLabel(self._custom_panel)
@@ -378,6 +390,7 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._vertical_scroll)
         self._design_stack.addWidget(self._inverted_v_scroll)
         self._design_stack.addWidget(self._yagi_scroll)
+        self._design_stack.addWidget(self._moxon_scroll)
         self._design_stack.addWidget(self._custom_panel)
 
         self._geometry = GeometryView(self._translator, self._unit_system)
@@ -649,6 +662,7 @@ class MainWindow(QMainWindow):
         is_vertical = isinstance(parameters, VerticalParameters)
         is_inverted_v = isinstance(parameters, InvertedVParameters)
         is_yagi = isinstance(parameters, YagiParameters)
+        is_moxon = isinstance(parameters, MoxonParameters)
         self._optimize_action.setEnabled(
             idle
             and has_project
@@ -657,6 +671,7 @@ class MainWindow(QMainWindow):
             and not is_vertical
             and not is_inverted_v
             and not is_yagi
+            and not is_moxon
             and self._solver is not None
         )
         self._loads_action.setEnabled(idle and has_project)
@@ -757,6 +772,9 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, YagiParameters):
             self._design_stack.setCurrentWidget(self._yagi_scroll)
             self._yagi_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, MoxonParameters):
+            self._design_stack.setCurrentWidget(self._moxon_scroll)
+            self._moxon_form.set_parameters(design.parameters)
         else:
             self._design_stack.setCurrentWidget(self._form_scroll)
             self._form.set_parameters(design.parameters, reset_sweep=True)
@@ -977,6 +995,34 @@ class MainWindow(QMainWindow):
             self._update_actions()
             self._update_height_control()
             return self._project
+        if isinstance(previous_design.parameters, MoxonParameters):
+            parameters = self._moxon_form.parameters()
+            updated = UpdateDipoleDesign().execute(
+                UpdateDipoleDesignCommand(
+                    project=self._project,
+                    design_id=self._design_id,
+                    parameters=parameters,
+                )
+            )
+            updated = replace(updated, name=project_name)
+            self._project = updated
+            design = updated.design_by_id(self._design_id)
+            if parameters != previous_design.parameters:
+                self._simulation_results.pop(self._design_id, None)
+                self._results.set_result(None)
+            self._loads = design.antenna.loads
+            self._results.set_design(design)
+            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._auto_select_view(design)
+            self._project_name_updating = True
+            self._project_name.setText(project_name)
+            self._project_name_updating = False
+            self._form_dirty = False
+            self._dirty = True
+            self._update_title()
+            self._update_actions()
+            self._update_height_control()
+            return self._project
         if isinstance(previous_design.parameters, CustomAntennaParameters):
             design = previous_design
             if design.antenna.loads != self._loads:
@@ -1074,6 +1120,8 @@ class MainWindow(QMainWindow):
                 spec = self._inverted_v_simulation_spec(design.parameters)
             elif isinstance(design.parameters, YagiParameters):
                 spec = self._yagi_simulation_spec(design.parameters)
+            elif isinstance(design.parameters, MoxonParameters):
+                spec = self._moxon_simulation_spec(design.parameters)
             else:
                 spec = self._form.simulation_spec()
         except Exception as exc:
@@ -1241,6 +1289,23 @@ class MainWindow(QMainWindow):
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
         )
 
+    def _moxon_simulation_spec(self, parameters: MoxonParameters) -> SimulationSpec:
+        model = parameters.to_antenna(name="Moxon")
+        frequency_hz = parameters.frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                frequency_hz * 0.95,
+                frequency_hz * 1.05,
+                100,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz * 1.05,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
     def _custom_simulation_spec(
         self,
         parameters: CustomAntennaParameters,
@@ -1289,6 +1354,33 @@ class MainWindow(QMainWindow):
             project = CreateDipoleProject().execute(
                 CreateDipoleProjectCommand(
                     project_name=name.strip() or "Custom antenna",
+                    variant_name="Initial",
+                    parameters=dialog.result_parameters(),
+                )
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+
+    def new_moxon_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        name, accepted = QInputDialog.getText(
+            self,
+            self._translator.t("moxon.title"),
+            self._translator.t("field.project_name"),
+            text="Moxon",
+        )
+        if not accepted:
+            return
+        dialog = MoxonDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            project = CreateDipoleProject().execute(
+                CreateDipoleProjectCommand(
+                    project_name=name.strip() or "Moxon",
                     variant_name="Initial",
                     parameters=dialog.result_parameters(),
                 )
@@ -1631,6 +1723,16 @@ class MainWindow(QMainWindow):
             if wizard.exec() != QWizard.DialogCode.Accepted:
                 return None
             return wizard.build_parameters()
+        if selected == CATALOG_TYPE_MOXON:
+            dialog = MoxonDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
         if selected == CATALOG_TYPE_YAGI:
             dialog = YagiDialog(
                 self._translator,
@@ -1738,6 +1840,8 @@ class MainWindow(QMainWindow):
             self.new_custom_antenna()
         elif selected == CATALOG_TYPE_YAGI:
             self.new_yagi_antenna()
+        elif selected == CATALOG_TYPE_MOXON:
+            self.new_moxon_antenna()
         elif selected == CATALOG_TYPE_INVERTED_V:
             self.new_inverted_v_antenna()
         elif selected == CATALOG_TYPE_OCFD:

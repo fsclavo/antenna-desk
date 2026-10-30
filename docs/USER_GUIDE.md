@@ -71,8 +71,9 @@ Use **File → New Antenna...** to open the antenna catalog. Search or filter by
 **Antenna Type** and choose the desired generator. The catalog is grouped by
 antenna family: Dipole, Yagi, Loop, Vertical, and Custom. The Dipole family
 contains the straight dipole, folded dipole, inverted-V, and off-center-fed
-dipole. The Loop family includes the generic loop plus delta-loop and quad-loop
-presets. The catalog shows a short description and evidence level for each type.
+dipole. The Yagi family includes the parametric Yagi and the Moxon rectangle.
+The Loop family includes the generic loop plus delta-loop and quad-loop presets.
+The catalog shows a short description and evidence level for each type.
 
 ### Basic templates
 
@@ -107,6 +108,14 @@ reference impedance. Once you edit positions or lengths, the result is an
 experimental geometry with no external reference; simulate it and judge it on
 its own modeled performance. The design panel keeps the element table editable;
 use **Edit Custom Wires...** only when you want raw coordinates.
+
+## Create a Moxon
+
+Choose **File → New Antenna... → Moxon rectangle** to generate a two-element
+Moxon with a reflector and driven element with bent tips. Set the element
+width, spacing, tip lengths, height, azimuth, radius, material, and ground. The
+dialog reports the remaining tip gap. Moxon is a first-class template with an
+inline editor; it is experimental and has no independent numerical reference.
 
 ## Create an inverted-V
 

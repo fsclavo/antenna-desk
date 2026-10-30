@@ -259,3 +259,23 @@ def test_yagi_parameters_round_trip() -> None:
 
     assert restored.designs[0].parameters == parameters
     assert restored.designs[0].antenna_type == "yagi"
+
+
+def test_moxon_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.moxon import MoxonParameters
+
+    parameters = MoxonParameters(
+        frequency_hz=14_100_000.0,
+        width_m=10.6,
+        depth_m=2.5,
+        reflector_tip_m=1.0,
+        driven_tip_m=1.0,
+        height_m=10.0,
+    )
+    original = _project(parameters, "Moxon")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "moxon"

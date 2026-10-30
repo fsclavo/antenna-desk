@@ -11,6 +11,7 @@ from .dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
 from .folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE, FoldedDipoleParameters
 from .inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
 from .loop import ANTENNA_TYPE_LOOP, LoopParameters
+from .moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from .ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
 from .vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
 from .yagi import ANTENNA_TYPE_YAGI, YagiParameters
@@ -23,6 +24,7 @@ AntennaDesignParameters = (
     | VerticalParameters
     | InvertedVParameters
     | YagiParameters
+    | MoxonParameters
     | CustomAntennaParameters
 )
 
@@ -42,6 +44,8 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_INVERTED_V
     if isinstance(parameters, YagiParameters):
         return ANTENNA_TYPE_YAGI
+    if isinstance(parameters, MoxonParameters):
+        return ANTENNA_TYPE_MOXON
     if isinstance(parameters, CustomAntennaParameters):
         return ANTENNA_TYPE_CUSTOM
     raise TypeError(f"unsupported antenna parameters: {type(parameters)!r}")

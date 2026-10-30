@@ -151,6 +151,13 @@ straight wires and a center feed on the selected driven element. The NBS
 TN-688 5-element 0.8λ preset is a starting geometry; edited designs are
 experimental.
 
+### MoxonParameters
+
+A first-class two-element Moxon rectangle with element width, spacing,
+reflector/driven tip lengths, height, azimuth, radius, material, and ground.
+`to_antenna()` creates the reflector, driven element, and four bent tip wires;
+the feed is at the center of the driven element. The generator is experimental.
+
 ### InvertedVParameters
 
 A first-class two-leg inverted-V with frequency, leg length, apex height,

@@ -12,6 +12,7 @@ from ..domain.antennas.dipole import DipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.loop import LoopParameters
+from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
@@ -129,6 +130,18 @@ and {other_leg_m:.4f} m from the end.</p>"""
 and two end connectors of {parameters.spacing_m:.4f} m. Join them at both
 ends and feed the center of one element. The total conductor length is
 {parameters.total_conductor_length_m:.4f} m.</p>"""
+    elif isinstance(parameters, MoxonParameters):
+        feed_rows = f"""
+<tr><th>Element width</th><td>{parameters.width_m:.4f} m</td></tr>
+<tr><th>Element spacing</th><td>{parameters.depth_m:.4f} m</td></tr>
+<tr><th>Reflector tip</th><td>{parameters.reflector_tip_m:.4f} m</td></tr>
+<tr><th>Driven tip</th><td>{parameters.driven_tip_m:.4f} m</td></tr>
+<tr><th>Tip gap</th><td>{parameters.gap_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Build a Moxon rectangle with {parameters.width_m:.4f} m elements,
+{parameters.depth_m:.4f} m spacing, and bent tips leaving a
+{parameters.gap_m:.4f} m gap.</p>"""
     elif isinstance(parameters, YagiParameters):
         positions = [element.position_m for element in parameters.elements]
         feed_rows = f"""

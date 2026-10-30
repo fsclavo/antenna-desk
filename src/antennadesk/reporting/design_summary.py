@@ -11,6 +11,7 @@ from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.load import LumpedLoad, ParallelLoad
 from ..domain.antennas.loop import LoopParameters
+from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
@@ -123,6 +124,21 @@ def design_summary_rows(
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
             ]
         )
+    if isinstance(parameters, MoxonParameters):
+        rows.extend(
+            [
+                ("Type", "Moxon rectangle"),
+                ("Element width", f"{parameters.width_m:.4f} m"),
+                ("Element spacing", f"{parameters.depth_m:.4f} m"),
+                ("Reflector tip", f"{parameters.reflector_tip_m:.4f} m"),
+                ("Driven tip", f"{parameters.driven_tip_m:.4f} m"),
+                ("Tip gap", f"{parameters.gap_m:.4f} m"),
+                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        return tuple(rows)
     if isinstance(parameters, YagiParameters):
         positions = [element.position_m for element in parameters.elements]
         rows.extend(
