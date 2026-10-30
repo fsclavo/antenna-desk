@@ -137,7 +137,7 @@ class DipoleForm(QWidget):
 
         self._sweep_group = QGroupBox(self)
         self._sweep = QCheckBox(self._sweep_group)
-        self._sweep.setChecked(False)
+        self._sweep.setChecked(True)
         self._sweep_start = QDoubleSpinBox(self._sweep_group)
         self._sweep_stop = QDoubleSpinBox(self._sweep_group)
         self._sweep_points = QSpinBox(self._sweep_group)
@@ -421,7 +421,7 @@ class DipoleForm(QWidget):
             self._sweep_start.setValue(center_mhz * 0.95)
             self._sweep_stop.setValue(center_mhz * 1.05)
             self._sweep_points.setValue(1_000)
-            self._sweep.setChecked(False)
+            self._sweep.setChecked(True)
         self._update_ground_controls()
         self._update_sweep_controls()
         self._update_type_controls()

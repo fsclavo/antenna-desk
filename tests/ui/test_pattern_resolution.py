@@ -37,10 +37,10 @@ def test_form_defaults_to_1000_sweep_points_and_10_degree_pattern(qtbot: QtBot) 
     form = DipoleForm(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(form)
 
-    assert form._sweep.isChecked() is False
+    assert form._sweep.isChecked() is True
     assert form._sweep_points.value() == 1_000
     spec = form.simulation_spec()
-    assert spec.frequency_plan.count == 1
+    assert spec.frequency_plan.count == 1_000
     assert spec.far_field.theta_count == 10
     assert spec.far_field.phi_count == 37
 

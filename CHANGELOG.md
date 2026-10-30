@@ -111,8 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   markers in Plan/3D geometry views, and conversion from a template to custom
   wires.
 - Configurable pattern resolution (10°, 5°, 2°, or 1°) with point-count
-  estimates, and a 1,000-point default for the frequency sweep. The sweep is
-  disabled by default to avoid accidental long runs.
+  estimates, and a 1,000-point default for the frequency sweep.
 - Series and parallel RLC loads on wires: validation, load editor,
   design/persistence support, NEC `LD 0`/`LD 1` export, and
   report/construction-sheet rows.
