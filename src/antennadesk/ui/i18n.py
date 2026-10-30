@@ -112,6 +112,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Two sloping wires fed at the apex, with adjustable included angle.",
         Language.SPANISH: "Dos hilos inclinados alimentados en el vértice, con ángulo ajustable.",
     },
+    "catalog.delta_loop": {
+        Language.ENGLISH: "Delta loop",
+        Language.SPANISH: "Lazo delta",
+    },
+    "catalog.delta_loop.description": {
+        Language.ENGLISH: "Three-sided loop preset; the loop editor opens with three sides.",
+        Language.SPANISH: "Preset de lazo de tres lados; el editor abre con tres lados.",
+    },
+    "catalog.quad_loop": {
+        Language.ENGLISH: "Quad loop",
+        Language.SPANISH: "Lazo cuadrado",
+    },
+    "catalog.quad_loop.description": {
+        Language.ENGLISH: "Four-sided loop preset; the loop editor opens with four sides.",
+        Language.SPANISH: "Preset de lazo de cuatro lados; el editor abre con cuatro lados.",
+    },
     "catalog.vertical": {
         Language.ENGLISH: "Vertical + radials",
         Language.SPANISH: "Vertical + radiales",

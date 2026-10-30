@@ -176,6 +176,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   with inline editors, native persistence, and reporting support.
 - Added inline editing, schema round trips, and reporting coverage for all
   first-class generators.
+- Added delta-loop and quad-loop catalog presets that initialize the loop editor
+  with three or four sides.
 - Persist generator metadata (`generator_id`, `generator_name`) in custom
   designs and show it in the custom design panel.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the

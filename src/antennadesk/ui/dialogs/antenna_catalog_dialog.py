@@ -22,6 +22,8 @@ from ..i18n import Translator
 CATALOG_TYPE_WIRE_DIPOLE = "wire_dipole"
 CATALOG_TYPE_FOLDED_DIPOLE = "folded_dipole"
 CATALOG_TYPE_LOOP = "loop"
+CATALOG_TYPE_DELTA_LOOP = "delta_loop"
+CATALOG_TYPE_QUAD_LOOP = "quad_loop"
 CATALOG_TYPE_VERTICAL = "vertical"
 CATALOG_TYPE_YAGI = "yagi"
 CATALOG_TYPE_INVERTED_V = "inverted_v"
@@ -79,6 +81,20 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         label_key="antenna_type.loop",
         family_key="catalog.family.loop",
         description_key="catalog.loop.description",
+        evidence_key="catalog.evidence.builtin",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_DELTA_LOOP,
+        label_key="catalog.delta_loop",
+        family_key="catalog.family.loop",
+        description_key="catalog.delta_loop.description",
+        evidence_key="catalog.evidence.builtin",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_QUAD_LOOP,
+        label_key="catalog.quad_loop",
+        family_key="catalog.family.loop",
+        description_key="catalog.quad_loop.description",
         evidence_key="catalog.evidence.builtin",
     ),
     CatalogEntry(

@@ -93,10 +93,12 @@ from ..reporting.html_report import write_html_report
 from ..simulation.nec2.solver import Nec2cSolver
 from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_CUSTOM,
+    CATALOG_TYPE_DELTA_LOOP,
     CATALOG_TYPE_FOLDED_DIPOLE,
     CATALOG_TYPE_INVERTED_V,
     CATALOG_TYPE_LOOP,
     CATALOG_TYPE_OCFD,
+    CATALOG_TYPE_QUAD_LOOP,
     CATALOG_TYPE_VERTICAL,
     CATALOG_TYPE_WIRE_DIPOLE,
     CATALOG_TYPE_YAGI,
@@ -1740,6 +1742,10 @@ class MainWindow(QMainWindow):
             self.new_inverted_v_antenna()
         elif selected == CATALOG_TYPE_OCFD:
             self.new_ocfd_antenna()
+        elif selected == CATALOG_TYPE_DELTA_LOOP:
+            self._new_basic_antenna(CATALOG_TYPE_LOOP, initial_sides=3)
+        elif selected == CATALOG_TYPE_QUAD_LOOP:
+            self._new_basic_antenna(CATALOG_TYPE_LOOP, initial_sides=4)
         elif selected == CATALOG_TYPE_VERTICAL:
             self.new_vertical_antenna()
         elif selected in {
@@ -1749,7 +1755,12 @@ class MainWindow(QMainWindow):
         }:
             self._new_basic_antenna(selected)
 
-    def _new_basic_antenna(self, antenna_type: str) -> None:
+    def _new_basic_antenna(
+        self,
+        antenna_type: str,
+        *,
+        initial_sides: int | None = None,
+    ) -> None:
         if not self._maybe_save_changes():
             return
         initial_frequency = 7_100_000.0
@@ -1760,6 +1771,7 @@ class MainWindow(QMainWindow):
             self._unit_system,
             initial_frequency_hz=initial_frequency,
             initial_antenna_type=antenna_type,
+            initial_sides=initial_sides,
             parent=self,
         )
         if wizard.exec() != QWizard.DialogCode.Accepted:

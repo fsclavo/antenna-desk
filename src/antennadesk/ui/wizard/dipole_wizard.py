@@ -348,6 +348,9 @@ class GeometryPage(QWizardPage):
     def sides(self) -> int:
         return self._sides.value()
 
+    def set_sides(self, sides: int) -> None:
+        self._sides.setValue(sides)
+
     def azimuth_deg(self) -> float:
         return self._azimuth.value()
 
@@ -579,6 +582,7 @@ class DipoleWizard(QWizard):
         unit_system: UnitSystem,
         initial_frequency_hz: float = 7_100_000.0,
         initial_antenna_type: str = ANTENNA_TYPE_WIRE_DIPOLE,
+        initial_sides: int | None = None,
         parent: QWizard | None = None,
     ) -> None:
         super().__init__(parent)
@@ -603,6 +607,8 @@ class DipoleWizard(QWizard):
 
         self.project_page.set_antenna_type(initial_antenna_type)
         self.project_page.set_frequency_hz(initial_frequency_hz)
+        if initial_sides is not None:
+            self.geometry_page.set_sides(initial_sides)
 
         self.setButtonText(
             QWizard.WizardButton.NextButton,

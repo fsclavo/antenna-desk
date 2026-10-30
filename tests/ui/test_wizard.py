@@ -143,3 +143,20 @@ def test_wizard_antenna_type_list_is_translated(qtbot: QtBot) -> None:
     texts = [combo.itemText(index) for index in range(combo.count())]
 
     assert texts == ["Dipolo de hilo", "Dipolo plegado", "Lazo"]
+
+
+def test_wizard_accepts_an_initial_loop_side_count(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.loop import ANTENNA_TYPE_LOOP
+
+    wizard = DipoleWizard(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        initial_antenna_type=ANTENNA_TYPE_LOOP,
+        initial_sides=3,
+    )
+    qtbot.addWidget(wizard)
+    wizard.geometry_page.initializePage()
+
+    parameters = wizard.build_parameters()
+
+    assert parameters.sides == 3

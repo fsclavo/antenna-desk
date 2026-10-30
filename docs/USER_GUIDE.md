@@ -71,7 +71,8 @@ Use **File → New Antenna...** to open the antenna catalog. Search or filter by
 **Antenna Type** and choose the desired generator. The catalog is grouped by
 antenna family: Dipole, Yagi, Loop, Vertical, and Custom. The Dipole family
 contains the straight dipole, folded dipole, inverted-V, and off-center-fed
-dipole. The catalog shows a short description and evidence level for each type.
+dipole. The Loop family includes the generic loop plus delta-loop and quad-loop
+presets. The catalog shows a short description and evidence level for each type.
 
 ### Basic templates
 
