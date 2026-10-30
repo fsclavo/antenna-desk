@@ -53,6 +53,14 @@ def _spec() -> SimulationSpec:
     )
 
 
+def _spec_for_loop() -> SimulationSpec:
+    return SimulationSpec(
+        frequency_plan=FrequencyPlan.single(3_750_000.0),
+        segmentation=SegmentationPolicy(segments_per_wire=31),
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+
 def test_arrl_free_space_100_foot_dipole_gain() -> None:
     parameters = DipoleParameters(
         frequency_hz=4_800_000.0,
@@ -94,3 +102,20 @@ def test_arrl_folded_dipole_keeps_gain_and_quadruples_resistance() -> None:
         single_result.max_total_gain_db,
         abs=0.2,
     )
+
+
+def test_arrl_free_space_quad_loop_resistance() -> None:
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    wavelength = 299_792_458.0 / 3_750_000.0
+    parameters = LoopParameters(
+        frequency_hz=3_750_000.0,
+        circumference_m=wavelength * 1.05,
+        height_m=0.0,
+        sides=4,
+        wire_radius_m=0.001,
+        ground=GroundModel.free_space(),
+    )
+    result = _solver().run(parameters.to_antenna(), _spec_for_loop())
+
+    assert result.frequencies[0].impedance_ohm.real == pytest.approx(120.0, abs=15.0)

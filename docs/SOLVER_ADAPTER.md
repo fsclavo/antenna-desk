@@ -100,6 +100,8 @@ The adapter is validated against the printed NEC-2 User's Guide values:
 - Example 1, free space: `82.6979 + j46.3060 Ω` at 299.8 MHz.
 - ARRL Antenna Book 24th ed., Figure 2.16: 100-foot free-space dipole at
   4.8 MHz, 2.14 dBi (integration tolerance ±0.15 dB).
+- ARRL Antenna Book 24th ed., Chapter 5: free-space quad loop, approximately
+  120 Ω radiation resistance (integration tolerance ±15 Ω).
 - Example 3, perfect ground: `106.437 + j9.90578 Ω` at 30 MHz.
 - Example 3, finite ground: `111.117 + j11.0075 Ω` at 30 MHz.
 

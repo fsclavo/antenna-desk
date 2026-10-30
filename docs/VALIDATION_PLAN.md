@@ -140,8 +140,9 @@ Phase 6 adds tests for:
   headers, chart images, tables, and non-trivial page content.
 - Series/parallel-load domain validation, design consistency, NEC `LD 0`/`LD 1`
   export, persistence round trip, load editor, report rows, and UI application.
-- ARRL Antenna Book, 24th edition, free-space dipole gain reference and the
-  equal-conductor folded-dipole gain/pattern and 4× resistance properties.
+- ARRL Antenna Book, 24th edition, free-space dipole gain reference, the
+  equal-conductor folded-dipole gain/pattern and 4× resistance properties, and
+  the free-space quad-loop resistance.
 - Pattern CSV export with one row per far-field point, PNG export of the
   current pattern view, and PNG export of the geometry view.
 - Custom wire parameters, design consistency, persistence round trip, editor,
@@ -165,7 +166,7 @@ Phase 6 adds tests for:
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 370 tests with the solver enabled. The twelve solver
+The suite currently has 371 tests with the solver enabled. The twelve solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.
@@ -205,9 +206,11 @@ provides two independent properties:
 - A 100-foot free-space dipole at 4.8 MHz has 2.14 dBi gain (Figure 2.16).
 - An equal-conductor folded dipole has the same gain/pattern as a single-wire
   dipole, with four times the feed-point resistance.
+- An equilateral quad loop in free space has approximately 120 Ω radiation
+  resistance at resonance (Chapter 5, printed page 5.4).
 
-Tolerances are ±0.15 dB for gain, ±2 Ω for the single-dipole resistance, and
-±0.5 for the folded/single resistance ratio. These tests are integration tests
+Tolerances are ±0.15 dB for gain, ±2 Ω for the single-dipole resistance,
+±0.5 for the folded/single resistance ratio, and ±15 Ω for the loop resistance. These tests are integration tests
 and require `NEC2C`.
 
 ## Known limitations
