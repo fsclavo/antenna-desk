@@ -44,6 +44,15 @@ def test_imports_wires_feed_ground_and_load() -> None:
     assert any("RP" in warning for warning in result.warnings)
 
 
+def test_accepts_comma_separated_cards() -> None:
+    result = parse_nec2_deck(
+        "GW,1,5,-5,0,8,5,0,8,0.001\nGN,0,0,0,0,13,0.005\nFR,0,1,0,0,7.1,0\nEX,0,1,3,0,1\nEN\n"
+    )
+
+    assert result.parameters.frequency_hz == pytest.approx(7_100_000.0)
+    assert result.parameters.feed.offset_m == pytest.approx(5.0)
+
+
 def test_rejects_a_deck_without_a_source() -> None:
     with pytest.raises(ValueError, match="EX"):
         parse_nec2_deck("GW 1 5 -5 0 8 5 0 8 0.001\nFR 0 1 0 0 7.1 0\n")

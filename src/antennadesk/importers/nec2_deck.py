@@ -59,7 +59,7 @@ def parse_nec2_deck(text: str) -> NecImportResult:
         line = raw_line.strip()
         if not line or line.startswith("CM") or line.startswith("CE"):
             continue
-        parts = line.split()
+        parts = line.replace(",", " ").split()
         card = parts[0].upper()
 
         if card == "GW":

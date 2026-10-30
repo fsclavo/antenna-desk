@@ -67,3 +67,60 @@ def test_custom_parameters_work_in_a_design_variant() -> None:
 
     assert design.antenna_type == "custom"
     assert design.antenna.wires[0].length_m == pytest.approx(10.0)
+
+
+def _wire(wire_id: str, start: tuple[float, float, float], end: tuple[float, float, float]) -> Wire:
+    return Wire(
+        id=wire_id,
+        start=Point3D(*start),
+        end=Point3D(*end),
+        radius_m=0.001,
+        material=COPPER,
+    )
+
+
+def _with_wires(*wires: Wire) -> CustomAntennaParameters:
+    return CustomAntennaParameters(
+        frequency_hz=7_100_000.0,
+        wires=wires,
+        feed=FeedPoint(wires[0].id, wires[0].length_m / 2.0),
+    )
+
+
+def test_custom_geometry_detects_overlapping_wires() -> None:
+    from antennadesk.domain.antennas.custom import geometry_warnings
+
+    warnings = geometry_warnings(
+        _with_wires(
+            _wire("a", (0.0, 0.0, 8.0), (10.0, 0.0, 8.0)),
+            _wire("b", (5.0, 0.0, 8.0), (15.0, 0.0, 8.0)),
+        )
+    )
+
+    assert any(diagnostic.code == "custom.wires.overlap" for diagnostic in warnings)
+
+
+def test_custom_geometry_detects_crossing_wires() -> None:
+    from antennadesk.domain.antennas.custom import geometry_warnings
+
+    warnings = geometry_warnings(
+        _with_wires(
+            _wire("a", (-5.0, 0.0, 8.0), (5.0, 0.0, 8.0)),
+            _wire("b", (0.0, -5.0, 8.0), (0.0, 5.0, 8.0)),
+        )
+    )
+
+    assert any(diagnostic.code == "custom.wires.cross" for diagnostic in warnings)
+
+
+def test_custom_geometry_allows_separate_parallel_wires() -> None:
+    from antennadesk.domain.antennas.custom import geometry_warnings
+
+    warnings = geometry_warnings(
+        _with_wires(
+            _wire("a", (-5.0, 0.0, 8.0), (5.0, 0.0, 8.0)),
+            _wire("b", (-5.0, 1.0, 8.0), (5.0, 1.0, 8.0)),
+        )
+    )
+
+    assert warnings == ()

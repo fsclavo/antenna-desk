@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...domain.antennas.custom import CustomAntennaParameters
+from ...domain.antennas.custom import CustomAntennaParameters, geometry_warnings
 from ...domain.antennas.feed import FeedPoint
 from ...domain.antennas.geometry import Point3D
 from ...domain.antennas.load import LumpedLoad
@@ -45,6 +45,7 @@ class CustomAntennaDialog(QDialog):
         self._translator = translator
         self._unit_system = unit_system
         self._loads: tuple[LumpedLoad, ...] = parameters.loads if parameters else ()
+        self._warnings = ()
         self.setWindowTitle(translator.t("custom.title"))
         self.resize(980, 620)
 
@@ -276,6 +277,13 @@ class CustomAntennaDialog(QDialog):
             QMessageBox.critical(self, self._translator.t("custom.title"), str(exc))
             return
         self._parameters = parameters
+        self._warnings = geometry_warnings(parameters)
+        if self._warnings:
+            QMessageBox.warning(
+                self,
+                self._translator.t("custom.title"),
+                "\n".join(diagnostic.message for diagnostic in self._warnings),
+            )
         self.accept()
 
     def parameters(self) -> CustomAntennaParameters:
@@ -293,3 +301,6 @@ class CustomAntennaDialog(QDialog):
 
     def result_parameters(self) -> CustomAntennaParameters:
         return self._parameters
+
+    def result_warnings(self) -> tuple[object, ...]:
+        return self._warnings

@@ -39,7 +39,8 @@ Positive:
 Limitations:
 
 - Wire editing is coordinate-based, not a 3D drawing tool.
-- There is no automatic junction/crossing validation beyond the canonical model.
+- Geometry warnings cover short wires, overlaps, and crossings, but do not
+  enforce electrical junctions or repair the geometry automatically.
 - Custom designs cannot use length optimization.
 - NEC import supports only a practical subset; unsupported cards are reported.
 - MMANA import does not read ground, loads, segmentation, or calculated results.
