@@ -228,3 +228,12 @@ def test_geometry_view_marks_series_loads(qtbot: QtBot) -> None:
 
     assert len(view._load_marks()) == 1
     assert not view.grab().isNull()
+
+
+def test_three_d_projection_places_positive_height_upward() -> None:
+    from antennadesk.ui.widgets.geometry_view import GeometryView
+
+    _, ground_y = GeometryView._project_3d(0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.5)
+    _, raised_y = GeometryView._project_3d(0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.5)
+
+    assert raised_y > ground_y

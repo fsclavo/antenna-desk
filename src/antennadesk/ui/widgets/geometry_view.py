@@ -362,7 +362,7 @@ class GeometryView(QWidget):
     ) -> tuple[float, float]:
         rotated_x = x_m * cos_yaw - y_m * sin_yaw
         rotated_y = x_m * sin_yaw + y_m * cos_yaw
-        return rotated_x, rotated_y * sin_pitch - z_m * cos_pitch
+        return rotated_x, rotated_y * sin_pitch + z_m * cos_pitch
 
     def _paint_elevation(self, painter: QPainter, rect: QRectF) -> None:
         assert self._model is not None

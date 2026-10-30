@@ -148,7 +148,7 @@ class RadiationPattern3DView(QWidget):
             x, y, z = pattern_point(theta_deg, phi_deg, gain)
             rotated_x = x * cos_yaw - y * sin_yaw
             rotated_y = x * sin_yaw + y * cos_yaw
-            return rotated_x, rotated_y * sin_pitch - z * cos_pitch
+            return rotated_x, rotated_y * sin_pitch + z * cos_pitch
 
         projected = [project(theta, phi, gain) for theta, phi, gain in points]
         min_px = min(point[0] for point in projected)
@@ -181,7 +181,7 @@ class RadiationPattern3DView(QWidget):
             rotated_x = x * cos_yaw - y * sin_yaw
             rotated_y = x * sin_yaw + y * cos_yaw
             px = rotated_x
-            py = rotated_y * sin_pitch - z * cos_pitch
+            py = rotated_y * sin_pitch + z * cos_pitch
             return QPointF(
                 center.x() + (px - center_px) * scale,
                 center.y() - (py - center_py) * scale,
