@@ -168,7 +168,7 @@ raw coordinates.
 ## Read the results
 
 - **Impedance / SWR**: table of frequency, resistance, reactance, magnitude,
-  and SWR, plus charts of impedance and SWR over the sweep. Resonance points
+  and SWR, plus impedance and SWR charts side by side over the sweep. Resonance points
   where the reactance crosses zero are marked and listed above the table.
 - **Pattern**: selectable **Azimuth** or **Elevation** cuts of NEC power gain
   for each simulated frequency. The **Cuts** tab shows a line chart and a polar

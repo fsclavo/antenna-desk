@@ -207,3 +207,13 @@ def test_pattern_3d_clips_below_ground_points(qtbot: QtBot) -> None:
 
     assert len(view._points) == 2
     assert all(theta <= 90.0 for theta, _phi, _gain in view._points)
+
+
+def test_impedance_and_swr_charts_are_side_by_side(qtbot: QtBot) -> None:
+    from PySide6.QtCore import Qt
+
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+
+    assert view._impedance_charts_splitter.orientation() == Qt.Orientation.Horizontal
+    assert view._impedance_charts_splitter.count() == 2

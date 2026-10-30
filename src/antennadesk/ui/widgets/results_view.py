@@ -58,13 +58,20 @@ class ResultsView(QWidget):
         self._resonance_label = QLabel(self._impedance_tab)
         self._resonance_label.setWordWrap(True)
 
+        self._impedance_charts_splitter = QSplitter(
+            Qt.Orientation.Horizontal,
+            self._impedance_tab,
+        )
+        self._impedance_charts_splitter.addWidget(self._impedance_plot)
+        self._impedance_charts_splitter.addWidget(self._swr_plot)
+        self._impedance_charts_splitter.setStretchFactor(0, 1)
+        self._impedance_charts_splitter.setStretchFactor(1, 1)
+
         impedance_splitter = QSplitter(Qt.Orientation.Vertical, self._impedance_tab)
         impedance_splitter.addWidget(self._table)
-        impedance_splitter.addWidget(self._impedance_plot)
-        impedance_splitter.addWidget(self._swr_plot)
+        impedance_splitter.addWidget(self._impedance_charts_splitter)
         impedance_splitter.setStretchFactor(0, 1)
-        impedance_splitter.setStretchFactor(1, 2)
-        impedance_splitter.setStretchFactor(2, 2)
+        impedance_splitter.setStretchFactor(1, 3)
         impedance_layout = QVBoxLayout(self._impedance_tab)
         impedance_layout.setContentsMargins(0, 0, 0, 0)
         impedance_layout.addWidget(self._resonance_label)

@@ -158,6 +158,8 @@ Custom/generated editing and view tests:
 - The 3D pattern view supports rotation, zoom, and reset.
 - The 3D pattern view clips points below the ground plane for grounded models.
 - The 3D projection places positive height above the ground plane.
+- Impedance and SWR charts use a horizontal splitter; the geometry pane gives
+  more vertical space to results.
 
 - Change Template replaces the current design through the catalog.
 - Inverted-V, Yagi, and vertical generators are first-class templates with
@@ -270,7 +272,7 @@ Phase 6 adds tests for:
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 467 tests with the solver enabled. Solver integration
+The suite currently has 468 tests with the solver enabled. Solver integration
 tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.

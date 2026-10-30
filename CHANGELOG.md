@@ -182,6 +182,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   editing, catalog, persistence, and reporting support.
 - Added an experimental first-class fan dipole generator with editable pairs,
   catalog, persistence, and reporting support.
+- Placed the impedance and SWR charts side by side and reduced the default
+  geometry pane height to give results more room.
 - Persist generator metadata (`generator_id`, `generator_name`) in custom
   designs and show it in the custom design panel.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the

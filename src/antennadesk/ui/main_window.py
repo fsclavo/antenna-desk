@@ -444,12 +444,13 @@ class MainWindow(QMainWindow):
         self._zoom_combo.currentIndexChanged.connect(self._on_zoom_changed)
         self._geometry.zoom_changed.connect(self._sync_zoom_combo)
 
-        right_splitter = QSplitter(Qt.Orientation.Vertical, self)
+        self._right_splitter = QSplitter(Qt.Orientation.Vertical, self)
+        right_splitter = self._right_splitter
         right_splitter.addWidget(geometry_container)
         right_splitter.addWidget(self._results)
         right_splitter.setStretchFactor(0, 1)
         right_splitter.setStretchFactor(1, 2)
-        right_splitter.setSizes([400, 600])
+        right_splitter.setSizes([350, 650])
 
         main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
         main_splitter.addWidget(self._design_stack)
