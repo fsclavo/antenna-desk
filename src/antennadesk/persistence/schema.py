@@ -44,6 +44,7 @@ from ..domain.antennas.loop import (
 from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from ..domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
+from ..domain.antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
 from ..domain.antennas.vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
 from ..domain.antennas.wire import Wire
 from ..domain.antennas.yagi import ANTENNA_TYPE_YAGI, YagiElement, YagiParameters
@@ -181,6 +182,17 @@ class OCFDParametersPayload(StrictModel):
     feed_ratio: float = Field(default=1.0 / 3.0, gt=0.0, lt=1.0)
     height_m: float = Field(default=10.0, ge=0.0)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class RingoParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    radiator_height_m: float = Field(gt=0.0)
+    ring_diameter_m: float = Field(gt=0.0)
+    ring_height_m: float = Field(default=0.0, ge=0.0)
+    ring_sides: int = Field(default=16, ge=3, le=128)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
@@ -449,6 +461,7 @@ ParameterPayload = (
     | FanDipoleParametersPayload
     | EndFedParametersPayload
     | JPoleParametersPayload
+    | RingoParametersPayload
     | CustomParametersPayload
 )
 
@@ -474,6 +487,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_ENDFED
     if isinstance(value, JPoleParametersPayload):
         return ANTENNA_TYPE_J_POLE
+    if isinstance(value, RingoParametersPayload):
+        return ANTENNA_TYPE_RINGO
     if isinstance(value, CustomParametersPayload):
         return ANTENNA_TYPE_CUSTOM
     return ANTENNA_TYPE_LOOP
@@ -502,6 +517,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return EndFedParametersPayload
     if antenna_type == ANTENNA_TYPE_J_POLE:
         return JPoleParametersPayload
+    if antenna_type == ANTENNA_TYPE_RINGO:
+        return RingoParametersPayload
     if antenna_type == ANTENNA_TYPE_CUSTOM:
         return CustomParametersPayload
     return None
@@ -709,6 +726,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _endfed_parameters_from_domain(value)
     if isinstance(value, JPoleParameters):
         return _j_pole_parameters_from_domain(value)
+    if isinstance(value, RingoParameters):
+        return _ringo_parameters_from_domain(value)
     if isinstance(value, CustomAntennaParameters):
         return _custom_parameters_from_domain(value)
     raise TypeError(f"unsupported antenna parameters: {type(value)!r}")
@@ -752,6 +771,19 @@ def _vertical_parameters_from_domain(
         radial_count=value.radial_count,
         radial_length_m=value.radial_length_m,
         radial_angle_deg=value.radial_angle_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _ringo_parameters_from_domain(value: RingoParameters) -> RingoParametersPayload:
+    return RingoParametersPayload(
+        frequency_hz=value.frequency_hz,
+        radiator_height_m=value.radiator_height_m,
+        ring_diameter_m=value.ring_diameter_m,
+        ring_height_m=value.ring_height_m,
+        ring_sides=value.ring_sides,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
@@ -1219,6 +1251,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, JPoleParametersPayload):
             raise ValueError("J-pole parameters have the wrong shape")
         return _j_pole_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_RINGO:
+        if not isinstance(value.parameters, RingoParametersPayload):
+            raise ValueError("Ringo parameters have the wrong shape")
+        return _ringo_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_CUSTOM:
         if not isinstance(value.parameters, CustomParametersPayload):
             raise ValueError("custom parameters have the wrong shape")
@@ -1262,6 +1298,19 @@ def _vertical_parameters_to_domain(value: VerticalParametersPayload) -> Vertical
         radial_count=value.radial_count,
         radial_length_m=value.radial_length_m,
         radial_angle_deg=value.radial_angle_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _ringo_parameters_to_domain(value: RingoParametersPayload) -> RingoParameters:
+    return RingoParameters(
+        frequency_hz=value.frequency_hz,
+        radiator_height_m=value.radiator_height_m,
+        ring_diameter_m=value.ring_diameter_m,
+        ring_height_m=value.ring_height_m,
+        ring_sides=value.ring_sides,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),

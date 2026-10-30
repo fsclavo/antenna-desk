@@ -83,9 +83,9 @@ basic template types.
   circumference, with an evaluation log and sensitivity table.
 - Custom straight-wire antennas with a coordinate editor, template-to-custom
   conversion, a parametric Yagi generator with an editable element table and
-  NBS starting preset, Moxon, fan dipole, end-fed, J Pole, Slim Jim, inverted-V,
-  off-center-fed dipole, and vertical generators, experimental ground radial
-  generator, practical NEC-2
+  NBS starting preset, Moxon, fan dipole, end-fed, J Pole, Slim Jim, Ringo,
+  inverted-V, off-center-fed dipole, and vertical generators, experimental
+  ground radial generator, practical NEC-2
   deck import, and basic MMANA-GAL `.maa` geometry import, plus series/parallel
   RLC loads, load markers, and report rows.
 - Optional transmitter-side feed line with characteristic impedance, length,

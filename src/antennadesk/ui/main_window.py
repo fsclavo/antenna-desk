@@ -77,6 +77,7 @@ from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.load import LumpedLoad
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
+from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
 from ..domain.common.time import utc_now
@@ -109,6 +110,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_MOXON,
     CATALOG_TYPE_OCFD,
     CATALOG_TYPE_QUAD_LOOP,
+    CATALOG_TYPE_RINGO,
     CATALOG_TYPE_SLIM_JIM,
     CATALOG_TYPE_VERTICAL,
     CATALOG_TYPE_WIRE_DIPOLE,
@@ -128,6 +130,7 @@ from .dialogs.measurement_details_dialog import MeasurementDetailsDialog
 from .dialogs.moxon_dialog import MoxonDialog
 from .dialogs.ocfd_dialog import OCFDDialog
 from .dialogs.optimization_dialog import OptimizationDialog
+from .dialogs.ringo_dialog import RingoDialog
 from .dialogs.vertical_dialog import VerticalDialog
 from .dialogs.yagi_dialog import YagiDialog
 from .i18n import Language, Translator
@@ -143,6 +146,7 @@ from .widgets.j_pole_form import JPoleForm
 from .widgets.moxon_form import MoxonForm
 from .widgets.ocfd_form import OCFDForm
 from .widgets.results_view import ResultsView
+from .widgets.ringo_form import RingoForm
 from .widgets.vertical_form import VerticalForm
 from .widgets.yagi_form import YagiForm
 from .wizard.dipole_wizard import DipoleWizard
@@ -376,6 +380,14 @@ class MainWindow(QMainWindow):
         self._j_pole_scroll.setMinimumWidth(340)
         self._j_pole_scroll.setMaximumWidth(480)
 
+        self._ringo_form = RingoForm(self._translator, self._unit_system, parent=self)
+        self._ringo_form.changed.connect(self._on_form_changed)
+        self._ringo_scroll = QScrollArea(self)
+        self._ringo_scroll.setWidgetResizable(True)
+        self._ringo_scroll.setWidget(self._ringo_form)
+        self._ringo_scroll.setMinimumWidth(340)
+        self._ringo_scroll.setMaximumWidth(480)
+
         self._custom_panel = QWidget(self)
         custom_layout = QVBoxLayout(self._custom_panel)
         self._custom_title = QLabel(self._custom_panel)
@@ -432,6 +444,7 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._fan_dipole_scroll)
         self._design_stack.addWidget(self._endfed_scroll)
         self._design_stack.addWidget(self._j_pole_scroll)
+        self._design_stack.addWidget(self._ringo_scroll)
         self._design_stack.addWidget(self._custom_panel)
         self._change_template_button = QPushButton(self)
         self._change_template_button.clicked.connect(lambda: self.change_template())
@@ -718,6 +731,7 @@ class MainWindow(QMainWindow):
         is_fan_dipole = isinstance(parameters, FanDipoleParameters)
         is_endfed = isinstance(parameters, EndFedParameters)
         is_j_pole = isinstance(parameters, JPoleParameters)
+        is_ringo = isinstance(parameters, RingoParameters)
         self._optimize_action.setEnabled(
             idle
             and has_project
@@ -730,6 +744,7 @@ class MainWindow(QMainWindow):
             and not is_fan_dipole
             and not is_endfed
             and not is_j_pole
+            and not is_ringo
             and self._solver is not None
         )
         self._loads_action.setEnabled(idle and has_project)
@@ -843,6 +858,9 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, JPoleParameters):
             self._design_stack.setCurrentWidget(self._j_pole_scroll)
             self._j_pole_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, RingoParameters):
+            self._design_stack.setCurrentWidget(self._ringo_scroll)
+            self._ringo_form.set_parameters(design.parameters)
         else:
             self._design_stack.setCurrentWidget(self._form_scroll)
             self._form.set_parameters(design.parameters, reset_sweep=True)
@@ -1176,6 +1194,34 @@ class MainWindow(QMainWindow):
             self._update_actions()
             self._update_height_control()
             return self._project
+        if isinstance(previous_design.parameters, RingoParameters):
+            parameters = self._ringo_form.parameters()
+            updated = UpdateDipoleDesign().execute(
+                UpdateDipoleDesignCommand(
+                    project=self._project,
+                    design_id=self._design_id,
+                    parameters=parameters,
+                )
+            )
+            updated = replace(updated, name=project_name)
+            self._project = updated
+            design = updated.design_by_id(self._design_id)
+            if parameters != previous_design.parameters:
+                self._simulation_results.pop(self._design_id, None)
+                self._results.set_result(None)
+            self._loads = design.antenna.loads
+            self._results.set_design(design)
+            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._auto_select_view(design)
+            self._project_name_updating = True
+            self._project_name.setText(project_name)
+            self._project_name_updating = False
+            self._form_dirty = False
+            self._dirty = True
+            self._update_title()
+            self._update_actions()
+            self._update_height_control()
+            return self._project
         if isinstance(previous_design.parameters, CustomAntennaParameters):
             design = previous_design
             if design.antenna.loads != self._loads:
@@ -1281,6 +1327,8 @@ class MainWindow(QMainWindow):
                 spec = self._endfed_simulation_spec(design.parameters)
             elif isinstance(design.parameters, JPoleParameters):
                 spec = self._j_pole_simulation_spec(design.parameters)
+            elif isinstance(design.parameters, RingoParameters):
+                spec = self._ringo_simulation_spec(design.parameters)
             else:
                 spec = self._form.simulation_spec()
         except Exception as exc:
@@ -1519,6 +1567,23 @@ class MainWindow(QMainWindow):
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
         )
 
+    def _ringo_simulation_spec(self, parameters: RingoParameters) -> SimulationSpec:
+        model = parameters.to_antenna()
+        frequency_hz = parameters.frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                frequency_hz * 0.95,
+                frequency_hz * 1.05,
+                100,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz * 1.05,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
     def _custom_simulation_spec(
         self,
         parameters: CustomAntennaParameters,
@@ -1621,6 +1686,33 @@ class MainWindow(QMainWindow):
             project = CreateDipoleProject().execute(
                 CreateDipoleProjectCommand(
                     project_name=name.strip() or "Yagi",
+                    variant_name="Initial",
+                    parameters=dialog.result_parameters(),
+                )
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+
+    def new_ringo_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        name, accepted = QInputDialog.getText(
+            self,
+            self._translator.t("ringo.title"),
+            self._translator.t("field.project_name"),
+            text="Ringo",
+        )
+        if not accepted:
+            return
+        dialog = RingoDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            project = CreateDipoleProject().execute(
+                CreateDipoleProjectCommand(
+                    project_name=name.strip() or "Ringo",
                     variant_name="Initial",
                     parameters=dialog.result_parameters(),
                 )
@@ -2098,6 +2190,16 @@ class MainWindow(QMainWindow):
             return (
                 dialog.result_parameters() if dialog.exec() == QDialog.DialogCode.Accepted else None
             )
+        if selected == CATALOG_TYPE_RINGO:
+            dialog = RingoDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
         if selected in {CATALOG_TYPE_J_POLE, CATALOG_TYPE_SLIM_JIM}:
             dialog = JPoleDialog(
                 self._translator,
@@ -2240,6 +2342,8 @@ class MainWindow(QMainWindow):
             self.new_j_pole_antenna(folded=False)
         elif selected == CATALOG_TYPE_SLIM_JIM:
             self.new_j_pole_antenna(folded=True)
+        elif selected == CATALOG_TYPE_RINGO:
+            self.new_ringo_antenna()
         elif selected == CATALOG_TYPE_OCFD:
             self.new_ocfd_antenna()
         elif selected == CATALOG_TYPE_DELTA_LOOP:

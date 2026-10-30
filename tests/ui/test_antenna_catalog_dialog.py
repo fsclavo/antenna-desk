@@ -16,7 +16,7 @@ def test_catalog_lists_antenna_types(qtbot: QtBot) -> None:
     dialog = AntennaCatalogDialog(Translator(Language.ENGLISH))
     qtbot.addWidget(dialog)
 
-    assert dialog._list.count() == 15
+    assert dialog._list.count() == 16
     assert dialog.selected_key() == "wire_dipole"
 
 

@@ -30,6 +30,7 @@ CATALOG_TYPE_MOXON = "moxon"
 CATALOG_TYPE_FAN_DIPOLE = "fan_dipole"
 CATALOG_TYPE_ENDFED = "endfed"
 CATALOG_TYPE_J_POLE = "j_pole"
+CATALOG_TYPE_RINGO = "ringo"
 CATALOG_TYPE_SLIM_JIM = "slim_jim"
 CATALOG_TYPE_INVERTED_V = "inverted_v"
 CATALOG_TYPE_OCFD = "ocfd"
@@ -59,6 +60,13 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         family_key="catalog.family.dipole",
         description_key="catalog.folded_dipole.description",
         evidence_key="catalog.evidence.builtin",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_RINGO,
+        label_key="catalog.ringo",
+        family_key="catalog.family.vertical",
+        description_key="catalog.ringo.description",
+        evidence_key="catalog.evidence.experimental",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_J_POLE,

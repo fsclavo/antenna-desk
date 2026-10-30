@@ -17,6 +17,7 @@ from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
+from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
 from ..domain.projects.project import DesignVariant, Project
@@ -133,6 +134,16 @@ and {other_leg_m:.4f} m from the end.</p>"""
 and two end connectors of {parameters.spacing_m:.4f} m. Join them at both
 ends and feed the center of one element. The total conductor length is
 {parameters.total_conductor_length_m:.4f} m.</p>"""
+    elif isinstance(parameters, RingoParameters):
+        feed_rows = f"""
+<tr><th>Radiator height</th><td>{parameters.radiator_height_m:.4f} m</td></tr>
+<tr><th>Ring diameter</th><td>{parameters.ring_diameter_m:.4f} m</td></tr>
+<tr><th>Ring height</th><td>{parameters.ring_height_m:.4f} m</td></tr>
+<tr><th>Ring sides</th><td>{parameters.ring_sides}</td></tr>
+"""
+        construction_note = f"""<p>Build a {parameters.radiator_height_m:.4f} m vertical radiator
+with a {parameters.ring_diameter_m:.4f} m matching ring at
+{parameters.ring_height_m:.4f} m above ground.</p>"""
     elif isinstance(parameters, JPoleParameters):
         feed_rows = f"""
 <tr><th>Type</th><td>{parameters.template_name}</td></tr>

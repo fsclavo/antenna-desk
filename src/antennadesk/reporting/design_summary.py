@@ -16,6 +16,7 @@ from ..domain.antennas.load import LumpedLoad, ParallelLoad
 from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
+from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
 from ..domain.environment.ground import GroundModel
@@ -127,6 +128,18 @@ def design_summary_rows(
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
             ]
         )
+    if isinstance(parameters, RingoParameters):
+        rows.extend(
+            [
+                ("Type", "Ringo"),
+                ("Radiator height", f"{parameters.radiator_height_m:.4f} m"),
+                ("Ring diameter", f"{parameters.ring_diameter_m:.4f} m"),
+                ("Ring height", f"{parameters.ring_height_m:.4f} m"),
+                ("Ring sides", str(parameters.ring_sides)),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        return tuple(rows)
     if isinstance(parameters, JPoleParameters):
         rows.extend(
             [

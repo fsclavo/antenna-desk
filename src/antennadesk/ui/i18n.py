@@ -100,6 +100,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Inverted-V",
         Language.SPANISH: "V invertida",
     },
+    "catalog.ringo": {
+        Language.ENGLISH: "Ringo",
+        Language.SPANISH: "Ringo",
+    },
+    "catalog.ringo.description": {
+        Language.ENGLISH: "Half-wave vertical with a base matching ring.",
+        Language.SPANISH: "Vertical de media onda con anillo de adaptación en la base.",
+    },
     "catalog.j_pole": {
         Language.ENGLISH: "J Pole",
         Language.SPANISH: "J Pole",
@@ -974,6 +982,54 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "inverted_v.title": {
         Language.ENGLISH: "Inverted-V Generator",
         Language.SPANISH: "Generador de V invertida",
+    },
+    "ringo.title": {
+        Language.ENGLISH: "Ringo Generator",
+        Language.SPANISH: "Generador Ringo",
+    },
+    "ringo.radiator_height": {
+        Language.ENGLISH: "Radiator height",
+        Language.SPANISH: "Altura del radiador",
+    },
+    "ringo.ring_diameter": {
+        Language.ENGLISH: "Ring diameter",
+        Language.SPANISH: "Diámetro del anillo",
+    },
+    "ringo.ring_height": {
+        Language.ENGLISH: "Ring height",
+        Language.SPANISH: "Altura del anillo",
+    },
+    "ringo.ring_sides": {
+        Language.ENGLISH: "Ring sides",
+        Language.SPANISH: "Lados del anillo",
+    },
+    "ringo.wire_radius": {
+        Language.ENGLISH: "Wire radius (mm)",
+        Language.SPANISH: "Radio del hilo (mm)",
+    },
+    "ringo.geometry": {
+        Language.ENGLISH: "Height {height} {unit} · ring {ring} {unit}",
+        Language.SPANISH: "Altura {height} {unit} · anillo {ring} {unit}",
+    },
+    "ringo.hint": {
+        Language.ENGLISH: (
+            "The Ringo is a vertical radiator with a horizontal matching ring "
+            "at its base. The generated antenna is an editable first-class design."
+        ),
+        Language.SPANISH: (
+            "El Ringo es un radiador vertical con un anillo horizontal de "
+            "adaptación en la base. La antena generada es un diseño editable de primera clase."
+        ),
+    },
+    "ringo.evidence": {
+        Language.ENGLISH: (
+            "Experimental generator: geometry is tested, but there is no "
+            "independent numerical reference for this configuration."
+        ),
+        Language.SPANISH: (
+            "Generador experimental: se prueba la geometría, pero no hay una "
+            "referencia numérica independiente para esta configuración."
+        ),
     },
     "j_pole.title": {
         Language.ENGLISH: "J-Pole / Slim-Jim Generator",

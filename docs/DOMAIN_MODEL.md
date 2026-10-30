@@ -151,6 +151,13 @@ straight wires and a center feed on the selected driven element. The NBS
 TN-688 5-element 0.8λ preset is a starting geometry; edited designs are
 experimental.
 
+### RingoParameters
+
+A first-class Ringo-style vertical with radiator height, base matching ring
+diameter/height/side count, radius, material, and ground. `to_antenna()` creates
+the vertical radiator, a ring connector, and the ring polygon. The generator is
+experimental.
+
 ### JPoleParameters
 
 A first-class J Pole/Slim Jim with radiator height, stub length, spacing, feed

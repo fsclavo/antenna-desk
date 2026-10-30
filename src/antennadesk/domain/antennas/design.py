@@ -16,6 +16,7 @@ from .j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
 from .loop import ANTENNA_TYPE_LOOP, LoopParameters
 from .moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from .ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
+from .ringo import ANTENNA_TYPE_RINGO, RingoParameters
 from .vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
 from .yagi import ANTENNA_TYPE_YAGI, YagiParameters
 
@@ -31,6 +32,7 @@ AntennaDesignParameters = (
     | FanDipoleParameters
     | EndFedParameters
     | JPoleParameters
+    | RingoParameters
     | CustomAntennaParameters
 )
 
@@ -58,6 +60,8 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_ENDFED
     if isinstance(parameters, JPoleParameters):
         return ANTENNA_TYPE_J_POLE
+    if isinstance(parameters, RingoParameters):
+        return ANTENNA_TYPE_RINGO
     if isinstance(parameters, CustomAntennaParameters):
         return ANTENNA_TYPE_CUSTOM
     raise TypeError(f"unsupported antenna parameters: {type(parameters)!r}")

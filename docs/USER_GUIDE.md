@@ -134,6 +134,13 @@ generator fields editable. Use **Edit Custom Wires...** for raw coordinates. The
 elevation view is selected automatically so the included angle is visible; Plan
 remains available.
 
+## Create a Ringo
+
+Choose **File → New Antenna... → Ringo** to generate a half-wave vertical with
+a horizontal matching ring at its base. Set radiator height, ring diameter,
+ring height, ring side count, radius, material, and ground. Ringo is a
+first-class experimental template with an inline editor.
+
 ## Create a J Pole or Slim Jim
 
 Choose **File → New Antenna... → J Pole** or **Slim Jim** to generate a vertical

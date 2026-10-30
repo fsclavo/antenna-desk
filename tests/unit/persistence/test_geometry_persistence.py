@@ -366,3 +366,22 @@ def test_j_pole_parameters_round_trip() -> None:
 
     assert restored.designs[0].parameters == parameters
     assert restored.designs[0].antenna_type == "j_pole"
+
+
+def test_ringo_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.ringo import RingoParameters
+
+    parameters = RingoParameters(
+        frequency_hz=50_100_000.0,
+        radiator_height_m=3.0,
+        ring_diameter_m=0.33,
+        ring_height_m=0.1,
+        ring_sides=8,
+    )
+    original = _project(parameters, "Ringo")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "ringo"

@@ -17,6 +17,7 @@ from .j_pole import JPoleParameters
 from .loop import ANTENNA_TYPE_LOOP, LoopParameters
 from .moxon import MoxonParameters
 from .ocfd import OCFDParameters
+from .ringo import RingoParameters
 from .vertical import VerticalParameters
 from .yagi import YagiParameters
 
@@ -39,6 +40,7 @@ _GENERATOR_FAMILIES: dict[str, AntennaFamily] = {
     "vertical": AntennaFamily.VERTICAL,
     "j_pole": AntennaFamily.VERTICAL,
     "slim_jim": AntennaFamily.VERTICAL,
+    "ringo": AntennaFamily.VERTICAL,
 }
 
 
@@ -62,6 +64,8 @@ def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
     if isinstance(parameters, EndFedParameters):
         return AntennaFamily.DIPOLE
     if isinstance(parameters, JPoleParameters):
+        return AntennaFamily.VERTICAL
+    if isinstance(parameters, RingoParameters):
         return AntennaFamily.VERTICAL
     if isinstance(parameters, CustomAntennaParameters):
         if parameters.generator_id is not None:
@@ -93,6 +97,8 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return "endfed"
     if isinstance(parameters, JPoleParameters):
         return "j_pole"
+    if isinstance(parameters, RingoParameters):
+        return "ringo"
     if isinstance(parameters, CustomAntennaParameters):
         return parameters.generator_id or "custom"
     raise TypeError(f"unsupported antenna parameters: {type(parameters)!r}")

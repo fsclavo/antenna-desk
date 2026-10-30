@@ -1175,3 +1175,41 @@ def test_new_j_pole_creates_a_first_class_design(
     assert window._design_stack.currentWidget() is window._j_pole_scroll
     assert window._j_pole_form.parameters() == parameters
     window._dirty = False
+
+
+def test_new_ringo_creates_a_first_class_design(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.ringo import RingoParameters
+
+    parameters = RingoParameters(
+        frequency_hz=50_100_000.0,
+        radiator_height_m=3.0,
+        ring_diameter_m=0.33,
+        ring_height_m=0.1,
+        ring_sides=8,
+    )
+
+    class FakeRingoDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> RingoParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "RingoDialog", FakeRingoDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Ringo", True))
+
+    window.new_ringo_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "Ringo"
+    assert window._project.designs[0].antenna_type == "ringo"
+    assert window._design_stack.currentWidget() is window._ringo_scroll
+    assert window._ringo_form.parameters() == parameters
+    window._dirty = False
