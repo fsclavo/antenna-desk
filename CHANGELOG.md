@@ -155,6 +155,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added Change Template to replace the current design from the antenna catalog.
 - Generalized Edit Generator to Yagi and vertical designs by reconstructing
   their parameters from custom geometry.
+- Inverted-V now defaults to finite ground, and the 3D pattern view draws the
+  ground plane for grounded models.
 - Persist generator metadata (`generator_id`, `generator_name`) in custom
   designs and show it in the custom design panel.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the

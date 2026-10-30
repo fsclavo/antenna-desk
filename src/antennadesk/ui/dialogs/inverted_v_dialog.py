@@ -86,6 +86,7 @@ class InvertedVDialog(QDialog):
         self._ground.addItem("", GroundKind.FREE_SPACE.value)
         self._ground.addItem("", GroundKind.PERFECT.value)
         self._ground.addItem("", GroundKind.FINITE.value)
+        self._ground.setCurrentIndex(2)
         self._ground.currentIndexChanged.connect(self._update_ground_controls)
 
         self._permittivity = QDoubleSpinBox(self)

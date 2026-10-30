@@ -19,6 +19,7 @@ def test_inverted_v_dialog_builds_two_wires(qtbot: QtBot) -> None:
     assert len(parameters.wires) == 2
     assert parameters.feed.wire_id == "leg-1"
     assert parameters.feed.offset_m == 0.0
+    assert parameters.ground.kind.value == "finite"
     assert "Horizontal span" in dialog._geometry.text()
 
 

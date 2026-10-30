@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.common.validation import Diagnostic, Severity
+from ...domain.environment.ground import GroundKind
 from ...domain.projects.project import DesignVariant
 from ...domain.simulation.resonance import find_resonances
 from ...domain.simulation.result import SimulationResult, SimulationStatus
@@ -565,12 +566,17 @@ class ResultsView(QWidget):
             )
         )
         self._polar_pattern.set_points(tuple(zip(theta, gain, strict=True)))
+        ground = (
+            self._design is not None
+            and self._design.antenna.environment.ground.kind is not GroundKind.FREE_SPACE
+        )
         self._pattern_3d.set_points(
             tuple(
                 (point.theta_deg, point.phi_deg, point.gain_total_db)
                 for point in frequency.far_field
                 if point.gain_total_db is not None
-            )
+            ),
+            ground=ground,
         )
 
     def _render_diagnostics(self) -> None:

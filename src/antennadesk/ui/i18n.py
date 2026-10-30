@@ -502,6 +502,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "3D lobe",
         Language.SPANISH: "Lóbulo 3D",
     },
+    "pattern.ground": {
+        Language.ENGLISH: "Ground",
+        Language.SPANISH: "Suelo",
+    },
     "pattern.3d_polar": {
         Language.ENGLISH: "3D radiation pattern",
         Language.SPANISH: "Patrón de radiación 3D",

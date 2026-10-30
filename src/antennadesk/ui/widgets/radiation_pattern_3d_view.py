@@ -19,6 +19,7 @@ class RadiationPattern3DView(QWidget):
         super().__init__(parent)
         self._translator = translator
         self._points: tuple[tuple[float, float, float], ...] = ()
+        self._ground = False
         self._colors = theme_colors(self.palette())
         self.setMinimumHeight(280)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -26,8 +27,14 @@ class RadiationPattern3DView(QWidget):
     def sizeHint(self) -> QSize:
         return QSize(640, 420)
 
-    def set_points(self, points: tuple[tuple[float, float, float], ...]) -> None:
+    def set_points(
+        self,
+        points: tuple[tuple[float, float, float], ...],
+        *,
+        ground: bool = False,
+    ) -> None:
         self._points = points
+        self._ground = ground
         self.update()
 
     def changeEvent(self, event: QEvent) -> None:
@@ -114,6 +121,16 @@ class RadiationPattern3DView(QWidget):
                 center.y() - (py - center_py) * scale,
             )
 
+        def screen_world(x: float, y: float, z: float) -> QPointF:
+            rotated_x = x * cos_yaw - y * sin_yaw
+            rotated_y = x * sin_yaw + y * cos_yaw
+            px = rotated_x
+            py = rotated_y * sin_pitch - z * cos_pitch
+            return QPointF(
+                center.x() + (px - center_px) * scale,
+                center.y() - (py - center_py) * scale,
+            )
+
         theta_values = sorted({theta for theta, _, _ in points})
         phi_values = sorted({phi for _, phi, _ in points})
         gain_by_coord = {(round(theta, 6), round(phi, 6)): gain for theta, phi, gain in points}
@@ -151,6 +168,36 @@ class RadiationPattern3DView(QWidget):
                 if previous is not None:
                     painter.drawLine(previous, current)
                 previous = current
+
+        if self._ground:
+            ground_points = [
+                screen_world(
+                    0.88 * math.cos(math.radians(phi)),
+                    0.88 * math.sin(math.radians(phi)),
+                    0.0,
+                )
+                for phi in range(0, 361, 12)
+            ]
+            painter.setPen(QPen(self._colors.light_line, 1.0, Qt.PenStyle.DotLine))
+            for index in range(1, len(ground_points)):
+                painter.drawLine(ground_points[index - 1], ground_points[index])
+            for phi in range(0, 360, 45):
+                painter.drawLine(
+                    screen_world(0.0, 0.0, 0.0),
+                    screen_world(
+                        0.88 * math.cos(math.radians(phi)),
+                        0.88 * math.sin(math.radians(phi)),
+                        0.0,
+                    ),
+                )
+            painter.setPen(self._colors.secondary_text)
+            painter.setFont(QFont("Sans Serif", 7))
+            label = screen_world(0.0, -0.88, 0.0)
+            painter.drawText(
+                QRectF(label.x() - 30.0, label.y() + 4.0, 60.0, 14.0),
+                Qt.AlignmentFlag.AlignCenter,
+                self._translator.t("pattern.ground"),
+            )
 
         max_point = max(points, key=lambda item: item[2])
         marker = screen(*max_point)

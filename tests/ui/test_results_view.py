@@ -140,3 +140,20 @@ def test_results_view_builds_a_polar_lobe_plot(qtbot: QtBot, tmp_path: Path) -> 
     view._pattern_view_tabs.setCurrentIndex(0)
     view.save_pattern_image(image_path)
     assert image_path.read_bytes().startswith(b"\x89PNG")
+
+
+def test_pattern_3d_can_draw_a_ground_plane(qtbot: QtBot) -> None:
+    from antennadesk.ui.widgets.radiation_pattern_3d_view import RadiationPattern3DView
+
+    view = RadiationPattern3DView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    points = tuple(
+        (float(theta), float(phi), 2.0 - theta / 90.0)
+        for theta in range(0, 91, 10)
+        for phi in range(0, 361, 30)
+    )
+
+    view.set_points(points, ground=True)
+
+    assert view._ground is True
+    assert view.grab().isNull() is False

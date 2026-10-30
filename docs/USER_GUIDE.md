@@ -113,7 +113,9 @@ parameter dialog instead of the raw wire table.
 Choose **File → New Antenna... → Inverted-V** to generate a two-leg inverted-V as an
 editable custom-wire design. Set the apex height, leg length, included angle,
 azimuth, wire radius, material, and ground. The dialog shows the resulting
-horizontal span and end height. The feed is at the apex.
+horizontal span and end height. The default ground is finite ground; choose
+**Free space** only if you deliberately want a free-space model. The feed is at
+the apex.
 
 This is an experimental generator: its geometry and frequency scaling are
 tested, but it has no independent numerical reference for gain or impedance.
@@ -150,7 +152,8 @@ coordinates.
   orientation. Above-ground elevation cuts are drawn as open arcs rather than
   closed lobes. The angular resolution comes from **Pattern resolution** in the
   design panel; higher resolution samples the same NEC solution more finely.
-  Power gain is not realized gain.
+  The 3D lobe draws a ground plane when the model has ground and only the
+  upper-hemisphere pattern is requested. Power gain is not realized gain.
 - **Currents**: segment current magnitude for the selected frequency, with the
   feed segment marked.
 - **Diagnostics**: solver version, status, duration, fingerprint, and warnings
