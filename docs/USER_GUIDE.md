@@ -123,20 +123,29 @@ design frequency. Missing results are reported in the dialog.
 ## Optimize the length
 
 Use **Optimize Dimension...** in the design panel or the File menu. Choose the
-objective: **target reactance** (0 Ω for series resonance) or **minimum SWR**.
-Set the minimum and maximum dimension, the maximum number of solver evaluations, and
+objective: **target reactance** (0 Ω for series resonance), **minimum SWR**,
+**maximum SWR bandwidth**, **maximum power gain**, **maximum efficiency**, or
+**balanced SWR + gain**. Set the minimum and maximum dimension and the maximum
+number of solver evaluations. For reactance and minimum-SWR searches, also set
 the objective tolerance. For **maximum SWR bandwidth**, set the SWR limit and
 use a frequency sweep; the grid resolution is controlled by the evaluation
-limit. The optimized dimension is the total length for a wire dipole or
-folded-dipole element, and the circumference for a loop. The dialog evaluates
-the design at the design frequency, shows every evaluation, and reports the
-best dimension. A sensitivity table evaluates the best dimension at ±10 mm and
-±25 mm so construction tolerances are visible.
+limit. Gain objectives require a far-field request. Efficiency uses the
+solver's power budget.
+
+For **balanced SWR + gain**, set non-negative SWR and gain weights. The dialog
+maximizes `gain_weight × gain_dBi − swr_weight × max(SWR − 1, 0)` at the design
+frequency; this is a transparent weighted score, not a Pareto front. The
+optimized dimension is the total length for a wire dipole or folded-dipole
+element, and the circumference for a loop. The dialog evaluates the design at
+the design frequency, shows resistance, reactance, SWR, bandwidth, gain, and
+efficiency for every evaluation, and reports the best dimension. A sensitivity
+table evaluates the best dimension at ±10 mm and ±25 mm so construction
+tolerances are visible.
 
 Press **Apply best dimension** to update the design; the application then runs
 the full sweep/pattern simulation with the current settings. The optimizer is
-bounded by the dimension range and evaluation limit; it is not a
-multi-objective optimizer.
+bounded by the dimension range and evaluation limit. It changes only one
+dimension; the SWR/gain balance is a weighted score, not a Pareto optimizer.
 
 ## Construction sheet
 
@@ -195,8 +204,9 @@ canonical meters and hertz.
 - Simulation reports and construction sheets have native PDF export; HTML
   versions remain available for browser printing.
 - Optimization is one-dimensional adjustment of the primary dimension against
-  a single reactance, SWR, bandwidth, or gain objective; efficiency and
-  multi-objective optimization are not implemented yet.
+  a reactance, SWR, bandwidth, gain, or efficiency objective, or a weighted
+  SWR/gain score. It does not produce a Pareto front or optimize multiple
+  dimensions.
 - Relative permeability is not emitted to NEC; conductor conductivity is.
 - Known diagnostic codes are localized; the raw solver detail remains in
   English in the tooltip and raw-output tab.

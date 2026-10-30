@@ -74,9 +74,9 @@ between those types.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - Currents tab and resonance markers on impedance/SWR sweeps.
 - Bounded antenna-dimension optimization for a target reactance, minimum SWR,
-  maximum SWR bandwidth, or maximum power gain: wire-dipole and folded-dipole
-  element length, or loop circumference, with an evaluation log and
-  sensitivity table.
+  maximum SWR bandwidth, maximum power gain, maximum efficiency, or a weighted
+  SWR/gain balance: wire-dipole and folded-dipole element length, or loop
+  circumference, with an evaluation log and sensitivity table.
 - Custom straight-wire antennas with a coordinate editor, template-to-custom
   conversion, experimental ground radial generator, practical NEC-2 deck
   import, and basic MMANA-GAL `.maa` geometry import, plus series/parallel RLC
@@ -136,9 +136,10 @@ uv run python scripts/run_reference_simulation.py \
 - Simulation runs are stored in the project, including raw solver text; the
   native project size limit is 10 MB. Use Compact Simulation History to keep
   only the latest run per variant.
-- Optimization is limited to one primary dimension per design against a single
-  reactance, SWR, bandwidth, or gain objective. It does not optimize efficiency
-  or multi-objective trade-offs yet.
+- Optimization adjusts one primary dimension per design. It supports one
+  reactance, SWR, bandwidth, gain, or efficiency objective, or a weighted
+  SWR/gain score; it does not expose a Pareto front or optimize several
+  dimensions at once.
 - Relative permeability is not emitted to NEC. Conductor conductivity is
   emitted when `SimulationSpec.include_conductor_losses` is true.
 - Simulation reports and construction sheets have native PDF export; HTML

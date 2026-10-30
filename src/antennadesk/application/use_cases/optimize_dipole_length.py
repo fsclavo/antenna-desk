@@ -52,7 +52,10 @@ class OptimizeDipoleLength:
                 command.base_spec,
                 far_field=FarFieldRequest(enabled=False),
             )
-        elif optimization_spec.objective is OptimizationObjective.MAX_GAIN:
+        elif optimization_spec.objective in {
+            OptimizationObjective.MAX_GAIN,
+            OptimizationObjective.BALANCED_SWR_GAIN,
+        }:
             if not command.base_spec.far_field.enabled:
                 raise ValueError("gain optimization requires a far-field request")
             evaluation_spec = replace(
@@ -89,6 +92,11 @@ class OptimizeDipoleLength:
                 )
                 bandwidth_hz = None
                 max_gain_db = None
+                efficiency_percent = (
+                    frequency.power_budget.efficiency_percent
+                    if frequency.power_budget is not None
+                    else None
+                )
                 if optimization_spec.objective is OptimizationObjective.MAX_BANDWIDTH:
                     bandwidth_hz = measure_bandwidth_hz(
                         [item.frequency_hz for item in result.frequencies],
@@ -96,7 +104,10 @@ class OptimizeDipoleLength:
                         center_hz=command.parameters.frequency_hz,
                         swr_limit=optimization_spec.swr_limit,
                     )
-                if optimization_spec.objective is OptimizationObjective.MAX_GAIN:
+                if optimization_spec.objective in {
+                    OptimizationObjective.MAX_GAIN,
+                    OptimizationObjective.BALANCED_SWR_GAIN,
+                }:
                     gains = [
                         point.gain_total_db
                         for point in frequency.far_field
@@ -109,6 +120,7 @@ class OptimizeDipoleLength:
                     swr=frequency.swr,
                     bandwidth_hz=bandwidth_hz,
                     max_gain_db=max_gain_db,
+                    efficiency_percent=efficiency_percent,
                 )
             message = next(
                 (
@@ -156,6 +168,7 @@ class OptimizeDipoleLength:
                         swr=evaluation.swr,
                         bandwidth_hz=evaluation.bandwidth_hz,
                         max_gain_db=evaluation.max_gain_db,
+                        efficiency_percent=evaluation.efficiency_percent,
                         error=evaluation.error,
                     )
                 )

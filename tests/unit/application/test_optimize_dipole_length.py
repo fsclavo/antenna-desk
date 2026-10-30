@@ -257,3 +257,69 @@ def test_optimizes_for_maximum_swr_bandwidth() -> None:
     assert result.best_bandwidth_hz is not None
     assert result.best_bandwidth_hz > 250_000.0
     assert solver is not None
+
+
+class EfficiencySolver(AnalyticalDipoleSolver):
+    def run(
+        self,
+        model: object,
+        spec: SimulationSpec,
+        *,
+        progress_callback: object = None,
+        cancel_token: object = None,
+    ) -> SimulationResult:
+        from antennadesk.domain.antennas.antenna import AntennaModel
+        from antennadesk.domain.simulation.result import PowerBudget
+
+        assert isinstance(model, AntennaModel)
+        length = model.wires[0].length_m
+        efficiency = 90.0 - abs(length - 19.5)
+        return SimulationResult(
+            status=SimulationStatus.COMPLETED,
+            spec=spec,
+            model_fingerprint="a" * 64,
+            solver=self.version(),
+            frequencies=(
+                FrequencyResult(
+                    frequency_hz=model.design_frequency_hz,
+                    feed_tag=1,
+                    feed_segment=11,
+                    impedance_ohm=complex(50.0, 0.0),
+                    swr=1.2,
+                    input_power_w=1.0,
+                    power_budget=PowerBudget(
+                        input_w=1.0,
+                        radiated_w=efficiency / 100.0,
+                        structure_loss_w=1.0 - efficiency / 100.0,
+                        network_loss_w=0.0,
+                        efficiency_percent=efficiency,
+                    ),
+                ),
+            ),
+        )
+
+
+def test_optimizes_for_maximum_efficiency() -> None:
+    from antennadesk.domain.optimization.length import OptimizationObjective
+
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    )
+    result = OptimizeDipoleLength(EfficiencySolver()).execute(
+        OptimizeDipoleLengthCommand(
+            parameters=parameters,
+            base_spec=SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0)),
+            optimization_spec=LengthOptimizationSpec(
+                min_length_m=18.0,
+                max_length_m=22.0,
+                objective=OptimizationObjective.MAX_EFFICIENCY,
+                max_evaluations=41,
+            ),
+        )
+    )
+
+    assert result.status is LengthOptimizationStatus.CONVERGED
+    assert result.best_length_m == pytest.approx(19.5, abs=0.03)
+    assert result.best_efficiency_percent == pytest.approx(90.0, abs=0.05)

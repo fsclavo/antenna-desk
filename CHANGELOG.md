@@ -105,10 +105,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   loads are explicitly reported as not imported.
 - NEC import accepts comma-separated cards; custom wire editing reports short,
   overlapping, and crossing wires.
-- Maximum-gain optimization objective, an experimental ground-radial wire
-  generator in the custom editor, an ARRL free-space quad-loop resistance
-  reference, load markers in Plan/3D geometry views, and conversion from a
-  template to custom wires.
+- Maximum-gain and maximum-efficiency optimization objectives, a weighted
+  balanced SWR + gain objective, an experimental ground-radial wire generator
+  in the custom editor, an ARRL free-space quad-loop resistance reference, load
+  markers in Plan/3D geometry views, and conversion from a template to custom
+  wires.
 - Series and parallel RLC loads on wires: validation, load editor,
   design/persistence support, NEC `LD 0`/`LD 1` export, and
   report/construction-sheet rows.
@@ -132,8 +133,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   element length or loop circumference. `EditDipoleLength` remains limited to
   wire dipoles.
 - Optimization objective selector: target reactance, minimum SWR, maximum SWR
-  bandwidth, or maximum power gain, with objective-specific limits and grid
-  resolution.
+  bandwidth, maximum power gain, maximum efficiency, or balanced SWR + gain,
+  with objective-specific limits, weights, and grid resolution.
 
 - Documentation and README are now in English.
 

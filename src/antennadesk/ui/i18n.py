@@ -779,6 +779,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Maximum power gain",
         Language.SPANISH: "Ganancia máxima de potencia",
     },
+    "optimize.max_efficiency_objective": {
+        Language.ENGLISH: "Maximum efficiency",
+        Language.SPANISH: "Máxima eficiencia",
+    },
+    "optimize.balanced_objective": {
+        Language.ENGLISH: "Balanced SWR + gain",
+        Language.SPANISH: "SWR + ganancia equilibrados",
+    },
     "optimize.target_reactance": {
         Language.ENGLISH: "Target reactance (Ω)",
         Language.SPANISH: "Reactancia objetivo (Ω)",
@@ -807,6 +815,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Max gain (dBi)",
         Language.SPANISH: "Ganancia máx. (dBi)",
     },
+    "optimize.efficiency": {
+        Language.ENGLISH: "Efficiency (%)",
+        Language.SPANISH: "Eficiencia (%)",
+    },
+    "optimize.swr_weight": {
+        Language.ENGLISH: "SWR weight",
+        Language.SPANISH: "Peso de SWR",
+    },
+    "optimize.gain_weight": {
+        Language.ENGLISH: "Gain weight",
+        Language.SPANISH: "Peso de ganancia",
+    },
     "optimize.bandwidth_result": {
         Language.ENGLISH: "Bandwidth {value} MHz",
         Language.SPANISH: "Ancho de banda {value} MHz",
@@ -814,6 +834,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize.gain_result": {
         Language.ENGLISH: "Max gain {value} dBi",
         Language.SPANISH: "Ganancia máxima {value} dBi",
+    },
+    "optimize.efficiency_result": {
+        Language.ENGLISH: "Efficiency {value} %",
+        Language.SPANISH: "Eficiencia {value} %",
+    },
+    "optimize.score_result": {
+        Language.ENGLISH: "Score {value}",
+        Language.SPANISH: "Puntuación {value}",
     },
     "optimize.bandwidth_needs_sweep": {
         Language.ENGLISH: "Bandwidth optimization requires a frequency sweep.",

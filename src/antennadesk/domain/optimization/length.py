@@ -10,7 +10,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from enum import StrEnum
 
-from ..common.units import ensure_finite, ensure_positive
+from ..common.units import ensure_finite, ensure_non_negative, ensure_positive
 
 
 class OptimizationObjective(StrEnum):
@@ -18,6 +18,8 @@ class OptimizationObjective(StrEnum):
     MIN_SWR = "min_swr"
     MAX_BANDWIDTH = "max_bandwidth"
     MAX_GAIN = "max_gain"
+    MAX_EFFICIENCY = "max_efficiency"
+    BALANCED_SWR_GAIN = "balanced_swr_gain"
 
 
 class LengthOptimizationStatus(StrEnum):
@@ -38,6 +40,8 @@ class LengthOptimizationSpec:
     reactance_tolerance_ohm: float = 0.1
     swr_tolerance: float = 0.05
     swr_limit: float = 2.0
+    swr_weight: float = 1.0
+    gain_weight: float = 1.0
     length_tolerance_m: float = 0.001
     sensitivity_offsets_m: tuple[float, ...] = (0.01, 0.025)
 
@@ -53,6 +57,14 @@ class LengthOptimizationSpec:
         ensure_positive(self.swr_tolerance, name="swr_tolerance")
         if self.swr_limit <= 1.0:
             raise ValueError("swr_limit must be greater than 1")
+        ensure_non_negative(self.swr_weight, name="swr_weight")
+        ensure_non_negative(self.gain_weight, name="gain_weight")
+        if (
+            self.objective is OptimizationObjective.BALANCED_SWR_GAIN
+            and self.swr_weight == 0.0
+            and self.gain_weight == 0.0
+        ):
+            raise ValueError("at least one multi-objective weight must be positive")
         ensure_positive(self.length_tolerance_m, name="length_tolerance_m")
         for offset in self.sensitivity_offsets_m:
             ensure_positive(offset, name="sensitivity offset")
@@ -68,6 +80,7 @@ class LengthEvaluation:
     index: int = 0
     bandwidth_hz: float | None = None
     max_gain_db: float | None = None
+    efficiency_percent: float | None = None
 
     @property
     def reactance_ohm(self) -> float | None:
@@ -83,6 +96,7 @@ class LengthSensitivityPoint:
     error: str | None = None
     bandwidth_hz: float | None = None
     max_gain_db: float | None = None
+    efficiency_percent: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,6 +108,8 @@ class LengthOptimizationResult:
     evaluations: tuple[LengthEvaluation, ...]
     best_bandwidth_hz: float | None = None
     best_gain_db: float | None = None
+    best_efficiency_percent: float | None = None
+    best_score: float | None = None
     sensitivity: tuple[LengthSensitivityPoint, ...] = ()
     message: str = ""
 
@@ -129,6 +145,10 @@ def optimize_length(
         return optimize_bandwidth(evaluate, spec, cancel_check=cancel_check)
     if spec.objective is OptimizationObjective.MAX_GAIN:
         return optimize_gain(evaluate, spec, cancel_check=cancel_check)
+    if spec.objective is OptimizationObjective.MAX_EFFICIENCY:
+        return optimize_efficiency(evaluate, spec, cancel_check=cancel_check)
+    if spec.objective is OptimizationObjective.BALANCED_SWR_GAIN:
+        return optimize_balanced(evaluate, spec, cancel_check=cancel_check)
     evaluations: list[LengthEvaluation] = []
 
     def cancelled() -> bool:
@@ -150,6 +170,7 @@ def optimize_length(
             evaluations=tuple(evaluations),
             best_bandwidth_hz=None if best is None else best.bandwidth_hz,
             best_gain_db=None if best is None else best.max_gain_db,
+            best_efficiency_percent=None if best is None else best.efficiency_percent,
             message=message,
         )
 
@@ -292,6 +313,7 @@ def optimize_swr(
             evaluations=tuple(evaluations),
             best_bandwidth_hz=None if best is None else best.bandwidth_hz,
             best_gain_db=None if best is None else best.max_gain_db,
+            best_efficiency_percent=None if best is None else best.efficiency_percent,
             message=message,
         )
 
@@ -457,6 +479,7 @@ def optimize_bandwidth(
             evaluations=tuple(evaluations),
             best_bandwidth_hz=None if best is None else best.bandwidth_hz,
             best_gain_db=None if best is None else best.max_gain_db,
+            best_efficiency_percent=None if best is None else best.efficiency_percent,
             message=message,
         )
 
@@ -531,6 +554,7 @@ def optimize_gain(
             evaluations=tuple(evaluations),
             best_bandwidth_hz=None if best is None else best.bandwidth_hz,
             best_gain_db=None if best is None else best.max_gain_db,
+            best_efficiency_percent=None if best is None else best.efficiency_percent,
             message=message,
         )
 
@@ -551,4 +575,148 @@ def optimize_gain(
     best = _best_gain_evaluation(evaluations)
     if best is None:
         return finish(LengthOptimizationStatus.ERROR, "no valid gain evaluation")
+    return finish(LengthOptimizationStatus.CONVERGED, "grid search completed")
+
+
+def _best_efficiency_evaluation(
+    evaluations: list[LengthEvaluation],
+) -> LengthEvaluation | None:
+    valid = [
+        evaluation
+        for evaluation in evaluations
+        if evaluation.impedance_ohm is not None
+        and evaluation.efficiency_percent is not None
+        and math.isfinite(evaluation.efficiency_percent)
+    ]
+    if not valid:
+        return None
+    return max(
+        valid,
+        key=lambda evaluation: (evaluation.efficiency_percent or -math.inf, -evaluation.length_m),
+    )
+
+
+def optimize_efficiency(
+    evaluate: LengthEvaluator,
+    spec: LengthOptimizationSpec,
+    *,
+    cancel_check: CancelCheck | None = None,
+) -> LengthOptimizationResult:
+    evaluations: list[LengthEvaluation] = []
+
+    def cancelled() -> bool:
+        return bool(cancel_check is not None and cancel_check())
+
+    def probe(length: float) -> LengthEvaluation:
+        raw = evaluate(length)
+        evaluation = replace(raw, index=len(evaluations) + 1)
+        evaluations.append(evaluation)
+        return evaluation
+
+    def finish(status: LengthOptimizationStatus, message: str = "") -> LengthOptimizationResult:
+        best = _best_efficiency_evaluation(evaluations)
+        return LengthOptimizationResult(
+            status=status,
+            best_length_m=None if best is None else best.length_m,
+            best_impedance_ohm=None if best is None else best.impedance_ohm,
+            best_swr=None if best is None else best.swr,
+            evaluations=tuple(evaluations),
+            best_bandwidth_hz=None if best is None else best.bandwidth_hz,
+            best_gain_db=None if best is None else best.max_gain_db,
+            best_efficiency_percent=None if best is None else best.efficiency_percent,
+            message=message,
+        )
+
+    for index in range(spec.max_evaluations):
+        if cancelled():
+            return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
+        ratio = index / (spec.max_evaluations - 1)
+        length = spec.min_length_m + (spec.max_length_m - spec.min_length_m) * ratio
+        evaluation = probe(length)
+        if evaluation.cancelled:
+            return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
+        if evaluation.impedance_ohm is None or evaluation.efficiency_percent is None:
+            return finish(
+                LengthOptimizationStatus.ERROR,
+                evaluation.error or "solver evaluation failed",
+            )
+    if _best_efficiency_evaluation(evaluations) is None:
+        return finish(LengthOptimizationStatus.ERROR, "no valid efficiency evaluation")
+    return finish(LengthOptimizationStatus.CONVERGED, "grid search completed")
+
+
+def _balanced_score(evaluation: LengthEvaluation, spec: LengthOptimizationSpec) -> float | None:
+    if (
+        evaluation.swr is None
+        or evaluation.max_gain_db is None
+        or not math.isfinite(evaluation.swr)
+        or not math.isfinite(evaluation.max_gain_db)
+    ):
+        return None
+    excess_swr = max(evaluation.swr - 1.0, 0.0)
+    return spec.gain_weight * evaluation.max_gain_db - spec.swr_weight * excess_swr
+
+
+def _best_balanced_evaluation(
+    evaluations: list[LengthEvaluation],
+    spec: LengthOptimizationSpec,
+) -> tuple[LengthEvaluation, float] | None:
+    scored = [
+        (evaluation, score)
+        for evaluation in evaluations
+        if (score := _balanced_score(evaluation, spec)) is not None
+    ]
+    if not scored:
+        return None
+    return max(scored, key=lambda item: (item[1], -item[0].length_m))
+
+
+def optimize_balanced(
+    evaluate: LengthEvaluator,
+    spec: LengthOptimizationSpec,
+    *,
+    cancel_check: CancelCheck | None = None,
+) -> LengthOptimizationResult:
+    evaluations: list[LengthEvaluation] = []
+
+    def cancelled() -> bool:
+        return bool(cancel_check is not None and cancel_check())
+
+    def probe(length: float) -> LengthEvaluation:
+        raw = evaluate(length)
+        evaluation = replace(raw, index=len(evaluations) + 1)
+        evaluations.append(evaluation)
+        return evaluation
+
+    def finish(status: LengthOptimizationStatus, message: str = "") -> LengthOptimizationResult:
+        best = _best_balanced_evaluation(evaluations, spec)
+        evaluation = None if best is None else best[0]
+        return LengthOptimizationResult(
+            status=status,
+            best_length_m=None if evaluation is None else evaluation.length_m,
+            best_impedance_ohm=None if evaluation is None else evaluation.impedance_ohm,
+            best_swr=None if evaluation is None else evaluation.swr,
+            evaluations=tuple(evaluations),
+            best_bandwidth_hz=None if evaluation is None else evaluation.bandwidth_hz,
+            best_gain_db=None if evaluation is None else evaluation.max_gain_db,
+            best_efficiency_percent=None if evaluation is None else evaluation.efficiency_percent,
+            best_score=None if best is None else best[1],
+            message=message,
+        )
+
+    for index in range(spec.max_evaluations):
+        if cancelled():
+            return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
+        ratio = index / (spec.max_evaluations - 1)
+        length = spec.min_length_m + (spec.max_length_m - spec.min_length_m) * ratio
+        evaluation = probe(length)
+        if evaluation.cancelled:
+            return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
+        if evaluation.impedance_ohm is None or evaluation.max_gain_db is None:
+            return finish(
+                LengthOptimizationStatus.ERROR,
+                evaluation.error or "solver evaluation failed",
+            )
+    if _best_balanced_evaluation(evaluations, spec) is None:
+        return finish(LengthOptimizationStatus.ERROR, "no valid balanced evaluation")
     return finish(LengthOptimizationStatus.CONVERGED, "grid search completed")

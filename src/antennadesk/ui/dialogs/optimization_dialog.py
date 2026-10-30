@@ -88,6 +88,8 @@ class OptimizationDialog(QDialog):
         self._objective.addItem("", OptimizationObjective.MIN_SWR.value)
         self._objective.addItem("", OptimizationObjective.MAX_BANDWIDTH.value)
         self._objective.addItem("", OptimizationObjective.MAX_GAIN.value)
+        self._objective.addItem("", OptimizationObjective.MAX_EFFICIENCY.value)
+        self._objective.addItem("", OptimizationObjective.BALANCED_SWR_GAIN.value)
         self._objective.currentIndexChanged.connect(self._objective_changed)
 
         self._min_length = QDoubleSpinBox(self)
@@ -107,6 +109,15 @@ class OptimizationDialog(QDialog):
         self._target.setDecimals(2)
         self._target.setValue(0.0)
         self._target.setSuffix(" Ω")
+
+        self._swr_weight = QDoubleSpinBox(self)
+        self._swr_weight.setRange(0.0, 100.0)
+        self._swr_weight.setDecimals(2)
+        self._swr_weight.setValue(1.0)
+        self._gain_weight = QDoubleSpinBox(self)
+        self._gain_weight.setRange(0.0, 100.0)
+        self._gain_weight.setDecimals(2)
+        self._gain_weight.setValue(1.0)
 
         self._swr_limit = QDoubleSpinBox(self)
         self._swr_limit.setRange(1.01, 10.0)
@@ -128,6 +139,8 @@ class OptimizationDialog(QDialog):
         self._label_max = QLabel(translator.t("optimize.max_length"), self)
         self._label_target = QLabel(translator.t("optimize.target_reactance"), self)
         self._label_swr_limit = QLabel(translator.t("optimize.swr_limit"), self)
+        self._label_swr_weight = QLabel(translator.t("optimize.swr_weight"), self)
+        self._label_gain_weight = QLabel(translator.t("optimize.gain_weight"), self)
         self._label_evaluations = QLabel(translator.t("optimize.max_evaluations"), self)
         self._label_tolerance = QLabel(translator.t("optimize.tolerance"), self)
         self._form_layout = QFormLayout()
@@ -136,16 +149,18 @@ class OptimizationDialog(QDialog):
         self._form_layout.addRow(self._label_max, self._max_length)
         self._form_layout.addRow(self._label_target, self._target)
         self._form_layout.addRow(self._label_swr_limit, self._swr_limit)
+        self._form_layout.addRow(self._label_swr_weight, self._swr_weight)
+        self._form_layout.addRow(self._label_gain_weight, self._gain_weight)
         self._form_layout.addRow(self._label_evaluations, self._max_evaluations)
         self._form_layout.addRow(self._label_tolerance, self._tolerance)
 
         self._evaluations_label = QLabel(translator.t("optimize.evaluations"), self)
-        self._evaluations = QTableWidget(0, 9, self)
+        self._evaluations = QTableWidget(0, 10, self)
         self._configure_table(self._evaluations)
-        self._evaluations.horizontalHeader().setSectionResizeMode(8, QHeaderView.ResizeMode.Stretch)
+        self._evaluations.horizontalHeader().setSectionResizeMode(9, QHeaderView.ResizeMode.Stretch)
 
         self._sensitivity_label = QLabel(translator.t("optimize.sensitivity"), self)
-        self._sensitivity = QTableWidget(0, 7, self)
+        self._sensitivity = QTableWidget(0, 8, self)
         self._configure_table(self._sensitivity)
         self._sensitivity.horizontalHeader().setStretchLastSection(True)
 
@@ -201,6 +216,8 @@ class OptimizationDialog(QDialog):
         self._objective.setItemText(1, t("optimize.min_swr_objective"))
         self._objective.setItemText(2, t("optimize.max_bandwidth_objective"))
         self._objective.setItemText(3, t("optimize.max_gain_objective"))
+        self._objective.setItemText(4, t("optimize.max_efficiency_objective"))
+        self._objective.setItemText(5, t("optimize.balanced_objective"))
         self._evaluations.setHorizontalHeaderLabels(
             [
                 t("optimize.iteration"),
@@ -211,6 +228,7 @@ class OptimizationDialog(QDialog):
                 t("table.swr"),
                 t("optimize.bandwidth"),
                 t("optimize.gain"),
+                t("optimize.efficiency"),
                 t("optimize.message"),
             ]
         )
@@ -223,6 +241,7 @@ class OptimizationDialog(QDialog):
                 t("table.swr"),
                 t("optimize.bandwidth"),
                 t("optimize.gain"),
+                t("optimize.efficiency"),
             ]
         )
 
@@ -249,15 +268,29 @@ class OptimizationDialog(QDialog):
         objective = self._objective_value()
         is_swr = objective is OptimizationObjective.MIN_SWR
         is_bandwidth = objective is OptimizationObjective.MAX_BANDWIDTH
-        is_gain = objective is OptimizationObjective.MAX_GAIN
+        is_gain = objective in {
+            OptimizationObjective.MAX_GAIN,
+            OptimizationObjective.BALANCED_SWR_GAIN,
+        }
+        is_balanced = objective is OptimizationObjective.BALANCED_SWR_GAIN
         self._target.setVisible(objective is OptimizationObjective.REACTANCE)
         self._label_target.setVisible(objective is OptimizationObjective.REACTANCE)
         self._swr_limit.setVisible(is_bandwidth)
         self._label_swr_limit.setVisible(is_bandwidth)
-        self._set_row_visible(self._tolerance, not is_bandwidth and not is_gain)
+        self._swr_weight.setVisible(is_balanced)
+        self._label_swr_weight.setVisible(is_balanced)
+        self._gain_weight.setVisible(is_balanced)
+        self._label_gain_weight.setVisible(is_balanced)
+        show_tolerance = objective in {
+            OptimizationObjective.REACTANCE,
+            OptimizationObjective.MIN_SWR,
+        }
+        self._set_row_visible(self._tolerance, show_tolerance)
         if is_bandwidth and self._max_evaluations.value() < 21:
             self._max_evaluations.setValue(41)
         if is_gain and self._max_evaluations.value() < 15:
+            self._max_evaluations.setValue(21)
+        if objective is OptimizationObjective.MAX_EFFICIENCY and self._max_evaluations.value() < 15:
             self._max_evaluations.setValue(21)
         if is_swr:
             self._label_tolerance.setText(self._translator.t("optimize.swr_tolerance"))
@@ -281,6 +314,8 @@ class OptimizationDialog(QDialog):
             reactance_tolerance_ohm=self._tolerance.value(),
             swr_tolerance=self._tolerance.value(),
             swr_limit=self._swr_limit.value(),
+            swr_weight=self._swr_weight.value(),
+            gain_weight=self._gain_weight.value(),
         )
 
     def _start(self) -> None:
@@ -297,7 +332,11 @@ class OptimizationDialog(QDialog):
             )
             return
         if (
-            self._objective_value() is OptimizationObjective.MAX_GAIN
+            self._objective_value()
+            in {
+                OptimizationObjective.MAX_GAIN,
+                OptimizationObjective.BALANCED_SWR_GAIN,
+            }
             and not self._base_spec.far_field.enabled
         ):
             QMessageBox.critical(
@@ -381,6 +420,8 @@ class OptimizationDialog(QDialog):
             self._max_length,
             self._target,
             self._swr_limit,
+            self._swr_weight,
+            self._gain_weight,
             self._max_evaluations,
             self._tolerance,
         ):
@@ -423,17 +464,22 @@ class OptimizationDialog(QDialog):
                     else "—"
                 ),
                 (f"{evaluation.max_gain_db:.2f}" if evaluation.max_gain_db is not None else "—"),
+                (
+                    f"{evaluation.efficiency_percent:.2f}"
+                    if evaluation.efficiency_percent is not None
+                    else "—"
+                ),
                 evaluation.error or "",
             ]
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
-                if column in {2, 3, 4, 5, 6, 7}:
+                if column in {2, 3, 4, 5, 6, 7, 8}:
                     item.setTextAlignment(
                         Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
                     )
                 self._evaluations.setItem(row, column, item)
         self._evaluations.resizeColumnsToContents()
-        self._evaluations.horizontalHeader().setSectionResizeMode(8, QHeaderView.ResizeMode.Stretch)
+        self._evaluations.horizontalHeader().setSectionResizeMode(9, QHeaderView.ResizeMode.Stretch)
 
     def _populate_sensitivity(self, result: LengthOptimizationResult) -> None:
         self._sensitivity.setRowCount(len(result.sensitivity))
@@ -449,10 +495,16 @@ class OptimizationDialog(QDialog):
                     else (f"{point.swr:.3f}" if point.swr is not None else "—")
                 ),
                 (f"{point.bandwidth_hz / 1e6:.3f}" if point.bandwidth_hz is not None else "—"),
+                (f"{point.max_gain_db:.2f}" if point.max_gain_db is not None else "—"),
+                (
+                    f"{point.efficiency_percent:.2f}"
+                    if point.efficiency_percent is not None
+                    else "—"
+                ),
             ]
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
-                if column in {2, 3, 4, 5}:
+                if column in {2, 3, 4, 5, 6, 7}:
                     item.setTextAlignment(
                         Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
                     )
@@ -497,6 +549,24 @@ class OptimizationDialog(QDialog):
                     + self._translator.t(
                         "optimize.gain_result",
                         value=f"{result.best_gain_db:.2f}",
+                    )
+                )
+            if result.best_efficiency_percent is not None:
+                text = (
+                    text
+                    + " · "
+                    + self._translator.t(
+                        "optimize.efficiency_result",
+                        value=f"{result.best_efficiency_percent:.2f}",
+                    )
+                )
+            if result.best_score is not None:
+                text = (
+                    text
+                    + " · "
+                    + self._translator.t(
+                        "optimize.score_result",
+                        value=f"{result.best_score:.3f}",
                     )
                 )
         if result.message:

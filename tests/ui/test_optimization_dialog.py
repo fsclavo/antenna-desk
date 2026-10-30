@@ -15,6 +15,7 @@ from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.result import (
     FarFieldPoint,
     FrequencyResult,
+    PowerBudget,
     SimulationResult,
     SimulationStatus,
 )
@@ -68,6 +69,13 @@ class AnalyticalSolver:
                     impedance_ohm=complex(70.0, 5.0 * (length - self.resonance_length_m)),
                     swr=1.0 + abs(length - self.resonance_length_m),
                     input_power_w=0.001,
+                    power_budget=PowerBudget(
+                        input_w=1.0,
+                        radiated_w=0.9,
+                        structure_loss_w=0.1,
+                        network_loss_w=0.0,
+                        efficiency_percent=95.0 - abs(length - self.resonance_length_m),
+                    ),
                     far_field=(
                         FarFieldPoint(
                             theta_deg=90.0,
@@ -225,3 +233,72 @@ def test_optimization_dialog_maximizes_gain(qtbot: QtBot) -> None:
     assert dialog.selected_dimension_m() == pytest.approx(20.3, abs=0.1)
     assert dialog._target.isVisible() is False
     assert dialog._swr_limit.isVisible() is False
+
+
+def test_optimization_dialog_maximizes_efficiency(qtbot: QtBot) -> None:
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    )
+    base_spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(7_100_000.0),
+        far_field=FarFieldRequest(enabled=False),
+    )
+    dialog = OptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalSolver(),
+        parameters,
+        base_spec,
+    )
+    qtbot.addWidget(dialog)
+    dialog._objective.setCurrentIndex(4)
+    dialog._min_length.setValue(18.0)
+    dialog._max_length.setValue(22.0)
+    dialog.show()
+
+    dialog._run.click()
+    qtbot.waitUntil(lambda: dialog._thread is None, timeout=5_000)
+
+    assert dialog._result is not None
+    assert dialog._result.status is LengthOptimizationStatus.CONVERGED
+    assert dialog.selected_dimension_m() == pytest.approx(20.3, abs=0.15)
+    assert dialog._result.best_efficiency_percent == pytest.approx(95.0, abs=0.2)
+    assert dialog._evaluations.columnCount() == 10
+    assert dialog._sensitivity.columnCount() == 8
+    assert dialog._swr_weight.isVisible() is False
+
+
+def test_optimization_dialog_balances_swr_and_gain(qtbot: QtBot) -> None:
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    )
+    base_spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(7_100_000.0),
+        far_field=FarFieldRequest(enabled=True),
+    )
+    dialog = OptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalSolver(),
+        parameters,
+        base_spec,
+    )
+    qtbot.addWidget(dialog)
+    dialog._objective.setCurrentIndex(5)
+    dialog._min_length.setValue(18.0)
+    dialog._max_length.setValue(22.0)
+    dialog.show()
+
+    assert dialog._swr_weight.isVisible() is True
+    assert dialog._gain_weight.isVisible() is True
+    dialog._run.click()
+    qtbot.waitUntil(lambda: dialog._thread is None, timeout=5_000)
+
+    assert dialog._result is not None
+    assert dialog._result.status is LengthOptimizationStatus.CONVERGED
+    assert dialog.selected_dimension_m() == pytest.approx(20.3, abs=0.1)
+    assert dialog._result.best_score is not None

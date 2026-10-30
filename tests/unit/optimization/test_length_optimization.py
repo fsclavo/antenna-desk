@@ -254,3 +254,62 @@ def test_maximizes_gain() -> None:
     assert result.status is LengthOptimizationStatus.CONVERGED
     assert result.best_length_m == pytest.approx(20.3, abs=0.1)
     assert result.best_gain_db == pytest.approx(2.14, abs=0.1)
+
+
+def test_maximizes_efficiency() -> None:
+    def evaluate(length_m: float) -> LengthEvaluation:
+        return LengthEvaluation(
+            length_m=length_m,
+            impedance_ohm=complex(50.0, 0.0),
+            swr=1.2,
+            efficiency_percent=90.0 - abs(length_m - 19.5),
+        )
+
+    spec = LengthOptimizationSpec(
+        min_length_m=18.0,
+        max_length_m=22.0,
+        objective=OptimizationObjective.MAX_EFFICIENCY,
+        max_evaluations=41,
+    )
+    result = optimize_length(evaluate, spec)
+
+    assert result.status is LengthOptimizationStatus.CONVERGED
+    assert result.best_length_m == pytest.approx(19.5, abs=0.1)
+    assert result.best_efficiency_percent == pytest.approx(90.0, abs=0.1)
+
+
+def test_balances_swr_and_gain_with_explicit_weights() -> None:
+    def evaluate(length_m: float) -> LengthEvaluation:
+        return LengthEvaluation(
+            length_m=length_m,
+            impedance_ohm=complex(50.0, 0.0),
+            swr=1.0 + 0.5 * abs(length_m - 20.3),
+            max_gain_db=2.6 - 0.05 * abs(length_m - 18.0),
+        )
+
+    spec = LengthOptimizationSpec(
+        min_length_m=18.0,
+        max_length_m=22.0,
+        objective=OptimizationObjective.BALANCED_SWR_GAIN,
+        swr_weight=1.0,
+        gain_weight=1.0,
+        max_evaluations=41,
+    )
+    result = optimize_length(evaluate, spec)
+
+    assert result.status is LengthOptimizationStatus.CONVERGED
+    assert result.best_length_m == pytest.approx(20.3, abs=0.1)
+    assert result.best_swr == pytest.approx(1.0, abs=0.1)
+    assert result.best_gain_db == pytest.approx(2.485, abs=0.1)
+    assert result.best_score is not None
+
+
+def test_rejects_zero_multi_objective_weights() -> None:
+    with pytest.raises(ValueError, match="at least one multi-objective weight"):
+        LengthOptimizationSpec(
+            min_length_m=18.0,
+            max_length_m=22.0,
+            objective=OptimizationObjective.BALANCED_SWR_GAIN,
+            swr_weight=0.0,
+            gain_weight=0.0,
+        )
