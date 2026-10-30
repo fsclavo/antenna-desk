@@ -85,6 +85,7 @@ from .dialogs.comparison_dialog import ComparisonDialog
 from .dialogs.construction_dialog import ConstructionDialog
 from .dialogs.custom_antenna_dialog import CustomAntennaDialog
 from .dialogs.feed_line_dialog import FeedLineDialog
+from .dialogs.inverted_v_dialog import InvertedVDialog
 from .dialogs.loads_dialog import LoadsDialog
 from .dialogs.optimization_dialog import OptimizationDialog
 from .dialogs.yagi_dialog import YagiDialog
@@ -146,6 +147,8 @@ class MainWindow(QMainWindow):
         self._new_custom_action.triggered.connect(lambda: self.new_custom_antenna())
         self._new_yagi_action = QAction(self)
         self._new_yagi_action.triggered.connect(lambda: self.new_yagi_antenna())
+        self._new_inverted_v_action = QAction(self)
+        self._new_inverted_v_action.triggered.connect(lambda: self.new_inverted_v_antenna())
         self._import_nec_action = QAction(self)
         self._import_nec_action.triggered.connect(lambda: self.import_nec_deck())
         self._import_mmana_action = QAction(self)
@@ -359,6 +362,7 @@ class MainWindow(QMainWindow):
         self._file_menu.addAction(self._new_action)
         self._file_menu.addAction(self._new_custom_action)
         self._file_menu.addAction(self._new_yagi_action)
+        self._file_menu.addAction(self._new_inverted_v_action)
         self._file_menu.addAction(self._import_nec_action)
         self._file_menu.addAction(self._import_mmana_action)
         self._file_menu.addAction(self._open_action)
@@ -410,6 +414,7 @@ class MainWindow(QMainWindow):
         self._new_action.setText(self._translator.t("action.new"))
         self._new_custom_action.setText(self._translator.t("action.new_custom"))
         self._new_yagi_action.setText(self._translator.t("action.new_yagi"))
+        self._new_inverted_v_action.setText(self._translator.t("action.new_inverted_v"))
         self._import_nec_action.setText(self._translator.t("action.import_nec"))
         self._import_mmana_action.setText(self._translator.t("action.import_mmana"))
         self._open_action.setText(self._translator.t("action.open"))
@@ -531,6 +536,7 @@ class MainWindow(QMainWindow):
         self._convert_custom_action.setEnabled(idle and has_project and not is_custom)
         self._new_custom_action.setEnabled(idle)
         self._new_yagi_action.setEnabled(idle)
+        self._new_inverted_v_action.setEnabled(idle)
         self._import_nec_action.setEnabled(idle)
         self._import_mmana_action.setEnabled(idle)
         self._export_csv_action.setEnabled(idle and has_result)
@@ -950,6 +956,33 @@ class MainWindow(QMainWindow):
             project = CreateDipoleProject().execute(
                 CreateDipoleProjectCommand(
                     project_name=name.strip() or "Yagi",
+                    variant_name="Initial",
+                    parameters=dialog.result_parameters(),
+                )
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+
+    def new_inverted_v_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        name, accepted = QInputDialog.getText(
+            self,
+            self._translator.t("inverted_v.title"),
+            self._translator.t("field.project_name"),
+            text="Inverted V",
+        )
+        if not accepted:
+            return
+        dialog = InvertedVDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            project = CreateDipoleProject().execute(
+                CreateDipoleProjectCommand(
+                    project_name=name.strip() or "Inverted V",
                     variant_name="Initial",
                     parameters=dialog.result_parameters(),
                 )

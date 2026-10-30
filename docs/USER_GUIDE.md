@@ -97,6 +97,18 @@ experimental geometry with no external reference; simulate it and judge it on
 its own modeled performance. The generated design can be refined further with
 **Edit Custom Wires...**.
 
+## Create an inverted-V
+
+Use **File → New Inverted-V...** to generate a two-leg inverted-V as an
+editable custom-wire design. Set the apex height, leg length, included angle,
+azimuth, wire radius, material, and ground. The dialog shows the resulting
+horizontal span and end height. The feed is at the apex.
+
+This is an experimental generator: its geometry and frequency scaling are
+tested, but it has no independent numerical reference for gain or impedance.
+Simulate it and judge the modeled performance; refine the wires with **Edit
+Custom Wires...** if needed.
+
 ## Read the results
 
 - **Impedance / SWR**: table of frequency, resistance, reactance, magnitude,

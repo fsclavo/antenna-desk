@@ -789,3 +789,57 @@ def test_new_yagi_creates_an_editable_custom_design(
     assert window._project.designs[0].antenna_type == "custom"
     assert window._project.designs[0].antenna.wires == parameters.wires
     window._dirty = False
+
+
+def test_new_inverted_v_creates_an_editable_custom_design(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.custom import CustomAntennaParameters
+    from antennadesk.domain.antennas.feed import FeedPoint
+    from antennadesk.domain.antennas.geometry import Point3D
+    from antennadesk.domain.antennas.materials import COPPER
+    from antennadesk.domain.antennas.wire import Wire
+
+    parameters = CustomAntennaParameters(
+        frequency_hz=7_100_000.0,
+        wires=(
+            Wire(
+                id="leg-1",
+                start=Point3D(0.0, 0.0, 12.0),
+                end=Point3D(-8.0, 0.0, 5.0),
+                radius_m=0.001,
+                material=COPPER,
+            ),
+            Wire(
+                id="leg-2",
+                start=Point3D(0.0, 0.0, 12.0),
+                end=Point3D(8.0, 0.0, 5.0),
+                radius_m=0.001,
+                material=COPPER,
+            ),
+        ),
+        feed=FeedPoint("leg-1", 0.0),
+    )
+
+    class FakeInvertedVDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> CustomAntennaParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "InvertedVDialog", FakeInvertedVDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Inv V", True))
+
+    window.new_inverted_v_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "Inv V"
+    assert window._project.designs[0].antenna_type == "custom"
+    assert window._project.designs[0].antenna.wires == parameters.wires
+    window._dirty = False

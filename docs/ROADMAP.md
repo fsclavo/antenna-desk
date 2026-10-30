@@ -41,13 +41,14 @@ Completed:
 - Reference anchors for NEC examples and selected ARRL dipole/folded/loop
   properties.
 
-Completed in M1:
+Completed:
 
-- Parametric Yagi generator with editable element table and NBS preset.
+- M1: parametric Yagi generator with editable element table and NBS preset.
+- M2: inverted-V generator.
 
 In progress:
 
-- Broad parametric catalog with explicit evidence levels; next is inverted-V.
+- Broad parametric catalog with explicit evidence levels; next is M3.
 
 Deferred:
 
@@ -65,7 +66,7 @@ Deferred:
 - Structural tests plus a reference-backed NEC check for the NBS preset.
 - UI: **File → New Yagi...**, validation badge/notes in the generated design.
 
-### M2 — Inverted-V generator
+### M2 — Inverted-V generator (completed)
 
 - Apex height, included angle, leg length, azimuth, wire radius, ground.
 - Free-space and ground simulations.
@@ -91,8 +92,8 @@ Deferred:
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
 | P0 | Parametric Yagi generator | B/C | done |
-| P0 | Inverted-V generator | C | next |
-| P1 | Catalog metadata and validation badge | A/B/C | pending |
+| P0 | Inverted-V generator | C | done |
+| P1 | Catalog metadata and validation badge | A/B/C | next |
 | P1 | Delta loop / quad / Moxon generators | B/C | pending |
 | P1 | OCFD and fan dipole generators | B/C | pending |
 | P1 | Vertical with radial screen | B/C | pending |

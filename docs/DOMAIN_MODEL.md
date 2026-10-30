@@ -151,6 +151,14 @@ parallel straight wires and a center feed on the selected driven element. The
 NBS TN-688 5-element 0.8λ preset is a starting geometry; edited designs are
 experimental custom-wire models.
 
+### InvertedVParameters
+
+A two-leg inverted-V with frequency, leg length, apex height, included angle,
+azimuth, wire radius, material, and ground. `to_custom_parameters()` creates
+two sloping wires meeting at the apex, with a center feed at the apex. The
+generator is experimental; its geometry and scaling are tested, but it has no
+independent numerical performance reference.
+
 ### AntennaDesignParameters
 
 `AntennaDesignParameters` is the union of `DipoleParameters`,

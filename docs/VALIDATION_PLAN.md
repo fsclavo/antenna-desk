@@ -125,6 +125,15 @@ gain, nulls, or impedance.
 
 ## Phase 6 — new geometry and measurements (in progress)
 
+Inverted-V generator tests:
+
+- Apex/end geometry, horizontal span, azimuth rotation, and below-ground
+  rejection.
+- Two-wire connectivity, apex feed, dialog geometry updates, and main-window
+  creation.
+- No independent numerical gain reference is claimed; the generator is marked
+  experimental.
+
 Yagi generator tests:
 
 - NBS TN-688 5-element preset positions, lengths, scaling, and feed mapping.
@@ -199,7 +208,7 @@ Phase 6 adds tests for:
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 410 tests with the solver enabled. The twelve solver
+The suite currently has 417 tests with the solver enabled. The twelve solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.

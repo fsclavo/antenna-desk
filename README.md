@@ -4,9 +4,10 @@ Desktop application for designing, simulating, and building antennas for
 amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
 
-**Status:** Phase 6 in progress. Horizontal and vertical center-fed dipoles,
-folded dipoles, and regular-polygon loops are supported, with schema v3
-persistence and migration. VNA CSV import and measurement comparison are next.
+**Status:** active antenna catalog development. Center-fed dipoles, folded
+dipoles, regular-polygon loops, custom wires, Yagis, and inverted-Vs are
+supported, with schema v3 persistence and migration. VNA CSV import and
+measurement comparison are deferred.
 
 ## Launch the GUI
 
@@ -80,7 +81,8 @@ between those types.
   circumference, with an evaluation log and sensitivity table.
 - Custom straight-wire antennas with a coordinate editor, template-to-custom
   conversion, a parametric Yagi generator with an editable element table and
-  NBS starting preset, experimental ground radial generator, practical NEC-2
+  NBS starting preset, an inverted-V generator, experimental ground radial
+  generator, practical NEC-2
   deck import, and basic MMANA-GAL `.maa` geometry import, plus series/parallel
   RLC loads, load markers, and report rows.
 - Optional transmitter-side feed line with characteristic impedance, length,

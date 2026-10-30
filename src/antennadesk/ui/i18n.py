@@ -691,6 +691,50 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Yagi Generator",
         Language.SPANISH: "Generador de Yagi",
     },
+    "inverted_v.title": {
+        Language.ENGLISH: "Inverted-V Generator",
+        Language.SPANISH: "Generador de V invertida",
+    },
+    "inverted_v.apex_height": {
+        Language.ENGLISH: "Apex height",
+        Language.SPANISH: "Altura del vértice",
+    },
+    "inverted_v.leg_length": {
+        Language.ENGLISH: "Leg length",
+        Language.SPANISH: "Longitud de cada rama",
+    },
+    "inverted_v.included_angle": {
+        Language.ENGLISH: "Included angle",
+        Language.SPANISH: "Ángulo incluido",
+    },
+    "inverted_v.wire_radius": {
+        Language.ENGLISH: "Wire radius (mm)",
+        Language.SPANISH: "Radio del hilo (mm)",
+    },
+    "inverted_v.geometry": {
+        Language.ENGLISH: "Horizontal span {span} {unit} · end height {end} {unit}",
+        Language.SPANISH: "Ancho horizontal {span} {unit} · altura de puntas {end} {unit}",
+    },
+    "inverted_v.hint": {
+        Language.ENGLISH: (
+            "The generator creates two sloping wires with a center feed at the "
+            "apex. The generated antenna is an editable custom-wire design."
+        ),
+        Language.SPANISH: (
+            "El generador crea dos hilos inclinados con alimentación central en "
+            "el vértice. La antena generada es un diseño de hilos editable."
+        ),
+    },
+    "inverted_v.evidence": {
+        Language.ENGLISH: (
+            "Experimental generator: geometry and scaling are tested, but there "
+            "is no independent numerical reference for this configuration."
+        ),
+        Language.SPANISH: (
+            "Generador experimental: se prueban geometría y escalado, pero no "
+            "hay una referencia numérica independiente para esta configuración."
+        ),
+    },
     "yagi.element": {
         Language.ENGLISH: "Element",
         Language.SPANISH: "Elemento",
@@ -804,6 +848,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "action.new_yagi": {
         Language.ENGLISH: "New Yagi...",
         Language.SPANISH: "Nueva Yagi...",
+    },
+    "action.new_inverted_v": {
+        Language.ENGLISH: "New Inverted-V...",
+        Language.SPANISH: "Nueva V invertida...",
     },
     "action.import_nec": {
         Language.ENGLISH: "Import NEC Deck...",

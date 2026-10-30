@@ -138,6 +138,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   persistence, diagnostics, and dialog integration.
 - Added a parametric Yagi generator with an editable element table, driven
   element selection, and an NBS TN-688 5-element starting preset.
+- Added an experimental inverted-V generator with apex height, leg length,
+  included angle, azimuth, geometry preview, and editable custom-wire output.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the
   first wire.
 - Length optimization is generalized to the primary dimension: wire/folded
