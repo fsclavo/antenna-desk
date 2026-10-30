@@ -26,6 +26,7 @@ from ...domain.antennas.antenna import AntennaModel
 from ...domain.antennas.dipole import ANTENNA_TYPE_WIRE_DIPOLE
 from ...domain.antennas.folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE
 from ...domain.antennas.geometry import Point3D
+from ...domain.antennas.j_pole import ANTENNA_TYPE_J_POLE
 from ...domain.antennas.loop import ANTENNA_TYPE_LOOP
 from ...domain.antennas.wire import Wire
 from ..i18n import Translator
@@ -369,6 +370,9 @@ class GeometryView(QWidget):
         if self._antenna_type == ANTENNA_TYPE_LOOP:
             self._paint_loop_elevation(painter, rect)
             return
+        if self._antenna_type == ANTENNA_TYPE_J_POLE:
+            self._paint_j_pole_elevation(painter, rect)
+            return
         if len(self._model.wires) == 1:
             wire = self._model.wires[0]
             dx = wire.end.x_m - wire.start.x_m
@@ -381,6 +385,192 @@ class GeometryView(QWidget):
             self._paint_multi_wire_elevation(painter, rect)
             return
         self._paint_installation_elevation(painter, rect)
+
+    @staticmethod
+    def _vertical_wires(model: AntennaModel) -> tuple[Wire, ...]:
+        return tuple(
+            wire
+            for wire in model.wires
+            if math.hypot(
+                wire.end.x_m - wire.start.x_m,
+                wire.end.y_m - wire.start.y_m,
+            )
+            < 1e-9
+        )
+
+    def _paint_j_pole_elevation(self, painter: QPainter, rect: QRectF) -> None:
+        assert self._model is not None
+        verticals = self._vertical_wires(self._model)
+        if len(verticals) < 2:
+            self._paint_multi_wire_elevation(painter, rect)
+            return
+        radiator = max(verticals, key=lambda wire: wire.length_m)
+        stub = min(verticals, key=lambda wire: wire.length_m)
+        base_z = min(point.z_m for wire in self._model.wires for point in (wire.start, wire.end))
+        top_z = max(point.z_m for wire in self._model.wires for point in (wire.start, wire.end))
+        min_x = min(point.x_m for wire in self._model.wires for point in (wire.start, wire.end))
+        max_x = max(point.x_m for wire in self._model.wires for point in (wire.start, wire.end))
+        span_m = max(max_x - min_x, 1e-9)
+        unit = self._translator.t(length_unit_key(self._unit_system))
+        summary = self._translator.t(
+            "geometry.j_pole_elevation",
+            radiator=f"{length_from_m(radiator.length_m, self._unit_system):.2f} {unit}",
+            stub=f"{length_from_m(stub.length_m, self._unit_system):.2f} {unit}",
+            spacing=f"{length_from_m(span_m, self._unit_system):.2f} {unit}",
+        )
+        if not math.isclose(self._height_exaggeration, 1.0):
+            summary = (
+                summary
+                + " · "
+                + self._translator.t(
+                    "geometry.vertical_exaggeration",
+                    factor=f"{self._height_exaggeration:g}",
+                )
+            )
+        self._draw_header(painter, rect, summary)
+        draw_rect = QRectF(
+            rect.left() + 110.0,
+            rect.top() + 84.0,
+            rect.width() - 110.0 - 120.0,
+            rect.height() - 84.0 - 86.0,
+        )
+        if draw_rect.width() < 80.0 or draw_rect.height() < 50.0:
+            return
+        z_draw = max(top_z * self._height_exaggeration, 0.5)
+        scale = (
+            min(
+                draw_rect.width() / span_m,
+                max(draw_rect.height() - 46.0, 24.0) / z_draw,
+            )
+            * self._zoom
+        )
+        if scale <= 0.0:
+            return
+        ground_y = draw_rect.bottom()
+        x_left = draw_rect.center().x() - span_m * scale / 2.0
+        x_right = draw_rect.center().x() + span_m * scale / 2.0
+
+        def screen(x_m: float, z_m: float) -> QPointF:
+            return QPointF(
+                x_left + (x_m - min_x) * scale,
+                ground_y - z_m * self._height_exaggeration * scale,
+            )
+
+        self._draw_ground(painter, x_left - 34.0, x_right + 34.0, ground_y)
+        painter.setPen(QPen(self._colors.wire, 2.5))
+        for wire in self._model.wires:
+            painter.drawLine(
+                screen(wire.start.x_m, wire.start.z_m),
+                screen(wire.end.x_m, wire.end.z_m),
+            )
+        feed_wire = self._model.feed_wire
+        ratio = min(max(self._model.feed.offset_m / feed_wire.length_m, 0.0), 1.0)
+        feed_z = feed_wire.start.z_m + (feed_wire.end.z_m - feed_wire.start.z_m) * ratio
+        feed = screen(feed_wire.start.x_m, feed_z)
+        painter.setPen(QPen(self._colors.feed, 2.0))
+        painter.setBrush(self._colors.feed)
+        painter.drawEllipse(feed, 4.0, 4.0)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        self._draw_centered_label(
+            painter,
+            QPointF(feed.x() + 20.0, feed.y() - 12.0),
+            self._translator.t("geometry.feed"),
+            color=self._colors.feed,
+        )
+
+        radiator_x = radiator.start.x_m
+        stub_x = stub.start.x_m
+        self._draw_plan_dimension(
+            painter,
+            screen(radiator_x, radiator.start.z_m),
+            screen(radiator_x, radiator.end.z_m),
+            QPointF(-34.0, 0.0),
+            f"{length_from_m(radiator.length_m, self._unit_system):.2f} {unit}",
+        )
+        self._draw_plan_dimension(
+            painter,
+            screen(stub_x, stub.start.z_m),
+            screen(stub_x, stub.end.z_m),
+            QPointF(34.0, 0.0),
+            f"{length_from_m(stub.length_m, self._unit_system):.2f} {unit}",
+        )
+        self._draw_plan_dimension(
+            painter,
+            screen(min_x, base_z),
+            screen(max_x, base_z),
+            QPointF(0.0, 30.0),
+            f"{length_from_m(span_m, self._unit_system):.2f} {unit}",
+        )
+        self._draw_scale_bar(
+            painter,
+            x_left=x_left,
+            bar_y=ground_y + 44.0,
+            scale=scale,
+            unit=unit,
+        )
+
+    def _paint_j_pole_plan(self, painter: QPainter, rect: QRectF) -> None:
+        assert self._model is not None
+        verticals = self._vertical_wires(self._model)
+        if len(verticals) < 2:
+            self._paint_multi_wire_plan(painter, rect)
+            return
+        radiator = max(verticals, key=lambda wire: wire.length_m)
+        stub = min(verticals, key=lambda wire: wire.length_m)
+        min_x = min(radiator.start.x_m, stub.start.x_m)
+        max_x = max(radiator.start.x_m, stub.start.x_m)
+        span_m = max(max_x - min_x, 1e-9)
+        unit = self._translator.t(length_unit_key(self._unit_system))
+        self._draw_header(
+            painter,
+            rect,
+            self._translator.t(
+                "geometry.j_pole_plan",
+                spacing=f"{length_from_m(span_m, self._unit_system):.2f} {unit}",
+            ),
+        )
+        draw_rect = QRectF(
+            rect.left() + 100.0,
+            rect.top() + 90.0,
+            rect.width() - 100.0 - 110.0,
+            rect.height() - 90.0 - 120.0,
+        )
+        if draw_rect.width() < 80.0 or draw_rect.height() < 50.0:
+            return
+        scale = draw_rect.width() / max(span_m * 2.2, 1e-9) * self._zoom
+        center = draw_rect.center()
+        left = center.x() - span_m * scale / 2.0
+        right = center.x() + span_m * scale / 2.0
+        y = center.y()
+        painter.setPen(QPen(self._colors.wire, 2.5))
+        painter.drawLine(QPointF(left, y), QPointF(right, y))
+        for x, wire, label in (
+            (left, radiator, self._translator.t("geometry.radiator")),
+            (right, stub, self._translator.t("geometry.stub")),
+        ):
+            painter.setPen(
+                QPen(self._colors.feed if wire is self._model.feed_wire else self._colors.wire, 2.0)
+            )
+            painter.setBrush(
+                self._colors.feed if wire is self._model.feed_wire else self._colors.wire
+            )
+            painter.drawEllipse(QPointF(x, y), 6.0, 6.0)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            self._draw_centered_label(painter, QPointF(x, y - 18.0), label)
+        self._draw_plan_dimension(
+            painter,
+            QPointF(left, y),
+            QPointF(right, y),
+            QPointF(0.0, 30.0),
+            f"{length_from_m(span_m, self._unit_system):.2f} {unit}",
+        )
+        self._draw_scale_bar(
+            painter,
+            x_left=draw_rect.left(),
+            bar_y=draw_rect.bottom() + 50.0,
+            scale=scale,
+            unit=unit,
+        )
 
     def _paint_multi_wire_elevation(self, painter: QPainter, rect: QRectF) -> None:
         assert self._model is not None
@@ -737,6 +927,8 @@ class GeometryView(QWidget):
                 self._paint_folded_plan(painter, rect)
             elif self._antenna_type == ANTENNA_TYPE_LOOP:
                 self._paint_loop_plan(painter, rect)
+            elif self._antenna_type == ANTENNA_TYPE_J_POLE:
+                self._paint_j_pole_plan(painter, rect)
             else:
                 self._paint_multi_wire_plan(painter, rect)
             return

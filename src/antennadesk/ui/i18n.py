@@ -283,6 +283,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "{count} wires · span {span} · height {height}",
         Language.SPANISH: "{count} hilos · ancho {span} · altura {height}",
     },
+    "geometry.j_pole_elevation": {
+        Language.ENGLISH: "Radiator {radiator} · stub {stub} · spacing {spacing}",
+        Language.SPANISH: "Radiador {radiator} · stub {stub} · separación {spacing}",
+    },
+    "geometry.j_pole_plan": {
+        Language.ENGLISH: "J Pole top view · spacing {spacing}",
+        Language.SPANISH: "Vista superior J Pole · separación {spacing}",
+    },
+    "geometry.radiator": {
+        Language.ENGLISH: "Radiator",
+        Language.SPANISH: "Radiador",
+    },
+    "geometry.stub": {
+        Language.ENGLISH: "Stub",
+        Language.SPANISH: "Stub",
+    },
     "geometry.elevation_summary": {
         Language.ENGLISH: "Height {height} · feed height {feed}",
         Language.SPANISH: "Altura {height} · altura de alimentación {feed}",

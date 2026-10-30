@@ -237,3 +237,27 @@ def test_three_d_projection_places_positive_height_upward() -> None:
     _, raised_y = GeometryView._project_3d(0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.5)
 
     assert raised_y > ground_y
+
+
+def test_j_pole_geometry_has_dedicated_plan_and_elevation(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.j_pole import JPoleParameters
+    from antennadesk.ui.widgets.geometry_view import GeometryViewMode
+
+    model = JPoleParameters(
+        frequency_hz=220_000_000.0,
+        radiator_height_m=1.0,
+        stub_length_m=0.5,
+        spacing_m=0.05,
+        feed_offset_m=0.1,
+    ).to_antenna()
+    view = GeometryView(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(view)
+    view.set_model(model, antenna_type="j_pole")
+
+    view.set_view_mode(GeometryViewMode.ELEVATION)
+    assert view.grab().isNull() is False
+    assert "Radiator" in (view._last_summary or "")
+
+    view.set_view_mode(GeometryViewMode.PLAN)
+    assert view.grab().isNull() is False
+    assert "spacing" in (view._last_summary or "")
