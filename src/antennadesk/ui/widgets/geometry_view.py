@@ -414,6 +414,7 @@ class GeometryView(QWidget):
         unit = self._translator.t(length_unit_key(self._unit_system))
         summary = self._translator.t(
             "geometry.j_pole_elevation",
+            template=self._model.name,
             radiator=f"{length_from_m(radiator.length_m, self._unit_system):.2f} {unit}",
             stub=f"{length_from_m(stub.length_m, self._unit_system):.2f} {unit}",
             spacing=f"{length_from_m(span_m, self._unit_system):.2f} {unit}",
@@ -471,9 +472,12 @@ class GeometryView(QWidget):
         painter.setBrush(self._colors.feed)
         painter.drawEllipse(feed, 4.0, 4.0)
         painter.setBrush(Qt.BrushStyle.NoBrush)
+        feed_label_x = (
+            feed.x() - 52.0 if stub.start.x_m > (min_x + max_x) / 2.0 else feed.x() + 20.0
+        )
         self._draw_centered_label(
             painter,
-            QPointF(feed.x() + 20.0, feed.y() - 12.0),
+            QPointF(feed_label_x, feed.y() - 12.0),
             self._translator.t("geometry.feed"),
             color=self._colors.feed,
         )
@@ -526,6 +530,7 @@ class GeometryView(QWidget):
             rect,
             self._translator.t(
                 "geometry.j_pole_plan",
+                template=self._model.name,
                 spacing=f"{length_from_m(span_m, self._unit_system):.2f} {unit}",
             ),
         )

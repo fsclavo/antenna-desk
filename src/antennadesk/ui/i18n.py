@@ -284,12 +284,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "{count} hilos · ancho {span} · altura {height}",
     },
     "geometry.j_pole_elevation": {
-        Language.ENGLISH: "Radiator {radiator} · stub {stub} · spacing {spacing}",
-        Language.SPANISH: "Radiador {radiator} · stub {stub} · separación {spacing}",
+        Language.ENGLISH: "{template} · radiator {radiator} · stub {stub} · spacing {spacing}",
+        Language.SPANISH: "{template} · radiador {radiator} · stub {stub} · separación {spacing}",
     },
     "geometry.j_pole_plan": {
-        Language.ENGLISH: "J Pole top view · spacing {spacing}",
-        Language.SPANISH: "Vista superior J Pole · separación {spacing}",
+        Language.ENGLISH: "{template} top view · spacing {spacing}",
+        Language.SPANISH: "Vista superior {template} · separación {spacing}",
     },
     "geometry.radiator": {
         Language.ENGLISH: "Radiator",

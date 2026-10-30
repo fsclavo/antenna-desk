@@ -190,8 +190,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   catalog, persistence, and reporting support.
 - Raised J Pole and Ringo default base/ring heights to 0.25 m so their ground
   connectors do not lie in the finite-ground plane.
-- Added dedicated J Pole plan and elevation views with radiator, stub, and
-  spacing dimensions.
+- Added dedicated J Pole and Slim Jim plan/elevation views with radiator, stub,
+  spacing, and template-specific labels.
 - Placed the impedance and SWR charts side by side and reduced the default
   geometry pane height to give results more room.
 - Moved Change Template to a fixed button above the design panel so it is always
