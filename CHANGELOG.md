@@ -164,6 +164,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Clip below-ground pattern points from the 3D view for grounded models.
 - Fix the 3D projection so positive height is drawn above the ground plane in
   both pattern and geometry views.
+- Increase the default radiation-pattern resolution from 10° to 5°, doubling
+  the angular points per axis.
 - Persist generator metadata (`generator_id`, `generator_name`) in custom
   designs and show it in the custom design panel.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the

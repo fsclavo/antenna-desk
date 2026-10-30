@@ -99,6 +99,8 @@ Phase 5 adds tests for:
   frequency/no-pattern evaluation specs and sensitivity probes.
 - Pattern-resolution presets, point-count estimates, and 100-point sweep
   defaults in the standard and custom forms.
+- The default pattern resolution is 5°, doubling the angular points per axis
+  compared with the previous 10° default.
 - Feed-line impedance transformation, velocity factor, matched-line behavior,
   project/run persistence, and dialog integration.
 - The optimization dialog worker, evaluation log, sensitivity table, and

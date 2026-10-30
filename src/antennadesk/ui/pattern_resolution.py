@@ -8,7 +8,7 @@ from ..domain.environment.ground import GroundKind, GroundModel
 from ..domain.simulation.far_field import FarFieldRequest
 
 PATTERN_STEPS_DEG: tuple[float, ...] = (10.0, 5.0, 2.0, 1.0)
-DEFAULT_PATTERN_STEP_DEG = 10.0
+DEFAULT_PATTERN_STEP_DEG = 5.0
 
 
 def pattern_counts(step_deg: float, ground: GroundModel) -> tuple[int, int]:

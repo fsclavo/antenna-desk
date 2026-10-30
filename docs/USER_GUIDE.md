@@ -172,7 +172,8 @@ SWR is computed with the reference impedance in the design panel (default
 The **Frequency sweep** is disabled by default. When enabled, it uses **1,000
 points** by default and accepts up to 10,000. Frequency points improve the
 impedance/SWR curve. **Pattern resolution** controls the angular sampling of
-the radiation pattern: 10° (normal), 5° (fine), 2° (very fine), or 1° (maximum).
+the radiation pattern: 10° (normal), 5° (fine, default), 2° (very fine), or 1°
+(maximum).
 The form shows the estimated number of pattern points. More points produce
 smoother cuts and a smoother 3D lobe, but increase solver time and project
 size; use high resolution for final runs rather than routine exploration.
