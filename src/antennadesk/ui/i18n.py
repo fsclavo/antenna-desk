@@ -506,6 +506,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Ground",
         Language.SPANISH: "Suelo",
     },
+    "pattern.3d_hint": {
+        Language.ENGLISH: "Drag to rotate · Wheel to zoom · Double-click to reset",
+        Language.SPANISH: "Arrastrá para rotar · Rueda para zoom · Doble clic para restablecer",
+    },
     "pattern.3d_polar": {
         Language.ENGLISH: "3D radiation pattern",
         Language.SPANISH: "Patrón de radiación 3D",

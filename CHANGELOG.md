@@ -159,6 +159,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   ground plane for grounded models.
 - Localized ground and material selector labels in the generator and custom
   antenna dialogs.
+- Added drag rotation, wheel zoom, and double-click reset to the 3D radiation
+  pattern view.
 - Persist generator metadata (`generator_id`, `generator_name`) in custom
   designs and show it in the custom design panel.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the

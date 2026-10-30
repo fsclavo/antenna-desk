@@ -157,3 +157,38 @@ def test_pattern_3d_can_draw_a_ground_plane(qtbot: QtBot) -> None:
 
     assert view._ground is True
     assert view.grab().isNull() is False
+
+
+def test_pattern_3d_supports_rotation_zoom_and_reset(qtbot: QtBot) -> None:
+    from PySide6.QtCore import QPoint, Qt
+
+    from antennadesk.ui.widgets.radiation_pattern_3d_view import RadiationPattern3DView
+
+    view = RadiationPattern3DView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    view.show()
+    view.set_points(((0.0, 0.0, 1.0), (90.0, 0.0, 0.0), (90.0, 180.0, 0.0), (45.0, 90.0, 0.5)))
+
+    initial_yaw = view._yaw_deg
+    initial_pitch = view._pitch_deg
+    qtbot.mousePress(view, Qt.MouseButton.LeftButton, pos=QPoint(20, 20))
+    qtbot.mouseMove(view, QPoint(60, 40))
+    qtbot.mouseRelease(view, Qt.MouseButton.LeftButton, pos=QPoint(60, 40))
+    assert view._yaw_deg != initial_yaw
+    assert view._pitch_deg != initial_pitch
+
+    class Wheel:
+        def angleDelta(self) -> QPoint:
+            return QPoint(0, 120)
+
+        def accept(self) -> None:
+            pass
+
+    old_zoom = view._zoom
+    view.wheelEvent(Wheel())  # type: ignore[arg-type]
+    assert view._zoom > old_zoom
+
+    view.reset_view()
+    assert view._yaw_deg == 38.0
+    assert view._pitch_deg == 26.0
+    assert view._zoom == 1.0

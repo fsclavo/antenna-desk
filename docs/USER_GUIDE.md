@@ -153,7 +153,9 @@ coordinates.
   closed lobes. The angular resolution comes from **Pattern resolution** in the
   design panel; higher resolution samples the same NEC solution more finely.
   The 3D lobe draws a ground plane when the model has ground and only the
-  upper-hemisphere pattern is requested. Power gain is not realized gain.
+  upper-hemisphere pattern is requested. Drag the 3D lobe to rotate it, use the
+  mouse wheel to zoom, and double-click to reset the view. Power gain is not
+  realized gain.
 - **Currents**: segment current magnitude for the selected frequency, with the
   feed segment marked.
 - **Diagnostics**: solver version, status, duration, fingerprint, and warnings

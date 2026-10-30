@@ -7,7 +7,7 @@ from __future__ import annotations
 import math
 
 from PySide6.QtCore import QEvent, QPointF, QRectF, QSize, Qt
-from PySide6.QtGui import QColor, QFont, QPainter, QPaintEvent, QPen
+from PySide6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPaintEvent, QPen, QWheelEvent
 from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from ..i18n import Translator
@@ -20,6 +20,11 @@ class RadiationPattern3DView(QWidget):
         self._translator = translator
         self._points: tuple[tuple[float, float, float], ...] = ()
         self._ground = False
+        self._yaw_deg = 38.0
+        self._pitch_deg = 26.0
+        self._zoom = 1.0
+        self._dragging = False
+        self._last_pos = QPointF(0.0, 0.0)
         self._colors = theme_colors(self.palette())
         self.setMinimumHeight(280)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -36,6 +41,55 @@ class RadiationPattern3DView(QWidget):
         self._points = points
         self._ground = ground
         self.update()
+
+    def reset_view(self) -> None:
+        self._yaw_deg = 38.0
+        self._pitch_deg = 26.0
+        self._zoom = 1.0
+        self.update()
+
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._dragging = True
+            self._last_pos = event.position()
+            self.setCursor(Qt.CursorShape.ClosedHandCursor)
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        if not self._dragging:
+            super().mouseMoveEvent(event)
+            return
+        delta = event.position() - self._last_pos
+        self._last_pos = event.position()
+        self._yaw_deg = (self._yaw_deg + delta.x() * 0.45) % 360.0
+        self._pitch_deg = min(max(self._pitch_deg + delta.y() * 0.35, -85.0), 85.0)
+        self.update()
+        event.accept()
+
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        if self._dragging and event.button() == Qt.MouseButton.LeftButton:
+            self._dragging = False
+            self.unsetCursor()
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
+
+    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.reset_view()
+            event.accept()
+            return
+        super().mouseDoubleClickEvent(event)
+
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        delta = event.angleDelta().y()
+        if delta == 0:
+            return
+        self._zoom = min(max(self._zoom * (1.1 if delta > 0 else 1.0 / 1.1), 0.5), 4.0)
+        self.update()
+        event.accept()
 
     def changeEvent(self, event: QEvent) -> None:
         if event.type() == QEvent.Type.PaletteChange:
@@ -71,8 +125,8 @@ class RadiationPattern3DView(QWidget):
         if math.isclose(max_gain, min_gain):
             max_gain = min_gain + 1.0
 
-        yaw = math.radians(38.0)
-        pitch = math.radians(26.0)
+        yaw = math.radians(self._yaw_deg)
+        pitch = math.radians(self._pitch_deg)
         cos_yaw, sin_yaw = math.cos(yaw), math.sin(yaw)
         cos_pitch, sin_pitch = math.cos(pitch), math.sin(pitch)
 
@@ -107,7 +161,7 @@ class RadiationPattern3DView(QWidget):
             rect.width() - 88.0,
             rect.height() - 78.0,
         )
-        scale = min(draw_rect.width() / span_x, draw_rect.height() / span_y) * 0.8
+        scale = min(draw_rect.width() / span_x, draw_rect.height() / span_y) * 0.8 * self._zoom
         if scale <= 0.0:
             return
         center = draw_rect.center()
@@ -229,4 +283,8 @@ class RadiationPattern3DView(QWidget):
         painter.drawText(
             QRectF(rect.left() + 14.0, rect.top() + 8.0, rect.width() - 28.0, 18.0),
             self._translator.t("pattern.3d_polar"),
+        )
+        painter.drawText(
+            QRectF(rect.left() + 14.0, rect.bottom() - 22.0, rect.width() - 28.0, 16.0),
+            self._translator.t("pattern.3d_hint"),
         )
