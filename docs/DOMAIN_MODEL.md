@@ -142,6 +142,15 @@ It is the escape hatch for geometries outside the guided templates. It has no
 single primary dimension, so length optimization is not available. Its wire,
 feed, and load rules are validated by `AntennaModel`.
 
+### YagiParameters
+
+A parametric Yagi generator with an ordered tuple of `YagiElement` values,
+boom height and azimuth, driven-element index, material, and ground. Elements
+store boom position, total length, and radius. `to_custom_parameters()` creates
+parallel straight wires and a center feed on the selected driven element. The
+NBS TN-688 5-element 0.8λ preset is a starting geometry; edited designs are
+experimental custom-wire models.
+
 ### AntennaDesignParameters
 
 `AntennaDesignParameters` is the union of `DipoleParameters`,

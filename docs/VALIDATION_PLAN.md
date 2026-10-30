@@ -107,7 +107,32 @@ Phase 5 adds tests for:
   simulation.
 - Construction-sheet dimensions, simulated-result rows, and HTML escaping.
 
+## Template and generator validation
+
+Templates and generators use three evidence levels:
+
+- **Reference-backed:** compared with a traceable independent source using a
+  metric-specific tolerance.
+- **Published/heuristic:** based on a published design rule or starting point;
+  structural and scaling tests are still required.
+- **Experimental:** arbitrary or unverified geometry. Structural tests and a
+  visible limitation are required; no accuracy claim is made.
+
+The solver adapter remains strictly reference-validated. A missing external
+reference does not block an experimental generator. A 10% tolerance is
+acceptable for many dimension/heuristic comparisons, but not universally for
+gain, nulls, or impedance.
+
 ## Phase 6 — new geometry and measurements (in progress)
+
+Yagi generator tests:
+
+- NBS TN-688 5-element preset positions, lengths, scaling, and feed mapping.
+- Editable element table, add/remove, reordering, and driven-element selection.
+- Generated custom-wire connectivity and azimuth rotation.
+- NEC integration against the published 9.2 dBd (11.35 dBi) reference with a
+  `±0.5 dB` tolerance.
+- Main-window creation of an editable Yagi custom design.
 
 Phase 6 adds tests for:
 
@@ -174,7 +199,7 @@ Phase 6 adds tests for:
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 398 tests with the solver enabled. The twelve solver
+The suite currently has 410 tests with the solver enabled. The twelve solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.

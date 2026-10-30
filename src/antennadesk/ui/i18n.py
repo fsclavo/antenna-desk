@@ -687,6 +687,64 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Custom wire antenna",
         Language.SPANISH: "Antena de hilos personalizada",
     },
+    "yagi.title": {
+        Language.ENGLISH: "Yagi Generator",
+        Language.SPANISH: "Generador de Yagi",
+    },
+    "yagi.element": {
+        Language.ENGLISH: "Element",
+        Language.SPANISH: "Elemento",
+    },
+    "yagi.position": {
+        Language.ENGLISH: "Boom position",
+        Language.SPANISH: "Posición en el boom",
+    },
+    "yagi.length": {
+        Language.ENGLISH: "Element length",
+        Language.SPANISH: "Longitud del elemento",
+    },
+    "yagi.radius_mm": {
+        Language.ENGLISH: "Element radius (mm)",
+        Language.SPANISH: "Radio del elemento (mm)",
+    },
+    "yagi.add_element": {
+        Language.ENGLISH: "Add element",
+        Language.SPANISH: "Agregar elemento",
+    },
+    "yagi.remove_element": {
+        Language.ENGLISH: "Remove element",
+        Language.SPANISH: "Quitar elemento",
+    },
+    "yagi.nbs_preset": {
+        Language.ENGLISH: "Load NBS 5-element preset",
+        Language.SPANISH: "Cargar preset NBS de 5 elementos",
+    },
+    "yagi.driven": {
+        Language.ENGLISH: "Driven element",
+        Language.SPANISH: "Elemento alimentado",
+    },
+    "yagi.hint": {
+        Language.ENGLISH: (
+            "Positions and lengths are editable. The generated antenna is an "
+            "editable custom-wire design."
+        ),
+        Language.SPANISH: (
+            "Las posiciones y longitudes son editables. La antena generada es "
+            "un diseño de hilos personalizado editable."
+        ),
+    },
+    "yagi.evidence": {
+        Language.ENGLISH: (
+            "NBS TN-688 preset: 5 elements, 0.8 wavelength, 9.2 dBd reference "
+            "gain. Modified geometries are experimental and have no external "
+            "reference."
+        ),
+        Language.SPANISH: (
+            "Preset NBS TN-688: 5 elementos, 0.8 longitud de onda, ganancia de "
+            "referencia 9.2 dBd. Las geometrías modificadas son experimentales y "
+            "no tienen referencia externa."
+        ),
+    },
     "custom.metric_hint": {
         Language.ENGLISH: "Coordinates use the application length unit; wire radius is in mm.",
         Language.SPANISH: "Las coordenadas usan la unidad de longitud de la aplicación; el radio está en mm.",
@@ -742,6 +800,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "action.new_custom": {
         Language.ENGLISH: "New Custom Antenna...",
         Language.SPANISH: "Nueva antena personalizada...",
+    },
+    "action.new_yagi": {
+        Language.ENGLISH: "New Yagi...",
+        Language.SPANISH: "Nueva Yagi...",
     },
     "action.import_nec": {
         Language.ENGLISH: "Import NEC Deck...",

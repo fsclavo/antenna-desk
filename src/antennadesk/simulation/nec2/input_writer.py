@@ -26,6 +26,10 @@ class Nec2Deck:
     def feed_segment(self) -> int:
         return self.layout.feed_segment
 
+    @property
+    def feed_local_segment(self) -> int:
+        return self.layout.feed_local_segment
+
 
 def _format(value: float, precision: int = 9) -> str:
     if abs(value) < 1e-15:
@@ -100,7 +104,7 @@ def write_nec2_input(model: AntennaModel, spec: SimulationSpec) -> Nec2Deck:
         f"{_format(frequency_plan.start_hz / 1_000_000.0)} "
         f"{_format(frequency_plan.step_hz / 1_000_000.0)}"
     )
-    lines.append(f"EX 0 {layout.feed_tag} {layout.feed_segment} 0 1.0")
+    lines.append(f"EX 0 {layout.feed_tag} {layout.feed_local_segment} 0 1.0")
 
     if spec.far_field.enabled:
         far_field = spec.far_field

@@ -32,6 +32,11 @@ class SegmentLayout:
     feed_wire_id: str
     feed_offset_m: float
 
+    @property
+    def feed_local_segment(self) -> int:
+        segmentation = self.wire_segmentation(self.feed_wire_id)
+        return self.feed_segment - segmentation.first_segment + 1
+
     def wire_segmentation(self, wire_id: str) -> WireSegmentation:
         for segmentation in self.wires:
             if segmentation.wire.id == wire_id:

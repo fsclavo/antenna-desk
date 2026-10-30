@@ -735,3 +735,57 @@ def test_convert_to_custom_wires_preserves_geometry(window: MainWindow) -> None:
     assert window._design_stack.currentWidget() is window._custom_panel
     assert window._optimize_action.isEnabled() is False
     window._dirty = False
+
+
+def test_new_yagi_creates_an_editable_custom_design(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.custom import CustomAntennaParameters
+    from antennadesk.domain.antennas.feed import FeedPoint
+    from antennadesk.domain.antennas.geometry import Point3D
+    from antennadesk.domain.antennas.materials import COPPER
+    from antennadesk.domain.antennas.wire import Wire
+
+    parameters = CustomAntennaParameters(
+        frequency_hz=14_100_000.0,
+        wires=(
+            Wire(
+                id="element-1",
+                start=Point3D(0.0, -5.0, 12.0),
+                end=Point3D(0.0, 5.0, 12.0),
+                radius_m=0.001,
+                material=COPPER,
+            ),
+            Wire(
+                id="element-2",
+                start=Point3D(2.0, -5.0, 12.0),
+                end=Point3D(2.0, 5.0, 12.0),
+                radius_m=0.001,
+                material=COPPER,
+            ),
+        ),
+        feed=FeedPoint("element-2", 5.0),
+    )
+
+    class FakeYagiDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> CustomAntennaParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "YagiDialog", FakeYagiDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Yagi", True))
+
+    window.new_yagi_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "Yagi"
+    assert window._project.designs[0].antenna_type == "custom"
+    assert window._project.designs[0].antenna.wires == parameters.wires
+    window._dirty = False

@@ -27,7 +27,11 @@ consequences, it is documented in `docs/ADR/`.
 - Cross-check alternative: **NEC2++/PyNEC**, not a runtime dependency.
 - **xnec2c** is used only as a technical and UX reference.
 - Independent sources available: **MMANA-GAL** samples and the **ARRL Antenna
-  Book**; they will be used to expand validation in Phase 2.
+  Book**; they will be used to expand validation.
+- Solver correctness is validated strictly. Experimental antennas and
+  arbitrary geometries do not require an external reference to be designed,
+  but they must be labeled as experimental and must not claim validated
+  accuracy. See `docs/ROADMAP.md`.
 
 ## Platforms and environment
 

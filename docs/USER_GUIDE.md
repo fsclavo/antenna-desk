@@ -81,6 +81,22 @@ currently selected in the design panel. It asks for:
 After creation, adjust the design panel and press **Apply design** or
 **Simulate**.
 
+## Create a Yagi
+
+Use **File → New Yagi...** to generate a Yagi as an editable custom-wire
+design. The table contains each element's boom position, total length, and
+radius. Add or remove elements, edit the values, and select the driven element.
+**Load NBS 5-element preset** fills the NBS TN-688 0.8λ starting geometry
+scaled to the selected frequency.
+
+The NBS preset is reference-backed for gain: the published design has 9.2 dBd
+gain over a half-wave dipole. A single straight driven element is generated
+instead of the published folded dipole, so the feed impedance is not the
+reference impedance. Once you edit positions or lengths, the result is an
+experimental geometry with no external reference; simulate it and judge it on
+its own modeled performance. The generated design can be refined further with
+**Edit Custom Wires...**.
+
 ## Read the results
 
 - **Impedance / SWR**: table of frequency, resistance, reactance, magnitude,

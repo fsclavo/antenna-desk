@@ -21,6 +21,7 @@ from antennadesk.domain.antennas.feed_line import FeedLine
 from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.wire import Wire
+from antennadesk.domain.antennas.yagi import nbs_five_element
 from antennadesk.domain.environment.environment import Environment
 from antennadesk.domain.environment.ground import GroundModel
 from antennadesk.domain.simulation.far_field import FarFieldRequest
@@ -331,3 +332,32 @@ def test_feed_line_transforms_impedance_at_the_transmitter(solver: Nec2cSolver) 
     assert result.status is SimulationStatus.COMPLETED
     assert result.frequencies[0].impedance_ohm == pytest.approx(expected, abs=1e-6)
     assert any(diagnostic.code == "feed_line.applied" for diagnostic in result.diagnostics)
+
+
+def test_nbs_five_element_yagi_gain_reference(solver: Nec2cSolver) -> None:
+    yagi = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=0.0,
+        ground=GroundModel.free_space(),
+    )
+    model = yagi.to_custom_parameters().to_antenna(name="NBS 5-element Yagi")
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(50_100_000.0),
+        segmentation=SegmentationPolicy(segments_per_wire=21),
+        include_conductor_losses=False,
+        far_field=FarFieldRequest(
+            enabled=True,
+            theta_start_deg=0.0,
+            theta_stop_deg=180.0,
+            theta_count=37,
+            phi_start_deg=0.0,
+            phi_stop_deg=360.0,
+            phi_count=73,
+        ),
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert result.max_total_gain_db == pytest.approx(11.35, abs=0.5)
+    assert len(result.frequencies[0].currents) == 5 * 21

@@ -136,7 +136,7 @@ def test_multi_wire_tags_and_feed_mapping() -> None:
 
     assert "GW 1 10 " in deck.text
     assert "GW 2 10 " in deck.text
-    assert "EX 0 2 16 0 1.0" in deck.text
+    assert "EX 0 2 6 0 1.0" in deck.text
     assert deck.layout.wires[0].first_segment == 1
     assert deck.layout.wires[1].first_segment == 11
 

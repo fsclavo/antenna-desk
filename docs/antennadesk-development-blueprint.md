@@ -88,8 +88,10 @@ simulation, and measurement.
 | 0.5 | NEC model import and VNA CSV measurements |
 | 0.6+ | Yagi, advanced editor, multi-objective optimization, and new engines |
 
-Do not add an antenna type until reference tests and an explanation of its
-limitations exist.
+Do not present an antenna type as reference-backed until reference tests and
+an explanation of its limitations exist. Experimental generators and arbitrary
+geometries are allowed when they are visibly labeled, structurally tested, and
+do not claim validated accuracy.
 
 ---
 

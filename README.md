@@ -79,9 +79,10 @@ between those types.
   SWR/gain balance: wire-dipole and folded-dipole element length, or loop
   circumference, with an evaluation log and sensitivity table.
 - Custom straight-wire antennas with a coordinate editor, template-to-custom
-  conversion, experimental ground radial generator, practical NEC-2 deck
-  import, and basic MMANA-GAL `.maa` geometry import, plus series/parallel RLC
-  loads, load markers, and report rows.
+  conversion, a parametric Yagi generator with an editable element table and
+  NBS starting preset, experimental ground radial generator, practical NEC-2
+  deck import, and basic MMANA-GAL `.maa` geometry import, plus series/parallel
+  RLC loads, load markers, and report rows.
 - Optional transmitter-side feed line with characteristic impedance, length,
   velocity factor, matched loss, and transformed impedance/SWR.
 - Printable/HTML construction sheet with type-aware dimensions, feed position,

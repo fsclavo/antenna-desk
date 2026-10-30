@@ -136,6 +136,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added an optional uniform feed line with characteristic impedance, length,
   velocity factor, matched loss, transmitter-side impedance/SWR, project/run
   persistence, diagnostics, and dialog integration.
+- Added a parametric Yagi generator with an editable element table, driven
+  element selection, and an NBS TN-688 5-element starting preset.
+- Fixed NEC `EX` source segment numbering for feeds on tags other than the
+  first wire.
 - Length optimization is generalized to the primary dimension: wire/folded
   element length or loop circumference. `EditDipoleLength` remains limited to
   wire dipoles.
