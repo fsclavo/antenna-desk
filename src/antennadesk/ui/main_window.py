@@ -63,6 +63,7 @@ from ..application.use_cases.update_dipole_design import (
 from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.design import with_primary_dimension
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
+from ..domain.antennas.feed_line import FeedLine
 from ..domain.antennas.load import LumpedLoad
 from ..domain.common.time import utc_now
 from ..domain.environment.ground import GroundModel
@@ -83,6 +84,7 @@ from ..simulation.nec2.solver import Nec2cSolver
 from .dialogs.comparison_dialog import ComparisonDialog
 from .dialogs.construction_dialog import ConstructionDialog
 from .dialogs.custom_antenna_dialog import CustomAntennaDialog
+from .dialogs.feed_line_dialog import FeedLineDialog
 from .dialogs.loads_dialog import LoadsDialog
 from .dialogs.optimization_dialog import OptimizationDialog
 from .i18n import Language, Translator
@@ -123,6 +125,7 @@ class MainWindow(QMainWindow):
         self._simulation_results: dict[UUID, SimulationResult] = {}
         self._simulation_design_id: UUID | None = None
         self._loads: tuple[LumpedLoad, ...] = ()
+        self._feed_line: FeedLine | None = None
         self._custom_pattern_step_deg = DEFAULT_PATTERN_STEP_DEG
         self._last_status_key = "status.ready"
         self._thread: QThread | None = None
@@ -159,6 +162,9 @@ class MainWindow(QMainWindow):
 
         self._locate_solver_action = QAction(self)
         self._locate_solver_action.triggered.connect(lambda: self.locate_solver())
+
+        self._feed_line_action = QAction(self)
+        self._feed_line_action.triggered.connect(lambda: self.configure_feed_line())
 
         self._exit_action = QAction(self)
         self._exit_action.setShortcut(QKeySequence.StandardKey.Quit)
@@ -363,6 +369,7 @@ class MainWindow(QMainWindow):
         self._file_menu.addAction(self._optimize_action)
         self._file_menu.addAction(self._construction_action)
         self._file_menu.addAction(self._loads_action)
+        self._file_menu.addAction(self._feed_line_action)
         self._file_menu.addAction(self._edit_custom_action)
         self._file_menu.addAction(self._convert_custom_action)
         self._file_menu.addSeparator()
@@ -404,6 +411,7 @@ class MainWindow(QMainWindow):
         self._save_action.setText(self._translator.t("action.save"))
         self._save_as_action.setText(self._translator.t("action.save_as"))
         self._locate_solver_action.setText(self._translator.t("action.locate_solver"))
+        self._feed_line_action.setText(self._translator.t("action.feed_line"))
         self._exit_action.setText(self._translator.t("action.exit"))
         self._about_action.setText(self._translator.t("action.about"))
         self._new_variant_action.setText(self._translator.t("action.new_variant"))
@@ -500,6 +508,7 @@ class MainWindow(QMainWindow):
         self._save_action.setEnabled(idle and has_project)
         self._save_as_action.setEnabled(idle and has_project)
         self._locate_solver_action.setEnabled(idle)
+        self._feed_line_action.setEnabled(idle)
         self._exit_action.setEnabled(idle)
         self._new_variant_action.setEnabled(idle and has_designs)
         self._rename_variant_action.setEnabled(idle and has_designs)
@@ -742,6 +751,16 @@ class MainWindow(QMainWindow):
         self._last_status_key = "status.design_changed"
         self._update_status_text()
 
+    def configure_feed_line(self) -> None:
+        dialog = FeedLineDialog(
+            self._translator,
+            self._unit_system,
+            self._feed_line,
+            self,
+        )
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self._feed_line = dialog.result_feed_line()
+
     def simulate(self) -> None:
         if self._simulating:
             return
@@ -765,6 +784,7 @@ class MainWindow(QMainWindow):
         self._last_result = None
         self._results.set_result(None)
         self._simulation_design_id = self._design_id
+        spec = replace(spec, feed_line=self._feed_line)
         self._cancel_token = EventCancelToken()
         self._simulating = True
         self._last_status_key = "status.simulating"
@@ -1321,7 +1341,7 @@ class MainWindow(QMainWindow):
                 self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
                 return
         design = self._project.design_by_id(self._design_id)
-        base_spec = self._form.simulation_spec()
+        base_spec = replace(self._form.simulation_spec(), feed_line=self._feed_line)
         dialog = OptimizationDialog(
             self._translator,
             self._unit_system,

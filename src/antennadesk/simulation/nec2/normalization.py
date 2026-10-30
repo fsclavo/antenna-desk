@@ -69,6 +69,19 @@ def normalize_nec2_result(
     finished_at: datetime,
 ) -> SimulationResult:
     problems: list[Diagnostic] = list(diagnostics)
+    feed_line = spec.feed_line
+    if feed_line is not None and feed_line.is_active:
+        problems.append(
+            Diagnostic(
+                code="feed_line.applied",
+                severity=Severity.INFO,
+                message=(
+                    "impedance and SWR are evaluated at the transmitter end of "
+                    f"a {feed_line.length_m:g} m feed line"
+                ),
+                field="feed_line",
+            )
+        )
     frequency_results: list[FrequencyResult] = []
 
     for parsed_frequency in parsed.frequencies:
@@ -120,15 +133,21 @@ def normalize_nec2_result(
             for current in parsed_frequency.currents
         )
         far_field = tuple(_far_field_point(point) for point in parsed_frequency.far_field)
+        input_impedance = input_parameters.impedance_ohm
+        if feed_line is not None:
+            input_impedance = feed_line.input_impedance(
+                input_impedance,
+                parsed_frequency.frequency_hz,
+            )
 
         frequency_results.append(
             FrequencyResult(
                 frequency_hz=parsed_frequency.frequency_hz,
                 feed_tag=deck.feed_tag,
                 feed_segment=deck.feed_segment,
-                impedance_ohm=input_parameters.impedance_ohm,
+                impedance_ohm=input_impedance,
                 swr=calculate_swr(
-                    input_parameters.impedance_ohm,
+                    input_impedance,
                     spec.reference_impedance_ohm,
                 ),
                 input_power_w=input_parameters.power_w,

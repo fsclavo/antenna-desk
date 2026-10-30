@@ -20,6 +20,7 @@ from ..domain.antennas.dipole import (
     DipoleParameters,
 )
 from ..domain.antennas.feed import FeedPoint
+from ..domain.antennas.feed_line import FeedLine
 from ..domain.antennas.folded_dipole import (
     ANTENNA_TYPE_FOLDED_DIPOLE,
     FoldedDipoleParameters,
@@ -188,6 +189,13 @@ class SegmentationPolicyPayload(StrictModel):
     wire_segments: list[WireSegmentsPayload] = Field(default_factory=list)
 
 
+class FeedLinePayload(StrictModel):
+    characteristic_impedance_ohm: float = Field(default=50.0, gt=0.0)
+    length_m: float = Field(default=0.0, ge=0.0)
+    velocity_factor: float = Field(default=1.0, gt=0.0, le=1.0)
+    matched_loss_db_per_100m: float = Field(default=0.0, ge=0.0)
+
+
 class FarFieldRequestPayload(StrictModel):
     enabled: bool = True
     theta_start_deg: float = 0.0
@@ -205,6 +213,7 @@ class SimulationSpecPayload(StrictModel):
     extended_thin_wire_kernel: bool = False
     include_conductor_losses: bool = True
     far_field: FarFieldRequestPayload = Field(default_factory=FarFieldRequestPayload)
+    feed_line: FeedLinePayload | None = None
     timeout_s: float = Field(default=60.0, gt=0.0)
 
 
@@ -546,6 +555,15 @@ def _segmentation_from_domain(
     )
 
 
+def _feed_line_from_domain(value: FeedLine) -> FeedLinePayload:
+    return FeedLinePayload(
+        characteristic_impedance_ohm=value.characteristic_impedance_ohm,
+        length_m=value.length_m,
+        velocity_factor=value.velocity_factor,
+        matched_loss_db_per_100m=value.matched_loss_db_per_100m,
+    )
+
+
 def _far_field_from_domain(value: FarFieldRequest) -> FarFieldRequestPayload:
     return FarFieldRequestPayload(
         enabled=value.enabled,
@@ -566,6 +584,7 @@ def _simulation_spec_from_domain(value: SimulationSpec) -> SimulationSpecPayload
         extended_thin_wire_kernel=value.extended_thin_wire_kernel,
         include_conductor_losses=value.include_conductor_losses,
         far_field=_far_field_from_domain(value.far_field),
+        feed_line=(_feed_line_from_domain(value.feed_line) if value.feed_line else None),
         timeout_s=value.timeout_s,
     )
 
@@ -859,6 +878,15 @@ def _segmentation_to_domain(
     )
 
 
+def _feed_line_to_domain(value: FeedLinePayload) -> FeedLine:
+    return FeedLine(
+        characteristic_impedance_ohm=value.characteristic_impedance_ohm,
+        length_m=value.length_m,
+        velocity_factor=value.velocity_factor,
+        matched_loss_db_per_100m=value.matched_loss_db_per_100m,
+    )
+
+
 def _far_field_to_domain(value: FarFieldRequestPayload) -> FarFieldRequest:
     return FarFieldRequest(
         enabled=value.enabled,
@@ -879,6 +907,7 @@ def _simulation_spec_to_domain(value: SimulationSpecPayload) -> SimulationSpec:
         extended_thin_wire_kernel=value.extended_thin_wire_kernel,
         include_conductor_losses=value.include_conductor_losses,
         far_field=_far_field_to_domain(value.far_field),
+        feed_line=(_feed_line_to_domain(value.feed_line) if value.feed_line else None),
         timeout_s=value.timeout_s,
     )
 

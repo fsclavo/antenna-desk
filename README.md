@@ -82,6 +82,8 @@ between those types.
   conversion, experimental ground radial generator, practical NEC-2 deck
   import, and basic MMANA-GAL `.maa` geometry import, plus series/parallel RLC
   loads, load markers, and report rows.
+- Optional transmitter-side feed line with characteristic impedance, length,
+  velocity factor, matched loss, and transformed impedance/SWR.
 - Printable/HTML construction sheet with type-aware dimensions, feed position,
   loads, and simulated result.
 - CSV/PNG export for sweep results, far-field patterns, and geometry, plus
@@ -133,7 +135,9 @@ uv run python scripts/run_reference_simulation.py \
   have theoretical sanity tests but no published independent impedance
   reference; VNA CSV import and measurement records are not implemented yet.
 - Series and parallel RLC loads are supported on one wire segment; general
-  networks, transmission lines, and radial ground screens are not implemented.
+  matching networks and radial ground screens are not implemented. The feed
+  line is a uniform line model evaluated at the transmitter; it does not change
+  the antenna pattern or power gain.
 - Simulation runs are stored in the project, including raw solver text; the
   native project size limit is 10 MB. Use Compact Simulation History to keep
   only the latest run per variant. High-resolution patterns and long sweeps

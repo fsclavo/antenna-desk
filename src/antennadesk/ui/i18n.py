@@ -37,6 +37,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Locate NEC2C...",
         Language.SPANISH: "Ubicar NEC2C...",
     },
+    "action.feed_line": {
+        Language.ENGLISH: "Feed Line...",
+        Language.SPANISH: "Línea de alimentación...",
+    },
     "action.exit": {Language.ENGLISH: "Exit", Language.SPANISH: "Salir"},
     "action.about": {
         Language.ENGLISH: "About AntennaDesk",
@@ -218,6 +222,40 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "field.pattern_points": {
         Language.ENGLISH: "{count} pattern points",
         Language.SPANISH: "{count} puntos de patrón",
+    },
+    "feed_line.title": {
+        Language.ENGLISH: "Feed Line",
+        Language.SPANISH: "Línea de alimentación",
+    },
+    "feed_line.enabled": {
+        Language.ENGLISH: "Enable feed line",
+        Language.SPANISH: "Habilitar línea de alimentación",
+    },
+    "feed_line.characteristic_impedance": {
+        Language.ENGLISH: "Characteristic impedance",
+        Language.SPANISH: "Impedancia característica",
+    },
+    "feed_line.length": {
+        Language.ENGLISH: "Length",
+        Language.SPANISH: "Longitud",
+    },
+    "feed_line.velocity_factor": {
+        Language.ENGLISH: "Velocity factor",
+        Language.SPANISH: "Factor de velocidad",
+    },
+    "feed_line.loss": {
+        Language.ENGLISH: "Matched loss",
+        Language.SPANISH: "Pérdida adaptada",
+    },
+    "feed_line.hint": {
+        Language.ENGLISH: (
+            "The feed line transforms the impedance and SWR to the transmitter. "
+            "It does not change the antenna pattern or power gain."
+        ),
+        Language.SPANISH: (
+            "La línea transforma la impedancia y el SWR hacia el transmisor. "
+            "No cambia el patrón ni la ganancia de potencia de la antena."
+        ),
     },
     "field.sweep": {Language.ENGLISH: "Frequency sweep", Language.SPANISH: "Barrido de frecuencia"},
     "field.sweep_enabled": {

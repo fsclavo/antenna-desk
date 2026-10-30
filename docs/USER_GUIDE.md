@@ -117,6 +117,19 @@ The form shows the estimated number of pattern points. More points produce
 smoother cuts and a smoother 3D lobe, but increase solver time and project
 size; use high resolution for final runs rather than routine exploration.
 
+## Feed line
+
+Use **File → Feed Line...** to configure a uniform transmission line between
+the transmitter and the antenna feed. Set its characteristic impedance, length,
+velocity factor, and matched loss in dB per 100 m. When enabled, the Impedance /
+SWR tab reports the impedance and SWR at the **transmitter end**; the Pattern
+tab still reports antenna power gain, because the line does not change the
+radiation pattern. A diagnostics row confirms that the line was applied.
+
+Disable the feed line to return to antenna-terminal impedance. Feed-line
+settings are simulation settings and are stored with each simulation run, not
+as part of the antenna geometry.
+
 ## Variants and comparison
 
 Use **File → New Variant...** to duplicate the current design, **Rename
@@ -211,6 +224,9 @@ canonical meters and hertz.
   geometry and source only; ground and loads are not imported.
 - Project files store normalized results and raw solver text; many long runs
   can reach the 10 MB project limit.
+- The feed line is a uniform-line post-processing model. It reports impedance
+  and SWR at the transmitter but does not add line loss to the pattern gain or
+  realized-gain calculation.
 - Pattern resolution is angular sampling, not additional electromagnetic
   accuracy. Fine patterns and long frequency sweeps increase runtime and
   project size.

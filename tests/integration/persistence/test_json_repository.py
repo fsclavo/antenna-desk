@@ -11,6 +11,7 @@ from typing import Any
 
 import pytest
 
+from antennadesk.domain.antennas.feed_line import FeedLine
 from antennadesk.domain.projects.project import Project
 from antennadesk.domain.simulation.result import SimulationResult
 from antennadesk.persistence import json_repository
@@ -334,6 +335,12 @@ def _rich_result() -> SimulationResult:
             wire_segments=(("radiator", 21),),
         ),
         far_field=FarFieldRequest(),
+        feed_line=FeedLine(
+            characteristic_impedance_ohm=75.0,
+            length_m=30.0,
+            velocity_factor=0.8,
+            matched_loss_db_per_100m=1.5,
+        ),
     )
     current = CurrentSample(
         segment=1,
@@ -435,6 +442,12 @@ def test_round_trip_with_a_simulation_run(
     assert run.result.frequencies[0].impedance_ohm == complex(60.0, -10.0)
     assert math.isinf(run.result.frequencies[1].swr)
     assert run.result.spec.segmentation.wire_segments == (("radiator", 21),)
+    assert run.result.spec.feed_line == FeedLine(
+        characteristic_impedance_ohm=75.0,
+        length_m=30.0,
+        velocity_factor=0.8,
+        matched_loss_db_per_100m=1.5,
+    )
 
 
 def test_serialized_size_matches_written_file(
