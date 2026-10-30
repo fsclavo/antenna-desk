@@ -56,3 +56,14 @@ def test_j_pole_validates_feed_and_stub() -> None:
             stub_length_m=0.5,
             spacing_m=0.05,
         )
+
+
+def test_j_pole_rejects_a_ground_level_base() -> None:
+    with pytest.raises(ValueError, match="base_height"):
+        JPoleParameters(
+            frequency_hz=145_000_000.0,
+            radiator_height_m=1.0,
+            stub_length_m=0.5,
+            spacing_m=0.05,
+            base_height_m=0.0,
+        )

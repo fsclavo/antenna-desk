@@ -58,7 +58,7 @@ class RingoForm(QWidget):
         self._ring_height = QDoubleSpinBox(self)
         self._ring_height.setDecimals(3)
         self._ring_height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
-        self._ring_height.setValue(0.0)
+        self._ring_height.setValue(length_from_m(0.25, unit_system))
 
         self._ring_sides = QSpinBox(self)
         self._ring_sides.setRange(MIN_RING_SIDES, MAX_RING_SIDES)

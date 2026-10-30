@@ -188,6 +188,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   editors, catalog, persistence, and reporting support.
 - Added an experimental first-class Ringo vertical with a base matching ring,
   catalog, persistence, and reporting support.
+- Raised J Pole and Ringo default base/ring heights to 0.25 m so their ground
+  connectors do not lie in the finite-ground plane.
 - Placed the impedance and SWR charts side by side and reduced the default
   geometry pane height to give results more room.
 - Moved Change Template to a fixed button above the design panel so it is always

@@ -31,7 +31,7 @@ class JPoleParameters:
     stub_length_m: float
     spacing_m: float
     feed_offset_m: float = 0.1
-    base_height_m: float = 0.0
+    base_height_m: float = 0.25
     folded: bool = False
     wire_radius_m: float = 0.001
     material: ConductorMaterial = COPPER
@@ -43,7 +43,7 @@ class JPoleParameters:
         ensure_positive(self.stub_length_m, name="stub_length_m")
         ensure_positive(self.spacing_m, name="spacing_m")
         ensure_non_negative(self.feed_offset_m, name="feed_offset_m")
-        ensure_non_negative(self.base_height_m, name="base_height_m")
+        ensure_positive(self.base_height_m, name="base_height_m")
         ensure_positive(self.wire_radius_m, name="wire_radius_m")
         if self.feed_offset_m >= self.stub_length_m:
             raise ValueError("feed_offset_m must be shorter than the stub")

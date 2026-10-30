@@ -68,7 +68,7 @@ class JPoleForm(QWidget):
         self._base_height = QDoubleSpinBox(self)
         self._base_height.setDecimals(3)
         self._base_height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
-        self._base_height.setValue(0.0)
+        self._base_height.setValue(length_from_m(0.25, unit_system))
 
         self._folded = QCheckBox(translator.t("j_pole.folded"), self)
 

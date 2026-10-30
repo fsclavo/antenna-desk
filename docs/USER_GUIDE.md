@@ -138,16 +138,19 @@ remains available.
 
 Choose **File → New Antenna... → Ringo** to generate a half-wave vertical with
 a horizontal matching ring at its base. Set radiator height, ring diameter,
-ring height, ring side count, radius, material, and ground. Ringo is a
+ring height, ring side count, radius, material, and ground. The ring height
+must be positive when using a ground model; the default is 0.25 m. Ringo is a
 first-class experimental template with an inline editor.
 
 ## Create a J Pole or Slim Jim
 
 Choose **File → New Antenna... → J Pole** or **Slim Jim** to generate a vertical
 radiator with a parallel matching stub. Set radiator height, stub length,
-spacing, feed offset, base height, radius, material, and ground. Slim Jim adds
-the top connector and is also available by enabling **Folded** in the J Pole
-editor. Both are first-class experimental templates.
+spacing, feed offset, base height, radius, material, and ground. The base
+height must be positive when using a ground model; the default is 0.25 m to keep
+the base connector out of the NEC ground plane. Slim Jim adds the top connector
+and is also available by enabling **Folded** in the J Pole editor. Both are
+first-class experimental templates.
 
 ## Create an end-fed wire
 

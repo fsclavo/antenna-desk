@@ -32,3 +32,13 @@ def test_ringo_rejects_invalid_ring_sides() -> None:
             ring_diameter_m=0.33,
             ring_sides=2,
         )
+
+
+def test_ringo_rejects_a_ground_level_ring() -> None:
+    with pytest.raises(ValueError, match="ring_height"):
+        RingoParameters(
+            frequency_hz=50_100_000.0,
+            radiator_height_m=3.0,
+            ring_diameter_m=0.33,
+            ring_height_m=0.0,
+        )

@@ -7,7 +7,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from ..common.units import ensure_non_negative, ensure_positive
+from ..common.units import ensure_positive
 from ..environment.ground import FREE_SPACE, GroundModel
 from .antenna import AntennaModel
 from .custom import CustomAntennaParameters
@@ -29,7 +29,7 @@ class RingoParameters:
     frequency_hz: float
     radiator_height_m: float
     ring_diameter_m: float
-    ring_height_m: float = 0.0
+    ring_height_m: float = 0.25
     ring_sides: int = 16
     wire_radius_m: float = 0.001
     material: ConductorMaterial = COPPER
@@ -39,7 +39,7 @@ class RingoParameters:
         ensure_positive(self.frequency_hz, name="frequency_hz")
         ensure_positive(self.radiator_height_m, name="radiator_height_m")
         ensure_positive(self.ring_diameter_m, name="ring_diameter_m")
-        ensure_non_negative(self.ring_height_m, name="ring_height_m")
+        ensure_positive(self.ring_height_m, name="ring_height_m")
         ensure_positive(self.wire_radius_m, name="wire_radius_m")
         if not MIN_RING_SIDES <= self.ring_sides <= MAX_RING_SIDES:
             raise ValueError(f"ring_sides must be between {MIN_RING_SIDES} and {MAX_RING_SIDES}")
