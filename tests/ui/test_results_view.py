@@ -192,3 +192,18 @@ def test_pattern_3d_supports_rotation_zoom_and_reset(qtbot: QtBot) -> None:
     assert view._yaw_deg == 38.0
     assert view._pitch_deg == 26.0
     assert view._zoom == 1.0
+
+
+def test_pattern_3d_clips_below_ground_points(qtbot: QtBot) -> None:
+    from antennadesk.ui.widgets.radiation_pattern_3d_view import RadiationPattern3DView
+
+    view = RadiationPattern3DView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+
+    view.set_points(
+        ((0.0, 0.0, 2.0), (90.0, 0.0, 0.0), (180.0, 0.0, -5.0)),
+        ground=True,
+    )
+
+    assert len(view._points) == 2
+    assert all(theta <= 90.0 for theta, _phi, _gain in view._points)

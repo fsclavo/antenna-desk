@@ -38,6 +38,8 @@ class RadiationPattern3DView(QWidget):
         *,
         ground: bool = False,
     ) -> None:
+        if ground:
+            points = tuple(point for point in points if point[0] <= 90.0 + 1e-6)
         self._points = points
         self._ground = ground
         self.update()
