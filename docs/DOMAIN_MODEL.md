@@ -167,6 +167,13 @@ independent numerical performance reference.
 This keeps the catalog and the design panel on the same taxonomy without
 forcing every generated design into a first-class parameter type.
 
+### VerticalParameters
+
+A vertical radiator with height, base/radial-plane height, optional radial
+count/length/angle, wire radius, material, and ground. `to_custom_parameters()`
+creates the vertical wire and evenly spaced radial wires connected at the base,
+with the feed at the radiator base. The generator is experimental.
+
 ### AntennaDesignParameters
 
 `AntennaDesignParameters` is the union of `DipoleParameters`,

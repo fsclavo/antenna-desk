@@ -875,3 +875,53 @@ def test_main_menu_is_grouped_by_task(window: MainWindow) -> None:
     assert "Edit Series Loads..." in design_titles
     assert "Simulate" in simulation_titles
     assert "Feed Line..." in simulation_titles
+
+
+def test_new_vertical_creates_an_editable_custom_design(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.custom import CustomAntennaParameters
+    from antennadesk.domain.antennas.feed import FeedPoint
+    from antennadesk.domain.antennas.geometry import Point3D
+    from antennadesk.domain.antennas.materials import COPPER
+    from antennadesk.domain.antennas.wire import Wire
+
+    parameters = CustomAntennaParameters(
+        frequency_hz=7_100_000.0,
+        wires=(
+            Wire(
+                id="radiator",
+                start=Point3D(0.0, 0.0, 0.1),
+                end=Point3D(0.0, 0.0, 10.1),
+                radius_m=0.001,
+                material=COPPER,
+            ),
+        ),
+        feed=FeedPoint("radiator", 0.0),
+        generator_id="vertical",
+        generator_name="Vertical",
+    )
+
+    class FakeVerticalDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> CustomAntennaParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "VerticalDialog", FakeVerticalDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Vertical", True))
+
+    window.new_vertical_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "Vertical"
+    assert window._project.designs[0].antenna_type == "custom"
+    assert window._custom_family.text() == "Family: Vertical"
+    assert window._custom_generator.text() == "Template: Vertical"
+    window._dirty = False

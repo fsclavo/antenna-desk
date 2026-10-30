@@ -87,6 +87,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_FOLDED_DIPOLE,
     CATALOG_TYPE_INVERTED_V,
     CATALOG_TYPE_LOOP,
+    CATALOG_TYPE_VERTICAL,
     CATALOG_TYPE_WIRE_DIPOLE,
     CATALOG_TYPE_YAGI,
     AntennaCatalogDialog,
@@ -98,6 +99,7 @@ from .dialogs.feed_line_dialog import FeedLineDialog
 from .dialogs.inverted_v_dialog import InvertedVDialog
 from .dialogs.loads_dialog import LoadsDialog
 from .dialogs.optimization_dialog import OptimizationDialog
+from .dialogs.vertical_dialog import VerticalDialog
 from .dialogs.yagi_dialog import YagiDialog
 from .i18n import Language, Translator
 from .pattern_resolution import DEFAULT_PATTERN_STEP_DEG, far_field_request
@@ -1028,6 +1030,33 @@ class MainWindow(QMainWindow):
             return
         self._set_project(project, project.designs[0].id, path=None, dirty=True)
 
+    def new_vertical_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        name, accepted = QInputDialog.getText(
+            self,
+            self._translator.t("vertical.title"),
+            self._translator.t("field.project_name"),
+            text="Vertical",
+        )
+        if not accepted:
+            return
+        dialog = VerticalDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            project = CreateDipoleProject().execute(
+                CreateDipoleProjectCommand(
+                    project_name=name.strip() or "Vertical",
+                    variant_name="Initial",
+                    parameters=dialog.result_parameters(),
+                )
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+
     def import_nec_deck(self) -> None:
         if not self._maybe_save_changes():
             return
@@ -1183,6 +1212,8 @@ class MainWindow(QMainWindow):
             self.new_yagi_antenna()
         elif selected == CATALOG_TYPE_INVERTED_V:
             self.new_inverted_v_antenna()
+        elif selected == CATALOG_TYPE_VERTICAL:
+            self.new_vertical_antenna()
         elif selected in {
             CATALOG_TYPE_WIRE_DIPOLE,
             CATALOG_TYPE_FOLDED_DIPOLE,

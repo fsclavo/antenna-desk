@@ -69,9 +69,9 @@ antennas.
 
 Use **File → New Antenna...** to open the antenna catalog. Search or filter by
 **Antenna Type** and choose the desired generator. The catalog is grouped by
-antenna family: Dipole, Yagi, Loop, and Custom. The Dipole family contains the
-straight dipole, folded dipole, and inverted-V. The catalog shows a short
-description and evidence level for each type.
+antenna family: Dipole, Yagi, Loop, Vertical, and Custom. The Dipole family
+contains the straight dipole, folded dipole, and inverted-V. The catalog shows
+a short description and evidence level for each type.
 
 ### Basic templates
 
@@ -116,6 +116,19 @@ This is an experimental generator: its geometry and frequency scaling are
 tested, but it has no independent numerical reference for gain or impedance.
 Simulate it and judge the modeled performance; refine the wires with **Edit
 Custom Wires...** if needed.
+
+## Create a vertical
+
+Choose **File → New Antenna... → Vertical + radials** to generate a vertical
+radiator with an optional radial plane. Set the radiator height, base height,
+radial count, radial length, first radial angle, wire radius, material, and
+ground. The base height is also the radial-plane height; use a small positive
+value for elevated radials.
+
+The generator is experimental: geometry and radial topology are tested, but it
+has no independent numerical performance reference. The feed is at the base of
+the radiator, so the usual delta-gap warning can appear. Simulate the result and
+refine the wires with **Edit Custom Wires...** if needed.
 
 ## Read the results
 

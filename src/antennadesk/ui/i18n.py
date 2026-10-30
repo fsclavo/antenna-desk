@@ -67,6 +67,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Yagi",
         Language.SPANISH: "Yagi",
     },
+    "catalog.family.vertical": {
+        Language.ENGLISH: "Vertical",
+        Language.SPANISH: "Vertical",
+    },
     "catalog.family.loop": {
         Language.ENGLISH: "Loop",
         Language.SPANISH: "Lazo",
@@ -99,6 +103,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "catalog.inverted_v.description": {
         Language.ENGLISH: "Two sloping wires fed at the apex, with adjustable included angle.",
         Language.SPANISH: "Dos hilos inclinados alimentados en el vértice, con ángulo ajustable.",
+    },
+    "catalog.vertical": {
+        Language.ENGLISH: "Vertical + radials",
+        Language.SPANISH: "Vertical + radiales",
+    },
+    "catalog.vertical.description": {
+        Language.ENGLISH: "Vertical radiator with an optional radial ground plane.",
+        Language.SPANISH: "Radiador vertical con plano de radiales opcional.",
     },
     "catalog.custom": {
         Language.ENGLISH: "Custom wires",
@@ -818,6 +830,58 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "inverted_v.title": {
         Language.ENGLISH: "Inverted-V Generator",
         Language.SPANISH: "Generador de V invertida",
+    },
+    "vertical.title": {
+        Language.ENGLISH: "Vertical Generator",
+        Language.SPANISH: "Generador de vertical",
+    },
+    "vertical.height": {
+        Language.ENGLISH: "Radiator height",
+        Language.SPANISH: "Altura del radiador",
+    },
+    "vertical.base_height": {
+        Language.ENGLISH: "Base height",
+        Language.SPANISH: "Altura de la base",
+    },
+    "vertical.radial_count": {
+        Language.ENGLISH: "Radial count",
+        Language.SPANISH: "Cantidad de radiales",
+    },
+    "vertical.radial_length": {
+        Language.ENGLISH: "Radial length",
+        Language.SPANISH: "Longitud de radiales",
+    },
+    "vertical.radial_angle": {
+        Language.ENGLISH: "First radial angle",
+        Language.SPANISH: "Ángulo del primer radial",
+    },
+    "vertical.wire_radius": {
+        Language.ENGLISH: "Wire radius (mm)",
+        Language.SPANISH: "Radio del hilo (mm)",
+    },
+    "vertical.geometry": {
+        Language.ENGLISH: "Top height {top} {unit} · {count} radials",
+        Language.SPANISH: "Altura superior {top} {unit} · {count} radiales",
+    },
+    "vertical.hint": {
+        Language.ENGLISH: (
+            "The radiator is fed at its base. Radials are wires in the radial "
+            "plane; set a small base height for elevated radials."
+        ),
+        Language.SPANISH: (
+            "El radiador se alimenta en la base. Los radiales son hilos en el "
+            "plano de radiales; usá una altura de base pequeña para radiales elevados."
+        ),
+    },
+    "vertical.evidence": {
+        Language.ENGLISH: (
+            "Experimental generator: geometry and radial topology are tested, "
+            "but there is no independent numerical reference for this configuration."
+        ),
+        Language.SPANISH: (
+            "Generador experimental: se prueban geometría y topología de radiales, "
+            "pero no hay una referencia numérica independiente para esta configuración."
+        ),
     },
     "inverted_v.apex_height": {
         Language.ENGLISH: "Apex height",

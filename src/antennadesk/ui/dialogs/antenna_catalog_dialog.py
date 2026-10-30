@@ -22,6 +22,7 @@ from ..i18n import Translator
 CATALOG_TYPE_WIRE_DIPOLE = "wire_dipole"
 CATALOG_TYPE_FOLDED_DIPOLE = "folded_dipole"
 CATALOG_TYPE_LOOP = "loop"
+CATALOG_TYPE_VERTICAL = "vertical"
 CATALOG_TYPE_YAGI = "yagi"
 CATALOG_TYPE_INVERTED_V = "inverted_v"
 CATALOG_TYPE_CUSTOM = "custom"
@@ -71,6 +72,13 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         family_key="catalog.family.loop",
         description_key="catalog.loop.description",
         evidence_key="catalog.evidence.builtin",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_VERTICAL,
+        label_key="catalog.vertical",
+        family_key="catalog.family.vertical",
+        description_key="catalog.vertical.description",
+        evidence_key="catalog.evidence.experimental",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_CUSTOM,

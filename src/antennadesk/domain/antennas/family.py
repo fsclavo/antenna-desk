@@ -24,6 +24,7 @@ class AntennaFamily(StrEnum):
 _GENERATOR_FAMILIES: dict[str, AntennaFamily] = {
     "inverted_v": AntennaFamily.DIPOLE,
     "yagi": AntennaFamily.YAGI,
+    "vertical": AntennaFamily.VERTICAL,
 }
 
 

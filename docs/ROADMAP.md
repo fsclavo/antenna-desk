@@ -53,8 +53,8 @@ Completed:
 
 In progress:
 
-- M3 catalog expansion: delta loop/quad, Moxon, OCFD, fan dipole, vertical
-  with radials.
+- M3 catalog expansion: vertical with radials is done; delta loop/quad, Moxon,
+  OCFD, and fan dipole remain.
 
 Deferred:
 
@@ -102,7 +102,7 @@ Deferred:
 | P1 | Catalog metadata and validation badge | A/B/C | done |
 | P1 | Delta loop / quad / Moxon generators | B/C | pending |
 | P1 | OCFD and fan dipole generators | B/C | pending |
-| P1 | Vertical with radial screen | B/C | pending |
+| P1 | Vertical with radial screen | B/C | done |
 | P2 | VNA CSV and measurement records | A | deferred |
 | P2 | Multi-element optimization | n/a | pending |
 | P2 | Packaging and release hardening | n/a | pending |
