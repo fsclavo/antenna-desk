@@ -142,7 +142,7 @@ class DipoleForm(QWidget):
         self._sweep_stop = QDoubleSpinBox(self._sweep_group)
         self._sweep_points = QSpinBox(self._sweep_group)
         self._sweep_points.setRange(2, 10_000)
-        self._sweep_points.setValue(1_000)
+        self._sweep_points.setValue(100)
         for spin in (self._sweep_start, self._sweep_stop):
             spin.setRange(0.1, 100_000.0)
             spin.setDecimals(6)
@@ -420,7 +420,7 @@ class DipoleForm(QWidget):
             center_mhz = parameters.frequency_hz / 1_000_000.0
             self._sweep_start.setValue(center_mhz * 0.95)
             self._sweep_stop.setValue(center_mhz * 1.05)
-            self._sweep_points.setValue(1_000)
+            self._sweep_points.setValue(100)
             self._sweep.setChecked(True)
         self._update_ground_controls()
         self._update_sweep_controls()

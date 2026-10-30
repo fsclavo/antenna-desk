@@ -97,7 +97,7 @@ Phase 5 adds tests for:
   no-bracket, max-evaluation, cancellation, and solver-failure evaluators.
 - The application use case with an analytical solver, including single-
   frequency/no-pattern evaluation specs and sensitivity probes.
-- Pattern-resolution presets, point-count estimates, and 1,000-point sweep
+- Pattern-resolution presets, point-count estimates, and 100-point sweep
   defaults in the standard and custom forms.
 - The optimization dialog worker, evaluation log, sensitivity table, and
   apply-length selection.

@@ -68,7 +68,7 @@ between those types.
 - Asynchronous simulation with cancellation, timeouts, and diagnostics.
 - Impedance, SWR, frequency-sweep, and far-field pattern charts, including
   selectable azimuth/elevation cuts, polar lobe diagrams, and an isometric 3D
-  radiation-pattern wireframe. Sweeps use 1,000 points by default, and pattern
+  radiation-pattern wireframe. Sweeps use 100 points by default, and pattern
   resolution can be set to 10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` projects with multiple design
   variants; schema v3 adds persisted simulation runs and migrates older files.

@@ -33,14 +33,14 @@ def test_far_field_request_uses_ground_hemisphere() -> None:
     assert request.phi_step_deg == pytest.approx(5.0)
 
 
-def test_form_defaults_to_1000_sweep_points_and_10_degree_pattern(qtbot: QtBot) -> None:
+def test_form_defaults_to_100_sweep_points_and_10_degree_pattern(qtbot: QtBot) -> None:
     form = DipoleForm(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(form)
 
     assert form._sweep.isChecked() is True
-    assert form._sweep_points.value() == 1_000
+    assert form._sweep_points.value() == 100
     spec = form.simulation_spec()
-    assert spec.frequency_plan.count == 1_000
+    assert spec.frequency_plan.count == 100
     assert spec.far_field.theta_count == 10
     assert spec.far_field.phi_count == 37
 
