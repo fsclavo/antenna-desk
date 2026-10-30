@@ -33,7 +33,6 @@ from ...domain.antennas.folded_dipole import (
 from ...domain.antennas.loop import ANTENNA_TYPE_LOOP, LoopParameters
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.environment.ground import GroundKind, GroundModel
-from ...domain.simulation.far_field import FarFieldRequest
 from ...domain.simulation.frequency import FrequencyPlan
 from ...domain.simulation.segmentation import (
     SegmentationPolicy,
@@ -41,6 +40,12 @@ from ...domain.simulation.segmentation import (
 )
 from ...domain.simulation.spec import SimulationSpec
 from ..i18n import Translator
+from ..pattern_resolution import (
+    DEFAULT_PATTERN_STEP_DEG,
+    PATTERN_STEPS_DEG,
+    far_field_request,
+    pattern_counts,
+)
 from ..units import (
     UnitSystem,
     diameter_bounds,
@@ -132,16 +137,24 @@ class DipoleForm(QWidget):
 
         self._sweep_group = QGroupBox(self)
         self._sweep = QCheckBox(self._sweep_group)
-        self._sweep.setChecked(True)
+        self._sweep.setChecked(False)
         self._sweep_start = QDoubleSpinBox(self._sweep_group)
         self._sweep_stop = QDoubleSpinBox(self._sweep_group)
         self._sweep_points = QSpinBox(self._sweep_group)
         self._sweep_points.setRange(2, 10_000)
-        self._sweep_points.setValue(21)
+        self._sweep_points.setValue(1_000)
         for spin in (self._sweep_start, self._sweep_stop):
             spin.setRange(0.1, 100_000.0)
             spin.setDecimals(6)
             spin.setSuffix(" MHz")
+
+        self._pattern_resolution = QComboBox(self)
+        for step in PATTERN_STEPS_DEG:
+            self._pattern_resolution.addItem(f"{step:g}°", step)
+        default_index = self._pattern_resolution.findData(DEFAULT_PATTERN_STEP_DEG)
+        if default_index >= 0:
+            self._pattern_resolution.setCurrentIndex(default_index)
+        self._pattern_points = QLabel(self)
 
         self._apply = QPushButton(self)
         self._apply.clicked.connect(self.apply_requested)
@@ -164,6 +177,8 @@ class DipoleForm(QWidget):
         form.addRow(self._label("field.permittivity"), self._permittivity)
         form.addRow(self._label("field.conductivity"), self._conductivity)
         form.addRow(self._label("field.reference_impedance"), self._reference)
+        form.addRow(self._label("field.pattern_resolution"), self._pattern_resolution)
+        form.addRow(self._label("field.pattern_points_label"), self._pattern_points)
 
         sweep_layout = QGridLayout(self._sweep_group)
         sweep_layout.addWidget(self._sweep, 0, 0, 1, 2)
@@ -207,6 +222,7 @@ class DipoleForm(QWidget):
         ):
             spin.valueChanged.connect(self._emit_changed)
         self._sweep_points.valueChanged.connect(self._emit_changed)
+        self._pattern_resolution.currentIndexChanged.connect(self._on_pattern_changed)
         self._sides.valueChanged.connect(self._emit_changed)
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._emit_changed)
@@ -267,6 +283,9 @@ class DipoleForm(QWidget):
         self._type.setItemText(0, self._translator.t("antenna_type.wire_dipole"))
         self._type.setItemText(1, self._translator.t("antenna_type.folded_dipole"))
         self._type.setItemText(2, self._translator.t("antenna_type.loop"))
+        for index, step in enumerate(PATTERN_STEPS_DEG):
+            self._pattern_resolution.setItemText(index, f"{step:g}°")
+        self._update_pattern_points()
         self._apply_unit_system()
         self._update_type_controls()
 
@@ -401,8 +420,8 @@ class DipoleForm(QWidget):
             center_mhz = parameters.frequency_hz / 1_000_000.0
             self._sweep_start.setValue(center_mhz * 0.95)
             self._sweep_stop.setValue(center_mhz * 1.05)
-            self._sweep_points.setValue(21)
-            self._sweep.setChecked(True)
+            self._sweep_points.setValue(1_000)
+            self._sweep.setChecked(False)
         self._update_ground_controls()
         self._update_sweep_controls()
         self._update_type_controls()
@@ -469,26 +488,7 @@ class DipoleForm(QWidget):
         else:
             frequency_plan = FrequencyPlan.single(center_hz)
 
-        if parameters.ground.kind is GroundKind.FREE_SPACE:
-            far_field = FarFieldRequest(
-                enabled=True,
-                theta_start_deg=0.0,
-                theta_stop_deg=180.0,
-                theta_count=19,
-                phi_start_deg=0.0,
-                phi_stop_deg=360.0,
-                phi_count=37,
-            )
-        else:
-            far_field = FarFieldRequest(
-                enabled=True,
-                theta_start_deg=0.0,
-                theta_stop_deg=90.0,
-                theta_count=10,
-                phi_start_deg=0.0,
-                phi_stop_deg=360.0,
-                phi_count=37,
-            )
+        far_field = far_field_request(self.pattern_step_deg(), parameters.ground)
 
         segmentation = aligned_policy_for_model(
             parameters.to_antenna(name="Segmentation preview"),
@@ -546,6 +546,25 @@ class DipoleForm(QWidget):
         finite = self._ground.currentData() == GroundKind.FINITE.value
         self._permittivity.setEnabled(finite)
         self._conductivity.setEnabled(finite)
+        self._update_pattern_points()
+
+    def _on_pattern_changed(self, *_args: object) -> None:
+        self._update_pattern_points()
+        self._emit_changed()
+
+    def _update_pattern_points(self) -> None:
+        try:
+            ground = self.parameters().ground
+        except (ValueError, TypeError):
+            ground = GroundModel.free_space()
+        theta_count, phi_count = pattern_counts(self.pattern_step_deg(), ground)
+        self._pattern_points.setText(
+            self._translator.t("field.pattern_points", count=f"{theta_count * phi_count:,}")
+        )
+
+    def pattern_step_deg(self) -> float:
+        value = self._pattern_resolution.currentData()
+        return float(value) if value is not None else DEFAULT_PATTERN_STEP_DEG
 
     def _update_sweep_controls(self) -> None:
         enabled = self._sweep.isChecked()

@@ -648,6 +648,9 @@ def test_new_custom_antenna_is_editable_and_simulatable(
         def result_parameters(self) -> CustomAntennaParameters:
             return parameters
 
+        def pattern_step_deg(self) -> float:
+            return 10.0
+
     monkeypatch.setattr(main_window_module, "CustomAntennaDialog", FakeCustomDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Custom", True))
 

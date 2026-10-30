@@ -207,6 +207,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Reference impedance (Ω)",
         Language.SPANISH: "Impedancia de referencia (Ω)",
     },
+    "field.pattern_resolution": {
+        Language.ENGLISH: "Pattern resolution",
+        Language.SPANISH: "Resolución del patrón",
+    },
+    "field.pattern_points_label": {
+        Language.ENGLISH: "Pattern points",
+        Language.SPANISH: "Puntos de patrón",
+    },
+    "field.pattern_points": {
+        Language.ENGLISH: "{count} pattern points",
+        Language.SPANISH: "{count} puntos de patrón",
+    },
     "field.sweep": {Language.ENGLISH: "Frequency sweep", Language.SPANISH: "Barrido de frecuencia"},
     "field.sweep_enabled": {
         Language.ENGLISH: "Enable sweep",

@@ -29,8 +29,8 @@ the `NEC2C` environment variable.
 
 The application opens with a 40 m horizontal dipole loaded. Press **Simulate**
 (or F5). The design panel on the left shows antenna type, frequency, geometry,
-height, wire diameter, material, ground, reference impedance, and the frequency
-sweep.
+height, wire diameter, material, ground, reference impedance, pattern
+resolution, and the frequency sweep.
 
 Choose the antenna type first:
 
@@ -93,7 +93,9 @@ After creation, adjust the design panel and press **Apply design** or
   another plane. The default azimuth cut is chosen at the elevation with the
   highest gain; the azimuth diagram includes a dashed line showing the antenna
   orientation. Above-ground elevation cuts are drawn as open arcs rather than
-  closed lobes. Power gain is not realized gain.
+  closed lobes. The angular resolution comes from **Pattern resolution** in the
+  design panel; higher resolution samples the same NEC solution more finely.
+  Power gain is not realized gain.
 - **Currents**: segment current magnitude for the selected frequency, with the
   feed segment marked.
 - **Diagnostics**: solver version, status, duration, fingerprint, and warnings
@@ -106,6 +108,14 @@ the palette changes.
 
 SWR is computed with the reference impedance in the design panel (default
 50 Ω). A low SWR does not prove high efficiency or a useful pattern.
+
+The **Frequency sweep** is disabled by default. When enabled, it uses **1,000
+points** by default and accepts up to 10,000. Frequency points improve the
+impedance/SWR curve. **Pattern resolution** controls the angular sampling of
+the radiation pattern: 10° (normal), 5° (fine), 2° (very fine), or 1° (maximum).
+The form shows the estimated number of pattern points. More points produce
+smoother cuts and a smoother 3D lobe, but increase solver time and project
+size; use high resolution for final runs rather than routine exploration.
 
 ## Variants and comparison
 
@@ -201,6 +211,9 @@ canonical meters and hertz.
   geometry and source only; ground and loads are not imported.
 - Project files store normalized results and raw solver text; many long runs
   can reach the 10 MB project limit.
+- Pattern resolution is angular sampling, not additional electromagnetic
+  accuracy. Fine patterns and long frequency sweeps increase runtime and
+  project size.
 - Simulation reports and construction sheets have native PDF export; HTML
   versions remain available for browser printing.
 - Optimization is one-dimensional adjustment of the primary dimension against

@@ -68,7 +68,9 @@ between those types.
 - Asynchronous simulation with cancellation, timeouts, and diagnostics.
 - Impedance, SWR, frequency-sweep, and far-field pattern charts, including
   selectable azimuth/elevation cuts, polar lobe diagrams, and an isometric 3D
-  radiation-pattern wireframe.
+  radiation-pattern wireframe. Sweep points are configurable (1,000 by
+  default when enabled), and pattern resolution can be set to 10°, 5°, 2°, or
+  1°.
 - Save/open of versioned `.antennadesk` projects with multiple design
   variants; schema v3 adds persisted simulation runs and migrates older files.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
@@ -135,7 +137,8 @@ uv run python scripts/run_reference_simulation.py \
   networks, transmission lines, and radial ground screens are not implemented.
 - Simulation runs are stored in the project, including raw solver text; the
   native project size limit is 10 MB. Use Compact Simulation History to keep
-  only the latest run per variant.
+  only the latest run per variant. High-resolution patterns and long sweeps
+  multiply runtime and stored points.
 - Optimization adjusts one primary dimension per design. It supports one
   reactance, SWR, bandwidth, gain, or efficiency objective, or a weighted
   SWR/gain score; it does not expose a Pareto front or optimize several

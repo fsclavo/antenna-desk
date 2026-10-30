@@ -67,7 +67,6 @@ from ..domain.antennas.load import LumpedLoad
 from ..domain.common.time import utc_now
 from ..domain.environment.ground import GroundModel
 from ..domain.projects.project import DesignVariant, Project
-from ..domain.simulation.far_field import FarFieldRequest
 from ..domain.simulation.frequency import FrequencyPlan
 from ..domain.simulation.result import SimulationResult, SimulationStatus
 from ..domain.simulation.segmentation import (
@@ -87,6 +86,7 @@ from .dialogs.custom_antenna_dialog import CustomAntennaDialog
 from .dialogs.loads_dialog import LoadsDialog
 from .dialogs.optimization_dialog import OptimizationDialog
 from .i18n import Language, Translator
+from .pattern_resolution import DEFAULT_PATTERN_STEP_DEG, far_field_request
 from .report_pdf import write_report_pdf
 from .units import UnitSystem
 from .widgets.dipole_form import DipoleForm
@@ -123,6 +123,7 @@ class MainWindow(QMainWindow):
         self._simulation_results: dict[UUID, SimulationResult] = {}
         self._simulation_design_id: UUID | None = None
         self._loads: tuple[LumpedLoad, ...] = ()
+        self._custom_pattern_step_deg = DEFAULT_PATTERN_STEP_DEG
         self._last_status_key = "status.ready"
         self._thread: QThread | None = None
         self._worker: SimulationWorker | None = None
@@ -856,15 +857,7 @@ class MainWindow(QMainWindow):
         parameters: CustomAntennaParameters,
     ) -> SimulationSpec:
         model = parameters.to_antenna(name="Custom")
-        far_field = FarFieldRequest(
-            enabled=True,
-            theta_start_deg=0.0,
-            theta_stop_deg=(180.0 if parameters.ground.kind.value == "free_space" else 90.0),
-            theta_count=19 if parameters.ground.kind.value == "free_space" else 10,
-            phi_start_deg=0.0,
-            phi_stop_deg=360.0,
-            phi_count=37,
-        )
+        far_field = far_field_request(self._custom_pattern_step_deg, parameters.ground)
         return SimulationSpec(
             frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
             segmentation=aligned_policy_for_model(
@@ -886,9 +879,15 @@ class MainWindow(QMainWindow):
         )
         if not accepted:
             return
-        dialog = CustomAntennaDialog(self._translator, self._unit_system, parent=self)
+        dialog = CustomAntennaDialog(
+            self._translator,
+            self._unit_system,
+            parent=self,
+            pattern_step_deg=self._custom_pattern_step_deg,
+        )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
+        self._custom_pattern_step_deg = dialog.pattern_step_deg()
         try:
             project = CreateDipoleProject().execute(
                 CreateDipoleProjectCommand(
@@ -994,6 +993,7 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
+        self._custom_pattern_step_deg = self._form.pattern_step_deg()
         self._loads = updated_design.antenna.loads
         self._form_dirty = False
         self._dirty = True
@@ -1029,9 +1029,11 @@ class MainWindow(QMainWindow):
             self._unit_system,
             design.parameters,
             self,
+            pattern_step_deg=self._custom_pattern_step_deg,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
+        self._custom_pattern_step_deg = dialog.pattern_step_deg()
         try:
             updated_design = design.with_parameters(dialog.result_parameters())
             self._project = self._project.with_design(updated_design, updated_at=utc_now())
