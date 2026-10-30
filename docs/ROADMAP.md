@@ -45,7 +45,9 @@ Completed:
 
 - M1: parametric Yagi generator with editable element table and NBS preset.
 - M2: inverted-V generator.
-- Single **New Antenna** catalog with search and Antenna Type selection.
+- Single **New Antenna** catalog with search, Antenna Type selection, and
+  family grouping.
+- Explicit antenna family/template mapping in the domain and design panel.
 - Generated-design metadata (`generator_id` / `generator_name`) persisted in
   custom designs.
 

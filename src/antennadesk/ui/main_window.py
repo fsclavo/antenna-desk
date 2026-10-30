@@ -63,6 +63,7 @@ from ..application.use_cases.update_dipole_design import (
 from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.design import with_primary_dimension
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
+from ..domain.antennas.family import antenna_family
 from ..domain.antennas.feed_line import FeedLine
 from ..domain.antennas.load import LumpedLoad
 from ..domain.common.time import utc_now
@@ -276,12 +277,15 @@ class MainWindow(QMainWindow):
         self._custom_title.setStyleSheet("font-weight: bold;")
         self._custom_summary = QLabel(self._custom_panel)
         self._custom_summary.setWordWrap(True)
+        self._custom_family = QLabel(self._custom_panel)
+        self._custom_family.setWordWrap(True)
         self._custom_generator = QLabel(self._custom_panel)
         self._custom_generator.setWordWrap(True)
         self._custom_generator.setStyleSheet("font-style: italic;")
         self._custom_edit = QPushButton(self._custom_panel)
         self._custom_edit.clicked.connect(lambda: self.edit_custom_wires())
         custom_layout.addWidget(self._custom_title)
+        custom_layout.addWidget(self._custom_family)
         custom_layout.addWidget(self._custom_generator)
         custom_layout.addWidget(self._custom_summary)
         custom_layout.addWidget(self._custom_edit)
@@ -465,6 +469,10 @@ class MainWindow(QMainWindow):
         self._form.retranslate()
         self._geometry.retranslate()
         self._results.retranslate()
+        if self._project is not None and self._design_id is not None:
+            design = self._project.design_by_id(self._design_id)
+            if isinstance(design.parameters, CustomAntennaParameters):
+                self._update_custom_panel(design)
         self._update_solver_status()
         self._update_status_text()
         self._update_actions()
@@ -584,8 +592,12 @@ class MainWindow(QMainWindow):
         parameters = design.parameters
         if not isinstance(parameters, CustomAntennaParameters):
             return
-        self._custom_generator.setText(parameters.generator_name or "")
-        self._custom_generator.setVisible(bool(parameters.generator_name))
+        family = antenna_family(parameters)
+        template = parameters.generator_name or self._translator.t("catalog.custom")
+        self._custom_family.setText(
+            self._translator.t("custom.family", value=self._translator.t(f"family.{family.value}"))
+        )
+        self._custom_generator.setText(self._translator.t("custom.template", value=template))
         self._custom_summary.setText(
             self._translator.t(
                 "custom.summary",

@@ -161,10 +161,12 @@ class DipoleForm(QWidget):
         self._optimize = QPushButton(self)
         self._optimize.clicked.connect(self.optimize_requested)
 
+        self._family_value = QLabel(self)
         self._form_layout = QFormLayout()
         form = self._form_layout
         form.addRow(self._label("field.frequency"), self._frequency)
-        form.addRow(self._label("field.antenna_type"), self._type)
+        form.addRow(self._label("field.family"), self._family_value)
+        form.addRow(self._label("field.template"), self._type)
         form.addRow(self._label("field.orientation"), self._orientation)
         form.addRow(self._label("field.length"), self._length)
         form.addRow(self._label("field.spacing"), self._spacing)
@@ -519,6 +521,9 @@ class DipoleForm(QWidget):
         self._set_row_visible(self._orientation, is_dipole)
         self._set_row_visible(self._spacing, is_folded)
         self._set_row_visible(self._sides, is_loop)
+        self._family_value.setText(
+            self._translator.t("family.loop" if is_loop else "family.dipole")
+        )
         self._optimize.setVisible(True)
         labels = self._labels()
         length_label = labels.get("field.length")

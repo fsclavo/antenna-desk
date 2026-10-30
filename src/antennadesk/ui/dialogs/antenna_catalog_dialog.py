@@ -31,7 +31,7 @@ CATALOG_TYPE_CUSTOM = "custom"
 class CatalogEntry:
     key: str
     label_key: str
-    category_key: str
+    family_key: str
     description_key: str
     evidence_key: str
 
@@ -40,42 +40,42 @@ ENTRIES: tuple[CatalogEntry, ...] = (
     CatalogEntry(
         key=CATALOG_TYPE_WIRE_DIPOLE,
         label_key="antenna_type.wire_dipole",
-        category_key="catalog.category.basic",
+        family_key="catalog.family.dipole",
         description_key="catalog.wire_dipole.description",
         evidence_key="catalog.evidence.builtin",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_FOLDED_DIPOLE,
         label_key="antenna_type.folded_dipole",
-        category_key="catalog.category.basic",
+        family_key="catalog.family.dipole",
         description_key="catalog.folded_dipole.description",
         evidence_key="catalog.evidence.builtin",
     ),
     CatalogEntry(
-        key=CATALOG_TYPE_LOOP,
-        label_key="antenna_type.loop",
-        category_key="catalog.category.basic",
-        description_key="catalog.loop.description",
-        evidence_key="catalog.evidence.builtin",
-    ),
-    CatalogEntry(
-        key=CATALOG_TYPE_YAGI,
-        label_key="catalog.yagi",
-        category_key="catalog.category.generated",
-        description_key="catalog.yagi.description",
-        evidence_key="catalog.evidence.yagi",
-    ),
-    CatalogEntry(
         key=CATALOG_TYPE_INVERTED_V,
         label_key="catalog.inverted_v",
-        category_key="catalog.category.generated",
+        family_key="catalog.family.dipole",
         description_key="catalog.inverted_v.description",
         evidence_key="catalog.evidence.experimental",
     ),
     CatalogEntry(
+        key=CATALOG_TYPE_YAGI,
+        label_key="catalog.yagi",
+        family_key="catalog.family.yagi",
+        description_key="catalog.yagi.description",
+        evidence_key="catalog.evidence.yagi",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_LOOP,
+        label_key="antenna_type.loop",
+        family_key="catalog.family.loop",
+        description_key="catalog.loop.description",
+        evidence_key="catalog.evidence.builtin",
+    ),
+    CatalogEntry(
         key=CATALOG_TYPE_CUSTOM,
         label_key="catalog.custom",
-        category_key="catalog.category.custom",
+        family_key="catalog.family.custom",
         description_key="catalog.custom.description",
         evidence_key="catalog.evidence.custom",
     ),
@@ -117,7 +117,7 @@ class AntennaCatalogDialog(QDialog):
 
         for entry in ENTRIES:
             item = QListWidgetItem(
-                f"{translator.t(entry.category_key)} · {translator.t(entry.label_key)}"
+                f"{translator.t(entry.family_key)} · {translator.t(entry.label_key)}"
             )
             item.setData(1, entry.key)
             item.setData(2, entry.description_key)

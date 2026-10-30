@@ -46,15 +46,19 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Evidence",
         Language.SPANISH: "Evidencia",
     },
-    "catalog.category.basic": {
-        Language.ENGLISH: "Basic",
-        Language.SPANISH: "Básica",
+    "catalog.family.dipole": {
+        Language.ENGLISH: "Dipole",
+        Language.SPANISH: "Dipolo",
     },
-    "catalog.category.generated": {
-        Language.ENGLISH: "Generated",
-        Language.SPANISH: "Generada",
+    "catalog.family.yagi": {
+        Language.ENGLISH: "Yagi",
+        Language.SPANISH: "Yagi",
     },
-    "catalog.category.custom": {
+    "catalog.family.loop": {
+        Language.ENGLISH: "Loop",
+        Language.SPANISH: "Lazo",
+    },
+    "catalog.family.custom": {
         Language.ENGLISH: "Custom",
         Language.SPANISH: "Personalizada",
     },
@@ -241,6 +245,36 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "field.antenna_type": {
         Language.ENGLISH: "Antenna type",
         Language.SPANISH: "Tipo de antena",
+    },
+    "field.family": {
+        Language.ENGLISH: "Family",
+        Language.SPANISH: "Familia",
+    },
+    "field.template": {
+        Language.ENGLISH: "Template",
+        Language.SPANISH: "Plantilla",
+    },
+    "family.dipole": {
+        Language.ENGLISH: "Dipole",
+        Language.SPANISH: "Dipolo",
+    },
+    "family.yagi": {Language.ENGLISH: "Yagi", Language.SPANISH: "Yagi"},
+    "family.loop": {Language.ENGLISH: "Loop", Language.SPANISH: "Lazo"},
+    "family.vertical": {
+        Language.ENGLISH: "Vertical",
+        Language.SPANISH: "Vertical",
+    },
+    "family.custom": {
+        Language.ENGLISH: "Custom",
+        Language.SPANISH: "Personalizada",
+    },
+    "custom.family": {
+        Language.ENGLISH: "Family: {value}",
+        Language.SPANISH: "Familia: {value}",
+    },
+    "custom.template": {
+        Language.ENGLISH: "Template: {value}",
+        Language.SPANISH: "Plantilla: {value}",
     },
     "field.spacing": {Language.ENGLISH: "Spacing", Language.SPANISH: "Separación"},
     "field.sides": {Language.ENGLISH: "Sides", Language.SPANISH: "Lados"},

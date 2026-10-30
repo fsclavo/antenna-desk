@@ -141,7 +141,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added an experimental inverted-V generator with apex height, leg length,
   included angle, azimuth, geometry preview, and editable custom-wire output.
 - Consolidated antenna creation into a searchable **New Antenna** catalog with
-  an Antenna Type selector; removed per-type New menu entries.
+  an Antenna Type selector and family grouping; removed per-type New menu
+  entries.
+- Separated antenna Family from Template in the design panel, including
+  generated custom designs.
 - Persist generator metadata (`generator_id`, `generator_name`) in custom
   designs and show it in the custom design panel.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the

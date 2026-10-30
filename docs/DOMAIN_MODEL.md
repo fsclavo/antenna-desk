@@ -159,6 +159,14 @@ two sloping wires meeting at the apex, with a center feed at the apex. The
 generator is experimental; its geometry and scaling are tested, but it has no
 independent numerical performance reference.
 
+### Antenna families
+
+`AntennaFamily` groups designs as Dipole, Yagi, Loop, Vertical, or Custom.
+`antenna_family()` maps native parameters and generator metadata to a family;
+`antenna_template_id()` returns the native template or generator identifier.
+This keeps the catalog and the design panel on the same taxonomy without
+forcing every generated design into a first-class parameter type.
+
 ### AntennaDesignParameters
 
 `AntennaDesignParameters` is the union of `DipoleParameters`,

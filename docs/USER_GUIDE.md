@@ -68,7 +68,9 @@ antennas.
 ## Create an antenna
 
 Use **File → New Antenna...** to open the antenna catalog. Search or filter by
-**Antenna Type** and choose the desired generator. The catalog shows a short
+**Antenna Type** and choose the desired generator. The catalog is grouped by
+antenna family: Dipole, Yagi, Loop, and Custom. The Dipole family contains the
+straight dipole, folded dipole, and inverted-V. The catalog shows a short
 description and evidence level for each type.
 
 ### Basic templates
@@ -84,7 +86,8 @@ For a wire dipole, folded dipole, or loop, the guided wizard asks for:
 5. A summary before creating the project.
 
 After creation, adjust the design panel and press **Apply design** or
-**Simulate**.
+**Simulate**. The design panel separates **Family** from **Template**; generated
+designs show both as metadata and remain editable as custom wires.
 
 ## Create a Yagi
 

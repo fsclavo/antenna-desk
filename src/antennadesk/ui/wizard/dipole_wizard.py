@@ -100,7 +100,7 @@ class ProjectPage(QWizardPage):
 
         form = QFormLayout(self)
         form.addRow(self._label("field.project_name"), self._name)
-        form.addRow(self._label("field.antenna_type"), self._type)
+        form.addRow(self._label("field.template"), self._type)
         form.addRow(self._label("wizard.band"), self._band)
         form.addRow(self._label("field.frequency"), self._frequency)
 

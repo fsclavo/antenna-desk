@@ -800,7 +800,8 @@ def test_new_yagi_creates_an_editable_custom_design(
     assert window._project.name == "Yagi"
     assert window._project.designs[0].antenna_type == "custom"
     assert window._project.designs[0].antenna.wires == parameters.wires
-    assert window._custom_generator.text() == "Yagi"
+    assert window._custom_family.text() == "Family: Yagi"
+    assert window._custom_generator.text() == "Template: Yagi"
     window._dirty = False
 
 
