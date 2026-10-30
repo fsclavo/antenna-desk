@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QKeySequence
@@ -79,6 +79,7 @@ from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
 from ..domain.common.time import utc_now
 from ..domain.environment.ground import GroundModel
+from ..domain.measurement import Measurement
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.frequency import FrequencyPlan
 from ..domain.simulation.result import SimulationResult, SimulationStatus
@@ -89,6 +90,7 @@ from ..domain.simulation.segmentation import (
 from ..domain.simulation.spec import SimulationSpec
 from ..importers.mmana import parse_mmana_file
 from ..importers.nec2_deck import parse_nec2_deck
+from ..importers.vna_csv import parse_vna_csv
 from ..persistence.constants import MAX_PROJECT_SIZE_BYTES, PROJECT_SIZE_WARNING_BYTES
 from ..reporting.csv_export import write_csv, write_pattern_csv
 from ..reporting.html_report import write_html_report
@@ -184,6 +186,8 @@ class MainWindow(QMainWindow):
         self._import_nec_action.triggered.connect(lambda: self.import_nec_deck())
         self._import_mmana_action = QAction(self)
         self._import_mmana_action.triggered.connect(lambda: self.import_mmana_file())
+        self._import_vna_action = QAction(self)
+        self._import_vna_action.triggered.connect(lambda: self.import_vna_csv())
 
         self._open_action = QAction(self)
         self._open_action.setShortcut(QKeySequence.StandardKey.Open)
@@ -494,6 +498,7 @@ class MainWindow(QMainWindow):
         self._import_menu = self._file_menu.addMenu("")
         self._import_menu.addAction(self._import_nec_action)
         self._import_menu.addAction(self._import_mmana_action)
+        self._import_menu.addAction(self._import_vna_action)
         self._export_menu = self._file_menu.addMenu("")
         self._export_menu.addAction(self._export_csv_action)
         self._export_menu.addAction(self._export_pattern_csv_action)
@@ -549,6 +554,7 @@ class MainWindow(QMainWindow):
         self._new_action.setText(self._translator.t("action.new"))
         self._import_nec_action.setText(self._translator.t("action.import_nec"))
         self._import_mmana_action.setText(self._translator.t("action.import_mmana"))
+        self._import_vna_action.setText(self._translator.t("action.import_vna"))
         self._open_action.setText(self._translator.t("action.open"))
         self._save_action.setText(self._translator.t("action.save"))
         self._save_as_action.setText(self._translator.t("action.save_as"))
@@ -699,6 +705,7 @@ class MainWindow(QMainWindow):
         self._convert_custom_action.setEnabled(idle and has_project and not is_custom)
         self._import_nec_action.setEnabled(idle)
         self._import_mmana_action.setEnabled(idle)
+        self._import_vna_action.setEnabled(idle and has_project)
         self._export_csv_action.setEnabled(idle and has_result)
         self._export_pattern_csv_action.setEnabled(idle and has_result)
         self._export_pattern_png_action.setEnabled(idle and has_result)
@@ -891,6 +898,7 @@ class MainWindow(QMainWindow):
                 self._simulation_results[project_design.id] = latest_run.result
         self._simulation_design_id = None
         self._results.set_result(None)
+        self._results.set_measurements(project.measurements)
         self._project_name_updating = True
         self._project_name.setText(project.name)
         self._project_name_updating = False
@@ -1597,6 +1605,56 @@ class MainWindow(QMainWindow):
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
         self._set_project(project, project.designs[0].id, path=None, dirty=True)
+
+    def import_vna_csv(self) -> None:
+        if self._project is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        filename, _ = QFileDialog.getOpenFileName(
+            self,
+            self._translator.t("dialog.vna_title"),
+            str(Path.home()),
+            self._translator.t("dialog.vna_filter"),
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        try:
+            parsed = parse_vna_csv(path.read_text(encoding="utf-8", errors="replace"))
+            measurement = Measurement(
+                id=uuid4(),
+                name=path.stem,
+                created_at=utc_now(),
+                reference_impedance_ohm=parsed.reference_impedance_ohm,
+                points=parsed.points,
+                source=str(path),
+            )
+            self._project = self._project.with_measurement(
+                measurement,
+                updated_at=utc_now(),
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.import_vna", message=str(exc)))
+            return
+        self._dirty = True
+        self._results.set_measurements(self._project.measurements)
+        self._tabs_select_measurements()
+        self._update_title()
+        self._update_actions()
+        self._update_status_text()
+        if parsed.warnings:
+            QMessageBox.warning(
+                self,
+                self._translator.t("dialog.vna_title"),
+                self._translator.t(
+                    "dialog.vna_warnings",
+                    count=len(parsed.warnings),
+                    details="\n".join(parsed.warnings[:12]),
+                ),
+            )
+
+    def _tabs_select_measurements(self) -> None:
+        self._results.show_measurements()
 
     def import_nec_deck(self) -> None:
         if not self._maybe_save_changes():

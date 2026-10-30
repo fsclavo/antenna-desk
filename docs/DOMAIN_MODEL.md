@@ -227,6 +227,13 @@ tuple of design variants. Invariants:
 
 `with_design()` returns a new project, replacing or appending a design.
 
+## Measurements
+
+`MeasurementPoint` stores a measured frequency and complex impedance.
+`Measurement` stores a name, timestamp, reference impedance, source, and points.
+Measurements are stored in the project and rendered with SWR computed at their
+reference impedance.
+
 ## Project file
 
 The native format is versioned JSON:

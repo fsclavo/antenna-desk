@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 
 from ...domain.common.validation import Diagnostic, Severity
 from ...domain.environment.ground import GroundKind
+from ...domain.measurement import Measurement
 from ...domain.projects.project import DesignVariant
 from ...domain.simulation.resonance import find_resonances
 from ...domain.simulation.result import SimulationResult, SimulationStatus
@@ -47,6 +48,7 @@ class ResultsView(QWidget):
         self._impedance_tab = QWidget(self)
         self._pattern_tab = QWidget(self)
         self._currents_tab = QWidget(self)
+        self._measurements_tab = QWidget(self)
         self._diagnostics_tab = QWidget(self)
         self._raw_tab = QWidget(self)
 
@@ -127,6 +129,24 @@ class ResultsView(QWidget):
         currents_layout.addLayout(currents_controls)
         currents_layout.addWidget(self._currents_plot)
 
+        self._measurements: tuple[Measurement, ...] = ()
+        self._measurement_selector = QComboBox(self._measurements_tab)
+        self._measurement_selector_label = QLabel(self._measurements_tab)
+        self._measurement_selector.currentIndexChanged.connect(self._render_measurements)
+        self._measurement_table = QTableWidget(0, 4, self._measurements_tab)
+        self._configure_table(self._measurement_table)
+        self._measurement_plot = self._make_plot()
+        self._measurement_plot.addLegend()
+        measurement_controls = QHBoxLayout()
+        measurement_controls.addWidget(self._measurement_selector_label)
+        measurement_controls.addWidget(self._measurement_selector)
+        measurement_controls.addStretch(1)
+        measurement_layout = QVBoxLayout(self._measurements_tab)
+        measurement_layout.setContentsMargins(0, 0, 0, 0)
+        measurement_layout.addLayout(measurement_controls)
+        measurement_layout.addWidget(self._measurement_table, 1)
+        measurement_layout.addWidget(self._measurement_plot, 2)
+
         self._summary = QLabel(self._diagnostics_tab)
         self._summary.setWordWrap(True)
         self._summary.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
@@ -151,6 +171,7 @@ class ResultsView(QWidget):
         self._tabs.addTab(self._impedance_tab, "")
         self._tabs.addTab(self._pattern_tab, "")
         self._tabs.addTab(self._currents_tab, "")
+        self._tabs.addTab(self._measurements_tab, "")
         self._tabs.addTab(self._diagnostics_tab, "")
         self._tabs.addTab(self._raw_tab, "")
 
@@ -224,6 +245,20 @@ class ResultsView(QWidget):
         self._design = design
         self._render_pattern()
 
+    def show_measurements(self) -> None:
+        self._tabs.setCurrentIndex(3)
+
+    def set_measurements(self, measurements: tuple[Measurement, ...]) -> None:
+        self._measurements = measurements
+        self._measurement_selector.blockSignals(True)
+        self._measurement_selector.clear()
+        for measurement in measurements:
+            self._measurement_selector.addItem(measurement.name)
+        self._measurement_selector.blockSignals(False)
+        if self._measurement_selector.count():
+            self._measurement_selector.setCurrentIndex(0)
+        self._render_measurements()
+
     def set_result(self, result: SimulationResult | None) -> None:
         self._result = result
         for combo in (self._pattern_frequency, self._currents_frequency):
@@ -242,8 +277,9 @@ class ResultsView(QWidget):
         self._tabs.setTabText(0, self._translator.t("tab.impedance"))
         self._tabs.setTabText(1, self._translator.t("tab.pattern"))
         self._tabs.setTabText(2, self._translator.t("tab.currents"))
-        self._tabs.setTabText(3, self._translator.t("tab.diagnostics"))
-        self._tabs.setTabText(4, self._translator.t("tab.raw"))
+        self._tabs.setTabText(3, self._translator.t("tab.measurements"))
+        self._tabs.setTabText(4, self._translator.t("tab.diagnostics"))
+        self._tabs.setTabText(5, self._translator.t("tab.raw"))
         self._pattern_view_tabs.setTabText(0, self._translator.t("pattern.cut_tab"))
         self._pattern_view_tabs.setTabText(1, self._translator.t("pattern.3d_tab"))
         self._table.setHorizontalHeaderLabels(
@@ -268,6 +304,15 @@ class ResultsView(QWidget):
         self._pattern_mode.setItemText(1, self._translator.t("pattern.mode_elevation"))
         self._update_cut_label()
         self._currents_frequency_label.setText(self._translator.t("currents.frequency"))
+        self._measurement_selector_label.setText(self._translator.t("measurement.select"))
+        self._measurement_table.setHorizontalHeaderLabels(
+            [
+                self._translator.t("table.frequency"),
+                self._translator.t("table.resistance"),
+                self._translator.t("table.reactance"),
+                self._translator.t("table.swr"),
+            ]
+        )
         self._raw_tabs.setTabText(0, self._translator.t("raw.input"))
         self._raw_tabs.setTabText(1, self._translator.t("raw.output"))
         self._render()
@@ -276,6 +321,7 @@ class ResultsView(QWidget):
         self._render_impedance()
         self._render_pattern()
         self._render_currents()
+        self._render_measurements()
         self._render_diagnostics()
         self._render_raw()
 
@@ -585,6 +631,61 @@ class ResultsView(QWidget):
             ),
             ground=ground,
         )
+
+    def _render_measurements(self) -> None:
+        self._measurement_table.setRowCount(0)
+        self._measurement_plot.clear()
+        self._measurement_plot.setTitle(
+            self._translator.t("measurement.none"), color=self._colors.text
+        )
+        index = self._measurement_selector.currentIndex()
+        if index < 0 or index >= len(self._measurements):
+            return
+        measurement = self._measurements[index]
+        self._measurement_table.setRowCount(len(measurement.points))
+        for row, point in enumerate(measurement.points):
+            values = [
+                f"{point.frequency_hz / 1e6:.6f}",
+                f"{point.impedance_ohm.real:.3f}",
+                f"{point.impedance_ohm.imag:+.3f}",
+                f"{point.swr(measurement.reference_impedance_ohm):.3f}",
+            ]
+            for column, value in enumerate(values):
+                item = QTableWidgetItem(value)
+                item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+                self._measurement_table.setItem(row, column, item)
+        self._measurement_table.resizeColumnsToContents()
+        frequencies = [point.frequency_hz / 1e6 for point in measurement.points]
+        swr = [point.swr(measurement.reference_impedance_ohm) for point in measurement.points]
+        self._measurement_plot.setTitle(
+            self._translator.t("measurement.swr"),
+            color=self._colors.text,
+        )
+        self._measurement_plot.setLabel(
+            "bottom", self._translator.t("table.frequency"), color=self._colors.text
+        )
+        self._measurement_plot.setLabel(
+            "left", self._translator.t("table.swr"), color=self._colors.text
+        )
+        self._measurement_plot.plot(
+            frequencies,
+            swr,
+            pen=pg.mkPen(self._colors.swr, width=2),
+            name=self._translator.t("measurement.measured"),
+        )
+        if self._result is not None and self._result.frequencies:
+            simulated = [
+                (frequency.frequency_hz / 1e6, frequency.swr)
+                for frequency in self._result.frequencies
+                if math.isfinite(frequency.swr)
+            ]
+            if simulated:
+                self._measurement_plot.plot(
+                    [point[0] for point in simulated],
+                    [point[1] for point in simulated],
+                    pen=pg.mkPen(self._colors.pattern, width=2, style=Qt.PenStyle.DashLine),
+                    name=self._translator.t("measurement.simulated"),
+                )
 
     def _render_diagnostics(self) -> None:
         self._diagnostics.setRowCount(0)

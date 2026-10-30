@@ -51,7 +51,7 @@ def test_results_view_shows_currents_and_resonance(qtbot: QtBot) -> None:
 
     view.set_result(_make_result())
 
-    assert view._tabs.count() == 5
+    assert view._tabs.count() == 6
     assert view._table.rowCount() == 3
     assert view._currents_frequency.count() == 3
     assert len(view._currents_plot.listDataItems()) >= 1
@@ -217,3 +217,30 @@ def test_impedance_and_swr_charts_are_side_by_side(qtbot: QtBot) -> None:
 
     assert view._impedance_charts_splitter.orientation() == Qt.Orientation.Horizontal
     assert view._impedance_charts_splitter.count() == 2
+
+
+def test_results_view_shows_imported_measurements(qtbot: QtBot) -> None:
+    from datetime import UTC, datetime
+    from uuid import UUID
+
+    from antennadesk.domain.measurement import Measurement, MeasurementPoint
+
+    measurement = Measurement(
+        id=UUID("00000000-0000-0000-0000-000000000002"),
+        name="Field sweep",
+        created_at=datetime(2026, 10, 30, tzinfo=UTC),
+        reference_impedance_ohm=50.0,
+        points=(
+            MeasurementPoint(7_000_000.0, complex(50.0, 0.0)),
+            MeasurementPoint(7_100_000.0, complex(75.0, 0.0)),
+        ),
+    )
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+
+    view.set_measurements((measurement,))
+
+    assert view._tabs.count() == 6
+    assert view._measurement_selector.count() == 1
+    assert view._measurement_table.rowCount() == 2
+    assert view._measurement_plot.listDataItems()

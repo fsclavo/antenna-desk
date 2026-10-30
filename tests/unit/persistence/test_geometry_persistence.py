@@ -299,3 +299,28 @@ def test_fan_dipole_parameters_round_trip() -> None:
 
     assert restored.designs[0].parameters == parameters
     assert restored.designs[0].antenna_type == "fan_dipole"
+
+
+def test_measurement_round_trip() -> None:
+    from dataclasses import replace
+    from datetime import UTC, datetime
+    from uuid import UUID
+
+    from antennadesk.domain.measurement import Measurement, MeasurementPoint
+
+    measurement = Measurement(
+        id=UUID("00000000-0000-0000-0000-000000000003"),
+        name="Field sweep",
+        created_at=datetime(2026, 10, 30, tzinfo=UTC),
+        reference_impedance_ohm=50.0,
+        points=(MeasurementPoint(7_100_000.0, complex(70.0, 5.0)),),
+        source="field.csv",
+    )
+    original = replace(
+        _project(DipoleParameters(7_100_000.0, 20.0, 8.0), "Dipole"), measurements=(measurement,)
+    )
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.measurements == (measurement,)

@@ -57,6 +57,8 @@ In progress:
 
 - M3 catalog expansion complete: delta/quad loops, Moxon, OCFD, vertical with
   radials, and fan dipole are available.
+- M4 measurement support started: VNA CSV import, project measurements, and
+  measured/simulated SWR comparison.
 
 Deferred:
 
@@ -107,7 +109,7 @@ Deferred:
 | P1 | OCFD generator | B/C | done |
 | P1 | Fan dipole generator | B/C | done |
 | P1 | Vertical with radial screen | B/C | done |
-| P2 | VNA CSV and measurement records | A | deferred |
+| P2 | VNA CSV and measurement records | A | in progress |
 | P2 | Multi-element optimization | n/a | pending |
 | P2 | Packaging and release hardening | n/a | pending |
 

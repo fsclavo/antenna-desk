@@ -1043,3 +1043,30 @@ def test_new_fan_dipole_creates_a_first_class_design(
     assert window._design_stack.currentWidget() is window._fan_dipole_scroll
     assert window._fan_dipole_form.parameters() == parameters
     window._dirty = False
+
+
+def test_import_vna_csv_adds_a_measurement(
+    window: MainWindow,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    csv_path = tmp_path / "field.csv"
+    csv_path.write_text(
+        "frequency_hz,r_ohm,x_ohm\n7000000,50,0\n7100000,75,0\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        QFileDialog,
+        "getOpenFileName",
+        lambda *args, **kwargs: (str(csv_path), ""),
+    )
+
+    window.import_vna_csv()
+
+    assert window._project is not None
+    assert len(window._project.measurements) == 1
+    assert window._project.measurements[0].name == "field"
+    assert window._tabs_select_measurements() is None
+    assert window._results._tabs.currentIndex() == 3
+    assert window._dirty is True
+    window._dirty = False

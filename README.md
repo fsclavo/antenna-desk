@@ -4,10 +4,10 @@ Desktop application for designing, simulating, and building antennas for
 amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
 
-**Status:** active antenna catalog development. Center-fed dipoles, folded
-dipoles, regular-polygon loops, custom wires, Yagis, and inverted-Vs are
-supported, with schema v3 persistence and migration. VNA CSV import and
-measurement comparison are deferred.
+**Status:** active antenna catalog and measurement development. Center-fed
+dipoles, folded dipoles, loops, custom wires, Yagis, Moxon, fan dipoles,
+inverted-Vs, OCFDs, and verticals are supported, with schema v3 persistence and
+migration. VNA CSV import and measured/simulated SWR comparison are available.
 
 ## Launch the GUI
 
@@ -74,6 +74,8 @@ basic template types.
 - Save/open of versioned `.antennadesk` projects with multiple design
   variants; schema v3 adds persisted simulation runs and migrates older files.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
+- VNA CSV import with measured impedance/SWR records and a measured/simulated
+  SWR comparison tab.
 - Currents tab and resonance markers on impedance/SWR sweeps.
 - Bounded antenna-dimension optimization for a target reactance, minimum SWR,
   maximum SWR bandwidth, maximum power gain, maximum efficiency, or a weighted

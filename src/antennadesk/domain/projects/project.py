@@ -14,6 +14,7 @@ from ..antennas.feed_line import FeedLine
 from ..antennas.load import LumpedLoad
 from ..common.time import ensure_utc
 from ..common.validation import Diagnostic, Severity, raise_if_errors
+from ..measurement import Measurement
 from ..simulation.run import SimulationRun
 
 
@@ -69,11 +70,13 @@ class Project:
     updated_at: datetime
     designs: tuple[DesignVariant, ...] = field(default_factory=tuple)
     simulation_runs: tuple[SimulationRun, ...] = field(default_factory=tuple)
+    measurements: tuple[Measurement, ...] = field(default_factory=tuple)
     feed_line: FeedLine | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "designs", tuple(self.designs))
         object.__setattr__(self, "simulation_runs", tuple(self.simulation_runs))
+        object.__setattr__(self, "measurements", tuple(self.measurements))
         raise_if_errors(self._invariants())
 
     def _invariants(self) -> tuple[Diagnostic, ...]:
@@ -196,6 +199,18 @@ class Project:
             if run.design_id == design_id:
                 latest = run
         return latest
+
+    def with_measurement(
+        self,
+        measurement: Measurement,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        return replace(
+            self,
+            measurements=(*self.measurements, measurement),
+            updated_at=updated_at,
+        )
 
     def with_feed_line(
         self,

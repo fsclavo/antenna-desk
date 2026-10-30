@@ -48,6 +48,7 @@ from ..domain.antennas.yagi import ANTENNA_TYPE_YAGI, YagiElement, YagiParameter
 from ..domain.common.validation import Diagnostic, Severity
 from ..domain.environment.environment import Environment
 from ..domain.environment.ground import GroundKind, GroundModel
+from ..domain.measurement import Measurement, MeasurementPoint
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.far_field import FarFieldRequest
 from ..domain.simulation.frequency import FrequencyPlan
@@ -384,6 +385,21 @@ class SimulationResultPayload(StrictModel):
     finished_at: datetime | None = None
 
 
+class MeasurementPointPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    impedance_real_ohm: float
+    impedance_imag_ohm: float
+
+
+class MeasurementPayload(StrictModel):
+    id: UUID
+    name: str = Field(min_length=1)
+    created_at: datetime
+    reference_impedance_ohm: float = Field(gt=0.0)
+    points: list[MeasurementPointPayload] = Field(min_length=1)
+    source: str = ""
+
+
 class SimulationRunPayload(StrictModel):
     id: UUID
     design_id: UUID
@@ -495,6 +511,7 @@ class ProjectPayload(StrictModel):
     updated_at: datetime
     designs: list[DesignPayload] = Field(default_factory=list)
     simulation_runs: list[SimulationRunPayload] = Field(default_factory=list)
+    measurements: list[MeasurementPayload] = Field(default_factory=list)
     feed_line: FeedLinePayload | None = None
 
     @model_validator(mode="after")
@@ -917,6 +934,24 @@ def _simulation_result_from_domain(value: SimulationResult) -> SimulationResultP
     )
 
 
+def _measurement_from_domain(value: Measurement) -> MeasurementPayload:
+    return MeasurementPayload(
+        id=value.id,
+        name=value.name,
+        created_at=value.created_at,
+        reference_impedance_ohm=value.reference_impedance_ohm,
+        points=[
+            MeasurementPointPayload(
+                frequency_hz=point.frequency_hz,
+                impedance_real_ohm=point.impedance_ohm.real,
+                impedance_imag_ohm=point.impedance_ohm.imag,
+            )
+            for point in value.points
+        ],
+        source=value.source,
+    )
+
+
 def _simulation_run_from_domain(value: SimulationRun) -> SimulationRunPayload:
     return SimulationRunPayload(
         id=value.id,
@@ -945,6 +980,7 @@ def _project_from_domain(value: Project) -> ProjectPayload:
         updated_at=value.updated_at,
         designs=[_design_from_domain(design) for design in value.designs],
         simulation_runs=[_simulation_run_from_domain(run) for run in value.simulation_runs],
+        measurements=[_measurement_from_domain(measurement) for measurement in value.measurements],
         feed_line=(_feed_line_from_domain(value.feed_line) if value.feed_line else None),
     )
 
@@ -1359,6 +1395,23 @@ def _simulation_result_to_domain(value: SimulationResultPayload) -> SimulationRe
     )
 
 
+def _measurement_to_domain(value: MeasurementPayload) -> Measurement:
+    return Measurement(
+        id=value.id,
+        name=value.name,
+        created_at=value.created_at,
+        reference_impedance_ohm=value.reference_impedance_ohm,
+        points=tuple(
+            MeasurementPoint(
+                frequency_hz=point.frequency_hz,
+                impedance_ohm=complex(point.impedance_real_ohm, point.impedance_imag_ohm),
+            )
+            for point in value.points
+        ),
+        source=value.source,
+    )
+
+
 def _simulation_run_to_domain(value: SimulationRunPayload) -> SimulationRun:
     return SimulationRun(
         id=value.id,
@@ -1388,6 +1441,9 @@ def project_from_document(document: ProjectDocument) -> Project:
         designs=tuple(_design_to_domain(design) for design in document.project.designs),
         simulation_runs=tuple(
             _simulation_run_to_domain(run) for run in document.project.simulation_runs
+        ),
+        measurements=tuple(
+            _measurement_to_domain(measurement) for measurement in document.project.measurements
         ),
         feed_line=(
             _feed_line_to_domain(document.project.feed_line) if document.project.feed_line else None

@@ -185,6 +185,8 @@ raw coordinates.
   realized gain.
 - **Currents**: segment current magnitude for the selected frequency, with the
   feed segment marked.
+- **Measurements**: imported VNA sweeps with measured SWR and a simulated SWR
+  overlay for the current design.
 - **Diagnostics**: solver version, status, duration, fingerprint, and warnings
   or errors.
 - **Raw data**: the generated NEC input deck and the raw solver output.
@@ -206,6 +208,14 @@ smoother cuts and a smoother 3D lobe, but increase solver time and project
 size; use high resolution for final runs rather than routine exploration.
 Custom and generated designs have their own sweep controls in the custom panel;
 they default to 100 points around the design frequency.
+
+## Import VNA measurements
+
+Use **File → Import → VNA CSV...** to add a measured sweep. The importer accepts
+frequency/R/X columns, S11 real/imaginary columns, or magnitude/phase columns.
+The measurement is stored in the project and appears in the **Measurements**
+tab, with measured SWR and the current simulated SWR overlaid. Imported data is
+treated as untrusted input; invalid rows are skipped with warnings.
 
 ## Feed line
 

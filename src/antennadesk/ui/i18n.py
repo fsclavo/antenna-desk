@@ -500,6 +500,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "tab.impedance": {Language.ENGLISH: "Impedance / SWR", Language.SPANISH: "Impedancia / ROE"},
     "tab.pattern": {Language.ENGLISH: "Pattern", Language.SPANISH: "Patrón"},
     "tab.currents": {Language.ENGLISH: "Currents", Language.SPANISH: "Corrientes"},
+    "tab.measurements": {
+        Language.ENGLISH: "Measurements",
+        Language.SPANISH: "Mediciones",
+    },
+    "measurement.select": {
+        Language.ENGLISH: "Measurement",
+        Language.SPANISH: "Medición",
+    },
+    "measurement.none": {
+        Language.ENGLISH: "No measurements imported.",
+        Language.SPANISH: "No hay mediciones importadas.",
+    },
+    "measurement.swr": {
+        Language.ENGLISH: "Measured and simulated SWR",
+        Language.SPANISH: "ROE medida y simulada",
+    },
+    "measurement.measured": {
+        Language.ENGLISH: "Measured",
+        Language.SPANISH: "Medida",
+    },
+    "measurement.simulated": {
+        Language.ENGLISH: "Simulated",
+        Language.SPANISH: "Simulada",
+    },
     "tab.diagnostics": {Language.ENGLISH: "Diagnostics", Language.SPANISH: "Diagnósticos"},
     "tab.raw": {Language.ENGLISH: "Raw data", Language.SPANISH: "Datos crudos"},
     "table.frequency": {Language.ENGLISH: "Frequency (MHz)", Language.SPANISH: "Frecuencia (MHz)"},
@@ -1226,6 +1250,26 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "action.import_nec": {
         Language.ENGLISH: "Import NEC Deck...",
         Language.SPANISH: "Importar archivo NEC...",
+    },
+    "action.import_vna": {
+        Language.ENGLISH: "Import VNA CSV...",
+        Language.SPANISH: "Importar CSV de VNA...",
+    },
+    "dialog.vna_title": {
+        Language.ENGLISH: "Import VNA CSV",
+        Language.SPANISH: "Importar CSV de VNA",
+    },
+    "dialog.vna_filter": {
+        Language.ENGLISH: "CSV files (*.csv *.txt);;All files (*)",
+        Language.SPANISH: "Archivos CSV (*.csv *.txt);;Todos los archivos (*)",
+    },
+    "dialog.vna_warnings": {
+        Language.ENGLISH: "Imported with {count} warning(s):\n{details}",
+        Language.SPANISH: "Importado con {count} advertencia(s):\n{details}",
+    },
+    "error.import_vna": {
+        Language.ENGLISH: "Could not import VNA CSV: {message}",
+        Language.SPANISH: "No se pudo importar el CSV de VNA: {message}",
     },
     "action.import_mmana": {
         Language.ENGLISH: "Import MMANA File...",
