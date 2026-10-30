@@ -145,7 +145,8 @@ Phase 6 adds tests for:
 - Pattern CSV export with one row per far-field point and PNG export of the
   current pattern view.
 - Custom wire parameters, design consistency, persistence round trip, editor,
-  custom-project simulation flow, and NEC subset import (GW/EX/FR/GN/LD).
+  custom-project simulation flow, NEC subset import (GW/EX/FR/GN/LD), and basic
+  MMANA `.maa` geometry/source import.
 - Isometric 3D geometry rendering and the 3D view selector.
 - Polar lobe rendering from far-field points, with selectable azimuth and
   elevation cuts, plus the projected 3D pattern wireframe.
@@ -161,7 +162,7 @@ Phase 6 adds tests for:
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 360 tests with the solver enabled. The twelve solver
+The suite currently has 363 tests with the solver enabled. The twelve solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.

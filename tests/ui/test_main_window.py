@@ -690,3 +690,29 @@ def test_import_nec_deck_creates_a_custom_project(
     assert len(window._project.designs[0].antenna.wires) == 1
     assert window._design_stack.currentWidget() is window._custom_panel
     window._dirty = False
+
+
+def test_import_mmana_file_creates_a_custom_project(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "imported.maa"
+    path.write_text(
+        "Test\n*\n7.1\n***Wires***\n1\n-5,0,8,5,0,8,0.001,-1\n*** Source ***\n1,1\nw1c,0,1\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        QFileDialog,
+        "getOpenFileName",
+        lambda *args, **kwargs: (str(path), ""),
+    )
+    monkeypatch.setattr(QMessageBox, "warning", lambda *args, **kwargs: None)
+
+    window.import_mmana_file()
+
+    assert window._project is not None
+    assert window._project.name == "imported"
+    assert window._project.designs[0].antenna_type == "custom"
+    assert len(window._project.designs[0].antenna.wires) == 1
+    window._dirty = False

@@ -187,7 +187,8 @@ canonical meters and hertz.
 - Series and parallel RLC loads are supported on one wire segment. General
   networks, transmission lines, and radial ground screens are not implemented.
 - NEC import supports a practical subset (GW, EX, FR, GE/GN, LD 0/1), not the
-  full language; unsupported cards are reported.
+  full language; unsupported cards are reported. MMANA import covers basic wire
+  geometry and source only; ground and loads are not imported.
 - Project files store normalized results and raw solver text; many long runs
   can reach the 10 MB project limit.
 - Simulation reports and construction sheets have native PDF export; HTML

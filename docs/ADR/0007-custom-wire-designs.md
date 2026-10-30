@@ -24,8 +24,9 @@ environment, and loads, so the solver does not need a new geometry path.
    single length/circumference.
 5. Reuse the existing simulation, load, report, comparison, persistence, and
    export paths.
-6. Add a practical NEC-2 subset importer (GW, EX, FR, GE/GN, LD 0/1) that
-   creates custom wire designs and reports unsupported cards.
+6. Add a practical NEC-2 subset importer (GW, EX, FR, GE/GN, LD 0/1) and a
+   basic MMANA-GAL `.maa` geometry/source importer. Both create custom wire
+   designs and report unsupported/omitted data.
 
 ## Consequences
 
@@ -41,9 +42,11 @@ Limitations:
 - There is no automatic junction/crossing validation beyond the canonical model.
 - Custom designs cannot use length optimization.
 - NEC import supports only a practical subset; unsupported cards are reported.
+- MMANA import does not read ground, loads, segmentation, or calculated results.
 
 ## Follow-ups
 
 - Extend the NEC importer with GM/GR transformations and more source types.
+- Extend MMANA import to ground/loads when the format is verified.
 - Add wire/load selection in the geometry view.
 - Add reference cases from imported models.

@@ -412,6 +412,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Save pattern CSV",
         Language.SPANISH: "Guardar CSV de patrón",
     },
+    "dialog.mmana_title": {
+        Language.ENGLISH: "Import MMANA file",
+        Language.SPANISH: "Importar archivo MMANA",
+    },
+    "dialog.mmana_filter": {
+        Language.ENGLISH: "MMANA files (*.maa *.MAA);;All files (*)",
+        Language.SPANISH: "Archivos MMANA (*.maa *.MAA);;Todos los archivos (*)",
+    },
+    "dialog.mmana_warnings": {
+        Language.ENGLISH: "Imported with {count} warning(s):\n{details}",
+        Language.SPANISH: "Importado con {count} advertencia(s):\n{details}",
+    },
+    "error.import_mmana": {
+        Language.ENGLISH: "Could not import MMANA file: {message}",
+        Language.SPANISH: "No se pudo importar el archivo MMANA: {message}",
+    },
     "dialog.nec_title": {
         Language.ENGLISH: "Import NEC deck",
         Language.SPANISH: "Importar archivo NEC",
@@ -648,6 +664,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "action.import_nec": {
         Language.ENGLISH: "Import NEC Deck...",
         Language.SPANISH: "Importar archivo NEC...",
+    },
+    "action.import_mmana": {
+        Language.ENGLISH: "Import MMANA File...",
+        Language.SPANISH: "Importar archivo MMANA...",
     },
     "action.edit_custom": {
         Language.ENGLISH: "Edit Custom Wires...",
