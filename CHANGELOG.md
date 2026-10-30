@@ -157,6 +157,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   their parameters from custom geometry.
 - Inverted-V now defaults to finite ground, and the 3D pattern view draws the
   ground plane for grounded models.
+- Localized ground and material selector labels in the generator and custom
+  antenna dialogs.
 - Persist generator metadata (`generator_id`, `generator_name`) in custom
   designs and show it in the custom design panel.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the

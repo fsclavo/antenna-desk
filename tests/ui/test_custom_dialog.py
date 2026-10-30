@@ -21,6 +21,8 @@ def test_custom_dialog_builds_a_wire_model(qtbot: QtBot) -> None:
     assert len(parameters.wires) == 1
     assert parameters.feed.wire_id == "wire-1"
     assert parameters.wires[0].length_m > 0.0
+    assert dialog._ground.currentText() == "Free space"
+    assert dialog._material.currentText() == "Copper"
 
 
 def test_custom_dialog_adds_a_second_wire(qtbot: QtBot) -> None:

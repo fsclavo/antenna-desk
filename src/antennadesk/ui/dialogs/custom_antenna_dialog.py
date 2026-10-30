@@ -78,11 +78,16 @@ class CustomAntennaDialog(QDialog):
         self._material = QComboBox(self)
         for material in MATERIALS:
             self._material.addItem(material.name, material)
+        self._material.setItemText(0, translator.t("material.copper"))
+        self._material.setItemText(1, translator.t("material.aluminum"))
 
         self._ground = QComboBox(self)
         self._ground.addItem("", GroundKind.FREE_SPACE.value)
         self._ground.addItem("", GroundKind.PERFECT.value)
         self._ground.addItem("", GroundKind.FINITE.value)
+        self._ground.setItemText(0, translator.t("ground.free_space"))
+        self._ground.setItemText(1, translator.t("ground.perfect"))
+        self._ground.setItemText(2, translator.t("ground.finite"))
         self._ground.currentIndexChanged.connect(self._update_ground_controls)
         self._permittivity = QDoubleSpinBox(self)
         self._permittivity.setRange(1.0, 1_000.0)

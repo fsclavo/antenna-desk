@@ -17,6 +17,8 @@ def test_yagi_dialog_loads_the_nbs_preset(qtbot: QtBot) -> None:
 
     assert dialog._table.rowCount() == 5
     assert dialog._driven.currentData() == 1
+    assert dialog._ground.currentText() == "Free space"
+    assert dialog._material.currentText() == "Copper"
     parameters = dialog.parameters()
     assert len(parameters.wires) == 5
     assert parameters.feed.wire_id == "element-2"

@@ -19,6 +19,8 @@ def test_vertical_dialog_builds_radiator_and_radials(qtbot: QtBot) -> None:
     assert len(parameters.wires) == 17
     assert parameters.feed.wire_id == "radiator"
     assert parameters.generator_name == "Vertical"
+    assert dialog._ground.currentText() == "Finite ground"
+    assert dialog._material.currentText() == "Copper"
     assert "16 radials" in dialog._geometry.text()
 
 
