@@ -174,6 +174,14 @@ count/length/angle, wire radius, material, and ground. `to_custom_parameters()`
 creates the vertical wire and evenly spaced radial wires connected at the base,
 with the feed at the radiator base. The generator is experimental.
 
+### OCFDParameters
+
+A single horizontal wire with a feed point offset from the center. It stores
+frequency, total length, feed ratio, height, azimuth, radius, material, and
+ground. `to_custom_parameters()` creates an editable custom-wire design with
+generator metadata. `from_custom_parameters()` reconstructs the parameters for
+editing.
+
 ### AntennaDesignParameters
 
 `AntennaDesignParameters` is the union of `DipoleParameters`,

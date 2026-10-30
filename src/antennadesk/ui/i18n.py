@@ -100,6 +100,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Inverted-V",
         Language.SPANISH: "V invertida",
     },
+    "catalog.ocfd": {
+        Language.ENGLISH: "Off-center-fed dipole",
+        Language.SPANISH: "Dipolo con alimentación descentrada",
+    },
+    "catalog.ocfd.description": {
+        Language.ENGLISH: "Single-wire dipole fed away from the center.",
+        Language.SPANISH: "Dipolo de un solo hilo alimentado fuera del centro.",
+    },
     "catalog.inverted_v.description": {
         Language.ENGLISH: "Two sloping wires fed at the apex, with adjustable included angle.",
         Language.SPANISH: "Dos hilos inclinados alimentados en el vértice, con ángulo ajustable.",
@@ -842,6 +850,42 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "inverted_v.title": {
         Language.ENGLISH: "Inverted-V Generator",
         Language.SPANISH: "Generador de V invertida",
+    },
+    "ocfd.title": {
+        Language.ENGLISH: "Off-Center-Fed Dipole Generator",
+        Language.SPANISH: "Generador de dipolo con alimentación descentrada",
+    },
+    "ocfd.feed_offset": {
+        Language.ENGLISH: "Feed offset",
+        Language.SPANISH: "Desplazamiento de alimentación",
+    },
+    "ocfd.wire_radius": {
+        Language.ENGLISH: "Wire radius (mm)",
+        Language.SPANISH: "Radio del hilo (mm)",
+    },
+    "ocfd.geometry": {
+        Language.ENGLISH: "Feed at {offset} {unit} from the start · total {total} {unit}",
+        Language.SPANISH: "Alimentación a {offset} {unit} del inicio · total {total} {unit}",
+    },
+    "ocfd.hint": {
+        Language.ENGLISH: (
+            "The generator creates one horizontal wire with an offset feed. "
+            "The generated antenna is an editable custom-wire design."
+        ),
+        Language.SPANISH: (
+            "El generador crea un hilo horizontal con alimentación descentrada. "
+            "La antena generada es un diseño de hilos editable."
+        ),
+    },
+    "ocfd.evidence": {
+        Language.ENGLISH: (
+            "Experimental generator: geometry and scaling are tested, but there "
+            "is no independent numerical reference for this configuration."
+        ),
+        Language.SPANISH: (
+            "Generador experimental: se prueban geometría y escalado, pero no "
+            "hay una referencia numérica independiente para esta configuración."
+        ),
     },
     "vertical.title": {
         Language.ENGLISH: "Vertical Generator",

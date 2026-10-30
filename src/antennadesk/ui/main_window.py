@@ -92,6 +92,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_FOLDED_DIPOLE,
     CATALOG_TYPE_INVERTED_V,
     CATALOG_TYPE_LOOP,
+    CATALOG_TYPE_OCFD,
     CATALOG_TYPE_VERTICAL,
     CATALOG_TYPE_WIRE_DIPOLE,
     CATALOG_TYPE_YAGI,
@@ -103,6 +104,7 @@ from .dialogs.custom_antenna_dialog import CustomAntennaDialog
 from .dialogs.feed_line_dialog import FeedLineDialog
 from .dialogs.inverted_v_dialog import InvertedVDialog
 from .dialogs.loads_dialog import LoadsDialog
+from .dialogs.ocfd_dialog import OCFDDialog
 from .dialogs.optimization_dialog import OptimizationDialog
 from .dialogs.vertical_dialog import VerticalDialog
 from .dialogs.yagi_dialog import YagiDialog
@@ -666,7 +668,7 @@ class MainWindow(QMainWindow):
             )
         )
         self._custom_generator_edit.setVisible(
-            parameters.generator_id in {"inverted_v", "yagi", "vertical"}
+            parameters.generator_id in {"inverted_v", "ocfd", "yagi", "vertical"}
         )
         if self._custom_sweep_center_hz != design.parameters.frequency_hz:
             self._custom_sweep_center_hz = design.parameters.frequency_hz
@@ -1121,6 +1123,33 @@ class MainWindow(QMainWindow):
             return
         self._set_project(project, project.designs[0].id, path=None, dirty=True)
 
+    def new_ocfd_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        name, accepted = QInputDialog.getText(
+            self,
+            self._translator.t("ocfd.title"),
+            self._translator.t("field.project_name"),
+            text="OCFD",
+        )
+        if not accepted:
+            return
+        dialog = OCFDDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            project = CreateDipoleProject().execute(
+                CreateDipoleProjectCommand(
+                    project_name=name.strip() or "OCFD",
+                    variant_name="Initial",
+                    parameters=dialog.result_parameters(),
+                )
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+
     def import_nec_deck(self) -> None:
         if not self._maybe_save_changes():
             return
@@ -1243,6 +1272,13 @@ class MainWindow(QMainWindow):
                 self,
                 parameters=parameters,
             )
+        elif parameters.generator_id == "ocfd":
+            dialog = OCFDDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                parameters=parameters,
+            )
         elif parameters.generator_id == "yagi":
             dialog = YagiDialog(
                 self._translator,
@@ -1359,6 +1395,16 @@ class MainWindow(QMainWindow):
             return (
                 dialog.result_parameters() if dialog.exec() == QDialog.DialogCode.Accepted else None
             )
+        if selected == CATALOG_TYPE_OCFD:
+            dialog = OCFDDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
         if selected == CATALOG_TYPE_VERTICAL:
             dialog = VerticalDialog(
                 self._translator,
@@ -1438,6 +1484,8 @@ class MainWindow(QMainWindow):
             self.new_yagi_antenna()
         elif selected == CATALOG_TYPE_INVERTED_V:
             self.new_inverted_v_antenna()
+        elif selected == CATALOG_TYPE_OCFD:
+            self.new_ocfd_antenna()
         elif selected == CATALOG_TYPE_VERTICAL:
             self.new_vertical_antenna()
         elif selected in {

@@ -1000,3 +1000,53 @@ def test_change_template_replaces_the_current_design(
     assert window._project.designs[0].antenna.wires == parameters.wires
     assert window._custom_generator.text() == "Template: Inverted-V"
     window._dirty = False
+
+
+def test_new_ocfd_creates_an_editable_custom_design(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.custom import CustomAntennaParameters
+    from antennadesk.domain.antennas.feed import FeedPoint
+    from antennadesk.domain.antennas.geometry import Point3D
+    from antennadesk.domain.antennas.materials import COPPER
+    from antennadesk.domain.antennas.wire import Wire
+
+    parameters = CustomAntennaParameters(
+        frequency_hz=7_100_000.0,
+        wires=(
+            Wire(
+                id="radiator",
+                start=Point3D(-10.0, 0.0, 10.0),
+                end=Point3D(10.0, 0.0, 10.0),
+                radius_m=0.001,
+                material=COPPER,
+            ),
+        ),
+        feed=FeedPoint("radiator", 6.6),
+        generator_id="ocfd",
+        generator_name="OCFD",
+    )
+
+    class FakeOCFDDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> CustomAntennaParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "OCFDDialog", FakeOCFDDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("OCFD", True))
+
+    window.new_ocfd_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "OCFD"
+    assert window._project.designs[0].antenna_type == "custom"
+    assert window._custom_generator.text() == "Template: OCFD"
+    assert window._custom_generator_edit.isHidden() is False
+    window._dirty = False

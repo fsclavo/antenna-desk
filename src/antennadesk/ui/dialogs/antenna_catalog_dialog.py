@@ -25,6 +25,7 @@ CATALOG_TYPE_LOOP = "loop"
 CATALOG_TYPE_VERTICAL = "vertical"
 CATALOG_TYPE_YAGI = "yagi"
 CATALOG_TYPE_INVERTED_V = "inverted_v"
+CATALOG_TYPE_OCFD = "ocfd"
 CATALOG_TYPE_CUSTOM = "custom"
 
 
@@ -57,6 +58,13 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         label_key="catalog.inverted_v",
         family_key="catalog.family.dipole",
         description_key="catalog.inverted_v.description",
+        evidence_key="catalog.evidence.experimental",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_OCFD,
+        label_key="catalog.ocfd",
+        family_key="catalog.family.dipole",
+        description_key="catalog.ocfd.description",
         evidence_key="catalog.evidence.experimental",
     ),
     CatalogEntry(

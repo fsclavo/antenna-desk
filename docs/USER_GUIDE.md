@@ -70,8 +70,8 @@ antennas.
 Use **File → New Antenna...** to open the antenna catalog. Search or filter by
 **Antenna Type** and choose the desired generator. The catalog is grouped by
 antenna family: Dipole, Yagi, Loop, Vertical, and Custom. The Dipole family
-contains the straight dipole, folded dipole, and inverted-V. The catalog shows
-a short description and evidence level for each type.
+contains the straight dipole, folded dipole, inverted-V, and off-center-fed
+dipole. The catalog shows a short description and evidence level for each type.
 
 ### Basic templates
 
@@ -123,6 +123,15 @@ Simulate it and judge the modeled performance; use **Edit Generator...** to
 change the apex, leg length, or included angle, or **Edit Custom Wires...** for
 raw coordinates. The elevation view is selected automatically so the included
 angle is visible; Plan remains available.
+
+## Create an off-center-fed dipole
+
+Choose **File → New Antenna... → Off-center-fed dipole** to generate a single
+horizontal wire with an offset feed. Set the total length, feed offset as a
+percentage of the wire, height, azimuth, radius, material, and ground. The
+dialog shows the resulting feed distance. The generator is experimental and
+creates an editable custom-wire design; use **Edit Generator...** to change its
+parameters.
 
 ## Create a vertical
 
