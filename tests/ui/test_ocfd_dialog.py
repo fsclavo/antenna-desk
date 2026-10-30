@@ -15,11 +15,11 @@ def test_ocfd_dialog_builds_an_offset_feed(qtbot: QtBot) -> None:
     dialog = OCFDDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(dialog)
 
-    parameters = dialog.parameters().to_custom_parameters()
+    parameters = dialog.parameters()
 
-    assert len(parameters.wires) == 1
-    assert parameters.feed.wire_id == "radiator"
-    assert parameters.feed.offset_m == pytest.approx(20.0 / 3.0, abs=0.01)
+    assert parameters.total_length_m == pytest.approx(20.0)
+    assert parameters.feed_offset_m == pytest.approx(20.0 / 3.0, abs=0.01)
+    assert parameters.feed_ratio == pytest.approx(1.0 / 3.0, abs=0.001)
     assert dialog._ground.currentText() == "Finite ground"
 
 
@@ -34,7 +34,7 @@ def test_ocfd_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
     dialog = OCFDDialog(
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
-        parameters=original.to_custom_parameters(),
+        parameters=original,
     )
     qtbot.addWidget(dialog)
 

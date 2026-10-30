@@ -129,9 +129,9 @@ angle is visible; Plan remains available.
 Choose **File → New Antenna... → Off-center-fed dipole** to generate a single
 horizontal wire with an offset feed. Set the total length, feed offset as a
 percentage of the wire, height, azimuth, radius, material, and ground. The
-dialog shows the resulting feed distance. The generator is experimental and
-creates an editable custom-wire design; use **Edit Generator...** to change its
-parameters.
+dialog shows the resulting feed distance. OCFD is a first-class template: after
+creation its parameters stay in the left design panel and can be edited inline.
+The generator is experimental.
 
 ## Create a vertical
 

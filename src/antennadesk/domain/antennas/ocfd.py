@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from ..common import units
 from ..common.units import ensure_positive
 from ..environment.ground import FREE_SPACE, GroundModel
+from .antenna import AntennaModel
 from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
@@ -17,6 +18,7 @@ from .materials import COPPER, ConductorMaterial
 from .wire import Wire
 
 RADIATOR_ID = "radiator"
+ANTENNA_TYPE_OCFD = "ocfd"
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +50,14 @@ class OCFDParameters:
     @property
     def feed_offset_m(self) -> float:
         return self.total_length_m * self.feed_ratio
+
+    def to_antenna(self, *, name: str = "OCFD") -> AntennaModel:
+        return self.to_custom_parameters().to_antenna(name=name)
+
+    def with_length(self, total_length_m: float) -> OCFDParameters:
+        from dataclasses import replace
+
+        return replace(self, total_length_m=total_length_m)
 
     def to_custom_parameters(self) -> CustomAntennaParameters:
         half_length = self.total_length_m / 2.0

@@ -71,6 +71,7 @@ from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
 from ..domain.antennas.family import antenna_family
 from ..domain.antennas.feed_line import FeedLine
 from ..domain.antennas.load import LumpedLoad
+from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.common.time import utc_now
 from ..domain.environment.ground import GroundModel
 from ..domain.projects.project import DesignVariant, Project
@@ -114,6 +115,7 @@ from .report_pdf import write_report_pdf
 from .units import UnitSystem
 from .widgets.dipole_form import DipoleForm
 from .widgets.geometry_view import GeometryView, GeometryViewMode
+from .widgets.ocfd_form import OCFDForm
 from .widgets.results_view import ResultsView
 from .wizard.dipole_wizard import DipoleWizard
 from .workers.simulation_worker import SimulationWorker
@@ -281,6 +283,14 @@ class MainWindow(QMainWindow):
         form_scroll.setWidget(self._form)
         form_scroll.setMinimumWidth(340)
         form_scroll.setMaximumWidth(480)
+        self._ocfd_form = OCFDForm(self._translator, self._unit_system, parent=self)
+        self._ocfd_form.changed.connect(self._on_form_changed)
+        self._ocfd_scroll = QScrollArea(self)
+        self._ocfd_scroll.setWidgetResizable(True)
+        self._ocfd_scroll.setWidget(self._ocfd_form)
+        self._ocfd_scroll.setMinimumWidth(340)
+        self._ocfd_scroll.setMaximumWidth(480)
+
         self._custom_panel = QWidget(self)
         custom_layout = QVBoxLayout(self._custom_panel)
         self._custom_title = QLabel(self._custom_panel)
@@ -332,6 +342,7 @@ class MainWindow(QMainWindow):
         custom_layout.addStretch(1)
         self._design_stack = QStackedWidget(self)
         self._design_stack.addWidget(form_scroll)
+        self._design_stack.addWidget(self._ocfd_scroll)
         self._design_stack.addWidget(self._custom_panel)
 
         self._geometry = GeometryView(self._translator, self._unit_system)
@@ -599,8 +610,9 @@ class MainWindow(QMainWindow):
         if self._project is not None and self._design_id is not None:
             parameters = self._project.design_by_id(self._design_id).parameters
         is_custom = isinstance(parameters, CustomAntennaParameters)
+        is_ocfd = isinstance(parameters, OCFDParameters)
         self._optimize_action.setEnabled(
-            idle and has_project and not is_custom and self._solver is not None
+            idle and has_project and not is_custom and not is_ocfd and self._solver is not None
         )
         self._loads_action.setEnabled(idle and has_project)
         self._edit_custom_action.setEnabled(idle and has_project and is_custom)
@@ -688,6 +700,9 @@ class MainWindow(QMainWindow):
         if isinstance(design.parameters, CustomAntennaParameters):
             self._design_stack.setCurrentWidget(self._custom_panel)
             self._update_custom_panel(design)
+        elif isinstance(design.parameters, OCFDParameters):
+            self._design_stack.setCurrentWidget(self._ocfd_scroll)
+            self._ocfd_form.set_parameters(design.parameters)
         else:
             self._design_stack.setCurrentWidget(self._form_scroll)
             self._form.set_parameters(design.parameters, reset_sweep=True)
@@ -796,6 +811,34 @@ class MainWindow(QMainWindow):
         if not project_name:
             raise ValueError("project name must not be empty")
         previous_design = self._project.design_by_id(self._design_id)
+        if isinstance(previous_design.parameters, OCFDParameters):
+            parameters = self._ocfd_form.parameters()
+            updated = UpdateDipoleDesign().execute(
+                UpdateDipoleDesignCommand(
+                    project=self._project,
+                    design_id=self._design_id,
+                    parameters=parameters,
+                )
+            )
+            updated = replace(updated, name=project_name)
+            self._project = updated
+            design = updated.design_by_id(self._design_id)
+            if parameters != previous_design.parameters:
+                self._simulation_results.pop(self._design_id, None)
+                self._results.set_result(None)
+            self._loads = design.antenna.loads
+            self._results.set_design(design)
+            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._auto_select_view(design)
+            self._project_name_updating = True
+            self._project_name.setText(project_name)
+            self._project_name_updating = False
+            self._form_dirty = False
+            self._dirty = True
+            self._update_title()
+            self._update_actions()
+            self._update_height_control()
+            return self._project
         if isinstance(previous_design.parameters, CustomAntennaParameters):
             design = previous_design
             if design.antenna.loads != self._loads:
@@ -883,11 +926,12 @@ class MainWindow(QMainWindow):
             if self._design_id is None:
                 raise ValueError(self._translator.t("error.no_project"))
             design = project.design_by_id(self._design_id)
-            spec = (
-                self._custom_simulation_spec(design.parameters)
-                if isinstance(design.parameters, CustomAntennaParameters)
-                else self._form.simulation_spec()
-            )
+            if isinstance(design.parameters, CustomAntennaParameters):
+                spec = self._custom_simulation_spec(design.parameters)
+            elif isinstance(design.parameters, OCFDParameters):
+                spec = self._ocfd_simulation_spec(design.parameters)
+            else:
+                spec = self._form.simulation_spec()
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
@@ -984,6 +1028,23 @@ class MainWindow(QMainWindow):
         self._custom_sweep_start.setEnabled(enabled)
         self._custom_sweep_stop.setEnabled(enabled)
         self._custom_sweep_points.setEnabled(enabled)
+
+    def _ocfd_simulation_spec(self, parameters: OCFDParameters) -> SimulationSpec:
+        model = parameters.to_antenna(name="OCFD")
+        frequency_hz = parameters.frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                frequency_hz * 0.95,
+                frequency_hz * 1.05,
+                100,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz * 1.05,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
 
     def _custom_simulation_spec(
         self,
@@ -1277,7 +1338,7 @@ class MainWindow(QMainWindow):
                 self._translator,
                 self._unit_system,
                 self,
-                parameters=parameters,
+                parameters=OCFDParameters.from_custom_parameters(parameters),
             )
         elif parameters.generator_id == "yagi":
             dialog = YagiDialog(

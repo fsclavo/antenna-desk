@@ -11,6 +11,7 @@ from .design import AntennaDesignParameters
 from .dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
 from .folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE, FoldedDipoleParameters
 from .loop import ANTENNA_TYPE_LOOP, LoopParameters
+from .ocfd import OCFDParameters
 
 
 class AntennaFamily(StrEnum):
@@ -34,6 +35,8 @@ def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
         return AntennaFamily.DIPOLE
     if isinstance(parameters, LoopParameters):
         return AntennaFamily.LOOP
+    if isinstance(parameters, OCFDParameters):
+        return AntennaFamily.DIPOLE
     if isinstance(parameters, CustomAntennaParameters):
         if parameters.generator_id is not None:
             return _GENERATOR_FAMILIES.get(parameters.generator_id, AntennaFamily.CUSTOM)
@@ -48,6 +51,8 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_FOLDED_DIPOLE
     if isinstance(parameters, LoopParameters):
         return ANTENNA_TYPE_LOOP
+    if isinstance(parameters, OCFDParameters):
+        return "ocfd"
     if isinstance(parameters, CustomAntennaParameters):
         return parameters.generator_id or "custom"
     raise TypeError(f"unsupported antenna parameters: {type(parameters)!r}")

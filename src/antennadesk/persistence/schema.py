@@ -34,6 +34,7 @@ from ..domain.antennas.loop import (
     LoopParameters,
 )
 from ..domain.antennas.materials import ConductorMaterial
+from ..domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
 from ..domain.antennas.wire import Wire
 from ..domain.common.validation import Diagnostic, Severity
 from ..domain.environment.environment import Environment
@@ -156,6 +157,17 @@ class LoopParametersPayload(StrictModel):
     circumference_m: float = Field(gt=0.0)
     height_m: float = Field(ge=0.0)
     sides: int = Field(default=16, ge=MIN_SIDES, le=MAX_SIDES)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class OCFDParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    total_length_m: float = Field(gt=0.0)
+    feed_ratio: float = Field(default=1.0 / 3.0, gt=0.0, lt=1.0)
+    height_m: float = Field(default=10.0, ge=0.0)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
@@ -307,6 +319,7 @@ ParameterPayload = (
     DipoleParametersPayload
     | FoldedDipoleParametersPayload
     | LoopParametersPayload
+    | OCFDParametersPayload
     | CustomParametersPayload
 )
 
@@ -316,6 +329,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_WIRE_DIPOLE
     if isinstance(value, FoldedDipoleParametersPayload):
         return ANTENNA_TYPE_FOLDED_DIPOLE
+    if isinstance(value, OCFDParametersPayload):
+        return ANTENNA_TYPE_OCFD
     if isinstance(value, CustomParametersPayload):
         return ANTENNA_TYPE_CUSTOM
     return ANTENNA_TYPE_LOOP
@@ -328,6 +343,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return FoldedDipoleParametersPayload
     if antenna_type == ANTENNA_TYPE_LOOP:
         return LoopParametersPayload
+    if antenna_type == ANTENNA_TYPE_OCFD:
+        return OCFDParametersPayload
     if antenna_type == ANTENNA_TYPE_CUSTOM:
         return CustomParametersPayload
     return None
@@ -518,9 +535,24 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _folded_parameters_from_domain(value)
     if isinstance(value, LoopParameters):
         return _loop_parameters_from_domain(value)
+    if isinstance(value, OCFDParameters):
+        return _ocfd_parameters_from_domain(value)
     if isinstance(value, CustomAntennaParameters):
         return _custom_parameters_from_domain(value)
     raise TypeError(f"unsupported antenna parameters: {type(value)!r}")
+
+
+def _ocfd_parameters_from_domain(value: OCFDParameters) -> OCFDParametersPayload:
+    return OCFDParametersPayload(
+        frequency_hz=value.frequency_hz,
+        total_length_m=value.total_length_m,
+        feed_ratio=value.feed_ratio,
+        height_m=value.height_m,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
 
 
 def _custom_parameters_from_domain(
@@ -847,11 +879,28 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, LoopParametersPayload):
             raise ValueError("loop parameters have the wrong shape")
         return _loop_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_OCFD:
+        if not isinstance(value.parameters, OCFDParametersPayload):
+            raise ValueError("OCFD parameters have the wrong shape")
+        return _ocfd_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_CUSTOM:
         if not isinstance(value.parameters, CustomParametersPayload):
             raise ValueError("custom parameters have the wrong shape")
         return _custom_parameters_to_domain(value.parameters)
     raise ValueError(f"unsupported antenna type: {value.antenna_type}")
+
+
+def _ocfd_parameters_to_domain(value: OCFDParametersPayload) -> OCFDParameters:
+    return OCFDParameters(
+        frequency_hz=value.frequency_hz,
+        total_length_m=value.total_length_m,
+        feed_ratio=value.feed_ratio,
+        height_m=value.height_m,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
 
 
 def _custom_parameters_to_domain(value: CustomParametersPayload) -> CustomAntennaParameters:

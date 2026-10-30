@@ -176,11 +176,12 @@ with the feed at the radiator base. The generator is experimental.
 
 ### OCFDParameters
 
-A single horizontal wire with a feed point offset from the center. It stores
-frequency, total length, feed ratio, height, azimuth, radius, material, and
-ground. `to_custom_parameters()` creates an editable custom-wire design with
-generator metadata. `from_custom_parameters()` reconstructs the parameters for
-editing.
+A first-class single-wire horizontal dipole with a feed point offset from the
+center. It stores frequency, total length, feed ratio, height, azimuth, radius,
+material, and ground. `to_antenna()` builds the canonical model;
+`to_custom_parameters()` remains available for conversion, and
+`from_custom_parameters()` reconstructs OCFD parameters from legacy custom
+designs.
 
 ### AntennaDesignParameters
 

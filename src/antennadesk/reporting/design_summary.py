@@ -10,6 +10,7 @@ from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.load import LumpedLoad, ParallelLoad
 from ..domain.antennas.loop import LoopParameters
+from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.environment.ground import GroundModel
 
 
@@ -68,6 +69,19 @@ def design_summary_rows(
                 ("Element length", f"{parameters.total_length_m:.4f} m"),
                 ("Spacing", f"{parameters.spacing_m:.4f} m"),
                 ("Total conductor length", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+            ]
+        )
+    elif isinstance(parameters, OCFDParameters):
+        rows.extend(
+            [
+                ("Type", "off-center-fed dipole"),
+                ("Total wire length", f"{parameters.total_length_m:.4f} m"),
+                (
+                    "Feed offset",
+                    f"{parameters.feed_offset_m:.4f} m ({parameters.feed_ratio * 100:.1f}%)",
+                ),
                 ("Height", f"{parameters.height_m:.4f} m"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
             ]

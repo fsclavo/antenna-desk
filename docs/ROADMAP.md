@@ -53,8 +53,9 @@ Completed:
 
 In progress:
 
-- M3 catalog expansion: vertical with radials and OCFD are done; delta
-  loop/quad, Moxon, and fan dipole remain.
+- M3 catalog expansion: vertical with radials and OCFD are done; OCFD is also
+  the first generator promoted to a first-class template with an inline editor.
+  Delta loop/quad, Moxon, and fan dipole remain.
 
 Deferred:
 

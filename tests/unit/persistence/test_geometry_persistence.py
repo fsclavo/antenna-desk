@@ -190,3 +190,22 @@ def test_custom_parameters_round_trip() -> None:
 
     assert restored.designs[0].parameters == parameters
     assert restored.designs[0].antenna_type == "custom"
+
+
+def test_ocfd_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.ocfd import OCFDParameters
+
+    parameters = OCFDParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        feed_ratio=1.0 / 3.0,
+        height_m=10.0,
+        azimuth_deg=30.0,
+    )
+    original = _project(parameters, "OCFD")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "ocfd"

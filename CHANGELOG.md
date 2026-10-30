@@ -170,6 +170,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   avoid numerical instability over finite ground.
 - Added an experimental off-center-fed dipole generator with feed-offset,
   catalog, editing, and persistence integration.
+- Promoted OCFD to a first-class template with an inline design-panel editor and
+  native project persistence.
 - Persist generator metadata (`generator_id`, `generator_name`) in custom
   designs and show it in the custom design panel.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the

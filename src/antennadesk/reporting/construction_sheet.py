@@ -11,6 +11,7 @@ from pathlib import Path
 from ..domain.antennas.dipole import DipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.loop import LoopParameters
+from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import FrequencyResult, SimulationResult
@@ -125,6 +126,15 @@ and {other_leg_m:.4f} m from the end.</p>"""
 and two end connectors of {parameters.spacing_m:.4f} m. Join them at both
 ends and feed the center of one element. The total conductor length is
 {parameters.total_conductor_length_m:.4f} m.</p>"""
+    elif isinstance(parameters, OCFDParameters):
+        other_leg_m = max(feed_wire.length_m - feed_offset_m, 0.0)
+        feed_rows = f"""
+<tr><th>Feed offset from start</th><td>{feed_offset_m:.4f} m</td></tr>
+<tr><th>Remaining leg</th><td>{other_leg_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Cut one conductor to {parameters.total_length_m:.4f} m.
+Feed it {feed_offset_m:.4f} m from the start ({parameters.feed_ratio * 100:.1f}% of its length).</p>"""
     elif isinstance(parameters, LoopParameters):
         feed_rows = f"""
 <tr><th>Side length</th><td>{parameters.side_length_m:.4f} m</td></tr>

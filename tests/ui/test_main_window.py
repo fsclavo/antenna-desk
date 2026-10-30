@@ -1002,31 +1002,18 @@ def test_change_template_replaces_the_current_design(
     window._dirty = False
 
 
-def test_new_ocfd_creates_an_editable_custom_design(
+def test_new_ocfd_creates_a_first_class_design(
     window: MainWindow,
     qtbot: QtBot,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from antennadesk.domain.antennas.custom import CustomAntennaParameters
-    from antennadesk.domain.antennas.feed import FeedPoint
-    from antennadesk.domain.antennas.geometry import Point3D
-    from antennadesk.domain.antennas.materials import COPPER
-    from antennadesk.domain.antennas.wire import Wire
+    from antennadesk.domain.antennas.ocfd import OCFDParameters
 
-    parameters = CustomAntennaParameters(
+    parameters = OCFDParameters(
         frequency_hz=7_100_000.0,
-        wires=(
-            Wire(
-                id="radiator",
-                start=Point3D(-10.0, 0.0, 10.0),
-                end=Point3D(10.0, 0.0, 10.0),
-                radius_m=0.001,
-                material=COPPER,
-            ),
-        ),
-        feed=FeedPoint("radiator", 6.6),
-        generator_id="ocfd",
-        generator_name="OCFD",
+        total_length_m=20.0,
+        feed_ratio=0.33,
+        height_m=10.0,
     )
 
     class FakeOCFDDialog:
@@ -1036,7 +1023,7 @@ def test_new_ocfd_creates_an_editable_custom_design(
         def exec(self) -> QDialog.DialogCode:
             return QDialog.DialogCode.Accepted
 
-        def result_parameters(self) -> CustomAntennaParameters:
+        def result_parameters(self) -> OCFDParameters:
             return parameters
 
     monkeypatch.setattr(main_window_module, "OCFDDialog", FakeOCFDDialog)
@@ -1046,7 +1033,10 @@ def test_new_ocfd_creates_an_editable_custom_design(
 
     assert window._project is not None
     assert window._project.name == "OCFD"
-    assert window._project.designs[0].antenna_type == "custom"
-    assert window._custom_generator.text() == "Template: OCFD"
-    assert window._custom_generator_edit.isHidden() is False
+    assert window._project.designs[0].antenna_type == "ocfd"
+    assert window._design_stack.currentWidget() is window._ocfd_scroll
+    assert window._ocfd_form.parameters() == parameters
+    window._ocfd_form._length.setValue(22.0)
+    window.apply_design()
+    assert window._project.designs[0].parameters.total_length_m == pytest.approx(22.0)
     window._dirty = False
