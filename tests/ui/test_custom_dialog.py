@@ -35,3 +35,19 @@ def test_custom_dialog_adds_a_second_wire(qtbot: QtBot) -> None:
 
     assert len(parameters.wires) == 2
     assert parameters.feed.wire_id == "wire-1"
+
+
+def test_custom_dialog_adds_ground_radials(qtbot: QtBot) -> None:
+    dialog = CustomAntennaDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+    )
+    qtbot.addWidget(dialog)
+
+    dialog._radial_count.setValue(4)
+    dialog._add_radials.click()
+    parameters = dialog.parameters()
+
+    assert len(parameters.wires) == 5
+    assert all(wire.id.startswith("radial-") for wire in parameters.wires[1:])
+    assert all(wire.start.z_m == 0.0 for wire in parameters.wires[1:])

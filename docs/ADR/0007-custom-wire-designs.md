@@ -44,6 +44,8 @@ Limitations:
 - Custom designs cannot use length optimization.
 - NEC import supports only a practical subset; unsupported cards are reported.
 - MMANA import does not read ground, loads, segmentation, or calculated results.
+- The radial generator adds geometry only; it is not a calibrated ground-screen
+  model.
 
 ## Follow-ups
 

@@ -151,6 +151,15 @@ def geometry_warnings(parameters: CustomAntennaParameters) -> tuple[Diagnostic, 
             )
     for index, first in enumerate(wires):
         for second in wires[index + 1 :]:
+            shared_endpoint = any(
+                math.dist(
+                    (point_a.x_m, point_a.y_m, point_a.z_m),
+                    (point_b.x_m, point_b.y_m, point_b.z_m),
+                )
+                < 1e-6
+                for point_a in (first.start, first.end)
+                for point_b in (second.start, second.end)
+            )
             if _collinear_overlap(first, second):
                 warnings.append(
                     Diagnostic(
@@ -160,7 +169,7 @@ def geometry_warnings(parameters: CustomAntennaParameters) -> tuple[Diagnostic, 
                         field="wires",
                     )
                 )
-            elif _segment_distance(first, second) < 1e-6:
+            elif not shared_endpoint and _segment_distance(first, second) < 1e-6:
                 warnings.append(
                     Diagnostic(
                         code="custom.wires.cross",

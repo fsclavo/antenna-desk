@@ -657,6 +657,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Remove wires",
         Language.SPANISH: "Quitar hilos",
     },
+    "custom.radials_title": {
+        Language.ENGLISH: "Ground radials (experimental)",
+        Language.SPANISH: "Radiales de suelo (experimental)",
+    },
+    "custom.radial_count": {
+        Language.ENGLISH: "Radials",
+        Language.SPANISH: "Radiales",
+    },
+    "custom.radial_length": {
+        Language.ENGLISH: "Radial length",
+        Language.SPANISH: "Longitud del radial",
+    },
+    "custom.radial_angle": {
+        Language.ENGLISH: "Start angle",
+        Language.SPANISH: "Ángulo inicial",
+    },
+    "custom.add_radials": {
+        Language.ENGLISH: "Add radials",
+        Language.SPANISH: "Agregar radiales",
+    },
+    "custom.radials_hint": {
+        Language.ENGLISH: "Adds wires from the origin (0,0,0) on the ground plane. Edit coordinates after adding.",
+        Language.SPANISH: "Agrega hilos desde el origen (0,0,0) sobre el plano de suelo. Editá las coordenadas después.",
+    },
     "custom.feed_wire": {
         Language.ENGLISH: "Feed wire",
         Language.SPANISH: "Hilo de alimentación",

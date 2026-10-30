@@ -4,16 +4,20 @@
 
 from __future__ import annotations
 
+import math
+
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QDialogButtonBox,
     QDoubleSpinBox,
     QFormLayout,
+    QGroupBox,
     QHBoxLayout,
     QLabel,
     QMessageBox,
     QPushButton,
+    QSpinBox,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -98,6 +102,21 @@ class CustomAntennaDialog(QDialog):
         self._add.clicked.connect(self._add_wire)
         self._remove.clicked.connect(self._remove_wire)
 
+        self._radial_count = QSpinBox(self)
+        self._radial_count.setRange(1, 64)
+        self._radial_count.setValue(8)
+        self._radial_length = QDoubleSpinBox(self)
+        self._radial_length.setRange(0.1, 1_000.0)
+        self._radial_length.setDecimals(3)
+        self._radial_length.setValue(length_from_m(5.0, unit_system))
+        self._radial_length.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._radial_angle = QDoubleSpinBox(self)
+        self._radial_angle.setRange(0.0, 360.0)
+        self._radial_angle.setDecimals(1)
+        self._radial_angle.setSuffix("°")
+        self._add_radials = QPushButton(translator.t("custom.add_radials"), self)
+        self._add_radials.clicked.connect(self._add_radial_wires)
+
         self._feed_wire = QComboBox(self)
         self._feed_wire.currentIndexChanged.connect(self._update_feed_range)
         self._feed_offset = QDoubleSpinBox(self)
@@ -114,6 +133,16 @@ class CustomAntennaDialog(QDialog):
         form.addRow(translator.t("custom.feed_wire"), self._feed_wire)
         form.addRow(translator.t("custom.feed_offset"), self._feed_offset)
 
+        radial_group = QGroupBox(translator.t("custom.radials_title"), self)
+        radial_form = QFormLayout(radial_group)
+        radial_form.addRow(translator.t("custom.radial_count"), self._radial_count)
+        radial_form.addRow(translator.t("custom.radial_length"), self._radial_length)
+        radial_form.addRow(translator.t("custom.radial_angle"), self._radial_angle)
+        radial_form.addRow(self._add_radials)
+        radial_hint = QLabel(translator.t("custom.radials_hint"), radial_group)
+        radial_hint.setWordWrap(True)
+        radial_form.addRow(radial_hint)
+
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
             parent=self,
@@ -129,6 +158,7 @@ class CustomAntennaDialog(QDialog):
         layout.addWidget(self._name)
         layout.addWidget(self._table, 1)
         layout.addLayout(add_remove)
+        layout.addWidget(radial_group)
         layout.addLayout(form)
         layout.addWidget(buttons)
 
@@ -180,6 +210,32 @@ class CustomAntennaDialog(QDialog):
                 material=self._selected_material(),
             )
         )
+        self._refresh_feed_values()
+
+    def _add_radial_wires(self) -> None:
+        count = self._radial_count.value()
+        length_m = length_to_m(self._radial_length.value(), self._unit_system)
+        step = 360.0 / count
+        material = self._selected_material()
+        start = self._table.rowCount() + 1
+        for index in range(count):
+            angle = math.radians(self._radial_angle.value() + index * step)
+            wire_id = f"radial-{start + index}"
+            self._append_wire(
+                Wire(
+                    id=wire_id,
+                    start=Point3D(0.0, 0.0, 0.0),
+                    end=Point3D(
+                        length_m * math.cos(angle),
+                        length_m * math.sin(angle),
+                        0.0,
+                    ),
+                    radius_m=max(
+                        self._selected_material().conductivity_s_per_m * 0.0 + 0.001, 0.001
+                    ),
+                    material=material,
+                )
+            )
         self._refresh_feed_values()
 
     def _remove_wire(self) -> None:
