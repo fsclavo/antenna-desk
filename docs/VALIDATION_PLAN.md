@@ -149,7 +149,8 @@ Phase 6 adds tests for:
   custom-project simulation flow, geometry overlap/crossing/short-wire
   diagnostics, NEC subset import (GW/EX/FR/GN/LD including comma-separated
   cards), basic MMANA `.maa` geometry/source import, the experimental
-  radial-wire generator, and load markers in the geometry view.
+  radial-wire generator, template-to-custom conversion, and load markers in the
+  geometry view.
 - Isometric 3D geometry rendering and the 3D view selector.
 - Polar lobe rendering from far-field points, with selectable azimuth and
   elevation cuts, plus the projected 3D pattern wireframe.
@@ -166,7 +167,7 @@ Phase 6 adds tests for:
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 372 tests with the solver enabled. The twelve solver
+The suite currently has 373 tests with the solver enabled. The twelve solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.

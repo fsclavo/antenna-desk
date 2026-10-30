@@ -107,7 +107,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   overlapping, and crossing wires.
 - Maximum-gain optimization objective, an experimental ground-radial wire
   generator in the custom editor, an ARRL free-space quad-loop resistance
-  reference, and load markers in Plan/3D geometry views.
+  reference, load markers in Plan/3D geometry views, and conversion from a
+  template to custom wires.
 - Series and parallel RLC loads on wires: validation, load editor,
   design/persistence support, NEC `LD 0`/`LD 1` export, and
   report/construction-sheet rows.

@@ -77,10 +77,10 @@ between those types.
   maximum SWR bandwidth, or maximum power gain: wire-dipole and folded-dipole
   element length, or loop circumference, with an evaluation log and
   sensitivity table.
-- Custom straight-wire antennas with a coordinate editor, experimental ground
-  radial generator, practical NEC-2 deck import, and basic MMANA-GAL `.maa`
-  geometry import, plus series/parallel RLC loads, load markers, and report
-  rows.
+- Custom straight-wire antennas with a coordinate editor, template-to-custom
+  conversion, experimental ground radial generator, practical NEC-2 deck
+  import, and basic MMANA-GAL `.maa` geometry import, plus series/parallel RLC
+  loads, load markers, and report rows.
 - Printable/HTML construction sheet with type-aware dimensions, feed position,
   loads, and simulated result.
 - CSV/PNG export for sweep results, far-field patterns, and geometry, plus

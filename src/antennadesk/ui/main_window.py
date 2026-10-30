@@ -182,6 +182,8 @@ class MainWindow(QMainWindow):
         self._loads_action.triggered.connect(lambda: self.edit_loads())
         self._edit_custom_action = QAction(self)
         self._edit_custom_action.triggered.connect(lambda: self.edit_custom_wires())
+        self._convert_custom_action = QAction(self)
+        self._convert_custom_action.triggered.connect(lambda: self.convert_to_custom_wires())
         self._export_csv_action = QAction(self)
         self._export_csv_action.triggered.connect(lambda: self.export_csv())
         self._export_pattern_csv_action = QAction(self)
@@ -365,6 +367,7 @@ class MainWindow(QMainWindow):
         self._file_menu.addAction(self._construction_action)
         self._file_menu.addAction(self._loads_action)
         self._file_menu.addAction(self._edit_custom_action)
+        self._file_menu.addAction(self._convert_custom_action)
         self._file_menu.addSeparator()
         self._file_menu.addAction(self._export_csv_action)
         self._file_menu.addAction(self._export_pattern_csv_action)
@@ -414,6 +417,7 @@ class MainWindow(QMainWindow):
         self._construction_action.setText(self._translator.t("action.construction"))
         self._loads_action.setText(self._translator.t("action.loads"))
         self._edit_custom_action.setText(self._translator.t("action.edit_custom"))
+        self._convert_custom_action.setText(self._translator.t("action.convert_custom"))
         self._custom_title.setText(self._translator.t("custom.panel_title"))
         self._custom_edit.setText(self._translator.t("action.edit_custom"))
         self._export_csv_action.setText(self._translator.t("action.export_csv"))
@@ -513,6 +517,7 @@ class MainWindow(QMainWindow):
         )
         self._loads_action.setEnabled(idle and has_project)
         self._edit_custom_action.setEnabled(idle and has_project and is_custom)
+        self._convert_custom_action.setEnabled(idle and has_project and not is_custom)
         self._new_custom_action.setEnabled(idle)
         self._import_nec_action.setEnabled(idle)
         self._import_mmana_action.setEnabled(idle)
@@ -968,6 +973,46 @@ class MainWindow(QMainWindow):
                     details="\n".join(result.warnings[:12]),
                 ),
             )
+
+    def convert_to_custom_wires(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        design = self._project.design_by_id(self._design_id)
+        if isinstance(design.parameters, CustomAntennaParameters):
+            return
+        try:
+            parameters = CustomAntennaParameters(
+                frequency_hz=design.parameters.frequency_hz,
+                wires=design.antenna.wires,
+                feed=design.antenna.feed,
+                ground=design.antenna.environment.ground,
+                loads=design.antenna.loads,
+            )
+            updated_design = design.with_parameters(parameters)
+            self._project = self._project.with_design(updated_design, updated_at=utc_now())
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._loads = updated_design.antenna.loads
+        self._form_dirty = False
+        self._dirty = True
+        self._simulation_results.pop(self._design_id, None)
+        self._results.set_result(None)
+        self._results.set_design(updated_design)
+        self._geometry.set_model(updated_design.antenna, antenna_type=updated_design.antenna_type)
+        self._design_stack.setCurrentWidget(self._custom_panel)
+        self._custom_summary.setText(
+            self._translator.t(
+                "custom.summary",
+                count=len(updated_design.antenna.wires),
+                length=f"{sum(wire.length_m for wire in updated_design.antenna.wires):.3f} m",
+            )
+        )
+        self._last_status_key = "status.design_changed"
+        self._update_title()
+        self._update_actions()
+        self._update_status_text()
 
     def edit_custom_wires(self) -> None:
         if self._project is None or self._design_id is None:

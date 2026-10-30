@@ -716,3 +716,19 @@ def test_import_mmana_file_creates_a_custom_project(
     assert window._project.designs[0].antenna_type == "custom"
     assert len(window._project.designs[0].antenna.wires) == 1
     window._dirty = False
+
+
+def test_convert_to_custom_wires_preserves_geometry(window: MainWindow) -> None:
+    original = window._project.designs[0].antenna if window._project is not None else None
+    assert original is not None
+
+    window.convert_to_custom_wires()
+
+    assert window._project is not None
+    design = window._project.designs[0]
+    assert design.antenna_type == "custom"
+    assert design.antenna.wires == original.wires
+    assert design.antenna.feed == original.feed
+    assert window._design_stack.currentWidget() is window._custom_panel
+    assert window._optimize_action.isEnabled() is False
+    window._dirty = False

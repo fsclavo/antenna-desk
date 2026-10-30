@@ -705,6 +705,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Edit Custom Wires...",
         Language.SPANISH: "Editar hilos personalizados...",
     },
+    "action.convert_custom": {
+        Language.ENGLISH: "Convert to Custom Wires...",
+        Language.SPANISH: "Convertir a hilos personalizados...",
+    },
     "custom.panel_title": {
         Language.ENGLISH: "Custom wires",
         Language.SPANISH: "Hilos personalizados",
