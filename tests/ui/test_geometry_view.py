@@ -208,3 +208,23 @@ def test_geometry_view_renders_three_d(qtbot: QtBot) -> None:
     pixmap = view.grab()
 
     assert _non_white_pixels(pixmap) > 50
+
+
+def test_geometry_view_marks_series_loads(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.load import SeriesLoad
+
+    model = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    ).to_antenna()
+    model = model.with_loads((SeriesLoad("load-1", "radiator", 10.0, resistance_ohm=50.0),))
+    view = GeometryView(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(view)
+    view.resize(900, 340)
+    view.set_model(model, antenna_type="wire_dipole")
+    view.set_view_mode(GeometryViewMode.PLAN)
+    view.show()
+
+    assert len(view._load_marks()) == 1
+    assert not view.grab().isNull()

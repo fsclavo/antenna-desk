@@ -79,7 +79,8 @@ between those types.
   sensitivity table.
 - Custom straight-wire antennas with a coordinate editor, experimental ground
   radial generator, practical NEC-2 deck import, and basic MMANA-GAL `.maa`
-  geometry import, plus series/parallel RLC loads and report rows.
+  geometry import, plus series/parallel RLC loads, load markers, and report
+  rows.
 - Printable/HTML construction sheet with type-aware dimensions, feed position,
   loads, and simulated result.
 - CSV/PNG export for sweep results, far-field patterns, and geometry, plus

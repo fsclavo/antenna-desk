@@ -25,6 +25,7 @@ from PySide6.QtWidgets import QSizePolicy, QWidget
 from ...domain.antennas.antenna import AntennaModel
 from ...domain.antennas.dipole import ANTENNA_TYPE_WIRE_DIPOLE
 from ...domain.antennas.folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE
+from ...domain.antennas.geometry import Point3D
 from ...domain.antennas.loop import ANTENNA_TYPE_LOOP
 from ...domain.antennas.wire import Wire
 from ..i18n import Translator
@@ -324,6 +325,12 @@ class GeometryView(QWidget):
             self._translator.t("geometry.feed"),
             color=self._colors.feed,
         )
+        for load, label, _ratio in self._load_marks():
+            self._draw_load_marker(
+                painter,
+                screen(load.x_m, load.y_m, load.z_m),
+                label,
+            )
 
         origin = screen(0.0, 0.0, 0.0)
         painter.setPen(QPen(self._colors.axis, 1.5))
@@ -603,6 +610,20 @@ class GeometryView(QWidget):
         }.get(self._antenna_type)
         return self._translator.t(key) if key is not None else None
 
+    def _load_marks(self) -> tuple[tuple[Point3D, str, float], ...]:
+        assert self._model is not None
+        marks: list[tuple[Point3D, str, float]] = []
+        for index, load in enumerate(self._model.loads, start=1):
+            wire = self._model.wire_by_id(load.wire_id)
+            ratio = min(max(load.offset_m / wire.length_m, 0.0), 1.0)
+            point = Point3D(
+                x_m=wire.start.x_m + (wire.end.x_m - wire.start.x_m) * ratio,
+                y_m=wire.start.y_m + (wire.end.y_m - wire.start.y_m) * ratio,
+                z_m=wire.start.z_m + (wire.end.z_m - wire.start.z_m) * ratio,
+            )
+            marks.append((point, f"L{index}", ratio))
+        return tuple(marks)
+
     def _paint_plan(self, painter: QPainter, rect: QRectF) -> None:
         assert self._model is not None
         if len(self._model.wires) > 1:
@@ -756,6 +777,12 @@ class GeometryView(QWidget):
             QPointF(end.x() + label_dir.x() * 17.0, end.y() + label_dir.y() * 17.0),
             self._translator.t("geometry.end"),
         )
+        for _load, label, load_ratio in self._load_marks():
+            load_point = QPointF(
+                start.x() + line.x() * load_ratio,
+                start.y() + line.y() * load_ratio,
+            )
+            self._draw_load_marker(painter, load_point, label)
 
         dim_offset = 30.0
         dim_start = QPointF(
@@ -802,6 +829,28 @@ class GeometryView(QWidget):
             bar_y=rect.bottom() - 42.0,
             scale=scale,
             unit=unit,
+        )
+
+    def _draw_load_marker(self, painter: QPainter, point: QPointF, label: str) -> None:
+        painter.setPen(QPen(self._colors.reactance, 1.5))
+        painter.setBrush(self._colors.reactance)
+        painter.drawPolygon(
+            QPolygonF(
+                [
+                    QPointF(point.x(), point.y() - 5.0),
+                    QPointF(point.x() + 5.0, point.y()),
+                    QPointF(point.x(), point.y() + 5.0),
+                    QPointF(point.x() - 5.0, point.y()),
+                ]
+            )
+        )
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        self._draw_centered_label(
+            painter,
+            QPointF(point.x() + 13.0, point.y() - 10.0),
+            label,
+            color=self._colors.reactance,
+            font_size=7,
         )
 
     def _draw_plan_leg_dimensions(
@@ -1249,6 +1298,12 @@ class GeometryView(QWidget):
             self._translator.t("geometry.feed"),
             color=self._colors.feed,
         )
+        for load, label, _ratio in self._load_marks():
+            self._draw_load_marker(
+                painter,
+                screen(load.x_m, load.y_m),
+                label,
+            )
         self._draw_plan_box_dimensions(
             painter,
             left=screen(min_x, 0.0).x(),
