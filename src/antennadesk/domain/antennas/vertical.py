@@ -59,6 +59,54 @@ class VerticalParameters:
     def top_height_m(self) -> float:
         return self.base_height_m + self.height_m
 
+    @classmethod
+    def from_custom_parameters(
+        cls,
+        parameters: CustomAntennaParameters,
+    ) -> VerticalParameters:
+        radiator = next(
+            (wire for wire in parameters.wires if wire.id == parameters.feed.wire_id),
+            None,
+        )
+        if radiator is None:
+            raise ValueError("vertical radiator is missing")
+        dx = radiator.end.x_m - radiator.start.x_m
+        dy = radiator.end.y_m - radiator.start.y_m
+        if math.hypot(dx, dy) > 1e-6:
+            raise ValueError("vertical radiator must be vertical")
+        base_z = min(radiator.start.z_m, radiator.end.z_m)
+        top_z = max(radiator.start.z_m, radiator.end.z_m)
+        radials = [wire for wire in parameters.wires if wire.id != radiator.id]
+        radial_lengths: list[float] = []
+        radial_angles: list[float] = []
+        for radial in radials:
+            endpoints = (radial.start, radial.end)
+            base_endpoint = next(
+                (
+                    point
+                    for point in endpoints
+                    if math.isclose(point.z_m, base_z, abs_tol=1e-6)
+                    and math.hypot(point.x_m, point.y_m) < 1e-6
+                ),
+                None,
+            )
+            if base_endpoint is None:
+                raise ValueError("all radials must start at the vertical base")
+            far_endpoint = radial.end if base_endpoint == radial.start else radial.start
+            radial_lengths.append(math.hypot(far_endpoint.x_m, far_endpoint.y_m))
+            radial_angles.append(math.degrees(math.atan2(far_endpoint.y_m, far_endpoint.x_m)))
+        return cls(
+            frequency_hz=parameters.frequency_hz,
+            height_m=top_z - base_z,
+            base_height_m=base_z,
+            radial_count=len(radials),
+            radial_length_m=(sum(radial_lengths) / len(radial_lengths) if radials else 0.0),
+            radial_angle_deg=(radial_angles[0] if radial_angles else 0.0),
+            wire_radius_m=radiator.radius_m,
+            material=radiator.material,
+            ground=parameters.ground,
+        )
+
     def to_custom_parameters(self) -> CustomAntennaParameters:
         base = Point3D(x_m=0.0, y_m=0.0, z_m=self.base_height_m)
         wires: list[Wire] = [

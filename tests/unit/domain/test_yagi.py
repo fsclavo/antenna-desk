@@ -110,3 +110,23 @@ def test_yagi_preset_is_finite_and_simulatable() -> None:
     assert (
         SimulationSpec(frequency_plan=FrequencyPlan.single(50_100_000.0)).frequency_plan.count == 1
     )
+
+
+def test_yagi_can_be_reconstructed_from_custom_geometry() -> None:
+    original = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        azimuth_deg=35.0,
+    )
+    restored = YagiParameters.from_custom_parameters(original.to_custom_parameters())
+
+    assert restored.frequency_hz == pytest.approx(original.frequency_hz)
+    assert restored.height_m == pytest.approx(original.height_m)
+    assert restored.driven_index == original.driven_index
+    assert restored.azimuth_deg == pytest.approx(original.azimuth_deg)
+    assert [element.position_m for element in restored.elements] == pytest.approx(
+        [element.position_m for element in original.elements]
+    )
+    assert [element.length_m for element in restored.elements] == pytest.approx(
+        [element.length_m for element in original.elements]
+    )

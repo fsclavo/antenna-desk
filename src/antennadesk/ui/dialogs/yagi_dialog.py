@@ -38,6 +38,7 @@ class YagiDialog(QDialog):
         parent: QWidget | None = None,
         *,
         frequency_hz: float | None = None,
+        parameters: CustomAntennaParameters | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
@@ -151,8 +152,39 @@ class YagiDialog(QDialog):
         layout.addLayout(element_buttons)
         layout.addWidget(buttons)
 
-        self._load_preset()
+        if parameters is not None:
+            self._set_existing(parameters)
+        else:
+            self._load_preset()
         self._update_ground_controls()
+
+    def _set_existing(self, parameters: CustomAntennaParameters) -> None:
+        existing = YagiParameters.from_custom_parameters(parameters)
+        self._frequency.setValue(existing.frequency_hz / 1_000_000.0)
+        self._height.setValue(length_from_m(existing.height_m, self._unit_system))
+        self._azimuth.setValue(existing.azimuth_deg)
+        if existing.elements:
+            self._radius.setValue(existing.elements[0].radius_m * 1_000.0)
+        material_index = self._material.findData(existing.material)
+        if material_index >= 0:
+            self._material.setCurrentIndex(material_index)
+        ground_index = self._ground.findData(existing.ground.kind.value)
+        if ground_index >= 0:
+            self._ground.setCurrentIndex(ground_index)
+        if existing.ground.relative_permittivity is not None:
+            self._permittivity.setValue(existing.ground.relative_permittivity)
+        if existing.ground.conductivity_s_per_m is not None:
+            self._conductivity.setValue(existing.ground.conductivity_s_per_m)
+        self._table.setRowCount(0)
+        self._updating = True
+        try:
+            for element in existing.elements:
+                self._append_element(element)
+        finally:
+            self._updating = False
+        index = self._driven.findData(existing.driven_index)
+        if index >= 0:
+            self._driven.setCurrentIndex(index)
 
     def _update_ground_controls(self) -> None:
         finite = self._ground.currentData() == GroundKind.FINITE.value

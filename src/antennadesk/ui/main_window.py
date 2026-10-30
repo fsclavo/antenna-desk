@@ -665,7 +665,9 @@ class MainWindow(QMainWindow):
                 length=f"{sum(wire.length_m for wire in design.antenna.wires):.3f} m",
             )
         )
-        self._custom_generator_edit.setVisible(parameters.generator_id == "inverted_v")
+        self._custom_generator_edit.setVisible(
+            parameters.generator_id in {"inverted_v", "yagi", "vertical"}
+        )
         if self._custom_sweep_center_hz != design.parameters.frequency_hz:
             self._custom_sweep_center_hz = design.parameters.frequency_hz
             center_mhz = design.parameters.frequency_hz / 1_000_000.0
@@ -1232,17 +1234,31 @@ class MainWindow(QMainWindow):
             return
         design = self._project.design_by_id(self._design_id)
         parameters = design.parameters
-        if (
-            not isinstance(parameters, CustomAntennaParameters)
-            or parameters.generator_id != "inverted_v"
-        ):
+        if not isinstance(parameters, CustomAntennaParameters):
             return
-        dialog = InvertedVDialog(
-            self._translator,
-            self._unit_system,
-            self,
-            parameters=parameters,
-        )
+        if parameters.generator_id == "inverted_v":
+            dialog: QDialog = InvertedVDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                parameters=parameters,
+            )
+        elif parameters.generator_id == "yagi":
+            dialog = YagiDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                parameters=parameters,
+            )
+        elif parameters.generator_id == "vertical":
+            dialog = VerticalDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                parameters=parameters,
+            )
+        else:
+            return
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         try:

@@ -76,6 +76,82 @@ class YagiParameters:
     def wavelength_m(self) -> float:
         return units.wavelength_m(self.frequency_hz)
 
+    @classmethod
+    def from_custom_parameters(
+        cls,
+        parameters: CustomAntennaParameters,
+    ) -> YagiParameters:
+        if len(parameters.wires) < 2:
+            raise ValueError("a Yagi requires at least two wires")
+        wires = parameters.wires
+        z_values = [point.z_m for wire in wires for point in (wire.start, wire.end)]
+        if max(z_values) - min(z_values) > 1e-6:
+            raise ValueError("Yagi elements must lie in a horizontal plane")
+
+        first = wires[0]
+        first_dx = first.end.x_m - first.start.x_m
+        first_dy = first.end.y_m - first.start.y_m
+        first_length = math.hypot(first_dx, first_dy)
+        if first_length <= 1e-9:
+            raise ValueError("Yagi elements must be horizontal")
+        direction_x = first_dx / first_length
+        direction_y = first_dy / first_length
+
+        midpoints: list[tuple[float, float]] = []
+        for wire in wires:
+            dx = wire.end.x_m - wire.start.x_m
+            dy = wire.end.y_m - wire.start.y_m
+            length = math.hypot(dx, dy)
+            if length <= 1e-9:
+                raise ValueError("Yagi elements must be horizontal")
+            if abs(direction_x * dy - direction_y * dx) > 1e-6 * length:
+                raise ValueError("Yagi elements must be parallel")
+            midpoints.append(
+                (
+                    (wire.start.x_m + wire.end.x_m) / 2.0,
+                    (wire.start.y_m + wire.end.y_m) / 2.0,
+                )
+            )
+
+        boom_x = midpoints[1][0] - midpoints[0][0]
+        boom_y = midpoints[1][1] - midpoints[0][1]
+        boom_length = math.hypot(boom_x, boom_y)
+        if boom_length <= 1e-9:
+            raise ValueError("Yagi elements must have distinct boom positions")
+        boom_x /= boom_length
+        boom_y /= boom_length
+        raw_positions = [
+            (midpoint[0] - midpoints[0][0]) * boom_x + (midpoint[1] - midpoints[0][1]) * boom_y
+            for midpoint in midpoints
+        ]
+        offset = min(raw_positions)
+        elements_with_index = [
+            (
+                index,
+                YagiElement(
+                    position_m=position - offset,
+                    length_m=wire.length_m,
+                    radius_m=wire.radius_m,
+                ),
+            )
+            for index, (position, wire) in enumerate(zip(raw_positions, wires, strict=True))
+        ]
+        elements_with_index.sort(key=lambda item: item[1].position_m)
+        driven_index = next(
+            index
+            for index, (wire_index, _element) in enumerate(elements_with_index)
+            if wires[wire_index].id == parameters.feed.wire_id
+        )
+        return cls(
+            frequency_hz=parameters.frequency_hz,
+            elements=tuple(element for _index, element in elements_with_index),
+            height_m=first.start.z_m,
+            driven_index=driven_index,
+            azimuth_deg=math.degrees(math.atan2(boom_y, boom_x)),
+            material=first.material,
+            ground=parameters.ground,
+        )
+
     def to_custom_parameters(self) -> CustomAntennaParameters:
         angle = units.degrees_to_radians(self.azimuth_deg)
         cos_angle = math.cos(angle)

@@ -68,3 +68,25 @@ def test_yagi_dialog_driven_element_mapping_survives_reordering(qtbot: QtBot) ->
 
     assert yagi.elements[0].position_m == pytest.approx(2.0)
     assert parameters.feed.wire_id == "element-2"
+
+
+def test_yagi_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+
+    original = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        azimuth_deg=20.0,
+    )
+    dialog = YagiDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=original.to_custom_parameters(),
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._table.rowCount() == 5
+    restored = YagiParameters.from_custom_parameters(dialog.parameters())
+    assert restored.frequency_hz == pytest.approx(original.frequency_hz)
+    assert restored.azimuth_deg == pytest.approx(original.azimuth_deg)
+    assert restored.driven_index == original.driven_index

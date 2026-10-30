@@ -58,3 +58,22 @@ def test_vertical_rejects_invalid_radials() -> None:
             height_m=10.0,
             radial_count=129,
         )
+
+
+def test_vertical_can_be_reconstructed_from_custom_geometry() -> None:
+    original = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=0.2,
+        radial_count=8,
+        radial_length_m=5.0,
+        radial_angle_deg=22.5,
+    )
+    restored = VerticalParameters.from_custom_parameters(original.to_custom_parameters())
+
+    assert restored.frequency_hz == pytest.approx(original.frequency_hz)
+    assert restored.height_m == pytest.approx(original.height_m)
+    assert restored.base_height_m == pytest.approx(original.base_height_m)
+    assert restored.radial_count == original.radial_count
+    assert restored.radial_length_m == pytest.approx(original.radial_length_m)
+    assert restored.radial_angle_deg == pytest.approx(original.radial_angle_deg)

@@ -105,8 +105,8 @@ instead of the published folded dipole, so the feed impedance is not the
 reference impedance. Once you edit positions or lengths, the result is an
 experimental geometry with no external reference; simulate it and judge it on
 its own modeled performance. The generated design can be refined further with **Edit Custom Wires...**.
-Generated inverted-V designs also expose **Edit Generator...**, which reopens
-the parameter dialog instead of the raw wire table.
+Generated designs also expose **Edit Generator...**, which reopens the
+parameter dialog instead of the raw wire table.
 
 ## Create an inverted-V
 
@@ -132,8 +132,9 @@ value for elevated radials.
 
 The generator is experimental: geometry and radial topology are tested, but it
 has no independent numerical performance reference. The feed is at the base of
-the radiator, so the usual delta-gap warning can appear. Simulate the result and
-refine the wires with **Edit Custom Wires...** if needed.
+the radiator, so the usual delta-gap warning can appear. Use **Edit Generator...**
+to change the height, base, or radials, or **Edit Custom Wires...** for raw
+coordinates.
 
 ## Read the results
 
