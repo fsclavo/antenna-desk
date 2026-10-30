@@ -51,6 +51,7 @@ class CustomAntennaDialog(QDialog):
         parent: QWidget | None = None,
         *,
         pattern_step_deg: float = DEFAULT_PATTERN_STEP_DEG,
+        frequency_hz: float | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
@@ -67,7 +68,12 @@ class CustomAntennaDialog(QDialog):
         self._frequency.setRange(0.1, 100_000.0)
         self._frequency.setDecimals(6)
         self._frequency.setSuffix(" MHz")
-        self._frequency.setValue((parameters.frequency_hz if parameters else 7_100_000.0) / 1e6)
+        initial_frequency_hz = (
+            parameters.frequency_hz
+            if parameters
+            else (frequency_hz if frequency_hz is not None else 7_100_000.0)
+        )
+        self._frequency.setValue(initial_frequency_hz / 1e6)
 
         self._material = QComboBox(self)
         for material in MATERIALS:

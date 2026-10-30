@@ -66,7 +66,7 @@ from ..application.use_cases.update_dipole_design import (
     UpdateDipoleDesignCommand,
 )
 from ..domain.antennas.custom import CustomAntennaParameters
-from ..domain.antennas.design import with_primary_dimension
+from ..domain.antennas.design import AntennaDesignParameters, with_primary_dimension
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
 from ..domain.antennas.family import antenna_family
 from ..domain.antennas.feed_line import FeedLine
@@ -271,6 +271,7 @@ class MainWindow(QMainWindow):
         self._form = DipoleForm(self._translator, self._unit_system)
         self._form.apply_requested.connect(lambda: self.apply_design())
         self._form.optimize_requested.connect(lambda: self.optimize_length())
+        self._form.change_template_requested.connect(lambda: self.change_template())
         self._form.changed.connect(self._on_form_changed)
         self._form_scroll = QScrollArea(self)
         form_scroll = self._form_scroll
@@ -293,6 +294,8 @@ class MainWindow(QMainWindow):
         self._custom_edit.clicked.connect(lambda: self.edit_custom_wires())
         self._custom_generator_edit = QPushButton(self._custom_panel)
         self._custom_generator_edit.clicked.connect(lambda: self.edit_generator())
+        self._custom_change_template = QPushButton(self._custom_panel)
+        self._custom_change_template.clicked.connect(lambda: self.change_template())
         self._custom_sweep_group = QGroupBox(self._custom_panel)
         self._custom_sweep = QCheckBox(self._custom_sweep_group)
         self._custom_sweep.setChecked(True)
@@ -321,6 +324,7 @@ class MainWindow(QMainWindow):
         custom_layout.addWidget(self._custom_generator)
         custom_layout.addWidget(self._custom_summary)
         custom_layout.addWidget(self._custom_generator_edit)
+        custom_layout.addWidget(self._custom_change_template)
         custom_layout.addWidget(self._custom_edit)
         custom_layout.addWidget(self._custom_sweep_group)
         custom_layout.addStretch(1)
@@ -486,6 +490,7 @@ class MainWindow(QMainWindow):
         self._custom_title.setText(self._translator.t("custom.panel_title"))
         self._custom_edit.setText(self._translator.t("action.edit_custom"))
         self._custom_generator_edit.setText(self._translator.t("action.edit_generator"))
+        self._custom_change_template.setText(self._translator.t("action.change_template"))
         self._custom_sweep_group.setTitle(self._translator.t("field.sweep"))
         self._custom_sweep.setText(self._translator.t("field.sweep_enabled"))
         self._export_csv_action.setText(self._translator.t("action.export_csv"))
@@ -1297,6 +1302,114 @@ class MainWindow(QMainWindow):
         self._update_custom_panel(updated_design)
         self._update_title()
         self._update_actions()
+
+    def _parameters_from_catalog(
+        self,
+        selected: str,
+        frequency_hz: float,
+    ) -> AntennaDesignParameters | None:
+        if selected in {
+            CATALOG_TYPE_WIRE_DIPOLE,
+            CATALOG_TYPE_FOLDED_DIPOLE,
+            CATALOG_TYPE_LOOP,
+        }:
+            wizard = DipoleWizard(
+                self._translator,
+                self._unit_system,
+                initial_frequency_hz=frequency_hz,
+                initial_antenna_type=selected,
+                parent=self,
+            )
+            if wizard.exec() != QWizard.DialogCode.Accepted:
+                return None
+            return wizard.build_parameters()
+        if selected == CATALOG_TYPE_YAGI:
+            dialog = YagiDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            return (
+                dialog.result_parameters() if dialog.exec() == QDialog.DialogCode.Accepted else None
+            )
+        if selected == CATALOG_TYPE_INVERTED_V:
+            dialog = InvertedVDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            return (
+                dialog.result_parameters() if dialog.exec() == QDialog.DialogCode.Accepted else None
+            )
+        if selected == CATALOG_TYPE_VERTICAL:
+            dialog = VerticalDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            return (
+                dialog.result_parameters() if dialog.exec() == QDialog.DialogCode.Accepted else None
+            )
+        if selected == CATALOG_TYPE_CUSTOM:
+            dialog = CustomAntennaDialog(
+                self._translator,
+                self._unit_system,
+                parent=self,
+                frequency_hz=frequency_hz,
+            )
+            return (
+                dialog.result_parameters() if dialog.exec() == QDialog.DialogCode.Accepted else None
+            )
+        return None
+
+    def change_template(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if not self._maybe_save_changes():
+            return
+        catalog = AntennaCatalogDialog(self._translator, self)
+        if catalog.exec() != QDialog.DialogCode.Accepted:
+            return
+        selected = catalog.selected_key()
+        if selected is None:
+            return
+        design = self._project.design_by_id(self._design_id)
+        try:
+            parameters = self._parameters_from_catalog(
+                selected,
+                design.parameters.frequency_hz,
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        if parameters is None:
+            return
+        answer = QMessageBox.question(
+            self,
+            self._translator.t("dialog.change_template_title"),
+            self._translator.t("dialog.change_template_message"),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            updated_design = design.with_parameters(parameters)
+            self._project = self._project.with_design(updated_design, updated_at=utc_now())
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._simulation_results.pop(self._design_id, None)
+        self._dirty = True
+        self._select_design(self._design_id)
+        self._last_status_key = "status.design_changed"
+        self._update_title()
+        self._update_actions()
+        self._update_status_text()
 
     def new_antenna(self) -> None:
         dialog = AntennaCatalogDialog(self._translator, self)

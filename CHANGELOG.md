@@ -152,6 +152,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added generator editing for inverted-V designs, automatic elevation view for
   vertical-plane multi-wire geometry, and 100-point sweep controls for custom
   and generated designs.
+- Added Change Template to replace the current design from the antenna catalog.
 - Persist generator metadata (`generator_id`, `generator_name`) in custom
   designs and show it in the custom design panel.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the

@@ -87,7 +87,9 @@ For a wire dipole, folded dipole, or loop, the guided wizard asks for:
 
 After creation, adjust the design panel and press **Apply design** or
 **Simulate**. The design panel separates **Family** from **Template**; generated
-designs show both as metadata and remain editable as custom wires.
+designs show both as metadata and remain editable as custom wires. The Template
+field shows the current template; use **Change Template...** to open the catalog
+and replace the current design with another native or generated template.
 
 ## Create a Yagi
 

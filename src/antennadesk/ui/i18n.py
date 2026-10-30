@@ -1049,6 +1049,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Edit Generator...",
         Language.SPANISH: "Editar generador...",
     },
+    "action.change_template": {
+        Language.ENGLISH: "Change Template...",
+        Language.SPANISH: "Cambiar plantilla...",
+    },
+    "dialog.change_template_title": {
+        Language.ENGLISH: "Change Template",
+        Language.SPANISH: "Cambiar plantilla",
+    },
+    "dialog.change_template_message": {
+        Language.ENGLISH: "Replace the current design with the selected template?",
+        Language.SPANISH: "¿Reemplazar el diseño actual por la plantilla seleccionada?",
+    },
     "action.convert_custom": {
         Language.ENGLISH: "Convert to Custom Wires...",
         Language.SPANISH: "Convertir a hilos personalizados...",

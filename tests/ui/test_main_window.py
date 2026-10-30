@@ -928,3 +928,73 @@ def test_new_vertical_creates_an_editable_custom_design(
     assert window._custom_family.text() == "Family: Vertical"
     assert window._custom_generator.text() == "Template: Vertical"
     window._dirty = False
+
+
+def test_change_template_replaces_the_current_design(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.custom import CustomAntennaParameters
+    from antennadesk.domain.antennas.feed import FeedPoint
+    from antennadesk.domain.antennas.geometry import Point3D
+    from antennadesk.domain.antennas.materials import COPPER
+    from antennadesk.domain.antennas.wire import Wire
+
+    parameters = CustomAntennaParameters(
+        frequency_hz=7_100_000.0,
+        wires=(
+            Wire(
+                id="leg-1",
+                start=Point3D(0.0, 0.0, 12.0),
+                end=Point3D(-8.0, 0.0, 5.0),
+                radius_m=0.001,
+                material=COPPER,
+            ),
+            Wire(
+                id="leg-2",
+                start=Point3D(0.0, 0.0, 12.0),
+                end=Point3D(8.0, 0.0, 5.0),
+                radius_m=0.001,
+                material=COPPER,
+            ),
+        ),
+        feed=FeedPoint("leg-1", 0.0),
+        generator_id="inverted_v",
+        generator_name="Inverted-V",
+    )
+
+    class FakeCatalog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def selected_key(self) -> str:
+            return "inverted_v"
+
+    class FakeInvertedVDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            assert "frequency_hz" in kwargs
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> CustomAntennaParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
+    monkeypatch.setattr(main_window_module, "InvertedVDialog", FakeInvertedVDialog)
+    monkeypatch.setattr(
+        QMessageBox,
+        "question",
+        lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
+    )
+
+    window.change_template()
+
+    assert window._project is not None
+    assert window._project.designs[0].antenna_type == "custom"
+    assert window._project.designs[0].antenna.wires == parameters.wires
+    assert window._custom_generator.text() == "Template: Inverted-V"
+    window._dirty = False

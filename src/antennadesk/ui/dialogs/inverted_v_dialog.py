@@ -34,6 +34,7 @@ class InvertedVDialog(QDialog):
         parent: QWidget | None = None,
         *,
         parameters: CustomAntennaParameters | None = None,
+        frequency_hz: float | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
@@ -47,7 +48,7 @@ class InvertedVDialog(QDialog):
         self._frequency.setRange(0.1, 100_000.0)
         self._frequency.setDecimals(6)
         self._frequency.setSuffix(" MHz")
-        self._frequency.setValue(7.1)
+        self._frequency.setValue(frequency_hz / 1_000_000.0 if frequency_hz is not None else 7.1)
         self._frequency.valueChanged.connect(self._update_suggestion)
 
         self._apex_height = QDoubleSpinBox(self)
