@@ -49,13 +49,13 @@ Completed:
   family grouping.
 - Explicit antenna family/template mapping in the domain and design panel.
 - Generated-design metadata (`generator_id` / `generator_name`) persisted in
-  custom designs.
+  legacy custom designs.
+- All current generators (Yagi, inverted-V, vertical, OCFD) are first-class
+  templates with inline editors and native persistence.
 
 In progress:
 
-- M3 catalog expansion: vertical with radials and OCFD are done; OCFD is also
-  the first generator promoted to a first-class template with an inline editor.
-  Delta loop/quad, Moxon, and fan dipole remain.
+- M3 catalog expansion: delta loop/quad, Moxon, and fan dipole remain.
 
 Deferred:
 
@@ -69,9 +69,9 @@ Deferred:
 - Element table: position along boom, total length, radius.
 - Add/remove elements and arbitrary driven-element index.
 - NBS 0.8λ five-element starting preset.
-- Generate an editable custom-wire design.
+- Generate a first-class editable Yagi design.
 - Structural tests plus a reference-backed NEC check for the NBS preset.
-- UI: Yagi entry in the **New Antenna** catalog; generated-design metadata.
+- UI: Yagi entry in the **New Antenna** catalog with an inline element editor.
 
 ### M2 — Inverted-V generator (completed)
 

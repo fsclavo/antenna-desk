@@ -144,35 +144,35 @@ feed, and load rules are validated by `AntennaModel`.
 
 ### YagiParameters
 
-A parametric Yagi generator with an ordered tuple of `YagiElement` values,
+A first-class parametric Yagi with an ordered tuple of `YagiElement` values,
 boom height and azimuth, driven-element index, material, and ground. Elements
-store boom position, total length, and radius. `to_custom_parameters()` creates
-parallel straight wires and a center feed on the selected driven element. The
-NBS TN-688 5-element 0.8λ preset is a starting geometry; edited designs are
-experimental custom-wire models.
+store boom position, total length, and radius. `to_antenna()` creates parallel
+straight wires and a center feed on the selected driven element. The NBS
+TN-688 5-element 0.8λ preset is a starting geometry; edited designs are
+experimental.
 
 ### InvertedVParameters
 
-A two-leg inverted-V with frequency, leg length, apex height, included angle,
-azimuth, wire radius, material, and ground. `to_custom_parameters()` creates
-two sloping wires meeting at the apex, with a center feed at the apex. The
-generator is experimental; its geometry and scaling are tested, but it has no
+A first-class two-leg inverted-V with frequency, leg length, apex height,
+included angle, azimuth, wire radius, material, and ground. `to_antenna()`
+creates two sloping wires meeting at the apex, with a center feed at the apex.
+It is experimental; its geometry and scaling are tested, but it has no
 independent numerical performance reference.
 
 ### Antenna families
 
 `AntennaFamily` groups designs as Dipole, Yagi, Loop, Vertical, or Custom.
-`antenna_family()` maps native parameters and generator metadata to a family;
-`antenna_template_id()` returns the native template or generator identifier.
-This keeps the catalog and the design panel on the same taxonomy without
-forcing every generated design into a first-class parameter type.
+`antenna_family()` maps native parameters and legacy generator metadata to a
+family; `antenna_template_id()` returns the native template or generator
+identifier. Current generators are first-class parameters, so the catalog and
+the design panel share the same taxonomy.
 
 ### VerticalParameters
 
-A vertical radiator with height, base/radial-plane height, optional radial
-count/length/angle, wire radius, material, and ground. `to_custom_parameters()`
+A first-class vertical radiator with height, base/radial-plane height, optional
+radial count/length/angle, wire radius, material, and ground. `to_antenna()`
 creates the vertical wire and evenly spaced radial wires connected at the base,
-with the feed at the radiator base. The generator is experimental.
+with the feed at the radiator base. It is experimental.
 
 ### OCFDParameters
 
@@ -186,9 +186,10 @@ designs.
 ### AntennaDesignParameters
 
 `AntennaDesignParameters` is the union of `DipoleParameters`,
-`FoldedDipoleParameters`, `LoopParameters`, and `CustomAntennaParameters`.
-`antenna_type_for()` maps a parameter object to `wire_dipole`, `folded_dipole`,
-`loop`, or `custom`.
+`FoldedDipoleParameters`, `LoopParameters`, `OCFDParameters`,
+`VerticalParameters`, `InvertedVParameters`, `YagiParameters`, and
+`CustomAntennaParameters`. `antenna_type_for()` maps a parameter object to its
+native type; `custom` remains the arbitrary-wire escape hatch.
 
 ### DesignVariant
 

@@ -10,8 +10,11 @@ from pathlib import Path
 
 from ..domain.antennas.dipole import DipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
+from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.ocfd import OCFDParameters
+from ..domain.antennas.vertical import VerticalParameters
+from ..domain.antennas.yagi import YagiParameters
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import FrequencyResult, SimulationResult
@@ -126,6 +129,39 @@ and {other_leg_m:.4f} m from the end.</p>"""
 and two end connectors of {parameters.spacing_m:.4f} m. Join them at both
 ends and feed the center of one element. The total conductor length is
 {parameters.total_conductor_length_m:.4f} m.</p>"""
+    elif isinstance(parameters, YagiParameters):
+        positions = [element.position_m for element in parameters.elements]
+        feed_rows = f"""
+<tr><th>Elements</th><td>{len(parameters.elements)}</td></tr>
+<tr><th>Boom length</th><td>{max(positions) - min(positions):.4f} m</td></tr>
+<tr><th>Driven element</th><td>{parameters.driven_index + 1}</td></tr>
+<tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Build {len(parameters.elements)} parallel elements on a
+{max(positions) - min(positions):.4f} m boom. Feed the center of element
+{parameters.driven_index + 1}.</p>"""
+    elif isinstance(parameters, InvertedVParameters):
+        feed_rows = f"""
+<tr><th>Leg length</th><td>{parameters.leg_length_m:.4f} m</td></tr>
+<tr><th>Apex height</th><td>{parameters.apex_height_m:.4f} m</td></tr>
+<tr><th>End height</th><td>{parameters.end_height_m:.4f} m</td></tr>
+<tr><th>Included angle</th><td>{parameters.included_angle_deg:.1f}°</td></tr>
+"""
+        construction_note = f"""<p>Cut two legs of {parameters.leg_length_m:.4f} m and join them at
+the apex with an included angle of {parameters.included_angle_deg:.1f}°.
+The apex is {parameters.apex_height_m:.4f} m above ground.</p>"""
+    elif isinstance(parameters, VerticalParameters):
+        feed_rows = f"""
+<tr><th>Radiator height</th><td>{parameters.height_m:.4f} m</td></tr>
+<tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
+<tr><th>Radials</th><td>{parameters.radial_count}</td></tr>
+<tr><th>Radial length</th><td>{parameters.radial_length_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Install a {parameters.height_m:.4f} m vertical radiator with its base
+{parameters.base_height_m:.4f} m above ground. Add {parameters.radial_count} radials of
+{parameters.radial_length_m:.4f} m in the base plane.</p>"""
     elif isinstance(parameters, OCFDParameters):
         other_leg_m = max(feed_wire.length_m - feed_offset_m, 0.0)
         feed_rows = f"""

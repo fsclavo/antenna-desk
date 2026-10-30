@@ -8,9 +8,12 @@ from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
+from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.load import LumpedLoad, ParallelLoad
 from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.ocfd import OCFDParameters
+from ..domain.antennas.vertical import VerticalParameters
+from ..domain.antennas.yagi import YagiParameters
 from ..domain.environment.ground import GroundModel
 
 
@@ -73,6 +76,28 @@ def design_summary_rows(
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
             ]
         )
+    elif isinstance(parameters, VerticalParameters):
+        rows.extend(
+            [
+                ("Type", "vertical"),
+                ("Radiator height", f"{parameters.height_m:.4f} m"),
+                ("Base height", f"{parameters.base_height_m:.4f} m"),
+                ("Top height", f"{parameters.top_height_m:.4f} m"),
+                ("Radials", str(parameters.radial_count)),
+                ("Radial length", f"{parameters.radial_length_m:.4f} m"),
+            ]
+        )
+    elif isinstance(parameters, InvertedVParameters):
+        rows.extend(
+            [
+                ("Type", "inverted-V"),
+                ("Leg length", f"{parameters.leg_length_m:.4f} m"),
+                ("Apex height", f"{parameters.apex_height_m:.4f} m"),
+                ("End height", f"{parameters.end_height_m:.4f} m"),
+                ("Included angle", f"{parameters.included_angle_deg:.1f}°"),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+            ]
+        )
     elif isinstance(parameters, OCFDParameters):
         rows.extend(
             [
@@ -98,6 +123,25 @@ def design_summary_rows(
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
             ]
         )
+    if isinstance(parameters, YagiParameters):
+        positions = [element.position_m for element in parameters.elements]
+        rows.extend(
+            [
+                ("Type", "Yagi"),
+                ("Elements", str(len(parameters.elements))),
+                ("Boom length", f"{max(positions) - min(positions):.4f} m"),
+                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+                ("Driven element", str(parameters.driven_index + 1)),
+                (
+                    "Material",
+                    f"{parameters.material.name} "
+                    f"({parameters.material.conductivity_s_per_m:.3g} S/m)",
+                ),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        return tuple(rows)
     rows.extend(
         [
             ("Wire diameter", f"{parameters.wire_radius_m * 2000.0:.3f} mm"),

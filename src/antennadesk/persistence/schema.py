@@ -26,6 +26,7 @@ from ..domain.antennas.folded_dipole import (
     FoldedDipoleParameters,
 )
 from ..domain.antennas.geometry import Point3D
+from ..domain.antennas.inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
 from ..domain.antennas.load import LoadKind, LumpedLoad, ParallelLoad, SeriesLoad
 from ..domain.antennas.loop import (
     ANTENNA_TYPE_LOOP,
@@ -35,7 +36,9 @@ from ..domain.antennas.loop import (
 )
 from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
+from ..domain.antennas.vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
 from ..domain.antennas.wire import Wire
+from ..domain.antennas.yagi import ANTENNA_TYPE_YAGI, YagiElement, YagiParameters
 from ..domain.common.validation import Diagnostic, Severity
 from ..domain.environment.environment import Environment
 from ..domain.environment.ground import GroundKind, GroundModel
@@ -170,6 +173,45 @@ class OCFDParametersPayload(StrictModel):
     height_m: float = Field(default=10.0, ge=0.0)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class InvertedVParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    leg_length_m: float = Field(gt=0.0)
+    apex_height_m: float = Field(ge=0.0)
+    included_angle_deg: float = Field(default=120.0, gt=0.0, lt=180.0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class VerticalParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    height_m: float = Field(gt=0.0)
+    base_height_m: float = Field(default=0.0, ge=0.0)
+    radial_count: int = Field(default=0, ge=0, le=128)
+    radial_length_m: float = Field(default=0.0, ge=0.0)
+    radial_angle_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class YagiElementPayload(StrictModel):
+    position_m: float = Field(ge=0.0)
+    length_m: float = Field(gt=0.0)
+    radius_m: float = Field(gt=0.0)
+
+
+class YagiParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    elements: list[YagiElementPayload] = Field(min_length=2)
+    height_m: float = Field(ge=0.0)
+    driven_index: int = Field(default=1, ge=0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     material: MaterialPayload
     ground: GroundPayload
 
@@ -320,6 +362,9 @@ ParameterPayload = (
     | FoldedDipoleParametersPayload
     | LoopParametersPayload
     | OCFDParametersPayload
+    | VerticalParametersPayload
+    | InvertedVParametersPayload
+    | YagiParametersPayload
     | CustomParametersPayload
 )
 
@@ -331,6 +376,12 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_FOLDED_DIPOLE
     if isinstance(value, OCFDParametersPayload):
         return ANTENNA_TYPE_OCFD
+    if isinstance(value, VerticalParametersPayload):
+        return ANTENNA_TYPE_VERTICAL
+    if isinstance(value, InvertedVParametersPayload):
+        return ANTENNA_TYPE_INVERTED_V
+    if isinstance(value, YagiParametersPayload):
+        return ANTENNA_TYPE_YAGI
     if isinstance(value, CustomParametersPayload):
         return ANTENNA_TYPE_CUSTOM
     return ANTENNA_TYPE_LOOP
@@ -345,6 +396,12 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return LoopParametersPayload
     if antenna_type == ANTENNA_TYPE_OCFD:
         return OCFDParametersPayload
+    if antenna_type == ANTENNA_TYPE_VERTICAL:
+        return VerticalParametersPayload
+    if antenna_type == ANTENNA_TYPE_INVERTED_V:
+        return InvertedVParametersPayload
+    if antenna_type == ANTENNA_TYPE_YAGI:
+        return YagiParametersPayload
     if antenna_type == ANTENNA_TYPE_CUSTOM:
         return CustomParametersPayload
     return None
@@ -537,6 +594,12 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _loop_parameters_from_domain(value)
     if isinstance(value, OCFDParameters):
         return _ocfd_parameters_from_domain(value)
+    if isinstance(value, VerticalParameters):
+        return _vertical_parameters_from_domain(value)
+    if isinstance(value, InvertedVParameters):
+        return _inverted_v_parameters_from_domain(value)
+    if isinstance(value, YagiParameters):
+        return _yagi_parameters_from_domain(value)
     if isinstance(value, CustomAntennaParameters):
         return _custom_parameters_from_domain(value)
     raise TypeError(f"unsupported antenna parameters: {type(value)!r}")
@@ -550,6 +613,56 @@ def _ocfd_parameters_from_domain(value: OCFDParameters) -> OCFDParametersPayload
         height_m=value.height_m,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _inverted_v_parameters_from_domain(
+    value: InvertedVParameters,
+) -> InvertedVParametersPayload:
+    return InvertedVParametersPayload(
+        frequency_hz=value.frequency_hz,
+        leg_length_m=value.leg_length_m,
+        apex_height_m=value.apex_height_m,
+        included_angle_deg=value.included_angle_deg,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _vertical_parameters_from_domain(
+    value: VerticalParameters,
+) -> VerticalParametersPayload:
+    return VerticalParametersPayload(
+        frequency_hz=value.frequency_hz,
+        height_m=value.height_m,
+        base_height_m=value.base_height_m,
+        radial_count=value.radial_count,
+        radial_length_m=value.radial_length_m,
+        radial_angle_deg=value.radial_angle_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _yagi_parameters_from_domain(value: YagiParameters) -> YagiParametersPayload:
+    return YagiParametersPayload(
+        frequency_hz=value.frequency_hz,
+        elements=[
+            YagiElementPayload(
+                position_m=element.position_m,
+                length_m=element.length_m,
+                radius_m=element.radius_m,
+            )
+            for element in value.elements
+        ],
+        height_m=value.height_m,
+        driven_index=value.driven_index,
+        azimuth_deg=value.azimuth_deg,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
     )
@@ -883,6 +996,18 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, OCFDParametersPayload):
             raise ValueError("OCFD parameters have the wrong shape")
         return _ocfd_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_VERTICAL:
+        if not isinstance(value.parameters, VerticalParametersPayload):
+            raise ValueError("vertical parameters have the wrong shape")
+        return _vertical_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_INVERTED_V:
+        if not isinstance(value.parameters, InvertedVParametersPayload):
+            raise ValueError("inverted-V parameters have the wrong shape")
+        return _inverted_v_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_YAGI:
+        if not isinstance(value.parameters, YagiParametersPayload):
+            raise ValueError("Yagi parameters have the wrong shape")
+        return _yagi_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_CUSTOM:
         if not isinstance(value.parameters, CustomParametersPayload):
             raise ValueError("custom parameters have the wrong shape")
@@ -898,6 +1023,54 @@ def _ocfd_parameters_to_domain(value: OCFDParametersPayload) -> OCFDParameters:
         height_m=value.height_m,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _inverted_v_parameters_to_domain(
+    value: InvertedVParametersPayload,
+) -> InvertedVParameters:
+    return InvertedVParameters(
+        frequency_hz=value.frequency_hz,
+        leg_length_m=value.leg_length_m,
+        apex_height_m=value.apex_height_m,
+        included_angle_deg=value.included_angle_deg,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _vertical_parameters_to_domain(value: VerticalParametersPayload) -> VerticalParameters:
+    return VerticalParameters(
+        frequency_hz=value.frequency_hz,
+        height_m=value.height_m,
+        base_height_m=value.base_height_m,
+        radial_count=value.radial_count,
+        radial_length_m=value.radial_length_m,
+        radial_angle_deg=value.radial_angle_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _yagi_parameters_to_domain(value: YagiParametersPayload) -> YagiParameters:
+    return YagiParameters(
+        frequency_hz=value.frequency_hz,
+        elements=tuple(
+            YagiElement(
+                position_m=element.position_m,
+                length_m=element.length_m,
+                radius_m=element.radius_m,
+            )
+            for element in value.elements
+        ),
+        height_m=value.height_m,
+        driven_index=value.driven_index,
+        azimuth_deg=value.azimuth_deg,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),
     )

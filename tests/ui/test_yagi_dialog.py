@@ -20,8 +20,8 @@ def test_yagi_dialog_loads_the_nbs_preset(qtbot: QtBot) -> None:
     assert dialog._ground.currentText() == "Free space"
     assert dialog._material.currentText() == "Copper"
     parameters = dialog.parameters()
-    assert len(parameters.wires) == 5
-    assert parameters.feed.wire_id == "element-2"
+    assert len(parameters.elements) == 5
+    assert parameters.driven_index == 1
 
 
 def test_yagi_dialog_can_add_and_remove_elements(qtbot: QtBot) -> None:
@@ -31,7 +31,7 @@ def test_yagi_dialog_can_add_and_remove_elements(qtbot: QtBot) -> None:
     dialog._add_element()
     assert dialog._table.rowCount() == 6
     parameters = dialog.parameters()
-    assert len(parameters.wires) == 6
+    assert len(parameters.elements) == 6
 
     dialog._table.selectRow(5)
     dialog._remove_element()
@@ -45,7 +45,7 @@ def test_yagi_dialog_rebuilds_geometry_from_edited_lengths(qtbot: QtBot) -> None
 
     parameters = dialog.parameters()
 
-    assert parameters.wires[1].length_m == pytest.approx(10.0, abs=0.001)
+    assert parameters.elements[1].length_m == pytest.approx(10.0, abs=0.001)
 
 
 def test_yagi_dialog_driven_element_mapping_survives_reordering(qtbot: QtBot) -> None:
@@ -69,7 +69,7 @@ def test_yagi_dialog_driven_element_mapping_survives_reordering(qtbot: QtBot) ->
     )
 
     assert yagi.elements[0].position_m == pytest.approx(2.0)
-    assert parameters.feed.wire_id == "element-2"
+    assert parameters.driven_index == 1
 
 
 def test_yagi_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
@@ -83,12 +83,12 @@ def test_yagi_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
     dialog = YagiDialog(
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
-        parameters=original.to_custom_parameters(),
+        parameters=original,
     )
     qtbot.addWidget(dialog)
 
     assert dialog._table.rowCount() == 5
-    restored = YagiParameters.from_custom_parameters(dialog.parameters())
+    restored = dialog.parameters()
     assert restored.frequency_hz == pytest.approx(original.frequency_hz)
     assert restored.azimuth_deg == pytest.approx(original.azimuth_deg)
     assert restored.driven_index == original.driven_index

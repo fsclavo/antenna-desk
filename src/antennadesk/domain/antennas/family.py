@@ -10,8 +10,11 @@ from .custom import CustomAntennaParameters
 from .design import AntennaDesignParameters
 from .dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
 from .folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE, FoldedDipoleParameters
+from .inverted_v import InvertedVParameters
 from .loop import ANTENNA_TYPE_LOOP, LoopParameters
 from .ocfd import OCFDParameters
+from .vertical import VerticalParameters
+from .yagi import YagiParameters
 
 
 class AntennaFamily(StrEnum):
@@ -37,6 +40,12 @@ def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
         return AntennaFamily.LOOP
     if isinstance(parameters, OCFDParameters):
         return AntennaFamily.DIPOLE
+    if isinstance(parameters, VerticalParameters):
+        return AntennaFamily.VERTICAL
+    if isinstance(parameters, InvertedVParameters):
+        return AntennaFamily.DIPOLE
+    if isinstance(parameters, YagiParameters):
+        return AntennaFamily.YAGI
     if isinstance(parameters, CustomAntennaParameters):
         if parameters.generator_id is not None:
             return _GENERATOR_FAMILIES.get(parameters.generator_id, AntennaFamily.CUSTOM)
@@ -53,6 +62,12 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_LOOP
     if isinstance(parameters, OCFDParameters):
         return "ocfd"
+    if isinstance(parameters, VerticalParameters):
+        return "vertical"
+    if isinstance(parameters, InvertedVParameters):
+        return "inverted_v"
+    if isinstance(parameters, YagiParameters):
+        return "yagi"
     if isinstance(parameters, CustomAntennaParameters):
         return parameters.generator_id or "custom"
     raise TypeError(f"unsupported antenna parameters: {type(parameters)!r}")

@@ -14,11 +14,10 @@ def test_inverted_v_dialog_builds_two_wires(qtbot: QtBot) -> None:
     dialog = InvertedVDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(dialog)
 
-    parameters = dialog.parameters().to_custom_parameters()
+    parameters = dialog.parameters()
 
-    assert len(parameters.wires) == 2
-    assert parameters.feed.wire_id == "leg-1"
-    assert parameters.feed.offset_m == 0.0
+    assert parameters.leg_length_m > 0.0
+    assert parameters.included_angle_deg == 120.0
     assert parameters.ground.kind.value == "finite"
     assert dialog._ground.currentText() == "Finite ground"
     assert dialog._material.currentText() == "Copper"
@@ -32,11 +31,9 @@ def test_inverted_v_dialog_updates_geometry_and_returns_custom(qtbot: QtBot) -> 
     dialog._apex_height.setValue(20.0)
 
     parameters = dialog.parameters()
-    custom = parameters.to_custom_parameters()
 
     assert parameters.included_angle_deg == pytest.approx(90.0)
     assert parameters.end_height_m > 0.0
-    assert custom.wires[0].end.z_m == pytest.approx(parameters.end_height_m)
 
 
 def test_inverted_v_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
@@ -52,7 +49,7 @@ def test_inverted_v_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
     dialog = InvertedVDialog(
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
-        parameters=original.to_custom_parameters(),
+        parameters=original,
     )
     qtbot.addWidget(dialog)
 

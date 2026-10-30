@@ -70,8 +70,11 @@ from ..domain.antennas.design import AntennaDesignParameters, with_primary_dimen
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
 from ..domain.antennas.family import antenna_family
 from ..domain.antennas.feed_line import FeedLine
+from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.load import LumpedLoad
 from ..domain.antennas.ocfd import OCFDParameters
+from ..domain.antennas.vertical import VerticalParameters
+from ..domain.antennas.yagi import YagiParameters
 from ..domain.common.time import utc_now
 from ..domain.environment.ground import GroundModel
 from ..domain.projects.project import DesignVariant, Project
@@ -115,8 +118,11 @@ from .report_pdf import write_report_pdf
 from .units import UnitSystem
 from .widgets.dipole_form import DipoleForm
 from .widgets.geometry_view import GeometryView, GeometryViewMode
+from .widgets.inverted_v_form import InvertedVForm
 from .widgets.ocfd_form import OCFDForm
 from .widgets.results_view import ResultsView
+from .widgets.vertical_form import VerticalForm
+from .widgets.yagi_form import YagiForm
 from .wizard.dipole_wizard import DipoleWizard
 from .workers.simulation_worker import SimulationWorker
 
@@ -291,6 +297,30 @@ class MainWindow(QMainWindow):
         self._ocfd_scroll.setMinimumWidth(340)
         self._ocfd_scroll.setMaximumWidth(480)
 
+        self._vertical_form = VerticalForm(self._translator, self._unit_system, parent=self)
+        self._vertical_form.changed.connect(self._on_form_changed)
+        self._vertical_scroll = QScrollArea(self)
+        self._vertical_scroll.setWidgetResizable(True)
+        self._vertical_scroll.setWidget(self._vertical_form)
+        self._vertical_scroll.setMinimumWidth(340)
+        self._vertical_scroll.setMaximumWidth(480)
+
+        self._inverted_v_form = InvertedVForm(self._translator, self._unit_system, parent=self)
+        self._inverted_v_form.changed.connect(self._on_form_changed)
+        self._inverted_v_scroll = QScrollArea(self)
+        self._inverted_v_scroll.setWidgetResizable(True)
+        self._inverted_v_scroll.setWidget(self._inverted_v_form)
+        self._inverted_v_scroll.setMinimumWidth(340)
+        self._inverted_v_scroll.setMaximumWidth(480)
+
+        self._yagi_form = YagiForm(self._translator, self._unit_system, parent=self)
+        self._yagi_form.changed.connect(self._on_form_changed)
+        self._yagi_scroll = QScrollArea(self)
+        self._yagi_scroll.setWidgetResizable(True)
+        self._yagi_scroll.setWidget(self._yagi_form)
+        self._yagi_scroll.setMinimumWidth(340)
+        self._yagi_scroll.setMaximumWidth(520)
+
         self._custom_panel = QWidget(self)
         custom_layout = QVBoxLayout(self._custom_panel)
         self._custom_title = QLabel(self._custom_panel)
@@ -343,6 +373,9 @@ class MainWindow(QMainWindow):
         self._design_stack = QStackedWidget(self)
         self._design_stack.addWidget(form_scroll)
         self._design_stack.addWidget(self._ocfd_scroll)
+        self._design_stack.addWidget(self._vertical_scroll)
+        self._design_stack.addWidget(self._inverted_v_scroll)
+        self._design_stack.addWidget(self._yagi_scroll)
         self._design_stack.addWidget(self._custom_panel)
 
         self._geometry = GeometryView(self._translator, self._unit_system)
@@ -611,8 +644,18 @@ class MainWindow(QMainWindow):
             parameters = self._project.design_by_id(self._design_id).parameters
         is_custom = isinstance(parameters, CustomAntennaParameters)
         is_ocfd = isinstance(parameters, OCFDParameters)
+        is_vertical = isinstance(parameters, VerticalParameters)
+        is_inverted_v = isinstance(parameters, InvertedVParameters)
+        is_yagi = isinstance(parameters, YagiParameters)
         self._optimize_action.setEnabled(
-            idle and has_project and not is_custom and not is_ocfd and self._solver is not None
+            idle
+            and has_project
+            and not is_custom
+            and not is_ocfd
+            and not is_vertical
+            and not is_inverted_v
+            and not is_yagi
+            and self._solver is not None
         )
         self._loads_action.setEnabled(idle and has_project)
         self._edit_custom_action.setEnabled(idle and has_project and is_custom)
@@ -703,6 +746,15 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, OCFDParameters):
             self._design_stack.setCurrentWidget(self._ocfd_scroll)
             self._ocfd_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, VerticalParameters):
+            self._design_stack.setCurrentWidget(self._vertical_scroll)
+            self._vertical_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, InvertedVParameters):
+            self._design_stack.setCurrentWidget(self._inverted_v_scroll)
+            self._inverted_v_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, YagiParameters):
+            self._design_stack.setCurrentWidget(self._yagi_scroll)
+            self._yagi_form.set_parameters(design.parameters)
         else:
             self._design_stack.setCurrentWidget(self._form_scroll)
             self._form.set_parameters(design.parameters, reset_sweep=True)
@@ -839,6 +891,90 @@ class MainWindow(QMainWindow):
             self._update_actions()
             self._update_height_control()
             return self._project
+        if isinstance(previous_design.parameters, VerticalParameters):
+            parameters = self._vertical_form.parameters()
+            updated = UpdateDipoleDesign().execute(
+                UpdateDipoleDesignCommand(
+                    project=self._project,
+                    design_id=self._design_id,
+                    parameters=parameters,
+                )
+            )
+            updated = replace(updated, name=project_name)
+            self._project = updated
+            design = updated.design_by_id(self._design_id)
+            if parameters != previous_design.parameters:
+                self._simulation_results.pop(self._design_id, None)
+                self._results.set_result(None)
+            self._loads = design.antenna.loads
+            self._results.set_design(design)
+            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._auto_select_view(design)
+            self._project_name_updating = True
+            self._project_name.setText(project_name)
+            self._project_name_updating = False
+            self._form_dirty = False
+            self._dirty = True
+            self._update_title()
+            self._update_actions()
+            self._update_height_control()
+            return self._project
+        if isinstance(previous_design.parameters, InvertedVParameters):
+            parameters = self._inverted_v_form.parameters()
+            updated = UpdateDipoleDesign().execute(
+                UpdateDipoleDesignCommand(
+                    project=self._project,
+                    design_id=self._design_id,
+                    parameters=parameters,
+                )
+            )
+            updated = replace(updated, name=project_name)
+            self._project = updated
+            design = updated.design_by_id(self._design_id)
+            if parameters != previous_design.parameters:
+                self._simulation_results.pop(self._design_id, None)
+                self._results.set_result(None)
+            self._loads = design.antenna.loads
+            self._results.set_design(design)
+            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._auto_select_view(design)
+            self._project_name_updating = True
+            self._project_name.setText(project_name)
+            self._project_name_updating = False
+            self._form_dirty = False
+            self._dirty = True
+            self._update_title()
+            self._update_actions()
+            self._update_height_control()
+            return self._project
+        if isinstance(previous_design.parameters, YagiParameters):
+            parameters = self._yagi_form.parameters()
+            updated = UpdateDipoleDesign().execute(
+                UpdateDipoleDesignCommand(
+                    project=self._project,
+                    design_id=self._design_id,
+                    parameters=parameters,
+                )
+            )
+            updated = replace(updated, name=project_name)
+            self._project = updated
+            design = updated.design_by_id(self._design_id)
+            if parameters != previous_design.parameters:
+                self._simulation_results.pop(self._design_id, None)
+                self._results.set_result(None)
+            self._loads = design.antenna.loads
+            self._results.set_design(design)
+            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._auto_select_view(design)
+            self._project_name_updating = True
+            self._project_name.setText(project_name)
+            self._project_name_updating = False
+            self._form_dirty = False
+            self._dirty = True
+            self._update_title()
+            self._update_actions()
+            self._update_height_control()
+            return self._project
         if isinstance(previous_design.parameters, CustomAntennaParameters):
             design = previous_design
             if design.antenna.loads != self._loads:
@@ -930,6 +1066,12 @@ class MainWindow(QMainWindow):
                 spec = self._custom_simulation_spec(design.parameters)
             elif isinstance(design.parameters, OCFDParameters):
                 spec = self._ocfd_simulation_spec(design.parameters)
+            elif isinstance(design.parameters, VerticalParameters):
+                spec = self._vertical_simulation_spec(design.parameters)
+            elif isinstance(design.parameters, InvertedVParameters):
+                spec = self._inverted_v_simulation_spec(design.parameters)
+            elif isinstance(design.parameters, YagiParameters):
+                spec = self._yagi_simulation_spec(design.parameters)
             else:
                 spec = self._form.simulation_spec()
         except Exception as exc:
@@ -1031,6 +1173,57 @@ class MainWindow(QMainWindow):
 
     def _ocfd_simulation_spec(self, parameters: OCFDParameters) -> SimulationSpec:
         model = parameters.to_antenna(name="OCFD")
+        frequency_hz = parameters.frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                frequency_hz * 0.95,
+                frequency_hz * 1.05,
+                100,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz * 1.05,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
+    def _vertical_simulation_spec(self, parameters: VerticalParameters) -> SimulationSpec:
+        model = parameters.to_antenna(name="Vertical")
+        frequency_hz = parameters.frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                frequency_hz * 0.95,
+                frequency_hz * 1.05,
+                100,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz * 1.05,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
+    def _inverted_v_simulation_spec(self, parameters: InvertedVParameters) -> SimulationSpec:
+        model = parameters.to_antenna(name="Inverted V")
+        frequency_hz = parameters.frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                frequency_hz * 0.95,
+                frequency_hz * 1.05,
+                100,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz * 1.05,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
+    def _yagi_simulation_spec(self, parameters: YagiParameters) -> SimulationSpec:
+        model = parameters.to_antenna(name="Yagi")
         frequency_hz = parameters.frequency_hz
         return SimulationSpec(
             frequency_plan=FrequencyPlan.sweep(
@@ -1331,7 +1524,7 @@ class MainWindow(QMainWindow):
                 self._translator,
                 self._unit_system,
                 self,
-                parameters=parameters,
+                parameters=InvertedVParameters.from_custom_parameters(parameters),
             )
         elif parameters.generator_id == "ocfd":
             dialog = OCFDDialog(
@@ -1345,14 +1538,14 @@ class MainWindow(QMainWindow):
                 self._translator,
                 self._unit_system,
                 self,
-                parameters=parameters,
+                parameters=YagiParameters.from_custom_parameters(parameters),
             )
         elif parameters.generator_id == "vertical":
             dialog = VerticalDialog(
                 self._translator,
                 self._unit_system,
                 self,
-                parameters=parameters,
+                parameters=VerticalParameters.from_custom_parameters(parameters),
             )
         else:
             return

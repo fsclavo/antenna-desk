@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from ..common import units
 from ..common.units import ensure_non_negative, ensure_positive
 from ..environment.ground import FREE_SPACE, GroundModel
+from .antenna import AntennaModel
 from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
@@ -18,6 +19,7 @@ from .wire import Wire
 
 LEG_ONE_ID = "leg-1"
 LEG_TWO_ID = "leg-2"
+ANTENNA_TYPE_INVERTED_V = "inverted_v"
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,6 +108,9 @@ class InvertedVParameters:
             material=first.material,
             ground=parameters.ground,
         )
+
+    def to_antenna(self, *, name: str = "Inverted V") -> AntennaModel:
+        return self.to_custom_parameters().to_antenna(name=name)
 
     def to_custom_parameters(self) -> CustomAntennaParameters:
         angle = units.degrees_to_radians(self.azimuth_deg)

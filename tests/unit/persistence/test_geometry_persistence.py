@@ -96,7 +96,7 @@ def test_schema_rejects_an_unknown_antenna_type() -> None:
         "Unknown",
     )
     document = document_from_project(project).model_dump(mode="json")
-    document["project"]["designs"][0]["antenna_type"] = "yagi"
+    document["project"]["designs"][0]["antenna_type"] = "unsupported_type"
 
     with pytest.raises(ValueError, match="unsupported antenna type"):
         ProjectDocument.model_validate(document)
@@ -209,3 +209,53 @@ def test_ocfd_parameters_round_trip() -> None:
 
     assert restored.designs[0].parameters == parameters
     assert restored.designs[0].antenna_type == "ocfd"
+
+
+def test_vertical_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=0.25,
+        radial_count=16,
+        radial_length_m=5.0,
+    )
+    original = _project(parameters, "Vertical")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "vertical"
+
+
+def test_inverted_v_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.inverted_v import InvertedVParameters
+
+    parameters = InvertedVParameters(
+        frequency_hz=7_100_000.0,
+        leg_length_m=10.6,
+        apex_height_m=12.0,
+        included_angle_deg=120.0,
+    )
+    original = _project(parameters, "Inverted V")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "inverted_v"
+
+
+def test_yagi_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+
+    parameters = nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0)
+    original = _project(parameters, "Yagi")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "yagi"

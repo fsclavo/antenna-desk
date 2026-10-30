@@ -14,11 +14,10 @@ def test_vertical_dialog_builds_radiator_and_radials(qtbot: QtBot) -> None:
     dialog = VerticalDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(dialog)
 
-    parameters = dialog.parameters().to_custom_parameters()
+    parameters = dialog.parameters()
 
-    assert len(parameters.wires) == 17
-    assert parameters.feed.wire_id == "radiator"
-    assert parameters.generator_name == "Vertical"
+    assert parameters.radial_count == 16
+    assert parameters.height_m == pytest.approx(10.0)
     assert dialog._ground.currentText() == "Finite ground"
     assert dialog._material.currentText() == "Copper"
     assert dialog._base_height.value() == pytest.approx(0.25)
@@ -31,7 +30,7 @@ def test_vertical_dialog_can_disable_radials(qtbot: QtBot) -> None:
     dialog._radial_count.setValue(0)
 
     assert dialog._radial_length.isEnabled() is False
-    assert len(dialog.parameters().to_custom_parameters().wires) == 1
+    assert dialog.parameters().radial_count == 0
 
 
 def test_vertical_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
@@ -48,7 +47,7 @@ def test_vertical_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
     dialog = VerticalDialog(
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
-        parameters=original.to_custom_parameters(),
+        parameters=original,
     )
     qtbot.addWidget(dialog)
 

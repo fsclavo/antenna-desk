@@ -275,7 +275,7 @@ def test_unsupported_antenna_type_is_rejected(
     path = tmp_path / "dipole.antennadesk"
     repository.save(sample_project, path)
     document = _load_json(path)
-    document["project"]["designs"][0]["antenna_type"] = "yagi"
+    document["project"]["designs"][0]["antenna_type"] = "unsupported_type"
     _write_json(path, document)
 
     with pytest.raises(ProjectFormatError, match="unsupported antenna type"):

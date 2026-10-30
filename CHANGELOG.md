@@ -172,6 +172,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   catalog, editing, and persistence integration.
 - Promoted OCFD to a first-class template with an inline design-panel editor and
   native project persistence.
+- Promoted Yagi, inverted-V, and vertical generators to first-class templates
+  with inline editors, native persistence, and reporting support.
+- Added inline editing, schema round trips, and reporting coverage for all
+  first-class generators.
 - Persist generator metadata (`generator_id`, `generator_name`) in custom
   designs and show it in the custom design panel.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the

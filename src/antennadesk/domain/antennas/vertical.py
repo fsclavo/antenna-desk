@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from ..common import units
 from ..common.units import ensure_non_negative, ensure_positive
 from ..environment.ground import FREE_SPACE, GroundModel
+from .antenna import AntennaModel
 from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
@@ -18,6 +19,7 @@ from .wire import Wire
 
 RADIATOR_ID = "radiator"
 MAX_RADIALS = 128
+ANTENNA_TYPE_VERTICAL = "vertical"
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,6 +108,9 @@ class VerticalParameters:
             material=radiator.material,
             ground=parameters.ground,
         )
+
+    def to_antenna(self, *, name: str = "Vertical") -> AntennaModel:
+        return self.to_custom_parameters().to_antenna(name=name)
 
     def to_custom_parameters(self) -> CustomAntennaParameters:
         base = Point3D(x_m=0.0, y_m=0.0, z_m=self.base_height_m)

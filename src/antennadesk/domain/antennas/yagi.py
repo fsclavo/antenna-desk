@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from ..common import units
 from ..common.units import ensure_non_negative, ensure_positive
 from ..environment.ground import FREE_SPACE, GroundModel
+from .antenna import AntennaModel
 from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
@@ -17,6 +18,7 @@ from .materials import COPPER, ConductorMaterial
 from .wire import Wire
 
 YAGI_ELEMENT_ID_PREFIX = "element"
+ANTENNA_TYPE_YAGI = "yagi"
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,6 +153,9 @@ class YagiParameters:
             material=first.material,
             ground=parameters.ground,
         )
+
+    def to_antenna(self, *, name: str = "Yagi") -> AntennaModel:
+        return self.to_custom_parameters().to_antenna(name=name)
 
     def to_custom_parameters(self) -> CustomAntennaParameters:
         angle = units.degrees_to_radians(self.azimuth_deg)

@@ -748,39 +748,14 @@ def test_convert_to_custom_wires_preserves_geometry(window: MainWindow) -> None:
     window._dirty = False
 
 
-def test_new_yagi_creates_an_editable_custom_design(
+def test_new_yagi_creates_a_first_class_design(
     window: MainWindow,
     qtbot: QtBot,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from antennadesk.domain.antennas.custom import CustomAntennaParameters
-    from antennadesk.domain.antennas.feed import FeedPoint
-    from antennadesk.domain.antennas.geometry import Point3D
-    from antennadesk.domain.antennas.materials import COPPER
-    from antennadesk.domain.antennas.wire import Wire
+    from antennadesk.domain.antennas.yagi import YagiParameters, nbs_five_element
 
-    parameters = CustomAntennaParameters(
-        frequency_hz=14_100_000.0,
-        wires=(
-            Wire(
-                id="element-1",
-                start=Point3D(0.0, -5.0, 12.0),
-                end=Point3D(0.0, 5.0, 12.0),
-                radius_m=0.001,
-                material=COPPER,
-            ),
-            Wire(
-                id="element-2",
-                start=Point3D(2.0, -5.0, 12.0),
-                end=Point3D(2.0, 5.0, 12.0),
-                radius_m=0.001,
-                material=COPPER,
-            ),
-        ),
-        feed=FeedPoint("element-2", 5.0),
-        generator_id="yagi",
-        generator_name="Yagi",
-    )
+    parameters = nbs_five_element(frequency_hz=14_100_000.0, height_m=12.0)
 
     class FakeYagiDialog:
         def __init__(self, *args: object, **kwargs: object) -> None:
@@ -789,7 +764,7 @@ def test_new_yagi_creates_an_editable_custom_design(
         def exec(self) -> QDialog.DialogCode:
             return QDialog.DialogCode.Accepted
 
-        def result_parameters(self) -> CustomAntennaParameters:
+        def result_parameters(self) -> YagiParameters:
             return parameters
 
     monkeypatch.setattr(main_window_module, "YagiDialog", FakeYagiDialog)
@@ -799,46 +774,27 @@ def test_new_yagi_creates_an_editable_custom_design(
 
     assert window._project is not None
     assert window._project.name == "Yagi"
-    assert window._project.designs[0].antenna_type == "custom"
-    assert window._project.designs[0].antenna.wires == parameters.wires
-    assert window._custom_family.text() == "Family: Yagi"
-    assert window._custom_generator.text() == "Template: Yagi"
-    assert window._custom_generator_edit.isHidden() is False
+    assert window._project.designs[0].antenna_type == "yagi"
+    assert window._design_stack.currentWidget() is window._yagi_scroll
+    form_parameters = window._yagi_form.parameters()
+    assert form_parameters.frequency_hz == pytest.approx(parameters.frequency_hz)
+    assert len(form_parameters.elements) == len(parameters.elements)
+    assert form_parameters.driven_index == parameters.driven_index
     window._dirty = False
 
 
-def test_new_inverted_v_creates_an_editable_custom_design(
+def test_new_inverted_v_creates_a_first_class_design(
     window: MainWindow,
     qtbot: QtBot,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from antennadesk.domain.antennas.custom import CustomAntennaParameters
-    from antennadesk.domain.antennas.feed import FeedPoint
-    from antennadesk.domain.antennas.geometry import Point3D
-    from antennadesk.domain.antennas.materials import COPPER
-    from antennadesk.domain.antennas.wire import Wire
+    from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 
-    parameters = CustomAntennaParameters(
+    parameters = InvertedVParameters(
         frequency_hz=7_100_000.0,
-        wires=(
-            Wire(
-                id="leg-1",
-                start=Point3D(0.0, 0.0, 12.0),
-                end=Point3D(-8.0, 0.0, 5.0),
-                radius_m=0.001,
-                material=COPPER,
-            ),
-            Wire(
-                id="leg-2",
-                start=Point3D(0.0, 0.0, 12.0),
-                end=Point3D(8.0, 0.0, 5.0),
-                radius_m=0.001,
-                material=COPPER,
-            ),
-        ),
-        feed=FeedPoint("leg-1", 0.0),
-        generator_id="inverted_v",
-        generator_name="Inverted-V",
+        leg_length_m=10.6,
+        apex_height_m=12.0,
+        included_angle_deg=120.0,
     )
 
     class FakeInvertedVDialog:
@@ -848,7 +804,7 @@ def test_new_inverted_v_creates_an_editable_custom_design(
         def exec(self) -> QDialog.DialogCode:
             return QDialog.DialogCode.Accepted
 
-        def result_parameters(self) -> CustomAntennaParameters:
+        def result_parameters(self) -> InvertedVParameters:
             return parameters
 
     monkeypatch.setattr(main_window_module, "InvertedVDialog", FakeInvertedVDialog)
@@ -858,77 +814,10 @@ def test_new_inverted_v_creates_an_editable_custom_design(
 
     assert window._project is not None
     assert window._project.name == "Inv V"
-    assert window._project.designs[0].antenna_type == "custom"
-    assert window._project.designs[0].antenna.wires == parameters.wires
+    assert window._project.designs[0].antenna_type == "inverted_v"
+    assert window._design_stack.currentWidget() is window._inverted_v_scroll
     assert window._view_combo.currentData() == "elevation"
-    assert window._custom_generator_edit.isHidden() is False
-    window._dirty = False
-
-
-def test_main_menu_is_grouped_by_task(window: MainWindow) -> None:
-    import_menu_titles = [action.text() for action in window._import_menu.actions()]
-    export_menu_titles = [action.text() for action in window._export_menu.actions()]
-    design_titles = [action.text() for action in window._design_menu.actions()]
-    simulation_titles = [action.text() for action in window._simulation_menu.actions()]
-
-    assert "Import NEC Deck..." in import_menu_titles
-    assert "Import MMANA File..." in import_menu_titles
-    assert "Export CSV..." in export_menu_titles
-    assert "Export PDF Report..." in export_menu_titles
-    assert "Optimize Dimension..." in design_titles
-    assert "Edit Series Loads..." in design_titles
-    assert "Simulate" in simulation_titles
-    assert "Feed Line..." in simulation_titles
-
-
-def test_new_vertical_creates_an_editable_custom_design(
-    window: MainWindow,
-    qtbot: QtBot,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    from antennadesk.domain.antennas.custom import CustomAntennaParameters
-    from antennadesk.domain.antennas.feed import FeedPoint
-    from antennadesk.domain.antennas.geometry import Point3D
-    from antennadesk.domain.antennas.materials import COPPER
-    from antennadesk.domain.antennas.wire import Wire
-
-    parameters = CustomAntennaParameters(
-        frequency_hz=7_100_000.0,
-        wires=(
-            Wire(
-                id="radiator",
-                start=Point3D(0.0, 0.0, 0.1),
-                end=Point3D(0.0, 0.0, 10.1),
-                radius_m=0.001,
-                material=COPPER,
-            ),
-        ),
-        feed=FeedPoint("radiator", 0.0),
-        generator_id="vertical",
-        generator_name="Vertical",
-    )
-
-    class FakeVerticalDialog:
-        def __init__(self, *args: object, **kwargs: object) -> None:
-            pass
-
-        def exec(self) -> QDialog.DialogCode:
-            return QDialog.DialogCode.Accepted
-
-        def result_parameters(self) -> CustomAntennaParameters:
-            return parameters
-
-    monkeypatch.setattr(main_window_module, "VerticalDialog", FakeVerticalDialog)
-    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Vertical", True))
-
-    window.new_vertical_antenna()
-
-    assert window._project is not None
-    assert window._project.name == "Vertical"
-    assert window._project.designs[0].antenna_type == "custom"
-    assert window._custom_family.text() == "Family: Vertical"
-    assert window._custom_generator.text() == "Template: Vertical"
-    assert window._custom_generator_edit.isHidden() is False
+    assert window._inverted_v_form.parameters() == parameters
     window._dirty = False
 
 
@@ -936,33 +825,13 @@ def test_change_template_replaces_the_current_design(
     window: MainWindow,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from antennadesk.domain.antennas.custom import CustomAntennaParameters
-    from antennadesk.domain.antennas.feed import FeedPoint
-    from antennadesk.domain.antennas.geometry import Point3D
-    from antennadesk.domain.antennas.materials import COPPER
-    from antennadesk.domain.antennas.wire import Wire
+    from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 
-    parameters = CustomAntennaParameters(
+    parameters = InvertedVParameters(
         frequency_hz=7_100_000.0,
-        wires=(
-            Wire(
-                id="leg-1",
-                start=Point3D(0.0, 0.0, 12.0),
-                end=Point3D(-8.0, 0.0, 5.0),
-                radius_m=0.001,
-                material=COPPER,
-            ),
-            Wire(
-                id="leg-2",
-                start=Point3D(0.0, 0.0, 12.0),
-                end=Point3D(8.0, 0.0, 5.0),
-                radius_m=0.001,
-                material=COPPER,
-            ),
-        ),
-        feed=FeedPoint("leg-1", 0.0),
-        generator_id="inverted_v",
-        generator_name="Inverted-V",
+        leg_length_m=10.6,
+        apex_height_m=12.0,
+        included_angle_deg=110.0,
     )
 
     class FakeCatalog:
@@ -982,7 +851,7 @@ def test_change_template_replaces_the_current_design(
         def exec(self) -> QDialog.DialogCode:
             return QDialog.DialogCode.Accepted
 
-        def result_parameters(self) -> CustomAntennaParameters:
+        def result_parameters(self) -> InvertedVParameters:
             return parameters
 
     monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
@@ -996,9 +865,47 @@ def test_change_template_replaces_the_current_design(
     window.change_template()
 
     assert window._project is not None
-    assert window._project.designs[0].antenna_type == "custom"
-    assert window._project.designs[0].antenna.wires == parameters.wires
-    assert window._custom_generator.text() == "Template: Inverted-V"
+    assert window._project.designs[0].antenna_type == "inverted_v"
+    assert window._design_stack.currentWidget() is window._inverted_v_scroll
+    assert window._inverted_v_form.parameters() == parameters
+    window._dirty = False
+
+
+def test_new_vertical_creates_a_first_class_design(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=0.25,
+        radial_count=16,
+        radial_length_m=5.0,
+    )
+
+    class FakeVerticalDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> VerticalParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "VerticalDialog", FakeVerticalDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Vertical", True))
+
+    window.new_vertical_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "Vertical"
+    assert window._project.designs[0].antenna_type == "vertical"
+    assert window._design_stack.currentWidget() is window._vertical_scroll
+    assert window._vertical_form.parameters() == parameters
     window._dirty = False
 
 
@@ -1040,3 +947,19 @@ def test_new_ocfd_creates_a_first_class_design(
     window.apply_design()
     assert window._project.designs[0].parameters.total_length_m == pytest.approx(22.0)
     window._dirty = False
+
+
+def test_main_menu_is_grouped_by_task(window: MainWindow) -> None:
+    import_menu_titles = [action.text() for action in window._import_menu.actions()]
+    export_menu_titles = [action.text() for action in window._export_menu.actions()]
+    design_titles = [action.text() for action in window._design_menu.actions()]
+    simulation_titles = [action.text() for action in window._simulation_menu.actions()]
+
+    assert "Import NEC Deck..." in import_menu_titles
+    assert "Import MMANA File..." in import_menu_titles
+    assert "Export CSV..." in export_menu_titles
+    assert "Export PDF Report..." in export_menu_titles
+    assert "Optimize Dimension..." in design_titles
+    assert "Edit Series Loads..." in design_titles
+    assert "Simulate" in simulation_titles
+    assert "Feed Line..." in simulation_titles

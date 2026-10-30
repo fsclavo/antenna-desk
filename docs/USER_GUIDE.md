@@ -87,14 +87,14 @@ For a wire dipole, folded dipole, or loop, the guided wizard asks for:
 
 After creation, adjust the design panel and press **Apply design** or
 **Simulate**. The design panel separates **Family** from **Template**; generated
-designs show both as metadata and remain editable as custom wires. The Template
-field shows the current template; use **Change Template...** to open the catalog
-and replace the current design with another native or generated template.
+templates now have their own inline editors. The Template field shows the current
+template; use **Change Template...** to open the catalog and replace the current
+design with another template.
 
 ## Create a Yagi
 
-Choose **File → New Antenna... → Yagi** to generate a Yagi as an editable custom-wire
-design. The table contains each element's boom position, total length, and
+Choose **File → New Antenna... → Yagi** to generate a Yagi as a first-class
+template. The table contains each element's boom position, total length, and
 radius. Add or remove elements, edit the values, and select the driven element.
 **Load NBS 5-element preset** fills the NBS TN-688 0.8λ starting geometry
 scaled to the selected frequency.
@@ -104,14 +104,13 @@ gain over a half-wave dipole. A single straight driven element is generated
 instead of the published folded dipole, so the feed impedance is not the
 reference impedance. Once you edit positions or lengths, the result is an
 experimental geometry with no external reference; simulate it and judge it on
-its own modeled performance. The generated design can be refined further with **Edit Custom Wires...**.
-Generated designs also expose **Edit Generator...**, which reopens the
-parameter dialog instead of the raw wire table.
+its own modeled performance. The design panel keeps the element table editable;
+use **Edit Custom Wires...** only when you want raw coordinates.
 
 ## Create an inverted-V
 
-Choose **File → New Antenna... → Inverted-V** to generate a two-leg inverted-V as an
-editable custom-wire design. Set the apex height, leg length, included angle,
+Choose **File → New Antenna... → Inverted-V** to generate a first-class
+two-leg inverted-V. Set the apex height, leg length, included angle,
 azimuth, wire radius, material, and ground. The dialog shows the resulting
 horizontal span and end height. The default ground is finite ground; choose
 **Free space** only if you deliberately want a free-space model. The feed is at
@@ -119,10 +118,10 @@ the apex.
 
 This is an experimental generator: its geometry and frequency scaling are
 tested, but it has no independent numerical reference for gain or impedance.
-Simulate it and judge the modeled performance; use **Edit Generator...** to
-change the apex, leg length, or included angle, or **Edit Custom Wires...** for
-raw coordinates. The elevation view is selected automatically so the included
-angle is visible; Plan remains available.
+Simulate it and judge the modeled performance; the design panel keeps the
+generator fields editable. Use **Edit Custom Wires...** for raw coordinates. The
+elevation view is selected automatically so the included angle is visible; Plan
+remains available.
 
 ## Create an off-center-fed dipole
 
@@ -135,8 +134,8 @@ The generator is experimental.
 
 ## Create a vertical
 
-Choose **File → New Antenna... → Vertical + radials** to generate a vertical
-radiator with an optional radial plane. Set the radiator height, base height,
+Choose **File → New Antenna... → Vertical + radials** to generate a first-class
+vertical radiator with an optional radial plane. Set the radiator height, base height,
 radial count, radial length, first radial angle, wire radius, material, and
 ground. The base height is also the radial-plane height. The default is 0.25 m;
 over finite ground keep at least this height to avoid numerical instability very
@@ -144,9 +143,9 @@ close to the soil.
 
 The generator is experimental: geometry and radial topology are tested, but it
 has no independent numerical performance reference. The feed is at the base of
-the radiator, so the usual delta-gap warning can appear. Use **Edit Generator...**
-to change the height, base, or radials, or **Edit Custom Wires...** for raw
-coordinates.
+the radiator, so the usual delta-gap warning can appear. The design panel keeps
+the height, base, and radial fields editable; use **Edit Custom Wires...** for
+raw coordinates.
 
 ## Read the results
 

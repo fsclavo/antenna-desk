@@ -1013,6 +1013,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Driven element",
         Language.SPANISH: "Elemento alimentado",
     },
+    "yagi.geometry": {
+        Language.ENGLISH: "{count} elements · boom {boom} {unit}",
+        Language.SPANISH: "{count} elementos · boom {boom} {unit}",
+    },
     "yagi.hint": {
         Language.ENGLISH: (
             "Positions and lengths are editable. The generated antenna is an "
