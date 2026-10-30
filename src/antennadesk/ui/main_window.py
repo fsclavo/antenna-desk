@@ -68,6 +68,7 @@ from ..application.use_cases.update_dipole_design import (
 from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.design import AntennaDesignParameters, with_primary_dimension
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
+from ..domain.antennas.endfed import EndFedParameters
 from ..domain.antennas.family import antenna_family
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.feed_line import FeedLine
@@ -98,6 +99,7 @@ from ..simulation.nec2.solver import Nec2cSolver
 from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_CUSTOM,
     CATALOG_TYPE_DELTA_LOOP,
+    CATALOG_TYPE_ENDFED,
     CATALOG_TYPE_FAN_DIPOLE,
     CATALOG_TYPE_FOLDED_DIPOLE,
     CATALOG_TYPE_INVERTED_V,
@@ -113,6 +115,7 @@ from .dialogs.antenna_catalog_dialog import (
 from .dialogs.comparison_dialog import ComparisonDialog
 from .dialogs.construction_dialog import ConstructionDialog
 from .dialogs.custom_antenna_dialog import CustomAntennaDialog
+from .dialogs.endfed_dialog import EndFedDialog
 from .dialogs.fan_dipole_dialog import FanDipoleDialog
 from .dialogs.feed_line_dialog import FeedLineDialog
 from .dialogs.inverted_v_dialog import InvertedVDialog
@@ -128,6 +131,7 @@ from .pattern_resolution import DEFAULT_PATTERN_STEP_DEG, far_field_request
 from .report_pdf import write_report_pdf
 from .units import UnitSystem
 from .widgets.dipole_form import DipoleForm
+from .widgets.endfed_form import EndFedForm
 from .widgets.fan_dipole_form import FanDipoleForm
 from .widgets.geometry_view import GeometryView, GeometryViewMode
 from .widgets.inverted_v_form import InvertedVForm
@@ -351,6 +355,14 @@ class MainWindow(QMainWindow):
         self._fan_dipole_scroll.setMinimumWidth(340)
         self._fan_dipole_scroll.setMaximumWidth(480)
 
+        self._endfed_form = EndFedForm(self._translator, self._unit_system, parent=self)
+        self._endfed_form.changed.connect(self._on_form_changed)
+        self._endfed_scroll = QScrollArea(self)
+        self._endfed_scroll.setWidgetResizable(True)
+        self._endfed_scroll.setWidget(self._endfed_form)
+        self._endfed_scroll.setMinimumWidth(340)
+        self._endfed_scroll.setMaximumWidth(480)
+
         self._custom_panel = QWidget(self)
         custom_layout = QVBoxLayout(self._custom_panel)
         self._custom_title = QLabel(self._custom_panel)
@@ -405,6 +417,7 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._yagi_scroll)
         self._design_stack.addWidget(self._moxon_scroll)
         self._design_stack.addWidget(self._fan_dipole_scroll)
+        self._design_stack.addWidget(self._endfed_scroll)
         self._design_stack.addWidget(self._custom_panel)
         self._change_template_button = QPushButton(self)
         self._change_template_button.clicked.connect(lambda: self.change_template())
@@ -689,6 +702,7 @@ class MainWindow(QMainWindow):
         is_yagi = isinstance(parameters, YagiParameters)
         is_moxon = isinstance(parameters, MoxonParameters)
         is_fan_dipole = isinstance(parameters, FanDipoleParameters)
+        is_endfed = isinstance(parameters, EndFedParameters)
         self._optimize_action.setEnabled(
             idle
             and has_project
@@ -699,6 +713,7 @@ class MainWindow(QMainWindow):
             and not is_yagi
             and not is_moxon
             and not is_fan_dipole
+            and not is_endfed
             and self._solver is not None
         )
         self._loads_action.setEnabled(idle and has_project)
@@ -806,6 +821,9 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, FanDipoleParameters):
             self._design_stack.setCurrentWidget(self._fan_dipole_scroll)
             self._fan_dipole_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, EndFedParameters):
+            self._design_stack.setCurrentWidget(self._endfed_scroll)
+            self._endfed_form.set_parameters(design.parameters)
         else:
             self._design_stack.setCurrentWidget(self._form_scroll)
             self._form.set_parameters(design.parameters, reset_sweep=True)
@@ -1083,6 +1101,34 @@ class MainWindow(QMainWindow):
             self._update_actions()
             self._update_height_control()
             return self._project
+        if isinstance(previous_design.parameters, EndFedParameters):
+            parameters = self._endfed_form.parameters()
+            updated = UpdateDipoleDesign().execute(
+                UpdateDipoleDesignCommand(
+                    project=self._project,
+                    design_id=self._design_id,
+                    parameters=parameters,
+                )
+            )
+            updated = replace(updated, name=project_name)
+            self._project = updated
+            design = updated.design_by_id(self._design_id)
+            if parameters != previous_design.parameters:
+                self._simulation_results.pop(self._design_id, None)
+                self._results.set_result(None)
+            self._loads = design.antenna.loads
+            self._results.set_design(design)
+            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._auto_select_view(design)
+            self._project_name_updating = True
+            self._project_name.setText(project_name)
+            self._project_name_updating = False
+            self._form_dirty = False
+            self._dirty = True
+            self._update_title()
+            self._update_actions()
+            self._update_height_control()
+            return self._project
         if isinstance(previous_design.parameters, CustomAntennaParameters):
             design = previous_design
             if design.antenna.loads != self._loads:
@@ -1184,6 +1230,8 @@ class MainWindow(QMainWindow):
                 spec = self._moxon_simulation_spec(design.parameters)
             elif isinstance(design.parameters, FanDipoleParameters):
                 spec = self._fan_dipole_simulation_spec(design.parameters)
+            elif isinstance(design.parameters, EndFedParameters):
+                spec = self._endfed_simulation_spec(design.parameters)
             else:
                 spec = self._form.simulation_spec()
         except Exception as exc:
@@ -1388,6 +1436,23 @@ class MainWindow(QMainWindow):
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
         )
 
+    def _endfed_simulation_spec(self, parameters: EndFedParameters) -> SimulationSpec:
+        model = parameters.to_antenna(name="End-fed")
+        frequency_hz = parameters.frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                frequency_hz * 0.95,
+                frequency_hz * 1.05,
+                100,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz * 1.05,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
     def _custom_simulation_spec(
         self,
         parameters: CustomAntennaParameters,
@@ -1490,6 +1555,33 @@ class MainWindow(QMainWindow):
             project = CreateDipoleProject().execute(
                 CreateDipoleProjectCommand(
                     project_name=name.strip() or "Yagi",
+                    variant_name="Initial",
+                    parameters=dialog.result_parameters(),
+                )
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+
+    def new_endfed_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        name, accepted = QInputDialog.getText(
+            self,
+            self._translator.t("endfed.title"),
+            self._translator.t("field.project_name"),
+            text="End-fed",
+        )
+        if not accepted:
+            return
+        dialog = EndFedDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            project = CreateDipoleProject().execute(
+                CreateDipoleProjectCommand(
+                    project_name=name.strip() or "End-fed",
                     variant_name="Initial",
                     parameters=dialog.result_parameters(),
                 )
@@ -1909,6 +2001,16 @@ class MainWindow(QMainWindow):
             return (
                 dialog.result_parameters() if dialog.exec() == QDialog.DialogCode.Accepted else None
             )
+        if selected == CATALOG_TYPE_ENDFED:
+            dialog = EndFedDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
         if selected == CATALOG_TYPE_FAN_DIPOLE:
             dialog = FanDipoleDialog(
                 self._translator,
@@ -2022,6 +2124,8 @@ class MainWindow(QMainWindow):
             self.new_inverted_v_antenna()
         elif selected == CATALOG_TYPE_FAN_DIPOLE:
             self.new_fan_dipole_antenna()
+        elif selected == CATALOG_TYPE_ENDFED:
+            self.new_endfed_antenna()
         elif selected == CATALOG_TYPE_OCFD:
             self.new_ocfd_antenna()
         elif selected == CATALOG_TYPE_DELTA_LOOP:

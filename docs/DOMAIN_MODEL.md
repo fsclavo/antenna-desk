@@ -151,6 +151,12 @@ straight wires and a center feed on the selected driven element. The NBS
 TN-688 5-element 0.8λ preset is a starting geometry; edited designs are
 experimental.
 
+### EndFedParameters
+
+A first-class single-wire antenna fed at one end, with separate feed and far-end
+heights, azimuth, radius, material, and ground. It can model horizontal wires or
+slopers. The generator is experimental.
+
 ### FanDipoleParameters
 
 A first-class multi-band fan dipole with one or more `FanElement` pairs, apex

@@ -70,8 +70,9 @@ antennas.
 Use **File → New Antenna...** to open the antenna catalog. Search or filter by
 **Antenna Type** and choose the desired generator. The catalog is grouped by
 antenna family: Dipole, Yagi, Loop, Vertical, and Custom. The Dipole family
-contains the straight dipole, folded dipole, inverted-V, and off-center-fed
-dipole. The Yagi family includes the parametric Yagi and the Moxon rectangle.
+contains the straight dipole, folded dipole, end-fed wire, inverted-V,
+off-center-fed dipole, and fan dipole. The Yagi family includes the parametric
+Yagi and the Moxon rectangle.
 The Loop family includes the generic loop plus delta-loop and quad-loop presets.
 The catalog shows a short description and evidence level for each type.
 
@@ -132,6 +133,13 @@ Simulate it and judge the modeled performance; the design panel keeps the
 generator fields editable. Use **Edit Custom Wires...** for raw coordinates. The
 elevation view is selected automatically so the included angle is visible; Plan
 remains available.
+
+## Create an end-fed wire
+
+Choose **File → New Antenna... → End-fed wire** to generate a single wire fed
+at one end, optionally sloping between feed and far-end heights. Set length,
+feed height, end height, azimuth, radius, material, and ground. End-fed is a
+first-class experimental template with an inline editor.
 
 ## Create a fan dipole
 

@@ -328,3 +328,21 @@ def test_measurement_round_trip() -> None:
     restored = project_from_document(document)
 
     assert restored.measurements == (measurement,)
+
+
+def test_endfed_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.endfed import EndFedParameters
+
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_height_m=10.0,
+        end_height_m=5.0,
+    )
+    original = _project(parameters, "End-fed")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "endfed"

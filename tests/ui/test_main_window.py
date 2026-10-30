@@ -1100,3 +1100,40 @@ def test_import_vna_csv_adds_a_measurement(
     assert window._results._tabs.currentIndex() == 3
     assert window._dirty is True
     window._dirty = False
+
+
+def test_new_endfed_creates_a_first_class_design(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.endfed import EndFedParameters
+
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_height_m=10.0,
+        end_height_m=5.0,
+    )
+
+    class FakeEndFedDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> EndFedParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "EndFedDialog", FakeEndFedDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("End-fed", True))
+
+    window.new_endfed_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "End-fed"
+    assert window._project.designs[0].antenna_type == "endfed"
+    assert window._design_stack.currentWidget() is window._endfed_scroll
+    assert window._endfed_form.parameters() == parameters
+    window._dirty = False

@@ -100,6 +100,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Inverted-V",
         Language.SPANISH: "V invertida",
     },
+    "catalog.endfed": {
+        Language.ENGLISH: "End-fed wire",
+        Language.SPANISH: "Hilo alimentado en el extremo",
+    },
+    "catalog.endfed.description": {
+        Language.ENGLISH: "Single wire fed at one end, optionally sloping.",
+        Language.SPANISH: "Hilo alimentado en un extremo, opcionalmente inclinado.",
+    },
     "catalog.fan_dipole": {
         Language.ENGLISH: "Fan dipole",
         Language.SPANISH: "Dipolo ventilador",
@@ -950,6 +958,45 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "inverted_v.title": {
         Language.ENGLISH: "Inverted-V Generator",
         Language.SPANISH: "Generador de V invertida",
+    },
+    "endfed.title": {
+        Language.ENGLISH: "End-Fed Wire Generator",
+        Language.SPANISH: "Generador de hilo alimentado en el extremo",
+    },
+    "endfed.feed_height": {
+        Language.ENGLISH: "Feed height",
+        Language.SPANISH: "Altura de alimentación",
+    },
+    "endfed.end_height": {
+        Language.ENGLISH: "End height",
+        Language.SPANISH: "Altura del extremo",
+    },
+    "endfed.wire_radius": {
+        Language.ENGLISH: "Wire radius (mm)",
+        Language.SPANISH: "Radio del hilo (mm)",
+    },
+    "endfed.geometry": {
+        Language.ENGLISH: "Feed {feed} {unit} · end {end} {unit}",
+        Language.SPANISH: "Alimentación {feed} {unit} · extremo {end} {unit}",
+    },
+    "endfed.hint": {
+        Language.ENGLISH: (
+            "The wire is fed at one end. The generated antenna is an editable first-class design."
+        ),
+        Language.SPANISH: (
+            "El hilo se alimenta en un extremo. La antena generada es un diseño "
+            "editable de primera clase."
+        ),
+    },
+    "endfed.evidence": {
+        Language.ENGLISH: (
+            "Experimental generator: geometry is tested, but there is no "
+            "independent numerical reference for this configuration."
+        ),
+        Language.SPANISH: (
+            "Generador experimental: se prueba la geometría, pero no hay una "
+            "referencia numérica independiente para esta configuración."
+        ),
     },
     "fan.title": {
         Language.ENGLISH: "Fan Dipole Generator",

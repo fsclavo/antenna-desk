@@ -7,6 +7,7 @@ from __future__ import annotations
 from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
+from ..domain.antennas.endfed import EndFedParameters
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
@@ -125,6 +126,18 @@ def design_summary_rows(
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
             ]
         )
+    if isinstance(parameters, EndFedParameters):
+        rows.extend(
+            [
+                ("Type", "end-fed wire"),
+                ("Length", f"{parameters.length_m:.4f} m"),
+                ("Feed height", f"{parameters.feed_height_m:.4f} m"),
+                ("End height", f"{parameters.end_height_m:.4f} m"),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        return tuple(rows)
     if isinstance(parameters, FanDipoleParameters):
         rows.extend(
             [

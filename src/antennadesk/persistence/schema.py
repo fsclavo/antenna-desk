@@ -19,6 +19,7 @@ from ..domain.antennas.dipole import (
     DipoleOrientation,
     DipoleParameters,
 )
+from ..domain.antennas.endfed import ANTENNA_TYPE_ENDFED, EndFedParameters
 from ..domain.antennas.fan_dipole import (
     ANTENNA_TYPE_FAN_DIPOLE,
     FanDipoleParameters,
@@ -202,6 +203,17 @@ class VerticalParametersPayload(StrictModel):
     radial_count: int = Field(default=0, ge=0, le=128)
     radial_length_m: float = Field(default=0.0, ge=0.0)
     radial_angle_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class EndFedParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    length_m: float = Field(gt=0.0)
+    feed_height_m: float = Field(default=10.0, ge=0.0)
+    end_height_m: float = Field(default=10.0, ge=0.0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
@@ -421,6 +433,7 @@ ParameterPayload = (
     | YagiParametersPayload
     | MoxonParametersPayload
     | FanDipoleParametersPayload
+    | EndFedParametersPayload
     | CustomParametersPayload
 )
 
@@ -442,6 +455,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_MOXON
     if isinstance(value, FanDipoleParametersPayload):
         return ANTENNA_TYPE_FAN_DIPOLE
+    if isinstance(value, EndFedParametersPayload):
+        return ANTENNA_TYPE_ENDFED
     if isinstance(value, CustomParametersPayload):
         return ANTENNA_TYPE_CUSTOM
     return ANTENNA_TYPE_LOOP
@@ -466,6 +481,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return MoxonParametersPayload
     if antenna_type == ANTENNA_TYPE_FAN_DIPOLE:
         return FanDipoleParametersPayload
+    if antenna_type == ANTENNA_TYPE_ENDFED:
+        return EndFedParametersPayload
     if antenna_type == ANTENNA_TYPE_CUSTOM:
         return CustomParametersPayload
     return None
@@ -669,6 +686,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _moxon_parameters_from_domain(value)
     if isinstance(value, FanDipoleParameters):
         return _fan_dipole_parameters_from_domain(value)
+    if isinstance(value, EndFedParameters):
+        return _endfed_parameters_from_domain(value)
     if isinstance(value, CustomAntennaParameters):
         return _custom_parameters_from_domain(value)
     raise TypeError(f"unsupported antenna parameters: {type(value)!r}")
@@ -712,6 +731,19 @@ def _vertical_parameters_from_domain(
         radial_count=value.radial_count,
         radial_length_m=value.radial_length_m,
         radial_angle_deg=value.radial_angle_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _endfed_parameters_from_domain(value: EndFedParameters) -> EndFedParametersPayload:
+    return EndFedParametersPayload(
+        frequency_hz=value.frequency_hz,
+        length_m=value.length_m,
+        feed_height_m=value.feed_height_m,
+        end_height_m=value.end_height_m,
+        azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
@@ -1143,6 +1175,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, FanDipoleParametersPayload):
             raise ValueError("fan dipole parameters have the wrong shape")
         return _fan_dipole_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_ENDFED:
+        if not isinstance(value.parameters, EndFedParametersPayload):
+            raise ValueError("end-fed parameters have the wrong shape")
+        return _endfed_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_CUSTOM:
         if not isinstance(value.parameters, CustomParametersPayload):
             raise ValueError("custom parameters have the wrong shape")
@@ -1186,6 +1222,19 @@ def _vertical_parameters_to_domain(value: VerticalParametersPayload) -> Vertical
         radial_count=value.radial_count,
         radial_length_m=value.radial_length_m,
         radial_angle_deg=value.radial_angle_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _endfed_parameters_to_domain(value: EndFedParametersPayload) -> EndFedParameters:
+    return EndFedParameters(
+        frequency_hz=value.frequency_hz,
+        length_m=value.length_m,
+        feed_height_m=value.feed_height_m,
+        end_height_m=value.end_height_m,
+        azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),

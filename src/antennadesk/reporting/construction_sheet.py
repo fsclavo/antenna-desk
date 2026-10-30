@@ -9,6 +9,7 @@ import math
 from pathlib import Path
 
 from ..domain.antennas.dipole import DipoleParameters
+from ..domain.antennas.endfed import EndFedParameters
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
@@ -131,6 +132,15 @@ and {other_leg_m:.4f} m from the end.</p>"""
 and two end connectors of {parameters.spacing_m:.4f} m. Join them at both
 ends and feed the center of one element. The total conductor length is
 {parameters.total_conductor_length_m:.4f} m.</p>"""
+    elif isinstance(parameters, EndFedParameters):
+        feed_rows = f"""
+<tr><th>Wire length</th><td>{parameters.length_m:.4f} m</td></tr>
+<tr><th>Feed height</th><td>{parameters.feed_height_m:.4f} m</td></tr>
+<tr><th>End height</th><td>{parameters.end_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Cut one wire to {parameters.length_m:.4f} m and feed it at one end.
+The feed is at {parameters.feed_height_m:.4f} m and the far end at
+{parameters.end_height_m:.4f} m.</p>"""
     elif isinstance(parameters, FanDipoleParameters):
         lengths = ", ".join(f"{element.length_m:.4f} m" for element in parameters.elements)
         feed_rows = f"""

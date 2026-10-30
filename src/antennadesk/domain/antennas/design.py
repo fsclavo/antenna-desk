@@ -8,6 +8,7 @@ from dataclasses import replace
 
 from .custom import ANTENNA_TYPE_CUSTOM, CustomAntennaParameters
 from .dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
+from .endfed import ANTENNA_TYPE_ENDFED, EndFedParameters
 from .fan_dipole import ANTENNA_TYPE_FAN_DIPOLE, FanDipoleParameters
 from .folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE, FoldedDipoleParameters
 from .inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
@@ -27,6 +28,7 @@ AntennaDesignParameters = (
     | YagiParameters
     | MoxonParameters
     | FanDipoleParameters
+    | EndFedParameters
     | CustomAntennaParameters
 )
 
@@ -50,6 +52,8 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_MOXON
     if isinstance(parameters, FanDipoleParameters):
         return ANTENNA_TYPE_FAN_DIPOLE
+    if isinstance(parameters, EndFedParameters):
+        return ANTENNA_TYPE_ENDFED
     if isinstance(parameters, CustomAntennaParameters):
         return ANTENNA_TYPE_CUSTOM
     raise TypeError(f"unsupported antenna parameters: {type(parameters)!r}")

@@ -9,6 +9,7 @@ from enum import StrEnum
 from .custom import CustomAntennaParameters
 from .design import AntennaDesignParameters
 from .dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
+from .endfed import EndFedParameters
 from .fan_dipole import FanDipoleParameters
 from .folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE, FoldedDipoleParameters
 from .inverted_v import InvertedVParameters
@@ -30,6 +31,7 @@ class AntennaFamily(StrEnum):
 _GENERATOR_FAMILIES: dict[str, AntennaFamily] = {
     "inverted_v": AntennaFamily.DIPOLE,
     "fan_dipole": AntennaFamily.DIPOLE,
+    "endfed": AntennaFamily.DIPOLE,
     "ocfd": AntennaFamily.DIPOLE,
     "yagi": AntennaFamily.YAGI,
     "moxon": AntennaFamily.YAGI,
@@ -53,6 +55,8 @@ def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
     if isinstance(parameters, MoxonParameters):
         return AntennaFamily.YAGI
     if isinstance(parameters, FanDipoleParameters):
+        return AntennaFamily.DIPOLE
+    if isinstance(parameters, EndFedParameters):
         return AntennaFamily.DIPOLE
     if isinstance(parameters, CustomAntennaParameters):
         if parameters.generator_id is not None:
@@ -80,6 +84,8 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return "moxon"
     if isinstance(parameters, FanDipoleParameters):
         return "fan_dipole"
+    if isinstance(parameters, EndFedParameters):
+        return "endfed"
     if isinstance(parameters, CustomAntennaParameters):
         return parameters.generator_id or "custom"
     raise TypeError(f"unsupported antenna parameters: {type(parameters)!r}")
