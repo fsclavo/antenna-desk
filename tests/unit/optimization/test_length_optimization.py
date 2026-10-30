@@ -232,3 +232,25 @@ def test_bandwidth_without_a_pass_band_is_no_bracket() -> None:
     result = optimize_length(evaluate, spec)
 
     assert result.status is LengthOptimizationStatus.NO_BRACKET
+
+
+def test_maximizes_gain() -> None:
+    def evaluate(length_m: float) -> LengthEvaluation:
+        return LengthEvaluation(
+            length_m=length_m,
+            impedance_ohm=complex(50.0, 0.0),
+            swr=1.2,
+            max_gain_db=2.14 - abs(length_m - 20.3),
+        )
+
+    spec = LengthOptimizationSpec(
+        min_length_m=18.0,
+        max_length_m=22.0,
+        objective=OptimizationObjective.MAX_GAIN,
+        max_evaluations=41,
+    )
+    result = optimize_length(evaluate, spec)
+
+    assert result.status is LengthOptimizationStatus.CONVERGED
+    assert result.best_length_m == pytest.approx(20.3, abs=0.1)
+    assert result.best_gain_db == pytest.approx(2.14, abs=0.1)

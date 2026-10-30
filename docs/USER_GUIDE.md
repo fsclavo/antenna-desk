@@ -195,7 +195,7 @@ canonical meters and hertz.
 - Simulation reports and construction sheets have native PDF export; HTML
   versions remain available for browser printing.
 - Optimization is one-dimensional adjustment of the primary dimension against
-  a single reactance, SWR, or bandwidth objective; gain, efficiency, and
+  a single reactance, SWR, bandwidth, or gain objective; efficiency and
   multi-objective optimization are not implemented yet.
 - Relative permeability is not emitted to NEC; conductor conductivity is.
 - Known diagnostic codes are localized; the raw solver detail remains in

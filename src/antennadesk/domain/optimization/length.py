@@ -17,6 +17,7 @@ class OptimizationObjective(StrEnum):
     REACTANCE = "reactance"
     MIN_SWR = "min_swr"
     MAX_BANDWIDTH = "max_bandwidth"
+    MAX_GAIN = "max_gain"
 
 
 class LengthOptimizationStatus(StrEnum):
@@ -66,6 +67,7 @@ class LengthEvaluation:
     cancelled: bool = False
     index: int = 0
     bandwidth_hz: float | None = None
+    max_gain_db: float | None = None
 
     @property
     def reactance_ohm(self) -> float | None:
@@ -80,6 +82,7 @@ class LengthSensitivityPoint:
     swr: float | None = None
     error: str | None = None
     bandwidth_hz: float | None = None
+    max_gain_db: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -90,6 +93,7 @@ class LengthOptimizationResult:
     best_swr: float | None
     evaluations: tuple[LengthEvaluation, ...]
     best_bandwidth_hz: float | None = None
+    best_gain_db: float | None = None
     sensitivity: tuple[LengthSensitivityPoint, ...] = ()
     message: str = ""
 
@@ -123,6 +127,8 @@ def optimize_length(
         return optimize_swr(evaluate, spec, cancel_check=cancel_check)
     if spec.objective is OptimizationObjective.MAX_BANDWIDTH:
         return optimize_bandwidth(evaluate, spec, cancel_check=cancel_check)
+    if spec.objective is OptimizationObjective.MAX_GAIN:
+        return optimize_gain(evaluate, spec, cancel_check=cancel_check)
     evaluations: list[LengthEvaluation] = []
 
     def cancelled() -> bool:
@@ -143,6 +149,7 @@ def optimize_length(
             best_swr=None if best is None else best.swr,
             evaluations=tuple(evaluations),
             best_bandwidth_hz=None if best is None else best.bandwidth_hz,
+            best_gain_db=None if best is None else best.max_gain_db,
             message=message,
         )
 
@@ -284,6 +291,7 @@ def optimize_swr(
             best_swr=None if best is None else best.swr,
             evaluations=tuple(evaluations),
             best_bandwidth_hz=None if best is None else best.bandwidth_hz,
+            best_gain_db=None if best is None else best.max_gain_db,
             message=message,
         )
 
@@ -448,6 +456,7 @@ def optimize_bandwidth(
             best_swr=None if best is None else best.swr,
             evaluations=tuple(evaluations),
             best_bandwidth_hz=None if best is None else best.bandwidth_hz,
+            best_gain_db=None if best is None else best.max_gain_db,
             message=message,
         )
 
@@ -477,4 +486,69 @@ def optimize_bandwidth(
             LengthOptimizationStatus.NO_BRACKET,
             "SWR limit is not met anywhere in the sweep",
         )
+    return finish(LengthOptimizationStatus.CONVERGED, "grid search completed")
+
+
+def _best_gain_evaluation(evaluations: list[LengthEvaluation]) -> LengthEvaluation | None:
+    valid = [
+        evaluation
+        for evaluation in evaluations
+        if evaluation.impedance_ohm is not None
+        and evaluation.max_gain_db is not None
+        and math.isfinite(evaluation.max_gain_db)
+    ]
+    if not valid:
+        return None
+    return max(
+        valid, key=lambda evaluation: (evaluation.max_gain_db or -math.inf, -evaluation.length_m)
+    )
+
+
+def optimize_gain(
+    evaluate: LengthEvaluator,
+    spec: LengthOptimizationSpec,
+    *,
+    cancel_check: CancelCheck | None = None,
+) -> LengthOptimizationResult:
+    evaluations: list[LengthEvaluation] = []
+
+    def cancelled() -> bool:
+        return bool(cancel_check is not None and cancel_check())
+
+    def probe(length: float) -> LengthEvaluation:
+        raw = evaluate(length)
+        evaluation = replace(raw, index=len(evaluations) + 1)
+        evaluations.append(evaluation)
+        return evaluation
+
+    def finish(status: LengthOptimizationStatus, message: str = "") -> LengthOptimizationResult:
+        best = _best_gain_evaluation(evaluations)
+        return LengthOptimizationResult(
+            status=status,
+            best_length_m=None if best is None else best.length_m,
+            best_impedance_ohm=None if best is None else best.impedance_ohm,
+            best_swr=None if best is None else best.swr,
+            evaluations=tuple(evaluations),
+            best_bandwidth_hz=None if best is None else best.bandwidth_hz,
+            best_gain_db=None if best is None else best.max_gain_db,
+            message=message,
+        )
+
+    count = spec.max_evaluations
+    for index in range(count):
+        if cancelled():
+            return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
+        ratio = index / (count - 1)
+        length = spec.min_length_m + (spec.max_length_m - spec.min_length_m) * ratio
+        evaluation = probe(length)
+        if evaluation.cancelled:
+            return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
+        if evaluation.impedance_ohm is None or evaluation.max_gain_db is None:
+            return finish(
+                LengthOptimizationStatus.ERROR,
+                evaluation.error or "solver evaluation failed",
+            )
+    best = _best_gain_evaluation(evaluations)
+    if best is None:
+        return finish(LengthOptimizationStatus.ERROR, "no valid gain evaluation")
     return finish(LengthOptimizationStatus.CONVERGED, "grid search completed")

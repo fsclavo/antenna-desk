@@ -52,6 +52,13 @@ class OptimizeDipoleLength:
                 command.base_spec,
                 far_field=FarFieldRequest(enabled=False),
             )
+        elif optimization_spec.objective is OptimizationObjective.MAX_GAIN:
+            if not command.base_spec.far_field.enabled:
+                raise ValueError("gain optimization requires a far-field request")
+            evaluation_spec = replace(
+                command.base_spec,
+                frequency_plan=FrequencyPlan.single(command.parameters.frequency_hz),
+            )
         else:
             evaluation_spec = replace(
                 command.base_spec,
@@ -81,6 +88,7 @@ class OptimizeDipoleLength:
                     key=lambda item: abs(item.frequency_hz - command.parameters.frequency_hz),
                 )
                 bandwidth_hz = None
+                max_gain_db = None
                 if optimization_spec.objective is OptimizationObjective.MAX_BANDWIDTH:
                     bandwidth_hz = measure_bandwidth_hz(
                         [item.frequency_hz for item in result.frequencies],
@@ -88,11 +96,19 @@ class OptimizeDipoleLength:
                         center_hz=command.parameters.frequency_hz,
                         swr_limit=optimization_spec.swr_limit,
                     )
+                if optimization_spec.objective is OptimizationObjective.MAX_GAIN:
+                    gains = [
+                        point.gain_total_db
+                        for point in frequency.far_field
+                        if point.gain_total_db is not None
+                    ]
+                    max_gain_db = max(gains) if gains else None
                 return LengthEvaluation(
                     length_m=length_m,
                     impedance_ohm=frequency.impedance_ohm,
                     swr=frequency.swr,
                     bandwidth_hz=bandwidth_hz,
+                    max_gain_db=max_gain_db,
                 )
             message = next(
                 (
@@ -139,6 +155,7 @@ class OptimizeDipoleLength:
                         impedance_ohm=evaluation.impedance_ohm,
                         swr=evaluation.swr,
                         bandwidth_hz=evaluation.bandwidth_hz,
+                        max_gain_db=evaluation.max_gain_db,
                         error=evaluation.error,
                     )
                 )

@@ -160,10 +160,11 @@ Phase 6 adds tests for:
   dialog objective switching.
 - Maximum-bandwidth objective: contiguous SWR bandwidth, grid resolution,
   no-pass-band behavior, and application use-case integration.
+- Maximum-gain objective: grid search, optimum selection, and dialog integration.
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 367 tests with the solver enabled. The twelve solver
+The suite currently has 369 tests with the solver enabled. The twelve solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.
@@ -223,7 +224,7 @@ and require `NEC2C`.
 - Reports and construction sheets have native PDF export; HTML versions are
   also available.
 - Optimization is limited to a single primary dimension and a single reactance,
-  SWR, or bandwidth objective; gain, efficiency, and multi-objective
+  SWR, bandwidth, or gain objective; efficiency and multi-objective
   optimization are not implemented yet.
 - PySide6 is pinned below 6.10 because 6.12 triggered a shutdown refcount
   crash with pyqtgraph in the test environment.

@@ -747,6 +747,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Maximum SWR bandwidth",
         Language.SPANISH: "Máximo ancho de banda de SWR",
     },
+    "optimize.max_gain_objective": {
+        Language.ENGLISH: "Maximum power gain",
+        Language.SPANISH: "Ganancia máxima de potencia",
+    },
     "optimize.target_reactance": {
         Language.ENGLISH: "Target reactance (Ω)",
         Language.SPANISH: "Reactancia objetivo (Ω)",
@@ -771,13 +775,25 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Bandwidth (MHz)",
         Language.SPANISH: "Ancho de banda (MHz)",
     },
+    "optimize.gain": {
+        Language.ENGLISH: "Max gain (dBi)",
+        Language.SPANISH: "Ganancia máx. (dBi)",
+    },
     "optimize.bandwidth_result": {
         Language.ENGLISH: "Bandwidth {value} MHz",
         Language.SPANISH: "Ancho de banda {value} MHz",
     },
+    "optimize.gain_result": {
+        Language.ENGLISH: "Max gain {value} dBi",
+        Language.SPANISH: "Ganancia máxima {value} dBi",
+    },
     "optimize.bandwidth_needs_sweep": {
         Language.ENGLISH: "Bandwidth optimization requires a frequency sweep.",
         Language.SPANISH: "La optimización por ancho de banda requiere un barrido de frecuencia.",
+    },
+    "optimize.gain_needs_far_field": {
+        Language.ENGLISH: "Gain optimization requires the far-field pattern.",
+        Language.SPANISH: "La optimización por ganancia requiere el patrón de campo lejano.",
     },
     "optimize.run": {
         Language.ENGLISH: "Run optimization",
