@@ -131,6 +131,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Removed redundant New Antenna, Open Project, and Save toolbar buttons; the
+  actions remain available in the File menu and by keyboard shortcut.
 - Length optimization is generalized to the primary dimension: wire/folded
   element length or loop circumference. `EditDipoleLength` remains limited to
   wire dipoles.
