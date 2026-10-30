@@ -13,6 +13,7 @@ from .endfed import EndFedParameters
 from .fan_dipole import FanDipoleParameters
 from .folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE, FoldedDipoleParameters
 from .inverted_v import InvertedVParameters
+from .j_pole import JPoleParameters
 from .loop import ANTENNA_TYPE_LOOP, LoopParameters
 from .moxon import MoxonParameters
 from .ocfd import OCFDParameters
@@ -36,6 +37,8 @@ _GENERATOR_FAMILIES: dict[str, AntennaFamily] = {
     "yagi": AntennaFamily.YAGI,
     "moxon": AntennaFamily.YAGI,
     "vertical": AntennaFamily.VERTICAL,
+    "j_pole": AntennaFamily.VERTICAL,
+    "slim_jim": AntennaFamily.VERTICAL,
 }
 
 
@@ -58,6 +61,8 @@ def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
         return AntennaFamily.DIPOLE
     if isinstance(parameters, EndFedParameters):
         return AntennaFamily.DIPOLE
+    if isinstance(parameters, JPoleParameters):
+        return AntennaFamily.VERTICAL
     if isinstance(parameters, CustomAntennaParameters):
         if parameters.generator_id is not None:
             return _GENERATOR_FAMILIES.get(parameters.generator_id, AntennaFamily.CUSTOM)
@@ -86,6 +91,8 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return "fan_dipole"
     if isinstance(parameters, EndFedParameters):
         return "endfed"
+    if isinstance(parameters, JPoleParameters):
+        return "j_pole"
     if isinstance(parameters, CustomAntennaParameters):
         return parameters.generator_id or "custom"
     raise TypeError(f"unsupported antenna parameters: {type(parameters)!r}")

@@ -134,6 +134,14 @@ generator fields editable. Use **Edit Custom Wires...** for raw coordinates. The
 elevation view is selected automatically so the included angle is visible; Plan
 remains available.
 
+## Create a J Pole or Slim Jim
+
+Choose **File → New Antenna... → J Pole** or **Slim Jim** to generate a vertical
+radiator with a parallel matching stub. Set radiator height, stub length,
+spacing, feed offset, base height, radius, material, and ground. Slim Jim adds
+the top connector and is also available by enabling **Folded** in the J Pole
+editor. Both are first-class experimental templates.
+
 ## Create an end-fed wire
 
 Choose **File → New Antenna... → End-fed wire** to generate a single wire fed

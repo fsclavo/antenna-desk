@@ -184,6 +184,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   catalog, persistence, and reporting support.
 - Added an experimental first-class end-fed wire generator with optional sloping
   geometry, catalog, persistence, and reporting support.
+- Added experimental first-class J Pole and Slim Jim generators with inline
+  editors, catalog, persistence, and reporting support.
 - Placed the impedance and SWR charts side by side and reduced the default
   geometry pane height to give results more room.
 - Moved Change Template to a fixed button above the design panel so it is always

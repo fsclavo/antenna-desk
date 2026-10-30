@@ -13,6 +13,7 @@ from ..domain.antennas.endfed import EndFedParameters
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
+from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
@@ -132,6 +133,17 @@ and {other_leg_m:.4f} m from the end.</p>"""
 and two end connectors of {parameters.spacing_m:.4f} m. Join them at both
 ends and feed the center of one element. The total conductor length is
 {parameters.total_conductor_length_m:.4f} m.</p>"""
+    elif isinstance(parameters, JPoleParameters):
+        feed_rows = f"""
+<tr><th>Type</th><td>{parameters.template_name}</td></tr>
+<tr><th>Radiator height</th><td>{parameters.radiator_height_m:.4f} m</td></tr>
+<tr><th>Stub length</th><td>{parameters.stub_length_m:.4f} m</td></tr>
+<tr><th>Stub spacing</th><td>{parameters.spacing_m:.4f} m</td></tr>
+<tr><th>Feed offset</th><td>{parameters.feed_offset_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Build a {parameters.template_name} with a
+{parameters.radiator_height_m:.4f} m radiator and a {parameters.stub_length_m:.4f} m
+stub spaced {parameters.spacing_m:.4f} m.</p>"""
     elif isinstance(parameters, EndFedParameters):
         feed_rows = f"""
 <tr><th>Wire length</th><td>{parameters.length_m:.4f} m</td></tr>

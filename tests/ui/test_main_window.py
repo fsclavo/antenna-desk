@@ -1137,3 +1137,41 @@ def test_new_endfed_creates_a_first_class_design(
     assert window._design_stack.currentWidget() is window._endfed_scroll
     assert window._endfed_form.parameters() == parameters
     window._dirty = False
+
+
+def test_new_j_pole_creates_a_first_class_design(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.j_pole import JPoleParameters
+
+    parameters = JPoleParameters(
+        frequency_hz=145_000_000.0,
+        radiator_height_m=1.0,
+        stub_length_m=0.5,
+        spacing_m=0.05,
+        feed_offset_m=0.1,
+    )
+
+    class FakeJPoleDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> JPoleParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "JPoleDialog", FakeJPoleDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("J Pole", True))
+
+    window.new_j_pole_antenna(folded=False)
+
+    assert window._project is not None
+    assert window._project.name == "J Pole"
+    assert window._project.designs[0].antenna_type == "j_pole"
+    assert window._design_stack.currentWidget() is window._j_pole_scroll
+    assert window._j_pole_form.parameters() == parameters
+    window._dirty = False

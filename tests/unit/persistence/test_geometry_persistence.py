@@ -346,3 +346,23 @@ def test_endfed_parameters_round_trip() -> None:
 
     assert restored.designs[0].parameters == parameters
     assert restored.designs[0].antenna_type == "endfed"
+
+
+def test_j_pole_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.j_pole import JPoleParameters
+
+    parameters = JPoleParameters(
+        frequency_hz=145_000_000.0,
+        radiator_height_m=1.0,
+        stub_length_m=0.5,
+        spacing_m=0.05,
+        feed_offset_m=0.1,
+        folded=True,
+    )
+    original = _project(parameters, "Slim Jim")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "j_pole"

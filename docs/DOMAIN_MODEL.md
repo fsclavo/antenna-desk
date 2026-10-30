@@ -151,6 +151,13 @@ straight wires and a center feed on the selected driven element. The NBS
 TN-688 5-element 0.8λ preset is a starting geometry; edited designs are
 experimental.
 
+### JPoleParameters
+
+A first-class J Pole/Slim Jim with radiator height, stub length, spacing, feed
+offset, base height, folded flag, radius, material, and ground. `to_antenna()`
+creates the radiator, stub, and base connector; `folded=True` adds the top
+connector for Slim Jim. The generator is experimental.
+
 ### EndFedParameters
 
 A first-class single-wire antenna fed at one end, with separate feed and far-end

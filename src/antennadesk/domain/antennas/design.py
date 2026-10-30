@@ -12,6 +12,7 @@ from .endfed import ANTENNA_TYPE_ENDFED, EndFedParameters
 from .fan_dipole import ANTENNA_TYPE_FAN_DIPOLE, FanDipoleParameters
 from .folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE, FoldedDipoleParameters
 from .inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
+from .j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
 from .loop import ANTENNA_TYPE_LOOP, LoopParameters
 from .moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from .ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
@@ -29,6 +30,7 @@ AntennaDesignParameters = (
     | MoxonParameters
     | FanDipoleParameters
     | EndFedParameters
+    | JPoleParameters
     | CustomAntennaParameters
 )
 
@@ -54,6 +56,8 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_FAN_DIPOLE
     if isinstance(parameters, EndFedParameters):
         return ANTENNA_TYPE_ENDFED
+    if isinstance(parameters, JPoleParameters):
+        return ANTENNA_TYPE_J_POLE
     if isinstance(parameters, CustomAntennaParameters):
         return ANTENNA_TYPE_CUSTOM
     raise TypeError(f"unsupported antenna parameters: {type(parameters)!r}")

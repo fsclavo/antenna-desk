@@ -11,6 +11,7 @@ from ..domain.antennas.endfed import EndFedParameters
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
+from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.load import LumpedLoad, ParallelLoad
 from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.moxon import MoxonParameters
@@ -126,6 +127,20 @@ def design_summary_rows(
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
             ]
         )
+    if isinstance(parameters, JPoleParameters):
+        rows.extend(
+            [
+                ("Type", parameters.template_name),
+                ("Radiator height", f"{parameters.radiator_height_m:.4f} m"),
+                ("Stub length", f"{parameters.stub_length_m:.4f} m"),
+                ("Stub spacing", f"{parameters.spacing_m:.4f} m"),
+                ("Feed offset", f"{parameters.feed_offset_m:.4f} m"),
+                ("Base height", f"{parameters.base_height_m:.4f} m"),
+                ("Folded", "yes" if parameters.folded else "no"),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        return tuple(rows)
     if isinstance(parameters, EndFedParameters):
         rows.extend(
             [

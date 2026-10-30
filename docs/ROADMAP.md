@@ -56,7 +56,7 @@ Completed:
 In progress:
 
 - M3 catalog expansion: delta/quad loops, Moxon, OCFD, vertical with radials,
-  fan dipole, and end-fed wire are available.
+  fan dipole, end-fed wire, J Pole, and Slim Jim are available.
 - M4 measurement support: VNA CSV import, measurement conditions/reference
   plane, project measurements, and measured/simulated SWR comparison.
 
@@ -109,6 +109,7 @@ Deferred:
 | P1 | OCFD generator | B/C | done |
 | P1 | Fan dipole generator | B/C | done |
 | P1 | End-fed wire generator | C | done |
+| P1 | J Pole / Slim Jim generator | C | done |
 | P1 | Vertical with radial screen | B/C | done |
 | P2 | VNA CSV and measurement records | A | in progress |
 | P2 | Multi-element optimization | n/a | pending |

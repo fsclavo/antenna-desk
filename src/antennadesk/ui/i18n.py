@@ -100,6 +100,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Inverted-V",
         Language.SPANISH: "V invertida",
     },
+    "catalog.j_pole": {
+        Language.ENGLISH: "J Pole",
+        Language.SPANISH: "J Pole",
+    },
+    "catalog.j_pole.description": {
+        Language.ENGLISH: "Vertical radiator with a parallel matching stub.",
+        Language.SPANISH: "Radiador vertical con stub de adaptación paralelo.",
+    },
+    "catalog.slim_jim": {
+        Language.ENGLISH: "Slim Jim",
+        Language.SPANISH: "Slim Jim",
+    },
+    "catalog.slim_jim.description": {
+        Language.ENGLISH: "Folded J-pole with a top connector.",
+        Language.SPANISH: "J Pole plegada con conector superior.",
+    },
     "catalog.endfed": {
         Language.ENGLISH: "End-fed wire",
         Language.SPANISH: "Hilo alimentado en el extremo",
@@ -958,6 +974,62 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "inverted_v.title": {
         Language.ENGLISH: "Inverted-V Generator",
         Language.SPANISH: "Generador de V invertida",
+    },
+    "j_pole.title": {
+        Language.ENGLISH: "J-Pole / Slim-Jim Generator",
+        Language.SPANISH: "Generador J Pole / Slim Jim",
+    },
+    "j_pole.radiator_height": {
+        Language.ENGLISH: "Radiator height",
+        Language.SPANISH: "Altura del radiador",
+    },
+    "j_pole.stub_length": {
+        Language.ENGLISH: "Stub length",
+        Language.SPANISH: "Longitud del stub",
+    },
+    "j_pole.spacing": {
+        Language.ENGLISH: "Stub spacing",
+        Language.SPANISH: "Separación del stub",
+    },
+    "j_pole.feed_offset": {
+        Language.ENGLISH: "Feed offset from base",
+        Language.SPANISH: "Offset de alimentación desde la base",
+    },
+    "j_pole.base_height": {
+        Language.ENGLISH: "Base height",
+        Language.SPANISH: "Altura de la base",
+    },
+    "j_pole.folded": {
+        Language.ENGLISH: "Folded (Slim Jim)",
+        Language.SPANISH: "Plegada (Slim Jim)",
+    },
+    "j_pole.wire_radius": {
+        Language.ENGLISH: "Wire radius (mm)",
+        Language.SPANISH: "Radio del hilo (mm)",
+    },
+    "j_pole.geometry": {
+        Language.ENGLISH: "{template} · height {height} {unit}",
+        Language.SPANISH: "{template} · altura {height} {unit}",
+    },
+    "j_pole.hint": {
+        Language.ENGLISH: (
+            "The J Pole has a vertical radiator and a parallel stub. Enable "
+            "Folded for a Slim-Jim geometry."
+        ),
+        Language.SPANISH: (
+            "La J Pole tiene un radiador vertical y un stub paralelo. Activá "
+            "Plegada para una geometría Slim Jim."
+        ),
+    },
+    "j_pole.evidence": {
+        Language.ENGLISH: (
+            "Experimental generator: geometry is tested, but there is no "
+            "independent numerical reference for this configuration."
+        ),
+        Language.SPANISH: (
+            "Generador experimental: se prueba la geometría, pero no hay una "
+            "referencia numérica independiente para esta configuración."
+        ),
     },
     "endfed.title": {
         Language.ENGLISH: "End-Fed Wire Generator",

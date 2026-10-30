@@ -33,6 +33,7 @@ from ..domain.antennas.folded_dipole import (
 )
 from ..domain.antennas.geometry import Point3D
 from ..domain.antennas.inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
+from ..domain.antennas.j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
 from ..domain.antennas.load import LoadKind, LumpedLoad, ParallelLoad, SeriesLoad
 from ..domain.antennas.loop import (
     ANTENNA_TYPE_LOOP,
@@ -180,6 +181,19 @@ class OCFDParametersPayload(StrictModel):
     feed_ratio: float = Field(default=1.0 / 3.0, gt=0.0, lt=1.0)
     height_m: float = Field(default=10.0, ge=0.0)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class JPoleParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    radiator_height_m: float = Field(gt=0.0)
+    stub_length_m: float = Field(gt=0.0)
+    spacing_m: float = Field(gt=0.0)
+    feed_offset_m: float = Field(default=0.1, ge=0.0)
+    base_height_m: float = Field(default=0.0, ge=0.0)
+    folded: bool = False
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
@@ -434,6 +448,7 @@ ParameterPayload = (
     | MoxonParametersPayload
     | FanDipoleParametersPayload
     | EndFedParametersPayload
+    | JPoleParametersPayload
     | CustomParametersPayload
 )
 
@@ -457,6 +472,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_FAN_DIPOLE
     if isinstance(value, EndFedParametersPayload):
         return ANTENNA_TYPE_ENDFED
+    if isinstance(value, JPoleParametersPayload):
+        return ANTENNA_TYPE_J_POLE
     if isinstance(value, CustomParametersPayload):
         return ANTENNA_TYPE_CUSTOM
     return ANTENNA_TYPE_LOOP
@@ -483,6 +500,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return FanDipoleParametersPayload
     if antenna_type == ANTENNA_TYPE_ENDFED:
         return EndFedParametersPayload
+    if antenna_type == ANTENNA_TYPE_J_POLE:
+        return JPoleParametersPayload
     if antenna_type == ANTENNA_TYPE_CUSTOM:
         return CustomParametersPayload
     return None
@@ -688,6 +707,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _fan_dipole_parameters_from_domain(value)
     if isinstance(value, EndFedParameters):
         return _endfed_parameters_from_domain(value)
+    if isinstance(value, JPoleParameters):
+        return _j_pole_parameters_from_domain(value)
     if isinstance(value, CustomAntennaParameters):
         return _custom_parameters_from_domain(value)
     raise TypeError(f"unsupported antenna parameters: {type(value)!r}")
@@ -731,6 +752,21 @@ def _vertical_parameters_from_domain(
         radial_count=value.radial_count,
         radial_length_m=value.radial_length_m,
         radial_angle_deg=value.radial_angle_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _j_pole_parameters_from_domain(value: JPoleParameters) -> JPoleParametersPayload:
+    return JPoleParametersPayload(
+        frequency_hz=value.frequency_hz,
+        radiator_height_m=value.radiator_height_m,
+        stub_length_m=value.stub_length_m,
+        spacing_m=value.spacing_m,
+        feed_offset_m=value.feed_offset_m,
+        base_height_m=value.base_height_m,
+        folded=value.folded,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
@@ -1179,6 +1215,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, EndFedParametersPayload):
             raise ValueError("end-fed parameters have the wrong shape")
         return _endfed_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_J_POLE:
+        if not isinstance(value.parameters, JPoleParametersPayload):
+            raise ValueError("J-pole parameters have the wrong shape")
+        return _j_pole_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_CUSTOM:
         if not isinstance(value.parameters, CustomParametersPayload):
             raise ValueError("custom parameters have the wrong shape")
@@ -1222,6 +1262,21 @@ def _vertical_parameters_to_domain(value: VerticalParametersPayload) -> Vertical
         radial_count=value.radial_count,
         radial_length_m=value.radial_length_m,
         radial_angle_deg=value.radial_angle_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _j_pole_parameters_to_domain(value: JPoleParametersPayload) -> JPoleParameters:
+    return JPoleParameters(
+        frequency_hz=value.frequency_hz,
+        radiator_height_m=value.radiator_height_m,
+        stub_length_m=value.stub_length_m,
+        spacing_m=value.spacing_m,
+        feed_offset_m=value.feed_offset_m,
+        base_height_m=value.base_height_m,
+        folded=value.folded,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),

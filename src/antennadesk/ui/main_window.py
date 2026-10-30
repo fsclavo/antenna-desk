@@ -73,6 +73,7 @@ from ..domain.antennas.family import antenna_family
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.feed_line import FeedLine
 from ..domain.antennas.inverted_v import InvertedVParameters
+from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.load import LumpedLoad
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
@@ -103,10 +104,12 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_FAN_DIPOLE,
     CATALOG_TYPE_FOLDED_DIPOLE,
     CATALOG_TYPE_INVERTED_V,
+    CATALOG_TYPE_J_POLE,
     CATALOG_TYPE_LOOP,
     CATALOG_TYPE_MOXON,
     CATALOG_TYPE_OCFD,
     CATALOG_TYPE_QUAD_LOOP,
+    CATALOG_TYPE_SLIM_JIM,
     CATALOG_TYPE_VERTICAL,
     CATALOG_TYPE_WIRE_DIPOLE,
     CATALOG_TYPE_YAGI,
@@ -119,6 +122,7 @@ from .dialogs.endfed_dialog import EndFedDialog
 from .dialogs.fan_dipole_dialog import FanDipoleDialog
 from .dialogs.feed_line_dialog import FeedLineDialog
 from .dialogs.inverted_v_dialog import InvertedVDialog
+from .dialogs.j_pole_dialog import JPoleDialog
 from .dialogs.loads_dialog import LoadsDialog
 from .dialogs.measurement_details_dialog import MeasurementDetailsDialog
 from .dialogs.moxon_dialog import MoxonDialog
@@ -135,6 +139,7 @@ from .widgets.endfed_form import EndFedForm
 from .widgets.fan_dipole_form import FanDipoleForm
 from .widgets.geometry_view import GeometryView, GeometryViewMode
 from .widgets.inverted_v_form import InvertedVForm
+from .widgets.j_pole_form import JPoleForm
 from .widgets.moxon_form import MoxonForm
 from .widgets.ocfd_form import OCFDForm
 from .widgets.results_view import ResultsView
@@ -363,6 +368,14 @@ class MainWindow(QMainWindow):
         self._endfed_scroll.setMinimumWidth(340)
         self._endfed_scroll.setMaximumWidth(480)
 
+        self._j_pole_form = JPoleForm(self._translator, self._unit_system, parent=self)
+        self._j_pole_form.changed.connect(self._on_form_changed)
+        self._j_pole_scroll = QScrollArea(self)
+        self._j_pole_scroll.setWidgetResizable(True)
+        self._j_pole_scroll.setWidget(self._j_pole_form)
+        self._j_pole_scroll.setMinimumWidth(340)
+        self._j_pole_scroll.setMaximumWidth(480)
+
         self._custom_panel = QWidget(self)
         custom_layout = QVBoxLayout(self._custom_panel)
         self._custom_title = QLabel(self._custom_panel)
@@ -418,6 +431,7 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._moxon_scroll)
         self._design_stack.addWidget(self._fan_dipole_scroll)
         self._design_stack.addWidget(self._endfed_scroll)
+        self._design_stack.addWidget(self._j_pole_scroll)
         self._design_stack.addWidget(self._custom_panel)
         self._change_template_button = QPushButton(self)
         self._change_template_button.clicked.connect(lambda: self.change_template())
@@ -703,6 +717,7 @@ class MainWindow(QMainWindow):
         is_moxon = isinstance(parameters, MoxonParameters)
         is_fan_dipole = isinstance(parameters, FanDipoleParameters)
         is_endfed = isinstance(parameters, EndFedParameters)
+        is_j_pole = isinstance(parameters, JPoleParameters)
         self._optimize_action.setEnabled(
             idle
             and has_project
@@ -714,6 +729,7 @@ class MainWindow(QMainWindow):
             and not is_moxon
             and not is_fan_dipole
             and not is_endfed
+            and not is_j_pole
             and self._solver is not None
         )
         self._loads_action.setEnabled(idle and has_project)
@@ -824,6 +840,9 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, EndFedParameters):
             self._design_stack.setCurrentWidget(self._endfed_scroll)
             self._endfed_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, JPoleParameters):
+            self._design_stack.setCurrentWidget(self._j_pole_scroll)
+            self._j_pole_form.set_parameters(design.parameters)
         else:
             self._design_stack.setCurrentWidget(self._form_scroll)
             self._form.set_parameters(design.parameters, reset_sweep=True)
@@ -1129,6 +1148,34 @@ class MainWindow(QMainWindow):
             self._update_actions()
             self._update_height_control()
             return self._project
+        if isinstance(previous_design.parameters, JPoleParameters):
+            parameters = self._j_pole_form.parameters()
+            updated = UpdateDipoleDesign().execute(
+                UpdateDipoleDesignCommand(
+                    project=self._project,
+                    design_id=self._design_id,
+                    parameters=parameters,
+                )
+            )
+            updated = replace(updated, name=project_name)
+            self._project = updated
+            design = updated.design_by_id(self._design_id)
+            if parameters != previous_design.parameters:
+                self._simulation_results.pop(self._design_id, None)
+                self._results.set_result(None)
+            self._loads = design.antenna.loads
+            self._results.set_design(design)
+            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._auto_select_view(design)
+            self._project_name_updating = True
+            self._project_name.setText(project_name)
+            self._project_name_updating = False
+            self._form_dirty = False
+            self._dirty = True
+            self._update_title()
+            self._update_actions()
+            self._update_height_control()
+            return self._project
         if isinstance(previous_design.parameters, CustomAntennaParameters):
             design = previous_design
             if design.antenna.loads != self._loads:
@@ -1232,6 +1279,8 @@ class MainWindow(QMainWindow):
                 spec = self._fan_dipole_simulation_spec(design.parameters)
             elif isinstance(design.parameters, EndFedParameters):
                 spec = self._endfed_simulation_spec(design.parameters)
+            elif isinstance(design.parameters, JPoleParameters):
+                spec = self._j_pole_simulation_spec(design.parameters)
             else:
                 spec = self._form.simulation_spec()
         except Exception as exc:
@@ -1453,6 +1502,23 @@ class MainWindow(QMainWindow):
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
         )
 
+    def _j_pole_simulation_spec(self, parameters: JPoleParameters) -> SimulationSpec:
+        model = parameters.to_antenna()
+        frequency_hz = parameters.frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                frequency_hz * 0.95,
+                frequency_hz * 1.05,
+                100,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz * 1.05,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
     def _custom_simulation_spec(
         self,
         parameters: CustomAntennaParameters,
@@ -1557,6 +1623,37 @@ class MainWindow(QMainWindow):
                     project_name=name.strip() or "Yagi",
                     variant_name="Initial",
                     parameters=dialog.result_parameters(),
+                )
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+
+    def new_j_pole_antenna(self, *, folded: bool) -> None:
+        if not self._maybe_save_changes():
+            return
+        default_name = "Slim Jim" if folded else "J Pole"
+        name, accepted = QInputDialog.getText(
+            self,
+            self._translator.t("j_pole.title"),
+            self._translator.t("field.project_name"),
+            text=default_name,
+        )
+        if not accepted:
+            return
+        dialog = JPoleDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        parameters = dialog.result_parameters()
+        if folded:
+            parameters = replace(parameters, folded=True)
+        try:
+            project = CreateDipoleProject().execute(
+                CreateDipoleProjectCommand(
+                    project_name=name.strip() or default_name,
+                    variant_name="Initial",
+                    parameters=parameters,
                 )
             )
         except Exception as exc:
@@ -2001,6 +2098,19 @@ class MainWindow(QMainWindow):
             return (
                 dialog.result_parameters() if dialog.exec() == QDialog.DialogCode.Accepted else None
             )
+        if selected in {CATALOG_TYPE_J_POLE, CATALOG_TYPE_SLIM_JIM}:
+            dialog = JPoleDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            parameters = dialog.result_parameters()
+            if selected == CATALOG_TYPE_SLIM_JIM:
+                parameters = replace(parameters, folded=True)
+            return parameters
         if selected == CATALOG_TYPE_ENDFED:
             dialog = EndFedDialog(
                 self._translator,
@@ -2126,6 +2236,10 @@ class MainWindow(QMainWindow):
             self.new_fan_dipole_antenna()
         elif selected == CATALOG_TYPE_ENDFED:
             self.new_endfed_antenna()
+        elif selected == CATALOG_TYPE_J_POLE:
+            self.new_j_pole_antenna(folded=False)
+        elif selected == CATALOG_TYPE_SLIM_JIM:
+            self.new_j_pole_antenna(folded=True)
         elif selected == CATALOG_TYPE_OCFD:
             self.new_ocfd_antenna()
         elif selected == CATALOG_TYPE_DELTA_LOOP:
