@@ -862,6 +862,8 @@ def test_change_template_replaces_the_current_design(
         lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
     )
 
+    assert window._change_template_button.isHidden() is False
+    assert window._change_template_button.text() == "Change Template..."
     window.change_template()
 
     assert window._project is not None

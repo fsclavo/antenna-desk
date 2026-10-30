@@ -65,7 +65,6 @@ MATERIALS = (COPPER, ALUMINUM)
 class DipoleForm(QWidget):
     apply_requested = Signal()
     optimize_requested = Signal()
-    change_template_requested = Signal()
     changed = Signal()
 
     def __init__(
@@ -161,8 +160,6 @@ class DipoleForm(QWidget):
         self._apply.clicked.connect(self.apply_requested)
         self._optimize = QPushButton(self)
         self._optimize.clicked.connect(self.optimize_requested)
-        self._change_template = QPushButton(self)
-        self._change_template.clicked.connect(self.change_template_requested)
 
         self._family_value = QLabel(self)
         self._form_layout = QFormLayout()
@@ -200,7 +197,6 @@ class DipoleForm(QWidget):
         button_layout = QHBoxLayout()
         button_layout.addWidget(self._apply)
         button_layout.addWidget(self._optimize)
-        button_layout.addWidget(self._change_template)
         group_layout.addLayout(button_layout)
 
         layout = QVBoxLayout(self)
@@ -276,7 +272,6 @@ class DipoleForm(QWidget):
         self._sweep.setText(self._translator.t("field.sweep_enabled"))
         self._apply.setText(self._translator.t("action.apply"))
         self._optimize.setText(self._translator.t("action.optimize"))
-        self._change_template.setText(self._translator.t("action.change_template"))
         labels = self._labels()
         for key, label in labels.items():
             label.setText(self._translator.t(key))

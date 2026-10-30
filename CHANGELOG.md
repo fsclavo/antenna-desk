@@ -184,6 +184,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   catalog, persistence, and reporting support.
 - Placed the impedance and SWR charts side by side and reduced the default
   geometry pane height to give results more room.
+- Moved Change Template to a fixed button above the design panel so it is always
+  reachable.
 - Persist generator metadata (`generator_id`, `generator_name`) in custom
   designs and show it in the custom design panel.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the
