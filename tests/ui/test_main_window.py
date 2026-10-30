@@ -859,3 +859,19 @@ def test_new_inverted_v_creates_an_editable_custom_design(
     assert window._project.designs[0].antenna_type == "custom"
     assert window._project.designs[0].antenna.wires == parameters.wires
     window._dirty = False
+
+
+def test_main_menu_is_grouped_by_task(window: MainWindow) -> None:
+    import_menu_titles = [action.text() for action in window._import_menu.actions()]
+    export_menu_titles = [action.text() for action in window._export_menu.actions()]
+    design_titles = [action.text() for action in window._design_menu.actions()]
+    simulation_titles = [action.text() for action in window._simulation_menu.actions()]
+
+    assert "Import NEC Deck..." in import_menu_titles
+    assert "Import MMANA File..." in import_menu_titles
+    assert "Export CSV..." in export_menu_titles
+    assert "Export PDF Report..." in export_menu_titles
+    assert "Optimize Dimension..." in design_titles
+    assert "Edit Series Loads..." in design_titles
+    assert "Simulate" in simulation_titles
+    assert "Feed Line..." in simulation_titles

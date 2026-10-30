@@ -31,7 +31,7 @@ uv run python -m antennadesk
 ```
 
 The application looks for `nec2c` in `NEC2C`, on `PATH`, and in
-`spikes/phase0/build/`. If it is not found, use **File → Locate NEC2C...** to
+`spikes/phase0/build/`. If it is not found, use **Tools → Locate NEC2C...** to
 select the executable.
 
 On first launch, a 40 m dipole is loaded so you can press **Simulate**
@@ -142,7 +142,7 @@ uv run python scripts/run_reference_simulation.py \
   line is a uniform line model evaluated at the transmitter; it does not change
   the antenna pattern or power gain.
 - Simulation runs are stored in the project, including raw solver text; the
-  native project size limit is 10 MB. Use Compact Simulation History to keep
+  native project size limit is 10 MB. Use **Tools → Compact Simulation History** to keep
   only the latest run per variant. High-resolution patterns and long sweeps
   multiply runtime and stored points.
 - Optimization adjusts one primary dimension per design. It supports one

@@ -145,6 +145,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   entries.
 - Separated antenna Family from Template in the design panel, including
   generated custom designs.
+- Reorganized the menu bar into File, Design, Simulation, Tools, Language,
+  Units, and Help, with Import/Export, Variants, and Custom Wires submenus.
 - Persist generator metadata (`generator_id`, `generator_name`) in custom
   designs and show it in the custom design panel.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the

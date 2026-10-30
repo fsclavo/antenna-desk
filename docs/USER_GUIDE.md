@@ -22,7 +22,7 @@ uv sync
 uv run python -m antennadesk
 ```
 
-If the engine is not found automatically, use **File → Locate NEC2C...** or set
+If the engine is not found automatically, use **Tools → Locate NEC2C...** or set
 the `NEC2C` environment variable.
 
 ## First simulation
@@ -155,7 +155,7 @@ size; use high resolution for final runs rather than routine exploration.
 
 ## Feed line
 
-Use **File → Feed Line...** to configure a uniform transmission line between
+Use **Simulation → Feed Line...** to configure a uniform transmission line between
 the transmitter and the antenna feed. Set its characteristic impedance, length,
 velocity factor, and matched loss in dB per 100 m. When enabled, the Impedance /
 SWR tab reports the impedance and SWR at the **transmitter end**; the Pattern
@@ -168,20 +168,19 @@ not part of the antenna geometry.
 
 ## Variants and comparison
 
-Use **File → New Variant...** to duplicate the current design, **Rename
-Variant...** to change its name, and **Delete Variant** to remove it. The
+Use **Design → Variants → New Variant...** to duplicate the current design,
+**Rename Variant...** to change its name, and **Delete Variant** to remove it. The
 variant selector in the toolbar switches between designs. Completed runs are
 stored in the project; the latest run for each variant is shown when you switch
 or reopen the project.
 
-Simulate the variants you want to compare, then use **File → Compare
-Variants...**. The dialog shows design and result metrics side by side, an SWR
+Simulate the variants you want to compare, then use **Design → Variants → Compare Variants...**. The dialog shows design and result metrics side by side, an SWR
 overlay, and a gain-pattern overlay for the frequency nearest each variant's
 design frequency. Missing results are reported in the dialog.
 
 ## Optimize the length
 
-Use **Optimize Dimension...** in the design panel or the File menu. Choose the
+Use **Optimize Dimension...** in the design panel or the **Design** menu. Choose the
 objective: **target reactance** (0 Ω for series resonance), **minimum SWR**,
 **maximum SWR bandwidth**, **maximum power gain**, **maximum efficiency**, or
 **balanced SWR + gain**. Set the minimum and maximum dimension and the maximum
@@ -208,7 +207,7 @@ dimension; the SWR/gain balance is a weighted score, not a Pareto optimizer.
 
 ## Construction sheet
 
-Use **File → Construction Sheet...** for a printable sheet with target
+Use **Design → Construction Sheet...** for a printable sheet with target
 frequency, type-aware dimensions, feed position, height, wire, ground,
 simulated impedance/SWR, resonance, and construction notes. Dipoles show first
 and second leg lengths; folded dipoles show element and connector lengths;
@@ -217,17 +216,17 @@ loops show side length, circumference, side count, and feed side.
 
 ## Export results
 
-Use **File → Export CSV...** for the frequency sweep table, **File → Export
-Pattern CSV...** for the far-field grid (frequency, θ, φ, gains,
-polarization, and E-field components), **File → Export Pattern PNG...** for
-the current cut/3D pattern image, **File → Export Geometry PNG...** for the
-current geometry view, **File → Export HTML Report...** for a self-contained
-HTML report, or **File → Export PDF Report...** for a native PDF with design
+Use **File → Export → CSV...** for the frequency sweep table, **File → Export
+→ Pattern CSV...** for the far-field grid (frequency, θ, φ, gains,
+polarization, and E-field components), **File → Export → Pattern PNG...** for
+the current cut/3D pattern image, **File → Export → Geometry PNG...** for the
+current geometry view, **File → Export → HTML Report...** for a self-contained
+HTML report, or **File → Export → PDF Report...** for a native PDF with design
 parameters, configuration, solver metadata, fingerprint, diagnostics,
 impedance, resonance, and charts.
 Simulation runs are stored when you save the project, including raw solver
 text. The project size limit is 10 MB; saving above 8 MB shows a warning, and
-**File → Compact Simulation History...** keeps only the latest run per
+**Tools → Compact Simulation History...** keeps only the latest run per
 variant.
 
 ## Cancel and errors

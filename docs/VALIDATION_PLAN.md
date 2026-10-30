@@ -125,6 +125,12 @@ gain, nulls, or impedance.
 
 ## Phase 6 — new geometry and measurements (in progress)
 
+Menu organization tests:
+
+- Import/export actions live in File submenus.
+- Design actions are grouped under Design and Variants.
+- Simulation actions are grouped under Simulation; solver tools under Tools.
+
 Family and template tests:
 
 - Native and generated designs map to the correct antenna family and template.
@@ -221,7 +227,7 @@ Phase 6 adds tests for:
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 425 tests with the solver enabled. Solver integration
+The suite currently has 426 tests with the solver enabled. Solver integration
 tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.
