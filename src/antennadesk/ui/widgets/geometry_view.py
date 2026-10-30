@@ -412,9 +412,14 @@ class GeometryView(QWidget):
         max_x = max(point.x_m for wire in self._model.wires for point in (wire.start, wire.end))
         span_m = max(max_x - min_x, 1e-9)
         unit = self._translator.t(length_unit_key(self._unit_system))
+        template = (
+            "Slim Jim"
+            if any(wire.id == "top-connector" for wire in self._model.wires)
+            else "J Pole"
+        )
         summary = self._translator.t(
             "geometry.j_pole_elevation",
-            template=self._model.name,
+            template=template,
             radiator=f"{length_from_m(radiator.length_m, self._unit_system):.2f} {unit}",
             stub=f"{length_from_m(stub.length_m, self._unit_system):.2f} {unit}",
             spacing=f"{length_from_m(span_m, self._unit_system):.2f} {unit}",
@@ -530,7 +535,11 @@ class GeometryView(QWidget):
             rect,
             self._translator.t(
                 "geometry.j_pole_plan",
-                template=self._model.name,
+                template=(
+                    "Slim Jim"
+                    if any(wire.id == "top-connector" for wire in self._model.wires)
+                    else "J Pole"
+                ),
                 spacing=f"{length_from_m(span_m, self._unit_system):.2f} {unit}",
             ),
         )

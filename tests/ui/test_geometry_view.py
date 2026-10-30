@@ -275,7 +275,7 @@ def test_slim_jim_geometry_uses_the_j_pole_views(qtbot: QtBot) -> None:
         feed_offset_m=0.1,
         base_height_m=0.25,
         folded=True,
-    ).to_antenna(name="Slim Jim")
+    ).to_antenna(name="Initial")
     view = GeometryView(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(view)
     view.set_model(model, antenna_type="j_pole")
