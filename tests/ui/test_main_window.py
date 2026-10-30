@@ -670,6 +670,7 @@ def test_new_custom_antenna_is_editable_and_simulatable(
     assert window._project.name == "Custom"
     assert window._project.designs[0].antenna_type == "custom"
     assert window._design_stack.currentWidget() is window._custom_panel
+    assert window._custom_simulation_spec(parameters).frequency_plan.count == 100
 
     window.simulate()
     qtbot.waitUntil(lambda: not window._simulating and window._thread is None, timeout=5_000)
@@ -858,6 +859,8 @@ def test_new_inverted_v_creates_an_editable_custom_design(
     assert window._project.name == "Inv V"
     assert window._project.designs[0].antenna_type == "custom"
     assert window._project.designs[0].antenna.wires == parameters.wires
+    assert window._view_combo.currentData() == "elevation"
+    assert window._custom_generator_edit.isHidden() is False
     window._dirty = False
 
 

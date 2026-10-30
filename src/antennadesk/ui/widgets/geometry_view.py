@@ -376,7 +376,113 @@ class GeometryView(QWidget):
             if math.hypot(dx, dy) < 1e-9:
                 self._draw_vertical_sketch(painter, rect, wire)
                 return
+        zs = [point.z_m for wire in self._model.wires for point in (wire.start, wire.end)]
+        if len(self._model.wires) > 1 and max(zs) - min(zs) > 1e-6:
+            self._paint_multi_wire_elevation(painter, rect)
+            return
         self._paint_installation_elevation(painter, rect)
+
+    def _paint_multi_wire_elevation(self, painter: QPainter, rect: QRectF) -> None:
+        assert self._model is not None
+        xs = [point.x_m for wire in self._model.wires for point in (wire.start, wire.end)]
+        ys = [point.y_m for wire in self._model.wires for point in (wire.start, wire.end)]
+        use_x = max(xs) - min(xs) >= max(ys) - min(ys)
+        horizontal = xs if use_x else ys
+        min_h, max_h = min(horizontal), max(horizontal)
+        span_m = max(max_h - min_h, 1e-9)
+        max_z = max(point.z_m for wire in self._model.wires for point in (wire.start, wire.end))
+        unit = self._translator.t(length_unit_key(self._unit_system))
+        summary = self._translator.t(
+            "geometry.multi_wire_elevation",
+            count=len(self._model.wires),
+            span=f"{length_from_m(span_m, self._unit_system):.2f} {unit}",
+            height=f"{length_from_m(max_z, self._unit_system):.2f} {unit}",
+        )
+        if not math.isclose(self._height_exaggeration, 1.0):
+            summary = (
+                summary
+                + " · "
+                + self._translator.t(
+                    "geometry.vertical_exaggeration",
+                    factor=f"{self._height_exaggeration:g}",
+                )
+            )
+        self._draw_header(painter, rect, summary)
+
+        draw_rect = QRectF(
+            rect.left() + 96.0,
+            rect.top() + 84.0,
+            rect.width() - 96.0 - 96.0,
+            rect.height() - 84.0 - 82.0,
+        )
+        if draw_rect.width() < 80.0 or draw_rect.height() < 50.0:
+            return
+        z_draw = max(max_z * self._height_exaggeration, 0.5)
+        scale = (
+            min(
+                draw_rect.width() / span_m,
+                max(draw_rect.height() - 42.0, 24.0) / z_draw,
+            )
+            * self._zoom
+        )
+        if scale <= 0.0:
+            return
+        ground_y = draw_rect.bottom()
+        x_left = draw_rect.center().x() - span_m * scale / 2.0
+        x_right = draw_rect.center().x() + span_m * scale / 2.0
+
+        def screen(x_m: float, y_m: float, z_m: float) -> QPointF:
+            coordinate = x_m if use_x else y_m
+            return QPointF(
+                x_left + (coordinate - min_h) * scale,
+                ground_y - z_m * self._height_exaggeration * scale,
+            )
+
+        self._draw_ground(painter, x_left - 28.0, x_right + 28.0, ground_y)
+        painter.setPen(QPen(self._colors.wire, 2.5))
+        for wire in self._model.wires:
+            painter.drawLine(
+                screen(wire.start.x_m, wire.start.y_m, wire.start.z_m),
+                screen(wire.end.x_m, wire.end.y_m, wire.end.z_m),
+            )
+        feed_wire = self._model.feed_wire
+        ratio = min(max(self._model.feed.offset_m / feed_wire.length_m, 0.0), 1.0)
+        feed = screen(
+            feed_wire.start.x_m + (feed_wire.end.x_m - feed_wire.start.x_m) * ratio,
+            feed_wire.start.y_m + (feed_wire.end.y_m - feed_wire.start.y_m) * ratio,
+            feed_wire.start.z_m + (feed_wire.end.z_m - feed_wire.start.z_m) * ratio,
+        )
+        painter.setPen(QPen(self._colors.feed, 2.0))
+        painter.setBrush(self._colors.feed)
+        painter.drawEllipse(feed, 4.0, 4.0)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        self._draw_centered_label(
+            painter,
+            QPointF(feed.x() + 22.0, feed.y() - 12.0),
+            self._translator.t("geometry.feed"),
+            color=self._colors.feed,
+        )
+        self._draw_plan_dimension(
+            painter,
+            QPointF(x_left, ground_y - max_z * self._height_exaggeration * scale),
+            QPointF(x_right, ground_y - max_z * self._height_exaggeration * scale),
+            QPointF(0.0, -30.0),
+            f"{length_from_m(span_m, self._unit_system):.2f} {unit}",
+        )
+        self._draw_height_dimension(
+            painter,
+            x_left=x_left,
+            ground_y=ground_y,
+            wire_y=ground_y - max_z * self._height_exaggeration * scale,
+            value=f"{length_from_m(max_z, self._unit_system):.2f} {unit}",
+        )
+        self._draw_scale_bar(
+            painter,
+            x_left=x_left,
+            bar_y=ground_y + 40.0,
+            scale=scale,
+            unit=unit,
+        )
 
     def _paint_loop_elevation(self, painter: QPainter, rect: QRectF) -> None:
         assert self._model is not None

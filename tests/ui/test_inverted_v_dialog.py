@@ -34,3 +34,26 @@ def test_inverted_v_dialog_updates_geometry_and_returns_custom(qtbot: QtBot) -> 
     assert parameters.included_angle_deg == pytest.approx(90.0)
     assert parameters.end_height_m > 0.0
     assert custom.wires[0].end.z_m == pytest.approx(parameters.end_height_m)
+
+
+def test_inverted_v_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.inverted_v import InvertedVParameters
+
+    original = InvertedVParameters(
+        frequency_hz=7_100_000.0,
+        leg_length_m=10.6,
+        apex_height_m=12.0,
+        included_angle_deg=110.0,
+        azimuth_deg=25.0,
+    )
+    dialog = InvertedVDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=original.to_custom_parameters(),
+    )
+    qtbot.addWidget(dialog)
+
+    restored = dialog.parameters()
+    assert restored.included_angle_deg == pytest.approx(110.0)
+    assert restored.azimuth_deg == pytest.approx(25.0)
+    assert restored.leg_length_m == pytest.approx(10.6)

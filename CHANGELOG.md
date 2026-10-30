@@ -149,6 +149,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Units, and Help, with Import/Export, Variants, and Custom Wires submenus.
 - Added an experimental vertical generator with an optional radial plane and
   catalog entry.
+- Added generator editing for inverted-V designs, automatic elevation view for
+  vertical-plane multi-wire geometry, and 100-point sweep controls for custom
+  and generated designs.
 - Persist generator metadata (`generator_id`, `generator_name`) in custom
   designs and show it in the custom design panel.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the

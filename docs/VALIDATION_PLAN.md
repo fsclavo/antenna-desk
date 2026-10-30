@@ -144,6 +144,14 @@ Catalog and generator metadata tests:
 - Single New Antenna dispatch for basic templates and generators.
 - Generator metadata round trip in custom parameters and the custom panel.
 
+Custom/generated editing and view tests:
+
+- Inverted-V geometry can be reconstructed from its custom wires and reopened in
+  the generator dialog.
+- Custom/generated simulations default to a 100-point sweep.
+- Vertical-plane generated designs select the elevation view automatically,
+  while loops keep Plan.
+
 Vertical generator tests:
 
 - Radiator/radial connectivity, radial count and length, base/radial plane, and
@@ -235,7 +243,7 @@ Phase 6 adds tests for:
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 432 tests with the solver enabled. Solver integration
+The suite currently has 434 tests with the solver enabled. Solver integration
 tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.

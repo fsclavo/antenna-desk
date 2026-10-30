@@ -69,6 +69,44 @@ class InvertedVParameters:
     def end_height_m(self) -> float:
         return self.apex_height_m - self.vertical_drop_m
 
+    @classmethod
+    def from_custom_parameters(
+        cls,
+        parameters: CustomAntennaParameters,
+    ) -> InvertedVParameters:
+        if len(parameters.wires) != 2:
+            raise ValueError("an inverted-V must contain exactly two wires")
+        first, second = parameters.wires
+        endpoints_first = {first.start, first.end}
+        endpoints_second = {second.start, second.end}
+        common = next(iter(endpoints_first & endpoints_second), None)
+        if common is None:
+            raise ValueError("inverted-V wires must share the apex")
+        apex = common
+        first_end = first.end if first.start == apex else first.start
+        second_end = second.end if second.start == apex else second.start
+        vertical_drop = apex.z_m - first_end.z_m
+        if vertical_drop <= 0.0:
+            raise ValueError("inverted-V legs must slope downward from the apex")
+        horizontal_span = math.hypot(first_end.x_m, first_end.y_m)
+        half_angle = math.degrees(math.atan2(horizontal_span, vertical_drop))
+        azimuth = math.degrees(
+            math.atan2(
+                second_end.y_m - first_end.y_m,
+                second_end.x_m - first_end.x_m,
+            )
+        )
+        return cls(
+            frequency_hz=parameters.frequency_hz,
+            leg_length_m=(first.length_m + second.length_m) / 2.0,
+            apex_height_m=apex.z_m,
+            included_angle_deg=2.0 * half_angle,
+            azimuth_deg=azimuth,
+            wire_radius_m=(first.radius_m + second.radius_m) / 2.0,
+            material=first.material,
+            ground=parameters.ground,
+        )
+
     def to_custom_parameters(self) -> CustomAntennaParameters:
         angle = units.degrees_to_radians(self.azimuth_deg)
         cos_angle = math.cos(angle)

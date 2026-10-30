@@ -66,3 +66,20 @@ def test_inverted_v_rejects_invalid_angle() -> None:
             apex_height_m=12.0,
             included_angle_deg=180.0,
         )
+
+
+def test_inverted_v_can_be_reconstructed_from_custom_geometry() -> None:
+    original = InvertedVParameters(
+        frequency_hz=7_100_000.0,
+        leg_length_m=10.6,
+        apex_height_m=12.0,
+        included_angle_deg=120.0,
+        azimuth_deg=35.0,
+    )
+    restored = InvertedVParameters.from_custom_parameters(original.to_custom_parameters())
+
+    assert restored.frequency_hz == pytest.approx(original.frequency_hz)
+    assert restored.leg_length_m == pytest.approx(original.leg_length_m)
+    assert restored.apex_height_m == pytest.approx(original.apex_height_m)
+    assert restored.included_angle_deg == pytest.approx(original.included_angle_deg)
+    assert restored.azimuth_deg == pytest.approx(original.azimuth_deg)

@@ -11,9 +11,13 @@ from uuid import UUID
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QKeySequence
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QDialog,
+    QDoubleSpinBox,
     QFileDialog,
+    QFormLayout,
+    QGroupBox,
     QHBoxLayout,
     QInputDialog,
     QLabel,
@@ -22,6 +26,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QScrollArea,
+    QSpinBox,
     QSplitter,
     QStackedWidget,
     QStyle,
@@ -286,11 +291,38 @@ class MainWindow(QMainWindow):
         self._custom_generator.setStyleSheet("font-style: italic;")
         self._custom_edit = QPushButton(self._custom_panel)
         self._custom_edit.clicked.connect(lambda: self.edit_custom_wires())
+        self._custom_generator_edit = QPushButton(self._custom_panel)
+        self._custom_generator_edit.clicked.connect(lambda: self.edit_generator())
+        self._custom_sweep_group = QGroupBox(self._custom_panel)
+        self._custom_sweep = QCheckBox(self._custom_sweep_group)
+        self._custom_sweep.setChecked(True)
+        self._custom_sweep.toggled.connect(self._update_custom_sweep_controls)
+        self._custom_sweep_start = QDoubleSpinBox(self._custom_sweep_group)
+        self._custom_sweep_stop = QDoubleSpinBox(self._custom_sweep_group)
+        for spin in (self._custom_sweep_start, self._custom_sweep_stop):
+            spin.setRange(0.1, 100_000.0)
+            spin.setDecimals(6)
+            spin.setSuffix(" MHz")
+        self._custom_sweep_points = QSpinBox(self._custom_sweep_group)
+        self._custom_sweep_points.setRange(2, 10_000)
+        self._custom_sweep_points.setValue(100)
+        self._custom_sweep_center_hz: float | None = None
+        custom_sweep_layout = QFormLayout(self._custom_sweep_group)
+        custom_sweep_layout.addRow(self._custom_sweep)
+        custom_sweep_layout.addRow(
+            self._translator.t("field.sweep_start"), self._custom_sweep_start
+        )
+        custom_sweep_layout.addRow(self._translator.t("field.sweep_stop"), self._custom_sweep_stop)
+        custom_sweep_layout.addRow(
+            self._translator.t("field.sweep_points"), self._custom_sweep_points
+        )
         custom_layout.addWidget(self._custom_title)
         custom_layout.addWidget(self._custom_family)
         custom_layout.addWidget(self._custom_generator)
         custom_layout.addWidget(self._custom_summary)
+        custom_layout.addWidget(self._custom_generator_edit)
         custom_layout.addWidget(self._custom_edit)
+        custom_layout.addWidget(self._custom_sweep_group)
         custom_layout.addStretch(1)
         self._design_stack = QStackedWidget(self)
         self._design_stack.addWidget(form_scroll)
@@ -453,6 +485,9 @@ class MainWindow(QMainWindow):
         self._convert_custom_action.setText(self._translator.t("action.convert_custom"))
         self._custom_title.setText(self._translator.t("custom.panel_title"))
         self._custom_edit.setText(self._translator.t("action.edit_custom"))
+        self._custom_generator_edit.setText(self._translator.t("action.edit_generator"))
+        self._custom_sweep_group.setTitle(self._translator.t("field.sweep"))
+        self._custom_sweep.setText(self._translator.t("field.sweep_enabled"))
         self._export_csv_action.setText(self._translator.t("action.export_csv"))
         self._export_pattern_csv_action.setText(self._translator.t("action.export_pattern_csv"))
         self._export_pattern_png_action.setText(self._translator.t("action.export_pattern_png"))
@@ -625,6 +660,14 @@ class MainWindow(QMainWindow):
                 length=f"{sum(wire.length_m for wire in design.antenna.wires):.3f} m",
             )
         )
+        self._custom_generator_edit.setVisible(parameters.generator_id == "inverted_v")
+        if self._custom_sweep_center_hz != design.parameters.frequency_hz:
+            self._custom_sweep_center_hz = design.parameters.frequency_hz
+            center_mhz = design.parameters.frequency_hz / 1_000_000.0
+            self._custom_sweep_start.setValue(center_mhz * 0.95)
+            self._custom_sweep_stop.setValue(center_mhz * 1.05)
+            self._custom_sweep_points.setValue(100)
+            self._custom_sweep.setChecked(True)
 
     def _select_design(self, design_id: UUID) -> None:
         if self._project is None:
@@ -927,14 +970,28 @@ class MainWindow(QMainWindow):
         self._status_label.setText(self._translator.t("status.cancelling"))
         self._cancel_action.setEnabled(False)
 
+    def _update_custom_sweep_controls(self) -> None:
+        enabled = self._custom_sweep.isChecked()
+        self._custom_sweep_start.setEnabled(enabled)
+        self._custom_sweep_stop.setEnabled(enabled)
+        self._custom_sweep_points.setEnabled(enabled)
+
     def _custom_simulation_spec(
         self,
         parameters: CustomAntennaParameters,
     ) -> SimulationSpec:
         model = parameters.to_antenna(name="Custom")
         far_field = far_field_request(self._custom_pattern_step_deg, parameters.ground)
+        if self._custom_sweep.isChecked():
+            frequency_plan = FrequencyPlan.sweep(
+                self._custom_sweep_start.value() * 1_000_000.0,
+                self._custom_sweep_stop.value() * 1_000_000.0,
+                self._custom_sweep_points.value(),
+            )
+        else:
+            frequency_plan = FrequencyPlan.single(parameters.frequency_hz)
         return SimulationSpec(
-            frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
+            frequency_plan=frequency_plan,
             segmentation=aligned_policy_for_model(
                 model,
                 parameters.frequency_hz,
@@ -1159,6 +1216,46 @@ class MainWindow(QMainWindow):
         self._geometry.set_model(updated_design.antenna, antenna_type=updated_design.antenna_type)
         self._design_stack.setCurrentWidget(self._custom_panel)
         self._update_custom_panel(updated_design)
+        self._last_status_key = "status.design_changed"
+        self._update_title()
+        self._update_actions()
+        self._update_status_text()
+
+    def edit_generator(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        design = self._project.design_by_id(self._design_id)
+        parameters = design.parameters
+        if (
+            not isinstance(parameters, CustomAntennaParameters)
+            or parameters.generator_id != "inverted_v"
+        ):
+            return
+        dialog = InvertedVDialog(
+            self._translator,
+            self._unit_system,
+            self,
+            parameters=parameters,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            updated_design = design.with_parameters(dialog.result_parameters())
+            self._project = self._project.with_design(updated_design, updated_at=utc_now())
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._loads = updated_design.antenna.loads
+        self._form_dirty = False
+        self._dirty = True
+        self._simulation_results.pop(self._design_id, None)
+        self._results.set_result(None)
+        self._results.set_design(updated_design)
+        self._geometry.set_model(updated_design.antenna, antenna_type=updated_design.antenna_type)
+        self._design_stack.setCurrentWidget(self._custom_panel)
+        self._update_custom_panel(updated_design)
+        self._auto_select_view(updated_design)
         self._last_status_key = "status.design_changed"
         self._update_title()
         self._update_actions()
@@ -1822,7 +1919,14 @@ class MainWindow(QMainWindow):
 
     def _auto_select_view(self, design: DesignVariant) -> None:
         if len(design.antenna.wires) > 1:
-            index = self._view_combo.findData(GeometryViewMode.PLAN.value)
+            zs = [point.z_m for wire in design.antenna.wires for point in (wire.start, wire.end)]
+            if design.antenna_type == "loop":
+                mode = GeometryViewMode.PLAN
+            elif max(zs) - min(zs) > 1e-6:
+                mode = GeometryViewMode.ELEVATION
+            else:
+                mode = GeometryViewMode.PLAN
+            index = self._view_combo.findData(mode.value)
             if index >= 0 and self._view_combo.currentIndex() != index:
                 self._view_combo.setCurrentIndex(index)
 

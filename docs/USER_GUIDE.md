@@ -102,8 +102,9 @@ gain over a half-wave dipole. A single straight driven element is generated
 instead of the published folded dipole, so the feed impedance is not the
 reference impedance. Once you edit positions or lengths, the result is an
 experimental geometry with no external reference; simulate it and judge it on
-its own modeled performance. The generated design can be refined further with
-**Edit Custom Wires...**.
+its own modeled performance. The generated design can be refined further with **Edit Custom Wires...**.
+Generated inverted-V designs also expose **Edit Generator...**, which reopens
+the parameter dialog instead of the raw wire table.
 
 ## Create an inverted-V
 
@@ -114,8 +115,10 @@ horizontal span and end height. The feed is at the apex.
 
 This is an experimental generator: its geometry and frequency scaling are
 tested, but it has no independent numerical reference for gain or impedance.
-Simulate it and judge the modeled performance; refine the wires with **Edit
-Custom Wires...** if needed.
+Simulate it and judge the modeled performance; use **Edit Generator...** to
+change the apex, leg length, or included angle, or **Edit Custom Wires...** for
+raw coordinates. The elevation view is selected automatically so the included
+angle is visible; Plan remains available.
 
 ## Create a vertical
 
@@ -165,6 +168,8 @@ the radiation pattern: 10° (normal), 5° (fine), 2° (very fine), or 1° (maxim
 The form shows the estimated number of pattern points. More points produce
 smoother cuts and a smoother 3D lobe, but increase solver time and project
 size; use high resolution for final runs rather than routine exploration.
+Custom and generated designs have their own sweep controls in the custom panel;
+they default to 100 points around the design frequency.
 
 ## Feed line
 

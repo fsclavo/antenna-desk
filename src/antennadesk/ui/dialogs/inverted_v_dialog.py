@@ -32,6 +32,8 @@ class InvertedVDialog(QDialog):
         translator: Translator,
         unit_system: UnitSystem,
         parent: QWidget | None = None,
+        *,
+        parameters: CustomAntennaParameters | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
@@ -131,6 +133,8 @@ class InvertedVDialog(QDialog):
         layout.addStretch(1)
         layout.addWidget(buttons)
 
+        if parameters is not None:
+            self._set_existing(parameters)
         self._update_ground_controls()
         self._update_suggestion()
         for widget in (
@@ -140,6 +144,25 @@ class InvertedVDialog(QDialog):
             self._azimuth,
         ):
             widget.valueChanged.connect(self._update_suggestion)
+
+    def _set_existing(self, parameters: CustomAntennaParameters) -> None:
+        existing = InvertedVParameters.from_custom_parameters(parameters)
+        self._frequency.setValue(existing.frequency_hz / 1_000_000.0)
+        self._apex_height.setValue(length_from_m(existing.apex_height_m, self._unit_system))
+        self._leg_length.setValue(length_from_m(existing.leg_length_m, self._unit_system))
+        self._included_angle.setValue(existing.included_angle_deg)
+        self._azimuth.setValue(existing.azimuth_deg)
+        self._radius.setValue(existing.wire_radius_m * 1_000.0)
+        material_index = self._material.findData(existing.material)
+        if material_index >= 0:
+            self._material.setCurrentIndex(material_index)
+        ground_index = self._ground.findData(existing.ground.kind.value)
+        if ground_index >= 0:
+            self._ground.setCurrentIndex(ground_index)
+        if existing.ground.relative_permittivity is not None:
+            self._permittivity.setValue(existing.ground.relative_permittivity)
+        if existing.ground.conductivity_s_per_m is not None:
+            self._conductivity.setValue(existing.ground.conductivity_s_per_m)
 
     def _update_ground_controls(self) -> None:
         finite = self._ground.currentData() == GroundKind.FINITE.value

@@ -207,6 +207,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Loop · circumference {circumference} · diameter {diameter} · {sides} sides",
         Language.SPANISH: "Lazo · circunferencia {circumference} · diámetro {diameter} · {sides} lados",
     },
+    "geometry.multi_wire_elevation": {
+        Language.ENGLISH: "{count} wires · span {span} · height {height}",
+        Language.SPANISH: "{count} hilos · ancho {span} · altura {height}",
+    },
     "geometry.elevation_summary": {
         Language.ENGLISH: "Height {height} · feed height {feed}",
         Language.SPANISH: "Altura {height} · altura de alimentación {feed}",
@@ -1040,6 +1044,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "action.edit_custom": {
         Language.ENGLISH: "Edit Custom Wires...",
         Language.SPANISH: "Editar hilos personalizados...",
+    },
+    "action.edit_generator": {
+        Language.ENGLISH: "Edit Generator...",
+        Language.SPANISH: "Editar generador...",
     },
     "action.convert_custom": {
         Language.ENGLISH: "Convert to Custom Wires...",
