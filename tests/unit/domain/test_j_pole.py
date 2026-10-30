@@ -25,7 +25,7 @@ def test_j_pole_generates_radiator_stub_and_connector() -> None:
     assert antenna_family(custom) is AntennaFamily.VERTICAL
 
 
-def test_slim_jim_adds_the_top_connector() -> None:
+def test_slim_jim_keeps_the_top_gap_open() -> None:
     parameters = JPoleParameters(
         frequency_hz=145_000_000.0,
         radiator_height_m=1.0,
@@ -36,8 +36,9 @@ def test_slim_jim_adds_the_top_connector() -> None:
     )
     custom = parameters.to_custom_parameters()
 
-    assert len(custom.wires) == 4
+    assert len(custom.wires) == 3
     assert custom.generator_name == "Slim Jim"
+    assert not any(wire.id == "top-connector" for wire in custom.wires)
 
 
 def test_j_pole_validates_feed_and_stub() -> None:

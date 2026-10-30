@@ -22,8 +22,8 @@ ANTENNA_TYPE_J_POLE = "j_pole"
 class JPoleParameters:
     """A vertical radiator with a parallel matching stub.
 
-    ``folded`` connects the top of the radiator to the top of the stub,
-    producing a Slim-Jim style folded geometry.
+    ``folded`` selects the Slim-Jim variant label. Both variants keep the
+    radiator and stub separated at the top, with a gap between their ends.
     """
 
     frequency_hz: float
@@ -86,16 +86,6 @@ class JPoleParameters:
                 material=self.material,
             ),
         ]
-        if self.folded:
-            wires.append(
-                Wire(
-                    id="top-connector",
-                    start=top_left,
-                    end=top_right,
-                    radius_m=self.wire_radius_m,
-                    material=self.material,
-                )
-            )
         return CustomAntennaParameters(
             frequency_hz=self.frequency_hz,
             wires=tuple(wires),

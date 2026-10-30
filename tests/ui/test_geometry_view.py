@@ -278,7 +278,7 @@ def test_slim_jim_geometry_uses_the_j_pole_views(qtbot: QtBot) -> None:
     ).to_antenna(name="Initial")
     view = GeometryView(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(view)
-    view.set_model(model, antenna_type="j_pole")
+    view.set_model(model, antenna_type="j_pole", display_name="Slim Jim")
 
     view.set_view_mode(GeometryViewMode.ELEVATION)
     assert view.grab().isNull() is False

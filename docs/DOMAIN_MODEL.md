@@ -162,8 +162,9 @@ experimental.
 
 A first-class J Pole/Slim Jim with radiator height, stub length, spacing, feed
 offset, base height, folded flag, radius, material, and ground. `to_antenna()`
-creates the radiator, stub, and base connector; `folded=True` adds the top
-connector for Slim Jim. The generator is experimental.
+creates the radiator, stub, and base connector, leaving the radiator and stub
+ends separated at the top. `folded=True` selects the Slim Jim label; the
+generator is experimental.
 
 ### EndFedParameters
 

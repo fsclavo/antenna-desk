@@ -824,6 +824,18 @@ class MainWindow(QMainWindow):
             self._custom_sweep_points.setValue(100)
             self._custom_sweep.setChecked(True)
 
+    def _set_geometry_model(self, design: DesignVariant) -> None:
+        display_name = (
+            design.parameters.template_name
+            if isinstance(design.parameters, JPoleParameters)
+            else None
+        )
+        self._geometry.set_model(
+            design.antenna,
+            antenna_type=design.antenna_type,
+            display_name=display_name,
+        )
+
     def _select_design(self, design_id: UUID) -> None:
         if self._project is None:
             return
@@ -865,7 +877,7 @@ class MainWindow(QMainWindow):
             self._design_stack.setCurrentWidget(self._form_scroll)
             self._form.set_parameters(design.parameters, reset_sweep=True)
         self._results.set_design(design)
-        self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+        self._set_geometry_model(design)
         self._auto_select_view(design)
         self._set_variant_combo(design_id)
         result = self._simulation_results.get(design_id)
@@ -987,7 +999,7 @@ class MainWindow(QMainWindow):
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._results.set_design(design)
-            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._set_geometry_model(design)
             self._auto_select_view(design)
             self._project_name_updating = True
             self._project_name.setText(project_name)
@@ -1015,7 +1027,7 @@ class MainWindow(QMainWindow):
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._results.set_design(design)
-            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._set_geometry_model(design)
             self._auto_select_view(design)
             self._project_name_updating = True
             self._project_name.setText(project_name)
@@ -1043,7 +1055,7 @@ class MainWindow(QMainWindow):
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._results.set_design(design)
-            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._set_geometry_model(design)
             self._auto_select_view(design)
             self._project_name_updating = True
             self._project_name.setText(project_name)
@@ -1071,7 +1083,7 @@ class MainWindow(QMainWindow):
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._results.set_design(design)
-            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._set_geometry_model(design)
             self._auto_select_view(design)
             self._project_name_updating = True
             self._project_name.setText(project_name)
@@ -1099,7 +1111,7 @@ class MainWindow(QMainWindow):
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._results.set_design(design)
-            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._set_geometry_model(design)
             self._auto_select_view(design)
             self._project_name_updating = True
             self._project_name.setText(project_name)
@@ -1127,7 +1139,7 @@ class MainWindow(QMainWindow):
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._results.set_design(design)
-            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._set_geometry_model(design)
             self._auto_select_view(design)
             self._project_name_updating = True
             self._project_name.setText(project_name)
@@ -1155,7 +1167,7 @@ class MainWindow(QMainWindow):
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._results.set_design(design)
-            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._set_geometry_model(design)
             self._auto_select_view(design)
             self._project_name_updating = True
             self._project_name.setText(project_name)
@@ -1183,7 +1195,7 @@ class MainWindow(QMainWindow):
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._results.set_design(design)
-            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._set_geometry_model(design)
             self._auto_select_view(design)
             self._project_name_updating = True
             self._project_name.setText(project_name)
@@ -1211,7 +1223,7 @@ class MainWindow(QMainWindow):
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._results.set_design(design)
-            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._set_geometry_model(design)
             self._auto_select_view(design)
             self._project_name_updating = True
             self._project_name.setText(project_name)
@@ -1229,7 +1241,7 @@ class MainWindow(QMainWindow):
                 self._project = self._project.with_design(design, updated_at=utc_now())
             self._project = replace(self._project, name=project_name)
             self._results.set_design(design)
-            self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+            self._set_geometry_model(design)
             self._auto_select_view(design)
             self._form_dirty = False
             self._dirty = True
@@ -1253,7 +1265,7 @@ class MainWindow(QMainWindow):
             updated = updated.with_design(design, updated_at=updated.updated_at)
             self._project = updated
         self._results.set_design(design)
-        self._geometry.set_model(design.antenna, antenna_type=design.antenna_type)
+        self._set_geometry_model(design)
         self._auto_select_view(design)
         self._project_name_updating = True
         self._project_name.setText(project_name)
@@ -2044,7 +2056,7 @@ class MainWindow(QMainWindow):
         self._simulation_results.pop(self._design_id, None)
         self._results.set_result(None)
         self._results.set_design(updated_design)
-        self._geometry.set_model(updated_design.antenna, antenna_type=updated_design.antenna_type)
+        self._set_geometry_model(updated_design)
         self._design_stack.setCurrentWidget(self._custom_panel)
         self._update_custom_panel(updated_design)
         self._last_status_key = "status.design_changed"
@@ -2104,7 +2116,7 @@ class MainWindow(QMainWindow):
         self._simulation_results.pop(self._design_id, None)
         self._results.set_result(None)
         self._results.set_design(updated_design)
-        self._geometry.set_model(updated_design.antenna, antenna_type=updated_design.antenna_type)
+        self._set_geometry_model(updated_design)
         self._design_stack.setCurrentWidget(self._custom_panel)
         self._update_custom_panel(updated_design)
         self._auto_select_view(updated_design)
@@ -2145,7 +2157,7 @@ class MainWindow(QMainWindow):
         self._simulation_results.pop(self._design_id, None)
         self._results.set_result(None)
         self._results.set_design(updated_design)
-        self._geometry.set_model(updated_design.antenna, antenna_type=updated_design.antenna_type)
+        self._set_geometry_model(updated_design)
         self._update_custom_panel(updated_design)
         self._update_title()
         self._update_actions()

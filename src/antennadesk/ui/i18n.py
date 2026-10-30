@@ -121,8 +121,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Slim Jim",
     },
     "catalog.slim_jim.description": {
-        Language.ENGLISH: "Folded J-pole with a top connector.",
-        Language.SPANISH: "J Pole plegada con conector superior.",
+        Language.ENGLISH: "Open-top folded J-pole with a gap between element ends.",
+        Language.SPANISH: "J Pole plegada con brecha entre los extremos.",
     },
     "catalog.endfed": {
         Language.ENGLISH: "End-fed wire",

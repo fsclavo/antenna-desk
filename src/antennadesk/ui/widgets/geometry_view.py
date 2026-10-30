@@ -57,6 +57,7 @@ class GeometryView(QWidget):
         self._unit_system = unit_system
         self._model: AntennaModel | None = None
         self._antenna_type: str | None = None
+        self._display_name: str | None = None
         self._mode = GeometryViewMode.ELEVATION
         self._height_exaggeration = 1.0
         self._zoom = 1.0
@@ -86,9 +87,11 @@ class GeometryView(QWidget):
         model: AntennaModel | None,
         *,
         antenna_type: str | None = None,
+        display_name: str | None = None,
     ) -> None:
         self._model = model
         self._antenna_type = antenna_type if antenna_type is not None else self._infer_type(model)
+        self._display_name = display_name
         self._pan = QPointF(0.0, 0.0)
         self.update()
 
@@ -412,11 +415,7 @@ class GeometryView(QWidget):
         max_x = max(point.x_m for wire in self._model.wires for point in (wire.start, wire.end))
         span_m = max(max_x - min_x, 1e-9)
         unit = self._translator.t(length_unit_key(self._unit_system))
-        template = (
-            "Slim Jim"
-            if any(wire.id == "top-connector" for wire in self._model.wires)
-            else "J Pole"
-        )
+        template = self._display_name or "J Pole"
         summary = self._translator.t(
             "geometry.j_pole_elevation",
             template=template,
@@ -535,11 +534,7 @@ class GeometryView(QWidget):
             rect,
             self._translator.t(
                 "geometry.j_pole_plan",
-                template=(
-                    "Slim Jim"
-                    if any(wire.id == "top-connector" for wire in self._model.wires)
-                    else "J Pole"
-                ),
+                template=self._display_name or "J Pole",
                 spacing=f"{length_from_m(span_m, self._unit_system):.2f} {unit}",
             ),
         )
