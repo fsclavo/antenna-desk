@@ -504,6 +504,50 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Measurements",
         Language.SPANISH: "Mediciones",
     },
+    "measurement.details_title": {
+        Language.ENGLISH: "Measurement Details",
+        Language.SPANISH: "Detalles de la medición",
+    },
+    "measurement.name": {
+        Language.ENGLISH: "Name",
+        Language.SPANISH: "Nombre",
+    },
+    "measurement.calibration": {
+        Language.ENGLISH: "Calibration",
+        Language.SPANISH: "Calibración",
+    },
+    "measurement.reference_plane": {
+        Language.ENGLISH: "Reference plane",
+        Language.SPANISH: "Plano de referencia",
+    },
+    "measurement.feed_line": {
+        Language.ENGLISH: "Feed line / accessories",
+        Language.SPANISH: "Línea de alimentación / accesorios",
+    },
+    "measurement.notes": {
+        Language.ENGLISH: "Notes",
+        Language.SPANISH: "Notas",
+    },
+    "measurement.notes_hint": {
+        Language.ENGLISH: "Optional measurement conditions or notes.",
+        Language.SPANISH: "Condiciones o notas opcionales de la medición.",
+    },
+    "measurement.calibration_value": {
+        Language.ENGLISH: "Calibration: {value}",
+        Language.SPANISH: "Calibración: {value}",
+    },
+    "measurement.reference_plane_value": {
+        Language.ENGLISH: "Reference plane: {value}",
+        Language.SPANISH: "Plano de referencia: {value}",
+    },
+    "measurement.feed_line_value": {
+        Language.ENGLISH: "Feed line: {value}",
+        Language.SPANISH: "Línea: {value}",
+    },
+    "measurement.notes_value": {
+        Language.ENGLISH: "Notes: {value}",
+        Language.SPANISH: "Notas: {value}",
+    },
     "measurement.select": {
         Language.ENGLISH: "Measurement",
         Language.SPANISH: "Medición",

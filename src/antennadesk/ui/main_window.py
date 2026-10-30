@@ -117,6 +117,7 @@ from .dialogs.fan_dipole_dialog import FanDipoleDialog
 from .dialogs.feed_line_dialog import FeedLineDialog
 from .dialogs.inverted_v_dialog import InvertedVDialog
 from .dialogs.loads_dialog import LoadsDialog
+from .dialogs.measurement_details_dialog import MeasurementDetailsDialog
 from .dialogs.moxon_dialog import MoxonDialog
 from .dialogs.ocfd_dialog import OCFDDialog
 from .dialogs.optimization_dialog import OptimizationDialog
@@ -1621,13 +1622,20 @@ class MainWindow(QMainWindow):
         path = Path(filename)
         try:
             parsed = parse_vna_csv(path.read_text(encoding="utf-8", errors="replace"))
+            details = MeasurementDetailsDialog(self._translator, path.stem, self)
+            if details.exec() != QDialog.DialogCode.Accepted:
+                return
             measurement = Measurement(
                 id=uuid4(),
-                name=path.stem,
+                name=details.name() or path.stem,
                 created_at=utc_now(),
                 reference_impedance_ohm=parsed.reference_impedance_ohm,
                 points=parsed.points,
                 source=str(path),
+                calibration=details.calibration(),
+                reference_plane=details.reference_plane(),
+                feed_line=details.feed_line(),
+                notes=details.notes(),
             )
             self._project = self._project.with_measurement(
                 measurement,

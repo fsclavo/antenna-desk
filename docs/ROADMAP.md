@@ -57,8 +57,8 @@ In progress:
 
 - M3 catalog expansion complete: delta/quad loops, Moxon, OCFD, vertical with
   radials, and fan dipole are available.
-- M4 measurement support started: VNA CSV import, project measurements, and
-  measured/simulated SWR comparison.
+- M4 measurement support: VNA CSV import, measurement conditions/reference
+  plane, project measurements, and measured/simulated SWR comparison.
 
 Deferred:
 

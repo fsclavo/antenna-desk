@@ -137,6 +137,8 @@ class ResultsView(QWidget):
         self._configure_table(self._measurement_table)
         self._measurement_plot = self._make_plot()
         self._measurement_plot.addLegend()
+        self._measurement_details = QLabel(self._measurements_tab)
+        self._measurement_details.setWordWrap(True)
         measurement_controls = QHBoxLayout()
         measurement_controls.addWidget(self._measurement_selector_label)
         measurement_controls.addWidget(self._measurement_selector)
@@ -144,6 +146,7 @@ class ResultsView(QWidget):
         measurement_layout = QVBoxLayout(self._measurements_tab)
         measurement_layout.setContentsMargins(0, 0, 0, 0)
         measurement_layout.addLayout(measurement_controls)
+        measurement_layout.addWidget(self._measurement_details)
         measurement_layout.addWidget(self._measurement_table, 1)
         measurement_layout.addWidget(self._measurement_plot, 2)
 
@@ -642,6 +645,25 @@ class ResultsView(QWidget):
         if index < 0 or index >= len(self._measurements):
             return
         measurement = self._measurements[index]
+        details = []
+        if measurement.calibration:
+            details.append(
+                self._translator.t("measurement.calibration_value", value=measurement.calibration)
+            )
+        if measurement.reference_plane:
+            details.append(
+                self._translator.t(
+                    "measurement.reference_plane_value",
+                    value=measurement.reference_plane,
+                )
+            )
+        if measurement.feed_line:
+            details.append(
+                self._translator.t("measurement.feed_line_value", value=measurement.feed_line)
+            )
+        if measurement.notes:
+            details.append(self._translator.t("measurement.notes_value", value=measurement.notes))
+        self._measurement_details.setText(" · ".join(details))
         self._measurement_table.setRowCount(len(measurement.points))
         for row, point in enumerate(measurement.points):
             values = [

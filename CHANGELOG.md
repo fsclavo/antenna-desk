@@ -187,7 +187,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Moved Change Template to a fixed button above the design panel so it is always
   reachable.
 - Added VNA CSV import for R/X, S11 real/imaginary, and magnitude/phase data,
-  persisted measurements, and a measured/simulated SWR tab.
+  persisted measurements, measurement conditions/reference plane, and a
+  measured/simulated SWR tab.
 - Persist generator metadata (`generator_id`, `generator_name`) in custom
   designs and show it in the custom design panel.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the

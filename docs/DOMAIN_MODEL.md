@@ -230,9 +230,10 @@ tuple of design variants. Invariants:
 ## Measurements
 
 `MeasurementPoint` stores a measured frequency and complex impedance.
-`Measurement` stores a name, timestamp, reference impedance, source, and points.
-Measurements are stored in the project and rendered with SWR computed at their
-reference impedance.
+`Measurement` stores a name, timestamp, reference impedance, source, points,
+calibration, reference plane, feed line/accessories, and notes. Measurements are
+stored in the project and rendered with SWR computed at their reference
+impedance.
 
 ## Project file
 

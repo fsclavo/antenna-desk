@@ -1055,17 +1055,47 @@ def test_import_vna_csv_adds_a_measurement(
         "frequency_hz,r_ohm,x_ohm\n7000000,50,0\n7100000,75,0\n",
         encoding="utf-8",
     )
+
+    class FakeDetailsDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def name(self) -> str:
+            return "Field measurement"
+
+        def calibration(self) -> str:
+            return "SOL"
+
+        def reference_plane(self) -> str:
+            return "antenna terminals"
+
+        def feed_line(self) -> str:
+            return "10 m RG-58"
+
+        def notes(self) -> str:
+            return "Dry ground"
+
     monkeypatch.setattr(
         QFileDialog,
         "getOpenFileName",
         lambda *args, **kwargs: (str(csv_path), ""),
+    )
+    monkeypatch.setattr(
+        main_window_module,
+        "MeasurementDetailsDialog",
+        FakeDetailsDialog,
     )
 
     window.import_vna_csv()
 
     assert window._project is not None
     assert len(window._project.measurements) == 1
-    assert window._project.measurements[0].name == "field"
+    assert window._project.measurements[0].name == "Field measurement"
+    assert window._project.measurements[0].calibration == "SOL"
+    assert window._project.measurements[0].reference_plane == "antenna terminals"
     assert window._tabs_select_measurements() is None
     assert window._results._tabs.currentIndex() == 3
     assert window._dirty is True

@@ -315,6 +315,10 @@ def test_measurement_round_trip() -> None:
         reference_impedance_ohm=50.0,
         points=(MeasurementPoint(7_100_000.0, complex(70.0, 5.0)),),
         source="field.csv",
+        calibration="SOL",
+        reference_plane="antenna terminals",
+        feed_line="10 m RG-58",
+        notes="Dry ground",
     )
     original = replace(
         _project(DipoleParameters(7_100_000.0, 20.0, 8.0), "Dipole"), measurements=(measurement,)

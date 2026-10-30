@@ -105,7 +105,8 @@ Phase 5 adds tests for:
 - Moxon geometry, tip-gap validation, persistence, dialog restoration, and
   main-window creation are covered.
 - VNA CSV parsing for R/X, S11 real/imaginary, and magnitude/phase formats,
-  measurement persistence, import action, and measured/simulated SWR rendering.
+  measurement persistence, import action, measurement-condition metadata, and
+  measured/simulated SWR rendering.
 - Fan-dipole pair geometry, below-ground rejection, persistence, dialog
   restoration, and main-window creation are covered.
 - Feed-line impedance transformation, velocity factor, matched-line behavior,
@@ -274,7 +275,7 @@ Phase 6 adds tests for:
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 475 tests with the solver enabled. Solver integration
+The suite currently has 476 tests with the solver enabled. Solver integration
 tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.

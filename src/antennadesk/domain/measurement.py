@@ -41,6 +41,10 @@ class Measurement:
     reference_impedance_ohm: float
     points: tuple[MeasurementPoint, ...]
     source: str = ""
+    calibration: str = ""
+    reference_plane: str = ""
+    feed_line: str = ""
+    notes: str = ""
 
     def __post_init__(self) -> None:
         if not self.name.strip():

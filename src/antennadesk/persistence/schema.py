@@ -398,6 +398,10 @@ class MeasurementPayload(StrictModel):
     reference_impedance_ohm: float = Field(gt=0.0)
     points: list[MeasurementPointPayload] = Field(min_length=1)
     source: str = ""
+    calibration: str = ""
+    reference_plane: str = ""
+    feed_line: str = ""
+    notes: str = ""
 
 
 class SimulationRunPayload(StrictModel):
@@ -949,6 +953,10 @@ def _measurement_from_domain(value: Measurement) -> MeasurementPayload:
             for point in value.points
         ],
         source=value.source,
+        calibration=value.calibration,
+        reference_plane=value.reference_plane,
+        feed_line=value.feed_line,
+        notes=value.notes,
     )
 
 
@@ -1409,6 +1417,10 @@ def _measurement_to_domain(value: MeasurementPayload) -> Measurement:
             for point in value.points
         ),
         source=value.source,
+        calibration=value.calibration,
+        reference_plane=value.reference_plane,
+        feed_line=value.feed_line,
+        notes=value.notes,
     )
 
 
