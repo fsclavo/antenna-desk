@@ -119,6 +119,8 @@ class YagiParameters:
             wires=tuple(wires),
             feed=FeedPoint(wire_id=driven.id, offset_m=driven.length_m / 2.0),
             ground=self.ground,
+            generator_id="yagi",
+            generator_name="Yagi",
         )
 
 

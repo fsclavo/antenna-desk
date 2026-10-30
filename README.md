@@ -35,10 +35,10 @@ The application looks for `nec2c` in `NEC2C`, on `PATH`, and in
 select the executable.
 
 On first launch, a 40 m dipole is loaded so you can press **Simulate**
-immediately. Use **File → New Antenna...** for the guided wizard. The wizard
-starts with the antenna type currently selected in the design panel and offers
-wire dipole, folded dipole, and loop. The panel also converts an existing design
-between those types.
+immediately. Use **File → New Antenna...** to open the antenna catalog, search
+by type, and choose a wire dipole, folded dipole, loop, Yagi, inverted-V, or
+custom-wire design. The panel also converts an existing design between the
+basic template types.
 
 ## Documentation
 

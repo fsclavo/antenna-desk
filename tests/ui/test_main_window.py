@@ -429,8 +429,18 @@ def test_new_antenna_uses_the_current_antenna_type(
         def exec(self) -> QDialog.DialogCode:
             return QDialog.DialogCode.Rejected
 
+    class FakeCatalog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def selected_key(self) -> str:
+            return "loop"
+
+    monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
     monkeypatch.setattr(main_window_module, "DipoleWizard", FakeWizard)
-    window._form._type.setCurrentIndex(2)
     window._dirty = False
 
     window.new_antenna()
@@ -767,6 +777,8 @@ def test_new_yagi_creates_an_editable_custom_design(
             ),
         ),
         feed=FeedPoint("element-2", 5.0),
+        generator_id="yagi",
+        generator_name="Yagi",
     )
 
     class FakeYagiDialog:
@@ -788,6 +800,7 @@ def test_new_yagi_creates_an_editable_custom_design(
     assert window._project.name == "Yagi"
     assert window._project.designs[0].antenna_type == "custom"
     assert window._project.designs[0].antenna.wires == parameters.wires
+    assert window._custom_generator.text() == "Yagi"
     window._dirty = False
 
 
@@ -821,6 +834,8 @@ def test_new_inverted_v_creates_an_editable_custom_design(
             ),
         ),
         feed=FeedPoint("leg-1", 0.0),
+        generator_id="inverted_v",
+        generator_name="Inverted-V",
     )
 
     class FakeInvertedVDialog:

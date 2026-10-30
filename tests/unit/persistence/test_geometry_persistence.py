@@ -180,6 +180,8 @@ def test_custom_parameters_round_trip() -> None:
         frequency_hz=7_100_000.0,
         wires=(wire,),
         feed=FeedPoint("wire-1", 5.0),
+        generator_id="yagi",
+        generator_name="Yagi",
     )
     original = _project(parameters, "Custom")
 

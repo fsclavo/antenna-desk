@@ -81,6 +81,15 @@ from ..persistence.constants import MAX_PROJECT_SIZE_BYTES, PROJECT_SIZE_WARNING
 from ..reporting.csv_export import write_csv, write_pattern_csv
 from ..reporting.html_report import write_html_report
 from ..simulation.nec2.solver import Nec2cSolver
+from .dialogs.antenna_catalog_dialog import (
+    CATALOG_TYPE_CUSTOM,
+    CATALOG_TYPE_FOLDED_DIPOLE,
+    CATALOG_TYPE_INVERTED_V,
+    CATALOG_TYPE_LOOP,
+    CATALOG_TYPE_WIRE_DIPOLE,
+    CATALOG_TYPE_YAGI,
+    AntennaCatalogDialog,
+)
 from .dialogs.comparison_dialog import ComparisonDialog
 from .dialogs.construction_dialog import ConstructionDialog
 from .dialogs.custom_antenna_dialog import CustomAntennaDialog
@@ -143,12 +152,6 @@ class MainWindow(QMainWindow):
         self._new_action = QAction(self)
         self._new_action.setShortcut(QKeySequence.StandardKey.New)
         self._new_action.triggered.connect(lambda: self.new_antenna())
-        self._new_custom_action = QAction(self)
-        self._new_custom_action.triggered.connect(lambda: self.new_custom_antenna())
-        self._new_yagi_action = QAction(self)
-        self._new_yagi_action.triggered.connect(lambda: self.new_yagi_antenna())
-        self._new_inverted_v_action = QAction(self)
-        self._new_inverted_v_action.triggered.connect(lambda: self.new_inverted_v_antenna())
         self._import_nec_action = QAction(self)
         self._import_nec_action.triggered.connect(lambda: self.import_nec_deck())
         self._import_mmana_action = QAction(self)
@@ -273,9 +276,13 @@ class MainWindow(QMainWindow):
         self._custom_title.setStyleSheet("font-weight: bold;")
         self._custom_summary = QLabel(self._custom_panel)
         self._custom_summary.setWordWrap(True)
+        self._custom_generator = QLabel(self._custom_panel)
+        self._custom_generator.setWordWrap(True)
+        self._custom_generator.setStyleSheet("font-style: italic;")
         self._custom_edit = QPushButton(self._custom_panel)
         self._custom_edit.clicked.connect(lambda: self.edit_custom_wires())
         custom_layout.addWidget(self._custom_title)
+        custom_layout.addWidget(self._custom_generator)
         custom_layout.addWidget(self._custom_summary)
         custom_layout.addWidget(self._custom_edit)
         custom_layout.addStretch(1)
@@ -360,9 +367,6 @@ class MainWindow(QMainWindow):
 
         self._file_menu = self.menuBar().addMenu("")
         self._file_menu.addAction(self._new_action)
-        self._file_menu.addAction(self._new_custom_action)
-        self._file_menu.addAction(self._new_yagi_action)
-        self._file_menu.addAction(self._new_inverted_v_action)
         self._file_menu.addAction(self._import_nec_action)
         self._file_menu.addAction(self._import_mmana_action)
         self._file_menu.addAction(self._open_action)
@@ -412,9 +416,6 @@ class MainWindow(QMainWindow):
     def retranslate(self) -> None:
         self._update_title()
         self._new_action.setText(self._translator.t("action.new"))
-        self._new_custom_action.setText(self._translator.t("action.new_custom"))
-        self._new_yagi_action.setText(self._translator.t("action.new_yagi"))
-        self._new_inverted_v_action.setText(self._translator.t("action.new_inverted_v"))
         self._import_nec_action.setText(self._translator.t("action.import_nec"))
         self._import_mmana_action.setText(self._translator.t("action.import_mmana"))
         self._open_action.setText(self._translator.t("action.open"))
@@ -534,9 +535,6 @@ class MainWindow(QMainWindow):
         self._loads_action.setEnabled(idle and has_project)
         self._edit_custom_action.setEnabled(idle and has_project and is_custom)
         self._convert_custom_action.setEnabled(idle and has_project and not is_custom)
-        self._new_custom_action.setEnabled(idle)
-        self._new_yagi_action.setEnabled(idle)
-        self._new_inverted_v_action.setEnabled(idle)
         self._import_nec_action.setEnabled(idle)
         self._import_mmana_action.setEnabled(idle)
         self._export_csv_action.setEnabled(idle and has_result)
@@ -582,6 +580,20 @@ class MainWindow(QMainWindow):
         self._variant_combo.blockSignals(False)
         self._updating_variants = previous
 
+    def _update_custom_panel(self, design: DesignVariant) -> None:
+        parameters = design.parameters
+        if not isinstance(parameters, CustomAntennaParameters):
+            return
+        self._custom_generator.setText(parameters.generator_name or "")
+        self._custom_generator.setVisible(bool(parameters.generator_name))
+        self._custom_summary.setText(
+            self._translator.t(
+                "custom.summary",
+                count=len(design.antenna.wires),
+                length=f"{sum(wire.length_m for wire in design.antenna.wires):.3f} m",
+            )
+        )
+
     def _select_design(self, design_id: UUID) -> None:
         if self._project is None:
             return
@@ -591,13 +603,7 @@ class MainWindow(QMainWindow):
         self._loads = design.antenna.loads
         if isinstance(design.parameters, CustomAntennaParameters):
             self._design_stack.setCurrentWidget(self._custom_panel)
-            self._custom_summary.setText(
-                self._translator.t(
-                    "custom.summary",
-                    count=len(design.antenna.wires),
-                    length=f"{sum(wire.length_m for wire in design.antenna.wires):.3f} m",
-                )
-            )
+            self._update_custom_panel(design)
         else:
             self._design_stack.setCurrentWidget(self._form_scroll)
             self._form.set_parameters(design.parameters, reset_sweep=True)
@@ -1093,13 +1099,7 @@ class MainWindow(QMainWindow):
         self._results.set_design(updated_design)
         self._geometry.set_model(updated_design.antenna, antenna_type=updated_design.antenna_type)
         self._design_stack.setCurrentWidget(self._custom_panel)
-        self._custom_summary.setText(
-            self._translator.t(
-                "custom.summary",
-                count=len(updated_design.antenna.wires),
-                length=f"{sum(wire.length_m for wire in updated_design.antenna.wires):.3f} m",
-            )
-        )
+        self._update_custom_panel(updated_design)
         self._last_status_key = "status.design_changed"
         self._update_title()
         self._update_actions()
@@ -1138,17 +1138,29 @@ class MainWindow(QMainWindow):
         self._results.set_result(None)
         self._results.set_design(updated_design)
         self._geometry.set_model(updated_design.antenna, antenna_type=updated_design.antenna_type)
-        self._custom_summary.setText(
-            self._translator.t(
-                "custom.summary",
-                count=len(updated_design.antenna.wires),
-                length=f"{sum(wire.length_m for wire in updated_design.antenna.wires):.3f} m",
-            )
-        )
+        self._update_custom_panel(updated_design)
         self._update_title()
         self._update_actions()
 
     def new_antenna(self) -> None:
+        dialog = AntennaCatalogDialog(self._translator, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        selected = dialog.selected_key()
+        if selected == CATALOG_TYPE_CUSTOM:
+            self.new_custom_antenna()
+        elif selected == CATALOG_TYPE_YAGI:
+            self.new_yagi_antenna()
+        elif selected == CATALOG_TYPE_INVERTED_V:
+            self.new_inverted_v_antenna()
+        elif selected in {
+            CATALOG_TYPE_WIRE_DIPOLE,
+            CATALOG_TYPE_FOLDED_DIPOLE,
+            CATALOG_TYPE_LOOP,
+        }:
+            self._new_basic_antenna(selected)
+
+    def _new_basic_antenna(self, antenna_type: str) -> None:
         if not self._maybe_save_changes():
             return
         initial_frequency = 7_100_000.0
@@ -1158,7 +1170,7 @@ class MainWindow(QMainWindow):
             self._translator,
             self._unit_system,
             initial_frequency_hz=initial_frequency,
-            initial_antenna_type=self._form.antenna_type(),
+            initial_antenna_type=antenna_type,
             parent=self,
         )
         if wizard.exec() != QWizard.DialogCode.Accepted:

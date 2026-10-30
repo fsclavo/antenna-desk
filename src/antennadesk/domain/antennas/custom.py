@@ -28,11 +28,17 @@ class CustomAntennaParameters:
     feed: FeedPoint
     ground: GroundModel = FREE_SPACE
     loads: tuple[LumpedLoad, ...] = ()
+    generator_id: str | None = None
+    generator_name: str | None = None
 
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
         object.__setattr__(self, "wires", tuple(self.wires))
         object.__setattr__(self, "loads", tuple(self.loads))
+        for field_name in ("generator_id", "generator_name"):
+            value = getattr(self, field_name)
+            if value is not None and not value.strip():
+                raise ValueError(f"{field_name} must not be empty when provided")
 
     def to_antenna(self, *, name: str = "Custom antenna") -> AntennaModel:
         return AntennaModel(

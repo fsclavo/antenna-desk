@@ -23,6 +23,8 @@ def test_inverted_v_geometry_and_feed() -> None:
     assert len(custom.wires) == 2
     assert custom.feed.wire_id == "leg-1"
     assert custom.feed.offset_m == 0.0
+    assert custom.generator_id == "inverted_v"
+    assert custom.generator_name == "Inverted-V"
     assert parameters.vertical_drop_m == pytest.approx(10.6 * math.cos(math.radians(60.0)))
     assert parameters.horizontal_span_m == pytest.approx(10.6 * math.sin(math.radians(60.0)))
     assert parameters.end_height_m == pytest.approx(12.0 - parameters.vertical_drop_m)

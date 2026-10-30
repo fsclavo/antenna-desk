@@ -45,10 +45,14 @@ Completed:
 
 - M1: parametric Yagi generator with editable element table and NBS preset.
 - M2: inverted-V generator.
+- Single **New Antenna** catalog with search and Antenna Type selection.
+- Generated-design metadata (`generator_id` / `generator_name`) persisted in
+  custom designs.
 
 In progress:
 
-- Broad parametric catalog with explicit evidence levels; next is M3.
+- M3 catalog expansion: delta loop/quad, Moxon, OCFD, fan dipole, vertical
+  with radials.
 
 Deferred:
 
@@ -64,7 +68,7 @@ Deferred:
 - NBS 0.8λ five-element starting preset.
 - Generate an editable custom-wire design.
 - Structural tests plus a reference-backed NEC check for the NBS preset.
-- UI: **File → New Yagi...**, validation badge/notes in the generated design.
+- UI: Yagi entry in the **New Antenna** catalog; generated-design metadata.
 
 ### M2 — Inverted-V generator (completed)
 
@@ -93,7 +97,7 @@ Deferred:
 |---|---|---|---|
 | P0 | Parametric Yagi generator | B/C | done |
 | P0 | Inverted-V generator | C | done |
-| P1 | Catalog metadata and validation badge | A/B/C | next |
+| P1 | Catalog metadata and validation badge | A/B/C | done |
 | P1 | Delta loop / quad / Moxon generators | B/C | pending |
 | P1 | OCFD and fan dipole generators | B/C | pending |
 | P1 | Vertical with radial screen | B/C | pending |

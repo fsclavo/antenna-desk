@@ -65,10 +65,15 @@ steps through those values, dragging pans, and double-click resets zoom and pan.
 selector can exaggerate the height (1x, 1.5x, 2x, 3x) for low horizontal
 antennas.
 
-## Create a dipole with the wizard
+## Create an antenna
 
-Use **File → New Antenna...**. The wizard starts with the antenna type
-currently selected in the design panel. It asks for:
+Use **File → New Antenna...** to open the antenna catalog. Search or filter by
+**Antenna Type** and choose the desired generator. The catalog shows a short
+description and evidence level for each type.
+
+### Basic templates
+
+For a wire dipole, folded dipole, or loop, the guided wizard asks for:
 
 1. Project name, antenna type, band, and frequency.
 2. Geometry for the selected type: wire dipole length/orientation, folded
@@ -83,7 +88,7 @@ After creation, adjust the design panel and press **Apply design** or
 
 ## Create a Yagi
 
-Use **File → New Yagi...** to generate a Yagi as an editable custom-wire
+Choose **File → New Antenna... → Yagi** to generate a Yagi as an editable custom-wire
 design. The table contains each element's boom position, total length, and
 radius. Add or remove elements, edit the values, and select the driven element.
 **Load NBS 5-element preset** fills the NBS TN-688 0.8λ starting geometry
@@ -99,7 +104,7 @@ its own modeled performance. The generated design can be refined further with
 
 ## Create an inverted-V
 
-Use **File → New Inverted-V...** to generate a two-leg inverted-V as an
+Choose **File → New Antenna... → Inverted-V** to generate a two-leg inverted-V as an
 editable custom-wire design. Set the apex height, leg length, included angle,
 azimuth, wire radius, material, and ground. The dialog shows the resulting
 horizontal span and end height. The feed is at the apex.

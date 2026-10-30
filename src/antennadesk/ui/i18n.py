@@ -30,6 +30,83 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "menu.help": {Language.ENGLISH: "Help", Language.SPANISH: "Ayuda"},
     "menu.units": {Language.ENGLISH: "Units", Language.SPANISH: "Unidades"},
     "action.new": {Language.ENGLISH: "New Antenna...", Language.SPANISH: "Nueva antena..."},
+    "catalog.title": {
+        Language.ENGLISH: "New Antenna",
+        Language.SPANISH: "Nueva antena",
+    },
+    "catalog.type": {
+        Language.ENGLISH: "Antenna Type",
+        Language.SPANISH: "Tipo de antena",
+    },
+    "catalog.search": {
+        Language.ENGLISH: "Search antenna types...",
+        Language.SPANISH: "Buscar tipos de antena...",
+    },
+    "catalog.evidence": {
+        Language.ENGLISH: "Evidence",
+        Language.SPANISH: "Evidencia",
+    },
+    "catalog.category.basic": {
+        Language.ENGLISH: "Basic",
+        Language.SPANISH: "Básica",
+    },
+    "catalog.category.generated": {
+        Language.ENGLISH: "Generated",
+        Language.SPANISH: "Generada",
+    },
+    "catalog.category.custom": {
+        Language.ENGLISH: "Custom",
+        Language.SPANISH: "Personalizada",
+    },
+    "catalog.wire_dipole.description": {
+        Language.ENGLISH: "Center-fed straight wire with horizontal or vertical orientation.",
+        Language.SPANISH: "Hilo recto con alimentación central, horizontal o vertical.",
+    },
+    "catalog.folded_dipole.description": {
+        Language.ENGLISH: "Two parallel elements joined at the ends, with adjustable spacing.",
+        Language.SPANISH: "Dos elementos paralelos unidos en los extremos, con separación ajustable.",
+    },
+    "catalog.loop.description": {
+        Language.ENGLISH: "Regular-polygon loop in a vertical plane.",
+        Language.SPANISH: "Lazo poligonal regular en un plano vertical.",
+    },
+    "catalog.yagi": {Language.ENGLISH: "Yagi", Language.SPANISH: "Yagi"},
+    "catalog.yagi.description": {
+        Language.ENGLISH: "Editable multi-element Yagi with an NBS starting preset.",
+        Language.SPANISH: "Yagi editable de múltiples elementos con preset inicial NBS.",
+    },
+    "catalog.inverted_v": {
+        Language.ENGLISH: "Inverted-V",
+        Language.SPANISH: "V invertida",
+    },
+    "catalog.inverted_v.description": {
+        Language.ENGLISH: "Two sloping wires fed at the apex, with adjustable included angle.",
+        Language.SPANISH: "Dos hilos inclinados alimentados en el vértice, con ángulo ajustable.",
+    },
+    "catalog.custom": {
+        Language.ENGLISH: "Custom wires",
+        Language.SPANISH: "Hilos personalizados",
+    },
+    "catalog.custom.description": {
+        Language.ENGLISH: "Start from an empty wire table and define arbitrary coordinates.",
+        Language.SPANISH: "Comenzar con una tabla vacía y definir coordenadas arbitrarias.",
+    },
+    "catalog.evidence.builtin": {
+        Language.ENGLISH: "Built-in template; simulation model",
+        Language.SPANISH: "Plantilla integrada; modelo de simulación",
+    },
+    "catalog.evidence.yagi": {
+        Language.ENGLISH: "Reference-backed NBS preset; edited geometry is experimental",
+        Language.SPANISH: "Preset NBS con referencia; la geometría editada es experimental",
+    },
+    "catalog.evidence.experimental": {
+        Language.ENGLISH: "Experimental; no independent numeric reference",
+        Language.SPANISH: "Experimental; sin referencia numérica independiente",
+    },
+    "catalog.evidence.custom": {
+        Language.ENGLISH: "User-defined geometry",
+        Language.SPANISH: "Geometría definida por el usuario",
+    },
     "action.open": {Language.ENGLISH: "Open Project...", Language.SPANISH: "Abrir proyecto..."},
     "action.save": {Language.ENGLISH: "Save", Language.SPANISH: "Guardar"},
     "action.save_as": {Language.ENGLISH: "Save As...", Language.SPANISH: "Guardar como..."},
@@ -840,18 +917,6 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "custom.feed_offset": {
         Language.ENGLISH: "Feed offset",
         Language.SPANISH: "Posición de alimentación",
-    },
-    "action.new_custom": {
-        Language.ENGLISH: "New Custom Antenna...",
-        Language.SPANISH: "Nueva antena personalizada...",
-    },
-    "action.new_yagi": {
-        Language.ENGLISH: "New Yagi...",
-        Language.SPANISH: "Nueva Yagi...",
-    },
-    "action.new_inverted_v": {
-        Language.ENGLISH: "New Inverted-V...",
-        Language.SPANISH: "Nueva V invertida...",
     },
     "action.import_nec": {
         Language.ENGLISH: "Import NEC Deck...",

@@ -56,6 +56,8 @@ class CustomAntennaDialog(QDialog):
         self._translator = translator
         self._unit_system = unit_system
         self._loads: tuple[LumpedLoad, ...] = parameters.loads if parameters else ()
+        self._generator_id = parameters.generator_id if parameters else None
+        self._generator_name = parameters.generator_name if parameters else None
         self._warnings = ()
         self.setWindowTitle(translator.t("custom.title"))
         self.resize(980, 620)
@@ -384,6 +386,8 @@ class CustomAntennaDialog(QDialog):
             feed=FeedPoint(feed_wire, length_to_m(self._feed_offset.value(), self._unit_system)),
             ground=self._ground_model(),
             loads=self._loads,
+            generator_id=self._generator_id,
+            generator_name=self._generator_name,
         )
 
     def result_parameters(self) -> CustomAntennaParameters:

@@ -103,4 +103,6 @@ class InvertedVParameters:
             wires=(leg_one, leg_two),
             feed=FeedPoint(wire_id=LEG_ONE_ID, offset_m=0.0),
             ground=self.ground,
+            generator_id="inverted_v",
+            generator_name="Inverted-V",
         )

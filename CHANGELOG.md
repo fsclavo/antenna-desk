@@ -140,6 +140,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   element selection, and an NBS TN-688 5-element starting preset.
 - Added an experimental inverted-V generator with apex height, leg length,
   included angle, azimuth, geometry preview, and editable custom-wire output.
+- Consolidated antenna creation into a searchable **New Antenna** catalog with
+  an Antenna Type selector; removed per-type New menu entries.
+- Persist generator metadata (`generator_id`, `generator_name`) in custom
+  designs and show it in the custom design panel.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the
   first wire.
 - Length optimization is generalized to the primary dimension: wire/folded

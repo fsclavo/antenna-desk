@@ -168,6 +168,8 @@ class CustomParametersPayload(StrictModel):
     feed: FeedPayload
     ground: GroundPayload
     loads: list[LoadPayload] = Field(default_factory=list)
+    generator_id: str | None = Field(default=None, min_length=1)
+    generator_name: str | None = Field(default=None, min_length=1)
 
 
 class FrequencyPlanPayload(StrictModel):
@@ -530,6 +532,8 @@ def _custom_parameters_from_domain(
         feed=_feed_from_domain(value.feed),
         ground=_ground_from_domain(value.ground),
         loads=[_load_from_domain(load) for load in value.loads],
+        generator_id=value.generator_id,
+        generator_name=value.generator_name,
     )
 
 
@@ -857,6 +861,8 @@ def _custom_parameters_to_domain(value: CustomParametersPayload) -> CustomAntenn
         feed=_feed_to_domain(value.feed),
         ground=_ground_to_domain(value.ground),
         loads=tuple(_load_to_domain(load) for load in value.loads),
+        generator_id=value.generator_id,
+        generator_name=value.generator_name,
     )
 
 

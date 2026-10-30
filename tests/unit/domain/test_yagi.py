@@ -32,6 +32,8 @@ def test_yagi_generates_parallel_wires_and_center_feed() -> None:
     assert all(wire.start.z_m == 8.0 and wire.end.z_m == 8.0 for wire in parameters.wires)
     assert parameters.feed.wire_id == "element-2"
     assert parameters.feed.offset_m == pytest.approx(parameters.wires[1].length_m / 2.0)
+    assert parameters.generator_id == "yagi"
+    assert parameters.generator_name == "Yagi"
     assert parameters.wires[0].start.x_m == pytest.approx(0.0)
     assert parameters.wires[1].start.x_m > parameters.wires[0].start.x_m
 
