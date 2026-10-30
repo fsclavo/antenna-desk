@@ -375,6 +375,7 @@ class ProjectPayload(StrictModel):
     updated_at: datetime
     designs: list[DesignPayload] = Field(default_factory=list)
     simulation_runs: list[SimulationRunPayload] = Field(default_factory=list)
+    feed_line: FeedLinePayload | None = None
 
     @model_validator(mode="after")
     def _validate_timestamps(self) -> Self:
@@ -712,6 +713,7 @@ def _project_from_domain(value: Project) -> ProjectPayload:
         updated_at=value.updated_at,
         designs=[_design_from_domain(design) for design in value.designs],
         simulation_runs=[_simulation_run_from_domain(run) for run in value.simulation_runs],
+        feed_line=(_feed_line_from_domain(value.feed_line) if value.feed_line else None),
     )
 
 
@@ -1032,5 +1034,8 @@ def project_from_document(document: ProjectDocument) -> Project:
         designs=tuple(_design_to_domain(design) for design in document.project.designs),
         simulation_runs=tuple(
             _simulation_run_to_domain(run) for run in document.project.simulation_runs
+        ),
+        feed_line=(
+            _feed_line_to_domain(document.project.feed_line) if document.project.feed_line else None
         ),
     )

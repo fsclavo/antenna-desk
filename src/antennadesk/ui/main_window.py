@@ -667,6 +667,7 @@ class MainWindow(QMainWindow):
     ) -> None:
         self._project = project
         self._design_id = design_id
+        self._feed_line = project.feed_line
         self._current_path = path
         self._dirty = dirty
         self._form_dirty = False
@@ -758,8 +759,16 @@ class MainWindow(QMainWindow):
             self._feed_line,
             self,
         )
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            self._feed_line = dialog.result_feed_line()
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._feed_line = dialog.result_feed_line()
+        if self._project is not None:
+            self._project = self._project.with_feed_line(
+                self._feed_line,
+                updated_at=utc_now(),
+            )
+            self._dirty = True
+            self._update_title()
 
     def simulate(self) -> None:
         if self._simulating:

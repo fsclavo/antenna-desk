@@ -10,6 +10,7 @@ from uuid import UUID
 
 from ..antennas.antenna import AntennaModel
 from ..antennas.design import AntennaDesignParameters, antenna_type_for
+from ..antennas.feed_line import FeedLine
 from ..antennas.load import LumpedLoad
 from ..common.time import ensure_utc
 from ..common.validation import Diagnostic, Severity, raise_if_errors
@@ -68,6 +69,7 @@ class Project:
     updated_at: datetime
     designs: tuple[DesignVariant, ...] = field(default_factory=tuple)
     simulation_runs: tuple[SimulationRun, ...] = field(default_factory=tuple)
+    feed_line: FeedLine | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "designs", tuple(self.designs))
@@ -194,6 +196,14 @@ class Project:
             if run.design_id == design_id:
                 latest = run
         return latest
+
+    def with_feed_line(
+        self,
+        feed_line: FeedLine | None,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        return replace(self, feed_line=feed_line, updated_at=updated_at)
 
     def with_latest_simulation_runs_only(self, *, updated_at: datetime) -> Project:
         latest_runs = tuple(

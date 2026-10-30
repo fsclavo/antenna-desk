@@ -126,9 +126,9 @@ SWR tab reports the impedance and SWR at the **transmitter end**; the Pattern
 tab still reports antenna power gain, because the line does not change the
 radiation pattern. A diagnostics row confirms that the line was applied.
 
-Disable the feed line to return to antenna-terminal impedance. Feed-line
-settings are simulation settings and are stored with each simulation run, not
-as part of the antenna geometry.
+Disable the feed line to return to antenna-terminal impedance. The feed-line
+configuration is saved with the project and with each simulation run; it is
+not part of the antenna geometry.
 
 ## Variants and comparison
 

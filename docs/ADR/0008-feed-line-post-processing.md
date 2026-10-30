@@ -16,9 +16,9 @@ pattern; it only transforms the impedance presented to the transmitter.
 
 1. Add an immutable `FeedLine` value object with characteristic impedance,
    length, velocity factor, and matched loss per 100 m.
-2. Store it in `SimulationSpec`, not in the antenna geometry. The line is a
-   simulation setting and is persisted with each simulation run; schema v3
-   remains additive.
+2. Store it in `SimulationSpec` and as a project-level setting, not in the
+   antenna geometry. The project keeps the current line configuration; each
+   simulation run keeps the exact line used. Schema v3 remains additive.
 3. After NEC normalization, transform each antenna-terminal impedance with the
    standard complex transmission-line equation. Compute SWR from the transformed
    impedance and the configured reference impedance.

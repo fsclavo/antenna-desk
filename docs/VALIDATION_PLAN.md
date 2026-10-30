@@ -100,7 +100,7 @@ Phase 5 adds tests for:
 - Pattern-resolution presets, point-count estimates, and 100-point sweep
   defaults in the standard and custom forms.
 - Feed-line impedance transformation, velocity factor, matched-line behavior,
-  persistence, and dialog integration.
+  project/run persistence, and dialog integration.
 - The optimization dialog worker, evaluation log, sensitivity table, and
   apply-length selection.
 - The main-window path that applies the optimized length and runs the full
@@ -174,7 +174,7 @@ Phase 6 adds tests for:
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 397 tests with the solver enabled. The twelve solver
+The suite currently has 398 tests with the solver enabled. The twelve solver
 integration tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.
