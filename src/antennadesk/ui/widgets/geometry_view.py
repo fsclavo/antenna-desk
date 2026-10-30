@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import math
 from enum import StrEnum
+from pathlib import Path
 
 from PySide6.QtCore import QEvent, QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import (
@@ -72,6 +73,11 @@ class GeometryView(QWidget):
 
     def minimumSizeHint(self) -> QSize:
         return QSize(360, 240)
+
+    def save_image(self, path: Path) -> None:
+        pixmap = self.grab()
+        if pixmap.isNull() or not pixmap.save(str(path), "PNG"):
+            raise OSError(f"could not write geometry image: {path}")
 
     def set_model(
         self,

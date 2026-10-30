@@ -81,7 +81,7 @@ between those types.
   loads, NEC `LD 0`/`LD 1` export, and report rows.
 - Printable/HTML construction sheet with type-aware dimensions, feed position,
   loads, and simulated result.
-- CSV/PNG export for sweep results and far-field patterns, plus
+- CSV/PNG export for sweep results, far-field patterns, and geometry, plus
   self-contained HTML/PDF reports.
 - English and Spanish UI, plus metric and imperial presentation units.
 - Immutable domain model for units, geometry, conductors, feed points, ground

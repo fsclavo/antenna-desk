@@ -95,7 +95,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Independent ARRL Antenna Book reference checks for free-space dipole gain
   and the folded-dipole gain/pattern/resistance relationship.
 - Far-field pattern CSV export with frequency, angles, gains, polarization,
-  and E-field components, plus PNG export of the current pattern view.
+  and E-field components, plus PNG export of the current pattern view and
+  geometry view.
 - Custom straight-wire antennas with a coordinate editor, persistence, and
   simulation flow; optimization is disabled for custom designs.
 - Practical NEC-2 deck import (GW, EX, FR, GE/GN, LD 0/1) into custom designs,

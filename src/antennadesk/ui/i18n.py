@@ -377,6 +377,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Export Pattern PNG...",
         Language.SPANISH: "Exportar PNG de patrón...",
     },
+    "action.export_geometry_png": {
+        Language.ENGLISH: "Export Geometry PNG...",
+        Language.SPANISH: "Exportar PNG de geometría...",
+    },
     "action.export_html": {
         Language.ENGLISH: "Export HTML Report...",
         Language.SPANISH: "Exportar informe HTML...",
@@ -439,6 +443,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "dialog.nec_warnings": {
         Language.ENGLISH: "Imported with {count} warning(s):\n{details}",
         Language.SPANISH: "Importado con {count} advertencia(s):\n{details}",
+    },
+    "dialog.geometry_png_title": {
+        Language.ENGLISH: "Save geometry image",
+        Language.SPANISH: "Guardar imagen de geometría",
     },
     "dialog.pattern_png_title": {
         Language.ENGLISH: "Save pattern image",

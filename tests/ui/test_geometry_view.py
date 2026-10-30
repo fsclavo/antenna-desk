@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from PySide6.QtGui import QPixmap
 from pytestqt.qtbot import QtBot
@@ -36,12 +38,15 @@ def _non_white_pixels(pixmap: QPixmap) -> int:
     return non_white
 
 
-def test_geometry_view_renders_a_sketch(qtbot: QtBot) -> None:
+def test_geometry_view_renders_a_sketch(qtbot: QtBot, tmp_path: Path) -> None:
     view = _make_view(qtbot)
     pixmap = view.grab()
 
     assert not pixmap.isNull()
     assert _non_white_pixels(pixmap) > 50
+    image_path = tmp_path / "geometry.png"
+    view.save_image(image_path)
+    assert image_path.read_bytes().startswith(b"\x89PNG")
 
 
 def test_geometry_view_plan_renders(qtbot: QtBot) -> None:

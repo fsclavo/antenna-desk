@@ -152,10 +152,11 @@ loops show side length, circumference, side count, and feed side.
 Use **File → Export CSV...** for the frequency sweep table, **File → Export
 Pattern CSV...** for the far-field grid (frequency, θ, φ, gains,
 polarization, and E-field components), **File → Export Pattern PNG...** for
-the current cut/3D pattern image, **File → Export HTML Report...** for a
-self-contained HTML report, or **File → Export PDF Report...** for a native
-PDF with design parameters, configuration, solver metadata, fingerprint,
-diagnostics, impedance, resonance, and charts.
+the current cut/3D pattern image, **File → Export Geometry PNG...** for the
+current geometry view, **File → Export HTML Report...** for a self-contained
+HTML report, or **File → Export PDF Report...** for a native PDF with design
+parameters, configuration, solver metadata, fingerprint, diagnostics,
+impedance, resonance, and charts.
 Simulation runs are stored when you save the project, including raw solver
 text. The project size limit is 10 MB; saving above 8 MB shows a warning, and
 **File → Compact Simulation History...** keeps only the latest run per
