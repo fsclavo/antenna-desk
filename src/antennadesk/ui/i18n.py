@@ -878,11 +878,13 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "vertical.hint": {
         Language.ENGLISH: (
             "The radiator is fed at its base. Radials are wires in the radial "
-            "plane; set a small base height for elevated radials."
+            "plane; over finite ground use at least 0.25 m to avoid numerical "
+            "instability close to the soil."
         ),
         Language.SPANISH: (
             "El radiador se alimenta en la base. Los radiales son hilos en el "
-            "plano de radiales; usá una altura de base pequeña para radiales elevados."
+            "plano de radiales; sobre suelo finito usá al menos 0.25 m para evitar "
+            "inestabilidad numérica cerca del suelo."
         ),
     },
     "vertical.evidence": {

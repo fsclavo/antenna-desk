@@ -166,6 +166,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   both pattern and geometry views.
 - Increase the default radiation-pattern resolution from 10° to 5°, doubling
   the angular points per axis.
+- Raise the vertical generator's default base/radial-plane height to 0.25 m to
+  avoid numerical instability over finite ground.
 - Persist generator metadata (`generator_id`, `generator_name`) in custom
   designs and show it in the custom design panel.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the

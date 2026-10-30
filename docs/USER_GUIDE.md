@@ -129,8 +129,9 @@ angle is visible; Plan remains available.
 Choose **File → New Antenna... → Vertical + radials** to generate a vertical
 radiator with an optional radial plane. Set the radiator height, base height,
 radial count, radial length, first radial angle, wire radius, material, and
-ground. The base height is also the radial-plane height; use a small positive
-value for elevated radials.
+ground. The base height is also the radial-plane height. The default is 0.25 m;
+over finite ground keep at least this height to avoid numerical instability very
+close to the soil.
 
 The generator is experimental: geometry and radial topology are tested, but it
 has no independent numerical performance reference. The feed is at the base of

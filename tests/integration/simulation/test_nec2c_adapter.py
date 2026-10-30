@@ -361,3 +361,42 @@ def test_nbs_five_element_yagi_gain_reference(solver: Nec2cSolver) -> None:
     assert result.status is SimulationStatus.COMPLETED
     assert result.max_total_gain_db == pytest.approx(11.35, abs=0.5)
     assert len(result.frequencies[0].currents) == 5 * 21
+
+
+def test_vertical_generator_produces_a_usable_sweep(solver: Nec2cSolver) -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=0.25,
+        radial_count=16,
+        radial_length_m=5.0,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    )
+    model = parameters.to_custom_parameters().to_antenna(name="Vertical")
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.sweep(7_000_000.0, 7_200_000.0, 5),
+        segmentation=SegmentationPolicy(min_segments_per_wire=3),
+        include_conductor_losses=False,
+        far_field=FarFieldRequest(
+            enabled=True,
+            theta_start_deg=0.0,
+            theta_stop_deg=90.0,
+            theta_count=19,
+            phi_start_deg=0.0,
+            phi_stop_deg=360.0,
+            phi_count=73,
+        ),
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert len(result.frequencies) == 5
+    assert all(frequency.impedance_ohm.real > 0.0 for frequency in result.frequencies)
+    assert all(frequency.swr is not None for frequency in result.frequencies)
+    assert result.max_total_gain_db is not None

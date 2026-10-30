@@ -59,7 +59,7 @@ class VerticalDialog(QDialog):
         self._base_height = QDoubleSpinBox(self)
         self._base_height.setDecimals(3)
         self._base_height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
-        self._base_height.setValue(length_from_m(0.1, unit_system))
+        self._base_height.setValue(length_from_m(0.25, unit_system))
 
         self._radial_count = QSpinBox(self)
         self._radial_count.setRange(0, MAX_RADIALS)
