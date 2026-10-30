@@ -133,6 +133,14 @@ generator fields editable. Use **Edit Custom Wires...** for raw coordinates. The
 elevation view is selected automatically so the included angle is visible; Plan
 remains available.
 
+## Create a fan dipole
+
+Choose **File → New Antenna... → Fan dipole** to generate multiple center-fed
+dipole pairs sharing a common apex feed. Each row sets the element length and
+included angle; add or remove pairs as needed. Set the apex height, azimuth,
+radius, material, and ground. The fan dipole is a first-class experimental
+template with an inline editor.
+
 ## Create an off-center-fed dipole
 
 Choose **File → New Antenna... → Off-center-fed dipole** to generate a single

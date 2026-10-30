@@ -19,6 +19,11 @@ from ..domain.antennas.dipole import (
     DipoleOrientation,
     DipoleParameters,
 )
+from ..domain.antennas.fan_dipole import (
+    ANTENNA_TYPE_FAN_DIPOLE,
+    FanDipoleParameters,
+    FanElement,
+)
 from ..domain.antennas.feed import FeedPoint
 from ..domain.antennas.feed_line import FeedLine
 from ..domain.antennas.folded_dipole import (
@@ -196,6 +201,21 @@ class VerticalParametersPayload(StrictModel):
     radial_count: int = Field(default=0, ge=0, le=128)
     radial_length_m: float = Field(default=0.0, ge=0.0)
     radial_angle_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class FanElementPayload(StrictModel):
+    length_m: float = Field(gt=0.0)
+    included_angle_deg: float = Field(default=120.0, gt=0.0, le=180.0)
+
+
+class FanDipoleParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    elements: list[FanElementPayload] = Field(min_length=1)
+    apex_height_m: float = Field(ge=0.0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
@@ -380,6 +400,7 @@ ParameterPayload = (
     | InvertedVParametersPayload
     | YagiParametersPayload
     | MoxonParametersPayload
+    | FanDipoleParametersPayload
     | CustomParametersPayload
 )
 
@@ -399,6 +420,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_YAGI
     if isinstance(value, MoxonParametersPayload):
         return ANTENNA_TYPE_MOXON
+    if isinstance(value, FanDipoleParametersPayload):
+        return ANTENNA_TYPE_FAN_DIPOLE
     if isinstance(value, CustomParametersPayload):
         return ANTENNA_TYPE_CUSTOM
     return ANTENNA_TYPE_LOOP
@@ -421,6 +444,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return YagiParametersPayload
     if antenna_type == ANTENNA_TYPE_MOXON:
         return MoxonParametersPayload
+    if antenna_type == ANTENNA_TYPE_FAN_DIPOLE:
+        return FanDipoleParametersPayload
     if antenna_type == ANTENNA_TYPE_CUSTOM:
         return CustomParametersPayload
     return None
@@ -621,6 +646,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _yagi_parameters_from_domain(value)
     if isinstance(value, MoxonParameters):
         return _moxon_parameters_from_domain(value)
+    if isinstance(value, FanDipoleParameters):
+        return _fan_dipole_parameters_from_domain(value)
     if isinstance(value, CustomAntennaParameters):
         return _custom_parameters_from_domain(value)
     raise TypeError(f"unsupported antenna parameters: {type(value)!r}")
@@ -664,6 +691,26 @@ def _vertical_parameters_from_domain(
         radial_count=value.radial_count,
         radial_length_m=value.radial_length_m,
         radial_angle_deg=value.radial_angle_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _fan_dipole_parameters_from_domain(
+    value: FanDipoleParameters,
+) -> FanDipoleParametersPayload:
+    return FanDipoleParametersPayload(
+        frequency_hz=value.frequency_hz,
+        elements=[
+            FanElementPayload(
+                length_m=element.length_m,
+                included_angle_deg=element.included_angle_deg,
+            )
+            for element in value.elements
+        ],
+        apex_height_m=value.apex_height_m,
+        azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
@@ -1048,6 +1095,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, MoxonParametersPayload):
             raise ValueError("Moxon parameters have the wrong shape")
         return _moxon_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_FAN_DIPOLE:
+        if not isinstance(value.parameters, FanDipoleParametersPayload):
+            raise ValueError("fan dipole parameters have the wrong shape")
+        return _fan_dipole_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_CUSTOM:
         if not isinstance(value.parameters, CustomParametersPayload):
             raise ValueError("custom parameters have the wrong shape")
@@ -1091,6 +1142,26 @@ def _vertical_parameters_to_domain(value: VerticalParametersPayload) -> Vertical
         radial_count=value.radial_count,
         radial_length_m=value.radial_length_m,
         radial_angle_deg=value.radial_angle_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _fan_dipole_parameters_to_domain(
+    value: FanDipoleParametersPayload,
+) -> FanDipoleParameters:
+    return FanDipoleParameters(
+        frequency_hz=value.frequency_hz,
+        elements=tuple(
+            FanElement(
+                length_m=element.length_m,
+                included_angle_deg=element.included_angle_deg,
+            )
+            for element in value.elements
+        ),
+        apex_height_m=value.apex_height_m,
+        azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),

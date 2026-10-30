@@ -55,8 +55,8 @@ Completed:
 
 In progress:
 
-- M3 catalog expansion: delta-loop, quad-loop, and Moxon are done; fan dipole
-  remains.
+- M3 catalog expansion complete: delta/quad loops, Moxon, OCFD, vertical with
+  radials, and fan dipole are available.
 
 Deferred:
 
@@ -105,7 +105,7 @@ Deferred:
 | P1 | Delta loop / quad presets | B/C | done |
 | P1 | Moxon generator | B/C | done |
 | P1 | OCFD generator | B/C | done |
-| P1 | Fan dipole generator | B/C | pending |
+| P1 | Fan dipole generator | B/C | done |
 | P1 | Vertical with radial screen | B/C | done |
 | P2 | VNA CSV and measurement records | A | deferred |
 | P2 | Multi-element optimization | n/a | pending |

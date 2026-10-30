@@ -100,6 +100,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Inverted-V",
         Language.SPANISH: "V invertida",
     },
+    "catalog.fan_dipole": {
+        Language.ENGLISH: "Fan dipole",
+        Language.SPANISH: "Dipolo ventilador",
+    },
+    "catalog.fan_dipole.description": {
+        Language.ENGLISH: "Multiple center-fed dipoles sharing a common apex feed.",
+        Language.SPANISH: "Varios dipolos con alimentación central y vértice común.",
+    },
     "catalog.moxon": {
         Language.ENGLISH: "Moxon rectangle",
         Language.SPANISH: "Rectángulo Moxon",
@@ -874,6 +882,58 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "inverted_v.title": {
         Language.ENGLISH: "Inverted-V Generator",
         Language.SPANISH: "Generador de V invertida",
+    },
+    "fan.title": {
+        Language.ENGLISH: "Fan Dipole Generator",
+        Language.SPANISH: "Generador de dipolo ventilador",
+    },
+    "fan.length": {
+        Language.ENGLISH: "Element length",
+        Language.SPANISH: "Longitud del elemento",
+    },
+    "fan.included_angle": {
+        Language.ENGLISH: "Included angle",
+        Language.SPANISH: "Ángulo incluido",
+    },
+    "fan.apex_height": {
+        Language.ENGLISH: "Apex height",
+        Language.SPANISH: "Altura del vértice",
+    },
+    "fan.wire_radius": {
+        Language.ENGLISH: "Wire radius (mm)",
+        Language.SPANISH: "Radio del hilo (mm)",
+    },
+    "fan.add_element": {
+        Language.ENGLISH: "Add pair",
+        Language.SPANISH: "Agregar par",
+    },
+    "fan.remove_element": {
+        Language.ENGLISH: "Remove pair",
+        Language.SPANISH: "Quitar par",
+    },
+    "fan.geometry": {
+        Language.ENGLISH: "{count} pairs · apex {height} {unit}",
+        Language.SPANISH: "{count} pares · vértice {height} {unit}",
+    },
+    "fan.hint": {
+        Language.ENGLISH: (
+            "Each row is one center-fed dipole pair sharing the apex. "
+            "The generated antenna is an editable first-class design."
+        ),
+        Language.SPANISH: (
+            "Cada fila es un par de dipolos con alimentación central que comparte "
+            "el vértice. La antena generada es un diseño editable de primera clase."
+        ),
+    },
+    "fan.evidence": {
+        Language.ENGLISH: (
+            "Experimental generator: geometry is tested, but there is no "
+            "independent numerical reference for this configuration."
+        ),
+        Language.SPANISH: (
+            "Generador experimental: se prueba la geometría, pero no hay una "
+            "referencia numérica independiente para esta configuración."
+        ),
     },
     "moxon.title": {
         Language.ENGLISH: "Moxon Generator",

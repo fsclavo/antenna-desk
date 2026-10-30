@@ -1002,3 +1002,42 @@ def test_new_moxon_creates_a_first_class_design(
     assert window._design_stack.currentWidget() is window._moxon_scroll
     assert window._moxon_form.parameters() == parameters
     window._dirty = False
+
+
+def test_new_fan_dipole_creates_a_first_class_design(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
+
+    parameters = FanDipoleParameters(
+        frequency_hz=7_100_000.0,
+        elements=(
+            FanElement(length_m=20.0, included_angle_deg=120.0),
+            FanElement(length_m=10.0, included_angle_deg=90.0),
+        ),
+        apex_height_m=12.0,
+    )
+
+    class FakeFanDipoleDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> FanDipoleParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "FanDipoleDialog", FakeFanDipoleDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Fan", True))
+
+    window.new_fan_dipole_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "Fan"
+    assert window._project.designs[0].antenna_type == "fan_dipole"
+    assert window._design_stack.currentWidget() is window._fan_dipole_scroll
+    assert window._fan_dipole_form.parameters() == parameters
+    window._dirty = False

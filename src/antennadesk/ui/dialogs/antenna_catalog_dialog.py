@@ -27,6 +27,7 @@ CATALOG_TYPE_QUAD_LOOP = "quad_loop"
 CATALOG_TYPE_VERTICAL = "vertical"
 CATALOG_TYPE_YAGI = "yagi"
 CATALOG_TYPE_MOXON = "moxon"
+CATALOG_TYPE_FAN_DIPOLE = "fan_dipole"
 CATALOG_TYPE_INVERTED_V = "inverted_v"
 CATALOG_TYPE_OCFD = "ocfd"
 CATALOG_TYPE_CUSTOM = "custom"
@@ -55,6 +56,13 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         family_key="catalog.family.dipole",
         description_key="catalog.folded_dipole.description",
         evidence_key="catalog.evidence.builtin",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_FAN_DIPOLE,
+        label_key="catalog.fan_dipole",
+        family_key="catalog.family.dipole",
+        description_key="catalog.fan_dipole.description",
+        evidence_key="catalog.evidence.experimental",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_INVERTED_V,

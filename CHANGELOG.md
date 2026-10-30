@@ -180,6 +180,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   with three or four sides.
 - Added an experimental first-class Moxon rectangle generator with inline
   editing, catalog, persistence, and reporting support.
+- Added an experimental first-class fan dipole generator with editable pairs,
+  catalog, persistence, and reporting support.
 - Persist generator metadata (`generator_id`, `generator_name`) in custom
   designs and show it in the custom design panel.
 - Fixed NEC `EX` source segment numbering for feeds on tags other than the

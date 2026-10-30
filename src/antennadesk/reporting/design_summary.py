@@ -7,6 +7,7 @@ from __future__ import annotations
 from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
+from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.load import LumpedLoad, ParallelLoad
@@ -124,6 +125,21 @@ def design_summary_rows(
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
             ]
         )
+    if isinstance(parameters, FanDipoleParameters):
+        rows.extend(
+            [
+                ("Type", "fan dipole"),
+                ("Pairs", str(len(parameters.elements))),
+                (
+                    "Element lengths",
+                    ", ".join(f"{element.length_m:.4f} m" for element in parameters.elements),
+                ),
+                ("Apex height", f"{parameters.apex_height_m:.4f} m"),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        return tuple(rows)
     if isinstance(parameters, MoxonParameters):
         rows.extend(
             [

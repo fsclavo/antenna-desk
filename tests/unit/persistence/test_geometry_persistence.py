@@ -279,3 +279,23 @@ def test_moxon_parameters_round_trip() -> None:
 
     assert restored.designs[0].parameters == parameters
     assert restored.designs[0].antenna_type == "moxon"
+
+
+def test_fan_dipole_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
+
+    parameters = FanDipoleParameters(
+        frequency_hz=7_100_000.0,
+        elements=(
+            FanElement(length_m=20.0, included_angle_deg=120.0),
+            FanElement(length_m=10.0, included_angle_deg=90.0),
+        ),
+        apex_height_m=12.0,
+    )
+    original = _project(parameters, "Fan dipole")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "fan_dipole"

@@ -151,6 +151,13 @@ straight wires and a center feed on the selected driven element. The NBS
 TN-688 5-element 0.8λ preset is a starting geometry; edited designs are
 experimental.
 
+### FanDipoleParameters
+
+A first-class multi-band fan dipole with one or more `FanElement` pairs, apex
+height, azimuth, radius, material, and ground. Each pair has a total length and
+included angle. `to_antenna()` creates two sloping wires per pair sharing the
+apex, with the feed at the first leg. The generator is experimental.
+
 ### MoxonParameters
 
 A first-class two-element Moxon rectangle with element width, spacing,

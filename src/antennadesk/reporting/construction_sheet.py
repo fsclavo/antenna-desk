@@ -9,6 +9,7 @@ import math
 from pathlib import Path
 
 from ..domain.antennas.dipole import DipoleParameters
+from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.loop import LoopParameters
@@ -130,6 +131,16 @@ and {other_leg_m:.4f} m from the end.</p>"""
 and two end connectors of {parameters.spacing_m:.4f} m. Join them at both
 ends and feed the center of one element. The total conductor length is
 {parameters.total_conductor_length_m:.4f} m.</p>"""
+    elif isinstance(parameters, FanDipoleParameters):
+        lengths = ", ".join(f"{element.length_m:.4f} m" for element in parameters.elements)
+        feed_rows = f"""
+<tr><th>Pairs</th><td>{len(parameters.elements)}</td></tr>
+<tr><th>Element lengths</th><td>{_escape(lengths)}</td></tr>
+<tr><th>Apex height</th><td>{parameters.apex_height_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Cut {len(parameters.elements)} dipole pairs with lengths
+{_escape(lengths)}. Join all pairs at the common apex and feed there.</p>"""
     elif isinstance(parameters, MoxonParameters):
         feed_rows = f"""
 <tr><th>Element width</th><td>{parameters.width_m:.4f} m</td></tr>
