@@ -66,8 +66,15 @@ Add all of the following before merging a new antenna family:
 - A solver integration or sanity test when the family affects the solver.
 
 Pixel-perfect golden images are not the primary contract: fonts, DPI, and
-platforms vary. Prefer deterministic scene snapshots and layout invariants. A
-small number of smoke images for light/dark themes is acceptable.
+platforms vary. Prefer deterministic scene snapshots and layout invariants.
+`tests/ui/geometry/golden_scenes.json` stores normalized scene hashes for every
+family and 2D view. After an intentional geometry change, update it with:
+
+```bash
+UPDATE_GEOMETRY_GOLDENS=1 uv run pytest tests/ui/geometry/test_contract.py
+```
+
+A small number of smoke images for light/dark themes is acceptable.
 
 ## Definition of Done for a new antenna family
 

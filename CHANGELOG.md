@@ -154,6 +154,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Layered DXF export of the current geometry scene, including wires, feed/load
   markers, linear dimensions, angular dimensions, and a title, using `ezdxf`
   (MIT, GPL-3.0-compatible).
+- Deterministic scene snapshots for every antenna family and 2D view, with an
+  explicit update command for intentional shape changes.
 - Interactive isometric geometry rotation with mouse drag and double-click
   reset.
 

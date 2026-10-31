@@ -4,8 +4,12 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import math
+import os
 from dataclasses import dataclass
+from pathlib import Path
 
 import pytest
 from PySide6.QtCore import QRectF
@@ -440,3 +444,92 @@ def _layout(scene: GeometryScene, width: int, height: int):
         (),
         QFontMetricsF(QFont("Sans Serif", 8)),
     )
+
+
+GOLDEN_PATH = Path(__file__).with_name("golden_scenes.json")
+
+
+def _snapshot(case: FamilyCase, mode: GeometryViewMode) -> str:
+    scene = _scene(case, mode)
+    data = {
+        "polylines": [
+            [[round(point.x_m, 6), round(point.y_m, 6)] for point in polyline.points]
+            for polyline in scene.polylines
+        ],
+        "markers": sorted(
+            [
+                [marker.kind, round(marker.point.x_m, 6), round(marker.point.y_m, 6)]
+                for marker in scene.markers
+            ]
+        ),
+        "dimensions": sorted(
+            [
+                [
+                    round(dimension.start.x_m, 6),
+                    round(dimension.start.y_m, 6),
+                    round(dimension.end.x_m, 6),
+                    round(dimension.end.y_m, 6),
+                    dimension.text,
+                ]
+                for dimension in scene.dimensions
+            ]
+        ),
+        "angular": sorted(
+            [
+                [
+                    round(dimension.center.x_m, 6),
+                    round(dimension.center.y_m, 6),
+                    round(dimension.first.x_m, 6),
+                    round(dimension.first.y_m, 6),
+                    round(dimension.second.x_m, 6),
+                    round(dimension.second.y_m, 6),
+                    dimension.text,
+                ]
+                for dimension in scene.angular_dimensions
+            ]
+        ),
+        "show_ground": scene.show_ground,
+        "ground_y_m": (round(scene.ground_y_m, 6) if scene.ground_y_m is not None else None),
+        "is_plan": scene.is_plan,
+        "insets": [
+            {
+                "label": inset.label,
+                "polylines": [
+                    [[round(point.x_m, 6), round(point.y_m, 6)] for point in polyline.points]
+                    for polyline in inset.polylines
+                ],
+                "dimensions": [
+                    [
+                        round(dimension.start.x_m, 6),
+                        round(dimension.start.y_m, 6),
+                        round(dimension.end.x_m, 6),
+                        round(dimension.end.y_m, 6),
+                        dimension.text,
+                    ]
+                    for dimension in inset.dimensions
+                ],
+            }
+            for inset in scene.insets
+        ],
+    }
+    encoded = json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def test_scene_snapshots_are_stable() -> None:
+    snapshots = {
+        f"{case.name}:{mode.value}": _snapshot(case, mode)
+        for case in CASES
+        for mode in (GeometryViewMode.ELEVATION, GeometryViewMode.PLAN)
+    }
+    if os.environ.get("UPDATE_GEOMETRY_GOLDENS") == "1":
+        GOLDEN_PATH.write_text(
+            json.dumps(snapshots, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        return
+    assert GOLDEN_PATH.is_file(), (
+        "geometry golden snapshots are missing; run with UPDATE_GEOMETRY_GOLDENS=1 to create them"
+    )
+    expected = json.loads(GOLDEN_PATH.read_text(encoding="utf-8"))
+    assert snapshots == expected
