@@ -121,8 +121,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Slim Jim",
     },
     "catalog.slim_jim.description": {
-        Language.ENGLISH: "Open-top folded J-pole with a gap between element ends.",
-        Language.SPANISH: "J Pole plegada con brecha entre los extremos.",
+        Language.ENGLISH: "Folded rectangle with a gap in one vertical leg.",
+        Language.SPANISH: "Rectángulo plegado con una brecha en una pata vertical.",
     },
     "catalog.endfed": {
         Language.ENGLISH: "End-fed wire",
@@ -286,6 +286,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "geometry.j_pole_elevation": {
         Language.ENGLISH: "{template} · radiator {radiator} · stub {stub} · spacing {spacing}",
         Language.SPANISH: "{template} · radiador {radiator} · stub {stub} · separación {spacing}",
+    },
+    "geometry.slim_jim_elevation": {
+        Language.ENGLISH: "Slim Jim · radiator {radiator} · stub {stub} · gap {gap} · spacing {spacing}",
+        Language.SPANISH: "Slim Jim · radiador {radiator} · stub {stub} · brecha {gap} · separación {spacing}",
     },
     "geometry.j_pole_plan": {
         Language.ENGLISH: "{template} top view · spacing {spacing}",
@@ -1066,6 +1070,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "j_pole.feed_offset": {
         Language.ENGLISH: "Feed offset from base",
         Language.SPANISH: "Offset de alimentación desde la base",
+    },
+    "j_pole.gap": {
+        Language.ENGLISH: "Gap",
+        Language.SPANISH: "Brecha",
     },
     "j_pole.base_height": {
         Language.ENGLISH: "Base height",

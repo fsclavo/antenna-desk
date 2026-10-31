@@ -194,8 +194,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   spacing, and template-specific labels.
 - Fixed Slim Jim geometry headers when the antenna model name is the generic
   variant name.
-- Corrected Slim Jim topology: the radiator and stub remain separated at the
-  top, forming an open rectangle instead of a diagonal top connector.
+- Corrected Slim Jim topology: a folded rectangle with horizontal top and
+  bottom connectors and a gap in one vertical leg between the radiator and
+  matching stub.
 - Placed the impedance and SWR charts side by side and reduced the default
   geometry pane height to give results more room.
 - Moved Change Template to a fixed button above the design panel so it is always

@@ -119,6 +119,8 @@ Phase 5 adds tests for:
   a solver integration test.
 - J Pole and Slim Jim geometry use dedicated plan/elevation views with
   radiator, stub, spacing, and template-specific labels.
+- Slim Jim geometry has a folded rectangle, horizontal top/bottom connectors,
+  and a gap in one vertical leg.
 - Feed-line impedance transformation, velocity factor, matched-line behavior,
   project/run persistence, and dialog integration.
 - The optimization dialog worker, evaluation log, sensitivity table, and
@@ -285,7 +287,7 @@ Phase 6 adds tests for:
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine; these are sanity checks, not published impedance references.
 
-The suite currently has 500 tests with the solver enabled. Solver integration
+The suite currently has 502 tests with the solver enabled. Solver integration
 tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.

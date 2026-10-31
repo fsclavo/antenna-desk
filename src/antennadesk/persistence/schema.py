@@ -204,7 +204,8 @@ class JPoleParametersPayload(StrictModel):
     stub_length_m: float = Field(gt=0.0)
     spacing_m: float = Field(gt=0.0)
     feed_offset_m: float = Field(default=0.1, ge=0.0)
-    base_height_m: float = Field(default=0.0, ge=0.0)
+    gap_m: float = Field(default=0.01, ge=0.0)
+    base_height_m: float = Field(default=0.25, ge=0.0)
     folded: bool = False
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
@@ -797,6 +798,7 @@ def _j_pole_parameters_from_domain(value: JPoleParameters) -> JPoleParametersPay
         stub_length_m=value.stub_length_m,
         spacing_m=value.spacing_m,
         feed_offset_m=value.feed_offset_m,
+        gap_m=value.gap_m,
         base_height_m=value.base_height_m,
         folded=value.folded,
         wire_radius_m=value.wire_radius_m,
@@ -1324,6 +1326,7 @@ def _j_pole_parameters_to_domain(value: JPoleParametersPayload) -> JPoleParamete
         stub_length_m=value.stub_length_m,
         spacing_m=value.spacing_m,
         feed_offset_m=value.feed_offset_m,
+        gap_m=value.gap_m,
         base_height_m=value.base_height_m,
         folded=value.folded,
         wire_radius_m=value.wire_radius_m,

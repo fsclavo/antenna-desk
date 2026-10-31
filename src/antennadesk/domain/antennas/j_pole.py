@@ -31,6 +31,7 @@ class JPoleParameters:
     stub_length_m: float
     spacing_m: float
     feed_offset_m: float = 0.1
+    gap_m: float = 0.01
     base_height_m: float = 0.25
     folded: bool = False
     wire_radius_m: float = 0.001
@@ -47,8 +48,10 @@ class JPoleParameters:
         ensure_positive(self.wire_radius_m, name="wire_radius_m")
         if self.feed_offset_m >= self.stub_length_m:
             raise ValueError("feed_offset_m must be shorter than the stub")
-        if self.radiator_height_m < self.stub_length_m:
+        if not self.folded and self.radiator_height_m < self.stub_length_m:
             raise ValueError("radiator_height_m must be at least the stub length")
+        if self.folded and self.gap_m <= 0.0:
+            raise ValueError("gap_m must be positive for a Slim Jim")
 
     @property
     def template_name(self) -> str:
@@ -61,35 +64,40 @@ class JPoleParameters:
         base_z = self.base_height_m
         base_left = Point3D(0.0, 0.0, base_z)
         base_right = Point3D(self.spacing_m, 0.0, base_z)
-        top_left = Point3D(0.0, 0.0, base_z + self.radiator_height_m)
-        top_right = Point3D(self.spacing_m, 0.0, base_z + self.stub_length_m)
-        wires = [
-            Wire(
-                id="radiator",
-                start=base_left,
-                end=top_left,
-                radius_m=self.wire_radius_m,
-                material=self.material,
-            ),
-            Wire(
-                id="stub",
-                start=base_right,
-                end=top_right,
-                radius_m=self.wire_radius_m,
-                material=self.material,
-            ),
-            Wire(
-                id="base-connector",
-                start=base_left,
-                end=base_right,
-                radius_m=self.wire_radius_m,
-                material=self.material,
-            ),
-        ]
+        if not self.folded:
+            top_left = Point3D(0.0, 0.0, base_z + self.radiator_height_m)
+            top_right = Point3D(self.spacing_m, 0.0, base_z + self.stub_length_m)
+            wires = [
+                Wire("radiator", base_left, top_left, self.wire_radius_m, self.material),
+                Wire("stub", base_right, top_right, self.wire_radius_m, self.material),
+                Wire("base-connector", base_left, base_right, self.wire_radius_m, self.material),
+            ]
+            feed = FeedPoint("stub", self.feed_offset_m)
+        else:
+            gap_bottom = Point3D(self.spacing_m, 0.0, base_z + self.stub_length_m)
+            gap_top = Point3D(
+                self.spacing_m,
+                0.0,
+                base_z + self.stub_length_m + self.gap_m,
+            )
+            top_left = Point3D(
+                0.0,
+                0.0,
+                gap_top.z_m + self.radiator_height_m,
+            )
+            top_right = Point3D(self.spacing_m, 0.0, top_left.z_m)
+            wires = [
+                Wire("left-leg", base_left, top_left, self.wire_radius_m, self.material),
+                Wire("right-upper", top_right, gap_top, self.wire_radius_m, self.material),
+                Wire("right-lower", gap_bottom, base_right, self.wire_radius_m, self.material),
+                Wire("base-connector", base_left, base_right, self.wire_radius_m, self.material),
+                Wire("top-connector", top_left, top_right, self.wire_radius_m, self.material),
+            ]
+            feed = FeedPoint("right-lower", self.stub_length_m)
         return CustomAntennaParameters(
             frequency_hz=self.frequency_hz,
             wires=tuple(wires),
-            feed=FeedPoint("stub", self.feed_offset_m),
+            feed=feed,
             ground=self.ground,
             generator_id="slim_jim" if self.folded else "j_pole",
             generator_name=self.template_name,

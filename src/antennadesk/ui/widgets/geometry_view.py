@@ -407,22 +407,37 @@ class GeometryView(QWidget):
         if len(verticals) < 2:
             self._paint_multi_wire_elevation(painter, rect)
             return
-        radiator = max(verticals, key=lambda wire: wire.length_m)
-        stub = min(verticals, key=lambda wire: wire.length_m)
+        folded = any(wire.id == "top-connector" for wire in self._model.wires)
+        if folded:
+            radiator = next(wire for wire in verticals if wire.id == "right-upper")
+            stub = next(wire for wire in verticals if wire.id == "right-lower")
+        else:
+            radiator = max(verticals, key=lambda wire: wire.length_m)
+            stub = min(verticals, key=lambda wire: wire.length_m)
         base_z = min(point.z_m for wire in self._model.wires for point in (wire.start, wire.end))
         top_z = max(point.z_m for wire in self._model.wires for point in (wire.start, wire.end))
         min_x = min(point.x_m for wire in self._model.wires for point in (wire.start, wire.end))
         max_x = max(point.x_m for wire in self._model.wires for point in (wire.start, wire.end))
         span_m = max(max_x - min_x, 1e-9)
         unit = self._translator.t(length_unit_key(self._unit_system))
-        template = self._display_name or "J Pole"
-        summary = self._translator.t(
-            "geometry.j_pole_elevation",
-            template=template,
-            radiator=f"{length_from_m(radiator.length_m, self._unit_system):.2f} {unit}",
-            stub=f"{length_from_m(stub.length_m, self._unit_system):.2f} {unit}",
-            spacing=f"{length_from_m(span_m, self._unit_system):.2f} {unit}",
-        )
+        template = self._display_name or ("Slim Jim" if folded else "J Pole")
+        if folded:
+            gap_m = max(top_z - radiator.length_m - stub.length_m - base_z, 0.0)
+            summary = self._translator.t(
+                "geometry.slim_jim_elevation",
+                radiator=f"{length_from_m(radiator.length_m, self._unit_system):.2f} {unit}",
+                stub=f"{length_from_m(stub.length_m, self._unit_system):.2f} {unit}",
+                gap=f"{length_from_m(gap_m, self._unit_system):.3f} {unit}",
+                spacing=f"{length_from_m(span_m, self._unit_system):.2f} {unit}",
+            )
+        else:
+            summary = self._translator.t(
+                "geometry.j_pole_elevation",
+                template=template,
+                radiator=f"{length_from_m(radiator.length_m, self._unit_system):.2f} {unit}",
+                stub=f"{length_from_m(stub.length_m, self._unit_system):.2f} {unit}",
+                spacing=f"{length_from_m(span_m, self._unit_system):.2f} {unit}",
+            )
         if not math.isclose(self._height_exaggeration, 1.0):
             summary = (
                 summary

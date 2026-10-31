@@ -65,6 +65,11 @@ class JPoleForm(QWidget):
         self._feed_offset.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._feed_offset.setValue(length_from_m(0.1, unit_system))
 
+        self._gap = QDoubleSpinBox(self)
+        self._gap.setDecimals(3)
+        self._gap.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._gap.setValue(length_from_m(0.01, unit_system))
+
         self._base_height = QDoubleSpinBox(self)
         self._base_height.setDecimals(3)
         self._base_height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
@@ -114,6 +119,7 @@ class JPoleForm(QWidget):
         form.addRow(translator.t("j_pole.stub_length"), self._stub_length)
         form.addRow(translator.t("j_pole.spacing"), self._spacing)
         form.addRow(translator.t("j_pole.feed_offset"), self._feed_offset)
+        form.addRow(translator.t("j_pole.gap"), self._gap)
         form.addRow(translator.t("j_pole.base_height"), self._base_height)
         form.addRow(self._folded)
         form.addRow(translator.t("j_pole.wire_radius"), self._radius)
@@ -133,6 +139,7 @@ class JPoleForm(QWidget):
             self._stub_length,
             self._spacing,
             self._feed_offset,
+            self._gap,
             self._base_height,
             self._radius,
             self._permittivity,
@@ -232,6 +239,7 @@ class JPoleForm(QWidget):
             stub_length_m=length_to_m(self._stub_length.value(), self._unit_system),
             spacing_m=length_to_m(self._spacing.value(), self._unit_system),
             feed_offset_m=length_to_m(self._feed_offset.value(), self._unit_system),
+            gap_m=length_to_m(self._gap.value(), self._unit_system),
             base_height_m=length_to_m(self._base_height.value(), self._unit_system),
             folded=self._folded.isChecked(),
             wire_radius_m=self._radius.value() / 1_000.0,
