@@ -21,6 +21,7 @@ def test_endfed_generates_one_wire_with_end_feed() -> None:
     assert custom.feed.wire_id == "radiator"
     assert custom.feed.offset_m == 0.0
     assert custom.wires[0].end.z_m == pytest.approx(5.0)
+    assert custom.wires[0].length_m == pytest.approx(20.0)
     assert custom.generator_name == "End-fed"
     assert antenna_family(custom) is AntennaFamily.DIPOLE
 
@@ -31,4 +32,14 @@ def test_endfed_rejects_below_ground_heights() -> None:
             frequency_hz=7_100_000.0,
             length_m=20.0,
             end_height_m=-1.0,
+        )
+
+
+def test_endfed_rejects_a_slope_steeper_than_the_wire() -> None:
+    with pytest.raises(ValueError, match="height difference"):
+        EndFedParameters(
+            frequency_hz=7_100_000.0,
+            length_m=5.0,
+            feed_height_m=1.0,
+            end_height_m=10.0,
         )

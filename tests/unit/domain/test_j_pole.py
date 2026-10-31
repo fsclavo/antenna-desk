@@ -97,3 +97,26 @@ def test_slim_jim_top_connector_is_horizontal() -> None:
     assert top.start.z_m == pytest.approx(top.end.z_m)
     assert top.start.x_m == pytest.approx(0.0)
     assert top.end.x_m == pytest.approx(0.05)
+
+
+def test_slim_jim_feed_offset_is_measured_from_the_base() -> None:
+    parameters = JPoleParameters(
+        frequency_hz=145_000_000.0,
+        radiator_height_m=1.0,
+        stub_length_m=0.5,
+        spacing_m=0.05,
+        feed_offset_m=0.1,
+        base_height_m=0.25,
+        folded=True,
+    )
+    custom = parameters.to_custom_parameters()
+    feed_wire = next(wire for wire in custom.wires if wire.id == custom.feed.wire_id)
+
+    assert custom.feed.wire_id == "right-lower"
+    assert custom.feed.offset_m == pytest.approx(
+        parameters.stub_length_m - parameters.feed_offset_m
+    )
+    feed_z = feed_wire.start.z_m + (feed_wire.end.z_m - feed_wire.start.z_m) * (
+        custom.feed.offset_m / feed_wire.length_m
+    )
+    assert feed_z == pytest.approx(parameters.base_height_m + parameters.feed_offset_m)

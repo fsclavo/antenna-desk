@@ -131,9 +131,11 @@ User-facing parameters for a vertical regular-polygon loop:
 
 `to_antenna()` generates one wire per side, connected end-to-start into a
 closed polygon in a vertical plane. `height_m` is the bottom above ground;
-`top_height_m` is `height_m + diameter_m`. `azimuth_deg` rotates the loop plane
-around the vertical axis. The feed is at the midpoint of the first side. A
-square loop uses four sides; a larger side count approximates a circular loop.
+`top_height_m` is the highest actual polygon vertex, which is not
+`height_m + diameter_m` for odd side counts. `azimuth_deg` rotates the loop
+plane around the vertical axis. The feed is at the midpoint of the first side.
+A square loop uses four sides; a larger side count approximates a circular
+loop.
 
 ### CustomAntennaParameters
 
@@ -164,13 +166,15 @@ A first-class J Pole/Slim Jim with radiator height, stub length, spacing, feed
 offset, base height, folded flag, radius, material, and ground. `to_antenna()`
 creates the J Pole radiator, stub, and base connector. `folded=True` creates a
 Slim Jim folded rectangle with top and bottom connectors and a gap in one
-vertical leg. The generator is experimental.
+vertical leg. The feed offset is measured from the stub base. The generator is
+experimental.
 
 ### EndFedParameters
 
 A first-class single-wire antenna fed at one end, with separate feed and far-end
-heights, azimuth, radius, material, and ground. It can model horizontal wires or
-slopers. The generator is experimental.
+heights, azimuth, radius, material, and ground. `length_m` is the physical
+conductor length; the horizontal run is derived from the height difference. It
+can model horizontal wires or slopers. The generator is experimental.
 
 ### FanDipoleParameters
 

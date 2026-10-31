@@ -15,6 +15,7 @@ from ..common.units import ensure_finite, ensure_non_negative, ensure_positive
 
 class OptimizationObjective(StrEnum):
     REACTANCE = "reactance"
+    TARGET_IMPEDANCE = "target_impedance"
     MIN_SWR = "min_swr"
     MAX_BANDWIDTH = "max_bandwidth"
     MAX_GAIN = "max_gain"
@@ -35,9 +36,11 @@ class LengthOptimizationSpec:
     min_length_m: float
     max_length_m: float
     objective: OptimizationObjective = OptimizationObjective.REACTANCE
+    target_resistance_ohm: float = 50.0
     target_reactance_ohm: float = 0.0
     max_evaluations: int = 12
     reactance_tolerance_ohm: float = 0.1
+    impedance_tolerance_ohm: float = 0.1
     swr_tolerance: float = 0.05
     swr_limit: float = 2.0
     swr_weight: float = 1.0
@@ -50,10 +53,12 @@ class LengthOptimizationSpec:
         ensure_positive(self.max_length_m, name="max_length_m")
         if self.max_length_m <= self.min_length_m:
             raise ValueError("max_length_m must be greater than min_length_m")
+        ensure_positive(self.target_resistance_ohm, name="target_resistance_ohm")
         ensure_finite(self.target_reactance_ohm, name="target_reactance_ohm")
         if self.max_evaluations < 3:
             raise ValueError("max_evaluations must be at least 3")
         ensure_positive(self.reactance_tolerance_ohm, name="reactance_tolerance_ohm")
+        ensure_positive(self.impedance_tolerance_ohm, name="impedance_tolerance_ohm")
         ensure_positive(self.swr_tolerance, name="swr_tolerance")
         if self.swr_limit <= 1.0:
             raise ValueError("swr_limit must be greater than 1")
@@ -110,6 +115,7 @@ class LengthOptimizationResult:
     best_gain_db: float | None = None
     best_efficiency_percent: float | None = None
     best_score: float | None = None
+    best_impedance_error_ohm: float | None = None
     sensitivity: tuple[LengthSensitivityPoint, ...] = ()
     message: str = ""
 
@@ -139,6 +145,8 @@ def optimize_length(
     *,
     cancel_check: CancelCheck | None = None,
 ) -> LengthOptimizationResult:
+    if spec.objective is OptimizationObjective.TARGET_IMPEDANCE:
+        return optimize_target_impedance(evaluate, spec, cancel_check=cancel_check)
     if spec.objective is OptimizationObjective.MIN_SWR:
         return optimize_swr(evaluate, spec, cancel_check=cancel_check)
     if spec.objective is OptimizationObjective.MAX_BANDWIDTH:
@@ -270,6 +278,84 @@ def optimize_length(
     return finish(
         LengthOptimizationStatus.MAX_EVALUATIONS,
         "maximum number of evaluations reached",
+    )
+
+
+def _best_target_impedance_evaluation(
+    evaluations: list[LengthEvaluation],
+    target: complex,
+) -> LengthEvaluation | None:
+    valid = [evaluation for evaluation in evaluations if evaluation.impedance_ohm is not None]
+    if not valid:
+        return None
+
+    def distance(evaluation: LengthEvaluation) -> tuple[float, float]:
+        assert evaluation.impedance_ohm is not None
+        return (abs(evaluation.impedance_ohm - target), evaluation.length_m)
+
+    return min(valid, key=distance)
+
+
+def optimize_target_impedance(
+    evaluate: LengthEvaluator,
+    spec: LengthOptimizationSpec,
+    *,
+    cancel_check: CancelCheck | None = None,
+) -> LengthOptimizationResult:
+    """Find the dimension whose complex impedance is closest to the target."""
+
+    evaluations: list[LengthEvaluation] = []
+    target = complex(spec.target_resistance_ohm, spec.target_reactance_ohm)
+
+    def cancelled() -> bool:
+        return bool(cancel_check is not None and cancel_check())
+
+    def probe(length: float) -> LengthEvaluation:
+        raw = evaluate(length)
+        evaluation = replace(raw, index=len(evaluations) + 1)
+        evaluations.append(evaluation)
+        return evaluation
+
+    def finish(status: LengthOptimizationStatus, message: str = "") -> LengthOptimizationResult:
+        best = _best_target_impedance_evaluation(evaluations, target)
+        error = (
+            None if best is None or best.impedance_ohm is None else abs(best.impedance_ohm - target)
+        )
+        return LengthOptimizationResult(
+            status=status,
+            best_length_m=None if best is None else best.length_m,
+            best_impedance_ohm=None if best is None else best.impedance_ohm,
+            best_swr=None if best is None else best.swr,
+            evaluations=tuple(evaluations),
+            best_bandwidth_hz=None if best is None else best.bandwidth_hz,
+            best_gain_db=None if best is None else best.max_gain_db,
+            best_efficiency_percent=None if best is None else best.efficiency_percent,
+            best_impedance_error_ohm=error,
+            message=message,
+        )
+
+    if cancelled():
+        return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
+
+    count = spec.max_evaluations
+    for index in range(count):
+        if cancelled():
+            return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
+        ratio = index / (count - 1)
+        length = spec.min_length_m + (spec.max_length_m - spec.min_length_m) * ratio
+        evaluation = probe(length)
+        if evaluation.cancelled:
+            return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
+
+    best = _best_target_impedance_evaluation(evaluations, target)
+    if best is None or best.impedance_ohm is None:
+        return finish(LengthOptimizationStatus.ERROR, "no valid impedance evaluation")
+    error = abs(best.impedance_ohm - target)
+    if error <= spec.impedance_tolerance_ohm:
+        return finish(LengthOptimizationStatus.CONVERGED, "impedance target reached")
+    return finish(
+        LengthOptimizationStatus.MAX_EVALUATIONS,
+        "maximum number of evaluations reached; target impedance not reached",
     )
 
 

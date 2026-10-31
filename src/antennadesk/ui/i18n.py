@@ -288,8 +288,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "{template} · radiador {radiator} · stub {stub} · separación {spacing}",
     },
     "geometry.slim_jim_elevation": {
-        Language.ENGLISH: "Slim Jim · radiator {radiator} · stub {stub} · gap {gap} · spacing {spacing}",
-        Language.SPANISH: "Slim Jim · radiador {radiator} · stub {stub} · brecha {gap} · separación {spacing}",
+        Language.ENGLISH: "{template} · radiator {radiator} · stub {stub} · gap {gap} · spacing {spacing}",
+        Language.SPANISH: "{template} · radiador {radiator} · stub {stub} · brecha {gap} · separación {spacing}",
     },
     "geometry.j_pole_plan": {
         Language.ENGLISH: "{template} top view · spacing {spacing}",
@@ -327,6 +327,77 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "geometry.diameter": {Language.ENGLISH: "Diameter", Language.SPANISH: "Diámetro"},
     "geometry.width": {Language.ENGLISH: "Width", Language.SPANISH: "Ancho"},
     "geometry.depth": {Language.ENGLISH: "Depth", Language.SPANISH: "Profundidad"},
+    "geometry.top_view": {
+        Language.ENGLISH: "top view",
+        Language.SPANISH: "vista superior",
+    },
+    "geometry.equivalent_diameter": {
+        Language.ENGLISH: "equivalent diameter",
+        Language.SPANISH: "diámetro equivalente",
+    },
+    "geometry.total_conductor": {
+        Language.ENGLISH: "total conductor",
+        Language.SPANISH: "conductor total",
+    },
+    "geometry.elements": {
+        Language.ENGLISH: "elements",
+        Language.SPANISH: "elementos",
+    },
+    "geometry.boom_length": {
+        Language.ENGLISH: "boom length",
+        Language.SPANISH: "longitud del boom",
+    },
+    "geometry.gap": {Language.ENGLISH: "gap", Language.SPANISH: "brecha"},
+    "geometry.end_height": {
+        Language.ENGLISH: "end height",
+        Language.SPANISH: "altura del extremo",
+    },
+    "geometry.feed_height": {
+        Language.ENGLISH: "feed height",
+        Language.SPANISH: "altura de alimentación",
+    },
+    "geometry.feed_offset": {
+        Language.ENGLISH: "feed offset",
+        Language.SPANISH: "desplazamiento de alimentación",
+    },
+    "geometry.radials": {Language.ENGLISH: "radials", Language.SPANISH: "radiales"},
+    "geometry.wires": {Language.ENGLISH: "wires", Language.SPANISH: "hilos"},
+    "geometry.wire_length": {
+        Language.ENGLISH: "wire length",
+        Language.SPANISH: "longitud del hilo",
+    },
+    "geometry.arbitrary_geometry": {
+        Language.ENGLISH: "arbitrary geometry · overall dimensions only",
+        Language.SPANISH: "geometría arbitraria · solo dimensiones generales",
+    },
+    "geometry.front_overlap": {
+        Language.ENGLISH: "front view: elements overlap; use Plan to see the layout",
+        Language.SPANISH: "alzado: los elementos se superponen; use Planta para ver la disposición",
+    },
+    "geometry.edge_on": {
+        Language.ENGLISH: "top view is edge-on",
+        Language.SPANISH: "la vista superior es de canto",
+    },
+    "geometry.sides_note": {
+        Language.ENGLISH: "{sides}-sided polygon shown to scale",
+        Language.SPANISH: "polígono de {sides} lados a escala",
+    },
+    "geometry.detail_gap": {
+        Language.ENGLISH: "gap detail (not to scale)",
+        Language.SPANISH: "detalle de brecha (fuera de escala)",
+    },
+    "geometry.detail_spacing": {
+        Language.ENGLISH: "spacing detail (not to scale)",
+        Language.SPANISH: "detalle de separación (fuera de escala)",
+    },
+    "geometry.dimension_hidden": {
+        Language.ENGLISH: "1 dimension hidden for space",
+        Language.SPANISH: "1 cota oculta por espacio",
+    },
+    "geometry.dimensions_hidden": {
+        Language.ENGLISH: "{count} dimensions hidden for space",
+        Language.SPANISH: "{count} cotas ocultas por espacio",
+    },
     "geometry.view": {Language.ENGLISH: "View", Language.SPANISH: "Vista"},
     "geometry.view_elevation": {Language.ENGLISH: "Elevation", Language.SPANISH: "Alzado"},
     "geometry.view_plan": {Language.ENGLISH: "Plan", Language.SPANISH: "Planta"},
@@ -739,6 +810,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Export Geometry PNG...",
         Language.SPANISH: "Exportar PNG de geometría...",
     },
+    "action.export_geometry_svg": {
+        Language.ENGLISH: "Export Geometry SVG...",
+        Language.SPANISH: "Exportar SVG de geometría...",
+    },
+    "action.export_geometry_pdf": {
+        Language.ENGLISH: "Export Geometry PDF...",
+        Language.SPANISH: "Exportar PDF de geometría...",
+    },
+    "action.export_geometry_dxf": {
+        Language.ENGLISH: "Export Geometry DXF...",
+        Language.SPANISH: "Exportar DXF de geometría...",
+    },
     "action.export_html": {
         Language.ENGLISH: "Export HTML Report...",
         Language.SPANISH: "Exportar informe HTML...",
@@ -806,6 +889,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Save geometry image",
         Language.SPANISH: "Guardar imagen de geometría",
     },
+    "dialog.geometry_svg_title": {
+        Language.ENGLISH: "Save geometry SVG",
+        Language.SPANISH: "Guardar SVG de geometría",
+    },
+    "dialog.geometry_pdf_title": {
+        Language.ENGLISH: "Save geometry PDF",
+        Language.SPANISH: "Guardar PDF de geometría",
+    },
+    "dialog.geometry_dxf_title": {
+        Language.ENGLISH: "Save geometry DXF",
+        Language.SPANISH: "Guardar DXF de geometría",
+    },
     "dialog.pattern_png_title": {
         Language.ENGLISH: "Save pattern image",
         Language.SPANISH: "Guardar imagen de patrón",
@@ -821,6 +916,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "dialog.png_filter": {
         Language.ENGLISH: "PNG images (*.png)",
         Language.SPANISH: "Imágenes PNG (*.png)",
+    },
+    "dialog.svg_filter": {
+        Language.ENGLISH: "SVG images (*.svg)",
+        Language.SPANISH: "Imágenes SVG (*.svg)",
+    },
+    "dialog.dxf_filter": {
+        Language.ENGLISH: "DXF drawings (*.dxf)",
+        Language.SPANISH: "Dibujos DXF (*.dxf)",
     },
     "dialog.csv_filter": {
         Language.ENGLISH: "CSV files (*.csv);;All files (*)",
@@ -850,6 +953,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "action.optimize": {
         Language.ENGLISH: "Optimize Dimension...",
         Language.SPANISH: "Optimizar dimensión...",
+    },
+    "action.synthesize": {
+        Language.ENGLISH: "Synthesize Dimensions...",
+        Language.SPANISH: "Sintetizar dimensiones...",
     },
     "action.construction": {
         Language.ENGLISH: "Construction Sheet...",
@@ -1600,6 +1707,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Target reactance",
         Language.SPANISH: "Reactancia objetivo",
     },
+    "optimize.target_impedance_objective": {
+        Language.ENGLISH: "Target impedance",
+        Language.SPANISH: "Impedancia objetivo",
+    },
     "optimize.min_swr_objective": {
         Language.ENGLISH: "Minimum SWR",
         Language.SPANISH: "SWR mínimo",
@@ -1624,6 +1735,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Target reactance (Ω)",
         Language.SPANISH: "Reactancia objetivo (Ω)",
     },
+    "optimize.target_resistance": {
+        Language.ENGLISH: "Target resistance R (Ω)",
+        Language.SPANISH: "Resistencia objetivo R (Ω)",
+    },
     "optimize.max_evaluations": {
         Language.ENGLISH: "Maximum evaluations",
         Language.SPANISH: "Evaluaciones máximas",
@@ -1631,6 +1746,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize.tolerance": {
         Language.ENGLISH: "Reactance tolerance (Ω)",
         Language.SPANISH: "Tolerancia de reactancia (Ω)",
+    },
+    "optimize.impedance_tolerance": {
+        Language.ENGLISH: "Impedance tolerance (Ω)",
+        Language.SPANISH: "Tolerancia de impedancia (Ω)",
     },
     "optimize.swr_tolerance": {
         Language.ENGLISH: "SWR tolerance",
@@ -1675,6 +1794,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize.score_result": {
         Language.ENGLISH: "Score {value}",
         Language.SPANISH: "Puntuación {value}",
+    },
+    "optimize.impedance_error_result": {
+        Language.ENGLISH: "Impedance error {value} Ω",
+        Language.SPANISH: "Error de impedancia {value} Ω",
     },
     "optimize.bandwidth_needs_sweep": {
         Language.ENGLISH: "Bandwidth optimization requires a frequency sweep.",
@@ -1748,6 +1871,62 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "error.optimize": {
         Language.ENGLISH: "Optimization failed: {message}",
         Language.SPANISH: "Falló la optimización: {message}",
+    },
+    "synthesis.title": {
+        Language.ENGLISH: "Synthesize Antenna Dimensions",
+        Language.SPANISH: "Sintetizar dimensiones de antena",
+    },
+    "synthesis.target_frequency": {
+        Language.ENGLISH: "Target frequency (MHz)",
+        Language.SPANISH: "Frecuencia objetivo (MHz)",
+    },
+    "synthesis.target_resistance": {
+        Language.ENGLISH: "Target resistance R (Ω)",
+        Language.SPANISH: "Resistencia objetivo R (Ω)",
+    },
+    "synthesis.target_reactance": {
+        Language.ENGLISH: "Target reactance X (Ω)",
+        Language.SPANISH: "Reactancia objetivo X (Ω)",
+    },
+    "synthesis.minimum": {
+        Language.ENGLISH: "Minimum",
+        Language.SPANISH: "Mínimo",
+    },
+    "synthesis.maximum": {
+        Language.ENGLISH: "Maximum",
+        Language.SPANISH: "Máximo",
+    },
+    "synthesis.run": {
+        Language.ENGLISH: "Run synthesis",
+        Language.SPANISH: "Ejecutar síntesis",
+    },
+    "synthesis.apply": {
+        Language.ENGLISH: "Apply dimensions",
+        Language.SPANISH: "Aplicar dimensiones",
+    },
+    "synthesis.running": {
+        Language.ENGLISH: "Running synthesis...",
+        Language.SPANISH: "Ejecutando síntesis...",
+    },
+    "synthesis.summary": {
+        Language.ENGLISH: "Status: {status} · {a} · {b} · R={resistance} Ω, X={reactance} Ω · SWR={swr} · impedance error={error} Ω",
+        Language.SPANISH: "Estado: {status} · {a} · {b} · R={resistance} Ω, X={reactance} Ω · ROE={swr} · error de impedancia={error} Ω",
+    },
+    "synthesis.no_best": {
+        Language.ENGLISH: "No valid dimensions were found ({status}).",
+        Language.SPANISH: "No se encontraron dimensiones válidas ({status}).",
+    },
+    "synthesis.apply_hint": {
+        Language.ENGLISH: "This is a numerical starting point. Apply it, run a full sweep, and verify the result before construction.",
+        Language.SPANISH: "Este es un punto de partida numérico. Aplicalo, ejecutá un barrido completo y verificá el resultado antes de construir.",
+    },
+    "synthesis.error": {
+        Language.ENGLISH: "Synthesis failed: {message}",
+        Language.SPANISH: "Falló la síntesis: {message}",
+    },
+    "synthesis.close_synthesis": {
+        Language.ENGLISH: "Cancel the running synthesis before closing.",
+        Language.SPANISH: "Cancelá la síntesis en curso antes de cerrar.",
     },
     "currents.none": {
         Language.ENGLISH: "No current data.",

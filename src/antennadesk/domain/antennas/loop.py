@@ -65,7 +65,12 @@ class LoopParameters:
 
     @property
     def top_height_m(self) -> float:
-        return self.height_m + self.diameter_m
+        """Highest point of the polygon, including odd side counts."""
+
+        radius = self.diameter_m / 2.0
+        step = 2.0 * math.pi / self.sides
+        top = max(math.sin(index * step) for index in range(self.sides))
+        return self.height_m + radius + radius * top
 
     def to_antenna(self, *, name: str = "Loop") -> AntennaModel:
         side_length = self.side_length_m

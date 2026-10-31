@@ -50,8 +50,9 @@ Completed:
 - Explicit antenna family/template mapping in the domain and design panel.
 - Generated-design metadata (`generator_id` / `generator_name`) persisted in
   legacy custom designs.
-- All current generators (Yagi, inverted-V, vertical, OCFD) are first-class
-  templates with inline editors and native persistence.
+- All current generators are first-class templates with inline editors and
+  native persistence.
+- Bounded two-variable impedance synthesis for OCFD, J Pole, and Slim Jim.
 
 In progress:
 
@@ -62,7 +63,7 @@ In progress:
 
 Deferred:
 
-- VNA import, measurement records, and hardware control.
+- Live VNA/hardware control.
 - Advanced full-wave engines.
 
 ## Milestones
@@ -94,8 +95,10 @@ Deferred:
 ### M4 — Advanced design and measurement
 
 - Multi-element optimization and constrained geometry.
-- VNA CSV import and measurement comparison.
-- Measurement conditions and reference-plane metadata.
+- VNA CSV import and measurement comparison (completed first slice).
+- Measurement conditions and reference-plane metadata (completed first slice).
+- Bounded impedance synthesis for OCFD, J Pole, and Slim Jim (completed first
+  slice).
 
 ## Backlog
 
@@ -113,6 +116,7 @@ Deferred:
 | P1 | Ringo generator | C | done |
 | P1 | Vertical with radial screen | B/C | done |
 | P2 | VNA CSV and measurement records | A | in progress |
+| P2 | Bounded OCFD/J-Pole impedance synthesis | C | done |
 | P2 | Multi-element optimization | n/a | pending |
 | P2 | Packaging and release hardening | n/a | pending |
 

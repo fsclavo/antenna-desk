@@ -93,7 +93,7 @@ class JPoleParameters:
                 Wire("base-connector", base_left, base_right, self.wire_radius_m, self.material),
                 Wire("top-connector", top_left, top_right, self.wire_radius_m, self.material),
             ]
-            feed = FeedPoint("right-lower", self.stub_length_m)
+            feed = FeedPoint("right-lower", self.stub_length_m - self.feed_offset_m)
         return CustomAntennaParameters(
             frequency_hz=self.frequency_hz,
             wires=tuple(wires),

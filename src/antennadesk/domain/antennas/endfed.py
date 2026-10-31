@@ -40,6 +40,10 @@ class EndFedParameters:
         ensure_non_negative(self.feed_height_m, name="feed_height_m")
         ensure_non_negative(self.end_height_m, name="end_height_m")
         ensure_positive(self.wire_radius_m, name="wire_radius_m")
+        if abs(self.end_height_m - self.feed_height_m) > self.length_m + 1e-12:
+            raise ValueError(
+                "the height difference between the feed and the end must not exceed the wire length"
+            )
         object.__setattr__(
             self,
             "azimuth_deg",
@@ -51,12 +55,14 @@ class EndFedParameters:
 
     def to_custom_parameters(self) -> CustomAntennaParameters:
         angle = units.degrees_to_radians(self.azimuth_deg)
+        rise = self.end_height_m - self.feed_height_m
+        horizontal_m = math.sqrt(max(self.length_m * self.length_m - rise * rise, 0.0))
         wire = Wire(
             id=RADIATOR_ID,
             start=Point3D(x_m=0.0, y_m=0.0, z_m=self.feed_height_m),
             end=Point3D(
-                x_m=self.length_m * math.cos(angle),
-                y_m=self.length_m * math.sin(angle),
+                x_m=horizontal_m * math.cos(angle),
+                y_m=horizontal_m * math.sin(angle),
                 z_m=self.end_height_m,
             ),
             radius_m=self.wire_radius_m,

@@ -3,6 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-10-29
 - **Supersedes:** none
+- **Refined by:** ADR-0012 for the plan/elevation construction-view semantics
 
 ## Context
 

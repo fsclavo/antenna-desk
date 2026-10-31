@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from PySide6.QtWidgets import QDialog, QFileDialog, QInputDialog, QMessageBox
+from PySide6.QtWidgets import QDialog, QFileDialog, QInputDialog, QMessageBox, QWizard
 from pytestqt.qtbot import QtBot
 
 from antennadesk.application.ports.antenna_solver import ProgressCallback
@@ -319,6 +319,181 @@ def test_optimize_length_applies_and_simulates(
     window._dirty = False
 
 
+def test_optimize_endfed_applies_to_the_endfed_form(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.endfed import EndFedParameters
+
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_height_m=10.0,
+        end_height_m=10.0,
+    )
+
+    class FakeEndFedDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> EndFedParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "EndFedDialog", FakeEndFedDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("End-fed", True))
+    window.new_endfed_antenna()
+
+    class FakeOptimizationDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def selected_dimension_m(self) -> float:
+            return 21.0
+
+    monkeypatch.setattr(
+        main_window_module,
+        "OptimizationDialog",
+        FakeOptimizationDialog,
+    )
+
+    assert window._optimize_action.isEnabled() is True
+    window.optimize_length()
+    qtbot.waitUntil(
+        lambda: not window._simulating and window._thread is None,
+        timeout=5_000,
+    )
+
+    assert window._endfed_form.parameters().length_m == pytest.approx(21.0)
+    assert window._project is not None
+    assert window._project.designs[0].parameters.length_m == pytest.approx(21.0)
+    assert window._results._table.rowCount() == 1
+    window._dirty = False
+
+
+def test_optimize_ocfd_applies_to_the_ocfd_form(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.ocfd import OCFDParameters
+
+    parameters = OCFDParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        feed_ratio=0.33,
+        height_m=10.0,
+    )
+
+    class FakeOCFDDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> OCFDParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "OCFDDialog", FakeOCFDDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("OCFD", True))
+    window.new_ocfd_antenna()
+
+    class FakeOptimizationDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def selected_dimension_m(self) -> float:
+            return 21.0
+
+    monkeypatch.setattr(
+        main_window_module,
+        "OptimizationDialog",
+        FakeOptimizationDialog,
+    )
+
+    assert window._optimize_action.isEnabled() is True
+    window.optimize_length()
+    qtbot.waitUntil(
+        lambda: not window._simulating and window._thread is None,
+        timeout=5_000,
+    )
+
+    assert window._ocfd_form.parameters().total_length_m == pytest.approx(21.0)
+    assert window._project is not None
+    assert window._project.designs[0].parameters.total_length_m == pytest.approx(21.0)
+    assert window._results._table.rowCount() == 1
+    window._dirty = False
+
+
+def test_synthesize_dimensions_applies_and_simulates(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.ocfd import OCFDParameters
+
+    parameters = OCFDParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        feed_ratio=0.33,
+        height_m=10.0,
+    )
+
+    class FakeOCFDDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> OCFDParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "OCFDDialog", FakeOCFDDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("OCFD", True))
+    window.new_ocfd_antenna()
+
+    synthesized = replace(parameters, total_length_m=21.0, feed_ratio=0.4)
+
+    class FakeSynthesisDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def selected_parameters(self) -> OCFDParameters:
+            return synthesized
+
+    monkeypatch.setattr(main_window_module, "SynthesisDialog", FakeSynthesisDialog)
+
+    assert window._synthesize_action.isEnabled() is True
+    window.synthesize_dimensions()
+    qtbot.waitUntil(
+        lambda: not window._simulating and window._thread is None,
+        timeout=5_000,
+    )
+
+    assert window._ocfd_form.parameters().total_length_m == pytest.approx(21.0)
+    assert window._project is not None
+    assert window._project.designs[0].parameters.total_length_m == pytest.approx(21.0)
+    assert window._project.designs[0].parameters.feed_ratio == pytest.approx(0.4)
+    assert window._results._table.rowCount() == 1
+    window._dirty = False
+
+
 def test_orientation_control_updates_parameters(window: MainWindow) -> None:
     from antennadesk.domain.antennas.dipole import DipoleOrientation
 
@@ -410,7 +585,7 @@ def test_switching_to_a_loop_updates_the_design(window: MainWindow) -> None:
     assert isinstance(parameters, LoopParameters)
     assert parameters.sides == 8
     assert len(window._project.designs[0].antenna.wires) == 8
-    assert window._view_combo.currentData() == "plan"
+    assert window._view_combo.currentData() == "elevation"
     assert window._form._sides.isHidden() is False
     assert window._form._spacing.isHidden() is True
     window._dirty = False
@@ -960,8 +1135,12 @@ def test_main_menu_is_grouped_by_task(window: MainWindow) -> None:
     assert "Import NEC Deck..." in import_menu_titles
     assert "Import MMANA File..." in import_menu_titles
     assert "Export CSV..." in export_menu_titles
+    assert "Export Geometry SVG..." in export_menu_titles
+    assert "Export Geometry PDF..." in export_menu_titles
+    assert "Export Geometry DXF..." in export_menu_titles
     assert "Export PDF Report..." in export_menu_titles
     assert "Optimize Dimension..." in design_titles
+    assert "Synthesize Dimensions..." in design_titles
     assert "Edit Series Loads..." in design_titles
     assert "Simulate" in simulation_titles
     assert "Feed Line..." in simulation_titles
@@ -1213,3 +1392,114 @@ def test_new_ringo_creates_a_first_class_design(
     assert window._design_stack.currentWidget() is window._ringo_scroll
     assert window._ringo_form.parameters() == parameters
     window._dirty = False
+
+
+def test_switching_between_delta_and_quad_changes_the_rendered_polygon(
+    window: MainWindow,
+) -> None:
+    window._form._type.setCurrentIndex(2)
+    window._form._length.setValue(40.0)
+    window._form._sides.setValue(3)
+    window.apply_design()
+    window._geometry._scene = None
+    delta = window._geometry._ensure_scene()
+
+    window._form._sides.setValue(4)
+    window.apply_design()
+    window._geometry._scene = None
+    quad = window._geometry._ensure_scene()
+
+    assert delta is not None
+    assert quad is not None
+    assert len(delta.polylines) == 3
+    assert len(quad.polylines) == 4
+    assert "Delta loop" in delta.summary
+    assert "Quad loop" in quad.summary
+    assert window._geometry._zoom == pytest.approx(1.0)
+    window._dirty = False
+
+
+def test_change_template_to_delta_and_quad_loop_creates_real_loops(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    class FakeCatalog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def selected_key(self) -> str:
+            return "delta_loop"
+
+    class FakeWizard:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            self._initial_sides = kwargs.get("initial_sides")
+
+        def exec(self) -> QWizard.DialogCode:
+            return QWizard.DialogCode.Accepted
+
+        def build_parameters(self) -> LoopParameters:
+            return LoopParameters(
+                frequency_hz=7_100_000.0,
+                circumference_m=40.0,
+                height_m=8.0,
+                sides=int(self._initial_sides or 3),
+            )
+
+    monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
+    monkeypatch.setattr(main_window_module, "DipoleWizard", FakeWizard)
+    monkeypatch.setattr(
+        QMessageBox,
+        "question",
+        lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
+    )
+
+    window.change_template()
+
+    assert window._project is not None
+    parameters = window._project.designs[0].parameters
+    assert isinstance(parameters, LoopParameters)
+    assert parameters.sides == 3
+    window._geometry._scene = None
+    scene = window._geometry._ensure_scene()
+    assert scene is not None
+    assert len(scene.polylines) == 3
+    assert "Delta loop" in scene.summary
+    window._dirty = False
+
+
+def test_new_delta_and_quad_loop_pass_the_expected_side_count(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    class FakeWizard:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            captured.update(kwargs)
+
+        def exec(self) -> QWizard.DialogCode:
+            return QWizard.DialogCode.Rejected
+
+    class FakeCatalog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def selected_key(self) -> str:
+            return "quad_loop"
+
+    monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
+    monkeypatch.setattr(main_window_module, "DipoleWizard", FakeWizard)
+    window._dirty = False
+
+    window.new_antenna()
+
+    assert captured["initial_antenna_type"] == "loop"
+    assert captured["initial_sides"] == 4

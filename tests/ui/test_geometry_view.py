@@ -287,3 +287,125 @@ def test_slim_jim_geometry_uses_the_j_pole_views(qtbot: QtBot) -> None:
     view.set_view_mode(GeometryViewMode.PLAN)
     assert view.grab().isNull() is False
     assert "Slim Jim top view" in (view._last_summary or "")
+
+
+def test_set_model_resets_zoom_pan_and_exaggeration(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    view = _make_view(qtbot)
+    view.set_zoom(8.0)
+    view.set_height_exaggeration(2.0)
+    view._pan = view._pan + view._pan
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=40.0,
+        height_m=8.0,
+        sides=3,
+    )
+
+    view.set_model(
+        parameters.to_antenna(),
+        antenna_type="loop",
+        parameters=parameters,
+    )
+
+    assert view._zoom == pytest.approx(1.0)
+    assert view._pan.x() == pytest.approx(0.0)
+    assert view._pan.y() == pytest.approx(0.0)
+    assert view._height_exaggeration == pytest.approx(1.0)
+    assert view._mode is GeometryViewMode.ELEVATION
+
+
+def test_loop_view_uses_the_actual_polygon(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=40.0,
+        height_m=8.0,
+        sides=3,
+    )
+    view = GeometryView(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(view)
+    view.resize(900, 340)
+    view.set_model(
+        parameters.to_antenna(),
+        antenna_type="loop",
+        parameters=parameters,
+    )
+    view.set_view_mode(GeometryViewMode.ELEVATION)
+    view.grab()
+
+    assert view.scene is not None
+    assert len(view.scene.polylines) == 3
+    assert "Delta loop" in (view._last_summary or "")
+    assert "top view is edge-on" not in (view._last_summary or "")
+
+
+def test_small_geometry_view_reports_hidden_dimensions(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=40.0,
+        height_m=8.0,
+        sides=3,
+    )
+    view = GeometryView(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(view)
+    view.resize(360, 240)
+    view.set_model(
+        parameters.to_antenna(),
+        antenna_type="loop",
+        parameters=parameters,
+    )
+    view.grab()
+
+    assert "hidden" in (view._last_summary or "")
+
+
+def test_three_d_view_can_be_rotated_and_reset(qtbot: QtBot) -> None:
+    from PySide6.QtCore import QPoint, Qt
+
+    view = _make_view(qtbot)
+    view.set_view_mode(GeometryViewMode.THREE_D)
+    view.show()
+    initial_yaw = view._three_d_yaw_deg
+    initial_pitch = view._three_d_pitch_deg
+
+    qtbot.mousePress(view, Qt.MouseButton.LeftButton, pos=QPoint(100, 100))
+    qtbot.mouseMove(view, QPoint(150, 120))
+    qtbot.mouseRelease(view, Qt.MouseButton.LeftButton, pos=QPoint(150, 120))
+
+    assert view._three_d_yaw_deg != pytest.approx(initial_yaw)
+    assert view._three_d_pitch_deg != pytest.approx(initial_pitch)
+
+    qtbot.mouseDClick(view, Qt.MouseButton.LeftButton, pos=QPoint(100, 100))
+    assert view._three_d_yaw_deg == pytest.approx(42.0)
+    assert view._three_d_pitch_deg == pytest.approx(24.0)
+
+
+def test_geometry_view_exports_vector_svg_pdf_and_dxf(
+    qtbot: QtBot,
+    tmp_path: Path,
+) -> None:
+    import ezdxf
+
+    view = _make_view(qtbot)
+    svg_path = tmp_path / "geometry.svg"
+    pdf_path = tmp_path / "geometry.pdf"
+    dxf_path = tmp_path / "geometry.dxf"
+
+    view.save_svg(svg_path)
+    view.save_pdf(pdf_path)
+    view.save_dxf(dxf_path)
+
+    svg = svg_path.read_text(encoding="utf-8")
+    assert "<svg" in svg
+    assert "polyline" in svg
+    assert pdf_path.read_bytes().startswith(b"%PDF")
+    document = ezdxf.readfile(dxf_path)
+    entity_types = [entity.dxftype() for entity in document.modelspace()]
+    assert "LWPOLYLINE" in entity_types
+    assert "DIMENSION" in entity_types
+    assert "ANTENNA_WIRES" in document.layers

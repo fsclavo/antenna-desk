@@ -42,28 +42,34 @@ Choose the antenna type first:
   sides, and the bottom height above ground.
 
 Changing the type converts the current design when you press **Apply design**
-or **Simulate**. The center shows a dimensioned sketch with a ground line and scale bar. Use
-the **View** selector to switch between:
+or **Simulate**. The center shows a dimensioned sketch with a ground line and
+scale bar. The sketch draws the actual wire model, so loops keep their polygon
+shape and arrays keep every element. Use the **View** selector to switch
+between:
 
-- **Plan**: construction dimensions. For a wire dipole it shows the total
-  length, both feed legs, feed position, ends, azimuth, and scale. For a
-  folded dipole it shows both elements with exaggerated spacing for clarity,
-  element length, spacing, and total conductor length. For a loop it shows a
-  circle with diameter, circumference, side count, and feed position.
-- **Elevation**: installation and position above ground. It shows the antenna
-  height, feed height, ground line, and scale. A folded dipole also includes a
-  small section symbol showing its two conductors and spacing. A loop is shown
-  edge-on as a vertical line with its diameter; Plan shows the loop in its own
-  plane as a circle with diameter, circumference, and side count. Construction
-  dimensions stay in Plan.
+- **Elevation / front**: the view that shows the construction shape for a
+  vertical-plane antenna. A quad or delta loop appears as its real square or
+  triangle, a Slim Jim shows its folded rectangle and gap detail, and an
+  end-fed wire keeps its slope. It also shows height above ground, feed
+  height, ground line, and scale. For a horizontal array whose elements
+  overlap in front view, the header tells you to use Plan.
+- **Plan / top**: the true top view. For a vertical loop this is edge-on, which
+  is expected; use Elevation to see its polygon. For horizontal arrays such as
+  a Yagi or Moxon it shows the element layout, boom spacing, and element
+  lengths. For a ring or radial vertical, a top inset shows the horizontal
+  structure while the main view keeps the installation height.
 - **3D**: isometric wireframe with ground grid, feed marker, axes, and scale.
 
-Multi-wire designs switch to Plan automatically. A vertical dipole is a point
-in Plan, so its elevation keeps the vertical construction dimensions. The
-**Zoom** selector scales the sketch (0.5x, 1x, 2x, 4x, 8x); the mouse wheel
-steps through those values, dragging pans, and double-click resets zoom and pan. The **Vertical scale**
-selector can exaggerate the height (1x, 1.5x, 2x, 3x) for low horizontal
-antennas.
+The default view is selected from the geometry: vertical-plane antennas use
+elevation, horizontal planar arrays use plan, and non-planar antennas show a
+front view with a top inset. Press **Apply design** or **Simulate** and the
+view resets to fit the new model; changing antennas also resets zoom, pan, and
+vertical exaggeration. Dimensions are placed around the geometry with
+collision avoidance. Very small features such as the Slim Jim gap use a detail
+inset marked *not to scale*. The **Zoom** selector scales the sketch (0.5x, 1x,
+2x, 4x, 8x); the mouse wheel steps through those values, dragging pans, and
+double-click resets zoom and pan. The **Vertical scale** selector can
+exaggerate the height (1x, 1.5x, 2x, 3x) for low horizontal antennas.
 
 ## Create an antenna
 
@@ -155,8 +161,9 @@ first-class experimental templates.
 ## Create an end-fed wire
 
 Choose **File → New Antenna... → End-fed wire** to generate a single wire fed
-at one end, optionally sloping between feed and far-end heights. Set length,
-feed height, end height, azimuth, radius, material, and ground. End-fed is a
+at one end, optionally sloping between feed and far-end heights. Set the
+physical wire length, feed height, end height, azimuth, radius, material, and
+ground; the horizontal run is derived from the height difference. End-fed is a
 first-class experimental template with an inline editor.
 
 ## Create a fan dipole
@@ -273,14 +280,23 @@ design frequency. Missing results are reported in the dialog.
 ## Optimize the length
 
 Use **Optimize Dimension...** in the design panel or the **Design** menu. Choose the
-objective: **target reactance** (0 Ω for series resonance), **minimum SWR**,
-**maximum SWR bandwidth**, **maximum power gain**, **maximum efficiency**, or
-**balanced SWR + gain**. Set the minimum and maximum dimension and the maximum
-number of solver evaluations. For reactance and minimum-SWR searches, also set
-the objective tolerance. For **maximum SWR bandwidth**, set the SWR limit and
-use a frequency sweep; the grid resolution is controlled by the evaluation
-limit. Gain objectives require a far-field request. Efficiency uses the
-solver's power budget.
+objective: **target impedance** (selectable `R + jX`), **target reactance**
+(0 Ω for series resonance), **minimum SWR**, **maximum SWR bandwidth**,
+**maximum power gain**, **maximum efficiency**, or **balanced SWR + gain**.
+Set the minimum and maximum dimension and the maximum number of solver
+evaluations. For target impedance, target reactance, and minimum-SWR searches,
+also set the objective tolerance. For **maximum SWR bandwidth**, set the SWR
+limit and use a frequency sweep; the grid resolution is controlled by the
+evaluation limit. Gain objectives require a far-field request. Efficiency uses
+the solver's power budget.
+
+**Target impedance** is the most direct option when the load matters, for
+example an OCFD where 200 Ω is a reasonable starting target. The optimizer
+evaluates the bounded dimension range and selects the point with the smallest
+complex impedance error, then reports that error and the resulting SWR. A
+single dimension may not reach both R and X exactly; the error makes the
+remaining mismatch visible. OCFD, end-fed wire, wire-dipole, folded-dipole,
+and loop designs support this dimension search.
 
 For **balanced SWR + gain**, set non-negative SWR and gain weights. The dialog
 maximizes `gain_weight × gain_dBi − swr_weight × max(SWR − 1, 0)` at the design
@@ -297,6 +313,25 @@ the full sweep/pattern simulation with the current settings. The optimizer is
 bounded by the dimension range and evaluation limit. It changes only one
 dimension; the SWR/gain balance is a weighted score, not a Pareto optimizer.
 
+## Synthesize dimensions
+
+For an **OCFD**, **J Pole**, or **Slim Jim**, use **Design → Synthesize
+Dimensions...**. Set the target frequency and the desired feed-point
+resistance/reactance, then choose bounds for the two search variables:
+
+- OCFD: total wire length and feed ratio.
+- J Pole: radiator height and feed-offset position.
+- Slim Jim: radiator height and stub length.
+
+The dialog evaluates a bounded grid at the target frequency and reports the
+best resistance, reactance, SWR, and impedance error. **Apply dimensions**
+updates the design and starts the normal full sweep/pattern simulation.
+
+This is a numerical starting point, not a guarantee that the target is
+physically reachable. Verify the applied design with a full sweep, check
+construction tolerances, and treat the result as experimental until it has an
+independent validation reference.
+
 ## Construction sheet
 
 Use **Design → Construction Sheet...** for a printable sheet with target
@@ -311,7 +346,8 @@ loops show side length, circumference, side count, and feed side.
 Use **File → Export → CSV...** for the frequency sweep table, **File → Export
 → Pattern CSV...** for the far-field grid (frequency, θ, φ, gains,
 polarization, and E-field components), **File → Export → Pattern PNG...** for
-the current cut/3D pattern image, **File → Export → Geometry PNG...** for the
+the current cut/3D pattern image, **File → Export → Geometry PNG...**,
+**Geometry SVG...**, **Geometry PDF...**, or **Geometry DXF...** for the
 current geometry view, **File → Export → HTML Report...** for a self-contained
 HTML report, or **File → Export → PDF Report...** for a native PDF with design
 parameters, configuration, solver metadata, fingerprint, diagnostics,

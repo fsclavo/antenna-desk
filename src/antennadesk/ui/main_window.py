@@ -131,6 +131,7 @@ from .dialogs.moxon_dialog import MoxonDialog
 from .dialogs.ocfd_dialog import OCFDDialog
 from .dialogs.optimization_dialog import OptimizationDialog
 from .dialogs.ringo_dialog import RingoDialog
+from .dialogs.synthesis_dialog import SynthesisDialog
 from .dialogs.vertical_dialog import VerticalDialog
 from .dialogs.yagi_dialog import YagiDialog
 from .i18n import Language, Translator
@@ -238,6 +239,8 @@ class MainWindow(QMainWindow):
         self._compare_action.triggered.connect(lambda: self.compare_variants())
         self._optimize_action = QAction(self)
         self._optimize_action.triggered.connect(lambda: self.optimize_length())
+        self._synthesize_action = QAction(self)
+        self._synthesize_action.triggered.connect(lambda: self.synthesize_dimensions())
         self._construction_action = QAction(self)
         self._construction_action.triggered.connect(lambda: self.show_construction_sheet())
         self._loads_action = QAction(self)
@@ -254,6 +257,12 @@ class MainWindow(QMainWindow):
         self._export_pattern_png_action.triggered.connect(lambda: self.export_pattern_png())
         self._export_geometry_png_action = QAction(self)
         self._export_geometry_png_action.triggered.connect(lambda: self.export_geometry_png())
+        self._export_geometry_svg_action = QAction(self)
+        self._export_geometry_svg_action.triggered.connect(lambda: self.export_geometry_svg())
+        self._export_geometry_pdf_action = QAction(self)
+        self._export_geometry_pdf_action.triggered.connect(lambda: self.export_geometry_pdf())
+        self._export_geometry_dxf_action = QAction(self)
+        self._export_geometry_dxf_action.triggered.connect(lambda: self.export_geometry_dxf())
         self._export_html_action = QAction(self)
         self._export_html_action.triggered.connect(lambda: self.export_html_report())
         self._export_pdf_action = QAction(self)
@@ -545,6 +554,9 @@ class MainWindow(QMainWindow):
         self._export_menu.addAction(self._export_pattern_csv_action)
         self._export_menu.addAction(self._export_pattern_png_action)
         self._export_menu.addAction(self._export_geometry_png_action)
+        self._export_menu.addAction(self._export_geometry_svg_action)
+        self._export_menu.addAction(self._export_geometry_pdf_action)
+        self._export_menu.addAction(self._export_geometry_dxf_action)
         self._export_menu.addAction(self._export_html_action)
         self._export_menu.addAction(self._export_pdf_action)
         self._file_menu.addSeparator()
@@ -558,6 +570,7 @@ class MainWindow(QMainWindow):
         self._variants_menu.addSeparator()
         self._variants_menu.addAction(self._compare_action)
         self._design_menu.addAction(self._optimize_action)
+        self._design_menu.addAction(self._synthesize_action)
         self._design_menu.addAction(self._construction_action)
         self._design_menu.addAction(self._loads_action)
         self._custom_menu = self._design_menu.addMenu("")
@@ -608,6 +621,7 @@ class MainWindow(QMainWindow):
         self._delete_variant_action.setText(self._translator.t("action.delete_variant"))
         self._compare_action.setText(self._translator.t("action.compare"))
         self._optimize_action.setText(self._translator.t("action.optimize"))
+        self._synthesize_action.setText(self._translator.t("action.synthesize"))
         self._construction_action.setText(self._translator.t("action.construction"))
         self._loads_action.setText(self._translator.t("action.loads"))
         self._edit_custom_action.setText(self._translator.t("action.edit_custom"))
@@ -622,6 +636,9 @@ class MainWindow(QMainWindow):
         self._export_pattern_csv_action.setText(self._translator.t("action.export_pattern_csv"))
         self._export_pattern_png_action.setText(self._translator.t("action.export_pattern_png"))
         self._export_geometry_png_action.setText(self._translator.t("action.export_geometry_png"))
+        self._export_geometry_svg_action.setText(self._translator.t("action.export_geometry_svg"))
+        self._export_geometry_pdf_action.setText(self._translator.t("action.export_geometry_pdf"))
+        self._export_geometry_dxf_action.setText(self._translator.t("action.export_geometry_dxf"))
         self._export_html_action.setText(self._translator.t("action.export_html"))
         self._export_pdf_action.setText(self._translator.t("action.export_pdf"))
         self._compact_history_action.setText(self._translator.t("action.compact_history"))
@@ -729,23 +746,23 @@ class MainWindow(QMainWindow):
         is_yagi = isinstance(parameters, YagiParameters)
         is_moxon = isinstance(parameters, MoxonParameters)
         is_fan_dipole = isinstance(parameters, FanDipoleParameters)
-        is_endfed = isinstance(parameters, EndFedParameters)
         is_j_pole = isinstance(parameters, JPoleParameters)
         is_ringo = isinstance(parameters, RingoParameters)
         self._optimize_action.setEnabled(
             idle
             and has_project
             and not is_custom
-            and not is_ocfd
             and not is_vertical
             and not is_inverted_v
             and not is_yagi
             and not is_moxon
             and not is_fan_dipole
-            and not is_endfed
             and not is_j_pole
             and not is_ringo
             and self._solver is not None
+        )
+        self._synthesize_action.setEnabled(
+            idle and has_project and (is_ocfd or is_j_pole) and self._solver is not None
         )
         self._loads_action.setEnabled(idle and has_project)
         self._edit_custom_action.setEnabled(idle and has_project and is_custom)
@@ -757,6 +774,9 @@ class MainWindow(QMainWindow):
         self._export_pattern_csv_action.setEnabled(idle and has_result)
         self._export_pattern_png_action.setEnabled(idle and has_result)
         self._export_geometry_png_action.setEnabled(idle and has_project)
+        self._export_geometry_svg_action.setEnabled(idle and has_project)
+        self._export_geometry_pdf_action.setEnabled(idle and has_project)
+        self._export_geometry_dxf_action.setEnabled(idle and has_project)
         self._export_html_action.setEnabled(idle and has_result)
         self._export_pdf_action.setEnabled(idle and has_result)
         has_history = self._project is not None and len(self._project.simulation_runs) > len(
@@ -834,7 +854,11 @@ class MainWindow(QMainWindow):
             design.antenna,
             antenna_type=design.antenna_type,
             display_name=display_name,
+            parameters=design.parameters,
         )
+        self._height_combo.blockSignals(True)
+        self._height_combo.setCurrentIndex(0)
+        self._height_combo.blockSignals(False)
 
     def _select_design(self, design_id: UUID) -> None:
         if self._project is None:
@@ -2171,12 +2195,24 @@ class MainWindow(QMainWindow):
             CATALOG_TYPE_WIRE_DIPOLE,
             CATALOG_TYPE_FOLDED_DIPOLE,
             CATALOG_TYPE_LOOP,
+            CATALOG_TYPE_DELTA_LOOP,
+            CATALOG_TYPE_QUAD_LOOP,
         }:
+            antenna_type = (
+                CATALOG_TYPE_LOOP
+                if selected in {CATALOG_TYPE_DELTA_LOOP, CATALOG_TYPE_QUAD_LOOP}
+                else selected
+            )
+            initial_sides = {
+                CATALOG_TYPE_DELTA_LOOP: 3,
+                CATALOG_TYPE_QUAD_LOOP: 4,
+            }.get(selected)
             wizard = DipoleWizard(
                 self._translator,
                 self._unit_system,
                 initial_frequency_hz=frequency_hz,
-                initial_antenna_type=selected,
+                initial_antenna_type=antenna_type,
+                initial_sides=initial_sides,
                 parent=self,
             )
             if wizard.exec() != QWizard.DialogCode.Accepted:
@@ -2645,7 +2681,13 @@ class MainWindow(QMainWindow):
                 self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
                 return
         design = self._project.design_by_id(self._design_id)
-        base_spec = replace(self._form.simulation_spec(), feed_line=self._feed_line)
+        if isinstance(design.parameters, OCFDParameters):
+            base_spec = self._ocfd_simulation_spec(design.parameters)
+        elif isinstance(design.parameters, EndFedParameters):
+            base_spec = self._endfed_simulation_spec(design.parameters)
+        else:
+            base_spec = self._form.simulation_spec()
+        base_spec = replace(base_spec, feed_line=self._feed_line)
         dialog = OptimizationDialog(
             self._translator,
             self._unit_system,
@@ -2661,7 +2703,59 @@ class MainWindow(QMainWindow):
             return
         try:
             parameters = with_primary_dimension(design.parameters, dimension)
-            self._form.set_parameters(parameters, reset_sweep=False)
+            if isinstance(parameters, OCFDParameters):
+                self._ocfd_form.set_parameters(parameters)
+            elif isinstance(parameters, EndFedParameters):
+                self._endfed_form.set_parameters(parameters)
+            else:
+                self._form.set_parameters(parameters, reset_sweep=False)
+            self._apply_fields()
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self.simulate()
+
+    def synthesize_dimensions(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._solver is None:
+            self._show_error(self._translator.t("error.solver"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        design = self._project.design_by_id(self._design_id)
+        if isinstance(design.parameters, OCFDParameters):
+            base_spec = self._ocfd_simulation_spec(design.parameters)
+        elif isinstance(design.parameters, JPoleParameters):
+            base_spec = self._j_pole_simulation_spec(design.parameters)
+        else:
+            return
+        dialog = SynthesisDialog(
+            self._translator,
+            self._unit_system,
+            self._solver,
+            design.parameters,
+            replace(base_spec, feed_line=self._feed_line),
+            self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        parameters = dialog.selected_parameters()
+        if parameters is None:
+            return
+        try:
+            if isinstance(parameters, OCFDParameters):
+                self._ocfd_form.set_parameters(parameters)
+            elif isinstance(parameters, JPoleParameters):
+                self._j_pole_form.set_parameters(parameters)
+            else:
+                return
+            self._form_dirty = True
             self._apply_fields()
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
@@ -2813,6 +2907,90 @@ class MainWindow(QMainWindow):
             path = path.with_suffix(".png")
         try:
             self._geometry.save_image(path)
+        except Exception as exc:
+            self._show_error(self._translator.t("error.export", message=str(exc)))
+            return
+        self._last_status_key = "status.exported"
+        self._update_status_text()
+
+    def export_geometry_svg(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        design = self._project.design_by_id(self._design_id)
+        suggested = (
+            f"{self._safe_file_name(self._project.name)}-"
+            f"{self._safe_file_name(design.name)}-geometry.svg"
+        )
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            self._translator.t("dialog.geometry_svg_title"),
+            str(Path.home() / suggested),
+            self._translator.t("dialog.svg_filter"),
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.lower() != ".svg":
+            path = path.with_suffix(".svg")
+        try:
+            self._geometry.save_svg(path)
+        except Exception as exc:
+            self._show_error(self._translator.t("error.export", message=str(exc)))
+            return
+        self._last_status_key = "status.exported"
+        self._update_status_text()
+
+    def export_geometry_pdf(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        design = self._project.design_by_id(self._design_id)
+        suggested = (
+            f"{self._safe_file_name(self._project.name)}-"
+            f"{self._safe_file_name(design.name)}-geometry.pdf"
+        )
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            self._translator.t("dialog.geometry_pdf_title"),
+            str(Path.home() / suggested),
+            self._translator.t("dialog.pdf_filter"),
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.lower() != ".pdf":
+            path = path.with_suffix(".pdf")
+        try:
+            self._geometry.save_pdf(path)
+        except Exception as exc:
+            self._show_error(self._translator.t("error.export", message=str(exc)))
+            return
+        self._last_status_key = "status.exported"
+        self._update_status_text()
+
+    def export_geometry_dxf(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        design = self._project.design_by_id(self._design_id)
+        suggested = (
+            f"{self._safe_file_name(self._project.name)}-"
+            f"{self._safe_file_name(design.name)}-geometry.dxf"
+        )
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            self._translator.t("dialog.geometry_dxf_title"),
+            str(Path.home() / suggested),
+            self._translator.t("dialog.dxf_filter"),
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.lower() != ".dxf":
+            path = path.with_suffix(".dxf")
+        try:
+            self._geometry.save_dxf(path)
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))
             return
@@ -2977,17 +3155,15 @@ class MainWindow(QMainWindow):
         self._update_height_control()
 
     def _auto_select_view(self, design: DesignVariant) -> None:
-        if len(design.antenna.wires) > 1:
-            zs = [point.z_m for wire in design.antenna.wires for point in (wire.start, wire.end)]
-            if design.antenna_type == "loop":
-                mode = GeometryViewMode.PLAN
-            elif max(zs) - min(zs) > 1e-6:
-                mode = GeometryViewMode.ELEVATION
-            else:
-                mode = GeometryViewMode.PLAN
-            index = self._view_combo.findData(mode.value)
-            if index >= 0 and self._view_combo.currentIndex() != index:
-                self._view_combo.setCurrentIndex(index)
+        del design
+        mode = self._geometry.recommended_mode()
+        self._geometry.set_view_mode(mode)
+        index = self._view_combo.findData(mode.value)
+        if index >= 0 and self._view_combo.currentIndex() != index:
+            self._view_combo.blockSignals(True)
+            self._view_combo.setCurrentIndex(index)
+            self._view_combo.blockSignals(False)
+        self._update_height_control()
 
     def _update_height_control(self) -> None:
         mode = self._view_combo.currentData()

@@ -128,6 +128,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Palette-aware diagram theme: the geometry sketch and pyqtgraph charts follow
   the GUI light/dark palette, including backgrounds, axes, labels, grids, and
   series colors, with runtime updates when the palette changes.
+- Renderer-neutral geometry scene and orthographic view policy: the sketch now
+  projects the canonical wire model instead of synthesizing circles or lines
+  per antenna type, with true front/plan views, shape-aware auto-selection,
+  collision-aware dimension placement, detail insets, and a scriptable scene
+  that can later feed SVG, PDF, or DXF export.
+- Semantic construction dimensions for loops, folded dipoles, J Pole/Slim Jim,
+  Ringo, Yagi, Moxon, end-fed, inverted-V, fan dipole, vertical, OCFD, and
+  generic custom wires, including a gap detail inset for Slim Jim, a spacing
+  detail inset for closely spaced folded dipoles, Moxon tip/gap dimensions,
+  and a top inset for Ringo/radial verticals.
+- Legacy custom generator designs keep their semantic Yagi/Vertical/summary
+  labels instead of falling back to a generic wire count.
+- The geometry header reports when low-priority dimensions had to be hidden
+  for space at small window sizes.
+- Vector geometry export to SVG and PDF from the same scene used by the
+  on-screen sketch.
+- `docs/GEOMETRY_PRESENTATION.md`: normative presentation contract, required
+  tests, anti-patterns, and Definition of Done for new antenna families.
+- Contract tests covering wire preservation, default views, dimension validity,
+  layout collisions, presentation-type registration, and catalog routing for
+  both New Antenna and Change Template.
+- Angular construction dimensions for inverted-V and fan-dipole included
+  angles, with collision-aware arc and label placement.
+- Layered DXF export of the current geometry scene, including wires, feed/load
+  markers, linear dimensions, angular dimensions, and a title, using `ezdxf`
+  (MIT, GPL-3.0-compatible).
+- Interactive isometric geometry rotation with mouse drag and double-click
+  reset.
 
 ### Changed
 
@@ -214,8 +242,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Optimization objective selector: target reactance, minimum SWR, maximum SWR
   bandwidth, maximum power gain, maximum efficiency, or balanced SWR + gain,
   with objective-specific limits, weights, and grid resolution.
+- Added bounded two-variable impedance synthesis for OCFD, J Pole, and Slim Jim
+  designs. It searches length/feed ratio or radiator/feed-offset (stub for Slim
+  Jim) over user bounds, evaluates at the target frequency, and applies the best
+  dimensions for a full validation sweep.
+- Added a target-impedance objective to dimension optimization. It accepts a
+  selectable complex target `R + jX` and ranks candidates by impedance error;
+  OCFD and end-fed wire designs can now be length-optimized against that
+  target.
 
 - Documentation and README are now in English.
+
+### Fixed
+
+- Geometry view now resets zoom, pan, and vertical exaggeration when the model
+  changes, so switching antennas always fits the new drawing.
+- Change Template now handles the Delta loop and Quad loop catalog entries and
+  opens the loop wizard with 3 or 4 sides instead of silently keeping the
+  previous design.
+- Quad and delta loops are drawn as their real polygons; vertical loops use a
+  front view and their plan view is correctly shown edge-on.
+- End-fed sloping wires, Yagi/Moxon elements, Ringo rings, J Pole stubs, and
+  loads are no longer collapsed or hidden by type-specific shortcuts.
+- Slim Jim feed offset is measured from the stub base, and loop top height is
+  exact for odd side counts and rotated azimuths.
+- End-fed wire length now means the physical conductor length, not just its
+  horizontal run; steep slopes are rejected when they exceed the wire length.
+- Dimension labels are measured, prioritized, and placed with collision
+  avoidance; units and translations are rebuilt on change.
+- The geometry compass labels the X/Y axes, matching the documented +X toward
+  +Y azimuth convention.
 
 ## [0.1.0.dev0] - 2026-10-29
 

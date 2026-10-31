@@ -52,6 +52,47 @@ def test_converges_on_a_target_reactance() -> None:
     assert result.best_length_m == pytest.approx(22.0, abs=0.1)
 
 
+def test_optimizes_a_complex_impedance_target() -> None:
+    def evaluate(length_m: float) -> LengthEvaluation:
+        offset = length_m - 20.0
+        return LengthEvaluation(
+            length_m,
+            complex(200.0 + 10.0 * offset, 5.0 * offset),
+            1.0,
+        )
+
+    spec = LengthOptimizationSpec(
+        min_length_m=18.0,
+        max_length_m=22.0,
+        objective=OptimizationObjective.TARGET_IMPEDANCE,
+        target_resistance_ohm=200.0,
+        target_reactance_ohm=0.0,
+        max_evaluations=5,
+    )
+    result = optimize_length(evaluate, spec)
+
+    assert result.status is LengthOptimizationStatus.CONVERGED
+    assert result.best_length_m == pytest.approx(20.0)
+    assert result.best_impedance_ohm == pytest.approx(complex(200.0, 0.0))
+    assert result.best_impedance_error_ohm == pytest.approx(0.0)
+
+
+def test_reports_an_unreachable_impedance_target() -> None:
+    spec = LengthOptimizationSpec(
+        min_length_m=18.0,
+        max_length_m=22.0,
+        objective=OptimizationObjective.TARGET_IMPEDANCE,
+        target_resistance_ohm=500.0,
+        target_reactance_ohm=0.0,
+        max_evaluations=5,
+    )
+    result = optimize_length(_linear_evaluator(), spec)  # type: ignore[arg-type]
+
+    assert result.status is LengthOptimizationStatus.MAX_EVALUATIONS
+    assert result.best_impedance_error_ohm is not None
+    assert result.best_impedance_error_ohm > spec.impedance_tolerance_ohm
+
+
 def test_reports_when_the_target_is_not_bracketed() -> None:
     spec = LengthOptimizationSpec(
         min_length_m=18.0,

@@ -171,10 +171,18 @@ unchanged. Series RLC loads are optional antenna payloads and are emitted as
 `LD 0` cards by the solver adapter.
 
 The form exposes an antenna-type selector with conditional spacing/sides
-fields. Multi-wire designs switch the geometry view to Plan, where construction
-dimensions live; Elevation shows installation data (height above ground, feed
-height, and ground line, plus a folded-conductor section). Reports,
-construction sheets, and comparison use type-aware dimensions.
+fields. The geometry view is renderer-neutral: `ui/geometry/builder.py`
+projects the canonical wires with an orthographic basis, attaches semantic
+dimensions and detail insets, and `ui/geometry/layout.py` places the dimensions
+in screen space using font metrics and collision avoidance. The default view is
+derived from the geometry (front for vertical planes, plan for horizontal
+arrays, front plus a top inset for non-planar models), and changing the model
+resets zoom, pan, and vertical exaggeration. Reports, construction sheets, and
+comparison use type-aware dimensions.
+
+The geometry presentation layer has no Qt dependency in `scene.py`,
+`views.py`, or `builder.py`; only the layout and widget use Qt. The same scene
+can therefore be tested headlessly and reused for future SVG/PDF/DXF export.
 
 
 The UI is bilingual through `ui/i18n.py` and supports metric or imperial

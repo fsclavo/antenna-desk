@@ -10,6 +10,7 @@ from antennadesk.domain.antennas.design import (
     with_primary_dimension,
 )
 from antennadesk.domain.antennas.dipole import DipoleParameters
+from antennadesk.domain.antennas.endfed import EndFedParameters
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.loop import LoopParameters
 
@@ -39,6 +40,22 @@ def test_primary_dimensions_and_types() -> None:
     assert antenna_type_for(dipole) == "wire_dipole"
     assert antenna_type_for(folded) == "folded_dipole"
     assert antenna_type_for(loop) == "loop"
+
+
+def test_endfed_uses_wire_length_as_its_primary_dimension() -> None:
+    endfed = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_height_m=10.0,
+        end_height_m=12.0,
+    )
+
+    assert primary_dimension_m(endfed) == pytest.approx(20.0)
+    edited = with_primary_dimension(endfed, 21.0)
+    assert isinstance(edited, EndFedParameters)
+    assert edited.length_m == pytest.approx(21.0)
+    assert edited.feed_height_m == pytest.approx(10.0)
+    assert edited.end_height_m == pytest.approx(12.0)
 
 
 def test_with_primary_dimension_updates_only_the_selected_geometry() -> None:

@@ -33,6 +33,15 @@ amateur radio. The project is GPL-3.0-or-later.
 - PySide6 is pinned below 6.10 because 6.12 triggered a shutdown refcount crash
   with pyqtgraph. Re-evaluate the pin deliberately.
 
+## Geometry presentation
+
+- Follow `docs/GEOMETRY_PRESENTATION.md`; it is the contract for the sketch.
+- Draw the canonical wires. Never synthesize a replacement shape for a family.
+- Every new antenna family needs a scene contract test, a default-view test,
+  catalog routes in both New Antenna and Change Template, and a DoD checklist.
+- Do not infer the family from the wire count or hard-code wire IDs outside the
+  family builder/domain module.
+
 ## Correctness and science
 
 - Do not invent numerical reference values.

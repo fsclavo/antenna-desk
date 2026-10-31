@@ -56,6 +56,12 @@ basic template types.
 - [ADR-0005 — Folded dipole and loop templates](docs/ADR/0005-new-wire-geometries.md)
 - [ADR-0006 — Series and parallel RLC loads](docs/ADR/0006-series-loads.md)
 - [ADR-0007 — Custom wire designs](docs/ADR/0007-custom-wire-designs.md)
+- [ADR-0008 — Feed-line post-processing](docs/ADR/0008-feed-line-post-processing.md)
+- [ADR-0009 — Catalog and experimental templates](docs/ADR/0009-catalog-and-experimental-templates.md)
+- [ADR-0010 — First-class generator templates](docs/ADR/0010-first-class-generator-templates.md)
+- [ADR-0011 — Bounded impedance synthesis](docs/ADR/0011-bounded-impedance-synthesis.md)
+- [ADR-0012 — Geometry presentation and dimension layout](docs/ADR/0012-geometry-presentation.md)
+- [Geometry presentation contract](docs/GEOMETRY_PRESENTATION.md)
 - [NEC engine evaluation](docs/spikes/phase0-solver-evaluation.md)
 - [Phase 0 reproducible spike](spikes/phase0/README.md)
 - [Agent instructions](AGENTS.md)
@@ -63,9 +69,9 @@ basic template types.
 
 ## What exists today
 
-- Guided antenna wizard and a main window with a design panel, construction
-  dimensions in Plan view, installation/height details in Elevation view, an
-  isometric 3D view, and results tabs.
+- Guided antenna wizard and a main window with a design panel, a shape-aware
+  construction sketch with a collision-aware dimension layout, front/plan
+  orthographic views, detail insets, an isometric 3D view, and results tabs.
 - Asynchronous simulation with cancellation, timeouts, and diagnostics.
 - Impedance, SWR, frequency-sweep, and far-field pattern charts, including
   selectable azimuth/elevation cuts, polar lobe diagrams, and an isometric 3D
@@ -77,10 +83,14 @@ basic template types.
 - VNA CSV import with measured impedance/SWR records and a measured/simulated
   SWR comparison tab.
 - Currents tab and resonance markers on impedance/SWR sweeps.
-- Bounded antenna-dimension optimization for a target reactance, minimum SWR,
-  maximum SWR bandwidth, maximum power gain, maximum efficiency, or a weighted
-  SWR/gain balance: wire-dipole and folded-dipole element length, or loop
-  circumference, with an evaluation log and sensitivity table.
+- Bounded antenna-dimension optimization for a selectable target impedance
+  `R + jX`, target reactance, minimum SWR, maximum SWR bandwidth, maximum power
+  gain, maximum efficiency, or a weighted SWR/gain balance: wire-dipole,
+  folded-dipole, OCFD, end-fed wire, or loop dimensions, with an evaluation
+  log and sensitivity table.
+- Bounded two-variable impedance synthesis for OCFD, J Pole, and Slim Jim
+  designs, with a target frequency/R/X, evaluation log, and apply-and-simulate
+  flow.
 - Custom straight-wire antennas with a coordinate editor, template-to-custom
   conversion, a parametric Yagi generator with an editable element table and
   NBS starting preset, Moxon, fan dipole, end-fed, J Pole, Slim Jim, Ringo,
@@ -92,8 +102,8 @@ basic template types.
   velocity factor, matched loss, and transformed impedance/SWR.
 - Printable/HTML construction sheet with type-aware dimensions, feed position,
   loads, and simulated result.
-- CSV/PNG export for sweep results, far-field patterns, and geometry, plus
-  self-contained HTML/PDF reports.
+- CSV, PNG, SVG, PDF, and layered DXF export for results, patterns, and
+  geometry, plus self-contained HTML/PDF reports.
 - English and Spanish UI, plus metric and imperial presentation units.
 - Immutable domain model for units, geometry, conductors, feed points, ground
   models, environments, wire dipoles, folded dipoles, and regular-polygon
@@ -139,7 +149,8 @@ uv run python scripts/run_reference_simulation.py \
 - Horizontal and vertical center-fed dipoles, folded dipoles, and
   regular-polygon loops are implemented. Folded and loop templates currently
   have theoretical sanity tests but no published independent impedance
-  reference; VNA CSV import and measurement records are not implemented yet.
+  reference. VNA CSV import and measurement records are implemented; live
+  instrument control is not.
 - Series and parallel RLC loads are supported on one wire segment; general
   matching networks and radial ground screens are not implemented. The feed
   line is a uniform line model evaluated at the transmitter; it does not change
@@ -151,7 +162,8 @@ uv run python scripts/run_reference_simulation.py \
 - Optimization adjusts one primary dimension per design. It supports one
   reactance, SWR, bandwidth, gain, or efficiency objective, or a weighted
   SWR/gain score; it does not expose a Pareto front or optimize several
-  dimensions at once.
+  dimensions at once. Synthesis searches two bounded variables for OCFD,
+  J Pole, and Slim Jim and is a starting point, not a global inverse solver.
 - Relative permeability is not emitted to NEC. Conductor conductivity is
   emitted when `SimulationSpec.include_conductor_losses` is true.
 - Simulation reports and construction sheets have native PDF export; HTML

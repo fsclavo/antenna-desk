@@ -90,6 +90,7 @@ class OptimizationDialog(QDialog):
         self._objective.addItem("", OptimizationObjective.MAX_GAIN.value)
         self._objective.addItem("", OptimizationObjective.MAX_EFFICIENCY.value)
         self._objective.addItem("", OptimizationObjective.BALANCED_SWR_GAIN.value)
+        self._objective.addItem("", OptimizationObjective.TARGET_IMPEDANCE.value)
         self._objective.currentIndexChanged.connect(self._objective_changed)
 
         self._min_length = QDoubleSpinBox(self)
@@ -103,6 +104,12 @@ class OptimizationDialog(QDialog):
         self._max_length.setDecimals(3)
         self._max_length.setSuffix(f" {unit}")
         self._max_length.setValue(length_from_m(default_max, unit_system))
+
+        self._target_r = QDoubleSpinBox(self)
+        self._target_r.setRange(1.0, 10_000.0)
+        self._target_r.setDecimals(3)
+        self._target_r.setValue(50.0)
+        self._target_r.setSuffix(" Ω")
 
         self._target = QDoubleSpinBox(self)
         self._target.setRange(-1_000.0, 1_000.0)
@@ -137,6 +144,7 @@ class OptimizationDialog(QDialog):
         self._label_objective = QLabel(translator.t("optimize.objective"), self)
         self._label_min = QLabel(translator.t("optimize.min_length"), self)
         self._label_max = QLabel(translator.t("optimize.max_length"), self)
+        self._label_target_r = QLabel(translator.t("optimize.target_resistance"), self)
         self._label_target = QLabel(translator.t("optimize.target_reactance"), self)
         self._label_swr_limit = QLabel(translator.t("optimize.swr_limit"), self)
         self._label_swr_weight = QLabel(translator.t("optimize.swr_weight"), self)
@@ -147,6 +155,7 @@ class OptimizationDialog(QDialog):
         self._form_layout.addRow(self._label_objective, self._objective)
         self._form_layout.addRow(self._label_min, self._min_length)
         self._form_layout.addRow(self._label_max, self._max_length)
+        self._form_layout.addRow(self._label_target_r, self._target_r)
         self._form_layout.addRow(self._label_target, self._target)
         self._form_layout.addRow(self._label_swr_limit, self._swr_limit)
         self._form_layout.addRow(self._label_swr_weight, self._swr_weight)
@@ -218,6 +227,7 @@ class OptimizationDialog(QDialog):
         self._objective.setItemText(3, t("optimize.max_gain_objective"))
         self._objective.setItemText(4, t("optimize.max_efficiency_objective"))
         self._objective.setItemText(5, t("optimize.balanced_objective"))
+        self._objective.setItemText(6, t("optimize.target_impedance_objective"))
         self._evaluations.setHorizontalHeaderLabels(
             [
                 t("optimize.iteration"),
@@ -273,8 +283,15 @@ class OptimizationDialog(QDialog):
             OptimizationObjective.BALANCED_SWR_GAIN,
         }
         is_balanced = objective is OptimizationObjective.BALANCED_SWR_GAIN
-        self._target.setVisible(objective is OptimizationObjective.REACTANCE)
-        self._label_target.setVisible(objective is OptimizationObjective.REACTANCE)
+        is_target_z = objective is OptimizationObjective.TARGET_IMPEDANCE
+        show_target = objective in {
+            OptimizationObjective.REACTANCE,
+            OptimizationObjective.TARGET_IMPEDANCE,
+        }
+        self._target.setVisible(show_target)
+        self._label_target.setVisible(show_target)
+        self._target_r.setVisible(is_target_z)
+        self._label_target_r.setVisible(is_target_z)
         self._swr_limit.setVisible(is_bandwidth)
         self._label_swr_limit.setVisible(is_bandwidth)
         self._swr_weight.setVisible(is_balanced)
@@ -283,6 +300,7 @@ class OptimizationDialog(QDialog):
         self._label_gain_weight.setVisible(is_balanced)
         show_tolerance = objective in {
             OptimizationObjective.REACTANCE,
+            OptimizationObjective.TARGET_IMPEDANCE,
             OptimizationObjective.MIN_SWR,
         }
         self._set_row_visible(self._tolerance, show_tolerance)
@@ -292,11 +310,18 @@ class OptimizationDialog(QDialog):
             self._max_evaluations.setValue(21)
         if objective is OptimizationObjective.MAX_EFFICIENCY and self._max_evaluations.value() < 15:
             self._max_evaluations.setValue(21)
+        if is_target_z and self._max_evaluations.value() < 21:
+            self._max_evaluations.setValue(21)
         if is_swr:
             self._label_tolerance.setText(self._translator.t("optimize.swr_tolerance"))
             self._tolerance.setDecimals(3)
             self._tolerance.setValue(0.05)
             self._tolerance.setSuffix("")
+        elif is_target_z:
+            self._label_tolerance.setText(self._translator.t("optimize.impedance_tolerance"))
+            self._tolerance.setDecimals(3)
+            self._tolerance.setValue(0.1)
+            self._tolerance.setSuffix(" Ω")
         else:
             self._label_tolerance.setText(self._translator.t("optimize.tolerance"))
             self._tolerance.setDecimals(3)
@@ -309,9 +334,11 @@ class OptimizationDialog(QDialog):
             min_length_m=length_to_m(self._min_length.value(), self._unit_system),
             max_length_m=length_to_m(self._max_length.value(), self._unit_system),
             objective=objective,
+            target_resistance_ohm=self._target_r.value(),
             target_reactance_ohm=self._target.value(),
             max_evaluations=self._max_evaluations.value(),
             reactance_tolerance_ohm=self._tolerance.value(),
+            impedance_tolerance_ohm=self._tolerance.value(),
             swr_tolerance=self._tolerance.value(),
             swr_limit=self._swr_limit.value(),
             swr_weight=self._swr_weight.value(),
@@ -418,6 +445,7 @@ class OptimizationDialog(QDialog):
             self._objective,
             self._min_length,
             self._max_length,
+            self._target_r,
             self._target,
             self._swr_limit,
             self._swr_weight,
@@ -567,6 +595,15 @@ class OptimizationDialog(QDialog):
                     + self._translator.t(
                         "optimize.score_result",
                         value=f"{result.best_score:.3f}",
+                    )
+                )
+            if result.best_impedance_error_ohm is not None:
+                text = (
+                    text
+                    + " · "
+                    + self._translator.t(
+                        "optimize.impedance_error_result",
+                        value=f"{result.best_impedance_error_ohm:.3f}",
                     )
                 )
         if result.message:

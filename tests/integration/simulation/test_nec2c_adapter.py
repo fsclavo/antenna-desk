@@ -436,3 +436,35 @@ def test_j_pole_defaults_to_a_ground_clear_base(solver: Nec2cSolver) -> None:
     assert result.status is SimulationStatus.COMPLETED
     assert result.frequencies
     assert result.max_total_gain_db is not None
+
+
+def test_slim_jim_runs_with_the_feed_offset_above_the_base(
+    solver: Nec2cSolver,
+) -> None:
+    from antennadesk.domain.antennas.j_pole import JPoleParameters
+
+    parameters = JPoleParameters(
+        frequency_hz=145_000_000.0,
+        radiator_height_m=1.0,
+        stub_length_m=0.5,
+        spacing_m=0.05,
+        feed_offset_m=0.1,
+        base_height_m=0.25,
+        folded=True,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(145_000_000.0),
+        segmentation=SegmentationPolicy(min_segments_per_wire=3),
+        include_conductor_losses=False,
+    )
+
+    result = solver.run(parameters.to_antenna(), spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert result.frequencies
+    assert result.frequencies[0].impedance_ohm.real > 0.0
+    assert result.frequencies[0].swr is not None

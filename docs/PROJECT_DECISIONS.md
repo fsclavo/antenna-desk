@@ -48,7 +48,9 @@ consequences, it is documented in `docs/ADR/`.
 - Persistence: **dataclasses** in the domain; **Pydantic v2** only at the
   persistence/schema-validation boundary.
 - Internal geometry convention: right-handed axes, **Z up**, azimuth from
-  North, elevation above the horizon; explicit mapping to NEC theta/phi.
+  **+X toward +Y**, normalized to `[0, 360)`; the geometry compass labels the
+  X/Y axes. Radiation-pattern cuts keep their own theta/phi convention with an
+  explicit mapping to the model coordinates.
 - Units: **metric and imperial selectable in preferences**; the domain uses
   canonical units (meters, Hz, ohms).
 - Python package: `antennadesk`.

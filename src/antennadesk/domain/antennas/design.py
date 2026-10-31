@@ -80,6 +80,8 @@ def primary_dimension_m(parameters: AntennaDesignParameters) -> float:
         return parameters.height_m
     if isinstance(parameters, InvertedVParameters):
         return parameters.leg_length_m
+    if isinstance(parameters, EndFedParameters):
+        return parameters.length_m
     raise TypeError(f"antenna has no single primary dimension: {type(parameters)!r}")
 
 
@@ -99,4 +101,6 @@ def with_primary_dimension(
         return replace(parameters, height_m=dimension_m)
     if isinstance(parameters, InvertedVParameters):
         return replace(parameters, leg_length_m=dimension_m)
+    if isinstance(parameters, EndFedParameters):
+        return replace(parameters, length_m=dimension_m)
     raise TypeError(f"antenna has no single primary dimension: {type(parameters)!r}")

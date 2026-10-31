@@ -84,3 +84,12 @@ def test_loop_azimuth_rotates_the_first_vertex() -> None:
 def test_loop_rejects_invalid_parameters(field: str, value: float) -> None:
     with pytest.raises(ValueError):
         _parameters(**{field: value})
+
+
+def test_loop_top_height_is_exact_for_an_odd_number_of_sides() -> None:
+    parameters = _parameters(sides=3)
+    antenna = parameters.to_antenna()
+    actual_top = max(point.z_m for wire in antenna.wires for point in (wire.start, wire.end))
+
+    assert parameters.top_height_m == pytest.approx(actual_top)
+    assert parameters.top_height_m < parameters.height_m + parameters.diameter_m
