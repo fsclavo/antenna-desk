@@ -180,6 +180,12 @@ arrays, front plus a top inset for non-planar models), and changing the model
 resets zoom, pan, and vertical exaggeration. Reports, construction sheets, and
 comparison use type-aware dimensions.
 
+The frequency-first estimator layer is domain code: `DesignIntent` and
+`DimensionEstimate` are Qt-free, and `EstimateAntennaDimensions` is an
+application use case. The UI displays the estimate and applies the resulting
+`AntennaDesignParameters`; numerical refinement remains in the existing
+optimization and synthesis use cases.
+
 The geometry presentation layer has no Qt dependency in `scene.py`,
 `views.py`, or `builder.py`; only the layout and widget use Qt. The same scene
 can therefore be tested headlessly and reused for future SVG/PDF/DXF export.

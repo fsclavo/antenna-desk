@@ -125,3 +125,34 @@ class MoxonParameters:
             generator_id="moxon",
             generator_name="Moxon",
         )
+
+
+FOOT_M = 0.3048
+
+
+def moxon_20m_wire(
+    *,
+    height_m: float = 10.0,
+    azimuth_deg: float = 0.0,
+    material: ConductorMaterial = COPPER,
+    ground: GroundModel = FREE_SPACE,
+) -> MoxonParameters:
+    """Return the published 20 m wire Moxon from L. B. Cebik, W4RNL.
+
+    Source: "The Moxon Rectangle: A Review", Table 1 (20 m wire), using
+    #14 copper wire. The source reports 56-58 ohm feedpoint impedance,
+    5.8 dBi free-space gain, and greater than 32 dB front-to-back ratio.
+    """
+
+    return MoxonParameters(
+        frequency_hz=14_170_000.0,
+        width_m=25.00 * FOOT_M,
+        depth_m=9.57 * FOOT_M,
+        reflector_tip_m=4.85 * FOOT_M,
+        driven_tip_m=4.00 * FOOT_M,
+        height_m=height_m,
+        azimuth_deg=azimuth_deg,
+        wire_radius_m=0.000912,
+        material=material,
+        ground=ground,
+    )

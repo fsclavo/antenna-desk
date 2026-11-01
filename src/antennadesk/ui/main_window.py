@@ -120,6 +120,7 @@ from .dialogs.antenna_catalog_dialog import (
 from .dialogs.comparison_dialog import ComparisonDialog
 from .dialogs.construction_dialog import ConstructionDialog
 from .dialogs.custom_antenna_dialog import CustomAntennaDialog
+from .dialogs.design_from_frequency_dialog import DesignFromFrequencyDialog
 from .dialogs.endfed_dialog import EndFedDialog
 from .dialogs.fan_dipole_dialog import FanDipoleDialog
 from .dialogs.feed_line_dialog import FeedLineDialog
@@ -242,6 +243,8 @@ class MainWindow(QMainWindow):
         self._compare_action.triggered.connect(lambda: self.compare_variants())
         self._optimize_action = QAction(self)
         self._optimize_action.triggered.connect(lambda: self.optimize_length())
+        self._design_from_frequency_action = QAction(self)
+        self._design_from_frequency_action.triggered.connect(lambda: self.design_from_frequency())
         self._synthesize_action = QAction(self)
         self._synthesize_action.triggered.connect(lambda: self.synthesize_dimensions())
         self._optimize_yagi_action = QAction(self)
@@ -575,6 +578,7 @@ class MainWindow(QMainWindow):
         self._variants_menu.addSeparator()
         self._variants_menu.addAction(self._compare_action)
         self._design_menu.addAction(self._optimize_action)
+        self._design_menu.addAction(self._design_from_frequency_action)
         self._design_menu.addAction(self._synthesize_action)
         self._design_menu.addAction(self._optimize_yagi_action)
         self._design_menu.addAction(self._construction_action)
@@ -627,6 +631,9 @@ class MainWindow(QMainWindow):
         self._delete_variant_action.setText(self._translator.t("action.delete_variant"))
         self._compare_action.setText(self._translator.t("action.compare"))
         self._optimize_action.setText(self._translator.t("action.optimize"))
+        self._design_from_frequency_action.setText(
+            self._translator.t("action.design_from_frequency")
+        )
         self._synthesize_action.setText(self._translator.t("action.synthesize"))
         self._optimize_yagi_action.setText(self._translator.t("action.optimize_yagi"))
         self._construction_action.setText(self._translator.t("action.construction"))
@@ -755,6 +762,7 @@ class MainWindow(QMainWindow):
         is_fan_dipole = isinstance(parameters, FanDipoleParameters)
         is_j_pole = isinstance(parameters, JPoleParameters)
         is_ringo = isinstance(parameters, RingoParameters)
+        self._design_from_frequency_action.setEnabled(idle and has_project)
         self._optimize_action.setEnabled(
             idle
             and has_project
@@ -2676,6 +2684,52 @@ class MainWindow(QMainWindow):
         self._select_design(new_id)
         self._update_title()
         self._update_actions()
+
+    def design_from_frequency(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        design = self._project.design_by_id(self._design_id)
+        dialog = DesignFromFrequencyDialog(
+            self._translator,
+            self._unit_system,
+            initial_frequency_hz=design.parameters.frequency_hz,
+            parent=self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            parameters = dialog.estimated_parameters()
+            preserved: dict[str, object] = {}
+            for name in (
+                "azimuth_deg",
+                "radial_angle_deg",
+                "material",
+                "ground",
+                "wire_radius_m",
+            ):
+                if hasattr(design.parameters, name) and hasattr(parameters, name):
+                    preserved[name] = getattr(design.parameters, name)
+            if preserved:
+                parameters = replace(parameters, **preserved)
+            updated_design = design.with_parameters(parameters)
+            self._project = self._project.with_design(updated_design, updated_at=utc_now())
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._simulation_results.pop(self._design_id, None)
+        self._dirty = True
+        self._select_design(self._design_id)
+        self._last_status_key = "status.design_estimated"
+        self._update_title()
+        self._update_actions()
+        self._update_status_text()
 
     def optimize_length(self) -> None:
         if self._project is None or self._design_id is None:

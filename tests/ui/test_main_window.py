@@ -1199,6 +1199,7 @@ def test_main_menu_is_grouped_by_task(window: MainWindow) -> None:
     assert "Export Geometry DXF..." in export_menu_titles
     assert "Export PDF Report..." in export_menu_titles
     assert "Optimize Dimension..." in design_titles
+    assert "Design from Frequency..." in design_titles
     assert "Synthesize Dimensions..." in design_titles
     assert "Optimize Yagi Elements..." in design_titles
     assert "Edit Series Loads..." in design_titles
@@ -1590,3 +1591,42 @@ def test_vertical_spec_uses_performance_safe_defaults(window: MainWindow) -> Non
     assert spec.frequency_plan.count == 31
     assert spec.segmentation.target_segment_length_wavelengths == pytest.approx(0.05)
     assert segments == 855
+
+
+def test_design_from_frequency_applies_estimated_parameters(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=41.0,
+        height_m=8.0,
+        sides=3,
+    )
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def estimated_parameters(self) -> LoopParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "DesignFromFrequencyDialog", FakeDialog)
+    window._dirty = False
+
+    window.design_from_frequency()
+
+    assert window._project is not None
+    design = window._project.design_by_id(window._design_id)
+    assert isinstance(design.parameters, LoopParameters)
+    assert design.parameters.circumference_m == pytest.approx(41.0)
+    assert design.parameters.sides == 3
+    assert design.antenna_type == "loop"
+    assert window._design_stack.currentWidget() is window._form_scroll
+    assert window._status_label.text() == "Estimated dimensions applied. Review them and simulate."
+    window._dirty = False

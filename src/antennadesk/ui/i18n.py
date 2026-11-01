@@ -196,6 +196,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Built-in template; simulation model",
         Language.SPANISH: "Plantilla integrada; modelo de simulación",
     },
+    "catalog.evidence.moxon": {
+        Language.ENGLISH: "Reference-backed 20 m wire preset; edited geometry is experimental",
+        Language.SPANISH: "Preset de alambre de 20 m con referencia; la geometría editada es experimental",
+    },
     "catalog.evidence.yagi": {
         Language.ENGLISH: "Reference-backed NBS preset; edited geometry is experimental",
         Language.SPANISH: "Preset NBS con referencia; la geometría editada es experimental",
@@ -419,6 +423,166 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "vertical x{factor}",
         Language.SPANISH: "vertical x{factor}",
     },
+    "design_from_frequency.title": {
+        Language.ENGLISH: "Design from frequency",
+        Language.SPANISH: "Diseñar desde frecuencia",
+    },
+    "design_from_frequency.family": {
+        Language.ENGLISH: "Antenna family",
+        Language.SPANISH: "Familia de antena",
+    },
+    "design_from_frequency.loop_shape": {
+        Language.ENGLISH: "Loop shape",
+        Language.SPANISH: "Forma del lazo",
+    },
+    "design_from_frequency.vertical_form": {
+        Language.ENGLISH: "Vertical type",
+        Language.SPANISH: "Tipo de vertical",
+    },
+    "design_from_frequency.fan_bands": {
+        Language.ENGLISH: "Band frequencies (MHz, comma-separated)",
+        Language.SPANISH: "Frecuencias de banda (MHz, separadas por coma)",
+    },
+    "design_from_frequency.invalid_bands": {
+        Language.ENGLISH: "Enter at least one valid band frequency.",
+        Language.SPANISH: "Ingresá al menos una frecuencia de banda válida.",
+    },
+    "design_from_frequency.dimension": {
+        Language.ENGLISH: "Dimension",
+        Language.SPANISH: "Dimensión",
+    },
+    "design_from_frequency.value": {
+        Language.ENGLISH: "Value",
+        Language.SPANISH: "Valor",
+    },
+    "design_from_frequency.estimate": {
+        Language.ENGLISH: "Estimate",
+        Language.SPANISH: "Estimar",
+    },
+    "design_from_frequency.apply": {
+        Language.ENGLISH: "Apply to current design",
+        Language.SPANISH: "Aplicar al diseño actual",
+    },
+    "design_from_frequency.hint": {
+        Language.ENGLISH: "These are starting dimensions, not verified construction values. Apply them and refine with the existing optimizer or synthesis if needed.",
+        Language.SPANISH: "Son dimensiones iniciales, no valores de construcción verificados. Aplicarlas y refinar con el optimizador o la síntesis existente si hace falta.",
+    },
+    "design_from_frequency.confidence": {
+        Language.ENGLISH: "Confidence: {value}",
+        Language.SPANISH: "Confianza: {value}",
+    },
+    "design_from_frequency.tolerance": {
+        Language.ENGLISH: "Tolerance: {value}",
+        Language.SPANISH: "Tolerancia: {value}",
+    },
+    "confidence.physical": {
+        Language.ENGLISH: "physical",
+        Language.SPANISH: "física",
+    },
+    "confidence.empirical": {
+        Language.ENGLISH: "empirical",
+        Language.SPANISH: "empírica",
+    },
+    "confidence.reference_scaled": {
+        Language.ENGLISH: "reference scaled",
+        Language.SPANISH: "referencia escalada",
+    },
+    "confidence.heuristic": {
+        Language.ENGLISH: "heuristic",
+        Language.SPANISH: "heurística",
+    },
+    "design_from_frequency.assumptions": {
+        Language.ENGLISH: "Assumptions: {values}",
+        Language.SPANISH: "Supuestos: {values}",
+    },
+    "design_from_frequency.warnings": {
+        Language.ENGLISH: "Warnings: {values}",
+        Language.SPANISH: "Advertencias: {values}",
+    },
+    "design_from_frequency.sources": {
+        Language.ENGLISH: "Sources: {values}",
+        Language.SPANISH: "Fuentes: {values}",
+    },
+    "source.arrl.antenna_book.dipole.end_effect": {
+        Language.ENGLISH: "ARRL Antenna Book — dipole end effect",
+        Language.SPANISH: "ARRL Antenna Book — efecto de extremo del dipolo",
+    },
+    "source.arrl.antenna_book.loop.resonant_circumference": {
+        Language.ENGLISH: "ARRL Antenna Book — resonant loop circumference",
+        Language.SPANISH: "ARRL Antenna Book — circunferencia resonante del lazo",
+    },
+    "source.arrl.antenna_book.vertical.quarter_wave": {
+        Language.ENGLISH: "ARRL Antenna Book — quarter-wave vertical",
+        Language.SPANISH: "ARRL Antenna Book — vertical de cuarto de onda",
+    },
+    "source.nbs.tn688.five_element": {
+        Language.ENGLISH: "NBS TN-688 — five-element Yagi",
+        Language.SPANISH: "NBS TN-688 — Yagi de cinco elementos",
+    },
+    "source.cebik.moxon_review.table1": {
+        Language.ENGLISH: "Cebik, W4RNL — Moxon review, Table 1",
+        Language.SPANISH: "Cebik, W4RNL — revisión Moxon, Tabla 1",
+    },
+    "source.antennadesk.heuristic.application_preset": {
+        Language.ENGLISH: "AntennaDesk application preset (heuristic)",
+        Language.SPANISH: "Preset de aplicación de AntennaDesk (heurístico)",
+    },
+    "estimator.assumption.height_and_ground": {
+        Language.ENGLISH: "height and ground affect the final resonance and feed impedance",
+        Language.SPANISH: "la altura y el ground afectan la resonancia y la impedancia final",
+    },
+    "estimator.assumption.inverted_v_angle": {
+        Language.ENGLISH: "the included angle changes the feed impedance",
+        Language.SPANISH: "el ángulo incluido cambia la impedancia de alimentación",
+    },
+    "estimator.assumption.endfed_matching": {
+        Language.ENGLISH: "the matching transformer and counterpoise are not included",
+        Language.SPANISH: "no se incluye el transformador de adaptación ni el contrapeso",
+    },
+    "estimator.assumption.yagi_reference": {
+        Language.ENGLISH: "dimensions are scaled from the NBS five-element reference",
+        Language.SPANISH: "las dimensiones se escalan desde la referencia NBS de cinco elementos",
+    },
+    "estimator.assumption.reference_scaling": {
+        Language.ENGLISH: "dimensions are scaled from a published reference design",
+        Language.SPANISH: "las dimensiones se escalan desde un diseño de referencia publicado",
+    },
+    "estimator.warning.starting_point": {
+        Language.ENGLISH: "starting point only; verify with simulation or measurement",
+        Language.SPANISH: "solo punto de partida; verificar con simulación o medición",
+    },
+    "estimator.warning.folded_impedance": {
+        Language.ENGLISH: "spacing strongly affects the step-up impedance",
+        Language.SPANISH: "la separación afecta fuertemente la impedancia elevada",
+    },
+    "estimator.warning.vertical_matching": {
+        Language.ENGLISH: "5/8-wave verticals need matching and a suitable radial system",
+        Language.SPANISH: "las verticales de 5/8 necesitan adaptación y un sistema de radiales adecuado",
+    },
+    "estimator.warning.fan_interaction": {
+        Language.ENGLISH: "fan elements interact; optimize the final lengths",
+        Language.SPANISH: "los elementos del fan interactúan; optimizar las longitudes finales",
+    },
+    "estimator.warning.endfed_matching": {
+        Language.ENGLISH: "end-fed matching and counterpoise are installation-specific",
+        Language.SPANISH: "la adaptación y el contrapeso del end-fed dependen de la instalación",
+    },
+    "estimator.warning.j_pole_matching": {
+        Language.ENGLISH: "stub and feed offset must be tuned with simulation or measurement",
+        Language.SPANISH: "el stub y el offset de alimentación deben ajustarse con simulación o medición",
+    },
+    "estimator.warning.ringo_heuristic": {
+        Language.ENGLISH: "Ringo proportions are an application preset, not a universal formula",
+        Language.SPANISH: "las proporciones del Ringo son un preset de la aplicación, no una fórmula universal",
+    },
+    "estimator.warning.yagi_not_unique": {
+        Language.ENGLISH: "a Yagi design is not unique; gain, bandwidth and F/B trade off",
+        Language.SPANISH: "un diseño Yagi no es único; ganancia, ancho de banda y F/B se compensan",
+    },
+    "estimator.warning.moxon_gap": {
+        Language.ENGLISH: "the Moxon gap is sensitive; verify the scaled design",
+        Language.SPANISH: "el gap del Moxon es sensible; verificar el diseño escalado",
+    },
     "panel.results": {Language.ENGLISH: "Results", Language.SPANISH: "Resultados"},
     "field.project_name": {
         Language.ENGLISH: "Project name",
@@ -612,6 +776,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "status.design_changed": {
         Language.ENGLISH: "Design changed. Simulate again.",
         Language.SPANISH: "Diseño modificado. Simulá de nuevo.",
+    },
+    "status.design_estimated": {
+        Language.ENGLISH: "Estimated dimensions applied. Review them and simulate.",
+        Language.SPANISH: "Dimensiones estimadas aplicadas. Revisalas y simulá.",
     },
     "status.cancelling": {Language.ENGLISH: "Cancelling...", Language.SPANISH: "Cancelando..."},
     "status.saved": {Language.ENGLISH: "Project saved.", Language.SPANISH: "Proyecto guardado."},
@@ -981,6 +1149,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "action.optimize": {
         Language.ENGLISH: "Optimize Dimension...",
         Language.SPANISH: "Optimizar dimensión...",
+    },
+    "action.design_from_frequency": {
+        Language.ENGLISH: "Design from Frequency...",
+        Language.SPANISH: "Diseñar desde frecuencia...",
     },
     "action.synthesize": {
         Language.ENGLISH: "Synthesize Dimensions...",
@@ -1369,6 +1541,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Tip gap {gap} {unit}",
         Language.SPANISH: "Separación de puntas {gap} {unit}",
     },
+    "moxon.reference_preset": {
+        Language.ENGLISH: "Load 20 m wire reference preset",
+        Language.SPANISH: "Cargar preset de referencia de 20 m",
+    },
     "moxon.hint": {
         Language.ENGLISH: (
             "The generator creates a reflector and driven element with bent tips. "
@@ -1381,12 +1557,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "moxon.evidence": {
         Language.ENGLISH: (
-            "Experimental generator: geometry is tested, but there is no "
-            "independent numerical reference for this configuration."
+            "The 20 m wire preset is reference-backed by a published model; "
+            "edited geometry is experimental."
         ),
         Language.SPANISH: (
-            "Generador experimental: se prueba la geometría, pero no hay una "
-            "referencia numérica independiente para esta configuración."
+            "El preset de alambre de 20 m tiene referencia de un modelo publicado; "
+            "la geometría editada es experimental."
         ),
     },
     "ocfd.title": {

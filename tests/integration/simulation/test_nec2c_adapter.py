@@ -363,6 +363,48 @@ def test_nbs_five_element_yagi_gain_reference(solver: Nec2cSolver) -> None:
     assert len(result.frequencies[0].currents) == 5 * 21
 
 
+def test_ocfd_published_feedpoint_trend(solver: Nec2cSolver) -> None:
+    """Published sanity check for an OCFD fed 20% from one end.
+
+    The WIA/VK2WB analysis reports roughly 276 + j140 ohms at 7.1 MHz for a
+    20.9 m wire 10 m above real ground. This is a published/heuristic sanity
+    check, not a strict reference: the source does not fully specify the
+    EZNEC ground model. We check the reported resistance band and the
+    documented trend that moving the feed toward the centre lowers R.
+    """
+
+    from antennadesk.domain.antennas.ocfd import OCFDParameters
+
+    ground = GroundModel.finite(
+        relative_permittivity=13.0,
+        conductivity_s_per_m=0.005,
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(7_100_000.0),
+        segmentation=SegmentationPolicy(segments_per_wire=21),
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+    def impedance(ratio: float) -> complex:
+        parameters = OCFDParameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=20.9,
+            feed_ratio=ratio,
+            height_m=10.0,
+            wire_radius_m=0.00075,
+            ground=ground,
+        )
+        result = solver.run(parameters.to_antenna(name="OCFD sanity"), spec)
+        assert result.status is SimulationStatus.COMPLETED
+        return result.frequencies[0].impedance_ohm
+
+    near_end = impedance(0.2)
+    toward_center = impedance(0.4)
+
+    assert 200.0 <= near_end.real <= 350.0
+    assert near_end.real > toward_center.real
+
+
 def test_moxon_20m_wire_reference(solver: Nec2cSolver) -> None:
     """Check the 20 m wire Moxon published by L. B. Cebik, W4RNL.
 

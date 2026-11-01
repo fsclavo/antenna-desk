@@ -61,6 +61,8 @@ basic template types.
 - [ADR-0010 — First-class generator templates](docs/ADR/0010-first-class-generator-templates.md)
 - [ADR-0011 — Bounded impedance synthesis](docs/ADR/0011-bounded-impedance-synthesis.md)
 - [ADR-0012 — Geometry presentation and dimension layout](docs/ADR/0012-geometry-presentation.md)
+- [ADR-0013 — Frequency-first dimension estimation](docs/ADR/0013-frequency-first-dimension-estimation.md)
+- [Antenna dimension estimators](docs/ANTENNA_DESIGN_ESTIMATORS.md)
 - [Geometry presentation contract](docs/GEOMETRY_PRESENTATION.md)
 - [NEC engine evaluation](docs/spikes/phase0-solver-evaluation.md)
 - [Phase 0 reproducible spike](spikes/phase0/README.md)
@@ -69,6 +71,8 @@ basic template types.
 
 ## What exists today
 
+- Frequency-first dimension estimates for the current antenna families, with
+  assumptions, confidence, and optional numerical refinement.
 - Guided antenna wizard and a main window with a design panel, a shape-aware
   construction sketch with a collision-aware dimension layout, front/plan
   orthographic views, detail insets, an isometric 3D view, and results tabs.

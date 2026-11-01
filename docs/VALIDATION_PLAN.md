@@ -134,6 +134,7 @@ Phase 5 adds tests for:
 | Case | Independent source | Expected | Tolerance |
 |---|---|---|---:|
 | Moxon 20 m wire rectangle, 14.17 MHz, free space | L. B. Cebik, W4RNL, "The Moxon Rectangle: A Review", Table 1 and text | 56–58 Ω, 5.8 dBi gain, >32 dB front-to-back | 1.5 Ω real, 5 Ω reactance, 0.3 dB gain, >30 dB F/B |
+| OCFD, 20.9 m wire, 0.2 L feed, 7.1 MHz, finite ground | R. Sanders, VK2WB, "Analysis of the Off Centre Fed (OCF) dipole", Table 1 | Published/heuristic: R in the 200–350 Ω range and R decreases as the feed moves toward the centre | Not a strict numeric reference; the source does not fully specify its EZNEC ground model |
 
 The Moxon check applies to the published 20 m wire dimensions in the source.
 Edited Moxon geometry remains experimental because the published values do not
@@ -197,6 +198,9 @@ Custom/generated editing and view tests:
 - Custom simulations default to a 100-point sweep; generated templates use a
   31-point sweep and 0.05λ segmentation to keep complex radial models within
   the default solver timeout.
+- Frequency-first estimators are tested for formula consistency, unit
+  conversion, registry coverage, source/confidence metadata, explicit
+  unsupported cases, and UI apply/invalidation behavior.
 - Vertical-plane generated designs select the elevation view automatically,
   while loops keep Plan.
 

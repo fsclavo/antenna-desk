@@ -10,12 +10,13 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
     QLabel,
+    QPushButton,
     QVBoxLayout,
     QWidget,
 )
 
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
-from ...domain.antennas.moxon import MoxonParameters
+from ...domain.antennas.moxon import MoxonParameters, moxon_20m_wire
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
@@ -107,6 +108,9 @@ class MoxonForm(QWidget):
         self._conductivity.setValue(0.005)
         self._conductivity.setSuffix(" S/m")
 
+        self._reference = QPushButton(translator.t("moxon.reference_preset"), self)
+        self._reference.clicked.connect(self._load_reference_preset)
+
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
 
@@ -127,6 +131,7 @@ class MoxonForm(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addLayout(form)
+        layout.addWidget(self._reference)
         layout.addWidget(self._geometry)
 
         for widget in (
@@ -210,6 +215,16 @@ class MoxonForm(QWidget):
 
     def set_frequency_hz(self, frequency_hz: float) -> None:
         self._frequency.setValue(frequency_hz / 1_000_000.0)
+
+    def _load_reference_preset(self) -> None:
+        self.set_parameters(
+            moxon_20m_wire(
+                height_m=length_to_m(self._height.value(), self._unit_system),
+                azimuth_deg=self._azimuth.value(),
+                material=self._selected_material(),
+            )
+        )
+        self._emit_changed()
 
     def _update_geometry(self) -> None:
         try:

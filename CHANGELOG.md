@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Frequency-first dimension estimation for dipoles, folded dipoles, loops,
+  verticals (1/4λ and 5/8λ), inverted-V, fan dipoles, end-fed, OCFD, J Pole,
+  Slim Jim, Ringo, Yagi (NBS five-element reference), and Moxon (Cebik
+  reference scaled by frequency).
+- `Design → Design from Frequency...` dialog with assumptions, warnings,
+  confidence, sources, dimension table, and apply-to-current-design flow.
+- Traceable estimator contract with source identifiers and explicit unsupported
+  cases for custom geometry and non-reference Yagi element counts.
 - Phase 1 domain model for units, geometry, conductors, feed points, ground
   models, environments, and horizontal half-wave dipoles.
 - Immutable project and design-variant model with validation.
@@ -265,6 +273,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a reference-backed Moxon validation test using the published 20 m wire
   dimensions and free-space gain, impedance, and front-to-back values from
   L. B. Cebik, W4RNL.
+- Added a published/heuristic OCFD sanity test for the 0.2 L feedpoint
+  resistance range and the documented trend toward lower R as the feed moves
+  toward the centre.
+- Added a **Load 20 m wire reference preset** button to the Moxon editor and
+  marked that preset as reference-backed in the catalog.
 - Added a bounded multi-variable coordinate-search optimizer in the domain.
 - Added the first multi-element Yagi workflow: select element lengths and boom
   gaps, set a target R/X, constrain the search around the current dimensions,

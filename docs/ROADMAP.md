@@ -53,6 +53,8 @@ Completed:
 - All current generators are first-class templates with inline editors and
   native persistence.
 - Bounded two-variable impedance synthesis for OCFD, J Pole, and Slim Jim.
+- Frequency-first dimension estimation with sourced starting dimensions and a
+  Design from Frequency dialog for the current antenna families.
 
 In progress:
 

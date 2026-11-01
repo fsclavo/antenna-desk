@@ -41,6 +41,8 @@ amateur radio. The project is GPL-3.0-or-later.
   catalog routes in both New Antenna and Change Template, and a DoD checklist.
 - Do not infer the family from the wire count or hard-code wire IDs outside the
   family builder/domain module.
+- Frequency-first estimators must declare a source, assumptions, confidence,
+  and tolerance in `docs/ANTENNA_DESIGN_ESTIMATORS.md`.
 
 ## Correctness and science
 

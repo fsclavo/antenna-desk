@@ -415,3 +415,18 @@ at the design frequency. It uses the solver through the same application port,
 logs every evaluation, and computes ±10/25 mm sensitivity probes around the
 best dimension. The final full-sweep/pattern simulation is run separately after
 the user applies the optimized dimension.
+
+## Design intent and dimension estimates
+
+`domain/design` contains the frequency-first estimation layer:
+
+- `DesignIntent` describes the requested family, frequency, environment, and
+  family-specific subtype or constraint.
+- `DimensionEstimate` returns valid `AntennaDesignParameters` plus a method
+  identifier, confidence, assumptions, warnings, tolerance, source identifiers,
+  and display rows.
+- Estimators are pure domain functions registered by antenna type. They do not
+  import Qt, the solver, or persistence.
+
+The resulting estimate is a starting point. Numerical refinement remains in
+the optimization and synthesis use cases.

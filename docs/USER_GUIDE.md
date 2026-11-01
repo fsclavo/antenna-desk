@@ -71,6 +71,20 @@ inset marked *not to scale*. The **Zoom** selector scales the sketch (0.5x, 1x,
 double-click resets zoom and pan. The **Vertical scale** selector can
 exaggerate the height (1x, 1.5x, 2x, 3x) for low horizontal antennas.
 
+## Design from frequency
+
+Use **Design → Design from Frequency...** to estimate initial dimensions from a
+frequency and an antenna family. The dialog supports wire and folded dipoles,
+loops (generic, quad, delta), verticals in 1/4λ and 5/8λ, inverted-V, fan
+dipoles, end-fed wires, OCFD, J Pole, Slim Jim, Ringo, Yagi, and Moxon.
+
+The result is a **starting point**, not a verified construction measurement.
+The dialog shows assumptions, warnings, confidence, and dimension values. Apply
+the estimate to the current design, then use the existing **Optimize
+Dimension...**, **Optimize Yagi Elements...**, or synthesis tools to refine it
+with NEC. For Yagi, the initial estimator is the NBS five-element reference;
+other element counts remain editable in the Yagi editor.
+
 ## Create an antenna
 
 Use **File → New Antenna...** to open the antenna catalog. Search or filter by
@@ -121,8 +135,10 @@ use **Edit Custom Wires...** only when you want raw coordinates.
 Choose **File → New Antenna... → Moxon rectangle** to generate a two-element
 Moxon with a reflector and driven element with bent tips. Set the element
 width, spacing, tip lengths, height, azimuth, radius, material, and ground. The
-dialog reports the remaining tip gap. Moxon is a first-class template with an
-inline editor; it is experimental and has no independent numerical reference.
+dialog reports the remaining tip gap. Use **Load 20 m wire reference preset**
+to load the published Cebik 20 m dimensions; that preset is reference-backed
+for impedance, gain, and front-to-back ratio. Any edited geometry is
+experimental and has no external reference.
 
 ## Create an inverted-V
 

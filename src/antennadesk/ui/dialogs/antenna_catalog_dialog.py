@@ -115,7 +115,7 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         label_key="catalog.moxon",
         family_key="catalog.family.yagi",
         description_key="catalog.moxon.description",
-        evidence_key="catalog.evidence.experimental",
+        evidence_key="catalog.evidence.moxon",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_YAGI,

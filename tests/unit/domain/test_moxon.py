@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from antennadesk.domain.antennas.family import AntennaFamily, antenna_family
-from antennadesk.domain.antennas.moxon import MoxonParameters
+from antennadesk.domain.antennas.moxon import MoxonParameters, moxon_20m_wire
 
 
 def test_moxon_generates_six_connected_wires() -> None:
@@ -25,6 +25,17 @@ def test_moxon_generates_six_connected_wires() -> None:
     assert parameters.gap_m == pytest.approx(0.5)
     assert custom.generator_name == "Moxon"
     assert antenna_family(custom) is AntennaFamily.YAGI
+
+
+def test_moxon_20m_wire_reference_dimensions() -> None:
+    parameters = moxon_20m_wire()
+
+    assert parameters.frequency_hz == pytest.approx(14_170_000.0)
+    assert parameters.width_m == pytest.approx(25.00 * 0.3048)
+    assert parameters.depth_m == pytest.approx(9.57 * 0.3048)
+    assert parameters.reflector_tip_m == pytest.approx(4.85 * 0.3048)
+    assert parameters.driven_tip_m == pytest.approx(4.00 * 0.3048)
+    assert parameters.gap_m == pytest.approx(0.72 * 0.3048)
 
 
 def test_moxon_rejects_overlapping_tips() -> None:
