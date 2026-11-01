@@ -53,6 +53,7 @@ from ..application.use_cases.delete_design_variant import (
     DeleteDesignVariantCommand,
 )
 from ..application.use_cases.open_project import OpenProject
+from ..application.use_cases.optimize_elements import ElementOptimizationObjective
 from ..application.use_cases.record_simulation_run import (
     RecordSimulationRun,
     RecordSimulationRunCommand,
@@ -123,9 +124,12 @@ from .dialogs.comparison_dialog import ComparisonDialog
 from .dialogs.construction_dialog import ConstructionDialog
 from .dialogs.custom_antenna_dialog import CustomAntennaDialog
 from .dialogs.design_from_frequency_dialog import DesignFromFrequencyDialog
+from .dialogs.element_optimization_dialog import (
+    ElementOptimizationDialog,
+    ElementOptimizationVariable,
+)
 from .dialogs.endfed_dialog import EndFedDialog
 from .dialogs.fan_dipole_dialog import FanDipoleDialog
-from .dialogs.fan_dipole_optimization_dialog import FanDipoleOptimizationDialog
 from .dialogs.feed_line_dialog import FeedLineDialog
 from .dialogs.inverted_v_dialog import InvertedVDialog
 from .dialogs.j_pole_dialog import JPoleDialog
@@ -133,14 +137,12 @@ from .dialogs.loads_dialog import LoadsDialog
 from .dialogs.matching_network_dialog import MatchingNetworkDialog
 from .dialogs.measurement_details_dialog import MeasurementDetailsDialog
 from .dialogs.moxon_dialog import MoxonDialog
-from .dialogs.moxon_optimization_dialog import MoxonOptimizationDialog
 from .dialogs.ocfd_dialog import OCFDDialog
 from .dialogs.optimization_dialog import OptimizationDialog
 from .dialogs.ringo_dialog import RingoDialog
 from .dialogs.synthesis_dialog import SynthesisDialog
 from .dialogs.vertical_dialog import VerticalDialog
 from .dialogs.yagi_dialog import YagiDialog
-from .dialogs.yagi_optimization_dialog import YagiOptimizationDialog
 from .i18n import Language, Translator
 from .pattern_resolution import DEFAULT_PATTERN_STEP_DEG, far_field_request
 from .report_pdf import write_report_pdf
@@ -3031,17 +3033,71 @@ class MainWindow(QMainWindow):
         design = self._project.design_by_id(self._design_id)
         if not isinstance(design.parameters, YagiParameters):
             return
-        dialog = YagiOptimizationDialog(
+        parameters = design.parameters
+        elements = parameters.elements
+        variables = []
+        for index, element in enumerate(elements):
+            variables.append(
+                ElementOptimizationVariable(
+                    f"length_{index}",
+                    f"{self._translator.t('yagi.element')} {index + 1} · "
+                    f"{self._translator.t('yagi.length')}",
+                    element.length_m,
+                )
+            )
+        for index in range(1, len(elements)):
+            variables.append(
+                ElementOptimizationVariable(
+                    f"gap_{index}",
+                    f"{self._translator.t('yagi.element')} {index + 1} · "
+                    f"{self._translator.t('yagi_optimize.current_gap')}",
+                    elements[index].position_m - elements[index - 1].position_m,
+                )
+            )
+
+        def build(values: dict[str, float]) -> YagiParameters:
+            updated = list(elements)
+            for index in range(len(updated)):
+                if (name := f"length_{index}") in values:
+                    updated[index] = replace(updated[index], length_m=values[name])
+            positions = [elements[0].position_m]
+            for index in range(1, len(updated)):
+                positions.append(
+                    positions[-1]
+                    + values.get(
+                        f"gap_{index}",
+                        elements[index].position_m - elements[index - 1].position_m,
+                    )
+                )
+            updated = [
+                replace(element, position_m=positions[index])
+                for index, element in enumerate(updated)
+            ]
+            return replace(
+                parameters,
+                frequency_hz=values.get("__frequency_hz", parameters.frequency_hz),
+                elements=tuple(updated),
+            )
+
+        dialog = ElementOptimizationDialog(
             self._translator,
             self._unit_system,
             self._solver,
-            design.parameters,
             replace(
-                self._yagi_simulation_spec(design.parameters),
+                self._yagi_simulation_spec(parameters),
                 feed_line=self._feed_line,
                 matching_network=self._matching_network,
             ),
-            self,
+            title_key="element_optimize.yagi_title",
+            variables=tuple(variables),
+            build_parameters=build,
+            objectives=(
+                ElementOptimizationObjective.TARGET_IMPEDANCE,
+                ElementOptimizationObjective.MAX_GAIN,
+                ElementOptimizationObjective.MAX_FRONT_TO_BACK,
+            ),
+            default_frequency_hz=parameters.frequency_hz,
+            parent=self,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -3073,17 +3129,44 @@ class MainWindow(QMainWindow):
         design = self._project.design_by_id(self._design_id)
         if not isinstance(design.parameters, FanDipoleParameters):
             return
-        dialog = FanDipoleOptimizationDialog(
+        parameters = design.parameters
+        elements = parameters.elements
+        variables = tuple(
+            ElementOptimizationVariable(
+                f"length_{index}",
+                f"{self._translator.t('yagi.element')} {index + 1} · "
+                f"{self._translator.t('yagi.length')}",
+                element.length_m,
+            )
+            for index, element in enumerate(elements)
+        )
+
+        def build(values: dict[str, float]) -> FanDipoleParameters:
+            updated = list(elements)
+            for index in range(len(updated)):
+                if (name := f"length_{index}") in values:
+                    updated[index] = replace(updated[index], length_m=values[name])
+            return replace(
+                parameters,
+                frequency_hz=values.get("__frequency_hz", parameters.frequency_hz),
+                elements=tuple(updated),
+            )
+
+        dialog = ElementOptimizationDialog(
             self._translator,
             self._unit_system,
             self._solver,
-            design.parameters,
             replace(
-                self._fan_dipole_simulation_spec(design.parameters),
+                self._fan_dipole_simulation_spec(parameters),
                 feed_line=self._feed_line,
                 matching_network=self._matching_network,
             ),
-            self,
+            title_key="element_optimize.fan_title",
+            variables=variables,
+            build_parameters=build,
+            objectives=(ElementOptimizationObjective.TARGET_IMPEDANCE,),
+            default_frequency_hz=parameters.frequency_hz,
+            parent=self,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -3115,17 +3198,55 @@ class MainWindow(QMainWindow):
         design = self._project.design_by_id(self._design_id)
         if not isinstance(design.parameters, MoxonParameters):
             return
-        dialog = MoxonOptimizationDialog(
+        parameters = design.parameters
+        variables = (
+            ElementOptimizationVariable(
+                "width_m", self._translator.t("moxon.width"), parameters.width_m
+            ),
+            ElementOptimizationVariable(
+                "depth_m", self._translator.t("moxon.depth"), parameters.depth_m
+            ),
+            ElementOptimizationVariable(
+                "reflector_tip_m",
+                self._translator.t("moxon.reflector_tip"),
+                parameters.reflector_tip_m,
+            ),
+            ElementOptimizationVariable(
+                "driven_tip_m",
+                self._translator.t("moxon.driven_tip"),
+                parameters.driven_tip_m,
+            ),
+        )
+
+        def build(values: dict[str, float]) -> MoxonParameters:
+            return replace(
+                parameters,
+                frequency_hz=values.get("__frequency_hz", parameters.frequency_hz),
+                width_m=values.get("width_m", parameters.width_m),
+                depth_m=values.get("depth_m", parameters.depth_m),
+                reflector_tip_m=values.get("reflector_tip_m", parameters.reflector_tip_m),
+                driven_tip_m=values.get("driven_tip_m", parameters.driven_tip_m),
+            )
+
+        dialog = ElementOptimizationDialog(
             self._translator,
             self._unit_system,
             self._solver,
-            design.parameters,
             replace(
-                self._moxon_simulation_spec(design.parameters),
+                self._moxon_simulation_spec(parameters),
                 feed_line=self._feed_line,
                 matching_network=self._matching_network,
             ),
-            self,
+            title_key="element_optimize.moxon_title",
+            variables=variables,
+            build_parameters=build,
+            objectives=(
+                ElementOptimizationObjective.TARGET_IMPEDANCE,
+                ElementOptimizationObjective.MAX_GAIN,
+                ElementOptimizationObjective.MAX_FRONT_TO_BACK,
+            ),
+            default_frequency_hz=parameters.frequency_hz,
+            parent=self,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return

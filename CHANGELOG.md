@@ -308,6 +308,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   tip for target impedance, maximum gain, or maximum front-to-back ratio.
 - Unified the Yagi, fan-dipole, and Moxon element optimizers on a shared
   bounded evaluation engine while keeping their template-specific dialogs.
+- The shared engine now drives a generic multi-element dialog used by Yagi,
+  fan-dipole, and Moxon optimization, with template-specific variables and
+  builders.
 - Added a lossless L matching network evaluated before the feed line, with
   project/run persistence and impedance/SWR diagnostics.
 - The matching-network dialog can auto-design an L section from a load R/X at

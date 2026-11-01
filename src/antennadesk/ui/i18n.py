@@ -1911,6 +1911,66 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "un diseño de hilos personalizado editable."
         ),
     },
+    "element_optimize.yagi_title": {
+        Language.ENGLISH: "Optimize Yagi Elements",
+        Language.SPANISH: "Optimizar elementos del Yagi",
+    },
+    "element_optimize.fan_title": {
+        Language.ENGLISH: "Optimize Fan Dipole Elements",
+        Language.SPANISH: "Optimizar elementos del dipolo abanico",
+    },
+    "element_optimize.moxon_title": {
+        Language.ENGLISH: "Optimize Moxon Dimensions",
+        Language.SPANISH: "Optimizar dimensiones del Moxon",
+    },
+    "element_optimize.objective.target_impedance": {
+        Language.ENGLISH: "Target impedance",
+        Language.SPANISH: "Impedancia objetivo",
+    },
+    "element_optimize.objective.max_gain": {
+        Language.ENGLISH: "Maximum gain",
+        Language.SPANISH: "Ganancia máxima",
+    },
+    "element_optimize.objective.max_front_to_back": {
+        Language.ENGLISH: "Maximum front-to-back",
+        Language.SPANISH: "Máxima relación frente/espalda",
+    },
+    "element_optimize.hint": {
+        Language.ENGLISH: "Selected dimensions change together. The target is evaluated at one frequency; verify the applied design with a full simulation.",
+        Language.SPANISH: "Las dimensiones seleccionadas cambian juntas. El objetivo se evalúa en una frecuencia; verificá el diseño aplicado con una simulación completa.",
+    },
+    "element_optimize.run": {
+        Language.ENGLISH: "Run optimization",
+        Language.SPANISH: "Ejecutar optimización",
+    },
+    "element_optimize.apply": {
+        Language.ENGLISH: "Apply dimensions",
+        Language.SPANISH: "Aplicar dimensiones",
+    },
+    "element_optimize.no_variables": {
+        Language.ENGLISH: "Select at least one dimension to optimize.",
+        Language.SPANISH: "Seleccioná al menos una dimensión para optimizar.",
+    },
+    "element_optimize.running": {
+        Language.ENGLISH: "Running optimization...",
+        Language.SPANISH: "Ejecutando optimización...",
+    },
+    "element_optimize.error": {
+        Language.ENGLISH: "Optimization failed: {message}",
+        Language.SPANISH: "Falló la optimización: {message}",
+    },
+    "element_optimize.no_best": {
+        Language.ENGLISH: "No valid dimensions were found.",
+        Language.SPANISH: "No se encontraron dimensiones válidas.",
+    },
+    "element_optimize.summary": {
+        Language.ENGLISH: "Best: {dimensions} · {objective}",
+        Language.SPANISH: "Mejor: {dimensions} · {objective}",
+    },
+    "element_optimize.close": {
+        Language.ENGLISH: "Cancel the running optimization before closing.",
+        Language.SPANISH: "Cancelá la optimización en curso antes de cerrar.",
+    },
     "moxon_optimize.title": {
         Language.ENGLISH: "Optimize Moxon Dimensions",
         Language.SPANISH: "Optimizar dimensiones del Moxon",

@@ -999,7 +999,7 @@ def test_optimize_yagi_applies_and_simulates(
 
     monkeypatch.setattr(
         main_window_module,
-        "YagiOptimizationDialog",
+        "ElementOptimizationDialog",
         FakeYagiOptimizationDialog,
     )
 
