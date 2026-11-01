@@ -13,7 +13,11 @@ from PySide6.QtGui import QFont, QPageLayout, QPageSize, QPainter, QPdfWriter
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import SimulationResult
-from ..reporting.design_summary import design_summary_rows, load_summary_rows
+from ..reporting.design_summary import (
+    design_provenance_rows,
+    design_summary_rows,
+    load_summary_rows,
+)
 from .i18n import Translator
 
 
@@ -96,6 +100,7 @@ def write_construction_pdf(
     section(translator.t("construction.dimensions"))
     for label, value in (
         *design_summary_rows(design.parameters),
+        *design_provenance_rows(design),
         *load_summary_rows(design.antenna.loads),
     ):
         row(label, value)

@@ -110,3 +110,22 @@ def test_html_report_supports_new_geometry_summaries(sample_project: Project) ->
     loop_report = render_html_report(sample_project, loop, make_result(sample_project))
     assert "loop" in loop_report
     assert "Circumference" in loop_report
+
+
+def test_html_report_includes_estimator_provenance(sample_project: Project) -> None:
+    from antennadesk.domain.projects.project import DesignProvenance
+
+    design = replace(
+        sample_project.designs[0],
+        provenance=DesignProvenance(
+            method_id="loop.resonant_circumference",
+            confidence="empirical",
+            tolerance_m=1.2,
+            source_ids=("arrl.antenna_book.loop.resonant_circumference",),
+        ),
+    )
+    report = render_html_report(sample_project, design, make_result(sample_project))
+
+    assert "Dimension source" in report
+    assert "loop.resonant_circumference" in report
+    assert "Estimate confidence" in report

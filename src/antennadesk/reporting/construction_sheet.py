@@ -23,7 +23,11 @@ from ..domain.antennas.yagi import YagiParameters
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import FrequencyResult, SimulationResult
-from .design_summary import design_summary_rows, load_summary_rows
+from .design_summary import (
+    design_provenance_rows,
+    design_summary_rows,
+    load_summary_rows,
+)
 
 CSS = """
 body { font-family: system-ui, sans-serif; margin: 28px; color: #222; background: #fff; }
@@ -109,6 +113,7 @@ def render_construction_sheet(
         f"<tr><th>{_escape(label)}</th><td>{_escape(value)}</td></tr>"
         for label, value in (
             *design_summary_rows(parameters),
+            *design_provenance_rows(design),
             *load_summary_rows(design.antenna.loads),
         )
     )

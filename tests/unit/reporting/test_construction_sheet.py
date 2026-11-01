@@ -149,3 +149,23 @@ def test_construction_sheet_lists_series_loads(sample_project: Project) -> None:
     assert "Load 1" in sheet
     assert "radiator @ 10.000 m" in sheet
     assert "R=50 Ω" in sheet
+
+
+def test_construction_sheet_includes_estimator_provenance(sample_project: Project) -> None:
+    from antennadesk.domain.projects.project import DesignProvenance
+
+    design = replace(
+        sample_project.designs[0],
+        provenance=DesignProvenance(
+            method_id="dipole.half_wave_end_effect",
+            confidence="empirical",
+            tolerance_m=0.6,
+            source_ids=("arrl.antenna_book.dipole.end_effect",),
+        ),
+    )
+    sheet = render_construction_sheet(sample_project, design, _make_result())
+
+    assert "Dimension source" in sheet
+    assert "dipole.half_wave_end_effect" in sheet
+    assert "Estimate confidence" in sheet
+    assert "arrl.antenna_book.dipole.end_effect" in sheet

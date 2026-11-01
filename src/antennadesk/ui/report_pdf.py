@@ -21,7 +21,11 @@ from PySide6.QtSvg import QSvgRenderer
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import SimulationResult
-from ..reporting.design_summary import design_summary_rows, load_summary_rows
+from ..reporting.design_summary import (
+    design_provenance_rows,
+    design_summary_rows,
+    load_summary_rows,
+)
 from ..reporting.svg_chart import SvgSeries, line_chart_svg
 from .i18n import Translator
 
@@ -207,6 +211,7 @@ def write_report_pdf(
     section(translator.t("panel.design"))
     for label, value in (
         *design_summary_rows(design.parameters),
+        *design_provenance_rows(design),
         *load_summary_rows(design.antenna.loads),
     ):
         row(label, value)

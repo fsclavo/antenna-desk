@@ -20,6 +20,7 @@ from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
 from ..domain.environment.ground import GroundModel
+from ..domain.projects.project import DesignVariant
 
 
 def ground_text(ground: GroundModel) -> str:
@@ -29,6 +30,18 @@ def ground_text(ground: GroundModel) -> str:
             f"sigma={ground.conductivity_s_per_m:g} S/m)"
         )
     return ground.kind.value
+
+
+def design_provenance_rows(design: DesignVariant) -> tuple[tuple[str, str], ...]:
+    provenance = design.provenance
+    if provenance is None:
+        return ()
+    return (
+        ("Dimension source", provenance.method_id),
+        ("Estimate confidence", provenance.confidence),
+        ("Estimate tolerance", f"{provenance.tolerance_m:.4f} m"),
+        ("Reference sources", ", ".join(provenance.source_ids) or "—"),
+    )
 
 
 def design_summary_rows(

@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Applied estimates persist their method, confidence, assumptions, warnings,
   tolerance, and source identifiers as optional design provenance; editing the
   design clears it.
+- Estimator provenance is shown in HTML reports and PDF construction/simulation
+  sheets alongside the design dimensions.
 - Traceable estimator contract with source identifiers and explicit unsupported
   cases for custom geometry and non-reference Yagi element counts.
 - Phase 1 domain model for units, geometry, conductors, feed points, ground
