@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import pytest
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.antennas.dipole import DipoleParameters
@@ -95,3 +96,33 @@ def test_changing_an_input_invalidates_the_estimate(qtbot: QtBot) -> None:
 
     assert dialog._apply.isEnabled() is False
     assert dialog._results.rowCount() == 0
+
+
+@pytest.mark.parametrize(
+    "family",
+    (
+        "wire_dipole",
+        "folded_dipole",
+        "loop",
+        "vertical",
+        "inverted_v",
+        "fan_dipole",
+        "endfed",
+        "ocfd",
+        "j_pole",
+        "ringo",
+        "yagi",
+        "moxon",
+    ),
+)
+def test_dialog_estimates_every_supported_family(
+    qtbot: QtBot,
+    family: str,
+) -> None:
+    dialog = _dialog(qtbot)
+    dialog._family.setCurrentIndex(dialog._family.findData(family))
+    dialog._run_estimate()
+
+    assert dialog._results.rowCount() > 0
+    assert dialog._apply.isEnabled() is True
+    assert dialog.estimated_parameters() is not None
