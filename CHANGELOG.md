@@ -301,6 +301,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Yagi optimization now supports target impedance, maximum power gain, and
   maximum front-to-back ratio objectives. Gain and F/B evaluations use the
   far-field pattern; the ranked table reports the selected objective.
+- Added bounded fan-dipole element-length optimization against a target
+  impedance, with selectable elements, search bounds, ranked evaluations, and
+  apply-and-simulate flow.
 
 - Documentation and README are now in English.
 

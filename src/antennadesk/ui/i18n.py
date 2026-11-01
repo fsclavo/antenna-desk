@@ -1214,6 +1214,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Optimize Yagi Elements...",
         Language.SPANISH: "Optimizar elementos del Yagi...",
     },
+    "action.optimize_fan": {
+        Language.ENGLISH: "Optimize Fan Elements...",
+        Language.SPANISH: "Optimizar elementos del dipolo abanico...",
+    },
     "action.construction": {
         Language.ENGLISH: "Construction Sheet...",
         Language.SPANISH: "Hoja de construcción...",
@@ -1796,6 +1800,46 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Las posiciones y longitudes son editables. La antena generada es "
             "un diseño de hilos personalizado editable."
         ),
+    },
+    "fan_optimize.title": {
+        Language.ENGLISH: "Optimize Fan Dipole Elements",
+        Language.SPANISH: "Optimizar elementos del dipolo abanico",
+    },
+    "fan_optimize.hint": {
+        Language.ENGLISH: "Only selected element lengths change. The target is evaluated at one frequency; verify the other bands after applying.",
+        Language.SPANISH: "Solo cambian las longitudes seleccionadas. El objetivo se evalúa en una frecuencia; verificá las otras bandas después de aplicar.",
+    },
+    "fan_optimize.run": {
+        Language.ENGLISH: "Run optimization",
+        Language.SPANISH: "Ejecutar optimización",
+    },
+    "fan_optimize.apply": {
+        Language.ENGLISH: "Apply element lengths",
+        Language.SPANISH: "Aplicar longitudes",
+    },
+    "fan_optimize.no_elements": {
+        Language.ENGLISH: "Select at least one element to optimize.",
+        Language.SPANISH: "Seleccioná al menos un elemento para optimizar.",
+    },
+    "fan_optimize.running": {
+        Language.ENGLISH: "Running fan-dipole optimization...",
+        Language.SPANISH: "Ejecutando optimización del dipolo abanico...",
+    },
+    "fan_optimize.error": {
+        Language.ENGLISH: "Fan-dipole optimization failed: {message}",
+        Language.SPANISH: "Falló la optimización del dipolo abanico: {message}",
+    },
+    "fan_optimize.no_best": {
+        Language.ENGLISH: "No valid element lengths were found.",
+        Language.SPANISH: "No se encontraron longitudes válidas.",
+    },
+    "fan_optimize.summary": {
+        Language.ENGLISH: "Best: {lengths} · impedance error {error} Ω",
+        Language.SPANISH: "Mejor: {lengths} · error de impedancia {error} Ω",
+    },
+    "fan_optimize.close": {
+        Language.ENGLISH: "Cancel the running optimization before closing.",
+        Language.SPANISH: "Cancelá la optimización en curso antes de cerrar.",
     },
     "yagi_optimize.title": {
         Language.ENGLISH: "Optimize Yagi Elements",

@@ -363,6 +363,17 @@ editor and starts the normal full sweep/pattern simulation. This is a numerical
 starting point; verify the applied design with a full simulation and, where
 possible, a measurement.
 
+## Optimize fan dipole elements
+
+For a fan dipole, use **Design → Optimize Fan Elements...**. Select the element
+pairs to include, set the target frequency and R/X, the search margin, and the
+evaluation budget. The optimizer performs a bounded coordinate search over the
+selected total element lengths and reports the best complex impedance match.
+
+**Apply element lengths** updates the fan editor and starts the normal full
+sweep. The target is evaluated at one frequency; check the other bands after
+applying because the elements interact.
+
 ## Synthesize dimensions
 
 For an **OCFD**, **J Pole**, or **Slim Jim**, use **Design → Synthesize
