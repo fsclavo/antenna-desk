@@ -356,8 +356,9 @@ and require `NEC2C`.
 - Relative permeability is not emitted to NEC. Conductor conductivity is
   emitted when `SimulationSpec.include_conductor_losses` is true.
 - Far-field values are NEC power gains in dB. Realized gain is not computed.
-- Series and parallel RLC loads are supported on one segment. General networks,
-  transmission lines, and radial ground screens are not implemented.
+- Series and parallel RLC loads are supported on one segment. A lossless L
+  matching network is post-processed before the feed line; Pi/T, lossy
+  networks, and general transmission-line geometry are not implemented.
 - Project files store normalized results and raw solver text; many long runs
   can reach the 10 MB project-size limit.
 - The GUI supports wire dipoles, folded dipoles, and regular-polygon loops.

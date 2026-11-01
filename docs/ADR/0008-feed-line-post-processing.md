@@ -40,5 +40,5 @@ Limitations:
 
 - The result does not report antenna-terminal impedance separately.
 - Insertion loss is not added to pattern gain or realized gain.
-- The model is a uniform line; non-uniform lines and general matching networks
-  are out of scope.
+- The model is a uniform line; non-uniform lines are out of scope. A lossless
+  L matching network is handled separately in ADR-0014.

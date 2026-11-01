@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import pytest
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.antennas.load import SeriesLoad
@@ -38,3 +39,26 @@ def test_loads_dialog_adds_and_removes_series_loads(qtbot: QtBot) -> None:
     dialog._table.selectRow(0)
     dialog._remove.click()
     assert [load.id for load in dialog.loads()] == ["load-2", "load-3"]
+
+
+def test_loads_dialog_adds_a_parallel_trap(qtbot: QtBot) -> None:
+    import math
+
+    from antennadesk.domain.antennas.load import ParallelLoad
+
+    dialog = LoadsDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        {"radiator": 20.0},
+        (),
+    )
+    qtbot.addWidget(dialog)
+    dialog._inductance.setValue(10.0)
+    dialog._trap_frequency.setValue(14.1)
+
+    dialog._add_trap.click()
+
+    load = dialog.loads()[0]
+    assert isinstance(load, ParallelLoad)
+    expected_c = 1.0 / ((2.0 * math.pi * 14_100_000.0) ** 2 * 10e-6)
+    assert load.capacitance_f == pytest.approx(expected_c)

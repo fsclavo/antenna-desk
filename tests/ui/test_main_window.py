@@ -1207,6 +1207,7 @@ def test_main_menu_is_grouped_by_task(window: MainWindow) -> None:
     assert "Edit Series Loads..." in design_titles
     assert "Simulate" in simulation_titles
     assert "Feed Line..." in simulation_titles
+    assert "Matching Network..." in simulation_titles
 
 
 def test_new_moxon_creates_a_first_class_design(

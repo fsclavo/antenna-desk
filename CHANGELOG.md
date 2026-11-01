@@ -306,6 +306,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   apply-and-simulate flow.
 - Added bounded Moxon optimization of width, spacing, reflector tip, and driven
   tip for target impedance, maximum gain, or maximum front-to-back ratio.
+- Added a lossless L matching network evaluated before the feed line, with
+  project/run persistence and impedance/SWR diagnostics.
+- Added a parallel-trap helper to the load editor that computes capacitance from
+  inductance and resonant frequency.
 
 - Documentation and README are now in English.
 

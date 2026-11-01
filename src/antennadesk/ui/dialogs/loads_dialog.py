@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping
 
 from PySide6.QtWidgets import (
@@ -73,9 +74,17 @@ class LoadsDialog(QDialog):
         self._capacitance.setDecimals(3)
         self._capacitance.setSuffix(" pF")
 
+        self._trap_frequency = QDoubleSpinBox(self)
+        self._trap_frequency.setRange(0.1, 100_000.0)
+        self._trap_frequency.setDecimals(6)
+        self._trap_frequency.setSuffix(" MHz")
+        self._trap_frequency.setValue(14.1)
+
         self._add = QPushButton(translator.t("loads.add"), self)
+        self._add_trap = QPushButton(translator.t("loads.add_trap"), self)
         self._remove = QPushButton(translator.t("loads.remove"), self)
         self._add.clicked.connect(self._add_load)
+        self._add_trap.clicked.connect(self._add_trap_load)
         self._remove.clicked.connect(self._remove_load)
         self._remove.setEnabled(False)
         self._table.itemSelectionChanged.connect(
@@ -89,6 +98,7 @@ class LoadsDialog(QDialog):
         form.addRow(translator.t("loads.resistance"), self._resistance)
         form.addRow(translator.t("loads.inductance"), self._inductance)
         form.addRow(translator.t("loads.capacitance"), self._capacitance)
+        form.addRow(translator.t("loads.trap_frequency"), self._trap_frequency)
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
             parent=self,
@@ -97,6 +107,7 @@ class LoadsDialog(QDialog):
         buttons.rejected.connect(self.reject)
         add_remove = QHBoxLayout()
         add_remove.addWidget(self._add)
+        add_remove.addWidget(self._add_trap)
         add_remove.addWidget(self._remove)
         add_remove.addStretch(1)
 
@@ -164,6 +175,35 @@ class LoadsDialog(QDialog):
                 resistance_ohm=self._resistance.value(),
                 inductance_h=self._inductance.value() * 1e-6,
                 capacitance_f=self._capacitance.value() * 1e-12,
+            )
+        except ValueError as exc:
+            QMessageBox.critical(self, self._translator.t("loads.title"), str(exc))
+            return
+        self._loads.append(load)
+        self._refresh()
+
+    def _add_trap_load(self) -> None:
+        wire_id = self._wire.currentData()
+        if not isinstance(wire_id, str):
+            return
+        inductance_h = self._inductance.value() * 1e-6
+        if inductance_h <= 0.0:
+            QMessageBox.critical(
+                self,
+                self._translator.t("loads.title"),
+                self._translator.t("loads.trap_requires_l"),
+            )
+            return
+        frequency_hz = self._trap_frequency.value() * 1_000_000.0
+        capacitance_f = 1.0 / ((2.0 * math.pi * frequency_hz) ** 2 * inductance_h)
+        try:
+            load = ParallelLoad(
+                id=self._next_id(),
+                wire_id=wire_id,
+                offset_m=length_to_m(self._offset.value(), self._unit_system),
+                resistance_ohm=self._resistance.value(),
+                inductance_h=inductance_h,
+                capacitance_f=capacitance_f,
             )
         except ValueError as exc:
             QMessageBox.critical(self, self._translator.t("loads.title"), str(exc))

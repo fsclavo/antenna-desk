@@ -296,6 +296,21 @@ Disable the feed line to return to antenna-terminal impedance. The feed-line
 configuration is saved with the project and with each simulation run; it is
 not part of the antenna geometry.
 
+
+## Matching network and traps
+
+Use **Simulation → Matching Network...** to add a lossless L-network at the
+antenna feed. Set one series element and one shunt element (L or C), choose
+whether the shunt element is on the transmitter side, and apply it. The network
+is evaluated before the feed line: antenna → matching network → feed line →
+transmitter. Impedance and SWR include the network; pattern and power gain remain
+antenna-side. Pi/T networks, lossy networks, and automatic synthesis are not
+implemented.
+
+In the load editor, **Add parallel trap** calculates the capacitance for a
+parallel LC trap from the entered inductance and resonant frequency. The trap is
+stored as a normal parallel RLC load and emitted as a NEC `LD 1` load.
+
 ## Variants and comparison
 
 Use **Design → Variants → New Variant...** to duplicate the current design,

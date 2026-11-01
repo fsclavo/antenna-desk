@@ -411,3 +411,22 @@ def test_design_provenance_round_trips_through_the_schema() -> None:
     restored = project_from_document(document_from_project(project))
 
     assert restored.designs[0].provenance == provenance
+
+
+def test_matching_network_round_trips_through_the_project_schema() -> None:
+    from antennadesk.domain.antennas.matching_network import LNetwork
+
+    project = _project(
+        DipoleParameters(frequency_hz=7_100_000.0, total_length_m=20.0, height_m=8.0),
+        "Dipole",
+    )
+    network = LNetwork(
+        series_inductance_h=1e-6,
+        shunt_capacitance_f=100e-12,
+        shunt_at_input=True,
+    )
+    project = project.with_matching_network(network, updated_at=project.updated_at)
+
+    restored = project_from_document(document_from_project(project))
+
+    assert restored.matching_network == network

@@ -223,6 +223,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Feed Line...",
         Language.SPANISH: "Línea de alimentación...",
     },
+    "action.matching_network": {
+        Language.ENGLISH: "Matching Network...",
+        Language.SPANISH: "Red de adaptación...",
+    },
     "action.exit": {Language.ENGLISH: "Exit", Language.SPANISH: "Salir"},
     "action.about": {
         Language.ENGLISH: "About AntennaDesk",
@@ -734,6 +738,44 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "La línea transforma la impedancia y el SWR hacia el transmisor. "
             "No cambia el patrón ni la ganancia de potencia de la antena."
+        ),
+    },
+    "matching_network.title": {
+        Language.ENGLISH: "Matching Network",
+        Language.SPANISH: "Red de adaptación",
+    },
+    "matching_network.enabled": {
+        Language.ENGLISH: "Enable L matching network",
+        Language.SPANISH: "Habilitar red de adaptación L",
+    },
+    "matching_network.series_l": {
+        Language.ENGLISH: "Series inductance",
+        Language.SPANISH: "Inductancia serie",
+    },
+    "matching_network.series_c": {
+        Language.ENGLISH: "Series capacitance",
+        Language.SPANISH: "Capacitancia serie",
+    },
+    "matching_network.shunt_l": {
+        Language.ENGLISH: "Shunt inductance",
+        Language.SPANISH: "Inductancia paralelo",
+    },
+    "matching_network.shunt_c": {
+        Language.ENGLISH: "Shunt capacitance",
+        Language.SPANISH: "Capacitancia paralelo",
+    },
+    "matching_network.shunt_at_input": {
+        Language.ENGLISH: "Shunt element on the transmitter side",
+        Language.SPANISH: "Elemento paralelo del lado del transmisor",
+    },
+    "matching_network.hint": {
+        Language.ENGLISH: (
+            "Lossless L-network evaluated before the feed line. It changes "
+            "impedance and SWR but not the antenna pattern or power gain."
+        ),
+        Language.SPANISH: (
+            "Red L sin pérdidas evaluada antes de la línea. Cambia la impedancia "
+            "y el SWR, pero no el patrón ni la ganancia de potencia."
         ),
     },
     "field.sweep": {Language.ENGLISH: "Frequency sweep", Language.SPANISH: "Barrido de frecuencia"},
@@ -2170,6 +2212,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "loads.capacitance": {
         Language.ENGLISH: "Capacitance (pF)",
         Language.SPANISH: "Capacitancia (pF)",
+    },
+    "loads.trap_frequency": {
+        Language.ENGLISH: "Trap frequency (MHz)",
+        Language.SPANISH: "Frecuencia de trampa (MHz)",
+    },
+    "loads.add_trap": {
+        Language.ENGLISH: "Add parallel trap",
+        Language.SPANISH: "Agregar trampa paralelo",
+    },
+    "loads.trap_requires_l": {
+        Language.ENGLISH: "Enter a positive inductance to calculate the trap capacitance.",
+        Language.SPANISH: "Ingresá una inductancia positiva para calcular la capacidad de la trampa.",
     },
     "action.loads": {
         Language.ENGLISH: "Edit Series Loads...",

@@ -41,6 +41,7 @@ from ..domain.antennas.loop import (
     MIN_SIDES,
     LoopParameters,
 )
+from ..domain.antennas.matching_network import LNetwork
 from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from ..domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
@@ -326,6 +327,14 @@ class FeedLinePayload(StrictModel):
     matched_loss_db_per_100m: float = Field(default=0.0, ge=0.0)
 
 
+class LNetworkPayload(StrictModel):
+    series_inductance_h: float = Field(default=0.0, ge=0.0)
+    series_capacitance_f: float = Field(default=0.0, ge=0.0)
+    shunt_inductance_h: float = Field(default=0.0, ge=0.0)
+    shunt_capacitance_f: float = Field(default=0.0, ge=0.0)
+    shunt_at_input: bool = False
+
+
 class FarFieldRequestPayload(StrictModel):
     enabled: bool = True
     theta_start_deg: float = 0.0
@@ -344,6 +353,7 @@ class SimulationSpecPayload(StrictModel):
     include_conductor_losses: bool = True
     far_field: FarFieldRequestPayload = Field(default_factory=FarFieldRequestPayload)
     feed_line: FeedLinePayload | None = None
+    matching_network: LNetworkPayload | None = None
     timeout_s: float = Field(default=60.0, gt=0.0)
 
 
@@ -581,6 +591,7 @@ class ProjectPayload(StrictModel):
     simulation_runs: list[SimulationRunPayload] = Field(default_factory=list)
     measurements: list[MeasurementPayload] = Field(default_factory=list)
     feed_line: FeedLinePayload | None = None
+    matching_network: LNetworkPayload | None = None
 
     @model_validator(mode="after")
     def _validate_timestamps(self) -> Self:
@@ -930,6 +941,16 @@ def _feed_line_from_domain(value: FeedLine) -> FeedLinePayload:
     )
 
 
+def _matching_network_from_domain(value: LNetwork) -> LNetworkPayload:
+    return LNetworkPayload(
+        series_inductance_h=value.series_inductance_h,
+        series_capacitance_f=value.series_capacitance_f,
+        shunt_inductance_h=value.shunt_inductance_h,
+        shunt_capacitance_f=value.shunt_capacitance_f,
+        shunt_at_input=value.shunt_at_input,
+    )
+
+
 def _far_field_from_domain(value: FarFieldRequest) -> FarFieldRequestPayload:
     return FarFieldRequestPayload(
         enabled=value.enabled,
@@ -951,6 +972,11 @@ def _simulation_spec_from_domain(value: SimulationSpec) -> SimulationSpecPayload
         include_conductor_losses=value.include_conductor_losses,
         far_field=_far_field_from_domain(value.far_field),
         feed_line=(_feed_line_from_domain(value.feed_line) if value.feed_line else None),
+        matching_network=(
+            _matching_network_from_domain(value.matching_network)
+            if value.matching_network
+            else None
+        ),
         timeout_s=value.timeout_s,
     )
 
@@ -1127,6 +1153,11 @@ def _project_from_domain(value: Project) -> ProjectPayload:
         simulation_runs=[_simulation_run_from_domain(run) for run in value.simulation_runs],
         measurements=[_measurement_from_domain(measurement) for measurement in value.measurements],
         feed_line=(_feed_line_from_domain(value.feed_line) if value.feed_line else None),
+        matching_network=(
+            _matching_network_from_domain(value.matching_network)
+            if value.matching_network
+            else None
+        ),
     )
 
 
@@ -1478,6 +1509,16 @@ def _feed_line_to_domain(value: FeedLinePayload) -> FeedLine:
     )
 
 
+def _matching_network_to_domain(value: LNetworkPayload) -> LNetwork:
+    return LNetwork(
+        series_inductance_h=value.series_inductance_h,
+        series_capacitance_f=value.series_capacitance_f,
+        shunt_inductance_h=value.shunt_inductance_h,
+        shunt_capacitance_f=value.shunt_capacitance_f,
+        shunt_at_input=value.shunt_at_input,
+    )
+
+
 def _far_field_to_domain(value: FarFieldRequestPayload) -> FarFieldRequest:
     return FarFieldRequest(
         enabled=value.enabled,
@@ -1499,6 +1540,9 @@ def _simulation_spec_to_domain(value: SimulationSpecPayload) -> SimulationSpec:
         include_conductor_losses=value.include_conductor_losses,
         far_field=_far_field_to_domain(value.far_field),
         feed_line=(_feed_line_to_domain(value.feed_line) if value.feed_line else None),
+        matching_network=(
+            _matching_network_to_domain(value.matching_network) if value.matching_network else None
+        ),
         timeout_s=value.timeout_s,
     )
 
@@ -1653,5 +1697,10 @@ def project_from_document(document: ProjectDocument) -> Project:
         ),
         feed_line=(
             _feed_line_to_domain(document.project.feed_line) if document.project.feed_line else None
+        ),
+        matching_network=(
+            _matching_network_to_domain(document.project.matching_network)
+            if document.project.matching_network
+            else None
         ),
     )

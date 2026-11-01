@@ -19,6 +19,7 @@ from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.feed import FeedPoint
 from antennadesk.domain.antennas.feed_line import FeedLine
 from antennadesk.domain.antennas.geometry import Point3D
+from antennadesk.domain.antennas.matching_network import LNetwork
 from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.antennas.yagi import nbs_five_element
@@ -311,6 +312,28 @@ def test_loop_multi_wire_simulation(solver: Nec2cSolver) -> None:
     assert frequency.impedance_ohm.real > 0.0
     assert len(frequency.currents) == 44
     assert not any(d.severity.value == "error" for d in result.diagnostics)
+
+
+def test_l_network_transforms_impedance_before_the_feed_line(solver: Nec2cSolver) -> None:
+    base = _manual_example1_spec()
+    reference = solver.run(_manual_example1_model(), base)
+    antenna_impedance = reference.frequencies[0].impedance_ohm
+    network = LNetwork(series_inductance_h=1e-6, shunt_capacitance_f=100e-12)
+    line = FeedLine(characteristic_impedance_ohm=50.0, length_m=5.0, velocity_factor=1.0)
+    expected = line.input_impedance(
+        network.input_impedance(antenna_impedance, 299_800_000.0),
+        299_800_000.0,
+    )
+
+    result = solver.run(
+        _manual_example1_model(),
+        replace(base, matching_network=network, feed_line=line),
+    )
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert result.frequencies[0].impedance_ohm == pytest.approx(expected, abs=1e-6)
+    assert any(diagnostic.code == "matching_network.applied" for diagnostic in result.diagnostics)
+    assert any(diagnostic.code == "feed_line.applied" for diagnostic in result.diagnostics)
 
 
 def test_feed_line_transforms_impedance_at_the_transmitter(solver: Nec2cSolver) -> None:

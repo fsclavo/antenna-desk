@@ -70,6 +70,16 @@ def normalize_nec2_result(
 ) -> SimulationResult:
     problems: list[Diagnostic] = list(diagnostics)
     feed_line = spec.feed_line
+    matching_network = spec.matching_network
+    if matching_network is not None and matching_network.is_active:
+        problems.append(
+            Diagnostic(
+                code="matching_network.applied",
+                severity=Severity.INFO,
+                message="impedance and SWR include the lossless L matching network",
+                field="matching_network",
+            )
+        )
     if feed_line is not None and feed_line.is_active:
         problems.append(
             Diagnostic(
@@ -134,6 +144,11 @@ def normalize_nec2_result(
         )
         far_field = tuple(_far_field_point(point) for point in parsed_frequency.far_field)
         input_impedance = input_parameters.impedance_ohm
+        if matching_network is not None:
+            input_impedance = matching_network.input_impedance(
+                input_impedance,
+                parsed_frequency.frequency_hz,
+            )
         if feed_line is not None:
             input_impedance = feed_line.input_impedance(
                 input_impedance,

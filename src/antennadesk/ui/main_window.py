@@ -76,6 +76,7 @@ from ..domain.antennas.feed_line import FeedLine
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.load import LumpedLoad
+from ..domain.antennas.matching_network import LNetwork
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
@@ -129,6 +130,7 @@ from .dialogs.feed_line_dialog import FeedLineDialog
 from .dialogs.inverted_v_dialog import InvertedVDialog
 from .dialogs.j_pole_dialog import JPoleDialog
 from .dialogs.loads_dialog import LoadsDialog
+from .dialogs.matching_network_dialog import MatchingNetworkDialog
 from .dialogs.measurement_details_dialog import MeasurementDetailsDialog
 from .dialogs.moxon_dialog import MoxonDialog
 from .dialogs.moxon_optimization_dialog import MoxonOptimizationDialog
@@ -189,6 +191,7 @@ class MainWindow(QMainWindow):
         self._simulation_design_id: UUID | None = None
         self._loads: tuple[LumpedLoad, ...] = ()
         self._feed_line: FeedLine | None = None
+        self._matching_network: LNetwork | None = None
         self._custom_pattern_step_deg = DEFAULT_PATTERN_STEP_DEG
         self._last_status_key = "status.ready"
         self._thread: QThread | None = None
@@ -228,6 +231,8 @@ class MainWindow(QMainWindow):
 
         self._feed_line_action = QAction(self)
         self._feed_line_action.triggered.connect(lambda: self.configure_feed_line())
+        self._matching_network_action = QAction(self)
+        self._matching_network_action.triggered.connect(lambda: self.configure_matching_network())
 
         self._exit_action = QAction(self)
         self._exit_action.setShortcut(QKeySequence.StandardKey.Quit)
@@ -607,6 +612,7 @@ class MainWindow(QMainWindow):
         self._simulation_menu.addAction(self._cancel_action)
         self._simulation_menu.addSeparator()
         self._simulation_menu.addAction(self._feed_line_action)
+        self._simulation_menu.addAction(self._matching_network_action)
 
         self._tools_menu = self.menuBar().addMenu("")
         self._tools_menu.addAction(self._locate_solver_action)
@@ -639,6 +645,7 @@ class MainWindow(QMainWindow):
         self._save_as_action.setText(self._translator.t("action.save_as"))
         self._locate_solver_action.setText(self._translator.t("action.locate_solver"))
         self._feed_line_action.setText(self._translator.t("action.feed_line"))
+        self._matching_network_action.setText(self._translator.t("action.matching_network"))
         self._exit_action.setText(self._translator.t("action.exit"))
         self._about_action.setText(self._translator.t("action.about"))
         self._new_variant_action.setText(self._translator.t("action.new_variant"))
@@ -780,6 +787,7 @@ class MainWindow(QMainWindow):
         self._save_as_action.setEnabled(idle and has_project)
         self._locate_solver_action.setEnabled(idle)
         self._feed_line_action.setEnabled(idle)
+        self._matching_network_action.setEnabled(idle)
         self._exit_action.setEnabled(idle)
         self._new_variant_action.setEnabled(idle and has_designs)
         self._rename_variant_action.setEnabled(idle and has_designs)
@@ -1042,6 +1050,7 @@ class MainWindow(QMainWindow):
         self._project = project
         self._design_id = design_id
         self._feed_line = project.feed_line
+        self._matching_network = project.matching_network
         self._current_path = path
         self._dirty = dirty
         self._form_dirty = False
@@ -1397,6 +1406,23 @@ class MainWindow(QMainWindow):
             self._dirty = True
             self._update_title()
 
+    def configure_matching_network(self) -> None:
+        dialog = MatchingNetworkDialog(
+            self._translator,
+            self._matching_network,
+            self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._matching_network = dialog.result_network()
+        if self._project is not None:
+            self._project = self._project.with_matching_network(
+                self._matching_network,
+                updated_at=utc_now(),
+            )
+            self._dirty = True
+            self._update_title()
+
     def simulate(self) -> None:
         if self._simulating:
             return
@@ -1449,7 +1475,7 @@ class MainWindow(QMainWindow):
         self._last_result = None
         self._results.set_result(None)
         self._simulation_design_id = self._design_id
-        spec = replace(spec, feed_line=self._feed_line)
+        spec = replace(spec, feed_line=self._feed_line, matching_network=self._matching_network)
         self._cancel_token = EventCancelToken()
         self._simulating = True
         self._last_status_key = "status.simulating"
@@ -2902,7 +2928,11 @@ class MainWindow(QMainWindow):
             base_spec = self._endfed_simulation_spec(design.parameters)
         else:
             base_spec = self._form.simulation_spec()
-        base_spec = replace(base_spec, feed_line=self._feed_line)
+        base_spec = replace(
+            base_spec,
+            feed_line=self._feed_line,
+            matching_network=self._matching_network,
+        )
         dialog = OptimizationDialog(
             self._translator,
             self._unit_system,
@@ -2955,7 +2985,11 @@ class MainWindow(QMainWindow):
             self._unit_system,
             self._solver,
             design.parameters,
-            replace(base_spec, feed_line=self._feed_line),
+            replace(
+                base_spec,
+                feed_line=self._feed_line,
+                matching_network=self._matching_network,
+            ),
             self,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
@@ -3001,6 +3035,7 @@ class MainWindow(QMainWindow):
             replace(
                 self._yagi_simulation_spec(design.parameters),
                 feed_line=self._feed_line,
+                matching_network=self._matching_network,
             ),
             self,
         )
@@ -3042,6 +3077,7 @@ class MainWindow(QMainWindow):
             replace(
                 self._fan_dipole_simulation_spec(design.parameters),
                 feed_line=self._feed_line,
+                matching_network=self._matching_network,
             ),
             self,
         )
@@ -3083,6 +3119,7 @@ class MainWindow(QMainWindow):
             replace(
                 self._moxon_simulation_spec(design.parameters),
                 feed_line=self._feed_line,
+                matching_network=self._matching_network,
             ),
             self,
         )
