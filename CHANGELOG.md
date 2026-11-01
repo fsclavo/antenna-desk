@@ -306,6 +306,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   apply-and-simulate flow.
 - Added bounded Moxon optimization of width, spacing, reflector tip, and driven
   tip for target impedance, maximum gain, or maximum front-to-back ratio.
+- Unified the Yagi, fan-dipole, and Moxon element optimizers on a shared
+  bounded evaluation engine while keeping their template-specific dialogs.
 - Added a lossless L matching network evaluated before the feed line, with
   project/run persistence and impedance/SWR diagnostics.
 - The matching-network dialog can auto-design an L section from a load R/X at
