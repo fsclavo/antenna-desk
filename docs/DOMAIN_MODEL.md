@@ -427,6 +427,8 @@ the user applies the optimized dimension.
   and display rows.
 - Estimators are pure domain functions registered by antenna type. They do not
   import Qt, the solver, or persistence.
+- Applied estimates store `DesignProvenance` on the design; it is optional,
+  additive schema metadata and is cleared when the design parameters change.
 
 The resulting estimate is a starting point. Numerical refinement remains in
 the optimization and synthesis use cases.

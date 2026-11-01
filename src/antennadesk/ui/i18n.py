@@ -785,6 +785,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Measurement deleted.",
         Language.SPANISH: "Medición eliminada.",
     },
+    "design.provenance": {
+        Language.ENGLISH: "Estimated design: {method} · confidence: {confidence} · tolerance: {tolerance}",
+        Language.SPANISH: "Diseño estimado: {method} · confianza: {confidence} · tolerancia: {tolerance}",
+    },
     "status.design_estimated": {
         Language.ENGLISH: "Estimated dimensions applied. Review them and simulate.",
         Language.SPANISH: "Dimensiones estimadas aplicadas. Revisalas y simulá.",

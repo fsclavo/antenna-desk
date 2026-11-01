@@ -34,8 +34,8 @@ an optional numerical refinement.
    Yagi optimizer, or impedance synthesis.
 7. Use only sourced or explicitly labelled heuristic factors. Do not invent
    numerical reference values.
-8. Do not persist estimator provenance in the project schema yet; display it in
-   the UI and document it. Persistence can be added later if needed.
+8. Persist estimator provenance as optional design metadata in the existing
+   schema. Older projects without provenance remain valid.
 
 ## Initial family coverage
 
@@ -85,3 +85,5 @@ Limitations:
 - Yagi support is limited to the reference preset in this milestone.
 - Ringo and Moxon use scaled presets.
 - Height, ground, and matching effects require simulation or measurement.
+- Editing a design clears its estimator provenance; re-estimate or refine it
+  deliberately.

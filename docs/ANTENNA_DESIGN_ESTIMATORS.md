@@ -112,5 +112,5 @@ Reference sources currently used:
 - Moxon and Ringo are scaled presets, not universal synthesis.
 - End-fed matching, counterpoise, and feed-line effects are installation
   specific.
-- Estimator provenance is shown in the dialog but not yet persisted with the
-  design.
+- Estimator provenance is shown in the dialog and persisted as optional design
+  metadata. Editing the design clears it.

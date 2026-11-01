@@ -385,3 +385,29 @@ def test_ringo_parameters_round_trip() -> None:
 
     assert restored.designs[0].parameters == parameters
     assert restored.designs[0].antenna_type == "ringo"
+
+
+def test_design_provenance_round_trips_through_the_schema() -> None:
+    from antennadesk.domain.projects.project import DesignProvenance
+
+    project = _project(
+        DipoleParameters(frequency_hz=7_100_000.0, total_length_m=20.0, height_m=8.0),
+        "Dipole",
+    )
+    design = project.designs[0]
+    provenance = DesignProvenance(
+        method_id="dipole.half_wave_end_effect",
+        confidence="empirical",
+        assumptions=("estimator.assumption.height_and_ground",),
+        warnings=("estimator.warning.starting_point",),
+        tolerance_m=0.3,
+        source_ids=("arrl.antenna_book.dipole.end_effect",),
+    )
+    project = project.with_design(
+        design.with_parameters(design.parameters, provenance=provenance),
+        updated_at=project.updated_at,
+    )
+
+    restored = project_from_document(document_from_project(project))
+
+    assert restored.designs[0].provenance == provenance

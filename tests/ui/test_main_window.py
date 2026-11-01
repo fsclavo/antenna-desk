@@ -1661,6 +1661,7 @@ def test_design_from_frequency_applies_estimated_parameters(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from antennadesk.domain.antennas.loop import LoopParameters
+    from antennadesk.domain.design import Confidence, DimensionEstimate
 
     parameters = LoopParameters(
         frequency_hz=7_100_000.0,
@@ -1676,6 +1677,15 @@ def test_design_from_frequency_applies_estimated_parameters(
         def exec(self) -> QDialog.DialogCode:
             return QDialog.DialogCode.Accepted
 
+        def estimated_estimate(self) -> DimensionEstimate:
+            return DimensionEstimate(
+                parameters=parameters,
+                method_id="test.loop",
+                confidence=Confidence.EMPIRICAL,
+                tolerance_m=0.1,
+                source_ids=("test.source",),
+            )
+
         def estimated_parameters(self) -> LoopParameters:
             return parameters
 
@@ -1690,6 +1700,10 @@ def test_design_from_frequency_applies_estimated_parameters(
     assert design.parameters.circumference_m == pytest.approx(41.0)
     assert design.parameters.sides == 3
     assert design.antenna_type == "loop"
+    assert design.provenance is not None
+    assert design.provenance.method_id == "test.loop"
+    assert design.provenance.source_ids == ("test.source",)
+    assert "test.loop" in window._provenance_label.text()
     assert window._design_stack.currentWidget() is window._form_scroll
     assert window._status_label.text() == "Estimated dimensions applied. Review them and simulate."
     window._dirty = False

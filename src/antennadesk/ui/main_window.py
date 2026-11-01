@@ -84,7 +84,7 @@ from ..domain.antennas.yagi import YagiParameters
 from ..domain.common.time import utc_now
 from ..domain.environment.ground import GroundModel
 from ..domain.measurement import Measurement
-from ..domain.projects.project import DesignVariant, Project
+from ..domain.projects.project import DesignProvenance, DesignVariant, Project
 from ..domain.simulation.frequency import FrequencyPlan
 from ..domain.simulation.result import SimulationResult, SimulationStatus
 from ..domain.simulation.segmentation import (
@@ -140,7 +140,7 @@ from .dialogs.yagi_optimization_dialog import YagiOptimizationDialog
 from .i18n import Language, Translator
 from .pattern_resolution import DEFAULT_PATTERN_STEP_DEG, far_field_request
 from .report_pdf import write_report_pdf
-from .units import UnitSystem
+from .units import UnitSystem, length_from_m, length_unit_key
 from .widgets.dipole_form import DipoleForm
 from .widgets.endfed_form import EndFedForm
 from .widgets.fan_dipole_form import FanDipoleForm
@@ -466,10 +466,14 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._custom_panel)
         self._change_template_button = QPushButton(self)
         self._change_template_button.clicked.connect(lambda: self.change_template())
+        self._provenance_label = QLabel(self)
+        self._provenance_label.setWordWrap(True)
+        self._provenance_label.setVisible(False)
         design_panel = QWidget(self)
         design_layout = QVBoxLayout(design_panel)
         design_layout.setContentsMargins(0, 0, 0, 0)
         design_layout.addWidget(self._change_template_button)
+        design_layout.addWidget(self._provenance_label)
         design_layout.addWidget(self._design_stack, 1)
 
         self._geometry = GeometryView(self._translator, self._unit_system)
@@ -703,6 +707,24 @@ class MainWindow(QMainWindow):
         marker = " *" if self._dirty else ""
         self.setWindowTitle(f"{name}{marker} — AntennaDesk")
 
+    def _update_provenance_label(self, design: DesignVariant | None) -> None:
+        provenance = design.provenance if design is not None else None
+        if provenance is None:
+            self._provenance_label.clear()
+            self._provenance_label.setVisible(False)
+            return
+        tolerance = length_from_m(provenance.tolerance_m, self._unit_system)
+        unit = self._translator.t(length_unit_key(self._unit_system))
+        self._provenance_label.setText(
+            self._translator.t(
+                "design.provenance",
+                method=provenance.method_id,
+                confidence=provenance.confidence,
+                tolerance=f"{tolerance:.3f} {unit}",
+            )
+        )
+        self._provenance_label.setVisible(True)
+
     def _update_status_text(self) -> None:
         key = "status.simulating" if self._simulating else self._last_status_key
         self._status_label.setText(self._translator.t(key))
@@ -753,9 +775,12 @@ class MainWindow(QMainWindow):
         self._rename_variant_action.setEnabled(idle and has_designs)
         self._delete_variant_action.setEnabled(idle and has_multiple)
         self._compare_action.setEnabled(idle and has_multiple)
+        design = None
         parameters = None
         if self._project is not None and self._design_id is not None:
-            parameters = self._project.design_by_id(self._design_id).parameters
+            design = self._project.design_by_id(self._design_id)
+            parameters = design.parameters
+        self._update_provenance_label(design)
         is_custom = isinstance(parameters, CustomAntennaParameters)
         is_ocfd = isinstance(parameters, OCFDParameters)
         is_vertical = isinstance(parameters, VerticalParameters)
@@ -887,6 +912,7 @@ class MainWindow(QMainWindow):
         design = self._project.design_by_id(design_id)
         self._design_id = design_id
         self._form_dirty = False
+        self._update_provenance_label(design)
         self._loads = design.antenna.loads
         if isinstance(design.parameters, CustomAntennaParameters):
             self._design_stack.setCurrentWidget(self._custom_panel)
@@ -2773,7 +2799,8 @@ class MainWindow(QMainWindow):
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         try:
-            parameters = dialog.estimated_parameters()
+            estimate = dialog.estimated_estimate()
+            parameters = estimate.parameters
             preserved: dict[str, object] = {}
             for name in (
                 "azimuth_deg",
@@ -2786,7 +2813,15 @@ class MainWindow(QMainWindow):
                     preserved[name] = getattr(design.parameters, name)
             if preserved:
                 parameters = replace(parameters, **preserved)
-            updated_design = design.with_parameters(parameters)
+            provenance = DesignProvenance(
+                method_id=estimate.method_id,
+                confidence=estimate.confidence.value,
+                assumptions=estimate.assumptions,
+                warnings=estimate.warnings,
+                tolerance_m=estimate.tolerance_m,
+                source_ids=estimate.source_ids,
+            )
+            updated_design = design.with_parameters(parameters, provenance=provenance)
             self._project = self._project.with_design(updated_design, updated_at=utc_now())
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))

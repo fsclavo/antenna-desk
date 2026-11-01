@@ -13,9 +13,32 @@ from ..antennas.design import AntennaDesignParameters, antenna_type_for
 from ..antennas.feed_line import FeedLine
 from ..antennas.load import LumpedLoad
 from ..common.time import ensure_utc
+from ..common.units import ensure_non_negative
 from ..common.validation import Diagnostic, Severity, raise_if_errors
 from ..measurement import Measurement
 from ..simulation.run import SimulationRun
+
+
+@dataclass(frozen=True, slots=True)
+class DesignProvenance:
+    """Traceability metadata attached to a design produced by an estimator."""
+
+    method_id: str
+    confidence: str
+    assumptions: tuple[str, ...] = ()
+    warnings: tuple[str, ...] = ()
+    tolerance_m: float = 0.0
+    source_ids: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        if not self.method_id.strip():
+            raise ValueError("provenance method_id must not be empty")
+        if not self.confidence.strip():
+            raise ValueError("provenance confidence must not be empty")
+        ensure_non_negative(self.tolerance_m, name="tolerance_m")
+        object.__setattr__(self, "assumptions", tuple(self.assumptions))
+        object.__setattr__(self, "warnings", tuple(self.warnings))
+        object.__setattr__(self, "source_ids", tuple(self.source_ids))
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,6 +50,7 @@ class DesignVariant:
     antenna_type: str
     parameters: AntennaDesignParameters
     antenna: AntennaModel
+    provenance: DesignProvenance | None = None
 
     def __post_init__(self) -> None:
         if not self.name.strip():
@@ -46,6 +70,8 @@ class DesignVariant:
     def with_parameters(
         self,
         parameters: AntennaDesignParameters,
+        *,
+        provenance: DesignProvenance | None = None,
     ) -> DesignVariant:
         antenna = parameters.to_antenna(name=self.antenna.name).with_loads(self.antenna.loads)
         return replace(
@@ -53,6 +79,7 @@ class DesignVariant:
             antenna_type=antenna_type_for(parameters),
             parameters=parameters,
             antenna=antenna,
+            provenance=provenance,
         )
 
     def with_loads(self, loads: tuple[LumpedLoad, ...]) -> DesignVariant:

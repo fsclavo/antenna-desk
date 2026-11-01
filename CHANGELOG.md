@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   reference scaled by frequency).
 - `Design → Design from Frequency...` dialog with assumptions, warnings,
   confidence, sources, dimension table, and apply-to-current-design flow.
+- Applied estimates persist their method, confidence, assumptions, warnings,
+  tolerance, and source identifiers as optional design provenance; editing the
+  design clears it.
 - Traceable estimator contract with source identifiers and explicit unsupported
   cases for custom geometry and non-reference Yagi element counts.
 - Phase 1 domain model for units, geometry, conductors, feed points, ground

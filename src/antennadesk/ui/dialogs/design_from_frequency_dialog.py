@@ -383,10 +383,13 @@ class DesignFromFrequencyDialog(QDialog):
             return
         self.accept()
 
-    def estimated_parameters(self) -> AntennaDesignParameters:
+    def estimated_estimate(self) -> DimensionEstimate:
         if self._estimate is None:
             raise ValueError("no dimension estimate has been produced")
-        return self._estimate.parameters
+        return self._estimate
+
+    def estimated_parameters(self) -> AntennaDesignParameters:
+        return self.estimated_estimate().parameters
 
     def retranslate(self) -> None:
         self.setWindowTitle(self._translator.t("design_from_frequency.title"))

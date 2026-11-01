@@ -52,7 +52,7 @@ from ..domain.common.validation import Diagnostic, Severity
 from ..domain.environment.environment import Environment
 from ..domain.environment.ground import GroundKind, GroundModel
 from ..domain.measurement import Measurement, MeasurementPoint
-from ..domain.projects.project import DesignVariant, Project
+from ..domain.projects.project import DesignProvenance, DesignVariant, Project
 from ..domain.simulation.far_field import FarFieldRequest
 from ..domain.simulation.frequency import FrequencyPlan
 from ..domain.simulation.result import (
@@ -525,12 +525,22 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
     return None
 
 
+class DesignProvenancePayload(StrictModel):
+    method_id: str = Field(min_length=1)
+    confidence: str = Field(min_length=1)
+    assumptions: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    tolerance_m: float = Field(ge=0.0)
+    source_ids: list[str] = Field(default_factory=list)
+
+
 class DesignPayload(StrictModel):
     id: UUID
     name: str = Field(min_length=1)
     antenna_type: str = Field(min_length=1)
     parameters: ParameterPayload
     antenna: AntennaPayload
+    provenance: DesignProvenancePayload | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -1071,6 +1081,28 @@ def _simulation_run_from_domain(value: SimulationRun) -> SimulationRunPayload:
     )
 
 
+def _provenance_from_domain(value: DesignProvenance) -> DesignProvenancePayload:
+    return DesignProvenancePayload(
+        method_id=value.method_id,
+        confidence=value.confidence,
+        assumptions=list(value.assumptions),
+        warnings=list(value.warnings),
+        tolerance_m=value.tolerance_m,
+        source_ids=list(value.source_ids),
+    )
+
+
+def _provenance_to_domain(value: DesignProvenancePayload) -> DesignProvenance:
+    return DesignProvenance(
+        method_id=value.method_id,
+        confidence=value.confidence,
+        assumptions=tuple(value.assumptions),
+        warnings=tuple(value.warnings),
+        tolerance_m=value.tolerance_m,
+        source_ids=tuple(value.source_ids),
+    )
+
+
 def _design_from_domain(value: DesignVariant) -> DesignPayload:
     return DesignPayload(
         id=value.id,
@@ -1078,6 +1110,9 @@ def _design_from_domain(value: DesignVariant) -> DesignPayload:
         antenna_type=value.antenna_type,
         parameters=_parameters_from_domain(value.parameters),
         antenna=_antenna_from_domain(value.antenna),
+        provenance=(
+            _provenance_from_domain(value.provenance) if value.provenance is not None else None
+        ),
     )
 
 
@@ -1596,6 +1631,9 @@ def _design_to_domain(value: DesignPayload) -> DesignVariant:
         antenna_type=value.antenna_type,
         parameters=_parameters_to_domain(value),
         antenna=_antenna_to_domain(value.antenna),
+        provenance=(
+            _provenance_to_domain(value.provenance) if value.provenance is not None else None
+        ),
     )
 
 
