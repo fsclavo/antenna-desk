@@ -12,7 +12,7 @@ from ..antennas.antenna import AntennaModel
 from ..antennas.design import AntennaDesignParameters, antenna_type_for
 from ..antennas.feed_line import FeedLine
 from ..antennas.load import LumpedLoad
-from ..antennas.matching_network import LNetwork
+from ..antennas.matching_network import MatchingNetwork
 from ..common.time import ensure_utc
 from ..common.units import ensure_non_negative
 from ..common.validation import Diagnostic, Severity, raise_if_errors
@@ -100,7 +100,7 @@ class Project:
     simulation_runs: tuple[SimulationRun, ...] = field(default_factory=tuple)
     measurements: tuple[Measurement, ...] = field(default_factory=tuple)
     feed_line: FeedLine | None = None
-    matching_network: LNetwork | None = None
+    matching_network: MatchingNetwork | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "designs", tuple(self.designs))
@@ -281,7 +281,7 @@ class Project:
 
     def with_matching_network(
         self,
-        matching_network: LNetwork | None,
+        matching_network: MatchingNetwork | None,
         *,
         updated_at: datetime,
     ) -> Project:

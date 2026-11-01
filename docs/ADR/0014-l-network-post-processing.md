@@ -14,8 +14,9 @@ source/network layout that does not fit the canonical one-feed model.
 
 ## Decision
 
-1. Add a lossless **L-network** value object with one series and one shunt
-   reactive element, either orientation.
+1. Add lossless **L**, **Pi**, and **T** network value objects with ideal
+   reactive elements. The L network has one series and one shunt element;
+   Pi/T use three branches.
 2. Evaluate the network analytically in post-processing, before the feed line:
    antenna → matching network → feed line → transmitter.
 3. Persist the network as an optional project setting and in each simulation
@@ -25,8 +26,9 @@ source/network layout that does not fit the canonical one-feed model.
 5. Add a **parallel trap** helper to the load editor: the user enters
    inductance and resonant frequency; the capacitance is calculated and stored
    as a normal `ParallelLoad`/NEC `LD 1` load.
-6. Keep Pi/T networks, lossy networks, and automatic network synthesis out of
-   this slice.
+6. Provide automatic L-network synthesis from a load R/X at the design
+   frequency. Pi/T are manual designs in this slice.
+7. Keep lossy networks and automatic Pi/T synthesis out of this slice.
 
 ## Consequences
 
@@ -39,7 +41,7 @@ Positive:
 Limitations:
 
 - The network is ideal and lossless.
-- Only L topology is supported.
+- Pi/T networks are manual; only L has automatic synthesis.
 - The network is evaluated from the simulated antenna impedance, so it does not
   alter current distribution or pattern.
-- Component parasitics and network loss are not modeled.
+- Component parasitics, Q, and network loss are not modeled.

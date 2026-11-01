@@ -76,7 +76,7 @@ from ..domain.antennas.feed_line import FeedLine
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.load import LumpedLoad
-from ..domain.antennas.matching_network import LNetwork
+from ..domain.antennas.matching_network import MatchingNetwork
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
@@ -191,7 +191,7 @@ class MainWindow(QMainWindow):
         self._simulation_design_id: UUID | None = None
         self._loads: tuple[LumpedLoad, ...] = ()
         self._feed_line: FeedLine | None = None
-        self._matching_network: LNetwork | None = None
+        self._matching_network: MatchingNetwork | None = None
         self._custom_pattern_step_deg = DEFAULT_PATTERN_STEP_DEG
         self._last_status_key = "status.ready"
         self._thread: QThread | None = None

@@ -7,7 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from ..antennas.feed_line import FeedLine
-from ..antennas.matching_network import LNetwork
+from ..antennas.matching_network import MatchingNetwork
 from ..common.units import ensure_positive
 from .far_field import FarFieldRequest
 from .frequency import FrequencyPlan
@@ -27,7 +27,7 @@ class SimulationSpec:
     include_conductor_losses: bool = True
     far_field: FarFieldRequest = field(default_factory=FarFieldRequest)
     feed_line: FeedLine | None = None
-    matching_network: LNetwork | None = None
+    matching_network: MatchingNetwork | None = None
     timeout_s: float = 60.0
 
     def __post_init__(self) -> None:

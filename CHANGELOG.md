@@ -310,6 +310,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   project/run persistence and impedance/SWR diagnostics.
 - The matching-network dialog can auto-design an L section from a load R/X at
   the design frequency, or report that a single L section cannot match it.
+- Matching-network support now includes manual Pi and T topologies with
+  project/run persistence and input-impedance evaluation.
 - Added a parallel-trap helper to the load editor that computes capacitance from
   inductance and resonant frequency.
 

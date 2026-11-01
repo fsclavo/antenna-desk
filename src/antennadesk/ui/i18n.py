@@ -764,6 +764,42 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Shunt capacitance",
         Language.SPANISH: "Capacitancia paralelo",
     },
+    "matching_network.topology": {
+        Language.ENGLISH: "Topology",
+        Language.SPANISH: "Topología",
+    },
+    "matching_network.input_shunt_l": {
+        Language.ENGLISH: "Input shunt inductance",
+        Language.SPANISH: "Inductancia paralelo de entrada",
+    },
+    "matching_network.input_shunt_c": {
+        Language.ENGLISH: "Input shunt capacitance",
+        Language.SPANISH: "Capacitancia paralelo de entrada",
+    },
+    "matching_network.output_shunt_l": {
+        Language.ENGLISH: "Output shunt inductance",
+        Language.SPANISH: "Inductancia paralelo de salida",
+    },
+    "matching_network.output_shunt_c": {
+        Language.ENGLISH: "Output shunt capacitance",
+        Language.SPANISH: "Capacitancia paralelo de salida",
+    },
+    "matching_network.input_series_l": {
+        Language.ENGLISH: "Input series inductance",
+        Language.SPANISH: "Inductancia serie de entrada",
+    },
+    "matching_network.input_series_c": {
+        Language.ENGLISH: "Input series capacitance",
+        Language.SPANISH: "Capacitancia serie de entrada",
+    },
+    "matching_network.output_series_l": {
+        Language.ENGLISH: "Output series inductance",
+        Language.SPANISH: "Inductancia serie de salida",
+    },
+    "matching_network.output_series_c": {
+        Language.ENGLISH: "Output series capacitance",
+        Language.SPANISH: "Capacitancia serie de salida",
+    },
     "matching_network.load_r": {
         Language.ENGLISH: "Load R at design frequency",
         Language.SPANISH: "R de carga en la frecuencia de diseño",

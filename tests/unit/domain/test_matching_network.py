@@ -88,3 +88,34 @@ def test_auto_design_returns_none_for_an_already_matched_load() -> None:
     from antennadesk.domain.antennas.matching_network import design_l_network
 
     assert design_l_network(complex(50.0, 0.0), 14_100_000.0) is None
+
+
+def test_pi_network_with_only_a_series_element_is_a_series_reactance() -> None:
+    from antennadesk.domain.antennas.matching_network import PiNetwork
+
+    network = PiNetwork(series_inductance_h=1e-6)
+    frequency = 10_000_000.0
+    load = complex(50.0, 0.0)
+    expected = load + complex(0.0, 2.0 * math.pi * frequency * 1e-6)
+
+    assert network.input_impedance(load, frequency) == pytest.approx(expected)
+
+
+def test_t_network_with_only_a_shunt_element_is_a_shunt_reactance() -> None:
+    from antennadesk.domain.antennas.matching_network import TNetwork
+
+    network = TNetwork(shunt_capacitance_f=100e-12)
+    frequency = 10_000_000.0
+    load = complex(50.0, 0.0)
+    expected = 1.0 / (complex(0.0, 2.0 * math.pi * frequency * 100e-12) + 1.0 / load)
+
+    assert network.input_impedance(load, frequency) == pytest.approx(expected)
+
+
+def test_pi_and_t_networks_reject_empty_configurations() -> None:
+    from antennadesk.domain.antennas.matching_network import PiNetwork, TNetwork
+
+    with pytest.raises(ValueError, match="non-zero"):
+        PiNetwork()
+    with pytest.raises(ValueError, match="non-zero"):
+        TNetwork()

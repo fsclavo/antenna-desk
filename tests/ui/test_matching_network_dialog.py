@@ -49,3 +49,28 @@ def test_matching_network_dialog_auto_designs_an_l_network(qtbot: QtBot) -> None
     assert network.input_impedance(complex(100.0, 0.0), 10_000_000.0) == pytest.approx(
         complex(50.0, 0.0), abs=0.05
     )
+
+
+def test_matching_network_dialog_builds_pi_and_t_topologies(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.matching_network import PiNetwork, TNetwork
+
+    dialog = MatchingNetworkDialog(Translator(Language.ENGLISH))
+    qtbot.addWidget(dialog)
+    dialog._enabled.setChecked(True)
+    dialog._topology.setCurrentIndex(1)
+    dialog._series_l.setValue(1.0)
+    dialog._input_shunt_c.setValue(100.0)
+    dialog._output_shunt_c.setValue(120.0)
+
+    pi = dialog.network()
+    assert isinstance(pi, PiNetwork)
+    assert pi.input_shunt_capacitance_f == pytest.approx(100e-12)
+
+    dialog._topology.setCurrentIndex(2)
+    dialog._input_series_l.setValue(1.0)
+    dialog._shunt_c.setValue(100.0)
+    dialog._output_series_l.setValue(1.0)
+
+    t = dialog.network()
+    assert isinstance(t, TNetwork)
+    assert t.shunt_capacitance_f == pytest.approx(100e-12)

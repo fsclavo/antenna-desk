@@ -299,15 +299,15 @@ not part of the antenna geometry.
 
 ## Matching network and traps
 
-Use **Simulation → Matching Network...** to add a lossless L-network at the
-antenna feed. Set one series element and one shunt element (L or C), choose
-whether the shunt element is on the transmitter side, and apply it. Enter the
-load R/X at the design frequency and use **Auto-design L network** to calculate
-one valid L section; the dialog reports when a single section cannot match the
-load. The network is evaluated before the feed line: antenna → matching network
-→ feed line → transmitter. Impedance and SWR include the network; pattern and
-power gain remain antenna-side. Pi/T networks and lossy networks are not
-implemented.
+Use **Simulation → Matching Network...** to add a lossless matching network at
+the antenna feed. Choose **L**, **Pi**, or **T** topology and set the reactive
+elements in µH/pF. For an L network, choose whether the shunt element is on the
+transmitter side. Enter the load R/X at the design frequency and use
+**Auto-design L network** to calculate one valid L section; the dialog reports
+when a single section cannot match the load. Pi/T are manual designs in this
+slice. The network is evaluated before the feed line: antenna → matching
+network → feed line → transmitter. Impedance and SWR include the network;
+pattern and power gain remain antenna-side. Lossy networks are not implemented.
 
 In the load editor, **Add parallel trap** calculates the capacitance for a
 parallel LC trap from the entered inductance and resonant frequency. The trap is

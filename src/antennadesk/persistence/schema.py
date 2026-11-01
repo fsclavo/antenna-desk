@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import math
 from datetime import datetime
-from typing import Any, Self
+from typing import Any, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -41,7 +41,7 @@ from ..domain.antennas.loop import (
     MIN_SIDES,
     LoopParameters,
 )
-from ..domain.antennas.matching_network import LNetwork
+from ..domain.antennas.matching_network import LNetwork, MatchingNetwork, PiNetwork, TNetwork
 from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from ..domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
@@ -328,11 +328,20 @@ class FeedLinePayload(StrictModel):
 
 
 class LNetworkPayload(StrictModel):
+    topology: Literal["l", "pi", "t"] = "l"
     series_inductance_h: float = Field(default=0.0, ge=0.0)
     series_capacitance_f: float = Field(default=0.0, ge=0.0)
     shunt_inductance_h: float = Field(default=0.0, ge=0.0)
     shunt_capacitance_f: float = Field(default=0.0, ge=0.0)
     shunt_at_input: bool = False
+    input_shunt_inductance_h: float = Field(default=0.0, ge=0.0)
+    input_shunt_capacitance_f: float = Field(default=0.0, ge=0.0)
+    output_shunt_inductance_h: float = Field(default=0.0, ge=0.0)
+    output_shunt_capacitance_f: float = Field(default=0.0, ge=0.0)
+    input_series_inductance_h: float = Field(default=0.0, ge=0.0)
+    input_series_capacitance_f: float = Field(default=0.0, ge=0.0)
+    output_series_inductance_h: float = Field(default=0.0, ge=0.0)
+    output_series_capacitance_f: float = Field(default=0.0, ge=0.0)
 
 
 class FarFieldRequestPayload(StrictModel):
@@ -941,8 +950,29 @@ def _feed_line_from_domain(value: FeedLine) -> FeedLinePayload:
     )
 
 
-def _matching_network_from_domain(value: LNetwork) -> LNetworkPayload:
+def _matching_network_from_domain(value: MatchingNetwork) -> LNetworkPayload:
+    if isinstance(value, PiNetwork):
+        return LNetworkPayload(
+            topology="pi",
+            input_shunt_inductance_h=value.input_shunt_inductance_h,
+            input_shunt_capacitance_f=value.input_shunt_capacitance_f,
+            series_inductance_h=value.series_inductance_h,
+            series_capacitance_f=value.series_capacitance_f,
+            output_shunt_inductance_h=value.output_shunt_inductance_h,
+            output_shunt_capacitance_f=value.output_shunt_capacitance_f,
+        )
+    if isinstance(value, TNetwork):
+        return LNetworkPayload(
+            topology="t",
+            input_series_inductance_h=value.input_series_inductance_h,
+            input_series_capacitance_f=value.input_series_capacitance_f,
+            shunt_inductance_h=value.shunt_inductance_h,
+            shunt_capacitance_f=value.shunt_capacitance_f,
+            output_series_inductance_h=value.output_series_inductance_h,
+            output_series_capacitance_f=value.output_series_capacitance_f,
+        )
     return LNetworkPayload(
+        topology="l",
         series_inductance_h=value.series_inductance_h,
         series_capacitance_f=value.series_capacitance_f,
         shunt_inductance_h=value.shunt_inductance_h,
@@ -1509,7 +1539,25 @@ def _feed_line_to_domain(value: FeedLinePayload) -> FeedLine:
     )
 
 
-def _matching_network_to_domain(value: LNetworkPayload) -> LNetwork:
+def _matching_network_to_domain(value: LNetworkPayload) -> MatchingNetwork:
+    if value.topology == "pi":
+        return PiNetwork(
+            input_shunt_inductance_h=value.input_shunt_inductance_h,
+            input_shunt_capacitance_f=value.input_shunt_capacitance_f,
+            series_inductance_h=value.series_inductance_h,
+            series_capacitance_f=value.series_capacitance_f,
+            output_shunt_inductance_h=value.output_shunt_inductance_h,
+            output_shunt_capacitance_f=value.output_shunt_capacitance_f,
+        )
+    if value.topology == "t":
+        return TNetwork(
+            input_series_inductance_h=value.input_series_inductance_h,
+            input_series_capacitance_f=value.input_series_capacitance_f,
+            shunt_inductance_h=value.shunt_inductance_h,
+            shunt_capacitance_f=value.shunt_capacitance_f,
+            output_series_inductance_h=value.output_series_inductance_h,
+            output_series_capacitance_f=value.output_series_capacitance_f,
+        )
     return LNetwork(
         series_inductance_h=value.series_inductance_h,
         series_capacitance_f=value.series_capacitance_f,
