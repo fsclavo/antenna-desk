@@ -1305,12 +1305,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "No se pudo exportar: {message}",
     },
     "action.optimize": {
-        Language.ENGLISH: "Optimize Dimension...",
-        Language.SPANISH: "Optimizar dimensión...",
+        Language.ENGLISH: "Optimize...",
+        Language.SPANISH: "Optimizar...",
     },
     "action.design_from_frequency": {
-        Language.ENGLISH: "Design from Frequency...",
-        Language.SPANISH: "Diseñar desde frecuencia...",
+        Language.ENGLISH: "Estimate Dimensions...",
+        Language.SPANISH: "Estimar dimensiones...",
     },
     "action.synthesize": {
         Language.ENGLISH: "Synthesize Dimensions...",
@@ -1910,6 +1910,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Las posiciones y longitudes son editables. La antena generada es "
             "un diseño de hilos personalizado editable."
         ),
+    },
+    "element_optimize.vertical_title": {
+        Language.ENGLISH: "Optimize Vertical Elements",
+        Language.SPANISH: "Optimizar elementos de la vertical",
+    },
+    "element_optimize.inverted_v_title": {
+        Language.ENGLISH: "Optimize Inverted-V Elements",
+        Language.SPANISH: "Optimizar elementos de la V invertida",
+    },
+    "element_optimize.ringo_title": {
+        Language.ENGLISH: "Optimize Ringo Elements",
+        Language.SPANISH: "Optimizar elementos del Ringo",
     },
     "element_optimize.yagi_title": {
         Language.ENGLISH: "Optimize Yagi Elements",
@@ -2538,6 +2550,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "error.optimize": {
         Language.ENGLISH: "Optimization failed: {message}",
         Language.SPANISH: "Falló la optimización: {message}",
+    },
+    "error.optimize_custom": {
+        Language.ENGLISH: "Custom or imported geometry has no generic optimizer. Select variables explicitly or use a template.",
+        Language.SPANISH: "La geometría personalizada o importada no tiene un optimizador genérico. Seleccioná variables explícitamente o usá una plantilla.",
     },
     "synthesis.title": {
         Language.ENGLISH: "Synthesize Antenna Dimensions",

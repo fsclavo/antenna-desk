@@ -313,6 +313,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   builders.
 - Removed the obsolete template-specific optimization dialogs and workers; the
   generic dialog is now the only multi-element optimization UI.
+- Replaced the separate optimization menu actions with one **Optimize...**
+  action that dispatches from the current template, plus an Optimize button in
+  the design panel. Frequency-first estimation is now **Estimate Dimensions...**.
 - Added a lossless L matching network evaluated before the feed line, with
   project/run persistence and impedance/SWR diagnostics.
 - The matching-network dialog can auto-design an L section from a load R/X at

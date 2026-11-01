@@ -1198,12 +1198,14 @@ def test_main_menu_is_grouped_by_task(window: MainWindow) -> None:
     assert "Export Geometry PDF..." in export_menu_titles
     assert "Export Geometry DXF..." in export_menu_titles
     assert "Export PDF Report..." in export_menu_titles
-    assert "Optimize Dimension..." in design_titles
-    assert "Design from Frequency..." in design_titles
-    assert "Synthesize Dimensions..." in design_titles
-    assert "Optimize Yagi Elements..." in design_titles
-    assert "Optimize Fan Elements..." in design_titles
-    assert "Optimize Moxon Dimensions..." in design_titles
+    assert "Optimize..." in design_titles
+    assert "Estimate Dimensions..." in design_titles
+    assert "Optimize Dimension..." not in design_titles
+    assert "Design from Frequency..." not in design_titles
+    assert "Synthesize Dimensions..." not in design_titles
+    assert "Optimize Yagi Elements..." not in design_titles
+    assert "Optimize Fan Elements..." not in design_titles
+    assert "Optimize Moxon Dimensions..." not in design_titles
     assert "Edit Series Loads..." in design_titles
     assert "Simulate" in simulation_titles
     assert "Feed Line..." in simulation_titles

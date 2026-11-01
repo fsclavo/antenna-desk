@@ -252,17 +252,13 @@ class MainWindow(QMainWindow):
         self._compare_action = QAction(self)
         self._compare_action.triggered.connect(lambda: self.compare_variants())
         self._optimize_action = QAction(self)
-        self._optimize_action.triggered.connect(lambda: self.optimize_length())
+        self._optimize_action.triggered.connect(lambda: self.optimize_current_design())
+        self._synthesize_action = self._optimize_action
+        self._optimize_yagi_action = self._optimize_action
+        self._optimize_fan_action = self._optimize_action
+        self._optimize_moxon_action = self._optimize_action
         self._design_from_frequency_action = QAction(self)
         self._design_from_frequency_action.triggered.connect(lambda: self.design_from_frequency())
-        self._synthesize_action = QAction(self)
-        self._synthesize_action.triggered.connect(lambda: self.synthesize_dimensions())
-        self._optimize_yagi_action = QAction(self)
-        self._optimize_yagi_action.triggered.connect(lambda: self.optimize_yagi_elements())
-        self._optimize_fan_action = QAction(self)
-        self._optimize_fan_action.triggered.connect(lambda: self.optimize_fan_dipole_elements())
-        self._optimize_moxon_action = QAction(self)
-        self._optimize_moxon_action.triggered.connect(lambda: self.optimize_moxon_elements())
         self._construction_action = QAction(self)
         self._construction_action.triggered.connect(lambda: self.show_construction_sheet())
         self._loads_action = QAction(self)
@@ -479,13 +475,18 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._custom_panel)
         self._change_template_button = QPushButton(self)
         self._change_template_button.clicked.connect(lambda: self.change_template())
+        self._optimize_button = QPushButton(self)
+        self._optimize_button.clicked.connect(lambda: self.optimize_current_design())
         self._provenance_label = QLabel(self)
         self._provenance_label.setWordWrap(True)
         self._provenance_label.setVisible(False)
         design_panel = QWidget(self)
         design_layout = QVBoxLayout(design_panel)
         design_layout.setContentsMargins(0, 0, 0, 0)
-        design_layout.addWidget(self._change_template_button)
+        design_actions = QHBoxLayout()
+        design_actions.addWidget(self._change_template_button)
+        design_actions.addWidget(self._optimize_button)
+        design_layout.addLayout(design_actions)
         design_layout.addWidget(self._provenance_label)
         design_layout.addWidget(self._design_stack, 1)
 
@@ -599,10 +600,6 @@ class MainWindow(QMainWindow):
         self._variants_menu.addAction(self._compare_action)
         self._design_menu.addAction(self._optimize_action)
         self._design_menu.addAction(self._design_from_frequency_action)
-        self._design_menu.addAction(self._synthesize_action)
-        self._design_menu.addAction(self._optimize_yagi_action)
-        self._design_menu.addAction(self._optimize_fan_action)
-        self._design_menu.addAction(self._optimize_moxon_action)
         self._design_menu.addAction(self._construction_action)
         self._design_menu.addAction(self._loads_action)
         self._custom_menu = self._design_menu.addMenu("")
@@ -658,10 +655,7 @@ class MainWindow(QMainWindow):
         self._design_from_frequency_action.setText(
             self._translator.t("action.design_from_frequency")
         )
-        self._synthesize_action.setText(self._translator.t("action.synthesize"))
-        self._optimize_yagi_action.setText(self._translator.t("action.optimize_yagi"))
-        self._optimize_fan_action.setText(self._translator.t("action.optimize_fan"))
-        self._optimize_moxon_action.setText(self._translator.t("action.optimize_moxon"))
+        self._optimize_button.setText(self._translator.t("action.optimize"))
         self._construction_action.setText(self._translator.t("action.construction"))
         self._loads_action.setText(self._translator.t("action.loads"))
         self._edit_custom_action.setText(self._translator.t("action.edit_custom"))
@@ -802,40 +796,10 @@ class MainWindow(QMainWindow):
             parameters = design.parameters
         self._update_provenance_label(design)
         is_custom = isinstance(parameters, CustomAntennaParameters)
-        is_ocfd = isinstance(parameters, OCFDParameters)
-        is_vertical = isinstance(parameters, VerticalParameters)
-        is_inverted_v = isinstance(parameters, InvertedVParameters)
-        is_yagi = isinstance(parameters, YagiParameters)
-        is_moxon = isinstance(parameters, MoxonParameters)
-        is_fan_dipole = isinstance(parameters, FanDipoleParameters)
-        is_j_pole = isinstance(parameters, JPoleParameters)
-        is_ringo = isinstance(parameters, RingoParameters)
         self._design_from_frequency_action.setEnabled(idle and has_project)
-        self._optimize_action.setEnabled(
-            idle
-            and has_project
-            and not is_custom
-            and not is_vertical
-            and not is_inverted_v
-            and not is_yagi
-            and not is_moxon
-            and not is_fan_dipole
-            and not is_j_pole
-            and not is_ringo
-            and self._solver is not None
-        )
-        self._synthesize_action.setEnabled(
-            idle and has_project and (is_ocfd or is_j_pole) and self._solver is not None
-        )
-        self._optimize_yagi_action.setEnabled(
-            idle and has_project and is_yagi and self._solver is not None
-        )
-        self._optimize_fan_action.setEnabled(
-            idle and has_project and is_fan_dipole and self._solver is not None
-        )
-        self._optimize_moxon_action.setEnabled(
-            idle and has_project and is_moxon and self._solver is not None
-        )
+        optimize_enabled = idle and has_project and not is_custom and self._solver is not None
+        self._optimize_action.setEnabled(optimize_enabled)
+        self._optimize_button.setEnabled(optimize_enabled)
         self._loads_action.setEnabled(idle and has_project)
         self._edit_custom_action.setEnabled(idle and has_project and is_custom)
         self._convert_custom_action.setEnabled(idle and has_project and not is_custom)
@@ -2899,20 +2863,40 @@ class MainWindow(QMainWindow):
             self._open_refinement_for_current_design()
 
     def _open_refinement_for_current_design(self) -> None:
+        self.optimize_current_design()
+
+    def optimize_current_design(self) -> None:
         if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
             return
+        if self._solver is None:
+            self._show_error(self._translator.t("error.solver"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
         parameters = self._project.design_by_id(self._design_id).parameters
-        if isinstance(parameters, YagiParameters):
-            self.optimize_yagi_elements()
-            return
         if isinstance(parameters, (OCFDParameters, JPoleParameters)):
             self.synthesize_dimensions()
-            return
-        if self._optimize_action.isEnabled():
+        elif isinstance(parameters, YagiParameters):
+            self.optimize_yagi_elements()
+        elif isinstance(parameters, FanDipoleParameters):
+            self.optimize_fan_dipole_elements()
+        elif isinstance(parameters, MoxonParameters):
+            self.optimize_moxon_elements()
+        elif isinstance(parameters, VerticalParameters):
+            self.optimize_vertical_elements()
+        elif isinstance(parameters, InvertedVParameters):
+            self.optimize_inverted_v_elements()
+        elif isinstance(parameters, RingoParameters):
+            self.optimize_ringo_elements()
+        elif isinstance(parameters, CustomAntennaParameters):
+            self._show_error(self._translator.t("error.optimize_custom"))
+        else:
             self.optimize_length()
-            return
-        self._last_status_key = "status.estimate_apply_manual_refine"
-        self._update_status_text()
 
     def optimize_length(self) -> None:
         if self._project is None or self._design_id is None:
@@ -3260,6 +3244,186 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
+        self.simulate()
+
+    def optimize_vertical_elements(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._solver is None:
+            self._show_error(self._translator.t("error.solver"))
+            return
+        design = self._project.design_by_id(self._design_id)
+        if not isinstance(design.parameters, VerticalParameters):
+            return
+        parameters = design.parameters
+        variables = [
+            ElementOptimizationVariable(
+                "height_m", self._translator.t("field.height"), parameters.height_m
+            )
+        ]
+        if parameters.radial_count > 0:
+            variables.append(
+                ElementOptimizationVariable(
+                    "radial_length_m",
+                    self._translator.t("vertical.radial_length"),
+                    parameters.radial_length_m,
+                )
+            )
+
+        def build(values: dict[str, float]) -> VerticalParameters:
+            return replace(
+                parameters,
+                frequency_hz=values.get("__frequency_hz", parameters.frequency_hz),
+                height_m=values.get("height_m", parameters.height_m),
+                radial_length_m=values.get("radial_length_m", parameters.radial_length_m),
+            )
+
+        dialog = ElementOptimizationDialog(
+            self._translator,
+            self._unit_system,
+            self._solver,
+            replace(
+                self._vertical_simulation_spec(parameters),
+                feed_line=self._feed_line,
+                matching_network=self._matching_network,
+            ),
+            title_key="element_optimize.vertical_title",
+            variables=tuple(variables),
+            build_parameters=build,
+            objectives=(
+                ElementOptimizationObjective.TARGET_IMPEDANCE,
+                ElementOptimizationObjective.MAX_GAIN,
+                ElementOptimizationObjective.MAX_FRONT_TO_BACK,
+            ),
+            default_frequency_hz=parameters.frequency_hz,
+            parent=self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        selected = dialog.selected_parameters()
+        if selected is None:
+            return
+        self._vertical_form.set_parameters(selected)
+        self._form_dirty = True
+        self._apply_fields()
+        self.simulate()
+
+    def optimize_inverted_v_elements(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._solver is None:
+            self._show_error(self._translator.t("error.solver"))
+            return
+        design = self._project.design_by_id(self._design_id)
+        if not isinstance(design.parameters, InvertedVParameters):
+            return
+        parameters = design.parameters
+
+        def build(values: dict[str, float]) -> InvertedVParameters:
+            return replace(
+                parameters,
+                frequency_hz=values.get("__frequency_hz", parameters.frequency_hz),
+                leg_length_m=values.get("leg_length_m", parameters.leg_length_m),
+            )
+
+        dialog = ElementOptimizationDialog(
+            self._translator,
+            self._unit_system,
+            self._solver,
+            replace(
+                self._inverted_v_simulation_spec(parameters),
+                feed_line=self._feed_line,
+                matching_network=self._matching_network,
+            ),
+            title_key="element_optimize.inverted_v_title",
+            variables=(
+                ElementOptimizationVariable(
+                    "leg_length_m",
+                    self._translator.t("inverted_v.leg_length"),
+                    parameters.leg_length_m,
+                ),
+            ),
+            build_parameters=build,
+            objectives=(
+                ElementOptimizationObjective.TARGET_IMPEDANCE,
+                ElementOptimizationObjective.MAX_GAIN,
+                ElementOptimizationObjective.MAX_FRONT_TO_BACK,
+            ),
+            default_frequency_hz=parameters.frequency_hz,
+            parent=self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        selected = dialog.selected_parameters()
+        if selected is None:
+            return
+        self._inverted_v_form.set_parameters(selected)
+        self._form_dirty = True
+        self._apply_fields()
+        self.simulate()
+
+    def optimize_ringo_elements(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._solver is None:
+            self._show_error(self._translator.t("error.solver"))
+            return
+        design = self._project.design_by_id(self._design_id)
+        if not isinstance(design.parameters, RingoParameters):
+            return
+        parameters = design.parameters
+        variables = (
+            ElementOptimizationVariable(
+                "radiator_height_m",
+                self._translator.t("ringo.radiator_height"),
+                parameters.radiator_height_m,
+            ),
+            ElementOptimizationVariable(
+                "ring_diameter_m",
+                self._translator.t("ringo.ring_diameter"),
+                parameters.ring_diameter_m,
+            ),
+        )
+
+        def build(values: dict[str, float]) -> RingoParameters:
+            return replace(
+                parameters,
+                frequency_hz=values.get("__frequency_hz", parameters.frequency_hz),
+                radiator_height_m=values.get("radiator_height_m", parameters.radiator_height_m),
+                ring_diameter_m=values.get("ring_diameter_m", parameters.ring_diameter_m),
+            )
+
+        dialog = ElementOptimizationDialog(
+            self._translator,
+            self._unit_system,
+            self._solver,
+            replace(
+                self._ringo_simulation_spec(parameters),
+                feed_line=self._feed_line,
+                matching_network=self._matching_network,
+            ),
+            title_key="element_optimize.ringo_title",
+            variables=variables,
+            build_parameters=build,
+            objectives=(
+                ElementOptimizationObjective.TARGET_IMPEDANCE,
+                ElementOptimizationObjective.MAX_GAIN,
+                ElementOptimizationObjective.MAX_FRONT_TO_BACK,
+            ),
+            default_frequency_hz=parameters.frequency_hz,
+            parent=self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        selected = dialog.selected_parameters()
+        if selected is None:
+            return
+        self._ringo_form.set_parameters(selected)
+        self._form_dirty = True
+        self._apply_fields()
         self.simulate()
 
     def edit_loads(self) -> None:

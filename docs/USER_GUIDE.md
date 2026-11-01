@@ -73,16 +73,15 @@ exaggerate the height (1x, 1.5x, 2x, 3x) for low horizontal antennas.
 
 ## Design from frequency
 
-Use **Design → Design from Frequency...** to estimate initial dimensions from a
+Use **Design → Estimate Dimensions...** to estimate initial dimensions from a
 frequency and an antenna family. The dialog supports wire and folded dipoles,
 loops (generic, quad, delta), verticals in 1/4λ and 5/8λ, inverted-V, fan
 dipoles, end-fed wires, OCFD, J Pole, Slim Jim, Ringo, Yagi, and Moxon.
 
 The result is a **starting point**, not a verified construction measurement.
 The dialog shows assumptions, warnings, confidence, and dimension values. Apply
-the estimate to the current design, then use the existing **Optimize
-Dimension...**, **Optimize Yagi Elements...**, or synthesis tools to refine it
-with NEC. The checkbox **Open an optimizer or synthesis dialog after applying**
+the estimate to the current design, then use **Optimize...** to refine it with
+NEC. The checkbox **Open an optimizer or synthesis dialog after applying**
 does this in one step when a solver is configured. For Yagi, the frequency
 estimator supports 2 to 32 elements from the DL6WU trimming reference; the
 NBS five-element preset remains available in the Yagi editor.
@@ -125,7 +124,7 @@ radius. Add or remove elements, edit the values, and select the driven element.
 scaled to the selected frequency. Changing the frequency in the form rescales
 the current element positions and lengths by the wavelength ratio. If the
 element dimensions do not look consistent with the current frequency, the form
-shows a warning; use **Design → Design from Frequency...** to rebuild a
+shows a warning; use **Design → Estimate Dimensions...** to rebuild a
 2–32 element DL6WU starting design.
 
 The NBS preset is reference-backed for gain: the published design has 9.2 dBd
@@ -327,9 +326,11 @@ Simulate the variants you want to compare, then use **Design → Variants → Co
 overlay, and a gain-pattern overlay for the frequency nearest each variant's
 design frequency. Missing results are reported in the dialog.
 
-## Optimize the length
+## Optimize the current design
 
-Use **Optimize Dimension...** in the design panel or the **Design** menu. Choose the
+Use **Optimize...** in the design panel or the **Design** menu. The dialog adapts
+to the current template: single-dimension, multi-element, or impedance
+synthesis. For single-dimension templates, choose the
 objective: **target impedance** (selectable `R + jX`), **target reactance**
 (0 Ω for series resonance), **minimum SWR**, **maximum SWR bandwidth**,
 **maximum power gain**, **maximum efficiency**, or **balanced SWR + gain**.
@@ -367,7 +368,7 @@ dimension; the SWR/gain balance is a weighted score, not a Pareto optimizer.
 
 ## Optimize Yagi elements
 
-For a Yagi, use **Design → Optimize Yagi Elements...**. Select which element
+For a Yagi, use **Design → Optimize...**. Select which element
 lengths and boom gaps to include, choose the objective (**target impedance**,
 **maximum gain**, or **maximum front-to-back ratio**), and set the search
 margin, minimum gap, and evaluation budget. Target impedance also asks for R/X;
@@ -384,7 +385,7 @@ possible, a measurement.
 
 ## Optimize Moxon dimensions
 
-For a Moxon, use **Design → Optimize Moxon Dimensions...**. Choose the objective
+For a Moxon, use **Design → Optimize...**. Choose the objective
 (target impedance, maximum gain, or maximum front-to-back), the dimensions to
 include, the search margin, and the evaluation budget. Target impedance also
 asks for R/X; gain and F/B require a far-field request. The optimizer varies the
@@ -397,7 +398,7 @@ rejected, so verify the applied geometry with a full simulation.
 
 ## Optimize fan dipole elements
 
-For a fan dipole, use **Design → Optimize Fan Elements...**. Select the element
+For a fan dipole, use **Design → Optimize...**. Select the element
 pairs to include, set the target frequency and R/X, the search margin, and the
 evaluation budget. The optimizer performs a bounded coordinate search over the
 selected total element lengths and reports the best complex impedance match.
@@ -408,8 +409,8 @@ applying because the elements interact.
 
 ## Synthesize dimensions
 
-For an **OCFD**, **J Pole**, or **Slim Jim**, use **Design → Synthesize
-Dimensions...**. Set the target frequency and the desired feed-point
+For an **OCFD**, **J Pole**, or **Slim Jim**, use **Design → Optimize...**.
+Set the target frequency and the desired feed-point
 resistance/reactance, then choose bounds for the two search variables:
 
 - OCFD: total wire length and feed ratio.
