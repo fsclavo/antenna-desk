@@ -764,6 +764,26 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Shunt capacitance",
         Language.SPANISH: "Capacitancia paralelo",
     },
+    "matching_network.load_r": {
+        Language.ENGLISH: "Load R at design frequency",
+        Language.SPANISH: "R de carga en la frecuencia de diseño",
+    },
+    "matching_network.load_x": {
+        Language.ENGLISH: "Load X at design frequency",
+        Language.SPANISH: "X de carga en la frecuencia de diseño",
+    },
+    "matching_network.frequency": {
+        Language.ENGLISH: "Design frequency",
+        Language.SPANISH: "Frecuencia de diseño",
+    },
+    "matching_network.auto_design": {
+        Language.ENGLISH: "Auto-design L network",
+        Language.SPANISH: "Diseñar red L automáticamente",
+    },
+    "matching_network.auto_unavailable": {
+        Language.ENGLISH: "A single L section cannot match this load at the selected frequency.",
+        Language.SPANISH: "Una sola sección L no puede adaptar esta carga en la frecuencia elegida.",
+    },
     "matching_network.shunt_at_input": {
         Language.ENGLISH: "Shunt element on the transmitter side",
         Language.SPANISH: "Elemento paralelo del lado del transmisor",

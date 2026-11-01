@@ -33,3 +33,19 @@ def test_matching_network_dialog_can_disable_the_network(qtbot: QtBot) -> None:
     dialog._enabled.setChecked(False)
 
     assert dialog.network() is None
+
+
+def test_matching_network_dialog_auto_designs_an_l_network(qtbot: QtBot) -> None:
+    dialog = MatchingNetworkDialog(Translator(Language.ENGLISH))
+    qtbot.addWidget(dialog)
+    dialog._load_r.setValue(100.0)
+    dialog._load_x.setValue(0.0)
+    dialog._frequency.setValue(10.0)
+
+    dialog._auto.click()
+    network = dialog.network()
+
+    assert network is not None
+    assert network.input_impedance(complex(100.0, 0.0), 10_000_000.0) == pytest.approx(
+        complex(50.0, 0.0), abs=0.05
+    )

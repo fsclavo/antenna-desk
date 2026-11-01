@@ -1407,10 +1407,14 @@ class MainWindow(QMainWindow):
             self._update_title()
 
     def configure_matching_network(self) -> None:
+        frequency_hz = 14_100_000.0
+        if self._project is not None and self._design_id is not None:
+            frequency_hz = self._project.design_by_id(self._design_id).parameters.frequency_hz
         dialog = MatchingNetworkDialog(
             self._translator,
             self._matching_network,
             self,
+            frequency_hz=frequency_hz,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return

@@ -59,3 +59,32 @@ def test_network_rejects_series_l_and_c_together() -> None:
             series_capacitance_f=100e-12,
             shunt_capacitance_f=100e-12,
         )
+
+
+def test_designs_an_l_network_for_a_high_impedance_load() -> None:
+    from antennadesk.domain.antennas.matching_network import design_l_network
+
+    network = design_l_network(complex(100.0, 0.0), 10_000_000.0)
+
+    assert network is not None
+    assert network.input_impedance(complex(100.0, 0.0), 10_000_000.0) == pytest.approx(
+        complex(50.0, 0.0), abs=1e-6
+    )
+
+
+def test_designs_an_l_network_for_a_low_impedance_complex_load() -> None:
+    from antennadesk.domain.antennas.matching_network import design_l_network
+
+    load = complex(25.0, 10.0)
+    network = design_l_network(load, 14_100_000.0)
+
+    assert network is not None
+    assert network.input_impedance(load, 14_100_000.0) == pytest.approx(
+        complex(50.0, 0.0), abs=1e-6
+    )
+
+
+def test_auto_design_returns_none_for_an_already_matched_load() -> None:
+    from antennadesk.domain.antennas.matching_network import design_l_network
+
+    assert design_l_network(complex(50.0, 0.0), 14_100_000.0) is None

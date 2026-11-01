@@ -122,8 +122,9 @@ for build, smoke-test, and packaging steps.
   RLC loads, load markers, and report rows.
 - Optional transmitter-side feed line with characteristic impedance, length,
   velocity factor, matched loss, and transformed impedance/SWR.
-- Optional lossless L matching network at the feedpoint, evaluated before the
-  feed line, plus a parallel-trap helper in the load editor.
+- Optional lossless L matching network at the feedpoint, with automatic L
+  design from a load R/X, evaluated before the feed line, plus a parallel-trap
+  helper in the load editor.
 - Printable/HTML construction sheet with type-aware dimensions, feed position,
   loads, and simulated result.
 - CSV, PNG, SVG, PDF, and layered DXF export for results, patterns, and

@@ -308,6 +308,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   tip for target impedance, maximum gain, or maximum front-to-back ratio.
 - Added a lossless L matching network evaluated before the feed line, with
   project/run persistence and impedance/SWR diagnostics.
+- The matching-network dialog can auto-design an L section from a load R/X at
+  the design frequency, or report that a single L section cannot match it.
 - Added a parallel-trap helper to the load editor that computes capacitance from
   inductance and resonant frequency.
 
