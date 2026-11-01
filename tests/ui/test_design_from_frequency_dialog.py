@@ -63,14 +63,18 @@ def test_dialog_estimates_a_delta_loop(qtbot: QtBot) -> None:
     assert parameters.sides == 3
 
 
-def test_dialog_estimates_the_nbs_yagi(qtbot: QtBot) -> None:
+def test_dialog_estimates_dl6wu_yagis_from_two_to_fifteen_elements(
+    qtbot: QtBot,
+) -> None:
     dialog = _dialog(qtbot)
     dialog._family.setCurrentIndex(dialog._family.findData("yagi"))
-    dialog._run_estimate()
 
-    parameters = dialog.estimated_parameters()
-    assert isinstance(parameters, YagiParameters)
-    assert len(parameters.elements) == 5
+    for count in (2, 5, 15):
+        dialog._yagi_elements.setValue(count)
+        dialog._run_estimate()
+        parameters = dialog.estimated_parameters()
+        assert isinstance(parameters, YagiParameters)
+        assert len(parameters.elements) == count
 
 
 def test_dialog_shows_estimator_sources(qtbot: QtBot) -> None:

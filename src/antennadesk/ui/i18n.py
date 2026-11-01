@@ -544,8 +544,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "no se incluye el transformador de adaptación ni el contrapeso",
     },
     "estimator.assumption.yagi_reference": {
-        Language.ENGLISH: "dimensions are scaled from the NBS five-element reference",
-        Language.SPANISH: "las dimensiones se escalan desde la referencia NBS de cinco elementos",
+        Language.ENGLISH: "dimensions are scaled from the DL6WU trimming reference",
+        Language.SPANISH: "las dimensiones se escalan desde la referencia DL6WU",
+    },
+    "estimator.assumption.yagi_element_diameter": {
+        Language.ENGLISH: "the reference assumes 4 mm elements at 432 MHz; element-diameter correction is not applied",
+        Language.SPANISH: "la referencia supone elementos de 4 mm a 432 MHz; no se aplica corrección por diámetro",
     },
     "estimator.assumption.reference_scaling": {
         Language.ENGLISH: "dimensions are scaled from a published reference design",
@@ -586,6 +590,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "estimator.warning.moxon_gap": {
         Language.ENGLISH: "the Moxon gap is sensitive; verify the scaled design",
         Language.SPANISH: "el gap del Moxon es sensible; verificar el diseño escalado",
+    },
+    "source.cebik.dl6wu.32_element_rsgb": {
+        Language.ENGLISH: "Cebik DL6WU 32-element reference (RSGB VHF/UHF DX Book)",
+        Language.SPANISH: "Referencia DL6WU de 32 elementos de Cebik (RSGB VHF/UHF DX Book)",
     },
     "panel.results": {Language.ENGLISH: "Results", Language.SPANISH: "Resultados"},
     "field.project_name": {

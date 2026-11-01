@@ -83,9 +83,9 @@ The dialog shows assumptions, warnings, confidence, and dimension values. Apply
 the estimate to the current design, then use the existing **Optimize
 Dimension...**, **Optimize Yagi Elements...**, or synthesis tools to refine it
 with NEC. The checkbox **Open an optimizer or synthesis dialog after applying**
-does this in one step when a solver is configured. For Yagi, the initial
-estimator is the NBS five-element reference; other element counts remain
-editable in the Yagi editor.
+does this in one step when a solver is configured. For Yagi, the frequency
+estimator supports 2 to 15 elements from the DL6WU trimming reference; the
+NBS five-element preset remains available in the Yagi editor.
 
 ## Create an antenna
 

@@ -117,14 +117,25 @@ def test_j_pole_feed_offset_stays_inside_the_stub() -> None:
     assert parameters.folded is True
 
 
-def test_yagi_uses_the_reference_preset_and_rejects_other_counts() -> None:
-    estimate = estimate_intent(_intent("yagi", frequency_hz=144_000_000.0, yagi_elements=5))
-    assert isinstance(estimate.parameters, YagiParameters)
-    assert len(estimate.parameters.elements) == 5
-    assert estimate.confidence is Confidence.REFERENCE_SCALED
+def test_yagi_supports_two_through_fifteen_elements() -> None:
+    for count in range(2, 16):
+        estimate = estimate_intent(_intent("yagi", frequency_hz=144_000_000.0, yagi_elements=count))
+        parameters = estimate.parameters
 
+        assert isinstance(parameters, YagiParameters)
+        assert len(parameters.elements) == count
+        assert parameters.driven_index == 1
+        assert [element.position_m for element in parameters.elements] == sorted(
+            element.position_m for element in parameters.elements
+        )
+        assert estimate.method_id == "yagi.dl6wu_trimming_2_15"
+        assert estimate.confidence is Confidence.REFERENCE_SCALED
+        assert estimate.source_ids == ("cebik.dl6wu.32_element_rsgb",)
+
+    with pytest.raises(ValueError):
+        _intent("yagi", yagi_elements=1)
     with pytest.raises(UnsupportedEstimateError):
-        estimate_intent(_intent("yagi", yagi_elements=3))
+        estimate_intent(_intent("yagi", yagi_elements=16))
 
 
 def test_moxon_scales_the_published_reference() -> None:

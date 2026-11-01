@@ -152,7 +152,7 @@ class DesignFromFrequencyDialog(QDialog):
         self._radial_count.setValue(4)
 
         self._yagi_elements = QSpinBox(self)
-        self._yagi_elements.setRange(5, 5)
+        self._yagi_elements.setRange(2, 15)
         self._yagi_elements.setValue(5)
 
         self._form = QFormLayout()

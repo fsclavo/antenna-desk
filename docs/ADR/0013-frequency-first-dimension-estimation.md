@@ -52,14 +52,14 @@ Supported:
 - OCFD;
 - J Pole and Slim Jim;
 - Ringo (heuristic preset);
-- Yagi (NBS five-element reference);
+- Yagi (2–15 elements from the DL6WU trimming reference);
 - Moxon (Cebik reference scaled by frequency).
 
 Explicitly unsupported:
 
 - arbitrary custom geometry;
-- Yagi element counts other than the five-element NBS reference until
-  published tables are added.
+- Yagi element counts outside 2–15 until additional published tables are
+  added.
 
 ## Alternatives considered
 
@@ -83,7 +83,7 @@ Positive:
 Limitations:
 
 - Estimates are starting points, not validated construction dimensions.
-- Yagi support is limited to the reference preset in this milestone.
+- Yagi support is limited to the 2–15 element DL6WU trimming reference.
 - Ringo and Moxon use scaled presets.
 - Height, ground, and matching effects require simulation or measurement.
 - Editing a design clears its estimator provenance; re-estimate or refine it

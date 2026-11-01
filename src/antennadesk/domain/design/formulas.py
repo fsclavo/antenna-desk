@@ -29,6 +29,7 @@ SOURCE_ARRL_LOOP = "arrl.antenna_book.loop.resonant_circumference"
 SOURCE_ARRL_VERTICAL = "arrl.antenna_book.vertical.quarter_wave"
 SOURCE_NBS_YAGI = "nbs.tn688.five_element"
 SOURCE_CEBIK_MOXON = "cebik.moxon_review.table1"
+SOURCE_DL6WU_YAGI = "cebik.dl6wu.32_element_rsgb"
 SOURCE_APPLICATION_PRESET = "antennadesk.heuristic.application_preset"
 
 

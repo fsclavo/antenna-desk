@@ -23,7 +23,7 @@ from ..antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters, moxon_20m_wire
 from ..antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
 from ..antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
 from ..antennas.vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
-from ..antennas.yagi import ANTENNA_TYPE_YAGI, nbs_five_element
+from ..antennas.yagi import ANTENNA_TYPE_YAGI, YagiElement, YagiParameters
 from .estimate import Confidence, DimensionEstimate, DimensionRow, DimensionUnit
 from .formulas import (
     FOLDED_SPACING_FACTOR,
@@ -34,7 +34,7 @@ from .formulas import (
     SOURCE_ARRL_LOOP,
     SOURCE_ARRL_VERTICAL,
     SOURCE_CEBIK_MOXON,
-    SOURCE_NBS_YAGI,
+    SOURCE_DL6WU_YAGI,
     default_radial_length_m,
     five_eighth_wave_length_m,
     half_wave_length_m,
@@ -43,6 +43,7 @@ from .formulas import (
     wavelength_m,
 )
 from .intent import DesignIntent, VerticalForm
+from .yagi_reference import MAX_YAGI_ELEMENTS, MIN_YAGI_ELEMENTS, dl6wu_elements
 
 
 class UnsupportedEstimateError(ValueError):
@@ -400,37 +401,53 @@ def estimate_ringo(intent: DesignIntent) -> DimensionEstimate:
 
 
 def estimate_yagi(intent: DesignIntent) -> DimensionEstimate:
-    if intent.yagi_elements != 5:
+    if not MIN_YAGI_ELEMENTS <= intent.yagi_elements <= MAX_YAGI_ELEMENTS:
         raise UnsupportedEstimateError(
-            "the current Yagi estimator supports the NBS five-element reference only"
+            f"the Yagi estimator supports {MIN_YAGI_ELEMENTS} to {MAX_YAGI_ELEMENTS} elements"
         )
-    parameters = nbs_five_element(
+    wavelength = wavelength_m(intent.frequency_hz)
+    normalized = dl6wu_elements(intent.yagi_elements)
+    elements = tuple(
+        YagiElement(
+            position_m=spacing * wavelength,
+            length_m=length * wavelength,
+            radius_m=intent.wire_radius_m,
+        )
+        for length, spacing in normalized
+    )
+    parameters = YagiParameters(
         frequency_hz=intent.frequency_hz,
+        elements=elements,
         height_m=intent.height_m,
+        driven_index=1,
         azimuth_deg=intent.azimuth_deg,
         material=intent.material,
         ground=intent.ground,
-        radius_m=intent.wire_radius_m,
     )
-    rows = tuple(
-        _length_row("field.element_length", element.length_m) for element in parameters.elements
+    rows = (
+        _count_row("geometry.elements", len(elements)),
+        *tuple(_length_row("field.element_length", element.length_m) for element in elements),
+        _length_row(
+            "geometry.boom_length",
+            elements[-1].position_m - elements[0].position_m,
+        ),
+        _length_row("field.height", intent.height_m),
     )
     return DimensionEstimate(
         parameters=parameters,
-        method_id="yagi.nbs_five_element",
+        method_id="yagi.dl6wu_trimming_2_15",
         confidence=Confidence.REFERENCE_SCALED,
-        tolerance_m=wavelength_m(intent.frequency_hz) * 0.02,
-        source_ids=(SOURCE_NBS_YAGI,),
-        assumptions=("estimator.assumption.yagi_reference",),
+        tolerance_m=wavelength * 0.02,
+        source_ids=(SOURCE_DL6WU_YAGI,),
+        assumptions=(
+            "estimator.assumption.yagi_reference",
+            "estimator.assumption.yagi_element_diameter",
+        ),
         warnings=(
             "estimator.warning.starting_point",
             "estimator.warning.yagi_not_unique",
         ),
-        rows=(
-            _count_row("geometry.elements", len(parameters.elements)),
-            *rows,
-            _length_row("field.height", intent.height_m),
-        ),
+        rows=rows,
     )
 
 

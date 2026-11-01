@@ -565,3 +565,29 @@ def test_slim_jim_runs_with_the_feed_offset_above_the_base(
     assert result.frequencies
     assert result.frequencies[0].impedance_ohm.real > 0.0
     assert result.frequencies[0].swr is not None
+
+
+def test_dl6wu_yagi_estimator_produces_a_runnable_model(
+    solver: Nec2cSolver,
+) -> None:
+    from antennadesk.domain.design import DesignIntent, estimate_intent
+
+    estimate = estimate_intent(
+        DesignIntent(
+            frequency_hz=144_000_000.0,
+            antenna_type="yagi",
+            height_m=10.0,
+            yagi_elements=15,
+        )
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(144_000_000.0),
+        segmentation=SegmentationPolicy(segments_per_wire=7),
+        include_conductor_losses=False,
+    )
+
+    result = solver.run(estimate.parameters.to_antenna(), spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert result.frequencies
+    assert result.frequencies[0].impedance_ohm.real > 0.0
