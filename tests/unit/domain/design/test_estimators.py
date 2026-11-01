@@ -23,7 +23,9 @@ from antennadesk.domain.design import (
 from antennadesk.domain.design.estimators import SUPPORTED_ESTIMATOR_TYPES
 from antennadesk.domain.design.formulas import (
     HALF_WAVE_FACTOR,
+    half_wave_length_m,
     loop_circumference_m,
+    quarter_wave_length_m,
     wavelength_m,
 )
 
@@ -115,6 +117,18 @@ def test_j_pole_feed_offset_stays_inside_the_stub() -> None:
     assert isinstance(parameters, JPoleParameters)
     assert 0.0 < parameters.feed_offset_m < parameters.stub_length_m
     assert parameters.folded is True
+
+
+def test_j_pole_uses_total_three_quarter_wave_height() -> None:
+    estimate = estimate_intent(_intent("j_pole", frequency_hz=146_000_000.0, folded=False))
+    parameters = estimate.parameters
+
+    assert isinstance(parameters, JPoleParameters)
+    assert parameters.folded is False
+    assert parameters.radiator_height_m == pytest.approx(
+        half_wave_length_m(146_000_000.0) + quarter_wave_length_m(146_000_000.0)
+    )
+    assert parameters.feed_offset_m == pytest.approx(parameters.stub_length_m * 0.4)
 
 
 def test_yagi_supports_two_through_thirty_two_elements() -> None:

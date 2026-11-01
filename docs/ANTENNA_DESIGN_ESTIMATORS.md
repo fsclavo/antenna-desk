@@ -59,7 +59,7 @@ warnings, and a dimension tolerance.
 | Fan dipole | one half-wave element per band | empirical | Elements interact |
 | End-fed | half-wave wire | heuristic | Matching transformer and counterpoise not modeled |
 | OCFD | half-wave total, feed at 1/3 | heuristic | Existing synthesis can refine length/feed |
-| J Pole / Slim Jim | radiator half-wave, stub quarter-wave | empirical | Feed offset and stub need tuning |
+| J Pole / Slim Jim | J Pole: total 3/4-wave height, quarter-wave stub, feed at 40% of stub; Slim Jim: half-wave radiator above the folded stub | empirical | Feed offset and stub need tuning |
 | Ringo | scaled application preset | heuristic | Not a universal formula |
 | Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; optimize for the target |
 | Moxon | Cebik 20 m wire reference scaled by frequency | reference scaled | Gap and tips are sensitive |

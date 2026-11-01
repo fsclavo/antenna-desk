@@ -290,6 +290,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a published/heuristic OCFD sanity test for the 0.2 L feedpoint
   resistance range and the documented trend toward lower R as the feed moves
   toward the centre.
+- Fixed the frequency-first J Pole estimate: the non-folded J Pole now uses the
+  total 3/4-wave height and a 40% stub feed point; Slim Jim keeps its half-wave
+  radiator estimate.
 - Added a **Load 20 m wire reference preset** button to the Moxon editor and
   marked that preset as reference-backed in the catalog.
 - Added a bounded multi-variable coordinate-search optimizer in the domain.

@@ -327,10 +327,19 @@ def estimate_ocfd(intent: DesignIntent) -> DimensionEstimate:
 
 
 def estimate_j_pole(intent: DesignIntent) -> DimensionEstimate:
-    radiator = half_wave_length_m(intent.frequency_hz)
     stub = quarter_wave_length_m(intent.frequency_hz)
+    # A J pole is a half-wave radiator above a quarter-wave matching stub.
+    # In the non-folded geometry both start at the base, so the vertical
+    # radiator height is the total 3/4-wave height; the Slim Jim uses the
+    # half-wave radiator portion above its folded matching section.
+    radiator = (
+        half_wave_length_m(intent.frequency_hz) + stub
+        if not intent.folded
+        else half_wave_length_m(intent.frequency_hz)
+    )
     spacing = max(wavelength_m(intent.frequency_hz) * 0.02, 0.01)
-    feed_offset = intent.feed_offset_m if intent.feed_offset_m is not None else stub * 0.2
+    default_feed = stub * (0.4 if not intent.folded else 0.2)
+    feed_offset = intent.feed_offset_m if intent.feed_offset_m is not None else default_feed
     feed_offset = min(max(feed_offset, 1e-3), stub * 0.95)
     parameters = JPoleParameters(
         frequency_hz=intent.frequency_hz,
