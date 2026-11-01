@@ -311,6 +311,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - The shared engine now drives a generic multi-element dialog used by Yagi,
   fan-dipole, and Moxon optimization, with template-specific variables and
   builders.
+- Removed the obsolete template-specific optimization dialogs and workers; the
+  generic dialog is now the only multi-element optimization UI.
 - Added a lossless L matching network evaluated before the feed line, with
   project/run persistence and impedance/SWR diagnostics.
 - The matching-network dialog can auto-design an L section from a load R/X at
