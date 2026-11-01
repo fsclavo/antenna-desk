@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
     QWizard,
 )
 
+from .. import __version__
 from ..application.cancellation import EventCancelToken
 from ..application.ports.antenna_solver import AntennaSolver
 from ..application.ports.project_repository import ProjectRepository
@@ -3324,7 +3325,7 @@ class MainWindow(QMainWindow):
         QMessageBox.about(
             self,
             self._translator.t("app.title"),
-            self._translator.t("app.about"),
+            self._translator.t("app.about", version=__version__),
         )
 
     def _show_error(self, message: str) -> None:

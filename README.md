@@ -40,6 +40,17 @@ by type, and choose a wire dipole, folded dipole, loop, Yagi, inverted-V, or
 custom-wire design. The panel also converts an existing design between the
 basic template types.
 
+## Installation and release
+
+Install from a built wheel:
+
+```bash
+python -m pip install dist/antennadesk-*.whl
+```
+
+`nec2c` is an external runtime dependency. See [Release checklist](docs/RELEASE.md)
+for build, smoke-test, and packaging steps.
+
 ## Documentation
 
 - [Development blueprint](docs/antennadesk-development-blueprint.md)
@@ -48,6 +59,7 @@ basic template types.
 - [Solver adapter](docs/SOLVER_ADAPTER.md)
 - [Validation plan](docs/VALIDATION_PLAN.md)
 - [User guide](docs/USER_GUIDE.md)
+- [Release checklist](docs/RELEASE.md)
 - [Confirmed project decisions](docs/PROJECT_DECISIONS.md)
 - [ADR-0001 — MVP engine](docs/ADR/0001-solver-selection.md)
 - [ADR-0002 — Report and export formats](docs/ADR/0002-report-formats.md)

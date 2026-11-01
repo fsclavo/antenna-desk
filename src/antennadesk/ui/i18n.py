@@ -22,8 +22,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Sin título",
     },
     "app.about": {
-        Language.ENGLISH: "AntennaDesk — GPL-3.0-or-later\nLocal-first antenna design and simulation.",
-        Language.SPANISH: "AntennaDesk — GPL-3.0-or-later\nDiseño y simulación de antenas local-first.",
+        Language.ENGLISH: "AntennaDesk {version} — GPL-3.0-or-later\nLocal-first antenna design and simulation.",
+        Language.SPANISH: "AntennaDesk {version} — GPL-3.0-or-later\nDiseño y simulación de antenas local-first.",
     },
     "menu.file": {Language.ENGLISH: "File", Language.SPANISH: "Archivo"},
     "menu.import": {Language.ENGLISH: "Import", Language.SPANISH: "Importar"},

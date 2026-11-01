@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Single-sourced package version from `antennadesk.__version__`, About-dialog
+  version display, and a Hatchling wheel/sdist build with a package smoke-test
+  workflow.
 - Frequency-first dimension estimation for dipoles, folded dipoles, loops,
   verticals (1/4λ and 5/8λ), inverted-V, fan dipoles, end-fed, OCFD, J Pole,
   Slim Jim, Ringo, Yagi (NBS five-element reference), and Moxon (Cebik
