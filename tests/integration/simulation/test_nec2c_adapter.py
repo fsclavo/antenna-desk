@@ -363,6 +363,61 @@ def test_nbs_five_element_yagi_gain_reference(solver: Nec2cSolver) -> None:
     assert len(result.frequencies[0].currents) == 5 * 21
 
 
+def test_moxon_20m_wire_reference(solver: Nec2cSolver) -> None:
+    """Check the 20 m wire Moxon published by L. B. Cebik, W4RNL.
+
+    Source: "The Moxon Rectangle: A Review", Table 1 (20 m wire), and the
+    accompanying text: 56-58 ohm feedpoint, 5.8 dBi free-space gain, and
+    greater than 32 dB front-to-back ratio.
+    https://www.antentop.org/w4rnl.001/mox20.html
+    """
+
+    from antennadesk.domain.antennas.moxon import MoxonParameters
+
+    foot = 0.3048
+    parameters = MoxonParameters(
+        frequency_hz=14_170_000.0,
+        width_m=25.00 * foot,
+        depth_m=9.57 * foot,
+        reflector_tip_m=4.85 * foot,
+        driven_tip_m=4.00 * foot,
+        height_m=10.0,
+        wire_radius_m=0.000912,
+        ground=GroundModel.free_space(),
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(14_170_000.0),
+        segmentation=SegmentationPolicy(segments_per_wire=21),
+        far_field=FarFieldRequest(
+            enabled=True,
+            theta_count=37,
+            phi_start_deg=0.0,
+            phi_stop_deg=360.0,
+            phi_count=73,
+        ),
+    )
+
+    result = solver.run(parameters.to_antenna(name="Moxon 20 m reference"), spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    frequency = result.frequencies[0]
+    assert 56.0 <= frequency.impedance_ohm.real <= 58.0
+    assert abs(frequency.impedance_ohm.imag) < 5.0
+    assert result.max_total_gain_db == pytest.approx(5.8, abs=0.3)
+    forward = next(
+        point.gain_total_db
+        for point in frequency.far_field
+        if abs(point.theta_deg - 90.0) < 0.1 and abs(point.phi_deg) < 0.1
+    )
+    rear = next(
+        point.gain_total_db
+        for point in frequency.far_field
+        if abs(point.theta_deg - 90.0) < 0.1 and abs(point.phi_deg - 180.0) < 0.1
+    )
+    assert forward is not None and rear is not None
+    assert forward - rear > 30.0
+
+
 def test_vertical_generator_produces_a_usable_sweep(solver: Nec2cSolver) -> None:
     from antennadesk.domain.antennas.vertical import VerticalParameters
 

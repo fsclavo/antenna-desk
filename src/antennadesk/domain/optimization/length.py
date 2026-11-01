@@ -757,6 +757,51 @@ def _best_balanced_evaluation(
     return max(scored, key=lambda item: (item[1], -item[0].length_m))
 
 
+def rank_evaluations(
+    evaluations: Sequence[LengthEvaluation],
+    spec: LengthOptimizationSpec,
+) -> tuple[LengthEvaluation, ...]:
+    """Return evaluations ordered from best to worst for the active objective."""
+
+    def key(evaluation: LengthEvaluation) -> tuple[int, float, float]:
+        if evaluation.cancelled:
+            return (2, math.inf, math.inf)
+        impedance = evaluation.impedance_ohm
+        if impedance is None:
+            return (1, math.inf, math.inf)
+        if spec.objective is OptimizationObjective.REACTANCE:
+            value = abs(impedance.imag - spec.target_reactance_ohm)
+        elif spec.objective is OptimizationObjective.TARGET_IMPEDANCE:
+            target = complex(spec.target_resistance_ohm, spec.target_reactance_ohm)
+            value = abs(impedance - target)
+        elif spec.objective is OptimizationObjective.MIN_SWR:
+            if evaluation.swr is None or not math.isfinite(evaluation.swr):
+                return (1, math.inf, math.inf)
+            value = evaluation.swr
+        elif spec.objective is OptimizationObjective.MAX_BANDWIDTH:
+            if evaluation.bandwidth_hz is None or not math.isfinite(evaluation.bandwidth_hz):
+                return (1, math.inf, math.inf)
+            value = -evaluation.bandwidth_hz
+        elif spec.objective is OptimizationObjective.MAX_GAIN:
+            if evaluation.max_gain_db is None or not math.isfinite(evaluation.max_gain_db):
+                return (1, math.inf, math.inf)
+            value = -evaluation.max_gain_db
+        elif spec.objective is OptimizationObjective.MAX_EFFICIENCY:
+            if evaluation.efficiency_percent is None or not math.isfinite(
+                evaluation.efficiency_percent
+            ):
+                return (1, math.inf, math.inf)
+            value = -evaluation.efficiency_percent
+        else:
+            score = _balanced_score(evaluation, spec)
+            if score is None:
+                return (1, math.inf, math.inf)
+            value = -score
+        return (0, value, evaluation.length_m)
+
+    return tuple(sorted(evaluations, key=key))
+
+
 def optimize_balanced(
     evaluate: LengthEvaluator,
     spec: LengthOptimizationSpec,

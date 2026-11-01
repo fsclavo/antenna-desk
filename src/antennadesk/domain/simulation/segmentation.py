@@ -12,7 +12,7 @@ from ..antennas.wire import Wire
 from ..common import units
 from ..common.units import ensure_positive
 
-DEFAULT_TARGET_SEGMENT_LENGTH_WAVELENGTHS = 0.02
+DEFAULT_TARGET_SEGMENT_LENGTH_WAVELENGTHS = 0.05
 DEFAULT_MAX_SEGMENTS_PER_WIRE = 1_000
 
 

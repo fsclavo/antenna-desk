@@ -156,6 +156,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (MIT, GPL-3.0-compatible).
 - Deterministic scene snapshots for every antenna family and 2D view, with an
   explicit update command for intentional shape changes.
+- Performance-safe simulation defaults: 0.05λ segmentation target and 31-point
+  sweeps for generated templates, fixing 60-second timeouts on large radial
+  vertical models while keeping reference cases explicitly fine-segmented.
 - Interactive isometric geometry rotation with mouse drag and double-click
   reset.
 
@@ -252,6 +255,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   selectable complex target `R + jX` and ranks candidates by impedance error;
   OCFD and end-fed wire designs can now be length-optimized against that
   target.
+- Optimization and synthesis result tables are ranked from best to worst by the
+  active objective, with a visible rank column, the original evaluation number,
+  and failed evaluations last. Synthesis rows also show the complex impedance
+  error against the target.
+- Measurement comparison now plots measured and simulated SWR, resistance,
+  reactance, or impedance magnitude, and reports measured/simulated series
+  resonances with their frequency difference.
+- Added a reference-backed Moxon validation test using the published 20 m wire
+  dimensions and free-space gain, impedance, and front-to-back values from
+  L. B. Cebik, W4RNL.
+- Added a bounded multi-variable coordinate-search optimizer in the domain.
+- Added the first multi-element Yagi workflow: select element lengths and boom
+  gaps, set a target R/X, constrain the search around the current dimensions,
+  enforce a minimum gap and keep the first element fixed, review a ranked
+  evaluation table, and apply the best geometry for a full simulation. Radii
+  remain fixed in this slice.
 
 - Documentation and README are now in English.
 

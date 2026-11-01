@@ -67,9 +67,12 @@ def test_explicit_segment_count() -> None:
     assert policy.segments_for(_wire(length_m=0.5), 299_800_000.0) == 7
 
 
-def test_default_segment_count_uses_shortest_wavelength() -> None:
+def test_default_segment_count_uses_a_five_percent_wavelength_target() -> None:
     policy = SegmentationPolicy()
-    assert policy.segments_for(_wire(length_m=20.0), 7_100_000.0) == 24
+    assert policy.segments_for(_wire(length_m=20.0), 7_100_000.0) == 10
+
+    fine = SegmentationPolicy(target_segment_length_wavelengths=0.02)
+    assert fine.segments_for(_wire(length_m=20.0), 7_100_000.0) == 24
 
 
 def test_segment_count_is_clamped() -> None:

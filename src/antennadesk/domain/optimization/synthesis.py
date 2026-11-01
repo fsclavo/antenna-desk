@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -87,6 +87,24 @@ def _score(impedance: complex | None, target: SynthesisTarget) -> float | None:
     if impedance is None:
         return None
     return abs(impedance - target.impedance_ohm)
+
+
+def rank_evaluations(
+    evaluations: Sequence[SynthesisEvaluation],
+    target: SynthesisTarget,
+) -> tuple[SynthesisEvaluation, ...]:
+    """Return evaluations ordered by complex impedance error."""
+
+    def key(evaluation: SynthesisEvaluation) -> tuple[int, float, int]:
+        if evaluation.impedance_ohm is None:
+            return (1, math.inf, evaluation.index)
+        return (
+            0,
+            abs(evaluation.impedance_ohm - target.impedance_ohm),
+            evaluation.index,
+        )
+
+    return tuple(sorted(evaluations, key=key))
 
 
 def synthesize_grid(

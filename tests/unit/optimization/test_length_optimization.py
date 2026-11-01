@@ -10,6 +10,7 @@ from antennadesk.domain.optimization.length import (
     LengthOptimizationStatus,
     OptimizationObjective,
     optimize_length,
+    rank_evaluations,
 )
 
 
@@ -91,6 +92,25 @@ def test_reports_an_unreachable_impedance_target() -> None:
     assert result.status is LengthOptimizationStatus.MAX_EVALUATIONS
     assert result.best_impedance_error_ohm is not None
     assert result.best_impedance_error_ohm > spec.impedance_tolerance_ohm
+
+
+def test_rank_evaluations_orders_by_target_impedance() -> None:
+    spec = LengthOptimizationSpec(
+        min_length_m=18.0,
+        max_length_m=22.0,
+        objective=OptimizationObjective.TARGET_IMPEDANCE,
+        target_resistance_ohm=200.0,
+        target_reactance_ohm=0.0,
+    )
+    evaluations = (
+        LengthEvaluation(19.0, complex(250.0, 0.0), 1.0, index=1),
+        LengthEvaluation(20.0, complex(200.0, 0.0), 1.0, index=2),
+        LengthEvaluation(21.0, None, error="failed", index=3),
+    )
+
+    ordered = rank_evaluations(evaluations, spec)
+
+    assert [evaluation.index for evaluation in ordered] == [2, 1, 3]
 
 
 def test_reports_when_the_target_is_not_bracketed() -> None:

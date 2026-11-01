@@ -958,6 +958,65 @@ def test_new_yagi_creates_a_first_class_design(
     window._dirty = False
 
 
+def test_optimize_yagi_applies_and_simulates(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+
+    parameters = nbs_five_element(frequency_hz=14_100_000.0, height_m=12.0)
+
+    class FakeYagiDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> object:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "YagiDialog", FakeYagiDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Yagi", True))
+    window.new_yagi_antenna()
+
+    elements = list(parameters.elements)
+    elements[0] = replace(elements[0], length_m=elements[0].length_m + 0.1)
+    optimized = replace(parameters, elements=tuple(elements))
+
+    class FakeYagiOptimizationDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def selected_parameters(self) -> object:
+            return optimized
+
+    monkeypatch.setattr(
+        main_window_module,
+        "YagiOptimizationDialog",
+        FakeYagiOptimizationDialog,
+    )
+
+    assert window._optimize_yagi_action.isEnabled() is True
+    monkeypatch.setattr(window, "simulate", lambda: None)
+    window.optimize_yagi_elements()
+
+    assert window._yagi_form.parameters().elements[0].length_m == pytest.approx(
+        optimized.elements[0].length_m, abs=1e-3
+    )
+    assert window._project is not None
+    assert window._project.designs[0].parameters.elements[0].length_m == pytest.approx(
+        optimized.elements[0].length_m, abs=1e-3
+    )
+    window._dirty = False
+
+
 def test_new_inverted_v_creates_a_first_class_design(
     window: MainWindow,
     qtbot: QtBot,
@@ -1141,6 +1200,7 @@ def test_main_menu_is_grouped_by_task(window: MainWindow) -> None:
     assert "Export PDF Report..." in export_menu_titles
     assert "Optimize Dimension..." in design_titles
     assert "Synthesize Dimensions..." in design_titles
+    assert "Optimize Yagi Elements..." in design_titles
     assert "Edit Series Loads..." in design_titles
     assert "Simulate" in simulation_titles
     assert "Feed Line..." in simulation_titles
@@ -1503,3 +1563,30 @@ def test_new_delta_and_quad_loop_pass_the_expected_side_count(
 
     assert captured["initial_antenna_type"] == "loop"
     assert captured["initial_sides"] == 4
+
+
+def test_vertical_spec_uses_performance_safe_defaults(window: MainWindow) -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+    from antennadesk.domain.environment.ground import GroundModel
+
+    parameters = VerticalParameters(
+        frequency_hz=146_000_000.0,
+        height_m=2.0,
+        base_height_m=0.25,
+        radial_count=16,
+        radial_length_m=5.0,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    )
+
+    spec = window._vertical_simulation_spec(parameters)
+    model = parameters.to_antenna()
+    segments = sum(
+        spec.segmentation.segments_for(wire, parameters.frequency_hz * 1.05) for wire in model.wires
+    )
+
+    assert spec.frequency_plan.count == 31
+    assert spec.segmentation.target_segment_length_wavelengths == pytest.approx(0.05)
+    assert segments == 855

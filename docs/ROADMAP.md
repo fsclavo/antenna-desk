@@ -38,8 +38,8 @@ Completed:
 - Guided dipole, folded dipole, vertical loop, and custom wires.
 - Series/parallel loads, optimization objectives, feed line, pattern resolution.
 - A/B comparison, construction sheets, CSV/HTML/PDF exports.
-- Reference anchors for NEC examples and selected ARRL dipole/folded/loop
-  properties.
+- Reference anchors for NEC examples, selected ARRL dipole/folded/loop
+  properties, and the published Cebik 20 m wire Moxon.
 
 Completed:
 
@@ -94,8 +94,11 @@ Deferred:
 
 ### M4 — Advanced design and measurement
 
-- Multi-element optimization and constrained geometry.
-- VNA CSV import and measurement comparison (completed first slice).
+- Multi-element optimization and constrained geometry. First slice: bounded
+  Yagi element-length and boom-gap optimization against a target impedance,
+  with a minimum-gap constraint and fixed radii.
+- VNA CSV import and measured/simulated SWR, R, X, and |Z| comparison, plus
+  resonance difference (completed first slice).
 - Measurement conditions and reference-plane metadata (completed first slice).
 - Bounded impedance synthesis for OCFD, J Pole, and Slim Jim (completed first
   slice).
@@ -117,7 +120,7 @@ Deferred:
 | P1 | Vertical with radial screen | B/C | done |
 | P2 | VNA CSV and measurement records | A | in progress |
 | P2 | Bounded OCFD/J-Pole impedance synthesis | C | done |
-| P2 | Multi-element optimization | n/a | pending |
+| P2 | Multi-element optimization | n/a | in progress |
 | P2 | Packaging and release hardening | n/a | pending |
 
 ## Definition of done for a generator

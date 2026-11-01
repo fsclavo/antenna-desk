@@ -134,6 +134,7 @@ from .dialogs.ringo_dialog import RingoDialog
 from .dialogs.synthesis_dialog import SynthesisDialog
 from .dialogs.vertical_dialog import VerticalDialog
 from .dialogs.yagi_dialog import YagiDialog
+from .dialogs.yagi_optimization_dialog import YagiOptimizationDialog
 from .i18n import Language, Translator
 from .pattern_resolution import DEFAULT_PATTERN_STEP_DEG, far_field_request
 from .report_pdf import write_report_pdf
@@ -152,6 +153,8 @@ from .widgets.vertical_form import VerticalForm
 from .widgets.yagi_form import YagiForm
 from .wizard.dipole_wizard import DipoleWizard
 from .workers.simulation_worker import SimulationWorker
+
+DEFAULT_GENERATED_SWEEP_POINTS = 31
 
 
 class MainWindow(QMainWindow):
@@ -241,6 +244,8 @@ class MainWindow(QMainWindow):
         self._optimize_action.triggered.connect(lambda: self.optimize_length())
         self._synthesize_action = QAction(self)
         self._synthesize_action.triggered.connect(lambda: self.synthesize_dimensions())
+        self._optimize_yagi_action = QAction(self)
+        self._optimize_yagi_action.triggered.connect(lambda: self.optimize_yagi_elements())
         self._construction_action = QAction(self)
         self._construction_action.triggered.connect(lambda: self.show_construction_sheet())
         self._loads_action = QAction(self)
@@ -571,6 +576,7 @@ class MainWindow(QMainWindow):
         self._variants_menu.addAction(self._compare_action)
         self._design_menu.addAction(self._optimize_action)
         self._design_menu.addAction(self._synthesize_action)
+        self._design_menu.addAction(self._optimize_yagi_action)
         self._design_menu.addAction(self._construction_action)
         self._design_menu.addAction(self._loads_action)
         self._custom_menu = self._design_menu.addMenu("")
@@ -622,6 +628,7 @@ class MainWindow(QMainWindow):
         self._compare_action.setText(self._translator.t("action.compare"))
         self._optimize_action.setText(self._translator.t("action.optimize"))
         self._synthesize_action.setText(self._translator.t("action.synthesize"))
+        self._optimize_yagi_action.setText(self._translator.t("action.optimize_yagi"))
         self._construction_action.setText(self._translator.t("action.construction"))
         self._loads_action.setText(self._translator.t("action.loads"))
         self._edit_custom_action.setText(self._translator.t("action.edit_custom"))
@@ -763,6 +770,9 @@ class MainWindow(QMainWindow):
         )
         self._synthesize_action.setEnabled(
             idle and has_project and (is_ocfd or is_j_pole) and self._solver is not None
+        )
+        self._optimize_yagi_action.setEnabled(
+            idle and has_project and is_yagi and self._solver is not None
         )
         self._loads_action.setEnabled(idle and has_project)
         self._edit_custom_action.setEnabled(idle and has_project and is_custom)
@@ -1471,7 +1481,7 @@ class MainWindow(QMainWindow):
             frequency_plan=FrequencyPlan.sweep(
                 frequency_hz * 0.95,
                 frequency_hz * 1.05,
-                100,
+                DEFAULT_GENERATED_SWEEP_POINTS,
             ),
             segmentation=aligned_policy_for_model(
                 model,
@@ -1488,7 +1498,7 @@ class MainWindow(QMainWindow):
             frequency_plan=FrequencyPlan.sweep(
                 frequency_hz * 0.95,
                 frequency_hz * 1.05,
-                100,
+                DEFAULT_GENERATED_SWEEP_POINTS,
             ),
             segmentation=aligned_policy_for_model(
                 model,
@@ -1505,7 +1515,7 @@ class MainWindow(QMainWindow):
             frequency_plan=FrequencyPlan.sweep(
                 frequency_hz * 0.95,
                 frequency_hz * 1.05,
-                100,
+                DEFAULT_GENERATED_SWEEP_POINTS,
             ),
             segmentation=aligned_policy_for_model(
                 model,
@@ -1522,7 +1532,7 @@ class MainWindow(QMainWindow):
             frequency_plan=FrequencyPlan.sweep(
                 frequency_hz * 0.95,
                 frequency_hz * 1.05,
-                100,
+                DEFAULT_GENERATED_SWEEP_POINTS,
             ),
             segmentation=aligned_policy_for_model(
                 model,
@@ -1539,7 +1549,7 @@ class MainWindow(QMainWindow):
             frequency_plan=FrequencyPlan.sweep(
                 frequency_hz * 0.95,
                 frequency_hz * 1.05,
-                100,
+                DEFAULT_GENERATED_SWEEP_POINTS,
             ),
             segmentation=aligned_policy_for_model(
                 model,
@@ -1559,7 +1569,7 @@ class MainWindow(QMainWindow):
             frequency_plan=FrequencyPlan.sweep(
                 frequency_hz * 0.95,
                 frequency_hz * 1.05,
-                100,
+                DEFAULT_GENERATED_SWEEP_POINTS,
             ),
             segmentation=aligned_policy_for_model(
                 model,
@@ -1576,7 +1586,7 @@ class MainWindow(QMainWindow):
             frequency_plan=FrequencyPlan.sweep(
                 frequency_hz * 0.95,
                 frequency_hz * 1.05,
-                100,
+                DEFAULT_GENERATED_SWEEP_POINTS,
             ),
             segmentation=aligned_policy_for_model(
                 model,
@@ -1593,7 +1603,7 @@ class MainWindow(QMainWindow):
             frequency_plan=FrequencyPlan.sweep(
                 frequency_hz * 0.95,
                 frequency_hz * 1.05,
-                100,
+                DEFAULT_GENERATED_SWEEP_POINTS,
             ),
             segmentation=aligned_policy_for_model(
                 model,
@@ -1610,7 +1620,7 @@ class MainWindow(QMainWindow):
             frequency_plan=FrequencyPlan.sweep(
                 frequency_hz * 0.95,
                 frequency_hz * 1.05,
-                100,
+                DEFAULT_GENERATED_SWEEP_POINTS,
             ),
             segmentation=aligned_policy_for_model(
                 model,
@@ -2755,6 +2765,47 @@ class MainWindow(QMainWindow):
                 self._j_pole_form.set_parameters(parameters)
             else:
                 return
+            self._form_dirty = True
+            self._apply_fields()
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self.simulate()
+
+    def optimize_yagi_elements(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._solver is None:
+            self._show_error(self._translator.t("error.solver"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        design = self._project.design_by_id(self._design_id)
+        if not isinstance(design.parameters, YagiParameters):
+            return
+        dialog = YagiOptimizationDialog(
+            self._translator,
+            self._unit_system,
+            self._solver,
+            design.parameters,
+            replace(
+                self._yagi_simulation_spec(design.parameters),
+                feed_line=self._feed_line,
+            ),
+            self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        parameters = dialog.selected_parameters()
+        if parameters is None:
+            return
+        try:
+            self._yagi_form.set_parameters(parameters)
             self._form_dirty = True
             self._apply_fields()
         except Exception as exc:

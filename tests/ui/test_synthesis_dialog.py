@@ -128,6 +128,9 @@ def test_synthesis_dialog_finds_ocfd_dimensions(qtbot: QtBot) -> None:
     assert isinstance(selected, OCFDParameters)
     assert selected.total_length_m == pytest.approx(20.0, abs=0.01)
     assert selected.feed_ratio == pytest.approx(0.33, abs=0.001)
+    assert dialog._evaluations.columnCount() == 9
+    assert dialog._evaluations.item(0, 0).text() == "1"
+    assert dialog._evaluations.item(0, 7).text() == "0.000"
     assert dialog._apply.isEnabled() is True
 
     dialog._apply.click()

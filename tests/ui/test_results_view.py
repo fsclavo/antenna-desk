@@ -219,6 +219,43 @@ def test_impedance_and_swr_charts_are_side_by_side(qtbot: QtBot) -> None:
     assert view._impedance_charts_splitter.count() == 2
 
 
+def test_results_view_compares_measured_and_simulated_impedance(qtbot: QtBot) -> None:
+    from uuid import UUID
+
+    from antennadesk.domain.measurement import Measurement, MeasurementPoint
+
+    measurement = Measurement(
+        id=UUID("00000000-0000-0000-0000-000000000003"),
+        name="Field sweep",
+        created_at=datetime(2026, 10, 30, tzinfo=UTC),
+        reference_impedance_ohm=50.0,
+        points=(
+            MeasurementPoint(7_000_000.0, complex(70.0, -10.0)),
+            MeasurementPoint(7_100_000.0, complex(75.0, 0.0)),
+            MeasurementPoint(7_200_000.0, complex(80.0, 10.0)),
+        ),
+    )
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+
+    view.set_measurements((measurement,))
+    view.set_result(_make_result())
+
+    assert view._measurement_metric.count() == 4
+    assert view._measurement_table.columnCount() == 8
+    assert len(view._measurement_plot.listDataItems()) == 2
+    assert "Compared 3 points" in view._measurement_comparison.text()
+    assert "mean" in view._measurement_comparison.text()
+    assert "Measured resonance" in view._measurement_resonance.text()
+    assert "Simulated resonance" in view._measurement_resonance.text()
+    assert "Resonance difference" in view._measurement_resonance.text()
+
+    view._measurement_metric.setCurrentIndex(1)
+
+    assert view._measurement_plot.getAxis("left").labelText == "R (Ω)"
+    assert len(view._measurement_plot.listDataItems()) == 2
+
+
 def test_results_view_shows_imported_measurements(qtbot: QtBot) -> None:
     from datetime import UTC, datetime
     from uuid import UUID

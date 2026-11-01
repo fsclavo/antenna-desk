@@ -218,8 +218,9 @@ raw coordinates.
   realized gain.
 - **Currents**: segment current magnitude for the selected frequency, with the
   feed segment marked.
-- **Measurements**: imported VNA sweeps with measured SWR and a simulated SWR
-  overlay for the current design.
+- **Measurements**: imported VNA sweeps with measured and simulated SWR,
+  resistance, reactance, or |Z|, plus measured/simulated resonance and their
+  frequency difference.
 - **Diagnostics**: solver version, status, duration, fingerprint, and warnings
   or errors.
 - **Raw data**: the generated NEC input deck and the raw solver output.
@@ -239,8 +240,12 @@ the radiation pattern: 10° (normal), 5° (fine, default), 2° (very fine), or 1
 The form shows the estimated number of pattern points. More points produce
 smoother cuts and a smoother 3D lobe, but increase solver time and project
 size; use high resolution for final runs rather than routine exploration.
-Custom and generated designs have their own sweep controls in the custom panel;
-they default to 100 points around the design frequency.
+Custom designs have their own sweep controls and default to 100 points.
+Generated templates use a 31-point sweep around the design frequency to keep
+large radial models responsive. Default segmentation targets 0.05 wavelength
+per segment; this is a standard accuracy/performance compromise. Very large
+models can still be slow, so reduce radial count/length or pattern resolution
+for routine exploration.
 
 ## Import VNA measurements
 
@@ -248,9 +253,11 @@ Use **File → Import → VNA CSV...** to add a measured sweep. The importer acc
 frequency/R/X columns, S11 real/imaginary columns, or magnitude/phase columns.
 Before importing, a details dialog asks for the measurement name, calibration,
 reference plane, feed line/accessories, and optional notes. The measurement is
-stored in the project and appears in the **Measurements** tab, with measured SWR
-and the current simulated SWR overlaid. Imported data is treated as untrusted
-input; invalid rows are skipped with warnings.
+stored in the project and appears in the **Measurements** tab. Use the
+**Plot** selector to compare measured and simulated SWR, R, X, or |Z|. The tab
+also reports the measured and simulated series resonances and their frequency
+difference. Imported data is treated as untrusted input; invalid rows are
+skipped with warnings.
 
 ## Feed line
 
@@ -296,7 +303,9 @@ evaluates the bounded dimension range and selects the point with the smallest
 complex impedance error, then reports that error and the resulting SWR. A
 single dimension may not reach both R and X exactly; the error makes the
 remaining mismatch visible. OCFD, end-fed wire, wire-dipole, folded-dipole,
-and loop designs support this dimension search.
+and loop designs support this dimension search. The evaluation table is ranked
+from best to worst for the selected objective; the **Rank** column is separate
+from the original evaluation number, and failed evaluations appear last.
 
 For **balanced SWR + gain**, set non-negative SWR and gain weights. The dialog
 maximizes `gain_weight × gain_dBi − swr_weight × max(SWR − 1, 0)` at the design
@@ -313,6 +322,21 @@ the full sweep/pattern simulation with the current settings. The optimizer is
 bounded by the dimension range and evaluation limit. It changes only one
 dimension; the SWR/gain balance is a weighted score, not a Pareto optimizer.
 
+## Optimize Yagi elements
+
+For a Yagi, use **Design → Optimize Yagi Elements...**. Select which element
+lengths and boom gaps to include, set the target resistance/reactance, the
+search margin, the minimum gap, and the evaluation budget. The optimizer
+performs a bounded coordinate search over the selected variables. The first
+element stays fixed, gaps remain positive, and the minimum-gap constraint keeps
+the element order and spacing valid; radii stay fixed.
+
+The evaluation table is ranked by complex impedance error. **Apply element
+lengths** updates the Yagi editor and starts the normal full sweep/pattern
+simulation. This is a numerical starting point: it does not optimize gain or
+front-to-back ratio yet. Verify the applied design with a full simulation and,
+where possible, a measurement.
+
 ## Synthesize dimensions
 
 For an **OCFD**, **J Pole**, or **Slim Jim**, use **Design → Synthesize
@@ -324,8 +348,10 @@ resistance/reactance, then choose bounds for the two search variables:
 - Slim Jim: radiator height and stub length.
 
 The dialog evaluates a bounded grid at the target frequency and reports the
-best resistance, reactance, SWR, and impedance error. **Apply dimensions**
-updates the design and starts the normal full sweep/pattern simulation.
+best resistance, reactance, SWR, and impedance error. The result table is
+ranked by complex impedance error, so the first row is the best candidate;
+failed evaluations appear last. **Apply dimensions** updates the design and
+starts the normal full sweep/pattern simulation.
 
 This is a numerical starting point, not a guarantee that the target is
 physically reachable. Verify the applied design with a full sweep, check
@@ -379,9 +405,11 @@ canonical meters and hertz.
 
 - Horizontal and vertical wire dipoles, folded dipoles, and regular-polygon
   loops are supported. Folded and loop geometry use theoretical sanity checks;
-  independent impedance references and VNA CSV import are not implemented yet.
+  some templates still lack independent impedance references. VNA CSV import
+  and measurement comparison are implemented; live instrument control is not.
 - Series and parallel RLC loads are supported on one wire segment. General
-  networks, transmission lines, and radial ground screens are not implemented.
+  matching networks and radial ground screens are not implemented; the feed
+  line is a uniform post-processing model.
 - NEC import supports a practical subset (GW, EX, FR, GE/GN, LD 0/1), not the
   full language; unsupported cards are reported. MMANA import covers basic wire
   geometry and source only; ground and loads are not imported.

@@ -39,6 +39,7 @@ from ...domain.optimization.length import (
     LengthOptimizationResult,
     LengthOptimizationSpec,
     OptimizationObjective,
+    rank_evaluations,
 )
 from ...domain.simulation.spec import SimulationSpec
 from ..i18n import Translator
@@ -73,6 +74,7 @@ class OptimizationDialog(QDialog):
         self._cancel_token: EventCancelToken | None = None
         self._result: LengthOptimizationResult | None = None
         self._selected_length_m: float | None = None
+        self._run_spec: LengthOptimizationSpec | None = None
 
         self.setWindowTitle(translator.t("optimize.title"))
         self.resize(960, 820)
@@ -164,9 +166,11 @@ class OptimizationDialog(QDialog):
         self._form_layout.addRow(self._label_tolerance, self._tolerance)
 
         self._evaluations_label = QLabel(translator.t("optimize.evaluations"), self)
-        self._evaluations = QTableWidget(0, 10, self)
+        self._evaluations = QTableWidget(0, 11, self)
         self._configure_table(self._evaluations)
-        self._evaluations.horizontalHeader().setSectionResizeMode(9, QHeaderView.ResizeMode.Stretch)
+        self._evaluations.horizontalHeader().setSectionResizeMode(
+            10, QHeaderView.ResizeMode.Stretch
+        )
 
         self._sensitivity_label = QLabel(translator.t("optimize.sensitivity"), self)
         self._sensitivity = QTableWidget(0, 8, self)
@@ -230,6 +234,7 @@ class OptimizationDialog(QDialog):
         self._objective.setItemText(6, t("optimize.target_impedance_objective"))
         self._evaluations.setHorizontalHeaderLabels(
             [
+                t("optimize.rank"),
                 t("optimize.iteration"),
                 t("optimize.length"),
                 t("table.resistance"),
@@ -384,6 +389,7 @@ class OptimizationDialog(QDialog):
 
         self._result = None
         self._selected_length_m = None
+        self._run_spec = spec
         self._evaluations.setRowCount(0)
         self._sensitivity.setRowCount(0)
         self._summary.setText(self._translator.t("optimize.running"))
@@ -461,9 +467,15 @@ class OptimizationDialog(QDialog):
             self._apply.setEnabled(False)
 
     def _populate_evaluations(self, evaluations: tuple[LengthEvaluation, ...]) -> None:
-        self._evaluations.setRowCount(len(evaluations))
-        for row, evaluation in enumerate(evaluations):
+        ordered = (
+            rank_evaluations(evaluations, self._run_spec)
+            if self._run_spec is not None
+            else evaluations
+        )
+        self._evaluations.setRowCount(len(ordered))
+        for row, evaluation in enumerate(ordered):
             values = [
+                str(row + 1),
                 str(evaluation.index),
                 self._length_display(evaluation.length_m),
                 (
@@ -501,13 +513,15 @@ class OptimizationDialog(QDialog):
             ]
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
-                if column in {2, 3, 4, 5, 6, 7, 8}:
+                if column in {2, 3, 4, 5, 6, 7, 8, 9}:
                     item.setTextAlignment(
                         Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
                     )
                 self._evaluations.setItem(row, column, item)
         self._evaluations.resizeColumnsToContents()
-        self._evaluations.horizontalHeader().setSectionResizeMode(9, QHeaderView.ResizeMode.Stretch)
+        self._evaluations.horizontalHeader().setSectionResizeMode(
+            10, QHeaderView.ResizeMode.Stretch
+        )
 
     def _populate_sensitivity(self, result: LengthOptimizationResult) -> None:
         self._sensitivity.setRowCount(len(result.sensitivity))

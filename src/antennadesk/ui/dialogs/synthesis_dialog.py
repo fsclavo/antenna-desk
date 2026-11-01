@@ -36,6 +36,7 @@ from ...domain.optimization.synthesis import (
     SynthesisResult,
     SynthesisTarget,
     SynthesisVariable,
+    rank_evaluations,
 )
 from ...domain.simulation.spec import SimulationSpec
 from ..i18n import Translator
@@ -74,6 +75,7 @@ class SynthesisDialog(QDialog):
         self._cancel_token: EventCancelToken | None = None
         self._result: SynthesisResult | None = None
         self._selected_parameters: AntennaDesignParameters | None = None
+        self._run_target: SynthesisTarget | None = None
 
         self._is_ocfd = isinstance(base_parameters, OCFDParameters)
         self._folded = isinstance(base_parameters, JPoleParameters) and base_parameters.folded
@@ -192,7 +194,7 @@ class SynthesisDialog(QDialog):
         form.addRow(self._label_max_b, self._max_b)
         form.addRow(self._label_evaluations, self._max_evaluations)
 
-        self._evaluations = QTableWidget(0, 7, self)
+        self._evaluations = QTableWidget(0, 9, self)
         self._configure_table(self._evaluations)
         self._evaluations_label = QLabel(translator.t("optimize.evaluations"), self)
 
@@ -277,12 +279,14 @@ class SynthesisDialog(QDialog):
         t = self._translator.t
         self._evaluations.setHorizontalHeaderLabels(
             [
+                t("optimize.rank"),
                 t("optimize.iteration"),
                 t(self._label_a_key),
                 t(self._label_b_key),
                 t("table.resistance"),
                 t("table.reactance"),
                 t("table.swr"),
+                t("synthesis.impedance_error"),
                 t("optimize.message"),
             ]
         )
@@ -349,6 +353,7 @@ class SynthesisDialog(QDialog):
             return
         self._result = None
         self._selected_parameters = None
+        self._run_target = target
         self._evaluations.setRowCount(0)
         self._summary.setText(self._translator.t("synthesis.running"))
         self._apply.setEnabled(False)
@@ -440,8 +445,13 @@ class SynthesisDialog(QDialog):
         return f"{value:.4f} {unit}"
 
     def _populate_evaluations(self, evaluations: tuple[SynthesisEvaluation, ...]) -> None:
-        self._evaluations.setRowCount(len(evaluations))
-        for row, evaluation in enumerate(evaluations):
+        ordered = (
+            rank_evaluations(evaluations, self._run_target)
+            if self._run_target is not None
+            else evaluations
+        )
+        self._evaluations.setRowCount(len(ordered))
+        for row, evaluation in enumerate(ordered):
             a = evaluation.values.get("length_m")
             if a is None:
                 a = evaluation.values.get("radiator_height_m")
@@ -451,7 +461,13 @@ class SynthesisDialog(QDialog):
             if b is None:
                 b = evaluation.values.get("feed_offset_m")
             impedance = evaluation.impedance_ohm
+            error = (
+                abs(impedance - self._run_target.impedance_ohm)
+                if impedance is not None and self._run_target is not None
+                else None
+            )
             values = [
+                str(row + 1),
                 str(evaluation.index),
                 self._value_a(a) if a is not None else "—",
                 self._value_b(b) if b is not None else "—",
@@ -462,17 +478,18 @@ class SynthesisDialog(QDialog):
                     if evaluation.swr is not None and math.isinf(evaluation.swr)
                     else (f"{evaluation.swr:.3f}" if evaluation.swr is not None else "—")
                 ),
+                f"{error:.3f}" if error is not None else "—",
                 evaluation.error or "",
             ]
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
-                if column in {3, 4, 5}:
+                if column in {4, 5, 6, 7}:
                     item.setTextAlignment(
                         Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
                     )
                 self._evaluations.setItem(row, column, item)
         self._evaluations.resizeColumnsToContents()
-        self._evaluations.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)
+        self._evaluations.horizontalHeader().setSectionResizeMode(8, QHeaderView.ResizeMode.Stretch)
 
     def _summary_text(self, result: SynthesisResult) -> str:
         status = self._translator.t(f"optimize_status.{result.status.value}")

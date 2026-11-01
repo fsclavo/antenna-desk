@@ -129,6 +129,17 @@ Phase 5 adds tests for:
   simulation.
 - Construction-sheet dimensions, simulated-result rows, and HTML escaping.
 
+## Template reference anchors
+
+| Case | Independent source | Expected | Tolerance |
+|---|---|---|---:|
+| Moxon 20 m wire rectangle, 14.17 MHz, free space | L. B. Cebik, W4RNL, "The Moxon Rectangle: A Review", Table 1 and text | 56–58 Ω, 5.8 dBi gain, >32 dB front-to-back | 1.5 Ω real, 5 Ω reactance, 0.3 dB gain, >30 dB F/B |
+
+The Moxon check applies to the published 20 m wire dimensions in the source.
+Edited Moxon geometry remains experimental because the published values do not
+transfer to arbitrary dimensions. The source is available at
+<https://www.antentop.org/w4rnl.001/mox20.html>.
+
 ## Template and generator validation
 
 Templates and generators use three evidence levels:
@@ -183,7 +194,9 @@ Custom/generated editing and view tests:
 
 - Inverted-V geometry can be reconstructed from its custom wires and reopened in
   the generator dialog.
-- Custom/generated simulations default to a 100-point sweep.
+- Custom simulations default to a 100-point sweep; generated templates use a
+  31-point sweep and 0.05λ segmentation to keep complex radial models within
+  the default solver timeout.
 - Vertical-plane generated designs select the elevation view automatically,
   while loops keep Plan.
 

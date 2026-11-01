@@ -26,7 +26,8 @@ from PySide6.QtWidgets import (
 
 from ...domain.common.validation import Diagnostic, Severity
 from ...domain.environment.ground import GroundKind
-from ...domain.measurement import Measurement
+from ...domain.measurement import Measurement, MeasurementPoint
+from ...domain.measurement_comparison import compare_measurement
 from ...domain.projects.project import DesignVariant
 from ...domain.simulation.resonance import find_resonances
 from ...domain.simulation.result import SimulationResult, SimulationStatus
@@ -133,20 +134,36 @@ class ResultsView(QWidget):
         self._measurement_selector = QComboBox(self._measurements_tab)
         self._measurement_selector_label = QLabel(self._measurements_tab)
         self._measurement_selector.currentIndexChanged.connect(self._render_measurements)
-        self._measurement_table = QTableWidget(0, 4, self._measurements_tab)
+        self._measurement_metric = QComboBox(self._measurements_tab)
+        self._measurement_metric.addItem("", "swr")
+        self._measurement_metric.addItem("", "resistance")
+        self._measurement_metric.addItem("", "reactance")
+        self._measurement_metric.addItem("", "magnitude")
+        self._measurement_metric.currentIndexChanged.connect(self._render_measurements)
+        self._measurement_metric_label = QLabel(self._measurements_tab)
+        self._measurement_table = QTableWidget(0, 8, self._measurements_tab)
         self._configure_table(self._measurement_table)
         self._measurement_plot = self._make_plot()
         self._measurement_plot.addLegend()
         self._measurement_details = QLabel(self._measurements_tab)
         self._measurement_details.setWordWrap(True)
+        self._measurement_comparison = QLabel(self._measurements_tab)
+        self._measurement_comparison.setWordWrap(True)
+        self._measurement_resonance = QLabel(self._measurements_tab)
+        self._measurement_resonance.setWordWrap(True)
         measurement_controls = QHBoxLayout()
         measurement_controls.addWidget(self._measurement_selector_label)
         measurement_controls.addWidget(self._measurement_selector)
+        measurement_controls.addSpacing(12)
+        measurement_controls.addWidget(self._measurement_metric_label)
+        measurement_controls.addWidget(self._measurement_metric)
         measurement_controls.addStretch(1)
         measurement_layout = QVBoxLayout(self._measurements_tab)
         measurement_layout.setContentsMargins(0, 0, 0, 0)
         measurement_layout.addLayout(measurement_controls)
         measurement_layout.addWidget(self._measurement_details)
+        measurement_layout.addWidget(self._measurement_comparison)
+        measurement_layout.addWidget(self._measurement_resonance)
         measurement_layout.addWidget(self._measurement_table, 1)
         measurement_layout.addWidget(self._measurement_plot, 2)
 
@@ -308,12 +325,21 @@ class ResultsView(QWidget):
         self._update_cut_label()
         self._currents_frequency_label.setText(self._translator.t("currents.frequency"))
         self._measurement_selector_label.setText(self._translator.t("measurement.select"))
+        self._measurement_metric_label.setText(self._translator.t("measurement.metric"))
+        self._measurement_metric.setItemText(0, self._translator.t("table.swr"))
+        self._measurement_metric.setItemText(1, self._translator.t("table.resistance"))
+        self._measurement_metric.setItemText(2, self._translator.t("table.reactance"))
+        self._measurement_metric.setItemText(3, self._translator.t("table.impedance"))
         self._measurement_table.setHorizontalHeaderLabels(
             [
                 self._translator.t("table.frequency"),
-                self._translator.t("table.resistance"),
-                self._translator.t("table.reactance"),
-                self._translator.t("table.swr"),
+                self._translator.t("measurement.measured_r"),
+                self._translator.t("measurement.measured_x"),
+                self._translator.t("measurement.measured_z"),
+                self._translator.t("measurement.measured_swr"),
+                self._translator.t("measurement.simulated_r"),
+                self._translator.t("measurement.simulated_x"),
+                self._translator.t("measurement.impedance_error"),
             ]
         )
         self._raw_tabs.setTabText(0, self._translator.t("raw.input"))
@@ -641,6 +667,8 @@ class ResultsView(QWidget):
         self._measurement_plot.setTitle(
             self._translator.t("measurement.none"), color=self._colors.text
         )
+        self._measurement_resonance.setText("")
+        self._measurement_resonance.setVisible(False)
         index = self._measurement_selector.currentIndex()
         if index < 0 or index >= len(self._measurements):
             return
@@ -664,50 +692,161 @@ class ResultsView(QWidget):
         if measurement.notes:
             details.append(self._translator.t("measurement.notes_value", value=measurement.notes))
         self._measurement_details.setText(" · ".join(details))
-        self._measurement_table.setRowCount(len(measurement.points))
+        comparison = (
+            compare_measurement(
+                measurement,
+                [frequency.frequency_hz for frequency in self._result.frequencies],
+                [frequency.impedance_ohm for frequency in self._result.frequencies],
+            )
+            if self._result is not None and self._result.frequencies
+            else None
+        )
+        self._measurement_table.setRowCount(
+            len(comparison.points) if comparison is not None else len(measurement.points)
+        )
         for row, point in enumerate(measurement.points):
+            measured = point.impedance_ohm
+            simulated = comparison.points[row].simulated_ohm if comparison is not None else None
+            error = comparison.points[row].error_ohm if comparison is not None else None
+            swr = point.swr(measurement.reference_impedance_ohm)
             values = [
                 f"{point.frequency_hz / 1e6:.6f}",
-                f"{point.impedance_ohm.real:.3f}",
-                f"{point.impedance_ohm.imag:+.3f}",
-                f"{point.swr(measurement.reference_impedance_ohm):.3f}",
+                f"{measured.real:.3f}",
+                f"{measured.imag:+.3f}",
+                f"{abs(measured):.3f}",
+                "∞" if math.isinf(swr) else f"{swr:.3f}",
+                f"{simulated.real:.3f}" if simulated is not None else "—",
+                f"{simulated.imag:+.3f}" if simulated is not None else "—",
+                f"{error:.3f}" if error is not None else "—",
             ]
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
                 item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
                 self._measurement_table.setItem(row, column, item)
         self._measurement_table.resizeColumnsToContents()
-        frequencies = [point.frequency_hz / 1e6 for point in measurement.points]
-        swr = [point.swr(measurement.reference_impedance_ohm) for point in measurement.points]
+        if comparison is None:
+            self._measurement_comparison.setText("")
+            self._measurement_comparison.setVisible(False)
+        elif comparison.compared_count:
+            self._measurement_comparison.setText(
+                self._translator.t(
+                    "measurement.comparison_summary",
+                    count=comparison.compared_count,
+                    mean=f"{comparison.mean_error_ohm:.3f}",
+                    maximum=f"{comparison.max_error_ohm:.3f}",
+                )
+            )
+            self._measurement_comparison.setVisible(True)
+        else:
+            self._measurement_comparison.setText(self._translator.t("measurement.comparison_none"))
+            self._measurement_comparison.setVisible(True)
+
+        metric = str(self._measurement_metric.currentData() or "swr")
+        metric_label = self._measurement_metric.currentText()
+        metric_colors = {
+            "swr": self._colors.swr,
+            "resistance": self._colors.resistance,
+            "reactance": self._colors.reactance,
+            "magnitude": self._colors.pattern,
+        }
+
+        def measured_value(point: MeasurementPoint) -> float:
+            if metric == "resistance":
+                return point.impedance_ohm.real
+            if metric == "reactance":
+                return point.impedance_ohm.imag
+            if metric == "magnitude":
+                return abs(point.impedance_ohm)
+            return point.swr(measurement.reference_impedance_ohm)
+
+        measured = [
+            (point.frequency_hz / 1e6, measured_value(point)) for point in measurement.points
+        ]
+        measured = [(frequency, value) for frequency, value in measured if math.isfinite(value)]
+        simulated: list[tuple[float, float]] = []
+        if self._result is not None and self._result.frequencies:
+            for frequency in self._result.frequencies:
+                if metric == "resistance":
+                    value = frequency.impedance_ohm.real
+                elif metric == "reactance":
+                    value = frequency.impedance_ohm.imag
+                elif metric == "magnitude":
+                    value = abs(frequency.impedance_ohm)
+                else:
+                    value = frequency.swr
+                if math.isfinite(value):
+                    simulated.append((frequency.frequency_hz / 1e6, value))
+
+        title_key = "measurement.comparison_title" if simulated else "measurement.measured_title"
         self._measurement_plot.setTitle(
-            self._translator.t("measurement.swr"),
+            self._translator.t(title_key, metric=metric_label),
             color=self._colors.text,
         )
         self._measurement_plot.setLabel(
             "bottom", self._translator.t("table.frequency"), color=self._colors.text
         )
-        self._measurement_plot.setLabel(
-            "left", self._translator.t("table.swr"), color=self._colors.text
+        self._measurement_plot.setLabel("left", metric_label, color=self._colors.text)
+        if measured:
+            self._measurement_plot.plot(
+                [point[0] for point in measured],
+                [point[1] for point in measured],
+                pen=pg.mkPen(metric_colors[metric], width=2),
+                name=self._translator.t("measurement.measured"),
+            )
+        if simulated:
+            self._measurement_plot.plot(
+                [point[0] for point in simulated],
+                [point[1] for point in simulated],
+                pen=pg.mkPen(self._colors.pattern, width=2, style=Qt.PenStyle.DashLine),
+                name=self._translator.t("measurement.simulated"),
+            )
+
+        measured_resonances = find_resonances(
+            [point.frequency_hz for point in measurement.points],
+            [point.impedance_ohm for point in measurement.points],
         )
-        self._measurement_plot.plot(
-            frequencies,
-            swr,
-            pen=pg.mkPen(self._colors.swr, width=2),
-            name=self._translator.t("measurement.measured"),
+        simulated_resonances = (
+            find_resonances(
+                [frequency.frequency_hz for frequency in self._result.frequencies],
+                [frequency.impedance_ohm for frequency in self._result.frequencies],
+            )
+            if self._result is not None and self._result.frequencies
+            else ()
         )
-        if self._result is not None and self._result.frequencies:
-            simulated = [
-                (frequency.frequency_hz / 1e6, frequency.swr)
-                for frequency in self._result.frequencies
-                if math.isfinite(frequency.swr)
-            ]
-            if simulated:
-                self._measurement_plot.plot(
-                    [point[0] for point in simulated],
-                    [point[1] for point in simulated],
-                    pen=pg.mkPen(self._colors.pattern, width=2, style=Qt.PenStyle.DashLine),
-                    name=self._translator.t("measurement.simulated"),
+        resonance_parts: list[str] = []
+        if measured_resonances:
+            resonance_parts.append(
+                " · ".join(
+                    self._translator.t(
+                        "measurement.resonance_measured",
+                        frequency=f"{point.frequency_hz / 1e6:.3f}",
+                        resistance=f"{point.impedance_ohm.real:.2f}",
+                    )
+                    for point in measured_resonances
                 )
+            )
+        else:
+            resonance_parts.append(self._translator.t("measurement.resonance_none"))
+        if simulated_resonances:
+            resonance_parts.append(
+                " · ".join(
+                    self._translator.t(
+                        "measurement.resonance_simulated",
+                        frequency=f"{point.frequency_hz / 1e6:.3f}",
+                        resistance=f"{point.impedance_ohm.real:.2f}",
+                    )
+                    for point in simulated_resonances
+                )
+            )
+        if len(measured_resonances) == 1 and len(simulated_resonances) == 1:
+            delta = (
+                measured_resonances[0].frequency_hz - simulated_resonances[0].frequency_hz
+            ) / 1e6
+            resonance_parts.append(
+                self._translator.t("measurement.resonance_delta", delta=f"{delta:+.3f}")
+            )
+        self._measurement_resonance.setText(" · ".join(resonance_parts))
+        self._measurement_resonance.setVisible(bool(resonance_parts))
 
     def _render_diagnostics(self) -> None:
         self._diagnostics.setRowCount(0)

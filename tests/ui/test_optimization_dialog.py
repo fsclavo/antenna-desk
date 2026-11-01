@@ -238,6 +238,9 @@ def test_optimization_dialog_targets_a_complex_impedance(qtbot: QtBot) -> None:
     assert dialog._result.best_impedance_error_ohm < 0.1
     assert dialog._target_r.isVisible() is True
     assert dialog._target.isVisible() is True
+    assert dialog._evaluations.columnCount() == 11
+    assert dialog._evaluations.item(0, 0).text() == "1"
+    assert dialog._evaluations.item(0, 2).text().startswith("20.300")
 
 
 def test_optimization_dialog_maximizes_gain(qtbot: QtBot) -> None:
@@ -303,7 +306,7 @@ def test_optimization_dialog_maximizes_efficiency(qtbot: QtBot) -> None:
     assert dialog._result.status is LengthOptimizationStatus.CONVERGED
     assert dialog.selected_dimension_m() == pytest.approx(20.3, abs=0.15)
     assert dialog._result.best_efficiency_percent == pytest.approx(95.0, abs=0.2)
-    assert dialog._evaluations.columnCount() == 10
+    assert dialog._evaluations.columnCount() == 11
     assert dialog._sensitivity.columnCount() == 8
     assert dialog._swr_weight.isVisible() is False
 

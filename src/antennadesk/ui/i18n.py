@@ -691,6 +691,34 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Simulated",
         Language.SPANISH: "Simulada",
     },
+    "measurement.metric": {
+        Language.ENGLISH: "Plot",
+        Language.SPANISH: "Gráfico",
+    },
+    "measurement.measured_title": {
+        Language.ENGLISH: "Measured: {metric}",
+        Language.SPANISH: "Medido: {metric}",
+    },
+    "measurement.comparison_title": {
+        Language.ENGLISH: "Measured vs simulated: {metric}",
+        Language.SPANISH: "Medido vs simulado: {metric}",
+    },
+    "measurement.resonance_measured": {
+        Language.ENGLISH: "Measured resonance: {frequency} MHz (R={resistance} Ω)",
+        Language.SPANISH: "Resonancia medida: {frequency} MHz (R={resistance} Ω)",
+    },
+    "measurement.resonance_simulated": {
+        Language.ENGLISH: "Simulated resonance: {frequency} MHz (R={resistance} Ω)",
+        Language.SPANISH: "Resonancia simulada: {frequency} MHz (R={resistance} Ω)",
+    },
+    "measurement.resonance_delta": {
+        Language.ENGLISH: "Resonance difference: {delta} MHz",
+        Language.SPANISH: "Diferencia de resonancia: {delta} MHz",
+    },
+    "measurement.resonance_none": {
+        Language.ENGLISH: "No measured resonance in the sweep.",
+        Language.SPANISH: "Sin resonancia medida en el barrido.",
+    },
     "tab.diagnostics": {Language.ENGLISH: "Diagnostics", Language.SPANISH: "Diagnósticos"},
     "tab.raw": {Language.ENGLISH: "Raw data", Language.SPANISH: "Datos crudos"},
     "table.frequency": {Language.ENGLISH: "Frequency (MHz)", Language.SPANISH: "Frecuencia (MHz)"},
@@ -957,6 +985,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "action.synthesize": {
         Language.ENGLISH: "Synthesize Dimensions...",
         Language.SPANISH: "Sintetizar dimensiones...",
+    },
+    "action.optimize_yagi": {
+        Language.ENGLISH: "Optimize Yagi Elements...",
+        Language.SPANISH: "Optimizar elementos del Yagi...",
     },
     "action.construction": {
         Language.ENGLISH: "Construction Sheet...",
@@ -1533,6 +1565,102 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "un diseño de hilos personalizado editable."
         ),
     },
+    "yagi_optimize.title": {
+        Language.ENGLISH: "Optimize Yagi Elements",
+        Language.SPANISH: "Optimizar elementos del Yagi",
+    },
+    "yagi_optimize.use": {
+        Language.ENGLISH: "Use",
+        Language.SPANISH: "Usar",
+    },
+    "yagi_optimize.current": {
+        Language.ENGLISH: "Current length",
+        Language.SPANISH: "Longitud actual",
+    },
+    "yagi_optimize.current_length": {
+        Language.ENGLISH: "Current length",
+        Language.SPANISH: "Longitud actual",
+    },
+    "yagi_optimize.current_gap": {
+        Language.ENGLISH: "Current gap",
+        Language.SPANISH: "Separación actual",
+    },
+    "yagi_optimize.opt_length": {
+        Language.ENGLISH: "Opt. length",
+        Language.SPANISH: "Long. opt.",
+    },
+    "yagi_optimize.opt_gap": {
+        Language.ENGLISH: "Opt. gap",
+        Language.SPANISH: "Sep. opt.",
+    },
+    "yagi_optimize.length_range": {
+        Language.ENGLISH: "Length range",
+        Language.SPANISH: "Rango longitud",
+    },
+    "yagi_optimize.gap_range": {
+        Language.ENGLISH: "Gap range",
+        Language.SPANISH: "Rango separación",
+    },
+    "yagi_optimize.min_gap": {
+        Language.ENGLISH: "Minimum gap",
+        Language.SPANISH: "Separación mínima",
+    },
+    "yagi_optimize.minimum": {
+        Language.ENGLISH: "Minimum",
+        Language.SPANISH: "Mínimo",
+    },
+    "yagi_optimize.maximum": {
+        Language.ENGLISH: "Maximum",
+        Language.SPANISH: "Máximo",
+    },
+    "yagi_optimize.bound": {
+        Language.ENGLISH: "Bound around current length",
+        Language.SPANISH: "Margen alrededor de la longitud actual",
+    },
+    "yagi_optimize.samples": {
+        Language.ENGLISH: "Samples per variable",
+        Language.SPANISH: "Muestras por variable",
+    },
+    "yagi_optimize.passes": {
+        Language.ENGLISH: "Refinement passes",
+        Language.SPANISH: "Pasadas de refinamiento",
+    },
+    "yagi_optimize.run": {
+        Language.ENGLISH: "Run optimization",
+        Language.SPANISH: "Ejecutar optimización",
+    },
+    "yagi_optimize.apply": {
+        Language.ENGLISH: "Apply element lengths",
+        Language.SPANISH: "Aplicar longitudes",
+    },
+    "yagi_optimize.hint": {
+        Language.ENGLISH: "Selected lengths and gaps change; the first element stays fixed and element order is preserved. Radii stay fixed.",
+        Language.SPANISH: "Cambian las longitudes y separaciones seleccionadas; el primer elemento queda fijo y se conserva el orden. Los radios quedan fijos.",
+    },
+    "yagi_optimize.no_elements": {
+        Language.ENGLISH: "Select at least one element to optimize.",
+        Language.SPANISH: "Seleccioná al menos un elemento para optimizar.",
+    },
+    "yagi_optimize.running": {
+        Language.ENGLISH: "Running Yagi optimization...",
+        Language.SPANISH: "Ejecutando optimización del Yagi...",
+    },
+    "yagi_optimize.error": {
+        Language.ENGLISH: "Yagi optimization failed: {message}",
+        Language.SPANISH: "Falló la optimización del Yagi: {message}",
+    },
+    "yagi_optimize.no_best": {
+        Language.ENGLISH: "No valid element lengths were found.",
+        Language.SPANISH: "No se encontraron longitudes válidas.",
+    },
+    "yagi_optimize.summary": {
+        Language.ENGLISH: "Best: {lengths} · impedance error {error} Ω",
+        Language.SPANISH: "Mejor: {lengths} · error de impedancia {error} Ω",
+    },
+    "yagi_optimize.close": {
+        Language.ENGLISH: "Cancel the running optimization before closing.",
+        Language.SPANISH: "Cancelá la optimización en curso antes de cerrar.",
+    },
     "yagi.evidence": {
         Language.ENGLISH: (
             "NBS TN-688 preset: 5 elements, 0.8 wavelength, 9.2 dBd reference "
@@ -1839,6 +1967,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Sensitivity",
         Language.SPANISH: "Sensibilidad",
     },
+    "optimize.rank": {Language.ENGLISH: "Rank", Language.SPANISH: "Ranking"},
     "optimize.iteration": {Language.ENGLISH: "#", Language.SPANISH: "#"},
     "optimize.length": {Language.ENGLISH: "Dimension", Language.SPANISH: "Dimensión"},
     "optimize.offset": {Language.ENGLISH: "Offset", Language.SPANISH: "Desvío"},
@@ -1887,6 +2016,42 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "synthesis.target_reactance": {
         Language.ENGLISH: "Target reactance X (Ω)",
         Language.SPANISH: "Reactancia objetivo X (Ω)",
+    },
+    "synthesis.impedance_error": {
+        Language.ENGLISH: "|Z-Zt| (Ω)",
+        Language.SPANISH: "|Z-Zt| (Ω)",
+    },
+    "measurement.measured_r": {
+        Language.ENGLISH: "Measured R (Ω)",
+        Language.SPANISH: "R medida (Ω)",
+    },
+    "measurement.measured_x": {
+        Language.ENGLISH: "Measured X (Ω)",
+        Language.SPANISH: "X medida (Ω)",
+    },
+    "measurement.measured_z": {
+        Language.ENGLISH: "Measured |Z| (Ω)",
+        Language.SPANISH: "|Z| medida (Ω)",
+    },
+    "measurement.measured_swr": {
+        Language.ENGLISH: "Measured SWR",
+        Language.SPANISH: "ROE medida",
+    },
+    "measurement.simulated_r": {
+        Language.ENGLISH: "Simulated R (Ω)",
+        Language.SPANISH: "R simulada (Ω)",
+    },
+    "measurement.simulated_x": {
+        Language.ENGLISH: "Simulated X (Ω)",
+        Language.SPANISH: "X simulada (Ω)",
+    },
+    "measurement.comparison_summary": {
+        Language.ENGLISH: "Compared {count} points · mean |ΔZ| = {mean} Ω · max = {maximum} Ω",
+        Language.SPANISH: "Comparados {count} puntos · |ΔZ| medio = {mean} Ω · máximo = {maximum} Ω",
+    },
+    "measurement.comparison_none": {
+        Language.ENGLISH: "No overlapping simulated frequencies.",
+        Language.SPANISH: "No hay frecuencias simuladas superpuestas.",
     },
     "synthesis.minimum": {
         Language.ENGLISH: "Minimum",

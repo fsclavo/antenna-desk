@@ -81,16 +81,19 @@ basic template types.
   variants; schema v3 adds persisted simulation runs and migrates older files.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - VNA CSV import with measured impedance/SWR records and a measured/simulated
-  SWR comparison tab.
+  SWR, R, X, or |Z| comparison tab, including resonance differences.
 - Currents tab and resonance markers on impedance/SWR sweeps.
 - Bounded antenna-dimension optimization for a selectable target impedance
   `R + jX`, target reactance, minimum SWR, maximum SWR bandwidth, maximum power
   gain, maximum efficiency, or a weighted SWR/gain balance: wire-dipole,
   folded-dipole, OCFD, end-fed wire, or loop dimensions, with an evaluation
-  log and sensitivity table.
+  log, ranked result table, and sensitivity table.
 - Bounded two-variable impedance synthesis for OCFD, J Pole, and Slim Jim
   designs, with a target frequency/R/X, evaluation log, and apply-and-simulate
   flow.
+- Bounded multi-element Yagi optimization of selected element lengths and boom
+  gaps against a target impedance, with minimum-gap constraints, a ranked
+  evaluation log, and apply-and-simulate flow.
 - Custom straight-wire antennas with a coordinate editor, template-to-custom
   conversion, a parametric Yagi generator with an editable element table and
   NBS starting preset, Moxon, fan dipole, end-fed, J Pole, Slim Jim, Ringo,

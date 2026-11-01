@@ -11,6 +11,7 @@ from antennadesk.domain.optimization.synthesis import (
     SynthesisStatus,
     SynthesisTarget,
     SynthesisVariable,
+    rank_evaluations,
     synthesize_grid,
 )
 
@@ -42,6 +43,19 @@ def test_synthesis_finds_best_grid_point() -> None:
     assert result.best_impedance_ohm == pytest.approx(50.0 + 0.0j)
     assert result.best_error_ohm == pytest.approx(0.0)
     assert len(result.evaluations) == 9
+
+
+def test_rank_evaluations_orders_by_impedance_error() -> None:
+    target = _target()
+    evaluations = (
+        SynthesisEvaluation(1, {"x": 1.0}, complex(70.0, 0.0)),
+        SynthesisEvaluation(2, {"x": 2.0}, complex(50.0, 0.0)),
+        SynthesisEvaluation(3, {"x": 3.0}, None, error="failed"),
+    )
+
+    ordered = rank_evaluations(evaluations, target)
+
+    assert [evaluation.index for evaluation in ordered] == [2, 1, 3]
 
 
 def test_synthesis_reports_cancellation() -> None:
