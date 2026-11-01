@@ -293,6 +293,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Fixed the frequency-first J Pole estimate: the non-folded J Pole now uses the
   total 3/4-wave height and a 40% stub feed point; Slim Jim keeps its half-wave
   radiator estimate.
+- Added parameterized domain and NEC smoke tests for every frequency-first
+  estimator, including folded dipole, end-fed, OCFD, Ringo, J Pole/Slim Jim,
+  Yagi, Moxon, loops, verticals, inverted-V, and fan dipoles.
 - Added a **Load 20 m wire reference preset** button to the Moxon editor and
   marked that preset as reference-backed in the catalog.
 - Added a bounded multi-variable coordinate-search optimizer in the domain.

@@ -208,3 +208,72 @@ def test_registry_covers_every_current_domain_antenna_type() -> None:
 
     assert domain_types <= SUPPORTED_ESTIMATOR_TYPES
     assert ANTENNA_TYPE_CUSTOM not in SUPPORTED_ESTIMATOR_TYPES
+
+
+@pytest.mark.parametrize(
+    ("antenna_type", "frequency_hz", "kwargs"),
+    [
+        ("wire_dipole", 7_100_000.0, {}),
+        ("folded_dipole", 7_100_000.0, {}),
+        ("loop", 7_100_000.0, {"loop_shape": LoopShape.QUAD}),
+        ("vertical", 146_000_000.0, {"radial_count": 8}),
+        ("inverted_v", 7_100_000.0, {"height_m": 20.0}),
+        ("fan_dipole", 7_100_000.0, {"height_m": 20.0}),
+        ("endfed", 7_100_000.0, {}),
+        ("ocfd", 7_100_000.0, {}),
+        ("j_pole", 146_000_000.0, {"folded": False}),
+        ("j_pole", 146_000_000.0, {"folded": True}),
+        ("ringo", 146_000_000.0, {}),
+        ("yagi", 146_000_000.0, {"yagi_elements": 5}),
+        ("moxon", 14_170_000.0, {}),
+    ],
+)
+def test_every_supported_estimator_produces_a_valid_antenna(
+    antenna_type: str,
+    frequency_hz: float,
+    kwargs: dict[str, object],
+) -> None:
+    estimate = estimate_intent(_intent(antenna_type, frequency_hz, **kwargs))
+    model = estimate.parameters.to_antenna()
+
+    assert model.wires
+    assert all(wire.length_m > 0.0 for wire in model.wires)
+    assert estimate.rows
+    assert estimate.tolerance_m > 0.0
+    assert estimate.source_ids
+    assert estimate.confidence in {
+        Confidence.PHYSICAL,
+        Confidence.EMPIRICAL,
+        Confidence.REFERENCE_SCALED,
+        Confidence.HEURISTIC,
+    }
+
+
+def test_folded_and_endfed_estimates_are_dimensionally_complete() -> None:
+    from antennadesk.domain.antennas.endfed import EndFedParameters
+    from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
+
+    folded = estimate_intent(_intent("folded_dipole")).parameters
+    endfed = estimate_intent(_intent("endfed", end_height_m=12.0)).parameters
+
+    assert isinstance(folded, FoldedDipoleParameters)
+    assert folded.spacing_m > 0.0
+    assert isinstance(endfed, EndFedParameters)
+    assert endfed.length_m > 0.0
+    assert endfed.feed_height_m == pytest.approx(10.0)
+    assert endfed.end_height_m == pytest.approx(12.0)
+
+
+def test_ocfd_and_ringo_estimates_have_valid_special_geometry() -> None:
+    from antennadesk.domain.antennas.ocfd import OCFDParameters
+    from antennadesk.domain.antennas.ringo import RingoParameters
+
+    ocfd = estimate_intent(_intent("ocfd")).parameters
+    ringo = estimate_intent(_intent("ringo", frequency_hz=146_000_000.0)).parameters
+
+    assert isinstance(ocfd, OCFDParameters)
+    assert 0.0 < ocfd.feed_ratio < 1.0
+    assert isinstance(ringo, RingoParameters)
+    assert ringo.radiator_height_m > 0.0
+    assert ringo.ring_diameter_m > 0.0
+    assert ringo.ring_height_m > 0.0

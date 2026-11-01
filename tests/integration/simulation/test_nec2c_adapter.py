@@ -23,12 +23,16 @@ from antennadesk.domain.antennas.matching_network import LNetwork
 from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.antennas.yagi import nbs_five_element
+from antennadesk.domain.design import DesignIntent, LoopShape, estimate_intent
 from antennadesk.domain.environment.environment import Environment
 from antennadesk.domain.environment.ground import GroundModel
 from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.result import SimulationStatus
-from antennadesk.domain.simulation.segmentation import SegmentationPolicy
+from antennadesk.domain.simulation.segmentation import (
+    SegmentationPolicy,
+    aligned_policy_for_model,
+)
 from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.simulation.nec2.solver import Nec2cSolver
 
@@ -426,6 +430,52 @@ def test_ocfd_published_feedpoint_trend(solver: Nec2cSolver) -> None:
 
     assert 200.0 <= near_end.real <= 350.0
     assert near_end.real > toward_center.real
+
+
+@pytest.mark.parametrize(
+    ("antenna_type", "frequency_hz", "kwargs"),
+    [
+        ("wire_dipole", 7_100_000.0, {}),
+        ("folded_dipole", 7_100_000.0, {}),
+        ("loop", 7_100_000.0, {"loop_shape": LoopShape.QUAD}),
+        ("vertical", 146_000_000.0, {"radial_count": 8}),
+        ("inverted_v", 7_100_000.0, {"height_m": 20.0}),
+        ("fan_dipole", 7_100_000.0, {"height_m": 20.0}),
+        ("endfed", 7_100_000.0, {}),
+        ("ocfd", 7_100_000.0, {}),
+        ("j_pole", 146_000_000.0, {"folded": False}),
+        ("j_pole", 146_000_000.0, {"folded": True}),
+        ("ringo", 146_000_000.0, {}),
+        ("yagi", 146_000_000.0, {"yagi_elements": 5}),
+        ("moxon", 14_170_000.0, {}),
+    ],
+)
+def test_every_estimator_produces_a_solvable_model(
+    solver: Nec2cSolver,
+    antenna_type: str,
+    frequency_hz: float,
+    kwargs: dict[str, object],
+) -> None:
+    estimate = estimate_intent(
+        DesignIntent(frequency_hz=frequency_hz, antenna_type=antenna_type, **kwargs)
+    )
+    model = estimate.parameters.to_antenna()
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(frequency_hz),
+        segmentation=aligned_policy_for_model(
+            model,
+            frequency_hz,
+            SegmentationPolicy(min_segments_per_wire=3),
+        ),
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert result.frequencies
+    assert math.isfinite(result.frequencies[0].impedance_ohm.real)
+    assert math.isfinite(result.frequencies[0].impedance_ohm.imag)
 
 
 def test_moxon_20m_wire_reference(solver: Nec2cSolver) -> None:

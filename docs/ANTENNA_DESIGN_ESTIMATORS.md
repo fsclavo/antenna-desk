@@ -94,6 +94,8 @@ Reference sources currently used:
 ## Tests
 
 - Formula and unit tests for every estimator.
+- A parameterized NEC smoke test that estimates every supported family and
+  confirms the resulting model solves and returns finite impedance.
 - Registry coverage for every current `ANTENNA_TYPE_*`.
 - Explicit unsupported result for custom geometry and non-reference Yagi
   element counts.
