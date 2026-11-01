@@ -108,8 +108,8 @@ for build, smoke-test, and packaging steps.
   designs, with a target frequency/R/X, evaluation log, and apply-and-simulate
   flow.
 - Bounded multi-element Yagi optimization of selected element lengths and boom
-  gaps against a target impedance, with minimum-gap constraints, a ranked
-  evaluation log, and apply-and-simulate flow.
+  gaps for target impedance, maximum gain, or maximum front-to-back ratio, with
+  minimum-gap constraints, a ranked evaluation log, and apply-and-simulate flow.
 - Custom straight-wire antennas with a coordinate editor, template-to-custom
   conversion, a parametric Yagi generator with an editable element table and
   NBS starting preset, Moxon, fan dipole, end-fed, J Pole, Slim Jim, Ringo,

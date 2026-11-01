@@ -349,17 +349,19 @@ dimension; the SWR/gain balance is a weighted score, not a Pareto optimizer.
 ## Optimize Yagi elements
 
 For a Yagi, use **Design → Optimize Yagi Elements...**. Select which element
-lengths and boom gaps to include, set the target resistance/reactance, the
-search margin, the minimum gap, and the evaluation budget. The optimizer
+lengths and boom gaps to include, choose the objective (**target impedance**,
+**maximum gain**, or **maximum front-to-back ratio**), and set the search
+margin, minimum gap, and evaluation budget. Target impedance also asks for R/X;
+gain and front-to-back require a far-field pattern request. The optimizer
 performs a bounded coordinate search over the selected variables. The first
 element stays fixed, gaps remain positive, and the minimum-gap constraint keeps
 the element order and spacing valid; radii stay fixed.
 
-The evaluation table is ranked by complex impedance error. **Apply element
-lengths** updates the Yagi editor and starts the normal full sweep/pattern
-simulation. This is a numerical starting point: it does not optimize gain or
-front-to-back ratio yet. Verify the applied design with a full simulation and,
-where possible, a measurement.
+The evaluation table is ranked by the selected objective and shows R, X, SWR,
+gain, F/B, and the objective value. **Apply element lengths** updates the Yagi
+editor and starts the normal full sweep/pattern simulation. This is a numerical
+starting point; verify the applied design with a full simulation and, where
+possible, a measurement.
 
 ## Synthesize dimensions
 

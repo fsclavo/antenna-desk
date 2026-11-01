@@ -1801,6 +1801,26 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Optimize Yagi Elements",
         Language.SPANISH: "Optimizar elementos del Yagi",
     },
+    "yagi_optimize.front_to_back": {
+        Language.ENGLISH: "F/B (dB)",
+        Language.SPANISH: "F/B (dB)",
+    },
+    "yagi_optimize.objective_value": {
+        Language.ENGLISH: "Objective",
+        Language.SPANISH: "Objetivo",
+    },
+    "yagi_optimize.target_impedance_objective": {
+        Language.ENGLISH: "Target impedance",
+        Language.SPANISH: "Impedancia objetivo",
+    },
+    "yagi_optimize.max_gain_objective": {
+        Language.ENGLISH: "Maximum gain",
+        Language.SPANISH: "Ganancia máxima",
+    },
+    "yagi_optimize.max_front_to_back_objective": {
+        Language.ENGLISH: "Maximum front-to-back",
+        Language.SPANISH: "Máxima relación frente/espalda",
+    },
     "yagi_optimize.use": {
         Language.ENGLISH: "Use",
         Language.SPANISH: "Usar",

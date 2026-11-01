@@ -298,6 +298,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   enforce a minimum gap and keep the first element fixed, review a ranked
   evaluation table, and apply the best geometry for a full simulation. Radii
   remain fixed in this slice.
+- Yagi optimization now supports target impedance, maximum power gain, and
+  maximum front-to-back ratio objectives. Gain and F/B evaluations use the
+  far-field pattern; the ranked table reports the selected objective.
 
 - Documentation and README are now in English.
 

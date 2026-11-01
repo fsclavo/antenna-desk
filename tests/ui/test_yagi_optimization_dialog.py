@@ -11,8 +11,14 @@ from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 from antennadesk.domain.common.validation import Diagnostic
 from antennadesk.domain.optimization.multi_variable import BoundedStatus
+from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
-from antennadesk.domain.simulation.result import FrequencyResult, SimulationResult, SimulationStatus
+from antennadesk.domain.simulation.result import (
+    FarFieldPoint,
+    FrequencyResult,
+    SimulationResult,
+    SimulationStatus,
+)
 from antennadesk.domain.simulation.solver import SolverCapabilities, SolverMetadata
 from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.ui.dialogs.yagi_optimization_dialog import YagiOptimizationDialog
@@ -52,6 +58,24 @@ class AnalyticalYagiSolver:
             50.0 + 10.0 * (reflector - 10.5),
             10.0 * (driven - 10.0) + 5.0 * (gap - 2.0),
         )
+        deviation = abs(reflector - 10.5)
+        far_field = tuple(
+            FarFieldPoint(
+                theta_deg=90.0,
+                phi_deg=phi,
+                gain_vertical_db=gain,
+                gain_horizontal_db=None,
+                gain_total_db=gain,
+                axial_ratio=None,
+                tilt_deg=None,
+                polarization="LINEAR",
+                e_theta_magnitude_v_per_m=None,
+                e_theta_phase_deg=None,
+                e_phi_magnitude_v_per_m=None,
+                e_phi_phase_deg=None,
+            )
+            for phi, gain in ((0.0, 8.0 - deviation), (180.0, -12.0 + deviation))
+        )
         return SimulationResult(
             status=SimulationStatus.COMPLETED,
             spec=spec,
@@ -65,6 +89,7 @@ class AnalyticalYagiSolver:
                     impedance_ohm=impedance,
                     swr=1.0,
                     input_power_w=0.001,
+                    far_field=far_field,
                 ),
             ),
         )
@@ -146,3 +171,37 @@ def test_yagi_optimization_respects_the_minimum_gap(qtbot: QtBot) -> None:
     selected = dialog.selected_parameters()
     assert selected is not None
     assert selected.elements[1].position_m - selected.elements[0].position_m >= 2.5 - 1e-6
+
+
+def test_yagi_optimization_dialog_maximizes_gain(qtbot: QtBot) -> None:
+    parameters = YagiParameters(
+        frequency_hz=14_100_000.0,
+        elements=(
+            YagiElement(0.0, 10.5, 0.002),
+            YagiElement(2.0, 10.0, 0.002),
+        ),
+        height_m=12.0,
+        driven_index=1,
+    )
+    dialog = YagiOptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalYagiSolver(),
+        parameters,
+        SimulationSpec(
+            frequency_plan=FrequencyPlan.single(14_100_000.0),
+            far_field=FarFieldRequest(enabled=True, theta_count=3, phi_count=3),
+        ),
+    )
+    qtbot.addWidget(dialog)
+    dialog._objective.setCurrentIndex(1)
+    dialog._max_evaluations.setValue(60)
+    dialog.show()
+
+    dialog._run.click()
+    qtbot.waitUntil(lambda: dialog._thread is None, timeout=5_000)
+
+    selected = dialog.selected_parameters()
+    assert selected is not None
+    assert selected.elements[0].length_m == pytest.approx(10.5, abs=0.05)
+    assert dialog._evaluations.item(0, 7).text().startswith("G=")

@@ -7,6 +7,7 @@ import pytest
 from antennadesk.application.use_cases.optimize_yagi_elements import (
     OptimizeYagiElements,
     OptimizeYagiElementsCommand,
+    YagiOptimizationObjective,
 )
 from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
@@ -15,7 +16,12 @@ from antennadesk.domain.optimization.multi_variable import BoundedStatus, Bounde
 from antennadesk.domain.optimization.synthesis import SynthesisTarget
 from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
-from antennadesk.domain.simulation.result import FrequencyResult, SimulationResult, SimulationStatus
+from antennadesk.domain.simulation.result import (
+    FarFieldPoint,
+    FrequencyResult,
+    SimulationResult,
+    SimulationStatus,
+)
 from antennadesk.domain.simulation.solver import SolverCapabilities, SolverMetadata
 from antennadesk.domain.simulation.spec import SimulationSpec
 
@@ -52,6 +58,26 @@ class AnalyticalYagiSolver:
         self.specs.append(spec)
         reflector, driven = model.wires[0].length_m, model.wires[1].length_m
         impedance = complex(50.0 + 10.0 * (reflector - 10.5), 10.0 * (driven - 10.0))
+        deviation = abs(reflector - 10.5)
+        forward = 8.0 - deviation
+        rear = -12.0 + deviation
+        far_field = tuple(
+            FarFieldPoint(
+                theta_deg=90.0,
+                phi_deg=phi,
+                gain_vertical_db=gain,
+                gain_horizontal_db=None,
+                gain_total_db=gain,
+                axial_ratio=None,
+                tilt_deg=None,
+                polarization="LINEAR",
+                e_theta_magnitude_v_per_m=None,
+                e_theta_phase_deg=None,
+                e_phi_magnitude_v_per_m=None,
+                e_phi_phase_deg=None,
+            )
+            for phi, gain in ((0.0, forward), (180.0, rear))
+        )
         return SimulationResult(
             status=SimulationStatus.COMPLETED,
             spec=spec,
@@ -65,6 +91,7 @@ class AnalyticalYagiSolver:
                     impedance_ohm=impedance,
                     swr=1.0,
                     input_power_w=0.001,
+                    far_field=far_field,
                 ),
             ),
         )
@@ -120,3 +147,95 @@ def test_optimizes_selected_yagi_element_lengths() -> None:
     assert result.best_score == pytest.approx(0.0, abs=0.1)
     assert all(spec.frequency_plan.is_single for spec in solver.specs)
     assert all(spec.far_field.enabled is False for spec in solver.specs)
+
+
+def test_optimizes_yagi_for_gain() -> None:
+    base = YagiParameters(
+        frequency_hz=14_100_000.0,
+        elements=(
+            YagiElement(0.0, 10.5, 0.002),
+            YagiElement(2.0, 10.0, 0.002),
+        ),
+        height_m=12.0,
+        driven_index=1,
+    )
+    target = SynthesisTarget(14_100_000.0, 50.0, 0.0)
+
+    def build(values: dict[str, float]) -> YagiParameters:
+        return YagiParameters(
+            frequency_hz=target.frequency_hz,
+            elements=(
+                YagiElement(0.0, values["reflector_m"], 0.002),
+                YagiElement(2.0, 10.0, 0.002),
+            ),
+            height_m=base.height_m,
+            driven_index=1,
+        )
+
+    result = OptimizeYagiElements(AnalyticalYagiSolver()).execute(
+        OptimizeYagiElementsCommand(
+            build_parameters=build,
+            variables=(BoundedVariable("reflector_m", 9.5, 11.5),),
+            start_values={"reflector_m": 10.0},
+            target=target,
+            base_spec=SimulationSpec(
+                frequency_plan=FrequencyPlan.single(14_100_000.0),
+                far_field=FarFieldRequest(enabled=True, theta_count=3, phi_count=3),
+            ),
+            objective=YagiOptimizationObjective.MAX_GAIN,
+            max_evaluations=20,
+            samples=5,
+            passes=3,
+        )
+    )
+
+    assert result.status is BoundedStatus.CONVERGED
+    assert result.best_values is not None
+    assert result.best_values["reflector_m"] == pytest.approx(10.5, abs=0.05)
+    assert result.best_score == pytest.approx(-8.0, abs=0.1)
+
+
+def test_optimizes_yagi_for_front_to_back() -> None:
+    base = YagiParameters(
+        frequency_hz=14_100_000.0,
+        elements=(
+            YagiElement(0.0, 10.5, 0.002),
+            YagiElement(2.0, 10.0, 0.002),
+        ),
+        height_m=12.0,
+        driven_index=1,
+    )
+    target = SynthesisTarget(14_100_000.0, 50.0, 0.0)
+
+    def build(values: dict[str, float]) -> YagiParameters:
+        return YagiParameters(
+            frequency_hz=target.frequency_hz,
+            elements=(
+                YagiElement(0.0, values["reflector_m"], 0.002),
+                YagiElement(2.0, 10.0, 0.002),
+            ),
+            height_m=base.height_m,
+            driven_index=1,
+        )
+
+    result = OptimizeYagiElements(AnalyticalYagiSolver()).execute(
+        OptimizeYagiElementsCommand(
+            build_parameters=build,
+            variables=(BoundedVariable("reflector_m", 9.5, 11.5),),
+            start_values={"reflector_m": 10.0},
+            target=target,
+            base_spec=SimulationSpec(
+                frequency_plan=FrequencyPlan.single(14_100_000.0),
+                far_field=FarFieldRequest(enabled=True, theta_count=3, phi_count=3),
+            ),
+            objective=YagiOptimizationObjective.MAX_FRONT_TO_BACK,
+            max_evaluations=20,
+            samples=5,
+            passes=3,
+        )
+    )
+
+    assert result.status is BoundedStatus.CONVERGED
+    assert result.best_values is not None
+    assert result.best_values["reflector_m"] == pytest.approx(10.5, abs=0.05)
+    assert result.best_score == pytest.approx(-20.0, abs=0.2)

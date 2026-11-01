@@ -9,6 +9,7 @@ from dataclasses import replace
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
+    QComboBox,
     QDialog,
     QDoubleSpinBox,
     QFormLayout,
@@ -26,7 +27,10 @@ from PySide6.QtWidgets import (
 
 from ...application.cancellation import EventCancelToken
 from ...application.ports.antenna_solver import AntennaSolver
-from ...application.use_cases.optimize_yagi_elements import OptimizeYagiElementsCommand
+from ...application.use_cases.optimize_yagi_elements import (
+    OptimizeYagiElementsCommand,
+    YagiOptimizationObjective,
+)
 from ...domain.antennas.yagi import YagiParameters
 from ...domain.optimization.multi_variable import (
     BoundedResult,
@@ -61,10 +65,17 @@ class YagiOptimizationDialog(QDialog):
         self._cancel_token: EventCancelToken | None = None
         self._result: BoundedResult | None = None
         self._selected_parameters: YagiParameters | None = None
+        self._run_objective = YagiOptimizationObjective.TARGET_IMPEDANCE
         self._updating = False
 
         self.setWindowTitle(translator.t("yagi_optimize.title"))
         self.resize(1_100, 780)
+
+        self._objective = QComboBox(self)
+        self._objective.addItem("", YagiOptimizationObjective.TARGET_IMPEDANCE.value)
+        self._objective.addItem("", YagiOptimizationObjective.MAX_GAIN.value)
+        self._objective.addItem("", YagiOptimizationObjective.MAX_FRONT_TO_BACK.value)
+        self._objective.currentIndexChanged.connect(self._objective_changed)
 
         self._frequency = QDoubleSpinBox(self)
         self._frequency.setRange(0.1, 100_000.0)
@@ -119,6 +130,7 @@ class YagiOptimizationDialog(QDialog):
         self._table.verticalHeader().setVisible(False)
         self._table.horizontalHeader().setStretchLastSection(True)
 
+        self._label_objective = QLabel(translator.t("optimize.objective"), self)
         self._label_frequency = QLabel(translator.t("synthesis.target_frequency"), self)
         self._label_r = QLabel(translator.t("synthesis.target_resistance"), self)
         self._label_x = QLabel(translator.t("synthesis.target_reactance"), self)
@@ -129,6 +141,7 @@ class YagiOptimizationDialog(QDialog):
         self._label_passes = QLabel(translator.t("yagi_optimize.passes"), self)
 
         form = QFormLayout()
+        form.addRow(self._label_objective, self._objective)
         form.addRow(self._label_frequency, self._frequency)
         form.addRow(self._label_r, self._target_r)
         form.addRow(self._label_x, self._target_x)
@@ -138,7 +151,7 @@ class YagiOptimizationDialog(QDialog):
         form.addRow(self._label_samples, self._samples)
         form.addRow(self._label_passes, self._passes)
 
-        self._evaluations = QTableWidget(0, 7, self)
+        self._evaluations = QTableWidget(0, 8, self)
         self._evaluations.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self._evaluations.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self._evaluations.setAlternatingRowColors(True)
@@ -180,10 +193,14 @@ class YagiOptimizationDialog(QDialog):
 
         self._retranslate()
         self._populate_table()
+        self._objective_changed()
         self._update_controls()
 
     def _retranslate(self) -> None:
         t = self._translator.t
+        self._objective.setItemText(0, t("yagi_optimize.target_impedance_objective"))
+        self._objective.setItemText(1, t("yagi_optimize.max_gain_objective"))
+        self._objective.setItemText(2, t("yagi_optimize.max_front_to_back_objective"))
         self._table.setHorizontalHeaderLabels(
             [
                 t("yagi.element"),
@@ -203,7 +220,9 @@ class YagiOptimizationDialog(QDialog):
                 t("table.resistance"),
                 t("table.reactance"),
                 t("table.swr"),
-                t("synthesis.impedance_error"),
+                t("optimize.gain"),
+                t("yagi_optimize.front_to_back"),
+                t("yagi_optimize.objective_value"),
                 t("optimize.message"),
             ]
         )
@@ -217,6 +236,18 @@ class YagiOptimizationDialog(QDialog):
     def _current_gap_m(self, row: int) -> float:
         elements = self._base_parameters.elements
         return elements[row].position_m - elements[row - 1].position_m
+
+    def _objective_value(self) -> YagiOptimizationObjective:
+        return YagiOptimizationObjective(str(self._objective.currentData()))
+
+    def _objective_changed(self, *_args: object) -> None:
+        target = self._objective_value() is YagiOptimizationObjective.TARGET_IMPEDANCE
+        for widget in (self._target_r, self._target_x):
+            widget.setEnabled(target)
+        self._label_r.setVisible(target)
+        self._label_x.setVisible(target)
+        self._target_r.setVisible(target)
+        self._target_x.setVisible(target)
 
     def _populate_table(self) -> None:
         self._updating = True
@@ -366,6 +397,7 @@ class YagiOptimizationDialog(QDialog):
             return
         self._result = None
         self._selected_parameters = None
+        self._run_objective = self._objective_value()
         self._evaluations.setRowCount(0)
         self._summary.setText(self._translator.t("yagi_optimize.running"))
         self._apply.setEnabled(False)
@@ -376,6 +408,7 @@ class YagiOptimizationDialog(QDialog):
             start_values=starts,
             target=target,
             base_spec=self._base_spec,
+            objective=self._objective_value(),
             max_evaluations=self._max_evaluations.value(),
             samples=self._samples.value(),
             passes=self._passes.value(),
@@ -460,18 +493,33 @@ class YagiOptimizationDialog(QDialog):
                     evaluation.metrics["resistance_ohm"],
                     evaluation.metrics["reactance_ohm"],
                 )
+            gain = evaluation.metrics.get("max_gain_db")
+            front_to_back = evaluation.metrics.get("front_to_back_db")
+            objective_value = "—"
+            if evaluation.score is not None:
+                if self._objective_value() is YagiOptimizationObjective.TARGET_IMPEDANCE:
+                    objective_value = f"ΔZ={evaluation.score:.3f} Ω"
+                elif (
+                    self._objective_value() is YagiOptimizationObjective.MAX_GAIN
+                    and gain is not None
+                ):
+                    objective_value = f"G={gain:.2f} dBi"
+                elif front_to_back is not None:
+                    objective_value = f"F/B={front_to_back:.2f} dB"
             values = [
                 str(row + 1),
                 str(evaluation.index),
                 f"{impedance.real:.3f}" if impedance is not None else "—",
                 f"{impedance.imag:+.3f}" if impedance is not None else "—",
                 (f"{evaluation.metrics['swr']:.3f}" if "swr" in evaluation.metrics else "—"),
-                f"{evaluation.score:.3f}" if evaluation.score is not None else "—",
+                f"{gain:.2f}" if gain is not None else "—",
+                f"{front_to_back:.2f}" if front_to_back is not None else "—",
+                objective_value,
                 evaluation.error or "",
             ]
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
-                if column in {2, 3, 4, 5}:
+                if column in {2, 3, 4, 5, 6, 7}:
                     item.setTextAlignment(
                         Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
                     )
@@ -489,10 +537,31 @@ class YagiOptimizationDialog(QDialog):
                 parts.append(f"L{index}={self._length_display(value)}")
             else:
                 parts.append(f"G{index}={self._length_display(value)}")
+        best = next(
+            (
+                evaluation
+                for evaluation in result.evaluations
+                if evaluation.values == result.best_values
+            ),
+            None,
+        )
+        objective_value = "—"
+        if best is not None:
+            if self._run_objective is YagiOptimizationObjective.TARGET_IMPEDANCE:
+                if best.score is not None:
+                    objective_value = f"ΔZ={best.score:.3f} Ω"
+            elif self._run_objective is YagiOptimizationObjective.MAX_GAIN:
+                gain = best.metrics.get("max_gain_db")
+                if gain is not None:
+                    objective_value = f"G={gain:.2f} dBi"
+            else:
+                front_to_back = best.metrics.get("front_to_back_db")
+                if front_to_back is not None:
+                    objective_value = f"F/B={front_to_back:.2f} dB"
         return self._translator.t(
             "yagi_optimize.summary",
             lengths=", ".join(parts),
-            error=f"{result.best_score:.3f}" if result.best_score is not None else "—",
+            error=objective_value,
         )
 
     def _apply_result(self) -> None:

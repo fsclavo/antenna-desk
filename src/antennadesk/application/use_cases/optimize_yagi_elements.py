@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
+from enum import StrEnum
 
 from ...domain.antennas.yagi import YagiParameters
 from ...domain.common.validation import Severity
@@ -18,6 +19,7 @@ from ...domain.optimization.multi_variable import (
 from ...domain.optimization.synthesis import SynthesisTarget
 from ...domain.simulation.far_field import FarFieldRequest
 from ...domain.simulation.frequency import FrequencyPlan
+from ...domain.simulation.pattern import front_to_back_db, max_power_gain_db
 from ...domain.simulation.result import SimulationStatus
 from ...domain.simulation.spec import SimulationSpec
 from ..ports.antenna_solver import AntennaSolver
@@ -27,6 +29,12 @@ from .run_simulation import RunSimulation, RunSimulationCommand
 BuildYagiParameters = Callable[[Mapping[str, float]], YagiParameters]
 
 
+class YagiOptimizationObjective(StrEnum):
+    TARGET_IMPEDANCE = "target_impedance"
+    MAX_GAIN = "max_gain"
+    MAX_FRONT_TO_BACK = "max_front_to_back"
+
+
 @dataclass(frozen=True, slots=True)
 class OptimizeYagiElementsCommand:
     build_parameters: BuildYagiParameters
@@ -34,6 +42,7 @@ class OptimizeYagiElementsCommand:
     start_values: Mapping[str, float]
     target: SynthesisTarget
     base_spec: SimulationSpec
+    objective: YagiOptimizationObjective = YagiOptimizationObjective.TARGET_IMPEDANCE
     max_evaluations: int = 81
     samples: int = 5
     passes: int = 4
@@ -45,10 +54,18 @@ class OptimizeYagiElements:
     solver: AntennaSolver
 
     def execute(self, command: OptimizeYagiElementsCommand) -> BoundedResult:
+        needs_pattern = command.objective in {
+            YagiOptimizationObjective.MAX_GAIN,
+            YagiOptimizationObjective.MAX_FRONT_TO_BACK,
+        }
+        if needs_pattern and not command.base_spec.far_field.enabled:
+            raise ValueError("gain and front-to-back optimization require a far-field request")
         evaluation_spec = replace(
             command.base_spec,
             frequency_plan=FrequencyPlan.single(command.target.frequency_hz),
-            far_field=FarFieldRequest(enabled=False),
+            far_field=(
+                command.base_spec.far_field if needs_pattern else FarFieldRequest(enabled=False)
+            ),
         )
 
         def evaluate(values: Mapping[str, float]) -> BoundedEvaluation:
@@ -72,16 +89,36 @@ class OptimizeYagiElements:
                     key=lambda item: abs(item.frequency_hz - command.target.frequency_hz),
                 )
                 impedance = point.impedance_ohm
-                return BoundedEvaluation(
-                    0,
-                    dict(values),
-                    abs(impedance - command.target.impedance_ohm),
-                    metrics={
-                        "resistance_ohm": impedance.real,
-                        "reactance_ohm": impedance.imag,
-                        "swr": point.swr,
-                    },
-                )
+                metrics = {
+                    "resistance_ohm": impedance.real,
+                    "reactance_ohm": impedance.imag,
+                    "swr": point.swr,
+                }
+                if command.objective is YagiOptimizationObjective.TARGET_IMPEDANCE:
+                    score = abs(impedance - command.target.impedance_ohm)
+                elif command.objective is YagiOptimizationObjective.MAX_GAIN:
+                    gain = max_power_gain_db(point.far_field)
+                    if gain is None:
+                        return BoundedEvaluation(
+                            0,
+                            dict(values),
+                            None,
+                            error="no far-field gain data",
+                        )
+                    metrics["max_gain_db"] = gain
+                    score = -gain
+                else:
+                    front_to_back = front_to_back_db(point.far_field)
+                    if front_to_back is None:
+                        return BoundedEvaluation(
+                            0,
+                            dict(values),
+                            None,
+                            error="no front-to-back data",
+                        )
+                    metrics["front_to_back_db"] = front_to_back
+                    score = -front_to_back
+                return BoundedEvaluation(0, dict(values), score, metrics=metrics)
             message = next(
                 (
                     diagnostic.message
