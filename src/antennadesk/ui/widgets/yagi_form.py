@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+import math
+
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QComboBox,
@@ -47,6 +49,7 @@ class YagiForm(QWidget):
         self._frequency.setDecimals(6)
         self._frequency.setSuffix(" MHz")
         self._frequency.setValue(14.1)
+        self._last_frequency_mhz = 14.1
 
         self._height = QDoubleSpinBox(self)
         self._height.setDecimals(3)
@@ -113,6 +116,9 @@ class YagiForm(QWidget):
 
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
+        self._frequency_warning = QLabel(self)
+        self._frequency_warning.setWordWrap(True)
+        self._frequency_warning.setVisible(False)
 
         form = QFormLayout()
         form.addRow(translator.t("field.frequency"), self._frequency)
@@ -137,9 +143,10 @@ class YagiForm(QWidget):
         layout.addWidget(self._table, 1)
         layout.addLayout(element_buttons)
         layout.addWidget(self._geometry)
+        layout.addWidget(self._frequency_warning)
 
+        self._frequency.valueChanged.connect(self._frequency_changed)
         for widget in (
-            self._frequency,
             self._height,
             self._azimuth,
             self._radius,
@@ -160,6 +167,35 @@ class YagiForm(QWidget):
         if not self._updating:
             self._update_geometry()
             self.changed.emit()
+
+    def _frequency_changed(self, value: float) -> None:
+        previous = self._last_frequency_mhz
+        self._last_frequency_mhz = value
+        if self._updating or previous <= 0.0 or value <= 0.0:
+            if not self._updating:
+                self._emit_changed()
+            return
+        if math.isclose(previous, value, rel_tol=1e-12, abs_tol=1e-12):
+            self._emit_changed()
+            return
+        scale = previous / value
+        self._updating = True
+        try:
+            for row in range(self._table.rowCount()):
+                for column in (1, 2):
+                    cell = self._table.item(row, column)
+                    if cell is None:
+                        continue
+                    try:
+                        current_m = length_to_m(float(cell.text()), self._unit_system)
+                    except ValueError:
+                        continue
+                    cell.setText(f"{length_from_m(current_m * scale, self._unit_system):.3f}")
+        finally:
+            self._updating = False
+        self._refresh_driven_values()
+        self._update_geometry()
+        self.changed.emit()
 
     def _ground_changed(self, *_args: object) -> None:
         self._update_ground_controls()
@@ -280,6 +316,7 @@ class YagiForm(QWidget):
     def set_parameters(self, parameters: YagiParameters) -> None:
         self._updating = True
         try:
+            self._last_frequency_mhz = parameters.frequency_hz / 1_000_000.0
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
             self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
             self._azimuth.setValue(parameters.azimuth_deg)
@@ -317,6 +354,15 @@ class YagiForm(QWidget):
             return
         positions = [element.position_m for element in parameters.elements]
         unit = self._translator.t(length_unit_key(self._unit_system))
+        wavelength = 299_792_458.0 / parameters.frequency_hz
+        lengths = [element.length_m for element in parameters.elements]
+        mismatch = bool(lengths) and any(
+            not 0.35 * wavelength <= length <= 0.65 * wavelength for length in lengths
+        )
+        self._frequency_warning.setText(
+            self._translator.t("yagi.frequency_mismatch") if mismatch else ""
+        )
+        self._frequency_warning.setVisible(mismatch)
         self._geometry.setText(
             self._translator.t(
                 "yagi.geometry",

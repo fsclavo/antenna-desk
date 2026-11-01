@@ -1771,6 +1771,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Driven element",
         Language.SPANISH: "Elemento alimentado",
     },
+    "yagi.frequency_mismatch": {
+        Language.ENGLISH: "Element dimensions do not match the current frequency. Change the frequency from a known design or use Design from Frequency to rebuild the Yagi.",
+        Language.SPANISH: "Las dimensiones de los elementos no coinciden con la frecuencia actual. Cambiá la frecuencia desde un diseño conocido o usá Diseñar desde frecuencia para regenerar la Yagi.",
+    },
     "yagi.geometry": {
         Language.ENGLISH: "{count} elements · boom {boom} {unit}",
         Language.SPANISH: "{count} elementos · boom {boom} {unit}",

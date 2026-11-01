@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   design clears it.
 - Estimator provenance is shown in HTML reports and PDF construction/simulation
   sheets alongside the design dimensions.
+- Yagi frequency changes rescale the current element table by wavelength, and a
+  warning flags element dimensions that do not match the current frequency.
 - Traceable estimator contract with source identifiers and explicit unsupported
   cases for custom geometry and Yagi element counts outside 2–15.
 - Phase 1 domain model for units, geometry, conductors, feed points, ground

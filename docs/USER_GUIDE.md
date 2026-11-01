@@ -122,7 +122,11 @@ Choose **File → New Antenna... → Yagi** to generate a Yagi as a first-class
 template. The table contains each element's boom position, total length, and
 radius. Add or remove elements, edit the values, and select the driven element.
 **Load NBS 5-element preset** fills the NBS TN-688 0.8λ starting geometry
-scaled to the selected frequency.
+scaled to the selected frequency. Changing the frequency in the form rescales
+the current element positions and lengths by the wavelength ratio. If the
+element dimensions do not look consistent with the current frequency, the form
+shows a warning; use **Design → Design from Frequency...** to rebuild a
+2–15 element DL6WU starting design.
 
 The NBS preset is reference-backed for gain: the published design has 9.2 dBd
 gain over a half-wave dipole. A single straight driven element is generated

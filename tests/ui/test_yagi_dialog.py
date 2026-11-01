@@ -92,3 +92,28 @@ def test_yagi_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
     assert restored.frequency_hz == pytest.approx(original.frequency_hz)
     assert restored.azimuth_deg == pytest.approx(original.azimuth_deg)
     assert restored.driven_index == original.driven_index
+
+
+def test_yagi_dialog_scales_elements_when_frequency_changes(qtbot: QtBot) -> None:
+    dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    original_length = float(dialog._table.item(1, 2).text())
+    original_position = float(dialog._table.item(1, 1).text())
+
+    dialog._form._frequency.setValue(7.1)
+
+    scaled_length = float(dialog._table.item(1, 2).text())
+    scaled_position = float(dialog._table.item(1, 1).text())
+    assert scaled_length == pytest.approx(original_length * 2.0, rel=0.02)
+    assert scaled_position == pytest.approx(original_position * 2.0, rel=0.02)
+    assert dialog._form._frequency_warning.isVisible() is False
+    assert dialog.parameters().frequency_hz == pytest.approx(7_100_000.0)
+
+
+def test_yagi_dialog_warns_about_a_frequency_mismatch(qtbot: QtBot) -> None:
+    dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    dialog.show()
+    dialog._table.item(1, 2).setText("5.000")
+
+    assert dialog._form._frequency_warning.isHidden() is False
