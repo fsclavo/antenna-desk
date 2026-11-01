@@ -130,3 +130,29 @@ def test_yagi_can_be_reconstructed_from_custom_geometry() -> None:
     assert [element.length_m for element in restored.elements] == pytest.approx(
         [element.length_m for element in original.elements]
     )
+
+
+def test_yagi_length_mismatch_flags_quarter_wave_elements() -> None:
+    from antennadesk.domain.antennas.yagi import yagi_element_length_mismatch
+
+    frequency_hz = 7_100_000.0
+    wavelength = 299_792_458.0 / frequency_hz
+    wrong = YagiParameters(
+        frequency_hz=frequency_hz,
+        elements=(
+            YagiElement(0.0, 0.25 * wavelength, 0.001),
+            YagiElement(0.2 * wavelength, 0.25 * wavelength, 0.001),
+        ),
+        height_m=10.0,
+    )
+    right = YagiParameters(
+        frequency_hz=frequency_hz,
+        elements=(
+            YagiElement(0.0, 0.49 * wavelength, 0.001),
+            YagiElement(0.2 * wavelength, 0.476 * wavelength, 0.001),
+        ),
+        height_m=10.0,
+    )
+
+    assert yagi_element_length_mismatch(wrong) is True
+    assert yagi_element_length_mismatch(right) is False

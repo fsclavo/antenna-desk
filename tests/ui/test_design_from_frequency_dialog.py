@@ -70,7 +70,7 @@ def test_dialog_estimates_dl6wu_yagis_from_two_to_fifteen_elements(
     dialog = _dialog(qtbot)
     dialog._family.setCurrentIndex(dialog._family.findData("yagi"))
 
-    for count in (2, 5, 15):
+    for count in (2, 5, 15, 32):
         dialog._yagi_elements.setValue(count)
         dialog._run_estimate()
         parameters = dialog.estimated_parameters()

@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   workflow.
 - Frequency-first dimension estimation for dipoles, folded dipoles, loops,
   verticals (1/4λ and 5/8λ), inverted-V, fan dipoles, end-fed, OCFD, J Pole,
-  Slim Jim, Ringo, Yagi (2–15 elements from the DL6WU trimming reference), and
+  Slim Jim, Ringo, Yagi (2–32 elements from the DL6WU trimming reference), and
   Moxon (Cebik reference scaled by frequency).
 - `Design → Design from Frequency...` dialog with assumptions, warnings,
   confidence, sources, dimension table, apply-to-current-design flow, and an
@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Yagi frequency changes rescale the current element table by wavelength, and a
   warning flags element dimensions that do not match the current frequency.
 - Traceable estimator contract with source identifiers and explicit unsupported
-  cases for custom geometry and Yagi element counts outside 2–15.
+  cases for custom geometry and Yagi element counts outside 2–32.
 - Phase 1 domain model for units, geometry, conductors, feed points, ground
   models, environments, and horizontal half-wave dipoles.
 - Immutable project and design-variant model with validation.

@@ -84,7 +84,7 @@ the estimate to the current design, then use the existing **Optimize
 Dimension...**, **Optimize Yagi Elements...**, or synthesis tools to refine it
 with NEC. The checkbox **Open an optimizer or synthesis dialog after applying**
 does this in one step when a solver is configured. For Yagi, the frequency
-estimator supports 2 to 15 elements from the DL6WU trimming reference; the
+estimator supports 2 to 32 elements from the DL6WU trimming reference; the
 NBS five-element preset remains available in the Yagi editor.
 
 ## Create an antenna
@@ -126,7 +126,7 @@ scaled to the selected frequency. Changing the frequency in the form rescales
 the current element positions and lengths by the wavelength ratio. If the
 element dimensions do not look consistent with the current frequency, the form
 shows a warning; use **Design → Design from Frequency...** to rebuild a
-2–15 element DL6WU starting design.
+2–32 element DL6WU starting design.
 
 The NBS preset is reference-backed for gain: the published design has 9.2 dBd
 gain over a half-wave dipole. A single straight driven element is generated

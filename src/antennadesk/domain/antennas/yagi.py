@@ -19,6 +19,8 @@ from .wire import Wire
 
 YAGI_ELEMENT_ID_PREFIX = "element"
 ANTENNA_TYPE_YAGI = "yagi"
+YAGI_ELEMENT_LENGTH_MIN_FACTOR = 0.35
+YAGI_ELEMENT_LENGTH_MAX_FACTOR = 0.65
 
 
 @dataclass(frozen=True, slots=True)
@@ -203,6 +205,15 @@ class YagiParameters:
             generator_id="yagi",
             generator_name="Yagi",
         )
+
+
+def yagi_element_length_mismatch(parameters: YagiParameters) -> bool:
+    """Return True when element lengths do not look like a Yagi at the design frequency."""
+
+    wavelength = units.wavelength_m(parameters.frequency_hz)
+    minimum = wavelength * YAGI_ELEMENT_LENGTH_MIN_FACTOR
+    maximum = wavelength * YAGI_ELEMENT_LENGTH_MAX_FACTOR
+    return any(not minimum <= element.length_m <= maximum for element in parameters.elements)
 
 
 def nbs_five_element(

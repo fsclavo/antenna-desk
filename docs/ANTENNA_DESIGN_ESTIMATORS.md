@@ -61,12 +61,12 @@ warnings, and a dimension tolerance.
 | OCFD | half-wave total, feed at 1/3 | heuristic | Existing synthesis can refine length/feed |
 | J Pole / Slim Jim | radiator half-wave, stub quarter-wave | empirical | Feed offset and stub need tuning |
 | Ringo | scaled application preset | heuristic | Not a universal formula |
-| Yagi | DL6WU 2–15 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; optimize for the target |
+| Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; optimize for the target |
 | Moxon | Cebik 20 m wire reference scaled by frequency | reference scaled | Gap and tips are sensitive |
 
 ## Yagi scope
 
-The frequency-only estimator supports **2 to 15 elements** using the first
+The frequency-only estimator supports **2 to 32 elements** using the first
 elements of the published DL6WU 32-element reference (Cebik, derived from the
 RSGB VHF/UHF DX Book). Shorter Yagis use the DL6WU trimming principle: keep the
 reflector, driven element, and the first directors. The driven element is
@@ -87,7 +87,7 @@ Reference sources currently used:
 
 - ARRL Antenna Book: dipole end-effect, resonant loop, quarter-wave vertical.
 - NBS TN-688: five-element Yagi preset in the editor.
-- DL6WU/Cebik: 2–15 element trimming Yagi starting design.
+- DL6WU/Cebik: 2–32 element trimming Yagi starting design.
 - L. B. Cebik, W4RNL, “The Moxon Rectangle: A Review”, Table 1: 20 m wire Moxon.
 - Application preset: Ringo proportions; explicitly heuristic.
 
@@ -115,7 +115,7 @@ Reference sources currently used:
 
 - Height and ground are not solved analytically; use simulation refinement.
 - Custom geometry has no frequency-only estimator.
-- Yagi supports the DL6WU 2–15 element trimming reference; element-diameter
+- Yagi supports the DL6WU 2–32 element trimming reference; element-diameter
   and boom-mounting corrections are not applied.
 - Moxon and Ringo are scaled presets, not universal synthesis.
 - End-fed matching, counterpoise, and feed-line effects are installation

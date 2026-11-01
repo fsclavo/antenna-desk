@@ -1125,6 +1125,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Imported with {count} warning(s):\n{details}",
         Language.SPANISH: "Importado con {count} advertencia(s):\n{details}",
     },
+    "dialog.yagi_mismatch_title": {
+        Language.ENGLISH: "Yagi dimensions and frequency",
+        Language.SPANISH: "Dimensiones y frecuencia de la Yagi",
+    },
+    "dialog.yagi_mismatch_message": {
+        Language.ENGLISH: "Element lengths do not look consistent with the design frequency. Simulate anyway?",
+        Language.SPANISH: "Las longitudes de los elementos no parecen coincidir con la frecuencia de diseño. ¿Simular igualmente?",
+    },
     "dialog.geometry_png_title": {
         Language.ENGLISH: "Save geometry image",
         Language.SPANISH: "Guardar imagen de geometría",

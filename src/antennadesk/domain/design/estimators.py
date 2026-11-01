@@ -435,7 +435,7 @@ def estimate_yagi(intent: DesignIntent) -> DimensionEstimate:
     )
     return DimensionEstimate(
         parameters=parameters,
-        method_id="yagi.dl6wu_trimming_2_15",
+        method_id="yagi.dl6wu_trimming_2_32",
         confidence=Confidence.REFERENCE_SCALED,
         tolerance_m=wavelength * 0.02,
         source_ids=(SOURCE_DL6WU_YAGI,),

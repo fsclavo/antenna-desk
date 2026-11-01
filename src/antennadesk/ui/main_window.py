@@ -80,7 +80,7 @@ from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.vertical import VerticalParameters
-from ..domain.antennas.yagi import YagiParameters
+from ..domain.antennas.yagi import YagiParameters, yagi_element_length_mismatch
 from ..domain.common.time import utc_now
 from ..domain.environment.ground import GroundModel
 from ..domain.measurement import Measurement
@@ -1392,6 +1392,18 @@ class MainWindow(QMainWindow):
             if self._design_id is None:
                 raise ValueError(self._translator.t("error.no_project"))
             design = project.design_by_id(self._design_id)
+            if isinstance(design.parameters, YagiParameters) and yagi_element_length_mismatch(
+                design.parameters
+            ):
+                answer = QMessageBox.question(
+                    self,
+                    self._translator.t("dialog.yagi_mismatch_title"),
+                    self._translator.t("dialog.yagi_mismatch_message"),
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No,
+                )
+                if answer != QMessageBox.StandardButton.Yes:
+                    return
             if isinstance(design.parameters, CustomAntennaParameters):
                 spec = self._custom_simulation_spec(design.parameters)
             elif isinstance(design.parameters, OCFDParameters):

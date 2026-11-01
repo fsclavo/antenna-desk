@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Fernando Sclavo
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Normalized DL6WU Yagi reference dimensions for 2 to 15 elements.
+"""Normalized DL6WU Yagi reference dimensions for 2 to 32 elements.
 
 Source: L. B. Cebik, W4RNL, "Appreciating DL6WU Wide-Band Long-Boom Yagi
 Design", 32-element DL6WU table derived from RSGB, The VHF/UHF DX Book,
@@ -27,6 +27,23 @@ DL6WU_ELEMENTS: tuple[tuple[float, float], ...] = (
     (0.400, 3.225),
     (0.398, 3.615),
     (0.396, 4.015),
+    (0.395, 4.415),
+    (0.393, 4.815),
+    (0.392, 5.215),
+    (0.390, 5.615),
+    (0.389, 6.015),
+    (0.388, 6.415),
+    (0.387, 6.815),
+    (0.386, 7.215),
+    (0.385, 7.615),
+    (0.384, 8.015),
+    (0.383, 8.415),
+    (0.382, 8.815),
+    (0.381, 9.215),
+    (0.380, 9.615),
+    (0.379, 10.015),
+    (0.379, 10.415),
+    (0.378, 10.815),
 )
 
 MIN_YAGI_ELEMENTS = 2

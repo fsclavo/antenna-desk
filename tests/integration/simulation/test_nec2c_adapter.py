@@ -577,7 +577,7 @@ def test_dl6wu_yagi_estimator_produces_a_runnable_model(
             frequency_hz=144_000_000.0,
             antenna_type="yagi",
             height_m=10.0,
-            yagi_elements=15,
+            yagi_elements=32,
         )
     )
     spec = SimulationSpec(
