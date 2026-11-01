@@ -273,6 +273,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Measurement comparison now plots measured and simulated SWR, resistance,
   reactance, or impedance magnitude, and reports measured/simulated series
   resonances with their frequency difference.
+- Measurements can now be edited (metadata and conditions) and deleted from
+  the Measurements tab, with project persistence and confirmation before
+  deletion.
 - Added a reference-backed Moxon validation test using the published 20 m wire
   dimensions and free-space gain, impedance, and front-to-back values from
   L. B. Cebik, W4RNL.

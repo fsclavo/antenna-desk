@@ -272,8 +272,10 @@ reference plane, feed line/accessories, and optional notes. The measurement is
 stored in the project and appears in the **Measurements** tab. Use the
 **Plot** selector to compare measured and simulated SWR, R, X, or |Z|. The tab
 also reports the measured and simulated series resonances and their frequency
-difference. Imported data is treated as untrusted input; invalid rows are
-skipped with warnings.
+difference. **Edit...** changes the measurement name, calibration, reference
+plane, feed line, and notes without touching the imported points. **Delete**
+removes the measurement after confirmation. Imported data is treated as
+untrusted input; invalid rows are skipped with warnings.
 
 ## Feed line
 

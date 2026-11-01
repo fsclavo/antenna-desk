@@ -8,7 +8,7 @@ import math
 from pathlib import Path
 
 import pyqtgraph as pg
-from PySide6.QtCore import QEvent, Qt
+from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QFontDatabase
 from PySide6.QtWidgets import (
     QComboBox,
@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QPlainTextEdit,
+    QPushButton,
     QSplitter,
     QTableWidget,
     QTableWidgetItem,
@@ -38,6 +39,9 @@ from .radiation_pattern_3d_view import RadiationPattern3DView
 
 
 class ResultsView(QWidget):
+    measurement_edit_requested = Signal(object)
+    measurement_delete_requested = Signal(object)
+
     def __init__(self, translator: Translator, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._translator = translator
@@ -141,6 +145,16 @@ class ResultsView(QWidget):
         self._measurement_metric.addItem("", "magnitude")
         self._measurement_metric.currentIndexChanged.connect(self._render_measurements)
         self._measurement_metric_label = QLabel(self._measurements_tab)
+        self._measurement_edit = QPushButton(
+            translator.t("measurement.edit"), self._measurements_tab
+        )
+        self._measurement_delete = QPushButton(
+            translator.t("measurement.delete"), self._measurements_tab
+        )
+        self._measurement_edit.setEnabled(False)
+        self._measurement_delete.setEnabled(False)
+        self._measurement_edit.clicked.connect(self._request_measurement_edit)
+        self._measurement_delete.clicked.connect(self._request_measurement_delete)
         self._measurement_table = QTableWidget(0, 8, self._measurements_tab)
         self._configure_table(self._measurement_table)
         self._measurement_plot = self._make_plot()
@@ -157,6 +171,9 @@ class ResultsView(QWidget):
         measurement_controls.addSpacing(12)
         measurement_controls.addWidget(self._measurement_metric_label)
         measurement_controls.addWidget(self._measurement_metric)
+        measurement_controls.addSpacing(12)
+        measurement_controls.addWidget(self._measurement_edit)
+        measurement_controls.addWidget(self._measurement_delete)
         measurement_controls.addStretch(1)
         measurement_layout = QVBoxLayout(self._measurements_tab)
         measurement_layout.setContentsMargins(0, 0, 0, 0)
@@ -326,6 +343,8 @@ class ResultsView(QWidget):
         self._currents_frequency_label.setText(self._translator.t("currents.frequency"))
         self._measurement_selector_label.setText(self._translator.t("measurement.select"))
         self._measurement_metric_label.setText(self._translator.t("measurement.metric"))
+        self._measurement_edit.setText(self._translator.t("measurement.edit"))
+        self._measurement_delete.setText(self._translator.t("measurement.delete"))
         self._measurement_metric.setItemText(0, self._translator.t("table.swr"))
         self._measurement_metric.setItemText(1, self._translator.t("table.resistance"))
         self._measurement_metric.setItemText(2, self._translator.t("table.reactance"))
@@ -670,7 +689,10 @@ class ResultsView(QWidget):
         self._measurement_resonance.setText("")
         self._measurement_resonance.setVisible(False)
         index = self._measurement_selector.currentIndex()
-        if index < 0 or index >= len(self._measurements):
+        valid = 0 <= index < len(self._measurements)
+        self._measurement_edit.setEnabled(valid)
+        self._measurement_delete.setEnabled(valid)
+        if not valid:
             return
         measurement = self._measurements[index]
         details = []
@@ -847,6 +869,16 @@ class ResultsView(QWidget):
             )
         self._measurement_resonance.setText(" · ".join(resonance_parts))
         self._measurement_resonance.setVisible(bool(resonance_parts))
+
+    def _request_measurement_edit(self) -> None:
+        index = self._measurement_selector.currentIndex()
+        if 0 <= index < len(self._measurements):
+            self.measurement_edit_requested.emit(self._measurements[index])
+
+    def _request_measurement_delete(self) -> None:
+        index = self._measurement_selector.currentIndex()
+        if 0 <= index < len(self._measurements):
+            self.measurement_delete_requested.emit(self._measurements[index])
 
     def _render_diagnostics(self) -> None:
         self._diagnostics.setRowCount(0)

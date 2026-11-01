@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ...domain.measurement import Measurement
 from ..i18n import Translator
 
 
@@ -24,6 +25,8 @@ class MeasurementDetailsDialog(QDialog):
         translator: Translator,
         default_name: str,
         parent: QWidget | None = None,
+        *,
+        measurement: Measurement | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
@@ -36,6 +39,13 @@ class MeasurementDetailsDialog(QDialog):
         self._feed_line = QLineEdit(self)
         self._notes = QPlainTextEdit(self)
         self._notes.setPlaceholderText(translator.t("measurement.notes_hint"))
+
+        if measurement is not None:
+            self._name.setText(measurement.name)
+            self._calibration.setText(measurement.calibration)
+            self._reference_plane.setText(measurement.reference_plane)
+            self._feed_line.setText(measurement.feed_line)
+            self._notes.setPlainText(measurement.notes)
 
         form = QFormLayout()
         form.addRow(translator.t("measurement.name"), self._name)

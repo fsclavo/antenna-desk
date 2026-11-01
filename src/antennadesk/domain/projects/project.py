@@ -212,6 +212,36 @@ class Project:
             updated_at=updated_at,
         )
 
+    def with_updated_measurement(
+        self,
+        measurement: Measurement,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        if not any(item.id == measurement.id for item in self.measurements):
+            raise KeyError(f"unknown measurement id: {measurement.id}")
+        return replace(
+            self,
+            measurements=tuple(
+                measurement if item.id == measurement.id else item for item in self.measurements
+            ),
+            updated_at=updated_at,
+        )
+
+    def without_measurement(
+        self,
+        measurement_id: UUID,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        if not any(item.id == measurement_id for item in self.measurements):
+            raise KeyError(f"unknown measurement id: {measurement_id}")
+        return replace(
+            self,
+            measurements=tuple(item for item in self.measurements if item.id != measurement_id),
+            updated_at=updated_at,
+        )
+
     def with_feed_line(
         self,
         feed_line: FeedLine | None,

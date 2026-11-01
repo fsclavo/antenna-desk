@@ -475,6 +475,8 @@ class MainWindow(QMainWindow):
         self._geometry = GeometryView(self._translator, self._unit_system)
         self._geometry.setMinimumHeight(300)
         self._results = ResultsView(self._translator)
+        self._results.measurement_edit_requested.connect(self.edit_measurement)
+        self._results.measurement_delete_requested.connect(self.delete_measurement)
 
         geometry_container = QWidget(self)
         geometry_layout = QVBoxLayout(geometry_container)
@@ -1942,6 +1944,71 @@ class MainWindow(QMainWindow):
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
         self._set_project(project, project.designs[0].id, path=None, dirty=True)
+
+    def edit_measurement(self, measurement: Measurement) -> None:
+        if self._project is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        dialog = MeasurementDetailsDialog(
+            self._translator,
+            measurement.name,
+            self,
+            measurement=measurement,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            updated = replace(
+                measurement,
+                name=dialog.name() or measurement.name,
+                calibration=dialog.calibration(),
+                reference_plane=dialog.reference_plane(),
+                feed_line=dialog.feed_line(),
+                notes=dialog.notes(),
+            )
+            self._project = self._project.with_updated_measurement(
+                updated,
+                updated_at=utc_now(),
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.measurement", message=str(exc)))
+            return
+        self._dirty = True
+        self._results.set_measurements(self._project.measurements)
+        self._tabs_select_measurements()
+        self._last_status_key = "status.measurement_updated"
+        self._update_title()
+        self._update_actions()
+        self._update_status_text()
+
+    def delete_measurement(self, measurement: Measurement) -> None:
+        if self._project is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        answer = QMessageBox.question(
+            self,
+            self._translator.t("measurement.delete_title"),
+            self._translator.t("measurement.delete_confirm", name=measurement.name),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            self._project = self._project.without_measurement(
+                measurement.id,
+                updated_at=utc_now(),
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.measurement", message=str(exc)))
+            return
+        self._dirty = True
+        self._results.set_measurements(self._project.measurements)
+        self._tabs_select_measurements()
+        self._last_status_key = "status.measurement_deleted"
+        self._update_title()
+        self._update_actions()
+        self._update_status_text()
 
     def import_vna_csv(self) -> None:
         if self._project is None:

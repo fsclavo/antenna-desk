@@ -256,6 +256,31 @@ def test_results_view_compares_measured_and_simulated_impedance(qtbot: QtBot) ->
     assert len(view._measurement_plot.listDataItems()) == 2
 
 
+def test_results_view_requests_measurement_edit_and_delete(qtbot: QtBot) -> None:
+    from uuid import UUID
+
+    from antennadesk.domain.measurement import Measurement, MeasurementPoint
+
+    measurement = Measurement(
+        id=UUID("00000000-0000-0000-0000-000000000004"),
+        name="Field sweep",
+        created_at=datetime(2026, 10, 30, tzinfo=UTC),
+        reference_impedance_ohm=50.0,
+        points=(MeasurementPoint(7_100_000.0, complex(50.0, 0.0)),),
+    )
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    view.set_measurements((measurement,))
+
+    with qtbot.waitSignal(view.measurement_edit_requested) as edit_signal:
+        view._measurement_edit.click()
+    assert edit_signal.args[0] == measurement
+
+    with qtbot.waitSignal(view.measurement_delete_requested) as delete_signal:
+        view._measurement_delete.click()
+    assert delete_signal.args[0] == measurement
+
+
 def test_results_view_shows_imported_measurements(qtbot: QtBot) -> None:
     from datetime import UTC, datetime
     from uuid import UUID

@@ -13,6 +13,7 @@ from antennadesk.application.use_cases.create_dipole_project import (
     CreateDipoleProjectCommand,
 )
 from antennadesk.domain.antennas.dipole import DipoleParameters
+from antennadesk.domain.measurement import Measurement, MeasurementPoint
 from antennadesk.domain.projects.project import DesignVariant, Project
 
 
@@ -77,6 +78,52 @@ def test_project_rejects_duplicate_design_names(sample_project: Project) -> None
             updated_at=sample_project.updated_at,
             designs=(design, duplicate),
         )
+
+
+def test_project_updates_and_removes_a_measurement(sample_project: Project) -> None:
+    from datetime import UTC
+
+    measurement = Measurement(
+        id=uuid4(),
+        name="Field sweep",
+        created_at=datetime(2026, 11, 1, tzinfo=UTC),
+        reference_impedance_ohm=50.0,
+        points=(MeasurementPoint(7_100_000.0, complex(50.0, 0.0)),),
+    )
+    project = sample_project.with_measurement(
+        measurement,
+        updated_at=sample_project.updated_at + timedelta(hours=1),
+    )
+    updated = replace(measurement, name="Edited sweep", notes="after tuning")
+    project = project.with_updated_measurement(
+        updated,
+        updated_at=sample_project.updated_at + timedelta(hours=2),
+    )
+
+    assert project.measurements == (updated,)
+
+    project = project.without_measurement(
+        measurement.id,
+        updated_at=sample_project.updated_at + timedelta(hours=3),
+    )
+    assert project.measurements == ()
+
+
+def test_project_rejects_unknown_measurement_updates(sample_project: Project) -> None:
+    from datetime import UTC
+
+    measurement = Measurement(
+        id=uuid4(),
+        name="Field sweep",
+        created_at=datetime(2026, 11, 1, tzinfo=UTC),
+        reference_impedance_ohm=50.0,
+        points=(MeasurementPoint(7_100_000.0, complex(50.0, 0.0)),),
+    )
+
+    with pytest.raises(KeyError, match="unknown measurement"):
+        sample_project.with_updated_measurement(measurement, updated_at=sample_project.updated_at)
+    with pytest.raises(KeyError, match="unknown measurement"):
+        sample_project.without_measurement(measurement.id, updated_at=sample_project.updated_at)
 
 
 def test_project_rejects_naive_timestamps(sample_project: Project) -> None:

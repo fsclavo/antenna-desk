@@ -1342,6 +1342,69 @@ def test_import_vna_csv_adds_a_measurement(
     window._dirty = False
 
 
+def test_edit_and_delete_measurement(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from datetime import UTC, datetime
+    from uuid import UUID
+
+    from antennadesk.domain.measurement import Measurement, MeasurementPoint
+
+    measurement = Measurement(
+        id=UUID("00000000-0000-0000-0000-000000000005"),
+        name="Field sweep",
+        created_at=datetime(2026, 11, 1, tzinfo=UTC),
+        reference_impedance_ohm=50.0,
+        points=(MeasurementPoint(7_100_000.0, complex(50.0, 0.0)),),
+    )
+    assert window._project is not None
+    window._project = window._project.with_measurement(
+        measurement,
+        updated_at=window._project.updated_at,
+    )
+    window._results.set_measurements(window._project.measurements)
+
+    class FakeDetailsDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def name(self) -> str:
+            return "Edited sweep"
+
+        def calibration(self) -> str:
+            return "SOL"
+
+        def reference_plane(self) -> str:
+            return "terminals"
+
+        def feed_line(self) -> str:
+            return ""
+
+        def notes(self) -> str:
+            return "after tuning"
+
+    monkeypatch.setattr(main_window_module, "MeasurementDetailsDialog", FakeDetailsDialog)
+    window.edit_measurement(measurement)
+
+    assert window._project.measurements[0].name == "Edited sweep"
+    assert window._project.measurements[0].calibration == "SOL"
+    assert window._project.measurements[0].notes == "after tuning"
+
+    monkeypatch.setattr(
+        QMessageBox,
+        "question",
+        lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
+    )
+    window.delete_measurement(window._project.measurements[0])
+
+    assert window._project.measurements == ()
+    window._dirty = False
+
+
 def test_new_endfed_creates_a_first_class_design(
     window: MainWindow,
     qtbot: QtBot,

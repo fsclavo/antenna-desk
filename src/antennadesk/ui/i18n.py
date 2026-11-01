@@ -777,6 +777,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Design changed. Simulate again.",
         Language.SPANISH: "Diseño modificado. Simulá de nuevo.",
     },
+    "status.measurement_updated": {
+        Language.ENGLISH: "Measurement details updated.",
+        Language.SPANISH: "Detalles de la medición actualizados.",
+    },
+    "status.measurement_deleted": {
+        Language.ENGLISH: "Measurement deleted.",
+        Language.SPANISH: "Medición eliminada.",
+    },
     "status.design_estimated": {
         Language.ENGLISH: "Estimated dimensions applied. Review them and simulate.",
         Language.SPANISH: "Dimensiones estimadas aplicadas. Revisalas y simulá.",
@@ -842,6 +850,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "measurement.select": {
         Language.ENGLISH: "Measurement",
         Language.SPANISH: "Medición",
+    },
+    "measurement.edit": {
+        Language.ENGLISH: "Edit...",
+        Language.SPANISH: "Editar...",
+    },
+    "measurement.delete": {
+        Language.ENGLISH: "Delete",
+        Language.SPANISH: "Eliminar",
+    },
+    "measurement.delete_title": {
+        Language.ENGLISH: "Delete measurement",
+        Language.SPANISH: "Eliminar medición",
+    },
+    "measurement.delete_confirm": {
+        Language.ENGLISH: "Delete measurement '{name}'? This cannot be undone.",
+        Language.SPANISH: "¿Eliminar la medición '{name}'? No se puede deshacer.",
     },
     "measurement.none": {
         Language.ENGLISH: "No measurements imported.",
@@ -1924,6 +1948,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "error.import_vna": {
         Language.ENGLISH: "Could not import VNA CSV: {message}",
         Language.SPANISH: "No se pudo importar el CSV de VNA: {message}",
+    },
+    "error.measurement": {
+        Language.ENGLISH: "Could not update the measurement: {message}",
+        Language.SPANISH: "No se pudo actualizar la medición: {message}",
     },
     "action.import_mmana": {
         Language.ENGLISH: "Import MMANA File...",
