@@ -1707,3 +1707,51 @@ def test_design_from_frequency_applies_estimated_parameters(
     assert window._design_stack.currentWidget() is window._form_scroll
     assert window._status_label.text() == "Estimated dimensions applied. Review them and simulate."
     window._dirty = False
+
+
+def test_design_from_frequency_can_open_the_refiner_after_applying(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=41.0,
+        height_m=8.0,
+        sides=4,
+    )
+    calls: list[bool] = []
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def estimated_estimate(self):
+            from antennadesk.domain.design import Confidence, DimensionEstimate
+
+            return DimensionEstimate(
+                parameters=parameters,
+                method_id="test.loop",
+                confidence=Confidence.EMPIRICAL,
+                tolerance_m=0.1,
+                source_ids=("test.source",),
+            )
+
+        def estimated_parameters(self) -> LoopParameters:
+            return parameters
+
+        def refine_requested(self) -> bool:
+            return True
+
+    monkeypatch.setattr(main_window_module, "DesignFromFrequencyDialog", FakeDialog)
+    monkeypatch.setattr(window, "optimize_length", lambda: calls.append(True))
+    window._dirty = False
+
+    window.design_from_frequency()
+
+    assert calls == [True]
+    window._dirty = False

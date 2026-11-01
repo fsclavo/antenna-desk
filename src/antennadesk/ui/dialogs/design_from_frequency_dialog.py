@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QDialog,
     QDoubleSpinBox,
@@ -65,6 +66,7 @@ class DesignFromFrequencyDialog(QDialog):
         unit_system: UnitSystem,
         *,
         initial_frequency_hz: float = 7_100_000.0,
+        can_refine: bool = True,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -195,6 +197,8 @@ class DesignFromFrequencyDialog(QDialog):
         self._hint = QLabel(translator.t("design_from_frequency.hint"), self)
         self._hint.setWordWrap(True)
 
+        self._refine = QCheckBox(translator.t("design_from_frequency.refine_after_apply"), self)
+        self._refine.setVisible(can_refine)
         self._apply = QPushButton(translator.t("design_from_frequency.apply"), self)
         self._apply.setEnabled(False)
         self._apply.clicked.connect(self._accept)
@@ -214,6 +218,7 @@ class DesignFromFrequencyDialog(QDialog):
         layout.addWidget(self._warnings)
         layout.addWidget(self._sources)
         layout.addWidget(self._hint)
+        layout.addWidget(self._refine)
         layout.addLayout(buttons)
 
         self._family.currentIndexChanged.connect(self._update_rows)
@@ -391,6 +396,9 @@ class DesignFromFrequencyDialog(QDialog):
     def estimated_parameters(self) -> AntennaDesignParameters:
         return self.estimated_estimate().parameters
 
+    def refine_requested(self) -> bool:
+        return self._refine.isChecked()
+
     def retranslate(self) -> None:
         self.setWindowTitle(self._translator.t("design_from_frequency.title"))
         self._results.setHorizontalHeaderLabels(
@@ -403,4 +411,5 @@ class DesignFromFrequencyDialog(QDialog):
             label.setText(self._translator.t(label.objectName()))
         self._estimate_button.setText(self._translator.t("design_from_frequency.estimate"))
         self._apply.setText(self._translator.t("design_from_frequency.apply"))
+        self._refine.setText(self._translator.t("design_from_frequency.refine_after_apply"))
         self._hint.setText(self._translator.t("design_from_frequency.hint"))

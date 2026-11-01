@@ -82,8 +82,10 @@ The result is a **starting point**, not a verified construction measurement.
 The dialog shows assumptions, warnings, confidence, and dimension values. Apply
 the estimate to the current design, then use the existing **Optimize
 Dimension...**, **Optimize Yagi Elements...**, or synthesis tools to refine it
-with NEC. For Yagi, the initial estimator is the NBS five-element reference;
-other element counts remain editable in the Yagi editor.
+with NEC. The checkbox **Open an optimizer or synthesis dialog after applying**
+does this in one step when a solver is configured. For Yagi, the initial
+estimator is the NBS five-element reference; other element counts remain
+editable in the Yagi editor.
 
 ## Create an antenna
 

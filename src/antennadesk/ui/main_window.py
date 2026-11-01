@@ -2794,6 +2794,7 @@ class MainWindow(QMainWindow):
             self._translator,
             self._unit_system,
             initial_frequency_hz=design.parameters.frequency_hz,
+            can_refine=self._solver is not None,
             parent=self,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
@@ -2832,6 +2833,25 @@ class MainWindow(QMainWindow):
         self._last_status_key = "status.design_estimated"
         self._update_title()
         self._update_actions()
+        self._update_status_text()
+        refine_requested = getattr(dialog, "refine_requested", lambda: False)()
+        if refine_requested and self._solver is not None:
+            self._open_refinement_for_current_design()
+
+    def _open_refinement_for_current_design(self) -> None:
+        if self._project is None or self._design_id is None:
+            return
+        parameters = self._project.design_by_id(self._design_id).parameters
+        if isinstance(parameters, YagiParameters):
+            self.optimize_yagi_elements()
+            return
+        if isinstance(parameters, (OCFDParameters, JPoleParameters)):
+            self.synthesize_dimensions()
+            return
+        if self._optimize_action.isEnabled():
+            self.optimize_length()
+            return
+        self._last_status_key = "status.estimate_apply_manual_refine"
         self._update_status_text()
 
     def optimize_length(self) -> None:

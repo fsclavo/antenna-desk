@@ -463,6 +463,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Apply to current design",
         Language.SPANISH: "Aplicar al diseño actual",
     },
+    "design_from_frequency.refine_after_apply": {
+        Language.ENGLISH: "Open an optimizer or synthesis dialog after applying",
+        Language.SPANISH: "Abrir un optimizador o síntesis después de aplicar",
+    },
     "design_from_frequency.hint": {
         Language.ENGLISH: "These are starting dimensions, not verified construction values. Apply them and refine with the existing optimizer or synthesis if needed.",
         Language.SPANISH: "Son dimensiones iniciales, no valores de construcción verificados. Aplicarlas y refinar con el optimizador o la síntesis existente si hace falta.",
@@ -792,6 +796,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "status.design_estimated": {
         Language.ENGLISH: "Estimated dimensions applied. Review them and simulate.",
         Language.SPANISH: "Dimensiones estimadas aplicadas. Revisalas y simulá.",
+    },
+    "status.estimate_apply_manual_refine": {
+        Language.ENGLISH: "Estimated dimensions applied. Choose an optimization or synthesis tool to refine them.",
+        Language.SPANISH: "Dimensiones estimadas aplicadas. Elegí un optimizador o síntesis para refinarlas.",
     },
     "status.cancelling": {Language.ENGLISH: "Cancelling...", Language.SPANISH: "Cancelando..."},
     "status.saved": {Language.ENGLISH: "Project saved.", Language.SPANISH: "Proyecto guardado."},

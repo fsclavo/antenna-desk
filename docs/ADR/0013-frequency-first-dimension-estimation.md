@@ -30,8 +30,9 @@ an optional numerical refinement.
    use case.
 5. Add a **Design from Frequency** dialog that estimates, displays assumptions,
    and applies the parameters to the current design.
-6. Keep refinement separate: after applying, users use the existing optimizer,
-   Yagi optimizer, or impedance synthesis.
+6. Keep refinement separate: after applying, users can open the existing
+   optimizer, Yagi optimizer, or impedance synthesis. The dialog offers an
+   optional one-step handoff when a solver is configured.
 7. Use only sourced or explicitly labelled heuristic factors. Do not invent
    numerical reference values.
 8. Persist estimator provenance as optional design metadata in the existing

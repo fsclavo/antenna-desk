@@ -17,7 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Slim Jim, Ringo, Yagi (NBS five-element reference), and Moxon (Cebik
   reference scaled by frequency).
 - `Design → Design from Frequency...` dialog with assumptions, warnings,
-  confidence, sources, dimension table, and apply-to-current-design flow.
+  confidence, sources, dimension table, apply-to-current-design flow, and an
+  optional one-step handoff to the matching optimizer or synthesis dialog.
 - Applied estimates persist their method, confidence, assumptions, warnings,
   tolerance, and source identifiers as optional design provenance; editing the
   design clears it.
