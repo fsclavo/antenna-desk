@@ -131,6 +131,7 @@ from .dialogs.j_pole_dialog import JPoleDialog
 from .dialogs.loads_dialog import LoadsDialog
 from .dialogs.measurement_details_dialog import MeasurementDetailsDialog
 from .dialogs.moxon_dialog import MoxonDialog
+from .dialogs.moxon_optimization_dialog import MoxonOptimizationDialog
 from .dialogs.ocfd_dialog import OCFDDialog
 from .dialogs.optimization_dialog import OptimizationDialog
 from .dialogs.ringo_dialog import RingoDialog
@@ -253,6 +254,8 @@ class MainWindow(QMainWindow):
         self._optimize_yagi_action.triggered.connect(lambda: self.optimize_yagi_elements())
         self._optimize_fan_action = QAction(self)
         self._optimize_fan_action.triggered.connect(lambda: self.optimize_fan_dipole_elements())
+        self._optimize_moxon_action = QAction(self)
+        self._optimize_moxon_action.triggered.connect(lambda: self.optimize_moxon_elements())
         self._construction_action = QAction(self)
         self._construction_action.triggered.connect(lambda: self.show_construction_sheet())
         self._loads_action = QAction(self)
@@ -592,6 +595,7 @@ class MainWindow(QMainWindow):
         self._design_menu.addAction(self._synthesize_action)
         self._design_menu.addAction(self._optimize_yagi_action)
         self._design_menu.addAction(self._optimize_fan_action)
+        self._design_menu.addAction(self._optimize_moxon_action)
         self._design_menu.addAction(self._construction_action)
         self._design_menu.addAction(self._loads_action)
         self._custom_menu = self._design_menu.addMenu("")
@@ -648,6 +652,7 @@ class MainWindow(QMainWindow):
         self._synthesize_action.setText(self._translator.t("action.synthesize"))
         self._optimize_yagi_action.setText(self._translator.t("action.optimize_yagi"))
         self._optimize_fan_action.setText(self._translator.t("action.optimize_fan"))
+        self._optimize_moxon_action.setText(self._translator.t("action.optimize_moxon"))
         self._construction_action.setText(self._translator.t("action.construction"))
         self._loads_action.setText(self._translator.t("action.loads"))
         self._edit_custom_action.setText(self._translator.t("action.edit_custom"))
@@ -817,6 +822,9 @@ class MainWindow(QMainWindow):
         )
         self._optimize_fan_action.setEnabled(
             idle and has_project and is_fan_dipole and self._solver is not None
+        )
+        self._optimize_moxon_action.setEnabled(
+            idle and has_project and is_moxon and self._solver is not None
         )
         self._loads_action.setEnabled(idle and has_project)
         self._edit_custom_action.setEnabled(idle and has_project and is_custom)
@@ -3044,6 +3052,47 @@ class MainWindow(QMainWindow):
             return
         try:
             self._fan_dipole_form.set_parameters(parameters)
+            self._form_dirty = True
+            self._apply_fields()
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self.simulate()
+
+    def optimize_moxon_elements(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._solver is None:
+            self._show_error(self._translator.t("error.solver"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        design = self._project.design_by_id(self._design_id)
+        if not isinstance(design.parameters, MoxonParameters):
+            return
+        dialog = MoxonOptimizationDialog(
+            self._translator,
+            self._unit_system,
+            self._solver,
+            design.parameters,
+            replace(
+                self._moxon_simulation_spec(design.parameters),
+                feed_line=self._feed_line,
+            ),
+            self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        parameters = dialog.selected_parameters()
+        if parameters is None:
+            return
+        try:
+            self._moxon_form.set_parameters(parameters)
             self._form_dirty = True
             self._apply_fields()
         except Exception as exc:

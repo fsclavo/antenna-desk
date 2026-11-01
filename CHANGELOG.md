@@ -304,6 +304,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added bounded fan-dipole element-length optimization against a target
   impedance, with selectable elements, search bounds, ranked evaluations, and
   apply-and-simulate flow.
+- Added bounded Moxon optimization of width, spacing, reflector tip, and driven
+  tip for target impedance, maximum gain, or maximum front-to-back ratio.
 
 - Documentation and README are now in English.
 

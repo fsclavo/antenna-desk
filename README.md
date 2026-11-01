@@ -111,6 +111,8 @@ for build, smoke-test, and packaging steps.
   gaps for target impedance, maximum gain, or maximum front-to-back ratio, with
   minimum-gap constraints, a ranked evaluation log, and apply-and-simulate flow.
 - Bounded fan-dipole element-length optimization against a target impedance.
+- Bounded Moxon optimization of width, spacing, and tip dimensions for target
+  impedance, gain, or front-to-back ratio.
 - Custom straight-wire antennas with a coordinate editor, template-to-custom
   conversion, a parametric Yagi generator with an editable element table and
   NBS starting preset, Moxon, fan dipole, end-fed, J Pole, Slim Jim, Ringo,

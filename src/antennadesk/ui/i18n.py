@@ -1218,6 +1218,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Optimize Fan Elements...",
         Language.SPANISH: "Optimizar elementos del dipolo abanico...",
     },
+    "action.optimize_moxon": {
+        Language.ENGLISH: "Optimize Moxon Dimensions...",
+        Language.SPANISH: "Optimizar dimensiones del Moxon...",
+    },
     "action.construction": {
         Language.ENGLISH: "Construction Sheet...",
         Language.SPANISH: "Hoja de construcción...",
@@ -1800,6 +1804,62 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Las posiciones y longitudes son editables. La antena generada es "
             "un diseño de hilos personalizado editable."
         ),
+    },
+    "moxon_optimize.title": {
+        Language.ENGLISH: "Optimize Moxon Dimensions",
+        Language.SPANISH: "Optimizar dimensiones del Moxon",
+    },
+    "moxon_optimize.variable": {
+        Language.ENGLISH: "Dimension",
+        Language.SPANISH: "Dimensión",
+    },
+    "moxon_optimize.target_impedance_objective": {
+        Language.ENGLISH: "Target impedance",
+        Language.SPANISH: "Impedancia objetivo",
+    },
+    "moxon_optimize.max_gain_objective": {
+        Language.ENGLISH: "Maximum gain",
+        Language.SPANISH: "Ganancia máxima",
+    },
+    "moxon_optimize.max_front_to_back_objective": {
+        Language.ENGLISH: "Maximum front-to-back",
+        Language.SPANISH: "Máxima relación frente/espalda",
+    },
+    "moxon_optimize.hint": {
+        Language.ENGLISH: "Selected Moxon dimensions change together. Invalid tip/spacing combinations are rejected; verify the applied design with a full simulation.",
+        Language.SPANISH: "Las dimensiones seleccionadas del Moxon cambian juntas. Las combinaciones inválidas de puntas/separación se rechazan; verificá el diseño aplicado con una simulación completa.",
+    },
+    "moxon_optimize.run": {
+        Language.ENGLISH: "Run optimization",
+        Language.SPANISH: "Ejecutar optimización",
+    },
+    "moxon_optimize.apply": {
+        Language.ENGLISH: "Apply dimensions",
+        Language.SPANISH: "Aplicar dimensiones",
+    },
+    "moxon_optimize.no_variables": {
+        Language.ENGLISH: "Select at least one dimension to optimize.",
+        Language.SPANISH: "Seleccioná al menos una dimensión para optimizar.",
+    },
+    "moxon_optimize.running": {
+        Language.ENGLISH: "Running Moxon optimization...",
+        Language.SPANISH: "Ejecutando optimización del Moxon...",
+    },
+    "moxon_optimize.error": {
+        Language.ENGLISH: "Moxon optimization failed: {message}",
+        Language.SPANISH: "Falló la optimización del Moxon: {message}",
+    },
+    "moxon_optimize.no_best": {
+        Language.ENGLISH: "No valid Moxon dimensions were found.",
+        Language.SPANISH: "No se encontraron dimensiones válidas del Moxon.",
+    },
+    "moxon_optimize.summary": {
+        Language.ENGLISH: "Best: {dimensions} · {objective}",
+        Language.SPANISH: "Mejor: {dimensions} · {objective}",
+    },
+    "moxon_optimize.close": {
+        Language.ENGLISH: "Cancel the running optimization before closing.",
+        Language.SPANISH: "Cancelá la optimización en curso antes de cerrar.",
     },
     "fan_optimize.title": {
         Language.ENGLISH: "Optimize Fan Dipole Elements",

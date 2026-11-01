@@ -1203,6 +1203,7 @@ def test_main_menu_is_grouped_by_task(window: MainWindow) -> None:
     assert "Synthesize Dimensions..." in design_titles
     assert "Optimize Yagi Elements..." in design_titles
     assert "Optimize Fan Elements..." in design_titles
+    assert "Optimize Moxon Dimensions..." in design_titles
     assert "Edit Series Loads..." in design_titles
     assert "Simulate" in simulation_titles
     assert "Feed Line..." in simulation_titles

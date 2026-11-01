@@ -363,6 +363,19 @@ editor and starts the normal full sweep/pattern simulation. This is a numerical
 starting point; verify the applied design with a full simulation and, where
 possible, a measurement.
 
+## Optimize Moxon dimensions
+
+For a Moxon, use **Design → Optimize Moxon Dimensions...**. Choose the objective
+(target impedance, maximum gain, or maximum front-to-back), the dimensions to
+include, the search margin, and the evaluation budget. Target impedance also
+asks for R/X; gain and F/B require a far-field request. The optimizer varies the
+selected width, spacing, reflector tip, and driven tip together.
+
+The evaluation table is ranked by the selected objective and reports R, X, SWR,
+gain, F/B, and the objective value. **Apply dimensions** updates the Moxon
+editor and starts the normal full sweep. Invalid tip/spacing combinations are
+rejected, so verify the applied geometry with a full simulation.
+
 ## Optimize fan dipole elements
 
 For a fan dipole, use **Design → Optimize Fan Elements...**. Select the element
