@@ -342,6 +342,7 @@ class LNetworkPayload(StrictModel):
     input_series_capacitance_f: float = Field(default=0.0, ge=0.0)
     output_series_inductance_h: float = Field(default=0.0, ge=0.0)
     output_series_capacitance_f: float = Field(default=0.0, ge=0.0)
+    q_factor: float | None = Field(default=None, gt=0.0)
 
 
 class FarFieldRequestPayload(StrictModel):
@@ -960,6 +961,7 @@ def _matching_network_from_domain(value: MatchingNetwork) -> LNetworkPayload:
             series_capacitance_f=value.series_capacitance_f,
             output_shunt_inductance_h=value.output_shunt_inductance_h,
             output_shunt_capacitance_f=value.output_shunt_capacitance_f,
+            q_factor=value.q_factor,
         )
     if isinstance(value, TNetwork):
         return LNetworkPayload(
@@ -970,6 +972,7 @@ def _matching_network_from_domain(value: MatchingNetwork) -> LNetworkPayload:
             shunt_capacitance_f=value.shunt_capacitance_f,
             output_series_inductance_h=value.output_series_inductance_h,
             output_series_capacitance_f=value.output_series_capacitance_f,
+            q_factor=value.q_factor,
         )
     return LNetworkPayload(
         topology="l",
@@ -978,6 +981,7 @@ def _matching_network_from_domain(value: MatchingNetwork) -> LNetworkPayload:
         shunt_inductance_h=value.shunt_inductance_h,
         shunt_capacitance_f=value.shunt_capacitance_f,
         shunt_at_input=value.shunt_at_input,
+        q_factor=value.q_factor,
     )
 
 
@@ -1548,6 +1552,7 @@ def _matching_network_to_domain(value: LNetworkPayload) -> MatchingNetwork:
             series_capacitance_f=value.series_capacitance_f,
             output_shunt_inductance_h=value.output_shunt_inductance_h,
             output_shunt_capacitance_f=value.output_shunt_capacitance_f,
+            q_factor=value.q_factor,
         )
     if value.topology == "t":
         return TNetwork(
@@ -1557,6 +1562,7 @@ def _matching_network_to_domain(value: LNetworkPayload) -> MatchingNetwork:
             shunt_capacitance_f=value.shunt_capacitance_f,
             output_series_inductance_h=value.output_series_inductance_h,
             output_series_capacitance_f=value.output_series_capacitance_f,
+            q_factor=value.q_factor,
         )
     return LNetwork(
         series_inductance_h=value.series_inductance_h,
@@ -1564,6 +1570,7 @@ def _matching_network_to_domain(value: LNetworkPayload) -> MatchingNetwork:
         shunt_inductance_h=value.shunt_inductance_h,
         shunt_capacitance_f=value.shunt_capacitance_f,
         shunt_at_input=value.shunt_at_input,
+        q_factor=value.q_factor,
     )
 
 

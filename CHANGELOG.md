@@ -312,6 +312,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the design frequency, or report that a single L section cannot match it.
 - Matching-network support now includes manual Pi and T topologies with
   project/run persistence and input-impedance evaluation.
+- Matching networks can include component loss through a Q factor; loss is
+  reflected in input impedance/SWR, not in reported antenna gain.
 - Added a parallel-trap helper to the load editor that computes capacitance from
   inductance and resonant frequency.
 

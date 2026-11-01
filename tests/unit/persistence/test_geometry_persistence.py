@@ -443,6 +443,7 @@ def test_pi_matching_network_round_trips_through_the_project_schema() -> None:
         input_shunt_capacitance_f=100e-12,
         series_inductance_h=1e-6,
         output_shunt_capacitance_f=120e-12,
+        q_factor=200.0,
     )
     project = project.with_matching_network(network, updated_at=project.updated_at)
 

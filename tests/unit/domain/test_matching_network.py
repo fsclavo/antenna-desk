@@ -119,3 +119,21 @@ def test_pi_and_t_networks_reject_empty_configurations() -> None:
         PiNetwork()
     with pytest.raises(ValueError, match="non-zero"):
         TNetwork()
+
+
+def test_component_q_adds_series_loss_to_a_pi_branch() -> None:
+    from antennadesk.domain.antennas.matching_network import PiNetwork
+
+    frequency = 10_000_000.0
+    inductance = 1e-6
+    q_factor = 100.0
+    network = PiNetwork(series_inductance_h=inductance, q_factor=q_factor)
+    omega = 2.0 * math.pi * frequency
+    expected = complex(50.0, 0.0) + complex(omega * inductance / q_factor, omega * inductance)
+
+    assert network.input_impedance(complex(50.0, 0.0), frequency) == pytest.approx(expected)
+
+
+def test_q_factor_must_be_positive_when_present() -> None:
+    with pytest.raises(ValueError, match="q_factor"):
+        LNetwork(series_inductance_h=1e-6, shunt_capacitance_f=100e-12, q_factor=0.0)

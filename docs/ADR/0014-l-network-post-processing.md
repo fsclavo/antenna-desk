@@ -28,7 +28,9 @@ source/network layout that does not fit the canonical one-feed model.
    as a normal `ParallelLoad`/NEC `LD 1` load.
 6. Provide automatic L-network synthesis from a load R/X at the design
    frequency. Pi/T are manual designs in this slice.
-7. Keep lossy networks and automatic Pi/T synthesis out of this slice.
+7. Model component loss through a single Q factor; lossy networks affect input
+   impedance/SWR but not the reported antenna pattern or gain.
+8. Keep automatic Pi/T synthesis and per-component parasitics out of this slice.
 
 ## Consequences
 
@@ -44,4 +46,5 @@ Limitations:
 - Pi/T networks are manual; only L has automatic synthesis.
 - The network is evaluated from the simulated antenna impedance, so it does not
   alter current distribution or pattern.
-- Component parasitics, Q, and network loss are not modeled.
+- A single Q models component loss; per-component Q and parasitics are not
+  modeled, and network loss is not reflected in reported gain.

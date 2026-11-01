@@ -113,6 +113,14 @@ class MatchingNetworkDialog(QDialog):
             self._output_series_l.setValue(network.output_series_inductance_h * 1e6)
             self._output_series_c.setValue(network.output_series_capacitance_f * 1e12)
 
+        self._q_factor = QDoubleSpinBox(self)
+        self._q_factor.setRange(0.0, 100_000.0)
+        self._q_factor.setDecimals(1)
+        self._q_factor.setValue(
+            network.q_factor if network is not None and network.q_factor else 0.0
+        )
+        self._q_factor.setSpecialValueText(translator.t("matching_network.lossless"))
+
         self._load_r = QDoubleSpinBox(self)
         self._load_r.setRange(0.1, 100_000.0)
         self._load_r.setDecimals(3)
@@ -133,6 +141,7 @@ class MatchingNetworkDialog(QDialog):
 
         form = QFormLayout()
         form.addRow(translator.t("matching_network.topology"), self._topology)
+        form.addRow(translator.t("matching_network.q_factor"), self._q_factor)
         form.addRow(translator.t("matching_network.load_r"), self._load_r)
         form.addRow(translator.t("matching_network.load_x"), self._load_x)
         form.addRow(translator.t("matching_network.frequency"), self._frequency)
@@ -224,6 +233,7 @@ class MatchingNetworkDialog(QDialog):
             self._shunt_c,
             self._shunt_at_input,
             self._topology,
+            self._q_factor,
             self._input_shunt_l,
             self._input_shunt_c,
             self._output_shunt_l,
@@ -247,6 +257,7 @@ class MatchingNetworkDialog(QDialog):
         if not self._enabled.isChecked():
             return None
         topology = self._topology.currentData()
+        q_factor = self._q_factor.value() or None
         if topology == "pi":
             return PiNetwork(
                 input_shunt_inductance_h=self._input_shunt_l.value() * 1e-6,
@@ -255,6 +266,7 @@ class MatchingNetworkDialog(QDialog):
                 series_capacitance_f=self._series_c.value() * 1e-12,
                 output_shunt_inductance_h=self._output_shunt_l.value() * 1e-6,
                 output_shunt_capacitance_f=self._output_shunt_c.value() * 1e-12,
+                q_factor=q_factor,
             )
         if topology == "t":
             return TNetwork(
@@ -264,6 +276,7 @@ class MatchingNetworkDialog(QDialog):
                 shunt_capacitance_f=self._shunt_c.value() * 1e-12,
                 output_series_inductance_h=self._output_series_l.value() * 1e-6,
                 output_series_capacitance_f=self._output_series_c.value() * 1e-12,
+                q_factor=q_factor,
             )
         return LNetwork(
             series_inductance_h=self._series_l.value() * 1e-6,
@@ -271,6 +284,7 @@ class MatchingNetworkDialog(QDialog):
             shunt_inductance_h=self._shunt_l.value() * 1e-6,
             shunt_capacitance_f=self._shunt_c.value() * 1e-12,
             shunt_at_input=self._shunt_at_input.isChecked(),
+            q_factor=q_factor,
         )
 
     def result_network(self) -> MatchingNetwork | None:

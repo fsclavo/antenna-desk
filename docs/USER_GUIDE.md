@@ -305,9 +305,11 @@ elements in µH/pF. For an L network, choose whether the shunt element is on the
 transmitter side. Enter the load R/X at the design frequency and use
 **Auto-design L network** to calculate one valid L section; the dialog reports
 when a single section cannot match the load. Pi/T are manual designs in this
-slice. The network is evaluated before the feed line: antenna → matching
+slice. Set a component Q to include loss in the input impedance (0 means
+lossless). The network is evaluated before the feed line: antenna → matching
 network → feed line → transmitter. Impedance and SWR include the network;
-pattern and power gain remain antenna-side. Lossy networks are not implemented.
+pattern and power gain remain antenna-side. Network loss is not added to
+reported gain.
 
 In the load editor, **Add parallel trap** calculates the capacitance for a
 parallel LC trap from the entered inductance and resonant frequency. The trap is

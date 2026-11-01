@@ -764,6 +764,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Shunt capacitance",
         Language.SPANISH: "Capacitancia paralelo",
     },
+    "matching_network.q_factor": {
+        Language.ENGLISH: "Component Q (0 = lossless)",
+        Language.SPANISH: "Q de componentes (0 = sin pérdidas)",
+    },
+    "matching_network.lossless": {
+        Language.ENGLISH: "Lossless",
+        Language.SPANISH: "Sin pérdidas",
+    },
     "matching_network.topology": {
         Language.ENGLISH: "Topology",
         Language.SPANISH: "Topología",

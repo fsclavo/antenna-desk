@@ -10,22 +10,45 @@ from dataclasses import dataclass
 from ..common.units import ensure_non_negative, ensure_positive
 
 
-def _branch_impedance(inductance_h: float, capacitance_f: float, omega: float) -> complex:
+def _branch_impedance(
+    inductance_h: float,
+    capacitance_f: float,
+    omega: float,
+    q_factor: float | None,
+) -> complex:
     impedance = complex(0.0, 0.0)
     if inductance_h:
         impedance += complex(0.0, omega * inductance_h)
+        if q_factor is not None:
+            impedance += omega * inductance_h / q_factor
     if capacitance_f:
         impedance += complex(0.0, -1.0 / (omega * capacitance_f))
+        if q_factor is not None:
+            impedance += 1.0 / (omega * capacitance_f * q_factor)
     return impedance
 
 
-def _branch_admittance(inductance_h: float, capacitance_f: float, omega: float) -> complex:
+def _branch_admittance(
+    inductance_h: float,
+    capacitance_f: float,
+    omega: float,
+    q_factor: float | None,
+) -> complex:
+    if not _active(inductance_h, capacitance_f):
+        return complex(0.0, 0.0)
+    if q_factor is not None:
+        return 1.0 / _branch_impedance(inductance_h, capacitance_f, omega, q_factor)
     admittance = complex(0.0, 0.0)
     if inductance_h:
         admittance += complex(0.0, -1.0 / (omega * inductance_h))
     if capacitance_f:
         admittance += complex(0.0, omega * capacitance_f)
     return admittance
+
+
+def _validate_q(q_factor: float | None) -> None:
+    if q_factor is not None:
+        ensure_positive(q_factor, name="q_factor")
 
 
 def _validate_branch(name: str, inductance_h: float, capacitance_f: float) -> None:
@@ -53,8 +76,10 @@ class LNetwork:
     shunt_inductance_h: float = 0.0
     shunt_capacitance_f: float = 0.0
     shunt_at_input: bool = False
+    q_factor: float | None = None
 
     def __post_init__(self) -> None:
+        _validate_q(self.q_factor)
         _validate_branch("series", self.series_inductance_h, self.series_capacitance_f)
         _validate_branch("shunt", self.shunt_inductance_h, self.shunt_capacitance_f)
         series = _active(self.series_inductance_h, self.series_capacitance_f)
@@ -73,8 +98,12 @@ class LNetwork:
         if not self.is_active:
             return load_impedance_ohm
         omega = 2.0 * math.pi * frequency_hz
-        series = _branch_impedance(self.series_inductance_h, self.series_capacitance_f, omega)
-        shunt = _branch_admittance(self.shunt_inductance_h, self.shunt_capacitance_f, omega)
+        series = _branch_impedance(
+            self.series_inductance_h, self.series_capacitance_f, omega, self.q_factor
+        )
+        shunt = _branch_admittance(
+            self.shunt_inductance_h, self.shunt_capacitance_f, omega, self.q_factor
+        )
         if self.shunt_at_input:
             return 1.0 / (shunt + 1.0 / (series + load_impedance_ohm))
         return series + 1.0 / (shunt + 1.0 / load_impedance_ohm)
@@ -90,8 +119,10 @@ class PiNetwork:
     series_capacitance_f: float = 0.0
     output_shunt_inductance_h: float = 0.0
     output_shunt_capacitance_f: float = 0.0
+    q_factor: float | None = None
 
     def __post_init__(self) -> None:
+        _validate_q(self.q_factor)
         _validate_branch(
             "input_shunt", self.input_shunt_inductance_h, self.input_shunt_capacitance_f
         )
@@ -126,11 +157,19 @@ class PiNetwork:
             return load_impedance_ohm
         omega = 2.0 * math.pi * frequency_hz
         output_shunt = _branch_admittance(
-            self.output_shunt_inductance_h, self.output_shunt_capacitance_f, omega
+            self.output_shunt_inductance_h,
+            self.output_shunt_capacitance_f,
+            omega,
+            self.q_factor,
         )
-        series = _branch_impedance(self.series_inductance_h, self.series_capacitance_f, omega)
+        series = _branch_impedance(
+            self.series_inductance_h, self.series_capacitance_f, omega, self.q_factor
+        )
         input_shunt = _branch_admittance(
-            self.input_shunt_inductance_h, self.input_shunt_capacitance_f, omega
+            self.input_shunt_inductance_h,
+            self.input_shunt_capacitance_f,
+            omega,
+            self.q_factor,
         )
         output_impedance = 1.0 / (output_shunt + 1.0 / load_impedance_ohm)
         return 1.0 / (input_shunt + 1.0 / (series + output_impedance))
@@ -146,8 +185,10 @@ class TNetwork:
     shunt_capacitance_f: float = 0.0
     output_series_inductance_h: float = 0.0
     output_series_capacitance_f: float = 0.0
+    q_factor: float | None = None
 
     def __post_init__(self) -> None:
+        _validate_q(self.q_factor)
         _validate_branch(
             "input_series", self.input_series_inductance_h, self.input_series_capacitance_f
         )
@@ -182,11 +223,19 @@ class TNetwork:
             return load_impedance_ohm
         omega = 2.0 * math.pi * frequency_hz
         output_series = _branch_impedance(
-            self.output_series_inductance_h, self.output_series_capacitance_f, omega
+            self.output_series_inductance_h,
+            self.output_series_capacitance_f,
+            omega,
+            self.q_factor,
         )
-        shunt = _branch_admittance(self.shunt_inductance_h, self.shunt_capacitance_f, omega)
+        shunt = _branch_admittance(
+            self.shunt_inductance_h, self.shunt_capacitance_f, omega, self.q_factor
+        )
         input_series = _branch_impedance(
-            self.input_series_inductance_h, self.input_series_capacitance_f, omega
+            self.input_series_inductance_h,
+            self.input_series_capacitance_f,
+            omega,
+            self.q_factor,
         )
         return input_series + 1.0 / (shunt + 1.0 / (output_series + load_impedance_ohm))
 
