@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   with nearest-point readouts and theme-aware overlays.
 - Menu ergonomics: standard File/Edit order, Change Template in the Design
   menu, grouped Import/Export entries, and Language/Units under Tools.
+- The design panel now leads with **Estimate Dimensions...** as the primary
+  frequency-first action; Change Template remains in the Design menu and keeps
+  its Ctrl+Shift+T shortcut.
 - Single-sourced package version from `antennadesk.__version__`, About-dialog
   version display, and a Hatchling wheel/sdist build with a package smoke-test
   workflow.
@@ -258,8 +261,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   matching stub.
 - Placed the impedance and SWR charts side by side and reduced the default
   geometry pane height to give results more room.
-- Moved Change Template to a fixed button above the design panel so it is always
-  reachable.
+- Change Template is always reachable from the Design menu and with
+  Ctrl+Shift+T.
 - Added VNA CSV import for R/X, S11 real/imaginary, and magnitude/phase data,
   persisted measurements, measurement conditions/reference plane, and a
   measured/simulated SWR tab.

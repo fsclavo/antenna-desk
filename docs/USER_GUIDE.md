@@ -32,7 +32,11 @@ The application opens with a 40 m horizontal dipole loaded. Press **Simulate**
 height, wire diameter, material, ground, reference impedance, pattern
 resolution, and the frequency sweep.
 
-Choose the antenna type first:
+For a frequency-first start, press **Estimate Dimensions...** above the design
+panel, choose the family and target frequency, and apply the estimate. The form
+then shows the resulting dimensions for review.
+
+Choose the antenna type in the form:
 
 - **Wire dipole**: one straight wire; choose horizontal or vertical. For a
   vertical dipole the height is the base height and the azimuth is disabled.
@@ -83,7 +87,8 @@ while they have focus.
 
 ## Design from frequency
 
-Use **Design → Estimate Dimensions...** to estimate initial dimensions from a
+Use the **Estimate Dimensions...** button above the design panel or
+**Design → Estimate Dimensions...** to estimate initial dimensions from a
 frequency and an antenna family. The dialog supports wire and folded dipoles,
 loops (generic, quad, delta), verticals in 1/4λ and 5/8λ, inverted-V, fan
 dipoles, end-fed wires, OCFD, J Pole, Slim Jim, Ringo, Yagi, and Moxon.
@@ -122,8 +127,8 @@ For a wire dipole, folded dipole, or loop, the guided wizard asks for:
 After creation, adjust the design panel and press **Apply design** or
 **Simulate**. The design panel separates **Family** from **Template**; generated
 templates now have their own inline editors. The Template field shows the current
-template; use **Change Template...** to open the catalog and replace the current
-design with another template.
+template; use **Design → Change Template...** (or Ctrl+Shift+T) to open the
+catalog and replace the current design with another template.
 
 A full-wave loop normally presents roughly 100-150 Ω at resonance, so a direct
 50 Ω target may be unreachable by changing only its circumference. Use a 2:1

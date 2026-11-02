@@ -129,9 +129,11 @@ def test_save_project_writes_a_native_file(
 def test_language_switch_updates_actions(window: MainWindow) -> None:
     window._set_language(Language.SPANISH)
     assert window._simulate_action.text() == "Simular"
+    assert window._estimate_button.text() == "Estimar dimensiones..."
 
     window._set_language(Language.ENGLISH)
     assert window._simulate_action.text() == "Simulate"
+    assert window._estimate_button.text() == "Estimate Dimensions..."
 
 
 def test_unit_switch_preserves_physical_length(window: MainWindow) -> None:
@@ -1096,8 +1098,10 @@ def test_change_template_replaces_the_current_design(
         lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
     )
 
-    assert window._change_template_button.isHidden() is False
-    assert window._change_template_button.text() == "Change Template..."
+    assert window._estimate_button.isHidden() is False
+    assert window._estimate_button.text() == "Estimate Dimensions..."
+    assert window._change_template_action.text() == "Change Template..."
+    assert window._change_template_action.isEnabled() is True
     window.change_template()
 
     assert window._project is not None
@@ -1709,7 +1713,8 @@ def test_design_from_frequency_applies_estimated_parameters(
     monkeypatch.setattr(main_window_module, "DesignFromFrequencyDialog", FakeDialog)
     window._dirty = False
 
-    window.design_from_frequency()
+    assert window._estimate_button.text() == "Estimate Dimensions..."
+    window._estimate_button.click()
 
     assert window._project is not None
     design = window._project.design_by_id(window._design_id)
@@ -1920,3 +1925,20 @@ def test_menu_order_follows_the_standard_desktop_layout(window: MainWindow) -> N
     assert "Units" in tools_titles
     assert window._change_template_action.shortcut().toString() == "Ctrl+Shift+T"
     assert window._design_from_frequency_action.shortcut().toString() == "Ctrl+Shift+E"
+
+
+def test_estimate_dimensions_does_not_require_a_solver(qtbot: QtBot) -> None:
+    window = MainWindow(
+        JsonProjectRepository(),
+        None,
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+    )
+    qtbot.addWidget(window)
+
+    assert window._estimate_button.isEnabled() is True
+    assert window._optimize_button.isEnabled() is False
+    assert window._simulate_action.isEnabled() is False
+
+    window._dirty = False
+    window.close()
