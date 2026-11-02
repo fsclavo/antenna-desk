@@ -1972,8 +1972,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Peso de eficiencia",
     },
     "element_optimize.hint": {
-        Language.ENGLISH: "Selected dimensions change together. The target is evaluated at one frequency; verify the applied design with a full simulation.",
-        Language.SPANISH: "Las dimensiones seleccionadas cambian juntas. El objetivo se evalúa en una frecuencia; verificá el diseño aplicado con una simulación completa.",
+        Language.ENGLISH: "Selected dimensions change together. Select a table row to apply a different candidate or Pareto compromise. Verify the applied design with a full simulation.",
+        Language.SPANISH: "Las dimensiones seleccionadas cambian juntas. Seleccioná una fila de la tabla para aplicar otro candidato o compromiso de Pareto. Verificá el diseño aplicado con una simulación completa.",
+    },
+    "element_optimize.selected_summary": {
+        Language.ENGLISH: "Selected candidate: {objective}",
+        Language.SPANISH: "Candidato seleccionado: {objective}",
     },
     "element_optimize.run": {
         Language.ENGLISH: "Run optimization",

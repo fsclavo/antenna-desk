@@ -322,6 +322,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   user weights.
 - Multi-objective results now include a Pareto rank column, with successive
   non-dominated fronts computed from the selected metrics.
+- Optimization result rows can be selected to apply a specific candidate or
+  Pareto compromise instead of only the best weighted score.
 - Removed the obsolete template-specific optimization dialogs and workers; the
   generic dialog is now the only multi-element optimization UI.
 - Replaced the separate optimization menu actions with one **Optimize...**

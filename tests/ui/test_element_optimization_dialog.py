@@ -103,5 +103,9 @@ def test_generic_element_dialog_applies_optimized_parameters(qtbot: QtBot) -> No
     assert isinstance(selected, DipoleParameters)
     assert selected.total_length_m == pytest.approx(20.0, abs=0.05)
 
+    dialog._evaluations.selectRow(1)
+    assert dialog.selected_parameters() is not None
+    assert "Selected candidate" in dialog._summary.text()
+
     dialog._apply.click()
     assert dialog.result() == QDialog.DialogCode.Accepted

@@ -88,6 +88,7 @@ class ElementOptimizationDialog(QDialog):
         self._selected_parameters: AntennaDesignParameters | None = None
         self._run_objective = objectives[0]
         self._run_weights = ElementOptimizationWeights()
+        self._ordered_evaluations: tuple[BoundedEvaluation, ...] = ()
         self._updating = False
 
         self.setWindowTitle(translator.t(title_key))
@@ -194,6 +195,7 @@ class ElementOptimizationDialog(QDialog):
         self._evaluations.verticalHeader().setVisible(False)
         self._evaluations.horizontalHeader().setStretchLastSection(True)
         self._evaluations_label = QLabel(translator.t("optimize.evaluations"), self)
+        self._evaluations.itemSelectionChanged.connect(self._on_evaluation_selected)
 
         self._summary = QLabel(self)
         self._summary.setWordWrap(True)
@@ -474,6 +476,7 @@ class ElementOptimizationDialog(QDialog):
 
     def _populate_evaluations(self, result: BoundedResult) -> None:
         ordered = rank_bounded(result.evaluations)
+        self._ordered_evaluations = ordered
         ranks: dict[int, int] = {}
         if self._run_objective is ElementOptimizationObjective.MULTI_OBJECTIVE:
             ranks = pareto_ranks(
@@ -518,6 +521,25 @@ class ElementOptimizationDialog(QDialog):
                 self._evaluations.setItem(row, column, item)
         self._evaluations.resizeColumnsToContents()
         self._evaluations.horizontalHeader().setSectionResizeMode(8, QHeaderView.ResizeMode.Stretch)
+
+    def _on_evaluation_selected(self) -> None:
+        rows = sorted({index.row() for index in self._evaluations.selectedIndexes()})
+        if not rows or rows[0] >= len(self._ordered_evaluations):
+            return
+        evaluation = self._ordered_evaluations[rows[0]]
+        if evaluation.score is None:
+            return
+        try:
+            self._selected_parameters = self._build_with_frequency(dict(evaluation.values))
+        except (ValueError, TypeError):
+            return
+        self._apply.setEnabled(True)
+        self._summary.setText(
+            self._translator.t(
+                "element_optimize.selected_summary",
+                objective=self._objective_text(evaluation),
+            )
+        )
 
     def _summary_text(self, result: BoundedResult) -> str:
         if result.best_values is None:
