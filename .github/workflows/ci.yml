@@ -96,7 +96,19 @@ jobs:
       - name: Sync locked environment
         run: uv sync --locked --python ${{ matrix.python-version }}
 
+      # PySide6 6.9.3/Qt can abort on Windows 3.12 when the complete UI suite
+      # runs in one process. Run the UI regression file in its own process,
+      # then the rest of the UI suite and the non-UI tests.
+      - name: pytest (Windows Python 3.12 split)
+        if: runner.os == 'Windows' && matrix.python-version == '3.12'
+        shell: bash
+        run: |
+          uv run pytest tests/ui/test_results_view.py -q
+          uv run pytest tests/ui --ignore=tests/ui/test_results_view.py -q
+          uv run pytest tests/acceptance tests/integration tests/unit -q
+
       - name: pytest
+        if: runner.os != 'Windows' || matrix.python-version != '3.12'
         run: uv run pytest
 
   solver-linux:
