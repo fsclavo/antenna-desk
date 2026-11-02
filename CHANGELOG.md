@@ -320,6 +320,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a weighted multi-objective mode for multi-element optimization,
   combining gain, front-to-back, SWR penalty, and efficiency with transparent
   user weights.
+- Multi-objective results now include a Pareto rank column, with successive
+  non-dominated fronts computed from the selected metrics.
 - Removed the obsolete template-specific optimization dialogs and workers; the
   generic dialog is now the only multi-element optimization UI.
 - Replaced the separate optimization menu actions with one **Optimize...**

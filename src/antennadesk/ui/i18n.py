@@ -1951,6 +1951,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Multi-objective",
         Language.SPANISH: "Multiobjetivo",
     },
+    "element_optimize.pareto": {
+        Language.ENGLISH: "Pareto",
+        Language.SPANISH: "Pareto",
+    },
     "element_optimize.weight_gain": {
         Language.ENGLISH: "Gain weight",
         Language.SPANISH: "Peso de ganancia",

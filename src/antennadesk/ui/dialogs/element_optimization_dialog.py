@@ -40,6 +40,7 @@ from ...domain.optimization.multi_variable import (
     BoundedVariable,
     rank_bounded,
 )
+from ...domain.optimization.pareto import ParetoObjectives, pareto_ranks
 from ...domain.optimization.synthesis import SynthesisTarget
 from ...domain.simulation.spec import SimulationSpec
 from ..i18n import Translator
@@ -86,6 +87,7 @@ class ElementOptimizationDialog(QDialog):
         self._result: BoundedResult | None = None
         self._selected_parameters: AntennaDesignParameters | None = None
         self._run_objective = objectives[0]
+        self._run_weights = ElementOptimizationWeights()
         self._updating = False
 
         self.setWindowTitle(translator.t(title_key))
@@ -185,7 +187,7 @@ class ElementOptimizationDialog(QDialog):
         form.addRow(self._label_samples, self._samples)
         form.addRow(self._label_passes, self._passes)
 
-        self._evaluations = QTableWidget(0, 10, self)
+        self._evaluations = QTableWidget(0, 11, self)
         self._evaluations.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self._evaluations.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self._evaluations.setAlternatingRowColors(True)
@@ -253,6 +255,7 @@ class ElementOptimizationDialog(QDialog):
                 t("optimize.gain"),
                 t("yagi_optimize.front_to_back"),
                 t("optimize.efficiency"),
+                t("element_optimize.pareto"),
                 t("yagi_optimize.objective_value"),
                 t("optimize.message"),
             ]
@@ -358,6 +361,12 @@ class ElementOptimizationDialog(QDialog):
         self._result = None
         self._selected_parameters = None
         self._run_objective = self._objective_value()
+        self._run_weights = ElementOptimizationWeights(
+            gain=self._weight_gain.value(),
+            front_to_back=self._weight_fb.value(),
+            swr=self._weight_swr.value(),
+            efficiency=self._weight_efficiency.value(),
+        )
         self._evaluations.setRowCount(0)
         self._summary.setText(self._translator.t("element_optimize.running"))
         self._apply.setEnabled(False)
@@ -369,12 +378,7 @@ class ElementOptimizationDialog(QDialog):
             target=target,
             base_spec=self._base_spec,
             objective=self._run_objective,
-            weights=ElementOptimizationWeights(
-                gain=self._weight_gain.value(),
-                front_to_back=self._weight_fb.value(),
-                swr=self._weight_swr.value(),
-                efficiency=self._weight_efficiency.value(),
-            ),
+            weights=self._run_weights,
             max_evaluations=self._max_evaluations.value(),
             samples=self._samples.value(),
             passes=self._passes.value(),
@@ -470,6 +474,17 @@ class ElementOptimizationDialog(QDialog):
 
     def _populate_evaluations(self, result: BoundedResult) -> None:
         ordered = rank_bounded(result.evaluations)
+        ranks: dict[int, int] = {}
+        if self._run_objective is ElementOptimizationObjective.MULTI_OBJECTIVE:
+            ranks = pareto_ranks(
+                ordered,
+                ParetoObjectives(
+                    gain=self._run_weights.gain > 0.0,
+                    front_to_back=self._run_weights.front_to_back > 0.0,
+                    swr=self._run_weights.swr > 0.0,
+                    efficiency=self._run_weights.efficiency > 0.0,
+                ),
+            )
         self._evaluations.setRowCount(len(ordered))
         for row, evaluation in enumerate(ordered):
             impedance = None
@@ -490,12 +505,13 @@ class ElementOptimizationDialog(QDialog):
                 f"{gain:.2f}" if gain is not None else "—",
                 f"{front_to_back:.2f}" if front_to_back is not None else "—",
                 f"{efficiency:.2f}" if efficiency is not None else "—",
+                str(ranks[evaluation.index]) if evaluation.index in ranks else "—",
                 self._objective_text(evaluation),
                 evaluation.error or "",
             ]
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
-                if column in {2, 3, 4, 5, 6, 7, 8}:
+                if column in {2, 3, 4, 5, 6, 7, 8, 9}:
                     item.setTextAlignment(
                         Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
                     )
