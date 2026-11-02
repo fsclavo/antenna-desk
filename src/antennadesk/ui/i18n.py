@@ -26,6 +26,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "AntennaDesk {version} — GPL-3.0-or-later\nDiseño y simulación de antenas local-first.",
     },
     "menu.file": {Language.ENGLISH: "File", Language.SPANISH: "Archivo"},
+    "menu.edit": {Language.ENGLISH: "Edit", Language.SPANISH: "Editar"},
     "menu.import": {Language.ENGLISH: "Import", Language.SPANISH: "Importar"},
     "menu.export": {Language.ENGLISH: "Export", Language.SPANISH: "Exportar"},
     "menu.design": {Language.ENGLISH: "Design", Language.SPANISH: "Diseño"},
@@ -1231,6 +1232,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Imported with {count} warning(s):\n{details}",
         Language.SPANISH: "Importado con {count} advertencia(s):\n{details}",
     },
+    "dialog.undo_dirty_title": {
+        Language.ENGLISH: "Unapplied design changes",
+        Language.SPANISH: "Cambios de diseño sin aplicar",
+    },
+    "dialog.undo_dirty_message": {
+        Language.ENGLISH: "There are unapplied design changes. Discard them and undo?",
+        Language.SPANISH: "Hay cambios de diseño sin aplicar. ¿Descartarlos y deshacer?",
+    },
+    "dialog.redo_dirty_message": {
+        Language.ENGLISH: "There are unapplied design changes. Discard them and redo?",
+        Language.SPANISH: "Hay cambios de diseño sin aplicar. ¿Descartarlos y rehacer?",
+    },
     "dialog.yagi_mismatch_title": {
         Language.ENGLISH: "Yagi dimensions and frequency",
         Language.SPANISH: "Dimensiones y frecuencia de la Yagi",
@@ -1303,6 +1316,80 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "error.export": {
         Language.ENGLISH: "Could not export: {message}",
         Language.SPANISH: "No se pudo exportar: {message}",
+    },
+    "action.undo": {Language.ENGLISH: "Undo", Language.SPANISH: "Deshacer"},
+    "action.redo": {Language.ENGLISH: "Redo", Language.SPANISH: "Rehacer"},
+    "history.apply_design": {
+        Language.ENGLISH: "Apply design",
+        Language.SPANISH: "Aplicar diseño",
+    },
+    "history.change_template": {
+        Language.ENGLISH: "Change template",
+        Language.SPANISH: "Cambiar plantilla",
+    },
+    "history.design_from_frequency": {
+        Language.ENGLISH: "Design from frequency",
+        Language.SPANISH: "Diseñar desde frecuencia",
+    },
+    "history.new_variant": {
+        Language.ENGLISH: "New variant",
+        Language.SPANISH: "Nueva variante",
+    },
+    "history.rename_variant": {
+        Language.ENGLISH: "Rename variant",
+        Language.SPANISH: "Renombrar variante",
+    },
+    "history.delete_variant": {
+        Language.ENGLISH: "Delete variant",
+        Language.SPANISH: "Eliminar variante",
+    },
+    "history.feed_line": {
+        Language.ENGLISH: "Feed line",
+        Language.SPANISH: "Línea de alimentación",
+    },
+    "history.matching_network": {
+        Language.ENGLISH: "Matching network",
+        Language.SPANISH: "Red de adaptación",
+    },
+    "history.loads": {
+        Language.ENGLISH: "Series loads",
+        Language.SPANISH: "Cargas serie",
+    },
+    "history.measurement_import": {
+        Language.ENGLISH: "Import measurement",
+        Language.SPANISH: "Importar medición",
+    },
+    "history.measurement_edit": {
+        Language.ENGLISH: "Edit measurement",
+        Language.SPANISH: "Editar medición",
+    },
+    "history.measurement_delete": {
+        Language.ENGLISH: "Delete measurement",
+        Language.SPANISH: "Eliminar medición",
+    },
+    "history.simulate": {
+        Language.ENGLISH: "Simulate",
+        Language.SPANISH: "Simular",
+    },
+    "history.optimize": {
+        Language.ENGLISH: "Optimize dimensions",
+        Language.SPANISH: "Optimizar dimensiones",
+    },
+    "history.convert_custom": {
+        Language.ENGLISH: "Convert to custom wires",
+        Language.SPANISH: "Convertir a hilos personalizados",
+    },
+    "history.edit_generator": {
+        Language.ENGLISH: "Edit generator",
+        Language.SPANISH: "Editar generador",
+    },
+    "history.edit_custom": {
+        Language.ENGLISH: "Edit custom wires",
+        Language.SPANISH: "Editar hilos personalizados",
+    },
+    "history.save": {
+        Language.ENGLISH: "Apply design before saving",
+        Language.SPANISH: "Aplicar diseño antes de guardar",
     },
     "action.optimize": {
         Language.ENGLISH: "Optimize...",
@@ -2700,6 +2787,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "resonance.none": {
         Language.ENGLISH: "No resonance in the sweep.",
         Language.SPANISH: "Sin resonancia en el barrido.",
+    },
+    "cursor.impedance_readout": {
+        Language.ENGLISH: "{frequency} · R {resistance} · X {reactance} · |Z| {magnitude} · SWR {swr}",
+        Language.SPANISH: "{frequency} · R {resistance} · X {reactance} · |Z| {magnitude} · ROE {swr}",
+    },
+    "cursor.swr_readout": {
+        Language.ENGLISH: "{frequency} · SWR {swr}",
+        Language.SPANISH: "{frequency} · ROE {swr}",
+    },
+    "cursor.gain_readout": {
+        Language.ENGLISH: "{angle} · {gain}",
+        Language.SPANISH: "{angle} · {gain}",
+    },
+    "cursor.current_readout": {
+        Language.ENGLISH: "{frequency} · segment {segment} · {current}",
+        Language.SPANISH: "{frequency} · segmento {segment} · {current}",
     },
     "plot.currents": {
         Language.ENGLISH: "Segment current",

@@ -180,6 +180,12 @@ arrays, front plus a top inset for non-planar models), and changing the model
 resets zoom, pan, and vertical exaggeration. Reports, construction sheets, and
 comparison use type-aware dimensions.
 
+The main window uses a `QUndoStack` with immutable project snapshots for
+Undo/Redo. Simulation runs are kept outside the undoable editable snapshot and
+merged back on restore, so undoing a design edit does not delete completed
+solver history. `ResultsView` shares a reusable `ChartCursor` across the
+impedance, SWR, pattern, currents, and measurement charts.
+
 The frequency-first estimator layer is domain code: `DesignIntent` and
 `DimensionEstimate` are Qt-free, and `EstimateAntennaDimensions` is an
 application use case. The UI displays the estimate and applies the resulting

@@ -1104,6 +1104,10 @@ def test_change_template_replaces_the_current_design(
     assert window._project.designs[0].antenna_type == "inverted_v"
     assert window._design_stack.currentWidget() is window._inverted_v_scroll
     assert window._inverted_v_form.parameters() == parameters
+    window._undo_stack.undo()
+    assert window._project.designs[0].antenna_type == "wire_dipole"
+    window._undo_stack.redo()
+    assert window._project.designs[0].antenna_type == "inverted_v"
     window._dirty = False
 
 
@@ -1186,11 +1190,14 @@ def test_new_ocfd_creates_a_first_class_design(
 
 
 def test_main_menu_is_grouped_by_task(window: MainWindow) -> None:
+    edit_menu_titles = [action.text() for action in window._edit_menu.actions()]
     import_menu_titles = [action.text() for action in window._import_menu.actions()]
     export_menu_titles = [action.text() for action in window._export_menu.actions()]
     design_titles = [action.text() for action in window._design_menu.actions()]
     simulation_titles = [action.text() for action in window._simulation_menu.actions()]
 
+    assert edit_menu_titles[0].startswith("Undo")
+    assert edit_menu_titles[1].startswith("Redo")
     assert "Import NEC Deck..." in import_menu_titles
     assert "Import MMANA File..." in import_menu_titles
     assert "Export CSV..." in export_menu_titles
@@ -1344,6 +1351,10 @@ def test_import_vna_csv_adds_a_measurement(
     assert window._tabs_select_measurements() is None
     assert window._results._tabs.currentIndex() == 3
     assert window._dirty is True
+    window._undo_stack.undo()
+    assert len(window._project.measurements) == 0
+    window._undo_stack.redo()
+    assert len(window._project.measurements) == 1
     window._dirty = False
 
 
@@ -1711,6 +1722,10 @@ def test_design_from_frequency_applies_estimated_parameters(
     assert "test.loop" in window._provenance_label.text()
     assert window._design_stack.currentWidget() is window._form_scroll
     assert window._status_label.text() == "Estimated dimensions applied. Review them and simulate."
+    window._undo_stack.undo()
+    assert window._project.designs[0].parameters != parameters
+    window._undo_stack.redo()
+    assert window._project.designs[0].parameters.sides == 3
     window._dirty = False
 
 
@@ -1759,4 +1774,137 @@ def test_design_from_frequency_can_open_the_refiner_after_applying(
     window.design_from_frequency()
 
     assert calls == [True]
+    window._dirty = False
+
+
+def test_apply_design_can_be_undone_and_redone(window: MainWindow) -> None:
+    original = window._project.designs[0].parameters
+    window._form._length.setValue(22.0)
+    window.apply_design()
+    changed = window._project.designs[0].parameters
+    assert changed != original
+
+    window._undo_stack.undo()
+    assert window._project.designs[0].parameters == original
+    assert window._undo_stack.canRedo() is True
+
+    window._undo_stack.redo()
+    assert window._project.designs[0].parameters == changed
+    window._dirty = False
+
+
+def test_new_variant_can_be_undone_and_redone(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Undoable", True))
+    window.new_variant()
+    assert len(window._project.designs) == 2
+
+    window._undo_stack.undo()
+    assert len(window._project.designs) == 1
+    window._undo_stack.redo()
+    assert len(window._project.designs) == 2
+    window._dirty = False
+
+
+def test_save_sets_clean_history_and_undo_marks_dirty(
+    window: MainWindow,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "history.antennadesk"
+    window._form._length.setValue(21.0)
+    window.apply_design()
+    assert window._dirty is True
+
+    assert window._save_to(path) is True
+    assert window._dirty is False
+
+    window._undo_stack.undo()
+    assert window._dirty is True
+    window._dirty = False
+
+
+def test_simulation_runs_survive_undo_of_a_design_edit(
+    window: MainWindow,
+    qtbot: QtBot,
+) -> None:
+    window._form._length.setValue(21.0)
+    window.apply_design()
+    window.simulate()
+    qtbot.waitUntil(
+        lambda: not window._simulating and window._thread is None,
+        timeout=5_000,
+    )
+    assert window._project is not None
+    runs_after_simulation = len(window._project.simulation_runs)
+    assert runs_after_simulation >= 1
+
+    window._form._length.setValue(22.0)
+    window.apply_design()
+    window._undo_stack.undo()
+
+    assert window._project is not None
+    assert len(window._project.simulation_runs) == runs_after_simulation
+    assert window._dirty is True
+    window._dirty = False
+
+
+def test_undo_actions_are_enabled_after_an_edit(window: MainWindow) -> None:
+    assert window._undo_action.isEnabled() is False
+    assert window._redo_action.isEnabled() is False
+
+    window._form._length.setValue(21.0)
+    window.apply_design()
+
+    assert window._undo_action.isEnabled() is True
+    window._undo_stack.undo()
+    assert window._redo_action.isEnabled() is True
+    window._dirty = False
+
+
+def test_ctrl_z_in_a_text_editor_does_not_undo_the_project(
+    window: MainWindow,
+    qtbot: QtBot,
+) -> None:
+    from PySide6.QtCore import Qt
+
+    window._form._length.setValue(21.0)
+    window.apply_design()
+    undo_index = window._undo_stack.index()
+    window._project_name.setFocus()
+    window._project_name.selectAll()
+    qtbot.keyClicks(window._project_name, "Renamed")
+    qtbot.keyClick(window._project_name, Qt.Key.Key_Z, Qt.KeyboardModifier.ControlModifier)
+
+    assert window._undo_stack.index() == undo_index
+    assert window._project_name.text() != "Renamed"
+    window._dirty = False
+
+
+def test_project_undo_prompts_for_unapplied_form_changes(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window._form._length.setValue(21.0)
+    window.apply_design()
+    index = window._undo_stack.index()
+    window._form._length.setValue(22.0)
+    assert window._form_dirty is True
+
+    monkeypatch.setattr(
+        QMessageBox,
+        "question",
+        lambda *args, **kwargs: QMessageBox.StandardButton.No,
+    )
+    window._undo_project()
+    assert window._undo_stack.index() == index
+
+    monkeypatch.setattr(
+        QMessageBox,
+        "question",
+        lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
+    )
+    window._undo_project()
+    assert window._undo_stack.index() == index - 1
     window._dirty = False

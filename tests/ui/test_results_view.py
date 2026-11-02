@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from pathlib import Path
 
+import pyqtgraph as pg
 import pytest
 from pytestqt.qtbot import QtBot
 
@@ -56,6 +57,15 @@ def test_results_view_shows_currents_and_resonance(qtbot: QtBot) -> None:
     assert view._currents_frequency.count() == 3
     assert len(view._currents_plot.listDataItems()) >= 1
     assert "Resonance" in view._resonance_label.text()
+    assert len(view._impedance_cursor._series) == 2
+    view._impedance_cursor.show_at_x(7.1)
+    assert "75.000" in view._impedance_cursor._label.text()
+    assert "SWR 1.500" in view._impedance_cursor._label.text()
+    view._swr_cursor.show_at_x(7.1)
+    assert "SWR 1.500" in view._swr_cursor._label.text()
+    view._currents_cursor.show_at_x(2.0)
+    assert "segment 2" in view._currents_cursor._label.text()
+    assert "0.2000 A" in view._currents_cursor._label.text()
 
 
 def test_results_view_localizes_known_diagnostics(qtbot: QtBot) -> None:
@@ -128,6 +138,9 @@ def test_results_view_builds_a_polar_lobe_plot(qtbot: QtBot, tmp_path: Path) -> 
     assert view._polar_pattern.grab().isNull() is False
 
     view._pattern_mode.setCurrentIndex(1)
+    assert len(view._pattern_cursor._series) == 1
+    view._pattern_cursor.show_at_x(45.0)
+    assert "φ=45" in view._pattern_cursor._label.text()
     assert view._pattern_mode.currentData() == "elevation"
     assert view._pattern_cut.currentData() == pytest.approx(0.0)
     assert len(view._polar_pattern._points) == 4
@@ -243,17 +256,39 @@ def test_results_view_compares_measured_and_simulated_impedance(qtbot: QtBot) ->
 
     assert view._measurement_metric.count() == 4
     assert view._measurement_table.columnCount() == 8
-    assert len(view._measurement_plot.listDataItems()) == 2
+    assert (
+        len(
+            [
+                item
+                for item in view._measurement_plot.listDataItems()
+                if isinstance(item, pg.PlotDataItem)
+            ]
+        )
+        == 2
+    )
     assert "Compared 3 points" in view._measurement_comparison.text()
     assert "mean" in view._measurement_comparison.text()
     assert "Measured resonance" in view._measurement_resonance.text()
     assert "Simulated resonance" in view._measurement_resonance.text()
     assert "Resonance difference" in view._measurement_resonance.text()
+    view._measurement_cursor.show_at_x(7.1)
+    assert "7.100000 MHz" in view._measurement_cursor._label.text()
+    assert "Measured" in view._measurement_cursor._label.text()
+    assert "Simulated" in view._measurement_cursor._label.text()
 
     view._measurement_metric.setCurrentIndex(1)
 
     assert view._measurement_plot.getAxis("left").labelText == "R (Ω)"
-    assert len(view._measurement_plot.listDataItems()) == 2
+    assert (
+        len(
+            [
+                item
+                for item in view._measurement_plot.listDataItems()
+                if isinstance(item, pg.PlotDataItem)
+            ]
+        )
+        == 2
+    )
 
 
 def test_results_view_requests_measurement_edit_and_delete(qtbot: QtBot) -> None:

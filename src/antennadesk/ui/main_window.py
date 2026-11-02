@@ -9,7 +9,13 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 from PySide6.QtCore import Qt, QThread
-from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QKeySequence
+from PySide6.QtGui import (
+    QAction,
+    QActionGroup,
+    QCloseEvent,
+    QKeySequence,
+    QUndoStack,
+)
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -144,6 +150,7 @@ from .dialogs.ringo_dialog import RingoDialog
 from .dialogs.synthesis_dialog import SynthesisDialog
 from .dialogs.vertical_dialog import VerticalDialog
 from .dialogs.yagi_dialog import YagiDialog
+from .history import ProjectSnapshot, SnapshotCommand, history_action
 from .i18n import Language, Translator
 from .pattern_resolution import DEFAULT_PATTERN_STEP_DEG, far_field_request
 from .report_pdf import write_report_pdf
@@ -200,6 +207,12 @@ class MainWindow(QMainWindow):
         self._thread: QThread | None = None
         self._worker: SimulationWorker | None = None
         self._cancel_token: EventCancelToken | None = None
+        self._undo_stack = QUndoStack(self)
+        self._undo_stack.setUndoLimit(50)
+        self._history_restoring = False
+        self._history_depth = 0
+        self._clean_signature: tuple[object, ...] | None = None
+        self._clean_run_ids: frozenset[UUID] = frozenset()
 
         self._build_actions()
         self._build_ui()
@@ -207,6 +220,14 @@ class MainWindow(QMainWindow):
         self._create_default_project()
 
     def _build_actions(self) -> None:
+        self._undo_action = QAction(self)
+        self._undo_action.setShortcut(QKeySequence.StandardKey.Undo)
+        self._undo_action.triggered.connect(self._undo_project)
+        self._redo_action = QAction(self)
+        self._redo_action.setShortcut(QKeySequence.StandardKey.Redo)
+        self._redo_action.triggered.connect(self._redo_project)
+        self._undo_stack.indexChanged.connect(lambda _index: self._refresh_history_actions())
+
         self._new_action = QAction(self)
         self._new_action.setShortcut(QKeySequence.StandardKey.New)
         self._new_action.triggered.connect(lambda: self.new_antenna())
@@ -566,8 +587,15 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(self._variant_combo)
         toolbar.addAction(self._new_variant_action)
         toolbar.addSeparator()
+        toolbar.addAction(self._undo_action)
+        toolbar.addAction(self._redo_action)
+        toolbar.addSeparator()
         toolbar.addAction(self._simulate_action)
         toolbar.addAction(self._cancel_action)
+
+        self._edit_menu = self.menuBar().addMenu("")
+        self._edit_menu.addAction(self._undo_action)
+        self._edit_menu.addAction(self._redo_action)
 
         self._file_menu = self.menuBar().addMenu("")
         self._file_menu.addAction(self._new_action)
@@ -683,6 +711,8 @@ class MainWindow(QMainWindow):
         self._spanish_action.setText(self._translator.t("action.spanish"))
         self._metric_action.setText(self._translator.t("units.metric"))
         self._imperial_action.setText(self._translator.t("units.imperial"))
+        self._edit_menu.setTitle(self._translator.t("menu.edit"))
+        self._refresh_history_actions()
         self._file_menu.setTitle(self._translator.t("menu.file"))
         self._import_menu.setTitle(self._translator.t("menu.import"))
         self._export_menu.setTitle(self._translator.t("menu.export"))
@@ -828,6 +858,143 @@ class MainWindow(QMainWindow):
         self._project_name.setEnabled(idle and has_project)
         self._variant_combo.setEnabled(idle and has_designs)
 
+    def _discard_form_changes_for_history(self, *, redo: bool) -> bool:
+        if not self._form_dirty:
+            return True
+        key = "dialog.redo_dirty_message" if redo else "dialog.undo_dirty_message"
+        answer = QMessageBox.question(
+            self,
+            self._translator.t("dialog.undo_dirty_title"),
+            self._translator.t(key),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        return answer == QMessageBox.StandardButton.Yes
+
+    def _undo_project(self) -> None:
+        if self._simulating or not self._undo_stack.canUndo():
+            return
+        if not self._discard_form_changes_for_history(redo=False):
+            return
+        self._undo_stack.undo()
+
+    def _redo_project(self) -> None:
+        if self._simulating or not self._redo_stack_can_redo():
+            return
+        if not self._discard_form_changes_for_history(redo=True):
+            return
+        self._undo_stack.redo()
+
+    def _redo_stack_can_redo(self) -> bool:
+        try:
+            return self._undo_stack.canRedo()
+        except RuntimeError:
+            return False
+
+    def _refresh_history_actions(self) -> None:
+        try:
+            undo_text = self._undo_stack.undoText()
+            redo_text = self._undo_stack.redoText()
+            can_undo = self._undo_stack.canUndo()
+            can_redo = self._undo_stack.canRedo()
+        except RuntimeError:
+            return
+        self._undo_action.setEnabled(can_undo and not self._simulating)
+        self._redo_action.setEnabled(can_redo and not self._simulating)
+        self._undo_action.setText(
+            self._translator.t("action.undo") + (f" {undo_text}" if undo_text else "")
+        )
+        self._redo_action.setText(
+            self._translator.t("action.redo") + (f" {redo_text}" if redo_text else "")
+        )
+
+    def _history_snapshot(self) -> ProjectSnapshot:
+        return ProjectSnapshot(self._project, self._design_id)
+
+    def _current_project_signature(self) -> tuple[object, ...] | None:
+        return self._history_snapshot().signature()
+
+    def _current_run_ids(self) -> frozenset[UUID]:
+        if self._project is None:
+            return frozenset()
+        return frozenset(run.id for run in self._project.simulation_runs)
+
+    def _update_dirty_from_signature(self) -> None:
+        self._dirty = (
+            self._current_project_signature() != self._clean_signature
+            or self._current_run_ids() != self._clean_run_ids
+            or self._form_dirty
+        )
+
+    def _record_history(
+        self,
+        label_key: str,
+        before: ProjectSnapshot,
+        after: ProjectSnapshot,
+    ) -> None:
+        if self._history_depth or self._history_restoring:
+            return
+        if before.signature() == after.signature():
+            return
+        self._undo_stack.push(
+            SnapshotCommand(
+                self._restore_project_snapshot,
+                before,
+                after,
+                self._translator.t(label_key),
+            )
+        )
+        self._update_dirty_from_signature()
+        self._update_title()
+        self._refresh_history_actions()
+
+    def _restore_project_snapshot(self, snapshot: ProjectSnapshot) -> None:
+        if snapshot.project is None or self._history_restoring:
+            return
+        self._history_restoring = True
+        try:
+            current_runs = self._project.simulation_runs if self._project is not None else ()
+            valid_design_ids = {design.id for design in snapshot.project.designs}
+            merged_runs = tuple(run for run in current_runs if run.design_id in valid_design_ids)
+            project = replace(
+                snapshot.project,
+                simulation_runs=merged_runs,
+                updated_at=utc_now(),
+            )
+            self._project = project
+            if snapshot.design_id is not None:
+                try:
+                    project.design_by_id(snapshot.design_id)
+                    selected_id = snapshot.design_id
+                except ValueError:
+                    selected_id = project.designs[0].id if project.designs else None
+            else:
+                selected_id = project.designs[0].id if project.designs else None
+            self._design_id = selected_id
+            self._feed_line = project.feed_line
+            self._matching_network = project.matching_network
+            self._form_dirty = False
+            self._simulation_results = {}
+            for project_design in project.designs:
+                latest_run = project.latest_simulation_run(project_design.id)
+                if latest_run is not None:
+                    self._simulation_results[project_design.id] = latest_run.result
+            self._results.set_measurements(project.measurements)
+            self._project_name_updating = True
+            self._project_name.setText(project.name)
+            self._project_name_updating = False
+            self._populate_variants(selected_id)
+            if selected_id is not None:
+                self._select_design(selected_id)
+            else:
+                self._results.set_result(None)
+            self._update_dirty_from_signature()
+            self._update_title()
+            self._update_actions()
+            self._update_status_text()
+        finally:
+            self._history_restoring = False
+
     def _populate_variants(self, target_id: UUID | None = None) -> None:
         if self._project is None:
             return
@@ -957,7 +1124,8 @@ class MainWindow(QMainWindow):
         self._update_actions()
         self._update_height_control()
 
-    def _on_variant_changed(self) -> None:
+    @history_action("history.apply_design")
+    def _on_variant_changed(self, *_args: object) -> None:
         if self._updating_variants or self._project is None:
             return
         value = self._variant_combo.currentData()
@@ -1035,8 +1203,16 @@ class MainWindow(QMainWindow):
         self._project_name_updating = False
         self._populate_variants(design_id)
         self._select_design(design_id)
+        self._undo_stack.clear()
+        self._history_depth = 0
+        self._history_restoring = False
+        if not dirty:
+            self._clean_signature = self._current_project_signature()
+            self._clean_run_ids = self._current_run_ids()
+        self._dirty = dirty
         self._update_title()
         self._update_actions()
+        self._refresh_history_actions()
 
     def _apply_fields(self) -> Project:
         if self._project is None or self._design_id is None:
@@ -1346,6 +1522,7 @@ class MainWindow(QMainWindow):
         self._update_height_control()
         return updated
 
+    @history_action("history.apply_design")
     def apply_design(self) -> None:
         try:
             self._apply_fields()
@@ -1355,6 +1532,7 @@ class MainWindow(QMainWindow):
         self._last_status_key = "status.design_changed"
         self._update_status_text()
 
+    @history_action("history.feed_line")
     def configure_feed_line(self) -> None:
         dialog = FeedLineDialog(
             self._translator,
@@ -1373,6 +1551,7 @@ class MainWindow(QMainWindow):
             self._dirty = True
             self._update_title()
 
+    @history_action("history.matching_network")
     def configure_matching_network(self) -> None:
         frequency_hz = 14_100_000.0
         if self._project is not None and self._design_id is not None:
@@ -1394,6 +1573,7 @@ class MainWindow(QMainWindow):
             self._dirty = True
             self._update_title()
 
+    @history_action("history.simulate")
     def simulate(self) -> None:
         if self._simulating:
             return
@@ -1996,6 +2176,7 @@ class MainWindow(QMainWindow):
             return
         self._set_project(project, project.designs[0].id, path=None, dirty=True)
 
+    @history_action("history.measurement_edit")
     def edit_measurement(self, measurement: Measurement) -> None:
         if self._project is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -2032,6 +2213,7 @@ class MainWindow(QMainWindow):
         self._update_actions()
         self._update_status_text()
 
+    @history_action("history.measurement_delete")
     def delete_measurement(self, measurement: Measurement) -> None:
         if self._project is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -2061,6 +2243,7 @@ class MainWindow(QMainWindow):
         self._update_actions()
         self._update_status_text()
 
+    @history_action("history.measurement_import")
     def import_vna_csv(self) -> None:
         if self._project is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -2190,6 +2373,7 @@ class MainWindow(QMainWindow):
                 ),
             )
 
+    @history_action("history.convert_custom")
     def convert_to_custom_wires(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -2225,6 +2409,7 @@ class MainWindow(QMainWindow):
         self._update_actions()
         self._update_status_text()
 
+    @history_action("history.edit_generator")
     def edit_generator(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -2286,6 +2471,7 @@ class MainWindow(QMainWindow):
         self._update_actions()
         self._update_status_text()
 
+    @history_action("history.edit_custom")
     def edit_custom_wires(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -2460,6 +2646,7 @@ class MainWindow(QMainWindow):
             )
         return None
 
+    @history_action("history.change_template")
     def change_template(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -2645,8 +2832,11 @@ class MainWindow(QMainWindow):
         return self._save_to(path)
 
     def _save_to(self, path: Path) -> bool:
+        before = self._history_snapshot()
         try:
             project = self._apply_fields()
+            after = self._history_snapshot()
+            self._record_history("history.save", before, after)
             size = self._repository.serialized_size(project)
             if size > MAX_PROJECT_SIZE_BYTES:
                 self._show_error(
@@ -2675,6 +2865,10 @@ class MainWindow(QMainWindow):
             return False
         self._current_path = path
         self._dirty = False
+        self._form_dirty = False
+        self._clean_signature = self._current_project_signature()
+        self._clean_run_ids = self._current_run_ids()
+        self._undo_stack.setClean()
         self._update_title()
         self._update_actions()
         self._last_status_key = "status.saved"
@@ -2697,6 +2891,7 @@ class MainWindow(QMainWindow):
             return self.save_project()
         return answer == QMessageBox.StandardButton.Discard
 
+    @history_action("history.new_variant")
     def new_variant(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -2738,6 +2933,7 @@ class MainWindow(QMainWindow):
         self._update_title()
         self._update_actions()
 
+    @history_action("history.rename_variant")
     def rename_variant(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -2768,6 +2964,7 @@ class MainWindow(QMainWindow):
         self._update_title()
         self._update_actions()
 
+    @history_action("history.delete_variant")
     def delete_variant(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -2804,6 +3001,7 @@ class MainWindow(QMainWindow):
         self._update_title()
         self._update_actions()
 
+    @history_action("history.design_from_frequency")
     def design_from_frequency(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -2866,6 +3064,7 @@ class MainWindow(QMainWindow):
     def _open_refinement_for_current_design(self) -> None:
         self.optimize_current_design()
 
+    @history_action("history.optimize")
     def optimize_current_design(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -2901,6 +3100,7 @@ class MainWindow(QMainWindow):
         else:
             self.optimize_length()
 
+    @history_action("history.optimize")
     def optimize_length(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -2953,6 +3153,7 @@ class MainWindow(QMainWindow):
             return
         self.simulate()
 
+    @history_action("history.optimize")
     def synthesize_dimensions(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -3004,6 +3205,7 @@ class MainWindow(QMainWindow):
             return
         self.simulate()
 
+    @history_action("history.optimize")
     def optimize_yagi_elements(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -3101,6 +3303,7 @@ class MainWindow(QMainWindow):
             return
         self.simulate()
 
+    @history_action("history.optimize")
     def optimize_fan_dipole_elements(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -3175,6 +3378,7 @@ class MainWindow(QMainWindow):
             return
         self.simulate()
 
+    @history_action("history.optimize")
     def optimize_moxon_elements(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -3256,6 +3460,7 @@ class MainWindow(QMainWindow):
             return
         self.simulate()
 
+    @history_action("history.optimize")
     def optimize_loop_elements(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -3314,6 +3519,7 @@ class MainWindow(QMainWindow):
         self._apply_fields()
         self.simulate()
 
+    @history_action("history.optimize")
     def optimize_vertical_elements(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -3387,6 +3593,7 @@ class MainWindow(QMainWindow):
         self._apply_fields()
         self.simulate()
 
+    @history_action("history.optimize")
     def optimize_inverted_v_elements(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -3443,6 +3650,7 @@ class MainWindow(QMainWindow):
         self._apply_fields()
         self.simulate()
 
+    @history_action("history.optimize")
     def optimize_ringo_elements(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -3513,6 +3721,7 @@ class MainWindow(QMainWindow):
         self._apply_fields()
         self.simulate()
 
+    @history_action("history.loads")
     def edit_loads(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -3995,6 +4204,7 @@ class MainWindow(QMainWindow):
             self._thread = None
             self._worker = None
         if self._maybe_save_changes():
+            self._undo_stack.clear()
             event.accept()
         else:
             event.ignore()

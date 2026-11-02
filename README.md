@@ -74,6 +74,7 @@ for build, smoke-test, and packaging steps.
 - [ADR-0011 — Bounded impedance synthesis](docs/ADR/0011-bounded-impedance-synthesis.md)
 - [ADR-0012 — Geometry presentation and dimension layout](docs/ADR/0012-geometry-presentation.md)
 - [ADR-0013 — Frequency-first dimension estimation](docs/ADR/0013-frequency-first-dimension-estimation.md)
+- [ADR-0014 — Undo/Redo and chart cursors](docs/ADR/0014-undo-redo-and-chart-cursors.md)
 - [Antenna dimension estimators](docs/ANTENNA_DESIGN_ESTIMATORS.md)
 - [Geometry presentation contract](docs/GEOMETRY_PRESENTATION.md)
 - [NEC engine evaluation](docs/spikes/phase0-solver-evaluation.md)
@@ -85,6 +86,7 @@ for build, smoke-test, and packaging steps.
 
 - Frequency-first dimension estimates for the current antenna families, with
   assumptions, confidence, and optional numerical refinement.
+- Project-level Undo/Redo and hover cursors on the result charts.
 - Guided antenna wizard and a main window with a design panel, a shape-aware
   construction sketch with a collision-aware dimension layout, front/plan
   orthographic views, detail insets, an isometric 3D view, and results tabs.

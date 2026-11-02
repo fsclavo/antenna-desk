@@ -71,6 +71,16 @@ inset marked *not to scale*. The **Zoom** selector scales the sketch (0.5x, 1x,
 double-click resets zoom and pan. The **Vertical scale** selector can
 exaggerate the height (1x, 1.5x, 2x, 3x) for low horizontal antennas.
 
+## Undo and redo
+
+Use **Edit → Undo** and **Edit → Redo**, or the standard Ctrl+Z / Ctrl+Shift+Z
+shortcuts, to move through applied project changes: design edits, template
+changes, variants, loads, feed line, matching network, measurements, and design
+estimates. Undo/Redo does not remove completed simulation runs or compact the
+solver history. If a form has unapplied changes, AntennaDesk asks before
+discarding them for a project-level undo. Text editors keep their own Ctrl+Z
+while they have focus.
+
 ## Design from frequency
 
 Use **Design → Estimate Dimensions...** to estimate initial dimensions from a
@@ -250,6 +260,12 @@ raw coordinates.
 - **Diagnostics**: solver version, status, duration, fingerprint, and warnings
   or errors.
 - **Raw data**: the generated NEC input deck and the raw solver output.
+
+Hover the mouse over the Impedance, SWR, Pattern, Currents, or Measurements
+charts to show a cursor at the nearest data point. The floating readout shows
+the frequency, resistance/reactance, SWR, gain, current, segment, or measured
+and simulated values as appropriate. The cursor hides when the pointer leaves
+the chart and does not change the chart auto-range.
 
 Diagrams and charts follow the application's light or dark Qt palette. The
 geometry sketch, chart backgrounds, axes, labels, and series colors update when

@@ -31,9 +31,15 @@ from ...domain.measurement import Measurement, MeasurementPoint
 from ...domain.measurement_comparison import compare_measurement
 from ...domain.projects.project import DesignVariant
 from ...domain.simulation.resonance import find_resonances
-from ...domain.simulation.result import SimulationResult, SimulationStatus
+from ...domain.simulation.result import (
+    CurrentSample,
+    FrequencyResult,
+    SimulationResult,
+    SimulationStatus,
+)
 from ..i18n import Translator
 from ..theme import theme_colors
+from .chart_cursor import ChartCursor, CursorSeries
 from .polar_pattern_view import PolarPatternView
 from .radiation_pattern_3d_view import RadiationPattern3DView
 
@@ -216,6 +222,12 @@ class ResultsView(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self._tabs)
 
+        self._impedance_cursor = ChartCursor(self._impedance_plot)
+        self._swr_cursor = ChartCursor(self._swr_plot)
+        self._pattern_cursor = ChartCursor(self._pattern_plot)
+        self._currents_cursor = ChartCursor(self._currents_plot)
+        self._measurement_cursor = ChartCursor(self._measurement_plot)
+
         self._pattern_frequency.currentIndexChanged.connect(self._on_pattern_frequency_changed)
         self._pattern_mode.currentIndexChanged.connect(self._on_pattern_mode_changed)
         self._pattern_cut.currentIndexChanged.connect(self._render_pattern)
@@ -245,6 +257,18 @@ class ResultsView(QWidget):
             legend = plot.plotItem.legend
             if legend is not None:
                 legend.setLabelTextColor(self._colors.text)
+        for cursor in (
+            self._impedance_cursor,
+            self._swr_cursor,
+            self._pattern_cursor,
+            self._currents_cursor,
+            self._measurement_cursor,
+        ):
+            cursor.set_colors(
+                text=self._colors.text,
+                background=self._colors.background,
+                line=self._colors.dimension,
+            )
         self._polar_pattern.update()
         self._pattern_3d.update()
 
@@ -379,6 +403,8 @@ class ResultsView(QWidget):
         self._swr_plot.clear()
 
         if self._result is None or not self._result.frequencies:
+            self._impedance_cursor.clear()
+            self._swr_cursor.clear()
             self._table.setRowCount(0)
             self._resonance_label.setText("")
             self._resonance_label.setVisible(False)
@@ -492,8 +518,66 @@ class ResultsView(QWidget):
         else:
             self._resonance_label.setText(self._translator.t("resonance.none"))
 
+        energy = CursorSeries(
+            self._translator.t("table.resistance"),
+            tuple(x),
+            tuple(resistance),
+            self._colors.resistance,
+        )
+        reactance_series = CursorSeries(
+            self._translator.t("table.reactance"),
+            tuple(x),
+            tuple(reactance),
+            self._colors.reactance,
+        )
+        self._impedance_cursor.set_series(
+            (energy, reactance_series),
+            readout_builder=lambda cursor_x, _values: self._impedance_readout(
+                cursor_x, frequencies
+            ),
+        )
+        self._swr_cursor.set_series(
+            (
+                CursorSeries(
+                    self._translator.t("table.swr"),
+                    tuple(swr_x),
+                    tuple(swr_y),
+                    self._colors.swr,
+                ),
+            ),
+            readout_builder=lambda cursor_x, _values: self._swr_readout(cursor_x, frequencies),
+        )
+
+    def _impedance_readout(self, x_mhz: float, frequencies: tuple[FrequencyResult, ...]) -> str:
+        frequency = min(
+            frequencies,
+            key=lambda item: abs(item.frequency_hz / 1e6 - x_mhz),
+        )
+        swr = "∞" if math.isinf(frequency.swr) else f"{frequency.swr:.3f}"
+        return self._translator.t(
+            "cursor.impedance_readout",
+            frequency=f"{frequency.frequency_hz / 1e6:.6f} MHz",
+            resistance=f"{frequency.impedance_ohm.real:.3f} Ω",
+            reactance=f"{frequency.impedance_ohm.imag:+.3f} Ω",
+            magnitude=f"{abs(frequency.impedance_ohm):.3f} Ω",
+            swr=swr,
+        )
+
+    def _swr_readout(self, x_mhz: float, frequencies: tuple[FrequencyResult, ...]) -> str:
+        frequency = min(
+            frequencies,
+            key=lambda item: abs(item.frequency_hz / 1e6 - x_mhz),
+        )
+        swr = "∞" if math.isinf(frequency.swr) else f"{frequency.swr:.3f}"
+        return self._translator.t(
+            "cursor.swr_readout",
+            frequency=f"{frequency.frequency_hz / 1e6:.6f} MHz",
+            swr=swr,
+        )
+
     def _render_currents(self) -> None:
         self._currents_plot.clear()
+        self._currents_cursor.clear()
         if self._result is None or not self._result.frequencies:
             self._currents_plot.setTitle(
                 self._translator.t("results.none"), color=self._colors.text
@@ -534,6 +618,36 @@ class ResultsView(QWidget):
                 label=self._translator.t("geometry.feed"),
                 labelOpts={"position": 0.95, "color": self._colors.feed},
             )
+        )
+        self._currents_cursor.set_series(
+            (
+                CursorSeries(
+                    self._translator.t("currents.magnitude"),
+                    tuple(float(value) for value in segments),
+                    tuple(magnitudes),
+                    self._colors.resistance,
+                ),
+            ),
+            readout_builder=lambda cursor_x, _values: self._currents_readout(
+                cursor_x, frequency, currents
+            ),
+        )
+
+    def _currents_readout(
+        self,
+        segment_x: float,
+        frequency: FrequencyResult,
+        currents: tuple[CurrentSample, ...],
+    ) -> str:
+        current = min(
+            currents,
+            key=lambda item: abs(item.segment - segment_x),
+        )
+        return self._translator.t(
+            "cursor.current_readout",
+            frequency=f"{frequency.frequency_hz / 1e6:.6f} MHz",
+            segment=current.segment,
+            current=f"{current.magnitude_a:.4f} A",
         )
 
     def _on_pattern_frequency_changed(self) -> None:
@@ -597,6 +711,7 @@ class ResultsView(QWidget):
     def _render_pattern(self) -> None:
         self._pattern_plot.clear()
         if self._result is None or not self._result.frequencies:
+            self._pattern_cursor.clear()
             self._pattern_plot.setTitle(self._translator.t("results.none"), color=self._colors.text)
             self._polar_pattern.set_points(())
             self._pattern_3d.set_points(())
@@ -619,6 +734,7 @@ class ResultsView(QWidget):
             and abs((point.phi_deg if mode == "elevation" else point.theta_deg) - selected) < 1e-6
         ]
         if not points:
+            self._pattern_cursor.clear()
             self._pattern_plot.setTitle(self._translator.t("pattern.none"), color=self._colors.text)
             self._polar_pattern.set_points(())
             self._pattern_3d.set_points(())
@@ -647,6 +763,18 @@ class ResultsView(QWidget):
             symbolSize=4,
         )
         self._pattern_plot.setXRange(min(theta), max(theta), padding=0.02)
+        self._pattern_cursor.set_series(
+            (
+                CursorSeries(
+                    self._translator.t("pattern.gain"),
+                    tuple(theta),
+                    tuple(gain),
+                    self._colors.pattern,
+                ),
+            ),
+            readout_builder=lambda cursor_x, values: self._pattern_readout(cursor_x, mode, values),
+            wrap_period=360.0 if mode == "azimuth" else None,
+        )
         self._polar_pattern.set_cut(
             selected,
             symbol="φ" if mode == "elevation" else "θ",
@@ -680,9 +808,24 @@ class ResultsView(QWidget):
             ground=ground,
         )
 
+    def _pattern_readout(
+        self,
+        angle_deg: float,
+        mode: str,
+        values: tuple[tuple[str, float], ...],
+    ) -> str:
+        symbol = "φ" if mode == "elevation" else "θ"
+        gain = f"{values[0][1]:.3f} dBi" if values else "—"
+        return self._translator.t(
+            "cursor.gain_readout",
+            angle=f"{symbol}={angle_deg:g}°",
+            gain=gain,
+        )
+
     def _render_measurements(self) -> None:
         self._measurement_table.setRowCount(0)
         self._measurement_plot.clear()
+        self._measurement_cursor.clear()
         self._measurement_plot.setTitle(
             self._translator.t("measurement.none"), color=self._colors.text
         )
@@ -823,6 +966,35 @@ class ResultsView(QWidget):
                 name=self._translator.t("measurement.simulated"),
             )
 
+        cursor_series: list[CursorSeries] = []
+        if measured:
+            cursor_series.append(
+                CursorSeries(
+                    self._translator.t("measurement.measured"),
+                    tuple(point[0] for point in measured),
+                    tuple(point[1] for point in measured),
+                    metric_colors[metric],
+                    metric_label,
+                )
+            )
+        if simulated:
+            cursor_series.append(
+                CursorSeries(
+                    self._translator.t("measurement.simulated"),
+                    tuple(point[0] for point in simulated),
+                    tuple(point[1] for point in simulated),
+                    self._colors.pattern,
+                    metric_label,
+                )
+            )
+        if cursor_series:
+            self._measurement_cursor.set_series(
+                cursor_series,
+                readout_builder=lambda cursor_x, values: self._measurement_readout(
+                    cursor_x, values
+                ),
+            )
+
         measured_resonances = find_resonances(
             [point.frequency_hz for point in measurement.points],
             [point.impedance_ohm for point in measurement.points],
@@ -869,6 +1041,15 @@ class ResultsView(QWidget):
             )
         self._measurement_resonance.setText(" · ".join(resonance_parts))
         self._measurement_resonance.setVisible(bool(resonance_parts))
+
+    def _measurement_readout(
+        self,
+        frequency_mhz: float,
+        values: tuple[tuple[str, float], ...],
+    ) -> str:
+        parts = [f"{frequency_mhz:.6f} MHz"]
+        parts.extend(f"{label}: {value:.3f}" for label, value in values)
+        return " · ".join(parts)
 
     def _request_measurement_edit(self) -> None:
         index = self._measurement_selector.currentIndex()
