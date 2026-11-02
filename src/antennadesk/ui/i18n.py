@@ -1911,6 +1911,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "un diseño de hilos personalizado editable."
         ),
     },
+    "element_optimize.loop_title": {
+        Language.ENGLISH: "Optimize Loop Elements",
+        Language.SPANISH: "Optimizar elementos del lazo",
+    },
     "element_optimize.vertical_title": {
         Language.ENGLISH: "Optimize Vertical Elements",
         Language.SPANISH: "Optimizar elementos de la vertical",
@@ -1950,6 +1954,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "element_optimize.objective.multi_objective": {
         Language.ENGLISH: "Multi-objective",
         Language.SPANISH: "Multiobjetivo",
+    },
+    "element_optimize.current_value": {
+        Language.ENGLISH: "Current value",
+        Language.SPANISH: "Valor actual",
     },
     "element_optimize.pareto": {
         Language.ENGLISH: "Pareto",

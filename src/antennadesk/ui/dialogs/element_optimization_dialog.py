@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -53,6 +54,7 @@ class ElementOptimizationVariable:
     name: str
     label: str
     current_m: float
+    integer: bool = False
 
 
 BuildParameters = Callable[[dict[str, float]], AntennaDesignParameters]
@@ -242,7 +244,7 @@ class ElementOptimizationDialog(QDialog):
             [
                 t("moxon_optimize.variable"),
                 t("yagi_optimize.use"),
-                t("yagi_optimize.current_length"),
+                t("element_optimize.current_value"),
                 t("yagi_optimize.minimum"),
                 t("yagi_optimize.maximum"),
             ]
@@ -275,7 +277,7 @@ class ElementOptimizationDialog(QDialog):
                 self._table.setItem(
                     row,
                     2,
-                    QTableWidgetItem(f"{length_from_m(variable.current_m, self._unit_system):.3f}"),
+                    QTableWidgetItem(self._variable_display(variable.current_m, variable)),
                 )
         finally:
             self._updating = False
@@ -288,12 +290,19 @@ class ElementOptimizationDialog(QDialog):
         self._updating = True
         try:
             for row, variable in enumerate(self._variables_spec):
-                low = length_from_m(variable.current_m * (1.0 - factor), self._unit_system)
-                high = length_from_m(variable.current_m * (1.0 + factor), self._unit_system)
-                self._table.setItem(row, 3, QTableWidgetItem(f"{low:.3f}"))
-                self._table.setItem(row, 4, QTableWidgetItem(f"{high:.3f}"))
+                low = variable.current_m * (1.0 - factor)
+                high = variable.current_m * (1.0 + factor)
+                self._table.setItem(row, 3, QTableWidgetItem(self._variable_display(low, variable)))
+                self._table.setItem(
+                    row, 4, QTableWidgetItem(self._variable_display(high, variable))
+                )
         finally:
             self._updating = False
+
+    def _variable_display(self, value_m: float, variable: ElementOptimizationVariable) -> str:
+        if variable.integer:
+            return f"{value_m:.0f}"
+        return f"{length_from_m(value_m, self._unit_system):.3f}"
 
     def _selected_indices(self) -> tuple[int, ...]:
         return tuple(
@@ -335,11 +344,20 @@ class ElementOptimizationDialog(QDialog):
         starts: dict[str, float] = {}
         for index in self._selected_indices():
             variable = self._variables_spec[index]
+            low = max(variable.current_m * (1.0 - factor), 1e-3)
+            high = variable.current_m * (1.0 + factor)
+            if variable.integer:
+                low = float(math.floor(low))
+                high = float(math.ceil(high))
+                if high <= low:
+                    low = max(0.0, variable.current_m - 1.0)
+                    high = variable.current_m + 1.0
             variables.append(
                 BoundedVariable(
                     variable.name,
-                    max(variable.current_m * (1.0 - factor), 1e-3),
-                    variable.current_m * (1.0 + factor),
+                    low,
+                    high,
+                    integer=variable.integer,
                 )
             )
             starts[variable.name] = variable.current_m
@@ -552,10 +570,17 @@ class ElementOptimizationDialog(QDialog):
             ),
             None,
         )
-        dimensions = ", ".join(
-            f"{name}={self._length_display(value)}"
-            for name, value in sorted(result.best_values.items())
-        )
+        variables = {variable.name: variable for variable in self._variables_spec}
+        parts = []
+        for name, value in sorted(result.best_values.items()):
+            variable = variables.get(name)
+            display = (
+                self._variable_display(value, variable)
+                if variable is not None
+                else self._length_display(value)
+            )
+            parts.append(f"{name}={display}")
+        dimensions = ", ".join(parts)
         return self._translator.t(
             "element_optimize.summary",
             dimensions=dimensions,

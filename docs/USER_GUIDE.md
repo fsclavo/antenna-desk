@@ -393,7 +393,9 @@ For a Moxon, use **Design → Optimize...**. Choose the objective
 (target impedance, maximum gain, or maximum front-to-back), the dimensions to
 include, the search margin, and the evaluation budget. Target impedance also
 asks for R/X; gain and F/B require a far-field request. The optimizer varies the
-selected width, spacing, reflector tip, and driven tip together.
+selected width, spacing, reflector tip, and driven tip together. Some families
+also expose discrete variables such as radial count, loop side count, or Ringo
+ring sides; those are searched as integers.
 
 The evaluation table is ranked by the selected objective and reports R, X, SWR,
 gain, F/B, and the objective value. **Apply dimensions** updates the Moxon

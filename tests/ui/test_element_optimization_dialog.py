@@ -109,3 +109,37 @@ def test_generic_element_dialog_applies_optimized_parameters(qtbot: QtBot) -> No
 
     dialog._apply.click()
     assert dialog.result() == QDialog.DialogCode.Accepted
+
+
+def test_generic_element_dialog_supports_integer_variables(qtbot: QtBot) -> None:
+    dialog = ElementOptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalSolver(),
+        SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0)),
+        title_key="element_optimize.loop_title",
+        variables=(
+            ElementOptimizationVariable(
+                "sides",
+                "Sides",
+                4.0,
+                integer=True,
+            ),
+        ),
+        build_parameters=lambda values: DipoleParameters(
+            frequency_hz=values["__frequency_hz"],
+            total_length_m=20.0,
+            height_m=8.0,
+        ),
+        objectives=(ElementOptimizationObjective.TARGET_IMPEDANCE,),
+        default_frequency_hz=7_100_000.0,
+    )
+    qtbot.addWidget(dialog)
+
+    variables, starts = dialog._variables()
+
+    assert variables[0].integer is True
+    assert variables[0].minimum == pytest.approx(3.0)
+    assert variables[0].maximum == pytest.approx(5.0)
+    assert starts["sides"] == pytest.approx(4.0)
+    assert dialog._table.item(0, 2).text() == "4"

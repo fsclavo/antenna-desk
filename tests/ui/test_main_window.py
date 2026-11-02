@@ -1753,7 +1753,7 @@ def test_design_from_frequency_can_open_the_refiner_after_applying(
             return True
 
     monkeypatch.setattr(main_window_module, "DesignFromFrequencyDialog", FakeDialog)
-    monkeypatch.setattr(window, "optimize_length", lambda: calls.append(True))
+    monkeypatch.setattr(window, "optimize_loop_elements", lambda: calls.append(True))
     window._dirty = False
 
     window.design_from_frequency()

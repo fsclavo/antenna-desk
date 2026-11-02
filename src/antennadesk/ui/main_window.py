@@ -77,6 +77,7 @@ from ..domain.antennas.feed_line import FeedLine
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.load import LumpedLoad
+from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.matching_network import MatchingNetwork
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
@@ -2893,6 +2894,8 @@ class MainWindow(QMainWindow):
             self.optimize_inverted_v_elements()
         elif isinstance(parameters, RingoParameters):
             self.optimize_ringo_elements()
+        elif isinstance(parameters, LoopParameters):
+            self.optimize_loop_elements()
         elif isinstance(parameters, CustomAntennaParameters):
             self._show_error(self._translator.t("error.optimize_custom"))
         else:
@@ -3253,6 +3256,70 @@ class MainWindow(QMainWindow):
             return
         self.simulate()
 
+    def optimize_loop_elements(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._solver is None:
+            self._show_error(self._translator.t("error.solver"))
+            return
+        design = self._project.design_by_id(self._design_id)
+        if not isinstance(design.parameters, LoopParameters):
+            return
+        parameters = design.parameters
+        variables = (
+            ElementOptimizationVariable(
+                "circumference_m",
+                self._translator.t("field.circumference"),
+                parameters.circumference_m,
+            ),
+            ElementOptimizationVariable(
+                "sides",
+                self._translator.t("field.sides"),
+                float(parameters.sides),
+                integer=True,
+            ),
+        )
+
+        def build(values: dict[str, float]) -> LoopParameters:
+            return replace(
+                parameters,
+                frequency_hz=values.get("__frequency_hz", parameters.frequency_hz),
+                circumference_m=values.get("circumference_m", parameters.circumference_m),
+                sides=round(values.get("sides", parameters.sides)),
+            )
+
+        dialog = ElementOptimizationDialog(
+            self._translator,
+            self._unit_system,
+            self._solver,
+            replace(
+                self._form.simulation_spec(),
+                feed_line=self._feed_line,
+                matching_network=self._matching_network,
+            ),
+            title_key="element_optimize.loop_title",
+            variables=variables,
+            build_parameters=build,
+            objectives=(
+                ElementOptimizationObjective.TARGET_IMPEDANCE,
+                ElementOptimizationObjective.MAX_GAIN,
+                ElementOptimizationObjective.MAX_FRONT_TO_BACK,
+                ElementOptimizationObjective.MULTI_OBJECTIVE,
+            ),
+            default_frequency_hz=parameters.frequency_hz,
+            parent=self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        selected = dialog.selected_parameters()
+        if selected is None:
+            return
+        self._form.set_parameters(selected, reset_sweep=False)
+        self._form_dirty = True
+        self._apply_fields()
+        self.simulate()
+
     def optimize_vertical_elements(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -3277,6 +3344,14 @@ class MainWindow(QMainWindow):
                     parameters.radial_length_m,
                 )
             )
+            variables.append(
+                ElementOptimizationVariable(
+                    "radial_count",
+                    self._translator.t("vertical.radial_count"),
+                    float(parameters.radial_count),
+                    integer=True,
+                )
+            )
 
         def build(values: dict[str, float]) -> VerticalParameters:
             return replace(
@@ -3284,6 +3359,7 @@ class MainWindow(QMainWindow):
                 frequency_hz=values.get("__frequency_hz", parameters.frequency_hz),
                 height_m=values.get("height_m", parameters.height_m),
                 radial_length_m=values.get("radial_length_m", parameters.radial_length_m),
+                radial_count=round(values.get("radial_count", parameters.radial_count)),
             )
 
         dialog = ElementOptimizationDialog(
@@ -3395,6 +3471,12 @@ class MainWindow(QMainWindow):
                 self._translator.t("ringo.ring_diameter"),
                 parameters.ring_diameter_m,
             ),
+            ElementOptimizationVariable(
+                "ring_sides",
+                self._translator.t("ringo.ring_sides"),
+                float(parameters.ring_sides),
+                integer=True,
+            ),
         )
 
         def build(values: dict[str, float]) -> RingoParameters:
@@ -3403,6 +3485,7 @@ class MainWindow(QMainWindow):
                 frequency_hz=values.get("__frequency_hz", parameters.frequency_hz),
                 radiator_height_m=values.get("radiator_height_m", parameters.radiator_height_m),
                 ring_diameter_m=values.get("ring_diameter_m", parameters.ring_diameter_m),
+                ring_sides=round(values.get("ring_sides", parameters.ring_sides)),
             )
 
         dialog = ElementOptimizationDialog(

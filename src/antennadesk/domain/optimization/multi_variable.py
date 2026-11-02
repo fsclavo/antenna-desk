@@ -22,6 +22,7 @@ class BoundedVariable:
     name: str
     minimum: float
     maximum: float
+    integer: bool = False
 
     def __post_init__(self) -> None:
         if not self.name.strip():
@@ -68,11 +69,21 @@ def rank_bounded(
     return tuple(sorted(evaluations, key=key))
 
 
-def _sample_values(minimum: float, maximum: float, count: int) -> tuple[float, ...]:
+def _sample_values(
+    minimum: float,
+    maximum: float,
+    count: int,
+    *,
+    integer: bool = False,
+) -> tuple[float, ...]:
     if count <= 1:
-        return ((minimum + maximum) / 2.0,)
+        value = (minimum + maximum) / 2.0
+        return (float(round(value)) if integer else value,)
     step = (maximum - minimum) / (count - 1)
-    return tuple(minimum + index * step for index in range(count))
+    values = [minimum + index * step for index in range(count)]
+    if integer:
+        return tuple(sorted({float(round(value)) for value in values}))
+    return tuple(values)
 
 
 def optimize_bounded(
@@ -100,13 +111,13 @@ def optimize_bounded(
     if len(set(names)) != len(names):
         raise ValueError("bounded variable names must be unique")
     limits = {variable.name: (variable.minimum, variable.maximum) for variable in variables}
-    current = {
-        variable.name: min(
+    current = {}
+    for variable in variables:
+        value = min(
             max(start_values.get(variable.name, variable.minimum), variable.minimum),
             variable.maximum,
         )
-        for variable in variables
-    }
+        current[variable.name] = float(round(value)) if variable.integer else value
     bounds = dict(limits)
     evaluations: list[BoundedEvaluation] = []
 
@@ -160,7 +171,7 @@ def optimize_bounded(
                     "maximum number of evaluations reached",
                 )
             low, high = bounds[variable.name]
-            candidates = _sample_values(low, high, samples)
+            candidates = _sample_values(low, high, samples, integer=variable.integer)
             best_candidate: tuple[float, float] | None = None
             for value in candidates:
                 if cancelled():

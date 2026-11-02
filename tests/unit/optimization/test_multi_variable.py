@@ -76,3 +76,21 @@ def test_rank_bounded_puts_failures_last() -> None:
     )
 
     assert [evaluation.index for evaluation in rank_bounded(evaluations)] == [2, 1, 3]
+
+
+def test_integer_variable_only_evaluates_integer_values() -> None:
+    def evaluate(values: dict[str, float]) -> BoundedEvaluation:
+        return BoundedEvaluation(0, dict(values), abs(values["count"] - 7.0))
+
+    result = optimize_bounded(
+        evaluate,
+        (BoundedVariable("count", 3.0, 11.0, integer=True),),
+        {"count": 8.0},
+        max_evaluations=20,
+        samples=5,
+        passes=3,
+    )
+
+    assert result.best_values is not None
+    assert result.best_values["count"] == 7.0
+    assert all(evaluation.values["count"].is_integer() for evaluation in result.evaluations)
