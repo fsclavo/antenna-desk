@@ -6,13 +6,12 @@ electromagnetic engine.
 
 **Status:** pre-alpha. The antenna catalog, estimators, simulation,
 measurements, optimization, matching, and reporting flows are implemented.
-Native AppImage, Debian, and Windows packages include `nec2c`; the first tagged
-release is the remaining release blocker. Signing is optional and deferred for
-the initial release. Center-fed dipoles, folded dipoles, loops,
-custom wires, Yagis, Moxon, fan dipoles, inverted-Vs, OCFDs, end-fed wires,
-J Poles, Slim Jims, Ringos, and verticals are supported, with schema v3
-persistence and migration. VNA CSV import and measured/simulated comparison are
-available.
+Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.1.0`
+is published; signing is optional and deferred for later releases. Center-fed
+dipoles, folded dipoles, loops, custom wires, Yagis, Moxon, fan dipoles,
+inverted-Vs, OCFDs, end-fed wires, J Poles, Slim Jims, Ringos, and verticals are
+supported, with schema v3 persistence and migration. VNA CSV import and
+measured/simulated comparison are available.
 
 ## Launch the GUI
 

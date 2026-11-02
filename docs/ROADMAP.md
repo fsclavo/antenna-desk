@@ -59,12 +59,8 @@ Completed:
   bundled `nec2c`, checksums, and a tag-triggered release workflow.
 - Reference anchors for NEC examples, selected ARRL dipole/folded/loop
   properties, the published Cebik 20 m wire Moxon, and the NBS Yagi preset.
-
-In progress:
-
-- Release hardening: publish the first tagged release. The AppImage/Windows
-  build recipes, `.deb`, bundled `nec2c`, and optional signing automation are
-  implemented; signing is deferred for the initial release.
+- `v0.1.0` published with wheel/sdist, AppImage, Debian package, Windows zip,
+  and SHA-256 checksums. Signing is optional and deferred.
 
 Deferred:
 
@@ -111,7 +107,7 @@ Deferred:
 - Measurement conditions and reference-plane metadata.
 - Bounded impedance synthesis for OCFD, J Pole, and Slim Jim.
 
-### M5 — Release hardening (in progress)
+### M5 — Release hardening (completed)
 
 - Linux AppImage, Debian `.deb`, and Windows onedir bundle recipes (completed).
 - Bundle `nec2c` next to the frozen executable (completed).
@@ -121,7 +117,7 @@ Deferred:
   Windows zip, and checksums (completed).
 - Optional GPG detached signatures and Windows Authenticode signing hooks
   (completed, deferred for the initial release).
-- Publish `v0.1.0` with unsigned, SHA-256-verified artifacts (pending).
+- Published `v0.1.0` with unsigned, SHA-256-verified artifacts (completed).
 - Keep the wheel/sdist smoke test as the fallback distribution path
   (completed).
 
@@ -129,7 +125,6 @@ Deferred:
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
-| P0 | Publish `v0.1.0` with checksum-verified unsigned artifacts | n/a | pending |
 | P1 | End-fed transformer/unun and counterpoise modeling | C | pending |
 | P1 | Transmission line as geometry, not only feed-line post-processing | B | pending |
 | P1 | Realized gain and directivity separated from NEC power gain | A | pending |
@@ -151,7 +146,7 @@ Modeling track:
 
 Release track:
 
-1. Tag `v0.1.0` and publish checksum-verified unsigned artifacts.
+1. `v0.1.0` is published with checksum-verified unsigned artifacts.
 2. Add GPG/Authenticode signing in a later release if required.
 
 Validation track:
