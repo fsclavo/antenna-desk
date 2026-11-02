@@ -449,26 +449,31 @@ def _layout(scene: GeometryScene, width: int, height: int):
 GOLDEN_PATH = Path(__file__).with_name("golden_scenes.json")
 
 
+def _rounded(value: float) -> float:
+    rounded = round(value, 6)
+    return 0.0 if rounded == 0.0 else rounded
+
+
 def _snapshot(case: FamilyCase, mode: GeometryViewMode) -> str:
     scene = _scene(case, mode)
     data = {
         "polylines": [
-            [[round(point.x_m, 6), round(point.y_m, 6)] for point in polyline.points]
+            [[_rounded(point.x_m), _rounded(point.y_m)] for point in polyline.points]
             for polyline in scene.polylines
         ],
         "markers": sorted(
             [
-                [marker.kind, round(marker.point.x_m, 6), round(marker.point.y_m, 6)]
+                [marker.kind, _rounded(marker.point.x_m), _rounded(marker.point.y_m)]
                 for marker in scene.markers
             ]
         ),
         "dimensions": sorted(
             [
                 [
-                    round(dimension.start.x_m, 6),
-                    round(dimension.start.y_m, 6),
-                    round(dimension.end.x_m, 6),
-                    round(dimension.end.y_m, 6),
+                    _rounded(dimension.start.x_m),
+                    _rounded(dimension.start.y_m),
+                    _rounded(dimension.end.x_m),
+                    _rounded(dimension.end.y_m),
                     dimension.text,
                 ]
                 for dimension in scene.dimensions
@@ -477,33 +482,33 @@ def _snapshot(case: FamilyCase, mode: GeometryViewMode) -> str:
         "angular": sorted(
             [
                 [
-                    round(dimension.center.x_m, 6),
-                    round(dimension.center.y_m, 6),
-                    round(dimension.first.x_m, 6),
-                    round(dimension.first.y_m, 6),
-                    round(dimension.second.x_m, 6),
-                    round(dimension.second.y_m, 6),
+                    _rounded(dimension.center.x_m),
+                    _rounded(dimension.center.y_m),
+                    _rounded(dimension.first.x_m),
+                    _rounded(dimension.first.y_m),
+                    _rounded(dimension.second.x_m),
+                    _rounded(dimension.second.y_m),
                     dimension.text,
                 ]
                 for dimension in scene.angular_dimensions
             ]
         ),
         "show_ground": scene.show_ground,
-        "ground_y_m": (round(scene.ground_y_m, 6) if scene.ground_y_m is not None else None),
+        "ground_y_m": (_rounded(scene.ground_y_m) if scene.ground_y_m is not None else None),
         "is_plan": scene.is_plan,
         "insets": [
             {
                 "label": inset.label,
                 "polylines": [
-                    [[round(point.x_m, 6), round(point.y_m, 6)] for point in polyline.points]
+                    [[_rounded(point.x_m), _rounded(point.y_m)] for point in polyline.points]
                     for polyline in inset.polylines
                 ],
                 "dimensions": [
                     [
-                        round(dimension.start.x_m, 6),
-                        round(dimension.start.y_m, 6),
-                        round(dimension.end.x_m, 6),
-                        round(dimension.end.y_m, 6),
+                        _rounded(dimension.start.x_m),
+                        _rounded(dimension.start.y_m),
+                        _rounded(dimension.end.x_m),
+                        _rounded(dimension.end.y_m),
                         dimension.text,
                     ]
                     for dimension in inset.dimensions
