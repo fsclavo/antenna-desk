@@ -35,7 +35,7 @@ jobs:
           /tmp/antennadesk-wheel/bin/pip install dist/*.whl
           /tmp/antennadesk-wheel/bin/python -c "import antennadesk; print(antennadesk.__version__)"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: antennadesk-dist
           path: |
@@ -123,14 +123,14 @@ jobs:
           code=$?
           test "$code" -eq 124
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: antennadesk-appimage
           path: |
             dist/*.AppImage
             dist/*.AppImage.sha256
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: antennadesk-debian
           path: |
@@ -196,7 +196,7 @@ jobs:
         shell: pwsh
         run: Remove-Item -Force (Join-Path $env:RUNNER_TEMP "codesign.pfx") -ErrorAction SilentlyContinue
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: antennadesk-windows
           path: |
@@ -219,22 +219,22 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: antennadesk-dist
           path: dist
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: antennadesk-appimage
           path: dist
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: antennadesk-debian
           path: dist
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: antennadesk-windows
           path: dist
