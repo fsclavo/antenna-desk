@@ -376,9 +376,11 @@ def estimate_j_pole(intent: DesignIntent) -> DimensionEstimate:
 
 def estimate_ringo(intent: DesignIntent) -> DimensionEstimate:
     scale = intent.frequency_hz / RINGO_REFERENCE_FREQUENCY_HZ
-    reference_radiator = 3.0
-    reference_ring_diameter = 0.33
-    reference_ring_height = 0.25
+    # Application preset calibrated for AntennaDesk's simplified Ringo
+    # geometry: a 0.725-wave vertical with a small horizontal matching ring.
+    reference_radiator = 4.34
+    reference_ring_diameter = 0.84
+    reference_ring_height = 0.06
     radiator = reference_radiator / scale
     parameters = RingoParameters(
         frequency_hz=intent.frequency_hz,

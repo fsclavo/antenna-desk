@@ -277,3 +277,13 @@ def test_ocfd_and_ringo_estimates_have_valid_special_geometry() -> None:
     assert ringo.radiator_height_m > 0.0
     assert ringo.ring_diameter_m > 0.0
     assert ringo.ring_height_m > 0.0
+
+
+def test_ringo_estimate_is_calibrated_for_the_simplified_geometry() -> None:
+    frequency = 146_000_000.0
+    parameters = estimate_intent(_intent("ringo", frequency_hz=frequency)).parameters
+    wavelength = wavelength_m(frequency)
+
+    assert parameters.radiator_height_m == pytest.approx(0.725 * wavelength, abs=0.01)
+    assert parameters.ring_diameter_m == pytest.approx(0.14 * wavelength, abs=0.01)
+    assert parameters.ring_height_m == pytest.approx(0.01 * wavelength, abs=0.005)

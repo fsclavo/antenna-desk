@@ -478,6 +478,25 @@ def test_every_estimator_produces_a_solvable_model(
     assert math.isfinite(result.frequencies[0].impedance_ohm.imag)
 
 
+def test_ringo_estimate_is_near_a_match(solver: Nec2cSolver) -> None:
+    estimate = estimate_intent(DesignIntent(frequency_hz=146_000_000.0, antenna_type="ringo"))
+    model = estimate.parameters.to_antenna()
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(146_000_000.0),
+        segmentation=aligned_policy_for_model(
+            model,
+            146_000_000.0,
+            SegmentationPolicy(min_segments_per_wire=3),
+        ),
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert result.frequencies[0].swr < 1.5
+
+
 def test_moxon_20m_wire_reference(solver: Nec2cSolver) -> None:
     """Check the 20 m wire Moxon published by L. B. Cebik, W4RNL.
 

@@ -296,6 +296,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added parameterized domain and NEC smoke tests for every frequency-first
   estimator, including folded dipole, end-fed, OCFD, Ringo, J Pole/Slim Jim,
   Yagi, Moxon, loops, verticals, inverted-V, and fan dipoles.
+- Recalibrated the Ringo estimator for the simplified Ringo geometry, improving
+  the 146 MHz estimate from a very high SWR to approximately 1.3.
 - Added a **Load 20 m wire reference preset** button to the Moxon editor and
   marked that preset as reference-backed in the catalog.
 - Added a bounded multi-variable coordinate-search optimizer in the domain.
