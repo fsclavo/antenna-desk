@@ -322,6 +322,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Replaced the separate optimization menu actions with one **Optimize...**
   action that dispatches from the current template, plus an Optimize button in
   the design panel. Frequency-first estimation is now **Estimate Dimensions...**.
+- Added the AntennaDesk application icon and a Linux desktop-entry file for
+  release packaging.
 - Added a lossless L matching network evaluated before the feed line, with
   project/run persistence and impedance/SWR diagnostics.
 - The matching-network dialog can auto-design an L section from a load R/X at

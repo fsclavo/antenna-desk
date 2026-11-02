@@ -52,7 +52,7 @@ path = "src/antennadesk/__init__.py"
 packages = ["src/antennadesk"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/antennadesk", "tests", "docs", "README.md", "LICENSE"]
+include = ["src/antennadesk", "tests", "docs", "packaging", "README.md", "LICENSE"]
 
 [tool.ruff]
 line-length = 100

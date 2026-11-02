@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=AntennaDesk
+Comment=Antenna design, simulation, and construction for amateur radio
+Exec=antennadesk
+Icon=antennadesk
+Terminal=false
+Categories=Science;Engineering;
+StartupWMClass=AntennaDesk

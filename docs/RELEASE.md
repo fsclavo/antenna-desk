@@ -20,6 +20,9 @@ Artifacts:
 - `dist/antennadesk-<version>.tar.gz`
 - `dist/antennadesk-<version>-py3-none-any.whl`
 
+The GUI icon is packaged in `antennadesk/ui/resources/antennadesk.svg`; the
+Linux desktop entry is `packaging/antennadesk.desktop`.
+
 ## Smoke test
 
 ```bash
