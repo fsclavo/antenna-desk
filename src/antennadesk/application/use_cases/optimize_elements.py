@@ -5,10 +5,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 
 from ...domain.antennas.design import AntennaDesignParameters
+from ...domain.common.units import ensure_non_negative
 from ...domain.common.validation import Severity
 from ...domain.optimization.multi_variable import (
     BoundedEvaluation,
@@ -33,6 +34,31 @@ class ElementOptimizationObjective(StrEnum):
     TARGET_IMPEDANCE = "target_impedance"
     MAX_GAIN = "max_gain"
     MAX_FRONT_TO_BACK = "max_front_to_back"
+    MULTI_OBJECTIVE = "multi_objective"
+
+
+@dataclass(frozen=True, slots=True)
+class ElementOptimizationWeights:
+    gain: float = 1.0
+    front_to_back: float = 1.0
+    swr: float = 1.0
+    efficiency: float = 0.0
+
+    def __post_init__(self) -> None:
+        for name, value in (
+            ("gain", self.gain),
+            ("front_to_back", self.front_to_back),
+            ("swr", self.swr),
+            ("efficiency", self.efficiency),
+        ):
+            ensure_non_negative(value, name=f"weight_{name}")
+        if (
+            self.gain == 0.0
+            and self.front_to_back == 0.0
+            and self.swr == 0.0
+            and self.efficiency == 0.0
+        ):
+            raise ValueError("at least one multi-objective weight must be positive")
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,6 +69,7 @@ class OptimizeElementsCommand:
     target: SynthesisTarget
     base_spec: SimulationSpec
     objective: ElementOptimizationObjective = ElementOptimizationObjective.TARGET_IMPEDANCE
+    weights: ElementOptimizationWeights = field(default_factory=ElementOptimizationWeights)
     max_evaluations: int = 81
     samples: int = 5
     passes: int = 4
@@ -57,6 +84,7 @@ class OptimizeElements:
         needs_pattern = command.objective in {
             ElementOptimizationObjective.MAX_GAIN,
             ElementOptimizationObjective.MAX_FRONT_TO_BACK,
+            ElementOptimizationObjective.MULTI_OBJECTIVE,
         }
         if needs_pattern and not command.base_spec.far_field.enabled:
             raise ValueError("gain and front-to-back optimization require a far-field request")
@@ -103,7 +131,7 @@ class OptimizeElements:
                         )
                     metrics["max_gain_db"] = gain
                     score = -gain
-                else:
+                elif command.objective is ElementOptimizationObjective.MAX_FRONT_TO_BACK:
                     front_to_back = front_to_back_db(point.far_field)
                     if front_to_back is None:
                         return BoundedEvaluation(
@@ -111,6 +139,42 @@ class OptimizeElements:
                         )
                     metrics["front_to_back_db"] = front_to_back
                     score = -front_to_back
+                else:
+                    weights = command.weights
+                    gain = max_power_gain_db(point.far_field)
+                    front_to_back = front_to_back_db(point.far_field)
+                    if weights.gain > 0.0 and gain is None:
+                        return BoundedEvaluation(
+                            0, dict(values), None, error="no far-field gain data"
+                        )
+                    if weights.front_to_back > 0.0 and front_to_back is None:
+                        return BoundedEvaluation(
+                            0, dict(values), None, error="no front-to-back data"
+                        )
+                    efficiency = (
+                        point.power_budget.efficiency_percent / 100.0
+                        if point.power_budget is not None
+                        else None
+                    )
+                    if weights.efficiency > 0.0 and efficiency is None:
+                        return BoundedEvaluation(0, dict(values), None, error="no efficiency data")
+                    gain_value = gain if gain is not None else 0.0
+                    front_to_back_value = front_to_back if front_to_back is not None else 0.0
+                    efficiency_value = efficiency if efficiency is not None else 0.0
+                    score = -(
+                        weights.gain * gain_value
+                        + weights.front_to_back * front_to_back_value
+                        - weights.swr * max(point.swr - 1.0, 0.0)
+                        + weights.efficiency * efficiency_value
+                    )
+                    metrics["max_gain_db"] = gain_value
+                    metrics["front_to_back_db"] = front_to_back_value
+                    if efficiency is not None:
+                        metrics["efficiency_percent"] = (
+                            point.power_budget.efficiency_percent
+                            if point.power_budget is not None
+                            else 0.0
+                        )
                 return BoundedEvaluation(0, dict(values), score, metrics=metrics)
             message = next(
                 (

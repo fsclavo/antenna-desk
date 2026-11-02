@@ -378,7 +378,9 @@ element stays fixed, gaps remain positive, and the minimum-gap constraint keeps
 the element order and spacing valid; radii stay fixed.
 
 The evaluation table is ranked by the selected objective and shows R, X, SWR,
-gain, F/B, and the objective value. **Apply element lengths** updates the Yagi
+gain, F/B, efficiency, and the objective value. **Multi-objective** combines
+gain, F/B, SWR penalty, and efficiency with user weights; it is a transparent
+weighted score, not a Pareto front. **Apply element lengths** updates the Yagi
 editor and starts the normal full sweep/pattern simulation. This is a numerical
 starting point; verify the applied design with a full simulation and, where
 possible, a measurement.

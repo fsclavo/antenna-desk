@@ -317,6 +317,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - The shared engine now drives a generic multi-element dialog used by Yagi,
   fan-dipole, and Moxon optimization, with template-specific variables and
   builders.
+- Added a weighted multi-objective mode for multi-element optimization,
+  combining gain, front-to-back, SWR penalty, and efficiency with transparent
+  user weights.
 - Removed the obsolete template-specific optimization dialogs and workers; the
   generic dialog is now the only multi-element optimization UI.
 - Replaced the separate optimization menu actions with one **Optimize...**

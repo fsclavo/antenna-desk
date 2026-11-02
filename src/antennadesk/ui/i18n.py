@@ -1947,6 +1947,26 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Maximum front-to-back",
         Language.SPANISH: "Máxima relación frente/espalda",
     },
+    "element_optimize.objective.multi_objective": {
+        Language.ENGLISH: "Multi-objective",
+        Language.SPANISH: "Multiobjetivo",
+    },
+    "element_optimize.weight_gain": {
+        Language.ENGLISH: "Gain weight",
+        Language.SPANISH: "Peso de ganancia",
+    },
+    "element_optimize.weight_fb": {
+        Language.ENGLISH: "F/B weight",
+        Language.SPANISH: "Peso de F/B",
+    },
+    "element_optimize.weight_swr": {
+        Language.ENGLISH: "SWR penalty weight",
+        Language.SPANISH: "Peso de penalización de ROE",
+    },
+    "element_optimize.weight_efficiency": {
+        Language.ENGLISH: "Efficiency weight",
+        Language.SPANISH: "Peso de eficiencia",
+    },
     "element_optimize.hint": {
         Language.ENGLISH: "Selected dimensions change together. The target is evaluated at one frequency; verify the applied design with a full simulation.",
         Language.SPANISH: "Las dimensiones seleccionadas cambian juntas. El objetivo se evalúa en una frecuencia; verificá el diseño aplicado con una simulación completa.",

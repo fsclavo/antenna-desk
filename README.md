@@ -107,9 +107,9 @@ for build, smoke-test, and packaging steps.
 - Bounded two-variable impedance synthesis for OCFD, J Pole, and Slim Jim
   designs, with a target frequency/R/X, evaluation log, and apply-and-simulate
   flow.
-- Bounded multi-element Yagi optimization of selected element lengths and boom
-  gaps for target impedance, maximum gain, or maximum front-to-back ratio, with
-  minimum-gap constraints, a ranked evaluation log, and apply-and-simulate flow.
+- Bounded multi-element optimization for target impedance, maximum gain,
+  maximum front-to-back ratio, or a weighted gain/F-B/SWR/efficiency score,
+  with template-specific variables and apply-and-simulate flow.
 - Bounded fan-dipole element-length optimization against a target impedance.
 - Bounded Moxon optimization of width, spacing, and tip dimensions for target
   impedance, gain, or front-to-back ratio.

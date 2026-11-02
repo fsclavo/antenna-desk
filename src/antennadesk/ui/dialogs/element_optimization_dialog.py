@@ -30,6 +30,7 @@ from ...application.cancellation import EventCancelToken
 from ...application.ports.antenna_solver import AntennaSolver
 from ...application.use_cases.optimize_elements import (
     ElementOptimizationObjective,
+    ElementOptimizationWeights,
     OptimizeElementsCommand,
 )
 from ...domain.antennas.design import AntennaDesignParameters
@@ -113,6 +114,28 @@ class ElementOptimizationDialog(QDialog):
         self._target_x.setValue(0.0)
         self._target_x.setSuffix(" Ω")
 
+        def weight() -> QDoubleSpinBox:
+            box = QDoubleSpinBox(self)
+            box.setRange(0.0, 100.0)
+            box.setDecimals(2)
+            box.setSingleStep(0.1)
+            return box
+
+        self._weight_gain = weight()
+        self._weight_gain.setValue(1.0)
+        self._weight_fb = weight()
+        self._weight_fb.setValue(1.0)
+        self._weight_swr = weight()
+        self._weight_swr.setValue(1.0)
+        self._weight_efficiency = weight()
+        self._weight_efficiency.setValue(0.0)
+        self._label_weight_gain = QLabel(translator.t("element_optimize.weight_gain"), self)
+        self._label_weight_fb = QLabel(translator.t("element_optimize.weight_fb"), self)
+        self._label_weight_swr = QLabel(translator.t("element_optimize.weight_swr"), self)
+        self._label_weight_efficiency = QLabel(
+            translator.t("element_optimize.weight_efficiency"), self
+        )
+
         self._bound_percent = QDoubleSpinBox(self)
         self._bound_percent.setRange(1.0, 50.0)
         self._bound_percent.setDecimals(1)
@@ -153,12 +176,16 @@ class ElementOptimizationDialog(QDialog):
         form.addRow(self._label_frequency, self._frequency)
         form.addRow(self._label_r, self._target_r)
         form.addRow(self._label_x, self._target_x)
+        form.addRow(self._label_weight_gain, self._weight_gain)
+        form.addRow(self._label_weight_fb, self._weight_fb)
+        form.addRow(self._label_weight_swr, self._weight_swr)
+        form.addRow(self._label_weight_efficiency, self._weight_efficiency)
         form.addRow(self._label_bound, self._bound_percent)
         form.addRow(self._label_evaluations, self._max_evaluations)
         form.addRow(self._label_samples, self._samples)
         form.addRow(self._label_passes, self._passes)
 
-        self._evaluations = QTableWidget(0, 9, self)
+        self._evaluations = QTableWidget(0, 10, self)
         self._evaluations.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self._evaluations.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self._evaluations.setAlternatingRowColors(True)
@@ -225,6 +252,7 @@ class ElementOptimizationDialog(QDialog):
                 t("table.swr"),
                 t("optimize.gain"),
                 t("yagi_optimize.front_to_back"),
+                t("optimize.efficiency"),
                 t("yagi_optimize.objective_value"),
                 t("optimize.message"),
             ]
@@ -275,10 +303,19 @@ class ElementOptimizationDialog(QDialog):
 
     def _objective_changed(self, *_args: object) -> None:
         target = self._objective_value() is ElementOptimizationObjective.TARGET_IMPEDANCE
+        multi = self._objective_value() is ElementOptimizationObjective.MULTI_OBJECTIVE
         self._label_r.setVisible(target)
         self._label_x.setVisible(target)
         self._target_r.setVisible(target)
         self._target_x.setVisible(target)
+        for label, widget in (
+            (self._label_weight_gain, self._weight_gain),
+            (self._label_weight_fb, self._weight_fb),
+            (self._label_weight_swr, self._weight_swr),
+            (self._label_weight_efficiency, self._weight_efficiency),
+        ):
+            label.setVisible(multi)
+            widget.setVisible(multi)
 
     def _target(self) -> SynthesisTarget:
         return SynthesisTarget(
@@ -332,6 +369,12 @@ class ElementOptimizationDialog(QDialog):
             target=target,
             base_spec=self._base_spec,
             objective=self._run_objective,
+            weights=ElementOptimizationWeights(
+                gain=self._weight_gain.value(),
+                front_to_back=self._weight_fb.value(),
+                swr=self._weight_swr.value(),
+                efficiency=self._weight_efficiency.value(),
+            ),
             max_evaluations=self._max_evaluations.value(),
             samples=self._samples.value(),
             passes=self._passes.value(),
@@ -388,6 +431,10 @@ class ElementOptimizationDialog(QDialog):
             self._frequency,
             self._target_r,
             self._target_x,
+            self._weight_gain,
+            self._weight_fb,
+            self._weight_swr,
+            self._weight_efficiency,
             self._bound_percent,
             self._max_evaluations,
             self._samples,
@@ -415,6 +462,8 @@ class ElementOptimizationDialog(QDialog):
         front_to_back = evaluation.metrics.get("front_to_back_db")
         if self._run_objective is ElementOptimizationObjective.MAX_GAIN and gain is not None:
             return f"G={gain:.2f} dBi"
+        if self._run_objective is ElementOptimizationObjective.MULTI_OBJECTIVE:
+            return f"Score={-evaluation.score:.3f}"
         if front_to_back is not None:
             return f"F/B={front_to_back:.2f} dB"
         return "—"
@@ -431,6 +480,7 @@ class ElementOptimizationDialog(QDialog):
                 )
             gain = evaluation.metrics.get("max_gain_db")
             front_to_back = evaluation.metrics.get("front_to_back_db")
+            efficiency = evaluation.metrics.get("efficiency_percent")
             values = [
                 str(row + 1),
                 str(evaluation.index),
@@ -439,12 +489,13 @@ class ElementOptimizationDialog(QDialog):
                 (f"{evaluation.metrics['swr']:.3f}" if "swr" in evaluation.metrics else "—"),
                 f"{gain:.2f}" if gain is not None else "—",
                 f"{front_to_back:.2f}" if front_to_back is not None else "—",
+                f"{efficiency:.2f}" if efficiency is not None else "—",
                 self._objective_text(evaluation),
                 evaluation.error or "",
             ]
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
-                if column in {2, 3, 4, 5, 6, 7}:
+                if column in {2, 3, 4, 5, 6, 7, 8}:
                     item.setTextAlignment(
                         Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
                     )
