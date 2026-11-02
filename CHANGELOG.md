@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-02
+
 ### Added
 
 - Project-level Undo/Redo for applied design, variant, template, load, feed-line,
@@ -203,6 +205,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Release signing is optional and deferred for the initial release. Unsigned
+  native packages are published with SHA-256 checksums; GPG and Authenticode
+  hooks remain available for later releases.
 - Refreshed the roadmap, README, architecture, domain-model, validation-plan,
   and user-guide status to reflect the completed catalog, estimators,
   measurements, optimization, matching, and packaging work.
@@ -415,5 +420,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Project documentation: blueprint, ADR-0001, project decisions, and solver
   evaluation.
 
-[Unreleased]: https://github.com/fsclavo/antenna-desk/compare/v0.1.0.dev0...HEAD
+[Unreleased]: https://github.com/fsclavo/antenna-desk/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/fsclavo/antenna-desk/releases/tag/v0.1.0
 [0.1.0.dev0]: https://github.com/fsclavo/antenna-desk/releases/tag/v0.1.0.dev0

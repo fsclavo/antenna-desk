@@ -76,6 +76,13 @@ consequences, it is documented in `docs/ADR/`.
 - **Conventional Commits**.
 - Phase 0 before the GUI; do not scaffold the whole roadmap.
 
+## Release
+
+- The initial release publishes unsigned native packages with mandatory
+  SHA-256 checksums.
+- GPG and Windows Authenticode signing are optional and deferred until
+  project-owned keys are available.
+
 ## Decisions still requiring an ADR
 
 - Final architecture and boundaries.

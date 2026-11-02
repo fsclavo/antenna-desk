@@ -6,8 +6,9 @@ electromagnetic engine.
 
 **Status:** pre-alpha. The antenna catalog, estimators, simulation,
 measurements, optimization, matching, and reporting flows are implemented.
-Native AppImage, Debian, and Windows packages include `nec2c`; code signing and
-the first tagged release are the remaining release blockers. Center-fed dipoles, folded dipoles, loops,
+Native AppImage, Debian, and Windows packages include `nec2c`; the first tagged
+release is the remaining release blocker. Signing is optional and deferred for
+the initial release. Center-fed dipoles, folded dipoles, loops,
 custom wires, Yagis, Moxon, fan dipoles, inverted-Vs, OCFDs, end-fed wires,
 J Poles, Slim Jims, Ringos, and verticals are supported, with schema v3
 persistence and migration. VNA CSV import and measured/simulated comparison are
@@ -62,8 +63,8 @@ solver yourself:
 python -m pip install dist/antennadesk-*.whl
 ```
 
-See [Release checklist](docs/RELEASE.md) for build, smoke-test, signing, and
-packaging steps.
+See [Release checklist](docs/RELEASE.md) for build, smoke-test, checksum, and
+optional signing steps.
 
 ## Documentation
 
@@ -205,10 +206,10 @@ uv run python scripts/run_reference_simulation.py \
   separated. Relative permeability is not emitted to NEC. Conductor
   conductivity is emitted when `SimulationSpec.include_conductor_losses` is
   true.
-- Native packages include `nec2c`, but the release artifacts are unsigned by
-  default. Signing requires the project GPG key or a Windows Authenticode
-  certificate. The wheel/sdist remains available for users who manage the
-  solver themselves.
+- Native packages include `nec2c`. The initial release is unsigned; verify the
+  published SHA-256 checksums. Optional GPG and Windows Authenticode signing
+  hooks are available for later releases. The wheel/sdist remains available for
+  users who manage the solver themselves.
 - Simulation runs are stored in the project, including raw solver text; the
   native project size limit is 10 MB. Use **Tools → Compact Simulation History**
   to keep only the latest run per variant. High-resolution patterns and long

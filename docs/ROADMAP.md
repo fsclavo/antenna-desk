@@ -62,9 +62,9 @@ Completed:
 
 In progress:
 
-- Release hardening: configure project signing keys and publish the first
-  tagged release. The AppImage/Windows build recipes, `.deb`, bundled `nec2c`,
-  and signing automation are implemented.
+- Release hardening: publish the first tagged release. The AppImage/Windows
+  build recipes, `.deb`, bundled `nec2c`, and optional signing automation are
+  implemented; signing is deferred for the initial release.
 
 Deferred:
 
@@ -120,8 +120,8 @@ Deferred:
 - Tag-triggered release workflow with wheel/sdist, AppImage, Debian package,
   Windows zip, and checksums (completed).
 - Optional GPG detached signatures and Windows Authenticode signing hooks
-  (completed).
-- Configure project signing keys and publish `v0.1.0` (pending).
+  (completed, deferred for the initial release).
+- Publish `v0.1.0` with unsigned, SHA-256-verified artifacts (pending).
 - Keep the wheel/sdist smoke test as the fallback distribution path
   (completed).
 
@@ -129,11 +129,12 @@ Deferred:
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
-| P0 | Configure signing keys and publish `v0.1.0` | n/a | pending |
+| P0 | Publish `v0.1.0` with checksum-verified unsigned artifacts | n/a | pending |
 | P1 | End-fed transformer/unun and counterpoise modeling | C | pending |
 | P1 | Transmission line as geometry, not only feed-line post-processing | B | pending |
 | P1 | Realized gain and directivity separated from NEC power gain | A | pending |
 | P1 | Independent references for remaining experimental templates | A/B | partial |
+| P2 | GPG/Authenticode code signing for release artifacts | n/a | deferred |
 | P2 | Relative permeability export to NEC | B | pending |
 | P2 | Custom/imported geometry optimization and space constraints | n/a | pending |
 | P2 | Live VNA/hardware control | n/a | deferred |
@@ -150,8 +151,8 @@ Modeling track:
 
 Release track:
 
-1. Configure GPG and Authenticode signing keys.
-2. Sign artifacts, tag `v0.1.0`, and publish the release.
+1. Tag `v0.1.0` and publish checksum-verified unsigned artifacts.
+2. Add GPG/Authenticode signing in a later release if required.
 
 Validation track:
 

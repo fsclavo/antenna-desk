@@ -2,7 +2,8 @@
 
 AntennaDesk is distributed as a Python wheel/sdist, a Linux AppImage, a Debian
 package, and a Windows onedir zip. `nec2c` is bundled in the native packages and
-remains an external runtime dependency for the wheel.
+remains an external runtime dependency for the wheel. The initial release is
+unsigned; signing is optional and deferred until project keys are configured.
 
 ## Versioning
 
@@ -58,7 +59,7 @@ packaging/build_deb.sh
 
 The result is `dist/antennadesk_<version>_<arch>.deb` plus a `.sha256` file.
 Development versions are normalized with `~` (for example
-`0.1.0.dev0` becomes `0.1.0~dev0`) so they sort before the final release. The
+`0.2.0.dev0` becomes `0.2.0~dev0`) so they sort before the final release. The
 package installs the frozen bundle under `/opt/antennadesk`, with
 `/usr/bin/antennadesk` as the launcher, the desktop entry, icons, copyright,
 and a generated Debian changelog.
@@ -154,9 +155,11 @@ application executable. The native bundles place `nec2c` next to the
 executable; the wheel installer must provide it separately. Use
 **Tools → Locate NEC2C...** if automatic discovery fails.
 
-## Signing
+## Signing (optional, deferred)
 
-Signing is optional and requires project-owned keys.
+Signing is optional, is not required for the initial release, and requires
+project-owned keys. Unsigned releases still publish SHA-256 checksums for
+integrity verification.
 
 ### GPG-signed release artifacts
 
@@ -225,11 +228,14 @@ are absent.
 7. Tag `v<version>` and push the tag.
 8. Verify the release workflow attached all artifacts and checksums.
 9. Record known limitations and experimental templates in the release notes.
+10. For the initial release, signing may be skipped; keep the SHA-256 checksums
+    and note that signatures are deferred.
 
 ## Current limitations
 
-- Native packages are unsigned unless the GPG or Windows Authenticode secrets
-  are configured. Signing requires project-owned keys.
+- The initial native packages are unsigned. Verify the published SHA-256
+  checksums. GPG and Windows Authenticode signing remain available as an
+  optional later step when project-owned keys are configured.
 - No live VNA/hardware control.
 - Some template families remain experimental or published/heuristic rather than
   strictly reference-backed. See `docs/VALIDATION_PLAN.md`.
