@@ -168,12 +168,27 @@ def design_summary_rows(
         )
         return tuple(rows)
     if isinstance(parameters, EndFedParameters):
+        counterpoise = (
+            f"{parameters.counterpoise_length_m:.4f} m"
+            if parameters.counterpoise_length_m > 0.0
+            else "none"
+        )
         rows.extend(
             [
                 ("Type", "end-fed wire"),
                 ("Length", f"{parameters.length_m:.4f} m"),
                 ("Feed height", f"{parameters.feed_height_m:.4f} m"),
                 ("End height", f"{parameters.end_height_m:.4f} m"),
+                ("Transformer", f"{parameters.transformer_ratio:g}:1"),
+                ("Counterpoise", counterpoise),
+                (
+                    "Counterpoise height",
+                    f"{parameters.counterpoise_height_m:.4f} m",
+                ),
+                (
+                    "Counterpoise azimuth",
+                    f"{parameters.effective_counterpoise_azimuth_deg:.1f}°",
+                ),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground)),
             ]

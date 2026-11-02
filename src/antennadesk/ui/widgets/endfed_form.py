@@ -59,6 +59,30 @@ class EndFedForm(QWidget):
         self._end_height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._end_height.setValue(length_from_m(10.0, unit_system))
 
+        self._transformer = QDoubleSpinBox(self)
+        self._transformer.setRange(1.0, 100_000.0)
+        self._transformer.setDecimals(1)
+        self._transformer.setValue(49.0)
+        self._transformer.setSuffix(":1")
+
+        self._counterpoise_length = QDoubleSpinBox(self)
+        self._counterpoise_length.setRange(0.0, 100_000.0)
+        self._counterpoise_length.setDecimals(3)
+        self._counterpoise_length.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._counterpoise_length.setValue(0.0)
+
+        self._counterpoise_height = QDoubleSpinBox(self)
+        self._counterpoise_height.setRange(0.0, 100_000.0)
+        self._counterpoise_height.setDecimals(3)
+        self._counterpoise_height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._counterpoise_height.setValue(length_from_m(0.1, unit_system))
+
+        self._counterpoise_azimuth = QDoubleSpinBox(self)
+        self._counterpoise_azimuth.setRange(0.0, 360.0)
+        self._counterpoise_azimuth.setDecimals(1)
+        self._counterpoise_azimuth.setSuffix("°")
+        self._counterpoise_azimuth.setValue(180.0)
+
         self._azimuth = QDoubleSpinBox(self)
         self._azimuth.setRange(0.0, 360.0)
         self._azimuth.setDecimals(1)
@@ -105,6 +129,13 @@ class EndFedForm(QWidget):
         form.addRow(translator.t("field.length"), self._length)
         form.addRow(translator.t("endfed.feed_height"), self._feed_height)
         form.addRow(translator.t("endfed.end_height"), self._end_height)
+        form.addRow(translator.t("endfed.transformer_ratio"), self._transformer)
+        form.addRow(translator.t("endfed.counterpoise_length"), self._counterpoise_length)
+        form.addRow(translator.t("endfed.counterpoise_height"), self._counterpoise_height)
+        form.addRow(
+            translator.t("endfed.counterpoise_azimuth"),
+            self._counterpoise_azimuth,
+        )
         form.addRow(translator.t("field.azimuth"), self._azimuth)
         form.addRow(translator.t("endfed.wire_radius"), self._radius)
         form.addRow(translator.t("field.material"), self._material)
@@ -122,6 +153,10 @@ class EndFedForm(QWidget):
             self._length,
             self._feed_height,
             self._end_height,
+            self._transformer,
+            self._counterpoise_length,
+            self._counterpoise_height,
+            self._counterpoise_azimuth,
             self._azimuth,
             self._radius,
             self._permittivity,
@@ -130,9 +165,11 @@ class EndFedForm(QWidget):
             widget.valueChanged.connect(self._emit_changed)
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._ground_changed)
+        self._counterpoise_length.valueChanged.connect(self._counterpoise_changed)
         if parameters is not None:
             self.set_parameters(parameters)
         self._update_ground_controls()
+        self._update_counterpoise_controls()
         self._update_geometry()
 
     def _emit_changed(self, *_args: object) -> None:
@@ -143,6 +180,14 @@ class EndFedForm(QWidget):
     def _ground_changed(self, *_args: object) -> None:
         self._update_ground_controls()
         self._emit_changed()
+
+    def _counterpoise_changed(self, *_args: object) -> None:
+        self._update_counterpoise_controls()
+
+    def _update_counterpoise_controls(self) -> None:
+        enabled = self._counterpoise_length.value() > 0.0
+        self._counterpoise_height.setEnabled(enabled)
+        self._counterpoise_azimuth.setEnabled(enabled)
 
     def _update_ground_controls(self) -> None:
         finite = self._ground.currentData() == GroundKind.FINITE.value
@@ -173,6 +218,17 @@ class EndFedForm(QWidget):
             self._length.setValue(length_from_m(parameters.length_m, self._unit_system))
             self._feed_height.setValue(length_from_m(parameters.feed_height_m, self._unit_system))
             self._end_height.setValue(length_from_m(parameters.end_height_m, self._unit_system))
+            self._transformer.setValue(parameters.transformer_ratio)
+            self._counterpoise_length.setValue(
+                length_from_m(parameters.counterpoise_length_m, self._unit_system)
+            )
+            self._counterpoise_height.setValue(
+                length_from_m(parameters.counterpoise_height_m, self._unit_system)
+            )
+            counterpoise_azimuth = parameters.counterpoise_azimuth_deg
+            if counterpoise_azimuth is None:
+                counterpoise_azimuth = parameters.effective_counterpoise_azimuth_deg
+            self._counterpoise_azimuth.setValue(counterpoise_azimuth)
             self._azimuth.setValue(parameters.azimuth_deg)
             self._radius.setValue(parameters.wire_radius_m * 1_000.0)
             material_index = self._material.findData(parameters.material)
@@ -188,6 +244,7 @@ class EndFedForm(QWidget):
         finally:
             self._updating = False
         self._update_ground_controls()
+        self._update_counterpoise_controls()
         self._update_geometry()
 
     def set_frequency_hz(self, frequency_hz: float) -> None:
@@ -200,11 +257,18 @@ class EndFedForm(QWidget):
             self._geometry.setText("")
             return
         unit = self._translator.t(length_unit_key(self._unit_system))
+        counterpoise = (
+            f"{length_from_m(parameters.counterpoise_length_m, self._unit_system):.2f} {unit}"
+            if parameters.counterpoise_length_m > 0.0
+            else "none"
+        )
         self._geometry.setText(
             self._translator.t(
                 "endfed.geometry",
                 feed=f"{length_from_m(parameters.feed_height_m, self._unit_system):.2f}",
                 end=f"{length_from_m(parameters.end_height_m, self._unit_system):.2f}",
+                counterpoise=counterpoise,
+                ratio=f"{parameters.transformer_ratio:g}",
                 unit=unit,
             )
         )
@@ -219,4 +283,8 @@ class EndFedForm(QWidget):
             wire_radius_m=self._radius.value() / 1_000.0,
             material=self._selected_material(),
             ground=self._ground_model(),
+            transformer_ratio=self._transformer.value(),
+            counterpoise_length_m=length_to_m(self._counterpoise_length.value(), self._unit_system),
+            counterpoise_height_m=length_to_m(self._counterpoise_height.value(), self._unit_system),
+            counterpoise_azimuth_deg=self._counterpoise_azimuth.value(),
         )

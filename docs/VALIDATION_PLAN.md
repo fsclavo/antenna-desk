@@ -109,8 +109,9 @@ Phase 5 adds tests for:
   measured/simulated SWR rendering.
 - Fan-dipole pair geometry, below-ground rejection, persistence, dialog
   restoration, and main-window creation are covered.
-- End-fed wire geometry, end-feed placement, below-ground rejection,
-  persistence, dialog restoration, and main-window creation are covered.
+- End-fed wire geometry, end-feed placement, below-ground rejection, optional
+  counterpoise/drop geometry, transformer-ratio persistence and impedance
+  scaling, dialog restoration, and main-window creation are covered.
 - J Pole/Slim Jim radiator-stub geometry, folded connector, validation,
   persistence, dialog restoration, and main-window creation are covered.
 - Ringo radiator/ring geometry, side-count validation, persistence, dialog
@@ -316,7 +317,7 @@ Phase 6 adds tests for:
 - Native packaging inputs, `--version`/`--check-solver` CLI behavior, and
   bundled-solver precedence in the executable locator.
 
-The suite currently has 781 tests with the solver enabled. Solver integration
+The suite currently has 788 tests with the solver enabled. Solver integration
 tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.
@@ -370,6 +371,8 @@ and require `NEC2C`.
   emitted when `SimulationSpec.include_conductor_losses` is true.
 - Far-field values are NEC power gains in dB. Realized gain and directivity are
   not separated yet.
+- The end-fed transformer is an ideal impedance ratio, not a physical unun
+  model; the counterpoise is simulated as wire geometry, not an ideal ground.
 - Series and parallel RLC loads are supported on one segment. L/Pi/T matching
   networks with optional component Q/loss are post-processed before the feed
   line; general transmission-line geometry is not implemented.

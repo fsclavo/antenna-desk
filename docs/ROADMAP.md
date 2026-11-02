@@ -49,6 +49,8 @@ Completed:
   integer variables.
 - Yagi element-count optimization: trailing directors are added from the
   DL6WU reference or removed, with the driven element preserved.
+- End-fed counterpoise geometry and an ideal feed transformer ratio, with
+  estimator starting values.
 - VNA CSV import, measurement conditions/reference plane, measured/simulated
   comparison, resonance differences, and project measurement records.
 - Construction sheets, CSV/HTML/PDF reports, PNG/SVG/DXF exports, and
@@ -125,7 +127,6 @@ Deferred:
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
-| P1 | End-fed transformer/unun and counterpoise modeling | C | pending |
 | P1 | Transmission line as geometry, not only feed-line post-processing | B | pending |
 | P1 | Realized gain and directivity separated from NEC power gain | A | pending |
 | P1 | Independent references for remaining experimental templates | A/B | partial |
@@ -140,8 +141,7 @@ Deferred:
 
 Modeling track:
 
-1. End-fed transformer/unun and counterpoise, followed by transmission-line
-   geometry.
+1. Transmission-line geometry.
 2. Realized gain/directivity and relative-permeability export.
 
 Release track:

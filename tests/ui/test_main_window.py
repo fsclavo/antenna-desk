@@ -1450,6 +1450,7 @@ def test_new_endfed_creates_a_first_class_design(
         length_m=20.0,
         feed_height_m=10.0,
         end_height_m=5.0,
+        counterpoise_azimuth_deg=180.0,
     )
 
     class FakeEndFedDialog:
@@ -1687,6 +1688,27 @@ def test_vertical_spec_uses_performance_safe_defaults(window: MainWindow) -> Non
     assert spec.frequency_plan.count == 31
     assert spec.segmentation.target_segment_length_wavelengths == pytest.approx(0.05)
     assert segments == 855
+
+
+def test_endfed_simulation_spec_carries_transformer_and_counterpoise(
+    window: MainWindow,
+) -> None:
+    from antennadesk.domain.antennas.endfed import EndFedParameters
+
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_height_m=10.0,
+        end_height_m=10.0,
+        transformer_ratio=49.0,
+        counterpoise_length_m=2.0,
+        counterpoise_height_m=0.2,
+    )
+
+    spec = window._endfed_simulation_spec(parameters)
+
+    assert spec.feed_transformer_ratio == pytest.approx(49.0)
+    assert len(parameters.to_antenna().wires) == 3
 
 
 def test_design_from_frequency_applies_estimated_parameters(

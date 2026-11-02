@@ -341,6 +341,7 @@ def _rich_result() -> SimulationResult:
             velocity_factor=0.8,
             matched_loss_db_per_100m=1.5,
         ),
+        feed_transformer_ratio=4.0,
     )
     current = CurrentSample(
         segment=1,
@@ -448,6 +449,7 @@ def test_round_trip_with_a_simulation_run(
         velocity_factor=0.8,
         matched_loss_db_per_100m=1.5,
     )
+    assert run.result.spec.feed_transformer_ratio == 4.0
 
 
 def test_serialized_size_matches_written_file(

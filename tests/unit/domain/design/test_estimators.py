@@ -268,6 +268,9 @@ def test_folded_and_endfed_estimates_are_dimensionally_complete() -> None:
     assert endfed.length_m > 0.0
     assert endfed.feed_height_m == pytest.approx(10.0)
     assert endfed.end_height_m == pytest.approx(12.0)
+    assert endfed.transformer_ratio == pytest.approx(49.0)
+    assert endfed.counterpoise_length_m == pytest.approx(wavelength_m(7_100_000.0) * 0.05)
+    assert endfed.counterpoise_height_m > 0.0
 
 
 def test_ocfd_and_ringo_estimates_have_valid_special_geometry() -> None:

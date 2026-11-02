@@ -208,11 +208,15 @@ first-class experimental templates.
 
 ## Create an end-fed wire
 
-Choose **File → New Antenna... → End-fed wire** to generate a single wire fed
-at one end, optionally sloping between feed and far-end heights. Set the
-physical wire length, feed height, end height, azimuth, radius, material, and
-ground; the horizontal run is derived from the height difference. End-fed is a
-first-class experimental template with an inline editor.
+Choose **File → New Antenna... → End-fed wire** to generate a wire fed at one
+end, optionally sloping between feed and far-end heights. Set the physical wire
+length, feed height, end height, azimuth, radius, material, and ground; the
+horizontal run is derived from the height difference. The optional counterpoise
+is modeled as a drop from the feed plus a horizontal wire. The transformer
+ratio is an ideal feed-point transformation: `49` means a 49:1 unun, so the
+antenna-side impedance is divided by 49 for the reported impedance and SWR.
+Set the counterpoise length to zero to omit it. End-fed is a first-class
+experimental template with an inline editor.
 
 ## Create a fan dipole
 

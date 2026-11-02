@@ -338,6 +338,10 @@ def test_endfed_parameters_round_trip() -> None:
         length_m=20.0,
         feed_height_m=10.0,
         end_height_m=5.0,
+        transformer_ratio=49.0,
+        counterpoise_length_m=2.5,
+        counterpoise_height_m=0.2,
+        counterpoise_azimuth_deg=210.0,
     )
     original = _project(parameters, "End-fed")
 

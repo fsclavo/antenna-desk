@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from datetime import datetime
 
@@ -80,6 +81,18 @@ def normalize_nec2_result(
                 field="matching_network",
             )
         )
+    if not math.isclose(spec.feed_transformer_ratio, 1.0):
+        problems.append(
+            Diagnostic(
+                code="transformer.applied",
+                severity=Severity.INFO,
+                message=(
+                    "impedance and SWR include an ideal "
+                    f"{spec.feed_transformer_ratio:g}:1 feed transformer"
+                ),
+                field="feed_transformer_ratio",
+            )
+        )
     if feed_line is not None and feed_line.is_active:
         problems.append(
             Diagnostic(
@@ -144,6 +157,8 @@ def normalize_nec2_result(
         )
         far_field = tuple(_far_field_point(point) for point in parsed_frequency.far_field)
         input_impedance = input_parameters.impedance_ohm
+        if not math.isclose(spec.feed_transformer_ratio, 1.0):
+            input_impedance /= spec.feed_transformer_ratio
         if matching_network is not None:
             input_impedance = matching_network.input_impedance(
                 input_impedance,

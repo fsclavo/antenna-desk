@@ -36,7 +36,7 @@ class EndFedDialog(QDialog):
         if frequency_hz is not None and parameters is None:
             self._form.set_frequency_hz(frequency_hz)
         self.setWindowTitle(translator.t("endfed.title"))
-        self.resize(560, 600)
+        self.resize(620, 720)
 
         self._hint = QLabel(translator.t("endfed.hint"), self)
         self._hint.setWordWrap(True)

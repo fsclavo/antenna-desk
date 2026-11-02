@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 
 from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.dipole import DipoleParameters
@@ -61,4 +62,11 @@ def test_fingerprint_changes_with_conductor_loss_setting() -> None:
         include_conductor_losses=True,
         far_field=FarFieldRequest(enabled=False),
     )
+    assert first != model_fingerprint(_model(), changed)
+
+
+def test_fingerprint_changes_with_feed_transformer_ratio() -> None:
+    first = model_fingerprint(_model(), _spec())
+    changed = replace(_spec(), feed_transformer_ratio=4.0)
+
     assert first != model_fingerprint(_model(), changed)

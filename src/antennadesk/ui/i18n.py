@@ -545,8 +545,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "el ángulo incluido cambia la impedancia de alimentación",
     },
     "estimator.assumption.endfed_matching": {
-        Language.ENGLISH: "the matching transformer and counterpoise are not included",
-        Language.SPANISH: "no se incluye el transformador de adaptación ni el contrapeso",
+        Language.ENGLISH: (
+            "the transformer ratio and counterpoise are starting values; verify "
+            "them for the installation"
+        ),
+        Language.SPANISH: (
+            "la relación del transformador y el contrapeso son valores de "
+            "partida; verificarlos para la instalación"
+        ),
     },
     "estimator.assumption.yagi_reference": {
         Language.ENGLISH: "dimensions are scaled from the DL6WU trimming reference",
@@ -1704,26 +1710,56 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Radio del hilo (mm)",
     },
     "endfed.geometry": {
-        Language.ENGLISH: "Feed {feed} {unit} · end {end} {unit}",
-        Language.SPANISH: "Alimentación {feed} {unit} · extremo {end} {unit}",
+        Language.ENGLISH: (
+            "Feed {feed} {unit} · end {end} {unit} · counterpoise {counterpoise} · {ratio}:1"
+        ),
+        Language.SPANISH: (
+            "Alimentación {feed} {unit} · extremo {end} {unit} · contrapeso "
+            "{counterpoise} · {ratio}:1"
+        ),
+    },
+    "endfed.transformer_ratio": {
+        Language.ENGLISH: "Transformer ratio",
+        Language.SPANISH: "Relación del transformador",
+    },
+    "endfed.counterpoise_length": {
+        Language.ENGLISH: "Counterpoise length (0 = none)",
+        Language.SPANISH: "Longitud del contrapeso (0 = ninguno)",
+    },
+    "endfed.counterpoise_height": {
+        Language.ENGLISH: "Counterpoise height",
+        Language.SPANISH: "Altura del contrapeso",
+    },
+    "endfed.counterpoise_azimuth": {
+        Language.ENGLISH: "Counterpoise azimuth",
+        Language.SPANISH: "Azimut del contrapeso",
     },
     "endfed.hint": {
         Language.ENGLISH: (
-            "The wire is fed at one end. The generated antenna is an editable first-class design."
+            "The wire is fed at one end. The optional counterpoise is modeled as "
+            "a drop plus a horizontal wire. The transformer ratio is an ideal "
+            "post-processing step: 49:1 means the antenna-side impedance is "
+            "divided by 49 for the reported impedance and SWR."
         ),
         Language.SPANISH: (
-            "El hilo se alimenta en un extremo. La antena generada es un diseño "
-            "editable de primera clase."
+            "El hilo se alimenta en un extremo. El contrapeso opcional se modela "
+            "como una bajada más un tramo horizontal. La relación del "
+            "transformador es un post-proceso ideal: 49:1 significa que la "
+            "impedancia del lado de la antena se divide por 49 para la "
+            "impedancia y la ROE informadas."
         ),
     },
     "endfed.evidence": {
         Language.ENGLISH: (
             "Experimental generator: geometry is tested, but there is no "
-            "independent numerical reference for this configuration."
+            "independent numerical reference for this configuration. The "
+            "transformer ratio and counterpoise are installation-specific."
         ),
         Language.SPANISH: (
             "Generador experimental: se prueba la geometría, pero no hay una "
-            "referencia numérica independiente para esta configuración."
+            "referencia numérica independiente para esta configuración. La "
+            "relación del transformador y el contrapeso dependen de la "
+            "instalación."
         ),
     },
     "fan.title": {

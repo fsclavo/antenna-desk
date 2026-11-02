@@ -237,6 +237,8 @@ limit, and offers simulation-history compaction.
   transmission-line geometry is not modeled.
 - Far-field results are NEC power gains. Realized gain and directivity are not
   separated yet.
+- The end-fed feed transformer is an ideal impedance ratio; it is not a
+  physical unun model. The counterpoise is ordinary wire geometry.
 - Relative permeability is not emitted to NEC.
 - Custom and imported designs are excluded from the guided optimizer. Space
   constraints are limited to variable bounds and the Yagi minimum-gap rule.

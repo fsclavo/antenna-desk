@@ -133,11 +133,11 @@ optional signing steps.
   impedance, gain, or front-to-back ratio.
 - Custom straight-wire antennas with a coordinate editor, template-to-custom
   conversion, a parametric Yagi generator with an editable element table and
-  NBS starting preset, Moxon, fan dipole, end-fed, J Pole, Slim Jim, Ringo,
-  inverted-V, off-center-fed dipole, and vertical generators, experimental
-  ground radial generator, practical NEC-2
-  deck import, and basic MMANA-GAL `.maa` geometry import, plus series/parallel
-  RLC loads, load markers, and report rows.
+  NBS starting preset, Moxon, fan dipole, end-fed with optional counterpoise
+  and transformer, J Pole, Slim Jim, Ringo, inverted-V, off-center-fed dipole,
+  and vertical generators, experimental ground radial generator, practical
+  NEC-2 deck import, and basic MMANA-GAL `.maa` geometry import, plus
+  series/parallel RLC loads, load markers, and report rows.
 - Optional transmitter-side feed line with characteristic impedance, length,
   velocity factor, matched loss, and transformed impedance/SWR.
 - Optional L/Pi/T matching networks at the feedpoint, with automatic L design
@@ -206,6 +206,8 @@ uv run python scripts/run_reference_simulation.py \
   separated. Relative permeability is not emitted to NEC. Conductor
   conductivity is emitted when `SimulationSpec.include_conductor_losses` is
   true.
+- The end-fed feed transformer is an ideal impedance ratio, not a physical
+  unun model. Its counterpoise is geometry, not an ideal ground plane.
 - Native packages include `nec2c`. The initial release is unsigned; verify the
   published SHA-256 checksums. Optional GPG and Windows Authenticode signing
   hooks are available for later releases. The wheel/sdist remains available for

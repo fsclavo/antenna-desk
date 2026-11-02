@@ -45,6 +45,11 @@ from .formulas import (
 from .intent import DesignIntent, VerticalForm
 from .yagi_reference import MAX_YAGI_ELEMENTS, MIN_YAGI_ELEMENTS, dl6wu_elements
 
+# Application starting point for a half-wave end-fed installation. Both values
+# are installation-specific and are documented in the estimator guide.
+ENDFED_TRANSFORMER_RATIO = 49.0
+ENDFED_COUNTERPOISE_FACTOR = 0.05
+
 
 class UnsupportedEstimateError(ValueError):
     """The requested family or intent has no estimator."""
@@ -58,7 +63,7 @@ def _angle_row(label_key: str, value_deg: float) -> DimensionRow:
     return DimensionRow(label_key, value_deg, DimensionUnit.ANGLE)
 
 
-def _count_row(label_key: str, value: int) -> DimensionRow:
+def _count_row(label_key: str, value: int | float) -> DimensionRow:
     return DimensionRow(label_key, float(value), DimensionUnit.COUNT)
 
 
@@ -273,6 +278,7 @@ def estimate_endfed(intent: DesignIntent) -> DimensionEstimate:
     end_height = intent.end_height_m if intent.end_height_m is not None else intent.height_m
     if abs(end_height - intent.height_m) > length:
         raise ValueError("the end height difference exceeds the estimated wire length")
+    counterpoise_length = wavelength_m(intent.frequency_hz) * ENDFED_COUNTERPOISE_FACTOR
     parameters = EndFedParameters(
         frequency_hz=intent.frequency_hz,
         length_m=length,
@@ -282,13 +288,15 @@ def estimate_endfed(intent: DesignIntent) -> DimensionEstimate:
         wire_radius_m=intent.wire_radius_m,
         material=intent.material,
         ground=intent.ground,
+        transformer_ratio=ENDFED_TRANSFORMER_RATIO,
+        counterpoise_length_m=counterpoise_length,
     )
     return DimensionEstimate(
         parameters=parameters,
         method_id="endfed.half_wave",
         confidence=Confidence.HEURISTIC,
         tolerance_m=length * 0.05,
-        source_ids=(SOURCE_ARRL_DIPOLE,),
+        source_ids=(SOURCE_ARRL_DIPOLE, SOURCE_APPLICATION_PRESET),
         assumptions=("estimator.assumption.endfed_matching",),
         warnings=(
             "estimator.warning.starting_point",
@@ -298,6 +306,8 @@ def estimate_endfed(intent: DesignIntent) -> DimensionEstimate:
             _length_row("field.length", length),
             _length_row("geometry.feed_height", intent.height_m),
             _length_row("geometry.end_height", end_height),
+            _count_row("endfed.transformer_ratio", ENDFED_TRANSFORMER_RATIO),
+            _length_row("endfed.counterpoise_length", counterpoise_length),
         ),
     )
 

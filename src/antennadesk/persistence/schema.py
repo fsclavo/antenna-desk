@@ -245,6 +245,10 @@ class EndFedParametersPayload(StrictModel):
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
+    transformer_ratio: float = Field(default=1.0, gt=0.0)
+    counterpoise_length_m: float = Field(default=0.0, ge=0.0)
+    counterpoise_height_m: float = Field(default=0.1, ge=0.0)
+    counterpoise_azimuth_deg: float | None = Field(default=None, ge=0.0, lt=360.0)
 
 
 class FanElementPayload(StrictModel):
@@ -364,6 +368,7 @@ class SimulationSpecPayload(StrictModel):
     far_field: FarFieldRequestPayload = Field(default_factory=FarFieldRequestPayload)
     feed_line: FeedLinePayload | None = None
     matching_network: LNetworkPayload | None = None
+    feed_transformer_ratio: float = Field(default=1.0, gt=0.0)
     timeout_s: float = Field(default=60.0, gt=0.0)
 
 
@@ -848,6 +853,10 @@ def _endfed_parameters_from_domain(value: EndFedParameters) -> EndFedParametersP
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
+        transformer_ratio=value.transformer_ratio,
+        counterpoise_length_m=value.counterpoise_length_m,
+        counterpoise_height_m=value.counterpoise_height_m,
+        counterpoise_azimuth_deg=value.counterpoise_azimuth_deg,
     )
 
 
@@ -1011,6 +1020,7 @@ def _simulation_spec_from_domain(value: SimulationSpec) -> SimulationSpecPayload
             if value.matching_network
             else None
         ),
+        feed_transformer_ratio=value.feed_transformer_ratio,
         timeout_s=value.timeout_s,
     )
 
@@ -1445,6 +1455,10 @@ def _endfed_parameters_to_domain(value: EndFedParametersPayload) -> EndFedParame
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),
+        transformer_ratio=value.transformer_ratio,
+        counterpoise_length_m=value.counterpoise_length_m,
+        counterpoise_height_m=value.counterpoise_height_m,
+        counterpoise_azimuth_deg=value.counterpoise_azimuth_deg,
     )
 
 
@@ -1598,6 +1612,7 @@ def _simulation_spec_to_domain(value: SimulationSpecPayload) -> SimulationSpec:
         matching_network=(
             _matching_network_to_domain(value.matching_network) if value.matching_network else None
         ),
+        feed_transformer_ratio=value.feed_transformer_ratio,
         timeout_s=value.timeout_s,
     )
 

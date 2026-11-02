@@ -161,14 +161,22 @@ with a {parameters.ring_diameter_m:.4f} m matching ring at
 {parameters.radiator_height_m:.4f} m radiator and a {parameters.stub_length_m:.4f} m
 stub spaced {parameters.spacing_m:.4f} m.</p>"""
     elif isinstance(parameters, EndFedParameters):
+        counterpoise = (
+            f"{parameters.counterpoise_length_m:.4f} m at {parameters.counterpoise_height_m:.4f} m"
+            if parameters.counterpoise_length_m > 0.0
+            else "none"
+        )
         feed_rows = f"""
 <tr><th>Wire length</th><td>{parameters.length_m:.4f} m</td></tr>
 <tr><th>Feed height</th><td>{parameters.feed_height_m:.4f} m</td></tr>
 <tr><th>End height</th><td>{parameters.end_height_m:.4f} m</td></tr>
+<tr><th>Transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
+<tr><th>Counterpoise</th><td>{counterpoise}</td></tr>
 """
         construction_note = f"""<p>Cut one wire to {parameters.length_m:.4f} m and feed it at one end.
 The feed is at {parameters.feed_height_m:.4f} m and the far end at
-{parameters.end_height_m:.4f} m.</p>"""
+{parameters.end_height_m:.4f} m. Use a {parameters.transformer_ratio:g}:1
+transformer; the counterpoise is {counterpoise}.</p>"""
     elif isinstance(parameters, FanDipoleParameters):
         lengths = ", ".join(f"{element.length_m:.4f} m" for element in parameters.elements)
         feed_rows = f"""

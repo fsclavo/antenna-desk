@@ -28,10 +28,12 @@ class SimulationSpec:
     far_field: FarFieldRequest = field(default_factory=FarFieldRequest)
     feed_line: FeedLine | None = None
     matching_network: MatchingNetwork | None = None
+    feed_transformer_ratio: float = 1.0
     timeout_s: float = 60.0
 
     def __post_init__(self) -> None:
         ensure_positive(self.reference_impedance_ohm, name="reference_impedance_ohm")
+        ensure_positive(self.feed_transformer_ratio, name="feed_transformer_ratio")
         ensure_positive(self.timeout_s, name="timeout_s")
         if self.timeout_s > MAX_TIMEOUT_S:
             raise ValueError(f"timeout_s must not exceed {MAX_TIMEOUT_S}")

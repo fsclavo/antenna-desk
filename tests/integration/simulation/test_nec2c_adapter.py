@@ -340,6 +340,26 @@ def test_l_network_transforms_impedance_before_the_feed_line(solver: Nec2cSolver
     assert any(diagnostic.code == "feed_line.applied" for diagnostic in result.diagnostics)
 
 
+def test_feed_transformer_scales_impedance_before_the_feed_line(
+    solver: Nec2cSolver,
+) -> None:
+    base = _manual_example1_spec()
+    reference = solver.run(_manual_example1_model(), base)
+    antenna_impedance = reference.frequencies[0].impedance_ohm
+
+    result = solver.run(
+        _manual_example1_model(),
+        replace(base, feed_transformer_ratio=4.0),
+    )
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert result.frequencies[0].impedance_ohm == pytest.approx(
+        antenna_impedance / 4.0,
+        abs=1e-6,
+    )
+    assert any(diagnostic.code == "transformer.applied" for diagnostic in result.diagnostics)
+
+
 def test_feed_line_transforms_impedance_at_the_transmitter(solver: Nec2cSolver) -> None:
     base = _manual_example1_spec()
     reference = solver.run(_manual_example1_model(), base)

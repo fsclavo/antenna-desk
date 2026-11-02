@@ -58,12 +58,21 @@ warnings, and a dimension tolerance.
 | Vertical 5/8 | `0.625λ` | physical | High feed impedance; matching required |
 | Inverted-V | half-wave dipole total, split in two legs | empirical | Included angle affects feed impedance |
 | Fan dipole | one half-wave element per band | empirical | Elements interact |
-| End-fed | half-wave wire | heuristic | Matching transformer and counterpoise not modeled |
+| End-fed | half-wave wire; `0.05λ` counterpoise; 49:1 transformer | heuristic | Transformer and counterpoise are application starting points |
 | OCFD | half-wave total, feed at 1/3 | heuristic | Existing synthesis can refine length/feed |
 | J Pole / Slim Jim | J Pole: total 3/4-wave height, quarter-wave stub, feed at 40% of stub; Slim Jim: half-wave radiator above the folded stub | empirical | Feed offset and stub need tuning |
 | Ringo | 0.725-wave vertical with a small horizontal matching ring, calibrated for the simplified AntennaDesk geometry | heuristic | Not a universal commercial Ringo formula |
 | Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; optimize for the target |
 | Moxon | Cebik 20 m wire reference scaled by frequency | reference scaled | Gap and tips are sensitive |
+
+## End-fed starting point
+
+The end-fed estimate includes a 49:1 ideal transformer and a `0.05λ`
+counterpoise as application starting points. The transformer is applied as a
+feed-point impedance transformation for the reported impedance and SWR; it is
+not a physical unun model. The counterpoise is geometry, not an ideal ground.
+Both values vary with the installation, feed height, ground, and routing, so
+verify them with simulation or measurement.
 
 ## Loop polygon correction
 
@@ -110,8 +119,8 @@ Reference sources currently used:
 - NBS TN-688: five-element Yagi preset in the editor.
 - DL6WU/Cebik: 2–32 element trimming Yagi starting design.
 - L. B. Cebik, W4RNL, “The Moxon Rectangle: A Review”, Table 1: 20 m wire Moxon.
-- Application preset: Ringo proportions and the loop polygon correction; both
-  are calibrated for the AntennaDesk simplified geometry and are not universal
+- Application preset: Ringo proportions, the loop polygon correction, and the
+  end-fed transformer/counterpoise starting point. They are not universal
   formulas.
 
 ## Tests

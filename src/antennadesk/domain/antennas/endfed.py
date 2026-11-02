@@ -19,6 +19,8 @@ from .wire import Wire
 
 ANTENNA_TYPE_ENDFED = "endfed"
 RADIATOR_ID = "radiator"
+COUNTERPOISE_ID = "counterpoise"
+COUNTERPOISE_DROP_ID = "counterpoise-drop"
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,6 +35,10 @@ class EndFedParameters:
     wire_radius_m: float = 0.001
     material: ConductorMaterial = COPPER
     ground: GroundModel = FREE_SPACE
+    transformer_ratio: float = 1.0
+    counterpoise_length_m: float = 0.0
+    counterpoise_height_m: float = 0.1
+    counterpoise_azimuth_deg: float | None = None
 
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
@@ -40,6 +46,9 @@ class EndFedParameters:
         ensure_non_negative(self.feed_height_m, name="feed_height_m")
         ensure_non_negative(self.end_height_m, name="end_height_m")
         ensure_positive(self.wire_radius_m, name="wire_radius_m")
+        ensure_positive(self.transformer_ratio, name="transformer_ratio")
+        ensure_non_negative(self.counterpoise_length_m, name="counterpoise_length_m")
+        ensure_non_negative(self.counterpoise_height_m, name="counterpoise_height_m")
         if abs(self.end_height_m - self.feed_height_m) > self.length_m + 1e-12:
             raise ValueError(
                 "the height difference between the feed and the end must not exceed the wire length"
@@ -49,6 +58,18 @@ class EndFedParameters:
             "azimuth_deg",
             units.normalize_azimuth_degrees(self.azimuth_deg),
         )
+        if self.counterpoise_azimuth_deg is not None:
+            object.__setattr__(
+                self,
+                "counterpoise_azimuth_deg",
+                units.normalize_azimuth_degrees(self.counterpoise_azimuth_deg),
+            )
+
+    @property
+    def effective_counterpoise_azimuth_deg(self) -> float:
+        if self.counterpoise_azimuth_deg is not None:
+            return self.counterpoise_azimuth_deg
+        return (self.azimuth_deg + 180.0) % 360.0
 
     def to_antenna(self, *, name: str = "End-fed wire") -> AntennaModel:
         return self.to_custom_parameters().to_antenna(name=name)
@@ -57,20 +78,53 @@ class EndFedParameters:
         angle = units.degrees_to_radians(self.azimuth_deg)
         rise = self.end_height_m - self.feed_height_m
         horizontal_m = math.sqrt(max(self.length_m * self.length_m - rise * rise, 0.0))
-        wire = Wire(
-            id=RADIATOR_ID,
-            start=Point3D(x_m=0.0, y_m=0.0, z_m=self.feed_height_m),
-            end=Point3D(
-                x_m=horizontal_m * math.cos(angle),
-                y_m=horizontal_m * math.sin(angle),
-                z_m=self.end_height_m,
-            ),
-            radius_m=self.wire_radius_m,
-            material=self.material,
-        )
+        feed_point = Point3D(x_m=0.0, y_m=0.0, z_m=self.feed_height_m)
+        wires = [
+            Wire(
+                id=RADIATOR_ID,
+                start=feed_point,
+                end=Point3D(
+                    x_m=horizontal_m * math.cos(angle),
+                    y_m=horizontal_m * math.sin(angle),
+                    z_m=self.end_height_m,
+                ),
+                radius_m=self.wire_radius_m,
+                material=self.material,
+            )
+        ]
+        if self.counterpoise_length_m > 0.0:
+            counterpoise_angle = units.degrees_to_radians(self.effective_counterpoise_azimuth_deg)
+            counterpoise_start = Point3D(
+                x_m=0.0,
+                y_m=0.0,
+                z_m=self.counterpoise_height_m,
+            )
+            if not math.isclose(self.feed_height_m, self.counterpoise_height_m):
+                wires.append(
+                    Wire(
+                        id=COUNTERPOISE_DROP_ID,
+                        start=feed_point,
+                        end=counterpoise_start,
+                        radius_m=self.wire_radius_m,
+                        material=self.material,
+                    )
+                )
+            wires.append(
+                Wire(
+                    id=COUNTERPOISE_ID,
+                    start=counterpoise_start,
+                    end=Point3D(
+                        x_m=self.counterpoise_length_m * math.cos(counterpoise_angle),
+                        y_m=self.counterpoise_length_m * math.sin(counterpoise_angle),
+                        z_m=self.counterpoise_height_m,
+                    ),
+                    radius_m=self.wire_radius_m,
+                    material=self.material,
+                )
+            )
         return CustomAntennaParameters(
             frequency_hz=self.frequency_hz,
-            wires=(wire,),
+            wires=tuple(wires),
             feed=FeedPoint(RADIATOR_ID, 0.0),
             ground=self.ground,
             generator_id="endfed",

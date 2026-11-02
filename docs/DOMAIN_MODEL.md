@@ -347,6 +347,8 @@ the application writes version 3.
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
   deserialize as an empty list.
+- End-fed transformer ratio and counterpoise fields are additive in version 3;
+  missing values default to no transformer and no counterpoise.
 - Unknown fields are rejected.
 - Unknown formats are rejected.
 - Future schema versions are rejected with a clear error.
