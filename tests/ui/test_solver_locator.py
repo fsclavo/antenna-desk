@@ -14,9 +14,10 @@ def test_configured_solver_wins(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
+    name = solver_locator._executable_name()
     configured = tmp_path / "configured-nec2c"
-    bundled = tmp_path / "bundle" / "nec2c"
-    on_path = tmp_path / "path-nec2c"
+    bundled = tmp_path / "bundle" / name
+    on_path = tmp_path / f"path-{name}"
     bundled.parent.mkdir()
     for executable in (configured, bundled, on_path):
         executable.write_text("", encoding="utf-8")
@@ -31,8 +32,9 @@ def test_bundled_solver_wins_over_path(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    bundled = tmp_path / "bundle" / "nec2c"
-    on_path = tmp_path / "path-nec2c"
+    name = solver_locator._executable_name()
+    bundled = tmp_path / "bundle" / name
+    on_path = tmp_path / f"path-{name}"
     bundled.parent.mkdir()
     bundled.write_text("", encoding="utf-8")
     on_path.write_text("", encoding="utf-8")
@@ -47,7 +49,8 @@ def test_path_solver_is_used_when_nothing_is_bundled(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    on_path = tmp_path / "path-nec2c"
+    name = solver_locator._executable_name()
+    on_path = tmp_path / f"path-{name}"
     on_path.write_text("", encoding="utf-8")
     monkeypatch.delenv("NEC2C", raising=False)
     monkeypatch.setattr(sys, "executable", str(tmp_path / "bundle" / "python"))
