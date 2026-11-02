@@ -7,11 +7,44 @@ from __future__ import annotations
 import math
 
 from PySide6.QtCore import QEvent, QPointF, QRectF, QSize, Qt
-from PySide6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPaintEvent, QPen, QWheelEvent
+from PySide6.QtGui import (
+    QColor,
+    QFont,
+    QLinearGradient,
+    QMouseEvent,
+    QPainter,
+    QPainterPath,
+    QPaintEvent,
+    QPen,
+    QWheelEvent,
+)
 from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from ..i18n import Translator
 from ..theme import theme_colors
+
+GAIN_COLOR_BINS = 24
+GAIN_LINE_ALPHA = 190
+
+
+def gain_color(normalized: float, alpha: int = GAIN_LINE_ALPHA) -> QColor:
+    """Map a 0..1 normalized gain to green, yellow, or red."""
+
+    value = min(max(normalized, 0.0), 1.0)
+    if value <= 0.5:
+        ratio = value * 2.0
+        start = (34, 197, 94)
+        end = (250, 204, 21)
+    else:
+        ratio = (value - 0.5) * 2.0
+        start = (250, 204, 21)
+        end = (239, 68, 68)
+    return QColor(
+        round(start[0] + (end[0] - start[0]) * ratio),
+        round(start[1] + (end[1] - start[1]) * ratio),
+        round(start[2] + (end[2] - start[2]) * ratio),
+        alpha,
+    )
 
 
 class RadiationPattern3DView(QWidget):
@@ -122,10 +155,16 @@ class RadiationPattern3DView(QWidget):
             return
 
         gains = [gain for _, _, gain in points]
-        min_gain = min(gains)
-        max_gain = max(gains)
-        if math.isclose(max_gain, min_gain):
-            max_gain = min_gain + 1.0
+        raw_min_gain = min(gains)
+        raw_max_gain = max(gains)
+        uniform_gain = math.isclose(raw_max_gain, raw_min_gain)
+        min_gain = raw_min_gain
+        max_gain = raw_max_gain if not uniform_gain else raw_min_gain + 1.0
+
+        def normalized_gain(gain: float) -> float:
+            if uniform_gain:
+                return 0.5
+            return min(max((gain - min_gain) / (max_gain - min_gain), 0.0), 1.0)
 
         yaw = math.radians(self._yaw_deg)
         pitch = math.radians(self._pitch_deg)
@@ -190,28 +229,32 @@ class RadiationPattern3DView(QWidget):
         theta_values = sorted({theta for theta, _, _ in points})
         phi_values = sorted({phi for _, phi, _ in points})
         gain_by_coord = {(round(theta, 6), round(phi, 6)): gain for theta, phi, gain in points}
+        gain_paths = [QPainterPath() for _ in range(GAIN_COLOR_BINS)]
 
-        pen = QPen(
-            QColor(
-                self._colors.pattern.red(),
-                self._colors.pattern.green(),
-                self._colors.pattern.blue(),
-                110,
-            ),
-            1.0,
-        )
-        painter.setPen(pen)
+        def add_segment(
+            start: tuple[QPointF, float],
+            end: tuple[QPointF, float],
+        ) -> None:
+            average_gain = (start[1] + end[1]) / 2.0
+            index = min(
+                int(normalized_gain(average_gain) * GAIN_COLOR_BINS),
+                GAIN_COLOR_BINS - 1,
+            )
+            path = gain_paths[index]
+            path.moveTo(start[0])
+            path.lineTo(end[0])
+
         painter.setBrush(Qt.BrushStyle.NoBrush)
         for phi in phi_values:
-            previous: QPointF | None = None
+            previous: tuple[QPointF, float] | None = None
             for theta in theta_values:
                 gain = gain_by_coord.get((round(theta, 6), round(phi, 6)))
                 if gain is None:
                     previous = None
                     continue
-                current = screen(theta, phi, gain)
+                current = (screen(theta, phi, gain), gain)
                 if previous is not None:
-                    painter.drawLine(previous, current)
+                    add_segment(previous, current)
                 previous = current
         for theta in theta_values:
             previous = None
@@ -220,10 +263,16 @@ class RadiationPattern3DView(QWidget):
                 if gain is None:
                     previous = None
                     continue
-                current = screen(theta, phi, gain)
+                current = (screen(theta, phi, gain), gain)
                 if previous is not None:
-                    painter.drawLine(previous, current)
+                    add_segment(previous, current)
                 previous = current
+
+        for index, path in enumerate(gain_paths):
+            if path.isEmpty():
+                continue
+            painter.setPen(QPen(gain_color((index + 0.5) / GAIN_COLOR_BINS), 1.0))
+            painter.drawPath(path)
 
         if self._ground:
             ground_points = [
@@ -280,6 +329,14 @@ class RadiationPattern3DView(QWidget):
                 label,
             )
 
+        self._draw_gain_legend(
+            painter,
+            draw_rect,
+            raw_min_gain,
+            raw_max_gain,
+            uniform_gain,
+        )
+
         painter.setPen(self._colors.secondary_text)
         painter.setFont(QFont("Sans Serif", 8))
         painter.drawText(
@@ -289,4 +346,60 @@ class RadiationPattern3DView(QWidget):
         painter.drawText(
             QRectF(rect.left() + 14.0, rect.bottom() - 22.0, rect.width() - 28.0, 16.0),
             self._translator.t("pattern.3d_hint"),
+        )
+
+    def _draw_gain_legend(
+        self,
+        painter: QPainter,
+        draw_rect: QRectF,
+        min_gain: float,
+        max_gain: float,
+        uniform: bool,
+    ) -> None:
+        if draw_rect.width() < 360.0 or draw_rect.height() < 180.0:
+            return
+
+        bar = QRectF(
+            draw_rect.right() - 64.0,
+            draw_rect.top() + 34.0,
+            10.0,
+            min(120.0, draw_rect.height() * 0.38),
+        )
+        painter.setFont(QFont("Sans Serif", 7))
+        if uniform:
+            painter.setPen(QPen(gain_color(0.5, 255), 0.8))
+            painter.setBrush(gain_color(0.5, 255))
+            painter.drawRoundedRect(bar, 2.0, 2.0)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.setPen(self._colors.secondary_text)
+            painter.drawText(
+                QRectF(bar.right() + 4.0, bar.center().y() - 7.0, 72.0, 14.0),
+                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                f"{max_gain:.1f} dBi",
+            )
+            return
+
+        gradient = QLinearGradient(bar.topLeft(), bar.bottomLeft())
+        gradient.setColorAt(0.0, gain_color(1.0, 255))
+        gradient.setColorAt(0.5, gain_color(0.5, 255))
+        gradient.setColorAt(1.0, gain_color(0.0, 255))
+        painter.setPen(QPen(self._colors.light_line, 0.8))
+        painter.setBrush(gradient)
+        painter.drawRoundedRect(bar, 2.0, 2.0)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(self._colors.secondary_text)
+        painter.drawText(
+            QRectF(bar.left() - 12.0, bar.top() - 18.0, 60.0, 14.0),
+            Qt.AlignmentFlag.AlignCenter,
+            "dBi",
+        )
+        painter.drawText(
+            QRectF(bar.right() + 4.0, bar.top() - 7.0, 62.0, 14.0),
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            f"{max_gain:.1f}",
+        )
+        painter.drawText(
+            QRectF(bar.right() + 4.0, bar.bottom() - 7.0, 62.0, 14.0),
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            f"{min_gain:.1f}",
         )

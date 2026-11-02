@@ -155,6 +155,21 @@ def test_results_view_builds_a_polar_lobe_plot(qtbot: QtBot, tmp_path: Path) -> 
     assert image_path.read_bytes().startswith(b"\x89PNG")
 
 
+def test_gain_color_maps_green_yellow_and_red() -> None:
+    from antennadesk.ui.widgets.radiation_pattern_3d_view import gain_color
+
+    low = gain_color(0.0)
+    middle = gain_color(0.5)
+    high = gain_color(1.0)
+
+    assert low.green() > low.red()
+    assert middle.red() > 200
+    assert middle.green() > 150
+    assert high.red() > high.green()
+    assert gain_color(-1.0).getRgb()[:3] == gain_color(0.0).getRgb()[:3]
+    assert gain_color(2.0).getRgb()[:3] == gain_color(1.0).getRgb()[:3]
+
+
 def test_pattern_3d_can_draw_a_ground_plane(qtbot: QtBot) -> None:
     from antennadesk.ui.widgets.radiation_pattern_3d_view import RadiationPattern3DView
 

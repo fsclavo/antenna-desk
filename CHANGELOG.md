@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The 3D radiation-pattern wireframe is colored by gain (green, yellow, red)
+  with a min/max dBi legend, while keeping the lobe interior transparent.
+
 ## [0.1.0] - 2026-11-02
 
 ### Added

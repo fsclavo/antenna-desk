@@ -65,7 +65,7 @@ between:
   a Yagi or Moxon it shows the element layout, boom spacing, and element
   lengths. For a ring or radial vertical, a top inset shows the horizontal
   structure while the main view keeps the installation height.
-- **3D**: isometric wireframe with ground grid, feed marker, axes, and scale.
+- **3D**: isometric wireframe colored by gain (green low, yellow intermediate, red high), with a dBi legend, ground grid, feed marker, axes, and scale.
 
 The default view is selected from the geometry: vertical-plane antennas use
 elevation, horizontal planar arrays use plan, and non-planar antennas show a
@@ -254,7 +254,9 @@ raw coordinates.
 - **Pattern**: selectable **Azimuth** or **Elevation** cuts of NEC power gain
   for each simulated frequency. The **Cuts** tab shows a line chart and a polar
   lobe diagram; the **3D lobe** tab shows a projected wireframe of the complete
-  pattern. Azimuth is the default cut view; use the selectors to inspect
+  pattern, with each line colored by gain (green low, yellow intermediate, red
+  high) and a min/max dBi legend. The interior stays transparent because only
+  lines are drawn. Azimuth is the default cut view; use the selectors to inspect
   another plane. The default azimuth cut is chosen at the elevation with the
   highest gain; the azimuth diagram includes a dashed line showing the antenna
   orientation. Above-ground elevation cuts are drawn as open arcs rather than
