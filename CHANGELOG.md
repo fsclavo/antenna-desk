@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   simulation-run history.
 - Hover cursors on impedance, SWR, pattern, currents, and measurement charts
   with nearest-point readouts and theme-aware overlays.
-
+- Menu ergonomics: standard File/Edit order, Change Template in the Design
+  menu, grouped Import/Export entries, and Language/Units under Tools.
 - Single-sourced package version from `antennadesk.__version__`, About-dialog
   version display, and a Hatchling wheel/sdist build with a package smoke-test
   workflow.

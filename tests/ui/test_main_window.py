@@ -479,7 +479,7 @@ def test_synthesize_dimensions_applies_and_simulates(
 
     monkeypatch.setattr(main_window_module, "SynthesisDialog", FakeSynthesisDialog)
 
-    assert window._synthesize_action.isEnabled() is True
+    assert window._optimize_action.isEnabled() is True
     window.synthesize_dimensions()
     qtbot.waitUntil(
         lambda: not window._simulating and window._thread is None,
@@ -1003,7 +1003,7 @@ def test_optimize_yagi_applies_and_simulates(
         FakeYagiOptimizationDialog,
     )
 
-    assert window._optimize_yagi_action.isEnabled() is True
+    assert window._optimize_action.isEnabled() is True
     monkeypatch.setattr(window, "simulate", lambda: None)
     window.optimize_yagi_elements()
 
@@ -1207,6 +1207,7 @@ def test_main_menu_is_grouped_by_task(window: MainWindow) -> None:
     assert "Export PDF Report..." in export_menu_titles
     assert "Optimize..." in design_titles
     assert "Estimate Dimensions..." in design_titles
+    assert "Change Template..." in design_titles
     assert "Optimize Dimension..." not in design_titles
     assert "Design from Frequency..." not in design_titles
     assert "Synthesize Dimensions..." not in design_titles
@@ -1908,3 +1909,14 @@ def test_project_undo_prompts_for_unapplied_form_changes(
     window._undo_project()
     assert window._undo_stack.index() == index - 1
     window._dirty = False
+
+
+def test_menu_order_follows_the_standard_desktop_layout(window: MainWindow) -> None:
+    menu_titles = [action.text() for action in window.menuBar().actions() if action.text()]
+
+    assert menu_titles == ["File", "Edit", "Design", "Simulation", "Tools", "Help"]
+    tools_titles = [action.text() for action in window._tools_menu.actions()]
+    assert "Language" in tools_titles
+    assert "Units" in tools_titles
+    assert window._change_template_action.shortcut().toString() == "Ctrl+Shift+T"
+    assert window._design_from_frequency_action.shortcut().toString() == "Ctrl+Shift+E"

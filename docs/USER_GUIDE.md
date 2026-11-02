@@ -494,7 +494,7 @@ before discarding unsaved changes.
 
 ## Language and units
 
-Use the **Language** menu for English or Español. Use the **Units** menu for
+Use **Tools → Language** for English or Español. Use **Tools → Units** for
 metric (m, mm) or imperial (ft, in). The domain and project files always store
 canonical meters and hertz.
 

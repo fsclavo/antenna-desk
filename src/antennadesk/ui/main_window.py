@@ -266,6 +266,7 @@ class MainWindow(QMainWindow):
         self._about_action.triggered.connect(lambda: self.show_about())
 
         self._new_variant_action = QAction(self)
+        self._new_variant_action.setShortcut(QKeySequence("Ctrl+Shift+N"))
         self._new_variant_action.triggered.connect(lambda: self.new_variant())
         self._rename_variant_action = QAction(self)
         self._rename_variant_action.triggered.connect(lambda: self.rename_variant())
@@ -275,11 +276,11 @@ class MainWindow(QMainWindow):
         self._compare_action.triggered.connect(lambda: self.compare_variants())
         self._optimize_action = QAction(self)
         self._optimize_action.triggered.connect(lambda: self.optimize_current_design())
-        self._synthesize_action = self._optimize_action
-        self._optimize_yagi_action = self._optimize_action
-        self._optimize_fan_action = self._optimize_action
-        self._optimize_moxon_action = self._optimize_action
+        self._change_template_action = QAction(self)
+        self._change_template_action.setShortcut(QKeySequence("Ctrl+Shift+T"))
+        self._change_template_action.triggered.connect(lambda: self.change_template())
         self._design_from_frequency_action = QAction(self)
+        self._design_from_frequency_action.setShortcut(QKeySequence("Ctrl+Shift+E"))
         self._design_from_frequency_action.triggered.connect(lambda: self.design_from_frequency())
         self._construction_action = QAction(self)
         self._construction_action.triggered.connect(lambda: self.show_construction_sheet())
@@ -593,10 +594,6 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self._simulate_action)
         toolbar.addAction(self._cancel_action)
 
-        self._edit_menu = self.menuBar().addMenu("")
-        self._edit_menu.addAction(self._undo_action)
-        self._edit_menu.addAction(self._redo_action)
-
         self._file_menu = self.menuBar().addMenu("")
         self._file_menu.addAction(self._new_action)
         self._file_menu.addAction(self._open_action)
@@ -606,19 +603,26 @@ class MainWindow(QMainWindow):
         self._import_menu = self._file_menu.addMenu("")
         self._import_menu.addAction(self._import_nec_action)
         self._import_menu.addAction(self._import_mmana_action)
+        self._import_menu.addSeparator()
         self._import_menu.addAction(self._import_vna_action)
         self._export_menu = self._file_menu.addMenu("")
         self._export_menu.addAction(self._export_csv_action)
         self._export_menu.addAction(self._export_pattern_csv_action)
+        self._export_menu.addSeparator()
         self._export_menu.addAction(self._export_pattern_png_action)
         self._export_menu.addAction(self._export_geometry_png_action)
         self._export_menu.addAction(self._export_geometry_svg_action)
         self._export_menu.addAction(self._export_geometry_pdf_action)
         self._export_menu.addAction(self._export_geometry_dxf_action)
+        self._export_menu.addSeparator()
         self._export_menu.addAction(self._export_html_action)
         self._export_menu.addAction(self._export_pdf_action)
         self._file_menu.addSeparator()
         self._file_menu.addAction(self._exit_action)
+
+        self._edit_menu = self.menuBar().addMenu("")
+        self._edit_menu.addAction(self._undo_action)
+        self._edit_menu.addAction(self._redo_action)
 
         self._design_menu = self.menuBar().addMenu("")
         self._variants_menu = self._design_menu.addMenu("")
@@ -627,8 +631,11 @@ class MainWindow(QMainWindow):
         self._variants_menu.addAction(self._delete_variant_action)
         self._variants_menu.addSeparator()
         self._variants_menu.addAction(self._compare_action)
-        self._design_menu.addAction(self._optimize_action)
+        self._design_menu.addSeparator()
+        self._design_menu.addAction(self._change_template_action)
         self._design_menu.addAction(self._design_from_frequency_action)
+        self._design_menu.addAction(self._optimize_action)
+        self._design_menu.addSeparator()
         self._design_menu.addAction(self._construction_action)
         self._design_menu.addAction(self._loads_action)
         self._custom_menu = self._design_menu.addMenu("")
@@ -645,12 +652,11 @@ class MainWindow(QMainWindow):
         self._tools_menu = self.menuBar().addMenu("")
         self._tools_menu.addAction(self._locate_solver_action)
         self._tools_menu.addAction(self._compact_history_action)
-
-        self._language_menu = self.menuBar().addMenu("")
+        self._tools_menu.addSeparator()
+        self._language_menu = self._tools_menu.addMenu("")
         self._language_menu.addAction(self._english_action)
         self._language_menu.addAction(self._spanish_action)
-
-        self._units_menu = self.menuBar().addMenu("")
+        self._units_menu = self._tools_menu.addMenu("")
         self._units_menu.addAction(self._metric_action)
         self._units_menu.addAction(self._imperial_action)
 
@@ -681,6 +687,7 @@ class MainWindow(QMainWindow):
         self._delete_variant_action.setText(self._translator.t("action.delete_variant"))
         self._compare_action.setText(self._translator.t("action.compare"))
         self._optimize_action.setText(self._translator.t("action.optimize"))
+        self._change_template_action.setText(self._translator.t("action.change_template"))
         self._design_from_frequency_action.setText(
             self._translator.t("action.design_from_frequency")
         )
@@ -827,6 +834,7 @@ class MainWindow(QMainWindow):
             parameters = design.parameters
         self._update_provenance_label(design)
         is_custom = isinstance(parameters, CustomAntennaParameters)
+        self._change_template_action.setEnabled(idle and has_project)
         self._design_from_frequency_action.setEnabled(idle and has_project)
         optimize_enabled = idle and has_project and not is_custom and self._solver is not None
         self._optimize_action.setEnabled(optimize_enabled)
