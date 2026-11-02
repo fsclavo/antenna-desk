@@ -115,6 +115,11 @@ templates now have their own inline editors. The Template field shows the curren
 template; use **Change Template...** to open the catalog and replace the current
 design with another template.
 
+A full-wave loop normally presents roughly 100-150 Ω at resonance, so a direct
+50 Ω target may be unreachable by changing only its circumference. Use a 2:1
+balun or the Matching Network dialog for a 50 Ω system. The loop optimizer keeps
+the selected loop shape and side count fixed.
+
 ## Create a Yagi
 
 Choose **File → New Antenna... → Yagi** to generate a Yagi as a first-class

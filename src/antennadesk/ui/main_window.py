@@ -3273,12 +3273,6 @@ class MainWindow(QMainWindow):
                 self._translator.t("field.circumference"),
                 parameters.circumference_m,
             ),
-            ElementOptimizationVariable(
-                "sides",
-                self._translator.t("field.sides"),
-                float(parameters.sides),
-                integer=True,
-            ),
         )
 
         def build(values: dict[str, float]) -> LoopParameters:
@@ -3286,7 +3280,6 @@ class MainWindow(QMainWindow):
                 parameters,
                 frequency_hz=values.get("__frequency_hz", parameters.frequency_hz),
                 circumference_m=values.get("circumference_m", parameters.circumference_m),
-                sides=round(values.get("sides", parameters.sides)),
             )
 
         dialog = ElementOptimizationDialog(
@@ -3299,6 +3292,7 @@ class MainWindow(QMainWindow):
                 matching_network=self._matching_network,
             ),
             title_key="element_optimize.loop_title",
+            hint_key="element_optimize.loop_hint",
             variables=variables,
             build_parameters=build,
             objectives=(

@@ -1983,6 +1983,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Selected dimensions change together. Select a table row to apply a different candidate or Pareto compromise. Verify the applied design with a full simulation.",
         Language.SPANISH: "Las dimensiones seleccionadas cambian juntas. Seleccioná una fila de la tabla para aplicar otro candidato o compromiso de Pareto. Verificá el diseño aplicado con una simulación completa.",
     },
+    "element_optimize.loop_hint": {
+        Language.ENGLISH: "Full-wave loops typically show 100-150 Ω at resonance. Use a 2:1 balun or Matching Network for a 50 Ω system; the loop shape and side count are preserved.",
+        Language.SPANISH: "Los lazos de onda completa suelen presentar 100-150 Ω en resonancia. Usá un balun 2:1 o una red de adaptación para un sistema de 50 Ω; la forma y la cantidad de lados se conservan.",
+    },
     "element_optimize.selected_summary": {
         Language.ENGLISH: "Selected candidate: {objective}",
         Language.SPANISH: "Candidato seleccionado: {objective}",

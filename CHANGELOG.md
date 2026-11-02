@@ -328,6 +328,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Pareto compromise instead of only the best weighted score.
 - Multi-element optimization supports integer variables; vertical radial count,
   loop side count, and Ringo ring sides are searched discretely.
+- Loop optimization now preserves the selected loop shape and side count, and
+  documents that full-wave loops normally need a balun or matching network for
+  a 50 Ω system.
 - Removed the obsolete template-specific optimization dialogs and workers; the
   generic dialog is now the only multi-element optimization UI.
 - Replaced the separate optimization menu actions with one **Optimize...**

@@ -73,6 +73,7 @@ class ElementOptimizationDialog(QDialog):
         build_parameters: BuildParameters,
         objectives: tuple[ElementOptimizationObjective, ...],
         default_frequency_hz: float,
+        hint_key: str = "element_optimize.hint",
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -201,7 +202,7 @@ class ElementOptimizationDialog(QDialog):
 
         self._summary = QLabel(self)
         self._summary.setWordWrap(True)
-        self._hint = QLabel(translator.t("element_optimize.hint"), self)
+        self._hint = QLabel(translator.t(hint_key), self)
         self._hint.setWordWrap(True)
 
         self._run = QPushButton(translator.t("element_optimize.run"), self)
