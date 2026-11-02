@@ -6,14 +6,13 @@ from __future__ import annotations
 
 import math
 
-from PySide6.QtCore import QEvent, QPointF, QRectF, QSize, Qt
+from PySide6.QtCore import QEvent, QLineF, QPointF, QRectF, QSize, Qt
 from PySide6.QtGui import (
     QColor,
     QFont,
     QLinearGradient,
     QMouseEvent,
     QPainter,
-    QPainterPath,
     QPaintEvent,
     QPen,
     QWheelEvent,
@@ -229,7 +228,7 @@ class RadiationPattern3DView(QWidget):
         theta_values = sorted({theta for theta, _, _ in points})
         phi_values = sorted({phi for _, phi, _ in points})
         gain_by_coord = {(round(theta, 6), round(phi, 6)): gain for theta, phi, gain in points}
-        gain_paths = [QPainterPath() for _ in range(GAIN_COLOR_BINS)]
+        gain_lines: list[list[QLineF]] = [[] for _ in range(GAIN_COLOR_BINS)]
 
         def add_segment(
             start: tuple[QPointF, float],
@@ -240,9 +239,7 @@ class RadiationPattern3DView(QWidget):
                 int(normalized_gain(average_gain) * GAIN_COLOR_BINS),
                 GAIN_COLOR_BINS - 1,
             )
-            path = gain_paths[index]
-            path.moveTo(start[0])
-            path.lineTo(end[0])
+            gain_lines[index].append(QLineF(start[0], end[0]))
 
         painter.setBrush(Qt.BrushStyle.NoBrush)
         for phi in phi_values:
@@ -268,11 +265,11 @@ class RadiationPattern3DView(QWidget):
                     add_segment(previous, current)
                 previous = current
 
-        for index, path in enumerate(gain_paths):
-            if path.isEmpty():
+        for index, lines in enumerate(gain_lines):
+            if not lines:
                 continue
             painter.setPen(QPen(gain_color((index + 0.5) / GAIN_COLOR_BINS), 1.0))
-            painter.drawPath(path)
+            painter.drawLines(lines)
 
         if self._ground:
             ground_points = [
