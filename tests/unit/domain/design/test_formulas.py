@@ -11,6 +11,7 @@ from antennadesk.domain.design.formulas import (
     five_eighth_wave_length_m,
     half_wave_length_m,
     loop_circumference_m,
+    loop_resonance_factor,
     quarter_wave_length_m,
     wavelength_m,
 )
@@ -24,10 +25,26 @@ def test_shared_formula_factors_are_the_documented_starting_points() -> None:
 
 def test_common_lengths_at_seven_megahertz() -> None:
     frequency_hz = 7_100_000.0
-    assert wavelength_m(frequency_hz) == pytest.approx(42.22428985915493)
+    wavelength = wavelength_m(frequency_hz)
+    assert wavelength == pytest.approx(42.22428985915493)
     assert half_wave_length_m(frequency_hz) == pytest.approx(20.05653768309859)
-    assert loop_circumference_m(frequency_hz) == pytest.approx(42.22428985915493)
+    assert loop_circumference_m(frequency_hz) == pytest.approx(
+        wavelength * loop_resonance_factor(16)
+    )
     assert quarter_wave_length_m(frequency_hz) == pytest.approx(10.028268841549295)
+
+
+def test_loop_resonance_factor_accounts_for_polygon_side_count() -> None:
+    assert loop_resonance_factor(3) == pytest.approx(1.056, abs=0.001)
+    assert loop_resonance_factor(4) == pytest.approx(1.048, abs=0.001)
+    assert loop_resonance_factor(16) == pytest.approx(1.032, abs=0.001)
+    assert loop_resonance_factor(3) > loop_resonance_factor(4)
+    assert loop_resonance_factor(4) > loop_resonance_factor(16)
+
+
+def test_loop_resonance_factor_rejects_fewer_than_three_sides() -> None:
+    with pytest.raises(ValueError, match="at least 3 sides"):
+        loop_resonance_factor(2)
 
 
 def test_five_eighth_vertical_is_longer_than_a_quarter_wave() -> None:

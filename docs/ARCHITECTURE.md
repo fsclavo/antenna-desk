@@ -149,7 +149,7 @@ Optimization runs in a worker thread. The final full-sweep/pattern simulation is
 performed after applying the dimension so the normal result/report path remains
 the single source of truth.
 
-## Phase 6 — new geometry (in progress)
+## Phase 6 — new geometry (completed; physical validation deferred)
 
 Phase 6 starts with a vertical center-fed dipole in the existing
 `wire_dipole` model. `DipoleParameters.orientation` selects horizontal or
@@ -225,9 +225,19 @@ Simulation runs are persisted in schema version 3. Raw solver text is stored
 with the normalized result. The UI warns at 8 MB, blocks files above the 10 MB
 limit, and offers simulation-history compaction.
 
-## Not implemented yet
+## Current limitations
 
-- Measurement import adapters.
-- Multi-objective optimization, bandwidth/gain objectives, and space
-  constraints beyond the min/max length bounds.
-- Measurement records and VNA CSV import.
+- `nec2c` is bundled in the native AppImage, Debian package, and Windows zip,
+  but remains an external runtime dependency for wheel installs. Native release
+  artifacts are unsigned by default.
+- Measurement import is CSV-based. There is no live VNA or instrument-control
+  adapter.
+- Series and parallel RLC loads are supported on one wire segment. L/Pi/T
+  matching networks are post-processed at the feedpoint. General
+  transmission-line geometry is not modeled.
+- Far-field results are NEC power gains. Realized gain and directivity are not
+  separated yet.
+- Relative permeability is not emitted to NEC.
+- Custom and imported designs are excluded from the guided optimizer. Space
+  constraints are limited to variable bounds and the Yagi minimum-gap rule.
+- One full-wave engine (NEC-2) is supported; additional engines are deferred.

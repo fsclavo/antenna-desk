@@ -989,9 +989,11 @@ def test_optimize_yagi_applies_and_simulates(
     elements[0] = replace(elements[0], length_m=elements[0].length_m + 0.1)
     optimized = replace(parameters, elements=tuple(elements))
 
+    captured: dict[str, object] = {}
+
     class FakeYagiOptimizationDialog:
         def __init__(self, *args: object, **kwargs: object) -> None:
-            pass
+            captured.update(kwargs)
 
         def exec(self) -> QDialog.DialogCode:
             return QDialog.DialogCode.Accepted
@@ -1008,6 +1010,16 @@ def test_optimize_yagi_applies_and_simulates(
     assert window._optimize_action.isEnabled() is True
     monkeypatch.setattr(window, "simulate", lambda: None)
     window.optimize_yagi_elements()
+
+    variables = captured["variables"]
+    assert isinstance(variables, tuple)
+    count_variable = next(variable for variable in variables if variable.name == "element_count")
+    assert count_variable.integer is True
+    assert count_variable.minimum == 2.0
+    assert count_variable.maximum == 32.0
+    gap_variable = next(variable for variable in variables if variable.name == "gap_1")
+    assert gap_variable.minimum == 0.1
+    assert captured["hint_key"] == "element_optimize.yagi_hint"
 
     assert window._yagi_form.parameters().elements[0].length_m == pytest.approx(
         optimized.elements[0].length_m, abs=1e-3

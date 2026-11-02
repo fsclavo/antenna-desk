@@ -11,6 +11,7 @@ from PySide6.QtCore import QLocale
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
+from .. import __version__
 from ..persistence.json_repository import JsonProjectRepository
 from ..simulation.nec2.solver import Nec2cSolver
 from .i18n import Language, Translator
@@ -19,6 +20,18 @@ from .solver_locator import find_nec2c
 
 
 def main() -> int:
+    if any(argument in {"--version", "-V"} for argument in sys.argv[1:]):
+        print(__version__)
+        return 0
+
+    if "--check-solver" in sys.argv[1:]:
+        executable = find_nec2c()
+        if executable is None:
+            print("nec2c not found", file=sys.stderr)
+            return 1
+        print(executable)
+        return 0
+
     app = QApplication(sys.argv)
     app.setApplicationName("AntennaDesk")
     app.setApplicationDisplayName("AntennaDesk")
@@ -38,3 +51,7 @@ def main() -> int:
     window = MainWindow(JsonProjectRepository(), solver, translator)
     window.show()
     return app.exec()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

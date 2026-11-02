@@ -497,6 +497,37 @@ def test_ringo_estimate_is_near_a_match(solver: Nec2cSolver) -> None:
     assert result.frequencies[0].swr < 1.5
 
 
+@pytest.mark.parametrize("shape", [LoopShape.LOOP, LoopShape.DELTA, LoopShape.QUAD])
+def test_loop_estimate_starts_near_resonance(
+    solver: Nec2cSolver,
+    shape: LoopShape,
+) -> None:
+    frequency_hz = 7_100_000.0
+    estimate = estimate_intent(
+        DesignIntent(
+            frequency_hz=frequency_hz,
+            antenna_type="loop",
+            loop_shape=shape,
+            height_m=10.0,
+        )
+    )
+    model = estimate.parameters.to_antenna()
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(frequency_hz),
+        segmentation=aligned_policy_for_model(
+            model,
+            frequency_hz,
+            SegmentationPolicy(min_segments_per_wire=3),
+        ),
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert abs(result.frequencies[0].impedance_ohm.imag) < 20.0
+
+
 def test_moxon_20m_wire_reference(solver: Nec2cSolver) -> None:
     """Check the 20 m wire Moxon published by L. B. Cebik, W4RNL.
 

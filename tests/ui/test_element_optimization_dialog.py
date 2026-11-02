@@ -143,3 +143,120 @@ def test_generic_element_dialog_supports_integer_variables(qtbot: QtBot) -> None
     assert variables[0].maximum == pytest.approx(5.0)
     assert starts["sides"] == pytest.approx(4.0)
     assert dialog._table.item(0, 2).text() == "4"
+
+
+def test_element_dialog_supports_explicit_integer_bounds(qtbot: QtBot) -> None:
+    dialog = ElementOptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalSolver(),
+        SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0)),
+        title_key="element_optimize.yagi_title",
+        variables=(
+            ElementOptimizationVariable(
+                "element_count",
+                "Elements",
+                5.0,
+                integer=True,
+                minimum=2.0,
+                maximum=8.0,
+            ),
+        ),
+        build_parameters=lambda values: DipoleParameters(
+            frequency_hz=values["__frequency_hz"],
+            total_length_m=20.0,
+            height_m=8.0,
+        ),
+        objectives=(ElementOptimizationObjective.TARGET_IMPEDANCE,),
+        default_frequency_hz=7_100_000.0,
+    )
+    qtbot.addWidget(dialog)
+
+    variables, starts = dialog._variables()
+
+    assert variables[0].minimum == pytest.approx(2.0)
+    assert variables[0].maximum == pytest.approx(8.0)
+    assert variables[0].integer is True
+    assert starts["element_count"] == pytest.approx(5.0)
+    assert dialog._table.item(0, 3).text() == "2"
+    assert dialog._table.item(0, 4).text() == "8"
+
+    dialog._bound_percent.setValue(50.0)
+
+    assert dialog._table.item(0, 3).text() == "2"
+    assert dialog._table.item(0, 4).text() == "8"
+
+
+def test_element_dialog_supports_a_minimum_only_bound(qtbot: QtBot) -> None:
+    dialog = ElementOptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalSolver(),
+        SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0)),
+        title_key="element_optimize.yagi_title",
+        variables=(
+            ElementOptimizationVariable(
+                "gap",
+                "Gap",
+                0.05,
+                minimum=0.1,
+            ),
+        ),
+        build_parameters=lambda values: DipoleParameters(
+            frequency_hz=values["__frequency_hz"],
+            total_length_m=20.0,
+            height_m=8.0,
+        ),
+        objectives=(ElementOptimizationObjective.TARGET_IMPEDANCE,),
+        default_frequency_hz=7_100_000.0,
+    )
+    qtbot.addWidget(dialog)
+
+    variables, _ = dialog._variables()
+
+    assert variables[0].minimum == pytest.approx(0.1)
+    assert variables[0].maximum > variables[0].minimum
+    assert dialog._table.item(0, 3).text() == "0.100"
+
+
+def test_element_dialog_rejects_maximum_without_minimum() -> None:
+    with pytest.raises(ValueError, match="maximum requires a minimum"):
+        ElementOptimizationVariable(
+            "element_count",
+            "Elements",
+            5.0,
+            integer=True,
+            maximum=8.0,
+        )
+
+
+def test_element_dialog_labels_swr_against_the_target(qtbot: QtBot) -> None:
+    dialog = ElementOptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalSolver(),
+        SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0)),
+        title_key="element_optimize.loop_title",
+        variables=(ElementOptimizationVariable("length_m", "Length", 20.0),),
+        build_parameters=lambda values: DipoleParameters(
+            frequency_hz=values["__frequency_hz"],
+            total_length_m=values["length_m"],
+            height_m=8.0,
+        ),
+        objectives=(
+            ElementOptimizationObjective.TARGET_IMPEDANCE,
+            ElementOptimizationObjective.MAX_GAIN,
+        ),
+        default_frequency_hz=7_100_000.0,
+        default_target_resistance_ohm=100.0,
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._evaluations.horizontalHeaderItem(4).text() == "SWR (target)"
+    assert dialog._target_r.value() == pytest.approx(100.0)
+    assert dialog._target().resistance_ohm == pytest.approx(100.0)
+
+    dialog._objective.setCurrentIndex(1)
+
+    assert dialog._evaluations.horizontalHeaderItem(4).text() == "SWR"
+    assert dialog._target().resistance_ohm == pytest.approx(50.0)

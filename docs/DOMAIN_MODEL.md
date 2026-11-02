@@ -1,9 +1,10 @@
 # Domain model
 
-This document describes the current domain. It covers straight-wire dipoles,
-folded dipoles, regular-polygon loops, one feed point per antenna, and basic
-ground models. The full blueprint contains additional antenna types and
-measurements that are not implemented yet.
+This document describes the current domain. It covers the generated antenna
+families (dipoles, loops, verticals, Yagi, Moxon, fan dipole, inverted-V,
+end-fed, OCFD, J Pole/Slim Jim, and Ringo), custom wires, one feed point per
+antenna, basic ground models, loads, matching networks, feed lines, imported
+measurements, and persisted simulation runs.
 
 ## Units and coordinates
 
@@ -354,16 +355,23 @@ the application writes version 3.
 
 ## Current limitations
 
-- Wire dipoles, folded dipoles, and regular-polygon loops are implemented.
-- Series and parallel RLC loads are supported on one wire segment; no general
-  networks, radials, or free-form conductors.
-- Folded and loop geometry are parametric templates; free-form wire editing is
-  not implemented.
-- VNA CSV import and measurement records are not implemented yet.
+- Generated families and custom straight-wire designs are implemented. There is
+  a coordinate editor and NEC/MMANA import, but no interactive wire-drawing
+  editor.
+- Series and parallel RLC loads are supported on one wire segment. L/Pi/T
+  matching networks are post-processed at the feedpoint, and the vertical
+  generator has a radial screen. General transmission-line geometry and
+  arbitrary radial screens are not modeled.
+- Optimization and synthesis operate on generated parameters. Custom and
+  imported designs are excluded from the guided optimizer.
+- Measurements are imported from CSV; there is no live instrument-control
+  adapter.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
 - Simulation results are persisted as immutable runs in schema version 3.
+- Far-field values are NEC power gains; realized gain and directivity are not
+  separated yet.
 - Relative permeability is not emitted to NEC. Conductor conductivity is
   emitted when `SimulationSpec.include_conductor_losses` is true.
 

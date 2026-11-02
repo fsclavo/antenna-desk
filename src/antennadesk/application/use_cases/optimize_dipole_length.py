@@ -21,6 +21,7 @@ from ...domain.optimization.length import (
     measure_bandwidth_hz,
     optimize_length,
 )
+from ...domain.optimization.synthesis import swr_for_resistance
 from ...domain.simulation.far_field import FarFieldRequest
 from ...domain.simulation.frequency import FrequencyPlan
 from ...domain.simulation.result import SimulationStatus
@@ -114,10 +115,16 @@ class OptimizeDipoleLength:
                         if point.gain_total_db is not None
                     ]
                     max_gain_db = max(gains) if gains else None
+                swr = frequency.swr
+                if optimization_spec.objective is OptimizationObjective.TARGET_IMPEDANCE:
+                    swr = swr_for_resistance(
+                        frequency.impedance_ohm,
+                        optimization_spec.target_resistance_ohm,
+                    )
                 return LengthEvaluation(
                     length_m=length_m,
                     impedance_ohm=frequency.impedance_ohm,
-                    swr=frequency.swr,
+                    swr=swr,
                     bandwidth_hz=bandwidth_hz,
                     max_gain_db=max_gain_db,
                     efficiency_percent=efficiency_percent,

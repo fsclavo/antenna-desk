@@ -116,10 +116,11 @@ class OptimizeElements:
                     key=lambda item: abs(item.frequency_hz - command.target.frequency_hz),
                 )
                 impedance = point.impedance_ohm
+                swr = command.target.swr(impedance)
                 metrics = {
                     "resistance_ohm": impedance.real,
                     "reactance_ohm": impedance.imag,
-                    "swr": point.swr,
+                    "swr": swr,
                 }
                 if command.objective is ElementOptimizationObjective.TARGET_IMPEDANCE:
                     score = abs(impedance - command.target.impedance_ohm)
@@ -164,7 +165,7 @@ class OptimizeElements:
                     score = -(
                         weights.gain * gain_value
                         + weights.front_to_back * front_to_back_value
-                        - weights.swr * max(point.swr - 1.0, 0.0)
+                        - weights.swr * max(swr - 1.0, 0.0)
                         + weights.efficiency * efficiency_value
                     )
                     metrics["max_gain_db"] = gain_value

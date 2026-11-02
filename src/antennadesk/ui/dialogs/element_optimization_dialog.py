@@ -55,6 +55,14 @@ class ElementOptimizationVariable:
     label: str
     current_m: float
     integer: bool = False
+    minimum: float | None = None
+    maximum: float | None = None
+
+    def __post_init__(self) -> None:
+        if self.maximum is not None and self.minimum is None:
+            raise ValueError("maximum requires a minimum")
+        if self.minimum is not None and self.maximum is not None and self.maximum <= self.minimum:
+            raise ValueError("variable maximum must exceed minimum")
 
 
 BuildParameters = Callable[[dict[str, float]], AntennaDesignParameters]
@@ -73,6 +81,7 @@ class ElementOptimizationDialog(QDialog):
         build_parameters: BuildParameters,
         objectives: tuple[ElementOptimizationObjective, ...],
         default_frequency_hz: float,
+        default_target_resistance_ohm: float = 50.0,
         hint_key: str = "element_optimize.hint",
         parent: QWidget | None = None,
     ) -> None:
@@ -111,7 +120,7 @@ class ElementOptimizationDialog(QDialog):
         self._target_r = QDoubleSpinBox(self)
         self._target_r.setRange(1.0, 10_000.0)
         self._target_r.setDecimals(3)
-        self._target_r.setValue(50.0)
+        self._target_r.setValue(default_target_resistance_ohm)
         self._target_r.setSuffix(" Ω")
 
         self._target_x = QDoubleSpinBox(self)
@@ -250,13 +259,18 @@ class ElementOptimizationDialog(QDialog):
                 t("yagi_optimize.maximum"),
             ]
         )
+        swr_header = (
+            t("table.swr_target")
+            if self._objective_value() is ElementOptimizationObjective.TARGET_IMPEDANCE
+            else t("table.swr")
+        )
         self._evaluations.setHorizontalHeaderLabels(
             [
                 t("optimize.rank"),
                 t("optimize.iteration"),
                 t("table.resistance"),
                 t("table.reactance"),
-                t("table.swr"),
+                swr_header,
                 t("optimize.gain"),
                 t("yagi_optimize.front_to_back"),
                 t("optimize.efficiency"),
@@ -291,8 +305,7 @@ class ElementOptimizationDialog(QDialog):
         self._updating = True
         try:
             for row, variable in enumerate(self._variables_spec):
-                low = variable.current_m * (1.0 - factor)
-                high = variable.current_m * (1.0 + factor)
+                low, high = self._variable_bounds(variable, factor)
                 self._table.setItem(row, 3, QTableWidgetItem(self._variable_display(low, variable)))
                 self._table.setItem(
                     row, 4, QTableWidgetItem(self._variable_display(high, variable))
@@ -331,13 +344,44 @@ class ElementOptimizationDialog(QDialog):
         ):
             label.setVisible(multi)
             widget.setVisible(multi)
+        swr_header = (
+            self._translator.t("table.swr_target") if target else self._translator.t("table.swr")
+        )
+        self._evaluations.setHorizontalHeaderItem(4, QTableWidgetItem(swr_header))
 
     def _target(self) -> SynthesisTarget:
+        target_impedance = self._objective_value() is ElementOptimizationObjective.TARGET_IMPEDANCE
         return SynthesisTarget(
             frequency_hz=self._frequency.value() * 1_000_000.0,
-            resistance_ohm=self._target_r.value(),
-            reactance_ohm=self._target_x.value(),
+            resistance_ohm=(
+                self._target_r.value()
+                if target_impedance
+                else self._base_spec.reference_impedance_ohm
+            ),
+            reactance_ohm=self._target_x.value() if target_impedance else 0.0,
         )
+
+    def _variable_bounds(
+        self,
+        variable: ElementOptimizationVariable,
+        factor: float,
+    ) -> tuple[float, float]:
+        if variable.minimum is not None and variable.maximum is not None:
+            low, high = variable.minimum, variable.maximum
+        else:
+            low = max(variable.current_m * (1.0 - factor), 1e-3)
+            high = variable.current_m * (1.0 + factor)
+            if variable.minimum is not None:
+                low = max(low, variable.minimum)
+                if high <= low:
+                    high = low + max(abs(low) * 0.01, 1e-3)
+        if variable.integer:
+            low = float(math.floor(low))
+            high = float(math.ceil(high))
+            if high <= low:
+                low = max(0.0, variable.current_m - 1.0)
+                high = variable.current_m + 1.0
+        return low, high
 
     def _variables(self) -> tuple[tuple[BoundedVariable, ...], dict[str, float]]:
         factor = self._bound_percent.value() / 100.0
@@ -345,14 +389,7 @@ class ElementOptimizationDialog(QDialog):
         starts: dict[str, float] = {}
         for index in self._selected_indices():
             variable = self._variables_spec[index]
-            low = max(variable.current_m * (1.0 - factor), 1e-3)
-            high = variable.current_m * (1.0 + factor)
-            if variable.integer:
-                low = float(math.floor(low))
-                high = float(math.ceil(high))
-                if high <= low:
-                    low = max(0.0, variable.current_m - 1.0)
-                    high = variable.current_m + 1.0
+            low, high = self._variable_bounds(variable, factor)
             variables.append(
                 BoundedVariable(
                     variable.name,

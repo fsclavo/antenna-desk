@@ -42,7 +42,8 @@ warnings, and a dimension tolerance.
   documented in the ARRL Antenna Book discussion used by this project.
 - Quarter-wave practical factor: `0.25λ × 0.95`.
 - Five-eighth-wave vertical: `0.625λ`.
-- Resonant full-wave loop: circumference `1.0λ`.
+- Resonant full-wave loop: circumference `1.0λ` for an ideal thin circular
+  loop, with the polygon correction described below.
 - Folded-dipole starting spacing: `0.02λ`.
 - Radial starting length: `0.25λ`.
 
@@ -52,7 +53,7 @@ warnings, and a dimension tolerance.
 |---|---|---|---|
 | Wire dipole | `0.5λ × 0.95` total length | empirical | Height and ground affect resonance |
 | Folded dipole | same element length; `0.02λ` spacing | empirical | Spacing controls step-up impedance |
-| Loop / quad / delta | circumference `1.0λ` | empirical | Quad=4 sides, delta=3 |
+| Loop / quad / delta | circumference `λ × (1.02895 + 0.05028/N + 0.09665/N²)` | empirical | `N` sides; quad=4, delta=3; calibrated polygon preset |
 | Vertical 1/4 | `0.25λ × 0.95`; radial `0.25λ` | empirical | Radial count/length are starting values |
 | Vertical 5/8 | `0.625λ` | physical | High feed impedance; matching required |
 | Inverted-V | half-wave dipole total, split in two legs | empirical | Included angle affects feed impedance |
@@ -63,6 +64,26 @@ warnings, and a dimension tolerance.
 | Ringo | 0.725-wave vertical with a small horizontal matching ring, calibrated for the simplified AntennaDesk geometry | heuristic | Not a universal commercial Ringo formula |
 | Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; optimize for the target |
 | Moxon | Cebik 20 m wire reference scaled by frequency | reference scaled | Gap and tips are sensitive |
+
+## Loop polygon correction
+
+A closed thin-wire polygon resonates at a slightly longer conductor than the
+ideal `1.0λ` circular loop. AntennaDesk applies
+
+```text
+C = λ × (1.02895 + 0.05028 / N + 0.09665 / N²)
+```
+
+where `N` is the number of sides. The coefficients are an application preset
+calibrated with NEC-2 using the AntennaDesk loop model in free space for
+`N = 3..32`; the residual in that calibration set is below `0.001λ`. This is
+not a universal loop formula. Height above ground, ground model, wire diameter,
+insulation, and nearby objects shift resonance, so the result remains a
+starting point.
+
+At resonance a full-wave loop normally presents roughly `100-150 Ω` at the
+feed point. Changing only its circumference cannot bring that to `50 Ω`; use a
+`2:1` balun or the Matching Network dialog for a `50 Ω` system.
 
 ## Yagi scope
 
@@ -89,13 +110,17 @@ Reference sources currently used:
 - NBS TN-688: five-element Yagi preset in the editor.
 - DL6WU/Cebik: 2–32 element trimming Yagi starting design.
 - L. B. Cebik, W4RNL, “The Moxon Rectangle: A Review”, Table 1: 20 m wire Moxon.
-- Application preset: Ringo proportions; explicitly heuristic.
+- Application preset: Ringo proportions and the loop polygon correction; both
+  are calibrated for the AntennaDesk simplified geometry and are not universal
+  formulas.
 
 ## Tests
 
 - Formula and unit tests for every estimator.
 - A parameterized NEC smoke test that estimates every supported family and
   confirms the resulting model solves and returns finite impedance.
+- NEC-2 resonance checks for the loop polygon preset and the Ringo near-match
+  estimate.
 - Registry coverage for every current `ANTENNA_TYPE_*`.
 - Explicit unsupported result for custom geometry and non-reference Yagi
   element counts.

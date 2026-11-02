@@ -200,6 +200,7 @@ def test_optimization_dialog_minimizes_swr(qtbot: QtBot) -> None:
     assert dialog._result.status is LengthOptimizationStatus.CONVERGED
     assert dialog.selected_dimension_m() == pytest.approx(20.3, abs=0.05)
     assert dialog._target.isVisible() is False
+    assert dialog._evaluations.horizontalHeaderItem(6).text() == "SWR"
 
 
 def test_optimization_dialog_targets_a_complex_impedance(qtbot: QtBot) -> None:
@@ -238,6 +239,7 @@ def test_optimization_dialog_targets_a_complex_impedance(qtbot: QtBot) -> None:
     assert dialog._result.best_impedance_error_ohm < 0.1
     assert dialog._target_r.isVisible() is True
     assert dialog._target.isVisible() is True
+    assert dialog._evaluations.horizontalHeaderItem(6).text() == "SWR (target)"
     assert dialog._evaluations.columnCount() == 11
     assert dialog._evaluations.item(0, 0).text() == "1"
     assert dialog._evaluations.item(0, 2).text().startswith("20.300")

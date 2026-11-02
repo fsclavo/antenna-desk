@@ -100,6 +100,40 @@ class AnalyticalPatternSolver:
         )
 
 
+def test_target_impedance_swr_is_relative_to_the_target() -> None:
+    target = SynthesisTarget(14_100_000.0, 100.0, 0.0)
+
+    def build(values: dict[str, float]) -> DipoleParameters:
+        return DipoleParameters(
+            frequency_hz=target.frequency_hz,
+            total_length_m=values["length_m"],
+            height_m=10.0,
+        )
+
+    result = OptimizeElements(AnalyticalPatternSolver()).execute(
+        OptimizeElementsCommand(
+            build_parameters=build,
+            variables=(BoundedVariable("length_m", 19.0, 21.0),),
+            start_values={"length_m": 20.0},
+            target=target,
+            base_spec=SimulationSpec(
+                frequency_plan=FrequencyPlan.single(14_100_000.0),
+            ),
+            objective=ElementOptimizationObjective.TARGET_IMPEDANCE,
+            max_evaluations=5,
+            samples=3,
+            passes=1,
+        )
+    )
+
+    assert result.evaluations
+    assert all(
+        evaluation.metrics["swr"] == pytest.approx(2.0)
+        for evaluation in result.evaluations
+        if evaluation.metrics is not None
+    )
+
+
 def test_multi_objective_optimizer_uses_weighted_metrics() -> None:
     target = SynthesisTarget(14_100_000.0, 50.0, 0.0)
 

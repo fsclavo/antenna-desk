@@ -122,12 +122,13 @@ def estimate_folded_dipole(intent: DesignIntent) -> DimensionEstimate:
 
 
 def estimate_loop(intent: DesignIntent) -> DimensionEstimate:
-    circumference = loop_circumference_m(intent.frequency_hz)
+    sides = intent.loop_shape.sides
+    circumference = loop_circumference_m(intent.frequency_hz, sides)
     parameters = LoopParameters(
         frequency_hz=intent.frequency_hz,
         circumference_m=circumference,
         height_m=intent.height_m,
-        sides=intent.loop_shape.sides,
+        sides=sides,
         azimuth_deg=intent.azimuth_deg,
         wire_radius_m=intent.wire_radius_m,
         material=intent.material,
@@ -138,12 +139,15 @@ def estimate_loop(intent: DesignIntent) -> DimensionEstimate:
         method_id="loop.resonant_circumference",
         confidence=Confidence.EMPIRICAL,
         tolerance_m=circumference * 0.04,
-        source_ids=(SOURCE_ARRL_LOOP,),
+        source_ids=(SOURCE_ARRL_LOOP, SOURCE_APPLICATION_PRESET),
         assumptions=("estimator.assumption.height_and_ground",),
-        warnings=("estimator.warning.starting_point",),
+        warnings=(
+            "estimator.warning.starting_point",
+            "estimator.warning.loop_matching",
+        ),
         rows=(
             _length_row("field.circumference", circumference),
-            _count_row("field.sides", intent.loop_shape.sides),
+            _count_row("field.sides", sides),
             _length_row("field.height", intent.height_m),
         ),
     )
@@ -317,7 +321,10 @@ def estimate_ocfd(intent: DesignIntent) -> DimensionEstimate:
         tolerance_m=length * 0.05,
         source_ids=(SOURCE_ARRL_DIPOLE,),
         assumptions=("estimator.assumption.height_and_ground",),
-        warnings=("estimator.warning.starting_point",),
+        warnings=(
+            "estimator.warning.starting_point",
+            "estimator.warning.ocfd_matching",
+        ),
         rows=(
             _length_row("field.length", length),
             _length_row("geometry.feed_offset", parameters.feed_offset_m),

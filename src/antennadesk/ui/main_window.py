@@ -60,6 +60,7 @@ from ..application.use_cases.delete_design_variant import (
 )
 from ..application.use_cases.open_project import OpenProject
 from ..application.use_cases.optimize_elements import ElementOptimizationObjective
+from ..application.use_cases.optimize_yagi_elements import resize_yagi
 from ..application.use_cases.record_simulation_run import (
     RecordSimulationRun,
     RecordSimulationRunCommand,
@@ -91,6 +92,7 @@ from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters, yagi_element_length_mismatch
 from ..domain.common.time import utc_now
+from ..domain.design.yagi_reference import MAX_YAGI_ELEMENTS, MIN_YAGI_ELEMENTS
 from ..domain.environment.ground import GroundModel
 from ..domain.measurement import Measurement
 from ..domain.projects.project import DesignProvenance, DesignVariant, Project
@@ -171,6 +173,7 @@ from .wizard.dipole_wizard import DipoleWizard
 from .workers.simulation_worker import SimulationWorker
 
 DEFAULT_GENERATED_SWEEP_POINTS = 31
+YAGI_OPTIMIZATION_MIN_GAP_M = 0.1
 
 
 class MainWindow(QMainWindow):
@@ -3232,7 +3235,20 @@ class MainWindow(QMainWindow):
             return
         parameters = design.parameters
         elements = parameters.elements
+        minimum_elements = max(MIN_YAGI_ELEMENTS, parameters.driven_index + 1)
+        maximum_elements = max(len(elements), MAX_YAGI_ELEMENTS)
         variables = []
+        if maximum_elements > minimum_elements:
+            variables.append(
+                ElementOptimizationVariable(
+                    "element_count",
+                    self._translator.t("yagi.element_count"),
+                    float(len(elements)),
+                    integer=True,
+                    minimum=float(minimum_elements),
+                    maximum=float(maximum_elements),
+                )
+            )
         for index, element in enumerate(elements):
             variables.append(
                 ElementOptimizationVariable(
@@ -3249,32 +3265,30 @@ class MainWindow(QMainWindow):
                     f"{self._translator.t('yagi.element')} {index + 1} · "
                     f"{self._translator.t('yagi_optimize.current_gap')}",
                     elements[index].position_m - elements[index - 1].position_m,
+                    minimum=YAGI_OPTIMIZATION_MIN_GAP_M,
                 )
             )
 
         def build(values: dict[str, float]) -> YagiParameters:
-            updated = list(elements)
-            for index in range(len(updated)):
+            frequency_hz = values.get("__frequency_hz", parameters.frequency_hz)
+            count = round(values.get("element_count", len(elements)))
+            resized = resize_yagi(
+                replace(parameters, frequency_hz=frequency_hz),
+                count,
+            )
+            updated = list(resized.elements)
+            for index in range(min(len(updated), len(elements))):
                 if (name := f"length_{index}") in values:
                     updated[index] = replace(updated[index], length_m=values[name])
-            positions = [elements[0].position_m]
+            positions = [updated[0].position_m]
             for index in range(1, len(updated)):
-                positions.append(
-                    positions[-1]
-                    + values.get(
-                        f"gap_{index}",
-                        elements[index].position_m - elements[index - 1].position_m,
-                    )
-                )
+                default_gap = updated[index].position_m - updated[index - 1].position_m
+                positions.append(positions[-1] + values.get(f"gap_{index}", default_gap))
             updated = [
                 replace(element, position_m=positions[index])
                 for index, element in enumerate(updated)
             ]
-            return replace(
-                parameters,
-                frequency_hz=values.get("__frequency_hz", parameters.frequency_hz),
-                elements=tuple(updated),
-            )
+            return replace(resized, elements=tuple(updated))
 
         dialog = ElementOptimizationDialog(
             self._translator,
@@ -3286,6 +3300,7 @@ class MainWindow(QMainWindow):
                 matching_network=self._matching_network,
             ),
             title_key="element_optimize.yagi_title",
+            hint_key="element_optimize.yagi_hint",
             variables=tuple(variables),
             build_parameters=build,
             objectives=(
@@ -3515,6 +3530,7 @@ class MainWindow(QMainWindow):
                 ElementOptimizationObjective.MULTI_OBJECTIVE,
             ),
             default_frequency_hz=parameters.frequency_hz,
+            default_target_resistance_ohm=100.0,
             parent=self,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:

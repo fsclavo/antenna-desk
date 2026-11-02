@@ -4,10 +4,14 @@ Desktop application for designing, simulating, and building antennas for
 amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
 
-**Status:** active antenna catalog and measurement development. Center-fed
-dipoles, folded dipoles, loops, custom wires, Yagis, Moxon, fan dipoles,
-inverted-Vs, OCFDs, and verticals are supported, with schema v3 persistence and
-migration. VNA CSV import and measured/simulated SWR comparison are available.
+**Status:** pre-alpha. The antenna catalog, estimators, simulation,
+measurements, optimization, matching, and reporting flows are implemented.
+Native AppImage, Debian, and Windows packages include `nec2c`; code signing and
+the first tagged release are the remaining release blockers. Center-fed dipoles, folded dipoles, loops,
+custom wires, Yagis, Moxon, fan dipoles, inverted-Vs, OCFDs, end-fed wires,
+J Poles, Slim Jims, Ringos, and verticals are supported, with schema v3
+persistence and migration. VNA CSV import and measured/simulated comparison are
+available.
 
 ## Launch the GUI
 
@@ -42,14 +46,24 @@ basic template types.
 
 ## Installation and release
 
-Install from a built wheel:
+Native packages:
+
+- Linux AppImage: `AntennaDesk-<version>-x86_64.AppImage`, built with
+  `packaging/build_appimage.sh`.
+- Debian/Ubuntu: `antennadesk_<version>_amd64.deb`, built with
+  `packaging/build_deb.sh`.
+- Windows: `AntennaDesk-<version>-windows-x86_64.zip`, built with
+  `packaging/build_windows.ps1`.
+
+All native packages include `nec2c`. Install from a wheel when you manage the
+solver yourself:
 
 ```bash
 python -m pip install dist/antennadesk-*.whl
 ```
 
-`nec2c` is an external runtime dependency. See [Release checklist](docs/RELEASE.md)
-for build, smoke-test, and packaging steps.
+See [Release checklist](docs/RELEASE.md) for build, smoke-test, signing, and
+packaging steps.
 
 ## Documentation
 
@@ -111,7 +125,8 @@ for build, smoke-test, and packaging steps.
   flow.
 - Bounded multi-element optimization for target impedance, maximum gain,
   maximum front-to-back ratio, or a weighted gain/F-B/SWR/efficiency score,
-  with template-specific variables and apply-and-simulate flow.
+  with template-specific variables, integer variables (including Yagi element
+  count), Pareto ranks, candidate selection, and apply-and-simulate flow.
 - Bounded fan-dipole element-length optimization against a target impedance.
 - Bounded Moxon optimization of width, spacing, and tip dimensions for target
   impedance, gain, or front-to-back ratio.
@@ -173,35 +188,38 @@ uv run python scripts/run_reference_simulation.py \
 
 ## Known limitations
 
-- Horizontal and vertical center-fed dipoles, folded dipoles, and
-  regular-polygon loops are implemented. Folded and loop templates currently
-  have theoretical sanity tests but no published independent impedance
-  reference. VNA CSV import and measurement records are implemented; live
-  instrument control is not.
-- Series and parallel RLC loads are supported on one wire segment; general
-  matching networks and radial ground screens are not implemented. The feed
-  line is a uniform line model evaluated at the transmitter; it does not change
-  the antenna pattern or power gain.
+- All catalog families are implemented, but some remain experimental or
+  heuristic. Folded dipoles still lack an independent impedance reference;
+  loops have the ARRL quad-loop resistance check. VNA CSV import and
+  measurement comparison are implemented; live instrument control is not.
+- Series and parallel RLC loads are supported on one wire segment. L/Pi/T
+  matching networks are post-processed at the feedpoint, and the vertical
+  generator supports a radial screen. General transmission-line geometry and
+  arbitrary radial screens are not modeled. The feed line is a uniform
+  post-processing model; it does not change the antenna pattern or power gain.
+- Optimization covers primary-dimension, multi-element, integer, and Pareto
+  searches for generated templates. Custom/imported designs are excluded, and
+  there are no boom-length or turning-radius constraints. Synthesis is a
+  bounded starting point, not a global inverse solver.
+- Far-field values are NEC power gains. Realized gain and directivity are not
+  separated. Relative permeability is not emitted to NEC. Conductor
+  conductivity is emitted when `SimulationSpec.include_conductor_losses` is
+  true.
+- Native packages include `nec2c`, but the release artifacts are unsigned by
+  default. Signing requires the project GPG key or a Windows Authenticode
+  certificate. The wheel/sdist remains available for users who manage the
+  solver themselves.
 - Simulation runs are stored in the project, including raw solver text; the
-  native project size limit is 10 MB. Use **Tools → Compact Simulation History** to keep
-  only the latest run per variant. High-resolution patterns and long sweeps
-  multiply runtime and stored points.
-- Optimization adjusts one primary dimension per design. It supports one
-  reactance, SWR, bandwidth, gain, or efficiency objective, or a weighted
-  SWR/gain score; it does not expose a Pareto front or optimize several
-  dimensions at once. Synthesis searches two bounded variables for OCFD,
-  J Pole, and Slim Jim and is a starting point, not a global inverse solver.
-- Relative permeability is not emitted to NEC. Conductor conductivity is
-  emitted when `SimulationSpec.include_conductor_losses` is true.
-- Simulation reports and construction sheets have native PDF export; HTML
-  versions remain available.
+  native project size limit is 10 MB. Use **Tools → Compact Simulation History**
+  to keep only the latest run per variant. High-resolution patterns and long
+  sweeps multiply runtime and stored points.
 - The segmentation policy is a documented heuristic; explicit counts are used
   for reference cases. The UI derives per-wire counts and aligns the feed wire
   to a segment center.
-- Known diagnostic codes are localized in the UI; the raw solver detail
-  remains available in English in the tooltip and raw-output tab.
-- PySide6 is pinned below 6.10 because 6.12 triggered a shutdown refcount
-  crash with pyqtgraph in this environment.
+- Known diagnostic codes are localized in the UI; the raw solver detail remains
+  available in English in the tooltip and raw-output tab.
+- PySide6 is pinned below 6.10 because 6.12 triggered a shutdown refcount crash
+  with pyqtgraph in this environment.
 
 ## License
 

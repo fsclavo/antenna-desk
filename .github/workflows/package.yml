@@ -77,4 +77,5 @@ jobs:
       - name: Import package and check version
         run: |
           python -c "import antennadesk; print(antennadesk.__version__)"
+          python -m antennadesk.ui.app --version
           python -c "from antennadesk.domain.design import estimate_intent"

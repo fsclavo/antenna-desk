@@ -9,6 +9,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
+from ..common.reflection import calculate_swr
 from ..common.units import ensure_positive
 
 
@@ -27,6 +28,17 @@ class SynthesisVariable:
             raise ValueError("synthesis variable maximum must exceed minimum")
 
 
+def swr_for_resistance(impedance_ohm: complex, resistance_ohm: float) -> float:
+    """Return SWR relative to a real target resistance.
+
+    The target reactance is deliberately not part of this calculation: it is
+    treated as a reactance to be cancelled by the matching network, while the
+    complex impedance error reported by the optimizer still includes it.
+    """
+
+    return calculate_swr(impedance_ohm, resistance_ohm)
+
+
 @dataclass(frozen=True, slots=True)
 class SynthesisTarget:
     frequency_hz: float
@@ -43,6 +55,11 @@ class SynthesisTarget:
     @property
     def impedance_ohm(self) -> complex:
         return complex(self.resistance_ohm, self.reactance_ohm)
+
+    def swr(self, impedance_ohm: complex) -> float:
+        """Return SWR relative to the target resistance."""
+
+        return swr_for_resistance(impedance_ohm, self.resistance_ohm)
 
 
 class SynthesisStatus(StrEnum):

@@ -222,16 +222,13 @@ class OptimizationDialog(QDialog):
         table.verticalHeader().setVisible(False)
         table.setMinimumHeight(150)
 
-    def _retranslate_tables(self) -> None:
+    def _update_table_headers(self) -> None:
         t = self._translator.t
-        self._label_objective.setText(t("optimize.objective"))
-        self._objective.setItemText(0, t("optimize.reactance_objective"))
-        self._objective.setItemText(1, t("optimize.min_swr_objective"))
-        self._objective.setItemText(2, t("optimize.max_bandwidth_objective"))
-        self._objective.setItemText(3, t("optimize.max_gain_objective"))
-        self._objective.setItemText(4, t("optimize.max_efficiency_objective"))
-        self._objective.setItemText(5, t("optimize.balanced_objective"))
-        self._objective.setItemText(6, t("optimize.target_impedance_objective"))
+        swr_header = (
+            t("table.swr_target")
+            if self._objective_value() is OptimizationObjective.TARGET_IMPEDANCE
+            else t("table.swr")
+        )
         self._evaluations.setHorizontalHeaderLabels(
             [
                 t("optimize.rank"),
@@ -240,7 +237,7 @@ class OptimizationDialog(QDialog):
                 t("table.resistance"),
                 t("table.reactance"),
                 t("table.impedance"),
-                t("table.swr"),
+                swr_header,
                 t("optimize.bandwidth"),
                 t("optimize.gain"),
                 t("optimize.efficiency"),
@@ -253,12 +250,24 @@ class OptimizationDialog(QDialog):
                 t("optimize.length"),
                 t("table.resistance"),
                 t("table.reactance"),
-                t("table.swr"),
+                swr_header,
                 t("optimize.bandwidth"),
                 t("optimize.gain"),
                 t("optimize.efficiency"),
             ]
         )
+
+    def _retranslate_tables(self) -> None:
+        t = self._translator.t
+        self._label_objective.setText(t("optimize.objective"))
+        self._objective.setItemText(0, t("optimize.reactance_objective"))
+        self._objective.setItemText(1, t("optimize.min_swr_objective"))
+        self._objective.setItemText(2, t("optimize.max_bandwidth_objective"))
+        self._objective.setItemText(3, t("optimize.max_gain_objective"))
+        self._objective.setItemText(4, t("optimize.max_efficiency_objective"))
+        self._objective.setItemText(5, t("optimize.balanced_objective"))
+        self._objective.setItemText(6, t("optimize.target_impedance_objective"))
+        self._update_table_headers()
 
     def _length_display(self, length_m: float) -> str:
         value = length_from_m(length_m, self._unit_system)
@@ -332,6 +341,7 @@ class OptimizationDialog(QDialog):
             self._tolerance.setDecimals(3)
             self._tolerance.setValue(0.1)
             self._tolerance.setSuffix(" Ω")
+        self._update_table_headers()
 
     def _optimization_spec(self) -> LengthOptimizationSpec:
         objective = self._objective_value()

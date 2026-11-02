@@ -2,6 +2,9 @@
 
 ## Before you start
 
+The Linux AppImage, Debian package, and Windows zip include `nec2c` and their
+own Python runtime. The instructions below build and run from source.
+
 AntennaDesk uses the external `nec2c` engine. Build it once from the
 repository:
 
@@ -132,8 +135,12 @@ catalog and replace the current design with another template.
 
 A full-wave loop normally presents roughly 100-150 Ω at resonance, so a direct
 50 Ω target may be unreachable by changing only its circumference. Use a 2:1
-balun or the Matching Network dialog for a 50 Ω system. The loop optimizer keeps
-the selected loop shape and side count fixed.
+balun or the Matching Network dialog for a 50 Ω system. The loop optimizer
+keeps the selected loop shape and side count fixed and starts its target
+resistance at 100 Ω; change it to 50 Ω only if you are not using a balun. The
+suggested circumference includes a polygon correction calibrated for the
+AntennaDesk loop model; it is still a starting point, so verify it with a
+simulation.
 
 ## Create a Yagi
 
@@ -370,10 +377,14 @@ the solver's power budget.
 **Target impedance** is the most direct option when the load matters, for
 example an OCFD where 200 Ω is a reasonable starting target. The optimizer
 evaluates the bounded dimension range and selects the point with the smallest
-complex impedance error, then reports that error and the resulting SWR. A
-single dimension may not reach both R and X exactly; the error makes the
-remaining mismatch visible. OCFD, end-fed wire, wire-dipole, folded-dipole,
-and loop designs support this dimension search. The evaluation table is ranked
+complex impedance error, then reports that error and the resulting SWR. For
+target-impedance searches, SWR is relative to the target resistance, not the
+50 Ω simulation reference; target reactance is treated as a reactance to be
+cancelled by the matching network, while the complex impedance error still
+includes it. A single dimension may not reach both R and X exactly; the error
+makes the remaining mismatch visible. OCFD, end-fed wire, wire-dipole,
+folded-dipole, and loop designs support this dimension search. The evaluation
+table is ranked
 from best to worst for the selected objective; the **Rank** column is separate
 from the original evaluation number, and failed evaluations appear last.
 
@@ -395,16 +406,26 @@ dimension; the SWR/gain balance is a weighted score, not a Pareto optimizer.
 ## Optimize Yagi elements
 
 For a Yagi, use **Design → Optimize...**. Select which element
-lengths and boom gaps to include, choose the objective (**target impedance**,
-**maximum gain**, or **maximum front-to-back ratio**), and set the search
-margin, minimum gap, and evaluation budget. Target impedance also asks for R/X;
-gain and front-to-back require a far-field pattern request. The optimizer
+lengths, boom gaps, and element count to include, choose the objective
+(**target impedance**, **maximum gain**, or **maximum front-to-back ratio**),
+and set the search margin and evaluation budget. Target impedance also asks for
+R/X; gain and front-to-back require a far-field pattern request. The optimizer
 performs a bounded coordinate search over the selected variables. The first
-element stays fixed, gaps remain positive, and the minimum-gap constraint keeps
-the element order and spacing valid; radii stay fixed.
+element stays fixed, gaps keep a fixed 0.1 m minimum, and the element order
+remains valid; radii stay fixed. **Element count** adds or removes trailing
+directors from the DL6WU reference scaled to the design frequency and never
+removes the driven element. The count range runs from the driven element up to
+32 elements; a design with more than 32 elements can only keep or remove its
+current elements. Existing element lengths and gaps remain the optimized
+variables; newly added directors use the reference dimensions until the design
+is applied and edited. More elements generally increase gain but also boom
+length and wind load; there is no boom-length constraint yet, so choose the
+count range deliberately.
 
 The evaluation table is ranked by the selected objective and shows R, X, SWR,
-gain, F/B, efficiency, and the objective value. **Multi-objective** combines
+gain, F/B, efficiency, and the objective value. The SWR column is relative to
+the target resistance shown in the dialog; it is 50 Ω unless you select target
+impedance and enter a different value. **Multi-objective** combines
 gain, F/B, SWR penalty, and efficiency with user weights. The table also shows a
 Pareto rank (1 = non-dominated front) for the selected metrics. Select any
 table row to apply that candidate; without a selection the best weighted score
@@ -505,31 +526,35 @@ canonical meters and hertz.
 
 ## Current limitations
 
-- Horizontal and vertical wire dipoles, folded dipoles, and regular-polygon
-  loops are supported. Folded and loop geometry use theoretical sanity checks;
-  some templates still lack independent impedance references. VNA CSV import
-  and measurement comparison are implemented; live instrument control is not.
-- Series and parallel RLC loads are supported on one wire segment. General
-  matching networks and radial ground screens are not implemented; the feed
-  line is a uniform post-processing model.
+- Native packages include `nec2c` but are unsigned by default; verify the
+  published SHA-256 checksums before installing them.
+- All catalog families are implemented, but some remain experimental or
+  heuristic. Folded dipoles still lack an independent impedance reference;
+  loops have the ARRL quad-loop resistance check. VNA CSV import and
+  measurement comparison are implemented; live instrument control is not.
+- Series and parallel RLC loads are supported on one wire segment. L/Pi/T
+  matching networks are post-processed at the feedpoint, and the vertical
+  generator supports a radial screen. General transmission-line geometry and
+  arbitrary radial screens are not modeled.
 - NEC import supports a practical subset (GW, EX, FR, GE/GN, LD 0/1), not the
   full language; unsupported cards are reported. MMANA import covers basic wire
   geometry and source only; ground and loads are not imported.
+- Optimization covers primary-dimension, multi-element, integer, and Pareto
+  searches for generated templates. Custom/imported designs are excluded, and
+  there are no boom-length or turning-radius constraints.
 - Project files store normalized results and raw solver text; many long runs
   can reach the 10 MB project limit.
 - The feed line is a uniform-line post-processing model. It reports impedance
   and SWR at the transmitter but does not add line loss to the pattern gain or
   realized-gain calculation.
+- Far-field values are NEC power gains. Realized gain and directivity are not
+  separated yet. Relative permeability is not emitted to NEC; conductor
+  conductivity is.
 - Pattern resolution is angular sampling, not additional electromagnetic
   accuracy. Fine patterns and long frequency sweeps increase runtime and
   project size.
 - Simulation reports and construction sheets have native PDF export; HTML
   versions remain available for browser printing.
-- Optimization is one-dimensional adjustment of the primary dimension against
-  a reactance, SWR, bandwidth, gain, or efficiency objective, or a weighted
-  SWR/gain score. It does not produce a Pareto front or optimize multiple
-  dimensions.
-- Relative permeability is not emitted to NEC; conductor conductivity is.
 - Known diagnostic codes are localized; the raw solver detail remains in
   English in the tooltip and raw-output tab.
 - A simulation is a prediction conditioned by the model. Unmodeled buildings,

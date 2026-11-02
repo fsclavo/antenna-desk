@@ -565,12 +565,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "solo punto de partida; verificar con simulación o medición",
     },
     "estimator.warning.folded_impedance": {
-        Language.ENGLISH: "spacing strongly affects the step-up impedance",
-        Language.SPANISH: "la separación afecta fuertemente la impedancia elevada",
+        Language.ENGLISH: "spacing affects the step-up impedance; a 4:1 balun is typical for a 50 Ω system",
+        Language.SPANISH: "la separación afecta la impedancia elevada; un balun 4:1 es lo típico para un sistema de 50 Ω",
     },
     "estimator.warning.vertical_matching": {
         Language.ENGLISH: "5/8-wave verticals need matching and a suitable radial system",
         Language.SPANISH: "las verticales de 5/8 necesitan adaptación y un sistema de radiales adecuado",
+    },
+    "estimator.warning.loop_matching": {
+        Language.ENGLISH: "full-wave loops normally present 100-150 Ω; use a 2:1 balun or matching network for 50 Ω",
+        Language.SPANISH: "los lazos de onda completa suelen presentar 100-150 Ω; usá un balun 2:1 o una red de adaptación para 50 Ω",
+    },
+    "estimator.warning.ocfd_matching": {
+        Language.ENGLISH: "off-center feed impedance depends on the offset and height; verify it before choosing a balun",
+        Language.SPANISH: "la impedancia del feed descentrado depende del offset y la altura; verificá antes de elegir un balun",
     },
     "estimator.warning.fan_interaction": {
         Language.ENGLISH: "fan elements interact; optimize the final lengths",
@@ -1045,6 +1053,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "table.reactance": {Language.ENGLISH: "X (Ω)", Language.SPANISH: "X (Ω)"},
     "table.impedance": {Language.ENGLISH: "|Z| (Ω)", Language.SPANISH: "|Z| (Ω)"},
     "table.swr": {Language.ENGLISH: "SWR", Language.SPANISH: "ROE"},
+    "table.swr_target": {
+        Language.ENGLISH: "SWR (target)",
+        Language.SPANISH: "ROE (objetivo)",
+    },
     "pattern.frequency": {Language.ENGLISH: "Frequency", Language.SPANISH: "Frecuencia"},
     "pattern.cut_phi": {
         Language.ENGLISH: "Plane φ",
@@ -1952,6 +1964,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Element",
         Language.SPANISH: "Elemento",
     },
+    "yagi.element_count": {
+        Language.ENGLISH: "Element count",
+        Language.SPANISH: "Cantidad de elementos",
+    },
     "yagi.position": {
         Language.ENGLISH: "Boom position",
         Language.SPANISH: "Posición en el boom",
@@ -2070,9 +2086,13 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Selected dimensions change together. Select a table row to apply a different candidate or Pareto compromise. Verify the applied design with a full simulation.",
         Language.SPANISH: "Las dimensiones seleccionadas cambian juntas. Seleccioná una fila de la tabla para aplicar otro candidato o compromiso de Pareto. Verificá el diseño aplicado con una simulación completa.",
     },
+    "element_optimize.yagi_hint": {
+        Language.ENGLISH: "Element count adds or removes trailing directors from the DL6WU reference. Existing lengths and gaps are optimized; added directors use reference dimensions. More elements increase boom length and wind load.",
+        Language.SPANISH: "La cantidad de elementos agrega o quita directores al final usando la referencia DL6WU. Se optimizan las longitudes y separaciones existentes; los directores agregados usan dimensiones de referencia. Más elementos aumentan el largo del boom y la carga de viento.",
+    },
     "element_optimize.loop_hint": {
-        Language.ENGLISH: "Full-wave loops typically show 100-150 Ω at resonance. Use a 2:1 balun or Matching Network for a 50 Ω system; the loop shape and side count are preserved.",
-        Language.SPANISH: "Los lazos de onda completa suelen presentar 100-150 Ω en resonancia. Usá un balun 2:1 o una red de adaptación para un sistema de 50 Ω; la forma y la cantidad de lados se conservan.",
+        Language.ENGLISH: "Full-wave loops typically show 100-150 Ω at resonance, so the target resistance defaults to 100 Ω. Use a 2:1 balun or Matching Network for a 50 Ω system; the loop shape and side count are preserved.",
+        Language.SPANISH: "Los lazos de onda completa suelen presentar 100-150 Ω en resonancia, por eso la resistencia objetivo parte de 100 Ω. Usá un balun 2:1 o una red de adaptación para un sistema de 50 Ω; la forma y la cantidad de lados se conservan.",
     },
     "element_optimize.selected_summary": {
         Language.ENGLISH: "Selected candidate: {objective}",

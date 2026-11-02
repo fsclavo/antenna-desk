@@ -116,9 +116,12 @@ impedance against the computed value `2.351965` at 50 Ω.
   false to reproduce perfect-conductor reference cases. Relative permeability
   is not emitted.
 - Series and parallel RLC loads are emitted as `LD 0`/`LD 1` on one segment.
-  General networks, transmission lines, and radial ground screens are not
-  implemented.
+  L/Pi/T matching networks and the uniform feed line are post-processed outside
+  NEC. General transmission-line geometry is not implemented. The vertical
+  generator emits its radial screen as ordinary wires.
 - Only free-space, perfect, and finite ground models are emitted.
+- Far-field values are NEC power gains; realized gain and directivity are not
+  separated by the adapter.
 - The segmentation policy is a documented heuristic with optional per-wire
   overrides; explicit segment counts are used for reference cases. The default
   target is 0.05 wavelength per segment, chosen as an accuracy/performance

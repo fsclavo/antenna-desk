@@ -157,7 +157,7 @@ reference does not block an experimental generator. A 10% tolerance is
 acceptable for many dimension/heuristic comparisons, but not universally for
 gain, nulls, or impedance.
 
-## Phase 6 — new geometry and measurements (in progress)
+## Phase 6 — new geometry and measurements (completed; physical validation deferred)
 
 Menu organization tests:
 
@@ -256,7 +256,7 @@ Phase 6 adds tests for:
 - Schema round trips and rejection of mismatched payloads for the new
   parameter types; schema version 3 remains additive.
 - UI type switching, conditional spacing/sides fields, automatic Plan view,
-  multi-wire rendering, and optimization being limited to wire dipoles.
+  multi-wire rendering, and optimization across generated template families.
 - Generic New Antenna wizard with type selection, type-aware geometry and
   review pages, and inheritance of the current design type.
 - Palette-aware diagram colors: light and dark backgrounds, axis/text/line
@@ -302,9 +302,19 @@ Phase 6 adds tests for:
 - Balanced SWR + gain objective: explicit weights, score selection, validation
   against all-zero weights, and dialog integration.
 - Multi-wire solver integration for folded dipole and loop with the real
-  `nec2c` engine; these are sanity checks, not published impedance references.
+  `nec2c` engine. The folded-dipole check is a sanity check; the quad-loop
+  resistance has the ARRL reference described below.
+- VNA CSV import, measurement conditions/reference plane, project records, and
+  measured/simulated R/X/|Z|/SWR comparison, including resonance differences.
+- Multi-element optimization for Yagi, fan dipole, Moxon, vertical, inverted-V,
+  Ringo, and loop, with integer variables, Pareto ranks, candidate selection,
+  and Yagi element-count search with reference-based director addition.
+- Frequency-first estimator provenance, loop polygon correction, and
+  target-relative SWR in optimization results.
+- Native packaging inputs, `--version`/`--check-solver` CLI behavior, and
+  bundled-solver precedence in the executable locator.
 
-The suite currently has 502 tests with the solver enabled. Solver integration
+The suite currently has 780 tests with the solver enabled. Solver integration
 tests skip when `NEC2C` is not set. All tests run on Python 3.11,
 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
 offscreen and do not require a display.
@@ -322,7 +332,8 @@ Before adding a new antenna type, it needs:
 
 - A canonical model built from the same domain primitives.
 - Unit tests for its domain rules.
-- At least one traceable reference case.
+- A traceable reference case when an independent numeric oracle exists;
+  otherwise evidence level C, a visible warning, and a documented limitation.
 - A documented list of limitations.
 - Solver adapter integration tests when it becomes simulatable.
 
@@ -355,21 +366,22 @@ and require `NEC2C`.
 
 - Relative permeability is not emitted to NEC. Conductor conductivity is
   emitted when `SimulationSpec.include_conductor_losses` is true.
-- Far-field values are NEC power gains in dB. Realized gain is not computed.
-- Series and parallel RLC loads are supported on one segment. A lossless L
-  matching network is post-processed before the feed line; Pi/T, lossy
-  networks, and general transmission-line geometry are not implemented.
+- Far-field values are NEC power gains in dB. Realized gain and directivity are
+  not separated yet.
+- Series and parallel RLC loads are supported on one segment. L/Pi/T matching
+  networks with optional component Q/loss are post-processed before the feed
+  line; general transmission-line geometry is not implemented.
 - Project files store normalized results and raw solver text; many long runs
   can reach the 10 MB project-size limit.
-- The GUI supports wire dipoles, folded dipoles, and regular-polygon loops.
-  Folded and loop templates still need independent impedance references; VNA
-  CSV import and measurement records are not implemented yet.
-- Reports and construction sheets have native PDF export; HTML versions are
-  also available.
-- Optimization is limited to a single primary dimension. It supports a single
-  reactance, SWR, bandwidth, gain, or efficiency objective, or a weighted
-  SWR/gain score; it does not expose a Pareto front or optimize several
-  dimensions.
+- Some generated templates remain experimental or heuristic. Folded dipoles
+  still lack an independent impedance reference; loops have the ARRL quad-loop
+  resistance check. End-fed, J Pole/Slim Jim, Ringo, fan dipole, and vertical
+  radial models rely on structural tests and visible warnings.
+- VNA CSV import and measurement records are implemented; live instrument
+  control is not.
+- Optimization covers primary-dimension, multi-element, integer, and Pareto
+  searches for generated templates. Custom/imported designs are excluded, and
+  there are no boom-length or turning-radius constraints.
 - Pattern resolution changes angular sampling only; it does not change NEC
   segment density or solver accuracy.
 - Feed-line results are post-processed at the transmitter. The line does not

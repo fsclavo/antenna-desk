@@ -22,6 +22,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Single-sourced package version from `antennadesk.__version__`, About-dialog
   version display, and a Hatchling wheel/sdist build with a package smoke-test
   workflow.
+- Native release packages: Linux AppImage, Debian `.deb`, and Windows onedir
+  zip recipes with bundled `nec2c`, application icons, SHA-256 checksums, and
+  optional GPG or Authenticode signing hooks.
+- Tag-triggered release workflow that builds the wheel/sdist, AppImage, Debian
+  package, and Windows zip and attaches them to the GitHub release.
+- Shared PyInstaller bundle builder and a packaging cleanup script so local
+  validation can run in temporary directories without orphan build artifacts.
+- Optional release signing: detached GPG signatures for every artifact,
+  embedded AppImage signatures, and Windows Authenticode for both executables.
+- `antennadesk --version` for packaged-application smoke tests.
 - Frequency-first dimension estimation for dipoles, folded dipoles, loops,
   verticals (1/4λ and 5/8λ), inverted-V, fan dipoles, end-fed, OCFD, J Pole,
   Slim Jim, Ringo, Yagi (2–32 elements from the DL6WU trimming reference), and
@@ -193,6 +203,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Refreshed the roadmap, README, architecture, domain-model, validation-plan,
+  and user-guide status to reflect the completed catalog, estimators,
+  measurements, optimization, matching, and packaging work.
 - Removed redundant New Antenna, Open Project, and Save toolbar buttons; the
   actions remain available in the File menu and by keyboard shortcut.
 - Added an optional uniform feed line with characteristic impedance, length,
@@ -338,9 +351,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Pareto compromise instead of only the best weighted score.
 - Multi-element optimization supports integer variables; vertical radial count,
   loop side count, and Ringo ring sides are searched discretely.
+- Yagi optimization can include element count as a discrete variable. Added
+  directors follow the DL6WU reference scaled to frequency, the driven element
+  is preserved, and gaps keep a fixed 0.1 m minimum.
 - Loop optimization now preserves the selected loop shape and side count, and
   documents that full-wave loops normally need a balun or matching network for
   a 50 Ω system.
+- The loop estimator applies a NEC-2-calibrated polygon correction, so quad,
+  delta, and generic loops start near resonance instead of several percent
+  short. The loop optimizer starts its target resistance at 100 Ω for a 2:1
+  balun.
+- Target-impedance searches report SWR relative to the target resistance;
+  folded dipoles, loops, OCFDs, and 5/8-wave verticals now show their matching
+  limitation explicitly.
 - Removed the obsolete template-specific optimization dialogs and workers; the
   generic dialog is now the only multi-element optimization UI.
 - Replaced the separate optimization menu actions with one **Optimize...**

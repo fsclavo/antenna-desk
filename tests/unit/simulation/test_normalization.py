@@ -35,6 +35,10 @@ def test_active_load_with_gain_has_infinite_swr() -> None:
     assert math.isinf(calculate_swr(complex(-100.0, 0.0), 50.0))
 
 
+def test_negative_reference_impedance_has_infinite_swr() -> None:
+    assert math.isinf(calculate_swr(complex(-50.0, 0.0), 50.0))
+
+
 def test_invalid_reference_impedance_is_rejected() -> None:
     with pytest.raises(ValueError, match="positive"):
         calculate_reflection_coefficient(complex(50.0, 0.0), 0.0)

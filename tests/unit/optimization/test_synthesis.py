@@ -12,6 +12,7 @@ from antennadesk.domain.optimization.synthesis import (
     SynthesisTarget,
     SynthesisVariable,
     rank_evaluations,
+    swr_for_resistance,
     synthesize_grid,
 )
 
@@ -43,6 +44,20 @@ def test_synthesis_finds_best_grid_point() -> None:
     assert result.best_impedance_ohm == pytest.approx(50.0 + 0.0j)
     assert result.best_error_ohm == pytest.approx(0.0)
     assert len(result.evaluations) == 9
+
+
+def test_swr_for_resistance_uses_the_requested_reference() -> None:
+    assert swr_for_resistance(complex(100.0, 0.0), 100.0) == pytest.approx(1.0)
+    assert swr_for_resistance(complex(50.0, 0.0), 100.0) == pytest.approx(2.0)
+    assert swr_for_resistance(complex(-100.0, 0.0), 100.0) == pytest.approx(float("inf"))
+
+
+def test_synthesis_target_swr_uses_the_target_resistance() -> None:
+    target = SynthesisTarget(7_100_000.0, 100.0, 25.0)
+    reactive_target = SynthesisTarget(7_100_000.0, 100.0, -40.0)
+
+    assert target.swr(complex(100.0, 0.0)) == pytest.approx(1.0)
+    assert target.swr(complex(50.0, 25.0)) == reactive_target.swr(complex(50.0, 25.0))
 
 
 def test_rank_evaluations_orders_by_impedance_error() -> None:

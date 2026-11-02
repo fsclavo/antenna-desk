@@ -37,6 +37,11 @@ dependencies = [
 antennadesk = "antennadesk.ui.app:main"
 
 [dependency-groups]
+packaging = [
+  # PyInstaller is GPL-2.0-or-later with the bootloader exception; it is used
+  # only to build the desktop bundles and is not a runtime dependency.
+  "pyinstaller>=6.10,<7",
+]
 dev = [
   "mypy>=1.10",
   "pytest>=8.0",

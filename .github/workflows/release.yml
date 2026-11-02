@@ -1,0 +1,259 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  wheel:
+    name: Build wheel and sdist
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: python -m pip install --upgrade pip uv
+
+      - name: Build artifacts
+        run: |
+          uv sync --locked --python 3.12
+          uv build --out-dir dist
+
+      - name: Smoke test wheel
+        run: |
+          python -m venv /tmp/antennadesk-wheel
+          /tmp/antennadesk-wheel/bin/pip install dist/*.whl
+          /tmp/antennadesk-wheel/bin/python -c "import antennadesk; print(antennadesk.__version__)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: antennadesk-dist
+          path: |
+            dist/*.whl
+            dist/*.tar.gz
+
+  linux-packages:
+    name: Build Linux packages
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: python -m pip install --upgrade pip uv
+
+      - name: Install build and Qt runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libegl1 libgl1 libxkbcommon-x11-0 libxcb-cursor0 \
+            libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-xinerama0 \
+            libxcb-randr0 libxcb-render-util0 libxcb-xfixes0 libdbus-1-3 \
+            libfontconfig1 libglib2.0-0 squashfs-tools
+
+      - name: Build nec2c
+        run: bash spikes/phase0/scripts/build_nec2c.sh
+
+      - name: Install appimagetool
+        env:
+          APPIMAGETOOL_VERSION: "1.9.1"
+          APPIMAGETOOL_SHA256: "ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0"
+        run: |
+          curl -L --fail --retry 3 \
+            -o /usr/local/bin/appimagetool \
+            "https://github.com/AppImage/appimagetool/releases/download/${APPIMAGETOOL_VERSION}/appimagetool-x86_64.AppImage"
+          echo "${APPIMAGETOOL_SHA256}  /usr/local/bin/appimagetool" | sha256sum -c -
+          chmod +x /usr/local/bin/appimagetool
+          APPIMAGE_EXTRACT_AND_RUN=1 appimagetool --version
+
+      - name: Install pinned AppImage runtime
+        env:
+          RUNTIME_VERSION: "20251108"
+          RUNTIME_SHA256: "2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d"
+        run: |
+          curl -L --fail --retry 3 \
+            -o /tmp/appimage-runtime-x86_64 \
+            "https://github.com/AppImage/type2-runtime/releases/download/${RUNTIME_VERSION}/runtime-x86_64"
+          echo "${RUNTIME_SHA256}  /tmp/appimage-runtime-x86_64" | sha256sum -c -
+
+      - name: Build AppImage
+        env:
+          APPIMAGE_RUNTIME_FILE: /tmp/appimage-runtime-x86_64
+        run: packaging/build_appimage.sh
+
+      - name: Build Debian package
+        run: packaging/build_deb.sh
+
+      - name: Smoke test AppImage
+        run: |
+          APPIMAGE_EXTRACT_AND_RUN=1 ./dist/*.AppImage --version
+          APPIMAGE_EXTRACT_AND_RUN=1 ./dist/*.AppImage --check-solver
+          (cd dist && sha256sum -c *.AppImage.sha256)
+          set +e
+          QT_QPA_PLATFORM=offscreen APPIMAGE_EXTRACT_AND_RUN=1 \
+            timeout 10s ./dist/*.AppImage
+          code=$?
+          test "$code" -eq 124
+
+      - name: Smoke test Debian package
+        run: |
+          dpkg-deb --info ./dist/*.deb
+          (cd dist && sha256sum -c *.deb.sha256)
+          rm -rf /tmp/antennadesk-deb
+          dpkg-deb --extract ./dist/*.deb /tmp/antennadesk-deb
+          /tmp/antennadesk-deb/opt/antennadesk/AntennaDesk --version
+          /tmp/antennadesk-deb/opt/antennadesk/AntennaDesk --check-solver
+          set +e
+          QT_QPA_PLATFORM=offscreen timeout 10s \
+            /tmp/antennadesk-deb/opt/antennadesk/AntennaDesk
+          code=$?
+          test "$code" -eq 124
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: antennadesk-appimage
+          path: |
+            dist/*.AppImage
+            dist/*.AppImage.sha256
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: antennadesk-debian
+          path: |
+            dist/*.deb
+            dist/*.deb.sha256
+
+  windows-bundle:
+    name: Build Windows bundle
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      WINDOWS_SIGN_CERT_BASE64: ${{ secrets.WINDOWS_SIGN_CERT_BASE64 }}
+      WINDOWS_SIGN_PASSWORD: ${{ secrets.WINDOWS_SIGN_PASSWORD }}
+      WINDOWS_TIMESTAMP_URL: ${{ secrets.WINDOWS_TIMESTAMP_URL }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: python -m pip install --upgrade pip uv
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: false
+          install: mingw-w64-ucrt-x86_64-gcc make patch
+
+      - name: Prepare Authenticode certificate
+        if: env.WINDOWS_SIGN_CERT_BASE64 != ''
+        shell: pwsh
+        run: |
+          $path = Join-Path $env:RUNNER_TEMP "codesign.pfx"
+          [IO.File]::WriteAllBytes(
+            $path,
+            [Convert]::FromBase64String($env:WINDOWS_SIGN_CERT_BASE64)
+          )
+          "WINDOWS_SIGN_CERT=$path" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Build nec2c for Windows
+        shell: msys2 {0}
+        env:
+          CC: gcc
+        run: bash spikes/phase0/scripts/build_nec2c_windows.sh
+
+      - name: Build Windows bundle
+        shell: pwsh
+        run: packaging/build_windows.ps1
+
+      - name: Smoke test frozen executable
+        shell: pwsh
+        run: |
+          $exe = Resolve-Path "build/pyinstaller-dist/AntennaDesk/AntennaDesk.exe"
+          foreach ($argument in @("--version", "--check-solver")) {
+            $process = Start-Process -FilePath $exe -ArgumentList $argument -Wait -PassThru
+            if ($process.ExitCode -ne 0) { throw "AntennaDesk.exe $argument failed" }
+          }
+
+      - name: Remove Authenticode certificate
+        if: always() && env.WINDOWS_SIGN_CERT_BASE64 != ''
+        shell: pwsh
+        run: Remove-Item -Force (Join-Path $env:RUNNER_TEMP "codesign.pfx") -ErrorAction SilentlyContinue
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: antennadesk-windows
+          path: |
+            dist/*.zip
+            dist/*.zip.sha256
+
+  release:
+    name: Publish GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs:
+      - wheel
+      - linux-packages
+      - windows-bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: antennadesk-dist
+          path: dist
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: antennadesk-appimage
+          path: dist
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: antennadesk-debian
+          path: dist
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: antennadesk-windows
+          path: dist
+
+      - name: Import GPG key
+        if: env.GPG_PRIVATE_KEY != ''
+        run: |
+          install -m 700 -d "$HOME/.gnupg"
+          printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --no-tty --import
+          gpg --list-secret-keys --with-colons | grep '^sec:' >/dev/null
+
+      - name: Sign release artifacts
+        if: env.GPG_PRIVATE_KEY != ''
+        run: packaging/sign_artifacts.sh
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || \
+            gh release create "$GITHUB_REF_NAME" --title "AntennaDesk $GITHUB_REF_NAME" --generate-notes
+          gh release upload "$GITHUB_REF_NAME" dist/* --clobber

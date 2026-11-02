@@ -9,6 +9,7 @@ venv/
 coverage.xml
 htmlcov/
 dist/
+build/
 *.egg-info/
 
 # Phase 0 spike artifacts

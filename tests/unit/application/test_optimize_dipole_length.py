@@ -13,7 +13,9 @@ from antennadesk.domain.common.validation import Diagnostic
 from antennadesk.domain.optimization.length import (
     LengthOptimizationSpec,
     LengthOptimizationStatus,
+    OptimizationObjective,
 )
+from antennadesk.domain.optimization.synthesis import swr_for_resistance
 from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.result import (
@@ -119,6 +121,32 @@ def test_optimizes_length_and_computes_sensitivity() -> None:
     assert all(spec.far_field.enabled is False for spec in solver.specs)
     assert min(solver.lengths) == pytest.approx(18.0)
     assert max(solver.lengths) == pytest.approx(22.0)
+
+
+def test_target_impedance_search_reports_swr_against_the_target() -> None:
+    solver = AnalyticalDipoleSolver()
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    )
+    result = OptimizeDipoleLength(solver).execute(
+        OptimizeDipoleLengthCommand(
+            parameters=parameters,
+            base_spec=SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0)),
+            optimization_spec=LengthOptimizationSpec(
+                min_length_m=19.0,
+                max_length_m=21.0,
+                objective=OptimizationObjective.TARGET_IMPEDANCE,
+                target_resistance_ohm=300.0,
+                max_evaluations=9,
+            ),
+        )
+    )
+
+    assert result.best_impedance_ohm is not None
+    expected = swr_for_resistance(result.best_impedance_ohm, 300.0)
+    assert result.best_swr == pytest.approx(expected)
 
 
 def test_optimizes_a_folded_dipole_element_length() -> None:
