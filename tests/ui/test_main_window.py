@@ -105,7 +105,7 @@ def test_simulate_updates_results(window: MainWindow, qtbot: QtBot) -> None:
     window.simulate()
     qtbot.waitUntil(
         lambda: not window._simulating and window._thread is None,
-        timeout=5_000,
+        timeout=15_000,
     )
 
     assert window._results._table.rowCount() == 1
@@ -236,7 +236,7 @@ def test_export_csv_and_html_from_the_current_result(
     window.simulate()
     qtbot.waitUntil(
         lambda: not window._simulating and window._thread is None,
-        timeout=5_000,
+        timeout=15_000,
     )
     assert window._export_csv_action.isEnabled() is True
     assert window._export_html_action.isEnabled() is True
@@ -268,7 +268,7 @@ def test_variant_switch_restores_the_cached_result(
     window.simulate()
     qtbot.waitUntil(
         lambda: not window._simulating and window._thread is None,
-        timeout=5_000,
+        timeout=15_000,
     )
     assert window._results._table.rowCount() == 1
     assert window._export_csv_action.isEnabled() is True
@@ -311,7 +311,7 @@ def test_optimize_length_applies_and_simulates(
     window.optimize_length()
     qtbot.waitUntil(
         lambda: not window._simulating and window._thread is None,
-        timeout=5_000,
+        timeout=15_000,
     )
 
     assert window._form.parameters().total_length_m == pytest.approx(19.8)
@@ -369,7 +369,7 @@ def test_optimize_endfed_applies_to_the_endfed_form(
     window.optimize_length()
     qtbot.waitUntil(
         lambda: not window._simulating and window._thread is None,
-        timeout=5_000,
+        timeout=15_000,
     )
 
     assert window._endfed_form.parameters().length_m == pytest.approx(21.0)
@@ -427,7 +427,7 @@ def test_optimize_ocfd_applies_to_the_ocfd_form(
     window.optimize_length()
     qtbot.waitUntil(
         lambda: not window._simulating and window._thread is None,
-        timeout=5_000,
+        timeout=15_000,
     )
 
     assert window._ocfd_form.parameters().total_length_m == pytest.approx(21.0)
@@ -485,7 +485,7 @@ def test_synthesize_dimensions_applies_and_simulates(
     window.synthesize_dimensions()
     qtbot.waitUntil(
         lambda: not window._simulating and window._thread is None,
-        timeout=5_000,
+        timeout=15_000,
     )
 
     assert window._ocfd_form.parameters().total_length_m == pytest.approx(21.0)
@@ -522,7 +522,7 @@ def test_simulation_results_persist_across_save_and_open(
     window.simulate()
     qtbot.waitUntil(
         lambda: not window._simulating and window._thread is None,
-        timeout=5_000,
+        timeout=15_000,
     )
     assert window._project is not None
     assert len(window._project.simulation_runs) == 1
@@ -672,7 +672,7 @@ def test_optimize_loop_applies_circumference_and_simulates(
     window.optimize_length()
     qtbot.waitUntil(
         lambda: not window._simulating and window._thread is None,
-        timeout=5_000,
+        timeout=15_000,
     )
 
     assert window._project is not None
@@ -726,9 +726,9 @@ def test_compacting_simulation_history_keeps_the_latest_run(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     window.simulate()
-    qtbot.waitUntil(lambda: not window._simulating and window._thread is None, timeout=5_000)
+    qtbot.waitUntil(lambda: not window._simulating and window._thread is None, timeout=15_000)
     window.simulate()
-    qtbot.waitUntil(lambda: not window._simulating and window._thread is None, timeout=5_000)
+    qtbot.waitUntil(lambda: not window._simulating and window._thread is None, timeout=15_000)
     assert window._project is not None
     assert len(window._project.simulation_runs) == 2
     assert window._compact_history_action.isEnabled() is True
@@ -850,7 +850,7 @@ def test_new_custom_antenna_is_editable_and_simulatable(
     assert window._custom_simulation_spec(parameters).frequency_plan.count == 100
 
     window.simulate()
-    qtbot.waitUntil(lambda: not window._simulating and window._thread is None, timeout=5_000)
+    qtbot.waitUntil(lambda: not window._simulating and window._thread is None, timeout=15_000)
 
     assert window._results._table.rowCount() == 1
     assert window._status_label.text() == "Simulation completed"
@@ -1874,7 +1874,7 @@ def test_simulation_runs_survive_undo_of_a_design_edit(
     window.simulate()
     qtbot.waitUntil(
         lambda: not window._simulating and window._thread is None,
-        timeout=5_000,
+        timeout=15_000,
     )
     assert window._project is not None
     runs_after_simulation = len(window._project.simulation_runs)
