@@ -85,7 +85,9 @@ A small number of smoke images for light/dark themes is acceptable.
 5. `new_antenna()` route.
 6. `_parameters_from_catalog()`/Change Template route.
 7. Design-panel form or dialog.
-8. Simulation spec mapping.
+8. Simulation spec mapping. Return a normal `SimulationSpec`; the main window
+   applies the global pattern snapshot and resolution policy. Do not hardcode a
+   pattern step or snapshot count in the family builder.
 9. Reporting and construction-sheet rows.
 10. Geometry presentation builder and semantic dimensions.
 11. Scene, layout, routing, legacy, and export tests.

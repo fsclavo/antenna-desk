@@ -85,6 +85,57 @@ def test_permeability_warning_is_suppressed_without_conductor_losses() -> None:
     )
 
 
+def test_ground_level_wire_reports_the_nec_clearance() -> None:
+    model = _model()
+    grounded = AntennaModel(
+        name=model.name,
+        design_frequency_hz=model.design_frequency_hz,
+        wires=(
+            Wire(
+                id="radiator",
+                start=Point3D(-10.0, 0.0, 0.0),
+                end=Point3D(10.0, 0.0, 0.0),
+                radius_m=0.001,
+                material=model.wires[0].material,
+            ),
+        ),
+        feed=model.feed,
+        environment=Environment(ground=GroundModel.perfect()),
+    )
+    diagnostics = _solver().validate(
+        grounded,
+        _spec(include_conductor_losses=False, ground=GroundModel.perfect()),
+    )
+
+    assert any(diagnostic.code == "geometry.ground_clearance" for diagnostic in diagnostics)
+    assert not any(diagnostic.code == "geometry.below_ground" for diagnostic in diagnostics)
+
+
+def test_below_ground_wire_is_an_error() -> None:
+    model = _model()
+    grounded = AntennaModel(
+        name=model.name,
+        design_frequency_hz=model.design_frequency_hz,
+        wires=(
+            Wire(
+                id="radiator",
+                start=Point3D(-10.0, 0.0, -0.1),
+                end=Point3D(10.0, 0.0, -0.1),
+                radius_m=0.001,
+                material=model.wires[0].material,
+            ),
+        ),
+        feed=model.feed,
+        environment=Environment(ground=GroundModel.perfect()),
+    )
+    diagnostics = _solver().validate(
+        grounded,
+        _spec(include_conductor_losses=False, ground=GroundModel.perfect()),
+    )
+
+    assert any(diagnostic.code == "geometry.below_ground" for diagnostic in diagnostics)
+
+
 def test_far_field_below_ground_warning() -> None:
     model = _model()
     grounded = AntennaModel(

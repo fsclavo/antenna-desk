@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Trap-dipole templates support two parallel LC traps, automatic trap
   capacitance from the target frequency and inductance, and a starting-dimension
   helper for the low and high bands.
+- T2FD (terminated folded dipole) templates support a broadband 800 Ω series
+  termination, an ideal feed transformer, horizontal or vertical geometry, and
+  a Cebik wide-long starting-dimension helper (`300/F` span, `10/F` spacing).
 - Catalog presets for a sloper, a random wire, and a doublet. Sloper and random
   wire use the end-fed template with preset metadata; the doublet creates a
   center-fed dipole and configures a project-level open-wire feed line.
@@ -47,9 +50,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   selected resolution automatically and report an informational diagnostic.
   Oversized solver output now reports a specific `solver.output_too_large`
   diagnostic.
+- Sweeps longer than five points now compute the far-field pattern at
+  amateur-band snapshots while keeping every impedance/SWR point. Custom designs
+  can choose Auto (bands), 5, 9, 13, 17, or 21 pattern frequencies. The pattern tab
+  lists the snapshots, so a 200-point G5RV sweep can show nine bands at 5°
+  instead of a 30° pattern at every point. The project-size budget accounts for
+  the sweep and pattern snapshot counts separately.
+
+### Changed
+
+- Pattern resolution and pattern-frequency controls are now global to every
+  antenna family. Generated dipoles, Yagis, loops, verticals, and future
+  templates use the same Auto (max)/Auto (bands) policy as the G5RV and get 1°
+  or 2° band snapshots when they fit the compressed budget.
+- The 3D pattern view draws a coarser display mesh while rotating or zooming
+  and returns to the full-resolution wireframe when the movement stops. This
+  keeps 1° and 2° patterns responsive without removing stored data.
+- Project files are now compact JSON compressed losslessly with gzip. Existing
+  plain-JSON projects still load. The 32 MB hard limit and 20 MB warning apply
+  to the compressed file, so a 200-point G5RV with 13 band snapshots at 2° is
+  about 8 MB, and nine band snapshots at 1° is about 20 MB.
+- The project storage budget is now 24 MB compressed, with a save warning above 20 MB and
+  a 32 MB hard limit. This lets pattern-rich runs keep more band snapshots and
+  a finer angular step: a 200-point G5RV with 13, 17, or 21 snapshots uses
+  5°, and with five snapshots it can use 2°.
 
 ### Fixed
 
+- Frequency-first estimator geometries stay above ground: inverted-V estimates
+  widen the included angle (and raise the apex if needed), fan-dipole estimates
+  use distinct progressively narrower element angles, and end-fed estimates
+  clamp an unreachable end height. Fan dipoles now reject two elements with the
+  same included angle because their wires would overlap.
+- Ground-mounted vertical radials are raised 1 cm in the NEC deck. A freshly
+  estimated vertical with finite ground previously failed with `nec2c exited
+  with code 255` because the radials lay exactly on the ground plane. Wires
+  below ground now produce a clear `geometry.below_ground` diagnostic instead.
 - NEC `LD` and `TL` cards now use local segment numbers within each wire tag;
   loads on wires after the first were previously mapped to global segment
   numbers.

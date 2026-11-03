@@ -22,7 +22,8 @@ metadata, diagnostics, currents, far-field data, and raw solver text.
   and an immutable `SimulationResult`.
 - Persist completed and partial runs in the project as `simulation_runs`.
 - Store normalized results plus raw solver input/output and stderr. The existing
-  10 MB project limit bounds the file size.
+  10 MB project limit bounds the file size. ADR-0020 later raised the limit
+  to 32 MiB.
 - Store SWR as `null` when it is infinite, because strict JSON does not support
   `Infinity`.
 - Bump the project schema to **version 3**. Migrate version 2 documents by

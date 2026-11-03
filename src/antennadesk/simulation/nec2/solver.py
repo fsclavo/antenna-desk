@@ -29,7 +29,7 @@ from ..discretization import validate_segmentation
 from ..fingerprint import model_fingerprint
 from .capabilities import NEC2C_CAPABILITIES
 from .errors import SolverExecutionError, SolverNotAvailable, SolverOutputTooLarge
-from .input_writer import write_nec2_input
+from .input_writer import GROUND_CLEARANCE_M, write_nec2_input
 from .normalization import normalize_nec2_result
 from .parser import Nec2ParseError, parse_nec2_output
 
@@ -115,6 +115,34 @@ class Nec2cSolver:
                             field="material.relative_permeability",
                         )
                     )
+
+        ground = model.environment.ground
+        if ground.kind is not GroundKind.FREE_SPACE:
+            min_z = min(point.z_m for wire in model.wires for point in (wire.start, wire.end))
+            if min_z < -1e-9:
+                diagnostics.append(
+                    Diagnostic(
+                        code="geometry.below_ground",
+                        severity=Severity.ERROR,
+                        message=(
+                            "the model has wires below the ground plane; "
+                            "raise the geometry above z = 0"
+                        ),
+                        field="geometry",
+                    )
+                )
+            elif min_z < GROUND_CLEARANCE_M:
+                diagnostics.append(
+                    Diagnostic(
+                        code="geometry.ground_clearance",
+                        severity=Severity.INFO,
+                        message=(
+                            f"the model is raised by {GROUND_CLEARANCE_M - min_z:.3f} m "
+                            "above the ground plane for NEC"
+                        ),
+                        field="geometry",
+                    )
+                )
 
         if (
             model.environment.ground.kind is not GroundKind.FREE_SPACE

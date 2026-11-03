@@ -736,6 +736,43 @@ def test_dl6wu_yagi_estimator_produces_a_runnable_model(
     assert result.frequencies[0].impedance_ohm.real > 0.0
 
 
+def test_freshly_estimated_ground_mounted_vertical_completes(
+    solver: Nec2cSolver,
+) -> None:
+    from antennadesk.domain.design import DesignIntent, VerticalForm, estimate_intent
+
+    ground = GroundModel.finite(
+        relative_permittivity=13.0,
+        conductivity_s_per_m=0.005,
+    )
+    parameters = estimate_intent(
+        DesignIntent(
+            frequency_hz=7_100_000.0,
+            antenna_type="vertical",
+            vertical_form=VerticalForm.QUARTER_WAVE,
+            radial_count=4,
+            ground=ground,
+        )
+    ).parameters
+    model = parameters.to_antenna(name="Estimated vertical")
+    segmentation = aligned_policy_for_model(
+        model,
+        parameters.frequency_hz * 1.05,
+        SegmentationPolicy(min_segments_per_wire=3),
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
+        segmentation=segmentation,
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert result.frequencies[0].impedance_ohm.real > 0.0
+    assert any(diagnostic.code == "geometry.ground_clearance" for diagnostic in result.diagnostics)
+
+
 def test_loaded_vertical_with_a_series_coil_solves(solver: Nec2cSolver) -> None:
     from antennadesk.domain.antennas.vertical import VerticalParameters
 
@@ -938,10 +975,8 @@ def test_output_limit_has_a_specific_diagnostic() -> None:
     assert any(diagnostic.code == "solver.output_too_large" for diagnostic in result.diagnostics)
 
 
-def test_g5rv_default_budgeted_pattern_completes(solver: Nec2cSolver) -> None:
+def _g5rv_model_and_segmentation():
     from antennadesk.domain.antennas.g5rv import G5RV_DIPOLE_ID, g5rv_parameters
-    from antennadesk.domain.simulation.budget import choose_pattern_step
-    from antennadesk.ui.pattern_resolution import pattern_counts
 
     ground = GroundModel.finite(
         relative_permittivity=13.0,
@@ -966,17 +1001,281 @@ def test_g5rv_default_budgeted_pattern_completes(solver: Nec2cSolver) -> None:
             wire_segments=((G5RV_DIPOLE_ID, count),),
         ),
     )
-    segment_count = sum(segmentation.segments_for(wire, stop_hz) for wire in model.wires)
+    return model, segmentation, ground
+
+
+def test_g5rv_default_budgeted_pattern_completes(solver: Nec2cSolver) -> None:
+    from antennadesk.domain.simulation.bands import band_snapshot_frequencies
+    from antennadesk.domain.simulation.budget import choose_pattern_step
+    from antennadesk.ui.pattern_resolution import pattern_counts
+
+    model, segmentation, ground = _g5rv_model_and_segmentation()
+    plan = FrequencyPlan.sweep(3_500_000.0, 30_000_000.0, 41)
+    snapshots = band_snapshot_frequencies(plan, preferred_frequency_hz=14_100_000.0)
+    segment_count = sum(segmentation.segments_for(wire, plan.stop_hz) for wire in model.wires)
     budget = choose_pattern_step(
-        frequency_count=41,
+        frequency_count=plan.count,
+        pattern_frequency_count=len(snapshots),
         segment_count=segment_count,
         candidate_steps=(1.0, 2.0, 5.0, 10.0, 15.0, 20.0, 30.0),
         counts_for_step=lambda step: pattern_counts(step, ground),
     )
 
-    assert budget.pattern_step_deg == 10.0
+    assert budget.pattern_step_deg == 1.0
     spec = SimulationSpec(
-        frequency_plan=FrequencyPlan.sweep(3_500_000.0, 30_000_000.0, 41),
+        frequency_plan=plan,
+        segmentation=segmentation,
+        include_conductor_losses=True,
+        far_field=FarFieldRequest(
+            enabled=True,
+            theta_start_deg=0.0,
+            theta_stop_deg=90.0,
+            theta_count=91,
+            phi_start_deg=0.0,
+            phi_stop_deg=360.0,
+            phi_count=361,
+        ),
+        pattern_frequencies_hz=snapshots,
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert len(result.frequencies) == 41
+    assert sum(1 for frequency in result.frequencies if frequency.far_field) == 9
+    assert all(frequency.currents for frequency in result.frequencies)
+    assert len(result.raw_output) < 50 * 1024 * 1024
+
+
+def test_g5rv_dense_sweep_uses_pattern_snapshots(solver: Nec2cSolver) -> None:
+    from antennadesk.domain.simulation.bands import band_snapshot_frequencies
+    from antennadesk.domain.simulation.budget import (
+        DEFAULT_MAX_PROJECT_BYTES,
+        choose_pattern_step,
+    )
+    from antennadesk.ui.pattern_resolution import pattern_counts
+
+    model, segmentation, ground = _g5rv_model_and_segmentation()
+    plan = FrequencyPlan.sweep(3_500_000.0, 30_000_000.0, 200)
+    snapshots = band_snapshot_frequencies(plan, preferred_frequency_hz=14_100_000.0)
+    segment_count = sum(segmentation.segments_for(wire, plan.stop_hz) for wire in model.wires)
+    budget = choose_pattern_step(
+        frequency_count=plan.count,
+        pattern_frequency_count=len(snapshots),
+        segment_count=segment_count,
+        candidate_steps=(1.0, 2.0, 5.0, 10.0, 15.0, 20.0, 30.0),
+        counts_for_step=lambda step: pattern_counts(step, ground),
+    )
+
+    assert budget.pattern_step_deg == 1.0
+    assert budget.estimated_project_bytes < DEFAULT_MAX_PROJECT_BYTES
+    spec = SimulationSpec(
+        frequency_plan=plan,
+        segmentation=segmentation,
+        include_conductor_losses=True,
+        far_field=FarFieldRequest(
+            enabled=True,
+            theta_start_deg=0.0,
+            theta_stop_deg=90.0,
+            theta_count=91,
+            phi_start_deg=0.0,
+            phi_stop_deg=360.0,
+            phi_count=361,
+        ),
+        pattern_frequencies_hz=snapshots,
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert len(result.frequencies) == 200
+    assert sum(1 for frequency in result.frequencies if frequency.far_field) == 9
+    assert all(frequency.currents for frequency in result.frequencies)
+    assert all(frequency.swr is not None for frequency in result.frequencies)
+    assert len(result.raw_output) < 50 * 1024 * 1024
+
+
+def _estimated_family_parameters(key: str, frequency_hz: float):
+    from antennadesk.domain.antennas.t2fd import (
+        T2FDParameters,
+        t2fd_starting_dimensions,
+    )
+    from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+
+    ground = GroundModel.finite(
+        relative_permittivity=13.0,
+        conductivity_s_per_m=0.005,
+    )
+    if key == "vertical":
+        return estimate_intent(
+            DesignIntent(
+                frequency_hz=frequency_hz,
+                antenna_type="vertical",
+                vertical_form="quarter_wave",
+                radial_count=4,
+                ground=ground,
+            )
+        ).parameters
+    if key == "loop":
+        return estimate_intent(
+            DesignIntent(
+                frequency_hz=frequency_hz,
+                antenna_type="loop",
+                loop_shape=LoopShape.QUAD,
+                ground=ground,
+            )
+        ).parameters
+    if key == "fan_dipole":
+        return estimate_intent(
+            DesignIntent(
+                frequency_hz=frequency_hz,
+                antenna_type="fan_dipole",
+                fan_bands_hz=(frequency_hz, frequency_hz * 2.0),
+                ground=ground,
+            )
+        ).parameters
+    if key == "endfed":
+        return estimate_intent(
+            DesignIntent(
+                frequency_hz=frequency_hz,
+                antenna_type="endfed",
+                end_height_m=2.0,
+                ground=ground,
+            )
+        ).parameters
+    if key == "trap_dipole":
+        return TrapDipoleParameters(
+            frequency_hz=frequency_hz,
+            high_band_frequency_hz=min(frequency_hz * 2.0, 60_000_000.0),
+            inner_length_m=10.0,
+            outer_length_m=5.0,
+            trap_frequency_hz=min(frequency_hz * 2.0, 60_000_000.0),
+            trap_inductance_h=10e-6,
+            height_m=10.0,
+            ground=ground,
+        )
+    if key == "t2fd":
+        span_m, spacing_m = t2fd_starting_dimensions(frequency_hz)
+        return T2FDParameters(
+            frequency_hz=frequency_hz,
+            highest_frequency_hz=max(frequency_hz * 2.0, 30_000_000.0),
+            length_m=span_m,
+            spacing_m=spacing_m,
+            height_m=10.0,
+            ground=ground,
+        )
+    return estimate_intent(
+        DesignIntent(
+            frequency_hz=frequency_hz,
+            antenna_type=key,
+            ground=ground,
+        )
+    ).parameters
+
+
+@pytest.mark.parametrize(
+    ("key", "frequency_hz"),
+    (
+        ("wire_dipole", 1_800_000.0),
+        ("wire_dipole", 28_500_000.0),
+        ("folded_dipole", 7_100_000.0),
+        ("loop", 1_800_000.0),
+        ("vertical", 7_100_000.0),
+        ("inverted_v", 1_800_000.0),
+        ("inverted_v", 3_500_000.0),
+        ("fan_dipole", 1_800_000.0),
+        ("fan_dipole", 7_100_000.0),
+        ("endfed", 7_100_000.0),
+        ("endfed", 28_500_000.0),
+        ("ocfd", 7_100_000.0),
+        ("j_pole", 50_000_000.0),
+        ("ringo", 29_000_000.0),
+        ("yagi", 14_100_000.0),
+        ("moxon", 14_100_000.0),
+        ("trap_dipole", 7_100_000.0),
+        ("t2fd", 3_500_000.0),
+        ("t2fd", 14_100_000.0),
+    ),
+)
+def test_estimated_families_solve_above_ground(
+    solver: Nec2cSolver,
+    key: str,
+    frequency_hz: float,
+) -> None:
+    parameters = _estimated_family_parameters(key, frequency_hz)
+    model = parameters.to_antenna(name=key)
+    min_z = min(point.z_m for wire in model.wires for point in (wire.start, wire.end))
+    segmentation = aligned_policy_for_model(
+        model,
+        frequency_hz,
+        SegmentationPolicy(min_segments_per_wire=3),
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(frequency_hz),
+        segmentation=segmentation,
+        include_conductor_losses=False,
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+    result = solver.run(model, spec)
+
+    assert min_z >= -1e-9, f"{key} has a wire below ground"
+    assert result.status is SimulationStatus.COMPLETED
+    assert math.isfinite(result.frequencies[0].impedance_ohm.real)
+
+
+def test_t2fd_default_design_completes_with_a_broadband_match(
+    solver: Nec2cSolver,
+) -> None:
+    from antennadesk.domain.antennas.t2fd import (
+        T2FD_DRIVEN_WIRE_ID,
+        T2FD_TERMINATED_WIRE_ID,
+        T2FDParameters,
+        t2fd_starting_dimensions,
+    )
+
+    ground = GroundModel.finite(
+        relative_permittivity=13.0,
+        conductivity_s_per_m=0.005,
+    )
+    span_m, spacing_m = t2fd_starting_dimensions(3_500_000.0)
+    parameters = T2FDParameters(
+        frequency_hz=3_500_000.0,
+        highest_frequency_hz=30_000_000.0,
+        length_m=span_m,
+        spacing_m=spacing_m,
+        height_m=10.0,
+        termination_resistance_ohm=800.0,
+        transformer_ratio=16.0,
+        ground=ground,
+    )
+    model = parameters.to_antenna(name="T2FD")
+    stop_hz = parameters.highest_frequency_hz
+    base = aligned_policy_for_model(
+        model,
+        stop_hz,
+        SegmentationPolicy(min_segments_per_wire=3),
+    )
+    driven_count = base.segments_for(
+        model.wire_by_id(T2FD_DRIVEN_WIRE_ID),
+        stop_hz,
+    )
+    if driven_count % 2 == 0:
+        driven_count += 1
+    segmentation = SegmentationPolicy(
+        min_segments_per_wire=3,
+        wire_segments=tuple(
+            (
+                wire.id,
+                driven_count
+                if wire.id in {T2FD_DRIVEN_WIRE_ID, T2FD_TERMINATED_WIRE_ID}
+                else base.segments_for(wire, stop_hz),
+            )
+            for wire in model.wires
+        ),
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.sweep(3_500_000.0, 30_000_000.0, 31),
         segmentation=segmentation,
         include_conductor_losses=True,
         far_field=FarFieldRequest(
@@ -988,10 +1287,19 @@ def test_g5rv_default_budgeted_pattern_completes(solver: Nec2cSolver) -> None:
             phi_stop_deg=360.0,
             phi_count=37,
         ),
+        feed_transformer_ratio=parameters.transformer_ratio,
     )
 
     result = solver.run(model, spec)
 
     assert result.status is SimulationStatus.COMPLETED
-    assert len(result.frequencies) == 41
+    assert len(result.frequencies) == 31
+    assert any(diagnostic.code == "transformer.applied" for diagnostic in result.diagnostics)
+    assert all(frequency.impedance_ohm.real > 0.0 for frequency in result.frequencies)
+    assert all(frequency.swr is not None for frequency in result.frequencies)
+    assert max(frequency.swr for frequency in result.frequencies) < 3.5
+    assert all(
+        frequency.realized_gain_db is not None and math.isfinite(frequency.realized_gain_db)
+        for frequency in result.frequencies
+    )
     assert len(result.raw_output) < 10 * 1024 * 1024

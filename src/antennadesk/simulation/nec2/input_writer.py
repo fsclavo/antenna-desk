@@ -12,11 +12,17 @@ from ...domain.environment.ground import GroundKind
 from ...domain.simulation.spec import SimulationSpec
 from ..discretization import SegmentLayout, WireSegmentation, build_segment_layout
 
+# NEC-2 requires wires to be separated from a ground plane. Ground-mounted
+# radials and dipoles are raised by this small physical clearance when the
+# canonical model sits exactly on the ground.
+GROUND_CLEARANCE_M = 0.01
+
 
 @dataclass(frozen=True, slots=True)
 class Nec2Deck:
     text: str
     layout: SegmentLayout
+    z_offset_m: float = 0.0
 
     @property
     def feed_tag(self) -> int:
@@ -52,6 +58,12 @@ def _local_segment_for_offset(segmentation: WireSegmentation, offset_m: float) -
 
 def write_nec2_input(model: AntennaModel, spec: SimulationSpec) -> Nec2Deck:
     layout = build_segment_layout(model, spec)
+    ground = model.environment.ground
+    z_offset = 0.0
+    if ground.kind is not GroundKind.FREE_SPACE:
+        min_z = min(point.z_m for wire in model.wires for point in (wire.start, wire.end))
+        if 0.0 <= min_z < GROUND_CLEARANCE_M:
+            z_offset = GROUND_CLEARANCE_M - min_z
     lines: list[str] = [
         "CM AntennaDesk generated NEC-2 input",
         f"CM Model: {_comment(model.name)}",
@@ -63,12 +75,13 @@ def write_nec2_input(model: AntennaModel, spec: SimulationSpec) -> Nec2Deck:
         lines.append(
             "GW "
             f"{segmentation.tag} {segmentation.segments} "
-            f"{_format(wire.start.x_m)} {_format(wire.start.y_m)} {_format(wire.start.z_m)} "
-            f"{_format(wire.end.x_m)} {_format(wire.end.y_m)} {_format(wire.end.z_m)} "
+            f"{_format(wire.start.x_m)} {_format(wire.start.y_m)} "
+            f"{_format(wire.start.z_m + z_offset)} "
+            f"{_format(wire.end.x_m)} {_format(wire.end.y_m)} "
+            f"{_format(wire.end.z_m + z_offset)} "
             f"{_format(wire.radius_m)}"
         )
 
-    ground = model.environment.ground
     lines.append("GE 1" if ground.kind is not GroundKind.FREE_SPACE else "GE 0")
     if ground.kind is GroundKind.PERFECT:
         lines.append("GN 1")
@@ -125,7 +138,7 @@ def write_nec2_input(model: AntennaModel, spec: SimulationSpec) -> Nec2Deck:
     )
     lines.append(f"EX 0 {layout.feed_tag} {layout.feed_local_segment} 0 1.0")
 
-    if spec.far_field.enabled:
+    def append_pattern_card() -> None:
         far_field = spec.far_field
         lines.append(
             "RP 0 "
@@ -135,8 +148,21 @@ def write_nec2_input(model: AntennaModel, spec: SimulationSpec) -> Nec2Deck:
             f"{_format(far_field.theta_step_deg, 6)} "
             f"{_format(far_field.phi_step_deg, 6)}"
         )
-    else:
+
+    if not spec.far_field.enabled:
         lines.append("XQ")
+    elif spec.pattern_frequencies_hz:
+        # The sweep block computes impedance and currents without patterns.
+        # Each snapshot then gets its own single-frequency block with an RP
+        # card, so the pattern can be much finer than a pattern at every sweep
+        # point would allow.
+        lines.append("XQ")
+        for frequency_hz in spec.pattern_frequencies_hz:
+            lines.append(f"FR 0 1 0 0 {_format(frequency_hz / 1_000_000.0)} 0.000000000")
+            lines.append(f"EX 0 {layout.feed_tag} {layout.feed_local_segment} 0 1.0")
+            append_pattern_card()
+    else:
+        append_pattern_card()
 
     lines.append("EN")
-    return Nec2Deck(text="\n".join(lines) + "\n", layout=layout)
+    return Nec2Deck(text="\n".join(lines) + "\n", layout=layout, z_offset_m=z_offset)

@@ -755,7 +755,7 @@ def test_save_warns_and_can_cancel_a_large_project(
     monkeypatch.setattr(
         window._repository,
         "serialized_size",
-        lambda project: 9 * 1024 * 1024,
+        lambda project: 21 * 1024 * 1024,
     )
     monkeypatch.setattr(
         QMessageBox,
@@ -765,6 +765,31 @@ def test_save_warns_and_can_cancel_a_large_project(
 
     assert window._save_to(path) is False
     assert path.exists() is False
+    window._dirty = False
+
+
+def test_save_blocks_a_project_above_the_hard_limit(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "too-large.antennadesk"
+    monkeypatch.setattr(
+        window._repository,
+        "serialized_size",
+        lambda project: 33 * 1024 * 1024,
+    )
+    messages: list[str] = []
+    monkeypatch.setattr(
+        QMessageBox,
+        "critical",
+        lambda *args, **kwargs: messages.append(args[2]) or QMessageBox.StandardButton.Ok,
+    )
+
+    assert window._save_to(path) is False
+    assert path.exists() is False
+    assert messages
+    assert "32 MB" in messages[0]
     window._dirty = False
 
 
@@ -1336,6 +1361,109 @@ def test_trap_dipole_spec_sweeps_both_bands(window: MainWindow) -> None:
     assert spec.frequency_plan.stop_hz == pytest.approx(14_100_000.0 * 1.05)
 
 
+def test_new_t2fd_creates_a_first_class_design(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.t2fd import T2FDParameters
+
+    parameters = T2FDParameters(
+        frequency_hz=3_500_000.0,
+        highest_frequency_hz=30_000_000.0,
+        length_m=26.0,
+        spacing_m=0.9,
+        height_m=12.0,
+        termination_resistance_ohm=800.0,
+        transformer_ratio=16.0,
+    )
+
+    class FakeT2FDDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> T2FDParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "T2FDDialog", FakeT2FDDialog)
+    monkeypatch.setattr(
+        QInputDialog,
+        "getText",
+        lambda *args, **kwargs: ("T2FD", True),
+    )
+    errors: list[tuple[object, ...]] = []
+    monkeypatch.setattr(
+        QMessageBox,
+        "critical",
+        lambda *args, **kwargs: errors.append(args) or QMessageBox.StandardButton.Ok,
+    )
+
+    window.new_t2fd_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "T2FD"
+    design = window._project.designs[0]
+    assert design.antenna_type == "t2fd"
+    assert [load.id for load in design.antenna.loads] == ["t2fd-termination"]
+    assert design.antenna.loads[0].resistance_ohm == pytest.approx(800.0)
+    assert window._design_stack.currentWidget() is window._t2fd_scroll
+    assert window._t2fd_form.parameters().spacing_m == pytest.approx(0.9)
+
+    window._t2fd_form._termination.setValue(820.0)
+    window.apply_design()
+
+    updated = window._project.designs[0]
+    assert updated.parameters.termination_resistance_ohm == pytest.approx(820.0)
+    assert updated.antenna.loads[0].resistance_ohm == pytest.approx(820.0)
+    assert errors == []
+    window._dirty = False
+
+
+def test_t2fd_spec_sweeps_the_design_band_with_centered_termination(
+    window: MainWindow,
+) -> None:
+    from antennadesk.domain.antennas.t2fd import (
+        T2FD_DRIVEN_WIRE_ID,
+        T2FD_TERMINATED_WIRE_ID,
+        T2FDParameters,
+    )
+
+    parameters = T2FDParameters(
+        frequency_hz=3_500_000.0,
+        highest_frequency_hz=30_000_000.0,
+        length_m=26.0,
+        spacing_m=0.9,
+        height_m=12.0,
+        termination_resistance_ohm=800.0,
+        transformer_ratio=16.0,
+    )
+
+    spec = window._t2fd_simulation_spec(parameters)
+    model = parameters.to_antenna()
+    driven_count = spec.segmentation.segments_for(
+        model.wire_by_id(T2FD_DRIVEN_WIRE_ID),
+        spec.frequency_plan.stop_hz,
+    )
+    terminated_count = spec.segmentation.segments_for(
+        model.wire_by_id(T2FD_TERMINATED_WIRE_ID),
+        spec.frequency_plan.stop_hz,
+    )
+
+    assert spec.frequency_plan.count == 31
+    assert spec.frequency_plan.start_hz == pytest.approx(3_500_000.0)
+    assert spec.frequency_plan.stop_hz == pytest.approx(30_000_000.0)
+    assert spec.feed_transformer_ratio == pytest.approx(16.0)
+    assert driven_count == terminated_count
+    assert driven_count % 2 == 1
+    segment_length = parameters.length_m / driven_count
+    assert parameters.termination_offset_m == pytest.approx(
+        (driven_count // 2 + 0.5) * segment_length
+    )
+
+
 def test_new_sloper_uses_the_endfed_preset(
     window: MainWindow,
     qtbot: QtBot,
@@ -1419,19 +1547,94 @@ def test_new_g5rv_creates_the_custom_preset_with_a_line(
     count = spec.segmentation.segments_for(dipole, spec.frequency_plan.stop_hz)
     assert count % 2 == 1
     assert spec.frequency_plan.count == 41
-    assert spec.far_field.theta_count == 10
-    assert spec.far_field.phi_count == 37
-    assert "10°" in window._custom_pattern_status.text()
+    fitted = window._fit_spec_to_budget(design.antenna, spec)
+    assert len(fitted.pattern_frequencies_hz) == 9
+    assert any(abs(frequency - 14_100_000.0) < 1.0 for frequency in fitted.pattern_frequencies_hz)
+    assert fitted.far_field.theta_count == 91
+    assert fitted.far_field.phi_count == 361
+    assert "1°" in window._custom_pattern_status.text()
+    assert "9 pattern frequencies" in window._custom_pattern_status.text()
+    assert "Using 1°" in window._custom_pattern_status.text()
     assert "MB" in window._custom_pattern_status.text()
 
     window._custom_pattern_resolution.setCurrentIndex(
         window._custom_pattern_resolution.findData(5.0)
     )
     assert window._custom_run_pattern_step_deg == 5.0
-    reduced = window._custom_simulation_spec(design.parameters)
-    assert reduced.far_field.theta_count == 10
-    assert "requested 5" in window._custom_pattern_status.text()
+    requested = window._custom_simulation_spec(design.parameters)
+    exact = window._fit_spec_to_budget(design.antenna, requested)
+    assert exact.far_field.theta_count == 19
+    assert "Using 5°" in window._custom_pattern_status.text()
+    assert "9 pattern frequencies" in window._custom_pattern_status.text()
+
+    window._custom_pattern_frequency_mode.setCurrentIndex(
+        window._custom_pattern_frequency_mode.findData(5)
+    )
+    assert window._custom_pattern_frequency_count == 5
+    five = window._custom_simulation_spec(design.parameters)
+    fitted_five = window._fit_spec_to_budget(design.antenna, five)
+    assert len(fitted_five.pattern_frequencies_hz) == 5
+    assert fitted_five.far_field.theta_count == 19
+    assert "5 pattern frequencies" in window._custom_pattern_status.text()
     window._dirty = False
+
+
+def test_dense_sweep_keeps_all_points_and_uses_band_snapshots(
+    window: MainWindow,
+) -> None:
+    from antennadesk.domain.antennas.g5rv import g5rv_parameters
+    from antennadesk.domain.environment.ground import GroundModel
+    from antennadesk.domain.simulation.frequency import FrequencyPlan
+    from antennadesk.domain.simulation.segmentation import SegmentationPolicy
+    from antennadesk.ui.pattern_resolution import far_field_request
+
+    ground = GroundModel.finite(
+        relative_permittivity=13.0,
+        conductivity_s_per_m=0.005,
+    )
+    parameters = g5rv_parameters(frequency_hz=14_100_000.0, ground=ground)
+    model = parameters.to_antenna()
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.sweep(3_500_000.0, 30_000_000.0, 200),
+        segmentation=SegmentationPolicy(min_segments_per_wire=3),
+        far_field=far_field_request(5.0, ground),
+    )
+
+    fitted = window._fit_spec_to_budget(model, spec)
+
+    assert fitted.frequency_plan.count == 200
+    assert len(fitted.pattern_frequencies_hz) == 9
+    assert fitted.far_field.theta_count == 91
+    assert fitted.far_field.phi_count == 361
+    assert "1°" in window._custom_pattern_status.text()
+    assert "9 pattern frequencies" in window._custom_pattern_status.text()
+
+
+def test_pattern_settings_apply_to_generated_designs(
+    window: MainWindow,
+) -> None:
+    from antennadesk.domain.simulation.frequency import FrequencyPlan
+    from antennadesk.domain.simulation.segmentation import SegmentationPolicy
+    from antennadesk.ui.pattern_resolution import far_field_request
+
+    assert window._project is not None
+    assert window._pattern_group.isHidden() is False
+    model = window._project.designs[0].antenna
+    window._custom_pattern_frequency_mode.setCurrentIndex(
+        window._custom_pattern_frequency_mode.findData(13)
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.sweep(6_700_000.0, 7_500_000.0, 31),
+        segmentation=SegmentationPolicy(min_segments_per_wire=3),
+        far_field=far_field_request(5.0, model.environment.ground),
+    )
+
+    fitted = window._fit_spec_to_budget(model, spec)
+
+    assert len(fitted.pattern_frequencies_hz) == 13
+    assert fitted.far_field.theta_count == 46
+    assert fitted.far_field.phi_count == 181
+    assert "13 pattern frequencies" in window._custom_pattern_status.text()
 
 
 def test_new_doublet_sets_the_project_feed_line(
@@ -2375,11 +2578,12 @@ def test_fit_spec_to_budget_uses_the_finest_pattern_that_fits(window: MainWindow
 
     fitted = window._fit_spec_to_budget(model, wide)
 
-    assert fitted.far_field.theta_count == 10
-    assert fitted.far_field.phi_count == 37
-    assert window._pending_pattern_diagnostic is not None
-    assert window._pending_pattern_diagnostic.code == "solver.pattern_resolution_reduced"
+    assert len(fitted.pattern_frequencies_hz) == 5
+    assert fitted.far_field.theta_count == 91
+    assert fitted.far_field.phi_count == 361
+    assert window._pending_pattern_diagnostic is None
 
+    window._custom_run_pattern_step_deg = 2.0
     single = SimulationSpec(
         frequency_plan=FrequencyPlan.single(7_100_000.0),
         segmentation=SegmentationPolicy(min_segments_per_wire=3),

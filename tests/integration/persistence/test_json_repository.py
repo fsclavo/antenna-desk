@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import gzip
 import json
 import math
 from dataclasses import replace
@@ -33,7 +34,10 @@ def _write_json(path: Path, document: dict[str, Any]) -> None:
 
 
 def _load_json(path: Path) -> dict[str, Any]:
-    value = json.loads(path.read_text(encoding="utf-8"))
+    data = path.read_bytes()
+    if data.startswith(b"\x1f\x8b"):
+        data = gzip.decompress(data)
+    value = json.loads(data.decode("utf-8"))
     assert isinstance(value, dict)
     return value
 
@@ -79,7 +83,7 @@ def test_atomic_save_keeps_original_on_failure(
 ) -> None:
     path = tmp_path / "dipole.antennadesk"
     repository.save(sample_project, path)
-    original_text = path.read_text(encoding="utf-8")
+    original_bytes = path.read_bytes()
 
     design = sample_project.designs[0]
     modified = sample_project.with_design(
@@ -95,8 +99,35 @@ def test_atomic_save_keeps_original_on_failure(
     with pytest.raises(ProjectFormatError, match="could not save"):
         repository.save(modified, path)
 
-    assert path.read_text(encoding="utf-8") == original_text
+    assert path.read_bytes() == original_bytes
     assert list(tmp_path.glob(".*.tmp")) == []
+
+
+def test_saved_file_is_losslessly_compressed(
+    repository: JsonProjectRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "compressed.antennadesk"
+
+    repository.save(sample_project, path)
+
+    assert path.read_bytes().startswith(b"\x1f\x8b")
+    assert repository.serialized_size(sample_project) == path.stat().st_size
+    assert repository.load(path) == sample_project
+
+
+def test_plain_json_project_still_loads(
+    repository: JsonProjectRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "legacy.antennadesk"
+    repository.save(sample_project, path)
+    document = _load_json(path)
+    _write_json(path, document)
+
+    assert repository.load(path) == sample_project
 
 
 def test_unknown_format_is_rejected(
@@ -335,6 +366,7 @@ def _rich_result() -> SimulationResult:
             wire_segments=(("radiator", 21),),
         ),
         far_field=FarFieldRequest(),
+        pattern_frequencies_hz=(6_900_000.0,),
         feed_line=FeedLine(
             characteristic_impedance_ohm=75.0,
             length_m=30.0,
@@ -460,6 +492,7 @@ def test_round_trip_with_a_simulation_run(
         matched_loss_db_per_100m=1.5,
     )
     assert run.result.spec.feed_transformer_ratio == 4.0
+    assert run.result.spec.pattern_frequencies_hz == (6_900_000.0,)
 
 
 def test_serialized_size_matches_written_file(

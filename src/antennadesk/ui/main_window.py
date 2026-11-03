@@ -94,6 +94,11 @@ from ..domain.antennas.matching_network import MatchingNetwork
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
+from ..domain.antennas.t2fd import (
+    T2FD_DRIVEN_WIRE_ID,
+    T2FD_TERMINATED_WIRE_ID,
+    T2FDParameters,
+)
 from ..domain.antennas.transmission_line import TransmissionLine
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
@@ -101,9 +106,10 @@ from ..domain.antennas.yagi import YagiParameters, yagi_element_length_mismatch
 from ..domain.common.time import utc_now
 from ..domain.common.validation import Diagnostic, Severity
 from ..domain.design.yagi_reference import MAX_YAGI_ELEMENTS, MIN_YAGI_ELEMENTS
-from ..domain.environment.ground import GroundKind, GroundModel
+from ..domain.environment.ground import GroundModel
 from ..domain.measurement import Measurement
 from ..domain.projects.project import DesignProvenance, DesignVariant, Project
+from ..domain.simulation.bands import band_snapshot_frequencies
 from ..domain.simulation.budget import choose_pattern_step
 from ..domain.simulation.far_field import FarFieldRequest
 from ..domain.simulation.frequency import FrequencyPlan
@@ -139,6 +145,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_RINGO,
     CATALOG_TYPE_SLIM_JIM,
     CATALOG_TYPE_SLOPER,
+    CATALOG_TYPE_T2FD,
     CATALOG_TYPE_TRAP_DIPOLE,
     CATALOG_TYPE_VERTICAL,
     CATALOG_TYPE_WIRE_DIPOLE,
@@ -168,6 +175,7 @@ from .dialogs.ocfd_dialog import OCFDDialog
 from .dialogs.optimization_dialog import OptimizationDialog
 from .dialogs.ringo_dialog import RingoDialog
 from .dialogs.synthesis_dialog import SynthesisDialog
+from .dialogs.t2fd_dialog import T2FDDialog
 from .dialogs.transmission_lines_dialog import TransmissionLinesDialog
 from .dialogs.trap_dipole_dialog import TrapDipoleDialog
 from .dialogs.vertical_dialog import VerticalDialog
@@ -175,6 +183,7 @@ from .dialogs.yagi_dialog import YagiDialog
 from .history import ProjectSnapshot, SnapshotCommand, history_action
 from .i18n import Language, Translator
 from .pattern_resolution import (
+    DEFAULT_PATTERN_SNAPSHOT_COUNT,
     DEFAULT_PATTERN_STEP_DEG,
     PATTERN_STEPS_DEG,
     far_field_request,
@@ -192,6 +201,7 @@ from .widgets.moxon_form import MoxonForm
 from .widgets.ocfd_form import OCFDForm
 from .widgets.results_view import ResultsView
 from .widgets.ringo_form import RingoForm
+from .widgets.t2fd_form import T2FDForm
 from .widgets.trap_dipole_form import TrapDipoleForm
 from .widgets.vertical_form import VerticalForm
 from .widgets.yagi_form import YagiForm
@@ -234,7 +244,8 @@ class MainWindow(QMainWindow):
         self._feed_line: FeedLine | None = None
         self._matching_network: MatchingNetwork | None = None
         self._custom_pattern_step_deg = DEFAULT_PATTERN_STEP_DEG
-        self._custom_run_pattern_step_deg: float | None = DEFAULT_PATTERN_STEP_DEG
+        self._custom_run_pattern_step_deg: float | None = None
+        self._custom_pattern_frequency_count: int | None = None
         self._custom_last_budget = None
         self._pending_pattern_diagnostic: Diagnostic | None = None
         self._last_status_key = "status.ready"
@@ -458,6 +469,14 @@ class MainWindow(QMainWindow):
         self._trap_dipole_scroll.setMinimumWidth(340)
         self._trap_dipole_scroll.setMaximumWidth(500)
 
+        self._t2fd_form = T2FDForm(self._translator, self._unit_system, parent=self)
+        self._t2fd_form.changed.connect(self._on_form_changed)
+        self._t2fd_scroll = QScrollArea(self)
+        self._t2fd_scroll.setWidgetResizable(True)
+        self._t2fd_scroll.setWidget(self._t2fd_form)
+        self._t2fd_scroll.setMinimumWidth(340)
+        self._t2fd_scroll.setMaximumWidth(500)
+
         self._endfed_form = EndFedForm(self._translator, self._unit_system, parent=self)
         self._endfed_form.changed.connect(self._on_form_changed)
         self._endfed_scroll = QScrollArea(self)
@@ -481,6 +500,53 @@ class MainWindow(QMainWindow):
         self._ringo_scroll.setWidget(self._ringo_form)
         self._ringo_scroll.setMinimumWidth(340)
         self._ringo_scroll.setMaximumWidth(480)
+
+        self._pattern_group = QGroupBox(self)
+        self._pattern_group.setTitle(self._translator.t("pattern.settings_title"))
+        self._custom_pattern_label = QLabel(
+            self._translator.t("custom.pattern_resolution"),
+            self._pattern_group,
+        )
+        self._custom_pattern_resolution = QComboBox(self._pattern_group)
+        self._custom_pattern_resolution.addItem(self._translator.t("custom.pattern_auto"), None)
+        for step in PATTERN_STEPS_DEG:
+            self._custom_pattern_resolution.addItem(f"{step:g}°", step)
+        self._custom_pattern_resolution.setCurrentIndex(
+            self._custom_pattern_resolution.findData(self._custom_run_pattern_step_deg)
+        )
+        self._custom_pattern_resolution.currentIndexChanged.connect(self._custom_pattern_changed)
+        self._custom_pattern_frequency_label = QLabel(
+            self._translator.t("custom.pattern_frequencies"),
+            self._pattern_group,
+        )
+        self._custom_pattern_frequency_mode = QComboBox(self._pattern_group)
+        self._custom_pattern_frequency_mode.addItem(
+            self._translator.t("custom.pattern_frequencies_auto"),
+            None,
+        )
+        for count in (5, 9, 13, 17, 21):
+            self._custom_pattern_frequency_mode.addItem(
+                self._translator.t("custom.pattern_frequencies_option", count=count),
+                count,
+            )
+        self._custom_pattern_frequency_mode.setCurrentIndex(
+            self._custom_pattern_frequency_mode.findData(self._custom_pattern_frequency_count)
+        )
+        self._custom_pattern_frequency_mode.currentIndexChanged.connect(
+            self._custom_pattern_frequency_changed
+        )
+        self._custom_pattern_status = QLabel(self._pattern_group)
+        self._custom_pattern_status.setWordWrap(True)
+        pattern_layout = QFormLayout(self._pattern_group)
+        pattern_layout.addRow(
+            self._custom_pattern_label,
+            self._custom_pattern_resolution,
+        )
+        pattern_layout.addRow(
+            self._custom_pattern_frequency_label,
+            self._custom_pattern_frequency_mode,
+        )
+        pattern_layout.addRow(self._custom_pattern_status)
 
         self._custom_panel = QWidget(self)
         custom_layout = QVBoxLayout(self._custom_panel)
@@ -511,20 +577,6 @@ class MainWindow(QMainWindow):
         self._custom_sweep_points.setRange(2, 10_000)
         self._custom_sweep_points.setValue(100)
         self._custom_sweep_center_hz: float | None = None
-        self._custom_pattern_label = QLabel(
-            self._translator.t("custom.pattern_resolution"),
-            self._custom_sweep_group,
-        )
-        self._custom_pattern_resolution = QComboBox(self._custom_sweep_group)
-        self._custom_pattern_resolution.addItem(self._translator.t("custom.pattern_auto"), None)
-        for step in PATTERN_STEPS_DEG:
-            self._custom_pattern_resolution.addItem(f"{step:g}°", step)
-        self._custom_pattern_resolution.setCurrentIndex(
-            self._custom_pattern_resolution.findData(self._custom_run_pattern_step_deg)
-        )
-        self._custom_pattern_resolution.currentIndexChanged.connect(self._custom_pattern_changed)
-        self._custom_pattern_status = QLabel(self._custom_sweep_group)
-        self._custom_pattern_status.setWordWrap(True)
         custom_sweep_layout = QFormLayout(self._custom_sweep_group)
         custom_sweep_layout.addRow(self._custom_sweep)
         custom_sweep_layout.addRow(
@@ -534,11 +586,6 @@ class MainWindow(QMainWindow):
         custom_sweep_layout.addRow(
             self._translator.t("field.sweep_points"), self._custom_sweep_points
         )
-        custom_sweep_layout.addRow(
-            self._custom_pattern_label,
-            self._custom_pattern_resolution,
-        )
-        custom_sweep_layout.addRow(self._custom_pattern_status)
         custom_layout.addWidget(self._custom_title)
         custom_layout.addWidget(self._custom_family)
         custom_layout.addWidget(self._custom_generator)
@@ -556,6 +603,7 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._moxon_scroll)
         self._design_stack.addWidget(self._fan_dipole_scroll)
         self._design_stack.addWidget(self._trap_dipole_scroll)
+        self._design_stack.addWidget(self._t2fd_scroll)
         self._design_stack.addWidget(self._endfed_scroll)
         self._design_stack.addWidget(self._j_pole_scroll)
         self._design_stack.addWidget(self._ringo_scroll)
@@ -576,6 +624,7 @@ class MainWindow(QMainWindow):
         design_layout.addLayout(design_actions)
         design_layout.addWidget(self._provenance_label)
         design_layout.addWidget(self._design_stack, 1)
+        design_layout.addWidget(self._pattern_group)
 
         self._geometry = GeometryView(self._translator, self._unit_system)
         self._geometry.setMinimumHeight(300)
@@ -768,11 +817,24 @@ class MainWindow(QMainWindow):
         self._custom_generator_edit.setText(self._translator.t("action.edit_generator"))
         self._custom_sweep_group.setTitle(self._translator.t("field.sweep"))
         self._custom_sweep.setText(self._translator.t("field.sweep_enabled"))
+        self._pattern_group.setTitle(self._translator.t("pattern.settings_title"))
         self._custom_pattern_label.setText(self._translator.t("custom.pattern_resolution"))
         self._custom_pattern_resolution.setItemText(
             0,
             self._translator.t("custom.pattern_auto"),
         )
+        self._custom_pattern_frequency_label.setText(
+            self._translator.t("custom.pattern_frequencies")
+        )
+        self._custom_pattern_frequency_mode.setItemText(
+            0,
+            self._translator.t("custom.pattern_frequencies_auto"),
+        )
+        for index, count in enumerate((5, 9, 13), start=1):
+            self._custom_pattern_frequency_mode.setItemText(
+                index,
+                self._translator.t("custom.pattern_frequencies_option", count=count),
+            )
         self._update_custom_pattern_status()
         self._export_csv_action.setText(self._translator.t("action.export_csv"))
         self._export_pattern_csv_action.setText(self._translator.t("action.export_pattern_csv"))
@@ -1193,6 +1255,9 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, TrapDipoleParameters):
             self._design_stack.setCurrentWidget(self._trap_dipole_scroll)
             self._trap_dipole_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, T2FDParameters):
+            self._design_stack.setCurrentWidget(self._t2fd_scroll)
+            self._t2fd_form.set_parameters(design.parameters)
         elif isinstance(design.parameters, EndFedParameters):
             self._design_stack.setCurrentWidget(self._endfed_scroll)
             self._endfed_form.set_parameters(design.parameters)
@@ -1223,6 +1288,7 @@ class MainWindow(QMainWindow):
         self._update_status_text()
         self._update_actions()
         self._update_height_control()
+        self._update_custom_pattern_status()
 
     @history_action("history.apply_design")
     def _on_variant_changed(self, *_args: object) -> None:
@@ -1545,6 +1611,37 @@ class MainWindow(QMainWindow):
             self._update_actions()
             self._update_height_control()
             return self._project
+        if isinstance(previous_design.parameters, T2FDParameters):
+            parameters = self._t2fd_form.parameters()
+            updated = UpdateDipoleDesign().execute(
+                UpdateDipoleDesignCommand(
+                    project=self._project,
+                    design_id=self._design_id,
+                    parameters=parameters,
+                    loads=loads_override,
+                    transmission_lines=transmission_lines_override,
+                )
+            )
+            updated = replace(updated, name=project_name)
+            self._project = updated
+            design = updated.design_by_id(self._design_id)
+            if parameters != previous_design.parameters or attachments_changed:
+                self._simulation_results.pop(self._design_id, None)
+                self._results.set_result(None)
+            self._loads = design.antenna.loads
+            self._transmission_lines = design.antenna.transmission_lines
+            self._results.set_design(design)
+            self._set_geometry_model(design)
+            self._auto_select_view(design)
+            self._project_name_updating = True
+            self._project_name.setText(project_name)
+            self._project_name_updating = False
+            self._form_dirty = False
+            self._dirty = True
+            self._update_title()
+            self._update_actions()
+            self._update_height_control()
+            return self._project
         if isinstance(previous_design.parameters, EndFedParameters):
             parameters = self._endfed_form.parameters()
             updated = UpdateDipoleDesign().execute(
@@ -1782,6 +1879,8 @@ class MainWindow(QMainWindow):
                 spec = self._fan_dipole_simulation_spec(design.parameters)
             elif isinstance(design.parameters, TrapDipoleParameters):
                 spec = self._trap_dipole_simulation_spec(design.parameters)
+            elif isinstance(design.parameters, T2FDParameters):
+                spec = self._t2fd_simulation_spec(design.parameters)
             elif isinstance(design.parameters, EndFedParameters):
                 spec = self._endfed_simulation_spec(design.parameters)
             elif isinstance(design.parameters, JPoleParameters):
@@ -1893,46 +1992,62 @@ class MainWindow(QMainWindow):
         self._cancel_action.setEnabled(False)
 
     def _fit_spec_to_budget(self, model: object, spec: SimulationSpec) -> SimulationSpec:
-        """Coarsen the far-field pattern to the finest step that fits storage."""
+        """Choose pattern snapshots and the finest pattern step that fits storage."""
 
         from ..domain.antennas.antenna import AntennaModel
 
         if not isinstance(model, AntennaModel) or not spec.far_field.enabled:
             self._pending_pattern_diagnostic = None
-            return spec
+            return replace(spec, pattern_frequencies_hz=())
         ground = model.environment.ground
-        theta_stop = 180.0 if ground.kind is GroundKind.FREE_SPACE else 90.0
-        theta_step = theta_stop / max(spec.far_field.theta_count - 1, 1)
-        phi_step = 360.0 / max(spec.far_field.phi_count - 1, 1)
-        requested_step = max(theta_step, phi_step)
+        requested_step = self._custom_run_pattern_step_deg
+        pattern_frequencies = spec.pattern_frequencies_hz
+        if not pattern_frequencies:
+            if self._custom_pattern_frequency_count is None:
+                pattern_frequencies = band_snapshot_frequencies(
+                    spec.frequency_plan,
+                    preferred_frequency_hz=model.design_frequency_hz,
+                )
+            else:
+                pattern_frequencies = spec.frequency_plan.snapshot_frequencies(
+                    self._custom_pattern_frequency_count,
+                    preferred_frequency_hz=model.design_frequency_hz,
+                )
+        pattern_count = (
+            len(pattern_frequencies) if pattern_frequencies else spec.frequency_plan.count
+        )
         segment_count = sum(
             spec.segmentation.segments_for(wire, spec.frequency_plan.stop_hz)
             for wire in model.wires
         )
         budget = choose_pattern_step(
             frequency_count=spec.frequency_plan.count,
+            pattern_frequency_count=pattern_count,
             segment_count=segment_count,
             candidate_steps=tuple(reversed(PATTERN_STEPS_DEG)),
             counts_for_step=lambda step: pattern_counts(step, ground),
             requested_step_deg=requested_step,
         )
-        if budget.far_field_enabled and budget.pattern_step_deg == requested_step:
-            self._pending_pattern_diagnostic = None
-            return spec
+        self._custom_last_budget = budget
+        self._show_custom_pattern_budget(budget)
         if budget.far_field_enabled:
-            self._pending_pattern_diagnostic = Diagnostic(
-                code="solver.pattern_resolution_reduced",
-                severity=Severity.INFO,
-                message=(
-                    "far-field pattern resolution reduced from "
-                    f"{requested_step:g}° to {budget.pattern_step_deg:g}° "
-                    "to fit the project storage limit"
-                ),
-                field="far_field",
-            )
+            if requested_step is None or budget.pattern_step_deg == requested_step:
+                self._pending_pattern_diagnostic = None
+            else:
+                self._pending_pattern_diagnostic = Diagnostic(
+                    code="solver.pattern_resolution_reduced",
+                    severity=Severity.INFO,
+                    message=(
+                        "far-field pattern resolution reduced from "
+                        f"{requested_step:g}° to {budget.pattern_step_deg:g}° "
+                        "to fit the project storage limit"
+                    ),
+                    field="far_field",
+                )
             return replace(
                 spec,
                 far_field=far_field_request(budget.pattern_step_deg, ground),
+                pattern_frequencies_hz=pattern_frequencies,
             )
         self._pending_pattern_diagnostic = Diagnostic(
             code="solver.pattern_disabled",
@@ -1942,7 +2057,11 @@ class MainWindow(QMainWindow):
             ),
             field="far_field",
         )
-        return replace(spec, far_field=FarFieldRequest(enabled=False))
+        return replace(
+            spec,
+            far_field=FarFieldRequest(enabled=False),
+            pattern_frequencies_hz=(),
+        )
 
     def _update_custom_sweep_controls(self) -> None:
         enabled = self._custom_sweep.isChecked()
@@ -1958,25 +2077,80 @@ class MainWindow(QMainWindow):
         )
         self._update_custom_pattern_status()
 
+    def _custom_pattern_frequency_changed(self, _index: int) -> None:
+        value = self._custom_pattern_frequency_mode.currentData()
+        self._custom_pattern_frequency_count = int(value) if isinstance(value, int) else None
+        self._update_custom_pattern_status()
+
+    def _custom_pattern_frequencies(
+        self,
+        frequency_plan: FrequencyPlan,
+        preferred_frequency_hz: float,
+    ) -> tuple[float, ...]:
+        if self._custom_pattern_frequency_count is None:
+            return band_snapshot_frequencies(
+                frequency_plan,
+                preferred_frequency_hz=preferred_frequency_hz,
+            )
+        return frequency_plan.snapshot_frequencies(
+            self._custom_pattern_frequency_count,
+            preferred_frequency_hz=preferred_frequency_hz,
+        )
+
     def _update_custom_pattern_status(self) -> None:
         if self._project is None or self._design_id is None:
             self._custom_pattern_status.setText("")
             return
         design = self._project.design_by_id(self._design_id)
-        if not isinstance(design.parameters, CustomAntennaParameters):
-            self._custom_pattern_status.setText("")
-            return
-        count = self._custom_sweep_points.value() if self._custom_sweep.isChecked() else 1
         requested = (
             self._translator.t("custom.pattern_auto")
             if self._custom_run_pattern_step_deg is None
             else f"{self._custom_run_pattern_step_deg:g}°"
         )
+        if not isinstance(design.parameters, CustomAntennaParameters):
+            mode = (
+                self._translator.t("custom.pattern_frequencies_auto")
+                if self._custom_pattern_frequency_count is None
+                else self._translator.t(
+                    "custom.pattern_frequencies_option",
+                    count=self._custom_pattern_frequency_count,
+                )
+            )
+            self._custom_pattern_status.setText(
+                self._translator.t(
+                    "pattern.requested_generic",
+                    value=requested,
+                    mode=mode,
+                )
+            )
+            return
+        sweep_count = self._custom_sweep_points.value() if self._custom_sweep.isChecked() else 1
+        pattern_count = 1
+        if (
+            self._custom_sweep.isChecked()
+            and self._custom_sweep_start.value() < self._custom_sweep_stop.value()
+            and sweep_count >= 2
+        ):
+            try:
+                plan = FrequencyPlan.sweep(
+                    self._custom_sweep_start.value() * 1_000_000.0,
+                    self._custom_sweep_stop.value() * 1_000_000.0,
+                    sweep_count,
+                )
+                pattern_count = len(
+                    self._custom_pattern_frequencies(
+                        plan,
+                        design.parameters.frequency_hz,
+                    )
+                )
+            except ValueError:
+                pattern_count = min(DEFAULT_PATTERN_SNAPSHOT_COUNT, sweep_count)
         self._custom_pattern_status.setText(
             self._translator.t(
                 "custom.pattern_requested",
                 value=requested,
-                count=count,
+                count=pattern_count,
+                sweep=sweep_count,
             )
         )
 
@@ -1993,19 +2167,21 @@ class MainWindow(QMainWindow):
         if budget.reduced:
             requested = (
                 self._translator.t("custom.pattern_auto")
-                if budget.requested_step_deg is None
+                if self._custom_run_pattern_step_deg is None
                 else f"{budget.requested_step_deg:g}°"
             )
             text = self._translator.t(
                 "custom.pattern_reduced",
                 value=value,
                 requested=requested,
+                patterns=budget.pattern_frequency_count,
                 size=size,
             )
         else:
             text = self._translator.t(
                 "custom.pattern_effective",
                 value=value,
+                patterns=budget.pattern_frequency_count,
                 size=size,
             )
         self._custom_pattern_status.setText(text)
@@ -2136,6 +2312,47 @@ class MainWindow(QMainWindow):
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
         )
 
+    def _t2fd_simulation_spec(self, parameters: T2FDParameters) -> SimulationSpec:
+        model = parameters.to_antenna(name="T2FD")
+        stop_hz = parameters.highest_frequency_hz
+        base = aligned_policy_for_model(
+            model,
+            stop_hz,
+            SegmentationPolicy(min_segments_per_wire=3),
+        )
+        driven_count = base.segments_for(
+            model.wire_by_id(T2FD_DRIVEN_WIRE_ID),
+            stop_hz,
+        )
+        if driven_count % 2 == 0:
+            driven_count += 1
+        wire_segments = tuple(
+            (
+                wire.id,
+                driven_count
+                if wire.id in {T2FD_DRIVEN_WIRE_ID, T2FD_TERMINATED_WIRE_ID}
+                else base.segments_for(wire, stop_hz),
+            )
+            for wire in model.wires
+        )
+        segmentation = SegmentationPolicy(
+            min_segments_per_wire=3,
+            wire_segments=wire_segments,
+        )
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                parameters.frequency_hz,
+                parameters.highest_frequency_hz,
+                DEFAULT_GENERATED_SWEEP_POINTS,
+            ),
+            segmentation=segmentation,
+            far_field=far_field_request(
+                self._custom_pattern_step_deg,
+                parameters.ground,
+            ),
+            feed_transformer_ratio=parameters.transformer_ratio,
+        )
+
     def _endfed_simulation_spec(self, parameters: EndFedParameters) -> SimulationSpec:
         model = parameters.to_antenna(name="End-fed")
         frequency_hz = parameters.frequency_hz
@@ -2216,27 +2433,10 @@ class MainWindow(QMainWindow):
             frequency_plan.stop_hz,
             segmentation,
         )
-        segment_count = sum(
-            segmentation.segments_for(wire, frequency_plan.stop_hz) for wire in model.wires
-        )
-        budget = choose_pattern_step(
-            frequency_count=frequency_plan.count,
-            segment_count=segment_count,
-            candidate_steps=tuple(reversed(PATTERN_STEPS_DEG)),
-            counts_for_step=lambda step: pattern_counts(step, parameters.ground),
-            requested_step_deg=self._custom_run_pattern_step_deg,
-        )
-        self._custom_last_budget = budget
-        self._show_custom_pattern_budget(budget)
-        far_field = (
-            far_field_request(budget.pattern_step_deg, parameters.ground)
-            if budget.pattern_step_deg is not None
-            else FarFieldRequest(enabled=False)
-        )
         return SimulationSpec(
             frequency_plan=frequency_plan,
             segmentation=segmentation,
-            far_field=far_field,
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
         )
 
     def new_custom_antenna(self) -> None:
@@ -2259,8 +2459,6 @@ class MainWindow(QMainWindow):
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         self._custom_pattern_step_deg = dialog.pattern_step_deg()
-        self._custom_run_pattern_step_deg = self._custom_pattern_step_deg
-        self._custom_run_pattern_step_deg = self._custom_pattern_step_deg
         try:
             project = CreateDipoleProject().execute(
                 CreateDipoleProjectCommand(
@@ -2447,7 +2645,6 @@ class MainWindow(QMainWindow):
         dialog = G5RVDialog(self._translator, self._unit_system, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        self._custom_run_pattern_step_deg = None
         try:
             project = CreateDipoleProject().execute(
                 CreateDipoleProjectCommand(
@@ -2537,6 +2734,33 @@ class MainWindow(QMainWindow):
             project = CreateDipoleProject().execute(
                 CreateDipoleProjectCommand(
                     project_name=name.strip() or "Trap dipole",
+                    variant_name="Initial",
+                    parameters=dialog.result_parameters(),
+                )
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+
+    def new_t2fd_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        name, accepted = QInputDialog.getText(
+            self,
+            self._translator.t("t2fd.title"),
+            self._translator.t("field.project_name"),
+            text="T2FD",
+        )
+        if not accepted:
+            return
+        dialog = T2FDDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            project = CreateDipoleProject().execute(
+                CreateDipoleProjectCommand(
+                    project_name=name.strip() or "T2FD",
                     variant_name="Initial",
                     parameters=dialog.result_parameters(),
                 )
@@ -3108,6 +3332,16 @@ class MainWindow(QMainWindow):
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
             return dialog.result_parameters()
+        if selected == CATALOG_TYPE_T2FD:
+            dialog = T2FDDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
         if selected == CATALOG_TYPE_INVERTED_V:
             dialog = InvertedVDialog(
                 self._translator,
@@ -3200,11 +3434,6 @@ class MainWindow(QMainWindow):
             return
         try:
             updated_design = design.with_parameters(parameters)
-            if (
-                isinstance(parameters, CustomAntennaParameters)
-                and parameters.generator_id == "g5rv"
-            ):
-                self._custom_run_pattern_step_deg = None
             timestamp = utc_now()
             self._project = self._project.with_design(updated_design, updated_at=timestamp)
             if feed_line is not None:
@@ -3241,6 +3470,8 @@ class MainWindow(QMainWindow):
             self.new_fan_dipole_antenna()
         elif selected == CATALOG_TYPE_TRAP_DIPOLE:
             self.new_trap_dipole_antenna()
+        elif selected == CATALOG_TYPE_T2FD:
+            self.new_t2fd_antenna()
         elif selected == CATALOG_TYPE_ENDFED:
             self.new_endfed_antenna()
         elif selected == CATALOG_TYPE_SLOPER:
@@ -3386,6 +3617,7 @@ class MainWindow(QMainWindow):
                     self._translator.t(
                         "dialog.project_too_large",
                         size=size / (1024 * 1024),
+                        limit=MAX_PROJECT_SIZE_BYTES / (1024 * 1024),
                     )
                 )
                 return False
@@ -3664,6 +3896,8 @@ class MainWindow(QMainWindow):
             base_spec = self._endfed_simulation_spec(design.parameters)
         elif isinstance(design.parameters, TrapDipoleParameters):
             base_spec = self._trap_dipole_simulation_spec(design.parameters)
+        elif isinstance(design.parameters, T2FDParameters):
+            base_spec = self._t2fd_simulation_spec(design.parameters)
         else:
             base_spec = self._form.simulation_spec()
         base_spec = replace(
@@ -3692,6 +3926,8 @@ class MainWindow(QMainWindow):
                 self._endfed_form.set_parameters(parameters)
             elif isinstance(parameters, TrapDipoleParameters):
                 self._trap_dipole_form.set_parameters(parameters)
+            elif isinstance(parameters, T2FDParameters):
+                self._t2fd_form.set_parameters(parameters)
             else:
                 self._form.set_parameters(parameters, reset_sweep=False)
             self._apply_fields()
@@ -4722,7 +4958,10 @@ class MainWindow(QMainWindow):
             design = self._project.design_by_id(self._design_id)
             multi_wire = len(design.antenna.wires) > 1
             parameters = design.parameters
-            if isinstance(parameters, (DipoleParameters, TrapDipoleParameters)):
+            if isinstance(
+                parameters,
+                (DipoleParameters, TrapDipoleParameters, T2FDParameters),
+            ):
                 vertical = parameters.orientation is DipoleOrientation.VERTICAL
         self._height_combo.setEnabled(
             mode == GeometryViewMode.ELEVATION.value and not vertical and not multi_wire

@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import gzip
 import json
 import os
 import tempfile
@@ -18,31 +19,51 @@ from .errors import ProjectFormatError, ProjectTooLargeError
 from .migrations import migrate_document
 from .schema import ProjectDocument, document_from_project, project_from_document
 
+GZIP_MAGIC = b"\x1f\x8b"
+COMPRESSION_LEVEL = 6
+
 
 class JsonProjectRepository:
-    """Read and write versioned ``.antennadesk`` project files."""
+    """Read and write versioned, losslessly compressed ``.antennadesk`` files.
+
+    New files are gzip-compressed UTF-8 JSON. Plain JSON files written by older
+    versions are still accepted on load.
+    """
 
     @staticmethod
     def _serialize(project: Project) -> str:
         document = document_from_project(project)
         text = json.dumps(
             document.model_dump(mode="json"),
-            indent=2,
             ensure_ascii=False,
+            separators=(",", ":"),
         )
         return text + "\n"
 
+    @staticmethod
+    def _compress(data: bytes) -> bytes:
+        return gzip.compress(data, compresslevel=COMPRESSION_LEVEL, mtime=0)
+
+    @staticmethod
+    def _decompress(data: bytes) -> bytes:
+        if data.startswith(GZIP_MAGIC):
+            return gzip.decompress(data)
+        return data
+
     def serialized_size(self, project: Project) -> int:
-        return len(self._serialize(project).encode("utf-8"))
+        """Return the compressed on-disk size of the project."""
+
+        return len(self._compress(self._serialize(project).encode("utf-8")))
 
     def save(self, project: Project, path: Path) -> None:
-        text = self._serialize(project)
-        size = len(text.encode("utf-8"))
+        payload = self._compress(self._serialize(project).encode("utf-8"))
+        size = len(payload)
         if size > MAX_PROJECT_SIZE_BYTES:
             raise ProjectTooLargeError(
-                f"project is too large ({size} bytes; limit is {MAX_PROJECT_SIZE_BYTES} bytes)"
+                f"project is too large ({size} bytes compressed; "
+                f"limit is {MAX_PROJECT_SIZE_BYTES} bytes)"
             )
-        self._atomic_write(path, text)
+        self._atomic_write(path, payload)
 
     def load(self, path: Path) -> Project:
         if not path.is_file():
@@ -58,11 +79,13 @@ class JsonProjectRepository:
             )
 
         try:
-            text = path.read_text(encoding="utf-8")
+            data = path.read_bytes()
+            data = self._decompress(data)
+            text = data.decode("utf-8")
+        except (OSError, gzip.BadGzipFile, EOFError) as exc:
+            raise ProjectFormatError(f"could not read project file: {exc}") from exc
         except UnicodeDecodeError as exc:
             raise ProjectFormatError("project file is not valid UTF-8") from exc
-        except OSError as exc:
-            raise ProjectFormatError(f"could not read project file: {exc}") from exc
 
         try:
             raw: Any = json.loads(text)
@@ -83,7 +106,7 @@ class JsonProjectRepository:
             raise ProjectFormatError(f"invalid project file: {exc}") from exc
 
     @staticmethod
-    def _atomic_write(path: Path, text: str) -> None:
+    def _atomic_write(path: Path, payload: bytes) -> None:
         path = Path(path)
         parent = path.parent
         if not parent.is_dir():
@@ -96,8 +119,8 @@ class JsonProjectRepository:
         )
         temporary_path = Path(temporary_name)
         try:
-            with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
-                handle.write(text)
+            with os.fdopen(fd, "wb") as handle:
+                handle.write(payload)
                 handle.flush()
                 os.fsync(handle.fileno())
             os.replace(temporary_path, path)

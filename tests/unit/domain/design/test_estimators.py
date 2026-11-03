@@ -124,9 +124,56 @@ def test_inverted_v_and_fan_estimates_keep_angle_and_bands() -> None:
     assert inverted.parameters.included_angle_deg == pytest.approx(90.0)
     assert isinstance(fan.parameters, FanDipoleParameters)
     assert len(fan.parameters.elements) == 2
-    assert all(
-        element.included_angle_deg == pytest.approx(110.0) for element in fan.parameters.elements
+    angles = [element.included_angle_deg for element in fan.parameters.elements]
+    assert angles == pytest.approx([110.0, 90.0])
+
+
+def test_inverted_v_estimate_flattens_the_angle_to_stay_above_ground() -> None:
+    estimate = estimate_intent(
+        _intent(
+            "inverted_v",
+            frequency_hz=1_800_000.0,
+            height_m=10.0,
+            included_angle_deg=120.0,
+        )
     )
+
+    assert estimate.parameters.end_height_m >= 0.0
+    assert estimate.parameters.included_angle_deg > 120.0
+    assert "estimator.warning.inverted_v_angle_increased" in estimate.warnings
+
+
+def test_fan_dipole_estimate_uses_distinct_angles_above_ground() -> None:
+    estimate = estimate_intent(
+        _intent(
+            "fan_dipole",
+            frequency_hz=1_800_000.0,
+            fan_bands_hz=(1_800_000.0, 3_500_000.0),
+            height_m=10.0,
+            included_angle_deg=120.0,
+        )
+    )
+
+    parameters = estimate.parameters
+    angles = [element.included_angle_deg for element in parameters.elements]
+    assert len(set(angles)) == len(angles)
+    assert all(parameters.element_end_height_m(element) >= 0.0 for element in parameters.elements)
+    assert "estimator.warning.fan_angle_increased" in estimate.warnings
+
+
+def test_endfed_estimate_clamps_an_unreachable_end_height() -> None:
+    estimate = estimate_intent(
+        _intent(
+            "endfed",
+            frequency_hz=28_500_000.0,
+            height_m=10.0,
+            end_height_m=2.0,
+        )
+    )
+
+    parameters = estimate.parameters
+    assert parameters.end_height_m == pytest.approx(10.0 - half_wave_length_m(28_500_000.0))
+    assert "estimator.warning.endfed_end_height_clamped" in estimate.warnings
 
 
 def test_j_pole_feed_offset_stays_inside_the_stub() -> None:

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import math
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -155,6 +156,46 @@ def test_results_view_builds_a_polar_lobe_plot(qtbot: QtBot, tmp_path: Path) -> 
     assert image_path.read_bytes().startswith(b"\x89PNG")
 
 
+def test_results_view_lists_only_pattern_snapshot_frequencies(qtbot: QtBot) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.simulation.result import FarFieldPoint
+
+    point = FarFieldPoint(
+        theta_deg=0.0,
+        phi_deg=0.0,
+        gain_vertical_db=2.0,
+        gain_horizontal_db=None,
+        gain_total_db=2.0,
+        axial_ratio=None,
+        tilt_deg=None,
+        polarization="LINEAR",
+        e_theta_magnitude_v_per_m=None,
+        e_theta_phase_deg=None,
+        e_phi_magnitude_v_per_m=None,
+        e_phi_phase_deg=None,
+    )
+    base = _make_result()
+    result = replace(
+        base,
+        frequencies=(
+            base.frequencies[0],
+            replace(base.frequencies[1], far_field=(point,)),
+            base.frequencies[2],
+        ),
+    )
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+
+    view.set_result(result)
+
+    assert view._currents_frequency.count() == 3
+    assert view._pattern_frequency.count() == 1
+    assert view._pattern_frequency.itemText(0) == "7.1 MHz (40m)"
+    assert view._selected_pattern_frequency() is result.frequencies[1]
+    assert len(view._polar_pattern._points) == 1
+
+
 def test_gain_color_maps_green_yellow_and_red() -> None:
     from antennadesk.ui.widgets.radiation_pattern_3d_view import gain_color
 
@@ -249,6 +290,37 @@ def test_pattern_3d_supports_rotation_zoom_and_reset(qtbot: QtBot) -> None:
     assert view._yaw_deg == 38.0
     assert view._pitch_deg == 26.0
     assert view._zoom == 1.0
+
+
+def test_pattern_3d_uses_a_coarser_mesh_during_interaction(qtbot: QtBot) -> None:
+    from antennadesk.ui.widgets.radiation_pattern_3d_view import RadiationPattern3DView
+
+    view = RadiationPattern3DView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    view.resize(800, 560)
+    points = tuple(
+        (
+            float(theta),
+            float(phi),
+            5.0 + 3.0 * math.sin(math.radians(theta)),
+        )
+        for theta in range(0, 91)
+        for phi in range(0, 361, 2)
+    )
+
+    view.set_points(points, ground=True)
+
+    assert view._full_mesh is not None
+    assert view._interactive_mesh is not None
+    assert len(view._interactive_mesh.vertices) < len(view._full_mesh.vertices)
+    assert len(view._interactive_mesh.segments) > 0
+    assert view._interacting is False
+
+    view._begin_interaction()
+    assert view._interacting is True
+    assert view.grab().isNull() is False
+    view._end_interaction()
+    assert view._interacting is False
 
 
 def test_pattern_3d_clips_below_ground_points(qtbot: QtBot) -> None:

@@ -78,8 +78,11 @@ def _pattern_series(
     if not result.frequencies:
         return (), None
     target = design.parameters.frequency_hz
+    candidates = [item for item in result.frequencies if item.far_field]
+    if not candidates:
+        return (), None
     frequency = min(
-        result.frequencies,
+        candidates,
         key=lambda item: abs(item.frequency_hz - target),
     )
     points = tuple(

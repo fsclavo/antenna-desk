@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import gc
 import os
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -23,6 +24,13 @@ from antennadesk.persistence.json_repository import JsonProjectRepository
 PROJECT_ID = UUID("00000000-0000-0000-0000-000000000001")
 DESIGN_ID = UUID("00000000-0000-0000-0000-000000000002")
 FIXED_NOW = datetime(2026, 10, 29, 12, 0, 0, tzinfo=UTC)
+
+
+@pytest.fixture(autouse=True)
+def _collect_garbage_after_each_test(request):
+    yield
+    if "/ui/" in str(request.node.path):
+        gc.collect()
 
 
 @pytest.fixture

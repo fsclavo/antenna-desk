@@ -30,6 +30,7 @@ from ...domain.environment.ground import GroundKind
 from ...domain.measurement import Measurement, MeasurementPoint
 from ...domain.measurement_comparison import compare_measurement
 from ...domain.projects.project import DesignVariant
+from ...domain.simulation.bands import amateur_band_for
 from ...domain.simulation.resonance import find_resonances
 from ...domain.simulation.result import (
     CurrentSample,
@@ -55,6 +56,7 @@ class ResultsView(QWidget):
         self._colors = theme_colors(self.palette())
         self._result: SimulationResult | None = None
         self._design: DesignVariant | None = None
+        self._pattern_frequencies: tuple[FrequencyResult, ...] = ()
 
         self._tabs = QTabWidget(self)
         self._impedance_tab = QWidget(self)
@@ -328,15 +330,39 @@ class ResultsView(QWidget):
 
     def set_result(self, result: SimulationResult | None) -> None:
         self._result = result
-        for combo in (self._pattern_frequency, self._currents_frequency):
-            combo.blockSignals(True)
-            combo.clear()
-            if result is not None:
-                for frequency in result.frequencies:
-                    combo.addItem(f"{frequency.frequency_hz / 1e6:g} MHz")
-            combo.blockSignals(False)
-            if combo.count() > 0:
-                combo.setCurrentIndex(0)
+        self._pattern_frequency.blockSignals(True)
+        self._currents_frequency.blockSignals(True)
+        self._pattern_frequency.clear()
+        self._currents_frequency.clear()
+        self._pattern_frequencies = ()
+        if result is not None:
+            for frequency in result.frequencies:
+                self._currents_frequency.addItem(f"{frequency.frequency_hz / 1e6:g} MHz")
+            self._pattern_frequencies = tuple(
+                frequency for frequency in result.frequencies if frequency.far_field
+            )
+            for frequency in self._pattern_frequencies:
+                band = amateur_band_for(frequency.frequency_hz)
+                label = f"{frequency.frequency_hz / 1e6:g} MHz"
+                if band is not None:
+                    label += f" ({band.name})"
+                self._pattern_frequency.addItem(label)
+        self._pattern_frequency.blockSignals(False)
+        self._currents_frequency.blockSignals(False)
+        if self._pattern_frequencies:
+            target = (
+                self._design.parameters.frequency_hz
+                if self._design is not None
+                else self._pattern_frequencies[0].frequency_hz
+            )
+            self._pattern_frequency.setCurrentIndex(
+                min(
+                    range(len(self._pattern_frequencies)),
+                    key=lambda index: abs(self._pattern_frequencies[index].frequency_hz - target),
+                )
+            )
+        if self._currents_frequency.count() > 0:
+            self._currents_frequency.setCurrentIndex(0)
         self._populate_cut_values()
         self._render()
 
@@ -674,16 +700,17 @@ class ResultsView(QWidget):
         )
         self._pattern_cut_label.setText(self._translator.t(key))
 
+    def _selected_pattern_frequency(self) -> FrequencyResult | None:
+        index = self._pattern_frequency.currentIndex()
+        if 0 <= index < len(self._pattern_frequencies):
+            return self._pattern_frequencies[index]
+        return None
+
     def _populate_cut_values(self) -> None:
         points = []
-        if self._result is not None:
-            index = self._pattern_frequency.currentIndex()
-            if 0 <= index < len(self._result.frequencies):
-                points = [
-                    point
-                    for point in self._result.frequencies[index].far_field
-                    if point.gain_total_db is not None
-                ]
+        frequency = self._selected_pattern_frequency()
+        if frequency is not None:
+            points = [point for point in frequency.far_field if point.gain_total_db is not None]
         mode = self._pattern_mode_value()
         current = self._pattern_cut.currentData()
         candidates: dict[float, list[float]] = {}
@@ -722,10 +749,13 @@ class ResultsView(QWidget):
             self._polar_pattern.set_points(())
             self._pattern_3d.set_points(())
             return
-        index = self._pattern_frequency.currentIndex()
-        if index < 0 or index >= len(self._result.frequencies):
+        frequency = self._selected_pattern_frequency()
+        if frequency is None:
+            self._pattern_cursor.clear()
+            self._pattern_plot.setTitle(self._translator.t("pattern.none"), color=self._colors.text)
+            self._polar_pattern.set_points(())
+            self._pattern_3d.set_points(())
             return
-        frequency = self._result.frequencies[index]
         mode = self._pattern_mode_value()
         selected_cut = self._pattern_cut.currentData()
         selected = float(selected_cut) if isinstance(selected_cut, (int, float)) else None

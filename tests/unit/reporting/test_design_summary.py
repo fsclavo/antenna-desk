@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.reporting.design_summary import design_summary_rows
 
@@ -51,6 +52,28 @@ def test_trap_dipole_summary_reports_two_traps_and_band_edges() -> None:
     assert rows["Trap positions"] == "5.0000 m, 15.0000 m from wire start"
     assert rows["Trap frequency"] == "14.100000 MHz"
     assert "pF" in rows["Trap capacitance"]
+
+
+def test_t2fd_summary_reports_the_band_termination_and_transformer() -> None:
+    parameters = T2FDParameters(
+        frequency_hz=3_500_000.0,
+        highest_frequency_hz=30_000_000.0,
+        length_m=26.0,
+        spacing_m=0.9,
+        height_m=12.0,
+        termination_resistance_ohm=800.0,
+        transformer_ratio=16.0,
+    )
+
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Type"] == "terminated folded dipole (T2FD)"
+    assert rows["Design band"] == "3.500000 MHz to 30.000000 MHz"
+    assert rows["Element length"] == "26.0000 m"
+    assert rows["Conductor spacing"] == "0.9000 m"
+    assert rows["Total conductor length"] == "53.8000 m"
+    assert rows["Termination resistor"] == "800 Ω non-inductive"
+    assert rows["Feed transformer"] == "16:1"
 
 
 def test_endfed_presets_are_labeled_in_the_summary() -> None:

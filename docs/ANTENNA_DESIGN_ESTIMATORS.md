@@ -68,6 +68,28 @@ warnings, and a dimension tolerance.
 | Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; optimize for the target |
 | Moxon | Cebik 20 m wire reference scaled by frequency | reference scaled | Gap and tips are sensitive |
 
+Ground-mounted radials are placed 1 cm above the ground plane in the NEC deck.
+The estimator and project keep the requested base height; the clearance is a
+solver constraint, not a design dimension. NEC-2 rejects horizontal radials
+lying exactly on a ground plane.
+
+
+## Ground and fan constraints
+
+The vertical, inverted-V, fan-dipole, and end-fed estimators keep the starting
+geometry above the ground plane:
+
+- A ground-mounted vertical is modeled 1 cm above the ground in the NEC deck.
+- An inverted-V estimate widens the included angle, and raises the apex if
+  needed, when the requested apex would put the ends below ground. The estimate
+  carries `estimator.warning.inverted_v_angle_increased`.
+- Fan-dipole elements use progressively narrower included angles so their wires
+  do not overlap. The apex is raised if a longer element needs it, and the
+  estimate carries `estimator.warning.fan_angle_increased` when adjusted.
+- An end-fed end height outside the wire's vertical reach is clamped to the
+  reachable range and the estimate carries
+  `estimator.warning.endfed_end_height_clamped`.
+
 ## End-fed starting point
 
 The end-fed estimate includes a 49:1 ideal transformer and a `0.05λ`
@@ -152,6 +174,46 @@ velocity factor is installation-specific; the default `1.0` treats the published
 length as the electrical length. No independent numerical reference is claimed
 for the complete lossless model or for a specific installation.
 
+## T2FD preset
+
+The T2FD is not a frequency-first resonance estimator. It is a
+**reference-backed starting geometry** for a non-resonant, terminated folded
+dipole. The editor's starting-dimension helper uses the "wide-long" construction
+rule documented by L. B. Cebik, W4RNL:
+
+- span (each parallel conductor): `300 / F(MHz)` feet;
+- conductor spacing: `10 / F(MHz)` feet.
+
+For the default 3.5 MHz lower band edge, that is a 26.13 m span and 0.87 m
+spacing. The 800 Ω non-inductive termination and 16:1 feed transformer follow
+the commercial B&W AC3-30 3-30 MHz design described in the Wikipedia T2FD
+article (90 ft span, 18 in spacing, 800 Ω resistor, 16:1 balun). Other published
+T2FDs use 390-480 Ω terminations with a 4:1 balun to 75 Ω; both values remain
+editable.
+
+The model places the resistor at the midpoint of the non-driven conductor and
+the feed at the midpoint of the driven conductor. The resistor is a series
+`LD 0` load. The transformer is an ideal post-processing two-port: it divides the
+antenna impedance by the selected ratio for the transmitter-side SWR and
+realized-gain calculations, but it is not part of the NEC geometry.
+
+Assumptions and limitations:
+
+- The resistor is ideal and has no temperature rise or power rating.
+- The transformer and balun are ideal; balun loss, leakage, and common-mode
+  current are not modeled.
+- The model supports horizontal and vertical flat installations. The
+  "tilted" installation is not modeled; the name is retained for the family.
+- The antenna is non-resonant, so no resonance tolerance is claimed. The span
+  and spacing are construction starting points, not verified cut lengths.
+- A significant part of the applied power is dissipated in the termination,
+  especially near the lower band edge. Realized gain and efficiency show this
+  loss.
+- Above roughly 1.25 wavelengths the main lobe moves away from broadside; the
+  pattern view shows the resulting high-angle lobes.
+- There is no independent numerical reference for the complete ideal-resistor,
+  ideal-transformer model or for a specific installation.
+
 ## Yagi scope
 
 The frequency-only estimator supports **2 to 32 elements** using the first
@@ -180,6 +242,9 @@ Reference sources currently used:
 - L. B. Cebik, W4RNL, “The Moxon Rectangle: A Review”, Table 1: 20 m wire Moxon.
 - Carr, *Practical Antenna Handbook* (via the Wikipedia G5RV article): 102 ft
   G5RV dipole and 29 ft 300 Ω / 34 ft 450 Ω matching sections.
+- L. B. Cebik, W4RNL, "Modeling the T2FD": wide-long span and spacing rule for
+  the T2FD. The Wikipedia T2FD article and the B&W AC3-30 product review
+  document the 800 Ω termination and 16:1 commercial transformer.
 - Application preset: Ringo proportions, the loop polygon correction, the
   end-fed transformer/counterpoise starting point, the loaded-vertical mobile
   preset, the trap-dipole starting dimensions, and the sloper, random-wire, and
@@ -222,6 +287,9 @@ Reference sources currently used:
   modeled.
 - Trap-dipole dimensions are starting points; trap loading, component losses,
   and installation effects are not solved analytically.
+- T2FD span, spacing, termination, and transformer are starting points; the
+  resistor and transformer are ideal, and the tilted installation is not
+  modeled.
 - Sloper, random-wire, and doublet presets are application starting points; the
   doublet tuner is not modeled as a matching network.
 - The G5RV uses a lossless geometry line and a user-supplied velocity factor;

@@ -1,6 +1,6 @@
 # AntennaDesk roadmap and backlog
 
-**Updated:** 2026-11-02
+**Updated:** 2026-11-03
 **Status:** active roadmap after catalog, measurement, optimization, and
 packaging work.
 
@@ -36,7 +36,7 @@ tolerance.
 Completed:
 
 - Solver adapter, normalized results, persistence, imports, and reports.
-- Guided dipole, folded dipole, trap dipole, loop (generic, delta, quad),
+- Guided dipole, folded dipole, trap dipole, T2FD, loop (generic, delta, quad),
   vertical (1/4λ, 1/2λ, and 5/8λ with radials, plus a loading-coil option and a
   mobile-whip preset), inverted-V, fan dipole, end-fed, sloper, random wire,
   doublet, OCFD, J Pole, Slim Jim, Ringo, Yagi, Moxon, and custom-wire designs.
@@ -44,8 +44,8 @@ Completed:
   Q/loss; uniform feed-line post-processing.
 - Frequency-first dimension estimation for the families with a documented
   estimator, with source identifiers, confidence, assumptions, warnings, and a
-  loop polygon correction calibrated with NEC-2. The trap dipole uses a
-  starting-dimension helper in its editor instead.
+  loop polygon correction calibrated with NEC-2. The trap dipole and T2FD use
+  starting-dimension helpers in their editors instead.
 - Single-dimension and multi-element optimization, target impedance, gain,
   front-to-back, efficiency, weighted multi-objective search, Pareto ranks, and
   integer variables.
@@ -71,6 +71,8 @@ Completed:
   the design panel.
 - G5RV catalog preset with the published 102 ft dipole and a 300 Ω / 450 Ω
   geometry matching line.
+- T2FD catalog preset with a broadband series termination, an ideal feed
+  transformer, and Cebik wide-long starting dimensions.
 - `v0.1.0` published with wheel/sdist, AppImage, Debian package, Windows zip,
   and SHA-256 checksums. Signing is optional and deferred.
 
@@ -133,11 +135,45 @@ Deferred:
 - Keep the wheel/sdist smoke test as the fallback distribution path
   (completed).
 
+### M6 — Multiband analysis (planned)
+
+Goal: let naturally multiband antennas be analyzed over a user-selected band
+set without pretending that every family is broadband. The detailed plan is in
+[`docs/MULTIBAND_ANALYSIS_PLAN.md`](MULTIBAND_ANALYSIS_PLAN.md).
+
+Scope:
+
+- Band catalog and validated band selections, reusing
+  `domain/simulation/bands.py`.
+- Per-family defaults for G5RV, OCFD, end-fed/random wire/sloper, fan dipole,
+  trap dipole, T2FD, and doublet, with evidence and limitation notes.
+- A batch analysis service that runs the existing single-band solver once per
+  selected band, with progress, cancellation, and partial results.
+- **Analyze Bands...** UI, band selection dialog, and a **Bands** results tab
+  showing best SWR, gain, takeoff angle, efficiency, and status.
+- Optional band/batch metadata on simulation runs, schema migration, band-aware
+  reports, CSV, comparison, and exports.
+- Deferred: a segmented frequency plan in one NEC deck, only if measurements
+  show that per-band runs are too slow or too large.
+
+Acceptance criteria:
+
+- Selecting 40/20/10 m for an OCFD runs three band analyses and presents three
+  inspectable results.
+- G5RV keeps its continuous "All HF" option and also supports a band list.
+- Single-band Simulate remains unchanged.
+- Save/open, reports, and undo/redo preserve the band analysis.
+- No default claims resonance without documented evidence.
+
 ## Backlog
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
 | P1 | Independent references for remaining experimental templates | A/B | partial |
+| P1 | Multiband batch engine and per-family band defaults (M6) | B | planned |
+| P1 | Band selection UI and band summary results (M6) | B | planned |
+| P2 | Persist band-analysis batches and add band-aware reports (M6) | B | planned |
+| P3 | Segmented frequency plan in one NEC deck | B | deferred |
 | P2 | GPG/Authenticode code signing for release artifacts | n/a | deferred |
 | P2 | Relative permeability export to NEC | B | pending |
 | P2 | Custom/imported geometry optimization and space constraints | n/a | pending |

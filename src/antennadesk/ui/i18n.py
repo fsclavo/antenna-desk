@@ -135,6 +135,26 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Dipolo alimentado en el centro con dos trampas LC paralelas para operar en dos bandas."
         ),
     },
+    "catalog.t2fd": {
+        Language.ENGLISH: "T2FD",
+        Language.SPANISH: "T2FD",
+    },
+    "catalog.t2fd.description": {
+        Language.ENGLISH: (
+            "Terminated folded dipole with a broadband non-inductive resistor "
+            "and a feed transformer."
+        ),
+        Language.SPANISH: (
+            "Dipolo plegado terminado con resistor no inductivo de banda ancha "
+            "y transformador de alimentación."
+        ),
+    },
+    "catalog.evidence.t2fd": {
+        Language.ENGLISH: ("Reference-backed starting dimensions; ideal resistor and transformer"),
+        Language.SPANISH: (
+            "Dimensiones iniciales con referencia; resistor y transformador ideales"
+        ),
+    },
     "catalog.sloper": {
         Language.ENGLISH: "Sloper",
         Language.SPANISH: "Sloper",
@@ -631,6 +651,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "starting point only; verify with simulation or measurement",
         Language.SPANISH: "solo punto de partida; verificar con simulación o medición",
     },
+    "estimator.warning.inverted_v_angle_increased": {
+        Language.ENGLISH: ("the included angle was widened to keep the leg ends above ground"),
+        Language.SPANISH: (
+            "el ángulo incluido se amplió para mantener los extremos sobre el suelo"
+        ),
+    },
+    "estimator.warning.fan_angle_increased": {
+        Language.ENGLISH: ("one or more element angles were widened to keep the ends above ground"),
+        Language.SPANISH: (
+            "uno o más ángulos de elemento se ampliaron para mantener los extremos sobre el suelo"
+        ),
+    },
+    "estimator.warning.endfed_end_height_clamped": {
+        Language.ENGLISH: ("the end height was clamped to the wire's vertical reach"),
+        Language.SPANISH: ("la altura del extremo se limitó al alcance vertical del hilo"),
+    },
     "estimator.warning.folded_impedance": {
         Language.ENGLISH: "spacing affects the step-up impedance; a 4:1 balun is typical for a 50 Ω system",
         Language.SPANISH: "la separación afecta la impedancia elevada; un balun 4:1 es lo típico para un sistema de 50 Ω",
@@ -746,6 +782,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "antenna_type.trap_dipole": {
         Language.ENGLISH: "Trap dipole",
         Language.SPANISH: "Dipolo con trampas",
+    },
+    "antenna_type.t2fd": {
+        Language.ENGLISH: "T2FD",
+        Language.SPANISH: "T2FD",
     },
     "wizard.name_wire": {Language.ENGLISH: "dipole", Language.SPANISH: "dipolo"},
     "wizard.name_folded": {
@@ -1232,6 +1272,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "table.swr_target": {
         Language.ENGLISH: "SWR (target)",
         Language.SPANISH: "ROE (objetivo)",
+    },
+    "pattern.settings_title": {
+        Language.ENGLISH: "Simulation pattern",
+        Language.SPANISH: "Patrón de simulación",
+    },
+    "pattern.requested_generic": {
+        Language.ENGLISH: "Requested resolution: {value} · {mode}",
+        Language.SPANISH: "Resolución solicitada: {value} · {mode}",
     },
     "pattern.frequency": {Language.ENGLISH: "Frequency", Language.SPANISH: "Frecuencia"},
     "pattern.cut_phi": {
@@ -1752,8 +1800,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "El proyecto pesa {size:.1f} MB. ¿Guardar igualmente? Usá Compactar historial para reducirlo.",
     },
     "dialog.project_too_large": {
-        Language.ENGLISH: "Project is {size:.1f} MB and exceeds the 10 MB limit. Compact Simulation History or remove designs.",
-        Language.SPANISH: "El proyecto pesa {size:.1f} MB y supera el límite de 10 MB. Compactá el historial o eliminá diseños.",
+        Language.ENGLISH: "Project is {size:.1f} MB and exceeds the {limit:.0f} MB limit. Compact Simulation History or remove designs.",
+        Language.SPANISH: "El proyecto pesa {size:.1f} MB y supera el límite de {limit:.0f} MB. Compactá el historial o eliminá diseños.",
     },
     "dialog.compact_history": {
         Language.ENGLISH: "Remove older simulation runs? {count} runs will be reduced to the latest run per design ({keep} kept).",
@@ -1771,20 +1819,44 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Auto (max)",
         Language.SPANISH: "Automática (máx.)",
     },
+    "custom.pattern_frequencies": {
+        Language.ENGLISH: "Pattern frequencies",
+        Language.SPANISH: "Frecuencias de patrón",
+    },
+    "custom.pattern_frequencies_auto": {
+        Language.ENGLISH: "Auto (bands)",
+        Language.SPANISH: "Automática (bandas)",
+    },
+    "custom.pattern_frequencies_option": {
+        Language.ENGLISH: "{count} frequencies",
+        Language.SPANISH: "{count} frecuencias",
+    },
     "custom.pattern_requested": {
-        Language.ENGLISH: "Requested: {value} · {count} frequencies",
-        Language.SPANISH: "Solicitada: {value} · {count} frecuencias",
+        Language.ENGLISH: (
+            "Requested resolution: {value} · {count} pattern frequencies ({sweep} sweep points)"
+        ),
+        Language.SPANISH: (
+            "Resolución solicitada: {value} · {count} frecuencias de patrón "
+            "({sweep} puntos de barrido)"
+        ),
     },
     "custom.pattern_effective": {
-        Language.ENGLISH: "Using {value} · estimated project size {size:.1f} MB",
-        Language.SPANISH: "Usando {value} · tamaño estimado del proyecto {size:.1f} MB",
+        Language.ENGLISH: (
+            "Using {value} at {patterns} pattern frequencies · estimated project size {size:.1f} MB"
+        ),
+        Language.SPANISH: (
+            "Usando {value} en {patterns} frecuencias de patrón · tamaño estimado del "
+            "proyecto {size:.1f} MB"
+        ),
     },
     "custom.pattern_reduced": {
         Language.ENGLISH: (
-            "Using {value} (requested {requested}) · estimated project size {size:.1f} MB"
+            "Using {value} (requested {requested}) at {patterns} pattern frequencies · "
+            "estimated project size {size:.1f} MB"
         ),
         Language.SPANISH: (
-            "Usando {value} (solicitada {requested}) · tamaño estimado del proyecto {size:.1f} MB"
+            "Usando {value} (solicitada {requested}) en {patterns} frecuencias de patrón · "
+            "tamaño estimado del proyecto {size:.1f} MB"
         ),
     },
     "custom.pattern_disabled": {
@@ -2000,6 +2072,91 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Plantilla experimental: se prueban la geometría y las trampas LC "
             "paralelas, pero no hay una referencia numérica independiente para "
             "este dipolo con trampas."
+        ),
+    },
+    "t2fd.title": {
+        Language.ENGLISH: "T2FD Generator",
+        Language.SPANISH: "Generador T2FD",
+    },
+    "t2fd.lowest_frequency": {
+        Language.ENGLISH: "Lowest design frequency",
+        Language.SPANISH: "Frecuencia más baja de diseño",
+    },
+    "t2fd.highest_frequency": {
+        Language.ENGLISH: "Highest design frequency",
+        Language.SPANISH: "Frecuencia más alta de diseño",
+    },
+    "t2fd.length": {
+        Language.ENGLISH: "Element length",
+        Language.SPANISH: "Longitud de cada elemento",
+    },
+    "t2fd.spacing": {
+        Language.ENGLISH: "Conductor spacing",
+        Language.SPANISH: "Separación entre conductores",
+    },
+    "t2fd.starting_dimensions": {
+        Language.ENGLISH: "Set starting dimensions from frequency",
+        Language.SPANISH: "Calcular dimensiones iniciales desde la frecuencia",
+    },
+    "t2fd.termination": {
+        Language.ENGLISH: "Termination resistance",
+        Language.SPANISH: "Resistencia de terminación",
+    },
+    "t2fd.transformer": {
+        Language.ENGLISH: "Feed transformer ratio",
+        Language.SPANISH: "Relación del transformador de alimentación",
+    },
+    "t2fd.wire_radius": {
+        Language.ENGLISH: "Wire radius (mm)",
+        Language.SPANISH: "Radio del hilo (mm)",
+    },
+    "t2fd.geometry": {
+        Language.ENGLISH: (
+            "Band {low}-{high} MHz · element {length} {unit} · spacing "
+            "{spacing} {unit} · termination {termination} Ω · {ratio}:1"
+        ),
+        Language.SPANISH: (
+            "Banda {low}-{high} MHz · elemento {length} {unit} · separación "
+            "{spacing} {unit} · terminación {termination} Ω · {ratio}:1"
+        ),
+    },
+    "t2fd.band_order": {
+        Language.ENGLISH: (
+            "The highest design frequency must be above the lowest design frequency."
+        ),
+        Language.SPANISH: ("La frecuencia más alta de diseño debe ser mayor que la más baja."),
+    },
+    "t2fd.hint": {
+        Language.ENGLISH: (
+            "Starting dimensions follow Cebik's wide-long T2FD: about "
+            "300/F(MHz) feet of span and 10/F(MHz) feet of spacing. The "
+            "800 Ω termination and 16:1 transformer follow the commercial "
+            "3-30 MHz B&W design. The resistor dissipates a significant part "
+            "of the applied power; the model uses an ideal resistor, an ideal "
+            "transformer, and no balun losses."
+        ),
+        Language.SPANISH: (
+            "Las dimensiones iniciales siguen el T2FD ancho y largo de Cebik: "
+            "aproximadamente 300/F(MHz) pies de longitud y 10/F(MHz) pies de "
+            "separación. La terminación de 800 Ω y el transformador 16:1 "
+            "siguen el diseño comercial B&W de 3-30 MHz. El resistor disipa "
+            "una parte importante de la potencia aplicada; el modelo usa un "
+            "resistor ideal, un transformador ideal y no incluye pérdidas del "
+            "balun."
+        ),
+    },
+    "t2fd.evidence": {
+        Language.ENGLISH: (
+            "Reference-backed starting dimensions (Cebik, W4RNL; Wikipedia "
+            "and the B&W AC3-30 commercial design). No independent numerical "
+            "reference is claimed for the ideal termination and transformer "
+            "model."
+        ),
+        Language.SPANISH: (
+            "Dimensiones iniciales con referencia (Cebik, W4RNL; Wikipedia y "
+            "el diseño comercial B&W AC3-30). No se reclama una referencia "
+            "numérica independiente para el modelo ideal de terminación y "
+            "transformador."
         ),
     },
     "endfed.preset.endfed": {
@@ -3471,6 +3628,25 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "Se desactivó el patrón de campo lejano porque el barrido es "
             "demasiado grande para el límite de almacenamiento del proyecto."
+        ),
+    },
+    "diagnostic.geometry.ground_clearance": {
+        Language.ENGLISH: (
+            "The model was raised slightly above the ground plane so NEC can "
+            "evaluate the ground-mounted wires."
+        ),
+        Language.SPANISH: (
+            "El modelo se elevó ligeramente sobre el plano de tierra para que "
+            "NEC pueda evaluar los hilos montados sobre el suelo."
+        ),
+    },
+    "diagnostic.geometry.below_ground": {
+        Language.ENGLISH: (
+            "The model has wires below the ground plane. Raise the geometry above z = 0."
+        ),
+        Language.SPANISH: (
+            "El modelo tiene hilos debajo del plano de tierra. Elevá la "
+            "geometría por encima de z = 0."
         ),
     },
     "diagnostic.solver.output_too_large": {

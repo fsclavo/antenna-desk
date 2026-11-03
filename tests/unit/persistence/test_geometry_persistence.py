@@ -526,6 +526,35 @@ def test_trap_dipole_parameters_and_traps_round_trip() -> None:
     assert restored == original
 
 
+def test_t2fd_parameters_and_termination_round_trip() -> None:
+    from antennadesk.domain.antennas.dipole import DipoleOrientation
+    from antennadesk.domain.antennas.t2fd import T2FDParameters
+
+    parameters = T2FDParameters(
+        frequency_hz=3_500_000.0,
+        highest_frequency_hz=30_000_000.0,
+        length_m=26.0,
+        spacing_m=0.9,
+        height_m=12.0,
+        orientation=DipoleOrientation.VERTICAL,
+        termination_resistance_ohm=820.0,
+        transformer_ratio=16.0,
+        azimuth_deg=45.0,
+    )
+    original = _project(parameters, "T2FD")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "t2fd"
+    assert [load.id for load in restored.designs[0].antenna.loads] == [
+        "t2fd-termination",
+    ]
+    assert restored.designs[0].antenna.loads[0].resistance_ohm == 820.0
+    assert restored == original
+
+
 def test_endfed_preset_round_trips() -> None:
     from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
 

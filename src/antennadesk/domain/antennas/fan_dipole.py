@@ -61,6 +61,17 @@ class FanDipoleParameters:
         for element in elements:
             if self.element_end_height_m(element) < 0.0:
                 raise ValueError("a fan dipole element would end below ground")
+        for index, first in enumerate(elements):
+            for second in elements[index + 1 :]:
+                if math.isclose(
+                    first.included_angle_deg,
+                    second.included_angle_deg,
+                    abs_tol=1e-6,
+                ):
+                    raise ValueError(
+                        "fan dipole elements must use different included angles "
+                        "to avoid overlapping wires"
+                    )
 
     def element_end_height_m(self, element: FanElement) -> float:
         half_angle = math.radians(element.included_angle_deg) / 2.0

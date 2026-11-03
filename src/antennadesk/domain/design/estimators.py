@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+import math
+
 from ..antennas.custom import ANTENNA_TYPE_CUSTOM
 from ..antennas.dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
 from ..antennas.endfed import ANTENNA_TYPE_ENDFED, EndFedParameters
@@ -218,11 +220,24 @@ def estimate_vertical(intent: DesignIntent) -> DimensionEstimate:
 def estimate_inverted_v(intent: DesignIntent) -> DimensionEstimate:
     total = half_wave_length_m(intent.frequency_hz)
     leg = total / 2.0
+    apex_height = max(intent.height_m, 0.01)
+    included_angle = intent.included_angle_deg
+    warnings: tuple[str, ...] = ("estimator.warning.starting_point",)
+    required_cosine = min(max(apex_height / leg, 0.0), 1.0)
+    if required_cosine < math.cos(math.radians(included_angle / 2.0)):
+        included_angle = min(
+            179.0,
+            2.0 * math.degrees(math.acos(required_cosine)),
+        )
+        required_apex = leg * math.cos(math.radians(included_angle / 2.0))
+        if apex_height < required_apex:
+            apex_height = required_apex + 0.01
+        warnings = (*warnings, "estimator.warning.inverted_v_angle_increased")
     parameters = InvertedVParameters(
         frequency_hz=intent.frequency_hz,
         leg_length_m=leg,
-        apex_height_m=intent.height_m,
-        included_angle_deg=intent.included_angle_deg,
+        apex_height_m=apex_height,
+        included_angle_deg=included_angle,
         azimuth_deg=intent.azimuth_deg,
         wire_radius_m=intent.wire_radius_m,
         material=intent.material,
@@ -238,33 +253,52 @@ def estimate_inverted_v(intent: DesignIntent) -> DimensionEstimate:
             "estimator.assumption.height_and_ground",
             "estimator.assumption.inverted_v_angle",
         ),
-        warnings=("estimator.warning.starting_point",),
+        warnings=warnings,
         rows=(
             _length_row("geometry.leg_length", leg),
-            _length_row("field.height", intent.height_m),
-            _angle_row("inverted_v.included_angle", intent.included_angle_deg),
+            _length_row("field.height", apex_height),
+            _angle_row("inverted_v.included_angle", included_angle),
         ),
     )
 
 
 def estimate_fan_dipole(intent: DesignIntent) -> DimensionEstimate:
-    bands = intent.fan_bands_hz or (intent.frequency_hz,)
-    elements = tuple(
-        FanElement(
-            length_m=half_wave_length_m(band),
-            included_angle_deg=intent.included_angle_deg,
+    bands = tuple(sorted(set(intent.fan_bands_hz or (intent.frequency_hz,))))
+    apex_height = max(intent.height_m, 0.01)
+    warnings: tuple[str, ...] = ("estimator.warning.starting_point",)
+    elements: list[FanElement] = []
+    previous_angle = 180.0
+    for index, band in enumerate(bands):
+        length = half_wave_length_m(band)
+        half_length = length / 2.0
+        requested_angle = max(20.0, intent.included_angle_deg - 20.0 * index)
+        required_cosine = min(max(apex_height / half_length, 0.0), 1.0)
+        minimum_angle = 2.0 * math.degrees(math.acos(required_cosine))
+        target_angle = min(requested_angle, previous_angle - 5.0)
+        if minimum_angle > target_angle:
+            required_apex = half_length * math.cos(math.radians(target_angle / 2.0))
+            apex_height = max(apex_height, required_apex + 0.01)
+            required_cosine = min(max(apex_height / half_length, 0.0), 1.0)
+            minimum_angle = 2.0 * math.degrees(math.acos(required_cosine))
+            warnings = (*warnings, "estimator.warning.fan_angle_increased")
+        included_angle = max(minimum_angle, target_angle)
+        previous_angle = included_angle
+        elements.append(
+            FanElement(
+                length_m=length,
+                included_angle_deg=included_angle,
+            )
         )
-        for band in bands
-    )
     parameters = FanDipoleParameters(
         frequency_hz=intent.frequency_hz,
-        elements=elements,
-        apex_height_m=intent.height_m,
+        elements=tuple(elements),
+        apex_height_m=apex_height,
         azimuth_deg=intent.azimuth_deg,
         wire_radius_m=intent.wire_radius_m,
         material=intent.material,
         ground=intent.ground,
     )
+    warnings = (*warnings, "estimator.warning.fan_interaction")
     rows = tuple(_length_row("field.element_length", element.length_m) for element in elements)
     return DimensionEstimate(
         parameters=parameters,
@@ -273,19 +307,26 @@ def estimate_fan_dipole(intent: DesignIntent) -> DimensionEstimate:
         tolerance_m=half_wave_length_m(intent.frequency_hz) * 0.04,
         source_ids=(SOURCE_ARRL_DIPOLE,),
         assumptions=("estimator.assumption.height_and_ground",),
-        warnings=(
-            "estimator.warning.starting_point",
-            "estimator.warning.fan_interaction",
-        ),
-        rows=(*rows, _length_row("field.height", intent.height_m)),
+        warnings=warnings,
+        rows=(*rows, _length_row("field.height", apex_height)),
     )
 
 
 def estimate_endfed(intent: DesignIntent) -> DimensionEstimate:
     length = half_wave_length_m(intent.frequency_hz)
     end_height = intent.end_height_m if intent.end_height_m is not None else intent.height_m
-    if abs(end_height - intent.height_m) > length:
-        raise ValueError("the end height difference exceeds the estimated wire length")
+    warnings: tuple[str, ...] = (
+        "estimator.warning.starting_point",
+        "estimator.warning.endfed_matching",
+    )
+    if end_height < intent.height_m:
+        clamped = max(0.0, intent.height_m - length)
+        if end_height < clamped:
+            end_height = clamped
+            warnings = (*warnings, "estimator.warning.endfed_end_height_clamped")
+    elif end_height - intent.height_m > length:
+        end_height = intent.height_m + length
+        warnings = (*warnings, "estimator.warning.endfed_end_height_clamped")
     counterpoise_length = wavelength_m(intent.frequency_hz) * ENDFED_COUNTERPOISE_FACTOR
     parameters = EndFedParameters(
         frequency_hz=intent.frequency_hz,
@@ -306,10 +347,7 @@ def estimate_endfed(intent: DesignIntent) -> DimensionEstimate:
         tolerance_m=length * 0.05,
         source_ids=(SOURCE_ARRL_DIPOLE, SOURCE_APPLICATION_PRESET),
         assumptions=("estimator.assumption.endfed_matching",),
-        warnings=(
-            "estimator.warning.starting_point",
-            "estimator.warning.endfed_matching",
-        ),
+        warnings=warnings,
         rows=(
             _length_row("field.length", length),
             _length_row("geometry.feed_height", intent.height_m),

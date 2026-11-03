@@ -174,8 +174,9 @@ experimental.
 
 A first-class single-wire antenna fed at one end, with separate feed and far-end
 heights, azimuth, radius, material, and ground. `length_m` is the physical
-conductor length; the horizontal run is derived from the height difference. It
-can model horizontal wires or slopers. The generator is experimental.
+conductor length; the horizontal run is derived from the height difference. An
+end height outside the wire's vertical reach is rejected. It can model
+horizontal wires or slopers. The generator is experimental.
 
 `preset` is `endfed`, `sloper`, or `random_wire`. The preset is metadata for
 catalog routing, reports, and the inline editor; the geometry and matching
@@ -186,8 +187,10 @@ with a project-level `FeedLine`; it does not introduce a new design payload.
 
 A first-class multi-band fan dipole with one or more `FanElement` pairs, apex
 height, azimuth, radius, material, and ground. Each pair has a total length and
-included angle. `to_antenna()` creates two sloping wires per pair sharing the
-apex, with the feed at the first leg. The generator is experimental.
+included angle. Elements must use distinct included angles; same-angle elements
+would overlap and are rejected. `to_antenna()` creates two sloping wires per
+pair sharing the apex, with the feed at the first leg. The generator is
+experimental.
 
 ### MoxonParameters
 
@@ -201,8 +204,8 @@ the feed is at the center of the driven element. The generator is experimental.
 A first-class two-leg inverted-V with frequency, leg length, apex height,
 included angle, azimuth, wire radius, material, and ground. `to_antenna()`
 creates two sloping wires meeting at the apex, with a center feed at the apex.
-It is experimental; its geometry and scaling are tested, but it has no
-independent numerical performance reference.
+The leg ends must stay at or above ground. It is experimental; its geometry and
+scaling are tested, but it has no independent numerical performance reference.
 
 ### Antenna families
 
@@ -245,6 +248,24 @@ wire length is `inner_length_m + 2 * outer_length_m`. The traps are
 template-managed loads: editing the parameters regenerates them, while other
 user loads are preserved.
 
+### T2FDParameters
+
+A first-class terminated folded dipole. It stores the lowest and highest design
+frequencies, the length of each parallel conductor, the conductor spacing, the
+height, orientation, termination resistance, transformer ratio, azimuth, wire
+radius, material, and ground. `to_antenna()` creates four wires: two parallel
+conductors and two end connectors. The feed is at the midpoint of one
+conductor. The other conductor carries a `SeriesLoad` with the reserved
+identifier `t2fd-termination` at its midpoint.
+
+The termination is a series `LD 0` resistor in the NEC model. The feed
+transformer is an ideal post-processing two-port selected by
+`transformer_ratio`; it is not part of the NEC geometry. The template manages
+the termination load, so editing the parameters regenerates it while preserving
+other user loads. The default starting dimensions use Cebik's wide-long rule,
+`300/F(MHz)` feet of span and `10/F(MHz)` feet of spacing at the lowest design
+frequency. See [ADR-0018](ADR/0018-t2fd-termination-and-transformer.md).
+
 ### G5RV preset
 
 The G5RV catalog preset is a `CustomAntennaParameters` design with
@@ -267,15 +288,18 @@ designs.
 
 `AntennaDesignParameters` is the union of `DipoleParameters`,
 `FoldedDipoleParameters`, `LoopParameters`, `OCFDParameters`,
-`VerticalParameters`, `InvertedVParameters`, `YagiParameters`, and
-`CustomAntennaParameters`. `antenna_type_for()` maps a parameter object to its
-native type; `custom` remains the arbitrary-wire escape hatch.
+`VerticalParameters`, `InvertedVParameters`, `YagiParameters`,
+`MoxonParameters`, `FanDipoleParameters`, `EndFedParameters`,
+`JPoleParameters`, `RingoParameters`, `TrapDipoleParameters`,
+`T2FDParameters`, and `CustomAntennaParameters`. `antenna_type_for()` maps a
+parameter object to its native type; `custom` remains the arbitrary-wire escape
+hatch.
 
 ### DesignVariant
 
-A named design with an identifier, an antenna type (`wire_dipole`,
-`folded_dipole`, or `loop`), the generating parameters, and the derived
-`AntennaModel`. Construction validates that the antenna type matches the
+A named design with an identifier, an antenna type identifier (for example
+`wire_dipole`, `trap_dipole`, or `t2fd`), the generating parameters, and the
+derived `AntennaModel`. Construction validates that the antenna type matches the
 parameters and that the derived geometry matches both.
 
 `with_parameters()` returns a new variant and updates both the antenna type and
@@ -303,7 +327,8 @@ impedance.
 
 ## Project file
 
-The native format is versioned JSON:
+The native format is versioned JSON, stored losslessly gzip-compressed.
+Plain JSON files from older versions are still accepted. The envelope is:
 
 ```json
 {
@@ -422,13 +447,18 @@ the application writes version 3.
 
 Phase 2 adds solver-independent simulation types:
 
-- `FrequencyPlan`: a single frequency or a uniformly spaced sweep.
+- `FrequencyPlan`: a single frequency or a uniformly spaced sweep, with
+  helpers for evenly spaced and design-frequency-preferred snapshots.
 - `FarFieldRequest`: angular sampling for the far-field pattern.
+- `AmateurBand` and `band_snapshot_frequencies()`: one representative pattern
+  frequency per amateur band inside a sweep, with an evenly spaced fallback for
+  narrow plans.
 - `SegmentationPolicy`: explicit global counts, a documented heuristic, or
   per-wire overrides; `aligned_policy_for_model()` aligns the feed wire to a
   segment center and gives short connector wires a sensible minimum.
 - `SimulationSpec`: frequency plan, segmentation, reference impedance,
-  extended-kernel flag, conductor-loss flag, far-field request, and timeout.
+  extended-kernel flag, conductor-loss flag, far-field request, optional
+  pattern snapshot frequencies, and timeout.
 - `SolverMetadata`: engine name, version, and executable.
 - `SolverCapabilities`: what the adapter can represent.
 - `TransmissionLine`: a lossless NEC TL two-port between two wire offsets,
@@ -443,9 +473,9 @@ Phase 2 adds solver-independent simulation types:
   free-space-equivalent length. Lines are drawn as dashed construction
   polylines and do not appear in far-field calculations.
 - `PatternBudget`: an application policy that estimates persisted project size
-  from frequency count, far-field points, and segment count, then chooses the
-  finest pattern step that fits. It may disable the far-field request when no
-  step fits.
+  from the impedance sweep count, pattern snapshot count, far-field points, and
+  segment count, then chooses the finest pattern step that fits. It may disable
+  the far-field request when no step fits.
 - `CurrentSample`, `FarFieldPoint`, and `PowerBudget`: normalized output
   records.
 - `ResonancePoint` and `find_resonances()`: series reactance zero crossings

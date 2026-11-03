@@ -107,8 +107,25 @@ def normalize_nec2_result(
             )
         )
     frequency_results: list[FrequencyResult] = []
+    main_count = spec.frequency_plan.count
+    parsed_main = parsed.frequencies[:main_count]
+    parsed_patterns = parsed.frequencies[main_count:] if spec.pattern_frequencies_hz else ()
+    pattern_by_main_index: dict[int, tuple[ParsedFarFieldPoint, ...]] = {}
+    if parsed_patterns:
+        tolerance_hz = (
+            spec.frequency_plan.step_hz / 2.0 + 1.0 if spec.frequency_plan.count > 1 else 1.0
+        )
+        for pattern in parsed_patterns:
+            if not pattern.far_field:
+                continue
+            main_index = min(
+                range(len(parsed_main)),
+                key=lambda index: abs(parsed_main[index].frequency_hz - pattern.frequency_hz),
+            )
+            if abs(parsed_main[main_index].frequency_hz - pattern.frequency_hz) <= tolerance_hz:
+                pattern_by_main_index[main_index] = tuple(pattern.far_field)
 
-    for parsed_frequency in parsed.frequencies:
+    for parsed_index, parsed_frequency in enumerate(parsed_main):
         input_parameters = next(
             (
                 candidate
@@ -156,7 +173,11 @@ def normalize_nec2_result(
             )
             for current in parsed_frequency.currents
         )
-        far_field = tuple(_far_field_point(point) for point in parsed_frequency.far_field)
+        if pattern_by_main_index:
+            pattern_points = pattern_by_main_index.get(parsed_index, ())
+        else:
+            pattern_points = tuple(parsed_frequency.far_field)
+        far_field = tuple(_far_field_point(point) for point in pattern_points)
         link = link_budget(
             antenna_impedance_ohm=input_parameters.impedance_ohm,
             frequency_hz=parsed_frequency.frequency_hz,
@@ -212,9 +233,25 @@ def normalize_nec2_result(
             )
         )
 
+    if spec.pattern_frequencies_hz:
+        expected_patterns = len(spec.pattern_frequencies_hz)
+        if len(pattern_by_main_index) < expected_patterns and len(frequency_results) >= main_count:
+            problems.append(
+                Diagnostic(
+                    code="normalization.pattern_missing",
+                    severity=Severity.WARNING,
+                    message=(
+                        f"{expected_patterns - len(pattern_by_main_index)} of "
+                        f"{expected_patterns} far-field snapshots were missing "
+                        "from the solver output"
+                    ),
+                    field="far_field",
+                )
+            )
+
     if not frequency_results:
         status = SimulationStatus.ERROR
-    elif len(frequency_results) < len(parsed.frequencies):
+    elif len(frequency_results) < main_count:
         status = SimulationStatus.PARTIAL
     else:
         status = SimulationStatus.COMPLETED

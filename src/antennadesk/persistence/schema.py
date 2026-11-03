@@ -50,6 +50,7 @@ from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from ..domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
 from ..domain.antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
+from ..domain.antennas.t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
 from ..domain.antennas.transmission_line import TransmissionLine
 from ..domain.antennas.trap_dipole import (
     ANTENNA_TYPE_TRAP_DIPOLE,
@@ -235,6 +236,21 @@ class TrapDipoleParametersPayload(StrictModel):
     ground: GroundPayload
 
 
+class T2FDParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    highest_frequency_hz: float = Field(gt=0.0)
+    length_m: float = Field(gt=0.0)
+    spacing_m: float = Field(gt=0.0)
+    height_m: float = Field(default=10.0, ge=0.0)
+    orientation: DipoleOrientation = DipoleOrientation.HORIZONTAL
+    termination_resistance_ohm: float = Field(default=800.0, gt=0.0)
+    transformer_ratio: float = Field(default=16.0, gt=0.0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
 class JPoleParametersPayload(StrictModel):
     frequency_hz: float = Field(gt=0.0)
     radiator_height_m: float = Field(gt=0.0)
@@ -408,6 +424,7 @@ class SimulationSpecPayload(StrictModel):
     extended_thin_wire_kernel: bool = False
     include_conductor_losses: bool = True
     far_field: FarFieldRequestPayload = Field(default_factory=FarFieldRequestPayload)
+    pattern_frequencies_hz: list[float] = Field(default_factory=list)
     feed_line: FeedLinePayload | None = None
     matching_network: LNetworkPayload | None = None
     feed_transformer_ratio: float = Field(default=1.0, gt=0.0)
@@ -535,6 +552,7 @@ ParameterPayload = (
     | EndFedParametersPayload
     | JPoleParametersPayload
     | RingoParametersPayload
+    | T2FDParametersPayload
     | TrapDipoleParametersPayload
     | CustomParametersPayload
 )
@@ -565,6 +583,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_RINGO
     if isinstance(value, TrapDipoleParametersPayload):
         return ANTENNA_TYPE_TRAP_DIPOLE
+    if isinstance(value, T2FDParametersPayload):
+        return ANTENNA_TYPE_T2FD
     if isinstance(value, CustomParametersPayload):
         return ANTENNA_TYPE_CUSTOM
     return ANTENNA_TYPE_LOOP
@@ -597,6 +617,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return RingoParametersPayload
     if antenna_type == ANTENNA_TYPE_TRAP_DIPOLE:
         return TrapDipoleParametersPayload
+    if antenna_type == ANTENNA_TYPE_T2FD:
+        return T2FDParametersPayload
     if antenna_type == ANTENNA_TYPE_CUSTOM:
         return CustomParametersPayload
     return None
@@ -850,6 +872,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _ringo_parameters_from_domain(value)
     if isinstance(value, TrapDipoleParameters):
         return _trap_dipole_parameters_from_domain(value)
+    if isinstance(value, T2FDParameters):
+        return _t2fd_parameters_from_domain(value)
     if isinstance(value, CustomAntennaParameters):
         return _custom_parameters_from_domain(value)
     raise TypeError(f"unsupported antenna parameters: {type(value)!r}")
@@ -928,6 +952,23 @@ def _trap_dipole_parameters_from_domain(
         trap_inductance_h=value.trap_inductance_h,
         height_m=value.height_m,
         orientation=value.orientation,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _t2fd_parameters_from_domain(value: T2FDParameters) -> T2FDParametersPayload:
+    return T2FDParametersPayload(
+        frequency_hz=value.frequency_hz,
+        highest_frequency_hz=value.highest_frequency_hz,
+        length_m=value.length_m,
+        spacing_m=value.spacing_m,
+        height_m=value.height_m,
+        orientation=value.orientation,
+        termination_resistance_ohm=value.termination_resistance_ohm,
+        transformer_ratio=value.transformer_ratio,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
@@ -1126,6 +1167,7 @@ def _simulation_spec_from_domain(value: SimulationSpec) -> SimulationSpecPayload
         extended_thin_wire_kernel=value.extended_thin_wire_kernel,
         include_conductor_losses=value.include_conductor_losses,
         far_field=_far_field_from_domain(value.far_field),
+        pattern_frequencies_hz=list(value.pattern_frequencies_hz),
         feed_line=(_feed_line_from_domain(value.feed_line) if value.feed_line else None),
         matching_network=(
             _matching_network_from_domain(value.matching_network)
@@ -1491,6 +1533,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, TrapDipoleParametersPayload):
             raise ValueError("trap dipole parameters have the wrong shape")
         return _trap_dipole_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_T2FD:
+        if not isinstance(value.parameters, T2FDParametersPayload):
+            raise ValueError("T2FD parameters have the wrong shape")
+        return _t2fd_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_CUSTOM:
         if not isinstance(value.parameters, CustomParametersPayload):
             raise ValueError("custom parameters have the wrong shape")
@@ -1569,6 +1615,23 @@ def _trap_dipole_parameters_to_domain(
         trap_inductance_h=value.trap_inductance_h,
         height_m=value.height_m,
         orientation=value.orientation,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _t2fd_parameters_to_domain(value: T2FDParametersPayload) -> T2FDParameters:
+    return T2FDParameters(
+        frequency_hz=value.frequency_hz,
+        highest_frequency_hz=value.highest_frequency_hz,
+        length_m=value.length_m,
+        spacing_m=value.spacing_m,
+        height_m=value.height_m,
+        orientation=value.orientation,
+        termination_resistance_ohm=value.termination_resistance_ohm,
+        transformer_ratio=value.transformer_ratio,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
@@ -1759,6 +1822,7 @@ def _simulation_spec_to_domain(value: SimulationSpecPayload) -> SimulationSpec:
         extended_thin_wire_kernel=value.extended_thin_wire_kernel,
         include_conductor_losses=value.include_conductor_losses,
         far_field=_far_field_to_domain(value.far_field),
+        pattern_frequencies_hz=tuple(value.pattern_frequencies_hz),
         feed_line=(_feed_line_to_domain(value.feed_line) if value.feed_line else None),
         matching_network=(
             _matching_network_to_domain(value.matching_network) if value.matching_network else None

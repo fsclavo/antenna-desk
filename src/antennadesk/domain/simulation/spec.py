@@ -26,6 +26,7 @@ class SimulationSpec:
     extended_thin_wire_kernel: bool = False
     include_conductor_losses: bool = True
     far_field: FarFieldRequest = field(default_factory=FarFieldRequest)
+    pattern_frequencies_hz: tuple[float, ...] = ()
     feed_line: FeedLine | None = None
     matching_network: MatchingNetwork | None = None
     feed_transformer_ratio: float = 1.0
@@ -37,3 +38,27 @@ class SimulationSpec:
         ensure_positive(self.timeout_s, name="timeout_s")
         if self.timeout_s > MAX_TIMEOUT_S:
             raise ValueError(f"timeout_s must not exceed {MAX_TIMEOUT_S}")
+        object.__setattr__(
+            self,
+            "pattern_frequencies_hz",
+            self._snapped_pattern_frequencies(),
+        )
+
+    def _snapped_pattern_frequencies(self) -> tuple[float, ...]:
+        requested = tuple(float(value) for value in self.pattern_frequencies_hz)
+        if not requested:
+            return ()
+        plan = self.frequency_plan
+        snapped: set[float] = set()
+        for frequency_hz in requested:
+            ensure_positive(frequency_hz, name="pattern frequency")
+            if plan.count == 1:
+                if abs(frequency_hz - plan.start_hz) > 1e-6:
+                    raise ValueError("pattern frequency must match the single-frequency plan")
+                snapped.add(plan.start_hz)
+                continue
+            index = round((frequency_hz - plan.start_hz) / plan.step_hz)
+            if index < 0 or index >= plan.count:
+                raise ValueError("pattern frequency is outside the frequency plan")
+            snapped.add(plan.start_hz + index * plan.step_hz)
+        return tuple(sorted(snapped))

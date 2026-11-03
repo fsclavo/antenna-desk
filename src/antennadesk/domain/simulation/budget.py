@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
@@ -11,7 +12,8 @@ BASE_PROJECT_BYTES = 50_000
 BYTES_PER_FAR_FIELD_POINT = 430
 BYTES_PER_CURRENT_SAMPLE = 360
 BYTES_PER_FREQUENCY = 20
-DEFAULT_MAX_PROJECT_BYTES = 9_500_000
+DEFAULT_MAX_PROJECT_BYTES = 24 * 1024 * 1024
+ESTIMATED_COMPRESSION_RATIO = 6.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,7 +22,9 @@ class PatternBudget:
 
     pattern_step_deg: float | None
     estimated_project_bytes: int
+    estimated_json_bytes: int
     far_field_points_per_frequency: int
+    pattern_frequency_count: int
     requested_step_deg: float | None
     far_field_enabled: bool
     reduced: bool
@@ -31,12 +35,17 @@ def estimate_project_bytes(
     frequency_count: int,
     far_field_points_per_frequency: int,
     segment_count: int,
+    pattern_frequency_count: int | None = None,
 ) -> int:
     """Estimate the persisted project JSON size for one simulation run.
 
     The estimate is calibrated against the G5RV preset and deliberately
     conservative. It includes the raw NEC output plus the normalized
     far-field/current records that are persisted in the project.
+
+    ``frequency_count`` is the impedance/current sweep. ``pattern_frequency_count``
+    is the number of far-field snapshots; when omitted, every sweep frequency is
+    assumed to carry a pattern.
     """
 
     if frequency_count < 1:
@@ -45,12 +54,38 @@ def estimate_project_bytes(
         raise ValueError("far_field_points_per_frequency must not be negative")
     if segment_count < 0:
         raise ValueError("segment_count must not be negative")
-    per_frequency = (
+    snapshots = frequency_count if pattern_frequency_count is None else pattern_frequency_count
+    if snapshots < 0:
+        raise ValueError("pattern_frequency_count must not be negative")
+    sweep_bytes = frequency_count * (segment_count * BYTES_PER_CURRENT_SAMPLE + BYTES_PER_FREQUENCY)
+    pattern_bytes = snapshots * (
         far_field_points_per_frequency * BYTES_PER_FAR_FIELD_POINT
         + segment_count * BYTES_PER_CURRENT_SAMPLE
         + BYTES_PER_FREQUENCY
     )
-    return BASE_PROJECT_BYTES + frequency_count * per_frequency
+    return BASE_PROJECT_BYTES + sweep_bytes + pattern_bytes
+
+
+def estimate_compressed_project_bytes(
+    *,
+    frequency_count: int,
+    far_field_points_per_frequency: int,
+    segment_count: int,
+    pattern_frequency_count: int | None = None,
+) -> int:
+    """Estimate the compressed on-disk project size.
+
+    New project files are gzip-compressed. The ratio is deliberately
+    conservative and calibrated against real G5RV runs.
+    """
+
+    raw = estimate_project_bytes(
+        frequency_count=frequency_count,
+        far_field_points_per_frequency=far_field_points_per_frequency,
+        segment_count=segment_count,
+        pattern_frequency_count=pattern_frequency_count,
+    )
+    return max(1, math.ceil(raw / ESTIMATED_COMPRESSION_RATIO))
 
 
 def choose_pattern_step(
@@ -60,6 +95,7 @@ def choose_pattern_step(
     candidate_steps: Sequence[float],
     counts_for_step: Callable[[float], tuple[int, int]],
     requested_step_deg: float | None = None,
+    pattern_frequency_count: int | None = None,
     max_project_bytes: int = DEFAULT_MAX_PROJECT_BYTES,
 ) -> PatternBudget:
     """Choose the finest pattern step that fits the project budget.
@@ -82,30 +118,46 @@ def choose_pattern_step(
     for step in candidates:
         theta_count, phi_count = counts_for_step(step)
         points = theta_count * phi_count
-        estimated = estimate_project_bytes(
+        estimated_json = estimate_project_bytes(
             frequency_count=frequency_count,
             far_field_points_per_frequency=points,
             segment_count=segment_count,
+            pattern_frequency_count=pattern_frequency_count,
+        )
+        estimated = max(
+            1,
+            math.ceil(estimated_json / ESTIMATED_COMPRESSION_RATIO),
         )
         if estimated <= max_project_bytes:
             return PatternBudget(
                 pattern_step_deg=step,
                 estimated_project_bytes=estimated,
+                estimated_json_bytes=estimated_json,
                 far_field_points_per_frequency=points,
+                pattern_frequency_count=(
+                    frequency_count if pattern_frequency_count is None else pattern_frequency_count
+                ),
                 requested_step_deg=requested_step_deg,
                 far_field_enabled=True,
                 reduced=requested_step_deg is not None and step != requested_step_deg,
             )
 
-    estimated_without = estimate_project_bytes(
+    estimated_json_without = estimate_project_bytes(
         frequency_count=frequency_count,
         far_field_points_per_frequency=0,
         segment_count=segment_count,
+        pattern_frequency_count=0,
+    )
+    estimated_without = max(
+        1,
+        math.ceil(estimated_json_without / ESTIMATED_COMPRESSION_RATIO),
     )
     return PatternBudget(
         pattern_step_deg=None,
         estimated_project_bytes=estimated_without,
+        estimated_json_bytes=estimated_json_without,
         far_field_points_per_frequency=0,
+        pattern_frequency_count=0,
         requested_step_deg=requested_step_deg,
         far_field_enabled=False,
         reduced=True,

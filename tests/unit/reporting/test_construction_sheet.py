@@ -99,6 +99,39 @@ def test_vertical_construction_sheet_uses_feed_height(sample_project: Project) -
     assert "Azimuth" in sheet
 
 
+def test_t2fd_construction_sheet_lists_the_resistor_and_transformer() -> None:
+    from antennadesk.application.use_cases.create_dipole_project import (
+        CreateDipoleProject,
+        CreateDipoleProjectCommand,
+    )
+    from antennadesk.domain.antennas.t2fd import T2FDParameters
+
+    parameters = T2FDParameters(
+        frequency_hz=3_500_000.0,
+        highest_frequency_hz=30_000_000.0,
+        length_m=26.0,
+        spacing_m=0.9,
+        height_m=12.0,
+        termination_resistance_ohm=800.0,
+        transformer_ratio=16.0,
+    )
+    project = CreateDipoleProject().execute(
+        CreateDipoleProjectCommand(
+            project_name="Broadband",
+            variant_name="T2FD",
+            parameters=parameters,
+        )
+    )
+
+    sheet = render_construction_sheet(project, project.designs[0], None)
+
+    assert "terminated folded dipole (T2FD)" in sheet
+    assert "26.0000 m each" in sheet
+    assert "800 Ω non-inductive" in sheet
+    assert "16:1" in sheet
+    assert "Load 1 (series)" in sheet
+
+
 def test_folded_dipole_construction_sheet(sample_project: Project) -> None:
     from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 

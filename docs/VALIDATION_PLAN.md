@@ -287,6 +287,27 @@ Phase 6 adds tests for:
   pattern resolution, and a three-band NEC smoke run with a geometry `TL`.
 - Run-size budget: fitted pattern resolution, project-size estimate, pattern
   disabled fallback, and a specific `solver.output_too_large` diagnostic.
+- Lossless project compression: gzip round trip, compressed-size accounting,
+  deterministic output, and plain-JSON backward compatibility.
+- Ground-mounted vertical: a freshly estimated quarter-wave vertical with
+  finite ground and four radials completes instead of failing with nec2c exit
+  code 255; the NEC deck clearance and the below-ground diagnostic are tested.
+- Family ground sweep: dipole, folded dipole, loop, vertical, inverted-V, fan
+  dipole, end-fed, OCFD, J Pole, Ringo, Yagi, Moxon, trap dipole, and T2FD at
+  representative HF frequencies with finite ground; estimated geometries stay
+  above ground and solve.
+- Estimator constraints: inverted-V angle widening, fan-dipole distinct angles
+  and apex adjustment, end-fed end-height clamping, and fan same-angle
+  rejection.
+- T2FD: folded-loop geometry, midpoint feed and termination, series `LD 0`
+  resistor, transformer ratio in the link budget, odd centered segmentation,
+  persistence, scene/default view, catalog routes, construction sheet, and a
+  broadband 31-point NEC smoke run.
+- Pattern snapshots: band-aware and evenly spaced snapshot selection,
+  `SimulationSpec` validation, split `FR`/`XQ`/`RP` decks, merge of snapshot far
+  fields into sweep results, pattern-only result views, the custom snapshot-count
+  control, and a 200-point G5RV NEC run with nine band snapshots inside the
+  project budget.
 - Directivity from NEC power gain and structure efficiency, realized gain from
   the link cascade, persistence round trip, CSV columns, results summary,
   construction sheet, and self-contained HTML report rows.
@@ -392,7 +413,7 @@ and require `NEC2C`.
   networks with optional component Q/loss are post-processed before the feed
   line; general transmission-line geometry is not implemented.
 - Project files store normalized results and raw solver text; many long runs
-  can reach the 10 MB project-size limit.
+  can reach the 32 MB project-size limit.
 - Some generated templates remain experimental or heuristic. Folded dipoles
   still lack an independent impedance reference; loops have the ARRL quad-loop
   resistance check. End-fed, J Pole/Slim Jim, Ringo, fan dipole, and vertical

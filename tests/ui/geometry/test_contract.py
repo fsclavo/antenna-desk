@@ -30,6 +30,7 @@ from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
 from antennadesk.domain.antennas.ringo import RingoParameters
+from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.wire import Wire
@@ -83,6 +84,20 @@ def _cases() -> tuple[FamilyCase, ...]:
             1,
             GeometryViewMode.ELEVATION,
             ("Trap dipole", "traps 2", "total length"),
+        ),
+        FamilyCase(
+            "t2fd",
+            T2FDParameters(
+                frequency_hz=3_500_000.0,
+                highest_frequency_hz=30_000_000.0,
+                length_m=26.0,
+                spacing_m=0.9,
+                height_m=10.0,
+            ),
+            "t2fd",
+            4,
+            GeometryViewMode.PLAN,
+            ("T2FD", "element length 26.00 m", "conductor spacing 0.90 m"),
         ),
         FamilyCase(
             "folded",
@@ -190,7 +205,7 @@ def _cases() -> tuple[FamilyCase, ...]:
             "fan",
             FanDipoleParameters(
                 frequency_hz=7_100_000.0,
-                elements=(FanElement(20.0, 120.0), FanElement(10.0, 120.0)),
+                elements=(FanElement(20.0, 120.0), FanElement(10.0, 90.0)),
                 apex_height_m=12.0,
             ),
             "fan_dipole",
@@ -369,6 +384,7 @@ def test_every_domain_antenna_type_has_a_presentation_family() -> None:
         moxon,
         ocfd,
         ringo,
+        t2fd,
         vertical,
         yagi,
     )
@@ -385,6 +401,7 @@ def test_every_domain_antenna_type_has_a_presentation_family() -> None:
         moxon,
         ocfd,
         ringo,
+        t2fd,
         vertical,
         yagi,
     )

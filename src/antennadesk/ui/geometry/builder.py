@@ -26,6 +26,7 @@ from ...domain.antennas.loop import ANTENNA_TYPE_LOOP, LoopParameters
 from ...domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from ...domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
 from ...domain.antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
+from ...domain.antennas.t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
 from ...domain.antennas.trap_dipole import (
     ANTENNA_TYPE_TRAP_DIPOLE,
     TrapDipoleParameters,
@@ -66,6 +67,7 @@ _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_J_POLE: "catalog.j_pole",
     ANTENNA_TYPE_RINGO: "catalog.ringo",
     ANTENNA_TYPE_TRAP_DIPOLE: "catalog.trap_dipole",
+    ANTENNA_TYPE_T2FD: "catalog.t2fd",
 }
 
 SUPPORTED_PRESENTATION_TYPES = frozenset({*_TYPE_KEYS, ANTENNA_TYPE_CUSTOM})
@@ -93,6 +95,7 @@ def effective_antenna_type(
             "vertical",
             "ocfd",
             "endfed",
+            "t2fd",
         }:
             return generator
     return antenna_type
@@ -1381,6 +1384,24 @@ def _summary(
                 f"{parameters.loading_coil_inductance_h * 1e6:.3f} µH @ "
                 f"{_format_length(parameters.loading_coil_offset_m, translator, unit_system)}"
             )
+    elif isinstance(parameters, T2FDParameters):
+        height_label = (
+            translator.t("field.base_height")
+            if parameters.orientation.value == "vertical"
+            else translator.t("field.height")
+        )
+        parts.extend(
+            [
+                f"{translator.t('t2fd.length').lower()} "
+                f"{_format_length(parameters.length_m, translator, unit_system)}",
+                f"{translator.t('t2fd.spacing').lower()} "
+                f"{_format_length(parameters.spacing_m, translator, unit_system)}",
+                f"{translator.t('t2fd.termination').lower()} "
+                f"{parameters.termination_resistance_ohm:g} Ω",
+                f"{height_label.lower()} "
+                f"{_format_length(parameters.height_m, translator, unit_system)}",
+            ]
+        )
     elif isinstance(parameters, TrapDipoleParameters):
         height_label = (
             translator.t("field.base_height")
@@ -1529,7 +1550,7 @@ def build_scene(
             dimensions,
             notes,
         )
-    elif effective_type == ANTENNA_TYPE_FOLDED_DIPOLE:
+    elif effective_type in {ANTENNA_TYPE_FOLDED_DIPOLE, ANTENNA_TYPE_T2FD}:
         _add_folded_dimensions(model, factory, dimensions, insets, translator)
     elif effective_type == ANTENNA_TYPE_J_POLE:
         _add_j_pole_dimensions(

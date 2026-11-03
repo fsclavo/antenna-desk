@@ -3,6 +3,8 @@
 - **Status:** Accepted
 - **Date:** 2026-11-03
 - **Supersedes:** none
+- **Updated by:** [ADR-0019](0019-pattern-snapshots.md),
+  [ADR-0020](0020-higher-pattern-storage-budget.md)
 
 ## Context
 
@@ -23,7 +25,7 @@ application should use the finest pattern resolution that can be stored safely.
      deliberately conservative.
 2. Use a **9.5 MB** budget, below the 10 MB hard project limit and above the
    8 MB warning threshold. Runs near the warning are allowed; the existing save
-   warning still applies.
+   warning still applies. ADR-0020 later raised these to 24 / 20 / 32 MiB.
 3. Treat the user's selected pattern resolution as a **maximum**:
    - try the requested step and coarser steps only;
    - use the finest step that fits;
@@ -47,7 +49,8 @@ application should use the finest pattern resolution that can be stored safely.
 Positive:
 
 - The default G5RV configuration uses 41 frequencies and a 10° pattern, runs in
-  under a second, and produces a project around 7.2 MB.
+  under a second, and produces a project around 7.2 MB. ADR-0019 later refined
+  this to five 5° pattern snapshots, which are smaller and visually smoother.
 - Larger sweeps remain usable without a pattern.
 - The user can request a finer pattern for a shorter sweep.
 - Oversized runs fail less often and explain the adjustment when they do.
@@ -64,8 +67,9 @@ Limitations:
 
 ## Follow-ups
 
-- Split a wideband impedance/SWR run from a separate pattern run at selected
-  frequencies.
+- ~~Split a wideband impedance/SWR run from a separate pattern run at selected
+  frequencies.~~ Implemented in
+  [ADR-0019](0019-pattern-snapshots.md) with pattern snapshots in one deck.
 - Add band-centered frequency plans instead of a dense linear sweep.
 - Optionally exclude or compress raw solver output for large runs.
 - Apply the same budget policy inside optimization and synthesis dialogs.

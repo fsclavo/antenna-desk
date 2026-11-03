@@ -8,11 +8,11 @@ electromagnetic engine.
 measurements, optimization, matching, and reporting flows are implemented.
 Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.1.0`
 is published; signing is optional and deferred for later releases. Center-fed
-dipoles, folded dipoles, trap dipoles, loops, custom wires, Yagis, Moxon, fan
-dipoles, inverted-Vs, OCFDs, end-fed wires, slopers, random wires, doublets,
+dipoles, folded dipoles, trap dipoles, T2FDs, loops, custom wires, Yagis, Moxon,
+fan dipoles, inverted-Vs, OCFDs, end-fed wires, slopers, random wires, doublets,
 J Poles, Slim Jims, Ringos, verticals, and loaded verticals are supported, with
-schema v3 persistence and migration. VNA CSV import and measured/simulated
-comparison are available.
+schema v3 persistence, lossless gzip compression, and migration. VNA CSV import
+and measured/simulated comparison are available.
 
 ## Launch the GUI
 
@@ -93,6 +93,10 @@ optional signing steps.
 - [ADR-0015 — Realized gain and directivity](docs/ADR/0015-realized-gain-and-directivity.md)
 - [ADR-0016 — Transmission line as geometry](docs/ADR/0016-transmission-line-as-geometry.md)
 - [ADR-0017 — Simulation storage budget](docs/ADR/0017-simulation-storage-budget.md)
+- [ADR-0018 — T2FD termination and transformer model](docs/ADR/0018-t2fd-termination-and-transformer.md)
+- [ADR-0019 — Pattern snapshots decoupled from the impedance sweep](docs/ADR/0019-pattern-snapshots.md)
+- [ADR-0020 — Higher pattern storage budget](docs/ADR/0020-higher-pattern-storage-budget.md)
+- [ADR-0021 — Lossless compressed project files](docs/ADR/0021-compressed-project-files.md)
 - [Antenna dimension estimators](docs/ANTENNA_DESIGN_ESTIMATORS.md)
 - [Geometry presentation contract](docs/GEOMETRY_PRESENTATION.md)
 - [NEC engine evaluation](docs/spikes/phase0-solver-evaluation.md)
@@ -156,7 +160,8 @@ optional signing steps.
 - Immutable domain model for units, geometry, conductors, feed points, ground
   models, environments, wire dipoles, folded dipoles, and regular-polygon
   loops.
-- Versioned JSON persistence with atomic saves and a migration framework.
+- Versioned JSON persistence with atomic saves, lossless gzip compression, and
+  a migration framework.
 - A `nec2c` solver adapter with input generation, output parsing, SWR
   normalization, currents, power budget, and far-field patterns.
 - Numerical validation against NEC-2 User's Guide examples and selected ARRL
@@ -217,10 +222,12 @@ uv run python scripts/run_reference_simulation.py \
   published SHA-256 checksums. Optional GPG and Windows Authenticode signing
   hooks are available for later releases. The wheel/sdist remains available for
   users who manage the solver themselves.
-- Simulation runs are stored in the project, including raw solver text; the
-  native project size limit is 10 MB. Use **Tools → Compact Simulation History**
-  to keep only the latest run per variant. High-resolution patterns and long
-  sweeps multiply runtime and stored points.
+- Simulation runs are stored in the project, including raw solver text. Project
+  files are losslessly gzip-compressed JSON; the 32 MB limit applies to the
+  compressed file, with a warning above 20 MB. Use
+  **Tools → Compact Simulation History** to keep only the latest run per
+  variant. High-resolution patterns and long sweeps multiply runtime and stored
+  points.
 - The segmentation policy is a documented heuristic; explicit counts are used
   for reference cases. The UI derives per-wire counts and aligns the feed wire
   to a segment center.

@@ -33,3 +33,15 @@ def test_fan_dipole_rejects_below_ground_elements() -> None:
             elements=(FanElement(length_m=20.0, included_angle_deg=20.0),),
             apex_height_m=5.0,
         )
+
+
+def test_fan_dipole_rejects_overlapping_element_angles() -> None:
+    with pytest.raises(ValueError, match="different included angles"):
+        FanDipoleParameters(
+            frequency_hz=7_100_000.0,
+            elements=(
+                FanElement(length_m=20.0, included_angle_deg=120.0),
+                FanElement(length_m=10.0, included_angle_deg=120.0),
+            ),
+            apex_height_m=12.0,
+        )

@@ -222,8 +222,10 @@ dipole orientation, version 3 adds persisted simulation runs, and older
 documents are migrated explicitly.
 
 Simulation runs are persisted in schema version 3. Raw solver text is stored
-with the normalized result. The UI warns at 8 MB, blocks files above the 10 MB
-limit, and offers simulation-history compaction.
+with the normalized result. Project files are compact JSON compressed with
+gzip; plain JSON files from older versions still load. The UI warns at 20 MB
+compressed, blocks files above the 32 MB compressed limit, and offers
+simulation-history compaction.
 
 ## Current limitations
 
@@ -240,9 +242,15 @@ limit, and offers simulation-history compaction.
   derived per frequency; the pattern charts still show power gain. See
   [ADR-0015](ADR/0015-realized-gain-and-directivity.md).
 - The UI estimates the persisted project size before a run and may coarsen the
-  far-field pattern to the finest step that fits. Oversized sweeps keep the
-  frequency plan and disable the pattern rather than failing. See
-  [ADR-0017](ADR/0017-simulation-storage-budget.md).
+  far-field pattern to the finest step that fits. For sweeps longer than five
+  points, the pattern is computed at amateur-band snapshots (or a user-selected
+  count) while the impedance/current sweep keeps every point. The policy is
+  applied centrally in the main window, so every current and future antenna
+  family inherits it; family builders only provide the frequency plan and
+  segmentation. Oversized sweeps keep the frequency plan and disable the
+  pattern rather than failing. See
+  [ADR-0017](ADR/0017-simulation-storage-budget.md) and
+  [ADR-0019](ADR/0019-pattern-snapshots.md).
 - The end-fed feed transformer is an ideal impedance ratio; it is not a
   physical unun model. The counterpoise is ordinary wire geometry.
 - Relative permeability is not emitted to NEC.

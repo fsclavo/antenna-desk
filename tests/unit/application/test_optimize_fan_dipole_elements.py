@@ -74,7 +74,7 @@ class AnalyticalFanSolver:
 def test_optimizes_selected_fan_dipole_element_lengths() -> None:
     base = FanDipoleParameters(
         frequency_hz=7_100_000.0,
-        elements=(FanElement(10.0), FanElement(20.0)),
+        elements=(FanElement(10.0, 120.0), FanElement(20.0, 90.0)),
         apex_height_m=10.0,
     )
     target = SynthesisTarget(7_100_000.0, 50.0, 0.0)
@@ -83,8 +83,8 @@ def test_optimizes_selected_fan_dipole_element_lengths() -> None:
         return FanDipoleParameters(
             frequency_hz=target.frequency_hz,
             elements=(
-                FanElement(values["length_0"]),
-                FanElement(values["length_1"]),
+                FanElement(values["length_0"], 120.0),
+                FanElement(values["length_1"], 90.0),
             ),
             apex_height_m=base.apex_height_m,
         )

@@ -23,6 +23,7 @@ from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
 from antennadesk.domain.antennas.ringo import RingoParameters
+from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.wire import Wire
@@ -108,8 +109,14 @@ def _parameters_for(key: str) -> object:
         ),
         "fan_dipole": FanDipoleParameters(
             frequency_hz=7_100_000.0,
-            elements=(FanElement(20.0, 120.0), FanElement(10.0, 120.0)),
+            elements=(FanElement(20.0, 120.0), FanElement(10.0, 90.0)),
             apex_height_m=12.0,
+        ),
+        "t2fd": T2FDParameters(
+            frequency_hz=3_500_000.0,
+            highest_frequency_hz=30_000_000.0,
+            length_m=26.0,
+            spacing_m=0.9,
         ),
         "trap_dipole": TrapDipoleParameters(
             frequency_hz=7_100_000.0,
@@ -237,6 +244,7 @@ def test_every_catalog_entry_has_a_change_template_route(
             "EndFedDialog",
             "FanDipoleDialog",
             "TrapDipoleDialog",
+            "T2FDDialog",
             "InvertedVDialog",
             "OCFDDialog",
             "VerticalDialog",
@@ -272,6 +280,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "moxon": ("moxon",),
         "fan_dipole": ("fan_dipole",),
         "trap_dipole": ("trap_dipole",),
+        "t2fd": ("t2fd",),
         "endfed": ("endfed",),
         "sloper": ("sloper",),
         "random_wire": ("random_wire",),
@@ -317,6 +326,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         new_inverted_v_antenna=record("inverted_v"),
         new_fan_dipole_antenna=record("fan_dipole"),
         new_trap_dipole_antenna=record("trap_dipole"),
+        new_t2fd_antenna=record("t2fd"),
         new_endfed_antenna=record("endfed"),
         new_sloper_antenna=record("sloper"),
         new_random_wire_antenna=record("random_wire"),

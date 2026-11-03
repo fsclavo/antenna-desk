@@ -38,3 +38,15 @@ def test_fan_dipole_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
     qtbot.addWidget(dialog)
 
     assert dialog.parameters() == original
+
+
+def test_fan_dipole_add_element_uses_a_distinct_angle(qtbot: QtBot) -> None:
+    dialog = FanDipoleDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+
+    dialog._form._add_element()
+
+    parameters = dialog.parameters()
+    angles = [element.included_angle_deg for element in parameters.elements]
+    assert len(angles) == 3
+    assert len(set(angles)) == len(angles)

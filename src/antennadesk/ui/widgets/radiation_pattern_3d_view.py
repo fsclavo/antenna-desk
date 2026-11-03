@@ -5,14 +5,16 @@
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 
-from PySide6.QtCore import QEvent, QLineF, QPointF, QRectF, QSize, Qt
+from PySide6.QtCore import QEvent, QPointF, QRectF, QSize, Qt, QTimer
 from PySide6.QtGui import (
     QColor,
     QFont,
     QLinearGradient,
     QMouseEvent,
     QPainter,
+    QPainterPath,
     QPaintEvent,
     QPen,
     QWheelEvent,
@@ -24,6 +26,8 @@ from ..theme import theme_colors
 
 GAIN_COLOR_BINS = 24
 GAIN_LINE_ALPHA = 190
+INTERACTION_DELAY_MS = 120
+FULL_MESH_THRESHOLD = 4_000
 
 
 def takeoff_angle_deg(theta_deg: float) -> float:
@@ -56,17 +60,196 @@ def gain_color(normalized: float, alpha: int = GAIN_LINE_ALPHA) -> QColor:
     )
 
 
+@dataclass(frozen=True, slots=True)
+class _MeshVertex:
+    x: float
+    y: float
+    z: float
+    normalized_gain: float
+    theta_index: int
+    phi_index: int
+
+
+@dataclass(frozen=True, slots=True)
+class _Mesh:
+    vertices: tuple[_MeshVertex, ...]
+    segments: tuple[tuple[int, int, int], ...]
+    raw_min_gain: float
+    raw_max_gain: float
+    min_gain: float
+    max_gain: float
+    uniform_gain: bool
+    max_point: tuple[float, float, float]
+
+
+def _segment_bin(first: float, second: float) -> int:
+    normalized = (first + second) / 2.0
+    return min(int(normalized * GAIN_COLOR_BINS), GAIN_COLOR_BINS - 1)
+
+
+def _build_mesh(points: tuple[tuple[float, float, float], ...]) -> _Mesh | None:
+    filtered = [
+        (theta, phi, gain) for theta, phi, gain in points if math.isfinite(gain) and gain > -100.0
+    ]
+    if len(filtered) < 4:
+        return None
+
+    gains = [gain for _, _, gain in filtered]
+    raw_min_gain = min(gains)
+    raw_max_gain = max(gains)
+    uniform_gain = math.isclose(raw_max_gain, raw_min_gain)
+    min_gain = raw_min_gain
+    max_gain = raw_max_gain if not uniform_gain else raw_min_gain + 1.0
+    span = max(max_gain - min_gain, 1e-9)
+
+    def normalized_gain(gain: float) -> float:
+        if uniform_gain:
+            return 0.5
+        return min(max((gain - min_gain) / span, 0.0), 1.0)
+
+    theta_values = sorted({theta for theta, _, _ in filtered})
+    phi_values = sorted({phi for _, phi, _ in filtered})
+    theta_index = {value: index for index, value in enumerate(theta_values)}
+    phi_index = {value: index for index, value in enumerate(phi_values)}
+    gain_by_grid: dict[tuple[int, int], float] = {}
+    for theta, phi, gain in filtered:
+        gain_by_grid[(theta_index[theta], phi_index[phi])] = gain
+
+    vertices: list[_MeshVertex] = []
+    vertex_by_grid: dict[tuple[int, int], int] = {}
+    for theta_position, theta in enumerate(theta_values):
+        theta_rad = math.radians(theta)
+        sin_theta = math.sin(theta_rad)
+        cos_theta = math.cos(theta_rad)
+        for phi_position, phi in enumerate(phi_values):
+            gain = gain_by_grid.get((theta_position, phi_position))
+            if gain is None:
+                continue
+            phi_rad = math.radians(phi)
+            vertex_by_grid[(theta_position, phi_position)] = len(vertices)
+            vertices.append(
+                _MeshVertex(
+                    x=sin_theta * math.cos(phi_rad),
+                    y=sin_theta * math.sin(phi_rad),
+                    z=cos_theta,
+                    normalized_gain=normalized_gain(gain),
+                    theta_index=theta_position,
+                    phi_index=phi_position,
+                )
+            )
+
+    segments: list[tuple[int, int, int]] = []
+    for phi_position in range(len(phi_values)):
+        previous: tuple[int, float] | None = None
+        for theta_position in range(len(theta_values)):
+            vertex_index = vertex_by_grid.get((theta_position, phi_position))
+            if vertex_index is None:
+                previous = None
+                continue
+            current = (vertex_index, vertices[vertex_index].normalized_gain)
+            if previous is not None:
+                segments.append((previous[0], current[0], _segment_bin(previous[1], current[1])))
+            previous = current
+
+    for theta_position in range(len(theta_values)):
+        previous = None
+        for phi_position in range(len(phi_values)):
+            vertex_index = vertex_by_grid.get((theta_position, phi_position))
+            if vertex_index is None:
+                previous = None
+                continue
+            current = (vertex_index, vertices[vertex_index].normalized_gain)
+            if previous is not None:
+                segments.append((previous[0], current[0], _segment_bin(previous[1], current[1])))
+            previous = current
+
+    return _Mesh(
+        vertices=tuple(vertices),
+        segments=tuple(segments),
+        raw_min_gain=raw_min_gain,
+        raw_max_gain=raw_max_gain,
+        min_gain=min_gain,
+        max_gain=max_gain,
+        uniform_gain=uniform_gain,
+        max_point=max(filtered, key=lambda item: item[2]),
+    )
+
+
+def _decimated_mesh(mesh: _Mesh) -> _Mesh:
+    """Return a coarser mesh for interactive rotation and zoom."""
+
+    if len(mesh.vertices) <= FULL_MESH_THRESHOLD:
+        return mesh
+    theta_count = max(vertex.theta_index for vertex in mesh.vertices) + 1
+    phi_count = max(vertex.phi_index for vertex in mesh.vertices) + 1
+    theta_stride = max(1, math.ceil(theta_count / 19))
+    phi_stride = max(1, math.ceil(phi_count / 37))
+    theta_positions = sorted({*range(0, theta_count, theta_stride), theta_count - 1})
+    phi_positions = sorted({*range(0, phi_count, phi_stride), phi_count - 1})
+    vertex_by_grid = {(vertex.theta_index, vertex.phi_index): vertex for vertex in mesh.vertices}
+    vertices: list[_MeshVertex] = []
+    index_by_grid: dict[tuple[int, int], int] = {}
+    for theta_position in theta_positions:
+        for phi_position in phi_positions:
+            vertex = vertex_by_grid.get((theta_position, phi_position))
+            if vertex is None:
+                continue
+            index_by_grid[(theta_position, phi_position)] = len(vertices)
+            vertices.append(vertex)
+    if len(vertices) < 4:
+        return mesh
+
+    segments: list[tuple[int, int, int]] = []
+    for phi_position in phi_positions:
+        previous: tuple[int, float] | None = None
+        for theta_position in theta_positions:
+            index = index_by_grid.get((theta_position, phi_position))
+            if index is None:
+                previous = None
+                continue
+            current = (index, vertices[index].normalized_gain)
+            if previous is not None:
+                segments.append((previous[0], current[0], _segment_bin(previous[1], current[1])))
+            previous = current
+    for theta_position in theta_positions:
+        previous = None
+        for phi_position in phi_positions:
+            index = index_by_grid.get((theta_position, phi_position))
+            if index is None:
+                previous = None
+                continue
+            current = (index, vertices[index].normalized_gain)
+            if previous is not None:
+                segments.append((previous[0], current[0], _segment_bin(previous[1], current[1])))
+            previous = current
+
+    return _Mesh(
+        vertices=tuple(vertices),
+        segments=tuple(segments),
+        raw_min_gain=mesh.raw_min_gain,
+        raw_max_gain=mesh.raw_max_gain,
+        min_gain=mesh.min_gain,
+        max_gain=mesh.max_gain,
+        uniform_gain=mesh.uniform_gain,
+        max_point=mesh.max_point,
+    )
+
+
 class RadiationPattern3DView(QWidget):
     def __init__(self, translator: Translator, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._translator = translator
         self._points: tuple[tuple[float, float, float], ...] = ()
+        self._full_mesh: _Mesh | None = None
+        self._interactive_mesh: _Mesh | None = None
         self._ground = False
         self._yaw_deg = 38.0
         self._pitch_deg = 26.0
         self._zoom = 1.0
         self._dragging = False
+        self._interacting = False
         self._last_pos = QPointF(0.0, 0.0)
+        self._interaction_timer: QTimer | None = None
         self._colors = theme_colors(self.palette())
         self.setMinimumHeight(280)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -83,19 +266,54 @@ class RadiationPattern3DView(QWidget):
         if ground:
             points = tuple(point for point in points if point[0] <= 90.0 + 1e-6)
         self._points = points
+        self._full_mesh = _build_mesh(points)
+        self._interactive_mesh = (
+            _decimated_mesh(self._full_mesh) if self._full_mesh is not None else None
+        )
         self._ground = ground
+        self._stop_interaction_timer()
+        self._interacting = False
         self.update()
 
     def reset_view(self) -> None:
+        self._stop_interaction_timer()
+        self._interacting = False
         self._yaw_deg = 38.0
         self._pitch_deg = 26.0
         self._zoom = 1.0
+        self.update()
+
+    def _interaction_timer_instance(self) -> QTimer:
+        if self._interaction_timer is None:
+            timer = QTimer(self)
+            timer.setSingleShot(True)
+            timer.setInterval(INTERACTION_DELAY_MS)
+            timer.timeout.connect(self._end_interaction)
+            self._interaction_timer = timer
+        return self._interaction_timer
+
+    def _stop_interaction_timer(self) -> None:
+        if self._interaction_timer is not None:
+            self._interaction_timer.stop()
+            self._interaction_timer.deleteLater()
+            self._interaction_timer = None
+
+    def _begin_interaction(self) -> None:
+        self._interacting = True
+        self._interaction_timer_instance().start()
+
+    def _end_interaction(self) -> None:
+        self._stop_interaction_timer()
+        if not self._interacting:
+            return
+        self._interacting = False
         self.update()
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
             self._dragging = True
             self._last_pos = event.position()
+            self._begin_interaction()
             self.setCursor(Qt.CursorShape.ClosedHandCursor)
             event.accept()
             return
@@ -109,6 +327,7 @@ class RadiationPattern3DView(QWidget):
         self._last_pos = event.position()
         self._yaw_deg = (self._yaw_deg + delta.x() * 0.45) % 360.0
         self._pitch_deg = min(max(self._pitch_deg + delta.y() * 0.35, -85.0), 85.0)
+        self._begin_interaction()
         self.update()
         event.accept()
 
@@ -116,12 +335,15 @@ class RadiationPattern3DView(QWidget):
         if self._dragging and event.button() == Qt.MouseButton.LeftButton:
             self._dragging = False
             self.unsetCursor()
+            self._interaction_timer_instance().start()
             event.accept()
             return
         super().mouseReleaseEvent(event)
 
     def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
+            self._stop_interaction_timer()
+            self._interacting = False
             self.reset_view()
             event.accept()
             return
@@ -132,6 +354,7 @@ class RadiationPattern3DView(QWidget):
         if delta == 0:
             return
         self._zoom = min(max(self._zoom * (1.1 if delta > 0 else 1.0 / 1.1), 0.5), 4.0)
+        self._begin_interaction()
         self.update()
         event.accept()
 
@@ -160,28 +383,18 @@ class RadiationPattern3DView(QWidget):
         if rect.width() < 160.0 or rect.height() < 120.0:
             return
 
-        points = [
-            (theta, phi, gain)
-            for theta, phi, gain in self._points
-            if math.isfinite(gain) and gain > -100.0
-        ]
-        if len(points) < 4:
+        mesh = self._interactive_mesh if self._interacting else self._full_mesh
+        if mesh is None or len(mesh.vertices) < 4:
             painter.setPen(self._colors.secondary_text)
             painter.setFont(QFont("Sans Serif", 9))
             painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, self._translator.t("pattern.none"))
             return
 
-        gains = [gain for _, _, gain in points]
-        raw_min_gain = min(gains)
-        raw_max_gain = max(gains)
-        uniform_gain = math.isclose(raw_max_gain, raw_min_gain)
-        min_gain = raw_min_gain
-        max_gain = raw_max_gain if not uniform_gain else raw_min_gain + 1.0
-
-        def normalized_gain(gain: float) -> float:
-            if uniform_gain:
-                return 0.5
-            return min(max((gain - min_gain) / (max_gain - min_gain), 0.0), 1.0)
+        raw_min_gain = mesh.raw_min_gain
+        raw_max_gain = mesh.raw_max_gain
+        uniform_gain = mesh.uniform_gain
+        min_gain = mesh.min_gain
+        max_gain = mesh.max_gain
 
         yaw = math.radians(self._yaw_deg)
         pitch = math.radians(self._pitch_deg)
@@ -206,11 +419,30 @@ class RadiationPattern3DView(QWidget):
             rotated_y = x * sin_yaw + y * cos_yaw
             return rotated_x, rotated_y * sin_pitch + z * cos_pitch
 
-        projected = [project(theta, phi, gain) for theta, phi, gain in points]
-        min_px = min(point[0] for point in projected)
-        max_px = max(point[0] for point in projected)
-        min_py = min(point[1] for point in projected)
-        max_py = max(point[1] for point in projected)
+        projected: list[tuple[float, float]] = []
+        for vertex in mesh.vertices:
+            radius = max(vertex.normalized_gain, 0.02)
+            rotated_x = (vertex.x * cos_yaw - vertex.y * sin_yaw) * radius
+            rotated_y = (vertex.x * sin_yaw + vertex.y * cos_yaw) * radius
+            projected.append(
+                (
+                    rotated_x,
+                    rotated_y * sin_pitch + vertex.z * radius * cos_pitch,
+                )
+            )
+
+        extent_points = [
+            *projected,
+            project(*mesh.max_point),
+            project(0.0, 0.0, min_gain),
+            project(0.0, 0.0, max_gain),
+            project(90.0, 0.0, max_gain),
+            project(90.0, 90.0, max_gain),
+        ]
+        min_px = min(point[0] for point in extent_points)
+        max_px = max(point[0] for point in extent_points)
+        min_py = min(point[1] for point in extent_points)
+        max_py = max(point[1] for point in extent_points)
         span_x = max(max_px - min_px, 1e-9)
         span_y = max(max_py - min_py, 1e-9)
         draw_rect = QRectF(
@@ -243,51 +475,25 @@ class RadiationPattern3DView(QWidget):
                 center.y() - (py - center_py) * scale,
             )
 
-        theta_values = sorted({theta for theta, _, _ in points})
-        phi_values = sorted({phi for _, phi, _ in points})
-        gain_by_coord = {(round(theta, 6), round(phi, 6)): gain for theta, phi, gain in points}
-        gain_lines: list[list[QLineF]] = [[] for _ in range(GAIN_COLOR_BINS)]
-
-        def add_segment(
-            start: tuple[QPointF, float],
-            end: tuple[QPointF, float],
-        ) -> None:
-            average_gain = (start[1] + end[1]) / 2.0
-            index = min(
-                int(normalized_gain(average_gain) * GAIN_COLOR_BINS),
-                GAIN_COLOR_BINS - 1,
+        screen_points = [
+            QPointF(
+                center.x() + (px - center_px) * scale,
+                center.y() - (py - center_py) * scale,
             )
-            gain_lines[index].append(QLineF(start[0], end[0]))
+            for px, py in projected
+        ]
+        gain_paths = [QPainterPath() for _ in range(GAIN_COLOR_BINS)]
+        for first, second, bin_index in mesh.segments:
+            path = gain_paths[bin_index]
+            path.moveTo(screen_points[first])
+            path.lineTo(screen_points[second])
 
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        for phi in phi_values:
-            previous: tuple[QPointF, float] | None = None
-            for theta in theta_values:
-                gain = gain_by_coord.get((round(theta, 6), round(phi, 6)))
-                if gain is None:
-                    previous = None
-                    continue
-                current = (screen(theta, phi, gain), gain)
-                if previous is not None:
-                    add_segment(previous, current)
-                previous = current
-        for theta in theta_values:
-            previous = None
-            for phi in phi_values:
-                gain = gain_by_coord.get((round(theta, 6), round(phi, 6)))
-                if gain is None:
-                    previous = None
-                    continue
-                current = (screen(theta, phi, gain), gain)
-                if previous is not None:
-                    add_segment(previous, current)
-                previous = current
-
-        for index, lines in enumerate(gain_lines):
-            if not lines:
+        for index, path in enumerate(gain_paths):
+            if path.isEmpty():
                 continue
             painter.setPen(QPen(gain_color((index + 0.5) / GAIN_COLOR_BINS), 1.0))
-            painter.drawLines(lines)
+            painter.drawPath(path)
 
         if self._ground:
             ground_points = [
@@ -319,7 +525,7 @@ class RadiationPattern3DView(QWidget):
                 self._translator.t("pattern.ground"),
             )
 
-        max_point = max(points, key=lambda item: item[2])
+        max_point = mesh.max_point
         marker = screen(*max_point)
         painter.setPen(QPen(self._colors.feed, 2.0))
         painter.setBrush(self._colors.feed)
@@ -358,14 +564,14 @@ class RadiationPattern3DView(QWidget):
 
         origin = screen(0.0, 0.0, min_gain)
         painter.setPen(QPen(self._colors.axis, 1.5))
-        for theta, phi, label in ((90.0, 0.0, "X"), (90.0, 90.0, "Y"), (0.0, 0.0, "Z")):
+        for theta, phi, axis_label in ((90.0, 0.0, "X"), (90.0, 90.0, "Y"), (0.0, 0.0, "Z")):
             end = screen(theta, phi, max_gain)
             painter.drawLine(origin, end)
             painter.setFont(QFont("Sans Serif", 7))
             painter.setPen(self._colors.secondary_text)
             painter.drawText(
                 QRectF(end.x() + 4.0, end.y() - 8.0, 16.0, 16.0),
-                label,
+                axis_label,
             )
 
         self._draw_gain_legend(

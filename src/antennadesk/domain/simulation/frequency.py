@@ -57,3 +57,58 @@ class FrequencyPlan:
             return (self.start_hz,)
         step = self.step_hz
         return tuple(self.start_hz + index * step for index in range(self.count))
+
+    def snapshot_frequencies(
+        self,
+        max_count: int,
+        *,
+        preferred_frequency_hz: float | None = None,
+    ) -> tuple[float, ...]:
+        """Return up to ``max_count`` representative frequencies from the plan.
+
+        The first and last plan frequencies are always included. When
+        ``preferred_frequency_hz`` is inside the plan and ``max_count >= 3``,
+        the evenly spaced index closest to it is replaced by the nearest plan
+        frequency, so the design frequency normally has a pattern snapshot.
+
+        This is used to compute far-field patterns at a small number of
+        frequencies while keeping the full impedance sweep.
+        """
+
+        if max_count < 1:
+            raise ValueError("max_count must be at least 1")
+        if self.count <= max_count:
+            return self.frequencies_hz
+        preferred_index = self._plan_index(preferred_frequency_hz)
+        if max_count == 1:
+            if preferred_index is None:
+                return (self.start_hz,)
+            return (self.start_hz + preferred_index * self.step_hz,)
+        last_index = self.count - 1
+        indices = sorted(
+            {round(index * last_index / (max_count - 1)) for index in range(max_count)}
+        )
+        if preferred_index is not None and preferred_index not in indices:
+            interior = [index for index in indices if 0 < index < last_index]
+            if interior:
+                closest = min(interior, key=lambda index: abs(index - preferred_index))
+                indices = sorted({*indices, preferred_index} - {closest})
+        step = self.step_hz
+        return tuple(self.start_hz + index * step for index in indices)
+
+    def _plan_index(self, frequency_hz: float | None) -> int | None:
+        if frequency_hz is None:
+            return None
+        index = round((frequency_hz - self.start_hz) / self.step_hz)
+        if 0 <= index < self.count:
+            return index
+        return None
+
+    def nearest_frequency(self, frequency_hz: float) -> float:
+        """Return the plan frequency closest to ``frequency_hz``."""
+
+        if self.count == 1:
+            return self.start_hz
+        index = round((frequency_hz - self.start_hz) / self.step_hz)
+        index = min(max(index, 0), self.count - 1)
+        return self.start_hz + index * self.step_hz

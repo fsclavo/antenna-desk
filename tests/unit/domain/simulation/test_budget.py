@@ -7,6 +7,7 @@ import pytest
 from antennadesk.domain.simulation.budget import (
     DEFAULT_MAX_PROJECT_BYTES,
     choose_pattern_step,
+    estimate_compressed_project_bytes,
     estimate_project_bytes,
 )
 
@@ -44,7 +45,7 @@ def test_auto_pattern_uses_the_finest_step_that_fits() -> None:
     )
 
     assert budget.far_field_enabled is True
-    assert budget.pattern_step_deg == 10.0
+    assert budget.pattern_step_deg == 2.0
     assert budget.reduced is False
 
 
@@ -62,8 +63,8 @@ def test_auto_pattern_coarsens_for_larger_sweeps() -> None:
         counts_for_step=_counts,
     )
 
-    assert few.pattern_step_deg == 5.0
-    assert tiny.pattern_step_deg == 2.0
+    assert few.pattern_step_deg == 2.0
+    assert tiny.pattern_step_deg == 1.0
 
 
 def test_auto_pattern_uses_coarser_fallbacks_for_larger_sweeps() -> None:
@@ -80,8 +81,77 @@ def test_auto_pattern_uses_coarser_fallbacks_for_larger_sweeps() -> None:
         counts_for_step=_counts,
     )
 
-    assert mid.pattern_step_deg == 15.0
-    assert wide.pattern_step_deg is None
+    assert mid.pattern_step_deg == 5.0
+    assert wide.pattern_step_deg == 10.0
+
+
+def test_pattern_snapshots_allow_a_fine_pattern_for_a_dense_sweep() -> None:
+    budget = choose_pattern_step(
+        frequency_count=200,
+        pattern_frequency_count=5,
+        segment_count=66,
+        candidate_steps=(1.0, 2.0, 5.0, 10.0, 15.0, 20.0, 30.0),
+        counts_for_step=_counts,
+    )
+
+    assert budget.pattern_step_deg == 1.0
+    assert budget.pattern_frequency_count == 5
+    assert budget.far_field_enabled is True
+    assert budget.estimated_project_bytes < DEFAULT_MAX_PROJECT_BYTES
+
+
+def test_many_pattern_snapshots_use_the_finest_compressed_step() -> None:
+    thirteen = choose_pattern_step(
+        frequency_count=200,
+        pattern_frequency_count=13,
+        segment_count=66,
+        candidate_steps=(1.0, 2.0, 5.0, 10.0, 15.0, 20.0, 30.0),
+        counts_for_step=_counts,
+    )
+    twenty_one = choose_pattern_step(
+        frequency_count=200,
+        pattern_frequency_count=21,
+        segment_count=66,
+        candidate_steps=(1.0, 2.0, 5.0, 10.0, 15.0, 20.0, 30.0),
+        counts_for_step=_counts,
+    )
+
+    assert thirteen.pattern_step_deg == 2.0
+    assert twenty_one.pattern_step_deg == 2.0
+    assert thirteen.estimated_project_bytes < DEFAULT_MAX_PROJECT_BYTES
+    assert twenty_one.estimated_project_bytes < DEFAULT_MAX_PROJECT_BYTES
+    assert thirteen.estimated_json_bytes > thirteen.estimated_project_bytes
+
+
+def test_project_size_estimate_separates_sweep_and_pattern_counts() -> None:
+    dense_pattern = estimate_project_bytes(
+        frequency_count=200,
+        pattern_frequency_count=200,
+        far_field_points_per_frequency=1387,
+        segment_count=66,
+    )
+    snapshots = estimate_project_bytes(
+        frequency_count=200,
+        pattern_frequency_count=5,
+        far_field_points_per_frequency=1387,
+        segment_count=66,
+    )
+
+    assert snapshots < dense_pattern
+    compressed = estimate_compressed_project_bytes(
+        frequency_count=200,
+        pattern_frequency_count=5,
+        far_field_points_per_frequency=1387,
+        segment_count=66,
+    )
+    assert compressed < snapshots
+    with pytest.raises(ValueError, match="pattern_frequency_count"):
+        estimate_project_bytes(
+            frequency_count=10,
+            pattern_frequency_count=-1,
+            far_field_points_per_frequency=1,
+            segment_count=1,
+        )
 
 
 def test_auto_pattern_disables_far_field_when_nothing_fits() -> None:
@@ -114,8 +184,8 @@ def test_requested_step_is_a_maximum_and_can_only_coarsen() -> None:
         requested_step_deg=10.0,
     )
 
-    assert reduced.pattern_step_deg == 10.0
-    assert reduced.reduced is True
+    assert reduced.pattern_step_deg == 5.0
+    assert reduced.reduced is False
     assert exact.pattern_step_deg == 10.0
     assert exact.reduced is False
 

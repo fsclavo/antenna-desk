@@ -13,7 +13,7 @@ from antennadesk.domain.antennas.j_pole import JPoleParameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
-from antennadesk.ui.geometry.builder import build_scene
+from antennadesk.ui.geometry.builder import build_scene, effective_antenna_type
 from antennadesk.ui.geometry.views import GeometryViewMode, recommended_view
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem
@@ -316,6 +316,56 @@ def test_trap_dipole_marks_both_traps_and_reports_the_center_section() -> None:
         assert len(loads) == 2
         assert "traps 2" in scene.summary
         assert "center 10.00 m" in scene.summary
+
+
+def test_t2fd_marks_the_feed_and_the_termination_resistor() -> None:
+    from antennadesk.domain.antennas.t2fd import T2FDParameters
+
+    parameters = T2FDParameters(
+        frequency_hz=3_500_000.0,
+        highest_frequency_hz=30_000_000.0,
+        length_m=26.0,
+        spacing_m=0.9,
+        height_m=10.0,
+    )
+
+    for mode in (GeometryViewMode.ELEVATION, GeometryViewMode.PLAN):
+        scene = _scene(parameters, "t2fd", mode)
+        loads = [marker for marker in scene.markers if marker.kind == "load"]
+        feeds = [marker for marker in scene.markers if marker.kind == "feed"]
+        assert len(loads) == 1
+        assert len(feeds) == 1
+        assert "element length 26.00 m" in scene.summary
+        assert "conductor spacing 0.90 m" in scene.summary
+        if mode is GeometryViewMode.PLAN:
+            assert any(dimension.text == "0.90 m" for dimension in scene.dimensions)
+
+
+def test_legacy_t2fd_generator_keeps_its_presentation_type() -> None:
+    from antennadesk.domain.antennas.t2fd import T2FDParameters
+
+    parameters = T2FDParameters(
+        frequency_hz=3_500_000.0,
+        highest_frequency_hz=30_000_000.0,
+        length_m=26.0,
+        spacing_m=0.9,
+        height_m=10.0,
+    )
+    custom = parameters.to_custom_parameters()
+
+    scene = build_scene(
+        custom.to_antenna(),
+        antenna_type="custom",
+        parameters=custom,
+        display_name=None,
+        mode=GeometryViewMode.PLAN,
+        translator=TRANSLATOR,
+        unit_system=UnitSystem.METRIC,
+    )
+
+    assert effective_antenna_type("custom", custom) == "t2fd"
+    assert scene.metadata["antenna_type"] == "t2fd"
+    assert len(scene.polylines) == 4
 
 
 def test_legacy_custom_slim_jim_keeps_its_presentation_type() -> None:

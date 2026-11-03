@@ -109,9 +109,9 @@ NBS five-element preset remains available in the Yagi editor.
 Use **File → New Antenna...** to open the antenna catalog. Search or filter by
 **Antenna Type** and choose the desired generator. The catalog is grouped by
 antenna family: Dipole, Yagi, Loop, Vertical, and Custom. The Dipole family
-contains the straight dipole, folded dipole, trap dipole, end-fed wire, sloper,
-random wire, doublet, inverted-V, off-center-fed dipole, and fan dipole. The
-Yagi family includes the parametric Yagi and the Moxon rectangle. The Loop
+contains the straight dipole, folded dipole, trap dipole, T2FD, end-fed wire,
+sloper, random wire, doublet, inverted-V, off-center-fed dipole, and fan dipole.
+The Yagi family includes the parametric Yagi and the Moxon rectangle. The Loop
 family includes the generic loop plus delta-loop and quad-loop presets. The
 Vertical family includes the generic vertical radiator and the loaded vertical
 / mobile whip preset. The catalog shows a short description and evidence level
@@ -163,6 +163,35 @@ are tested, but there is no independent numerical reference for this
 configuration. The loads editor protects the two trap loads; edit them through
 the trap-dipole fields.
 
+## Create a T2FD
+
+Choose **File → New Antenna... → T2FD** for a terminated folded dipole. Set the
+lowest and highest design frequencies, the element length, the conductor
+spacing, the termination resistance, the feed transformer ratio, the height,
+orientation, azimuth, radius, material, and ground.
+
+**Set starting dimensions from frequency** applies Cebik's wide-long rule:
+about `300/F(MHz)` feet of span and `10/F(MHz)` feet of conductor spacing at the
+lowest design frequency. The default 3.5-30 MHz design starts with an 800 Ω
+non-inductive resistor and a 16:1 transformer, following the commercial
+B&W AC3-30 design. A 390-480 Ω resistor with a 4:1 transformer to 75 Ω is the
+other common arrangement; both fields are editable.
+
+The termination is modeled as a series load at the midpoint of the non-driven
+conductor. The transformer is an ideal post-processing two-port: it scales the
+antenna impedance for the transmitter-side SWR and realized gain, but it is not
+part of the NEC geometry. The resistor dissipates a large part of the applied
+power, especially near the lowest frequency; check the efficiency and realized
+gain, not only the SWR. The model supports flat horizontal and vertical
+installations. It does not model a tilted installation, balun loss, resistor
+temperature rise, or a feed line as part of the antenna.
+
+The design panel starts with a 31-point sweep from the lowest to the highest
+design frequency. The pattern is computed at amateur-band snapshots with the
+finest resolution that fits the project storage budget; the effective value is
+reported after a run. The T2FD span and spacing are construction starting
+points, not verified cut lengths.
+
 ## Create a Yagi
 
 Choose **File → New Antenna... → Yagi** to generate a Yagi as a first-class
@@ -202,8 +231,12 @@ horizontal span and end height. The default ground is finite ground; choose
 **Free space** only if you deliberately want a free-space model. The feed is at
 the apex.
 
-This is an experimental generator: its geometry and frequency scaling are
-tested, but it has no independent numerical reference for gain or impedance.
+If the requested apex height would put the leg ends below ground, the
+frequency-first estimator widens the included angle (and raises the apex if
+needed) and reports a warning. Manual entries must keep the ends above ground;
+the form rejects a geometry that would cross the ground plane. This is an
+experimental generator: its geometry and frequency scaling are tested, but it
+has no independent numerical reference for gain or impedance.
 Simulate it and judge the modeled performance; the design panel keeps the
 generator fields editable. Use **Edit Custom Wires...** for raw coordinates. The
 elevation view is selected automatically so the included angle is visible; Plan
@@ -238,7 +271,10 @@ wire; disable it to remove
 the counterpoise while keeping its last values for later. The transformer
 ratio is an ideal feed-point transformation: `49` means a 49:1 unun, so the
 antenna-side impedance is divided by 49 for the reported impedance and SWR.
-End-fed is a first-class experimental template with an inline editor.
+If the requested end height is outside the wire's vertical reach, the
+frequency-first estimator clamps it to the nearest reachable height and reports
+a warning. End-fed is a first-class experimental template with an inline
+editor.
 
 ## Create a sloper
 
@@ -278,10 +314,11 @@ transformation.
 The preset is multiband: the custom design panel starts with a **41-point
 3.5–30 MHz sweep** so you can inspect the G5RV bands. The pattern resolution is
 **Auto (max)** by default: AntennaDesk estimates the saved project size and
-uses the finest pattern step that fits, reducing it automatically when needed.
-If even the coarsest pattern would be too large, it disables the far-field
-pattern and leaves the impedance/SWR sweep intact. The panel shows the requested
-and effective resolution after a run.
+uses the finest pattern step that fits. The 41-point default uses a 1° pattern
+at nine band snapshot frequencies. If even the coarsest pattern would be too
+large,
+it disables the far-field pattern and leaves the impedance/SWR sweep intact.
+The panel shows the requested and effective resolution after a run.
 
 The published dimensions are reference-backed (Carr, *Practical Antenna
 Handbook*, via the Wikipedia G5RV article); the lossless TL model and the
@@ -305,8 +342,12 @@ so the inline dipole editor remains available.
 Choose **File → New Antenna... → Fan dipole** to generate multiple center-fed
 dipole pairs sharing a common apex feed. Each row sets the element length and
 included angle; add or remove pairs as needed. Set the apex height, azimuth,
-radius, material, and ground. The fan dipole is a first-class experimental
-template with an inline editor.
+radius, material, and ground. Elements must use different included angles: two elements with the same angle
+would overlap, so the model rejects them. The form defaults to 120°/90° and its
+**Add element** button chooses a narrower angle that is not already in use. The
+frequency-first estimator fans the elements at progressively narrower angles and
+raises the apex if needed to keep all ends above ground. The fan dipole is a
+first-class experimental template with an inline editor.
 
 ## Create an off-center-fed dipole
 
@@ -318,6 +359,12 @@ creation its parameters stay in the left design panel and can be edited inline.
 The generator is experimental.
 
 ## Create a vertical
+
+Ground-mounted radials are modeled **1 cm above the ground plane** so NEC-2 can
+evaluate them. The canonical design keeps the base height you enter; the small
+clearance is applied only to the solver deck and is reported as an
+informational diagnostic. Without it, `nec2c` rejects radials lying exactly on
+the ground with exit code 255.
 
 Choose **File → New Antenna... → Vertical + radials** to generate a first-class
 vertical radiator with an optional radial plane. Set the radiator height, base height,
@@ -372,12 +419,17 @@ construction sheet.
   orientation. Above-ground elevation cuts are drawn as open arcs rather than
   closed lobes. The angular resolution comes from **Pattern resolution** in the
   design panel; higher resolution samples the same NEC solution more finely.
-  The 3D lobe draws a ground plane when the model has ground and only the
+  While you rotate or zoom the 3D lobe, AntennaDesk draws a coarser display
+  mesh; when the movement stops it redraws the full-resolution wireframe. The
+  stored pattern, the cuts, and the exports keep the full resolution. The
+  pattern frequency selector lists the pattern snapshot frequencies, not every
+  impedance-sweep point. The 3D lobe draws a ground plane when the model has
+  ground and only the
   upper-hemisphere pattern is requested. Its maximum-gain marker reports the
   gain and the takeoff angle above the ground plane; for free-space models it
   reports elevation above the horizontal plane instead. The marker is the
-  highest sampled direction, so with the default 5° pattern resolution the
-  reported angle is quantized to the sampling grid. Drag the 3D lobe to rotate
+  highest sampled direction, so the reported angle is quantized to the selected
+  pattern resolution. Drag the 3D lobe to rotate
   it, use the mouse wheel to zoom, and double-click to reset the view. Power
   gain is not realized gain; see the gain summary below.
 - **Currents**: segment current magnitude for the selected frequency, with the
@@ -438,6 +490,14 @@ coarsest pattern does not fit, the far-field pattern is disabled and the
 impedance/SWR sweep still runs. Custom designs also expose **Auto (max)**,
 which always chooses the finest fitting step; the custom panel shows the
 requested and effective resolution and the estimated project size.
+
+For sweeps longer than five points, the pattern is computed at up to **five
+evenly spaced snapshot frequencies**, always including the first and last
+frequency. When the design frequency falls inside the sweep, the nearest sweep
+point to it is included as well. The impedance/SWR sweep keeps every point. The pattern tab lists the
+snapshot frequencies, so the 3D lobe resolution no longer degrades when you use
+a dense impedance sweep. A 200-point G5RV sweep, for example, can use a 5°
+pattern at five frequencies instead of a 30° pattern at every frequency.
 The form shows the estimated number of pattern points. More points produce
 smoother cuts and a smoother 3D lobe, but increase solver time and project
 size; use high resolution for final runs rather than routine exploration.
@@ -673,7 +733,8 @@ HTML report, or **File → Export → PDF Report...** for a native PDF with desi
 parameters, configuration, solver metadata, fingerprint, diagnostics,
 impedance, resonance, and charts.
 Simulation runs are stored when you save the project, including raw solver
-text. The project size limit is 10 MB; saving above 8 MB shows a warning, and
+text. Project files are losslessly gzip-compressed JSON; the 32 MB limit applies
+to the compressed file. Saving above 20 MB compressed shows a warning, and
 **Tools → Compact Simulation History...** keeps only the latest run per
 variant.
 
@@ -714,7 +775,7 @@ canonical meters and hertz.
   searches for generated templates. Custom/imported designs are excluded, and
   there are no boom-length or turning-radius constraints.
 - Project files store normalized results and raw solver text; many long runs
-  can reach the 10 MB project limit.
+  can reach the 32 MB project limit.
 - The feed line is a uniform-line post-processing model. It reports impedance
   and SWR at the transmitter but does not add line loss to the pattern gain or
   realized-gain calculation.

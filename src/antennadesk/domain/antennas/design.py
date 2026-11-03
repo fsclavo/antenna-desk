@@ -17,6 +17,7 @@ from .loop import ANTENNA_TYPE_LOOP, LoopParameters
 from .moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from .ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
 from .ringo import ANTENNA_TYPE_RINGO, RingoParameters
+from .t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
 from .trap_dipole import ANTENNA_TYPE_TRAP_DIPOLE, TrapDipoleParameters
 from .vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
 from .yagi import ANTENNA_TYPE_YAGI, YagiParameters
@@ -34,6 +35,7 @@ AntennaDesignParameters = (
     | EndFedParameters
     | JPoleParameters
     | RingoParameters
+    | T2FDParameters
     | TrapDipoleParameters
     | CustomAntennaParameters
 )
@@ -44,7 +46,7 @@ def template_load_ids(parameters: AntennaDesignParameters) -> frozenset[str]:
 
     if isinstance(parameters, VerticalParameters):
         return parameters.managed_load_ids
-    if isinstance(parameters, TrapDipoleParameters):
+    if isinstance(parameters, (T2FDParameters, TrapDipoleParameters)):
         return parameters.managed_load_ids
     return frozenset()
 
@@ -76,6 +78,8 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_RINGO
     if isinstance(parameters, TrapDipoleParameters):
         return ANTENNA_TYPE_TRAP_DIPOLE
+    if isinstance(parameters, T2FDParameters):
+        return ANTENNA_TYPE_T2FD
     if isinstance(parameters, CustomAntennaParameters):
         return ANTENNA_TYPE_CUSTOM
     raise TypeError(f"unsupported antenna parameters: {type(parameters)!r}")
@@ -98,6 +102,8 @@ def primary_dimension_m(parameters: AntennaDesignParameters) -> float:
         return parameters.length_m
     if isinstance(parameters, TrapDipoleParameters):
         return parameters.total_length_m
+    if isinstance(parameters, T2FDParameters):
+        return parameters.length_m
     raise TypeError(f"antenna has no single primary dimension: {type(parameters)!r}")
 
 
@@ -121,4 +127,6 @@ def with_primary_dimension(
         return replace(parameters, length_m=dimension_m)
     if isinstance(parameters, TrapDipoleParameters):
         return parameters.with_total_length(dimension_m)
+    if isinstance(parameters, T2FDParameters):
+        return parameters.with_length(dimension_m)
     raise TypeError(f"antenna has no single primary dimension: {type(parameters)!r}")

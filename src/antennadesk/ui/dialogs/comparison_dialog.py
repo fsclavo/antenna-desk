@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 from ...domain.antennas.dipole import DipoleParameters
 from ...domain.antennas.folded_dipole import FoldedDipoleParameters
 from ...domain.antennas.loop import LoopParameters
+from ...domain.antennas.t2fd import T2FDParameters
 from ...domain.antennas.trap_dipole import TrapDipoleParameters
 from ...domain.projects.project import DesignVariant, Project
 from ...domain.simulation.result import FrequencyResult, SimulationResult
@@ -194,6 +195,9 @@ class ComparisonDialog(QDialog):
         elif isinstance(parameters, TrapDipoleParameters):
             primary = f"{parameters.total_length_m:.3f} m"
             secondary = f"{parameters.trap_frequency_hz / 1e6:.3f} MHz"
+        elif isinstance(parameters, T2FDParameters):
+            primary = f"{parameters.length_m:.3f} m"
+            secondary = f"{parameters.termination_resistance_ohm:g} Ω"
         else:
             primary = "—"
             secondary = "—"

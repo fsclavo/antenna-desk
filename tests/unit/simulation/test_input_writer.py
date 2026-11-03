@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+from dataclasses import replace
+
 from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.feed import FeedPoint
@@ -198,6 +200,50 @@ def test_loaded_vertical_emits_its_loading_coil_on_the_radiator() -> None:
     assert "LD 0 1 4 4 0.500000000 0.000012000 0.000000000000" in deck.text
 
 
+def test_ground_mounted_radials_are_raised_for_nec() -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+    from antennadesk.domain.environment.ground import GroundModel
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        radial_count=4,
+        radial_length_m=10.0,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    )
+
+    deck = write_nec2_input(parameters.to_antenna(name="Vertical"), _spec(segments=3))
+
+    assert deck.z_offset_m == 0.01
+    assert (
+        "GW 1 3 0.000000000 0.000000000 0.010000000 0.000000000 0.000000000 10.010000000"
+    ) in deck.text
+    assert (
+        "GW 2 3 0.000000000 0.000000000 0.010000000 10.000000000 0.000000000 0.010000000"
+    ) in deck.text
+
+
+def test_free_space_vertical_is_not_raised() -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        radial_count=4,
+        radial_length_m=10.0,
+    )
+
+    deck = write_nec2_input(parameters.to_antenna(name="Vertical"), _spec(segments=3))
+
+    assert deck.z_offset_m == 0.0
+    assert (
+        "GW 1 3 0.000000000 0.000000000 0.000000000 0.000000000 0.000000000 10.000000000"
+    ) in deck.text
+
+
 def test_trap_dipole_emits_parallel_traps_on_both_sides() -> None:
     from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 
@@ -214,6 +260,51 @@ def test_trap_dipole_emits_parallel_traps_on_both_sides() -> None:
 
     assert "LD 1 1 2 2 0.000000000 0.000010000 0.000000000013" in deck.text
     assert "LD 1 1 6 6 0.000000000 0.000010000 0.000000000013" in deck.text
+
+
+def test_t2fd_emits_a_series_termination_opposite_the_feed() -> None:
+    from antennadesk.domain.antennas.t2fd import T2FDParameters
+
+    parameters = T2FDParameters(
+        frequency_hz=3_500_000.0,
+        highest_frequency_hz=30_000_000.0,
+        length_m=26.0,
+        spacing_m=0.9,
+        height_m=10.0,
+        termination_resistance_ohm=800.0,
+        transformer_ratio=16.0,
+    )
+    deck = write_nec2_input(parameters.to_antenna(name="T2FD"), _spec(segments=7))
+
+    assert "LD 0 2 4 4 800.000000000 0.000000000 0.000000000000" in deck.text
+    assert "EX 0 1 4 0 1.0" in deck.text
+    assert deck.text.count("GW ") == 4
+
+
+def test_pattern_snapshots_split_the_frequency_sweep() -> None:
+    plan = FrequencyPlan.sweep(7_000_000.0, 7_200_000.0, 11)
+    spec = replace(
+        _spec(
+            frequency_plan=plan,
+            far_field=FarFieldRequest(
+                enabled=True,
+                theta_start_deg=0.0,
+                theta_stop_deg=90.0,
+                theta_count=10,
+                phi_count=37,
+            ),
+        ),
+        pattern_frequencies_hz=plan.snapshot_frequencies(2),
+    )
+
+    deck = write_nec2_input(_manual_model(), spec)
+
+    assert "FR 0 11 0 0 7.000000000 0.020000000" in deck.text
+    assert deck.text.count("XQ") == 1
+    assert deck.text.count("RP 0 10 37") == 2
+    assert "FR 0 1 0 0 7.000000000 0.000000000" in deck.text
+    assert "FR 0 1 0 0 7.200000000 0.000000000" in deck.text
+    assert deck.text.count("EX 0 1 4 0 1.0") == 3
 
 
 def test_transmission_line_card_uses_electrical_length() -> None:

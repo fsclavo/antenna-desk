@@ -17,6 +17,7 @@ from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
+from ..domain.antennas.t2fd import T2FDParameters
 from ..domain.antennas.transmission_line import TransmissionLine
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
@@ -116,6 +117,39 @@ def design_summary_rows(
                     f"{parameters.azimuth_deg:.1f}°"
                     if parameters.orientation is DipoleOrientation.HORIZONTAL
                     else "—",
+                ),
+            ]
+        )
+    elif isinstance(parameters, T2FDParameters):
+        height_label = (
+            "Base height" if parameters.orientation is DipoleOrientation.VERTICAL else "Wire height"
+        )
+        rows.extend(
+            [
+                ("Type", "terminated folded dipole (T2FD)"),
+                ("Orientation", parameters.orientation.value),
+                (
+                    "Design band",
+                    f"{parameters.frequency_hz / 1e6:.6f} MHz to "
+                    f"{parameters.highest_frequency_hz / 1e6:.6f} MHz",
+                ),
+                ("Element length", f"{parameters.length_m:.4f} m"),
+                ("Conductor spacing", f"{parameters.spacing_m:.4f} m"),
+                (
+                    "Total conductor length",
+                    f"{parameters.total_conductor_length_m:.4f} m",
+                ),
+                (
+                    "Termination resistor",
+                    f"{parameters.termination_resistance_ohm:g} Ω non-inductive",
+                ),
+                ("Feed transformer", f"{parameters.transformer_ratio:g}:1"),
+                (height_label, f"{parameters.height_m:.4f} m"),
+                (
+                    "Azimuth",
+                    f"{parameters.azimuth_deg:.1f}°"
+                    if parameters.orientation is DipoleOrientation.HORIZONTAL
+                    else "-",
                 ),
             ]
         )

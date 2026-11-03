@@ -18,6 +18,7 @@ from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
+from ..domain.antennas.t2fd import T2FDParameters
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
@@ -137,6 +138,22 @@ the start, leaving a {parameters.inner_length_m:.4f} m center section. Install
  parallel LC traps tuned to {parameters.trap_frequency_hz / 1e6:.6f} MHz
 ({parameters.trap_inductance_h * 1e6:.4f} µH, {parameters.trap_capacitance_f * 1e12:.4f} pF).
 Feed the center of the element.</p>"""
+    elif isinstance(parameters, T2FDParameters):
+        feed_rows = f"""
+<tr><th>Element length</th><td>{parameters.length_m:.4f} m each</td></tr>
+<tr><th>Conductor spacing</th><td>{parameters.spacing_m:.4f} m</td></tr>
+<tr><th>Design band</th><td>{parameters.frequency_hz / 1e6:.6f} MHz to {parameters.highest_frequency_hz / 1e6:.6f} MHz</td></tr>
+<tr><th>Termination resistor</th><td>{parameters.termination_resistance_ohm:g} Ω non-inductive</td></tr>
+<tr><th>Feed transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Cut two equal conductors of {parameters.length_m:.4f} m
+and two end connectors of {parameters.spacing_m:.4f} m. Join them at both ends
+to form a folded loop. Feed the midpoint of one conductor through a
+{parameters.transformer_ratio:g}:1 transformer. Install a
+{parameters.termination_resistance_ohm:g} Ω non-inductive resistor at the
+midpoint of the other conductor, opposite the feed point. The total conductor
+length is {parameters.total_conductor_length_m:.4f} m.</p>"""
     elif isinstance(parameters, FoldedDipoleParameters):
         feed_rows = f"""
 <tr><th>Driven element length</th><td>{parameters.total_length_m:.4f} m</td></tr>
