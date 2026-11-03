@@ -64,7 +64,12 @@ jobs:
         run: uv run mypy
 
       - name: pytest
-        run: uv run pytest
+        shell: bash
+        run: |
+          timeout 180s uv run pytest tests/ui/test_results_view.py -q
+          timeout 180s uv run pytest tests/ui/test_main_window.py -q
+          timeout 180s uv run pytest tests/ui --ignore=tests/ui/test_results_view.py --ignore=tests/ui/test_main_window.py -q
+          timeout 300s uv run pytest tests/acceptance tests/integration tests/unit -q
 
   tests:
     name: Tests (${{ matrix.os }}, Python ${{ matrix.python-version }})
