@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - The 3D radiation-pattern wireframe is colored by gain (green, yellow, red)
   with a min/max dBi legend, while keeping the lobe interior transparent.
+- The 3D lobe maximum-gain marker now reports the takeoff angle above the
+  ground plane (or elevation for free-space models) alongside the gain.
 - End-fed designs support a user-selectable counterpoise (drop plus horizontal
   wire) and an ideal feed transformer ratio. The one-time estimator starts with
   a 49:1 transformer and a 0.05λ counterpoise as application starting points.

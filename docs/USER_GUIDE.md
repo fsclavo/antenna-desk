@@ -344,9 +344,13 @@ construction sheet.
   closed lobes. The angular resolution comes from **Pattern resolution** in the
   design panel; higher resolution samples the same NEC solution more finely.
   The 3D lobe draws a ground plane when the model has ground and only the
-  upper-hemisphere pattern is requested. Drag the 3D lobe to rotate it, use the
-  mouse wheel to zoom, and double-click to reset the view. Power gain is not
-  realized gain.
+  upper-hemisphere pattern is requested. Its maximum-gain marker reports the
+  gain and the takeoff angle above the ground plane; for free-space models it
+  reports elevation above the horizontal plane instead. The marker is the
+  highest sampled direction, so with the default 5° pattern resolution the
+  reported angle is quantized to the sampling grid. Drag the 3D lobe to rotate
+  it, use the mouse wheel to zoom, and double-click to reset the view. Power
+  gain is not realized gain.
 - **Currents**: segment current magnitude for the selected frequency, with the
   feed segment marked.
 - **Measurements**: imported VNA sweeps with measured and simulated SWR,

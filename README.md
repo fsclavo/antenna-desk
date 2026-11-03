@@ -108,7 +108,8 @@ optional signing steps.
 - Asynchronous simulation with cancellation, timeouts, and diagnostics.
 - Impedance, SWR, frequency-sweep, and far-field pattern charts, including
   selectable azimuth/elevation cuts, polar lobe diagrams, and an isometric 3D
-  radiation-pattern wireframe colored by gain with a dBi legend. Sweeps use 100
+  radiation-pattern wireframe colored by gain with a dBi legend and a takeoff
+  angle at the maximum-gain marker. Sweeps use 100
   points by default, and pattern resolution defaults to 5° and can be set to
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` projects with multiple design

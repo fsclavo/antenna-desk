@@ -1189,6 +1189,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Ground",
         Language.SPANISH: "Suelo",
     },
+    "pattern.max_gain_ground": {
+        Language.ENGLISH: "{gain:.2f} dBi · {angle:.1f}° above ground",
+        Language.SPANISH: "{gain:.2f} dBi · {angle:.1f}° sobre el suelo",
+    },
+    "pattern.max_gain_elevation": {
+        Language.ENGLISH: "{gain:.2f} dBi · {angle:.1f}° elevation",
+        Language.SPANISH: "{gain:.2f} dBi · {angle:.1f}° de elevación",
+    },
     "pattern.3d_hint": {
         Language.ENGLISH: "Drag to rotate · Wheel to zoom · Double-click to reset",
         Language.SPANISH: "Arrastrá para rotar · Rueda para zoom · Doble clic para restablecer",

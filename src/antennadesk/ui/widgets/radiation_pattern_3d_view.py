@@ -26,6 +26,16 @@ GAIN_COLOR_BINS = 24
 GAIN_LINE_ALPHA = 190
 
 
+def takeoff_angle_deg(theta_deg: float) -> float:
+    """Return the elevation above the ground plane for a NEC theta angle.
+
+    NEC measures theta from the zenith, so a point on the horizon (theta = 90)
+    has a takeoff angle of 0 degrees.
+    """
+
+    return 90.0 - theta_deg
+
+
 def gain_color(normalized: float, alpha: int = GAIN_LINE_ALPHA) -> QColor:
     """Map a 0..1 normalized gain to green, yellow, or red."""
 
@@ -130,6 +140,14 @@ class RadiationPattern3DView(QWidget):
             self._colors = theme_colors(self.palette())
             self.update()
         super().changeEvent(event)
+
+    def _max_gain_label(self, point: tuple[float, float, float]) -> str:
+        key = "pattern.max_gain_ground" if self._ground else "pattern.max_gain_elevation"
+        return self._translator.t(
+            key,
+            gain=point[2],
+            angle=takeoff_angle_deg(point[0]),
+        )
 
     def paintEvent(self, event: QPaintEvent) -> None:
         del event
@@ -307,11 +325,35 @@ class RadiationPattern3DView(QWidget):
         painter.setBrush(self._colors.feed)
         painter.drawEllipse(marker, 3.5, 3.5)
         painter.setBrush(Qt.BrushStyle.NoBrush)
+
+        label = self._max_gain_label(max_point)
         painter.setFont(QFont("Sans Serif", 8))
+        metrics = painter.fontMetrics()
+        label_width = min(metrics.horizontalAdvance(label) + 10.0, rect.width() - 12.0)
+        label_height = 18.0
+        label_x = marker.x() + 8.0
+        label_y = marker.y() - label_height - 4.0
+        if label_x + label_width > rect.right() - 6.0:
+            label_x = marker.x() - label_width - 8.0
+        if label_y < rect.top() + 6.0:
+            label_y = marker.y() + 6.0
+        label_rect = QRectF(
+            max(rect.left() + 6.0, label_x),
+            label_y,
+            label_width,
+            label_height,
+        )
+        background = QColor(self._colors.background)
+        background.setAlpha(220)
+        painter.setPen(QPen(self._colors.light_line, 0.8))
+        painter.setBrush(background)
+        painter.drawRoundedRect(label_rect, 3.0, 3.0)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.setPen(self._colors.feed)
         painter.drawText(
-            QRectF(marker.x() + 8.0, marker.y() - 16.0, 100.0, 16.0),
-            f"{max_point[2]:.2f} dBi",
+            label_rect.adjusted(5.0, 0.0, -5.0, 0.0),
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            label,
         )
 
         origin = screen(0.0, 0.0, min_gain)

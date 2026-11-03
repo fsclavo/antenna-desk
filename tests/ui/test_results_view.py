@@ -170,6 +170,32 @@ def test_gain_color_maps_green_yellow_and_red() -> None:
     assert gain_color(2.0).getRgb()[:3] == gain_color(1.0).getRgb()[:3]
 
 
+def test_takeoff_angle_is_measured_from_the_ground_plane() -> None:
+    from antennadesk.ui.widgets.radiation_pattern_3d_view import takeoff_angle_deg
+
+    assert takeoff_angle_deg(0.0) == 90.0
+    assert takeoff_angle_deg(30.0) == 60.0
+    assert takeoff_angle_deg(90.0) == 0.0
+    assert takeoff_angle_deg(150.0) == -60.0
+
+
+def test_pattern_3d_max_label_shows_gain_and_takeoff_angle(qtbot: QtBot) -> None:
+    from antennadesk.ui.widgets.radiation_pattern_3d_view import RadiationPattern3DView
+
+    view = RadiationPattern3DView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    view.set_points(((75.0, 0.0, 12.34),), ground=True)
+    assert view._max_gain_label((75.0, 0.0, 12.34)) == "12.34 dBi · 15.0° above ground"
+
+    view.set_points(((75.0, 0.0, 12.34),), ground=False)
+    assert view._max_gain_label((75.0, 0.0, 12.34)) == "12.34 dBi · 15.0° elevation"
+
+    spanish = RadiationPattern3DView(Translator(Language.SPANISH))
+    qtbot.addWidget(spanish)
+    spanish.set_points(((75.0, 0.0, 12.34),), ground=True)
+    assert spanish._max_gain_label((75.0, 0.0, 12.34)) == "12.34 dBi · 15.0° sobre el suelo"
+
+
 def test_pattern_3d_can_draw_a_ground_plane(qtbot: QtBot) -> None:
     from antennadesk.ui.widgets.radiation_pattern_3d_view import RadiationPattern3DView
 
