@@ -204,3 +204,36 @@ def test_loaded_vertical_construction_sheet_lists_the_loading_coil() -> None:
     assert "12.0000 µH" in sheet
     assert "Load 1 (series)" in sheet
     assert "radiator @ 1.000 m" in sheet
+
+
+def test_trap_dipole_construction_sheet_lists_both_traps() -> None:
+    from antennadesk.application.use_cases.create_dipole_project import (
+        CreateDipoleProject,
+        CreateDipoleProjectCommand,
+    )
+    from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+
+    parameters = TrapDipoleParameters(
+        frequency_hz=7_100_000.0,
+        high_band_frequency_hz=14_100_000.0,
+        inner_length_m=10.0,
+        outer_length_m=5.0,
+        trap_frequency_hz=14_100_000.0,
+        trap_inductance_h=10e-6,
+        height_m=12.0,
+    )
+    project = CreateDipoleProject().execute(
+        CreateDipoleProjectCommand(
+            project_name="Two bands",
+            variant_name="Trap dipole",
+            parameters=parameters,
+        )
+    )
+
+    sheet = render_construction_sheet(project, project.designs[0], None)
+
+    assert "trap dipole" in sheet
+    assert "5.0000 m, 15.0000 m from wire start" in sheet
+    assert "14.100000 MHz" in sheet
+    assert "Load 1 (parallel)" in sheet
+    assert "Load 2 (parallel)" in sheet

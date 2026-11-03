@@ -23,6 +23,7 @@ from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
 from antennadesk.domain.antennas.ringo import RingoParameters
+from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
@@ -110,6 +111,14 @@ def _parameters_for(key: str) -> object:
             elements=(FanElement(20.0, 120.0), FanElement(10.0, 120.0)),
             apex_height_m=12.0,
         ),
+        "trap_dipole": TrapDipoleParameters(
+            frequency_hz=7_100_000.0,
+            high_band_frequency_hz=14_100_000.0,
+            inner_length_m=10.0,
+            outer_length_m=5.0,
+            trap_frequency_hz=14_100_000.0,
+            trap_inductance_h=10e-6,
+        ),
         "endfed": EndFedParameters(frequency_hz=7_100_000.0, length_m=20.0),
         "j_pole": JPoleParameters(
             frequency_hz=220_000_000.0,
@@ -186,6 +195,7 @@ def test_every_catalog_entry_has_a_change_template_route(
             "JPoleDialog",
             "EndFedDialog",
             "FanDipoleDialog",
+            "TrapDipoleDialog",
             "InvertedVDialog",
             "OCFDDialog",
             "VerticalDialog",
@@ -218,6 +228,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "yagi": ("yagi",),
         "moxon": ("moxon",),
         "fan_dipole": ("fan_dipole",),
+        "trap_dipole": ("trap_dipole",),
         "endfed": ("endfed",),
         "j_pole": ("j_pole", False),
         "slim_jim": ("j_pole", True),
@@ -258,6 +269,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         new_moxon_antenna=record("moxon"),
         new_inverted_v_antenna=record("inverted_v"),
         new_fan_dipole_antenna=record("fan_dipole"),
+        new_trap_dipole_antenna=record("trap_dipole"),
         new_endfed_antenna=record("endfed"),
         new_j_pole_antenna=record("j_pole"),
         new_ringo_antenna=record("ringo"),

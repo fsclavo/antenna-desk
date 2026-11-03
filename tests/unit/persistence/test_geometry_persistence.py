@@ -498,3 +498,29 @@ def test_loaded_vertical_parameters_and_coil_round_trip() -> None:
     assert restored.designs[0].antenna.loads == original.designs[0].antenna.loads
     assert restored.designs[0].antenna.loads[0].id == "loading-coil"
     assert restored.designs[0].antenna_type == "vertical"
+
+
+def test_trap_dipole_parameters_and_traps_round_trip() -> None:
+    from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+
+    parameters = TrapDipoleParameters(
+        frequency_hz=7_100_000.0,
+        high_band_frequency_hz=14_100_000.0,
+        inner_length_m=10.0,
+        outer_length_m=5.0,
+        trap_frequency_hz=14_100_000.0,
+        trap_inductance_h=10e-6,
+        height_m=12.0,
+    )
+    original = _project(parameters, "Trap dipole")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "trap_dipole"
+    assert [load.id for load in restored.designs[0].antenna.loads] == [
+        "trap-left",
+        "trap-right",
+    ]
+    assert restored == original

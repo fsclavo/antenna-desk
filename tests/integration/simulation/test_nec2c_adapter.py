@@ -766,3 +766,35 @@ def test_loaded_vertical_with_a_series_coil_solves(solver: Nec2cSolver) -> None:
     assert result.status is SimulationStatus.COMPLETED
     assert len(result.frequencies) == 1
     assert result.frequencies[0].impedance_ohm.real > 0.0
+
+
+def test_trap_dipole_with_parallel_traps_solves_both_bands(
+    solver: Nec2cSolver,
+) -> None:
+    from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+
+    parameters = TrapDipoleParameters(
+        frequency_hz=7_100_000.0,
+        high_band_frequency_hz=14_100_000.0,
+        inner_length_m=10.0,
+        outer_length_m=5.0,
+        trap_frequency_hz=14_100_000.0,
+        trap_inductance_h=10e-6,
+        height_m=12.0,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    )
+    model = parameters.to_antenna(name="Trap dipole")
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.sweep(7_100_000.0, 14_100_000.0, 2),
+        segmentation=SegmentationPolicy(min_segments_per_wire=9),
+        include_conductor_losses=False,
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert len(result.frequencies) == 2
+    assert all(frequency.impedance_ohm.real > 0.0 for frequency in result.frequencies)

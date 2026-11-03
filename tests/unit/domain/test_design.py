@@ -13,6 +13,7 @@ from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.endfed import EndFedParameters
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.loop import LoopParameters
+from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 
 
 def test_primary_dimensions_and_types() -> None:
@@ -83,3 +84,21 @@ def test_with_primary_dimension_updates_only_the_selected_geometry() -> None:
     assert edited_loop.circumference_m == pytest.approx(42.0)
     assert edited_loop.sides == 8
     assert loop.circumference_m == pytest.approx(40.0)
+
+
+def test_trap_dipole_uses_total_length_as_its_primary_dimension() -> None:
+    trap = TrapDipoleParameters(
+        frequency_hz=7_100_000.0,
+        high_band_frequency_hz=14_100_000.0,
+        inner_length_m=10.0,
+        outer_length_m=5.0,
+        trap_frequency_hz=14_100_000.0,
+        trap_inductance_h=10e-6,
+    )
+
+    assert primary_dimension_m(trap) == pytest.approx(20.0)
+    edited = with_primary_dimension(trap, 22.0)
+    assert isinstance(edited, TrapDipoleParameters)
+    assert edited.total_length_m == pytest.approx(22.0)
+    assert edited.inner_length_m == pytest.approx(10.0)
+    assert edited.outer_length_m == pytest.approx(6.0)

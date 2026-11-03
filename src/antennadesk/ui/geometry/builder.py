@@ -26,6 +26,10 @@ from ...domain.antennas.loop import ANTENNA_TYPE_LOOP, LoopParameters
 from ...domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from ...domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
 from ...domain.antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
+from ...domain.antennas.trap_dipole import (
+    ANTENNA_TYPE_TRAP_DIPOLE,
+    TrapDipoleParameters,
+)
 from ...domain.antennas.vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
 from ...domain.antennas.wire import Wire
 from ...domain.antennas.yagi import ANTENNA_TYPE_YAGI, YagiParameters
@@ -61,6 +65,7 @@ _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_ENDFED: "catalog.endfed",
     ANTENNA_TYPE_J_POLE: "catalog.j_pole",
     ANTENNA_TYPE_RINGO: "catalog.ringo",
+    ANTENNA_TYPE_TRAP_DIPOLE: "catalog.trap_dipole",
 }
 
 SUPPORTED_PRESENTATION_TYPES = frozenset({*_TYPE_KEYS, ANTENNA_TYPE_CUSTOM})
@@ -1374,6 +1379,23 @@ def _summary(
                 f"{parameters.loading_coil_inductance_h * 1e6:.3f} µH @ "
                 f"{_format_length(parameters.loading_coil_offset_m, translator, unit_system)}"
             )
+    elif isinstance(parameters, TrapDipoleParameters):
+        height_label = (
+            translator.t("field.base_height")
+            if parameters.orientation.value == "vertical"
+            else translator.t("field.height")
+        )
+        parts.extend(
+            [
+                f"{translator.t('geometry.total_length').lower()} "
+                f"{_format_length(parameters.total_length_m, translator, unit_system)}",
+                f"{translator.t('geometry.center').lower()} "
+                f"{_format_length(parameters.inner_length_m, translator, unit_system)}",
+                f"{translator.t('geometry.traps').lower()} 2",
+                f"{height_label.lower()} "
+                f"{_format_length(parameters.height_m, translator, unit_system)}",
+            ]
+        )
     elif isinstance(parameters, DipoleParameters):
         parts.extend(
             [

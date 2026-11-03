@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   height above the base. A loaded vertical / mobile whip catalog preset starts
   with a 2.0 m radiator, four short radials, and an editable 10 µH coil as
   application starting points.
+- Trap-dipole templates support two parallel LC traps, automatic trap
+  capacitance from the target frequency and inductance, and a starting-dimension
+  helper for the low and high bands.
 
 ## [0.1.0] - 2026-11-02
 

@@ -261,6 +261,27 @@ def test_loaded_vertical_marks_the_loading_coil() -> None:
         assert "loading coil 12.000 µH" in scene.summary
 
 
+def test_trap_dipole_marks_both_traps_and_reports_the_center_section() -> None:
+    from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+
+    parameters = TrapDipoleParameters(
+        frequency_hz=7_100_000.0,
+        high_band_frequency_hz=14_100_000.0,
+        inner_length_m=10.0,
+        outer_length_m=5.0,
+        trap_frequency_hz=14_100_000.0,
+        trap_inductance_h=10e-6,
+        height_m=12.0,
+    )
+
+    for mode in (GeometryViewMode.ELEVATION, GeometryViewMode.PLAN):
+        scene = _scene(parameters, "trap_dipole", mode)
+        loads = [marker for marker in scene.markers if marker.kind == "load"]
+        assert len(loads) == 2
+        assert "traps 2" in scene.summary
+        assert "center 10.00 m" in scene.summary
+
+
 def test_legacy_custom_slim_jim_keeps_its_presentation_type() -> None:
     parameters = JPoleParameters(
         frequency_hz=220_000_000.0,

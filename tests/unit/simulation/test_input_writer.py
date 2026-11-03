@@ -196,3 +196,21 @@ def test_loaded_vertical_emits_its_loading_coil_on_the_radiator() -> None:
     deck = write_nec2_input(parameters.to_antenna(name="Loaded vertical"), _spec(segments=7))
 
     assert "LD 0 1 4 4 0.500000000 0.000012000 0.000000000000" in deck.text
+
+
+def test_trap_dipole_emits_parallel_traps_on_both_sides() -> None:
+    from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+
+    parameters = TrapDipoleParameters(
+        frequency_hz=7_100_000.0,
+        high_band_frequency_hz=14_100_000.0,
+        inner_length_m=10.0,
+        outer_length_m=5.0,
+        trap_frequency_hz=14_100_000.0,
+        trap_inductance_h=10e-6,
+        height_m=12.0,
+    )
+    deck = write_nec2_input(parameters.to_antenna(name="Trap dipole"), _spec(segments=7))
+
+    assert "LD 1 1 2 2 0.000000000 0.000010000 0.000000000013" in deck.text
+    assert "LD 1 1 6 6 0.000000000 0.000010000 0.000000000013" in deck.text

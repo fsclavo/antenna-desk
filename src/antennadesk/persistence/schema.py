@@ -46,6 +46,10 @@ from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from ..domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
 from ..domain.antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
+from ..domain.antennas.trap_dipole import (
+    ANTENNA_TYPE_TRAP_DIPOLE,
+    TrapDipoleParameters,
+)
 from ..domain.antennas.vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
 from ..domain.antennas.wire import Wire
 from ..domain.antennas.yagi import ANTENNA_TYPE_YAGI, YagiElement, YagiParameters
@@ -194,6 +198,21 @@ class RingoParametersPayload(StrictModel):
     ring_diameter_m: float = Field(gt=0.0)
     ring_height_m: float = Field(default=0.0, ge=0.0)
     ring_sides: int = Field(default=16, ge=3, le=128)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class TrapDipoleParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    high_band_frequency_hz: float = Field(gt=0.0)
+    inner_length_m: float = Field(gt=0.0)
+    outer_length_m: float = Field(gt=0.0)
+    trap_frequency_hz: float = Field(gt=0.0)
+    trap_inductance_h: float = Field(gt=0.0)
+    height_m: float = Field(default=10.0, ge=0.0)
+    orientation: DipoleOrientation = DipoleOrientation.HORIZONTAL
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
@@ -492,6 +511,7 @@ ParameterPayload = (
     | EndFedParametersPayload
     | JPoleParametersPayload
     | RingoParametersPayload
+    | TrapDipoleParametersPayload
     | CustomParametersPayload
 )
 
@@ -519,6 +539,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_J_POLE
     if isinstance(value, RingoParametersPayload):
         return ANTENNA_TYPE_RINGO
+    if isinstance(value, TrapDipoleParametersPayload):
+        return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(value, CustomParametersPayload):
         return ANTENNA_TYPE_CUSTOM
     return ANTENNA_TYPE_LOOP
@@ -549,6 +571,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return JPoleParametersPayload
     if antenna_type == ANTENNA_TYPE_RINGO:
         return RingoParametersPayload
+    if antenna_type == ANTENNA_TYPE_TRAP_DIPOLE:
+        return TrapDipoleParametersPayload
     if antenna_type == ANTENNA_TYPE_CUSTOM:
         return CustomParametersPayload
     return None
@@ -769,6 +793,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _j_pole_parameters_from_domain(value)
     if isinstance(value, RingoParameters):
         return _ringo_parameters_from_domain(value)
+    if isinstance(value, TrapDipoleParameters):
+        return _trap_dipole_parameters_from_domain(value)
     if isinstance(value, CustomAntennaParameters):
         return _custom_parameters_from_domain(value)
     raise TypeError(f"unsupported antenna parameters: {type(value)!r}")
@@ -829,6 +855,25 @@ def _ringo_parameters_from_domain(value: RingoParameters) -> RingoParametersPayl
         ring_diameter_m=value.ring_diameter_m,
         ring_height_m=value.ring_height_m,
         ring_sides=value.ring_sides,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _trap_dipole_parameters_from_domain(
+    value: TrapDipoleParameters,
+) -> TrapDipoleParametersPayload:
+    return TrapDipoleParametersPayload(
+        frequency_hz=value.frequency_hz,
+        high_band_frequency_hz=value.high_band_frequency_hz,
+        inner_length_m=value.inner_length_m,
+        outer_length_m=value.outer_length_m,
+        trap_frequency_hz=value.trap_frequency_hz,
+        trap_inductance_h=value.trap_inductance_h,
+        height_m=value.height_m,
+        orientation=value.orientation,
+        azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
@@ -1375,6 +1420,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, RingoParametersPayload):
             raise ValueError("Ringo parameters have the wrong shape")
         return _ringo_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_TRAP_DIPOLE:
+        if not isinstance(value.parameters, TrapDipoleParametersPayload):
+            raise ValueError("trap dipole parameters have the wrong shape")
+        return _trap_dipole_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_CUSTOM:
         if not isinstance(value.parameters, CustomParametersPayload):
             raise ValueError("custom parameters have the wrong shape")
@@ -1435,6 +1484,25 @@ def _ringo_parameters_to_domain(value: RingoParametersPayload) -> RingoParameter
         ring_diameter_m=value.ring_diameter_m,
         ring_height_m=value.ring_height_m,
         ring_sides=value.ring_sides,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _trap_dipole_parameters_to_domain(
+    value: TrapDipoleParametersPayload,
+) -> TrapDipoleParameters:
+    return TrapDipoleParameters(
+        frequency_hz=value.frequency_hz,
+        high_band_frequency_hz=value.high_band_frequency_hz,
+        inner_length_m=value.inner_length_m,
+        outer_length_m=value.outer_length_m,
+        trap_frequency_hz=value.trap_frequency_hz,
+        trap_inductance_h=value.trap_inductance_h,
+        height_m=value.height_m,
+        orientation=value.orientation,
+        azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),

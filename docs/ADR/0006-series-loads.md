@@ -23,8 +23,8 @@ Loads also need to survive template changes, persistence, reports, and edits.
    geometry plus the design's loads, and `with_parameters()` preserves loads
    when the wire identifiers still exist. Loads owned by a parameter template
    use a reserved identifier and are regenerated from the new parameters;
-   only non-managed loads are preserved. The vertical loading coil is the
-   first template-managed load.
+   only non-managed loads are preserved. The vertical loading coil and the
+   trap-dipole traps are template-managed loads.
 3. Persist loads as an optional list in the existing schema v3 antenna payload.
    Older projects load with an empty list; no migration is required.
 4. Map a load position to the containing segment and emit one `LD 0` (series)

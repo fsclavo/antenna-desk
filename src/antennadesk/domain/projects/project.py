@@ -75,7 +75,11 @@ class DesignVariant:
         provenance: DesignProvenance | None = None,
     ) -> DesignVariant:
         generated = parameters.to_antenna(name=self.antenna.name)
-        managed_ids = template_load_ids(parameters) | {load.id for load in generated.loads}
+        managed_ids = (
+            template_load_ids(self.parameters)
+            | template_load_ids(parameters)
+            | {load.id for load in generated.loads}
+        )
         preserved = tuple(load for load in self.antenna.loads if load.id not in managed_ids)
         antenna = generated.with_loads(generated.loads + preserved)
         return replace(

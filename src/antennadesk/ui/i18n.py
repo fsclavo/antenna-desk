@@ -125,6 +125,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Folded rectangle with a gap in one vertical leg.",
         Language.SPANISH: "Rectángulo plegado con una brecha en una pata vertical.",
     },
+    "catalog.trap_dipole": {
+        Language.ENGLISH: "Trap dipole",
+        Language.SPANISH: "Dipolo con trampas",
+    },
+    "catalog.trap_dipole.description": {
+        Language.ENGLISH: ("Center-fed dipole with two parallel LC traps for two-band operation."),
+        Language.SPANISH: (
+            "Dipolo alimentado en el centro con dos trampas LC paralelas para operar en dos bandas."
+        ),
+    },
     "catalog.endfed": {
         Language.ENGLISH: "End-fed wire",
         Language.SPANISH: "Hilo alimentado en el extremo",
@@ -365,6 +375,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "longitud del boom",
     },
     "geometry.gap": {Language.ENGLISH: "gap", Language.SPANISH: "brecha"},
+    "geometry.traps": {Language.ENGLISH: "traps", Language.SPANISH: "trampas"},
     "geometry.end_height": {
         Language.ENGLISH: "end height",
         Language.SPANISH: "altura del extremo",
@@ -690,6 +701,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Dipolo plegado",
     },
     "antenna_type.loop": {Language.ENGLISH: "Loop", Language.SPANISH: "Lazo"},
+    "antenna_type.trap_dipole": {
+        Language.ENGLISH: "Trap dipole",
+        Language.SPANISH: "Dipolo con trampas",
+    },
     "wizard.name_wire": {Language.ENGLISH: "dipole", Language.SPANISH: "dipolo"},
     "wizard.name_folded": {
         Language.ENGLISH: "folded dipole",
@@ -1699,6 +1714,90 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "Generador experimental: se prueba la geometría, pero no hay una "
             "referencia numérica independiente para esta configuración."
+        ),
+    },
+    "trap_dipole.title": {
+        Language.ENGLISH: "Trap Dipole Generator",
+        Language.SPANISH: "Generador de dipolo con trampas",
+    },
+    "trap_dipole.low_band": {
+        Language.ENGLISH: "Low-band frequency",
+        Language.SPANISH: "Frecuencia de banda baja",
+    },
+    "trap_dipole.high_band": {
+        Language.ENGLISH: "High-band frequency",
+        Language.SPANISH: "Frecuencia de banda alta",
+    },
+    "trap_dipole.inner_length": {
+        Language.ENGLISH: "Center section length",
+        Language.SPANISH: "Longitud de la sección central",
+    },
+    "trap_dipole.outer_length": {
+        Language.ENGLISH: "Outer section length (each side)",
+        Language.SPANISH: "Longitud de la sección exterior (cada lado)",
+    },
+    "trap_dipole.starting_dimensions": {
+        Language.ENGLISH: "Set starting dimensions from bands",
+        Language.SPANISH: "Calcular dimensiones iniciales desde las bandas",
+    },
+    "trap_dipole.trap_frequency": {
+        Language.ENGLISH: "Trap frequency",
+        Language.SPANISH: "Frecuencia de la trampa",
+    },
+    "trap_dipole.trap_inductance": {
+        Language.ENGLISH: "Trap inductance",
+        Language.SPANISH: "Inductancia de la trampa",
+    },
+    "trap_dipole.trap_capacitance": {
+        Language.ENGLISH: "Trap capacitance",
+        Language.SPANISH: "Capacitancia de la trampa",
+    },
+    "trap_dipole.wire_radius": {
+        Language.ENGLISH: "Wire radius (mm)",
+        Language.SPANISH: "Radio del hilo (mm)",
+    },
+    "trap_dipole.geometry": {
+        Language.ENGLISH: (
+            "Total {total} {unit} · center {inner} {unit} · traps at {left}/{right} {unit}"
+        ),
+        Language.SPANISH: (
+            "Total {total} {unit} · centro {inner} {unit} · trampas en {left}/{right} {unit}"
+        ),
+    },
+    "trap_dipole.trap_below_high_band": {
+        Language.ENGLISH: (
+            "Trap frequency is below the high band; verify that the traps "
+            "isolate the outer sections."
+        ),
+        Language.SPANISH: (
+            "La frecuencia de la trampa está por debajo de la banda alta; "
+            "verificá que las trampas aíslen las secciones exteriores."
+        ),
+    },
+    "trap_dipole.hint": {
+        Language.ENGLISH: (
+            "Starting dimensions use the half-wave factors for both bands. The "
+            "traps load the outer sections on the low band, so the total length "
+            "usually needs to be shorter; tune it with the solver. Trap "
+            "capacitance is calculated from the target frequency and inductance."
+        ),
+        Language.SPANISH: (
+            "Las dimensiones iniciales usan los factores de media onda para "
+            "ambas bandas. Las trampas cargan las secciones exteriores en la "
+            "banda baja, así que la longitud total normalmente debe ser menor; "
+            "sintonizala con el solver. La capacitancia de la trampa se calcula "
+            "a partir de la frecuencia objetivo y la inductancia."
+        ),
+    },
+    "trap_dipole.evidence": {
+        Language.ENGLISH: (
+            "Experimental template: geometry and parallel LC traps are tested, "
+            "but there is no independent numerical reference for this trap dipole."
+        ),
+        Language.SPANISH: (
+            "Plantilla experimental: se prueban la geometría y las trampas LC "
+            "paralelas, pero no hay una referencia numérica independiente para "
+            "este dipolo con trampas."
         ),
     },
     "endfed.title": {

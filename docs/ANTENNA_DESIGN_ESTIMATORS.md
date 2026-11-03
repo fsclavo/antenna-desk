@@ -107,6 +107,24 @@ user-supplied loss estimate. Tune the height, coil position, and inductance with
 the solver. The radial plane is a simplified counterpoise, not a vehicle body,
 and no independent numerical reference is claimed for a mobile installation.
 
+## Trap dipole starting dimensions
+
+The trap dipole template is not a frequency-first estimator and is not listed
+in the Design from Frequency dialog. The **Set starting dimensions from bands**
+button inside its editor is an application helper:
+
+- center section = half-wave factor at the high band;
+- total length = half-wave factor at the low band;
+- each outer section = `(total - center) / 2`;
+- trap frequency = high band frequency;
+- trap capacitance = `1 / ((2 * pi * f_trap)^2 * L)` for the entered
+  inductance.
+
+The helper ignores the loading effect of the traps on the low band, so the
+calculated total is usually too long. Treat it as a starting point and tune the
+length, trap position, inductance, and trap frequency with the solver. There is
+no independent numerical reference for this trap-dipole configuration.
+
 ## Yagi scope
 
 The frequency-only estimator supports **2 to 32 elements** using the first
@@ -134,8 +152,9 @@ Reference sources currently used:
 - DL6WU/Cebik: 2–32 element trimming Yagi starting design.
 - L. B. Cebik, W4RNL, “The Moxon Rectangle: A Review”, Table 1: 20 m wire Moxon.
 - Application preset: Ringo proportions, the loop polygon correction, the
-  end-fed transformer/counterpoise starting point, and the loaded-vertical
-  mobile preset. They are not universal formulas.
+  end-fed transformer/counterpoise starting point, the loaded-vertical mobile
+  preset, and the trap-dipole starting dimensions. They are not universal
+  formulas.
 
 ## Tests
 
@@ -172,5 +191,7 @@ Reference sources currently used:
   specific.
 - Loaded-vertical coil values are starting points; a mobile vehicle body is not
   modeled.
+- Trap-dipole dimensions are starting points; trap loading, component losses,
+  and installation effects are not solved analytically.
 - Estimator provenance is shown in the dialog and persisted as optional design
   metadata. Editing the design clears it.

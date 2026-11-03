@@ -2,7 +2,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import math
 from uuid import uuid4
+
+import pytest
 
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.load import SeriesLoad
@@ -155,3 +158,97 @@ def test_custom_parameter_loads_are_not_duplicated_when_editing() -> None:
     edited = design.with_parameters(replace(parameters, frequency_hz=7_050_000.0))
 
     assert edited.antenna.loads == (load,)
+
+
+def test_trap_dipole_design_regenerates_its_traps_and_keeps_user_loads() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+
+    parameters = TrapDipoleParameters(
+        frequency_hz=7_100_000.0,
+        high_band_frequency_hz=14_100_000.0,
+        inner_length_m=10.0,
+        outer_length_m=5.0,
+        trap_frequency_hz=14_100_000.0,
+        trap_inductance_h=10e-6,
+        height_m=12.0,
+    )
+    design = DesignVariant(
+        id=uuid4(),
+        name="Trap dipole",
+        antenna_type="trap_dipole",
+        parameters=parameters,
+        antenna=parameters.to_antenna(),
+    )
+    user_load = SeriesLoad("user-load", "radiator", 2.0, resistance_ohm=50.0)
+    design = design.with_loads((*design.antenna.loads, user_load))
+
+    edited = design.with_parameters(replace(parameters, trap_inductance_h=15e-6))
+
+    loads = {load.id: load for load in edited.antenna.loads}
+    assert set(loads) == {"trap-left", "trap-right", "user-load"}
+    assert loads["trap-left"].inductance_h == 15e-6
+    expected_c = 1.0 / ((2.0 * math.pi * 14_100_000.0) ** 2 * 15e-6)
+    assert loads["trap-left"].capacitance_f == pytest.approx(expected_c)
+    assert loads["user-load"] is user_load
+
+
+def test_changing_a_trap_dipole_to_a_dipole_drops_the_traps() -> None:
+    from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+
+    parameters = TrapDipoleParameters(
+        frequency_hz=7_100_000.0,
+        high_band_frequency_hz=14_100_000.0,
+        inner_length_m=10.0,
+        outer_length_m=5.0,
+        trap_frequency_hz=14_100_000.0,
+        trap_inductance_h=10e-6,
+        height_m=12.0,
+    )
+    design = DesignVariant(
+        id=uuid4(),
+        name="Trap dipole",
+        antenna_type="trap_dipole",
+        parameters=parameters,
+        antenna=parameters.to_antenna(),
+    )
+
+    edited = design.with_parameters(
+        DipoleParameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=20.0,
+            height_m=12.0,
+        )
+    )
+
+    assert edited.antenna.loads == ()
+
+
+def test_changing_a_loaded_vertical_to_a_dipole_drops_the_loading_coil() -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=2.0,
+        loading_coil_enabled=True,
+        loading_coil_offset_m=1.0,
+        loading_coil_inductance_h=10e-6,
+    )
+    design = DesignVariant(
+        id=uuid4(),
+        name="Loaded vertical",
+        antenna_type="vertical",
+        parameters=parameters,
+        antenna=parameters.to_antenna(),
+    )
+
+    edited = design.with_parameters(
+        DipoleParameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=20.0,
+            height_m=12.0,
+        )
+    )
+
+    assert edited.antenna.loads == ()

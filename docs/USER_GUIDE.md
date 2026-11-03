@@ -114,8 +114,8 @@ off-center-fed dipole, and fan dipole. The Yagi family includes the parametric
 Yagi and the Moxon rectangle.
 The Loop family includes the generic loop plus delta-loop and quad-loop presets.
 The Vertical family includes the generic vertical radiator and the loaded
-vertical / mobile whip preset. The catalog shows a short description and
-evidence level for each type.
+vertical / mobile whip preset. The Dipole family also includes the trap dipole.
+The catalog shows a short description and evidence level for each type.
 
 ### Basic templates
 
@@ -143,6 +143,25 @@ resistance at 100 Ω; change it to 50 Ω only if you are not using a balun. The
 suggested circumference includes a polygon correction calibrated for the
 AntennaDesk loop model; it is still a starting point, so verify it with a
 simulation.
+
+## Create a trap dipole
+
+Choose **File → New Antenna... → Trap dipole** to generate a center-fed dipole
+with one parallel LC trap on each side. Set the low-band and high-band
+frequencies, the center-section length, the outer-section length, the trap
+frequency, the trap inductance, the wire height, orientation, azimuth, radius,
+material, and ground. The trap capacitance is calculated from the trap
+frequency and inductance.
+
+**Set starting dimensions from bands** uses the half-wave factor for the
+high band as the center section and the half-wave factor for the low band as
+the total length. The traps load the outer sections on the low band, so the
+real total length is usually shorter; tune it with the solver. The trap
+frequency should normally be at or above the high band; the editor warns when
+it is below. The template is experimental: the geometry and parallel LC traps
+are tested, but there is no independent numerical reference for this
+configuration. The loads editor protects the two trap loads; edit them through
+the trap-dipole fields.
 
 ## Create a Yagi
 

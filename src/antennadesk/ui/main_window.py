@@ -93,6 +93,7 @@ from ..domain.antennas.matching_network import MatchingNetwork
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
+from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters, yagi_element_length_mismatch
 from ..domain.common.time import utc_now
@@ -129,6 +130,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_QUAD_LOOP,
     CATALOG_TYPE_RINGO,
     CATALOG_TYPE_SLIM_JIM,
+    CATALOG_TYPE_TRAP_DIPOLE,
     CATALOG_TYPE_VERTICAL,
     CATALOG_TYPE_WIRE_DIPOLE,
     CATALOG_TYPE_YAGI,
@@ -155,6 +157,7 @@ from .dialogs.ocfd_dialog import OCFDDialog
 from .dialogs.optimization_dialog import OptimizationDialog
 from .dialogs.ringo_dialog import RingoDialog
 from .dialogs.synthesis_dialog import SynthesisDialog
+from .dialogs.trap_dipole_dialog import TrapDipoleDialog
 from .dialogs.vertical_dialog import VerticalDialog
 from .dialogs.yagi_dialog import YagiDialog
 from .history import ProjectSnapshot, SnapshotCommand, history_action
@@ -172,12 +175,14 @@ from .widgets.moxon_form import MoxonForm
 from .widgets.ocfd_form import OCFDForm
 from .widgets.results_view import ResultsView
 from .widgets.ringo_form import RingoForm
+from .widgets.trap_dipole_form import TrapDipoleForm
 from .widgets.vertical_form import VerticalForm
 from .widgets.yagi_form import YagiForm
 from .wizard.dipole_wizard import DipoleWizard
 from .workers.simulation_worker import SimulationWorker
 
 DEFAULT_GENERATED_SWEEP_POINTS = 31
+DEFAULT_TWO_BAND_SWEEP_POINTS = 61
 YAGI_OPTIMIZATION_MIN_GAP_M = 0.1
 
 
@@ -422,6 +427,14 @@ class MainWindow(QMainWindow):
         self._fan_dipole_scroll.setMinimumWidth(340)
         self._fan_dipole_scroll.setMaximumWidth(480)
 
+        self._trap_dipole_form = TrapDipoleForm(self._translator, self._unit_system, parent=self)
+        self._trap_dipole_form.changed.connect(self._on_form_changed)
+        self._trap_dipole_scroll = QScrollArea(self)
+        self._trap_dipole_scroll.setWidgetResizable(True)
+        self._trap_dipole_scroll.setWidget(self._trap_dipole_form)
+        self._trap_dipole_scroll.setMinimumWidth(340)
+        self._trap_dipole_scroll.setMaximumWidth(500)
+
         self._endfed_form = EndFedForm(self._translator, self._unit_system, parent=self)
         self._endfed_form.changed.connect(self._on_form_changed)
         self._endfed_scroll = QScrollArea(self)
@@ -500,6 +513,7 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._yagi_scroll)
         self._design_stack.addWidget(self._moxon_scroll)
         self._design_stack.addWidget(self._fan_dipole_scroll)
+        self._design_stack.addWidget(self._trap_dipole_scroll)
         self._design_stack.addWidget(self._endfed_scroll)
         self._design_stack.addWidget(self._j_pole_scroll)
         self._design_stack.addWidget(self._ringo_scroll)
@@ -1109,6 +1123,9 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, FanDipoleParameters):
             self._design_stack.setCurrentWidget(self._fan_dipole_scroll)
             self._fan_dipole_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, TrapDipoleParameters):
+            self._design_stack.setCurrentWidget(self._trap_dipole_scroll)
+            self._trap_dipole_form.set_parameters(design.parameters)
         elif isinstance(design.parameters, EndFedParameters):
             self._design_stack.setCurrentWidget(self._endfed_scroll)
             self._endfed_form.set_parameters(design.parameters)
@@ -1405,6 +1422,34 @@ class MainWindow(QMainWindow):
             self._update_actions()
             self._update_height_control()
             return self._project
+        if isinstance(previous_design.parameters, TrapDipoleParameters):
+            parameters = self._trap_dipole_form.parameters()
+            updated = UpdateDipoleDesign().execute(
+                UpdateDipoleDesignCommand(
+                    project=self._project,
+                    design_id=self._design_id,
+                    parameters=parameters,
+                )
+            )
+            updated = replace(updated, name=project_name)
+            self._project = updated
+            design = updated.design_by_id(self._design_id)
+            if parameters != previous_design.parameters:
+                self._simulation_results.pop(self._design_id, None)
+                self._results.set_result(None)
+            self._loads = design.antenna.loads
+            self._results.set_design(design)
+            self._set_geometry_model(design)
+            self._auto_select_view(design)
+            self._project_name_updating = True
+            self._project_name.setText(project_name)
+            self._project_name_updating = False
+            self._form_dirty = False
+            self._dirty = True
+            self._update_title()
+            self._update_actions()
+            self._update_height_control()
+            return self._project
         if isinstance(previous_design.parameters, EndFedParameters):
             parameters = self._endfed_form.parameters()
             updated = UpdateDipoleDesign().execute(
@@ -1627,6 +1672,8 @@ class MainWindow(QMainWindow):
                 spec = self._moxon_simulation_spec(design.parameters)
             elif isinstance(design.parameters, FanDipoleParameters):
                 spec = self._fan_dipole_simulation_spec(design.parameters)
+            elif isinstance(design.parameters, TrapDipoleParameters):
+                spec = self._trap_dipole_simulation_spec(design.parameters)
             elif isinstance(design.parameters, EndFedParameters):
                 spec = self._endfed_simulation_spec(design.parameters)
             elif isinstance(design.parameters, JPoleParameters):
@@ -1832,6 +1879,27 @@ class MainWindow(QMainWindow):
             segmentation=aligned_policy_for_model(
                 model,
                 frequency_hz * 1.05,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
+    def _trap_dipole_simulation_spec(
+        self,
+        parameters: TrapDipoleParameters,
+    ) -> SimulationSpec:
+        model = parameters.to_antenna(name="Trap dipole")
+        low_band_hz = parameters.frequency_hz
+        high_band_hz = parameters.high_band_frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                low_band_hz * 0.95,
+                high_band_hz * 1.05,
+                DEFAULT_TWO_BAND_SWEEP_POINTS,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                high_band_hz * 1.05,
                 SegmentationPolicy(min_segments_per_wire=3),
             ),
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
@@ -2103,6 +2171,33 @@ class MainWindow(QMainWindow):
             project = CreateDipoleProject().execute(
                 CreateDipoleProjectCommand(
                     project_name=name.strip() or "Fan dipole",
+                    variant_name="Initial",
+                    parameters=dialog.result_parameters(),
+                )
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+
+    def new_trap_dipole_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        name, accepted = QInputDialog.getText(
+            self,
+            self._translator.t("trap_dipole.title"),
+            self._translator.t("field.project_name"),
+            text="Trap dipole",
+        )
+        if not accepted:
+            return
+        dialog = TrapDipoleDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            project = CreateDipoleProject().execute(
+                CreateDipoleProjectCommand(
+                    project_name=name.strip() or "Trap dipole",
                     variant_name="Initial",
                     parameters=dialog.result_parameters(),
                 )
@@ -2629,6 +2724,16 @@ class MainWindow(QMainWindow):
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
             return dialog.result_parameters()
+        if selected == CATALOG_TYPE_TRAP_DIPOLE:
+            dialog = TrapDipoleDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
         if selected == CATALOG_TYPE_INVERTED_V:
             dialog = InvertedVDialog(
                 self._translator,
@@ -2734,6 +2839,8 @@ class MainWindow(QMainWindow):
             self.new_inverted_v_antenna()
         elif selected == CATALOG_TYPE_FAN_DIPOLE:
             self.new_fan_dipole_antenna()
+        elif selected == CATALOG_TYPE_TRAP_DIPOLE:
+            self.new_trap_dipole_antenna()
         elif selected == CATALOG_TYPE_ENDFED:
             self.new_endfed_antenna()
         elif selected == CATALOG_TYPE_J_POLE:
@@ -3147,6 +3254,8 @@ class MainWindow(QMainWindow):
             base_spec = self._ocfd_simulation_spec(design.parameters)
         elif isinstance(design.parameters, EndFedParameters):
             base_spec = self._endfed_simulation_spec(design.parameters)
+        elif isinstance(design.parameters, TrapDipoleParameters):
+            base_spec = self._trap_dipole_simulation_spec(design.parameters)
         else:
             base_spec = self._form.simulation_spec()
         base_spec = replace(
@@ -3173,6 +3282,8 @@ class MainWindow(QMainWindow):
                 self._ocfd_form.set_parameters(parameters)
             elif isinstance(parameters, EndFedParameters):
                 self._endfed_form.set_parameters(parameters)
+            elif isinstance(parameters, TrapDipoleParameters):
+                self._trap_dipole_form.set_parameters(parameters)
             else:
                 self._form.set_parameters(parameters, reset_sweep=False)
             self._apply_fields()
@@ -4175,7 +4286,7 @@ class MainWindow(QMainWindow):
             design = self._project.design_by_id(self._design_id)
             multi_wire = len(design.antenna.wires) > 1
             parameters = design.parameters
-            if isinstance(parameters, DipoleParameters):
+            if isinstance(parameters, (DipoleParameters, TrapDipoleParameters)):
                 vertical = parameters.orientation is DipoleOrientation.VERTICAL
         self._height_combo.setEnabled(
             mode == GeometryViewMode.ELEVATION.value and not vertical and not multi_wire

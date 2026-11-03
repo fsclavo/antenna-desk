@@ -18,6 +18,7 @@ from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
+from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
 from ..domain.projects.project import DesignVariant, Project
@@ -128,6 +129,24 @@ def render_construction_sheet(
         construction_note = f"""<p>Cut the two legs to the dimensions above, leaving a small feed gap at the
 center. The feed point is {feed_offset_m:.4f} m from the start of the wire
 and {other_leg_m:.4f} m from the end.</p>"""
+    elif isinstance(parameters, TrapDipoleParameters):
+        left_position, right_position = parameters.trap_positions_m
+        feed_rows = f"""
+<tr><th>Total wire length</th><td>{parameters.total_length_m:.4f} m</td></tr>
+<tr><th>Center section</th><td>{parameters.inner_length_m:.4f} m</td></tr>
+<tr><th>Outer sections</th><td>{parameters.outer_length_m:.4f} m each</td></tr>
+<tr><th>Trap positions</th><td>{left_position:.4f} m, {right_position:.4f} m from wire start</td></tr>
+<tr><th>Trap frequency</th><td>{parameters.trap_frequency_hz / 1e6:.6f} MHz</td></tr>
+<tr><th>Trap inductance</th><td>{parameters.trap_inductance_h * 1e6:.4f} µH</td></tr>
+<tr><th>Trap capacitance</th><td>{parameters.trap_capacitance_f * 1e12:.4f} pF</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Cut one conductor to {parameters.total_length_m:.4f} m.
+Mark the trap positions at {left_position:.4f} m and {right_position:.4f} m from
+the start, leaving a {parameters.inner_length_m:.4f} m center section. Install
+ parallel LC traps tuned to {parameters.trap_frequency_hz / 1e6:.6f} MHz
+({parameters.trap_inductance_h * 1e6:.4f} µH, {parameters.trap_capacitance_f * 1e12:.4f} pF).
+Feed the center of the element.</p>"""
     elif isinstance(parameters, FoldedDipoleParameters):
         feed_rows = f"""
 <tr><th>Driven element length</th><td>{parameters.total_length_m:.4f} m</td></tr>

@@ -222,6 +222,24 @@ An optional loading coil is described by `loading_coil_enabled`,
 coil fields when that load is present. The coil is an ideal series RLC load
 with zero capacitance; it is not a physical solenoid model.
 
+### TrapDipoleParameters
+
+A first-class center-fed dipole with one parallel LC trap on each side. It
+stores the low-band frequency, high-band frequency, total center-section
+length, outer-section length per side, target trap frequency, trap inductance,
+height, orientation, azimuth, wire radius, material, and ground. The trap
+capacitance is derived from parallel resonance:
+
+```text
+C = 1 / ((2 * pi * f_trap)^2 * L)
+```
+
+`to_antenna()` creates one straight wire, a center feed, and two `ParallelLoad`
+objects with the reserved identifiers `trap-left` and `trap-right`. The total
+wire length is `inner_length_m + 2 * outer_length_m`. The traps are
+template-managed loads: editing the parameters regenerates them, while other
+user loads are preserved.
+
 ### OCFDParameters
 
 A first-class single-wire horizontal dipole with a feed point offset from the

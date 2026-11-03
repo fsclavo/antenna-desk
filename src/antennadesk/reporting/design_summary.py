@@ -17,6 +17,7 @@ from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
+from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
 from ..domain.environment.ground import GroundModel
@@ -74,6 +75,39 @@ def design_summary_rows(
                 ("Type", "wire dipole"),
                 ("Orientation", parameters.orientation.value),
                 ("Total wire length", f"{parameters.total_length_m:.4f} m"),
+                (height_label, f"{parameters.height_m:.4f} m"),
+                (
+                    "Azimuth",
+                    f"{parameters.azimuth_deg:.1f}°"
+                    if parameters.orientation is DipoleOrientation.HORIZONTAL
+                    else "—",
+                ),
+            ]
+        )
+    elif isinstance(parameters, TrapDipoleParameters):
+        height_label = (
+            "Base height" if parameters.orientation is DipoleOrientation.VERTICAL else "Wire height"
+        )
+        left_position, right_position = parameters.trap_positions_m
+        rows.extend(
+            [
+                ("Type", "trap dipole"),
+                ("Orientation", parameters.orientation.value),
+                ("Low band", f"{parameters.frequency_hz / 1e6:.6f} MHz"),
+                ("High band", f"{parameters.high_band_frequency_hz / 1e6:.6f} MHz"),
+                ("Total wire length", f"{parameters.total_length_m:.4f} m"),
+                ("Center section", f"{parameters.inner_length_m:.4f} m"),
+                ("Outer section", f"{parameters.outer_length_m:.4f} m each"),
+                (
+                    "Trap positions",
+                    f"{left_position:.4f} m, {right_position:.4f} m from wire start",
+                ),
+                ("Trap frequency", f"{parameters.trap_frequency_hz / 1e6:.6f} MHz"),
+                ("Trap inductance", f"{parameters.trap_inductance_h * 1e6:.4f} µH"),
+                (
+                    "Trap capacitance",
+                    f"{parameters.trap_capacitance_f * 1e12:.4f} pF",
+                ),
                 (height_label, f"{parameters.height_m:.4f} m"),
                 (
                     "Azimuth",

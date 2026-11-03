@@ -30,6 +30,7 @@ from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
 from antennadesk.domain.antennas.ringo import RingoParameters
+from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
@@ -66,6 +67,22 @@ def _cases() -> tuple[FamilyCase, ...]:
             1,
             GeometryViewMode.ELEVATION,
             ("Wire dipole", "length 20.00 m"),
+        ),
+        FamilyCase(
+            "trap_dipole",
+            TrapDipoleParameters(
+                frequency_hz=7_100_000.0,
+                high_band_frequency_hz=14_100_000.0,
+                inner_length_m=10.0,
+                outer_length_m=5.0,
+                trap_frequency_hz=14_100_000.0,
+                trap_inductance_h=10e-6,
+                height_m=12.0,
+            ),
+            "trap_dipole",
+            1,
+            GeometryViewMode.ELEVATION,
+            ("Trap dipole", "traps 2", "total length"),
         ),
         FamilyCase(
             "folded",

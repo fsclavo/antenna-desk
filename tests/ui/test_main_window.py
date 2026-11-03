@@ -1215,6 +1215,87 @@ def test_new_loaded_vertical_creates_a_design_with_the_loading_coil(
     window._dirty = False
 
 
+def test_new_trap_dipole_creates_a_first_class_design(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+
+    parameters = TrapDipoleParameters(
+        frequency_hz=7_100_000.0,
+        high_band_frequency_hz=14_100_000.0,
+        inner_length_m=10.0,
+        outer_length_m=5.0,
+        trap_frequency_hz=14_100_000.0,
+        trap_inductance_h=10e-6,
+        height_m=12.0,
+    )
+
+    class FakeTrapDipoleDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> TrapDipoleParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "TrapDipoleDialog", FakeTrapDipoleDialog)
+    monkeypatch.setattr(
+        QInputDialog,
+        "getText",
+        lambda *args, **kwargs: ("Trap dipole", True),
+    )
+    errors: list[tuple[object, ...]] = []
+    monkeypatch.setattr(
+        QMessageBox,
+        "critical",
+        lambda *args, **kwargs: errors.append(args) or QMessageBox.StandardButton.Ok,
+    )
+
+    window.new_trap_dipole_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "Trap dipole"
+    design = window._project.designs[0]
+    assert design.antenna_type == "trap_dipole"
+    assert [load.id for load in design.antenna.loads] == ["trap-left", "trap-right"]
+    assert window._design_stack.currentWidget() is window._trap_dipole_scroll
+    form_parameters = window._trap_dipole_form.parameters()
+    assert form_parameters.trap_inductance_h == pytest.approx(parameters.trap_inductance_h)
+    assert form_parameters.inner_length_m == pytest.approx(parameters.inner_length_m)
+
+    window._trap_dipole_form._trap_inductance.setValue(15.0)
+    window.apply_design()
+
+    assert window._project.designs[0].parameters.trap_inductance_h == pytest.approx(15e-6)
+    assert window._project.designs[0].antenna.loads[0].inductance_h == pytest.approx(15e-6)
+    assert errors == []
+    window._dirty = False
+
+
+def test_trap_dipole_spec_sweeps_both_bands(window: MainWindow) -> None:
+    from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+
+    parameters = TrapDipoleParameters(
+        frequency_hz=7_100_000.0,
+        high_band_frequency_hz=14_100_000.0,
+        inner_length_m=10.0,
+        outer_length_m=5.0,
+        trap_frequency_hz=14_100_000.0,
+        trap_inductance_h=10e-6,
+        height_m=12.0,
+    )
+
+    spec = window._trap_dipole_simulation_spec(parameters)
+
+    assert spec.frequency_plan.count == 61
+    assert spec.frequency_plan.start_hz == pytest.approx(7_100_000.0 * 0.95)
+    assert spec.frequency_plan.stop_hz == pytest.approx(14_100_000.0 * 1.05)
+
+
 def test_new_ocfd_creates_a_first_class_design(
     window: MainWindow,
     qtbot: QtBot,
