@@ -103,7 +103,7 @@ jobs:
         shell: bash
         run: |
           uv run pytest tests/ui/test_results_view.py -q
-          uv run pytest tests/ui/test_main_window.py -q
+          timeout 120s uv run pytest tests/ui/test_main_window.py -vv
           uv run pytest tests/ui --ignore=tests/ui/test_results_view.py --ignore=tests/ui/test_main_window.py -q
           uv run pytest tests/acceptance tests/integration tests/unit -q
 
