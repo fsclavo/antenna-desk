@@ -1722,6 +1722,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Transformer ratio",
         Language.SPANISH: "Relación del transformador",
     },
+    "endfed.counterpoise_enabled": {
+        Language.ENGLISH: "Use counterpoise",
+        Language.SPANISH: "Usar contrapeso",
+    },
     "endfed.counterpoise_length": {
         Language.ENGLISH: "Counterpoise length (0 = none)",
         Language.SPANISH: "Longitud del contrapeso (0 = ninguno)",

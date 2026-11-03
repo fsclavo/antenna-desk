@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QDoubleSpinBox,
     QFormLayout,
@@ -64,6 +65,9 @@ class EndFedForm(QWidget):
         self._transformer.setDecimals(1)
         self._transformer.setValue(49.0)
         self._transformer.setSuffix(":1")
+
+        self._counterpoise_enabled = QCheckBox(translator.t("endfed.counterpoise_enabled"), self)
+        self._counterpoise_enabled.setChecked(False)
 
         self._counterpoise_length = QDoubleSpinBox(self)
         self._counterpoise_length.setRange(0.0, 100_000.0)
@@ -130,6 +134,7 @@ class EndFedForm(QWidget):
         form.addRow(translator.t("endfed.feed_height"), self._feed_height)
         form.addRow(translator.t("endfed.end_height"), self._end_height)
         form.addRow(translator.t("endfed.transformer_ratio"), self._transformer)
+        form.addRow(self._counterpoise_enabled)
         form.addRow(translator.t("endfed.counterpoise_length"), self._counterpoise_length)
         form.addRow(translator.t("endfed.counterpoise_height"), self._counterpoise_height)
         form.addRow(
@@ -166,6 +171,7 @@ class EndFedForm(QWidget):
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._ground_changed)
         self._counterpoise_length.valueChanged.connect(self._counterpoise_changed)
+        self._counterpoise_enabled.toggled.connect(self._counterpoise_toggled)
         if parameters is not None:
             self.set_parameters(parameters)
         self._update_ground_controls()
@@ -184,8 +190,18 @@ class EndFedForm(QWidget):
     def _counterpoise_changed(self, *_args: object) -> None:
         self._update_counterpoise_controls()
 
+    def _counterpoise_toggled(self, checked: bool) -> None:
+        if checked and self._counterpoise_length.value() <= 0.0:
+            wavelength = 299.792458 / self._frequency.value()
+            self._counterpoise_length.setValue(length_from_m(0.05 * wavelength, self._unit_system))
+        self._update_counterpoise_controls()
+        if not self._updating:
+            self._update_geometry()
+            self.changed.emit()
+
     def _update_counterpoise_controls(self) -> None:
-        enabled = self._counterpoise_length.value() > 0.0
+        enabled = self._counterpoise_enabled.isChecked()
+        self._counterpoise_length.setEnabled(enabled)
         self._counterpoise_height.setEnabled(enabled)
         self._counterpoise_azimuth.setEnabled(enabled)
 
@@ -219,6 +235,7 @@ class EndFedForm(QWidget):
             self._feed_height.setValue(length_from_m(parameters.feed_height_m, self._unit_system))
             self._end_height.setValue(length_from_m(parameters.end_height_m, self._unit_system))
             self._transformer.setValue(parameters.transformer_ratio)
+            self._counterpoise_enabled.setChecked(parameters.counterpoise_length_m > 0.0)
             self._counterpoise_length.setValue(
                 length_from_m(parameters.counterpoise_length_m, self._unit_system)
             )
@@ -284,7 +301,11 @@ class EndFedForm(QWidget):
             material=self._selected_material(),
             ground=self._ground_model(),
             transformer_ratio=self._transformer.value(),
-            counterpoise_length_m=length_to_m(self._counterpoise_length.value(), self._unit_system),
+            counterpoise_length_m=(
+                length_to_m(self._counterpoise_length.value(), self._unit_system)
+                if self._counterpoise_enabled.isChecked()
+                else 0.0
+            ),
             counterpoise_height_m=length_to_m(self._counterpoise_height.value(), self._unit_system),
             counterpoise_azimuth_deg=self._counterpoise_azimuth.value(),
         )

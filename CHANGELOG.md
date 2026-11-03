@@ -11,9 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - The 3D radiation-pattern wireframe is colored by gain (green, yellow, red)
   with a min/max dBi legend, while keeping the lobe interior transparent.
-- End-fed designs support an optional counterpoise (drop plus horizontal wire)
-  and an ideal feed transformer ratio. The one-time estimator starts with a
-  49:1 transformer and a 0.05λ counterpoise as application starting points.
+- End-fed designs support a user-selectable counterpoise (drop plus horizontal
+  wire) and an ideal feed transformer ratio. The one-time estimator starts with
+  a 49:1 transformer and a 0.05λ counterpoise as application starting points.
 
 ## [0.1.0] - 2026-11-02
 
