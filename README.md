@@ -9,9 +9,10 @@ measurements, optimization, matching, and reporting flows are implemented.
 Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.1.0`
 is published; signing is optional and deferred for later releases. Center-fed
 dipoles, folded dipoles, trap dipoles, loops, custom wires, Yagis, Moxon, fan
-dipoles, inverted-Vs, OCFDs, end-fed wires, J Poles, Slim Jims, Ringos,
-verticals, and loaded verticals are supported, with schema v3 persistence and
-migration. VNA CSV import and measured/simulated comparison are available.
+dipoles, inverted-Vs, OCFDs, end-fed wires, slopers, random wires, doublets,
+J Poles, Slim Jims, Ringos, verticals, and loaded verticals are supported, with
+schema v3 persistence and migration. VNA CSV import and measured/simulated
+comparison are available.
 
 ## Launch the GUI
 

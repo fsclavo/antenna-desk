@@ -7,7 +7,7 @@ from __future__ import annotations
 from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
-from ..domain.antennas.endfed import EndFedParameters
+from ..domain.antennas.endfed import EndFedParameters, EndFedPreset
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
@@ -219,9 +219,14 @@ def design_summary_rows(
             if parameters.counterpoise_length_m > 0.0
             else "none"
         )
+        type_label = {
+            EndFedPreset.STANDARD: "end-fed wire",
+            EndFedPreset.SLOPER: "sloper",
+            EndFedPreset.RANDOM_WIRE: "random wire",
+        }[parameters.preset]
         rows.extend(
             [
-                ("Type", "end-fed wire"),
+                ("Type", type_label),
                 ("Length", f"{parameters.length_m:.4f} m"),
                 ("Feed height", f"{parameters.feed_height_m:.4f} m"),
                 ("End height", f"{parameters.end_height_m:.4f} m"),

@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QDialog, QWizard
 
 from antennadesk.domain.antennas.custom import CustomAntennaParameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
-from antennadesk.domain.antennas.endfed import EndFedParameters
+from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
 from antennadesk.domain.antennas.feed import FeedPoint
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
@@ -120,6 +120,25 @@ def _parameters_for(key: str) -> object:
             trap_inductance_h=10e-6,
         ),
         "endfed": EndFedParameters(frequency_hz=7_100_000.0, length_m=20.0),
+        "sloper": EndFedParameters(
+            frequency_hz=7_100_000.0,
+            length_m=20.0,
+            feed_height_m=10.0,
+            end_height_m=2.0,
+            preset=EndFedPreset.SLOPER,
+        ),
+        "random_wire": EndFedParameters(
+            frequency_hz=7_100_000.0,
+            length_m=17.0,
+            transformer_ratio=9.0,
+            counterpoise_length_m=1.0,
+            preset=EndFedPreset.RANDOM_WIRE,
+        ),
+        "doublet": DipoleParameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=20.0,
+            height_m=10.0,
+        ),
         "j_pole": JPoleParameters(
             frequency_hz=220_000_000.0,
             radiator_height_m=1.0,
@@ -200,6 +219,7 @@ def test_every_catalog_entry_has_a_change_template_route(
             "OCFDDialog",
             "VerticalDialog",
             "CustomAntennaDialog",
+            "DoubletDialog",
         ):
             monkeypatch.setattr(main_window_module, class_name, fake_factory)
         fake_self = SimpleNamespace(
@@ -230,6 +250,9 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "fan_dipole": ("fan_dipole",),
         "trap_dipole": ("trap_dipole",),
         "endfed": ("endfed",),
+        "sloper": ("sloper",),
+        "random_wire": ("random_wire",),
+        "doublet": ("doublet",),
         "j_pole": ("j_pole", False),
         "slim_jim": ("j_pole", True),
         "ringo": ("ringo",),
@@ -271,6 +294,9 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         new_fan_dipole_antenna=record("fan_dipole"),
         new_trap_dipole_antenna=record("trap_dipole"),
         new_endfed_antenna=record("endfed"),
+        new_sloper_antenna=record("sloper"),
+        new_random_wire_antenna=record("random_wire"),
+        new_doublet_antenna=record("doublet"),
         new_j_pole_antenna=record("j_pole"),
         new_ringo_antenna=record("ringo"),
         new_ocfd_antenna=record("ocfd"),

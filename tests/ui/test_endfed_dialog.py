@@ -2,9 +2,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import pytest
 from pytestqt.qtbot import QtBot
 
-from antennadesk.domain.antennas.endfed import EndFedParameters
+from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
+from antennadesk.domain.design.formulas import half_wave_length_m
 from antennadesk.ui.dialogs.endfed_dialog import EndFedDialog
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem
@@ -58,3 +60,58 @@ def test_endfed_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
     qtbot.addWidget(dialog)
 
     assert dialog.parameters() == original
+
+
+def test_sloper_preset_uses_a_half_wave_sloping_wire(qtbot: QtBot) -> None:
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        preset=EndFedPreset.SLOPER,
+    )
+    qtbot.addWidget(dialog)
+
+    parameters = dialog.parameters()
+
+    assert dialog.windowTitle() == "Sloper Generator"
+    assert parameters.preset is EndFedPreset.SLOPER
+    assert parameters.length_m == pytest.approx(half_wave_length_m(7_100_000.0), abs=0.001)
+    assert parameters.feed_height_m == pytest.approx(10.0)
+    assert parameters.end_height_m < parameters.feed_height_m
+    assert parameters.transformer_ratio == pytest.approx(49.0)
+    assert parameters.counterpoise_length_m > 0.0
+    assert dialog._form._preset_label.text() == "Sloper"
+
+
+def test_random_wire_preset_uses_a_9_to_1_transformer(qtbot: QtBot) -> None:
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        preset=EndFedPreset.RANDOM_WIRE,
+    )
+    qtbot.addWidget(dialog)
+
+    parameters = dialog.parameters()
+
+    assert dialog.windowTitle() == "Random Wire Generator"
+    assert parameters.preset is EndFedPreset.RANDOM_WIRE
+    assert parameters.length_m == pytest.approx(17.0)
+    assert parameters.transformer_ratio == pytest.approx(9.0)
+    assert parameters.counterpoise_length_m > 0.0
+    assert dialog._form._preset_label.text() == "Random wire"
+
+
+def test_sloper_preset_tracks_the_selected_frequency(qtbot: QtBot) -> None:
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        preset=EndFedPreset.SLOPER,
+    )
+    qtbot.addWidget(dialog)
+
+    dialog._form.set_frequency_hz(28_500_000.0)
+    parameters = dialog.parameters()
+
+    assert parameters.preset is EndFedPreset.SLOPER
+    assert parameters.frequency_hz == pytest.approx(28_500_000.0)
+    assert parameters.length_m == pytest.approx(half_wave_length_m(28_500_000.0), abs=0.001)
+    assert parameters.end_height_m < parameters.feed_height_m

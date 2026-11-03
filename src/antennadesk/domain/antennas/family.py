@@ -98,7 +98,7 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
     if isinstance(parameters, FanDipoleParameters):
         return "fan_dipole"
     if isinstance(parameters, EndFedParameters):
-        return "endfed"
+        return parameters.preset.value
     if isinstance(parameters, JPoleParameters):
         return "j_pole"
     if isinstance(parameters, RingoParameters):

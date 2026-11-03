@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from enum import StrEnum
 
 from ..common import units
 from ..common.units import ensure_non_negative, ensure_positive
@@ -19,6 +20,14 @@ from .wire import Wire
 
 ANTENNA_TYPE_ENDFED = "endfed"
 RADIATOR_ID = "radiator"
+
+
+class EndFedPreset(StrEnum):
+    STANDARD = "endfed"
+    SLOPER = "sloper"
+    RANDOM_WIRE = "random_wire"
+
+
 COUNTERPOISE_ID = "counterpoise"
 COUNTERPOISE_DROP_ID = "counterpoise-drop"
 
@@ -39,6 +48,7 @@ class EndFedParameters:
     counterpoise_length_m: float = 0.0
     counterpoise_height_m: float = 0.1
     counterpoise_azimuth_deg: float | None = None
+    preset: EndFedPreset = EndFedPreset.STANDARD
 
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
@@ -47,6 +57,7 @@ class EndFedParameters:
         ensure_non_negative(self.end_height_m, name="end_height_m")
         ensure_positive(self.wire_radius_m, name="wire_radius_m")
         ensure_positive(self.transformer_ratio, name="transformer_ratio")
+        object.__setattr__(self, "preset", EndFedPreset(self.preset))
         ensure_non_negative(self.counterpoise_length_m, name="counterpoise_length_m")
         ensure_non_negative(self.counterpoise_height_m, name="counterpoise_height_m")
         if abs(self.end_height_m - self.feed_height_m) > self.length_m + 1e-12:
@@ -128,5 +139,9 @@ class EndFedParameters:
             feed=FeedPoint(RADIATOR_ID, 0.0),
             ground=self.ground,
             generator_id="endfed",
-            generator_name="End-fed",
+            generator_name={
+                EndFedPreset.STANDARD: "End-fed",
+                EndFedPreset.SLOPER: "Sloper",
+                EndFedPreset.RANDOM_WIRE: "Random wire",
+            }[self.preset],
         )

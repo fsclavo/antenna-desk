@@ -109,13 +109,13 @@ NBS five-element preset remains available in the Yagi editor.
 Use **File → New Antenna...** to open the antenna catalog. Search or filter by
 **Antenna Type** and choose the desired generator. The catalog is grouped by
 antenna family: Dipole, Yagi, Loop, Vertical, and Custom. The Dipole family
-contains the straight dipole, folded dipole, end-fed wire, inverted-V,
-off-center-fed dipole, and fan dipole. The Yagi family includes the parametric
-Yagi and the Moxon rectangle.
-The Loop family includes the generic loop plus delta-loop and quad-loop presets.
-The Vertical family includes the generic vertical radiator and the loaded
-vertical / mobile whip preset. The Dipole family also includes the trap dipole.
-The catalog shows a short description and evidence level for each type.
+contains the straight dipole, folded dipole, trap dipole, end-fed wire, sloper,
+random wire, doublet, inverted-V, off-center-fed dipole, and fan dipole. The
+Yagi family includes the parametric Yagi and the Moxon rectangle. The Loop
+family includes the generic loop plus delta-loop and quad-loop presets. The
+Vertical family includes the generic vertical radiator and the loaded vertical
+/ mobile whip preset. The catalog shows a short description and evidence level
+for each type.
 
 ### Basic templates
 
@@ -239,6 +239,37 @@ the counterpoise while keeping its last values for later. The transformer
 ratio is an ideal feed-point transformation: `49` means a 49:1 unun, so the
 antenna-side impedance is divided by 49 for the reported impedance and SWR.
 End-fed is a first-class experimental template with an inline editor.
+
+## Create a sloper
+
+Choose **File → New Antenna... → Sloper** for an end-fed half-wave wire sloping
+from a high feed point to a lower far end. The preset starts with a 10 m feed
+height, a 49:1 transformer, and a 0.05λ counterpoise. The end height is chosen
+so the height difference fits inside the wire length. These are application
+starting points; tune the length, slope, transformer, and counterpoise with the
+solver. The design is an `EndFedParameters` design with the `sloper` preset, so
+the inline end-fed editor remains available and the reports label it as a
+sloper.
+
+## Create a random wire
+
+Choose **File → New Antenna... → Random wire** for a non-resonant end-fed wire
+with a 9:1 transformer and a 0.05λ counterpoise. The preset starts with a 17 m
+wire at 10 m height. The length is intentionally non-resonant and is an
+application starting point; tune it for the bands and the matching you use.
+The design is an `EndFedParameters` design with the `random_wire` preset.
+
+## Create a doublet
+
+Choose **File → New Antenna... → Doublet** for a center-fed dipole intended for
+open-wire feed line and a tuner. Set the dipole length, height, orientation,
+azimuth, radius, material, and ground, plus the feed-line characteristic
+impedance, length, velocity factor, and loss. The preset starts with a half-wave
+dipole and a 450 Ω, 10 m line. The feed line is project-level, so later changes
+are made in **Design → Feed Line**. The line is post-processed at the feedpoint
+and transforms the impedance seen at the transmitter; a tuner is not modeled as
+a matching network. The antenna itself is a normal `DipoleParameters` design,
+so the inline dipole editor remains available.
 
 ## Create a fan dipole
 

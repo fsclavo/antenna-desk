@@ -524,3 +524,25 @@ def test_trap_dipole_parameters_and_traps_round_trip() -> None:
         "trap-right",
     ]
     assert restored == original
+
+
+def test_endfed_preset_round_trips() -> None:
+    from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
+
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_height_m=10.0,
+        end_height_m=2.0,
+        transformer_ratio=49.0,
+        counterpoise_length_m=2.0,
+        preset=EndFedPreset.SLOPER,
+    )
+    original = _project(parameters, "Sloper")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].parameters.preset is EndFedPreset.SLOPER
+    assert restored.designs[0].antenna_type == "endfed"

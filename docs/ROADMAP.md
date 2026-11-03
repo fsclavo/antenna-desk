@@ -38,8 +38,8 @@ Completed:
 - Solver adapter, normalized results, persistence, imports, and reports.
 - Guided dipole, folded dipole, trap dipole, loop (generic, delta, quad),
   vertical (1/4λ, 1/2λ, and 5/8λ with radials, plus a loading-coil option and a
-  mobile-whip preset), inverted-V, fan dipole, end-fed, OCFD, J Pole, Slim Jim,
-  Ringo, Yagi, Moxon, and custom-wire designs.
+  mobile-whip preset), inverted-V, fan dipole, end-fed, sloper, random wire,
+  doublet, OCFD, J Pole, Slim Jim, Ringo, Yagi, Moxon, and custom-wire designs.
 - Series/parallel RLC loads and traps; L/Pi/T matching networks with component
   Q/loss; uniform feed-line post-processing.
 - Frequency-first dimension estimation for the families with a documented

@@ -177,6 +177,11 @@ heights, azimuth, radius, material, and ground. `length_m` is the physical
 conductor length; the horizontal run is derived from the height difference. It
 can model horizontal wires or slopers. The generator is experimental.
 
+`preset` is `endfed`, `sloper`, or `random_wire`. The preset is metadata for
+catalog routing, reports, and the inline editor; the geometry and matching
+fields remain fully editable. A doublet is a normal `DipoleParameters` design
+with a project-level `FeedLine`; it does not introduce a new design payload.
+
 ### FanDipoleParameters
 
 A first-class multi-band fan dipole with one or more `FanElement` pairs, apex

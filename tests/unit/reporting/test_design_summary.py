@@ -51,3 +51,31 @@ def test_trap_dipole_summary_reports_two_traps_and_band_edges() -> None:
     assert rows["Trap positions"] == "5.0000 m, 15.0000 m from wire start"
     assert rows["Trap frequency"] == "14.100000 MHz"
     assert "pF" in rows["Trap capacitance"]
+
+
+def test_endfed_presets_are_labeled_in_the_summary() -> None:
+    from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
+
+    sloper = dict(
+        design_summary_rows(
+            EndFedParameters(
+                frequency_hz=7_100_000.0,
+                length_m=20.0,
+                feed_height_m=10.0,
+                end_height_m=2.0,
+                preset=EndFedPreset.SLOPER,
+            )
+        )
+    )
+    random_wire = dict(
+        design_summary_rows(
+            EndFedParameters(
+                frequency_hz=7_100_000.0,
+                length_m=17.0,
+                preset=EndFedPreset.RANDOM_WIRE,
+            )
+        )
+    )
+
+    assert sloper["Type"] == "sloper"
+    assert random_wire["Type"] == "random wire"

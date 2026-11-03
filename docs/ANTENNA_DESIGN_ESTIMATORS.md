@@ -125,6 +125,23 @@ calculated total is usually too long. Treat it as a starting point and tune the
 length, trap position, inductance, and trap frequency with the solver. There is
 no independent numerical reference for this trap-dipole configuration.
 
+## Sloper, random wire, and doublet presets
+
+These catalog presets are not frequency-first estimators:
+
+- **Sloper** uses the end-fed half-wave factor for its wire length, a 10 m feed
+  height, a 49:1 transformer, and a 0.05λ counterpoise. The end height is
+  selected so the slope fits inside the wire. Tune the length, slope, and
+  matching with the solver.
+- **Random wire** uses a 17 m non-resonant wire, a 9:1 transformer, and a 0.05λ
+  counterpoise. The length is an application starting point, not a resonance
+  calculation.
+- **Doublet** starts with a half-wave dipole and a 450 Ω, 10 m open-wire line.
+  The feed line is project-level post-processing; the tuner is not modeled as a
+  matching network. Tune the dipole length and line for the bands you use.
+
+No independent numerical reference is claimed for these presets.
+
 ## Yagi scope
 
 The frequency-only estimator supports **2 to 32 elements** using the first
@@ -153,8 +170,8 @@ Reference sources currently used:
 - L. B. Cebik, W4RNL, “The Moxon Rectangle: A Review”, Table 1: 20 m wire Moxon.
 - Application preset: Ringo proportions, the loop polygon correction, the
   end-fed transformer/counterpoise starting point, the loaded-vertical mobile
-  preset, and the trap-dipole starting dimensions. They are not universal
-  formulas.
+  preset, the trap-dipole starting dimensions, and the sloper, random-wire, and
+  doublet presets. They are not universal formulas.
 
 ## Tests
 
@@ -193,5 +210,7 @@ Reference sources currently used:
   modeled.
 - Trap-dipole dimensions are starting points; trap loading, component losses,
   and installation effects are not solved analytically.
+- Sloper, random-wire, and doublet presets are application starting points; the
+  doublet tuner is not modeled as a matching network.
 - Estimator provenance is shown in the dialog and persisted as optional design
   metadata. Editing the design clears it.

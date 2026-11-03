@@ -1296,6 +1296,148 @@ def test_trap_dipole_spec_sweeps_both_bands(window: MainWindow) -> None:
     assert spec.frequency_plan.stop_hz == pytest.approx(14_100_000.0 * 1.05)
 
 
+def test_new_sloper_uses_the_endfed_preset(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
+
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_height_m=10.0,
+        end_height_m=2.0,
+        preset=EndFedPreset.SLOPER,
+    )
+    captured: dict[str, object] = {}
+
+    class FakeEndFedDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            captured.update(kwargs)
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> EndFedParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "EndFedDialog", FakeEndFedDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Sloper", True))
+
+    window.new_sloper_antenna()
+
+    assert captured["preset"] is EndFedPreset.SLOPER
+    assert window._project is not None
+    assert window._project.designs[0].parameters.preset is EndFedPreset.SLOPER
+    window._dirty = False
+
+
+def test_new_doublet_sets_the_project_feed_line(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.dipole import DipoleParameters
+    from antennadesk.domain.antennas.feed_line import FeedLine
+
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=10.0,
+    )
+    line = FeedLine(
+        characteristic_impedance_ohm=450.0,
+        length_m=12.0,
+        velocity_factor=0.9,
+        matched_loss_db_per_100m=0.2,
+    )
+
+    class FakeDoubletDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> DipoleParameters:
+            return parameters
+
+        def result_feed_line(self) -> FeedLine:
+            return line
+
+    monkeypatch.setattr(main_window_module, "DoubletDialog", FakeDoubletDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Doublet", True))
+
+    window.new_doublet_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "Doublet"
+    assert window._project.feed_line == line
+    assert window._feed_line == line
+    assert window._project.designs[0].antenna_type == "wire_dipole"
+    window._dirty = False
+
+
+def test_change_template_to_doublet_updates_the_feed_line(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.dipole import DipoleParameters
+    from antennadesk.domain.antennas.feed_line import FeedLine
+
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=10.0,
+    )
+    line = FeedLine(
+        characteristic_impedance_ohm=300.0,
+        length_m=8.0,
+        velocity_factor=0.85,
+        matched_loss_db_per_100m=0.3,
+    )
+
+    class FakeCatalog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def selected_key(self) -> str:
+            return "doublet"
+
+    class FakeDoubletDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def parameters(self) -> DipoleParameters:
+            return parameters
+
+        def feed_line(self) -> FeedLine:
+            return line
+
+    monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
+    monkeypatch.setattr(main_window_module, "DoubletDialog", FakeDoubletDialog)
+    monkeypatch.setattr(
+        QMessageBox,
+        "question",
+        lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
+    )
+
+    window.change_template()
+
+    assert window._project is not None
+    assert window._project.feed_line == line
+    assert window._feed_line == line
+    assert window._project.designs[0].parameters == parameters
+    window._dirty = False
+
+
 def test_new_ocfd_creates_a_first_class_design(
     window: MainWindow,
     qtbot: QtBot,

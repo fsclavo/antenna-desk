@@ -81,7 +81,7 @@ from ..domain.antennas.design import (
     with_primary_dimension,
 )
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
-from ..domain.antennas.endfed import EndFedParameters
+from ..domain.antennas.endfed import EndFedParameters, EndFedPreset
 from ..domain.antennas.family import antenna_family
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.feed_line import FeedLine
@@ -118,6 +118,7 @@ from ..simulation.nec2.solver import Nec2cSolver
 from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_CUSTOM,
     CATALOG_TYPE_DELTA_LOOP,
+    CATALOG_TYPE_DOUBLET,
     CATALOG_TYPE_ENDFED,
     CATALOG_TYPE_FAN_DIPOLE,
     CATALOG_TYPE_FOLDED_DIPOLE,
@@ -128,8 +129,10 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_MOXON,
     CATALOG_TYPE_OCFD,
     CATALOG_TYPE_QUAD_LOOP,
+    CATALOG_TYPE_RANDOM_WIRE,
     CATALOG_TYPE_RINGO,
     CATALOG_TYPE_SLIM_JIM,
+    CATALOG_TYPE_SLOPER,
     CATALOG_TYPE_TRAP_DIPOLE,
     CATALOG_TYPE_VERTICAL,
     CATALOG_TYPE_WIRE_DIPOLE,
@@ -140,6 +143,7 @@ from .dialogs.comparison_dialog import ComparisonDialog
 from .dialogs.construction_dialog import ConstructionDialog
 from .dialogs.custom_antenna_dialog import CustomAntennaDialog
 from .dialogs.design_from_frequency_dialog import DesignFromFrequencyDialog
+from .dialogs.doublet_dialog import DoubletDialog
 from .dialogs.element_optimization_dialog import (
     ElementOptimizationDialog,
     ElementOptimizationVariable,
@@ -2126,27 +2130,78 @@ class MainWindow(QMainWindow):
             return
         self._set_project(project, project.designs[0].id, path=None, dirty=True)
 
-    def new_endfed_antenna(self) -> None:
+    def new_endfed_antenna(
+        self,
+        *,
+        preset: EndFedPreset = EndFedPreset.STANDARD,
+    ) -> None:
         if not self._maybe_save_changes():
             return
+        title_key, default_name = {
+            EndFedPreset.STANDARD: ("endfed.title", "End-fed"),
+            EndFedPreset.SLOPER: ("endfed.sloper_title", "Sloper"),
+            EndFedPreset.RANDOM_WIRE: ("endfed.random_wire_title", "Random wire"),
+        }[preset]
         name, accepted = QInputDialog.getText(
             self,
-            self._translator.t("endfed.title"),
+            self._translator.t(title_key),
             self._translator.t("field.project_name"),
-            text="End-fed",
+            text=default_name,
         )
         if not accepted:
             return
-        dialog = EndFedDialog(self._translator, self._unit_system, self)
+        dialog = EndFedDialog(
+            self._translator,
+            self._unit_system,
+            self,
+            preset=preset,
+        )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         try:
             project = CreateDipoleProject().execute(
                 CreateDipoleProjectCommand(
-                    project_name=name.strip() or "End-fed",
+                    project_name=name.strip() or default_name,
                     variant_name="Initial",
                     parameters=dialog.result_parameters(),
                 )
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+
+    def new_sloper_antenna(self) -> None:
+        self.new_endfed_antenna(preset=EndFedPreset.SLOPER)
+
+    def new_random_wire_antenna(self) -> None:
+        self.new_endfed_antenna(preset=EndFedPreset.RANDOM_WIRE)
+
+    def new_doublet_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        name, accepted = QInputDialog.getText(
+            self,
+            self._translator.t("doublet.title"),
+            self._translator.t("field.project_name"),
+            text="Doublet",
+        )
+        if not accepted:
+            return
+        dialog = DoubletDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            project = CreateDipoleProject().execute(
+                CreateDipoleProjectCommand(
+                    project_name=name.strip() or "Doublet",
+                    variant_name="Initial",
+                    parameters=dialog.result_parameters(),
+                )
+            )
+            project = project.with_feed_line(
+                dialog.result_feed_line(),
+                updated_at=project.updated_at,
             )
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
@@ -2714,6 +2769,30 @@ class MainWindow(QMainWindow):
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
             return dialog.result_parameters()
+        if selected in {CATALOG_TYPE_SLOPER, CATALOG_TYPE_RANDOM_WIRE}:
+            preset = (
+                EndFedPreset.SLOPER if selected == CATALOG_TYPE_SLOPER else EndFedPreset.RANDOM_WIRE
+            )
+            dialog = EndFedDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+                preset=preset,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
+        if selected == CATALOG_TYPE_DOUBLET:
+            dialog = DoubletDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
         if selected == CATALOG_TYPE_FAN_DIPOLE:
             dialog = FanDipoleDialog(
                 self._translator,
@@ -2791,11 +2870,25 @@ class MainWindow(QMainWindow):
         if selected is None:
             return
         design = self._project.design_by_id(self._design_id)
+        feed_line = None
         try:
-            parameters = self._parameters_from_catalog(
-                selected,
-                design.parameters.frequency_hz,
-            )
+            if selected == CATALOG_TYPE_DOUBLET:
+                dialog = DoubletDialog(
+                    self._translator,
+                    self._unit_system,
+                    self,
+                    frequency_hz=design.parameters.frequency_hz,
+                    feed_line=self._feed_line,
+                )
+                if dialog.exec() != QDialog.DialogCode.Accepted:
+                    return
+                parameters = dialog.parameters()
+                feed_line = dialog.feed_line()
+            else:
+                parameters = self._parameters_from_catalog(
+                    selected,
+                    design.parameters.frequency_hz,
+                )
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
@@ -2812,7 +2905,14 @@ class MainWindow(QMainWindow):
             return
         try:
             updated_design = design.with_parameters(parameters)
-            self._project = self._project.with_design(updated_design, updated_at=utc_now())
+            timestamp = utc_now()
+            self._project = self._project.with_design(updated_design, updated_at=timestamp)
+            if feed_line is not None:
+                self._project = self._project.with_feed_line(
+                    feed_line,
+                    updated_at=timestamp,
+                )
+                self._feed_line = feed_line
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
@@ -2843,6 +2943,12 @@ class MainWindow(QMainWindow):
             self.new_trap_dipole_antenna()
         elif selected == CATALOG_TYPE_ENDFED:
             self.new_endfed_antenna()
+        elif selected == CATALOG_TYPE_SLOPER:
+            self.new_sloper_antenna()
+        elif selected == CATALOG_TYPE_RANDOM_WIRE:
+            self.new_random_wire_antenna()
+        elif selected == CATALOG_TYPE_DOUBLET:
+            self.new_doublet_antenna()
         elif selected == CATALOG_TYPE_J_POLE:
             self.new_j_pole_antenna(folded=False)
         elif selected == CATALOG_TYPE_SLIM_JIM:

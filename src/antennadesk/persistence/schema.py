@@ -19,7 +19,11 @@ from ..domain.antennas.dipole import (
     DipoleOrientation,
     DipoleParameters,
 )
-from ..domain.antennas.endfed import ANTENNA_TYPE_ENDFED, EndFedParameters
+from ..domain.antennas.endfed import (
+    ANTENNA_TYPE_ENDFED,
+    EndFedParameters,
+    EndFedPreset,
+)
 from ..domain.antennas.fan_dipole import (
     ANTENNA_TYPE_FAN_DIPOLE,
     FanDipoleParameters,
@@ -272,6 +276,7 @@ class EndFedParametersPayload(StrictModel):
     counterpoise_length_m: float = Field(default=0.0, ge=0.0)
     counterpoise_height_m: float = Field(default=0.1, ge=0.0)
     counterpoise_azimuth_deg: float | None = Field(default=None, ge=0.0, lt=360.0)
+    preset: EndFedPreset = EndFedPreset.STANDARD
 
 
 class FanElementPayload(StrictModel):
@@ -910,6 +915,7 @@ def _endfed_parameters_from_domain(value: EndFedParameters) -> EndFedParametersP
         counterpoise_length_m=value.counterpoise_length_m,
         counterpoise_height_m=value.counterpoise_height_m,
         counterpoise_azimuth_deg=value.counterpoise_azimuth_deg,
+        preset=value.preset,
     )
 
 
@@ -1539,6 +1545,7 @@ def _endfed_parameters_to_domain(value: EndFedParametersPayload) -> EndFedParame
         counterpoise_length_m=value.counterpoise_length_m,
         counterpoise_height_m=value.counterpoise_height_m,
         counterpoise_azimuth_deg=value.counterpoise_azimuth_deg,
+        preset=value.preset,
     )
 
 

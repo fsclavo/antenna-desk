@@ -31,6 +31,9 @@ CATALOG_TYPE_MOXON = "moxon"
 CATALOG_TYPE_FAN_DIPOLE = "fan_dipole"
 CATALOG_TYPE_TRAP_DIPOLE = "trap_dipole"
 CATALOG_TYPE_ENDFED = "endfed"
+CATALOG_TYPE_SLOPER = "sloper"
+CATALOG_TYPE_RANDOM_WIRE = "random_wire"
+CATALOG_TYPE_DOUBLET = "doublet"
 CATALOG_TYPE_J_POLE = "j_pole"
 CATALOG_TYPE_RINGO = "ringo"
 CATALOG_TYPE_SLIM_JIM = "slim_jim"
@@ -89,6 +92,27 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         label_key="catalog.endfed",
         family_key="catalog.family.dipole",
         description_key="catalog.endfed.description",
+        evidence_key="catalog.evidence.experimental",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_SLOPER,
+        label_key="catalog.sloper",
+        family_key="catalog.family.dipole",
+        description_key="catalog.sloper.description",
+        evidence_key="catalog.evidence.experimental",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_RANDOM_WIRE,
+        label_key="catalog.random_wire",
+        family_key="catalog.family.dipole",
+        description_key="catalog.random_wire.description",
+        evidence_key="catalog.evidence.experimental",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_DOUBLET,
+        label_key="catalog.doublet",
+        family_key="catalog.family.dipole",
+        description_key="catalog.doublet.description",
         evidence_key="catalog.evidence.experimental",
     ),
     CatalogEntry(

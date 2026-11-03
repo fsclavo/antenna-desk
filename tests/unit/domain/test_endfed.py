@@ -4,8 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from antennadesk.domain.antennas.endfed import EndFedParameters
-from antennadesk.domain.antennas.family import AntennaFamily, antenna_family
+from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
+from antennadesk.domain.antennas.family import (
+    AntennaFamily,
+    antenna_family,
+    antenna_template_id,
+)
 from antennadesk.domain.antennas.feed import FeedPoint
 
 
@@ -102,3 +106,26 @@ def test_endfed_rejects_an_invalid_transformer_ratio() -> None:
             length_m=20.0,
             transformer_ratio=0.0,
         )
+
+
+def test_endfed_presets_keep_their_generator_name_and_template_id() -> None:
+    sloper = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_height_m=10.0,
+        end_height_m=2.0,
+        preset=EndFedPreset.SLOPER,
+    )
+    random_wire = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=17.0,
+        transformer_ratio=9.0,
+        preset=EndFedPreset.RANDOM_WIRE,
+    )
+
+    assert sloper.to_custom_parameters().generator_name == "Sloper"
+    assert random_wire.to_custom_parameters().generator_name == "Random wire"
+    assert antenna_template_id(sloper) == "sloper"
+    assert antenna_template_id(random_wire) == "random_wire"
+    assert antenna_family(sloper) is AntennaFamily.DIPOLE
+    assert antenna_family(random_wire) is AntennaFamily.DIPOLE

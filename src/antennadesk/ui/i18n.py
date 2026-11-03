@@ -135,6 +135,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Dipolo alimentado en el centro con dos trampas LC paralelas para operar en dos bandas."
         ),
     },
+    "catalog.sloper": {
+        Language.ENGLISH: "Sloper",
+        Language.SPANISH: "Sloper",
+    },
+    "catalog.sloper.description": {
+        Language.ENGLISH: "End-fed half-wave wire sloping from a high feed point to a lower end.",
+        Language.SPANISH: "Hilo de media onda alimentado en el extremo, inclinado desde un punto alto hacia un extremo más bajo.",
+    },
+    "catalog.random_wire": {
+        Language.ENGLISH: "Random wire",
+        Language.SPANISH: "Hilo aleatorio",
+    },
+    "catalog.random_wire.description": {
+        Language.ENGLISH: "Non-resonant end-fed wire with a 9:1 transformer and counterpoise.",
+        Language.SPANISH: "Hilo no resonante alimentado en el extremo con transformador 9:1 y contrapeso.",
+    },
+    "catalog.doublet": {
+        Language.ENGLISH: "Doublet",
+        Language.SPANISH: "Doublet",
+    },
+    "catalog.doublet.description": {
+        Language.ENGLISH: "Center-fed dipole for open-wire feed line and a tuner.",
+        Language.SPANISH: "Dipolo alimentado en el centro para línea abierta y sintonizador.",
+    },
     "catalog.endfed": {
         Language.ENGLISH: "End-fed wire",
         Language.SPANISH: "Hilo alimentado en el extremo",
@@ -718,6 +742,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "orientation.vertical": {Language.ENGLISH: "Vertical", Language.SPANISH: "Vertical"},
     "field.azimuth": {Language.ENGLISH: "Azimuth (°)", Language.SPANISH: "Azimut (°)"},
     "field.diameter": {Language.ENGLISH: "Wire diameter", Language.SPANISH: "Diámetro del hilo"},
+    "field.wire_radius": {
+        Language.ENGLISH: "Wire radius (mm)",
+        Language.SPANISH: "Radio del hilo (mm)",
+    },
     "field.material": {Language.ENGLISH: "Material", Language.SPANISH: "Material"},
     "field.ground": {Language.ENGLISH: "Ground", Language.SPANISH: "Suelo"},
     "field.permittivity": {
@@ -743,6 +771,42 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "field.pattern_points": {
         Language.ENGLISH: "{count} pattern points",
         Language.SPANISH: "{count} puntos de patrón",
+    },
+    "doublet.title": {
+        Language.ENGLISH: "Doublet Generator",
+        Language.SPANISH: "Generador de doublet",
+    },
+    "doublet.hint": {
+        Language.ENGLISH: (
+            "A center-fed dipole intended for open-wire feed line and a tuner. "
+            "The feed line is project-level; adjust it later in Design → Feed "
+            "Line. The dimensions and 450 Ω line are application starting points."
+        ),
+        Language.SPANISH: (
+            "Un dipolo alimentado en el centro pensado para línea abierta y "
+            "sintonizador. La línea es del proyecto; ajustala después en "
+            "Diseño → Línea de alimentación. Las dimensiones y la línea de "
+            "450 Ω son puntos de partida."
+        ),
+    },
+    "doublet.geometry": {
+        Language.ENGLISH: (
+            "Length {length} {unit} · feed line {line} Ω · adjust the line in Design → Feed Line"
+        ),
+        Language.SPANISH: (
+            "Longitud {length} {unit} · línea de {line} Ω · ajustá la línea en "
+            "Diseño → Línea de alimentación"
+        ),
+    },
+    "doublet.evidence": {
+        Language.ENGLISH: (
+            "Experimental preset: the dipole geometry is standard, but the "
+            "open-wire line and tuner are not modeled as a matching network."
+        ),
+        Language.SPANISH: (
+            "Preset experimental: la geometría del dipolo es estándar, pero la "
+            "línea abierta y el sintonizador no se modelan como red de adaptación."
+        ),
     },
     "feed_line.title": {
         Language.ENGLISH: "Feed Line",
@@ -1798,6 +1862,74 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Plantilla experimental: se prueban la geometría y las trampas LC "
             "paralelas, pero no hay una referencia numérica independiente para "
             "este dipolo con trampas."
+        ),
+    },
+    "endfed.preset.endfed": {
+        Language.ENGLISH: "End-fed wire",
+        Language.SPANISH: "Hilo alimentado en el extremo",
+    },
+    "endfed.preset.sloper": {
+        Language.ENGLISH: "Sloper",
+        Language.SPANISH: "Sloper",
+    },
+    "endfed.preset.random_wire": {
+        Language.ENGLISH: "Random wire",
+        Language.SPANISH: "Hilo aleatorio",
+    },
+    "endfed.sloper_title": {
+        Language.ENGLISH: "Sloper Generator",
+        Language.SPANISH: "Generador de sloper",
+    },
+    "endfed.random_wire_title": {
+        Language.ENGLISH: "Random Wire Generator",
+        Language.SPANISH: "Generador de hilo aleatorio",
+    },
+    "endfed.sloper_hint": {
+        Language.ENGLISH: (
+            "A half-wave wire sloping from a high feed point to a lower far end. "
+            "The 49:1 transformer and counterpoise are application starting "
+            "points; tune the length, slope, and matching with the solver."
+        ),
+        Language.SPANISH: (
+            "Un hilo de media onda inclinado desde un punto de alimentación alto "
+            "hacia un extremo más bajo. El transformador 49:1 y el contrapeso son "
+            "puntos de partida; sintonizá la longitud, la inclinación y la "
+            "adaptación con el solver."
+        ),
+    },
+    "endfed.random_wire_hint": {
+        Language.ENGLISH: (
+            "A non-resonant end-fed wire with a 9:1 transformer and counterpoise. "
+            "The 17 m length, transformer, and counterpoise are application "
+            "starting points; tune them for your band and installation."
+        ),
+        Language.SPANISH: (
+            "Un hilo no resonante alimentado en el extremo con transformador 9:1 "
+            "y contrapeso. La longitud de 17 m, el transformador y el contrapeso "
+            "son puntos de partida; sintonizalos para tu banda e instalación."
+        ),
+    },
+    "endfed.sloper_evidence": {
+        Language.ENGLISH: (
+            "Experimental preset: the geometry and matching are application "
+            "starting points, with no independent numerical reference for this "
+            "sloper."
+        ),
+        Language.SPANISH: (
+            "Preset experimental: la geometría y la adaptación son puntos de "
+            "partida, sin una referencia numérica independiente para este sloper."
+        ),
+    },
+    "endfed.random_wire_evidence": {
+        Language.ENGLISH: (
+            "Experimental preset: the geometry and matching are application "
+            "starting points, with no independent numerical reference for this "
+            "random wire."
+        ),
+        Language.SPANISH: (
+            "Preset experimental: la geometría y la adaptación son puntos de "
+            "partida, sin una referencia numérica independiente para este hilo "
+            "aleatorio."
         ),
     },
     "endfed.title": {

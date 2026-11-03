@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Trap-dipole templates support two parallel LC traps, automatic trap
   capacitance from the target frequency and inductance, and a starting-dimension
   helper for the low and high bands.
+- Catalog presets for a sloper, a random wire, and a doublet. Sloper and random
+  wire use the end-fed template with preset metadata; the doublet creates a
+  center-fed dipole and configures a project-level open-wire feed line.
 
 ## [0.1.0] - 2026-11-02
 

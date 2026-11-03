@@ -15,8 +15,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...domain.antennas.endfed import EndFedParameters
+from ...domain.antennas.endfed import EndFedParameters, EndFedPreset
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
+from ...domain.design.formulas import half_wave_length_m
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
@@ -33,11 +34,14 @@ class EndFedForm(QWidget):
         unit_system: UnitSystem,
         parameters: EndFedParameters | None = None,
         parent: QWidget | None = None,
+        *,
+        preset: EndFedPreset = EndFedPreset.STANDARD,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._unit_system = unit_system
         self._updating = False
+        self._preset = EndFedPreset(preset)
 
         self._frequency = QDoubleSpinBox(self)
         self._frequency.setRange(0.1, 100_000.0)
@@ -125,10 +129,15 @@ class EndFedForm(QWidget):
         self._conductivity.setValue(0.005)
         self._conductivity.setSuffix(" S/m")
 
+        self._preset_label = QLabel(self)
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
 
+        if parameters is None:
+            self._apply_preset_defaults()
+
         form = QFormLayout()
+        form.addRow(translator.t("field.template"), self._preset_label)
         form.addRow(translator.t("field.frequency"), self._frequency)
         form.addRow(translator.t("field.length"), self._length)
         form.addRow(translator.t("endfed.feed_height"), self._feed_height)
@@ -174,9 +183,37 @@ class EndFedForm(QWidget):
         self._counterpoise_enabled.toggled.connect(self._counterpoise_toggled)
         if parameters is not None:
             self.set_parameters(parameters)
+        else:
+            self._update_preset_label()
         self._update_ground_controls()
         self._update_counterpoise_controls()
         self._update_geometry()
+
+    def _update_preset_label(self) -> None:
+        self._preset_label.setText(self._translator.t(f"endfed.preset.{self._preset.value}"))
+
+    def _apply_preset_defaults(self) -> None:
+        if self._preset is EndFedPreset.STANDARD:
+            self._update_preset_label()
+            return
+        frequency_hz = self._frequency.value() * 1_000_000.0
+        wavelength_m = 299_792_458.0 / frequency_hz
+        if self._preset is EndFedPreset.SLOPER:
+            length_m = half_wave_length_m(frequency_hz)
+            feed_height_m = 10.0
+            end_height_m = max(feed_height_m - min(0.5 * length_m, feed_height_m - 0.5), 0.5)
+            self._transformer.setValue(49.0)
+        else:
+            length_m = 17.0
+            feed_height_m = 10.0
+            end_height_m = 10.0
+            self._transformer.setValue(9.0)
+        self._length.setValue(length_from_m(length_m, self._unit_system))
+        self._feed_height.setValue(length_from_m(feed_height_m, self._unit_system))
+        self._end_height.setValue(length_from_m(end_height_m, self._unit_system))
+        self._counterpoise_enabled.setChecked(True)
+        self._counterpoise_length.setValue(length_from_m(0.05 * wavelength_m, self._unit_system))
+        self._update_preset_label()
 
     def _emit_changed(self, *_args: object) -> None:
         if not self._updating:
@@ -230,6 +267,7 @@ class EndFedForm(QWidget):
     def set_parameters(self, parameters: EndFedParameters) -> None:
         self._updating = True
         try:
+            self._preset = parameters.preset
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
             self._length.setValue(length_from_m(parameters.length_m, self._unit_system))
             self._feed_height.setValue(length_from_m(parameters.feed_height_m, self._unit_system))
@@ -260,12 +298,15 @@ class EndFedForm(QWidget):
                 self._conductivity.setValue(parameters.ground.conductivity_s_per_m)
         finally:
             self._updating = False
+        self._update_preset_label()
         self._update_ground_controls()
         self._update_counterpoise_controls()
         self._update_geometry()
 
     def set_frequency_hz(self, frequency_hz: float) -> None:
         self._frequency.setValue(frequency_hz / 1_000_000.0)
+        if self._preset is not EndFedPreset.STANDARD:
+            self._apply_preset_defaults()
 
     def _update_geometry(self) -> None:
         try:
@@ -308,4 +349,5 @@ class EndFedForm(QWidget):
             ),
             counterpoise_height_m=length_to_m(self._counterpoise_height.value(), self._unit_system),
             counterpoise_azimuth_deg=self._counterpoise_azimuth.value(),
+            preset=self._preset,
         )

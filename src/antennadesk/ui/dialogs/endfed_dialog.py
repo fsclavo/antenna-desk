@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...domain.antennas.endfed import EndFedParameters
+from ...domain.antennas.endfed import EndFedParameters, EndFedPreset
 from ..i18n import Translator
 from ..units import UnitSystem
 from ..widgets.endfed_form import EndFedForm
@@ -28,19 +28,43 @@ class EndFedDialog(QDialog):
         *,
         frequency_hz: float | None = None,
         parameters: EndFedParameters | None = None,
+        preset: EndFedPreset = EndFedPreset.STANDARD,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._parameters: EndFedParameters | None = None
-        self._form = EndFedForm(translator, unit_system, parameters, self)
+        if parameters is not None:
+            preset = parameters.preset
+        self._form = EndFedForm(
+            translator,
+            unit_system,
+            parameters,
+            self,
+            preset=preset,
+        )
         if frequency_hz is not None and parameters is None:
             self._form.set_frequency_hz(frequency_hz)
-        self.setWindowTitle(translator.t("endfed.title"))
+        title_key = {
+            EndFedPreset.STANDARD: "endfed.title",
+            EndFedPreset.SLOPER: "endfed.sloper_title",
+            EndFedPreset.RANDOM_WIRE: "endfed.random_wire_title",
+        }[preset]
+        self.setWindowTitle(translator.t(title_key))
         self.resize(620, 720)
 
-        self._hint = QLabel(translator.t("endfed.hint"), self)
+        hint_key = {
+            EndFedPreset.STANDARD: "endfed.hint",
+            EndFedPreset.SLOPER: "endfed.sloper_hint",
+            EndFedPreset.RANDOM_WIRE: "endfed.random_wire_hint",
+        }[preset]
+        evidence_key = {
+            EndFedPreset.STANDARD: "endfed.evidence",
+            EndFedPreset.SLOPER: "endfed.sloper_evidence",
+            EndFedPreset.RANDOM_WIRE: "endfed.random_wire_evidence",
+        }[preset]
+        self._hint = QLabel(translator.t(hint_key), self)
         self._hint.setWordWrap(True)
-        self._evidence = QLabel(translator.t("endfed.evidence"), self)
+        self._evidence = QLabel(translator.t(evidence_key), self)
         self._evidence.setWordWrap(True)
 
         buttons = QDialogButtonBox(
