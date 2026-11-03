@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - End-fed designs support a user-selectable counterpoise (drop plus horizontal
   wire) and an ideal feed transformer ratio. The one-time estimator starts with
   a 49:1 transformer and a 0.05λ counterpoise as application starting points.
+- Frequency-first vertical estimation supports the half-wave form
+  (`0.5λ × 0.95`) in addition to quarter-wave and five-eighth-wave, with a
+  matching warning for the high half-wave feed impedance.
+- Vertical templates support an optional series loading coil at a selected
+  height above the base. A loaded vertical / mobile whip catalog preset starts
+  with a 2.0 m radiator, four short radials, and an editable 10 µH coil as
+  application starting points.
 
 ## [0.1.0] - 2026-11-02
 
@@ -43,9 +50,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   embedded AppImage signatures, and Windows Authenticode for both executables.
 - `antennadesk --version` for packaged-application smoke tests.
 - Frequency-first dimension estimation for dipoles, folded dipoles, loops,
-  verticals (1/4λ and 5/8λ), inverted-V, fan dipoles, end-fed, OCFD, J Pole,
-  Slim Jim, Ringo, Yagi (2–32 elements from the DL6WU trimming reference), and
-  Moxon (Cebik reference scaled by frequency).
+  verticals (1/4λ, 1/2λ, and 5/8λ), inverted-V, fan dipoles, end-fed, OCFD,
+  J Pole, Slim Jim, Ringo, Yagi (2–32 elements from the DL6WU trimming
+  reference), and Moxon (Cebik reference scaled by frequency).
 - `Design → Design from Frequency...` dialog with assumptions, warnings,
   confidence, sources, dimension table, apply-to-current-design flow, and an
   optional one-step handoff to the matching optimizer or synthesis dialog.

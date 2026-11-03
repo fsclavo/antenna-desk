@@ -74,6 +74,16 @@ def _parameters_for(key: str) -> object:
         ),
         "ocfd": OCFDParameters(frequency_hz=7_100_000.0, total_length_m=40.0),
         "vertical": VerticalParameters(frequency_hz=7_100_000.0, height_m=10.0),
+        "loaded_vertical": VerticalParameters(
+            frequency_hz=7_100_000.0,
+            height_m=2.0,
+            base_height_m=0.25,
+            radial_count=4,
+            radial_length_m=1.0,
+            loading_coil_enabled=True,
+            loading_coil_offset_m=1.0,
+            loading_coil_inductance_h=10e-6,
+        ),
         "inverted_v": InvertedVParameters(
             frequency_hz=7_100_000.0,
             leg_length_m=10.0,
@@ -203,6 +213,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "quad_loop": ("basic", "loop", 4),
         "ocfd": ("ocfd",),
         "vertical": ("vertical",),
+        "loaded_vertical": ("loaded_vertical",),
         "inverted_v": ("inverted_v",),
         "yagi": ("yagi",),
         "moxon": ("moxon",),
@@ -252,6 +263,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         new_ringo_antenna=record("ringo"),
         new_ocfd_antenna=record("ocfd"),
         new_vertical_antenna=record("vertical"),
+        new_loaded_vertical_antenna=record("loaded_vertical"),
         _new_basic_antenna=record("basic"),
     )
     monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)

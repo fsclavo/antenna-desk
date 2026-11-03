@@ -14,10 +14,12 @@ from .antenna import AntennaModel
 from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
+from .load import SeriesLoad
 from .materials import COPPER, ConductorMaterial
 from .wire import Wire
 
 RADIATOR_ID = "radiator"
+LOADING_COIL_ID = "loading-coil"
 MAX_RADIALS = 128
 ANTENNA_TYPE_VERTICAL = "vertical"
 
@@ -28,6 +30,10 @@ class VerticalParameters:
 
     ``base_height_m`` is both the lower end of the radiator and the radial
     plane.  Set it slightly above ground for elevated radials.
+
+    An optional series loading coil can be placed along the radiator.  Its
+    offset is measured from the radiator base and it is modeled as an ideal
+    series RLC load with zero capacitance.
     """
 
     frequency_hz: float
@@ -39,6 +45,10 @@ class VerticalParameters:
     wire_radius_m: float = 0.001
     material: ConductorMaterial = COPPER
     ground: GroundModel = FREE_SPACE
+    loading_coil_enabled: bool = False
+    loading_coil_offset_m: float = 0.0
+    loading_coil_inductance_h: float = 0.0
+    loading_coil_resistance_ohm: float = 0.0
 
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
@@ -56,10 +66,32 @@ class VerticalParameters:
             "radial_angle_deg",
             units.normalize_azimuth_degrees(self.radial_angle_deg),
         )
+        ensure_non_negative(self.loading_coil_offset_m, name="loading_coil_offset_m")
+        ensure_non_negative(
+            self.loading_coil_inductance_h,
+            name="loading_coil_inductance_h",
+        )
+        ensure_non_negative(
+            self.loading_coil_resistance_ohm,
+            name="loading_coil_resistance_ohm",
+        )
+        if self.loading_coil_enabled:
+            ensure_positive(
+                self.loading_coil_inductance_h,
+                name="loading_coil_inductance_h",
+            )
+            if self.loading_coil_offset_m > self.height_m:
+                raise ValueError("loading_coil_offset_m must not exceed height_m")
 
     @property
     def top_height_m(self) -> float:
         return self.base_height_m + self.height_m
+
+    @property
+    def managed_load_ids(self) -> frozenset[str]:
+        """Load identifiers that this template manages."""
+
+        return frozenset({LOADING_COIL_ID})
 
     @classmethod
     def from_custom_parameters(
@@ -97,6 +129,18 @@ class VerticalParameters:
             far_endpoint = radial.end if base_endpoint == radial.start else radial.start
             radial_lengths.append(math.hypot(far_endpoint.x_m, far_endpoint.y_m))
             radial_angles.append(math.degrees(math.atan2(far_endpoint.y_m, far_endpoint.x_m)))
+        coil = next(
+            (
+                load
+                for load in parameters.loads
+                if load.id == LOADING_COIL_ID
+                and load.wire_id == radiator.id
+                and isinstance(load, SeriesLoad)
+                and load.capacitance_f == 0.0
+                and load.inductance_h > 0.0
+            ),
+            None,
+        )
         return cls(
             frequency_hz=parameters.frequency_hz,
             height_m=top_z - base_z,
@@ -107,6 +151,10 @@ class VerticalParameters:
             wire_radius_m=radiator.radius_m,
             material=radiator.material,
             ground=parameters.ground,
+            loading_coil_enabled=coil is not None,
+            loading_coil_offset_m=coil.offset_m if coil is not None else 0.0,
+            loading_coil_inductance_h=coil.inductance_h if coil is not None else 0.0,
+            loading_coil_resistance_ohm=coil.resistance_ohm if coil is not None else 0.0,
         )
 
     def to_antenna(self, *, name: str = "Vertical") -> AntennaModel:
@@ -140,11 +188,23 @@ class VerticalParameters:
                         material=self.material,
                     )
                 )
+        loads: tuple[SeriesLoad, ...] = ()
+        if self.loading_coil_enabled:
+            loads = (
+                SeriesLoad(
+                    id=LOADING_COIL_ID,
+                    wire_id=RADIATOR_ID,
+                    offset_m=self.loading_coil_offset_m,
+                    resistance_ohm=self.loading_coil_resistance_ohm,
+                    inductance_h=self.loading_coil_inductance_h,
+                ),
+            )
         return CustomAntennaParameters(
             frequency_hz=self.frequency_hz,
             wires=tuple(wires),
             feed=FeedPoint(RADIATOR_ID, 0.0),
             ground=self.ground,
+            loads=loads,
             generator_id="vertical",
-            generator_name="Vertical",
+            generator_name="Loaded vertical" if self.loading_coil_enabled else "Vertical",
         )

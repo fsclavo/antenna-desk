@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...domain.antennas.load import LoadKind, ParallelLoad, SeriesLoad
+from ...domain.antennas.load import LoadKind, LumpedLoad, ParallelLoad, SeriesLoad
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
 
@@ -33,14 +33,17 @@ class LoadsDialog(QDialog):
         translator: Translator,
         unit_system: UnitSystem,
         wire_lengths_m: Mapping[str, float],
-        loads: tuple[SeriesLoad, ...],
+        loads: tuple[LumpedLoad, ...],
         parent: QWidget | None = None,
+        *,
+        protected_load_ids: frozenset[str] = frozenset(),
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._unit_system = unit_system
         self._wire_lengths_m = dict(wire_lengths_m)
         self._loads = list(loads)
+        self._protected_load_ids = protected_load_ids
         self.setWindowTitle(translator.t("loads.title"))
         self.resize(720, 480)
 
@@ -213,6 +216,13 @@ class LoadsDialog(QDialog):
 
     def _remove_load(self) -> None:
         rows = sorted({index.row() for index in self._table.selectedIndexes()}, reverse=True)
+        if any(self._loads[row].id in self._protected_load_ids for row in rows):
+            QMessageBox.information(
+                self,
+                self._translator.t("loads.title"),
+                self._translator.t("loads.protected_message"),
+            )
+            return
         for row in rows:
             if 0 <= row < len(self._loads):
                 del self._loads[row]
@@ -225,5 +235,5 @@ class LoadsDialog(QDialog):
             index += 1
         return f"load-{index}"
 
-    def loads(self) -> tuple[SeriesLoad, ...]:
+    def loads(self) -> tuple[LumpedLoad, ...]:
         return tuple(self._loads)

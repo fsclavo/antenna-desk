@@ -30,6 +30,7 @@ class LoopShape(StrEnum):
 
 class VerticalForm(StrEnum):
     QUARTER_WAVE = "quarter_wave"
+    HALF_WAVE = "half_wave"
     FIVE_EIGHTH_WAVE = "five_eighth_wave"
 
 

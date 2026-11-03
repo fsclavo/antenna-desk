@@ -159,11 +159,19 @@ def estimate_loop(intent: DesignIntent) -> DimensionEstimate:
 
 
 def estimate_vertical(intent: DesignIntent) -> DimensionEstimate:
-    if intent.vertical_form is VerticalForm.FIVE_EIGHTH_WAVE:
+    if intent.vertical_form is VerticalForm.HALF_WAVE:
+        height = half_wave_length_m(intent.frequency_hz)
+        method_id = "vertical.half_wave"
+        confidence = Confidence.EMPIRICAL
+        warnings: tuple[str, ...] = (
+            "estimator.warning.starting_point",
+            "estimator.warning.vertical_matching",
+        )
+    elif intent.vertical_form is VerticalForm.FIVE_EIGHTH_WAVE:
         height = five_eighth_wave_length_m(intent.frequency_hz)
         method_id = "vertical.five_eighth_wave"
         confidence = Confidence.PHYSICAL
-        warnings: tuple[str, ...] = (
+        warnings = (
             "estimator.warning.starting_point",
             "estimator.warning.vertical_matching",
         )

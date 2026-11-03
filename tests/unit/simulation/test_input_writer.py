@@ -180,3 +180,19 @@ def test_parallel_load_card_is_emitted_as_ld1() -> None:
     deck = write_nec2_input(_manual_model().with_loads((load,)), _spec(segments=7))
 
     assert "LD 1 1 4 4 0.000000000 0.000012000 0.000000000030" in deck.text
+
+
+def test_loaded_vertical_emits_its_loading_coil_on_the_radiator() -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=2.0,
+        loading_coil_enabled=True,
+        loading_coil_offset_m=1.0,
+        loading_coil_inductance_h=12e-6,
+        loading_coil_resistance_ohm=0.5,
+    )
+    deck = write_nec2_input(parameters.to_antenna(name="Loaded vertical"), _spec(segments=7))
+
+    assert "LD 0 1 4 4 0.500000000 0.000012000 0.000000000000" in deck.text

@@ -6,9 +6,11 @@ from __future__ import annotations
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QDoubleSpinBox,
     QFormLayout,
+    QGroupBox,
     QLabel,
     QSpinBox,
     QVBoxLayout,
@@ -33,6 +35,8 @@ class VerticalForm(QWidget):
         unit_system: UnitSystem,
         parameters: VerticalParameters | None = None,
         parent: QWidget | None = None,
+        *,
+        mobile: bool = False,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
@@ -105,6 +109,39 @@ class VerticalForm(QWidget):
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
 
+        self._coil_group = QGroupBox(translator.t("vertical.loading_coil"), self)
+        self._coil_enabled = QCheckBox(
+            translator.t("vertical.loading_coil_enabled"), self._coil_group
+        )
+        self._coil_offset = QDoubleSpinBox(self._coil_group)
+        self._coil_offset.setDecimals(3)
+        self._coil_offset.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._coil_inductance = QDoubleSpinBox(self._coil_group)
+        self._coil_inductance.setRange(0.0, 100_000.0)
+        self._coil_inductance.setDecimals(3)
+        self._coil_inductance.setSuffix(" µH")
+        self._coil_inductance.setValue(10.0)
+        self._coil_resistance = QDoubleSpinBox(self._coil_group)
+        self._coil_resistance.setRange(0.0, 10_000.0)
+        self._coil_resistance.setDecimals(3)
+        self._coil_resistance.setSuffix(" Ω")
+        self._coil_summary = QLabel(self._coil_group)
+        self._coil_summary.setWordWrap(True)
+
+        coil_form = QFormLayout(self._coil_group)
+        coil_form.addRow(self._coil_enabled)
+        coil_form.addRow(translator.t("vertical.loading_coil_offset"), self._coil_offset)
+        coil_form.addRow(translator.t("vertical.loading_coil_inductance"), self._coil_inductance)
+        coil_form.addRow(translator.t("vertical.loading_coil_resistance"), self._coil_resistance)
+        coil_form.addRow(self._coil_summary)
+
+        if parameters is None and mobile:
+            self._height.setValue(length_from_m(2.0, unit_system))
+            self._radial_count.setValue(4)
+            self._radial_length.setValue(length_from_m(1.0, unit_system))
+            self._coil_enabled.setChecked(True)
+            self._coil_offset.setValue(length_from_m(1.0, unit_system))
+
         form = QFormLayout()
         form.addRow(translator.t("field.frequency"), self._frequency)
         form.addRow(translator.t("vertical.height"), self._height)
@@ -121,32 +158,42 @@ class VerticalForm(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addLayout(form)
+        layout.addWidget(self._coil_group)
         layout.addWidget(self._geometry)
 
         for widget in (
             self._frequency,
-            self._height,
             self._base_height,
             self._radial_length,
             self._radial_angle,
             self._radius,
             self._permittivity,
             self._conductivity,
+            self._coil_offset,
+            self._coil_inductance,
+            self._coil_resistance,
         ):
             widget.valueChanged.connect(self._emit_changed)
+        self._height.valueChanged.connect(self._height_changed)
         self._radial_count.valueChanged.connect(self._radial_count_changed)
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._ground_changed)
+        self._coil_enabled.toggled.connect(self._coil_toggled)
         if parameters is not None:
             self.set_parameters(parameters)
         self._update_ground_controls()
         self._update_radial_controls()
+        self._update_coil_controls()
         self._update_geometry()
 
     def _emit_changed(self, *_args: object) -> None:
         if not self._updating:
             self._update_geometry()
             self.changed.emit()
+
+    def _height_changed(self, *_args: object) -> None:
+        self._update_coil_controls()
+        self._emit_changed()
 
     def _radial_count_changed(self, *_args: object) -> None:
         self._update_radial_controls()
@@ -155,6 +202,20 @@ class VerticalForm(QWidget):
     def _ground_changed(self, *_args: object) -> None:
         self._update_ground_controls()
         self._emit_changed()
+
+    def _coil_toggled(self, _checked: bool) -> None:
+        self._update_coil_controls()
+        self._emit_changed()
+
+    def _update_coil_controls(self) -> None:
+        enabled = self._coil_enabled.isChecked()
+        self._coil_offset.setEnabled(enabled)
+        self._coil_inductance.setEnabled(enabled)
+        self._coil_resistance.setEnabled(enabled)
+        maximum = self._height.value()
+        self._coil_offset.setMaximum(maximum)
+        if self._coil_offset.value() > maximum:
+            self._coil_offset.setValue(maximum)
 
     def _update_radial_controls(self) -> None:
         enabled = self._radial_count.value() > 0
@@ -206,10 +267,17 @@ class VerticalForm(QWidget):
                 self._permittivity.setValue(parameters.ground.relative_permittivity)
             if parameters.ground.conductivity_s_per_m is not None:
                 self._conductivity.setValue(parameters.ground.conductivity_s_per_m)
+            self._coil_enabled.setChecked(parameters.loading_coil_enabled)
+            self._coil_offset.setValue(
+                length_from_m(parameters.loading_coil_offset_m, self._unit_system)
+            )
+            self._coil_inductance.setValue(parameters.loading_coil_inductance_h * 1e6)
+            self._coil_resistance.setValue(parameters.loading_coil_resistance_ohm)
         finally:
             self._updating = False
         self._update_ground_controls()
         self._update_radial_controls()
+        self._update_coil_controls()
         self._update_geometry()
 
     def set_frequency_hz(self, frequency_hz: float) -> None:
@@ -221,14 +289,31 @@ class VerticalForm(QWidget):
         except (ValueError, TypeError):
             self._geometry.setText("")
             return
+        unit = self._translator.t(length_unit_key(self._unit_system))
         self._geometry.setText(
             self._translator.t(
                 "vertical.geometry",
                 top=f"{length_from_m(parameters.top_height_m, self._unit_system):.3f}",
-                unit=self._translator.t(length_unit_key(self._unit_system)),
+                unit=unit,
                 count=parameters.radial_count,
             )
         )
+        if parameters.loading_coil_enabled:
+            coil_offset = length_from_m(
+                parameters.loading_coil_offset_m,
+                self._unit_system,
+            )
+            self._coil_summary.setText(
+                self._translator.t(
+                    "vertical.loading_coil_summary",
+                    inductance=f"{parameters.loading_coil_inductance_h * 1e6:.3f}",
+                    offset=f"{coil_offset:.3f}",
+                    unit=unit,
+                    resistance=f"{parameters.loading_coil_resistance_ohm:.3f}",
+                )
+            )
+        else:
+            self._coil_summary.setText("")
 
     def parameters(self) -> VerticalParameters:
         return VerticalParameters(
@@ -241,4 +326,8 @@ class VerticalForm(QWidget):
             wire_radius_m=self._radius.value() / 1_000.0,
             material=self._selected_material(),
             ground=self._ground_model(),
+            loading_coil_enabled=self._coil_enabled.isChecked(),
+            loading_coil_offset_m=length_to_m(self._coil_offset.value(), self._unit_system),
+            loading_coil_inductance_h=self._coil_inductance.value() * 1e-6,
+            loading_coil_resistance_ohm=self._coil_resistance.value(),
         )

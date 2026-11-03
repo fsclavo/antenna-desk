@@ -241,6 +241,26 @@ def test_vertical_with_radials_gets_a_top_inset() -> None:
     assert "radials 4" in scene.summary
 
 
+def test_loaded_vertical_marks_the_loading_coil() -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=2.0,
+        radial_count=4,
+        radial_length_m=1.0,
+        loading_coil_enabled=True,
+        loading_coil_offset_m=1.0,
+        loading_coil_inductance_h=12e-6,
+    )
+
+    for mode in (GeometryViewMode.ELEVATION, GeometryViewMode.PLAN):
+        scene = _scene(parameters, "vertical", mode)
+        assert any(marker.kind == "load" for marker in scene.markers)
+        assert "radials 4" in scene.summary
+        assert "loading coil 12.000 µH" in scene.summary
+
+
 def test_legacy_custom_slim_jim_keeps_its_presentation_type() -> None:
     parameters = JPoleParameters(
         frequency_hz=220_000_000.0,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from PySide6.QtWidgets import QMessageBox
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.antennas.load import SeriesLoad
@@ -62,3 +63,30 @@ def test_loads_dialog_adds_a_parallel_trap(qtbot: QtBot) -> None:
     assert isinstance(load, ParallelLoad)
     expected_c = 1.0 / ((2.0 * math.pi * 14_100_000.0) ** 2 * 10e-6)
     assert load.capacitance_f == pytest.approx(expected_c)
+
+
+def test_loads_dialog_protects_template_managed_loads(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    load = SeriesLoad("loading-coil", "radiator", 1.0, inductance_h=12e-6)
+    dialog = LoadsDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        {"radiator": 2.0},
+        (load,),
+        protected_load_ids=frozenset({"loading-coil"}),
+    )
+    qtbot.addWidget(dialog)
+    messages: list[str] = []
+    monkeypatch.setattr(
+        QMessageBox,
+        "information",
+        lambda *args, **kwargs: messages.append(str(args[-1])) or QMessageBox.StandardButton.Ok,
+    )
+
+    dialog._table.selectRow(0)
+    dialog._remove.click()
+
+    assert dialog.loads() == (load,)
+    assert messages

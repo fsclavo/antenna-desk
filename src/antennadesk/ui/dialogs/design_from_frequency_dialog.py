@@ -131,6 +131,7 @@ class DesignFromFrequencyDialog(QDialog):
 
         self._vertical_form = QComboBox(self)
         self._vertical_form.addItem("1/4 λ", VerticalForm.QUARTER_WAVE.value)
+        self._vertical_form.addItem("1/2 λ", VerticalForm.HALF_WAVE.value)
         self._vertical_form.addItem("5/8 λ", VerticalForm.FIVE_EIGHTH_WAVE.value)
 
         self._j_pole_variant = QComboBox(self)

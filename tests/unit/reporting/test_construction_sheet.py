@@ -169,3 +169,38 @@ def test_construction_sheet_includes_estimator_provenance(sample_project: Projec
     assert "dipole.half_wave_end_effect" in sheet
     assert "Estimate confidence" in sheet
     assert "arrl.antenna_book.dipole.end_effect" in sheet
+
+
+def test_loaded_vertical_construction_sheet_lists_the_loading_coil() -> None:
+    from antennadesk.application.use_cases.create_dipole_project import (
+        CreateDipoleProject,
+        CreateDipoleProjectCommand,
+    )
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=2.0,
+        base_height_m=0.25,
+        radial_count=4,
+        radial_length_m=1.0,
+        loading_coil_enabled=True,
+        loading_coil_offset_m=1.0,
+        loading_coil_inductance_h=12e-6,
+        loading_coil_resistance_ohm=0.5,
+    )
+    project = CreateDipoleProject().execute(
+        CreateDipoleProjectCommand(
+            project_name="Mobile",
+            variant_name="Loaded vertical",
+            parameters=parameters,
+        )
+    )
+
+    sheet = render_construction_sheet(project, project.designs[0], None)
+
+    assert "loaded vertical" in sheet
+    assert "Loading coil" in sheet
+    assert "12.0000 µH" in sheet
+    assert "Load 1 (series)" in sheet
+    assert "radiator @ 1.000 m" in sheet

@@ -37,6 +37,14 @@ AntennaDesignParameters = (
 )
 
 
+def template_load_ids(parameters: AntennaDesignParameters) -> frozenset[str]:
+    """Return load identifiers managed by the parameter template."""
+
+    if isinstance(parameters, VerticalParameters):
+        return parameters.managed_load_ids
+    return frozenset()
+
+
 def antenna_type_for(parameters: AntennaDesignParameters) -> str:
     if isinstance(parameters, DipoleParameters):
         return ANTENNA_TYPE_WIRE_DIPOLE

@@ -77,3 +77,73 @@ def test_vertical_can_be_reconstructed_from_custom_geometry() -> None:
     assert restored.radial_count == original.radial_count
     assert restored.radial_length_m == pytest.approx(original.radial_length_m)
     assert restored.radial_angle_deg == pytest.approx(original.radial_angle_deg)
+
+
+def test_vertical_loading_coil_becomes_a_series_load_on_the_radiator() -> None:
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=2.0,
+        base_height_m=0.25,
+        radial_count=4,
+        radial_length_m=1.0,
+        loading_coil_enabled=True,
+        loading_coil_offset_m=1.0,
+        loading_coil_inductance_h=12e-6,
+        loading_coil_resistance_ohm=0.5,
+    )
+
+    custom = parameters.to_custom_parameters()
+
+    assert len(custom.loads) == 1
+    load = custom.loads[0]
+    assert load.id == "loading-coil"
+    assert load.wire_id == "radiator"
+    assert load.offset_m == pytest.approx(1.0)
+    assert load.inductance_h == pytest.approx(12e-6)
+    assert load.resistance_ohm == pytest.approx(0.5)
+    assert custom.generator_name == "Loaded vertical"
+
+
+def test_vertical_without_loading_coil_has_no_loads() -> None:
+    parameters = VerticalParameters(frequency_hz=7_100_000.0, height_m=10.0)
+
+    assert parameters.to_custom_parameters().loads == ()
+
+
+def test_vertical_rejects_an_invalid_loading_coil() -> None:
+    with pytest.raises(ValueError, match="loading_coil_inductance_h"):
+        VerticalParameters(
+            frequency_hz=7_100_000.0,
+            height_m=2.0,
+            loading_coil_enabled=True,
+            loading_coil_inductance_h=0.0,
+        )
+    with pytest.raises(ValueError, match="loading_coil_offset_m"):
+        VerticalParameters(
+            frequency_hz=7_100_000.0,
+            height_m=2.0,
+            loading_coil_enabled=True,
+            loading_coil_offset_m=2.5,
+            loading_coil_inductance_h=12e-6,
+        )
+
+
+def test_vertical_loading_coil_survives_custom_round_trip() -> None:
+    original = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=2.0,
+        base_height_m=0.25,
+        radial_count=4,
+        radial_length_m=1.0,
+        loading_coil_enabled=True,
+        loading_coil_offset_m=0.75,
+        loading_coil_inductance_h=18e-6,
+        loading_coil_resistance_ohm=0.2,
+    )
+
+    restored = VerticalParameters.from_custom_parameters(original.to_custom_parameters())
+
+    assert restored.loading_coil_enabled is True
+    assert restored.loading_coil_offset_m == pytest.approx(0.75)
+    assert restored.loading_coil_inductance_h == pytest.approx(18e-6)
+    assert restored.loading_coil_resistance_ohm == pytest.approx(0.2)

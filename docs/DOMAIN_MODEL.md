@@ -214,6 +214,14 @@ radial count/length/angle, wire radius, material, and ground. `to_antenna()`
 creates the vertical wire and evenly spaced radial wires connected at the base,
 with the feed at the radiator base. It is experimental.
 
+An optional loading coil is described by `loading_coil_enabled`,
+`loading_coil_offset_m` (measured from the radiator base),
+`loading_coil_inductance_h`, and `loading_coil_resistance_ohm`.
+`to_antenna()` adds a `SeriesLoad` with the reserved identifier
+`loading-coil` on the radiator, and `from_custom_parameters()` restores the
+coil fields when that load is present. The coil is an ideal series RLC load
+with zero capacitance; it is not a physical solenoid model.
+
 ### OCFDParameters
 
 A first-class single-wire horizontal dipole with a feed point offset from the

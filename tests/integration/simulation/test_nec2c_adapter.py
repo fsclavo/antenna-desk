@@ -734,3 +734,35 @@ def test_dl6wu_yagi_estimator_produces_a_runnable_model(
     assert result.status is SimulationStatus.COMPLETED
     assert result.frequencies
     assert result.frequencies[0].impedance_ohm.real > 0.0
+
+
+def test_loaded_vertical_with_a_series_coil_solves(solver: Nec2cSolver) -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=2.0,
+        base_height_m=0.25,
+        radial_count=4,
+        radial_length_m=1.0,
+        loading_coil_enabled=True,
+        loading_coil_offset_m=1.0,
+        loading_coil_inductance_h=12e-6,
+        loading_coil_resistance_ohm=0.5,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    )
+    model = parameters.to_antenna(name="Loaded vertical")
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(7_100_000.0),
+        segmentation=SegmentationPolicy(min_segments_per_wire=3),
+        include_conductor_losses=False,
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert len(result.frequencies) == 1
+    assert result.frequencies[0].impedance_ohm.real > 0.0

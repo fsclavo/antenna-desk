@@ -42,7 +42,7 @@ def test_dialog_estimates_a_vertical_with_subtype(qtbot: QtBot) -> None:
     dialog = _dialog(qtbot)
     dialog._family.setCurrentIndex(dialog._family.findData("vertical"))
     dialog._vertical_form.setCurrentIndex(
-        dialog._vertical_form.findData(VerticalForm.FIVE_EIGHTH_WAVE.value)
+        dialog._vertical_form.findData(VerticalForm.HALF_WAVE.value)
     )
     dialog._radial_count.setValue(8)
     dialog._run_estimate()
@@ -50,7 +50,8 @@ def test_dialog_estimates_a_vertical_with_subtype(qtbot: QtBot) -> None:
     parameters = dialog.estimated_parameters()
     assert isinstance(parameters, VerticalParameters)
     assert parameters.radial_count == 8
-    assert parameters.height_m > 0.5
+    assert parameters.height_m > 0.9
+    assert dialog._vertical_form.findData(VerticalForm.FIVE_EIGHTH_WAVE.value) >= 0
 
 
 def test_dialog_estimates_a_delta_loop(qtbot: QtBot) -> None:

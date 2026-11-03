@@ -97,7 +97,10 @@ def design_summary_rows(
     elif isinstance(parameters, VerticalParameters):
         rows.extend(
             [
-                ("Type", "vertical"),
+                (
+                    "Type",
+                    "loaded vertical" if parameters.loading_coil_enabled else "vertical",
+                ),
                 ("Radiator height", f"{parameters.height_m:.4f} m"),
                 ("Base height", f"{parameters.base_height_m:.4f} m"),
                 ("Top height", f"{parameters.top_height_m:.4f} m"),
@@ -105,6 +108,15 @@ def design_summary_rows(
                 ("Radial length", f"{parameters.radial_length_m:.4f} m"),
             ]
         )
+        if parameters.loading_coil_enabled:
+            rows.append(
+                (
+                    "Loading coil",
+                    f"{parameters.loading_coil_inductance_h * 1e6:.4f} µH at "
+                    f"{parameters.loading_coil_offset_m:.4f} m; "
+                    f"R={parameters.loading_coil_resistance_ohm:g} Ω",
+                )
+            )
     elif isinstance(parameters, InvertedVParameters):
         rows.extend(
             [

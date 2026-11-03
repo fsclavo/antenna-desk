@@ -21,7 +21,10 @@ Loads also need to survive template changes, persistence, reports, and edits.
    least one element must be non-zero.
 2. Store loads on `AntennaModel`. `DesignVariant` compares the generated
    geometry plus the design's loads, and `with_parameters()` preserves loads
-   when the wire identifiers still exist.
+   when the wire identifiers still exist. Loads owned by a parameter template
+   use a reserved identifier and are regenerated from the new parameters;
+   only non-managed loads are preserved. The vertical loading coil is the
+   first template-managed load.
 3. Persist loads as an optional list in the existing schema v3 antenna payload.
    Older projects load with an empty list; no migration is required.
 4. Map a load position to the containing segment and emit one `LD 0` (series)
@@ -46,6 +49,8 @@ Limitations:
 - The load is attached to one segment; effective position depends on
   segmentation.
 - A trap is represented as a series RLC approximation, not as a full network.
+- The generic load editor marks template-managed loads as protected; edit or
+  disable them in the template form.
 - Changes to a wire template can invalidate a load's wire reference; the
   design then fails validation until the load is edited or removed.
 - No mutual coupling, distributed loads, or per-unit-length parameters.

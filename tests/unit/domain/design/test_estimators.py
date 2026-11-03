@@ -71,12 +71,20 @@ def test_loop_estimate_uses_shape_side_count() -> None:
     assert "estimator.warning.loop_matching" in delta.warnings
 
 
-def test_vertical_estimate_supports_quarter_and_five_eighth() -> None:
+def test_vertical_estimate_supports_quarter_half_and_five_eighth() -> None:
     quarter = estimate_intent(
         _intent(
             "vertical",
             frequency_hz=146_000_000.0,
             vertical_form=VerticalForm.QUARTER_WAVE,
+            radial_count=8,
+        )
+    )
+    half = estimate_intent(
+        _intent(
+            "vertical",
+            frequency_hz=146_000_000.0,
+            vertical_form=VerticalForm.HALF_WAVE,
             radial_count=8,
         )
     )
@@ -90,10 +98,15 @@ def test_vertical_estimate_supports_quarter_and_five_eighth() -> None:
     )
 
     assert isinstance(quarter.parameters, VerticalParameters)
+    assert isinstance(half.parameters, VerticalParameters)
     assert isinstance(five_eighth.parameters, VerticalParameters)
-    assert five_eighth.parameters.height_m > quarter.parameters.height_m
+    assert quarter.parameters.height_m < half.parameters.height_m
+    assert half.parameters.height_m < five_eighth.parameters.height_m
+    assert half.parameters.height_m == pytest.approx(half_wave_length_m(146_000_000.0))
+    assert half.method_id == "vertical.half_wave"
     assert quarter.parameters.radial_count == 8
     assert quarter.parameters.radial_length_m > 0.0
+    assert any("vertical_matching" in warning for warning in half.warnings)
     assert any("vertical_matching" in warning for warning in five_eighth.warnings)
 
 

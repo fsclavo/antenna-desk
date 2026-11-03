@@ -9,7 +9,7 @@ from datetime import datetime
 from uuid import UUID
 
 from ..antennas.antenna import AntennaModel
-from ..antennas.design import AntennaDesignParameters, antenna_type_for
+from ..antennas.design import AntennaDesignParameters, antenna_type_for, template_load_ids
 from ..antennas.feed_line import FeedLine
 from ..antennas.load import LumpedLoad
 from ..antennas.matching_network import MatchingNetwork
@@ -74,7 +74,10 @@ class DesignVariant:
         *,
         provenance: DesignProvenance | None = None,
     ) -> DesignVariant:
-        antenna = parameters.to_antenna(name=self.antenna.name).with_loads(self.antenna.loads)
+        generated = parameters.to_antenna(name=self.antenna.name)
+        managed_ids = template_load_ids(parameters) | {load.id for load in generated.loads}
+        preserved = tuple(load for load in self.antenna.loads if load.id not in managed_ids)
+        antenna = generated.with_loads(generated.loads + preserved)
         return replace(
             self,
             antenna_type=antenna_type_for(parameters),

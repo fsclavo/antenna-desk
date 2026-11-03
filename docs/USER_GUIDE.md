@@ -93,8 +93,8 @@ while they have focus.
 Use the **Estimate Dimensions...** button above the design panel or
 **Design → Estimate Dimensions...** to estimate initial dimensions from a
 frequency and an antenna family. The dialog supports wire and folded dipoles,
-loops (generic, quad, delta), verticals in 1/4λ and 5/8λ, inverted-V, fan
-dipoles, end-fed wires, OCFD, J Pole, Slim Jim, Ringo, Yagi, and Moxon.
+loops (generic, quad, delta), verticals in 1/4λ, 1/2λ, and 5/8λ, inverted-V,
+fan dipoles, end-fed wires, OCFD, J Pole, Slim Jim, Ringo, Yagi, and Moxon.
 
 The result is a **starting point**, not a verified construction measurement.
 The dialog shows assumptions, warnings, confidence, and dimension values. Apply
@@ -113,7 +113,9 @@ contains the straight dipole, folded dipole, end-fed wire, inverted-V,
 off-center-fed dipole, and fan dipole. The Yagi family includes the parametric
 Yagi and the Moxon rectangle.
 The Loop family includes the generic loop plus delta-loop and quad-loop presets.
-The catalog shows a short description and evidence level for each type.
+The Vertical family includes the generic vertical radiator and the loaded
+vertical / mobile whip preset. The catalog shows a short description and
+evidence level for each type.
 
 ### Basic templates
 
@@ -245,11 +247,35 @@ ground. The base height is also the radial-plane height. The default is 0.25 m;
 over finite ground keep at least this height to avoid numerical instability very
 close to the soil.
 
+The **Loading coil** group adds a series coil at a selected height above the
+radiator base. The model is an ideal series inductor with optional series
+resistance; enter a measured or estimated coil resistance when you need a more
+realistic efficiency estimate. The coil is part of the vertical template, so
+the design panel updates it when you apply the vertical fields, and the loads
+list and reports show it as a series load on the radiator. Disable **Use
+loading coil** to remove it.
+
 The generator is experimental: geometry and radial topology are tested, but it
 has no independent numerical performance reference. The feed is at the base of
 the radiator, so the usual delta-gap warning can appear. The design panel keeps
-the height, base, and radial fields editable; use **Edit Custom Wires...** for
-raw coordinates.
+the height, base, radial, and coil fields editable; use **Edit Custom Wires...**
+for raw coordinates.
+
+## Create a loaded vertical / mobile whip
+
+Choose **File → New Antenna... → Loaded vertical / mobile whip** for a short
+vertical with a series loading coil. The mobile preset starts with a 2.0 m
+radiator, a 0.25 m base height, four 1.0 m radials, and a 10 µH coil at 1.0 m.
+These are application starting points, not calculated resonance values: tune
+the height, coil position, and inductance with the solver for your band and
+installation.
+
+The radial plane is a simplified counterpoise. It does not model a vehicle
+body, roof, or chassis, so treat mobile performance as qualitative until you
+have measurements or a more detailed model. The loaded vertical uses the same
+first-class `VerticalParameters` as the generic vertical; the coil is stored as
+a series load on the radiator and appears in the loads editor, reports, and
+construction sheet.
 
 ## Read the results
 

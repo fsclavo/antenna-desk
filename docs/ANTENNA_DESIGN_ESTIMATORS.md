@@ -41,6 +41,8 @@ warnings, and a dimension tolerance.
 - Half-wave practical factor: `0.5λ × 0.95`. The 0.95 end-effect factor is
   documented in the ARRL Antenna Book discussion used by this project.
 - Quarter-wave practical factor: `0.25λ × 0.95`.
+- Half-wave vertical: `0.5λ × 0.95`, using the same end-effect factor as a
+  dipole. The feed impedance is high, so matching is required.
 - Five-eighth-wave vertical: `0.625λ`.
 - Resonant full-wave loop: circumference `1.0λ` for an ideal thin circular
   loop, with the polygon correction described below.
@@ -55,6 +57,7 @@ warnings, and a dimension tolerance.
 | Folded dipole | same element length; `0.02λ` spacing | empirical | Spacing controls step-up impedance |
 | Loop / quad / delta | circumference `λ × (1.02895 + 0.05028/N + 0.09665/N²)` | empirical | `N` sides; quad=4, delta=3; calibrated polygon preset |
 | Vertical 1/4 | `0.25λ × 0.95`; radial `0.25λ` | empirical | Radial count/length are starting values |
+| Vertical 1/2 | `0.5λ × 0.95`; radial `0.25λ` | empirical | High feed impedance; matching required |
 | Vertical 5/8 | `0.625λ` | physical | High feed impedance; matching required |
 | Inverted-V | half-wave dipole total, split in two legs | empirical | Included angle affects feed impedance |
 | Fan dipole | one half-wave element per band | empirical | Elements interact |
@@ -94,6 +97,16 @@ At resonance a full-wave loop normally presents roughly `100-150 Ω` at the
 feed point. Changing only its circumference cannot bring that to `50 Ω`; use a
 `2:1` balun or the Matching Network dialog for a `50 Ω` system.
 
+## Loaded vertical preset
+
+The loaded vertical / mobile whip catalog preset is not a frequency-first
+estimator. It supplies a 2.0 m radiator, a 0.25 m base height, four 1.0 m
+radials, and a 10 µH series coil at 1.0 m as application starting points. The
+coil is an ideal series load with zero capacitance; its resistance is a
+user-supplied loss estimate. Tune the height, coil position, and inductance with
+the solver. The radial plane is a simplified counterpoise, not a vehicle body,
+and no independent numerical reference is claimed for a mobile installation.
+
 ## Yagi scope
 
 The frequency-only estimator supports **2 to 32 elements** using the first
@@ -115,13 +128,14 @@ or published design is traceable. If no source exists, the estimator is
 
 Reference sources currently used:
 
-- ARRL Antenna Book: dipole end-effect, resonant loop, quarter-wave vertical.
+- ARRL Antenna Book: dipole end-effect, resonant loop, and vertical length
+  factors (quarter-wave, half-wave, five-eighth-wave).
 - NBS TN-688: five-element Yagi preset in the editor.
 - DL6WU/Cebik: 2–32 element trimming Yagi starting design.
 - L. B. Cebik, W4RNL, “The Moxon Rectangle: A Review”, Table 1: 20 m wire Moxon.
-- Application preset: Ringo proportions, the loop polygon correction, and the
-  end-fed transformer/counterpoise starting point. They are not universal
-  formulas.
+- Application preset: Ringo proportions, the loop polygon correction, the
+  end-fed transformer/counterpoise starting point, and the loaded-vertical
+  mobile preset. They are not universal formulas.
 
 ## Tests
 
@@ -156,5 +170,7 @@ Reference sources currently used:
 - Moxon and Ringo are scaled presets, not universal synthesis.
 - End-fed matching, counterpoise, and feed-line effects are installation
   specific.
+- Loaded-vertical coil values are starting points; a mobile vehicle body is not
+  modeled.
 - Estimator provenance is shown in the dialog and persisted as optional design
   metadata. Editing the design clears it.

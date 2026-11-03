@@ -234,6 +234,10 @@ class VerticalParametersPayload(StrictModel):
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
+    loading_coil_enabled: bool = False
+    loading_coil_offset_m: float = Field(default=0.0, ge=0.0)
+    loading_coil_inductance_h: float = Field(default=0.0, ge=0.0)
+    loading_coil_resistance_ohm: float = Field(default=0.0, ge=0.0)
 
 
 class EndFedParametersPayload(StrictModel):
@@ -811,6 +815,10 @@ def _vertical_parameters_from_domain(
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
+        loading_coil_enabled=value.loading_coil_enabled,
+        loading_coil_offset_m=value.loading_coil_offset_m,
+        loading_coil_inductance_h=value.loading_coil_inductance_h,
+        loading_coil_resistance_ohm=value.loading_coil_resistance_ohm,
     )
 
 
@@ -1413,6 +1421,10 @@ def _vertical_parameters_to_domain(value: VerticalParametersPayload) -> Vertical
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),
+        loading_coil_enabled=value.loading_coil_enabled,
+        loading_coil_offset_m=value.loading_coil_offset_m,
+        loading_coil_inductance_h=value.loading_coil_inductance_h,
+        loading_coil_resistance_ohm=value.loading_coil_resistance_ohm,
     )
 
 

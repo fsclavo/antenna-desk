@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QLabel,
     QMessageBox,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -28,11 +29,18 @@ class VerticalDialog(QDialog):
         *,
         frequency_hz: float | None = None,
         parameters: VerticalParameters | None = None,
+        mobile: bool = False,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._parameters: VerticalParameters | None = None
-        self._form = VerticalForm(translator, unit_system, parameters, self)
+        self._form = VerticalForm(
+            translator,
+            unit_system,
+            parameters,
+            self,
+            mobile=mobile,
+        )
         if frequency_hz is not None and parameters is None:
             self._form.set_frequency_hz(frequency_hz)
         self._frequency = self._form._frequency
@@ -48,12 +56,16 @@ class VerticalDialog(QDialog):
         self._conductivity = self._form._conductivity
         self._geometry = self._form._geometry
 
-        self.setWindowTitle(translator.t("vertical.title"))
-        self.resize(560, 620)
+        self.setWindowTitle(translator.t("vertical.mobile_title" if mobile else "vertical.title"))
+        self.resize(560, 700)
 
-        self._hint = QLabel(translator.t("vertical.hint"), self)
+        self._hint = QLabel(
+            translator.t("vertical.mobile_hint" if mobile else "vertical.hint"), self
+        )
         self._hint.setWordWrap(True)
-        self._evidence = QLabel(translator.t("vertical.evidence"), self)
+        self._evidence = QLabel(
+            translator.t("vertical.mobile_evidence" if mobile else "vertical.evidence"), self
+        )
         self._evidence.setWordWrap(True)
 
         buttons = QDialogButtonBox(
@@ -63,8 +75,12 @@ class VerticalDialog(QDialog):
         buttons.accepted.connect(self._accept)
         buttons.rejected.connect(self.reject)
 
+        scroll = QScrollArea(self)
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(self._form)
+
         layout = QVBoxLayout(self)
-        layout.addWidget(self._form)
+        layout.addWidget(scroll, 1)
         layout.addWidget(self._hint)
         layout.addWidget(self._evidence)
         layout.addStretch(1)

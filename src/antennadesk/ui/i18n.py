@@ -185,6 +185,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Vertical radiator with an optional radial ground plane.",
         Language.SPANISH: "Radiador vertical con plano de radiales opcional.",
     },
+    "catalog.loaded_vertical": {
+        Language.ENGLISH: "Loaded vertical / mobile whip",
+        Language.SPANISH: "Vertical cargada / whip móvil",
+    },
+    "catalog.loaded_vertical.description": {
+        Language.ENGLISH: "Short vertical with a series loading coil for mobile or restricted spaces.",
+        Language.SPANISH: "Vertical corta con bobina de carga en serie para móvil o espacios reducidos.",
+    },
     "catalog.custom": {
         Language.ENGLISH: "Custom wires",
         Language.SPANISH: "Hilos personalizados",
@@ -521,8 +529,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "ARRL Antenna Book — circunferencia resonante del lazo",
     },
     "source.arrl.antenna_book.vertical.quarter_wave": {
-        Language.ENGLISH: "ARRL Antenna Book — quarter-wave vertical",
-        Language.SPANISH: "ARRL Antenna Book — vertical de cuarto de onda",
+        Language.ENGLISH: "ARRL Antenna Book — vertical length factors",
+        Language.SPANISH: "ARRL Antenna Book — factores de longitud para verticales",
     },
     "source.nbs.tn688.five_element": {
         Language.ENGLISH: "NBS TN-688 — five-element Yagi",
@@ -1938,6 +1946,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Top height {top} {unit} · {count} radials",
         Language.SPANISH: "Altura superior {top} {unit} · {count} radiales",
     },
+    "vertical.loading_coil": {
+        Language.ENGLISH: "Loading coil",
+        Language.SPANISH: "Bobina de carga",
+    },
+    "vertical.loading_coil_enabled": {
+        Language.ENGLISH: "Use loading coil",
+        Language.SPANISH: "Usar bobina de carga",
+    },
+    "vertical.loading_coil_offset": {
+        Language.ENGLISH: "Coil height above base",
+        Language.SPANISH: "Altura de la bobina sobre la base",
+    },
+    "vertical.loading_coil_inductance": {
+        Language.ENGLISH: "Inductance",
+        Language.SPANISH: "Inductancia",
+    },
+    "vertical.loading_coil_resistance": {
+        Language.ENGLISH: "Coil resistance",
+        Language.SPANISH: "Resistencia de la bobina",
+    },
+    "vertical.loading_coil_summary": {
+        Language.ENGLISH: "Series {inductance} µH at {offset} {unit} · R {resistance} Ω",
+        Language.SPANISH: "Serie {inductance} µH a {offset} {unit} · R {resistance} Ω",
+    },
     "vertical.hint": {
         Language.ENGLISH: (
             "The radiator is fed at its base. Radials are wires in the radial "
@@ -1958,6 +1990,34 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "Generador experimental: se prueban geometría y topología de radiales, "
             "pero no hay una referencia numérica independiente para esta configuración."
+        ),
+    },
+    "vertical.mobile_title": {
+        Language.ENGLISH: "Loaded vertical / mobile whip generator",
+        Language.SPANISH: "Generador de vertical cargada / whip móvil",
+    },
+    "vertical.mobile_hint": {
+        Language.ENGLISH: (
+            "A short vertical with a series loading coil. The mobile preset uses "
+            "a small radial plane as a simplified counterpoise; it does not model "
+            "a vehicle body. The coil values are application starting points: "
+            "tune the inductance and position with the solver."
+        ),
+        Language.SPANISH: (
+            "Una vertical corta con bobina de carga en serie. El preset móvil usa "
+            "un plano de radiales pequeño como contrapeso simplificado; no modela "
+            "la carrocería de un vehículo. Los valores de la bobina son puntos de "
+            "partida: sintonizá la inductancia y la posición con el solver."
+        ),
+    },
+    "vertical.mobile_evidence": {
+        Language.ENGLISH: (
+            "Experimental preset: the loading coil uses the existing series-load "
+            "model and there is no independent reference for a mobile installation."
+        ),
+        Language.SPANISH: (
+            "Preset experimental: la bobina usa el modelo de carga serie existente "
+            "y no hay una referencia independiente para una instalación móvil."
         ),
     },
     "inverted_v.apex_height": {
@@ -2513,6 +2573,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "loads.title": {
         Language.ENGLISH: "Series Loads",
         Language.SPANISH: "Cargas en serie",
+    },
+    "loads.protected_message": {
+        Language.ENGLISH: (
+            "This load is managed by the antenna template. Change or disable it "
+            "in the design panel."
+        ),
+        Language.SPANISH: (
+            "Esta carga es administrada por la plantilla de antena. Cambiala o "
+            "desactivala en el panel de diseño."
+        ),
     },
     "loads.add": {Language.ENGLISH: "Add", Language.SPANISH: "Agregar"},
     "loads.remove": {Language.ENGLISH: "Remove", Language.SPANISH: "Quitar"},

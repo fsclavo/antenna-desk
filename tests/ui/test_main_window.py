@@ -1165,6 +1165,56 @@ def test_new_vertical_creates_a_first_class_design(
     window._dirty = False
 
 
+def test_new_loaded_vertical_creates_a_design_with_the_loading_coil(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=2.0,
+        base_height_m=0.25,
+        radial_count=4,
+        radial_length_m=1.0,
+        loading_coil_enabled=True,
+        loading_coil_offset_m=1.0,
+        loading_coil_inductance_h=12e-6,
+        loading_coil_resistance_ohm=0.5,
+    )
+
+    class FakeVerticalDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> VerticalParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "VerticalDialog", FakeVerticalDialog)
+    monkeypatch.setattr(
+        QInputDialog,
+        "getText",
+        lambda *args, **kwargs: ("Loaded vertical", True),
+    )
+
+    window.new_loaded_vertical_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "Loaded vertical"
+    design = window._project.designs[0]
+    assert design.antenna_type == "vertical"
+    assert len(design.antenna.loads) == 1
+    assert design.antenna.loads[0].id == "loading-coil"
+    assert design.antenna.loads[0].inductance_h == pytest.approx(12e-6)
+    assert window._vertical_form.parameters() == parameters
+    assert window._vertical_form._coil_enabled.isChecked() is True
+    window._dirty = False
+
+
 def test_new_ocfd_creates_a_first_class_design(
     window: MainWindow,
     qtbot: QtBot,

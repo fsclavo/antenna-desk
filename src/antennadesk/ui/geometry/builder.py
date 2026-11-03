@@ -1368,6 +1368,12 @@ def _summary(
                 f"{translator.t('geometry.radials').lower()} {radial_count} x "
                 f"{_format_length(radial_length, translator, unit_system)}"
             )
+        if isinstance(parameters, VerticalParameters) and parameters.loading_coil_enabled:
+            parts.append(
+                f"{translator.t('vertical.loading_coil').lower()} "
+                f"{parameters.loading_coil_inductance_h * 1e6:.3f} µH @ "
+                f"{_format_length(parameters.loading_coil_offset_m, translator, unit_system)}"
+            )
     elif isinstance(parameters, DipoleParameters):
         parts.extend(
             [

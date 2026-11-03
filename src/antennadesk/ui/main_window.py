@@ -75,7 +75,11 @@ from ..application.use_cases.update_dipole_design import (
     UpdateDipoleDesignCommand,
 )
 from ..domain.antennas.custom import CustomAntennaParameters
-from ..domain.antennas.design import AntennaDesignParameters, with_primary_dimension
+from ..domain.antennas.design import (
+    AntennaDesignParameters,
+    template_load_ids,
+    with_primary_dimension,
+)
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
 from ..domain.antennas.endfed import EndFedParameters
 from ..domain.antennas.family import antenna_family
@@ -118,6 +122,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_FOLDED_DIPOLE,
     CATALOG_TYPE_INVERTED_V,
     CATALOG_TYPE_J_POLE,
+    CATALOG_TYPE_LOADED_VERTICAL,
     CATALOG_TYPE_LOOP,
     CATALOG_TYPE_MOXON,
     CATALOG_TYPE_OCFD,
@@ -2134,18 +2139,23 @@ class MainWindow(QMainWindow):
             return
         self._set_project(project, project.designs[0].id, path=None, dirty=True)
 
-    def new_vertical_antenna(self) -> None:
+    def new_vertical_antenna(self, *, mobile: bool = False) -> None:
         if not self._maybe_save_changes():
             return
         name, accepted = QInputDialog.getText(
             self,
-            self._translator.t("vertical.title"),
+            self._translator.t("vertical.mobile_title" if mobile else "vertical.title"),
             self._translator.t("field.project_name"),
-            text="Vertical",
+            text="Loaded vertical" if mobile else "Vertical",
         )
         if not accepted:
             return
-        dialog = VerticalDialog(self._translator, self._unit_system, self)
+        dialog = VerticalDialog(
+            self._translator,
+            self._unit_system,
+            self,
+            mobile=mobile,
+        )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         try:
@@ -2160,6 +2170,9 @@ class MainWindow(QMainWindow):
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
         self._set_project(project, project.designs[0].id, path=None, dirty=True)
+
+    def new_loaded_vertical_antenna(self) -> None:
+        self.new_vertical_antenna(mobile=True)
 
     def new_ocfd_antenna(self) -> None:
         if not self._maybe_save_changes():
@@ -2636,12 +2649,13 @@ class MainWindow(QMainWindow):
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
             return dialog.result_parameters()
-        if selected == CATALOG_TYPE_VERTICAL:
+        if selected in {CATALOG_TYPE_VERTICAL, CATALOG_TYPE_LOADED_VERTICAL}:
             dialog = VerticalDialog(
                 self._translator,
                 self._unit_system,
                 self,
                 frequency_hz=frequency_hz,
+                mobile=selected == CATALOG_TYPE_LOADED_VERTICAL,
             )
             return (
                 dialog.result_parameters() if dialog.exec() == QDialog.DialogCode.Accepted else None
@@ -2736,6 +2750,8 @@ class MainWindow(QMainWindow):
             self._new_basic_antenna(CATALOG_TYPE_LOOP, initial_sides=4)
         elif selected == CATALOG_TYPE_VERTICAL:
             self.new_vertical_antenna()
+        elif selected == CATALOG_TYPE_LOADED_VERTICAL:
+            self.new_loaded_vertical_antenna()
         elif selected in {
             CATALOG_TYPE_WIRE_DIPOLE,
             CATALOG_TYPE_FOLDED_DIPOLE,
@@ -3764,6 +3780,7 @@ class MainWindow(QMainWindow):
             {wire.id: wire.length_m for wire in design.antenna.wires},
             design.antenna.loads,
             self,
+            protected_load_ids=template_load_ids(design.parameters),
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return

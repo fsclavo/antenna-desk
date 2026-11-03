@@ -473,3 +473,28 @@ def test_t_matching_network_round_trips_through_the_project_schema() -> None:
     restored = project_from_document(document_from_project(project))
 
     assert restored.matching_network == network
+
+
+def test_loaded_vertical_parameters_and_coil_round_trip() -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=2.0,
+        base_height_m=0.25,
+        radial_count=4,
+        radial_length_m=1.0,
+        loading_coil_enabled=True,
+        loading_coil_offset_m=1.0,
+        loading_coil_inductance_h=12e-6,
+        loading_coil_resistance_ohm=0.5,
+    )
+    original = _project(parameters, "Loaded vertical")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna.loads == original.designs[0].antenna.loads
+    assert restored.designs[0].antenna.loads[0].id == "loading-coil"
+    assert restored.designs[0].antenna_type == "vertical"
