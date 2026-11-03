@@ -103,6 +103,7 @@ def test_synthesis_dialog_finds_ocfd_dimensions(qtbot: QtBot) -> None:
         total_length_m=20.0,
         feed_ratio=0.33,
         height_m=10.0,
+        transformer_ratio=4.0,
     )
     dialog = SynthesisDialog(
         Translator(Language.ENGLISH),
@@ -128,6 +129,9 @@ def test_synthesis_dialog_finds_ocfd_dimensions(qtbot: QtBot) -> None:
     assert isinstance(selected, OCFDParameters)
     assert selected.total_length_m == pytest.approx(20.0, abs=0.01)
     assert selected.feed_ratio == pytest.approx(0.33, abs=0.001)
+    assert selected.transformer_ratio == pytest.approx(4.0)
+    assert dialog._transformer_note.isVisible() is True
+    assert "200.0" in dialog._transformer_note.text()
     assert dialog._evaluations.columnCount() == 9
     assert dialog._evaluations.item(0, 0).text() == "1"
     assert dialog._evaluations.item(0, 7).text() == "0.000"

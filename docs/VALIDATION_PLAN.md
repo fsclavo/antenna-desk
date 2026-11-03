@@ -255,8 +255,9 @@ Phase 6 adds tests for:
 - Folded dipole and loop topology, parameters, azimuth, validation, and
   type/geometry consistency.
 - Schema round trips and rejection of mismatched payloads for the new
-  parameter types; schema version 4 adds optional band/batch metadata without
-  changing existing design payloads.
+  parameter types; schema version 5 adds optional band/batch metadata and
+  OCFD/custom feed-transformer ratios without changing existing design
+  geometry.
 - Multiband domain plans, family defaults, per-band result metrics, batch
   cancellation/partial results, band-aware run persistence, and the Bands UI
   tab.

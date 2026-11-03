@@ -48,3 +48,36 @@ def test_ocfd_rejects_invalid_feed_ratio() -> None:
             total_length_m=20.0,
             feed_ratio=0.0,
         )
+
+
+def test_ocfd_defaults_to_no_transformer() -> None:
+    parameters = OCFDParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+    )
+
+    assert parameters.transformer_ratio == 1.0
+
+
+def test_ocfd_transformer_ratio_survives_custom_conversion() -> None:
+    original = OCFDParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        feed_ratio=1.0 / 3.0,
+        transformer_ratio=4.0,
+    )
+
+    custom = original.to_custom_parameters()
+    restored = OCFDParameters.from_custom_parameters(custom)
+
+    assert custom.feed_transformer_ratio == 4.0
+    assert restored.transformer_ratio == 4.0
+
+
+def test_ocfd_rejects_a_non_positive_transformer_ratio() -> None:
+    with pytest.raises(ValueError, match="transformer_ratio"):
+        OCFDParameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=20.0,
+            transformer_ratio=0.0,
+        )

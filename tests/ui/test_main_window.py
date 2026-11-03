@@ -2712,3 +2712,20 @@ def test_band_analysis_controls_are_centralized(window: MainWindow) -> None:
     assert window._analyze_bands_action.text() == "Analyze Bands..."
     assert window._analyze_bands_action.shortcut().toString() == "Ctrl+Shift+B"
     assert window._band_plan_label.text().startswith("Bands: 40m")
+
+
+def test_ocfd_and_custom_specs_include_the_transformer_ratio(window: MainWindow) -> None:
+    from antennadesk.domain.antennas.ocfd import OCFDParameters
+
+    parameters = OCFDParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.4,
+        height_m=10.0,
+        transformer_ratio=4.0,
+    )
+
+    ocfd_spec = window._ocfd_simulation_spec(parameters)
+    custom_spec = window._custom_simulation_spec(parameters.to_custom_parameters())
+
+    assert ocfd_spec.feed_transformer_ratio == pytest.approx(4.0)
+    assert custom_spec.feed_transformer_ratio == pytest.approx(4.0)

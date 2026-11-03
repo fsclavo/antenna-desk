@@ -72,7 +72,9 @@ Completed:
 - G5RV catalog preset with the published 102 ft dipole and a 300 Ω / 450 Ω
   geometry matching line.
 - Per-band multiband analysis for G5RV, OCFD, end-fed presets, fan dipole, trap
-  dipole, and T2FD, with a Bands results tab and band-aware reports.
+  dipole, T2FD, and doublet, with a Bands results tab and band-aware reports.
+- Optional ideal OCFD feed transformer (4:1 default for new designs), preserved
+  through custom-wire conversion and usable by the synthesis dialog.
 - T2FD catalog preset with a broadband series termination, an ideal feed
   transformer, and Cebik wide-long starting dimensions.
 - `v0.1.0` published with wheel/sdist, AppImage, Debian package, Windows zip,
@@ -157,8 +159,9 @@ Scope:
   and global **Simulation pattern** settings, plus a band selection dialog and
   a **Bands** results tab showing best SWR, gain, takeoff angle, efficiency,
   and status. The top action bar stays Apply/Estimate/Optimize.
-- Band/batch metadata on simulation runs, schema version 4 migration, and
-  band-aware CSV, HTML, PDF, and comparison summaries.
+- Band/batch metadata on simulation runs, schema version 4 migration (extended
+  by version 5 with OCFD/custom transformer fields), and band-aware CSV, HTML,
+  PDF, and comparison summaries.
 - Deferred: a segmented frequency plan in one NEC deck, only if measurements
   show that per-band runs are too slow or too large.
 - Deferred: per-band pattern PNG export.
@@ -179,6 +182,7 @@ Acceptance criteria:
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
 | P1 | Independent references for remaining experimental templates | A/B | partial |
+| P1 | Optional ideal transformer/4:1 balun for OCFD | B | done |
 | P1 | Multiband batch engine and per-family band defaults (M6) | B | done |
 | P1 | Band selection UI and band summary results (M6) | B | done |
 | P2 | Persist band-analysis batches and band-aware reports (M6) | B | done |
@@ -196,11 +200,9 @@ Acceptance criteria:
 
 Modeling track:
 
-1. Multiband analysis (M6): band defaults, batch analysis, and band summary
-   results. See [`docs/MULTIBAND_ANALYSIS_PLAN.md`](MULTIBAND_ANALYSIS_PLAN.md).
-2. Relative-permeability export and a pattern-metric selector for realized
+1. Relative-permeability export and a pattern-metric selector for realized
    gain/directivity.
-3. ZS6BKW and Zepp presets using geometry transmission lines.
+2. ZS6BKW and Zepp presets using geometry transmission lines.
 
 Release track:
 

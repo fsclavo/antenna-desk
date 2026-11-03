@@ -116,6 +116,8 @@ optional signing steps.
 - Asynchronous simulation with cancellation, timeouts, and diagnostics.
 - Multiband analysis with family defaults, per-band solver runs, a **Bands**
   results tab, and band-aware CSV/HTML/PDF summaries.
+- Optional ideal OCFD feed transformer, defaulting to 4:1 for new designs, with
+  raw-impedance and transformed SWR/realized-gain views.
 - Impedance, SWR, frequency-sweep, and far-field pattern charts, including
   selectable azimuth/elevation cuts, polar lobe diagrams, and an isometric 3D
   radiation-pattern wireframe colored by gain with a dBi legend and a takeoff

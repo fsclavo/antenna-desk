@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
-from ...domain.antennas.ocfd import OCFDParameters
+from ...domain.antennas.ocfd import OCFD_REFERENCE_TRANSFORMER_RATIO, OCFDParameters
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
@@ -98,8 +98,16 @@ class OCFDForm(QWidget):
         self._conductivity.setValue(0.005)
         self._conductivity.setSuffix(" S/m")
 
+        self._transformer = QDoubleSpinBox(self)
+        self._transformer.setRange(1.0, 100_000.0)
+        self._transformer.setDecimals(1)
+        self._transformer.setSuffix(":1")
+        self._transformer.setValue(OCFD_REFERENCE_TRANSFORMER_RATIO)
+
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
+        self._transformer_hint = QLabel(translator.t("ocfd.transformer_hint"), self)
+        self._transformer_hint.setWordWrap(True)
 
         form = QFormLayout()
         form.addRow(translator.t("field.frequency"), self._frequency)
@@ -112,10 +120,12 @@ class OCFDForm(QWidget):
         form.addRow(translator.t("field.ground"), self._ground)
         form.addRow(translator.t("field.permittivity"), self._permittivity)
         form.addRow(translator.t("field.conductivity"), self._conductivity)
+        form.addRow(translator.t("ocfd.transformer_ratio"), self._transformer)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addLayout(form)
+        layout.addWidget(self._transformer_hint)
         layout.addWidget(self._geometry)
 
         for widget in (
@@ -127,6 +137,7 @@ class OCFDForm(QWidget):
             self._radius,
             self._permittivity,
             self._conductivity,
+            self._transformer,
         ):
             widget.valueChanged.connect(self._emit_changed)
         self._material.currentIndexChanged.connect(self._emit_changed)
@@ -176,6 +187,7 @@ class OCFDForm(QWidget):
             self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
             self._azimuth.setValue(parameters.azimuth_deg)
             self._radius.setValue(parameters.wire_radius_m * 1_000.0)
+            self._transformer.setValue(parameters.transformer_ratio)
             material_index = self._material.findData(parameters.material)
             if material_index >= 0:
                 self._material.setCurrentIndex(material_index)
@@ -220,4 +232,5 @@ class OCFDForm(QWidget):
             wire_radius_m=self._radius.value() / 1_000.0,
             material=self._selected_material(),
             ground=self._ground_model(),
+            transformer_ratio=self._transformer.value(),
         )

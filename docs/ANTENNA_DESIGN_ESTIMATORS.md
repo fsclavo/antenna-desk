@@ -62,7 +62,7 @@ warnings, and a dimension tolerance.
 | Inverted-V | half-wave dipole total, split in two legs | empirical | Included angle affects feed impedance |
 | Fan dipole | one half-wave element per band | empirical | Elements interact |
 | End-fed | half-wave wire; `0.05λ` counterpoise; 49:1 transformer | heuristic | Transformer and counterpoise are application starting points |
-| OCFD | half-wave total, feed at 1/3 | heuristic | Existing synthesis can refine length/feed |
+| OCFD | half-wave total, feed at 1/3, 4:1 ideal transformer | heuristic | Existing synthesis can refine length/feed; actual balun ratio depends on height and feed offset |
 | J Pole / Slim Jim | J Pole: total 3/4-wave height, quarter-wave stub, feed at 40% of stub; Slim Jim: half-wave radiator above the folded stub | empirical | Feed offset and stub need tuning |
 | Ringo | 0.725-wave vertical with a small horizontal matching ring, calibrated for the simplified AntennaDesk geometry | heuristic | Not a universal commercial Ringo formula |
 | Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; optimize for the target |
@@ -285,6 +285,9 @@ Reference sources currently used:
   specific.
 - Loaded-vertical coil values are starting points; a mobile vehicle body is not
   modeled.
+- OCFD dimensions and the 4:1 transformer are starting points. The actual
+  feed-point impedance depends on height, ground, and feed offset; the balun is
+  an ideal impedance transformation with no loss or common-mode model.
 - Trap-dipole dimensions are starting points; trap loading, component losses,
   and installation effects are not solved analytically.
 - T2FD span, spacing, termination, and transformer are starting points; the

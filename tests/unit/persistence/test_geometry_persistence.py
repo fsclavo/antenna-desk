@@ -182,6 +182,7 @@ def test_custom_parameters_round_trip() -> None:
         feed=FeedPoint("wire-1", 5.0),
         generator_id="yagi",
         generator_name="Yagi",
+        feed_transformer_ratio=4.0,
     )
     original = _project(parameters, "Custom")
 
@@ -201,6 +202,7 @@ def test_ocfd_parameters_round_trip() -> None:
         feed_ratio=1.0 / 3.0,
         height_m=10.0,
         azimuth_deg=30.0,
+        transformer_ratio=4.0,
     )
     original = _project(parameters, "OCFD")
 

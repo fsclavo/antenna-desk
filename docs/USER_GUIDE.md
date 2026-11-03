@@ -111,10 +111,12 @@ NBS five-element preset remains available in the Yagi editor.
 
 Use **Simulation → Analyze Bands...** or the central **Band analysis** group to
 run the current design over several amateur bands. The dialog starts from the
-family default and lets you select any HF band from 160 m to 6 m, with a sweep
+family default and lets you select any catalog band from 160 m to 23 cm, with a sweep
 point count for each band.
 
-Family defaults are starting points, not resonance guarantees:
+Band ranges are generic IARU ranges; local allocations differ and the user is
+responsible for operating within them. Family defaults are starting points, not
+resonance guarantees:
 
 - **G5RV**: 80/40/20/15/10 m; WARC bands are available for manual selection.
 - **OCFD**: harmonically related bands, for example 40/20/10 m for a 40 m
@@ -393,10 +395,14 @@ first-class experimental template with an inline editor.
 
 Choose **File → New Antenna... → Off-center-fed dipole** to generate a single
 horizontal wire with an offset feed. Set the total length, feed offset as a
-percentage of the wire, height, azimuth, radius, material, and ground. The
-dialog shows the resulting feed distance. OCFD is a first-class template: after
-creation its parameters stay in the left design panel and can be edited inline.
-The generator is experimental.
+percentage of the wire, height, azimuth, radius, material, ground, and
+transformer ratio. The dialog shows the resulting feed distance. New designs
+start with an ideal **4:1** transformer, the common OCFD balun; set **1.0** to
+see the raw antenna impedance. The transformer changes impedance, SWR, and
+realized gain, not the NEC pattern. Actual balun loss and common-mode current
+are not modeled. OCFD is a first-class template: after creation its parameters
+stay in the left design panel and can be edited inline. The generator is
+experimental.
 
 ## Create a vertical
 

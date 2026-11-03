@@ -32,9 +32,11 @@ class CustomAntennaParameters:
     transmission_lines: tuple[TransmissionLine, ...] = ()
     generator_id: str | None = None
     generator_name: str | None = None
+    feed_transformer_ratio: float = 1.0
 
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
+        ensure_positive(self.feed_transformer_ratio, name="feed_transformer_ratio")
         object.__setattr__(self, "wires", tuple(self.wires))
         object.__setattr__(self, "loads", tuple(self.loads))
         object.__setattr__(

@@ -19,6 +19,7 @@ from .wire import Wire
 
 RADIATOR_ID = "radiator"
 ANTENNA_TYPE_OCFD = "ocfd"
+OCFD_REFERENCE_TRANSFORMER_RATIO = 4.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,12 +34,14 @@ class OCFDParameters:
     wire_radius_m: float = 0.001
     material: ConductorMaterial = COPPER
     ground: GroundModel = FREE_SPACE
+    transformer_ratio: float = 1.0
 
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
         ensure_positive(self.total_length_m, name="total_length_m")
         ensure_positive(self.height_m, name="height_m")
         ensure_positive(self.wire_radius_m, name="wire_radius_m")
+        ensure_positive(self.transformer_ratio, name="transformer_ratio")
         if not 0.0 < self.feed_ratio < 1.0:
             raise ValueError("feed_ratio must be between 0 and 1")
         object.__setattr__(
@@ -78,6 +81,7 @@ class OCFDParameters:
             ground=self.ground,
             generator_id="ocfd",
             generator_name="OCFD",
+            feed_transformer_ratio=self.transformer_ratio,
         )
 
     @classmethod
@@ -106,4 +110,5 @@ class OCFDParameters:
             wire_radius_m=wire.radius_m,
             material=wire.material,
             ground=parameters.ground,
+            transformer_ratio=parameters.feed_transformer_ratio,
         )

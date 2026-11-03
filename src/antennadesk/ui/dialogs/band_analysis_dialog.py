@@ -53,7 +53,7 @@ class BandAnalysisDialog(QDialog):
         self._applying = False
 
         self.setWindowTitle(translator.t("band.dialog_title"))
-        self.resize(560, 540)
+        self.resize(560, 620)
 
         self._preset = QComboBox(self)
         for key in (

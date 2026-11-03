@@ -20,6 +20,7 @@ def test_ocfd_dialog_builds_an_offset_feed(qtbot: QtBot) -> None:
     assert parameters.total_length_m == pytest.approx(20.0)
     assert parameters.feed_offset_m == pytest.approx(20.0 / 3.0, abs=0.01)
     assert parameters.feed_ratio == pytest.approx(1.0 / 3.0, abs=0.001)
+    assert parameters.transformer_ratio == pytest.approx(4.0)
     assert dialog._ground.currentText() == "Finite ground"
 
 
@@ -41,3 +42,4 @@ def test_ocfd_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
     restored = dialog.parameters()
     assert restored.feed_ratio == pytest.approx(0.3)
     assert restored.azimuth_deg == pytest.approx(30.0)
+    assert restored.transformer_ratio == pytest.approx(1.0)

@@ -342,6 +342,7 @@ def test_ocfd_and_ringo_estimates_have_valid_special_geometry() -> None:
 
     assert isinstance(ocfd, OCFDParameters)
     assert 0.0 < ocfd.feed_ratio < 1.0
+    assert ocfd.transformer_ratio == 4.0
     assert isinstance(ringo, RingoParameters)
     assert ringo.radiator_height_m > 0.0
     assert ringo.ring_diameter_m > 0.0

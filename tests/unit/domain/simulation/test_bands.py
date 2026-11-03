@@ -17,6 +17,12 @@ def test_amateur_band_lookup() -> None:
     assert amateur_band_for(7_400_000.0) is None
     assert amateur_band_for(10_158_000.0).name == "30m"
     assert amateur_band_for(24_700_000.0).name == "12m"
+    assert amateur_band_for(70_100_000.0).name == "4m"
+    assert amateur_band_for(145_500_000.0).name == "2m"
+    assert amateur_band_for(223_500_000.0).name == "1.25m"
+    assert amateur_band_for(433_000_000.0).name == "70cm"
+    assert amateur_band_for(915_000_000.0).name == "33cm"
+    assert amateur_band_for(1_296_000_000.0).name == "23cm"
     assert amateur_band_for(10_300_000.0) is None
 
 
@@ -73,4 +79,15 @@ def test_amateur_band_lookup_by_stable_id() -> None:
     from antennadesk.domain.simulation.bands import amateur_band_by_id
 
     assert amateur_band_by_id("40m").start_hz == 7_000_000.0
+    assert amateur_band_by_id("23cm").stop_hz == 1_300_000_000.0
     assert amateur_band_by_id("unknown") is None
+
+
+def test_band_snapshots_include_vhf_and_uhf_bands() -> None:
+    plan = FrequencyPlan.sweep(50_000_000.0, 1_300_000_000.0, 1_000)
+
+    snapshots = band_snapshot_frequencies(plan, max_count=20)
+
+    assert any(144_000_000.0 <= value <= 148_000_000.0 for value in snapshots)
+    assert any(420_000_000.0 <= value <= 450_000_000.0 for value in snapshots)
+    assert any(1_240_000_000.0 <= value <= 1_300_000_000.0 for value in snapshots)

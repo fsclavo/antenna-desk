@@ -22,7 +22,11 @@ from ..antennas.inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
 from ..antennas.j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
 from ..antennas.loop import ANTENNA_TYPE_LOOP, LoopParameters
 from ..antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters, moxon_20m_wire
-from ..antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
+from ..antennas.ocfd import (
+    ANTENNA_TYPE_OCFD,
+    OCFD_REFERENCE_TRANSFORMER_RATIO,
+    OCFDParameters,
+)
 from ..antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
 from ..antennas.vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
 from ..antennas.yagi import ANTENNA_TYPE_YAGI, YagiElement, YagiParameters
@@ -369,6 +373,7 @@ def estimate_ocfd(intent: DesignIntent) -> DimensionEstimate:
         wire_radius_m=intent.wire_radius_m,
         material=intent.material,
         ground=intent.ground,
+        transformer_ratio=OCFD_REFERENCE_TRANSFORMER_RATIO,
     )
     return DimensionEstimate(
         parameters=parameters,

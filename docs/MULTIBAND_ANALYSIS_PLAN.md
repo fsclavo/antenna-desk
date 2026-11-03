@@ -213,7 +213,7 @@ only top-level design actions. The dialog should contain:
 
 - a preset selector: **Current band**, **40/20/10**, **80–10**, **All HF**,
   **Custom**;
-- a checkbox per band from 160 m to 6 m;
+- a checkbox per band from 160 m to 23 cm;
 - a per-band frequency-sweep point count, defaulting to 11 or 15 for narrow
   bands and 31 for broadband families;
 - a short note showing the family default, its evidence level, and any

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- OCFD designs support an optional ideal feed transformer, defaulting to the
+  common 4:1 balun for new designs while old projects remain untransformed.
+  The ratio is editable, applies to impedance/SWR/realized gain, and preserves
+  pattern geometry. Custom designs also carry an optional transformer ratio.
 - Multiband analysis for G5RV, OCFD, end-fed/random-wire/sloper, fan dipole,
   trap dipole, T2FD, and doublet designs. **Analyze Bands...** runs the existing solver
   once per selected band, stores band/batch metadata on simulation runs, and
@@ -64,6 +68,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Project schema version 5 adds optional OCFD/custom feed-transformer ratios
+  on top of the version 4 band/batch run metadata. Older projects migrate
+  without changing their geometry or results.
 - Project schema version 4 adds optional `band_id` and `batch_id` metadata to
   simulation runs. Version 3 projects migrate without changing their data.
 - The design panel now has one action bar (**Apply design**, **Estimate

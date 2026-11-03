@@ -23,8 +23,9 @@ class AmateurBand:
         return (self.start_hz + self.stop_hz) / 2.0
 
 
-# Widely used HF amateur band ranges. Regional band plans differ at the edges;
-# the snapshot only needs a representative frequency inside each band.
+# Widely used amateur band ranges from HF through 23 cm. Regional band plans
+# differ at the edges; the snapshot and analysis catalog only need a
+# representative range inside each band.
 AMATEUR_BANDS: tuple[AmateurBand, ...] = (
     AmateurBand("160m", 1_800_000.0, 2_000_000.0),
     AmateurBand("80m", 3_500_000.0, 4_000_000.0),
@@ -37,6 +38,12 @@ AMATEUR_BANDS: tuple[AmateurBand, ...] = (
     AmateurBand("12m", 24_890_000.0, 24_990_000.0),
     AmateurBand("10m", 28_000_000.0, 29_700_000.0),
     AmateurBand("6m", 50_000_000.0, 54_000_000.0),
+    AmateurBand("4m", 70_000_000.0, 70_500_000.0),
+    AmateurBand("2m", 144_000_000.0, 148_000_000.0),
+    AmateurBand("1.25m", 222_000_000.0, 225_000_000.0),
+    AmateurBand("70cm", 420_000_000.0, 450_000_000.0),
+    AmateurBand("33cm", 902_000_000.0, 928_000_000.0),
+    AmateurBand("23cm", 1_240_000_000.0, 1_300_000_000.0),
 )
 
 AMATEUR_BANDS_BY_ID: dict[str, AmateurBand] = {band.name: band for band in AMATEUR_BANDS}

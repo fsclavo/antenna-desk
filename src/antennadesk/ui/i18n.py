@@ -680,8 +680,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "los lazos de onda completa suelen presentar 100-150 Ω; usá un balun 2:1 o una red de adaptación para 50 Ω",
     },
     "estimator.warning.ocfd_matching": {
-        Language.ENGLISH: "off-center feed impedance depends on the offset and height; verify it before choosing a balun",
-        Language.SPANISH: "la impedancia del feed descentrado depende del offset y la altura; verificá antes de elegir un balun",
+        Language.ENGLISH: "off-center feed impedance depends on the offset and height; the preset uses an ideal 4:1 transformer, so verify the real balun",
+        Language.SPANISH: "la impedancia del feed descentrado depende del offset y la altura; el preset usa un transformador ideal 4:1, verificá el balún real",
     },
     "estimator.warning.fan_interaction": {
         Language.ENGLISH: "fan elements interact; optimize the final lengths",
@@ -1166,8 +1166,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "80-10 m",
     },
     "band.preset.all": {
-        Language.ENGLISH: "All HF bands",
-        Language.SPANISH: "Todas las bandas de HF",
+        Language.ENGLISH: "All bands",
+        Language.SPANISH: "Todas las bandas",
     },
     "band.preset.custom": {
         Language.ENGLISH: "Custom",
@@ -2550,6 +2550,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Feed at {offset} {unit} from the start · total {total} {unit}",
         Language.SPANISH: "Alimentación a {offset} {unit} del inicio · total {total} {unit}",
     },
+    "ocfd.transformer_ratio": {
+        Language.ENGLISH: "Transformer ratio",
+        Language.SPANISH: "Relación del transformador",
+    },
+    "ocfd.transformer_hint": {
+        Language.ENGLISH: (
+            "Ideal feed transformer. 4.0 is the common OCFD 4:1 balun; "
+            "set 1.0 to see the raw antenna impedance."
+        ),
+        Language.SPANISH: (
+            "Transformador de alimentación ideal. 4.0 es el balún 4:1 habitual "
+            "del OCFD; poné 1.0 para ver la impedancia cruda de la antena."
+        ),
+    },
     "ocfd.hint": {
         Language.ENGLISH: (
             "The generator creates one horizontal wire with an offset feed. "
@@ -3547,6 +3561,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "synthesis.target_reactance": {
         Language.ENGLISH: "Target reactance X (Ω)",
         Language.SPANISH: "Reactancia objetivo X (Ω)",
+    },
+    "synthesis.ocfd_transformer_note": {
+        Language.ENGLISH: (
+            "Targets are transmitter-side. With the {ratio}:1 ideal transformer, "
+            "a {target} Ω target at the transmitter is about {antenna} Ω at the antenna."
+        ),
+        Language.SPANISH: (
+            "Los objetivos son del lado del transmisor. Con el transformador ideal "
+            "{ratio}:1, un objetivo de {target} Ω en el transmisor equivale a unos "
+            "{antenna} Ω en la antena."
+        ),
     },
     "synthesis.impedance_error": {
         Language.ENGLISH: "|Z-Zt| (Ω)",

@@ -31,8 +31,8 @@ produce tens of megabytes of far-field data.
    `DEFAULT_PATTERN_SNAPSHOT_COUNT` points, it selects a small set of snapshot
    frequencies:
    - **Auto (bands)** picks one frequency per amateur band inside the plan
-     (160 m through 6 m), using the design frequency when it falls inside a
-     band.
+     (160 m through 23 cm in the current catalog), using the design frequency
+     when it falls inside a band.
    - A narrow single-band plan is filled with evenly spaced snapshots so it
      still gets at least five pattern cuts.
    - The custom panel also offers fixed **5**, **9**, **13**, **17**, and

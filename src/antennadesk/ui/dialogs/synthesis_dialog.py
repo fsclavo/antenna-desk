@@ -183,16 +183,21 @@ class SynthesisDialog(QDialog):
             f"{translator.t(self._label_b_key)} — {translator.t('synthesis.maximum')}"
         )
         self._label_evaluations = QLabel(translator.t("optimize.max_evaluations"), self)
+        self._transformer_note = QLabel(self)
+        self._transformer_note.setWordWrap(True)
 
         form = QFormLayout()
         form.addRow(self._label_frequency, self._frequency)
         form.addRow(self._label_r, self._target_r)
         form.addRow(self._label_x, self._target_x)
+        form.addRow(self._transformer_note)
         form.addRow(self._label_min_a, self._min_a)
         form.addRow(self._label_max_a, self._max_a)
         form.addRow(self._label_min_b, self._min_b)
         form.addRow(self._label_max_b, self._max_b)
         form.addRow(self._label_evaluations, self._max_evaluations)
+        self._target_r.valueChanged.connect(self._update_transformer_note)
+        self._update_transformer_note()
 
         self._evaluations = QTableWidget(0, 9, self)
         self._configure_table(self._evaluations)
@@ -231,6 +236,25 @@ class SynthesisDialog(QDialog):
 
         self._retranslate_table()
         self._update_controls()
+
+    def _update_transformer_note(self) -> None:
+        if not isinstance(self._base_parameters, OCFDParameters):
+            self._transformer_note.setVisible(False)
+            return
+        ratio = self._base_parameters.transformer_ratio
+        if ratio == 1.0:
+            self._transformer_note.setVisible(False)
+            return
+        target = self._target_r.value()
+        self._transformer_note.setText(
+            self._translator.t(
+                "synthesis.ocfd_transformer_note",
+                ratio=f"{ratio:g}",
+                target=f"{target:.1f}",
+                antenna=f"{target * ratio:.1f}",
+            )
+        )
+        self._transformer_note.setVisible(True)
 
     def _length_spin(self, minimum: float, maximum: float) -> QDoubleSpinBox:
         spin = QDoubleSpinBox(self)

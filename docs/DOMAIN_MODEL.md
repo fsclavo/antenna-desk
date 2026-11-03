@@ -140,10 +140,11 @@ loop.
 
 ### CustomAntennaParameters
 
-User-defined straight wires with a frequency, feed, ground, and optional loads.
-It is the escape hatch for geometries outside the guided templates. It has no
-single primary dimension, so length optimization is not available. Its wire,
-feed, and load rules are validated by `AntennaModel`.
+User-defined straight wires with a frequency, feed, ground, optional loads, and
+an optional ideal feed-transformer ratio. It is the escape hatch for geometries
+outside the guided templates. It has no single primary dimension, so length
+optimization is not available. Its wire, feed, and load rules are validated by
+`AntennaModel`.
 
 ### YagiParameters
 
@@ -279,10 +280,11 @@ the generic custom-wire and transmission-line editors remain available.
 
 A first-class single-wire horizontal dipole with a feed point offset from the
 center. It stores frequency, total length, feed ratio, height, azimuth, radius,
-material, and ground. `to_antenna()` builds the canonical model;
-`to_custom_parameters()` remains available for conversion, and
-`from_custom_parameters()` reconstructs OCFD parameters from legacy custom
-designs.
+material, ground, and an optional ideal feed-transformer ratio. The transformer
+ratio is `1.0` for no transformation and can be set to the common OCFD `4.0`.
+`to_antenna()` builds the canonical model; `to_custom_parameters()` preserves
+the ratio in the generic custom field, and `from_custom_parameters()`
+reconstructs OCFD parameters from legacy custom designs.
 
 ### AntennaDesignParameters
 
@@ -333,7 +335,7 @@ Plain JSON files from older versions are still accepted. The envelope is:
 ```json
 {
   "format": "antennadesk-project",
-  "schema_version": 4,
+  "schema_version": 5,
   "project": {
     "id": "11111111-1111-4111-8111-111111111111",
     "name": "40 m dipole",
@@ -398,11 +400,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 4.
+the application writes version 5.
 
 ## Schema policy
 
-- Current version: `4`.
+- Current version: `5`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -410,6 +412,8 @@ the application writes version 4.
   SWR is stored as `null` when it is infinite.
 - Version 4 adds optional `band_id` and `batch_id` metadata to simulation runs
   for multiband analyses. Existing runs load with both fields as `null`.
+- Version 5 adds optional feed-transformer ratios to OCFD and custom designs.
+  Existing designs load with `1.0`, preserving their raw-impedance behavior.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -438,7 +442,7 @@ the application writes version 4.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 4.
+- Simulation results are persisted as immutable runs in schema version 5.
   Band analyses store one run per band with a shared `batch_id`.
 - Far-field values are NEC power gains. Directivity and realized gain are
   derived per frequency and stored alongside the impedance and power budget;

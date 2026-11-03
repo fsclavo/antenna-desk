@@ -208,6 +208,7 @@ class OCFDParametersPayload(StrictModel):
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
+    transformer_ratio: float = Field(default=1.0, gt=0.0)
 
 
 class RingoParametersPayload(StrictModel):
@@ -361,6 +362,7 @@ class CustomParametersPayload(StrictModel):
     transmission_lines: list[TransmissionLinePayload] = Field(default_factory=list)
     generator_id: str | None = Field(default=None, min_length=1)
     generator_name: str | None = Field(default=None, min_length=1)
+    feed_transformer_ratio: float = Field(default=1.0, gt=0.0)
 
 
 class FrequencyPlanPayload(StrictModel):
@@ -891,6 +893,7 @@ def _ocfd_parameters_from_domain(value: OCFDParameters) -> OCFDParametersPayload
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
+        transformer_ratio=value.transformer_ratio,
     )
 
 
@@ -1080,6 +1083,7 @@ def _custom_parameters_from_domain(
         ],
         generator_id=value.generator_id,
         generator_name=value.generator_name,
+        feed_transformer_ratio=value.feed_transformer_ratio,
     )
 
 
@@ -1558,6 +1562,7 @@ def _ocfd_parameters_to_domain(value: OCFDParametersPayload) -> OCFDParameters:
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),
+        transformer_ratio=value.transformer_ratio,
     )
 
 
@@ -1743,6 +1748,7 @@ def _custom_parameters_to_domain(value: CustomParametersPayload) -> CustomAntenn
         ),
         generator_id=value.generator_id,
         generator_name=value.generator_name,
+        feed_transformer_ratio=value.feed_transformer_ratio,
     )
 
 
