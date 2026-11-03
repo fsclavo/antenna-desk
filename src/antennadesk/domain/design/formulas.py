@@ -47,6 +47,14 @@ def half_wave_length_m(frequency_hz: float) -> float:
     return wavelength_m(frequency_hz) * HALF_WAVE_FACTOR
 
 
+def frequency_for_half_wave_length(length_m: float) -> float:
+    """Return the approximate half-wave frequency for a wire length."""
+
+    if length_m <= 0.0:
+        raise ValueError("length_m must be positive")
+    return units.SPEED_OF_LIGHT_M_PER_S * HALF_WAVE_FACTOR / length_m
+
+
 def loop_resonance_factor(sides: int) -> float:
     """Return the polygon correction for a closed loop with ``sides`` sides."""
 

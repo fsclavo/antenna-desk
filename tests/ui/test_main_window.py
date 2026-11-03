@@ -1806,6 +1806,7 @@ def test_main_menu_is_grouped_by_task(window: MainWindow) -> None:
     assert "Optimize Moxon Dimensions..." not in design_titles
     assert "Edit Series Loads..." in design_titles
     assert "Simulate" in simulation_titles
+    assert "Analyze Bands..." in simulation_titles
     assert "Feed Line..." in simulation_titles
     assert "Matching Network..." in simulation_titles
 
@@ -2591,3 +2592,123 @@ def test_fit_spec_to_budget_uses_the_finest_pattern_that_fits(window: MainWindow
     assert kept.far_field.theta_count == 46
     assert kept.far_field.phi_count == 181
     assert window._pending_pattern_diagnostic is None
+
+
+def test_analyze_bands_runs_the_selected_band_set(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.design.band_plan import BandPlan, BandSelection
+    from antennadesk.domain.simulation.bands import amateur_band_by_id
+
+    selected = tuple(
+        BandSelection(amateur_band_by_id(band_id), points=5)
+        for band_id in ("40m", "20m", "10m")
+        if amateur_band_by_id(band_id) is not None
+    )
+    plan = BandPlan(selected)
+
+    class FakeBandDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def plan(self) -> BandPlan:
+            return plan
+
+    monkeypatch.setattr(main_window_module, "BandAnalysisDialog", FakeBandDialog)
+
+    window.analyze_bands()
+    qtbot.waitUntil(
+        lambda: not window._simulating and window._thread is None,
+        timeout=5_000,
+    )
+
+    assert window._project is not None
+    assert window._design_id is not None
+    analysis = window._band_analysis_results[window._design_id]
+    assert [band.band.name for band in analysis.bands] == ["40m", "20m", "10m"]
+    assert window._results._bands_tab_index >= 0
+    assert window._results._bands_table.rowCount() == 3
+    band_runs = [run for run in window._project.simulation_runs if run.band_id is not None]
+    assert {run.band_id for run in band_runs} == {"40m", "20m", "10m"}
+    assert len({run.batch_id for run in band_runs}) == 1
+
+    window._results._bands_table.selectRow(1)
+    qtbot.waitUntil(
+        lambda: window._selected_band_ids.get(window._design_id) == "20m",
+        timeout=1_000,
+    )
+    window._dirty = False
+
+
+def test_band_analysis_reopens_from_a_saved_project(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    from antennadesk.domain.design.band_plan import BandPlan, BandSelection
+    from antennadesk.domain.simulation.bands import amateur_band_by_id
+
+    plan = BandPlan(
+        tuple(
+            BandSelection(amateur_band_by_id(band_id), points=5)
+            for band_id in ("40m", "20m")
+            if amateur_band_by_id(band_id) is not None
+        )
+    )
+
+    class FakeBandDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def plan(self) -> BandPlan:
+            return plan
+
+    monkeypatch.setattr(main_window_module, "BandAnalysisDialog", FakeBandDialog)
+    window.analyze_bands()
+    qtbot.waitUntil(
+        lambda: not window._simulating and window._thread is None,
+        timeout=5_000,
+    )
+    path = tmp_path / "bands.antennadesk"
+    assert window._save_to(path) is True
+
+    loaded = JsonProjectRepository().load(path)
+    second = MainWindow(
+        JsonProjectRepository(),
+        FakeSolver(),
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+    )
+    qtbot.addWidget(second)
+    second._set_project(
+        loaded,
+        loaded.designs[0].id,
+        path=path,
+        dirty=False,
+    )
+
+    assert second._design_id is not None
+    analysis = second._band_analysis_results[second._design_id]
+    assert [band.band.name for band in analysis.bands] == ["40m", "20m"]
+    assert second._results._bands_tab_index >= 0
+    assert second._results._bands_table.rowCount() == 2
+    second._dirty = False
+    second.close()
+    window._dirty = False
+
+
+def test_band_analysis_controls_are_centralized(window: MainWindow) -> None:
+    assert window._band_group.title() == "Band analysis"
+    assert window._analyze_bands_button.text() == "Analyze Bands..."
+    assert window._analyze_bands_action.text() == "Analyze Bands..."
+    assert window._analyze_bands_action.shortcut().toString() == "Ctrl+Shift+B"
+    assert window._band_plan_label.text().startswith("Bands: 40m")

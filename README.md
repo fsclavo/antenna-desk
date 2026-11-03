@@ -97,6 +97,7 @@ optional signing steps.
 - [ADR-0019 — Pattern snapshots decoupled from the impedance sweep](docs/ADR/0019-pattern-snapshots.md)
 - [ADR-0020 — Higher pattern storage budget](docs/ADR/0020-higher-pattern-storage-budget.md)
 - [ADR-0021 — Lossless compressed project files](docs/ADR/0021-compressed-project-files.md)
+- [ADR-0022 — Multiband analysis by per-band batches](docs/ADR/0022-multiband-analysis-by-band-batches.md)
 - [Antenna dimension estimators](docs/ANTENNA_DESIGN_ESTIMATORS.md)
 - [Geometry presentation contract](docs/GEOMETRY_PRESENTATION.md)
 - [NEC engine evaluation](docs/spikes/phase0-solver-evaluation.md)
@@ -113,6 +114,8 @@ optional signing steps.
   construction sketch with a collision-aware dimension layout, front/plan
   orthographic views, detail insets, an isometric 3D view, and results tabs.
 - Asynchronous simulation with cancellation, timeouts, and diagnostics.
+- Multiband analysis with family defaults, per-band solver runs, a **Bands**
+  results tab, and band-aware CSV/HTML/PDF summaries.
 - Impedance, SWR, frequency-sweep, and far-field pattern charts, including
   selectable azimuth/elevation cuts, polar lobe diagrams, and an isometric 3D
   radiation-pattern wireframe colored by gain with a dBi legend and a takeoff

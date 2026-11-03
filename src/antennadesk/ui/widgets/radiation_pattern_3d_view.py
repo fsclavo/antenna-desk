@@ -21,6 +21,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QSizePolicy, QWidget
 
+from ...domain.simulation.pattern import takeoff_angle_deg
 from ..i18n import Translator
 from ..theme import theme_colors
 
@@ -28,16 +29,6 @@ GAIN_COLOR_BINS = 24
 GAIN_LINE_ALPHA = 190
 INTERACTION_DELAY_MS = 120
 FULL_MESH_THRESHOLD = 4_000
-
-
-def takeoff_angle_deg(theta_deg: float) -> float:
-    """Return the elevation above the ground plane for a NEC theta angle.
-
-    NEC measures theta from the zenith, so a point on the horizon (theta = 90)
-    has a takeoff angle of 0 degrees.
-    """
-
-    return 90.0 - theta_deg
 
 
 def gain_color(normalized: float, alpha: int = GAIN_LINE_ALPHA) -> QColor:

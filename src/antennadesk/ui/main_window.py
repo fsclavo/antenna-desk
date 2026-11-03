@@ -50,6 +50,7 @@ from ..application.use_cases.add_design_variant import (
     AddDesignVariant,
     AddDesignVariantCommand,
 )
+from ..application.use_cases.analyze_bands import BandSimulationRequest
 from ..application.use_cases.create_dipole_project import (
     CreateDipoleProject,
     CreateDipoleProjectCommand,
@@ -105,12 +106,14 @@ from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters, yagi_element_length_mismatch
 from ..domain.common.time import utc_now
 from ..domain.common.validation import Diagnostic, Severity
+from ..domain.design.band_plan import BandDefault, BandPlan, BandSelection, default_band_plan
 from ..domain.design.yagi_reference import MAX_YAGI_ELEMENTS, MIN_YAGI_ELEMENTS
 from ..domain.environment.ground import GroundModel
 from ..domain.measurement import Measurement
 from ..domain.projects.project import DesignProvenance, DesignVariant, Project
+from ..domain.simulation.band_result import BandAnalysisResult, BandResult
 from ..domain.simulation.bands import band_snapshot_frequencies
-from ..domain.simulation.budget import choose_pattern_step
+from ..domain.simulation.budget import choose_batch_pattern_step, choose_pattern_step
 from ..domain.simulation.far_field import FarFieldRequest
 from ..domain.simulation.frequency import FrequencyPlan
 from ..domain.simulation.result import SimulationResult, SimulationStatus
@@ -123,7 +126,12 @@ from ..importers.mmana import parse_mmana_file
 from ..importers.nec2_deck import parse_nec2_deck
 from ..importers.vna_csv import parse_vna_csv
 from ..persistence.constants import MAX_PROJECT_SIZE_BYTES, PROJECT_SIZE_WARNING_BYTES
-from ..reporting.csv_export import write_csv, write_pattern_csv
+from ..reporting.csv_export import (
+    write_band_analysis_csv,
+    write_band_analysis_pattern_csv,
+    write_csv,
+    write_pattern_csv,
+)
 from ..reporting.html_report import write_html_report
 from ..simulation.nec2.solver import Nec2cSolver
 from .dialogs.antenna_catalog_dialog import (
@@ -152,6 +160,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_YAGI,
     AntennaCatalogDialog,
 )
+from .dialogs.band_analysis_dialog import BandAnalysisDialog
 from .dialogs.comparison_dialog import ComparisonDialog
 from .dialogs.construction_dialog import ConstructionDialog
 from .dialogs.custom_antenna_dialog import CustomAntennaDialog
@@ -206,6 +215,7 @@ from .widgets.trap_dipole_form import TrapDipoleForm
 from .widgets.vertical_form import VerticalForm
 from .widgets.yagi_form import YagiForm
 from .wizard.dipole_wizard import DipoleWizard
+from .workers.band_analysis_worker import BandAnalysisWorker
 from .workers.simulation_worker import SimulationWorker
 
 DEFAULT_GENERATED_SWEEP_POINTS = 31
@@ -238,7 +248,11 @@ class MainWindow(QMainWindow):
         self._simulating = False
         self._last_result: SimulationResult | None = None
         self._simulation_results: dict[UUID, SimulationResult] = {}
+        self._band_analysis_results: dict[UUID, BandAnalysisResult] = {}
+        self._band_plans: dict[UUID, BandPlan] = {}
+        self._selected_band_ids: dict[UUID, str] = {}
         self._simulation_design_id: UUID | None = None
+        self._band_analysis_design_id: UUID | None = None
         self._loads: tuple[LumpedLoad, ...] = ()
         self._transmission_lines: tuple[TransmissionLine, ...] = ()
         self._feed_line: FeedLine | None = None
@@ -250,7 +264,7 @@ class MainWindow(QMainWindow):
         self._pending_pattern_diagnostic: Diagnostic | None = None
         self._last_status_key = "status.ready"
         self._thread: QThread | None = None
-        self._worker: SimulationWorker | None = None
+        self._worker: SimulationWorker | BandAnalysisWorker | None = None
         self._cancel_token: EventCancelToken | None = None
         self._undo_stack = QUndoStack(self)
         self._undo_stack.setUndoLimit(50)
@@ -361,6 +375,10 @@ class MainWindow(QMainWindow):
         self._simulate_action = QAction(self)
         self._simulate_action.setShortcut(QKeySequence("F5"))
         self._simulate_action.triggered.connect(lambda: self.simulate())
+
+        self._analyze_bands_action = QAction(self)
+        self._analyze_bands_action.setShortcut(QKeySequence("Ctrl+Shift+B"))
+        self._analyze_bands_action.triggered.connect(lambda: self.analyze_bands())
 
         self._cancel_action = QAction(self)
         self._cancel_action.setShortcut(QKeySequence("Ctrl+."))
@@ -546,6 +564,16 @@ class MainWindow(QMainWindow):
         )
         pattern_layout.addRow(self._custom_pattern_status)
 
+        self._band_group = QGroupBox(self)
+        self._band_group.setTitle(self._translator.t("band.group_title"))
+        self._band_plan_label = QLabel(self._band_group)
+        self._band_plan_label.setWordWrap(True)
+        self._analyze_bands_button = QPushButton(self._band_group)
+        self._analyze_bands_button.clicked.connect(lambda: self.analyze_bands())
+        band_layout = QHBoxLayout(self._band_group)
+        band_layout.addWidget(self._band_plan_label, 1)
+        band_layout.addWidget(self._analyze_bands_button)
+
         self._custom_panel = QWidget(self)
         custom_layout = QVBoxLayout(self._custom_panel)
         self._custom_title = QLabel(self._custom_panel)
@@ -624,6 +652,7 @@ class MainWindow(QMainWindow):
         design_actions.addWidget(self._optimize_button)
         design_layout.addLayout(design_actions)
         design_layout.addWidget(self._pattern_group)
+        design_layout.addWidget(self._band_group)
         design_layout.addWidget(self._provenance_label)
         design_layout.addWidget(self._design_stack, 1)
 
@@ -632,6 +661,7 @@ class MainWindow(QMainWindow):
         self._results = ResultsView(self._translator)
         self._results.measurement_edit_requested.connect(self.edit_measurement)
         self._results.measurement_delete_requested.connect(self.delete_measurement)
+        self._results.band_selected.connect(self._on_band_selected)
 
         geometry_container = QWidget(self)
         geometry_layout = QVBoxLayout(geometry_container)
@@ -759,6 +789,7 @@ class MainWindow(QMainWindow):
 
         self._simulation_menu = self.menuBar().addMenu("")
         self._simulation_menu.addAction(self._simulate_action)
+        self._simulation_menu.addAction(self._analyze_bands_action)
         self._simulation_menu.addAction(self._cancel_action)
         self._simulation_menu.addSeparator()
         self._simulation_menu.addAction(self._feed_line_action)
@@ -820,6 +851,10 @@ class MainWindow(QMainWindow):
         self._custom_sweep_group.setTitle(self._translator.t("field.sweep"))
         self._custom_sweep.setText(self._translator.t("field.sweep_enabled"))
         self._pattern_group.setTitle(self._translator.t("pattern.settings_title"))
+        self._band_group.setTitle(self._translator.t("band.group_title"))
+        self._analyze_bands_button.setText(self._translator.t("band.analyze"))
+        self._analyze_bands_action.setText(self._translator.t("band.analyze"))
+        self._update_band_plan_label()
         self._custom_pattern_label.setText(self._translator.t("custom.pattern_resolution"))
         self._custom_pattern_resolution.setItemText(
             0,
@@ -912,6 +947,73 @@ class MainWindow(QMainWindow):
         )
         self._provenance_label.setVisible(True)
 
+    def _latest_band_analysis_for(
+        self,
+        project: Project,
+        design_id: UUID,
+    ) -> BandAnalysisResult | None:
+        analysis = project.latest_band_analysis(design_id)
+        if analysis is None:
+            return None
+        latest_single = project.latest_simulation_run(design_id)
+        if latest_single is not None and latest_single.created_at > analysis.created_at:
+            return None
+        return analysis
+
+    def _remember_band_plan(self, analysis: BandAnalysisResult) -> None:
+        selections = tuple(
+            BandSelection(
+                band.band,
+                max(2, band.result.spec.frequency_plan.count),
+            )
+            for band in analysis.bands
+        )
+        if selections:
+            self._band_plans[analysis.design_id] = BandPlan(selections)
+
+    def _default_band_default(self, design: DesignVariant) -> BandDefault:
+        return default_band_plan(
+            design.parameters,
+            high_impedance_feed_line=(
+                self._feed_line is not None
+                and self._feed_line.characteristic_impedance_ohm >= 300.0
+            ),
+        )
+
+    def _default_band_for(self, design: DesignVariant) -> BandPlan:
+        return self._default_band_default(design).plan
+
+    def _current_band_plan(self, design: DesignVariant) -> BandPlan:
+        plan = self._band_plans.get(design.id)
+        if plan is not None:
+            return plan
+        return self._default_band_for(design)
+
+    def _update_band_plan_label(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._band_plan_label.setText("")
+            return
+        try:
+            design = self._project.design_by_id(self._design_id)
+        except KeyError:
+            self._band_plan_label.setText("")
+            return
+        plan = self._current_band_plan(design)
+        if plan:
+            bands = ", ".join(selection.band.name for selection in plan.selections)
+            self._band_plan_label.setText(self._translator.t("band.selected", bands=bands))
+        else:
+            self._band_plan_label.setText(self._translator.t("band.no_selection"))
+
+    def _invalidate_design_result(self, design_id: UUID | None) -> None:
+        if design_id is None:
+            return
+        self._simulation_results.pop(design_id, None)
+        self._band_analysis_results.pop(design_id, None)
+        self._selected_band_ids.pop(design_id, None)
+        if design_id == self._design_id and hasattr(self, "_results"):
+            self._results.set_band_analysis(None)
+
     def _update_status_text(self) -> None:
         key = "status.simulating" if self._simulating else self._last_status_key
         self._status_label.setText(self._translator.t(key))
@@ -973,6 +1075,9 @@ class MainWindow(QMainWindow):
         is_custom = isinstance(parameters, CustomAntennaParameters)
         self._change_template_action.setEnabled(idle and has_project)
         self._design_from_frequency_action.setEnabled(idle and has_project)
+        band_enabled = idle and has_project and self._solver is not None
+        self._analyze_bands_action.setEnabled(band_enabled)
+        self._analyze_bands_button.setEnabled(band_enabled)
         optimize_enabled = idle and has_project and not is_custom and self._solver is not None
         self._optimize_action.setEnabled(optimize_enabled)
         self._optimize_button.setEnabled(optimize_enabled)
@@ -992,8 +1097,8 @@ class MainWindow(QMainWindow):
         self._export_geometry_dxf_action.setEnabled(idle and has_project)
         self._export_html_action.setEnabled(idle and has_result)
         self._export_pdf_action.setEnabled(idle and has_result)
-        has_history = self._project is not None and len(self._project.simulation_runs) > len(
-            self._project.designs
+        has_history = (
+            self._project is not None and self._project.has_compactable_simulation_history()
         )
         self._compact_history_action.setEnabled(idle and has_history)
         self._simulate_action.setEnabled(idle and has_project and self._solver is not None)
@@ -1121,10 +1226,20 @@ class MainWindow(QMainWindow):
             self._matching_network = project.matching_network
             self._form_dirty = False
             self._simulation_results = {}
+            self._band_analysis_results = {}
+            self._selected_band_ids = {}
+            self._band_plans = {}
             for project_design in project.designs:
+                analysis = self._latest_band_analysis_for(project, project_design.id)
+                if analysis is not None and analysis.bands:
+                    self._band_analysis_results[project_design.id] = analysis
+                    self._remember_band_plan(analysis)
+                    self._simulation_results[project_design.id] = analysis.bands[0].result
+                    continue
                 latest_run = project.latest_simulation_run(project_design.id)
                 if latest_run is not None:
                     self._simulation_results[project_design.id] = latest_run.result
+            self._results.set_band_analysis(None)
             self._results.set_measurements(project.measurements)
             self._project_name_updating = True
             self._project_name.setText(project.name)
@@ -1277,13 +1392,29 @@ class MainWindow(QMainWindow):
         self._set_geometry_model(design)
         self._auto_select_view(design)
         self._set_variant_combo(design_id)
+        analysis = self._band_analysis_results.get(design_id)
+        if analysis is None and self._project is not None:
+            analysis = self._latest_band_analysis_for(self._project, design_id)
+            if analysis is not None:
+                self._band_analysis_results[design_id] = analysis
+                self._remember_band_plan(analysis)
         result = self._simulation_results.get(design_id)
-        if result is None and self._project is not None:
-            latest_run = self._project.latest_simulation_run(design_id)
-            if latest_run is not None:
-                result = latest_run.result
-                self._simulation_results[design_id] = result
+        if analysis is not None and analysis.bands:
+            selected_id = self._selected_band_ids.get(design_id, analysis.bands[0].band.name)
+            selected = analysis.result_for_band(selected_id) or analysis.bands[0]
+            self._selected_band_ids[design_id] = selected.band.name
+            result = selected.result
+            self._simulation_results[design_id] = result
+            self._results.set_band_analysis(analysis)
+        else:
+            self._results.set_band_analysis(None)
+            if result is None and self._project is not None:
+                latest_run = self._project.latest_simulation_run(design_id)
+                if latest_run is not None:
+                    result = latest_run.result
+                    self._simulation_results[design_id] = result
         self._last_result = result
+        self._update_band_plan_label()
         self._results.set_result(result)
         self._last_status_key = (
             self._result_status_key(result.status) if result is not None else "status.ready"
@@ -1360,11 +1491,22 @@ class MainWindow(QMainWindow):
         self._form_dirty = False
         self._last_result = None
         self._simulation_results = {}
+        self._band_analysis_results = {}
+        self._band_plans = {}
+        self._selected_band_ids = {}
         for project_design in project.designs:
+            analysis = self._latest_band_analysis_for(project, project_design.id)
+            if analysis is not None and analysis.bands:
+                self._band_analysis_results[project_design.id] = analysis
+                self._remember_band_plan(analysis)
+                self._simulation_results[project_design.id] = analysis.bands[0].result
+                continue
             latest_run = project.latest_simulation_run(project_design.id)
             if latest_run is not None:
                 self._simulation_results[project_design.id] = latest_run.result
         self._simulation_design_id = None
+        self._band_analysis_design_id = None
+        self._results.set_band_analysis(None)
         self._results.set_result(None)
         self._results.set_measurements(project.measurements)
         self._project_name_updating = True
@@ -1412,7 +1554,7 @@ class MainWindow(QMainWindow):
             self._project = updated
             design = updated.design_by_id(self._design_id)
             if parameters != previous_design.parameters or attachments_changed:
-                self._simulation_results.pop(self._design_id, None)
+                self._invalidate_design_result(self._design_id)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._transmission_lines = design.antenna.transmission_lines
@@ -1443,7 +1585,7 @@ class MainWindow(QMainWindow):
             self._project = updated
             design = updated.design_by_id(self._design_id)
             if parameters != previous_design.parameters or attachments_changed:
-                self._simulation_results.pop(self._design_id, None)
+                self._invalidate_design_result(self._design_id)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._transmission_lines = design.antenna.transmission_lines
@@ -1474,7 +1616,7 @@ class MainWindow(QMainWindow):
             self._project = updated
             design = updated.design_by_id(self._design_id)
             if parameters != previous_design.parameters or attachments_changed:
-                self._simulation_results.pop(self._design_id, None)
+                self._invalidate_design_result(self._design_id)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._transmission_lines = design.antenna.transmission_lines
@@ -1505,7 +1647,7 @@ class MainWindow(QMainWindow):
             self._project = updated
             design = updated.design_by_id(self._design_id)
             if parameters != previous_design.parameters or attachments_changed:
-                self._simulation_results.pop(self._design_id, None)
+                self._invalidate_design_result(self._design_id)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._transmission_lines = design.antenna.transmission_lines
@@ -1536,7 +1678,7 @@ class MainWindow(QMainWindow):
             self._project = updated
             design = updated.design_by_id(self._design_id)
             if parameters != previous_design.parameters or attachments_changed:
-                self._simulation_results.pop(self._design_id, None)
+                self._invalidate_design_result(self._design_id)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._transmission_lines = design.antenna.transmission_lines
@@ -1567,7 +1709,7 @@ class MainWindow(QMainWindow):
             self._project = updated
             design = updated.design_by_id(self._design_id)
             if parameters != previous_design.parameters or attachments_changed:
-                self._simulation_results.pop(self._design_id, None)
+                self._invalidate_design_result(self._design_id)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._transmission_lines = design.antenna.transmission_lines
@@ -1598,7 +1740,7 @@ class MainWindow(QMainWindow):
             self._project = updated
             design = updated.design_by_id(self._design_id)
             if parameters != previous_design.parameters or attachments_changed:
-                self._simulation_results.pop(self._design_id, None)
+                self._invalidate_design_result(self._design_id)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._transmission_lines = design.antenna.transmission_lines
@@ -1629,7 +1771,7 @@ class MainWindow(QMainWindow):
             self._project = updated
             design = updated.design_by_id(self._design_id)
             if parameters != previous_design.parameters or attachments_changed:
-                self._simulation_results.pop(self._design_id, None)
+                self._invalidate_design_result(self._design_id)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._transmission_lines = design.antenna.transmission_lines
@@ -1660,7 +1802,7 @@ class MainWindow(QMainWindow):
             self._project = updated
             design = updated.design_by_id(self._design_id)
             if parameters != previous_design.parameters or attachments_changed:
-                self._simulation_results.pop(self._design_id, None)
+                self._invalidate_design_result(self._design_id)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._transmission_lines = design.antenna.transmission_lines
@@ -1691,7 +1833,7 @@ class MainWindow(QMainWindow):
             self._project = updated
             design = updated.design_by_id(self._design_id)
             if parameters != previous_design.parameters or attachments_changed:
-                self._simulation_results.pop(self._design_id, None)
+                self._invalidate_design_result(self._design_id)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._transmission_lines = design.antenna.transmission_lines
@@ -1722,7 +1864,7 @@ class MainWindow(QMainWindow):
             self._project = updated
             design = updated.design_by_id(self._design_id)
             if parameters != previous_design.parameters or attachments_changed:
-                self._simulation_results.pop(self._design_id, None)
+                self._invalidate_design_result(self._design_id)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
             self._transmission_lines = design.antenna.transmission_lines
@@ -1750,7 +1892,7 @@ class MainWindow(QMainWindow):
                 self._project = self._project.with_design(design, updated_at=utc_now())
             self._project = replace(self._project, name=project_name)
             if attachments_changed:
-                self._simulation_results.pop(self._design_id, None)
+                self._invalidate_design_result(self._design_id)
                 self._results.set_result(None)
             self._results.set_design(design)
             self._set_geometry_model(design)
@@ -1781,7 +1923,7 @@ class MainWindow(QMainWindow):
         self._project_name.setText(project_name)
         self._project_name_updating = False
         if parameters != previous_design.parameters or attachments_changed:
-            self._simulation_results.pop(self._design_id, None)
+            self._invalidate_design_result(self._design_id)
             self._last_result = None
             self._results.set_result(None)
         self._form_dirty = False
@@ -1842,6 +1984,91 @@ class MainWindow(QMainWindow):
             self._dirty = True
             self._update_title()
 
+    def _base_simulation_spec(self, design: DesignVariant) -> SimulationSpec:
+        parameters = design.parameters
+        if isinstance(parameters, CustomAntennaParameters):
+            return self._custom_simulation_spec(parameters)
+        if isinstance(parameters, OCFDParameters):
+            return self._ocfd_simulation_spec(parameters)
+        if isinstance(parameters, VerticalParameters):
+            return self._vertical_simulation_spec(parameters)
+        if isinstance(parameters, InvertedVParameters):
+            return self._inverted_v_simulation_spec(parameters)
+        if isinstance(parameters, YagiParameters):
+            return self._yagi_simulation_spec(parameters)
+        if isinstance(parameters, MoxonParameters):
+            return self._moxon_simulation_spec(parameters)
+        if isinstance(parameters, FanDipoleParameters):
+            return self._fan_dipole_simulation_spec(parameters)
+        if isinstance(parameters, TrapDipoleParameters):
+            return self._trap_dipole_simulation_spec(parameters)
+        if isinstance(parameters, T2FDParameters):
+            return self._t2fd_simulation_spec(parameters)
+        if isinstance(parameters, EndFedParameters):
+            return self._endfed_simulation_spec(parameters)
+        if isinstance(parameters, JPoleParameters):
+            return self._j_pole_simulation_spec(parameters)
+        if isinstance(parameters, RingoParameters):
+            return self._ringo_simulation_spec(parameters)
+        return self._form.simulation_spec()
+
+    def _replanned_spec(
+        self,
+        design: DesignVariant,
+        spec: SimulationSpec,
+        frequency_plan: FrequencyPlan,
+    ) -> SimulationSpec:
+        """Rebuild segmentation for a different band plan."""
+
+        model = design.antenna
+        segmentation = SegmentationPolicy(min_segments_per_wire=3)
+        if isinstance(design.parameters, CustomAntennaParameters) and (
+            design.parameters.generator_id == "g5rv"
+        ):
+            dipole = model.wire_by_id(G5RV_DIPOLE_ID)
+            count = segmentation.segments_for(dipole, frequency_plan.stop_hz)
+            if count % 2 == 0:
+                count += 1
+            segmentation = SegmentationPolicy(
+                min_segments_per_wire=3,
+                wire_segments=((G5RV_DIPOLE_ID, count),),
+            )
+        elif isinstance(design.parameters, T2FDParameters):
+            base = aligned_policy_for_model(
+                model,
+                frequency_plan.stop_hz,
+                SegmentationPolicy(min_segments_per_wire=3),
+            )
+            driven_count = base.segments_for(
+                model.wire_by_id(T2FD_DRIVEN_WIRE_ID),
+                frequency_plan.stop_hz,
+            )
+            if driven_count % 2 == 0:
+                driven_count += 1
+            segmentation = SegmentationPolicy(
+                min_segments_per_wire=3,
+                wire_segments=tuple(
+                    (
+                        wire.id,
+                        driven_count
+                        if wire.id in {T2FD_DRIVEN_WIRE_ID, T2FD_TERMINATED_WIRE_ID}
+                        else base.segments_for(wire, frequency_plan.stop_hz),
+                    )
+                    for wire in model.wires
+                ),
+            )
+        segmentation = aligned_policy_for_model(
+            model,
+            frequency_plan.stop_hz,
+            segmentation,
+        )
+        return replace(
+            spec,
+            frequency_plan=frequency_plan,
+            segmentation=segmentation,
+            pattern_frequencies_hz=(),
+        )
+
     @history_action("history.simulate")
     def simulate(self) -> None:
         if self._simulating:
@@ -1866,32 +2093,7 @@ class MainWindow(QMainWindow):
                 )
                 if answer != QMessageBox.StandardButton.Yes:
                     return
-            if isinstance(design.parameters, CustomAntennaParameters):
-                spec = self._custom_simulation_spec(design.parameters)
-            elif isinstance(design.parameters, OCFDParameters):
-                spec = self._ocfd_simulation_spec(design.parameters)
-            elif isinstance(design.parameters, VerticalParameters):
-                spec = self._vertical_simulation_spec(design.parameters)
-            elif isinstance(design.parameters, InvertedVParameters):
-                spec = self._inverted_v_simulation_spec(design.parameters)
-            elif isinstance(design.parameters, YagiParameters):
-                spec = self._yagi_simulation_spec(design.parameters)
-            elif isinstance(design.parameters, MoxonParameters):
-                spec = self._moxon_simulation_spec(design.parameters)
-            elif isinstance(design.parameters, FanDipoleParameters):
-                spec = self._fan_dipole_simulation_spec(design.parameters)
-            elif isinstance(design.parameters, TrapDipoleParameters):
-                spec = self._trap_dipole_simulation_spec(design.parameters)
-            elif isinstance(design.parameters, T2FDParameters):
-                spec = self._t2fd_simulation_spec(design.parameters)
-            elif isinstance(design.parameters, EndFedParameters):
-                spec = self._endfed_simulation_spec(design.parameters)
-            elif isinstance(design.parameters, JPoleParameters):
-                spec = self._j_pole_simulation_spec(design.parameters)
-            elif isinstance(design.parameters, RingoParameters):
-                spec = self._ringo_simulation_spec(design.parameters)
-            else:
-                spec = self._form.simulation_spec()
+            spec = self._base_simulation_spec(design)
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
@@ -1927,6 +2129,171 @@ class MainWindow(QMainWindow):
         self._worker = worker
         thread.start()
 
+    def analyze_bands(self) -> None:
+        if self._simulating:
+            return
+        if self._solver is None:
+            self._show_error(self._translator.t("error.solver"))
+            return
+        try:
+            project = self._apply_fields()
+            if self._design_id is None:
+                raise ValueError(self._translator.t("error.no_project"))
+            design = project.design_by_id(self._design_id)
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+
+        default = self._default_band_default(design)
+        saved_plan = self._band_plans.get(design.id)
+        dialog = BandAnalysisDialog(
+            self._translator,
+            default,
+            current_frequency_hz=design.parameters.frequency_hz,
+            selected_plan=saved_plan,
+            parent=self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        plan = dialog.plan()
+        if not plan:
+            return
+        self._band_plans[design.id] = plan
+        self._update_band_plan_label()
+
+        requests: list[BandSimulationRequest] = []
+        for selection in plan.selections:
+            spec = self._replanned_spec(
+                design,
+                self._base_simulation_spec(design),
+                selection.frequency_plan,
+            )
+            target_hz = (
+                design.parameters.frequency_hz
+                if selection.band.start_hz
+                <= design.parameters.frequency_hz
+                <= selection.band.stop_hz
+                else selection.center_hz
+            )
+            spec = replace(
+                spec,
+                pattern_frequencies_hz=(spec.frequency_plan.nearest_frequency(target_hz),),
+                feed_line=self._feed_line,
+                matching_network=self._matching_network,
+            )
+            requests.append(BandSimulationRequest(selection.band, spec))
+
+        fitted = self._fit_band_specs_to_budget(
+            design.antenna,
+            tuple(request.spec for request in requests),
+        )
+        requests = [
+            BandSimulationRequest(request.band, spec)
+            for request, spec in zip(requests, fitted, strict=True)
+        ]
+
+        self._last_result = None
+        self._pending_pattern_diagnostic = None
+        self._results.set_band_analysis(None)
+        self._results.set_result(None)
+        self._band_analysis_design_id = design.id
+        self._cancel_token = EventCancelToken()
+        self._simulating = True
+        self._last_status_key = "status.analyzing_bands"
+        self._update_actions()
+        self._update_status_text()
+
+        thread = QThread(self)
+        worker = BandAnalysisWorker(
+            self._solver,
+            design.id,
+            design.antenna,
+            tuple(requests),
+            self._cancel_token,
+        )
+        worker.moveToThread(thread)
+        thread.started.connect(worker.run)
+        worker.progress.connect(self._on_band_analysis_progress)
+        worker.finished.connect(self._on_band_analysis_finished)
+        worker.failed.connect(self._on_simulation_failed)
+        worker.finished.connect(thread.quit)
+        worker.failed.connect(thread.quit)
+        thread.finished.connect(worker.deleteLater)
+        thread.finished.connect(thread.deleteLater)
+        thread.finished.connect(self._on_worker_thread_finished)
+        self._thread = thread
+        self._worker = worker
+        thread.start()
+
+    def _on_band_analysis_progress(self, index: int, total: int, band: str) -> None:
+        self._status_label.setText(
+            self._translator.t(
+                "status.bands_progress",
+                index=index,
+                total=total,
+                band=band,
+            )
+        )
+
+    def _on_band_analysis_finished(self, analysis: BandAnalysisResult) -> None:
+        self._simulating = False
+        self._cancel_token = None
+        self._pending_pattern_diagnostic = None
+        design_id = self._band_analysis_design_id or analysis.design_id
+        self._band_analysis_design_id = None
+        self._band_analysis_results[design_id] = analysis
+        self._remember_band_plan(analysis)
+        if analysis.bands:
+            selected = analysis.bands[0]
+            self._selected_band_ids[design_id] = selected.band.name
+            self._simulation_results[design_id] = selected.result
+            self._last_result = selected.result
+        self._simulation_design_id = None
+        self._last_status_key = (
+            "status.bands_done"
+            if analysis.status is SimulationStatus.COMPLETED
+            else self._result_status_key(analysis.status)
+        )
+        if self._project is not None:
+            recorded = False
+            for band_result in analysis.bands:
+                if band_result.result.status not in {
+                    SimulationStatus.COMPLETED,
+                    SimulationStatus.PARTIAL,
+                }:
+                    continue
+                self._project = RecordSimulationRun().execute(
+                    RecordSimulationRunCommand(
+                        project=self._project,
+                        design_id=design_id,
+                        result=band_result.result,
+                        band_id=band_result.band.name,
+                        batch_id=analysis.batch_id,
+                    )
+                )
+                recorded = True
+            if recorded:
+                self._dirty = True
+                self._update_title()
+        self._results.set_band_analysis(analysis)
+        if analysis.bands:
+            self._results.set_result(analysis.bands[0].result)
+        self._results.show_bands()
+        self._update_actions()
+        self._update_status_text()
+        if analysis.status is SimulationStatus.ERROR:
+            self._show_error(self._translator.t("status.error"))
+
+    def _on_band_selected(self, band_result: object) -> None:
+        if not isinstance(band_result, BandResult):
+            return
+        if self._design_id is None:
+            return
+        self._selected_band_ids[self._design_id] = band_result.band.name
+        self._simulation_results[self._design_id] = band_result.result
+        self._last_result = band_result.result
+        self._update_actions()
+
     def _on_simulation_finished(self, result: SimulationResult) -> None:
         self._simulating = False
         self._cancel_token = None
@@ -1941,6 +2308,9 @@ class MainWindow(QMainWindow):
             self._pending_pattern_diagnostic = None
         design_id = self._simulation_design_id
         if design_id is not None:
+            self._band_analysis_results.pop(design_id, None)
+            self._selected_band_ids.pop(design_id, None)
+            self._results.set_band_analysis(None)
             self._simulation_results[design_id] = result
             if self._project is not None and result.status in {
                 SimulationStatus.COMPLETED,
@@ -1976,6 +2346,7 @@ class MainWindow(QMainWindow):
         self._simulating = False
         self._cancel_token = None
         self._simulation_design_id = None
+        self._band_analysis_design_id = None
         self._pending_pattern_diagnostic = None
         self._last_status_key = "status.error"
         self._update_actions()
@@ -2064,6 +2435,53 @@ class MainWindow(QMainWindow):
             spec,
             far_field=FarFieldRequest(enabled=False),
             pattern_frequencies_hz=(),
+        )
+
+    def _fit_band_specs_to_budget(
+        self,
+        model: object,
+        specs: tuple[SimulationSpec, ...],
+    ) -> tuple[SimulationSpec, ...]:
+        from ..domain.antennas.antenna import AntennaModel
+
+        if not specs or not isinstance(model, AntennaModel):
+            return specs
+        ground = model.environment.ground
+        budget = choose_batch_pattern_step(
+            frequency_counts=tuple(spec.frequency_plan.count for spec in specs),
+            segment_counts=tuple(
+                sum(
+                    spec.segmentation.segments_for(wire, spec.frequency_plan.stop_hz)
+                    for wire in model.wires
+                )
+                for spec in specs
+            ),
+            candidate_steps=tuple(reversed(PATTERN_STEPS_DEG)),
+            counts_for_step=lambda step: pattern_counts(step, ground),
+            requested_step_deg=self._custom_run_pattern_step_deg,
+            pattern_frequency_count=1,
+        )
+        self._custom_last_budget = budget
+        self._show_custom_pattern_budget(budget)
+        if not budget.far_field_enabled:
+            return tuple(
+                replace(
+                    spec,
+                    far_field=FarFieldRequest(enabled=False),
+                    pattern_frequencies_hz=(),
+                )
+                for spec in specs
+            )
+        if budget.pattern_step_deg is None:
+            return specs
+        request = far_field_request(budget.pattern_step_deg, ground)
+        return tuple(
+            replace(
+                spec,
+                far_field=request,
+                pattern_frequencies_hz=spec.pattern_frequencies_hz[:1],
+            )
+            for spec in specs
         )
 
     def _update_custom_sweep_controls(self) -> None:
@@ -3068,7 +3486,7 @@ class MainWindow(QMainWindow):
         self._loads = updated_design.antenna.loads
         self._form_dirty = False
         self._dirty = True
-        self._simulation_results.pop(self._design_id, None)
+        self._invalidate_design_result(self._design_id)
         self._results.set_result(None)
         self._results.set_design(updated_design)
         self._set_geometry_model(updated_design)
@@ -3129,7 +3547,7 @@ class MainWindow(QMainWindow):
         self._loads = updated_design.antenna.loads
         self._form_dirty = False
         self._dirty = True
-        self._simulation_results.pop(self._design_id, None)
+        self._invalidate_design_result(self._design_id)
         self._results.set_result(None)
         self._results.set_design(updated_design)
         self._set_geometry_model(updated_design)
@@ -3169,7 +3587,7 @@ class MainWindow(QMainWindow):
         self._loads = updated_design.antenna.loads
         self._form_dirty = False
         self._dirty = True
-        self._simulation_results.pop(self._design_id, None)
+        self._invalidate_design_result(self._design_id)
         self._results.set_result(None)
         self._results.set_design(updated_design)
         self._set_geometry_model(updated_design)
@@ -3429,7 +3847,7 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
-        self._simulation_results.pop(self._design_id, None)
+        self._invalidate_design_result(self._design_id)
         self._dirty = True
         self._select_design(self._design_id)
         self._last_status_key = "status.design_changed"
@@ -3751,7 +4169,7 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
-        self._simulation_results.pop(design.id, None)
+        self._invalidate_design_result(design.id)
         self._project = updated
         self._dirty = True
         new_id = updated.designs[0].id
@@ -3809,7 +4227,7 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
-        self._simulation_results.pop(self._design_id, None)
+        self._invalidate_design_result(self._design_id)
         self._dirty = True
         self._select_design(self._design_id)
         self._last_status_key = "status.design_estimated"
@@ -4587,6 +5005,7 @@ class MainWindow(QMainWindow):
             self._project,
             self._simulation_results,
             self,
+            band_analyses=self._band_analysis_results,
         )
         dialog.exec()
 
@@ -4619,8 +5038,16 @@ class MainWindow(QMainWindow):
         path = Path(filename)
         if path.suffix.lower() != ".csv":
             path = path.with_suffix(".csv")
+        analysis = (
+            self._band_analysis_results.get(self._design_id)
+            if self._design_id is not None
+            else None
+        )
         try:
-            write_csv(result, path)
+            if analysis is not None:
+                write_band_analysis_csv(analysis, path)
+            else:
+                write_csv(result, path)
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))
             return
@@ -4646,8 +5073,16 @@ class MainWindow(QMainWindow):
         path = Path(filename)
         if path.suffix.lower() != ".csv":
             path = path.with_suffix(".csv")
+        analysis = (
+            self._band_analysis_results.get(self._design_id)
+            if self._design_id is not None
+            else None
+        )
         try:
-            write_pattern_csv(result, path)
+            if analysis is not None:
+                write_band_analysis_pattern_csv(analysis, path)
+            else:
+                write_pattern_csv(result, path)
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))
             return
@@ -4810,8 +5245,13 @@ class MainWindow(QMainWindow):
         path = Path(filename)
         if path.suffix.lower() not in {".html", ".htm"}:
             path = path.with_suffix(".html")
+        analysis = (
+            self._band_analysis_results.get(self._design_id)
+            if self._design_id is not None
+            else None
+        )
         try:
-            write_html_report(project, design, result, path)
+            write_html_report(project, design, result, path, band_analysis=analysis)
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))
             return
@@ -4832,7 +5272,7 @@ class MainWindow(QMainWindow):
         if self._project is None:
             self._show_error(self._translator.t("error.no_project"))
             return
-        if len(self._project.simulation_runs) <= len(self._project.designs):
+        if not self._project.has_compactable_simulation_history():
             return
         answer = QMessageBox.question(
             self,
@@ -4840,7 +5280,7 @@ class MainWindow(QMainWindow):
             self._translator.t(
                 "dialog.compact_history",
                 count=len(self._project.simulation_runs),
-                keep=len(self._project.designs),
+                keep=self._project.retained_simulation_run_count(),
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
@@ -4871,8 +5311,20 @@ class MainWindow(QMainWindow):
         path = Path(filename)
         if path.suffix.lower() != ".pdf":
             path = path.with_suffix(".pdf")
+        analysis = (
+            self._band_analysis_results.get(self._design_id)
+            if self._design_id is not None
+            else None
+        )
         try:
-            write_report_pdf(self._translator, project, design, result, path)
+            write_report_pdf(
+                self._translator,
+                project,
+                design,
+                result,
+                path,
+                band_analysis=analysis,
+            )
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))
             return

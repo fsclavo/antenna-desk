@@ -117,6 +117,29 @@ def test_v2_migration_adds_simulation_runs() -> None:
 
     migrated = migrate_document(document)
 
-    assert migrated["schema_version"] == 3
+    assert migrated["schema_version"] == SCHEMA_VERSION
     assert migrated["project"]["simulation_runs"] == []
     assert "simulation_runs" not in document["project"]
+
+
+def test_v3_migration_adds_optional_band_metadata() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 3,
+        "project": {
+            "simulation_runs": [
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "design_id": "00000000-0000-0000-0000-000000000002",
+                    "created_at": "2026-11-03T12:00:00Z",
+                    "result": {},
+                }
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert migrated["project"]["simulation_runs"][0]["band_id"] is None
+    assert migrated["project"]["simulation_runs"][0]["batch_id"] is None

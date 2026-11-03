@@ -71,6 +71,8 @@ Completed:
   the design panel.
 - G5RV catalog preset with the published 102 ft dipole and a 300 Ω / 450 Ω
   geometry matching line.
+- Per-band multiband analysis for G5RV, OCFD, end-fed presets, fan dipole, trap
+  dipole, and T2FD, with a Bands results tab and band-aware reports.
 - T2FD catalog preset with a broadband series termination, an ideal feed
   transformer, and Cebik wide-long starting dimensions.
 - `v0.1.0` published with wheel/sdist, AppImage, Debian package, Windows zip,
@@ -135,7 +137,7 @@ Deferred:
 - Keep the wheel/sdist smoke test as the fallback distribution path
   (completed).
 
-### M6 — Multiband analysis (planned)
+### M6 — Multiband analysis (core implemented)
 
 Goal: let naturally multiband antennas be analyzed over a user-selected band
 set without pretending that every family is broadband. The detailed plan is in
@@ -146,7 +148,8 @@ Scope:
 - Band catalog and validated band selections, reusing
   `domain/simulation/bands.py`.
 - Per-family defaults for G5RV, OCFD, end-fed/random wire/sloper, fan dipole,
-  trap dipole, T2FD, and doublet, with evidence and limitation notes.
+  trap dipole, T2FD, and doublet, with evidence and limitation notes. The
+  doublet default is inferred from a high-impedance/open-wire project feed line.
 - A batch analysis service that runs the existing single-band solver once per
   selected band, with progress, cancellation, partial results, and one pattern
   snapshot per band by default.
@@ -154,10 +157,11 @@ Scope:
   and global **Simulation pattern** settings, plus a band selection dialog and
   a **Bands** results tab showing best SWR, gain, takeoff angle, efficiency,
   and status. The top action bar stays Apply/Estimate/Optimize.
-- Optional band/batch metadata on simulation runs, schema migration, band-aware
-  reports, CSV, comparison, and exports.
+- Band/batch metadata on simulation runs, schema version 4 migration, and
+  band-aware CSV, HTML, PDF, and comparison summaries.
 - Deferred: a segmented frequency plan in one NEC deck, only if measurements
   show that per-band runs are too slow or too large.
+- Deferred: per-band pattern PNG export.
 
 Acceptance criteria:
 
@@ -175,9 +179,11 @@ Acceptance criteria:
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
 | P1 | Independent references for remaining experimental templates | A/B | partial |
-| P1 | Multiband batch engine and per-family band defaults (M6) | B | planned |
-| P1 | Band selection UI and band summary results (M6) | B | planned |
-| P2 | Persist band-analysis batches and add band-aware reports (M6) | B | planned |
+| P1 | Multiband batch engine and per-family band defaults (M6) | B | done |
+| P1 | Band selection UI and band summary results (M6) | B | done |
+| P2 | Persist band-analysis batches and band-aware reports (M6) | B | done |
+| P2 | Cross-band comparison table | B | done |
+| P3 | Per-band pattern PNG export | B | pending |
 | P2 | GPG/Authenticode code signing for release artifacts | n/a | deferred |
 | P2 | Relative permeability export to NEC | B | pending |
 | P2 | Custom/imported geometry optimization and space constraints | n/a | pending |

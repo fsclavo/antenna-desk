@@ -107,6 +107,43 @@ does this in one step when a solver is configured. For Yagi, the frequency
 estimator supports 2 to 32 elements from the DL6WU trimming reference; the
 NBS five-element preset remains available in the Yagi editor.
 
+## Analyze multiple bands
+
+Use **Simulation → Analyze Bands...** or the central **Band analysis** group to
+run the current design over several amateur bands. The dialog starts from the
+family default and lets you select any HF band from 160 m to 6 m, with a sweep
+point count for each band.
+
+Family defaults are starting points, not resonance guarantees:
+
+- **G5RV**: 80/40/20/15/10 m; WARC bands are available for manual selection.
+- **OCFD**: harmonically related bands, for example 40/20/10 m for a 40 m
+  design and 80/40/20/10 m for an 80 m design.
+- **End-fed**: the design band and its documented harmonics; **random wire**
+  defaults to 80-10 m and requires an external tuner.
+- **Sloper**: a conservative end-fed subset.
+- **Fan dipole**: one band per element length.
+- **Trap dipole**: the low and high design frequencies.
+- **T2FD**: the broadband HF range.
+- **Doublet**: 80-10 m when the project uses a high-impedance/open-wire feed
+  line; otherwise select bands manually.
+
+The analysis runs the solver once per band and builds a **Bands** results tab.
+Each row shows the best SWR, its frequency, the sampled power gain, takeoff
+angle, efficiency, and status. Selecting a row reuses the existing impedance,
+pattern, currents, diagnostics, and raw-data views for that band. Completed
+bands are kept if another band fails or the analysis is cancelled.
+
+The global **Simulation pattern** group controls the angular resolution.
+Band analysis uses one representative pattern snapshot per band by default, so
+a band list does not multiply the pattern data. CSV, HTML, and PDF exports
+include a band column or summary when a band analysis is active. The G5RV custom
+panel still offers its continuous 3.5-30 MHz sweep as a separate mode.
+
+Defaults are evidence-labelled in the dialog. Transformer, tuner, counterpoise,
+ground, and installation effects are not modeled as ideal guarantees; verify
+the selected bands with a simulation and, when possible, a measurement.
+
 ## Create an antenna
 
 Use **File → New Antenna...** to open the antenna catalog. Search or filter by
@@ -408,6 +445,9 @@ construction sheet.
 
 ## Read the results
 
+- **Bands**: appears after a band analysis. One row per selected band with best
+  SWR, frequency at best SWR, sampled power gain, takeoff angle, efficiency, and
+  status. Selecting a row switches the other tabs to that band's result.
 - **Impedance / SWR**: table of frequency, resistance, reactance, magnitude,
   and SWR, plus impedance and SWR charts side by side over the sweep. Resonance points
   where the reactance crosses zero are marked and listed above the table.
@@ -421,7 +461,8 @@ construction sheet.
   highest gain; the azimuth diagram includes a dashed line showing the antenna
   orientation. Above-ground elevation cuts are drawn as open arcs rather than
   closed lobes. The angular resolution comes from **Pattern resolution** in the
-  design panel; higher resolution samples the same NEC solution more finely.
+  global **Simulation pattern** group; higher resolution samples the same NEC
+  solution more finely.
   While you rotate or zoom the 3D lobe, AntennaDesk draws a coarser display
   mesh; when the movement stops it redraws the full-resolution wireframe. The
   stored pattern, the cuts, and the exports keep the full resolution. The
@@ -785,6 +826,10 @@ canonical meters and hertz.
 - Far-field values are NEC power gains. Realized gain and directivity are not
   separated yet. Relative permeability is not emitted to NEC; conductor
   conductivity is.
+- Multiband defaults are starting points. The doublet default is inferred from
+  a high-impedance project feed line; the tuner is not modeled as an automatic
+  matching network. Variant comparison shows a band summary when analyses are
+  available, but the main comparison values still use the selected band result.
 - Pattern resolution is angular sampling, not additional electromagnetic
   accuracy. Fine patterns and long frequency sweeps increase runtime and
   project size.

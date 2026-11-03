@@ -50,3 +50,17 @@ def test_loop_resonance_factor_rejects_fewer_than_three_sides() -> None:
 def test_five_eighth_vertical_is_longer_than_a_quarter_wave() -> None:
     frequency_hz = 146_000_000.0
     assert five_eighth_wave_length_m(frequency_hz) > quarter_wave_length_m(frequency_hz)
+
+
+def test_frequency_for_half_wave_length_is_the_inverse() -> None:
+    from antennadesk.domain.design.formulas import (
+        frequency_for_half_wave_length,
+        half_wave_length_m,
+    )
+
+    frequency_hz = 14_100_000.0
+    length_m = half_wave_length_m(frequency_hz)
+
+    assert frequency_for_half_wave_length(length_m) == pytest.approx(frequency_hz)
+    with pytest.raises(ValueError):
+        frequency_for_half_wave_length(0.0)

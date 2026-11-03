@@ -88,6 +88,88 @@ def estimate_compressed_project_bytes(
     return max(1, math.ceil(raw / ESTIMATED_COMPRESSION_RATIO))
 
 
+def choose_batch_pattern_step(
+    *,
+    frequency_counts: Sequence[int],
+    segment_counts: Sequence[int],
+    candidate_steps: Sequence[float],
+    counts_for_step: Callable[[float], tuple[int, int]],
+    requested_step_deg: float | None = None,
+    pattern_frequency_count: int = 1,
+    max_project_bytes: int = DEFAULT_MAX_PROJECT_BYTES,
+) -> PatternBudget:
+    """Choose one pattern step that fits a whole per-band batch.
+
+    Each band keeps its own sweep and segmentation, but the angular step is
+    shared. The estimate is the sum of the per-band project estimates.
+    """
+
+    if not frequency_counts or len(frequency_counts) != len(segment_counts):
+        raise ValueError("frequency_counts and segment_counts must be non-empty and aligned")
+    if pattern_frequency_count < 1:
+        raise ValueError("pattern_frequency_count must be at least 1")
+    if not candidate_steps:
+        raise ValueError("candidate_steps must not be empty")
+
+    steps = sorted({float(step) for step in candidate_steps})
+    if requested_step_deg is None:
+        candidates = steps
+    else:
+        candidates = [step for step in steps if step >= requested_step_deg]
+        if not candidates:
+            candidates = [max(steps)]
+
+    total_patterns = len(frequency_counts) * pattern_frequency_count
+    for step in candidates:
+        theta_count, phi_count = counts_for_step(step)
+        points = theta_count * phi_count
+        estimated_json = sum(
+            estimate_project_bytes(
+                frequency_count=frequency_count,
+                far_field_points_per_frequency=points,
+                segment_count=segment_count,
+                pattern_frequency_count=pattern_frequency_count,
+            )
+            for frequency_count, segment_count in zip(frequency_counts, segment_counts, strict=True)
+        )
+        estimated = max(1, math.ceil(estimated_json / ESTIMATED_COMPRESSION_RATIO))
+        if estimated <= max_project_bytes:
+            return PatternBudget(
+                pattern_step_deg=step,
+                estimated_project_bytes=estimated,
+                estimated_json_bytes=estimated_json,
+                far_field_points_per_frequency=points,
+                pattern_frequency_count=total_patterns,
+                requested_step_deg=requested_step_deg,
+                far_field_enabled=True,
+                reduced=requested_step_deg is not None and step != requested_step_deg,
+            )
+
+    estimated_json_without = sum(
+        estimate_project_bytes(
+            frequency_count=frequency_count,
+            far_field_points_per_frequency=0,
+            segment_count=segment_count,
+            pattern_frequency_count=0,
+        )
+        for frequency_count, segment_count in zip(frequency_counts, segment_counts, strict=True)
+    )
+    estimated_without = max(
+        1,
+        math.ceil(estimated_json_without / ESTIMATED_COMPRESSION_RATIO),
+    )
+    return PatternBudget(
+        pattern_step_deg=None,
+        estimated_project_bytes=estimated_without,
+        estimated_json_bytes=estimated_json_without,
+        far_field_points_per_frequency=0,
+        pattern_frequency_count=0,
+        requested_step_deg=requested_step_deg,
+        far_field_enabled=False,
+        reduced=True,
+    )
+
+
 def choose_pattern_step(
     *,
     frequency_count: int,

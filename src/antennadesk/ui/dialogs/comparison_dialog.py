@@ -29,6 +29,9 @@ from ...domain.antennas.loop import LoopParameters
 from ...domain.antennas.t2fd import T2FDParameters
 from ...domain.antennas.trap_dipole import TrapDipoleParameters
 from ...domain.projects.project import DesignVariant, Project
+from ...domain.simulation.band_result import BandAnalysisResult
+from ...domain.simulation.band_summary import summarize_band
+from ...domain.simulation.bands import AmateurBand
 from ...domain.simulation.result import FrequencyResult, SimulationResult
 from ..i18n import Translator
 from ..theme import theme_colors
@@ -41,11 +44,14 @@ class ComparisonDialog(QDialog):
         project: Project,
         results: Mapping[UUID, SimulationResult],
         parent: QWidget | None = None,
+        *,
+        band_analyses: Mapping[UUID, BandAnalysisResult] | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._project = project
         self._results = results
+        self._band_analyses = band_analyses or {}
         self._colors = theme_colors(self.palette())
         self.setWindowTitle(translator.t("compare.title"))
         self.resize(960, 780)
@@ -77,6 +83,16 @@ class ComparisonDialog(QDialog):
         self._table.horizontalHeader().setStretchLastSection(True)
         self._table.setMinimumHeight(260)
 
+        self._band_label = QLabel(translator.t("band.group_title"), self)
+        self._band_table = QTableWidget(0, 5, self)
+        self._band_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self._band_table.setAlternatingRowColors(True)
+        self._band_table.verticalHeader().setVisible(False)
+        self._band_table.horizontalHeader().setStretchLastSection(True)
+        self._band_table.setMaximumHeight(160)
+        self._band_label.setVisible(False)
+        self._band_table.setVisible(False)
+
         self._swr_plot = self._make_plot()
         self._swr_plot.addLegend()
         self._pattern_plot = self._make_plot()
@@ -96,6 +112,8 @@ class ComparisonDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.addLayout(controls)
         layout.addWidget(self._table)
+        layout.addWidget(self._band_label)
+        layout.addWidget(self._band_table)
         layout.addWidget(self._swr_plot, 1)
         layout.addWidget(self._pattern_plot, 1)
         layout.addWidget(self._note)
@@ -241,6 +259,71 @@ class ComparisonDialog(QDialog):
             (t("results.frequency_count"), str(len(result.frequencies)) if result else "—"),
         ]
 
+    def _render_band_table(
+        self,
+        design_a: DesignVariant | None,
+        design_b: DesignVariant | None,
+    ) -> None:
+        analysis_a = self._band_analyses.get(design_a.id) if design_a else None
+        analysis_b = self._band_analyses.get(design_b.id) if design_b else None
+        if analysis_a is None and analysis_b is None:
+            self._band_label.setVisible(False)
+            self._band_table.setVisible(False)
+            self._band_table.setRowCount(0)
+            return
+        bands: dict[str, AmateurBand] = {}
+        for analysis in (analysis_a, analysis_b):
+            if analysis is None:
+                continue
+            for band_result in analysis.bands:
+                bands[band_result.band.name] = band_result.band
+        self._band_table.setRowCount(0)
+        self._band_table.setColumnCount(5)
+        self._band_table.setHorizontalHeaderLabels(
+            [
+                self._translator.t("band.table.band"),
+                f"{design_a.name if design_a else 'A'} {self._translator.t('table.swr')}",
+                f"{design_b.name if design_b else 'B'} {self._translator.t('table.swr')}",
+                f"{design_a.name if design_a else 'A'} {self._translator.t('band.table.gain')}",
+                f"{design_b.name if design_b else 'B'} {self._translator.t('band.table.gain')}",
+            ]
+        )
+        for band_id, band in sorted(
+            bands.items(),
+            key=lambda item: item[1].start_hz,
+        ):
+            row = self._band_table.rowCount()
+            self._band_table.insertRow(row)
+            self._band_table.setItem(row, 0, QTableWidgetItem(band_id))
+            for column, analysis in ((1, analysis_a), (2, analysis_b)):
+                summary = (
+                    summarize_band(band, analysis.result_for_band(band_id).result)
+                    if analysis is not None and analysis.result_for_band(band_id) is not None
+                    else None
+                )
+                self._band_table.setItem(
+                    row,
+                    column,
+                    QTableWidgetItem(
+                        "—"
+                        if summary is None or summary.best_swr is None
+                        else f"{summary.best_swr:.3f}"
+                    ),
+                )
+                gain_column = column + 2
+                self._band_table.setItem(
+                    row,
+                    gain_column,
+                    QTableWidgetItem(
+                        "—"
+                        if summary is None or summary.max_gain_db is None
+                        else f"{summary.max_gain_db:.2f} dBi"
+                    ),
+                )
+        self._band_label.setVisible(True)
+        self._band_table.setVisible(True)
+        self._band_table.resizeColumnsToContents()
+
     def _refresh(self) -> None:
         design_a = self._design_for(self._combo_a)
         design_b = self._design_for(self._combo_b)
@@ -268,6 +351,7 @@ class ComparisonDialog(QDialog):
 
         self._note.setText(self._translator.t("compare.no_result"))
         self._note.setVisible(result_a is None or result_b is None)
+        self._render_band_table(design_a, design_b)
         self._render_charts(design_a, design_b, result_a, result_b)
 
     def _render_charts(

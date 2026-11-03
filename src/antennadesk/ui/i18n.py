@@ -1135,6 +1135,152 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "No project open.",
         Language.SPANISH: "No hay proyecto abierto.",
     },
+    "tab.bands": {Language.ENGLISH: "Bands", Language.SPANISH: "Bandas"},
+    "band.group_title": {
+        Language.ENGLISH: "Band analysis",
+        Language.SPANISH: "Análisis por bandas",
+    },
+    "band.analyze": {
+        Language.ENGLISH: "Analyze Bands...",
+        Language.SPANISH: "Analizar bandas...",
+    },
+    "band.dialog_title": {
+        Language.ENGLISH: "Band analysis",
+        Language.SPANISH: "Análisis por bandas",
+    },
+    "band.preset": {Language.ENGLISH: "Preset", Language.SPANISH: "Preajuste"},
+    "band.preset.default": {
+        Language.ENGLISH: "Family default",
+        Language.SPANISH: "Predeterminado de la familia",
+    },
+    "band.preset.current": {
+        Language.ENGLISH: "Current band",
+        Language.SPANISH: "Banda actual",
+    },
+    "band.preset.40_20_10": {
+        Language.ENGLISH: "40 / 20 / 10 m",
+        Language.SPANISH: "40 / 20 / 10 m",
+    },
+    "band.preset.80_10": {
+        Language.ENGLISH: "80-10 m",
+        Language.SPANISH: "80-10 m",
+    },
+    "band.preset.all": {
+        Language.ENGLISH: "All HF bands",
+        Language.SPANISH: "Todas las bandas de HF",
+    },
+    "band.preset.custom": {
+        Language.ENGLISH: "Custom",
+        Language.SPANISH: "Personalizado",
+    },
+    "band.table.band": {Language.ENGLISH: "Band", Language.SPANISH: "Banda"},
+    "band.table.range": {
+        Language.ENGLISH: "Range (MHz)",
+        Language.SPANISH: "Rango (MHz)",
+    },
+    "band.table.points": {Language.ENGLISH: "Points", Language.SPANISH: "Puntos"},
+    "band.table.best_swr": {
+        Language.ENGLISH: "Best SWR",
+        Language.SPANISH: "Mejor ROE",
+    },
+    "band.table.at_frequency": {
+        Language.ENGLISH: "At frequency",
+        Language.SPANISH: "En frecuencia",
+    },
+    "band.table.gain": {Language.ENGLISH: "Gain", Language.SPANISH: "Ganancia"},
+    "band.table.takeoff": {
+        Language.ENGLISH: "Takeoff",
+        Language.SPANISH: "Disparo",
+    },
+    "band.table.efficiency": {
+        Language.ENGLISH: "Efficiency",
+        Language.SPANISH: "Eficiencia",
+    },
+    "band.table.status": {Language.ENGLISH: "Status", Language.SPANISH: "Estado"},
+    "band.selected": {
+        Language.ENGLISH: "Bands: {bands}",
+        Language.SPANISH: "Bandas: {bands}",
+    },
+    "band.no_selection": {
+        Language.ENGLISH: "No bands selected",
+        Language.SPANISH: "Sin bandas seleccionadas",
+    },
+    "band.none_selected": {
+        Language.ENGLISH: "Select at least one band.",
+        Language.SPANISH: "Seleccioná al menos una banda.",
+    },
+    "band.evidence.published": {
+        Language.ENGLISH: "Evidence: published reference",
+        Language.SPANISH: "Evidencia: referencia publicada",
+    },
+    "band.evidence.heuristic": {
+        Language.ENGLISH: "Evidence: heuristic starting point",
+        Language.SPANISH: "Evidencia: punto de partida heurístico",
+    },
+    "band.evidence.tunable": {
+        Language.ENGLISH: "Evidence: tuner-assisted starting point",
+        Language.SPANISH: "Evidencia: punto de partida con sintonizador",
+    },
+    "band.evidence.broadband": {
+        Language.ENGLISH: "Evidence: broadband design",
+        Language.SPANISH: "Evidencia: diseño de banda ancha",
+    },
+    "band.evidence.current": {
+        Language.ENGLISH: "Evidence: current design band only",
+        Language.SPANISH: "Evidencia: solo la banda actual del diseño",
+    },
+    "band.note.g5rv": {
+        Language.ENGLISH: "Published G5RV coverage. WARC bands may require a tuner.",
+        Language.SPANISH: "Cobertura publicada del G5RV. Las bandas WARC pueden requerir sintonizador.",
+    },
+    "band.note.ocfd": {
+        Language.ENGLISH: "Harmonically related bands; verify them with the feed arrangement.",
+        Language.SPANISH: "Bandas relacionadas por armónicos; verificarlas con la alimentación.",
+    },
+    "band.note.endfed": {
+        Language.ENGLISH: "Starting point; the transformer and counterpoise determine coverage.",
+        Language.SPANISH: "Punto de partida; el transformador y el contrapeso determinan la cobertura.",
+    },
+    "band.note.random_wire": {
+        Language.ENGLISH: "Non-resonant wire; an external tuner is required.",
+        Language.SPANISH: "Hilo no resonante; se requiere un sintonizador externo.",
+    },
+    "band.note.sloper": {
+        Language.ENGLISH: "End-fed sloper geometry; coverage depends on the transformer and tuner.",
+        Language.SPANISH: "Geometría sloper alimentada en el extremo; la cobertura depende del transformador y el sintonizador.",
+    },
+    "band.note.fan": {
+        Language.ENGLISH: "Bands derived from element lengths; elements interact.",
+        Language.SPANISH: "Bandas derivadas de las longitudes de los elementos; los elementos interactúan.",
+    },
+    "band.note.trap": {
+        Language.ENGLISH: "The low and high trap-dipole design frequencies.",
+        Language.SPANISH: "Las frecuencias de diseño baja y alta del dipolo con trampas.",
+    },
+    "band.note.t2fd": {
+        Language.ENGLISH: "Broadband terminated antenna; not a set of narrow resonances.",
+        Language.SPANISH: "Antena terminada de banda ancha; no es un conjunto de resonancias estrechas.",
+    },
+    "band.note.doublet": {
+        Language.ENGLISH: "High-impedance/open-wire feed line; a tuner is required.",
+        Language.SPANISH: "Línea de alimentación de alta impedancia o hilo abierto; se requiere sintonizador.",
+    },
+    "band.note.current": {
+        Language.ENGLISH: "Current band only; select more bands manually if needed.",
+        Language.SPANISH: "Solo la banda actual; seleccioná más bandas manualmente si hace falta.",
+    },
+    "status.analyzing_bands": {
+        Language.ENGLISH: "Analyzing bands...",
+        Language.SPANISH: "Analizando bandas...",
+    },
+    "status.bands_done": {
+        Language.ENGLISH: "Band analysis complete.",
+        Language.SPANISH: "Análisis por bandas completado.",
+    },
+    "status.bands_progress": {
+        Language.ENGLISH: "Band {index}/{total}: {band}",
+        Language.SPANISH: "Banda {index}/{total}: {band}",
+    },
     "tab.impedance": {Language.ENGLISH: "Impedance / SWR", Language.SPANISH: "Impedancia / ROE"},
     "tab.pattern": {Language.ENGLISH: "Pattern", Language.SPANISH: "Patrón"},
     "tab.currents": {Language.ENGLISH: "Currents", Language.SPANISH: "Corrientes"},

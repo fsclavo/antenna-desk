@@ -89,3 +89,31 @@ def test_pattern_csv_has_one_row_per_far_field_point() -> None:
     assert len(lines) == 3
     assert lines[1].startswith("6900000.000000,6.900000000,0.000000,0.000000,2.000000")
     assert lines[2].startswith("7100000.000000,7.100000000,0.000000,0.000000,2.100000")
+
+
+def test_band_csv_adds_a_band_column() -> None:
+    from uuid import uuid4
+
+    from antennadesk.domain.simulation.band_result import BandAnalysisResult, BandResult
+    from antennadesk.domain.simulation.bands import amateur_band_by_id
+    from antennadesk.reporting.csv_export import (
+        band_analysis_pattern_to_csv,
+        band_analysis_to_csv,
+    )
+
+    band = amateur_band_by_id("40m")
+    assert band is not None
+    analysis = BandAnalysisResult(
+        design_id=uuid4(),
+        batch_id=uuid4(),
+        created_at=datetime(2026, 11, 3, tzinfo=UTC),
+        bands=(BandResult(band=band, result=make_result()),),
+    )
+
+    lines = band_analysis_to_csv(analysis).strip().splitlines()
+    pattern_lines = band_analysis_pattern_to_csv(analysis).strip().splitlines()
+
+    assert lines[0] == f"band,{CSV_HEADER}"
+    assert lines[1].startswith("40m,6900000.000000")
+    assert pattern_lines[0] == f"band,{PATTERN_HEADER}"
+    assert pattern_lines[1].startswith("40m,6900000.000000")

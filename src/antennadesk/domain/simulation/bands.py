@@ -39,6 +39,14 @@ AMATEUR_BANDS: tuple[AmateurBand, ...] = (
     AmateurBand("6m", 50_000_000.0, 54_000_000.0),
 )
 
+AMATEUR_BANDS_BY_ID: dict[str, AmateurBand] = {band.name: band for band in AMATEUR_BANDS}
+
+
+def amateur_band_by_id(band_id: str) -> AmateurBand | None:
+    """Return the catalog band with a stable identifier, if it exists."""
+
+    return AMATEUR_BANDS_BY_ID.get(band_id)
+
 
 def amateur_band_for(
     frequency_hz: float,

@@ -333,7 +333,7 @@ Plain JSON files from older versions are still accepted. The envelope is:
 ```json
 {
   "format": "antennadesk-project",
-  "schema_version": 3,
+  "schema_version": 4,
   "project": {
     "id": "11111111-1111-4111-8111-111111111111",
     "name": "40 m dipole",
@@ -398,16 +398,18 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 3.
+the application writes version 4.
 
 ## Schema policy
 
-- Current version: `3`.
+- Current version: `4`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
 - Version 3 persists normalized simulation runs, including raw solver text.
   SWR is stored as `null` when it is infinite.
+- Version 4 adds optional `band_id` and `batch_id` metadata to simulation runs
+  for multiband analyses. Existing runs load with both fields as `null`.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -436,7 +438,8 @@ the application writes version 3.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 3.
+- Simulation results are persisted as immutable runs in schema version 4.
+  Band analyses store one run per band with a shared `batch_id`.
 - Far-field values are NEC power gains. Directivity and realized gain are
   derived per frequency and stored alongside the impedance and power budget;
   see [ADR-0015](ADR/0015-realized-gain-and-directivity.md).
@@ -452,7 +455,8 @@ Phase 2 adds solver-independent simulation types:
 - `FarFieldRequest`: angular sampling for the far-field pattern.
 - `AmateurBand` and `band_snapshot_frequencies()`: one representative pattern
   frequency per amateur band inside a sweep, with an evenly spaced fallback for
-  narrow plans.
+  narrow plans. `BandSelection` and `BandPlan` validate a multiband analysis
+  request; `default_band_plan()` supplies evidence-labelled family defaults.
 - `SegmentationPolicy`: explicit global counts, a documented heuristic, or
   per-wire overrides; `aligned_policy_for_model()` aligns the feed wire to a
   segment center and gives short connector wires a sensible minimum.
@@ -488,7 +492,12 @@ Phase 2 adds solver-independent simulation types:
 - `LengthOptimizationResult`: status, best length/impedance/SWR, evaluation
   log, and sensitivity points.
 - `SimulationRun`: immutable snapshot linked to a design, with creation time
-  and the normalized `SimulationResult`.
+  and the normalized `SimulationResult`; optional `band_id` and `batch_id`
+  identify a run inside a band analysis.
+- `BandResult` and `BandAnalysisResult`: one immutable result per selected band
+  and the batch that groups them.
+- `BandMetrics`: best SWR, sampled power gain, takeoff angle, efficiency, and
+  status derived from one band result.
 
 The far-field values are NEC power gains in dB. For a frequency with a power
 budget, directivity is derived from the gain and the structure efficiency. For
@@ -499,10 +508,13 @@ three metrics. See [ADR-0015](ADR/0015-realized-gain-and-directivity.md).
 
 Simulation results are immutable and carry a deterministic fingerprint of the
 model and spec. Completed and partial runs are stored in the project as
-`SimulationRun` snapshots and reloaded by the GUI. The latest run per design is
-shown when a project is opened. Editing a design removes its current result
-view, but earlier run snapshots remain in the project. A project can contain
-multiple design variants; the GUI edits the selected variant.
+`SimulationRun` snapshots and reloaded by the GUI. When a project is opened,
+the GUI shows the newest single-band run or the newest band batch, whichever is
+later. A band batch stores one run per band with a shared `batch_id`; history
+compaction keeps the latest single-band run and every run in the latest batch.
+Editing a design removes its current result view, but earlier run snapshots
+remain in the project. A project can contain multiple design variants; the GUI
+edits the selected variant.
 
 Dimension optimization is a bounded one-dimensional search over the primary
 dimension (dipole/folded element length or loop circumference)

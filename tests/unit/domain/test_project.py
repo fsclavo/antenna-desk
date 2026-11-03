@@ -344,3 +344,132 @@ def test_compaction_keeps_only_the_latest_run_per_design(sample_project: Project
     assert len(project.simulation_runs) == 2
     assert compacted.simulation_runs == (second,)
     assert compacted.updated_at == updated_at + timedelta(hours=2)
+
+
+def test_latest_simulation_run_ignores_band_runs(sample_project: Project) -> None:
+    single = _simulation_run(sample_project)
+    band = replace(  # type: ignore[arg-type]
+        _simulation_run(sample_project),
+        band_id="40m",
+        batch_id=uuid4(),
+    )
+    updated_at = sample_project.updated_at + timedelta(hours=1)
+    project = sample_project.with_simulation_run(  # type: ignore[arg-type]
+        single,
+        updated_at=updated_at,
+    ).with_simulation_run(  # type: ignore[arg-type]
+        band,
+        updated_at=updated_at,
+    )
+
+    assert project.latest_simulation_run(sample_project.designs[0].id) == single
+    assert project.latest_simulation_run_for_band(sample_project.designs[0].id, "40m") == band
+
+
+def test_latest_band_analysis_groups_the_latest_batch(sample_project: Project) -> None:
+    design_id = sample_project.designs[0].id
+    first_batch = uuid4()
+    second_batch = uuid4()
+    updated_at = sample_project.updated_at + timedelta(hours=1)
+    runs = (
+        replace(  # type: ignore[arg-type]
+            _simulation_run(sample_project),
+            band_id="40m",
+            batch_id=first_batch,
+            created_at=updated_at,
+        ),
+        replace(  # type: ignore[arg-type]
+            _simulation_run(sample_project),
+            band_id="20m",
+            batch_id=second_batch,
+            created_at=updated_at + timedelta(minutes=1),
+        ),
+        replace(  # type: ignore[arg-type]
+            _simulation_run(sample_project),
+            band_id="10m",
+            batch_id=second_batch,
+            created_at=updated_at + timedelta(minutes=2),
+        ),
+    )
+    project = sample_project
+    for run in runs:
+        project = project.with_simulation_run(  # type: ignore[arg-type]
+            run,
+            updated_at=run.created_at,  # type: ignore[attr-defined]
+        )
+
+    analysis = project.latest_band_analysis(design_id)
+
+    assert analysis is not None
+    assert analysis.batch_id == second_batch
+    assert [band.band.name for band in analysis.bands] == ["20m", "10m"]
+
+
+def test_compaction_keeps_latest_single_run_and_latest_band_batch(
+    sample_project: Project,
+) -> None:
+    batch = uuid4()
+    updated_at = sample_project.updated_at + timedelta(hours=1)
+    single = _simulation_run(sample_project)
+    band_40 = replace(  # type: ignore[arg-type]
+        _simulation_run(sample_project),
+        band_id="40m",
+        batch_id=batch,
+    )
+    band_20 = replace(  # type: ignore[arg-type]
+        _simulation_run(sample_project),
+        band_id="20m",
+        batch_id=batch,
+    )
+    project = sample_project
+    for run in (single, band_40, band_20):
+        project = project.with_simulation_run(  # type: ignore[arg-type]
+            run,
+            updated_at=updated_at,
+        )
+
+    assert project.has_compactable_simulation_history() is False
+    compacted = project.with_latest_simulation_runs_only(updated_at=updated_at)
+    assert len(compacted.simulation_runs) == 3
+
+
+def test_compaction_keeps_only_the_latest_band_batch(sample_project: Project) -> None:
+    design_id = sample_project.designs[0].id
+    old_batch = uuid4()
+    new_batch = uuid4()
+    updated_at = sample_project.updated_at + timedelta(hours=1)
+    runs = (
+        replace(  # type: ignore[arg-type]
+            _simulation_run(sample_project),
+            band_id="40m",
+            batch_id=old_batch,
+            created_at=updated_at,
+        ),
+        replace(  # type: ignore[arg-type]
+            _simulation_run(sample_project),
+            band_id="20m",
+            batch_id=old_batch,
+            created_at=updated_at + timedelta(minutes=1),
+        ),
+        replace(  # type: ignore[arg-type]
+            _simulation_run(sample_project),
+            band_id="40m",
+            batch_id=new_batch,
+            created_at=updated_at + timedelta(minutes=2),
+        ),
+    )
+    project = sample_project
+    for run in runs:
+        project = project.with_simulation_run(  # type: ignore[arg-type]
+            run,
+            updated_at=run.created_at,  # type: ignore[attr-defined]
+        )
+
+    assert project.has_compactable_simulation_history() is True
+    compacted = project.with_latest_simulation_runs_only(updated_at=updated_at)
+    analysis = compacted.latest_band_analysis(design_id)
+
+    assert analysis is not None
+    assert analysis.batch_id == new_batch
+    assert [band.band.name for band in analysis.bands] == ["40m"]
+    assert len(compacted.simulation_runs) == 1

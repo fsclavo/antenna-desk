@@ -1,10 +1,33 @@
 # Multiband analysis plan
 
-**Status:** proposed, not implemented
+**Status:** core implemented; follow-ups open
 **Date:** 2026-11-03
 **Revised:** 2026-11-03 after the centralized design-panel action bar and
 global **Simulation pattern** group.
 **Scope:** analysis workflow, not new antenna geometry
+
+## Implementation status
+
+Implemented:
+
+- validated `BandSelection`/`BandPlan` values and evidence-labelled family
+  defaults;
+- the per-band `AnalyzeBands` service with progress, cancellation, and partial
+  results;
+- the central **Band analysis** group, selection dialog, and **Bands** results
+  tab;
+- per-band metrics and band switching;
+- optional `band_id`/`batch_id` run metadata, schema version 4 migration, and
+  history compaction;
+- band-aware CSV, HTML, PDF, and comparison outputs;
+- a doublet default inferred from a high-impedance/open-wire project feed line;
+- tests for domain defaults, metrics, batch behavior, persistence, UI, and
+  reports.
+
+Deferred:
+
+- per-band pattern PNG export;
+- the segmented `FrequencyPlan`/multi-`FR` optimization, pending measurements.
 
 ## Problem
 
@@ -78,7 +101,7 @@ than one band, plus presets that are commonly used with a tuner.
 | Fan dipole | One half-wave element per band | Derive from element lengths or `DesignIntent.fan_bands_hz` | Add band metadata to `FanElement` or persist the estimator bands |
 | Trap dipole | Two resonant sections separated by traps | Low band from `frequency_hz`; high band from `high_band_frequency_hz` | Both frequencies already exist in the model |
 | T2FD | Terminated folded dipole, broadband by design | 160–10 m, 80–10 m, or "All HF" | Broadband, not a set of narrow resonances |
-| Doublet | Center-fed doublet with open-wire line and tuner | 80–10 m; optional 160–6 m | Requires preserving the doublet identity and modelling the tuner as an external limitation |
+| Doublet | Center-fed doublet with open-wire line and tuner | 80–10 m; optional 160–6 m | Infer from a high-impedance/open-wire project feed line; the tuner is an external limitation |
 
 ### Tuner-assisted or non-resonant
 
@@ -286,8 +309,9 @@ Proposed defaults:
   `high_band_frequency_hz`; no band in between.
 - **T2FD**: 160–10 m or 80–10 m band set plus an "All HF" continuous option;
   label as broadband.
-- **Doublet**: 80–10 m default, with a tuner-required note. This requires
-  preserving the doublet identity instead of storing it as a plain dipole.
+- **Doublet**: 80–10 m default when the project has a high-impedance/open-wire
+  feed line, with a tuner-required note. The feed line is the persisted proxy
+  for the doublet identity; no new parameter field is required.
 - **Future ZS6BKW/Zepp**: add defaults with the preset and its source.
 
 No default may be copied from another family without evidence. If a family has
@@ -396,7 +420,7 @@ Exit criteria: save, reopen, report, and compare preserve the band analysis.
 - Fan dipole band metadata.
 - Trap dipole two-band defaults.
 - T2FD broadband defaults.
-- Doublet identity and tuner-required warning.
+- Doublet feed-line proxy and tuner-required warning (implemented).
 - ZS6BKW and Zepp when their presets are added.
 - Review loop harmonic analysis separately.
 
@@ -440,8 +464,9 @@ or an explicit exclusion.
    unambiguously after manual tuning. Prefer persisted band metadata from the
    estimator, fall back to a user prompt, and never guess silently.
 4. **Doublet identity.** The current doublet preset is stored as a plain
-   dipole plus a feed line. Add explicit preset metadata before offering
-   doublet defaults.
+   dipole plus a feed line. The implementation uses a high-impedance/open-wire
+   project feed line as the persisted proxy; a future preset metadata field
+   would remove the ambiguity for unusual feed lines.
 5. **Regional band plans.** The catalog uses generic HF ranges. Allow custom
    ranges and document that the user is responsible for local regulations.
 6. **Batch semantics.** A cancelled or partially failed batch must remain

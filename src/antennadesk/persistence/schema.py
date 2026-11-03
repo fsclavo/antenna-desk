@@ -537,6 +537,8 @@ class SimulationRunPayload(StrictModel):
     design_id: UUID
     created_at: datetime
     result: SimulationResultPayload
+    band_id: str | None = None
+    batch_id: UUID | None = None
 
 
 ParameterPayload = (
@@ -1307,6 +1309,8 @@ def _simulation_run_from_domain(value: SimulationRun) -> SimulationRunPayload:
         design_id=value.design_id,
         created_at=value.created_at,
         result=_simulation_result_from_domain(value.result),
+        band_id=value.band_id,
+        batch_id=value.batch_id,
     )
 
 
@@ -1955,6 +1959,8 @@ def _simulation_run_to_domain(value: SimulationRunPayload) -> SimulationRun:
         design_id=value.design_id,
         created_at=value.created_at,
         result=_simulation_result_to_domain(value.result),
+        band_id=value.band_id,
+        batch_id=value.batch_id,
     )
 
 

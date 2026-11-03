@@ -107,3 +107,50 @@ def test_comparison_dialog_supports_mixed_geometry(
     assert "Secondary dimension" in labels
     assert dialog._table.item(0, 1).text() == "Wire dipole"
     assert dialog._table.item(0, 2).text() == "Folded dipole"
+
+
+def test_comparison_dialog_shows_a_band_summary(
+    qtbot: QtBot,
+    sample_project: Project,
+) -> None:
+    from datetime import UTC, datetime
+    from uuid import uuid4
+
+    from antennadesk.domain.simulation.band_result import BandAnalysisResult, BandResult
+    from antennadesk.domain.simulation.bands import amateur_band_by_id
+
+    project = AddDesignVariant().execute(
+        AddDesignVariantCommand(
+            project=sample_project,
+            source_design_id=sample_project.designs[0].id,
+            name="Second",
+        )
+    )
+    bands = tuple(
+        BandResult(amateur_band_by_id(band_id), make_completed_result())
+        for band_id in ("40m", "20m")
+        if amateur_band_by_id(band_id) is not None
+    )
+    analyses = {
+        design.id: BandAnalysisResult(
+            design_id=design.id,
+            batch_id=uuid4(),
+            created_at=datetime(2026, 11, 3, tzinfo=UTC),
+            bands=bands,
+        )
+        for design in project.designs
+    }
+    results = {design.id: make_completed_result() for design in project.designs}
+    dialog = ComparisonDialog(
+        Translator(Language.ENGLISH),
+        project,
+        results,
+        band_analyses=analyses,
+    )
+    qtbot.addWidget(dialog)
+    dialog.show()
+
+    assert dialog._band_table.isVisible() is True
+    assert dialog._band_table.rowCount() == 2
+    assert dialog._band_table.item(0, 0).text() == "40m"
+    assert dialog._band_table.item(0, 1).text() == "1.000"

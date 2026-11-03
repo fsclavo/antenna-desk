@@ -137,3 +137,31 @@ def test_html_report_includes_estimator_provenance(sample_project: Project) -> N
     assert "Dimension source" in report
     assert "loop.resonant_circumference" in report
     assert "Estimate confidence" in report
+
+
+def test_html_report_includes_a_band_summary(sample_project: Project) -> None:
+    from uuid import uuid4
+
+    from antennadesk.domain.simulation.band_result import BandAnalysisResult, BandResult
+    from antennadesk.domain.simulation.bands import amateur_band_by_id
+
+    design = sample_project.designs[0]
+    band = amateur_band_by_id("40m")
+    assert band is not None
+    analysis = BandAnalysisResult(
+        design_id=design.id,
+        batch_id=uuid4(),
+        created_at=datetime(2026, 11, 3, tzinfo=UTC),
+        bands=(BandResult(band=band, result=make_result(sample_project)),),
+    )
+
+    report = render_html_report(
+        sample_project,
+        design,
+        make_result(sample_project),
+        band_analysis=analysis,
+    )
+
+    assert "Band summary" in report
+    assert "Band patterns" in report
+    assert "40m" in report

@@ -67,3 +67,10 @@ def test_band_snapshots_respect_the_maximum() -> None:
     assert len(snapshots) == 5
     with pytest.raises(ValueError, match="max_count"):
         band_snapshot_frequencies(plan, min_count=6, max_count=5)
+
+
+def test_amateur_band_lookup_by_stable_id() -> None:
+    from antennadesk.domain.simulation.bands import amateur_band_by_id
+
+    assert amateur_band_by_id("40m").start_hz == 7_000_000.0
+    assert amateur_band_by_id("unknown") is None

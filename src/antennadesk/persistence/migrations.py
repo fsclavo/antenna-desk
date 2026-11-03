@@ -41,9 +41,26 @@ def _migrate_v2_to_v3(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v3_to_v4(document: dict[str, Any]) -> dict[str, Any]:
+    """Add optional band/batch metadata to simulation runs."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if isinstance(project, dict):
+        runs = project.get("simulation_runs")
+        if isinstance(runs, list):
+            for run in runs:
+                if not isinstance(run, dict):
+                    continue
+                run.setdefault("band_id", None)
+                run.setdefault("batch_id", None)
+    return migrated
+
+
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
+    3: _migrate_v3_to_v4,
 }
 
 

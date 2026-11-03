@@ -19,6 +19,8 @@ from PySide6.QtGui import (
 from PySide6.QtSvg import QSvgRenderer
 
 from ..domain.projects.project import DesignVariant, Project
+from ..domain.simulation.band_result import BandAnalysisResult
+from ..domain.simulation.band_summary import summarize_band
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import SimulationResult
 from ..reporting.design_summary import (
@@ -73,12 +75,35 @@ def _chart_series(result: SimulationResult) -> tuple[QImage, QImage]:
     return _svg_image(impedance), _svg_image(swr)
 
 
+def _band_summary_rows(
+    analysis: BandAnalysisResult,
+    translator: Translator,
+) -> list[list[str]]:
+    rows: list[list[str]] = []
+    for band_result in analysis.bands:
+        summary = summarize_band(band_result.band, band_result.result)
+        rows.append(
+            [
+                band_result.band.name,
+                "" if summary.best_swr is None else f"{summary.best_swr:.3f}",
+                "" if summary.best_swr_hz is None else f"{summary.best_swr_hz / 1e6:.6f}",
+                "" if summary.max_gain_db is None else f"{summary.max_gain_db:.2f}",
+                "" if summary.takeoff_deg is None else f"{summary.takeoff_deg:.1f}",
+                "" if summary.efficiency_percent is None else f"{summary.efficiency_percent:.1f}",
+                translator.t(f"status_value.{summary.status.value}"),
+            ]
+        )
+    return rows
+
+
 def write_report_pdf(
     translator: Translator,
     project: Project,
     design: DesignVariant,
     result: SimulationResult,
     path: Path,
+    *,
+    band_analysis: BandAnalysisResult | None = None,
 ) -> None:
     writer = QPdfWriter(str(path))
     writer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
@@ -218,6 +243,22 @@ def write_report_pdf(
         *transmission_line_summary_rows(design.antenna.transmission_lines),
     ):
         row(label, value)
+
+    if band_analysis is not None:
+        section(translator.t("band.group_title"))
+        table(
+            [
+                translator.t("band.table.band"),
+                translator.t("band.table.best_swr"),
+                translator.t("band.table.at_frequency"),
+                translator.t("band.table.gain"),
+                translator.t("band.table.takeoff"),
+                translator.t("band.table.efficiency"),
+                translator.t("band.table.status"),
+            ],
+            _band_summary_rows(band_analysis, translator),
+            [1.0, 1.1, 1.4, 1.1, 1.0, 1.2, 2.0],
+        )
 
     section(translator.t("report.configuration"))
     frequency_plan = result.spec.frequency_plan

@@ -501,3 +501,42 @@ def test_results_view_shows_directivity_and_realized_gain(qtbot: QtBot) -> None:
     assert "Mismatch 0.20 dB" in text
     assert "line 0.10 dB" in text
     assert "network 0.05 dB" in text
+
+
+def test_results_view_adds_a_band_summary_tab(qtbot: QtBot) -> None:
+    from datetime import UTC, datetime
+    from uuid import uuid4
+
+    from antennadesk.domain.simulation.band_result import BandAnalysisResult, BandResult
+    from antennadesk.domain.simulation.bands import amateur_band_by_id
+
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    bands = tuple(
+        BandResult(amateur_band_by_id(band_id), _make_result())
+        for band_id in ("40m", "20m")
+        if amateur_band_by_id(band_id) is not None
+    )
+    analysis = BandAnalysisResult(
+        design_id=uuid4(),
+        batch_id=uuid4(),
+        created_at=datetime(2026, 11, 3, tzinfo=UTC),
+        bands=bands,
+    )
+
+    view.set_band_analysis(analysis)
+
+    assert view._tabs.count() == 7
+    assert view._bands_tab_index == 6
+    assert view._bands_table.rowCount() == 2
+    assert view._bands_table.item(0, 0).text() == "40m"
+    assert view._bands_table.item(0, 2).text() == "1.500"
+    assert view._bands_table.item(0, 7).text() == "Simulation completed"
+
+    with qtbot.waitSignal(view.band_selected, timeout=1_000):
+        view._bands_table.selectRow(1)
+    assert view._result is not None
+    assert view._result.frequencies[0].frequency_hz == 7_000_000.0
+
+    view.set_band_analysis(None)
+    assert view._tabs.count() == 6

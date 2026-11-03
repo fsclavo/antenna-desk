@@ -162,11 +162,11 @@ The second slice adds two multi-wire templates:
 - `LoopParameters`: a vertical regular polygon with 3–128 sides and a feed at
   the midpoint of the first side.
 
-`AntennaDesignParameters` is the union of the three parameter types.
+`AntennaDesignParameters` is the union of the supported parameter types.
 `DesignVariant` stores the union and validates that `antenna_type` matches the
 parameters. The canonical model remains the shared `AntennaModel`, so the
-solver adapter does not need geometry-specific branches. Schema version 3 is
-kept: the new payloads are additive, and old `wire_dipole` documents are
+solver adapter does not need geometry-specific branches. Schema version 4 is
+current: parameter payloads are additive, and old `wire_dipole` documents are
 unchanged. Series RLC loads are optional antenna payloads and are emitted as
 `LD 0` cards by the solver adapter.
 
@@ -218,14 +218,25 @@ untrusted files.
 Project files use the `antennadesk-project` format with a schema version.
 Saves are atomic: write a temporary file in the target directory, flush and
 `fsync`, then replace the destination with `os.replace`. Schema version 2 added
-dipole orientation, version 3 adds persisted simulation runs, and older
-documents are migrated explicitly.
+dipole orientation, version 3 added persisted simulation runs, version 4 adds
+optional band/batch metadata, and older documents are migrated explicitly.
 
-Simulation runs are persisted in schema version 3. Raw solver text is stored
+Simulation runs are persisted in schema version 4. Raw solver text is stored
 with the normalized result. Project files are compact JSON compressed with
 gzip; plain JSON files from older versions still load. The UI warns at 20 MB
 compressed, blocks files above the 32 MB compressed limit, and offers
 simulation-history compaction.
+
+Multiband analysis is an application-level batch over the existing single-band
+solver boundary. `AnalyzeBands` runs one `SimulationSpec` per selected band,
+keeps completed results when another band fails or is cancelled, and groups
+them in an immutable `BandAnalysisResult`. The adapter still receives one
+contiguous `FrequencyPlan` at a time, so no NEC deck or parser change is
+required. Each band run carries a stable `band_id` and shared `batch_id`; the
+project reconstructs the latest batch from those runs. Pattern resolution is
+global and snapshots are one per band by default. The architecture leaves a
+future segmented `FrequencyPlan` or multi-`FR` deck as an optimization, not a
+prerequisite for the user workflow.
 
 ## Current limitations
 

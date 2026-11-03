@@ -52,3 +52,36 @@ def test_report_pdf_is_written(
     data = path.read_bytes()
     assert data.startswith(b"%PDF")
     assert len(data) > 2_000
+
+
+def test_report_pdf_includes_a_band_summary(
+    qtbot: QtBot,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    from datetime import UTC, datetime
+    from uuid import uuid4
+
+    from antennadesk.domain.simulation.band_result import BandAnalysisResult, BandResult
+    from antennadesk.domain.simulation.bands import amateur_band_by_id
+
+    band = amateur_band_by_id("40m")
+    assert band is not None
+    analysis = BandAnalysisResult(
+        design_id=sample_project.designs[0].id,
+        batch_id=uuid4(),
+        created_at=datetime(2026, 11, 3, tzinfo=UTC),
+        bands=(BandResult(band=band, result=_result()),),
+    )
+    path = tmp_path / "band-report.pdf"
+
+    write_report_pdf(
+        Translator(Language.ENGLISH),
+        sample_project,
+        sample_project.designs[0],
+        _result(),
+        path,
+        band_analysis=analysis,
+    )
+
+    assert path.read_bytes().startswith(b"%PDF")

@@ -10,6 +10,16 @@ from collections.abc import Sequence
 from .result import FarFieldPoint
 
 
+def takeoff_angle_deg(theta_deg: float) -> float:
+    """Return the elevation above the ground plane for a NEC theta angle.
+
+    NEC measures theta from the zenith, so a point on the horizon (theta = 90)
+    has a takeoff angle of 0 degrees.
+    """
+
+    return 90.0 - theta_deg
+
+
 def max_power_gain_db(points: Sequence[FarFieldPoint]) -> float | None:
     gains = [
         point.gain_total_db

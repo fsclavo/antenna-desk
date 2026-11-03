@@ -204,3 +204,36 @@ def test_budget_rejects_invalid_inputs() -> None:
             candidate_steps=(),
             counts_for_step=_counts,
         )
+
+
+def test_batch_pattern_budget_sums_every_band() -> None:
+    from antennadesk.domain.simulation.budget import choose_batch_pattern_step
+
+    budget = choose_batch_pattern_step(
+        frequency_counts=(15, 15, 15),
+        segment_counts=(33, 33, 33),
+        candidate_steps=(1.0, 2.0, 5.0, 10.0),
+        counts_for_step=_counts,
+        pattern_frequency_count=1,
+    )
+
+    assert budget.far_field_enabled is True
+    assert budget.pattern_step_deg in {1.0, 2.0, 5.0, 10.0}
+    assert budget.pattern_frequency_count == 3
+    assert budget.estimated_project_bytes < DEFAULT_MAX_PROJECT_BYTES
+
+
+def test_batch_pattern_budget_respects_a_requested_maximum() -> None:
+    from antennadesk.domain.simulation.budget import choose_batch_pattern_step
+
+    budget = choose_batch_pattern_step(
+        frequency_counts=(15, 15),
+        segment_counts=(33, 33),
+        candidate_steps=(1.0, 2.0, 5.0, 10.0),
+        counts_for_step=_counts,
+        pattern_frequency_count=1,
+        requested_step_deg=5.0,
+    )
+
+    assert budget.pattern_step_deg is not None
+    assert budget.pattern_step_deg >= 5.0

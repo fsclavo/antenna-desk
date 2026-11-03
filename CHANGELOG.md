@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Multiband analysis for G5RV, OCFD, end-fed/random-wire/sloper, fan dipole,
+  trap dipole, T2FD, and doublet designs. **Analyze Bands...** runs the existing solver
+  once per selected band, stores band/batch metadata on simulation runs, and
+  adds a **Bands** results tab with best SWR, gain, takeoff angle, efficiency,
+  and status. Band summaries are included in CSV, HTML, and PDF exports.
 - The 3D radiation-pattern wireframe is colored by gain (green, yellow, red)
   with a min/max dBi legend, while keeping the lobe interior transparent.
 - The 3D lobe maximum-gain marker now reports the takeoff angle above the
@@ -59,6 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Project schema version 4 adds optional `band_id` and `batch_id` metadata to
+  simulation runs. Version 3 projects migrate without changing their data.
 - The design panel now has one action bar (**Apply design**, **Estimate
   Dimensions...**, **Optimize...**) and a compact global **Simulation pattern**
   group. The duplicate per-form pattern controls and bottom Apply/Optimize

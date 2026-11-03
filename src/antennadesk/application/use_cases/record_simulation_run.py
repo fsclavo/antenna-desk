@@ -22,6 +22,8 @@ class RecordSimulationRunCommand:
     result: SimulationResult
     run_id: UUID | None = None
     created_at: datetime | None = None
+    band_id: str | None = None
+    batch_id: UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,5 +36,7 @@ class RecordSimulationRun:
             design_id=command.design_id,
             created_at=timestamp,
             result=command.result,
+            band_id=command.band_id,
+            batch_id=command.batch_id,
         )
         return command.project.with_simulation_run(run, updated_at=timestamp)

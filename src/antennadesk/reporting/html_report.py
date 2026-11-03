@@ -9,6 +9,8 @@ import math
 from pathlib import Path
 
 from ..domain.projects.project import DesignVariant, Project
+from ..domain.simulation.band_result import BandAnalysisResult
+from ..domain.simulation.band_summary import summarize_band
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import SimulationResult
 from .design_summary import (
@@ -112,10 +114,61 @@ def _diagnostics_table(result: SimulationResult) -> str:
     )
 
 
+def _band_summary_table(analysis: BandAnalysisResult) -> str:
+    rows = []
+    for band_result in analysis.bands:
+        summary = summarize_band(band_result.band, band_result.result)
+        best_swr = "" if summary.best_swr is None else f"{summary.best_swr:.3f}"
+        best_hz = "" if summary.best_swr_hz is None else f"{summary.best_swr_hz / 1e6:.6f}"
+        gain = "" if summary.max_gain_db is None else f"{summary.max_gain_db:.2f}"
+        takeoff = "" if summary.takeoff_deg is None else f"{summary.takeoff_deg:.1f}"
+        efficiency = (
+            "" if summary.efficiency_percent is None else f"{summary.efficiency_percent:.1f}"
+        )
+        rows.append(
+            "<tr>"
+            f"<td>{_escape(band_result.band.name)}</td>"
+            f'<td class="num">{best_swr}</td>'
+            f'<td class="num">{best_hz}</td>'
+            f'<td class="num">{gain}</td>'
+            f'<td class="num">{takeoff}</td>'
+            f'<td class="num">{efficiency}</td>'
+            f"<td>{_escape(summary.status.value)}</td>"
+            "</tr>"
+        )
+    return (
+        "<table><thead><tr><th>Band</th><th>Best SWR</th><th>At (MHz)</th>"
+        "<th>Gain (dBi)</th><th>Takeoff (°)</th><th>Efficiency (%)</th>"
+        "<th>Status</th></tr></thead>"
+        f"<tbody>{''.join(rows)}</tbody></table>"
+    )
+
+
+def _band_patterns(analysis: BandAnalysisResult, design: DesignVariant) -> str:
+    charts = []
+    for band_result in analysis.bands:
+        series, frequency = _pattern_series(band_result.result, design)
+        if not series or frequency is None:
+            continue
+        charts.append(
+            '<div class="chart">'
+            + line_chart_svg(
+                title=f"{band_result.band.name} power gain at {frequency / 1e6:g} MHz",
+                x_label="Elevation θ (°)",
+                y_label="Power gain (dBi)",
+                series=series,
+            )
+            + "</div>"
+        )
+    return "".join(charts) if charts else '<p class="muted">No band patterns available.</p>'
+
+
 def render_html_report(
     project: Project,
     design: DesignVariant,
     result: SimulationResult,
+    *,
+    band_analysis: BandAnalysisResult | None = None,
 ) -> str:
     parameters = design.parameters
     design_rows = "".join(
@@ -212,6 +265,14 @@ def render_html_report(
         if pattern_chart
         else '<p class="muted">No far-field pattern available.</p>'
     )
+    band_section = ""
+    if band_analysis is not None:
+        band_section = (
+            "<h2>Band summary</h2>"
+            f"{_band_summary_table(band_analysis)}"
+            "<h2>Band patterns</h2>"
+            f"{_band_patterns(band_analysis, design)}"
+        )
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -236,6 +297,8 @@ status <strong>{_escape(result.status.value)}</strong>.
 <table>
 {design_rows}
 </table>
+
+{band_section}
 
 <h2>Simulation configuration</h2>
 <table>
@@ -285,9 +348,16 @@ def write_html_report(
     design: DesignVariant,
     result: SimulationResult,
     path: Path,
+    *,
+    band_analysis: BandAnalysisResult | None = None,
 ) -> None:
     path.write_text(
-        render_html_report(project, design, result),
+        render_html_report(
+            project,
+            design,
+            result,
+            band_analysis=band_analysis,
+        ),
         encoding="utf-8",
         newline="\n",
     )

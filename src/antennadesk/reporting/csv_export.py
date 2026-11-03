@@ -7,6 +7,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
+from ..domain.simulation.band_result import BandAnalysisResult
 from ..domain.simulation.result import SimulationResult
 
 CSV_HEADER = (
@@ -17,8 +18,8 @@ CSV_HEADER = (
 )
 
 
-def result_to_csv(result: SimulationResult) -> str:
-    lines = [CSV_HEADER]
+def _result_rows(result: SimulationResult) -> list[str]:
+    rows: list[str] = []
     for frequency in result.frequencies:
         gains = [
             point.gain_total_db for point in frequency.far_field if point.gain_total_db is not None
@@ -33,7 +34,7 @@ def result_to_csv(result: SimulationResult) -> str:
             "" if frequency.feed_line_loss_db is None else f"{frequency.feed_line_loss_db:.6f}"
         )
         network = "" if frequency.network_loss_db is None else f"{frequency.network_loss_db:.6f}"
-        lines.append(
+        rows.append(
             ",".join(
                 [
                     f"{frequency.frequency_hz:.6f}",
@@ -52,11 +53,26 @@ def result_to_csv(result: SimulationResult) -> str:
                 ]
             )
         )
+    return rows
+
+
+def result_to_csv(result: SimulationResult) -> str:
+    return "\n".join([CSV_HEADER, *_result_rows(result)]) + "\n"
+
+
+def band_analysis_to_csv(analysis: BandAnalysisResult) -> str:
+    lines = [f"band,{CSV_HEADER}"]
+    for band in analysis.bands:
+        lines.extend(f"{band.band.name},{row}" for row in _result_rows(band.result))
     return "\n".join(lines) + "\n"
 
 
 def write_csv(result: SimulationResult, path: Path) -> None:
     path.write_text(result_to_csv(result), encoding="utf-8", newline="\n")
+
+
+def write_band_analysis_csv(analysis: BandAnalysisResult, path: Path) -> None:
+    path.write_text(band_analysis_to_csv(analysis), encoding="utf-8", newline="\n")
 
 
 PATTERN_HEADER = (
@@ -74,11 +90,11 @@ def _optional(value: float | None) -> str:
     return f"{value:.6f}"
 
 
-def pattern_to_csv(result: SimulationResult) -> str:
-    lines = [PATTERN_HEADER]
+def _pattern_rows(result: SimulationResult) -> list[str]:
+    rows: list[str] = []
     for frequency in result.frequencies:
         for point in frequency.far_field:
-            lines.append(
+            rows.append(
                 ",".join(
                     [
                         f"{frequency.frequency_hz:.6f}",
@@ -98,8 +114,27 @@ def pattern_to_csv(result: SimulationResult) -> str:
                     ]
                 )
             )
+    return rows
+
+
+def pattern_to_csv(result: SimulationResult) -> str:
+    return "\n".join([PATTERN_HEADER, *_pattern_rows(result)]) + "\n"
+
+
+def band_analysis_pattern_to_csv(analysis: BandAnalysisResult) -> str:
+    lines = [f"band,{PATTERN_HEADER}"]
+    for band in analysis.bands:
+        lines.extend(f"{band.band.name},{row}" for row in _pattern_rows(band.result))
     return "\n".join(lines) + "\n"
 
 
 def write_pattern_csv(result: SimulationResult, path: Path) -> None:
     path.write_text(pattern_to_csv(result), encoding="utf-8", newline="\n")
+
+
+def write_band_analysis_pattern_csv(analysis: BandAnalysisResult, path: Path) -> None:
+    path.write_text(
+        band_analysis_pattern_to_csv(analysis),
+        encoding="utf-8",
+        newline="\n",
+    )

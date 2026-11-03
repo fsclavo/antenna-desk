@@ -526,3 +526,40 @@ def test_round_trip_with_a_project_feed_line(
 
     assert loaded.feed_line == line
     assert loaded == project
+
+
+def test_round_trip_preserves_band_analysis_metadata(
+    repository: JsonProjectRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    from uuid import uuid4
+
+    from antennadesk.application.use_cases.record_simulation_run import (
+        RecordSimulationRun,
+        RecordSimulationRunCommand,
+    )
+
+    batch_id = uuid4()
+    project = RecordSimulationRun().execute(
+        RecordSimulationRunCommand(
+            project=sample_project,
+            design_id=sample_project.designs[0].id,
+            result=_rich_result(),
+            created_at=sample_project.updated_at,
+            band_id="40m",
+            batch_id=batch_id,
+        )
+    )
+    path = tmp_path / "with-band-run.antennadesk"
+
+    repository.save(project, path)
+    loaded = repository.load(path)
+
+    assert loaded == project
+    run = loaded.simulation_runs[0]
+    assert run.band_id == "40m"
+    assert run.batch_id == batch_id
+    analysis = loaded.latest_band_analysis(sample_project.designs[0].id)
+    assert analysis is not None
+    assert analysis.bands[0].band.name == "40m"

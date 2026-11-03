@@ -18,6 +18,7 @@ from ..common.time import ensure_utc
 from ..common.units import ensure_non_negative
 from ..common.validation import Diagnostic, Severity, raise_if_errors
 from ..measurement import Measurement
+from ..simulation.band_result import BandAnalysisResult
 from ..simulation.run import SimulationRun
 
 
@@ -251,11 +252,48 @@ class Project:
         )
 
     def latest_simulation_run(self, design_id: UUID) -> SimulationRun | None:
+        """Return the latest single-band run for a design.
+
+        Band-analysis runs carry a ``band_id`` and are retrieved through
+        :meth:`latest_band_analysis` or :meth:`latest_simulation_run_for_band`.
+        """
+
         latest: SimulationRun | None = None
         for run in self.simulation_runs:
-            if run.design_id == design_id:
+            if run.design_id == design_id and run.band_id is None:
                 latest = run
         return latest
+
+    def latest_simulation_run_for_band(
+        self,
+        design_id: UUID,
+        band_id: str,
+    ) -> SimulationRun | None:
+        latest: SimulationRun | None = None
+        for run in self.simulation_runs:
+            if run.design_id == design_id and run.band_id == band_id:
+                latest = run
+        return latest
+
+    def latest_band_analysis(self, design_id: UUID) -> BandAnalysisResult | None:
+        batches: dict[UUID, list[SimulationRun]] = {}
+        for run in self.simulation_runs:
+            if run.design_id != design_id or run.batch_id is None:
+                continue
+            batches.setdefault(run.batch_id, []).append(run)
+        if not batches:
+            return None
+        batch_id, runs = max(
+            batches.items(),
+            key=lambda item: max(run.created_at for run in item[1]),
+        )
+        ordered = sorted(runs, key=lambda run: run.created_at)
+        return BandAnalysisResult.from_runs(
+            design_id=design_id,
+            batch_id=batch_id,
+            created_at=max(run.created_at for run in runs),
+            runs=tuple((run.band_id or "", run.result) for run in ordered),
+        )
 
     def with_measurement(
         self,
@@ -315,13 +353,36 @@ class Project:
     ) -> Project:
         return replace(self, matching_network=matching_network, updated_at=updated_at)
 
+    def _retained_simulation_runs(self) -> tuple[SimulationRun, ...]:
+        retained_ids: set[UUID] = set()
+        for design in self.designs:
+            latest_single = self.latest_simulation_run(design.id)
+            if latest_single is not None:
+                retained_ids.add(latest_single.id)
+            batches: dict[UUID, list[SimulationRun]] = {}
+            for run in self.simulation_runs:
+                if run.design_id == design.id and run.batch_id is not None:
+                    batches.setdefault(run.batch_id, []).append(run)
+            if batches:
+                _, runs = max(
+                    batches.items(),
+                    key=lambda item: max(run.created_at for run in item[1]),
+                )
+                retained_ids.update(run.id for run in runs)
+        return tuple(run for run in self.simulation_runs if run.id in retained_ids)
+
+    def has_compactable_simulation_history(self) -> bool:
+        return len(self.simulation_runs) > len(self._retained_simulation_runs())
+
+    def retained_simulation_run_count(self) -> int:
+        return len(self._retained_simulation_runs())
+
     def with_latest_simulation_runs_only(self, *, updated_at: datetime) -> Project:
-        latest_runs = tuple(
-            run
-            for design in self.designs
-            if (run := self.latest_simulation_run(design.id)) is not None
+        return replace(
+            self,
+            simulation_runs=self._retained_simulation_runs(),
+            updated_at=updated_at,
         )
-        return replace(self, simulation_runs=latest_runs, updated_at=updated_at)
 
     def with_design(self, design: DesignVariant, *, updated_at: datetime) -> Project:
         replaced = False

@@ -30,6 +30,8 @@ from ...domain.environment.ground import GroundKind
 from ...domain.measurement import Measurement, MeasurementPoint
 from ...domain.measurement_comparison import compare_measurement
 from ...domain.projects.project import DesignVariant
+from ...domain.simulation.band_result import BandAnalysisResult, BandResult
+from ...domain.simulation.band_summary import summarize_band
 from ...domain.simulation.bands import amateur_band_for
 from ...domain.simulation.resonance import find_resonances
 from ...domain.simulation.result import (
@@ -49,6 +51,7 @@ from .radiation_pattern_3d_view import RadiationPattern3DView
 class ResultsView(QWidget):
     measurement_edit_requested = Signal(object)
     measurement_delete_requested = Signal(object)
+    band_selected = Signal(object)
 
     def __init__(self, translator: Translator, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -57,6 +60,8 @@ class ResultsView(QWidget):
         self._result: SimulationResult | None = None
         self._design: DesignVariant | None = None
         self._pattern_frequencies: tuple[FrequencyResult, ...] = ()
+        self._band_analysis: BandAnalysisResult | None = None
+        self._bands_tab_index = -1
 
         self._tabs = QTabWidget(self)
         self._impedance_tab = QWidget(self)
@@ -65,6 +70,13 @@ class ResultsView(QWidget):
         self._measurements_tab = QWidget(self)
         self._diagnostics_tab = QWidget(self)
         self._raw_tab = QWidget(self)
+        self._bands_tab = QWidget(self)
+        self._bands_table = QTableWidget(0, 8, self._bands_tab)
+        self._configure_table(self._bands_table)
+        bands_layout = QVBoxLayout(self._bands_tab)
+        bands_layout.setContentsMargins(0, 0, 0, 0)
+        bands_layout.addWidget(self._bands_table)
+        self._bands_tab.setVisible(False)
 
         self._table = QTableWidget(0, 5, self._impedance_tab)
         self._configure_table(self._table)
@@ -240,6 +252,7 @@ class ResultsView(QWidget):
         self._pattern_mode.currentIndexChanged.connect(self._on_pattern_mode_changed)
         self._pattern_cut.currentIndexChanged.connect(self._render_pattern)
         self._currents_frequency.currentIndexChanged.connect(self._render_currents)
+        self._bands_table.itemSelectionChanged.connect(self._on_band_selected)
         self._apply_theme()
         self.retranslate()
 
@@ -317,6 +330,10 @@ class ResultsView(QWidget):
     def show_measurements(self) -> None:
         self._tabs.setCurrentIndex(3)
 
+    def show_bands(self) -> None:
+        if self._bands_tab_index >= 0:
+            self._tabs.setCurrentIndex(self._bands_tab_index)
+
     def set_measurements(self, measurements: tuple[Measurement, ...]) -> None:
         self._measurements = measurements
         self._measurement_selector.blockSignals(True)
@@ -366,6 +383,66 @@ class ResultsView(QWidget):
         self._populate_cut_values()
         self._render()
 
+    def set_band_analysis(self, analysis: BandAnalysisResult | None) -> None:
+        self._band_analysis = analysis
+        self._bands_table.blockSignals(True)
+        self._bands_table.setRowCount(0)
+        if analysis is None or not analysis.bands:
+            if self._bands_tab_index >= 0:
+                self._tabs.removeTab(self._bands_tab_index)
+                self._bands_tab_index = -1
+            self._bands_table.blockSignals(False)
+            return
+        if self._bands_tab_index < 0:
+            self._bands_tab_index = self._tabs.addTab(self._bands_tab, "")
+        self._tabs.setTabText(
+            self._bands_tab_index,
+            self._translator.t("tab.bands"),
+        )
+        self._render_bands()
+        if self._bands_table.rowCount():
+            self._bands_table.selectRow(0)
+        self._bands_table.blockSignals(False)
+
+    def _render_bands(self) -> None:
+        self._bands_table.setRowCount(0)
+        analysis = self._band_analysis
+        if analysis is None:
+            return
+        for band_result in analysis.bands:
+            summary = summarize_band(band_result.band, band_result.result)
+            row = self._bands_table.rowCount()
+            self._bands_table.insertRow(row)
+            band_item = QTableWidgetItem(band_result.band.name)
+            band_item.setData(Qt.ItemDataRole.UserRole, band_result)
+            self._bands_table.setItem(row, 0, band_item)
+            values = (
+                f"{band_result.band.start_hz / 1e6:.3f} - {band_result.band.stop_hz / 1e6:.3f}",
+                "—" if summary.best_swr is None else f"{summary.best_swr:.3f}",
+                "—" if summary.best_swr_hz is None else f"{summary.best_swr_hz / 1e6:.6f} MHz",
+                "—" if summary.max_gain_db is None else f"{summary.max_gain_db:.2f} dBi",
+                "—" if summary.takeoff_deg is None else f"{summary.takeoff_deg:.1f}°",
+                "—"
+                if summary.efficiency_percent is None
+                else f"{summary.efficiency_percent:.1f} %",
+                self._translator.t(f"status.{summary.status.value}"),
+            )
+            for column, value in enumerate(values, start=1):
+                self._bands_table.setItem(row, column, QTableWidgetItem(value))
+
+    def _on_band_selected(self) -> None:
+        row = self._bands_table.currentRow()
+        if row < 0:
+            return
+        item = self._bands_table.item(row, 0)
+        if item is None:
+            return
+        band_result = item.data(Qt.ItemDataRole.UserRole)
+        if not isinstance(band_result, BandResult):
+            return
+        self.set_result(band_result.result)
+        self.band_selected.emit(band_result)
+
     def retranslate(self) -> None:
         self._tabs.setTabText(0, self._translator.t("tab.impedance"))
         self._tabs.setTabText(1, self._translator.t("tab.pattern"))
@@ -373,6 +450,25 @@ class ResultsView(QWidget):
         self._tabs.setTabText(3, self._translator.t("tab.measurements"))
         self._tabs.setTabText(4, self._translator.t("tab.diagnostics"))
         self._tabs.setTabText(5, self._translator.t("tab.raw"))
+        if self._bands_tab_index >= 0:
+            self._tabs.setTabText(
+                self._bands_tab_index,
+                self._translator.t("tab.bands"),
+            )
+        self._bands_table.setHorizontalHeaderLabels(
+            [
+                self._translator.t("band.table.band"),
+                self._translator.t("band.table.range"),
+                self._translator.t("band.table.best_swr"),
+                self._translator.t("band.table.at_frequency"),
+                self._translator.t("band.table.gain"),
+                self._translator.t("band.table.takeoff"),
+                self._translator.t("band.table.efficiency"),
+                self._translator.t("band.table.status"),
+            ]
+        )
+        if self._band_analysis is not None:
+            self._render_bands()
         self._pattern_view_tabs.setTabText(0, self._translator.t("pattern.cut_tab"))
         self._pattern_view_tabs.setTabText(1, self._translator.t("pattern.3d_tab"))
         self._table.setHorizontalHeaderLabels(
