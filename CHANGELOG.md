@@ -29,6 +29,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Catalog presets for a sloper, a random wire, and a doublet. Sloper and random
   wire use the end-fed template with preset metadata; the doublet creates a
   center-fed dipole and configures a project-level open-wire feed line.
+- Directivity and realized gain are now separated from NEC power gain. The
+  results summary and reports show power gain, directivity, realized gain, and
+  the mismatch, feed-line, and matching-network loss components. The feed
+  line, matching network, and ideal transformer are evaluated as a two-port
+  cascade; the pattern charts remain NEC power gain.
+- Transmission lines can be modeled as geometry: a lossless two-port between
+  two wire offsets, persisted with the design, emitted as NEC `TL` cards,
+  drawn as dashed construction lines, and edited from the design panel. This is
+  separate from the transmitter feed-line post-processing model.
+- G5RV catalog preset with the published 102 ft dipole and a 300 Ω / 8.84 m or
+  450 Ω / 10.36 m lossless geometry matching line, plus a 41-point wideband
+  custom sweep.
+- Simulations choose the finest pattern resolution that fits the project size
+  budget. Custom designs expose an Auto (max) setting, an estimated-size
+  indicator, and a pattern-disabled fallback; generated templates coarsen the
+  selected resolution automatically and report an informational diagnostic.
+  Oversized solver output now reports a specific `solver.output_too_large`
+  diagnostic.
+
+### Fixed
+
+- NEC `LD` and `TL` cards now use local segment numbers within each wire tag;
+  loads on wires after the first were previously mapped to global segment
+  numbers.
 
 ## [0.1.0] - 2026-11-02
 

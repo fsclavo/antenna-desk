@@ -10,7 +10,7 @@ from ...domain.antennas.antenna import AntennaModel
 from ...domain.antennas.load import ParallelLoad
 from ...domain.environment.ground import GroundKind
 from ...domain.simulation.spec import SimulationSpec
-from ..discretization import SegmentLayout, build_segment_layout
+from ..discretization import SegmentLayout, WireSegmentation, build_segment_layout
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,6 +40,14 @@ def _format(value: float, precision: int = 9) -> str:
 def _comment(text: str, limit: int = 70) -> str:
     cleaned = text.encode("ascii", errors="replace").decode("ascii").replace("\n", " ")
     return cleaned[:limit]
+
+
+def _local_segment_for_offset(segmentation: WireSegmentation, offset_m: float) -> int:
+    """Map a wire offset to a one-based segment number within its tag."""
+
+    index = int(offset_m / segmentation.segment_length_m)
+    index = min(max(index, 0), segmentation.segments - 1)
+    return index + 1
 
 
 def write_nec2_input(model: AntennaModel, spec: SimulationSpec) -> Nec2Deck:
@@ -86,15 +94,26 @@ def write_nec2_input(model: AntennaModel, spec: SimulationSpec) -> Nec2Deck:
 
     for load in model.loads:
         segmentation = layout.wire_segmentation(load.wire_id)
-        index = int(load.offset_m / segmentation.segment_length_m)
-        index = min(max(index, 0), segmentation.segments - 1)
-        segment = segmentation.first_segment + index
+        segment = _local_segment_for_offset(segmentation, load.offset_m)
         lines.append(
             f"LD {1 if isinstance(load, ParallelLoad) else 0} "
             f"{segmentation.tag} {segment} {segment} "
             f"{_format(load.resistance_ohm)} "
             f"{_format(load.inductance_h)} "
             f"{_format(load.capacitance_f, 12)}"
+        )
+
+    for transmission_line in model.transmission_lines:
+        start = layout.wire_segmentation(transmission_line.start_wire_id)
+        end = layout.wire_segmentation(transmission_line.end_wire_id)
+        start_segment = _local_segment_for_offset(start, transmission_line.start_offset_m)
+        end_segment = _local_segment_for_offset(end, transmission_line.end_offset_m)
+        lines.append(
+            "TL "
+            f"{start.tag} {start_segment} {end.tag} {end_segment} "
+            f"{_format(transmission_line.characteristic_impedance_ohm)} "
+            f"{_format(transmission_line.electrical_length_m)} "
+            "0.000000000 0.000000000 0.000000000 0.000000000"
         )
 
     frequency_plan = spec.frequency_plan

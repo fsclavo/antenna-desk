@@ -137,3 +137,49 @@ def test_component_q_adds_series_loss_to_a_pi_branch() -> None:
 def test_q_factor_must_be_positive_when_present() -> None:
     with pytest.raises(ValueError, match="q_factor"):
         LNetwork(series_inductance_h=1e-6, shunt_capacitance_f=100e-12, q_factor=0.0)
+
+
+def test_abcd_input_impedance_matches_each_topology() -> None:
+    from antennadesk.domain.antennas.matching_network import PiNetwork, TNetwork
+
+    frequency = 14_100_000.0
+    load = complex(80.0, -15.0)
+    networks = (
+        LNetwork(series_inductance_h=1e-6, shunt_capacitance_f=50e-12, q_factor=100.0),
+        LNetwork(
+            series_capacitance_f=40e-12,
+            shunt_inductance_h=1.5e-6,
+            shunt_at_input=True,
+            q_factor=120.0,
+        ),
+        PiNetwork(
+            input_shunt_capacitance_f=30e-12,
+            series_inductance_h=0.8e-6,
+            output_shunt_capacitance_f=60e-12,
+            q_factor=80.0,
+        ),
+        TNetwork(
+            input_series_inductance_h=0.5e-6,
+            shunt_capacitance_f=40e-12,
+            output_series_inductance_h=0.7e-6,
+            q_factor=90.0,
+        ),
+    )
+
+    for network in networks:
+        assert network.abcd(frequency).input_impedance(load) == pytest.approx(
+            network.input_impedance(load, frequency)
+        )
+
+
+def test_matched_lossless_l_network_has_no_insertion_loss() -> None:
+    from antennadesk.domain.antennas.matching_network import design_l_network
+    from antennadesk.domain.antennas.two_port import transducer_gain_db
+
+    load = complex(100.0, 0.0)
+    network = design_l_network(load, 14_100_000.0)
+    assert network is not None
+
+    assert transducer_gain_db(network.abcd(14_100_000.0), 50.0, load) == pytest.approx(
+        0.0, abs=1e-6
+    )

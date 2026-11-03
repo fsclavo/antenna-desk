@@ -14,6 +14,7 @@ from ..environment.ground import FREE_SPACE, GroundModel
 from .antenna import AntennaModel
 from .feed import FeedPoint
 from .load import LumpedLoad
+from .transmission_line import TransmissionLine
 from .wire import Wire
 
 ANTENNA_TYPE_CUSTOM = "custom"
@@ -28,6 +29,7 @@ class CustomAntennaParameters:
     feed: FeedPoint
     ground: GroundModel = FREE_SPACE
     loads: tuple[LumpedLoad, ...] = ()
+    transmission_lines: tuple[TransmissionLine, ...] = ()
     generator_id: str | None = None
     generator_name: str | None = None
 
@@ -35,6 +37,11 @@ class CustomAntennaParameters:
         ensure_positive(self.frequency_hz, name="frequency_hz")
         object.__setattr__(self, "wires", tuple(self.wires))
         object.__setattr__(self, "loads", tuple(self.loads))
+        object.__setattr__(
+            self,
+            "transmission_lines",
+            tuple(self.transmission_lines),
+        )
         for field_name in ("generator_id", "generator_name"):
             value = getattr(self, field_name)
             if value is not None and not value.strip():
@@ -48,6 +55,7 @@ class CustomAntennaParameters:
             feed=self.feed,
             environment=Environment(ground=self.ground),
             loads=self.loads,
+            transmission_lines=self.transmission_lines,
         )
 
 

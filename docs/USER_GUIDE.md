@@ -259,6 +259,35 @@ wire at 10 m height. The length is intentionally non-resonant and is an
 application starting point; tune it for the bands and the matching you use.
 The design is an `EndFedParameters` design with the `random_wire` preset.
 
+## Create a G5RV
+
+Choose **File → New Antenna... → G5RV** for the published 102 ft dipole with a
+symmetric matching line. The preset uses a 31.1 m dipole and either:
+
+- 300 Ω, 8.84 m (29 ft), or
+- 450 Ω, 10.36 m (34 ft).
+
+The dipole height, feed height, azimuth, radius, material, and ground are
+editable. The matching line is modeled as a lossless geometry transmission line
+between the dipole center and a short source wire. Set the line velocity factor
+for your actual ladder line; the default `1.0` treats the published length as
+the electrical length. The transmitter coax is not part of the antenna model;
+add it with **Simulation → Feed Line...** if you want its loss and impedance
+transformation.
+
+The preset is multiband: the custom design panel starts with a **41-point
+3.5–30 MHz sweep** so you can inspect the G5RV bands. The pattern resolution is
+**Auto (max)** by default: AntennaDesk estimates the saved project size and
+uses the finest pattern step that fits, reducing it automatically when needed.
+If even the coarsest pattern would be too large, it disables the far-field
+pattern and leaves the impedance/SWR sweep intact. The panel shows the requested
+and effective resolution after a run.
+
+The published dimensions are reference-backed (Carr, *Practical Antenna
+Handbook*, via the Wikipedia G5RV article); the lossless TL model and the
+installation are simplified. Tune the line length, velocity factor, and feed
+line for your installation.
+
 ## Create a doublet
 
 Choose **File → New Antenna... → Doublet** for a center-fed dipole intended for
@@ -350,7 +379,7 @@ construction sheet.
   highest sampled direction, so with the default 5° pattern resolution the
   reported angle is quantized to the sampling grid. Drag the 3D lobe to rotate
   it, use the mouse wheel to zoom, and double-click to reset the view. Power
-  gain is not realized gain.
+  gain is not realized gain; see the gain summary below.
 - **Currents**: segment current magnitude for the selected frequency, with the
   feed segment marked.
 - **Measurements**: imported VNA sweeps with measured and simulated SWR,
@@ -359,6 +388,28 @@ construction sheet.
 - **Diagnostics**: solver version, status, duration, fingerprint, and warnings
   or errors.
 - **Raw data**: the generated NEC input deck and the raw solver output.
+
+### Gain, directivity, and realized gain
+
+The Diagnostics tab summary and the reports show three different metrics:
+
+- **Power gain (NEC)**: radiated power density relative to the power accepted by
+  the antenna. It includes conductor and ground losses when those are enabled,
+  but not the feed line, matching network, transformer, or transmitter
+  mismatch.
+- **Directivity**: power gain divided by the structure radiation efficiency. It
+  describes the pattern alone and requires a power budget; if conductor losses
+  are disabled, the reported directivity is only meaningful for the modeled
+  lossless structure.
+- **Realized gain**: power gain plus the transducer gain of the feed line,
+  matching network, and ideal transformer cascade. It includes transmitter
+  mismatch, line loss, network loss, and residual load mismatch.
+
+The summary also reports the mismatch, matched feed-line, and network loss at
+the frequency with the highest realized gain. These components are evaluated at
+their nominal reference planes and need not add exactly to the difference
+between power gain and realized gain. The pattern charts and CSV pattern export
+still contain NEC power gain; the per-frequency CSV includes the new metrics.
 
 Hover the mouse over the Impedance, SWR, Pattern, Currents, or Measurements
 charts to show a cursor at the nearest data point. The floating readout shows
@@ -376,8 +427,17 @@ SWR is computed with the reference impedance in the design panel (default
 The **Frequency sweep** is disabled by default. When enabled, it uses **1,000
 points** by default and accepts up to 10,000. Frequency points improve the
 impedance/SWR curve. **Pattern resolution** controls the angular sampling of
-the radiation pattern: 10° (normal), 5° (fine, default), 2° (very fine), or 1°
-(maximum).
+the radiation pattern: 30°, 20°, 15°, 10° (normal), 5° (fine, default), 2°
+(very fine), or 1° (maximum).
+
+The selected pattern resolution is a **maximum**: before a run, AntennaDesk
+estimates the saved project size and may coarsen the pattern to the finest step
+that fits. This prevents oversized solver output and projects that cannot be
+saved. A diagnostic reports when the resolution was reduced. If even the
+coarsest pattern does not fit, the far-field pattern is disabled and the
+impedance/SWR sweep still runs. Custom designs also expose **Auto (max)**,
+which always chooses the finest fitting step; the custom panel shows the
+requested and effective resolution and the estimated project size.
 The form shows the estimated number of pattern points. More points produce
 smoother cuts and a smoother 3D lobe, but increase solver time and project
 size; use high resolution for final runs rather than routine exploration.
@@ -409,11 +469,35 @@ the transmitter and the antenna feed. Set its characteristic impedance, length,
 velocity factor, and matched loss in dB per 100 m. When enabled, the Impedance /
 SWR tab reports the impedance and SWR at the **transmitter end**; the Pattern
 tab still reports antenna power gain, because the line does not change the
-radiation pattern. A diagnostics row confirms that the line was applied.
+radiation pattern. Realized gain in the results summary includes the line loss
+and mismatch. A diagnostics row confirms that the line was applied.
 
 Disable the feed line to return to antenna-terminal impedance. The feed-line
 configuration is saved with the project and with each simulation run; it is
 not part of the antenna geometry.
+
+## Transmission lines as geometry
+
+Use **Design → Transmission Lines...** to add a lossless two-port between two
+points of the structure. Select the start and end wire and offsets, the
+characteristic impedance, the physical length, and the velocity factor. **Use
+straight-line distance** fills the length from the current endpoints. The line
+is emitted as a NEC `TL` card; the adapter converts physical length to the
+free-space-equivalent length using the velocity factor.
+
+A geometry line is different from the transmitter feed line:
+
+- it connects two points of the structure and participates in the current
+  solution;
+- it is mathematical, so it does not radiate;
+- NEC-2 models it without loss;
+- its endpoints are attached to segments, so place them near segment centers
+  (the solver warns when they are not).
+
+Geometry lines are drawn as dashed construction lines in the sketch. They are
+saved in the project, appear in construction sheets and reports, and can be
+edited or removed without changing the antenna wires. A project can have both
+geometry lines and a transmitter feed line.
 
 
 ## Matching network and traps
@@ -427,8 +511,8 @@ when a single section cannot match the load. Pi/T are manual designs in this
 slice. Set a component Q to include loss in the input impedance (0 means
 lossless). The network is evaluated before the feed line: antenna → matching
 network → feed line → transmitter. Impedance and SWR include the network;
-pattern and power gain remain antenna-side. Network loss is not added to
-reported gain.
+pattern and power gain remain antenna-side. Network loss is included in
+realized gain and reported separately.
 
 In the load editor, **Add parallel trap** calculates the capacitance for a
 parallel LC trap from the entered inductance and resonant frequency. The trap is

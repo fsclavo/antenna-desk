@@ -8,6 +8,7 @@ import math
 from dataclasses import dataclass
 
 from ..common.units import ensure_non_negative, ensure_positive
+from .two_port import Abcd
 
 
 def _branch_impedance(
@@ -64,7 +65,7 @@ def _active(inductance_h: float, capacitance_f: float) -> bool:
 
 @dataclass(frozen=True, slots=True)
 class LNetwork:
-    """A lossless L matching network.
+    """An L matching network with optional component loss.
 
     The series branch is between the antenna and the shunt branch.  When
     ``shunt_at_input`` is true the shunt branch is on the transmitter side;
@@ -108,10 +109,31 @@ class LNetwork:
             return 1.0 / (shunt + 1.0 / (series + load_impedance_ohm))
         return series + 1.0 / (shunt + 1.0 / load_impedance_ohm)
 
+    def abcd(self, frequency_hz: float) -> Abcd:
+        ensure_positive(frequency_hz, name="frequency_hz")
+        omega = 2.0 * math.pi * frequency_hz
+        series = Abcd.series(
+            _branch_impedance(
+                self.series_inductance_h,
+                self.series_capacitance_f,
+                omega,
+                self.q_factor,
+            )
+        )
+        shunt = Abcd.shunt(
+            _branch_admittance(
+                self.shunt_inductance_h,
+                self.shunt_capacitance_f,
+                omega,
+                self.q_factor,
+            )
+        )
+        return shunt @ series if self.shunt_at_input else series @ shunt
+
 
 @dataclass(frozen=True, slots=True)
 class PiNetwork:
-    """A lossless Pi network: input shunt, series, output shunt."""
+    """A Pi network with optional component loss: input shunt, series, output shunt."""
 
     input_shunt_inductance_h: float = 0.0
     input_shunt_capacitance_f: float = 0.0
@@ -174,10 +196,39 @@ class PiNetwork:
         output_impedance = 1.0 / (output_shunt + 1.0 / load_impedance_ohm)
         return 1.0 / (input_shunt + 1.0 / (series + output_impedance))
 
+    def abcd(self, frequency_hz: float) -> Abcd:
+        ensure_positive(frequency_hz, name="frequency_hz")
+        omega = 2.0 * math.pi * frequency_hz
+        input_shunt = Abcd.shunt(
+            _branch_admittance(
+                self.input_shunt_inductance_h,
+                self.input_shunt_capacitance_f,
+                omega,
+                self.q_factor,
+            )
+        )
+        series = Abcd.series(
+            _branch_impedance(
+                self.series_inductance_h,
+                self.series_capacitance_f,
+                omega,
+                self.q_factor,
+            )
+        )
+        output_shunt = Abcd.shunt(
+            _branch_admittance(
+                self.output_shunt_inductance_h,
+                self.output_shunt_capacitance_f,
+                omega,
+                self.q_factor,
+            )
+        )
+        return input_shunt @ series @ output_shunt
+
 
 @dataclass(frozen=True, slots=True)
 class TNetwork:
-    """A lossless T network: input series, shunt, output series."""
+    """A T network with optional component loss: input series, shunt, output series."""
 
     input_series_inductance_h: float = 0.0
     input_series_capacitance_f: float = 0.0
@@ -238,6 +289,35 @@ class TNetwork:
             self.q_factor,
         )
         return input_series + 1.0 / (shunt + 1.0 / (output_series + load_impedance_ohm))
+
+    def abcd(self, frequency_hz: float) -> Abcd:
+        ensure_positive(frequency_hz, name="frequency_hz")
+        omega = 2.0 * math.pi * frequency_hz
+        input_series = Abcd.series(
+            _branch_impedance(
+                self.input_series_inductance_h,
+                self.input_series_capacitance_f,
+                omega,
+                self.q_factor,
+            )
+        )
+        shunt = Abcd.shunt(
+            _branch_admittance(
+                self.shunt_inductance_h,
+                self.shunt_capacitance_f,
+                omega,
+                self.q_factor,
+            )
+        )
+        output_series = Abcd.series(
+            _branch_impedance(
+                self.output_series_inductance_h,
+                self.output_series_capacitance_f,
+                omega,
+                self.q_factor,
+            )
+        )
+        return input_series @ shunt @ output_series
 
 
 MatchingNetwork = LNetwork | PiNetwork | TNetwork

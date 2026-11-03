@@ -275,6 +275,21 @@ Phase 6 adds tests for:
   headers, chart images, tables, and non-trivial page content.
 - Series/parallel-load domain validation, design consistency, NEC `LD 0`/`LD 1`
   export, persistence round trip, load editor, report rows, and UI application.
+- Two-port link-budget math for feed lines, L/Pi/T matching networks, and the
+  ideal transformer; matched-line attenuation, transformer matching, and
+  network insertion-loss cases.
+- Transmission-line geometry: domain validation, persistence, local segment
+  mapping for `LD`/`TL` cards, dashed scene polylines, off-center endpoint
+  warning, and a half-wave line-fed dipole reproducing the direct-fed input
+  impedance within 1%.
+- G5RV preset: published dipole and matching-line dimensions, 300 Ω/450 Ω
+  options, custom-generator routing, 41-point wideband custom sweep, automatic
+  pattern resolution, and a three-band NEC smoke run with a geometry `TL`.
+- Run-size budget: fitted pattern resolution, project-size estimate, pattern
+  disabled fallback, and a specific `solver.output_too_large` diagnostic.
+- Directivity from NEC power gain and structure efficiency, realized gain from
+  the link cascade, persistence round trip, CSV columns, results summary,
+  construction sheet, and self-contained HTML report rows.
 - ARRL Antenna Book, 24th edition, free-space dipole gain reference, the
   equal-conductor folded-dipole gain/pattern and 4× resistance properties, and
   the free-space quad-loop resistance.

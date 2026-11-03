@@ -798,3 +798,200 @@ def test_trap_dipole_with_parallel_traps_solves_both_bands(
     assert result.status is SimulationStatus.COMPLETED
     assert len(result.frequencies) == 2
     assert all(frequency.impedance_ohm.real > 0.0 for frequency in result.frequencies)
+
+
+def test_realized_gain_and_directivity_are_reported(
+    solver: Nec2cSolver,
+) -> None:
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=10.0,
+    )
+    model = parameters.to_antenna(name="Realized gain dipole")
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(7_100_000.0),
+        segmentation=SegmentationPolicy(min_segments_per_wire=9),
+        include_conductor_losses=True,
+        far_field=FarFieldRequest(
+            enabled=True,
+            theta_start_deg=0.0,
+            theta_stop_deg=90.0,
+            theta_count=19,
+            phi_start_deg=0.0,
+            phi_stop_deg=360.0,
+            phi_count=37,
+        ),
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    frequency = result.frequencies[0]
+    assert frequency.directivity_db is not None
+    assert frequency.realized_gain_db is not None
+    assert frequency.mismatch_loss_db is not None
+    assert frequency.feed_line_loss_db == pytest.approx(0.0)
+    assert frequency.network_loss_db == pytest.approx(0.0)
+    assert frequency.directivity_db >= (frequency.realized_gain_db or -math.inf)
+    assert frequency.power_budget is not None
+    max_gain_db = max(
+        point.gain_total_db for point in frequency.far_field if point.gain_total_db is not None
+    )
+    expected_directivity = max_gain_db - 10.0 * math.log10(
+        frequency.power_budget.efficiency_percent / 100.0
+    )
+    assert frequency.directivity_db == pytest.approx(expected_directivity)
+    assert result.max_directivity_db == pytest.approx(frequency.directivity_db)
+    assert result.max_realized_gain_db == pytest.approx(frequency.realized_gain_db)
+
+
+def test_transmission_line_geometry_repeats_the_load_impedance(
+    solver: Nec2cSolver,
+) -> None:
+    from antennadesk.domain.antennas.transmission_line import TransmissionLine
+    from antennadesk.domain.antennas.wire import Wire
+
+    frequency_hz = 7_100_000.0
+    dipole = DipoleParameters(
+        frequency_hz=frequency_hz,
+        total_length_m=20.0,
+        height_m=10.0,
+    )
+    direct_model = dipole.to_antenna(name="Direct dipole")
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(frequency_hz),
+        segmentation=SegmentationPolicy(segments_per_wire=9),
+        include_conductor_losses=False,
+    )
+    direct = solver.run(direct_model, spec)
+
+    source = Wire(
+        id="source",
+        start=Point3D(0.0, 0.0, 0.0),
+        end=Point3D(0.0, 0.0, 0.02),
+        radius_m=0.001,
+        material=COPPER,
+    )
+    line_model = AntennaModel(
+        name="Line-fed dipole",
+        design_frequency_hz=frequency_hz,
+        wires=(source, *direct_model.wires),
+        feed=FeedPoint("source", 0.01),
+        environment=Environment(),
+        transmission_lines=(
+            TransmissionLine(
+                id="line-1",
+                start_wire_id="source",
+                start_offset_m=0.01,
+                end_wire_id="radiator",
+                end_offset_m=10.0,
+                characteristic_impedance_ohm=50.0,
+                length_m=299_792_458.0 / (2.0 * frequency_hz),
+                velocity_factor=1.0,
+            ),
+        ),
+    )
+    line_fed = solver.run(line_model, spec)
+
+    assert direct.status is SimulationStatus.COMPLETED
+    assert line_fed.status is SimulationStatus.COMPLETED
+    assert "TL 1 5 2 5" in line_fed.raw_input
+    direct_impedance = direct.frequencies[0].impedance_ohm
+    line_impedance = line_fed.frequencies[0].impedance_ohm
+    assert line_impedance.real == pytest.approx(direct_impedance.real, rel=0.01)
+    assert line_impedance.imag == pytest.approx(direct_impedance.imag, rel=0.01)
+
+
+def test_g5rv_preset_with_geometry_line_solves(solver: Nec2cSolver) -> None:
+    from antennadesk.domain.antennas.g5rv import g5rv_parameters
+
+    parameters = g5rv_parameters(
+        frequency_hz=14_100_000.0,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    )
+    model = parameters.to_antenna(name="G5RV")
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.sweep(7_100_000.0, 21_100_000.0, 3),
+        segmentation=SegmentationPolicy(min_segments_per_wire=9),
+        include_conductor_losses=False,
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert len(result.frequencies) == 3
+    assert "TL " in result.raw_input
+    assert all(frequency.impedance_ohm.real > 0.0 for frequency in result.frequencies)
+
+
+def test_output_limit_has_a_specific_diagnostic() -> None:
+    assert NEC2C is not None
+    limited = Nec2cSolver(Path(NEC2C), max_output_bytes=1)
+
+    result = limited.run(_manual_example1_model(), _manual_example1_spec())
+
+    assert result.status is SimulationStatus.ERROR
+    assert any(diagnostic.code == "solver.output_too_large" for diagnostic in result.diagnostics)
+
+
+def test_g5rv_default_budgeted_pattern_completes(solver: Nec2cSolver) -> None:
+    from antennadesk.domain.antennas.g5rv import G5RV_DIPOLE_ID, g5rv_parameters
+    from antennadesk.domain.simulation.budget import choose_pattern_step
+    from antennadesk.ui.pattern_resolution import pattern_counts
+
+    ground = GroundModel.finite(
+        relative_permittivity=13.0,
+        conductivity_s_per_m=0.005,
+    )
+    parameters = g5rv_parameters(
+        frequency_hz=14_100_000.0,
+        ground=ground,
+    )
+    model = parameters.to_antenna(name="G5RV")
+    stop_hz = 30_000_000.0
+    base = SegmentationPolicy(min_segments_per_wire=3)
+    dipole = model.wire_by_id(G5RV_DIPOLE_ID)
+    count = base.segments_for(dipole, stop_hz)
+    if count % 2 == 0:
+        count += 1
+    segmentation = aligned_policy_for_model(
+        model,
+        stop_hz,
+        SegmentationPolicy(
+            min_segments_per_wire=3,
+            wire_segments=((G5RV_DIPOLE_ID, count),),
+        ),
+    )
+    segment_count = sum(segmentation.segments_for(wire, stop_hz) for wire in model.wires)
+    budget = choose_pattern_step(
+        frequency_count=41,
+        segment_count=segment_count,
+        candidate_steps=(1.0, 2.0, 5.0, 10.0, 15.0, 20.0, 30.0),
+        counts_for_step=lambda step: pattern_counts(step, ground),
+    )
+
+    assert budget.pattern_step_deg == 10.0
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.sweep(3_500_000.0, 30_000_000.0, 41),
+        segmentation=segmentation,
+        include_conductor_losses=True,
+        far_field=FarFieldRequest(
+            enabled=True,
+            theta_start_deg=0.0,
+            theta_stop_deg=90.0,
+            theta_count=10,
+            phi_start_deg=0.0,
+            phi_stop_deg=360.0,
+            phi_count=37,
+        ),
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert len(result.frequencies) == 41
+    assert len(result.raw_output) < 10 * 1024 * 1024

@@ -37,6 +37,7 @@ from ...domain.simulation.result import (
     SimulationResult,
     SimulationStatus,
 )
+from ...reporting.result_summary import representative_gain_frequency
 from ..i18n import Translator
 from ..theme import theme_colors
 from .chart_cursor import ChartCursor, CursorSeries
@@ -193,12 +194,17 @@ class ResultsView(QWidget):
         self._summary = QLabel(self._diagnostics_tab)
         self._summary.setWordWrap(True)
         self._summary.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self._gain_summary = QLabel(self._diagnostics_tab)
+        self._gain_summary.setWordWrap(True)
+        self._gain_summary.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self._gain_summary.setVisible(False)
         self._diagnostics = QTableWidget(0, 3, self._diagnostics_tab)
         self._configure_table(self._diagnostics)
         self._diagnostics_empty = QLabel(self._diagnostics_tab)
         diagnostics_layout = QVBoxLayout(self._diagnostics_tab)
         diagnostics_layout.setContentsMargins(0, 0, 0, 0)
         diagnostics_layout.addWidget(self._summary)
+        diagnostics_layout.addWidget(self._gain_summary)
         diagnostics_layout.addWidget(self._diagnostics)
         diagnostics_layout.addWidget(self._diagnostics_empty)
 
@@ -1065,6 +1071,8 @@ class ResultsView(QWidget):
         self._diagnostics.setRowCount(0)
         if self._result is None:
             self._summary.setText(self._translator.t("results.none"))
+            self._gain_summary.setText("")
+            self._gain_summary.setVisible(False)
             self._diagnostics_empty.setText("")
             self._diagnostics_empty.setVisible(False)
             return
@@ -1081,6 +1089,9 @@ class ResultsView(QWidget):
                 fingerprint=self._result.model_fingerprint[:12],
             )
         )
+        gain_summary = self._gain_summary_text()
+        self._gain_summary.setText(gain_summary)
+        self._gain_summary.setVisible(bool(gain_summary))
         diagnostics = self._result.diagnostics
         self._diagnostics.setRowCount(len(diagnostics))
         for row, diagnostic in enumerate(diagnostics):
@@ -1097,6 +1108,46 @@ class ResultsView(QWidget):
         self._diagnostics.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         self._diagnostics_empty.setText(self._translator.t("diagnostic.none"))
         self._diagnostics_empty.setVisible(not diagnostics)
+
+    def _gain_summary_text(self) -> str:
+        if self._result is None:
+            return ""
+        metrics = (
+            self._result.max_total_gain_db,
+            self._result.max_directivity_db,
+            self._result.max_realized_gain_db,
+        )
+        frequency = representative_gain_frequency(self._result)
+        if frequency is not None:
+            metrics = (
+                *metrics,
+                frequency.mismatch_loss_db,
+                frequency.feed_line_loss_db,
+                frequency.network_loss_db,
+            )
+        if all(metric is None for metric in metrics):
+            return ""
+        t = self._translator.t
+
+        def value(value: float | None, suffix: str) -> str:
+            return f"{value:.2f} {suffix}" if value is not None else "—"
+
+        first = t(
+            "results.gain_summary",
+            gain=value(self._result.max_total_gain_db, "dBi"),
+            directivity=value(self._result.max_directivity_db, "dBi"),
+            realized=value(self._result.max_realized_gain_db, "dBi"),
+        )
+        if frequency is None:
+            return first
+        second = t(
+            "results.link_summary",
+            frequency=f"{frequency.frequency_hz / 1e6:.3f}",
+            mismatch=value(frequency.mismatch_loss_db, "dB"),
+            line=value(frequency.feed_line_loss_db, "dB"),
+            network=value(frequency.network_loss_db, "dB"),
+        )
+        return f"{first} · {second}"
 
     def _render_raw(self) -> None:
         if self._result is None:

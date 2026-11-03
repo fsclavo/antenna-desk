@@ -39,6 +39,11 @@ def make_result(project: Project) -> SimulationResult:
             swr=2.0,
             input_power_w=0.001,
             far_field=far_field,
+            directivity_db=2.20,
+            realized_gain_db=1.85,
+            mismatch_loss_db=0.20,
+            feed_line_loss_db=0.10,
+            network_loss_db=0.05,
         ),
         FrequencyResult(
             frequency_hz=7_100_000.0,
@@ -72,6 +77,9 @@ def test_html_report_contains_design_results_and_charts(sample_project: Project)
     assert "Resonance" in report
     assert "<svg" in report
     assert "7.100000" in report
+    assert "Gain and efficiency" in report
+    assert "Max realized gain" in report
+    assert "1.85 dBi" in report
 
 
 def test_html_report_escapes_user_text(sample_project: Project) -> None:

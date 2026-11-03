@@ -39,6 +39,9 @@ Positive:
 Limitations:
 
 - The result does not report antenna-terminal impedance separately.
-- Insertion loss is not added to pattern gain or realized gain.
-- The model is a uniform line; non-uniform lines are out of scope. A lossless
-  L matching network is handled separately in ADR-0014.
+- Insertion loss is included in realized gain but not in the pattern power
+  gain.
+- The model is a uniform line; non-uniform lines are out of scope. A matching
+  network is handled separately in the matching-network ADR.
+- Geometry transmission lines between structure points are a separate feature;
+  see [ADR-0016](0016-transmission-line-as-geometry.md).

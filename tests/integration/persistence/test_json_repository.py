@@ -379,6 +379,11 @@ def _rich_result() -> SimulationResult:
             currents=(current,),
             far_field=(far_field,),
             power_budget=PowerBudget(0.001, 0.0009, 0.0001, 0.0, 90.0),
+            directivity_db=2.20,
+            realized_gain_db=1.85,
+            mismatch_loss_db=0.20,
+            feed_line_loss_db=0.45,
+            network_loss_db=0.05,
         ),
         FrequencyResult(
             frequency_hz=7_100_000.0,
@@ -441,6 +446,11 @@ def test_round_trip_with_a_simulation_run(
     assert run.design_id == sample_project.designs[0].id
     assert run.result.raw_output == "FREQUENCY ...\n"
     assert run.result.frequencies[0].impedance_ohm == complex(60.0, -10.0)
+    assert run.result.frequencies[0].directivity_db == pytest.approx(2.20)
+    assert run.result.frequencies[0].realized_gain_db == pytest.approx(1.85)
+    assert run.result.frequencies[0].mismatch_loss_db == pytest.approx(0.20)
+    assert run.result.frequencies[0].feed_line_loss_db == pytest.approx(0.45)
+    assert run.result.frequencies[0].network_loss_db == pytest.approx(0.05)
     assert math.isinf(run.result.frequencies[1].swr)
     assert run.result.spec.segmentation.wire_segments == (("radiator", 21),)
     assert run.result.spec.feed_line == FeedLine(

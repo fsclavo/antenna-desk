@@ -31,3 +31,15 @@ class Wire:
     @property
     def length_m(self) -> float:
         return self.start.distance_to(self.end)
+
+    def point_at(self, offset_m: float) -> Point3D:
+        """Return the point at ``offset_m`` from the wire start."""
+
+        if offset_m < 0.0 or offset_m > self.length_m:
+            raise ValueError("offset_m must be within the wire length")
+        ratio = offset_m / self.length_m
+        return Point3D(
+            x_m=self.start.x_m + (self.end.x_m - self.start.x_m) * ratio,
+            y_m=self.start.y_m + (self.end.y_m - self.start.y_m) * ratio,
+            z_m=self.start.z_m + (self.end.z_m - self.start.z_m) * ratio,
+        )

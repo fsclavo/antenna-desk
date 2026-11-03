@@ -15,7 +15,9 @@ from .design_summary import (
     design_provenance_rows,
     design_summary_rows,
     load_summary_rows,
+    transmission_line_summary_rows,
 )
+from .result_summary import gain_metric_rows
 from .svg_chart import SvgSeries, line_chart_svg
 
 CSS = """
@@ -119,7 +121,12 @@ def render_html_report(
             *design_summary_rows(parameters),
             *design_provenance_rows(design),
             *load_summary_rows(design.antenna.loads),
+            *transmission_line_summary_rows(design.antenna.transmission_lines),
         )
+    )
+    gain_rows = "".join(
+        f"<tr><th>{_escape(label)}</th><td>{_escape(value)}</td></tr>"
+        for label, value in gain_metric_rows(result)
     )
     spec = result.spec
     segmentation = spec.segmentation
@@ -252,6 +259,11 @@ status <strong>{_escape(result.status.value)}</strong>.
 
 <h2>Far field</h2>
 {pattern_section}
+
+<h2>Gain and efficiency</h2>
+<table>
+{gain_rows}
+</table>
 
 <h2>Diagnostics</h2>
 {diagnostics}

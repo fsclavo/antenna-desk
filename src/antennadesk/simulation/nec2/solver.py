@@ -28,7 +28,7 @@ from ...domain.simulation.spec import SimulationSpec
 from ..discretization import validate_segmentation
 from ..fingerprint import model_fingerprint
 from .capabilities import NEC2C_CAPABILITIES
-from .errors import SolverExecutionError, SolverNotAvailable
+from .errors import SolverExecutionError, SolverNotAvailable, SolverOutputTooLarge
 from .input_writer import write_nec2_input
 from .normalization import normalize_nec2_result
 from .parser import Nec2ParseError, parse_nec2_output
@@ -328,6 +328,11 @@ class Nec2cSolver:
         ) as exc:
             if not output_text:
                 output_text = self._read_output_or_empty(output_path)
+            code = (
+                "solver.output_too_large"
+                if isinstance(exc, SolverOutputTooLarge)
+                else "solver.execution_error"
+            )
             return self._empty_result(
                 model=model,
                 spec=spec,
@@ -335,7 +340,7 @@ class Nec2cSolver:
                 status=SimulationStatus.ERROR,
                 diagnostics=[
                     Diagnostic(
-                        code="solver.execution_error",
+                        code=code,
                         severity=Severity.ERROR,
                         message=str(exc),
                     )
@@ -389,7 +394,7 @@ class Nec2cSolver:
             raise SolverExecutionError("nec2c produced no output file")
         size = path.stat().st_size
         if size > self._max_output_bytes:
-            raise SolverExecutionError(
+            raise SolverOutputTooLarge(
                 f"nec2c output is too large ({size} bytes; limit is {self._max_output_bytes})"
             )
         return path.read_text(encoding="utf-8", errors="replace")

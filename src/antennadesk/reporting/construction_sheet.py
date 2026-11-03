@@ -28,7 +28,9 @@ from .design_summary import (
     design_provenance_rows,
     design_summary_rows,
     load_summary_rows,
+    transmission_line_summary_rows,
 )
+from .result_summary import gain_metric_rows
 
 CSS = """
 body { font-family: system-ui, sans-serif; margin: 28px; color: #222; background: #fff; }
@@ -64,18 +66,6 @@ def _swr_text(frequency: FrequencyResult | None) -> str:
     return "∞" if math.isinf(frequency.swr) else f"{frequency.swr:.3f}"
 
 
-def _max_gain(result: SimulationResult | None) -> float | None:
-    if result is None:
-        return None
-    gains = [
-        point.gain_total_db
-        for frequency in result.frequencies
-        for point in frequency.far_field
-        if point.gain_total_db is not None
-    ]
-    return max(gains) if gains else None
-
-
 def _resonance_text(result: SimulationResult | None) -> str:
     if result is None or len(result.frequencies) < 2:
         return "—"
@@ -103,7 +93,6 @@ def render_construction_sheet(
     feed_ratio = feed_offset_m / feed_wire.length_m if feed_wire.length_m > 0 else 0.0
     feed_height_m = feed_wire.start.z_m + (feed_wire.end.z_m - feed_wire.start.z_m) * feed_ratio
     frequency = _nearest_frequency(result, parameters.frequency_hz) if result else None
-    max_gain = _max_gain(result)
     efficiency = (
         frequency.power_budget.efficiency_percent
         if frequency is not None and frequency.power_budget is not None
@@ -116,6 +105,7 @@ def render_construction_sheet(
             *design_summary_rows(parameters),
             *design_provenance_rows(design),
             *load_summary_rows(design.antenna.loads),
+            *transmission_line_summary_rows(design.antenna.transmission_lines),
         )
     )
     if isinstance(parameters, DipoleParameters):
@@ -279,8 +269,8 @@ Feed the midpoint of the first side.</p>"""
 <tr><th>Simulated frequency</th><td>{frequency.frequency_hz / 1e6:.6f} MHz</td></tr>
 <tr><th>Impedance</th><td>{frequency.impedance_ohm.real:.3f} {frequency.impedance_ohm.imag:+.3f}j Ω</td></tr>
 <tr><th>SWR ({result.spec.reference_impedance_ohm:g} Ω)</th><td>{_swr_text(frequency)}</td></tr>
-<tr><th>Max power gain</th><td>{f"{max_gain:.2f} dBi" if max_gain is not None else "—"}</td></tr>
 <tr><th>Efficiency</th><td>{f"{efficiency:.2f} %" if efficiency is not None else "—"}</td></tr>
+{"".join(f"<tr><th>{_escape(label)}</th><td>{_escape(value)}</td></tr>" for label, value in gain_metric_rows(result))}
 <tr><th>Resonance</th><td>{_escape(_resonance_text(result))}</td></tr>
 <tr><th>Solver</th><td>{_escape(result.solver.name)} {_escape(result.solver.version)}</td></tr>
 <tr><th>Fingerprint</th><td><code>{_escape(result.model_fingerprint)}</code></td></tr>

@@ -139,6 +139,28 @@ def _parameters_for(key: str) -> object:
             total_length_m=20.0,
             height_m=10.0,
         ),
+        "g5rv": CustomAntennaParameters(
+            frequency_hz=7_100_000.0,
+            wires=(
+                Wire(
+                    "source",
+                    Point3D(0.0, 0.0, 1.0),
+                    Point3D(0.0, 0.0, 1.1),
+                    0.001,
+                    COPPER,
+                ),
+                Wire(
+                    "dipole",
+                    Point3D(-15.55, 0.0, 10.0),
+                    Point3D(15.55, 0.0, 10.0),
+                    0.001,
+                    COPPER,
+                ),
+            ),
+            feed=FeedPoint("source", 0.05),
+            generator_id="g5rv",
+            generator_name="G5RV",
+        ),
         "j_pole": JPoleParameters(
             frequency_hz=220_000_000.0,
             radiator_height_m=1.0,
@@ -220,6 +242,7 @@ def test_every_catalog_entry_has_a_change_template_route(
             "VerticalDialog",
             "CustomAntennaDialog",
             "DoubletDialog",
+            "G5RVDialog",
         ):
             monkeypatch.setattr(main_window_module, class_name, fake_factory)
         fake_self = SimpleNamespace(
@@ -253,6 +276,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "sloper": ("sloper",),
         "random_wire": ("random_wire",),
         "doublet": ("doublet",),
+        "g5rv": ("g5rv",),
         "j_pole": ("j_pole", False),
         "slim_jim": ("j_pole", True),
         "ringo": ("ringo",),
@@ -297,6 +321,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         new_sloper_antenna=record("sloper"),
         new_random_wire_antenna=record("random_wire"),
         new_doublet_antenna=record("doublet"),
+        new_g5rv_antenna=record("g5rv"),
         new_j_pole_antenna=record("j_pole"),
         new_ringo_antenna=record("ringo"),
         new_ocfd_antenna=record("ocfd"),

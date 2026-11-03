@@ -11,7 +11,9 @@ from ..domain.simulation.result import SimulationResult
 
 CSV_HEADER = (
     "frequency_hz,frequency_mhz,resistance_ohm,reactance_ohm,"
-    "impedance_magnitude_ohm,swr,input_power_w,max_gain_dbi"
+    "impedance_magnitude_ohm,swr,input_power_w,max_gain_dbi,"
+    "directivity_dbi,realized_gain_dbi,mismatch_loss_db,"
+    "feed_line_loss_db,network_loss_db"
 )
 
 
@@ -24,6 +26,13 @@ def result_to_csv(result: SimulationResult) -> str:
         max_gain = max(gains) if gains else None
         swr = "inf" if math.isinf(frequency.swr) else f"{frequency.swr:.6f}"
         gain = "" if max_gain is None else f"{max_gain:.4f}"
+        directivity = "" if frequency.directivity_db is None else f"{frequency.directivity_db:.4f}"
+        realized = "" if frequency.realized_gain_db is None else f"{frequency.realized_gain_db:.4f}"
+        mismatch = "" if frequency.mismatch_loss_db is None else f"{frequency.mismatch_loss_db:.6f}"
+        line_loss = (
+            "" if frequency.feed_line_loss_db is None else f"{frequency.feed_line_loss_db:.6f}"
+        )
+        network = "" if frequency.network_loss_db is None else f"{frequency.network_loss_db:.6f}"
         lines.append(
             ",".join(
                 [
@@ -35,6 +44,11 @@ def result_to_csv(result: SimulationResult) -> str:
                     swr,
                     f"{frequency.input_power_w:.9g}",
                     gain,
+                    directivity,
+                    realized,
+                    mismatch,
+                    line_loss,
+                    network,
                 ]
             )
         )

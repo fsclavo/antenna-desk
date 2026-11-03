@@ -50,6 +50,7 @@ from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from ..domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
 from ..domain.antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
+from ..domain.antennas.transmission_line import TransmissionLine
 from ..domain.antennas.trap_dipole import (
     ANTENNA_TYPE_TRAP_DIPOLE,
     TrapDipoleParameters,
@@ -143,6 +144,17 @@ class LoadPayload(StrictModel):
     capacitance_f: float = Field(default=0.0, ge=0.0)
 
 
+class TransmissionLinePayload(StrictModel):
+    id: str = Field(min_length=1)
+    start_wire_id: str = Field(min_length=1)
+    start_offset_m: float = Field(ge=0.0)
+    end_wire_id: str = Field(min_length=1)
+    end_offset_m: float = Field(ge=0.0)
+    characteristic_impedance_ohm: float = Field(gt=0.0)
+    length_m: float = Field(gt=0.0)
+    velocity_factor: float = Field(default=1.0, gt=0.0, le=1.0)
+
+
 class AntennaPayload(StrictModel):
     name: str = Field(min_length=1)
     design_frequency_hz: float = Field(gt=0.0)
@@ -150,6 +162,7 @@ class AntennaPayload(StrictModel):
     feed: FeedPayload
     environment: EnvironmentPayload
     loads: list[LoadPayload] = Field(default_factory=list)
+    transmission_lines: list[TransmissionLinePayload] = Field(default_factory=list)
 
 
 class DipoleParametersPayload(StrictModel):
@@ -329,6 +342,7 @@ class CustomParametersPayload(StrictModel):
     feed: FeedPayload
     ground: GroundPayload
     loads: list[LoadPayload] = Field(default_factory=list)
+    transmission_lines: list[TransmissionLinePayload] = Field(default_factory=list)
     generator_id: str | None = Field(default=None, min_length=1)
     generator_name: str | None = Field(default=None, min_length=1)
 
@@ -460,6 +474,11 @@ class FrequencyResultPayload(StrictModel):
     currents: list[CurrentSamplePayload] = Field(default_factory=list)
     far_field: list[FarFieldPointPayload] = Field(default_factory=list)
     power_budget: PowerBudgetPayload | None = None
+    directivity_db: float | None = None
+    realized_gain_db: float | None = None
+    mismatch_loss_db: float | None = None
+    feed_line_loss_db: float | None = None
+    network_loss_db: float | None = None
 
 
 class SimulationResultPayload(StrictModel):
@@ -721,6 +740,34 @@ def _load_from_domain(value: LumpedLoad) -> LoadPayload:
     )
 
 
+def _transmission_line_from_domain(
+    value: TransmissionLine,
+) -> TransmissionLinePayload:
+    return TransmissionLinePayload(
+        id=value.id,
+        start_wire_id=value.start_wire_id,
+        start_offset_m=value.start_offset_m,
+        end_wire_id=value.end_wire_id,
+        end_offset_m=value.end_offset_m,
+        characteristic_impedance_ohm=value.characteristic_impedance_ohm,
+        length_m=value.length_m,
+        velocity_factor=value.velocity_factor,
+    )
+
+
+def _transmission_line_to_domain(value: TransmissionLinePayload) -> TransmissionLine:
+    return TransmissionLine(
+        id=value.id,
+        start_wire_id=value.start_wire_id,
+        start_offset_m=value.start_offset_m,
+        end_wire_id=value.end_wire_id,
+        end_offset_m=value.end_offset_m,
+        characteristic_impedance_ohm=value.characteristic_impedance_ohm,
+        length_m=value.length_m,
+        velocity_factor=value.velocity_factor,
+    )
+
+
 def _antenna_from_domain(value: AntennaModel) -> AntennaPayload:
     return AntennaPayload(
         name=value.name,
@@ -729,6 +776,9 @@ def _antenna_from_domain(value: AntennaModel) -> AntennaPayload:
         feed=_feed_from_domain(value.feed),
         environment=_environment_from_domain(value.environment),
         loads=[_load_from_domain(load) for load in value.loads],
+        transmission_lines=[
+            _transmission_line_from_domain(line) for line in value.transmission_lines
+        ],
     )
 
 
@@ -982,6 +1032,9 @@ def _custom_parameters_from_domain(
         feed=_feed_from_domain(value.feed),
         ground=_ground_from_domain(value.ground),
         loads=[_load_from_domain(load) for load in value.loads],
+        transmission_lines=[
+            _transmission_line_from_domain(line) for line in value.transmission_lines
+        ],
         generator_id=value.generator_id,
         generator_name=value.generator_name,
     )
@@ -1159,6 +1212,11 @@ def _frequency_result_from_domain(value: FrequencyResult) -> FrequencyResultPayl
             if value.power_budget is not None
             else None
         ),
+        directivity_db=value.directivity_db,
+        realized_gain_db=value.realized_gain_db,
+        mismatch_loss_db=value.mismatch_loss_db,
+        feed_line_loss_db=value.feed_line_loss_db,
+        network_loss_db=value.network_loss_db,
     )
 
 
@@ -1333,6 +1391,9 @@ def _antenna_to_domain(value: AntennaPayload) -> AntennaModel:
         feed=_feed_to_domain(value.feed),
         environment=_environment_to_domain(value.environment),
         loads=tuple(_load_to_domain(load) for load in value.loads),
+        transmission_lines=tuple(
+            _transmission_line_to_domain(line) for line in value.transmission_lines
+        ),
     )
 
 
@@ -1610,6 +1671,9 @@ def _custom_parameters_to_domain(value: CustomParametersPayload) -> CustomAntenn
         feed=_feed_to_domain(value.feed),
         ground=_ground_to_domain(value.ground),
         loads=tuple(_load_to_domain(load) for load in value.loads),
+        transmission_lines=tuple(
+            _transmission_line_to_domain(line) for line in value.transmission_lines
+        ),
         generator_id=value.generator_id,
         generator_name=value.generator_name,
     )
@@ -1775,6 +1839,11 @@ def _frequency_result_to_domain(value: FrequencyResultPayload) -> FrequencyResul
         power_budget=(
             _power_budget_to_domain(value.power_budget) if value.power_budget is not None else None
         ),
+        directivity_db=value.directivity_db,
+        realized_gain_db=value.realized_gain_db,
+        mismatch_loss_db=value.mismatch_loss_db,
+        feed_line_loss_db=value.feed_line_loss_db,
+        network_loss_db=value.network_loss_db,
     )
 
 

@@ -63,6 +63,14 @@ Completed:
   bundled `nec2c`, checksums, and a tag-triggered release workflow.
 - Reference anchors for NEC examples, selected ARRL dipole/folded/loop
   properties, the published Cebik 20 m wire Moxon, and the NBS Yagi preset.
+- Directivity and realized gain separated from NEC power gain, with a two-port
+  feed-line/matching-network cascade and reported mismatch, line, and network
+  losses.
+- Transmission lines as geometry: NEC `TL` two-ports between wire points,
+  persisted in the model, drawn as dashed construction lines, and editable from
+  the design panel.
+- G5RV catalog preset with the published 102 ft dipole and a 300 Ω / 450 Ω
+  geometry matching line.
 - `v0.1.0` published with wheel/sdist, AppImage, Debian package, Windows zip,
   and SHA-256 checksums. Signing is optional and deferred.
 
@@ -129,8 +137,6 @@ Deferred:
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
-| P1 | Transmission line as geometry, not only feed-line post-processing | B | pending |
-| P1 | Realized gain and directivity separated from NEC power gain | A | pending |
 | P1 | Independent references for remaining experimental templates | A/B | partial |
 | P2 | GPG/Authenticode code signing for release artifacts | n/a | deferred |
 | P2 | Relative permeability export to NEC | B | pending |
@@ -143,8 +149,9 @@ Deferred:
 
 Modeling track:
 
-1. Transmission-line geometry.
-2. Realized gain/directivity and relative-permeability export.
+1. Relative-permeability export and a pattern-metric selector for realized
+   gain/directivity.
+2. ZS6BKW and Zepp presets using geometry transmission lines.
 
 Release track:
 

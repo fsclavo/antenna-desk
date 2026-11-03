@@ -12,6 +12,7 @@ from ..common.validation import Diagnostic, Severity, raise_if_errors
 from ..environment.environment import Environment
 from .feed import FeedPoint
 from .load import LumpedLoad
+from .transmission_line import TransmissionLine
 from .wire import Wire
 
 
@@ -25,10 +26,12 @@ class AntennaModel:
     feed: FeedPoint
     environment: Environment = field(default_factory=Environment)
     loads: tuple[LumpedLoad, ...] = field(default_factory=tuple)
+    transmission_lines: tuple[TransmissionLine, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "wires", tuple(self.wires))
         object.__setattr__(self, "loads", tuple(self.loads))
+        object.__setattr__(self, "transmission_lines", tuple(self.transmission_lines))
         raise_if_errors(self._invariants())
 
     def _invariants(self) -> tuple[Diagnostic, ...]:
@@ -119,6 +122,54 @@ class AntennaModel:
                     )
                 )
 
+        seen_line_ids: set[str] = set()
+        for line in self.transmission_lines:
+            if line.id in seen_line_ids:
+                diagnostics.append(
+                    Diagnostic(
+                        code="antenna.transmission_line.duplicate_id",
+                        severity=Severity.ERROR,
+                        message=f"duplicate transmission line id: {line.id}",
+                        field="transmission_lines",
+                    )
+                )
+            seen_line_ids.add(line.id)
+            for label, wire_id, offset_m in (
+                ("start", line.start_wire_id, line.start_offset_m),
+                ("end", line.end_wire_id, line.end_offset_m),
+            ):
+                line_wire = next((wire for wire in self.wires if wire.id == wire_id), None)
+                if line_wire is None:
+                    diagnostics.append(
+                        Diagnostic(
+                            code="antenna.transmission_line.unknown_wire",
+                            severity=Severity.ERROR,
+                            message=(
+                                f"transmission line {line.id} {label} references "
+                                f"an unknown wire: {wire_id}"
+                            ),
+                            field="transmission_lines",
+                        )
+                    )
+                elif offset_m > line_wire.length_m and not math.isclose(
+                    offset_m,
+                    line_wire.length_m,
+                    rel_tol=1e-9,
+                    abs_tol=1e-9,
+                ):
+                    diagnostics.append(
+                        Diagnostic(
+                            code="antenna.transmission_line.out_of_range",
+                            severity=Severity.ERROR,
+                            message=(
+                                f"transmission line {line.id} {label} offset "
+                                f"{offset_m} m is outside wire {line_wire.id} of "
+                                f"length {line_wire.length_m} m"
+                            ),
+                            field="transmission_lines",
+                        )
+                    )
+
         feed_wire = next(
             (wire for wire in self.wires if wire.id == self.feed.wire_id),
             None,
@@ -192,3 +243,9 @@ class AntennaModel:
 
     def with_loads(self, loads: tuple[LumpedLoad, ...]) -> AntennaModel:
         return replace(self, loads=loads)
+
+    def with_transmission_lines(
+        self,
+        transmission_lines: tuple[TransmissionLine, ...],
+    ) -> AntennaModel:
+        return replace(self, transmission_lines=transmission_lines)

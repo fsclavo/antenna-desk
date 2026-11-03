@@ -40,6 +40,11 @@ def make_result() -> SimulationResult:
             far_field=(
                 FarFieldPoint(0.0, 0.0, 2.0, None, 2.0, 0.0, 0.0, None, None, None, None, None),
             ),
+            directivity_db=2.2,
+            realized_gain_db=1.8,
+            mismatch_loss_db=0.2,
+            feed_line_loss_db=0.1,
+            network_loss_db=0.05,
         ),
         FrequencyResult(
             frequency_hz=7_100_000.0,
@@ -72,6 +77,7 @@ def test_csv_header_and_rows() -> None:
     assert lines[0] == CSV_HEADER
     assert len(lines) == 3
     assert lines[1].startswith("6900000.000000,6.900000000,60.000000,-10.000000")
+    assert lines[1].endswith(",2.0000,2.2000,1.8000,0.200000,0.100000,0.050000")
     assert lines[2].startswith("7100000.000000,7.100000000,70.000000,0.000000")
 
 

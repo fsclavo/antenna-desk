@@ -166,4 +166,27 @@ def validate_segmentation(
                     )
                 )
 
+    for line in model.transmission_lines:
+        for label, wire_id, offset_m in (
+            ("start", line.start_wire_id, line.start_offset_m),
+            ("end", line.end_wire_id, line.end_offset_m),
+        ):
+            segmentation = layout.wire_segmentation(wire_id)
+            index = int(offset_m / segmentation.segment_length_m)
+            index = min(max(index, 0), segmentation.segments - 1)
+            center = (index + 0.5) * segmentation.segment_length_m
+            if abs(offset_m - center) > 0.05 * segmentation.segment_length_m:
+                diagnostics.append(
+                    Diagnostic(
+                        code="segmentation.transmission_line_offset",
+                        severity=Severity.WARNING,
+                        message=(
+                            f"transmission line {line.id} {label} point is not at "
+                            "the center of its segment; the TL connection is an "
+                            "approximation"
+                        ),
+                        field="transmission_lines",
+                    )
+                )
+
     return tuple(diagnostics)

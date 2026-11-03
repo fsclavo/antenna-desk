@@ -237,3 +237,67 @@ def test_trap_dipole_construction_sheet_lists_both_traps() -> None:
     assert "14.100000 MHz" in sheet
     assert "Load 1 (parallel)" in sheet
     assert "Load 2 (parallel)" in sheet
+
+
+def test_construction_sheet_reports_realized_gain_and_losses(sample_project: Project) -> None:
+    from antennadesk.domain.simulation.result import FarFieldPoint
+
+    point = FarFieldPoint(
+        theta_deg=90.0,
+        phi_deg=0.0,
+        gain_vertical_db=2.15,
+        gain_horizontal_db=None,
+        gain_total_db=2.15,
+        axial_ratio=1.0,
+        tilt_deg=0.0,
+        polarization="linear",
+        e_theta_magnitude_v_per_m=None,
+        e_theta_phase_deg=None,
+        e_phi_magnitude_v_per_m=None,
+        e_phi_phase_deg=None,
+    )
+    result = _make_result()
+    frequency = replace(
+        result.frequencies[0],
+        far_field=(point,),
+        directivity_db=2.20,
+        realized_gain_db=1.85,
+        mismatch_loss_db=0.20,
+        feed_line_loss_db=0.10,
+        network_loss_db=0.05,
+    )
+    result = replace(result, frequencies=(frequency,))
+
+    sheet = render_construction_sheet(sample_project, sample_project.designs[0], result)
+
+    assert "Max power gain (NEC)" in sheet
+    assert "2.15 dBi" in sheet
+    assert "Max directivity" in sheet
+    assert "2.20 dBi" in sheet
+    assert "Max realized gain" in sheet
+    assert "1.85 dBi" in sheet
+    assert "Mismatch loss" in sheet
+    assert "0.200 dB" in sheet
+
+
+def test_construction_sheet_lists_transmission_lines(sample_project: Project) -> None:
+    from antennadesk.domain.antennas.transmission_line import TransmissionLine
+
+    line = TransmissionLine(
+        id="line-1",
+        start_wire_id="radiator",
+        start_offset_m=0.0,
+        end_wire_id="radiator",
+        end_offset_m=10.0,
+        characteristic_impedance_ohm=300.0,
+        length_m=8.0,
+        velocity_factor=0.9,
+    )
+    design = sample_project.designs[0].with_transmission_lines((line,))
+    project = sample_project.with_design(design, updated_at=sample_project.updated_at)
+
+    sheet = render_construction_sheet(project, design, None)
+
+    assert "Transmission line 1" in sheet
+    assert "300 Ω" in sheet
+    assert "VF 0.9" in sheet

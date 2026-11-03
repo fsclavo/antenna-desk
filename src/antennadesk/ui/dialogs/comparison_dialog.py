@@ -174,6 +174,8 @@ class ComparisonDialog(QDialog):
             return [(t("compare.metric"), "—")]
         frequency = self._closest_frequency(result, design.parameters.frequency_hz)
         max_gain = self._max_gain(result)
+        max_directivity = result.max_directivity_db if result is not None else None
+        max_realized = result.max_realized_gain_db if result is not None else None
         efficiency = (
             frequency.power_budget.efficiency_percent
             if frequency is not None and frequency.power_budget is not None
@@ -218,6 +220,14 @@ class ComparisonDialog(QDialog):
                 ),
             ),
             (t("compare.max_gain"), f"{max_gain:.2f}" if max_gain is not None else "—"),
+            (
+                t("compare.max_directivity"),
+                f"{max_directivity:.2f}" if max_directivity is not None else "—",
+            ),
+            (
+                t("compare.max_realized_gain"),
+                f"{max_realized:.2f}" if max_realized is not None else "—",
+            ),
             (t("compare.efficiency"), (f"{efficiency:.2f}" if efficiency is not None else "—")),
             (
                 t("results.solver"),

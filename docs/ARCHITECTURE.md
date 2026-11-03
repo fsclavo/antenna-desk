@@ -234,9 +234,15 @@ limit, and offers simulation-history compaction.
   adapter.
 - Series and parallel RLC loads are supported on one wire segment. L/Pi/T
   matching networks are post-processed at the feedpoint. General
-  transmission-line geometry is not modeled.
-- Far-field results are NEC power gains. Realized gain and directivity are not
-  separated yet.
+  transmission-line geometry is modeled as NEC `TL` two-ports between wire
+  points; physical parallel-line coupling is not modeled.
+- Far-field results are NEC power gains. Directivity and realized gain are
+  derived per frequency; the pattern charts still show power gain. See
+  [ADR-0015](ADR/0015-realized-gain-and-directivity.md).
+- The UI estimates the persisted project size before a run and may coarsen the
+  far-field pattern to the finest step that fits. Oversized sweeps keep the
+  frequency plan and disable the pattern rather than failing. See
+  [ADR-0017](ADR/0017-simulation-storage-budget.md).
 - The end-fed feed transformer is an ideal impedance ratio; it is not a
   physical unun model. The counterpoise is ordinary wire geometry.
 - Relative permeability is not emitted to NEC.

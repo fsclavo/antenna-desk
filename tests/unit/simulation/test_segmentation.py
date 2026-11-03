@@ -247,3 +247,25 @@ def test_aligned_policy_gives_short_connectors_at_least_three_segments() -> None
 
     assert len(policy.wire_segments) == 4
     assert all(segments >= 3 for _, segments in policy.wire_segments)
+
+
+def test_transmission_line_endpoint_off_segment_center_warns() -> None:
+    from antennadesk.domain.antennas.transmission_line import TransmissionLine
+
+    model = _model(_wire(length_m=20.0), feed_offset_m=10.0).with_transmission_lines(
+        (
+            TransmissionLine(
+                id="line-1",
+                start_wire_id="radiator",
+                start_offset_m=0.1,
+                end_wire_id="radiator",
+                end_offset_m=10.0,
+                characteristic_impedance_ohm=50.0,
+                length_m=1.0,
+            ),
+        )
+    )
+    spec = _spec(segments_per_wire=20)
+    codes = {diagnostic.code for diagnostic in validate_segmentation(model, spec)}
+
+    assert "segmentation.transmission_line_offset" in codes

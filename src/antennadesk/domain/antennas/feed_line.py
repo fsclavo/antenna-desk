@@ -9,6 +9,7 @@ import math
 from dataclasses import dataclass
 
 from ..common.units import SPEED_OF_LIGHT_M_PER_S, ensure_non_negative, ensure_positive
+from .two_port import Abcd
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,13 +42,12 @@ class FeedLine:
     def is_active(self) -> bool:
         return self.length_m > 0.0
 
-    def input_impedance(self, load_impedance_ohm: complex, frequency_hz: float) -> complex:
-        """Return the impedance at the transmitter end of the line."""
+    def abcd(self, frequency_hz: float) -> Abcd:
+        """Return the line's ABCD matrix at ``frequency_hz``."""
 
         ensure_positive(frequency_hz, name="frequency_hz")
         if not self.is_active:
-            return load_impedance_ohm
-
+            return Abcd()
         attenuation_np_per_m = self.matched_loss_db_per_100m * math.log(10.0) / (20.0 * 100.0)
         phase_rad_per_m = (
             2.0 * math.pi * frequency_hz / (SPEED_OF_LIGHT_M_PER_S * self.velocity_factor)
@@ -56,6 +56,19 @@ class FeedLine:
             attenuation_np_per_m * self.length_m,
             phase_rad_per_m * self.length_m,
         )
-        tangent = cmath.tanh(electrical_length)
-        z0 = self.characteristic_impedance_ohm
-        return z0 * (load_impedance_ohm + z0 * tangent) / (z0 + load_impedance_ohm * tangent)
+        hyperbolic_sine = cmath.sinh(electrical_length)
+        hyperbolic_cosine = cmath.cosh(electrical_length)
+        return Abcd(
+            a=hyperbolic_cosine,
+            b=self.characteristic_impedance_ohm * hyperbolic_sine,
+            c=hyperbolic_sine / self.characteristic_impedance_ohm,
+            d=hyperbolic_cosine,
+        )
+
+    def input_impedance(self, load_impedance_ohm: complex, frequency_hz: float) -> complex:
+        """Return the impedance at the transmitter end of the line."""
+
+        ensure_positive(frequency_hz, name="frequency_hz")
+        if not self.is_active:
+            return load_impedance_ohm
+        return self.abcd(frequency_hz).input_impedance(load_impedance_ohm)

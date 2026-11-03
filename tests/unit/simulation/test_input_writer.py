@@ -214,3 +214,50 @@ def test_trap_dipole_emits_parallel_traps_on_both_sides() -> None:
 
     assert "LD 1 1 2 2 0.000000000 0.000010000 0.000000000013" in deck.text
     assert "LD 1 1 6 6 0.000000000 0.000010000 0.000000000013" in deck.text
+
+
+def test_transmission_line_card_uses_electrical_length() -> None:
+    from antennadesk.domain.antennas.transmission_line import TransmissionLine
+
+    line = TransmissionLine(
+        id="line-1",
+        start_wire_id="radiator",
+        start_offset_m=0.1,
+        end_wire_id="radiator",
+        end_offset_m=0.4,
+        characteristic_impedance_ohm=50.0,
+        length_m=1.0,
+        velocity_factor=0.5,
+    )
+    model = _manual_model().with_transmission_lines((line,))
+    deck = write_nec2_input(model, _spec(segments=7))
+
+    assert (
+        "TL 1 2 1 6 50.000000000 2.000000000 0.000000000 0.000000000 0.000000000 0.000000000"
+    ) in deck.text
+
+
+def test_load_card_uses_local_segment_number_for_later_wires() -> None:
+    from antennadesk.domain.antennas.load import SeriesLoad
+    from antennadesk.domain.antennas.materials import COPPER
+
+    second = Wire(
+        id="second",
+        start=Point3D(0.0, 0.0, 10.0),
+        end=Point3D(0.0, 0.0, 10.5),
+        radius_m=0.001,
+        material=COPPER,
+    )
+    model = _manual_model().with_transmission_lines(())  # keep the first wire
+    model = AntennaModel(
+        name="Two wires",
+        design_frequency_hz=299_800_000.0,
+        wires=(*model.wires, second),
+        feed=model.feed,
+        environment=model.environment,
+        loads=(SeriesLoad("load-1", "second", 0.25, resistance_ohm=50.0),),
+    )
+
+    deck = write_nec2_input(model, _spec(segments=7))
+
+    assert "LD 0 2 4 4 50.000000000" in deck.text

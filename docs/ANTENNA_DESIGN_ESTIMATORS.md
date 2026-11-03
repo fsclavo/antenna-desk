@@ -142,6 +142,16 @@ These catalog presets are not frequency-first estimators:
 
 No independent numerical reference is claimed for these presets.
 
+## G5RV preset
+
+The G5RV preset is not a frequency-first estimator. It uses the published
+102 ft dipole with a 29 ft 300 Ω or 34 ft 450 Ω matching section. The line is
+modeled as a lossless geometry `TL` two-port. The published dimensions come from
+Carr, *Practical Antenna Handbook* (via the Wikipedia G5RV article). The line
+velocity factor is installation-specific; the default `1.0` treats the published
+length as the electrical length. No independent numerical reference is claimed
+for the complete lossless model or for a specific installation.
+
 ## Yagi scope
 
 The frequency-only estimator supports **2 to 32 elements** using the first
@@ -168,6 +178,8 @@ Reference sources currently used:
 - NBS TN-688: five-element Yagi preset in the editor.
 - DL6WU/Cebik: 2–32 element trimming Yagi starting design.
 - L. B. Cebik, W4RNL, “The Moxon Rectangle: A Review”, Table 1: 20 m wire Moxon.
+- Carr, *Practical Antenna Handbook* (via the Wikipedia G5RV article): 102 ft
+  G5RV dipole and 29 ft 300 Ω / 34 ft 450 Ω matching sections.
 - Application preset: Ringo proportions, the loop polygon correction, the
   end-fed transformer/counterpoise starting point, the loaded-vertical mobile
   preset, the trap-dipole starting dimensions, and the sloper, random-wire, and
@@ -212,5 +224,7 @@ Reference sources currently used:
   and installation effects are not solved analytically.
 - Sloper, random-wire, and doublet presets are application starting points; the
   doublet tuner is not modeled as a matching network.
+- The G5RV uses a lossless geometry line and a user-supplied velocity factor;
+  the transmitter coax and tuner are separate.
 - Estimator provenance is shown in the dialog and persisted as optional design
   metadata. Editing the design clears it.

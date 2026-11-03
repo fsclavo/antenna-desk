@@ -245,6 +245,15 @@ wire length is `inner_length_m + 2 * outer_length_m`. The traps are
 template-managed loads: editing the parameters regenerates them, while other
 user loads are preserved.
 
+### G5RV preset
+
+The G5RV catalog preset is a `CustomAntennaParameters` design with
+`generator_id="g5rv"` and `generator_name="G5RV"`. It generates a 31.1 m
+dipole, a short source wire, and a geometry `TransmissionLine` matching section
+(300 Ω / 8.84 m or 450 Ω / 10.36 m). The line is lossless and does not radiate.
+The preset is an antenna configuration, not a new first-class parameter type;
+the generic custom-wire and transmission-line editors remain available.
+
 ### OCFDParameters
 
 A first-class single-wire horizontal dipole with a feed point offset from the
@@ -393,8 +402,8 @@ the application writes version 3.
   editor.
 - Series and parallel RLC loads are supported on one wire segment. L/Pi/T
   matching networks are post-processed at the feedpoint, and the vertical
-  generator has a radial screen. General transmission-line geometry and
-  arbitrary radial screens are not modeled.
+  generator has a radial screen. Transmission-line two-ports between wire
+  points are modeled as geometry; arbitrary radial screens are not.
 - Optimization and synthesis operate on generated parameters. Custom and
   imported designs are excluded from the guided optimizer.
 - Measurements are imported from CSV; there is no live instrument-control
@@ -403,8 +412,9 @@ the application writes version 3.
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
 - Simulation results are persisted as immutable runs in schema version 3.
-- Far-field values are NEC power gains; realized gain and directivity are not
-  separated yet.
+- Far-field values are NEC power gains. Directivity and realized gain are
+  derived per frequency and stored alongside the impedance and power budget;
+  see [ADR-0015](ADR/0015-realized-gain-and-directivity.md).
 - Relative permeability is not emitted to NEC. Conductor conductivity is
   emitted when `SimulationSpec.include_conductor_losses` is true.
 
@@ -421,10 +431,21 @@ Phase 2 adds solver-independent simulation types:
   extended-kernel flag, conductor-loss flag, far-field request, and timeout.
 - `SolverMetadata`: engine name, version, and executable.
 - `SolverCapabilities`: what the adapter can represent.
+- `TransmissionLine`: a lossless NEC TL two-port between two wire offsets,
+  with characteristic impedance, physical length, and velocity factor.
 - `SimulationResult`: status, spec, model fingerprint, solver metadata,
   per-frequency results, diagnostics, raw input/output, and timing.
-- `FrequencyResult`: impedance, SWR, input power, currents, far field, and
-  power budget for one frequency.
+- `FrequencyResult`: impedance, SWR, input power, currents, far field, power
+  budget, directivity, realized gain, and link-loss components for one
+  frequency.
+- `TransmissionLine`: a mathematical two-port, not a radiating wire. The model
+  stores physical length and velocity factor; the NEC adapter writes the
+  free-space-equivalent length. Lines are drawn as dashed construction
+  polylines and do not appear in far-field calculations.
+- `PatternBudget`: an application policy that estimates persisted project size
+  from frequency count, far-field points, and segment count, then chooses the
+  finest pattern step that fits. It may disable the far-field request when no
+  step fits.
 - `CurrentSample`, `FarFieldPoint`, and `PowerBudget`: normalized output
   records.
 - `ResonancePoint` and `find_resonances()`: series reactance zero crossings
@@ -439,9 +460,12 @@ Phase 2 adds solver-independent simulation types:
 - `SimulationRun`: immutable snapshot linked to a design, with creation time
   and the normalized `SimulationResult`.
 
-The far-field values are NEC power gains in dB. They are not realized gain or
-directivity unless the model and losses justify that interpretation; the
-adapter documents this explicitly.
+The far-field values are NEC power gains in dB. For a frequency with a power
+budget, directivity is derived from the gain and the structure efficiency. For
+a frequency with a far-field pattern, realized gain is the power gain plus the
+transducer gain of the feed-line, matching-network, and transformer cascade.
+The pattern charts still show NEC power gain; the summary and reports show all
+three metrics. See [ADR-0015](ADR/0015-realized-gain-and-directivity.md).
 
 Simulation results are immutable and carry a deterministic fingerprint of the
 model and spec. Completed and partial runs are stored in the project as

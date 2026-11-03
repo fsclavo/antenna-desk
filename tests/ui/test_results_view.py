@@ -185,15 +185,18 @@ def test_pattern_3d_max_label_shows_gain_and_takeoff_angle(qtbot: QtBot) -> None
     view = RadiationPattern3DView(Translator(Language.ENGLISH))
     qtbot.addWidget(view)
     view.set_points(((75.0, 0.0, 12.34),), ground=True)
-    assert view._max_gain_label((75.0, 0.0, 12.34)) == "12.34 dBi · 15.0° above ground"
+    assert view._max_gain_label((75.0, 0.0, 12.34)) == "Power gain 12.34 dBi · 15.0° above ground"
 
     view.set_points(((75.0, 0.0, 12.34),), ground=False)
-    assert view._max_gain_label((75.0, 0.0, 12.34)) == "12.34 dBi · 15.0° elevation"
+    assert view._max_gain_label((75.0, 0.0, 12.34)) == "Power gain 12.34 dBi · 15.0° elevation"
 
     spanish = RadiationPattern3DView(Translator(Language.SPANISH))
     qtbot.addWidget(spanish)
     spanish.set_points(((75.0, 0.0, 12.34),), ground=True)
-    assert spanish._max_gain_label((75.0, 0.0, 12.34)) == "12.34 dBi · 15.0° sobre el suelo"
+    assert (
+        spanish._max_gain_label((75.0, 0.0, 12.34))
+        == "Ganancia de potencia 12.34 dBi · 15.0° sobre el suelo"
+    )
 
 
 def test_pattern_3d_can_draw_a_ground_plane(qtbot: QtBot) -> None:
@@ -382,3 +385,47 @@ def test_results_view_shows_imported_measurements(qtbot: QtBot) -> None:
     assert view._measurement_selector.count() == 1
     assert view._measurement_table.rowCount() == 2
     assert view._measurement_plot.listDataItems()
+
+
+def test_results_view_shows_directivity_and_realized_gain(qtbot: QtBot) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.simulation.result import FarFieldPoint
+
+    point = FarFieldPoint(
+        theta_deg=90.0,
+        phi_deg=0.0,
+        gain_vertical_db=2.0,
+        gain_horizontal_db=None,
+        gain_total_db=2.0,
+        axial_ratio=1.0,
+        tilt_deg=0.0,
+        polarization="linear",
+        e_theta_magnitude_v_per_m=None,
+        e_theta_phase_deg=None,
+        e_phi_magnitude_v_per_m=None,
+        e_phi_phase_deg=None,
+    )
+    result = _make_result()
+    frequency = replace(
+        result.frequencies[1],
+        far_field=(point,),
+        directivity_db=2.2,
+        realized_gain_db=1.8,
+        mismatch_loss_db=0.2,
+        feed_line_loss_db=0.1,
+        network_loss_db=0.05,
+    )
+    result = replace(result, frequencies=(frequency,))
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+
+    view.set_result(result)
+
+    text = view._gain_summary.text()
+    assert "Power gain 2.00 dBi" in text
+    assert "Directivity 2.20 dBi" in text
+    assert "Realized gain 1.80 dBi" in text
+    assert "Mismatch 0.20 dB" in text
+    assert "line 0.10 dB" in text
+    assert "network 0.05 dB" in text

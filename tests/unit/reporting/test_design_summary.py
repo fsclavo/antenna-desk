@@ -79,3 +79,13 @@ def test_endfed_presets_are_labeled_in_the_summary() -> None:
 
     assert sloper["Type"] == "sloper"
     assert random_wire["Type"] == "random wire"
+
+
+def test_g5rv_custom_generator_is_labeled_in_the_summary() -> None:
+    from antennadesk.domain.antennas.g5rv import g5rv_parameters
+
+    parameters = g5rv_parameters(frequency_hz=14_100_000.0)
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Type"] == "custom wires"
+    assert rows["Generator"] == "G5RV"

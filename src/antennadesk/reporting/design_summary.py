@@ -17,6 +17,7 @@ from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
+from ..domain.antennas.transmission_line import TransmissionLine
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
@@ -57,6 +58,7 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", "custom wires"),
+                ("Generator", parameters.generator_name or "custom"),
                 ("Wires", str(len(parameters.wires))),
                 ("Total conductor", f"{sum(wire.length_m for wire in parameters.wires):.4f} m"),
                 ("Min height", f"{min(heights):.4f} m"),
@@ -319,6 +321,25 @@ def load_summary_rows(loads: tuple[LumpedLoad, ...]) -> tuple[tuple[str, str], .
                     f"R={load.resistance_ohm:g} Ω · "
                     f"L={load.inductance_h * 1e6:g} µH · "
                     f"C={load.capacitance_f * 1e12:g} pF"
+                ),
+            )
+        )
+    return tuple(rows)
+
+
+def transmission_line_summary_rows(
+    lines: tuple[TransmissionLine, ...],
+) -> tuple[tuple[str, str], ...]:
+    rows: list[tuple[str, str]] = []
+    for index, line in enumerate(lines, start=1):
+        rows.append(
+            (
+                f"Transmission line {index}",
+                (
+                    f"{line.start_wire_id} @ {line.start_offset_m:.3f} m → "
+                    f"{line.end_wire_id} @ {line.end_offset_m:.3f} m · "
+                    f"{line.characteristic_impedance_ohm:g} Ω · "
+                    f"{line.length_m:.3f} m · VF {line.velocity_factor:g}"
                 ),
             )
         )

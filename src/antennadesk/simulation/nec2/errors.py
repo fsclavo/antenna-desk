@@ -11,3 +11,7 @@ class SolverNotAvailable(RuntimeError):
 
 class SolverExecutionError(RuntimeError):
     """The solver failed to produce usable output."""
+
+
+class SolverOutputTooLarge(SolverExecutionError):
+    """The solver output exceeded the configured storage limit."""

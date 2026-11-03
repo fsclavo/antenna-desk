@@ -241,6 +241,42 @@ def test_vertical_with_radials_gets_a_top_inset() -> None:
     assert "radials 4" in scene.summary
 
 
+def test_transmission_lines_are_drawn_as_dashed_construction_lines() -> None:
+    from antennadesk.domain.antennas.transmission_line import TransmissionLine
+
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=10.0,
+    )
+    line = TransmissionLine(
+        id="line-1",
+        start_wire_id="radiator",
+        start_offset_m=0.0,
+        end_wire_id="radiator",
+        end_offset_m=20.0,
+        characteristic_impedance_ohm=300.0,
+        length_m=10.0,
+        velocity_factor=0.9,
+    )
+    model = parameters.to_antenna().with_transmission_lines((line,))
+
+    scene = build_scene(
+        model,
+        antenna_type="wire_dipole",
+        parameters=parameters,
+        display_name=None,
+        mode=GeometryViewMode.ELEVATION,
+        translator=TRANSLATOR,
+        unit_system=UnitSystem.METRIC,
+    )
+
+    lines = [polyline for polyline in scene.polylines if polyline.role == "transmission-line"]
+    assert len(lines) == 1
+    assert lines[0].style == "dashed"
+    assert "transmission lines: 1" in scene.summary
+
+
 def test_loaded_vertical_marks_the_loading_coil() -> None:
     from antennadesk.domain.antennas.vertical import VerticalParameters
 
@@ -392,3 +428,23 @@ def test_fan_dipole_has_one_angle_annotation_per_element() -> None:
         "120.0°",
         "90.0°",
     }
+
+
+def test_g5rv_custom_generator_uses_the_dipole_summary_and_dashed_line() -> None:
+    from antennadesk.domain.antennas.g5rv import g5rv_parameters
+
+    parameters = g5rv_parameters(frequency_hz=14_100_000.0)
+
+    scene = build_scene(
+        parameters.to_antenna(),
+        antenna_type="custom",
+        parameters=parameters,
+        display_name=None,
+        mode=GeometryViewMode.ELEVATION,
+        translator=TRANSLATOR,
+        unit_system=UnitSystem.METRIC,
+    )
+
+    assert "Wire dipole" in scene.summary
+    assert "transmission lines: 1" in scene.summary
+    assert any(polyline.role == "transmission-line" for polyline in scene.polylines)

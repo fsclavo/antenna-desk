@@ -82,3 +82,21 @@ def test_material_rejects_invalid_values() -> None:
             conductivity_s_per_m=1.0,
             relative_permeability=0.0,
         )
+
+
+def test_wire_point_at_interpolates_between_endpoints() -> None:
+    wire = Wire(
+        id="radiator",
+        start=Point3D(-10.0, 0.0, 8.0),
+        end=Point3D(10.0, 0.0, 4.0),
+        radius_m=0.001,
+        material=COPPER,
+    )
+
+    assert wire.point_at(0.0) == wire.start
+    assert wire.point_at(wire.length_m) == wire.end
+    midpoint = wire.point_at(wire.length_m / 2.0)
+    assert midpoint.x_m == pytest.approx(0.0)
+    assert midpoint.z_m == pytest.approx(6.0)
+    with pytest.raises(ValueError, match="within the wire length"):
+        wire.point_at(wire.length_m + 0.1)

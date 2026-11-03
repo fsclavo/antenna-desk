@@ -151,6 +151,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Non-resonant end-fed wire with a 9:1 transformer and counterpoise.",
         Language.SPANISH: "Hilo no resonante alimentado en el extremo con transformador 9:1 y contrapeso.",
     },
+    "catalog.g5rv": {
+        Language.ENGLISH: "G5RV",
+        Language.SPANISH: "G5RV",
+    },
+    "catalog.g5rv.description": {
+        Language.ENGLISH: ("Published 102 ft dipole with a 300 Ω or 450 Ω matching line."),
+        Language.SPANISH: (
+            "Dipolo publicado de 102 pies con línea de adaptación de 300 Ω o 450 Ω."
+        ),
+    },
+    "catalog.evidence.g5rv": {
+        Language.ENGLISH: "Published G5RV dimensions; lossless TL model",
+        Language.SPANISH: "Dimensiones publicadas del G5RV; modelo de línea sin pérdidas",
+    },
     "catalog.doublet": {
         Language.ENGLISH: "Doublet",
         Language.SPANISH: "Doublet",
@@ -400,6 +414,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "geometry.gap": {Language.ENGLISH: "gap", Language.SPANISH: "brecha"},
     "geometry.traps": {Language.ENGLISH: "traps", Language.SPANISH: "trampas"},
+    "geometry.transmission_lines": {
+        Language.ENGLISH: "transmission lines: {count}",
+        Language.SPANISH: "líneas de transmisión: {count}",
+    },
     "geometry.end_height": {
         Language.ENGLISH: "end height",
         Language.SPANISH: "altura del extremo",
@@ -771,6 +789,71 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "field.pattern_points": {
         Language.ENGLISH: "{count} pattern points",
         Language.SPANISH: "{count} puntos de patrón",
+    },
+    "g5rv.title": {
+        Language.ENGLISH: "G5RV Generator",
+        Language.SPANISH: "Generador G5RV",
+    },
+    "g5rv.feed_height": {
+        Language.ENGLISH: "Feed height",
+        Language.SPANISH: "Altura de alimentación",
+    },
+    "g5rv.wire_radius": {
+        Language.ENGLISH: "Wire radius (mm)",
+        Language.SPANISH: "Radio del hilo (mm)",
+    },
+    "g5rv.line_option": {
+        Language.ENGLISH: "Matching line",
+        Language.SPANISH: "Línea de adaptación",
+    },
+    "g5rv.line_option.0": {
+        Language.ENGLISH: "300 Ω / 8.84 m (29 ft)",
+        Language.SPANISH: "300 Ω / 8.84 m (29 pies)",
+    },
+    "g5rv.line_option.1": {
+        Language.ENGLISH: "450 Ω / 10.36 m (34 ft)",
+        Language.SPANISH: "450 Ω / 10.36 m (34 pies)",
+    },
+    "g5rv.velocity_factor": {
+        Language.ENGLISH: "Line velocity factor",
+        Language.SPANISH: "Factor de velocidad de la línea",
+    },
+    "g5rv.geometry": {
+        Language.ENGLISH: (
+            "Dipole {dipole} {unit} · matching line {line_impedance} Ω / {line_length} {unit}"
+        ),
+        Language.SPANISH: (
+            "Dipolo {dipole} {unit} · línea de adaptación {line_impedance} Ω / {line_length} {unit}"
+        ),
+    },
+    "g5rv.hint": {
+        Language.ENGLISH: (
+            "Published G5RV dimensions: 102 ft dipole with a 29 ft 300 Ω or "
+            "34 ft 450 Ω matching section. The line is modeled as lossless. "
+            "Set the line velocity factor for your hardware; the default "
+            "treats the published length as the electrical length. The custom "
+            "panel starts with a 41-point 3.5-30 MHz sweep and automatic "
+            "pattern resolution. Add the transmitter coax as a Feed Line."
+        ),
+        Language.SPANISH: (
+            "Dimensiones publicadas del G5RV: dipolo de 102 pies con sección "
+            "de adaptación de 29 pies y 300 Ω o 34 pies y 450 Ω. La línea se "
+            "modela sin pérdidas. Ajustá el factor de velocidad de tu línea; "
+            "el valor por defecto trata la longitud publicada como longitud "
+            "eléctrica. Agregá el coaxil del transmisor como Feed Line."
+        ),
+    },
+    "g5rv.evidence": {
+        Language.ENGLISH: (
+            "Reference-backed dimensions from Carr, Practical Antenna Handbook "
+            "(via the Wikipedia G5RV article); the transmission-line model is "
+            "lossless and simplified."
+        ),
+        Language.SPANISH: (
+            "Dimensiones con referencia de Carr, Practical Antenna Handbook "
+            "(vía el artículo de Wikipedia sobre G5RV); el modelo de línea de "
+            "transmisión es sin pérdidas y simplificado."
+        ),
     },
     "doublet.title": {
         Language.ENGLISH: "Doublet Generator",
@@ -1190,12 +1273,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Suelo",
     },
     "pattern.max_gain_ground": {
-        Language.ENGLISH: "{gain:.2f} dBi · {angle:.1f}° above ground",
-        Language.SPANISH: "{gain:.2f} dBi · {angle:.1f}° sobre el suelo",
+        Language.ENGLISH: "Power gain {gain:.2f} dBi · {angle:.1f}° above ground",
+        Language.SPANISH: "Ganancia de potencia {gain:.2f} dBi · {angle:.1f}° sobre el suelo",
     },
     "pattern.max_gain_elevation": {
-        Language.ENGLISH: "{gain:.2f} dBi · {angle:.1f}° elevation",
-        Language.SPANISH: "{gain:.2f} dBi · {angle:.1f}° de elevación",
+        Language.ENGLISH: "Power gain {gain:.2f} dBi · {angle:.1f}° elevation",
+        Language.SPANISH: "Ganancia de potencia {gain:.2f} dBi · {angle:.1f}° de elevación",
     },
     "pattern.3d_hint": {
         Language.ENGLISH: "Drag to rotate · Wheel to zoom · Double-click to reset",
@@ -1235,6 +1318,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "compare.max_gain": {
         Language.ENGLISH: "Max power gain (dBi)",
         Language.SPANISH: "Ganancia máxima de potencia (dBi)",
+    },
+    "compare.max_directivity": {
+        Language.ENGLISH: "Max directivity (dBi)",
+        Language.SPANISH: "Directividad máxima (dBi)",
+    },
+    "compare.max_realized_gain": {
+        Language.ENGLISH: "Max realized gain (dBi)",
+        Language.SPANISH: "Ganancia realizada máxima (dBi)",
     },
     "compare.efficiency": {Language.ENGLISH: "Efficiency (%)", Language.SPANISH: "Eficiencia (%)"},
     "compare.no_result": {
@@ -1617,6 +1708,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Reproducibility",
         Language.SPANISH: "Reproducibilidad",
     },
+    "report.gain": {
+        Language.ENGLISH: "Gain and efficiency",
+        Language.SPANISH: "Ganancia y eficiencia",
+    },
     "report.configuration": {
         Language.ENGLISH: "Simulation configuration",
         Language.SPANISH: "Configuración de la simulación",
@@ -1667,6 +1762,41 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "dialog.construction_title": {
         Language.ENGLISH: "Save construction sheet",
         Language.SPANISH: "Guardar hoja de construcción",
+    },
+    "custom.pattern_resolution": {
+        Language.ENGLISH: "Pattern resolution",
+        Language.SPANISH: "Resolución del patrón",
+    },
+    "custom.pattern_auto": {
+        Language.ENGLISH: "Auto (max)",
+        Language.SPANISH: "Automática (máx.)",
+    },
+    "custom.pattern_requested": {
+        Language.ENGLISH: "Requested: {value} · {count} frequencies",
+        Language.SPANISH: "Solicitada: {value} · {count} frecuencias",
+    },
+    "custom.pattern_effective": {
+        Language.ENGLISH: "Using {value} · estimated project size {size:.1f} MB",
+        Language.SPANISH: "Usando {value} · tamaño estimado del proyecto {size:.1f} MB",
+    },
+    "custom.pattern_reduced": {
+        Language.ENGLISH: (
+            "Using {value} (requested {requested}) · estimated project size {size:.1f} MB"
+        ),
+        Language.SPANISH: (
+            "Usando {value} (solicitada {requested}) · tamaño estimado del proyecto {size:.1f} MB"
+        ),
+    },
+    "custom.pattern_disabled": {
+        Language.ENGLISH: (
+            "Pattern disabled: the sweep is too large for the project size "
+            "limit. Reduce frequencies or run a shorter pattern sweep."
+        ),
+        Language.SPANISH: (
+            "Patrón desactivado: el barrido es demasiado grande para el límite "
+            "de tamaño del proyecto. Reducí las frecuencias o hacé un barrido "
+            "de patrón más corto."
+        ),
     },
     "custom.title": {
         Language.ENGLISH: "Custom wire antenna",
@@ -2809,6 +2939,62 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "{count} wires · {length} total conductor",
         Language.SPANISH: "{count} hilos · {length} de conductor total",
     },
+    "transmission_lines.title": {
+        Language.ENGLISH: "Transmission lines",
+        Language.SPANISH: "Líneas de transmisión",
+    },
+    "transmission_lines.start_wire": {
+        Language.ENGLISH: "Start wire",
+        Language.SPANISH: "Hilo inicial",
+    },
+    "transmission_lines.start_offset": {
+        Language.ENGLISH: "Start offset",
+        Language.SPANISH: "Desplazamiento inicial",
+    },
+    "transmission_lines.end_wire": {
+        Language.ENGLISH: "End wire",
+        Language.SPANISH: "Hilo final",
+    },
+    "transmission_lines.end_offset": {
+        Language.ENGLISH: "End offset",
+        Language.SPANISH: "Desplazamiento final",
+    },
+    "transmission_lines.z0": {
+        Language.ENGLISH: "Characteristic impedance",
+        Language.SPANISH: "Impedancia característica",
+    },
+    "transmission_lines.length": {
+        Language.ENGLISH: "Physical length",
+        Language.SPANISH: "Longitud física",
+    },
+    "transmission_lines.velocity_factor": {
+        Language.ENGLISH: "Velocity factor",
+        Language.SPANISH: "Factor de velocidad",
+    },
+    "transmission_lines.use_distance": {
+        Language.ENGLISH: "Use straight-line distance",
+        Language.SPANISH: "Usar distancia en línea recta",
+    },
+    "transmission_lines.add": {
+        Language.ENGLISH: "Add line",
+        Language.SPANISH: "Agregar línea",
+    },
+    "transmission_lines.remove": {
+        Language.ENGLISH: "Remove line",
+        Language.SPANISH: "Quitar línea",
+    },
+    "transmission_lines.hint": {
+        Language.ENGLISH: (
+            "A transmission line is a mathematical two-port between two wire "
+            "points. It does not radiate. NEC-2 models it as lossless; use the "
+            "feed-line post-processing model when line loss matters."
+        ),
+        Language.SPANISH: (
+            "Una línea de transmisión es un dos-puertos matemático entre dos "
+            "puntos de hilo. No irradia. NEC-2 la modela sin pérdidas; usá el "
+            "modelo de línea de alimentación cuando importen las pérdidas."
+        ),
+    },
     "loads.title": {
         Language.ENGLISH: "Series Loads",
         Language.SPANISH: "Cargas en serie",
@@ -2856,6 +3042,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "loads.trap_requires_l": {
         Language.ENGLISH: "Enter a positive inductance to calculate the trap capacitance.",
         Language.SPANISH: "Ingresá una inductancia positiva para calcular la capacidad de la trampa.",
+    },
+    "action.transmission_lines": {
+        Language.ENGLISH: "Transmission Lines...",
+        Language.SPANISH: "Líneas de transmisión...",
+    },
+    "history.transmission_lines": {
+        Language.ENGLISH: "Edit transmission lines",
+        Language.SPANISH: "Editar líneas de transmisión",
     },
     "action.loads": {
         Language.ENGLISH: "Edit Series Loads...",
@@ -3260,6 +3454,46 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "The project timestamps are out of order.",
         Language.SPANISH: "Las marcas de tiempo del proyecto están fuera de orden.",
     },
+    "diagnostic.solver.pattern_resolution_reduced": {
+        Language.ENGLISH: (
+            "The far-field pattern resolution was reduced to fit the project storage limit."
+        ),
+        Language.SPANISH: (
+            "Se redujo la resolución del patrón de campo lejano para ajustarse "
+            "al límite de almacenamiento del proyecto."
+        ),
+    },
+    "diagnostic.solver.pattern_disabled": {
+        Language.ENGLISH: (
+            "The far-field pattern was disabled because the sweep is too large "
+            "for the project storage limit."
+        ),
+        Language.SPANISH: (
+            "Se desactivó el patrón de campo lejano porque el barrido es "
+            "demasiado grande para el límite de almacenamiento del proyecto."
+        ),
+    },
+    "diagnostic.solver.output_too_large": {
+        Language.ENGLISH: (
+            "The solver output exceeded the storage limit. Reduce sweep points, "
+            "use a coarser pattern resolution, or disable the far-field pattern."
+        ),
+        Language.SPANISH: (
+            "La salida del solver superó el límite de almacenamiento. Reducí los "
+            "puntos del barrido, usá una resolución de patrón más gruesa o "
+            "desactivá el patrón de campo lejano."
+        ),
+    },
+    "diagnostic.segmentation.transmission_line_offset": {
+        Language.ENGLISH: (
+            "A transmission-line endpoint is not at a segment center; the "
+            "connection is approximate."
+        ),
+        Language.SPANISH: (
+            "Un extremo de la línea de transmisión no está en el centro de un "
+            "segmento; la conexión es aproximada."
+        ),
+    },
     "diagnostic.segmentation.feed_offset": {
         Language.ENGLISH: "The feed is not centered on a segment; the delta gap is approximate.",
         Language.SPANISH: "La alimentación no está centrada en un segmento; el gap delta es aproximado.",
@@ -3316,6 +3550,23 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "results.duration": {Language.ENGLISH: "Duration", Language.SPANISH: "Duración"},
     "results.fingerprint": {Language.ENGLISH: "Fingerprint", Language.SPANISH: "Huella"},
     "results.frequency_count": {Language.ENGLISH: "Frequencies", Language.SPANISH: "Frecuencias"},
+    "results.gain_summary": {
+        Language.ENGLISH: (
+            "Power gain {gain} · Directivity {directivity} · Realized gain {realized}"
+        ),
+        Language.SPANISH: (
+            "Ganancia de potencia {gain} · Directividad {directivity} · "
+            "Ganancia realizada {realized}"
+        ),
+    },
+    "results.link_summary": {
+        Language.ENGLISH: (
+            "Mismatch {mismatch} · line {line} · network {network} at {frequency} MHz"
+        ),
+        Language.SPANISH: (
+            "Desadaptación {mismatch} · línea {line} · red {network} a {frequency} MHz"
+        ),
+    },
     "results.summary": {
         Language.ENGLISH: "{status} · {solver} {version} · {frequencies} frequencies · {duration:.3f} s · {fingerprint}",
         Language.SPANISH: "{status} · {solver} {version} · {frequencies} frecuencias · {duration:.3f} s · {fingerprint}",

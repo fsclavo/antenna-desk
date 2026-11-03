@@ -795,6 +795,46 @@ def test_edit_loads_applies_series_loads(
     window._dirty = False
 
 
+def test_edit_transmission_lines_applies_the_geometry(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.transmission_line import TransmissionLine
+
+    line = TransmissionLine(
+        id="line-1",
+        start_wire_id="radiator",
+        start_offset_m=0.0,
+        end_wire_id="radiator",
+        end_offset_m=10.0,
+        characteristic_impedance_ohm=300.0,
+        length_m=8.0,
+        velocity_factor=0.9,
+    )
+
+    class FakeTransmissionLinesDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def transmission_lines(self) -> tuple[TransmissionLine, ...]:
+            return (line,)
+
+    monkeypatch.setattr(
+        main_window_module,
+        "TransmissionLinesDialog",
+        FakeTransmissionLinesDialog,
+    )
+    window.edit_transmission_lines()
+
+    assert window._project is not None
+    assert window._transmission_lines == (line,)
+    assert window._project.designs[0].antenna.transmission_lines == (line,)
+    window._dirty = False
+
+
 def test_geometry_view_has_a_3d_option(window: MainWindow) -> None:
     assert window._view_combo.count() == 3
     assert window._view_combo.itemData(2) == "3d"
@@ -1330,6 +1370,67 @@ def test_new_sloper_uses_the_endfed_preset(
     assert captured["preset"] is EndFedPreset.SLOPER
     assert window._project is not None
     assert window._project.designs[0].parameters.preset is EndFedPreset.SLOPER
+    window._dirty = False
+
+
+def test_new_g5rv_creates_the_custom_preset_with_a_line(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.g5rv import g5rv_parameters
+    from antennadesk.domain.environment.ground import GroundModel
+
+    parameters = g5rv_parameters(
+        frequency_hz=14_100_000.0,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    )
+
+    class FakeG5RVDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self):
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "G5RVDialog", FakeG5RVDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("G5RV", True))
+
+    window.new_g5rv_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "G5RV"
+    design = window._project.designs[0]
+    assert design.parameters.generator_id == "g5rv"
+    assert len(design.antenna.transmission_lines) == 1
+    assert window._design_stack.currentWidget() is window._custom_panel
+    assert window._custom_sweep_start.value() == pytest.approx(3.5)
+    assert window._custom_sweep_stop.value() == pytest.approx(30.0)
+    assert window._custom_sweep_points.value() == 41
+    assert window._custom_run_pattern_step_deg is None
+    spec = window._custom_simulation_spec(design.parameters)
+    dipole = design.antenna.wire_by_id("dipole")
+    count = spec.segmentation.segments_for(dipole, spec.frequency_plan.stop_hz)
+    assert count % 2 == 1
+    assert spec.frequency_plan.count == 41
+    assert spec.far_field.theta_count == 10
+    assert spec.far_field.phi_count == 37
+    assert "10°" in window._custom_pattern_status.text()
+    assert "MB" in window._custom_pattern_status.text()
+
+    window._custom_pattern_resolution.setCurrentIndex(
+        window._custom_pattern_resolution.findData(5.0)
+    )
+    assert window._custom_run_pattern_step_deg == 5.0
+    reduced = window._custom_simulation_spec(design.parameters)
+    assert reduced.far_field.theta_count == 10
+    assert "requested 5" in window._custom_pattern_status.text()
     window._dirty = False
 
 
@@ -2249,3 +2350,43 @@ def test_estimate_dimensions_does_not_require_a_solver(qtbot: QtBot) -> None:
 
     window._dirty = False
     window.close()
+
+
+def test_fit_spec_to_budget_uses_the_finest_pattern_that_fits(window: MainWindow) -> None:
+    from antennadesk.domain.antennas.dipole import DipoleParameters
+    from antennadesk.domain.environment.ground import GroundModel
+    from antennadesk.domain.simulation.frequency import FrequencyPlan
+    from antennadesk.domain.simulation.segmentation import SegmentationPolicy
+    from antennadesk.ui.pattern_resolution import far_field_request
+
+    ground = GroundModel.finite(relative_permittivity=13.0, conductivity_s_per_m=0.005)
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        ground=ground,
+    )
+    model = parameters.to_antenna()
+    wide = SimulationSpec(
+        frequency_plan=FrequencyPlan.sweep(6_700_000.0, 7_500_000.0, 31),
+        segmentation=SegmentationPolicy(min_segments_per_wire=3),
+        far_field=far_field_request(1.0, ground),
+    )
+
+    fitted = window._fit_spec_to_budget(model, wide)
+
+    assert fitted.far_field.theta_count == 10
+    assert fitted.far_field.phi_count == 37
+    assert window._pending_pattern_diagnostic is not None
+    assert window._pending_pattern_diagnostic.code == "solver.pattern_resolution_reduced"
+
+    single = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(7_100_000.0),
+        segmentation=SegmentationPolicy(min_segments_per_wire=3),
+        far_field=far_field_request(2.0, ground),
+    )
+    kept = window._fit_spec_to_budget(model, single)
+
+    assert kept.far_field.theta_count == 46
+    assert kept.far_field.phi_count == 181
+    assert window._pending_pattern_diagnostic is None

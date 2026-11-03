@@ -13,6 +13,7 @@ from ..antennas.design import AntennaDesignParameters, antenna_type_for, templat
 from ..antennas.feed_line import FeedLine
 from ..antennas.load import LumpedLoad
 from ..antennas.matching_network import MatchingNetwork
+from ..antennas.transmission_line import TransmissionLine
 from ..common.time import ensure_utc
 from ..common.units import ensure_non_negative
 from ..common.validation import Diagnostic, Severity, raise_if_errors
@@ -64,7 +65,11 @@ class DesignVariant:
                 f"antenna_type {self.antenna_type!r} does not match "
                 f"the parameter type {expected_type!r}"
             )
-        expected = self.parameters.to_antenna(name=self.antenna.name).with_loads(self.antenna.loads)
+        expected = (
+            self.parameters.to_antenna(name=self.antenna.name)
+            .with_loads(self.antenna.loads)
+            .with_transmission_lines(self.antenna.transmission_lines)
+        )
         if expected != self.antenna:
             raise ValueError("antenna geometry is inconsistent with its design parameters")
 
@@ -81,7 +86,14 @@ class DesignVariant:
             | {load.id for load in generated.loads}
         )
         preserved = tuple(load for load in self.antenna.loads if load.id not in managed_ids)
-        antenna = generated.with_loads(generated.loads + preserved)
+        generated_lines = generated.transmission_lines
+        managed_line_ids = {line.id for line in generated_lines}
+        preserved_lines = tuple(
+            line for line in self.antenna.transmission_lines if line.id not in managed_line_ids
+        )
+        antenna = generated.with_loads(generated.loads + preserved).with_transmission_lines(
+            generated_lines + preserved_lines
+        )
         return replace(
             self,
             antenna_type=antenna_type_for(parameters),
@@ -92,6 +104,15 @@ class DesignVariant:
 
     def with_loads(self, loads: tuple[LumpedLoad, ...]) -> DesignVariant:
         return replace(self, antenna=self.antenna.with_loads(loads))
+
+    def with_transmission_lines(
+        self,
+        transmission_lines: tuple[TransmissionLine, ...],
+    ) -> DesignVariant:
+        return replace(
+            self,
+            antenna=self.antenna.with_transmission_lines(transmission_lines),
+        )
 
 
 @dataclass(frozen=True, slots=True)

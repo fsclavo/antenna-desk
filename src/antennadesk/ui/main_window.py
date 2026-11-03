@@ -85,6 +85,7 @@ from ..domain.antennas.endfed import EndFedParameters, EndFedPreset
 from ..domain.antennas.family import antenna_family
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.feed_line import FeedLine
+from ..domain.antennas.g5rv import G5RV_DIPOLE_ID
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.load import LumpedLoad
@@ -93,14 +94,18 @@ from ..domain.antennas.matching_network import MatchingNetwork
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
+from ..domain.antennas.transmission_line import TransmissionLine
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters, yagi_element_length_mismatch
 from ..domain.common.time import utc_now
+from ..domain.common.validation import Diagnostic, Severity
 from ..domain.design.yagi_reference import MAX_YAGI_ELEMENTS, MIN_YAGI_ELEMENTS
-from ..domain.environment.ground import GroundModel
+from ..domain.environment.ground import GroundKind, GroundModel
 from ..domain.measurement import Measurement
 from ..domain.projects.project import DesignProvenance, DesignVariant, Project
+from ..domain.simulation.budget import choose_pattern_step
+from ..domain.simulation.far_field import FarFieldRequest
 from ..domain.simulation.frequency import FrequencyPlan
 from ..domain.simulation.result import SimulationResult, SimulationStatus
 from ..domain.simulation.segmentation import (
@@ -122,6 +127,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_ENDFED,
     CATALOG_TYPE_FAN_DIPOLE,
     CATALOG_TYPE_FOLDED_DIPOLE,
+    CATALOG_TYPE_G5RV,
     CATALOG_TYPE_INVERTED_V,
     CATALOG_TYPE_J_POLE,
     CATALOG_TYPE_LOADED_VERTICAL,
@@ -151,6 +157,7 @@ from .dialogs.element_optimization_dialog import (
 from .dialogs.endfed_dialog import EndFedDialog
 from .dialogs.fan_dipole_dialog import FanDipoleDialog
 from .dialogs.feed_line_dialog import FeedLineDialog
+from .dialogs.g5rv_dialog import G5RVDialog
 from .dialogs.inverted_v_dialog import InvertedVDialog
 from .dialogs.j_pole_dialog import JPoleDialog
 from .dialogs.loads_dialog import LoadsDialog
@@ -161,12 +168,18 @@ from .dialogs.ocfd_dialog import OCFDDialog
 from .dialogs.optimization_dialog import OptimizationDialog
 from .dialogs.ringo_dialog import RingoDialog
 from .dialogs.synthesis_dialog import SynthesisDialog
+from .dialogs.transmission_lines_dialog import TransmissionLinesDialog
 from .dialogs.trap_dipole_dialog import TrapDipoleDialog
 from .dialogs.vertical_dialog import VerticalDialog
 from .dialogs.yagi_dialog import YagiDialog
 from .history import ProjectSnapshot, SnapshotCommand, history_action
 from .i18n import Language, Translator
-from .pattern_resolution import DEFAULT_PATTERN_STEP_DEG, far_field_request
+from .pattern_resolution import (
+    DEFAULT_PATTERN_STEP_DEG,
+    PATTERN_STEPS_DEG,
+    far_field_request,
+    pattern_counts,
+)
 from .report_pdf import write_report_pdf
 from .units import UnitSystem, length_from_m, length_unit_key
 from .widgets.dipole_form import DipoleForm
@@ -217,9 +230,13 @@ class MainWindow(QMainWindow):
         self._simulation_results: dict[UUID, SimulationResult] = {}
         self._simulation_design_id: UUID | None = None
         self._loads: tuple[LumpedLoad, ...] = ()
+        self._transmission_lines: tuple[TransmissionLine, ...] = ()
         self._feed_line: FeedLine | None = None
         self._matching_network: MatchingNetwork | None = None
         self._custom_pattern_step_deg = DEFAULT_PATTERN_STEP_DEG
+        self._custom_run_pattern_step_deg: float | None = DEFAULT_PATTERN_STEP_DEG
+        self._custom_last_budget = None
+        self._pending_pattern_diagnostic: Diagnostic | None = None
         self._last_status_key = "status.ready"
         self._thread: QThread | None = None
         self._worker: SimulationWorker | None = None
@@ -303,6 +320,8 @@ class MainWindow(QMainWindow):
         self._construction_action.triggered.connect(lambda: self.show_construction_sheet())
         self._loads_action = QAction(self)
         self._loads_action.triggered.connect(lambda: self.edit_loads())
+        self._transmission_lines_action = QAction(self)
+        self._transmission_lines_action.triggered.connect(lambda: self.edit_transmission_lines())
         self._edit_custom_action = QAction(self)
         self._edit_custom_action.triggered.connect(lambda: self.edit_custom_wires())
         self._convert_custom_action = QAction(self)
@@ -492,6 +511,20 @@ class MainWindow(QMainWindow):
         self._custom_sweep_points.setRange(2, 10_000)
         self._custom_sweep_points.setValue(100)
         self._custom_sweep_center_hz: float | None = None
+        self._custom_pattern_label = QLabel(
+            self._translator.t("custom.pattern_resolution"),
+            self._custom_sweep_group,
+        )
+        self._custom_pattern_resolution = QComboBox(self._custom_sweep_group)
+        self._custom_pattern_resolution.addItem(self._translator.t("custom.pattern_auto"), None)
+        for step in PATTERN_STEPS_DEG:
+            self._custom_pattern_resolution.addItem(f"{step:g}°", step)
+        self._custom_pattern_resolution.setCurrentIndex(
+            self._custom_pattern_resolution.findData(self._custom_run_pattern_step_deg)
+        )
+        self._custom_pattern_resolution.currentIndexChanged.connect(self._custom_pattern_changed)
+        self._custom_pattern_status = QLabel(self._custom_sweep_group)
+        self._custom_pattern_status.setWordWrap(True)
         custom_sweep_layout = QFormLayout(self._custom_sweep_group)
         custom_sweep_layout.addRow(self._custom_sweep)
         custom_sweep_layout.addRow(
@@ -501,6 +534,11 @@ class MainWindow(QMainWindow):
         custom_sweep_layout.addRow(
             self._translator.t("field.sweep_points"), self._custom_sweep_points
         )
+        custom_sweep_layout.addRow(
+            self._custom_pattern_label,
+            self._custom_pattern_resolution,
+        )
+        custom_sweep_layout.addRow(self._custom_pattern_status)
         custom_layout.addWidget(self._custom_title)
         custom_layout.addWidget(self._custom_family)
         custom_layout.addWidget(self._custom_generator)
@@ -664,6 +702,7 @@ class MainWindow(QMainWindow):
         self._design_menu.addSeparator()
         self._design_menu.addAction(self._construction_action)
         self._design_menu.addAction(self._loads_action)
+        self._design_menu.addAction(self._transmission_lines_action)
         self._custom_menu = self._design_menu.addMenu("")
         self._custom_menu.addAction(self._edit_custom_action)
         self._custom_menu.addAction(self._convert_custom_action)
@@ -720,6 +759,7 @@ class MainWindow(QMainWindow):
         self._optimize_button.setText(self._translator.t("action.optimize"))
         self._construction_action.setText(self._translator.t("action.construction"))
         self._loads_action.setText(self._translator.t("action.loads"))
+        self._transmission_lines_action.setText(self._translator.t("action.transmission_lines"))
         self._edit_custom_action.setText(self._translator.t("action.edit_custom"))
         self._convert_custom_action.setText(self._translator.t("action.convert_custom"))
         self._custom_title.setText(self._translator.t("custom.panel_title"))
@@ -728,6 +768,12 @@ class MainWindow(QMainWindow):
         self._custom_generator_edit.setText(self._translator.t("action.edit_generator"))
         self._custom_sweep_group.setTitle(self._translator.t("field.sweep"))
         self._custom_sweep.setText(self._translator.t("field.sweep_enabled"))
+        self._custom_pattern_label.setText(self._translator.t("custom.pattern_resolution"))
+        self._custom_pattern_resolution.setItemText(
+            0,
+            self._translator.t("custom.pattern_auto"),
+        )
+        self._update_custom_pattern_status()
         self._export_csv_action.setText(self._translator.t("action.export_csv"))
         self._export_pattern_csv_action.setText(self._translator.t("action.export_pattern_csv"))
         self._export_pattern_png_action.setText(self._translator.t("action.export_pattern_png"))
@@ -866,6 +912,7 @@ class MainWindow(QMainWindow):
         self._optimize_action.setEnabled(optimize_enabled)
         self._optimize_button.setEnabled(optimize_enabled)
         self._loads_action.setEnabled(idle and has_project)
+        self._transmission_lines_action.setEnabled(idle and has_project)
         self._edit_custom_action.setEnabled(idle and has_project and is_custom)
         self._convert_custom_action.setEnabled(idle and has_project and not is_custom)
         self._import_nec_action.setEnabled(idle)
@@ -1074,13 +1121,28 @@ class MainWindow(QMainWindow):
         self._custom_generator_edit.setVisible(
             parameters.generator_id in {"inverted_v", "ocfd", "yagi", "vertical"}
         )
+        index = (
+            0
+            if self._custom_run_pattern_step_deg is None
+            else self._custom_pattern_resolution.findData(self._custom_run_pattern_step_deg)
+        )
+        if index >= 0:
+            self._custom_pattern_resolution.blockSignals(True)
+            self._custom_pattern_resolution.setCurrentIndex(index)
+            self._custom_pattern_resolution.blockSignals(False)
         if self._custom_sweep_center_hz != design.parameters.frequency_hz:
             self._custom_sweep_center_hz = design.parameters.frequency_hz
-            center_mhz = design.parameters.frequency_hz / 1_000_000.0
-            self._custom_sweep_start.setValue(center_mhz * 0.95)
-            self._custom_sweep_stop.setValue(center_mhz * 1.05)
-            self._custom_sweep_points.setValue(100)
+            if parameters.generator_id == "g5rv":
+                self._custom_sweep_start.setValue(3.5)
+                self._custom_sweep_stop.setValue(30.0)
+                self._custom_sweep_points.setValue(41)
+            else:
+                center_mhz = design.parameters.frequency_hz / 1_000_000.0
+                self._custom_sweep_start.setValue(center_mhz * 0.95)
+                self._custom_sweep_stop.setValue(center_mhz * 1.05)
+                self._custom_sweep_points.setValue(100)
             self._custom_sweep.setChecked(True)
+        self._update_custom_pattern_status()
 
     def _set_geometry_model(self, design: DesignVariant) -> None:
         display_name = (
@@ -1106,6 +1168,7 @@ class MainWindow(QMainWindow):
         self._form_dirty = False
         self._update_provenance_label(design)
         self._loads = design.antenna.loads
+        self._transmission_lines = design.antenna.transmission_lines
         if isinstance(design.parameters, CustomAntennaParameters):
             self._design_stack.setCurrentWidget(self._custom_panel)
             self._update_custom_panel(design)
@@ -1258,6 +1321,13 @@ class MainWindow(QMainWindow):
         if not project_name:
             raise ValueError("project name must not be empty")
         previous_design = self._project.design_by_id(self._design_id)
+        loads_override = self._loads if self._loads != previous_design.antenna.loads else None
+        transmission_lines_override = (
+            self._transmission_lines
+            if self._transmission_lines != previous_design.antenna.transmission_lines
+            else None
+        )
+        attachments_changed = loads_override is not None or transmission_lines_override is not None
         if isinstance(previous_design.parameters, OCFDParameters):
             parameters = self._ocfd_form.parameters()
             updated = UpdateDipoleDesign().execute(
@@ -1265,15 +1335,18 @@ class MainWindow(QMainWindow):
                     project=self._project,
                     design_id=self._design_id,
                     parameters=parameters,
+                    loads=loads_override,
+                    transmission_lines=transmission_lines_override,
                 )
             )
             updated = replace(updated, name=project_name)
             self._project = updated
             design = updated.design_by_id(self._design_id)
-            if parameters != previous_design.parameters:
+            if parameters != previous_design.parameters or attachments_changed:
                 self._simulation_results.pop(self._design_id, None)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
+            self._transmission_lines = design.antenna.transmission_lines
             self._results.set_design(design)
             self._set_geometry_model(design)
             self._auto_select_view(design)
@@ -1293,15 +1366,18 @@ class MainWindow(QMainWindow):
                     project=self._project,
                     design_id=self._design_id,
                     parameters=parameters,
+                    loads=loads_override,
+                    transmission_lines=transmission_lines_override,
                 )
             )
             updated = replace(updated, name=project_name)
             self._project = updated
             design = updated.design_by_id(self._design_id)
-            if parameters != previous_design.parameters:
+            if parameters != previous_design.parameters or attachments_changed:
                 self._simulation_results.pop(self._design_id, None)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
+            self._transmission_lines = design.antenna.transmission_lines
             self._results.set_design(design)
             self._set_geometry_model(design)
             self._auto_select_view(design)
@@ -1321,15 +1397,18 @@ class MainWindow(QMainWindow):
                     project=self._project,
                     design_id=self._design_id,
                     parameters=parameters,
+                    loads=loads_override,
+                    transmission_lines=transmission_lines_override,
                 )
             )
             updated = replace(updated, name=project_name)
             self._project = updated
             design = updated.design_by_id(self._design_id)
-            if parameters != previous_design.parameters:
+            if parameters != previous_design.parameters or attachments_changed:
                 self._simulation_results.pop(self._design_id, None)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
+            self._transmission_lines = design.antenna.transmission_lines
             self._results.set_design(design)
             self._set_geometry_model(design)
             self._auto_select_view(design)
@@ -1349,15 +1428,18 @@ class MainWindow(QMainWindow):
                     project=self._project,
                     design_id=self._design_id,
                     parameters=parameters,
+                    loads=loads_override,
+                    transmission_lines=transmission_lines_override,
                 )
             )
             updated = replace(updated, name=project_name)
             self._project = updated
             design = updated.design_by_id(self._design_id)
-            if parameters != previous_design.parameters:
+            if parameters != previous_design.parameters or attachments_changed:
                 self._simulation_results.pop(self._design_id, None)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
+            self._transmission_lines = design.antenna.transmission_lines
             self._results.set_design(design)
             self._set_geometry_model(design)
             self._auto_select_view(design)
@@ -1377,15 +1459,18 @@ class MainWindow(QMainWindow):
                     project=self._project,
                     design_id=self._design_id,
                     parameters=parameters,
+                    loads=loads_override,
+                    transmission_lines=transmission_lines_override,
                 )
             )
             updated = replace(updated, name=project_name)
             self._project = updated
             design = updated.design_by_id(self._design_id)
-            if parameters != previous_design.parameters:
+            if parameters != previous_design.parameters or attachments_changed:
                 self._simulation_results.pop(self._design_id, None)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
+            self._transmission_lines = design.antenna.transmission_lines
             self._results.set_design(design)
             self._set_geometry_model(design)
             self._auto_select_view(design)
@@ -1405,15 +1490,18 @@ class MainWindow(QMainWindow):
                     project=self._project,
                     design_id=self._design_id,
                     parameters=parameters,
+                    loads=loads_override,
+                    transmission_lines=transmission_lines_override,
                 )
             )
             updated = replace(updated, name=project_name)
             self._project = updated
             design = updated.design_by_id(self._design_id)
-            if parameters != previous_design.parameters:
+            if parameters != previous_design.parameters or attachments_changed:
                 self._simulation_results.pop(self._design_id, None)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
+            self._transmission_lines = design.antenna.transmission_lines
             self._results.set_design(design)
             self._set_geometry_model(design)
             self._auto_select_view(design)
@@ -1433,15 +1521,18 @@ class MainWindow(QMainWindow):
                     project=self._project,
                     design_id=self._design_id,
                     parameters=parameters,
+                    loads=loads_override,
+                    transmission_lines=transmission_lines_override,
                 )
             )
             updated = replace(updated, name=project_name)
             self._project = updated
             design = updated.design_by_id(self._design_id)
-            if parameters != previous_design.parameters:
+            if parameters != previous_design.parameters or attachments_changed:
                 self._simulation_results.pop(self._design_id, None)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
+            self._transmission_lines = design.antenna.transmission_lines
             self._results.set_design(design)
             self._set_geometry_model(design)
             self._auto_select_view(design)
@@ -1461,15 +1552,18 @@ class MainWindow(QMainWindow):
                     project=self._project,
                     design_id=self._design_id,
                     parameters=parameters,
+                    loads=loads_override,
+                    transmission_lines=transmission_lines_override,
                 )
             )
             updated = replace(updated, name=project_name)
             self._project = updated
             design = updated.design_by_id(self._design_id)
-            if parameters != previous_design.parameters:
+            if parameters != previous_design.parameters or attachments_changed:
                 self._simulation_results.pop(self._design_id, None)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
+            self._transmission_lines = design.antenna.transmission_lines
             self._results.set_design(design)
             self._set_geometry_model(design)
             self._auto_select_view(design)
@@ -1489,15 +1583,18 @@ class MainWindow(QMainWindow):
                     project=self._project,
                     design_id=self._design_id,
                     parameters=parameters,
+                    loads=loads_override,
+                    transmission_lines=transmission_lines_override,
                 )
             )
             updated = replace(updated, name=project_name)
             self._project = updated
             design = updated.design_by_id(self._design_id)
-            if parameters != previous_design.parameters:
+            if parameters != previous_design.parameters or attachments_changed:
                 self._simulation_results.pop(self._design_id, None)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
+            self._transmission_lines = design.antenna.transmission_lines
             self._results.set_design(design)
             self._set_geometry_model(design)
             self._auto_select_view(design)
@@ -1517,15 +1614,18 @@ class MainWindow(QMainWindow):
                     project=self._project,
                     design_id=self._design_id,
                     parameters=parameters,
+                    loads=loads_override,
+                    transmission_lines=transmission_lines_override,
                 )
             )
             updated = replace(updated, name=project_name)
             self._project = updated
             design = updated.design_by_id(self._design_id)
-            if parameters != previous_design.parameters:
+            if parameters != previous_design.parameters or attachments_changed:
                 self._simulation_results.pop(self._design_id, None)
                 self._results.set_result(None)
             self._loads = design.antenna.loads
+            self._transmission_lines = design.antenna.transmission_lines
             self._results.set_design(design)
             self._set_geometry_model(design)
             self._auto_select_view(design)
@@ -1540,10 +1640,18 @@ class MainWindow(QMainWindow):
             return self._project
         if isinstance(previous_design.parameters, CustomAntennaParameters):
             design = previous_design
-            if design.antenna.loads != self._loads:
-                design = design.with_loads(self._loads)
+            if (
+                design.antenna.loads != self._loads
+                or design.antenna.transmission_lines != self._transmission_lines
+            ):
+                design = design.with_loads(self._loads).with_transmission_lines(
+                    self._transmission_lines
+                )
                 self._project = self._project.with_design(design, updated_at=utc_now())
             self._project = replace(self._project, name=project_name)
+            if attachments_changed:
+                self._simulation_results.pop(self._design_id, None)
+                self._results.set_result(None)
             self._results.set_design(design)
             self._set_geometry_model(design)
             self._auto_select_view(design)
@@ -1559,24 +1667,20 @@ class MainWindow(QMainWindow):
                 project=self._project,
                 design_id=self._design_id,
                 parameters=parameters,
+                loads=loads_override,
+                transmission_lines=transmission_lines_override,
             )
         )
         updated = replace(updated, name=project_name)
         self._project = updated
         design = updated.design_by_id(self._design_id)
-        if design.antenna.loads != self._loads:
-            design = design.with_loads(self._loads)
-            updated = updated.with_design(design, updated_at=updated.updated_at)
-            self._project = updated
         self._results.set_design(design)
         self._set_geometry_model(design)
         self._auto_select_view(design)
         self._project_name_updating = True
         self._project_name.setText(project_name)
         self._project_name_updating = False
-        parameters_changed = parameters != previous_design.parameters
-        loads_changed = self._loads != previous_design.antenna.loads
-        if parameters_changed or loads_changed:
+        if parameters != previous_design.parameters or attachments_changed:
             self._simulation_results.pop(self._design_id, None)
             self._last_result = None
             self._results.set_result(None)
@@ -1693,6 +1797,7 @@ class MainWindow(QMainWindow):
         self._last_result = None
         self._results.set_result(None)
         self._simulation_design_id = self._design_id
+        spec = self._fit_spec_to_budget(design.antenna, spec)
         spec = replace(spec, feed_line=self._feed_line, matching_network=self._matching_network)
         self._cancel_token = EventCancelToken()
         self._simulating = True
@@ -1723,6 +1828,15 @@ class MainWindow(QMainWindow):
     def _on_simulation_finished(self, result: SimulationResult) -> None:
         self._simulating = False
         self._cancel_token = None
+        if self._pending_pattern_diagnostic is not None:
+            result = replace(
+                result,
+                diagnostics=(
+                    *result.diagnostics,
+                    self._pending_pattern_diagnostic,
+                ),
+            )
+            self._pending_pattern_diagnostic = None
         design_id = self._simulation_design_id
         if design_id is not None:
             self._simulation_results[design_id] = result
@@ -1760,6 +1874,7 @@ class MainWindow(QMainWindow):
         self._simulating = False
         self._cancel_token = None
         self._simulation_design_id = None
+        self._pending_pattern_diagnostic = None
         self._last_status_key = "status.error"
         self._update_actions()
         self._status_label.setText(self._translator.t("status.error"))
@@ -1777,11 +1892,123 @@ class MainWindow(QMainWindow):
         self._status_label.setText(self._translator.t("status.cancelling"))
         self._cancel_action.setEnabled(False)
 
+    def _fit_spec_to_budget(self, model: object, spec: SimulationSpec) -> SimulationSpec:
+        """Coarsen the far-field pattern to the finest step that fits storage."""
+
+        from ..domain.antennas.antenna import AntennaModel
+
+        if not isinstance(model, AntennaModel) or not spec.far_field.enabled:
+            self._pending_pattern_diagnostic = None
+            return spec
+        ground = model.environment.ground
+        theta_stop = 180.0 if ground.kind is GroundKind.FREE_SPACE else 90.0
+        theta_step = theta_stop / max(spec.far_field.theta_count - 1, 1)
+        phi_step = 360.0 / max(spec.far_field.phi_count - 1, 1)
+        requested_step = max(theta_step, phi_step)
+        segment_count = sum(
+            spec.segmentation.segments_for(wire, spec.frequency_plan.stop_hz)
+            for wire in model.wires
+        )
+        budget = choose_pattern_step(
+            frequency_count=spec.frequency_plan.count,
+            segment_count=segment_count,
+            candidate_steps=tuple(reversed(PATTERN_STEPS_DEG)),
+            counts_for_step=lambda step: pattern_counts(step, ground),
+            requested_step_deg=requested_step,
+        )
+        if budget.far_field_enabled and budget.pattern_step_deg == requested_step:
+            self._pending_pattern_diagnostic = None
+            return spec
+        if budget.far_field_enabled:
+            self._pending_pattern_diagnostic = Diagnostic(
+                code="solver.pattern_resolution_reduced",
+                severity=Severity.INFO,
+                message=(
+                    "far-field pattern resolution reduced from "
+                    f"{requested_step:g}° to {budget.pattern_step_deg:g}° "
+                    "to fit the project storage limit"
+                ),
+                field="far_field",
+            )
+            return replace(
+                spec,
+                far_field=far_field_request(budget.pattern_step_deg, ground),
+            )
+        self._pending_pattern_diagnostic = Diagnostic(
+            code="solver.pattern_disabled",
+            severity=Severity.WARNING,
+            message=(
+                "far-field pattern disabled: the sweep is too large for the project storage limit"
+            ),
+            field="far_field",
+        )
+        return replace(spec, far_field=FarFieldRequest(enabled=False))
+
     def _update_custom_sweep_controls(self) -> None:
         enabled = self._custom_sweep.isChecked()
         self._custom_sweep_start.setEnabled(enabled)
         self._custom_sweep_stop.setEnabled(enabled)
         self._custom_sweep_points.setEnabled(enabled)
+        self._update_custom_pattern_status()
+
+    def _custom_pattern_changed(self, _index: int) -> None:
+        value = self._custom_pattern_resolution.currentData()
+        self._custom_run_pattern_step_deg = (
+            float(value) if isinstance(value, (int, float)) else None
+        )
+        self._update_custom_pattern_status()
+
+    def _update_custom_pattern_status(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._custom_pattern_status.setText("")
+            return
+        design = self._project.design_by_id(self._design_id)
+        if not isinstance(design.parameters, CustomAntennaParameters):
+            self._custom_pattern_status.setText("")
+            return
+        count = self._custom_sweep_points.value() if self._custom_sweep.isChecked() else 1
+        requested = (
+            self._translator.t("custom.pattern_auto")
+            if self._custom_run_pattern_step_deg is None
+            else f"{self._custom_run_pattern_step_deg:g}°"
+        )
+        self._custom_pattern_status.setText(
+            self._translator.t(
+                "custom.pattern_requested",
+                value=requested,
+                count=count,
+            )
+        )
+
+    def _show_custom_pattern_budget(self, budget: object) -> None:
+        from ..domain.simulation.budget import PatternBudget
+
+        if not isinstance(budget, PatternBudget):
+            return
+        size = budget.estimated_project_bytes / (1024.0 * 1024.0)
+        if not budget.far_field_enabled:
+            self._custom_pattern_status.setText(self._translator.t("custom.pattern_disabled"))
+            return
+        value = f"{budget.pattern_step_deg:g}°"
+        if budget.reduced:
+            requested = (
+                self._translator.t("custom.pattern_auto")
+                if budget.requested_step_deg is None
+                else f"{budget.requested_step_deg:g}°"
+            )
+            text = self._translator.t(
+                "custom.pattern_reduced",
+                value=value,
+                requested=requested,
+                size=size,
+            )
+        else:
+            text = self._translator.t(
+                "custom.pattern_effective",
+                value=value,
+                size=size,
+            )
+        self._custom_pattern_status.setText(text)
 
     def _ocfd_simulation_spec(self, parameters: OCFDParameters) -> SimulationSpec:
         model = parameters.to_antenna(name="OCFD")
@@ -1966,7 +2193,6 @@ class MainWindow(QMainWindow):
         parameters: CustomAntennaParameters,
     ) -> SimulationSpec:
         model = parameters.to_antenna(name="Custom")
-        far_field = far_field_request(self._custom_pattern_step_deg, parameters.ground)
         if self._custom_sweep.isChecked():
             frequency_plan = FrequencyPlan.sweep(
                 self._custom_sweep_start.value() * 1_000_000.0,
@@ -1975,13 +2201,41 @@ class MainWindow(QMainWindow):
             )
         else:
             frequency_plan = FrequencyPlan.single(parameters.frequency_hz)
+        segmentation = SegmentationPolicy(min_segments_per_wire=3)
+        if parameters.generator_id == "g5rv":
+            dipole = model.wire_by_id(G5RV_DIPOLE_ID)
+            count = segmentation.segments_for(dipole, frequency_plan.stop_hz)
+            if count % 2 == 0:
+                count += 1
+            segmentation = SegmentationPolicy(
+                min_segments_per_wire=3,
+                wire_segments=((G5RV_DIPOLE_ID, count),),
+            )
+        segmentation = aligned_policy_for_model(
+            model,
+            frequency_plan.stop_hz,
+            segmentation,
+        )
+        segment_count = sum(
+            segmentation.segments_for(wire, frequency_plan.stop_hz) for wire in model.wires
+        )
+        budget = choose_pattern_step(
+            frequency_count=frequency_plan.count,
+            segment_count=segment_count,
+            candidate_steps=tuple(reversed(PATTERN_STEPS_DEG)),
+            counts_for_step=lambda step: pattern_counts(step, parameters.ground),
+            requested_step_deg=self._custom_run_pattern_step_deg,
+        )
+        self._custom_last_budget = budget
+        self._show_custom_pattern_budget(budget)
+        far_field = (
+            far_field_request(budget.pattern_step_deg, parameters.ground)
+            if budget.pattern_step_deg is not None
+            else FarFieldRequest(enabled=False)
+        )
         return SimulationSpec(
             frequency_plan=frequency_plan,
-            segmentation=aligned_policy_for_model(
-                model,
-                parameters.frequency_hz,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
+            segmentation=segmentation,
             far_field=far_field,
         )
 
@@ -2005,6 +2259,8 @@ class MainWindow(QMainWindow):
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         self._custom_pattern_step_deg = dialog.pattern_step_deg()
+        self._custom_run_pattern_step_deg = self._custom_pattern_step_deg
+        self._custom_run_pattern_step_deg = self._custom_pattern_step_deg
         try:
             project = CreateDipoleProject().execute(
                 CreateDipoleProjectCommand(
@@ -2176,6 +2432,34 @@ class MainWindow(QMainWindow):
 
     def new_random_wire_antenna(self) -> None:
         self.new_endfed_antenna(preset=EndFedPreset.RANDOM_WIRE)
+
+    def new_g5rv_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        name, accepted = QInputDialog.getText(
+            self,
+            self._translator.t("g5rv.title"),
+            self._translator.t("field.project_name"),
+            text="G5RV",
+        )
+        if not accepted:
+            return
+        dialog = G5RVDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._custom_run_pattern_step_deg = None
+        try:
+            project = CreateDipoleProject().execute(
+                CreateDipoleProjectCommand(
+                    project_name=name.strip() or "G5RV",
+                    variant_name="Initial",
+                    parameters=dialog.result_parameters(),
+                )
+            )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._set_project(project, project.designs[0].id, path=None, dirty=True)
 
     def new_doublet_antenna(self) -> None:
         if not self._maybe_save_changes():
@@ -2563,6 +2847,7 @@ class MainWindow(QMainWindow):
                 feed=design.antenna.feed,
                 ground=design.antenna.environment.ground,
                 loads=design.antenna.loads,
+                transmission_lines=design.antenna.transmission_lines,
             )
             updated_design = design.with_parameters(parameters)
             self._project = self._project.with_design(updated_design, updated_at=utc_now())
@@ -2783,6 +3068,16 @@ class MainWindow(QMainWindow):
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
             return dialog.result_parameters()
+        if selected == CATALOG_TYPE_G5RV:
+            dialog = G5RVDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
         if selected == CATALOG_TYPE_DOUBLET:
             dialog = DoubletDialog(
                 self._translator,
@@ -2905,6 +3200,11 @@ class MainWindow(QMainWindow):
             return
         try:
             updated_design = design.with_parameters(parameters)
+            if (
+                isinstance(parameters, CustomAntennaParameters)
+                and parameters.generator_id == "g5rv"
+            ):
+                self._custom_run_pattern_step_deg = None
             timestamp = utc_now()
             self._project = self._project.with_design(updated_design, updated_at=timestamp)
             if feed_line is not None:
@@ -2949,6 +3249,8 @@ class MainWindow(QMainWindow):
             self.new_random_wire_antenna()
         elif selected == CATALOG_TYPE_DOUBLET:
             self.new_doublet_antenna()
+        elif selected == CATALOG_TYPE_G5RV:
+            self.new_g5rv_antenna()
         elif selected == CATALOG_TYPE_J_POLE:
             self.new_j_pole_antenna(folded=False)
         elif selected == CATALOG_TYPE_SLIM_JIM:
@@ -4002,6 +4304,34 @@ class MainWindow(QMainWindow):
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         self._loads = dialog.loads()
+        self._form_dirty = True
+        self._dirty = True
+        self.apply_design()
+        self._last_status_key = "status.design_changed"
+        self._update_status_text()
+
+    @history_action("history.transmission_lines")
+    def edit_transmission_lines(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        design = self._project.design_by_id(self._design_id)
+        dialog = TransmissionLinesDialog(
+            self._translator,
+            self._unit_system,
+            {wire.id: wire for wire in design.antenna.wires},
+            design.antenna.transmission_lines,
+            self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._transmission_lines = dialog.transmission_lines()
         self._form_dirty = True
         self._dirty = True
         self.apply_design()

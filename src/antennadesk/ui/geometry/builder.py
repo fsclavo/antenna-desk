@@ -81,6 +81,8 @@ def effective_antenna_type(
         generator = parameters.generator_id
         if generator == "slim_jim":
             return ANTENNA_TYPE_J_POLE
+        if generator == "g5rv":
+            return ANTENNA_TYPE_WIRE_DIPOLE
         if generator in {
             "j_pole",
             "ringo",
@@ -1429,6 +1431,27 @@ def _summary(
     return f"{label} · " + " · ".join(parts)
 
 
+def _transmission_line_polylines(
+    model: AntennaModel,
+    factory: _Factory,
+) -> tuple[ScenePolyline, ...]:
+    polylines: list[ScenePolyline] = []
+    for line in model.transmission_lines:
+        start_wire = model.wire_by_id(line.start_wire_id)
+        end_wire = model.wire_by_id(line.end_wire_id)
+        start = start_wire.point_at(min(line.start_offset_m, start_wire.length_m))
+        end = end_wire.point_at(min(line.end_offset_m, end_wire.length_m))
+        polylines.append(
+            ScenePolyline(
+                (factory.project(start), factory.project(end)),
+                role="transmission-line",
+                style="dashed",
+                width=1.5,
+            )
+        )
+    return tuple(polylines)
+
+
 def _plan_inset(
     model: AntennaModel,
     translator: Translator,
@@ -1483,13 +1506,20 @@ def build_scene(
             width=2.5,
         )
         for wire in model.wires
-    )
+    ) + _transmission_line_polylines(model, factory)
     markers: list[SceneMarker] = [_feed_marker(model, factory, translator)]
     markers.extend(_load_markers(model, factory))
     dimensions: list[Dimension] = []
     angular_dimensions: list[AngularDimension] = []
     insets: list[SceneInset] = []
     notes: list[str] = []
+    if model.transmission_lines:
+        notes.append(
+            translator.t(
+                "geometry.transmission_lines",
+                count=len(model.transmission_lines),
+            )
+        )
 
     if effective_type == ANTENNA_TYPE_LOOP:
         _add_loop_dimensions(

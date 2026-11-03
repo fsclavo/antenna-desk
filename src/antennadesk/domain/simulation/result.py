@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
@@ -69,6 +70,11 @@ class FrequencyResult:
     currents: tuple[CurrentSample, ...] = ()
     far_field: tuple[FarFieldPoint, ...] = ()
     power_budget: PowerBudget | None = None
+    directivity_db: float | None = None
+    realized_gain_db: float | None = None
+    mismatch_loss_db: float | None = None
+    feed_line_loss_db: float | None = None
+    network_loss_db: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -99,3 +105,21 @@ class SimulationResult:
             if point.gain_total_db is not None
         ]
         return max(gains) if gains else None
+
+    @property
+    def max_directivity_db(self) -> float | None:
+        values = [
+            frequency.directivity_db
+            for frequency in self.frequencies
+            if frequency.directivity_db is not None and math.isfinite(frequency.directivity_db)
+        ]
+        return max(values) if values else None
+
+    @property
+    def max_realized_gain_db(self) -> float | None:
+        values = [
+            frequency.realized_gain_db
+            for frequency in self.frequencies
+            if frequency.realized_gain_db is not None and math.isfinite(frequency.realized_gain_db)
+        ]
+        return max(values) if values else None

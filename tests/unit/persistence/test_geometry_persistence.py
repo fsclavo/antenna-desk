@@ -546,3 +546,34 @@ def test_endfed_preset_round_trips() -> None:
     assert restored.designs[0].parameters == parameters
     assert restored.designs[0].parameters.preset is EndFedPreset.SLOPER
     assert restored.designs[0].antenna_type == "endfed"
+
+
+def test_transmission_lines_round_trip_through_the_schema() -> None:
+    from antennadesk.domain.antennas.transmission_line import TransmissionLine
+
+    line = TransmissionLine(
+        id="line-1",
+        start_wire_id="radiator",
+        start_offset_m=0.0,
+        end_wire_id="radiator",
+        end_offset_m=20.0,
+        characteristic_impedance_ohm=300.0,
+        length_m=10.0,
+        velocity_factor=0.9,
+    )
+    original = _project(
+        DipoleParameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=20.0,
+            height_m=8.0,
+        ),
+        "Transmission line",
+    )
+    design = original.designs[0].with_transmission_lines((line,))
+    project = original.with_design(design, updated_at=original.updated_at)
+
+    document = document_from_project(project)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].antenna.transmission_lines == (line,)
+    assert restored == project

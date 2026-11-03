@@ -25,7 +25,9 @@ from ..reporting.design_summary import (
     design_provenance_rows,
     design_summary_rows,
     load_summary_rows,
+    transmission_line_summary_rows,
 )
+from ..reporting.result_summary import gain_metric_rows
 from ..reporting.svg_chart import SvgSeries, line_chart_svg
 from .i18n import Translator
 
@@ -213,6 +215,7 @@ def write_report_pdf(
         *design_summary_rows(design.parameters),
         *design_provenance_rows(design),
         *load_summary_rows(design.antenna.loads),
+        *transmission_line_summary_rows(design.antenna.transmission_lines),
     ):
         row(label, value)
 
@@ -240,6 +243,10 @@ def write_report_pdf(
         translator.t("report.far_field"),
         translator.t("report.enabled" if result.spec.far_field.enabled else "report.disabled"),
     )
+
+    section(translator.t("report.gain"))
+    for label, value in gain_metric_rows(result):
+        row(label, value)
 
     section(translator.t("tab.impedance"))
     table(

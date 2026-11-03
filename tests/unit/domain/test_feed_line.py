@@ -57,3 +57,36 @@ def test_matched_line_does_not_change_a_matched_load() -> None:
 def test_rejects_invalid_parameters(kwargs: dict[str, float]) -> None:
     with pytest.raises(ValueError):
         FeedLine(**kwargs)
+
+
+def test_abcd_input_impedance_matches_the_closed_form() -> None:
+    frequency_hz = 14_100_000.0
+    load = complex(75.0, -20.0)
+    for line in (
+        FeedLine(characteristic_impedance_ohm=50.0, length_m=10.0, velocity_factor=0.66),
+        FeedLine(
+            characteristic_impedance_ohm=450.0,
+            length_m=30.0,
+            velocity_factor=0.9,
+            matched_loss_db_per_100m=0.2,
+        ),
+    ):
+        assert line.abcd(frequency_hz).input_impedance(load) == pytest.approx(
+            line.input_impedance(load, frequency_hz)
+        )
+
+
+def test_matched_line_transducer_gain_equals_the_matched_loss() -> None:
+    from antennadesk.domain.antennas.two_port import transducer_gain_db
+
+    frequency_hz = 14_100_000.0
+    line = FeedLine(
+        characteristic_impedance_ohm=50.0,
+        length_m=100.0,
+        velocity_factor=1.0,
+        matched_loss_db_per_100m=1.0,
+    )
+
+    assert transducer_gain_db(line.abcd(frequency_hz), 50.0, complex(50.0, 0.0)) == pytest.approx(
+        -1.0
+    )

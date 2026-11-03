@@ -34,6 +34,7 @@ CATALOG_TYPE_ENDFED = "endfed"
 CATALOG_TYPE_SLOPER = "sloper"
 CATALOG_TYPE_RANDOM_WIRE = "random_wire"
 CATALOG_TYPE_DOUBLET = "doublet"
+CATALOG_TYPE_G5RV = "g5rv"
 CATALOG_TYPE_J_POLE = "j_pole"
 CATALOG_TYPE_RINGO = "ringo"
 CATALOG_TYPE_SLIM_JIM = "slim_jim"
@@ -107,6 +108,13 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         family_key="catalog.family.dipole",
         description_key="catalog.random_wire.description",
         evidence_key="catalog.evidence.experimental",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_G5RV,
+        label_key="catalog.g5rv",
+        family_key="catalog.family.dipole",
+        description_key="catalog.g5rv.description",
+        evidence_key="catalog.evidence.g5rv",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_DOUBLET,

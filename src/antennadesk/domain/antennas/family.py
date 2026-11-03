@@ -43,6 +43,7 @@ _GENERATOR_FAMILIES: dict[str, AntennaFamily] = {
     "slim_jim": AntennaFamily.VERTICAL,
     "ringo": AntennaFamily.VERTICAL,
     "trap_dipole": AntennaFamily.DIPOLE,
+    "g5rv": AntennaFamily.DIPOLE,
 }
 
 

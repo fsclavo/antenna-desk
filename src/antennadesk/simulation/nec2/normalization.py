@@ -10,6 +10,7 @@ from datetime import datetime
 
 from ...domain.antennas.antenna import AntennaModel
 from ...domain.common.validation import Diagnostic, Severity
+from ...domain.simulation.link import link_budget
 from ...domain.simulation.result import (
     CurrentSample,
     FarFieldPoint,
@@ -77,7 +78,7 @@ def normalize_nec2_result(
             Diagnostic(
                 code="matching_network.applied",
                 severity=Severity.INFO,
-                message="impedance and SWR include the lossless L matching network",
+                message=("impedance, SWR, and realized gain include the matching network"),
                 field="matching_network",
             )
         )
@@ -87,7 +88,7 @@ def normalize_nec2_result(
                 code="transformer.applied",
                 severity=Severity.INFO,
                 message=(
-                    "impedance and SWR include an ideal "
+                    "impedance, SWR, and realized gain include an ideal "
                     f"{spec.feed_transformer_ratio:g}:1 feed transformer"
                 ),
                 field="feed_transformer_ratio",
@@ -99,8 +100,8 @@ def normalize_nec2_result(
                 code="feed_line.applied",
                 severity=Severity.INFO,
                 message=(
-                    "impedance and SWR are evaluated at the transmitter end of "
-                    f"a {feed_line.length_m:g} m feed line"
+                    "impedance, SWR, and realized gain include a "
+                    f"{feed_line.length_m:g} m feed line"
                 ),
                 field="feed_line",
             )
@@ -156,19 +157,32 @@ def normalize_nec2_result(
             for current in parsed_frequency.currents
         )
         far_field = tuple(_far_field_point(point) for point in parsed_frequency.far_field)
-        input_impedance = input_parameters.impedance_ohm
-        if not math.isclose(spec.feed_transformer_ratio, 1.0):
-            input_impedance /= spec.feed_transformer_ratio
-        if matching_network is not None:
-            input_impedance = matching_network.input_impedance(
-                input_impedance,
-                parsed_frequency.frequency_hz,
-            )
-        if feed_line is not None:
-            input_impedance = feed_line.input_impedance(
-                input_impedance,
-                parsed_frequency.frequency_hz,
-            )
+        link = link_budget(
+            antenna_impedance_ohm=input_parameters.impedance_ohm,
+            frequency_hz=parsed_frequency.frequency_hz,
+            spec=spec,
+        )
+        input_impedance = link.input_impedance_ohm
+        gains = [
+            point.gain_total_db
+            for point in far_field
+            if point.gain_total_db is not None and math.isfinite(point.gain_total_db)
+        ]
+        max_gain_db = max(gains) if gains else None
+        power_budget = _power_budget(parsed_frequency.power_budget)
+        efficiency_percent = power_budget.efficiency_percent if power_budget is not None else None
+        directivity_db = (
+            max_gain_db - 10.0 * math.log10(efficiency_percent / 100.0)
+            if max_gain_db is not None
+            and efficiency_percent is not None
+            and efficiency_percent > 0.0
+            else None
+        )
+        realized_gain_db = (
+            max_gain_db + link.transducer_gain_db
+            if max_gain_db is not None and math.isfinite(link.transducer_gain_db)
+            else None
+        )
 
         frequency_results.append(
             FrequencyResult(
@@ -183,7 +197,18 @@ def normalize_nec2_result(
                 input_power_w=input_parameters.power_w,
                 currents=currents,
                 far_field=far_field,
-                power_budget=_power_budget(parsed_frequency.power_budget),
+                power_budget=power_budget,
+                directivity_db=directivity_db,
+                realized_gain_db=realized_gain_db,
+                mismatch_loss_db=(
+                    link.mismatch_loss_db if math.isfinite(link.mismatch_loss_db) else None
+                ),
+                feed_line_loss_db=(
+                    link.feed_line_loss_db if math.isfinite(link.feed_line_loss_db) else None
+                ),
+                network_loss_db=(
+                    link.network_loss_db if math.isfinite(link.network_loss_db) else None
+                ),
             )
         )
 

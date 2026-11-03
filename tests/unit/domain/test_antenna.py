@@ -10,6 +10,7 @@ from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.feed import FeedPoint
 from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.materials import COPPER
+from antennadesk.domain.antennas.transmission_line import TransmissionLine
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.common.validation import DomainValidationError, Severity
 from antennadesk.domain.environment.environment import Environment
@@ -103,3 +104,44 @@ def test_feed_at_wire_end_is_a_warning() -> None:
 def test_unknown_wire_lookup_raises_key_error() -> None:
     with pytest.raises(KeyError):
         _antenna().wire_by_id("missing")
+
+
+def test_transmission_lines_are_validated_and_replaced() -> None:
+    first = TransmissionLine(
+        id="line-1",
+        start_wire_id="radiator",
+        start_offset_m=0.0,
+        end_wire_id="radiator",
+        end_offset_m=20.0,
+        characteristic_impedance_ohm=300.0,
+        length_m=10.0,
+        velocity_factor=0.9,
+    )
+    antenna = _antenna()
+    loaded = antenna.with_transmission_lines((first,))
+
+    assert loaded.transmission_lines == (first,)
+    assert loaded.transmission_lines[0].electrical_length_m == pytest.approx(10.0 / 0.9)
+    with pytest.raises(DomainValidationError) as error:
+        AntennaModel(
+            name="Bad line",
+            design_frequency_hz=7_100_000.0,
+            wires=(_wire(),),
+            feed=FeedPoint("radiator", 10.0),
+            environment=Environment(),
+            transmission_lines=(
+                TransmissionLine(
+                    id="line-1",
+                    start_wire_id="missing",
+                    start_offset_m=0.0,
+                    end_wire_id="radiator",
+                    end_offset_m=0.0,
+                    characteristic_impedance_ohm=50.0,
+                    length_m=1.0,
+                ),
+            ),
+        )
+    assert any(
+        diagnostic.code == "antenna.transmission_line.unknown_wire"
+        for diagnostic in error.value.diagnostics
+    )
