@@ -97,19 +97,15 @@ jobs:
         run: uv sync --locked --python ${{ matrix.python-version }}
 
       # PySide6 6.9.3/Qt can abort or hang when the complete UI suite runs in
-      # one process. Split the heavy UI files on the affected combinations.
-      - name: pytest (split heavy UI suites)
-        if: (runner.os == 'Windows' && matrix.python-version == '3.12') || (runner.os == 'Linux' && matrix.python-version == '3.13')
+      # one process. Run the heavy UI files in separate processes on every
+      # platform, then the rest of the UI and non-UI suites.
+      - name: pytest
         shell: bash
         run: |
           uv run pytest tests/ui/test_results_view.py -q
           uv run pytest tests/ui/test_main_window.py -q
           uv run pytest tests/ui --ignore=tests/ui/test_results_view.py --ignore=tests/ui/test_main_window.py -q
           uv run pytest tests/acceptance tests/integration tests/unit -q
-
-      - name: pytest
-        if: (runner.os != 'Windows' || matrix.python-version != '3.12') && (runner.os != 'Linux' || matrix.python-version != '3.13')
-        run: uv run pytest
 
   solver-linux:
     name: Solver integration (Linux)
