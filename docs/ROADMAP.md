@@ -148,9 +148,12 @@ Scope:
 - Per-family defaults for G5RV, OCFD, end-fed/random wire/sloper, fan dipole,
   trap dipole, T2FD, and doublet, with evidence and limitation notes.
 - A batch analysis service that runs the existing single-band solver once per
-  selected band, with progress, cancellation, and partial results.
-- **Analyze Bands...** UI, band selection dialog, and a **Bands** results tab
-  showing best SWR, gain, takeoff angle, efficiency, and status.
+  selected band, with progress, cancellation, partial results, and one pattern
+  snapshot per band by default.
+- **Analyze Bands...** UI integrated with the central **Band analysis** group
+  and global **Simulation pattern** settings, plus a band selection dialog and
+  a **Bands** results tab showing best SWR, gain, takeoff angle, efficiency,
+  and status. The top action bar stays Apply/Estimate/Optimize.
 - Optional band/batch metadata on simulation runs, schema migration, band-aware
   reports, CSV, comparison, and exports.
 - Deferred: a segmented frequency plan in one NEC deck, only if measurements
@@ -161,6 +164,8 @@ Acceptance criteria:
 - Selecting 40/20/10 m for an OCFD runs three band analyses and presents three
   inspectable results.
 - G5RV keeps its continuous "All HF" option and also supports a band list.
+- The centralized action bar and global **Simulation pattern** group remain
+  intact; band selection does not add per-form controls.
 - Single-band Simulate remains unchanged.
 - Save/open, reports, and undo/redo preserve the band analysis.
 - No default claims resonance without documented evidence.
@@ -173,21 +178,23 @@ Acceptance criteria:
 | P1 | Multiband batch engine and per-family band defaults (M6) | B | planned |
 | P1 | Band selection UI and band summary results (M6) | B | planned |
 | P2 | Persist band-analysis batches and add band-aware reports (M6) | B | planned |
-| P3 | Segmented frequency plan in one NEC deck | B | deferred |
 | P2 | GPG/Authenticode code signing for release artifacts | n/a | deferred |
 | P2 | Relative permeability export to NEC | B | pending |
 | P2 | Custom/imported geometry optimization and space constraints | n/a | pending |
 | P2 | Live VNA/hardware control | n/a | deferred |
 | P2 | Additional full-wave engines | n/a | deferred |
 | P2 | Physical antenna validation | A | blocked: no measurements |
+| P3 | Segmented frequency plan in one NEC deck | B | deferred |
 
 ## Next
 
 Modeling track:
 
-1. Relative-permeability export and a pattern-metric selector for realized
+1. Multiband analysis (M6): band defaults, batch analysis, and band summary
+   results. See [`docs/MULTIBAND_ANALYSIS_PLAN.md`](MULTIBAND_ANALYSIS_PLAN.md).
+2. Relative-permeability export and a pattern-metric selector for realized
    gain/directivity.
-2. ZS6BKW and Zepp presets using geometry transmission lines.
+3. ZS6BKW and Zepp presets using geometry transmission lines.
 
 Release track:
 

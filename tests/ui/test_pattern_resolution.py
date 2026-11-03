@@ -33,7 +33,7 @@ def test_far_field_request_uses_ground_hemisphere() -> None:
     assert request.phi_step_deg == pytest.approx(5.0)
 
 
-def test_form_defaults_to_100_sweep_points_and_5_degree_pattern(qtbot: QtBot) -> None:
+def test_form_defaults_to_100_sweep_points(qtbot: QtBot) -> None:
     form = DipoleForm(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(form)
 
@@ -43,31 +43,3 @@ def test_form_defaults_to_100_sweep_points_and_5_degree_pattern(qtbot: QtBot) ->
     assert spec.frequency_plan.count == 100
     assert spec.far_field.theta_count == 19
     assert spec.far_field.phi_count == 73
-
-
-def test_form_changes_pattern_resolution(qtbot: QtBot) -> None:
-    form = DipoleForm(Translator(Language.ENGLISH), UnitSystem.METRIC)
-    qtbot.addWidget(form)
-
-    index = form._pattern_resolution.findData(2.0)
-    form._pattern_resolution.setCurrentIndex(index)
-    spec = form.simulation_spec()
-
-    assert spec.far_field.theta_count == 46
-    assert spec.far_field.phi_count == 181
-    assert spec.far_field.theta_step_deg == pytest.approx(2.0)
-    assert "8,326" in form._pattern_points.text()
-
-
-def test_custom_dialog_exposes_pattern_step(qtbot: QtBot) -> None:
-    from antennadesk.ui.dialogs.custom_antenna_dialog import CustomAntennaDialog
-
-    dialog = CustomAntennaDialog(
-        Translator(Language.ENGLISH),
-        UnitSystem.METRIC,
-        pattern_step_deg=5.0,
-    )
-    qtbot.addWidget(dialog)
-
-    assert dialog.pattern_step_deg() == pytest.approx(5.0)
-    assert "2,701" in dialog._pattern_points.text()

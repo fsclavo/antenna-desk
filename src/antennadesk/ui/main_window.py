@@ -404,8 +404,6 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1_100, 800)
 
         self._form = DipoleForm(self._translator, self._unit_system)
-        self._form.apply_requested.connect(lambda: self.apply_design())
-        self._form.optimize_requested.connect(lambda: self.optimize_length())
         self._form.changed.connect(self._on_form_changed)
         self._form_scroll = QScrollArea(self)
         form_scroll = self._form_scroll
@@ -608,6 +606,8 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._j_pole_scroll)
         self._design_stack.addWidget(self._ringo_scroll)
         self._design_stack.addWidget(self._custom_panel)
+        self._apply_button = QPushButton(self)
+        self._apply_button.clicked.connect(lambda: self.apply_design())
         self._estimate_button = QPushButton(self)
         self._estimate_button.clicked.connect(lambda: self.design_from_frequency())
         self._optimize_button = QPushButton(self)
@@ -619,12 +619,13 @@ class MainWindow(QMainWindow):
         design_layout = QVBoxLayout(design_panel)
         design_layout.setContentsMargins(0, 0, 0, 0)
         design_actions = QHBoxLayout()
+        design_actions.addWidget(self._apply_button)
         design_actions.addWidget(self._estimate_button)
         design_actions.addWidget(self._optimize_button)
         design_layout.addLayout(design_actions)
+        design_layout.addWidget(self._pattern_group)
         design_layout.addWidget(self._provenance_label)
         design_layout.addWidget(self._design_stack, 1)
-        design_layout.addWidget(self._pattern_group)
 
         self._geometry = GeometryView(self._translator, self._unit_system)
         self._geometry.setMinimumHeight(300)
@@ -805,6 +806,7 @@ class MainWindow(QMainWindow):
         self._design_from_frequency_action.setText(
             self._translator.t("action.design_from_frequency")
         )
+        self._apply_button.setText(self._translator.t("action.apply"))
         self._optimize_button.setText(self._translator.t("action.optimize"))
         self._construction_action.setText(self._translator.t("action.construction"))
         self._loads_action.setText(self._translator.t("action.loads"))
@@ -949,6 +951,7 @@ class MainWindow(QMainWindow):
         has_multiple = self._project is not None and len(self._project.designs) > 1
         has_result = self._design_id is not None and self._design_id in self._simulation_results
         self._new_action.setEnabled(idle)
+        self._apply_button.setEnabled(idle and has_project)
         self._estimate_button.setEnabled(idle and has_project)
         self._open_action.setEnabled(idle)
         self._save_action.setEnabled(idle and has_project)
@@ -2108,21 +2111,7 @@ class MainWindow(QMainWindow):
             else f"{self._custom_run_pattern_step_deg:g}°"
         )
         if not isinstance(design.parameters, CustomAntennaParameters):
-            mode = (
-                self._translator.t("custom.pattern_frequencies_auto")
-                if self._custom_pattern_frequency_count is None
-                else self._translator.t(
-                    "custom.pattern_frequencies_option",
-                    count=self._custom_pattern_frequency_count,
-                )
-            )
-            self._custom_pattern_status.setText(
-                self._translator.t(
-                    "pattern.requested_generic",
-                    value=requested,
-                    mode=mode,
-                )
-            )
+            self._custom_pattern_status.setText("")
             return
         sweep_count = self._custom_sweep_points.value() if self._custom_sweep.isChecked() else 1
         pattern_count = 1
@@ -2454,11 +2443,9 @@ class MainWindow(QMainWindow):
             self._translator,
             self._unit_system,
             parent=self,
-            pattern_step_deg=self._custom_pattern_step_deg,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        self._custom_pattern_step_deg = dialog.pattern_step_deg()
         try:
             project = CreateDipoleProject().execute(
                 CreateDipoleProjectCommand(
@@ -3078,7 +3065,6 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
-        self._custom_pattern_step_deg = self._form.pattern_step_deg()
         self._loads = updated_design.antenna.loads
         self._form_dirty = False
         self._dirty = True
@@ -3171,11 +3157,9 @@ class MainWindow(QMainWindow):
             self._unit_system,
             design.parameters,
             self,
-            pattern_step_deg=self._custom_pattern_step_deg,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        self._custom_pattern_step_deg = dialog.pattern_step_deg()
         try:
             updated_design = design.with_parameters(dialog.result_parameters())
             self._project = self._project.with_design(updated_design, updated_at=utc_now())

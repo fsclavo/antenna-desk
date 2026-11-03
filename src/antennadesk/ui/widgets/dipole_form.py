@@ -12,9 +12,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QGridLayout,
     QGroupBox,
-    QHBoxLayout,
     QLabel,
-    QPushButton,
     QSpinBox,
     QVBoxLayout,
     QWidget,
@@ -40,12 +38,7 @@ from ...domain.simulation.segmentation import (
 )
 from ...domain.simulation.spec import SimulationSpec
 from ..i18n import Translator
-from ..pattern_resolution import (
-    DEFAULT_PATTERN_STEP_DEG,
-    PATTERN_STEPS_DEG,
-    far_field_request,
-    pattern_counts,
-)
+from ..pattern_resolution import DEFAULT_PATTERN_STEP_DEG, far_field_request
 from ..units import (
     UnitSystem,
     diameter_bounds,
@@ -63,8 +56,6 @@ MATERIALS = (COPPER, ALUMINUM)
 
 
 class DipoleForm(QWidget):
-    apply_requested = Signal()
-    optimize_requested = Signal()
     changed = Signal()
 
     def __init__(
@@ -148,19 +139,6 @@ class DipoleForm(QWidget):
             spin.setDecimals(6)
             spin.setSuffix(" MHz")
 
-        self._pattern_resolution = QComboBox(self)
-        for step in PATTERN_STEPS_DEG:
-            self._pattern_resolution.addItem(f"{step:g}°", step)
-        default_index = self._pattern_resolution.findData(DEFAULT_PATTERN_STEP_DEG)
-        if default_index >= 0:
-            self._pattern_resolution.setCurrentIndex(default_index)
-        self._pattern_points = QLabel(self)
-
-        self._apply = QPushButton(self)
-        self._apply.clicked.connect(self.apply_requested)
-        self._optimize = QPushButton(self)
-        self._optimize.clicked.connect(self.optimize_requested)
-
         self._family_value = QLabel(self)
         self._form_layout = QFormLayout()
         form = self._form_layout
@@ -179,8 +157,6 @@ class DipoleForm(QWidget):
         form.addRow(self._label("field.permittivity"), self._permittivity)
         form.addRow(self._label("field.conductivity"), self._conductivity)
         form.addRow(self._label("field.reference_impedance"), self._reference)
-        form.addRow(self._label("field.pattern_resolution"), self._pattern_resolution)
-        form.addRow(self._label("field.pattern_points_label"), self._pattern_points)
 
         sweep_layout = QGridLayout(self._sweep_group)
         sweep_layout.addWidget(self._sweep, 0, 0, 1, 2)
@@ -194,10 +170,6 @@ class DipoleForm(QWidget):
         group_layout = QVBoxLayout(self._group)
         group_layout.addLayout(form)
         group_layout.addWidget(self._sweep_group)
-        button_layout = QHBoxLayout()
-        button_layout.addWidget(self._apply)
-        button_layout.addWidget(self._optimize)
-        group_layout.addLayout(button_layout)
 
         layout = QVBoxLayout(self)
         layout.addWidget(self._group)
@@ -224,7 +196,6 @@ class DipoleForm(QWidget):
         ):
             spin.valueChanged.connect(self._emit_changed)
         self._sweep_points.valueChanged.connect(self._emit_changed)
-        self._pattern_resolution.currentIndexChanged.connect(self._on_pattern_changed)
         self._sides.valueChanged.connect(self._emit_changed)
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._emit_changed)
@@ -270,8 +241,6 @@ class DipoleForm(QWidget):
         self._group.setTitle(self._translator.t("panel.design"))
         self._sweep_group.setTitle(self._translator.t("field.sweep"))
         self._sweep.setText(self._translator.t("field.sweep_enabled"))
-        self._apply.setText(self._translator.t("action.apply"))
-        self._optimize.setText(self._translator.t("action.optimize"))
         labels = self._labels()
         for key, label in labels.items():
             label.setText(self._translator.t(key))
@@ -285,9 +254,6 @@ class DipoleForm(QWidget):
         self._type.setItemText(0, self._translator.t("antenna_type.wire_dipole"))
         self._type.setItemText(1, self._translator.t("antenna_type.folded_dipole"))
         self._type.setItemText(2, self._translator.t("antenna_type.loop"))
-        for index, step in enumerate(PATTERN_STEPS_DEG):
-            self._pattern_resolution.setItemText(index, f"{step:g}°")
-        self._update_pattern_points()
         self._apply_unit_system()
         self._update_type_controls()
 
@@ -490,7 +456,7 @@ class DipoleForm(QWidget):
         else:
             frequency_plan = FrequencyPlan.single(center_hz)
 
-        far_field = far_field_request(self.pattern_step_deg(), parameters.ground)
+        far_field = far_field_request(DEFAULT_PATTERN_STEP_DEG, parameters.ground)
 
         segmentation = aligned_policy_for_model(
             parameters.to_antenna(name="Segmentation preview"),
@@ -524,7 +490,6 @@ class DipoleForm(QWidget):
         self._family_value.setText(
             self._translator.t("family.loop" if is_loop else "family.dipole")
         )
-        self._optimize.setVisible(True)
         labels = self._labels()
         length_label = labels.get("field.length")
         if length_label is not None:
@@ -551,25 +516,6 @@ class DipoleForm(QWidget):
         finite = self._ground.currentData() == GroundKind.FINITE.value
         self._permittivity.setEnabled(finite)
         self._conductivity.setEnabled(finite)
-        self._update_pattern_points()
-
-    def _on_pattern_changed(self, *_args: object) -> None:
-        self._update_pattern_points()
-        self._emit_changed()
-
-    def _update_pattern_points(self) -> None:
-        try:
-            ground = self.parameters().ground
-        except (ValueError, TypeError):
-            ground = GroundModel.free_space()
-        theta_count, phi_count = pattern_counts(self.pattern_step_deg(), ground)
-        self._pattern_points.setText(
-            self._translator.t("field.pattern_points", count=f"{theta_count * phi_count:,}")
-        )
-
-    def pattern_step_deg(self) -> float:
-        value = self._pattern_resolution.currentData()
-        return float(value) if value is not None else DEFAULT_PATTERN_STEP_DEG
 
     def _update_sweep_controls(self) -> None:
         enabled = self._sweep.isChecked()

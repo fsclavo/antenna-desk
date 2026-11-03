@@ -32,8 +32,11 @@ the `NEC2C` environment variable.
 
 The application opens with a 40 m horizontal dipole loaded. Press **Simulate**
 (or F5). The design panel on the left shows antenna type, frequency, geometry,
-height, wire diameter, material, ground, reference impedance, pattern
-resolution, and the frequency sweep.
+height, wire diameter, material, ground, reference impedance, and the frequency
+sweep. A single action bar above the panel has **Apply design**, **Estimate
+Dimensions...**, and **Optimize...**. The compact **Simulation pattern** group
+sets the global pattern resolution and pattern frequency count for every
+antenna family.
 
 For a frequency-first start, press **Estimate Dimensions...** above the design
 panel, choose the family and target frequency, and apply the estimate. The form

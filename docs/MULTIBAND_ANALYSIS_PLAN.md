@@ -2,6 +2,8 @@
 
 **Status:** proposed, not implemented
 **Date:** 2026-11-03
+**Revised:** 2026-11-03 after the centralized design-panel action bar and
+global **Simulation pattern** group.
 **Scope:** analysis workflow, not new antenna geometry
 
 ## Problem
@@ -33,6 +35,13 @@ The G5RV is therefore not special because it is "more multiband" than the
 others. It is special because its implementation happens to expose the generic
 custom sweep controls.
 
+The recent GUI consolidation is part of the baseline for this plan: the design
+panel now has one action bar (**Apply design**, **Estimate Dimensions...**,
+**Optimize...**) and one global **Simulation pattern** group. Per-form pattern
+controls and the duplicate bottom Apply/Optimize buttons were removed. The
+frequency sweep remains family-specific. Band analysis must join this central
+area and must not reintroduce per-form pattern or band controls.
+
 ## Goals
 
 1. Let the user select a set of amateur bands for analysis.
@@ -40,8 +49,8 @@ custom sweep controls.
 3. Keep single-band designs and the existing Simulate action unchanged.
 4. Show a compact per-band summary: best SWR, frequency at best SWR, gain,
    takeoff angle, efficiency, and run status.
-5. Reuse the existing per-band result views, pattern snapshots, storage budget,
-   reports, and undo/redo model.
+5. Reuse the existing per-band result views, global pattern settings, storage
+   budget, reports, and undo/redo model.
 6. Keep every default and limitation visible; do not claim that an antenna is
    resonant on a band just because the band is selected.
 
@@ -64,9 +73,9 @@ than one band, plus presets that are commonly used with a tuner.
 
 | Family | Why it qualifies | Proposed default bands | Notes |
 |---|---|---|---|
-| G5RV | 102 ft dipole plus 300/450 Ω matching line | 80, 40, 20, 17, 15, 12, 10 m; also "All HF" 3.5–30 MHz | Published preset; current continuous sweep remains an option |
+| G5RV | 102 ft dipole plus 300/450 Ω matching line | 80, 40, 20, 15, 10 m; optional 30, 17, 12 m with tuner; also "All HF" 3.5–30 MHz | Published preset; current continuous sweep remains an option |
 | OCFD | Off-center feed at about 1/3; classic 40/20/10 coverage | 40, 20, 10 m for a 40 m design; use 80, 40, 20, 10 for an 80 m design | Heuristic; floor plan depends on length and feed ratio |
-| Far dipole | One half-wave element per band | Derive from element lengths or `DesignIntent.fan_bands_hz` | Add band metadata to `FanElement` or persist the estimator bands |
+| Fan dipole | One half-wave element per band | Derive from element lengths or `DesignIntent.fan_bands_hz` | Add band metadata to `FanElement` or persist the estimator bands |
 | Trap dipole | Two resonant sections separated by traps | Low band from `frequency_hz`; high band from `high_band_frequency_hz` | Both frequencies already exist in the model |
 | T2FD | Terminated folded dipole, broadband by design | 160–10 m, 80–10 m, or "All HF" | Broadband, not a set of narrow resonances |
 | Doublet | Center-fed doublet with open-wire line and tuner | 80–10 m; optional 160–6 m | Requires preserving the doublet identity and modelling the tuner as an external limitation |
@@ -105,7 +114,7 @@ single-band `RunSimulation` once per selected band.
   - Reuse `AmateurBand` and `AMATEUR_BANDS` from
     `domain/simulation/bands.py`.
   - Add a validated `BandSelection`/`BandPlan` value containing the selected
-    bands and per-band point counts.
+    bands and per-band frequency-sweep point counts.
   - Add a family-default resolver that maps a design to candidate bands and
     an evidence/limitation note.
 - Application:
@@ -114,8 +123,11 @@ single-band `RunSimulation` once per selected band.
     solver, and returns partial results when a band fails or the user cancels.
   - Keep `RunSimulation` as the only solver-facing use case.
 - UI:
-  - A band-selection dialog with checkboxes, per-band points, and preset
-    buttons (for example 40/20/10, 80–10, All HF).
+  - A compact **Band analysis** group in the central design area, beside the
+    existing global **Simulation pattern** group. The top action bar stays at
+    three buttons: Apply design, Estimate Dimensions..., Optimize...
+  - A band-selection dialog with checkboxes, per-band frequency-sweep points,
+    and preset buttons (for example 40/20/10, 80–10, All HF).
   - A band-analysis worker that reports "band 2 of 3" progress and supports
     cancellation between bands.
   - A **Bands** results tab with one row per band. Selecting a row reuses the
@@ -129,7 +141,8 @@ Advantages:
 
 - No changes to the NEC adapter, deck writer, parser, or normalization.
 - A failure in one band does not discard the other bands.
-- Each band gets its own pattern snapshots, storage budget, and diagnostics.
+- Each band gets its own representative pattern snapshot, storage budget, and
+  diagnostics while sharing the global angular resolution.
 - Existing single-band Simulate remains the regression baseline.
 - The G5RV can keep its continuous "All HF" mode while gaining a band-list
   mode.
@@ -170,14 +183,16 @@ startup or raw-output size becomes a measured problem.
 
 ### Band selection
 
-Use a dedicated **Analyze Bands...** action in the Simulation menu and a
-secondary button in the design panel. The dialog should contain:
+Use a dedicated **Analyze Bands...** action in the Simulation menu and a compact
+control in a central **Band analysis** group. Do not add a fourth equal button
+to the action bar: Apply design, Estimate Dimensions..., and Optimize... are the
+only top-level design actions. The dialog should contain:
 
 - a preset selector: **Current band**, **40/20/10**, **80–10**, **All HF**,
   **Custom**;
 - a checkbox per band from 160 m to 6 m;
-- a per-band point count, defaulting to 11 or 15 for narrow bands and 31 for
-  broadband families;
+- a per-band frequency-sweep point count, defaulting to 11 or 15 for narrow
+  bands and 31 for broadband families;
 - a short note showing the family default, its evidence level, and any
   limitation (for example "tuner required", "starting point only");
 - a warning if the selection includes a band outside the design's documented
@@ -185,6 +200,30 @@ secondary button in the design panel. The dialog should contain:
 
 Defaults should be preselected from the family resolver, not hard-coded in the
 dialog.
+
+### Pattern settings
+
+The global **Simulation pattern** group remains the single place for angular
+resolution and pattern-frequency policy. Band analysis must not duplicate it or
+reintroduce per-form controls.
+
+- In band-analysis mode, each band gets one representative pattern snapshot at
+  its design or band-center frequency by default. This mirrors the existing
+  G5RV "one pattern per band" behavior without multiplying patterns by the
+  narrow-band minimum.
+- The global angular step (Auto max, 1°, 2°, 5°, and so on) applies to every
+  band. The budget check uses the total pattern count of the batch.
+- The existing **Pattern frequencies** count remains meaningful for a single
+  contiguous plan. When band analysis is active, the dialog shows "one per
+  band" and the total pattern count; a later enhancement can allow more
+  snapshots per band if users need pattern-versus-frequency detail inside one
+  band.
+- The first milestone keeps the band dialog limited to band selection and
+  frequency-sweep points. Pattern resolution and snapshot policy stay in the
+  global group, so the GUI does not grow a second pattern editor.
+- `band_snapshot_frequencies()` selects snapshots inside one plan; it does not
+  create multiple impedance bands. Band analysis creates the frequency plans;
+  the pattern group decides how much far-field data to keep.
 
 ### Results
 
@@ -205,7 +244,10 @@ Add a **Bands** tab to `ResultsView`:
 ### Simulation action semantics
 
 - **Simulate** keeps the current-band or current-sweep behavior.
-- **Analyze Bands...** runs the selected band set.
+- **Analyze Bands...** runs the selected band set from the Simulation menu and
+  the central **Band analysis** group.
+- The top action bar is unchanged; band analysis is not a fourth primary
+  button.
 - Both use the same worker-thread and cancellation model.
 - The status line and progress dialog identify the active band.
 - If the user cancels, keep completed bands and report a partial analysis.
@@ -224,8 +266,9 @@ should carry:
 
 Proposed defaults:
 
-- **G5RV**: 80/40/20/17/15/12/10 m plus an "All HF" continuous option. Source:
-  published G5RV dimensions and the existing preset documentation.
+- **G5RV**: 80/40/20/15/10 m, with optional 30/17/12 m when the user has a
+  tuner, plus an "All HF" continuous option. Source: published G5RV dimensions
+  and the existing preset documentation.
 - **OCFD**: the design band plus harmonically related bands, capped to a
   documented set. For a 40 m design, default 40/20/10 m. For an 80 m design,
   default 80/40/20/10 m. Label as a heuristic.
@@ -313,7 +356,8 @@ invalid selection.
 - Add `BandResult`, `BandAnalysisResult`, and `AnalyzeBands`.
 - Add a worker that runs bands sequentially, reports progress, and supports
   cancellation between bands.
-- Reuse `_fit_spec_to_budget` per band, with an aggregate check.
+- Reuse the storage-budget policy per band, with one pattern snapshot per band
+  by default and an aggregate check.
 - Add fake-solver tests for success, partial failure, cancellation, and an
   empty band set.
 
@@ -323,14 +367,20 @@ batch is equivalent to today's Simulate.
 ### Phase 3 — Band selection UI
 
 - Add the **Analyze Bands...** action and dialog.
+- Add a compact **Band analysis** group beside the global **Simulation
+  pattern** group; keep the action bar at Apply/Estimate/Optimize.
 - Preselect family defaults; allow custom bands and point counts.
+- Use one pattern snapshot per band by default and keep angular resolution
+  global.
 - Add the **Bands** results tab and band switching.
 - Add accessibility names, tooltips, and translations in English and Spanish.
-- Add pytest-qt tests for defaults, validation, progress, cancellation, and
-  band selection.
+- Add pytest-qt tests for defaults, validation, progress, cancellation, band
+  selection, and the unchanged action bar.
+- Add a regression test that no per-form pattern or band controls return.
 
 Exit criteria: G5RV, OCFD, and end-fed can be analyzed across their default
-bands without touching the frequency sweep manually.
+bands without touching the frequency sweep manually, and the centralized
+action bar/pattern layout remains intact.
 
 ### Phase 4 — Persistence and reports
 
@@ -369,7 +419,9 @@ or an explicit exclusion.
 - Solver integration: one real NEC run for each representative family; no
   invented reference values. Reuse existing reference anchors where available.
 - UI: dialog defaults, action enablement, progress, band switching, empty
-  states, error states, English/Spanish text.
+  states, error states, English/Spanish text, unchanged action bar, no
+  duplicate per-form pattern controls, and no pattern editor inside the band
+  dialog.
 - Persistence: schema migration, round-trip, compaction, old project loading.
 - Reports: CSV column contract, HTML/PDF band sections, pattern export.
 - Regression: single-band Simulate, G5RV continuous sweep, pattern snapshots,
@@ -395,10 +447,15 @@ or an explicit exclusion.
 6. **Batch semantics.** A cancelled or partially failed batch must remain
    inspectable and saveable without pretending all bands succeeded.
 7. **Storage.** A full HF band set with fine patterns can exceed the project
-   budget. Use the existing budget per band and show the aggregate before
-   running.
+   budget. Use one pattern per band by default, the existing budget per band,
+   and show the aggregate before running.
 8. **Solver output.** Each band keeps its own raw output. Truncating or
    compressing raw output remains a separate optimization.
+9. **Centralized UI.** The recent GUI correction deliberately removed per-form
+   pattern controls and duplicate action buttons. Band analysis must extend the
+   central analysis area, not reverse that consolidation. If per-band pattern
+   detail is needed, add an explicit per-band override later rather than
+   multiplying the global count silently.
 
 ## Definition of done
 
@@ -407,6 +464,11 @@ or an explicit exclusion.
 - Each family default has a source or an explicit experimental label.
 - A band summary shows best SWR, gain, and takeoff angle per band.
 - Selecting a band reuses the existing charts and pattern views.
+- The action bar remains Apply design/Estimate Dimensions.../Optimize..., and
+  band controls live in the central analysis area.
+- Band analysis uses one pattern snapshot per band by default and respects the
+  global angular resolution.
+- No per-form pattern or band controls return.
 - Single-band behavior is unchanged.
 - Cancellation and partial failure are safe and visible.
 - Save/open, reports, exports, comparison, and undo/redo preserve the analysis.

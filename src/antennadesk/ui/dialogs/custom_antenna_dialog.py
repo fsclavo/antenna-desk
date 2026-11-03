@@ -32,11 +32,6 @@ from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.antennas.wire import Wire
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
-from ..pattern_resolution import (
-    DEFAULT_PATTERN_STEP_DEG,
-    PATTERN_STEPS_DEG,
-    pattern_counts,
-)
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
 
 MATERIALS = (COPPER, ALUMINUM)
@@ -50,7 +45,6 @@ class CustomAntennaDialog(QDialog):
         parameters: CustomAntennaParameters | None = None,
         parent: QWidget | None = None,
         *,
-        pattern_step_deg: float = DEFAULT_PATTERN_STEP_DEG,
         frequency_hz: float | None = None,
     ) -> None:
         super().__init__(parent)
@@ -99,16 +93,6 @@ class CustomAntennaDialog(QDialog):
         self._conductivity.setSingleStep(0.001)
         self._conductivity.setValue(0.005)
         self._conductivity.setSuffix(" S/m")
-
-        self._pattern_resolution = QComboBox(self)
-        for step in PATTERN_STEPS_DEG:
-            self._pattern_resolution.addItem(f"{step:g}°", step)
-        index = self._pattern_resolution.findData(pattern_step_deg)
-        if index < 0:
-            index = self._pattern_resolution.findData(DEFAULT_PATTERN_STEP_DEG)
-        self._pattern_resolution.setCurrentIndex(max(index, 0))
-        self._pattern_resolution.currentIndexChanged.connect(self._update_pattern_points)
-        self._pattern_points = QLabel(self)
 
         self._table = QTableWidget(0, 8, self)
         self._table.setHorizontalHeaderLabels(
@@ -160,8 +144,6 @@ class CustomAntennaDialog(QDialog):
         form.addRow(translator.t("field.ground"), self._ground)
         form.addRow(translator.t("field.permittivity"), self._permittivity)
         form.addRow(translator.t("field.conductivity"), self._conductivity)
-        form.addRow(translator.t("field.pattern_resolution"), self._pattern_resolution)
-        form.addRow(translator.t("field.pattern_points_label"), self._pattern_points)
         form.addRow(translator.t("custom.feed_wire"), self._feed_wire)
         form.addRow(translator.t("custom.feed_offset"), self._feed_offset)
 
@@ -210,7 +192,6 @@ class CustomAntennaDialog(QDialog):
             self._set_ground(parameters.ground)
             self._set_material(parameters.wires[0].material if parameters.wires else COPPER)
         self._update_ground_controls()
-        self._update_pattern_points()
         self._refresh_feed_values()
         if parameters is None:
             self._feed_offset.setValue(length_from_m(5.0, self._unit_system))
@@ -345,17 +326,6 @@ class CustomAntennaDialog(QDialog):
         finite = self._ground.currentData() == GroundKind.FINITE.value
         self._permittivity.setEnabled(finite)
         self._conductivity.setEnabled(finite)
-        self._update_pattern_points()
-
-    def _update_pattern_points(self, *_args: object) -> None:
-        theta_count, phi_count = pattern_counts(self.pattern_step_deg(), self._ground_model())
-        self._pattern_points.setText(
-            self._translator.t("field.pattern_points", count=f"{theta_count * phi_count:,}")
-        )
-
-    def pattern_step_deg(self) -> float:
-        value = self._pattern_resolution.currentData()
-        return float(value) if value is not None else DEFAULT_PATTERN_STEP_DEG
 
     def _ground_model(self) -> GroundModel:
         kind = self._ground.currentData()

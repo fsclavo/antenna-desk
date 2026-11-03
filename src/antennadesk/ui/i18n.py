@@ -818,18 +818,6 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Reference impedance (Ω)",
         Language.SPANISH: "Impedancia de referencia (Ω)",
     },
-    "field.pattern_resolution": {
-        Language.ENGLISH: "Pattern resolution",
-        Language.SPANISH: "Resolución del patrón",
-    },
-    "field.pattern_points_label": {
-        Language.ENGLISH: "Pattern points",
-        Language.SPANISH: "Puntos de patrón",
-    },
-    "field.pattern_points": {
-        Language.ENGLISH: "{count} pattern points",
-        Language.SPANISH: "{count} puntos de patrón",
-    },
     "g5rv.title": {
         Language.ENGLISH: "G5RV Generator",
         Language.SPANISH: "Generador G5RV",
@@ -1276,10 +1264,6 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "pattern.settings_title": {
         Language.ENGLISH: "Simulation pattern",
         Language.SPANISH: "Patrón de simulación",
-    },
-    "pattern.requested_generic": {
-        Language.ENGLISH: "Requested resolution: {value} · {mode}",
-        Language.SPANISH: "Resolución solicitada: {value} · {mode}",
     },
     "pattern.frequency": {Language.ENGLISH: "Frequency", Language.SPANISH: "Frecuencia"},
     "pattern.cut_phi": {

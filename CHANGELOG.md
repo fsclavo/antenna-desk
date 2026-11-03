@@ -59,6 +59,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The design panel now has one action bar (**Apply design**, **Estimate
+  Dimensions...**, **Optimize...**) and a compact global **Simulation pattern**
+  group. The duplicate per-form pattern controls and bottom Apply/Optimize
+  buttons were removed.
 - Pattern resolution and pattern-frequency controls are now global to every
   antenna family. Generated dipoles, Yagis, loops, verticals, and future
   templates use the same Auto (max)/Auto (bands) policy as the G5RV and get 1°
