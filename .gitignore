@@ -19,3 +19,6 @@ spikes/phase0/results/
 
 # External reference material (copyrighted / not part of the repo)
 reference_data/
+
+# Hypothesis example database
+.hypothesis/

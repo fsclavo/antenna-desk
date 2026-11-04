@@ -15,9 +15,9 @@ Measured on 2026-11-04:
 
 | Fact | Value |
 |---|---|
-| Collected tests | 1,121 |
-| Passing locally without solver | 1,044 passed in 41 s |
-| Passing locally with `NEC2C` set | 1,121 passed in 56 s |
+| Collected tests | 1,139 |
+| Passing locally without solver | 1,062 passed in 44 s |
+| Passing locally with `NEC2C` set | 1,139 passed in 59 s |
 | Slowest test | 4.9 s (`test_g5rv_dense_sweep_uses_pattern_snapshots`) |
 | UI test isolation | fixed 2026-11-04: deferred deletes were not dispatched, so widgets from one test stayed alive and a later test spent ~66 s in a nested event loop. The teardown in `tests/conftest.py` now closes windows and dispatches `DeferredDelete`; the full suite went from 142 s to 56 s |
 | Test files | 128 (78 unit, 3 integration, 1 acceptance, 46 UI) |
@@ -33,12 +33,12 @@ Measured on 2026-11-04:
 | Timing sensitivity | one UI failure appeared under coverage instrumentation at ~32 % while another pytest process ran concurrently. The polarization commit added deterministic posted-event processing in `tests/ui/helpers.py`; re-verify under coverage before treating it as open |
 | ADR files | 24, numbered 0001–0023 with a duplicated `0014` |
 | CI | 4 workflows, green; Linux + Windows, Python 3.11/3.12/3.13 |
-| Property-based tests | 0 |
+| Property-based tests | unit round trips, azimuth range, and importer fuzzing with Hypothesis 6.170 |
 | Mutation testing | 0 |
 | Cross-engine numerical checks | 0 |
 | Segment-convergence tests | 0 |
 | Physics-invariant tests | 0 |
-| `docs/VALIDATION_PLAN.md` test count | fixed in Phase 0 (was 788, now 1,121) |
+| `docs/VALIDATION_PLAN.md` test count | fixed in Phase 0 (was 788, now 1,139) |
 
 The suite is in good shape for its size. The gaps are not "more tests"; they are
 *stronger oracles*, *enforced thresholds*, and *consistency between code, docs,
@@ -112,14 +112,12 @@ catch regressions.
 - Add mutation testing with `mutmut` (BSD-3, Unix only) on `domain/` and
   `simulation/` in a nightly job. Target ≥ 80 % killed. Annotate equivalent
   mutants explicitly; do not lower the target to hide survivors.
-- Add property-based tests with `hypothesis` (MPL-2.0, dev-only) for:
-  - unit conversion round trips (`meters → feet → meters`, `Hz → MHz`);
-  - geometry invariants (wire length, connectivity, no below-ground wires);
-  - project JSON round trip and every migration path from version 1 to the
-    current version 7;
-  - the untrusted-input parsers: NEC deck, MMANA `.maa`, VNA CSV.
-- Add a fuzz corpus for the three importers: no crash, bounded memory, explicit
-  diagnostics for malformed input.
+- (implemented 2026-11-04) `hypothesis` 6.170 (MPL-2.0, dev-only) covers unit
+  round trips, azimuth range, and the three untrusted-input parsers. The fuzz
+  tests found two real defects: `parse_nec2_deck(",")` raised `IndexError`, and
+  `normalize_azimuth_degrees(-1e-15)` returned `360.0`. Both are fixed with
+  deterministic regression tests.
+- Remaining: geometry invariants and project/migration round trips.
 
 **Acceptance.** CI fails on a coverage regression. The nightly mutation job
 reports a score and a survivor list. Each importer has at least one Hypothesis
@@ -463,7 +461,8 @@ the polarization commit.
 1. (done 2026-11-04) Coverage measurement and per-package thresholds.
 2. (done 2026-11-04) mypy coverage for `ui/` via `mypy_ui.ini`, started
    permissively with a 17-file ratchet; 58 of 75 files are checked.
-3. Hypothesis for units, geometry, persistence, and the three importers.
+3. (partly done 2026-11-04) Hypothesis for units and the three importers,
+   including a fuzz corpus; geometry and persistence are pending.
 4. (done 2026-11-04) i18n parity test:
    `tests/unit/ui/test_i18n.py` checks both languages, blank entries,
    placeholder parity, duplicate literal keys, and the fallback path.

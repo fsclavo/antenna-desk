@@ -125,4 +125,6 @@ def radians_to_degrees(value: float) -> float:
 def normalize_azimuth_degrees(value: float) -> float:
     """Normalize an azimuth to the half-open interval ``[0, 360)``."""
 
-    return ensure_finite(value, name="azimuth_degrees") % 360.0
+    normalized = ensure_finite(value, name="azimuth_degrees") % 360.0
+    # A tiny negative angle rounds to exactly 360.0 in binary floating point.
+    return 0.0 if normalized >= 360.0 else normalized

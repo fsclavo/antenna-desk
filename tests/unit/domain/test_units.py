@@ -47,6 +47,11 @@ def test_azimuth_normalization() -> None:
     assert units.normalize_azimuth_degrees(-10.0) == 350.0
 
 
+def test_azimuth_normalization_wraps_tiny_negative_angles_to_zero() -> None:
+    # 360.0 - 1e-15 rounds to 360.0, which would fall outside [0, 360).
+    assert units.normalize_azimuth_degrees(-1e-15) == 0.0
+
+
 def test_angle_conversions() -> None:
     assert units.degrees_to_radians(180.0) == pytest.approx(math.pi)
     assert units.radians_to_degrees(math.pi) == pytest.approx(180.0)

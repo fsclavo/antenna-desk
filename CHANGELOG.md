@@ -121,8 +121,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `ui` markers, and the CI caches the uv environment. The UI teardown now
   dispatches deferred deletes, which cuts the full suite from 142 s to 56 s.
 - Added a coverage job with per-package thresholds, a permissive mypy pass over
-  58 of the 75 UI modules (`mypy_ui.ini`), and English/Spanish translation
-  parity tests.
+  58 of the 75 UI modules (`mypy_ui.ini`), English/Spanish translation parity
+  tests, and Hypothesis property tests for units and the three importers.
 
 ### Changed
 
@@ -179,6 +179,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- A NEC deck line containing only separators (for example `,`) no longer raises
+  an `IndexError`; it is ignored like a blank line. Imported files are untrusted
+  data, so the parser now reports malformed cards as `ValueError`.
+- `normalize_azimuth_degrees` now returns `0.0` for tiny negative angles. The
+  modulo result (`360.0 - 1e-15`) rounded to exactly `360.0`, which violated
+  the documented `[0, 360)` range.
 - Frequency-first estimator geometries stay above ground: inverted-V estimates
   widen the included angle (and raise the apex if needed), fan-dipole estimates
   use distinct progressively narrower element angles, and end-fed estimates

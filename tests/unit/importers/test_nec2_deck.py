@@ -61,3 +61,9 @@ def test_rejects_a_deck_without_a_source() -> None:
 def test_rejects_a_deck_without_a_wire() -> None:
     with pytest.raises(ValueError, match="GW"):
         parse_nec2_deck("FR 0 1 0 0 7.1 0\n")
+
+
+def test_ignores_a_line_that_is_only_separators() -> None:
+    result = parse_nec2_deck(",\nGW 1 5 -5 0 8 5 0 8 0.001\nFR 0 1 0 0 7.1 0\nEX 0 1 3 0 1.0\n")
+
+    assert len(result.parameters.wires) == 1
