@@ -1,0 +1,477 @@
+# QA strategy
+
+**Status:** proposal
+**Date:** 2026-11-04
+**Scope:** test infrastructure, static analysis, CI, and numerical/experimental
+validation for the current codebase and the next two milestones.
+
+This document complements [`VALIDATION_PLAN.md`](VALIDATION_PLAN.md). That file
+defines *what* counts as evidence and the three validation levels. This one
+defines *how* the project produces, enforces, and scales that evidence.
+
+## 1. Baseline
+
+Measured on 2026-11-04:
+
+| Fact | Value |
+|---|---|
+| Collected tests | 1,121 |
+| Passing locally without solver | 1,044 passed, 77 skipped, 62 s |
+| Passing locally with `NEC2C` set | 1,121 passed |
+| Test files | 128 (78 unit, 3 integration, 1 acceptance, 46 UI) |
+| Custom pytest markers | 0 |
+| `parametrize` uses | 24 |
+| `skipif` uses | 2 |
+| Largest test file | `tests/ui/test_main_window.py`, 3,657 lines |
+| Source lines | 46,323 total; 30,144 in `ui/` |
+| Type-checked lines | ~16,000 (`ui/` is excluded from strict mypy) |
+| Coverage, non-UI, with solver (measured) | 89 % total; domain 90 %, simulation 91 %, persistence 94 %, application 91 %, importers 75 %, reporting 85 % |
+| Coverage, full suite | not measured; a run with UI exceeded 10 minutes and was stopped |
+| Coverage enforcement | none; `[tool.coverage.*]` is configured but unused |
+| Timing sensitivity | one UI failure appeared under coverage instrumentation at ~32 % while another pytest process ran concurrently; not yet reproduced in isolation |
+| CI | 4 workflows, green; Linux + Windows, Python 3.11/3.12/3.13 |
+| Property-based tests | 0 |
+| Mutation testing | 0 |
+| Cross-engine numerical checks | 0 |
+| Segment-convergence tests | 0 |
+| Physics-invariant tests | 0 |
+| `docs/VALIDATION_PLAN.md` test count | 788 (stale by ~330) |
+
+The suite is in good shape for its size. The gaps are not "more tests"; they are
+*stronger oracles*, *enforced thresholds*, and *consistency between code, docs,
+and CI*.
+
+## 2. Principles
+
+1. **Test the oracle, not only the code.** A green suite proves execution, not
+   correctness. Every numerical assertion must name an independent source and a
+   tolerance rationale.
+2. **Prefer independent implementations over self-consistency.** A test that
+   compares the adapter with itself catches typos, not physics.
+3. **CI is the gate; local tooling is the fast lane.** Local checks must not
+   report a weaker result than CI.
+4. **Thresholds are enforced, not documented.** Coverage, mutation score, and
+   evidence levels fail the build when they regress.
+5. **No invented numbers.** A reference value enters a test only after being
+   verified against the printed or published source.
+
+## 3. Workstreams
+
+### 3.1 Test taxonomy and infrastructure
+
+**Problem.** There are no markers, so there is no way to select a fast lane, a
+solver lane, or a science lane. `test_main_window.py` is a 3,657-line monolith
+that is hard to navigate and slow to run in isolation.
+
+**Change.**
+
+- Register markers in `pyproject.toml`: `science`, `solver`, `ui`, `slow`,
+  `golden`. `--strict-markers` is already enabled, so unregistered markers fail.
+- Tag the 77 solver tests with `@pytest.mark.solver` instead of relying only on
+  `skipif`, so `pytest -m solver` is meaningful and `pytest -m "not solver"` is
+  the default fast lane.
+- Add `tests/factories.py` with builders for `AntennaModel`, `SimulationSpec`,
+  `Wire`, and `SimulationResult` to remove repeated literal construction.
+- Split `tests/ui/test_main_window.py` into feature modules (project lifecycle,
+  simulation flow, menu actions, language, units, exports, dialogs, solver
+  locator). Keep one smoke test that drives the full window.
+- Replace copy-pasted per-family tests with `@pytest.mark.parametrize` over the
+  family registry where the assertion is structural.
+- Add `--durations=20` to the local command and track the top ten slow tests.
+- Add a flaky-test policy: UI tests wait on Qt signals or an explicit condition,
+  never on fixed sleeps. Run the UI suite under coverage in the nightly job to
+  expose timing sensitivity, and record the outcome in the job summary.
+
+**Acceptance.** `uv run pytest -m "not solver and not slow"` runs in under 20 s;
+`uv run pytest -m solver` runs only the 77 solver tests; no test file exceeds
+1,000 lines.
+
+**Effort.** M.
+
+### 3.2 Coverage and test strength
+
+**Problem.** Coverage is configured but never measured, so nobody knows which
+domain rules are unexercised. Line coverage alone would not prove the tests
+catch regressions.
+
+**Change.**
+
+- Add `--cov=antennadesk --cov-branch --cov-report=term-missing --cov-report=xml`
+  to CI and upload `coverage.xml` as an artifact.
+- Measure coverage in two lanes, because a full-suite run with UI exceeded
+  10 minutes: non-UI tests with the solver, and UI tests separately. Combine
+  the data files for the final report.
+- Set `fail_under` per package, starting one point below the measured baseline
+  and ratcheting upward: `domain` 89 → 95, `simulation` 90 → 95,
+  `persistence` 93 → 95, `application` 90 → 95, `importers` 74 → 90,
+  `reporting` 84 → 90, `ui` measured first, then ratcheted.
+- Add mutation testing with `mutmut` (BSD-3, Unix only) on `domain/` and
+  `simulation/` in a nightly job. Target ≥ 80 % killed. Annotate equivalent
+  mutants explicitly; do not lower the target to hide survivors.
+- Add property-based tests with `hypothesis` (MPL-2.0, dev-only) for:
+  - unit conversion round trips (`meters → feet → meters`, `Hz → MHz`);
+  - geometry invariants (wire length, connectivity, no below-ground wires);
+  - project JSON round trip and every migration path;
+  - the untrusted-input parsers: NEC deck, MMANA `.maa`, VNA CSV.
+- Add a fuzz corpus for the three importers: no crash, bounded memory, explicit
+  diagnostics for malformed input.
+
+**Acceptance.** CI fails on a coverage regression. The nightly mutation job
+reports a score and a survivor list. Each importer has at least one Hypothesis
+test and one malformed-input test.
+
+**Effort.** L.
+
+### 3.3 Typing and static analysis
+
+**Problem.** Strict mypy covers `src/antennadesk` minus `ui/`. That leaves
+30,144 of 46,323 source lines (65 %) unchecked, including all signal wiring
+between the domain and the widgets.
+
+**Change.**
+
+- Add a second mypy target for `ui/` that starts permissive
+  (`disallow_untyped_defs = false`, `ignore_missing_imports = true` for PySide6)
+  and ratchets file by file. Do not attempt strict mode in one step.
+- Extend ruff with `S` (bandit), `PT` (pytest style), `T20` (no `print` in
+  `src/`), and `RUF100`. Evaluate `ANN` for `src/` separately.
+- Add an SPDX header check for new source files, matching the existing headers.
+- Keep the PySide6 pin below 6.10 and record the reason in the ADR, not only in
+  a comment.
+
+**Acceptance.** `uv run mypy` covers `ui/` at the agreed level; ruff reports no
+new categories; every source file has an SPDX header.
+
+**Effort.** L (incremental, one module per session).
+
+### 3.4 CI/CD and supply chain
+
+**Problem.** The CI is solid but has avoidable cost and blind spots: no
+dependency cache, no coverage, no artifacts on failure, no concurrency
+cancellation, and a `paths` filter that ignores `docs/`, `scripts/`, and
+`packaging/`. Actions are pinned by tag, not by SHA.
+
+**Change.**
+
+- Replace `python -m pip install uv` with `astral-sh/setup-uv` pinned by SHA,
+  `enable-cache: true`, `prune-cache: true`.
+- Add `concurrency: {group: ci-${{ github.ref }}, cancel-in-progress: true}`.
+- Extend `paths` to `docs/**`, `scripts/**`, `packaging/**`, `CHANGELOG.md`,
+  `examples/**`.
+- Remove the duplicated Linux 3.12 cell: the `quality` job already runs it.
+- Upload `coverage.xml`, `junit.xml`, and the pytest failure log as artifacts.
+- Add a `schedule:` nightly job: full matrix, solver on both platforms,
+  mutation testing, benchmark, and `reference_data` checks.
+- Add Dependabot for `github-actions` and `uv`.
+- Pin every action by commit SHA; add a comment with the human-readable version.
+- Add `uv lock --check` and an OSV or `pip-audit` scan of `uv.lock`.
+- Add a bundle smoke test: build the frozen artifact, run `--version` and
+  `--check-solver`, assert the bundled `nec2c` is found.
+- License audit: ADR 0001 already records that the `nec2c` fork is GPL-3 and
+  that distribution requires shipping the engine source, `COPYING`, and
+  notices. The remaining work is to verify that every artifact actually does
+  it (`packaging/debian/copyright`, the AppImage, and the Windows bundle), and
+  to add a test that fails when the notice files are missing.
+
+**Acceptance.** A docs-only pull request runs CI. A failing job uploads its
+artifacts. The nightly job is green or files an issue. No action is referenced
+by a mutable tag.
+
+**Effort.** M.
+
+### 3.5 Science validation: numerical (level 2)
+
+This is the core gap. The current references cover a dipole, a folded dipole, a
+quad loop, a Moxon, a Yagi, and a few NEC-2 User's Guide examples. Everything
+else is structural or heuristic.
+
+#### 3.5.1 Segmentation convergence and NEC-2 modeling guidelines
+
+The NEC-2 User's Guide, Part III, Section II
+(<https://www.nec2.org/part_3/secii.html>) states:
+
+- segment length Δ ≤ 0.1 λ in general, ≤ 0.05 λ in critical regions;
+- Δ < 10⁻³ λ must be avoided;
+- Δ/a > 8 for < 1 % error with the thin-wire kernel; the extended kernel
+  extends the limit to Δ/a ≈ 2.
+
+`SegmentationPolicy` defaults to 0.05 λ but does not check Δ/a, does not warn
+about very short segments, and has no convergence test. The default is an
+unverified assumption.
+
+**Change.**
+
+- Add diagnostics to the solver validation layer:
+  `solver.segment_too_long`, `solver.segment_too_short`,
+  `solver.segment_radius_ratio_low`, each carrying the computed ratio and the
+  guideline it violates. Warnings, not errors.
+- Add an integration test that sweeps segment counts on the 30.48 m free-space
+  dipole at 4.8 MHz (7, 11, 15, 21, 31, 41, 61) and asserts that resistance and
+  reactance converge: for n ≥ 21, the difference from n = 61 is within 2 %, and
+  the sequence does not oscillate.
+- Add a second convergence case over finite ground, where segmentation is more
+  sensitive.
+
+**Acceptance.** The default policy is justified by a test, not by a comment.
+
+**Effort.** M.
+
+#### 3.5.2 Physical invariants
+
+These checks need no external reference and catch adapter and normalization bugs
+that reference comparisons miss.
+
+- **Power conservation:** `P_in = P_rad + P_loss` within 1 % for every run.
+- **Pattern integration:** integrate the far-field power pattern over the sphere
+  and derive directivity; compare with the solver's reported gain plus structure
+  efficiency within 0.2 dB. This validates pattern parsing and normalization,
+  which today are checked only at the single maximum-gain point.
+- **Reciprocity:** for a two-port case, `Z12 = Z21` within 1 %.
+- **Rotation invariance:** rotating the antenna azimuth by 90° rotates the
+  pattern and leaves the maximum gain unchanged within 0.05 dB.
+
+**Acceptance.** Each invariant is an integration test that runs with `NEC2C`.
+
+**Effort.** M.
+
+#### 3.5.3 Cross-engine oracle
+
+`PyNEC`/`necpp` 2.3.4 (GPL-3.0-only, Python ≥ 3.11) wraps `nec2++`, an
+independent C++ rewrite of NEC-2.
+
+**Change.** Add it as a dev-only dependency and run a small canonical set
+(dipole, folded dipole, quad loop, Yagi) comparing impedance within 1 % and gain
+within 0.2 dB.
+
+**Limitation, stated explicitly:** `nec2++` uses the same thin-wire EFIE
+formulation, so this catches implementation and adapter bugs, not formulation
+errors. It does not replace the published references.
+
+**Acceptance.** A nightly job compares both engines and reports deltas.
+
+**Effort.** M.
+
+#### 3.5.4 Different-method oracle (offline)
+
+To catch formulation-level errors shared by every NEC-2 derivative, compare two
+or three canonical cases against a different numerical method: FDTD (openEMS) or
+FEM. Run it manually, commit the results with provenance (engine, version,
+mesh, boundary conditions), and treat them as golden values.
+
+**Acceptance.** Two golden cases with a documented method difference and an
+explained delta. Not part of CI.
+
+**Effort.** L, one-off.
+
+#### 3.5.5 Independent RF math oracle
+
+The feed-line, matching-network, transformer, and cascade math is pure
+two-port algebra. `scikit-rf` 2.2.0 (BSD-3, dev-only) provides an independent
+implementation of transmission-line physics, ABCD/S-parameter conversion, and
+network cascading.
+
+**Change.** Add `scikit-rf` to the dev group and validate:
+
+- ideal line input impedance against the closed-form `Zin` expression;
+- velocity factor and electrical length;
+- matched-line attenuation;
+- L, Pi, and T network S-parameters;
+- transformer ratio and cascade order.
+
+This runs on every platform, needs no solver, and closes a module that today is
+checked only against values computed inside the same codebase.
+
+**Acceptance.** At least one test per construct, comparing against `skrf` with a
+stated tolerance.
+
+**Effort.** M.
+
+#### 3.5.6 Closed-form references for estimators
+
+`docs/ANTENNA_DESIGN_ESTIMATORS.md` requires a source, assumptions, confidence,
+and tolerance for every frequency-first estimator. Today the tests check
+*formula consistency*, not agreement with a published value.
+
+**Change.** Add published closed-form anchors, each verified against the printed
+edition before use:
+
+- half-wave dipole input impedance and directivity (Balanis, *Antenna Theory*);
+- short dipole directivity;
+- small-loop radiation resistance;
+- folded-dipole 4× resistance rule (already covered by the ARRL check);
+- NEC-2 User's Guide examples for the solver, already in place.
+
+Record the edition and page in the test docstring. Do not transcribe a value
+from a secondary web source.
+
+**Acceptance.** Every estimator with a closed-form oracle has at least one
+published-value test.
+
+**Effort.** M.
+
+#### 3.5.7 Evidence registry as code
+
+**Problem.** `VALIDATION_PLAN.md` already carries a stale test count (788 vs
+1,121). The evidence level of each family lives only in prose, so it drifts.
+
+**Change.** Add a machine-readable registry (a module or a JSON file) mapping
+each antenna family to: evidence level (A reference-backed, B published
+heuristic, C experimental), source, tolerance, and known limitation. A test
+asserts that every registered family has an entry and that the docs table is
+generated from the registry. CI fails on drift.
+
+**Acceptance.** Adding a family without an evidence entry fails the build.
+
+**Effort.** M.
+
+#### 3.5.8 Reference corpus pipeline
+
+`reference_data/` is correctly gitignored because it is copyrighted, but that
+also means nothing verifies it is present or current, and none of the 644 MMANA
+models feeds a test.
+
+**Change.**
+
+- Add `scripts/fetch_reference_data.py` with a manifest of file names, sizes,
+  and SHA-256 checksums, plus a documented source for each.
+- Add a test that skips when the corpus is absent and fails in the nightly job
+  when it is expected but missing.
+- Wire 10–20 MMANA models with published results into reference tests, starting
+  with simple dipoles and beams.
+
+**Acceptance.** The corpus is reproducible, and at least ten models are used as
+evidence.
+
+**Effort.** L.
+
+### 3.6 Science validation: experimental (level 3)
+
+Level 3 is currently deferred. The VNA import exists, but no measurement is
+recorded as validation evidence.
+
+**Change.**
+
+- Adopt IEEE Std 149-2021, *Recommended Practice for Antenna Measurements*, as
+  the protocol reference: reference plane, range evaluation, gain standard, and
+  uncertainty budget.
+- Extend the measurement schema with uncertainty fields: instrument, cable and
+  connector losses, reference plane, calibration date, and an estimated
+  expanded uncertainty.
+- Document a repeatable procedure for one reference antenna (a half-wave dipole
+  is the cheapest defensible case) and record the result in `docs/`.
+- Compare measured and simulated results, and explain the difference in terms of
+  the documented uncertainty rather than a tolerance.
+
+**Acceptance.** One measurement with an uncertainty budget, stored in the
+project format, compared against simulation, with the delta explained.
+
+**Effort.** L, and it requires physical access to a VNA and a suitable site.
+
+### 3.7 Consistency and documentation
+
+**Problem.** English and Spanish strings are maintained by hand with no parity
+test. Documentation drifts from code, as the test count already shows.
+
+**Change.**
+
+- Add a test that both translation tables have identical keys, no empty values,
+  and no placeholder mismatch.
+- Add a test that every user-visible string in `ui/` resolves through
+  `ui/i18n.py`.
+- Add doc-code consistency tests for the evidence registry, the estimator
+  registry, the catalog routes, and the ADR index.
+- Add a `CHANGELOG.md` entry check for user-visible changes.
+- Turn the `AGENTS.md` definition of done into a checklist template used by the
+  milestone review.
+
+**Acceptance.** A missing translation or a stale table fails the build.
+
+**Effort.** S–M.
+
+### 3.8 Performance and scalability
+
+**Problem.** The suite takes 62 s and the UI suite is the slow part. Multiband
+runs are benchmarked manually (`scripts/benchmark_multiband.py`) but not
+tracked.
+
+**Change.**
+
+- Add `pytest-benchmark` cases for the output parser, pattern metrics, and
+  project save/load.
+- Track peak RSS and wall time for 3, 5, and 8 bands; fail on a documented
+  regression threshold.
+- Enforce a suite runtime budget in CI and report the ten slowest tests.
+- Keep the existing run-size budget tests and extend them to the new families.
+
+**Acceptance.** A performance regression produces a visible CI signal, not a
+surprise in a release.
+
+**Effort.** M.
+
+## 4. Phases
+
+Each phase is independently shippable.
+
+### Phase 0 — Quick wins (one session)
+
+1. `NEC2C` auto-detection in `tests/conftest.py`, so the local command does not
+   silently skip 77 tests.
+2. Register markers and tag the solver tests.
+3. Extend the CI `paths` filter and add `concurrency`.
+4. Replace the manual uv install with `setup-uv` and caching.
+5. Fix the stale test count in `VALIDATION_PLAN.md`.
+
+### Phase 1 — Foundation (one week)
+
+1. Coverage measurement and per-package thresholds.
+2. mypy coverage for `ui/`, started permissively.
+3. Hypothesis for units, geometry, persistence, and the three importers.
+4. i18n parity test.
+5. Split `test_main_window.py`.
+
+### Phase 2 — Science oracles (two weeks)
+
+1. Segmentation diagnostics and the convergence test.
+2. Physical invariants: power, pattern integral, reciprocity, rotation.
+3. `scikit-rf` oracle for the two-port math.
+4. `PyNEC` cross-engine job.
+5. Published closed-form anchors for the estimators.
+6. Evidence registry as code.
+
+### Phase 3 — Scale (ongoing)
+
+1. Mutation testing on the domain and simulation layers.
+2. Reference corpus pipeline and the first ten MMANA cases.
+3. Different-method golden cases.
+4. Level 3 measurement protocol and one recorded measurement.
+5. Benchmark and memory tracking.
+
+## 5. Metrics
+
+Track these over time; they are the definition of "better QA" for this project:
+
+| Metric | Target |
+|---|---|
+| Solver tests executed in CI | 77/77 on Linux and Windows |
+| Solver tests executed locally | 77/77 when the binary exists |
+| Domain coverage (line + branch) | ≥ 95 % |
+| Mutation score, `domain/` + `simulation/` | ≥ 80 % killed |
+| Families with evidence level A or B | all, or an explicit C with a visible warning |
+| Reference tests with a named source | 100 % |
+| Numeric assertions with a tolerance rationale | 100 % |
+| Doc-code drift tests | 0 failures |
+| Flaky tests per week | 0; a new flake is fixed or quarantined with an issue |
+| Suite runtime, fast lane | < 20 s |
+| Suite runtime, full | < 90 s |
+
+## 6. Deliberately out of scope
+
+- **100 % coverage.** It rewards executing lines, not checking behavior.
+- **Mutation testing on `ui/`.** The signal-to-noise ratio is poor and the run
+  is slow.
+- **FDTD/FEM in CI.** Heavy, no wheels, and not needed on every pull request.
+- **Strict mypy on `ui/` in one step.** It would block feature work for days.
+- **Replacing `nec2c`.** The adapter boundary is correct; add oracles around it
+  instead.
+- **Inventing reference values from simulation output.** Prohibited by
+  `AGENTS.md` and by `VALIDATION_PLAN.md`.
