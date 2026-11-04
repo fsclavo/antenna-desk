@@ -33,6 +33,7 @@ from ..antennas.ocfd import (
     OCFDParameters,
 )
 from ..antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
+from ..antennas.t2fd import ANTENNA_TYPE_T2FD, T2FDParameters, t2fd_starting_dimensions
 from ..antennas.vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
 from ..antennas.yagi import ANTENNA_TYPE_YAGI, YagiElement, YagiParameters
 from .estimate import Confidence, DimensionEstimate, DimensionRow, DimensionUnit
@@ -45,6 +46,7 @@ from .formulas import (
     SOURCE_ARRL_LOOP,
     SOURCE_ARRL_VERTICAL,
     SOURCE_CEBIK_MOXON,
+    SOURCE_CEBIK_T2FD,
     SOURCE_DL6WU_YAGI,
     default_radial_length_m,
     five_eighth_wave_length_m,
@@ -535,6 +537,41 @@ def estimate_yagi(intent: DesignIntent) -> DimensionEstimate:
     )
 
 
+def estimate_t2fd(intent: DesignIntent) -> DimensionEstimate:
+    if intent.highest_frequency_hz is None:
+        raise UnsupportedEstimateError("the T2FD estimator requires a highest design frequency")
+    span_m, spacing_m = t2fd_starting_dimensions(intent.frequency_hz)
+    parameters = T2FDParameters(
+        frequency_hz=intent.frequency_hz,
+        highest_frequency_hz=intent.highest_frequency_hz,
+        length_m=span_m,
+        spacing_m=spacing_m,
+        height_m=intent.height_m,
+        orientation=intent.orientation,
+        azimuth_deg=intent.azimuth_deg,
+        wire_radius_m=intent.wire_radius_m,
+        material=intent.material,
+        ground=intent.ground,
+    )
+    return DimensionEstimate(
+        parameters=parameters,
+        method_id="t2fd.cebik_wide_long",
+        confidence=Confidence.HEURISTIC,
+        tolerance_m=span_m * 0.1,
+        source_ids=(SOURCE_CEBIK_T2FD,),
+        assumptions=("estimator.assumption.t2fd_broadband",),
+        warnings=(
+            "estimator.warning.starting_point",
+            "estimator.warning.t2fd_broadband",
+        ),
+        rows=(
+            _length_row("field.length", span_m),
+            _length_row("field.spacing", spacing_m),
+            _length_row("field.height", intent.height_m),
+        ),
+    )
+
+
 def estimate_moxon(intent: DesignIntent) -> DimensionEstimate:
     reference = moxon_20m_wire(
         height_m=intent.height_m,
@@ -588,6 +625,7 @@ ESTIMATORS = {
     ANTENNA_TYPE_RINGO: estimate_ringo,
     ANTENNA_TYPE_YAGI: estimate_yagi,
     ANTENNA_TYPE_MOXON: estimate_moxon,
+    ANTENNA_TYPE_T2FD: estimate_t2fd,
 }
 
 SUPPORTED_ESTIMATOR_TYPES = frozenset(ESTIMATORS)

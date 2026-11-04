@@ -34,6 +34,7 @@ class AddDesignVariant:
             antenna_type=source.antenna_type,
             parameters=source.parameters,
             antenna=source.antenna,
+            band_plan=source.band_plan,
         )
         timestamp = command.updated_at if command.updated_at is not None else utc_now()
         return command.project.with_design(variant, updated_at=timestamp)

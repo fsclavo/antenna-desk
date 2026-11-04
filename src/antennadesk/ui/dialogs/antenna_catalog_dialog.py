@@ -36,6 +36,8 @@ CATALOG_TYPE_SLOPER = "sloper"
 CATALOG_TYPE_RANDOM_WIRE = "random_wire"
 CATALOG_TYPE_DOUBLET = "doublet"
 CATALOG_TYPE_G5RV = "g5rv"
+CATALOG_TYPE_ZS6BKW = "zs6bkw"
+CATALOG_TYPE_ZEPP = "zepp"
 CATALOG_TYPE_J_POLE = "j_pole"
 CATALOG_TYPE_RINGO = "ringo"
 CATALOG_TYPE_SLIM_JIM = "slim_jim"
@@ -116,6 +118,20 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         family_key="catalog.family.dipole",
         description_key="catalog.g5rv.description",
         evidence_key="catalog.evidence.g5rv",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_ZS6BKW,
+        label_key="catalog.zs6bkw",
+        family_key="catalog.family.dipole",
+        description_key="catalog.zs6bkw.description",
+        evidence_key="catalog.evidence.zs6bkw",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_ZEPP,
+        label_key="catalog.zepp",
+        family_key="catalog.family.dipole",
+        description_key="catalog.zepp.description",
+        evidence_key="catalog.evidence.zepp",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_DOUBLET,

@@ -145,6 +145,22 @@ def test_v3_migration_adds_optional_band_metadata() -> None:
     assert migrated["project"]["simulation_runs"][0]["batch_id"] is None
 
 
+def test_v5_migration_adds_optional_design_band_plans() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 5,
+        "project": {
+            "designs": [{"antenna_type": "wire_dipole", "parameters": {}}],
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert migrated["project"]["designs"][0]["band_plan"] is None
+    assert "band_plan" not in document["project"]["designs"][0]
+
+
 def test_v4_migration_adds_optional_transformer_ratios() -> None:
     document = {
         "format": "antennadesk-project",

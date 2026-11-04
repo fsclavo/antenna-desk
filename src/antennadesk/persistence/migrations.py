@@ -80,11 +80,27 @@ def _migrate_v4_to_v5(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v5_to_v6(document: dict[str, Any]) -> dict[str, Any]:
+    """Add optional persisted band-intent metadata to designs."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if not isinstance(project, dict):
+        return migrated
+    designs = project.get("designs")
+    if isinstance(designs, list):
+        for design in designs:
+            if isinstance(design, dict):
+                design.setdefault("band_plan", None)
+    return migrated
+
+
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
     3: _migrate_v3_to_v4,
     4: _migrate_v4_to_v5,
+    5: _migrate_v5_to_v6,
 }
 
 

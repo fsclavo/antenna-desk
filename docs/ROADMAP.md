@@ -71,6 +71,10 @@ Completed:
   the design panel.
 - G5RV catalog preset with the published 102 ft dipole and a 300 Ω / 450 Ω
   geometry matching line.
+- ZS6BKW catalog preset with the Cebik/W4RNL reference dimensions and the
+  common 450 Ω commercial variant, using a lossless geometry matching line.
+- Zepp catalog preset with a half-wave end-fed radiator and a quarter-wave
+  lossless matching section, labeled experimental.
 - Per-band multiband analysis for G5RV, OCFD, end-fed presets, fan dipole, trap
   dipole, T2FD, and doublet, with a Bands results tab and band-aware reports.
   The Pattern frequency selector lists all analyzed bands, and each band uses
@@ -168,8 +172,9 @@ Scope:
   a **Bands** results tab showing best SWR, gain, takeoff angle, efficiency,
   and status. The top action bar stays Apply/Estimate/Optimize.
 - Band/batch metadata on simulation runs, schema version 4 migration (extended
-  by version 5 with OCFD/custom transformer fields), and band-aware CSV, HTML,
-  PDF, and comparison summaries.
+  by version 5 with OCFD/custom transformer fields and version 6 with persisted
+  analysis band plans), and band-aware CSV, HTML, PDF, and comparison
+  summaries.
 - Deferred: a segmented frequency plan in one NEC deck, only if measurements
   show that per-band runs are too slow or too large.
 
@@ -198,7 +203,7 @@ Acceptance criteria:
 | P2 | GPG/Authenticode code signing for release artifacts | n/a | deferred |
 | P2 | Relative permeability export to NEC | B | not supported by NEC-2; warning implemented |
 | P2 | Pattern metric selector for power/directivity/realized gain | B | done |
-| P2 | ZS6BKW and Zepp multiband presets | B | pending |
+| P2 | ZS6BKW and Zepp multiband presets | B | done |
 | P2 | Custom/imported geometry optimization and space constraints | n/a | pending |
 | P2 | Live VNA/hardware control | n/a | deferred |
 | P2 | Additional full-wave engines | n/a | deferred |
@@ -212,7 +217,8 @@ Detailed pending-work plan:
 
 Modeling track:
 
-1. ZS6BKW and Zepp presets using geometry transmission lines.
+1. Deferred: refined Zepp matching-section geometry with an explicit second
+   conductor and choke model.
 
 Release track:
 

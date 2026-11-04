@@ -965,6 +965,55 @@ def test_g5rv_preset_with_geometry_line_solves(solver: Nec2cSolver) -> None:
     assert all(frequency.impedance_ohm.real > 0.0 for frequency in result.frequencies)
 
 
+@pytest.mark.parametrize(
+    ("frequency_hz", "reference_swr"),
+    (
+        (7_150_000.0, 1.15),
+        (14_175_000.0, 1.47),
+        (28_800_000.0, 1.56),
+    ),
+)
+def test_zs6bkw_reference_swr(
+    solver: Nec2cSolver, frequency_hz: float, reference_swr: float
+) -> None:
+    """Cebik/W4RNL free-space table: 1.15, 1.47, and 1.56 at 40/20/10 m."""
+
+    from antennadesk.domain.antennas.zs6bkw import zs6bkw_parameters
+
+    parameters = zs6bkw_parameters()
+    model = parameters.to_antenna(name="ZS6BKW")
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(frequency_hz),
+        segmentation=SegmentationPolicy(min_segments_per_wire=9),
+        include_conductor_losses=False,
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert "TL " in result.raw_input
+    assert result.frequencies[0].swr == pytest.approx(reference_swr, abs=0.3)
+
+
+def test_zepp_preset_with_geometry_matching_section_solves(solver: Nec2cSolver) -> None:
+    from antennadesk.domain.antennas.zepp import zepp_parameters
+
+    parameters = zepp_parameters()
+    model = parameters.to_antenna(name="Zepp")
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.sweep(7_000_000.0, 14_300_000.0, 3),
+        segmentation=SegmentationPolicy(min_segments_per_wire=9),
+        include_conductor_losses=False,
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert "TL " in result.raw_input
+    assert len(result.frequencies) == 3
+    assert all(frequency.impedance_ohm.real > 0.0 for frequency in result.frequencies)
+
+
 def test_output_limit_has_a_specific_diagnostic() -> None:
     assert NEC2C is not None
     limited = Nec2cSolver(Path(NEC2C), max_output_bytes=1)

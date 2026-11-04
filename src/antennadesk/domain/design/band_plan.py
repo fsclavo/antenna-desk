@@ -29,6 +29,7 @@ BROADBAND_BAND_POINTS = 21
 MAX_BAND_POINTS = 1_000
 
 G5RV_DEFAULT_BAND_IDS = ("80m", "40m", "20m", "15m", "10m")
+ZS6BKW_DEFAULT_BAND_IDS = ("40m", "20m", "17m", "12m", "10m")
 RANDOM_WIRE_BAND_IDS = ("80m", "40m", "30m", "20m", "17m", "15m", "12m", "10m")
 HF_BAND_IDS = ("80m", "40m", "30m", "20m", "17m", "15m", "12m", "10m")
 
@@ -129,6 +130,18 @@ def default_band_plan(
             _plan_from_ids(G5RV_DEFAULT_BAND_IDS),
             BandEvidence.PUBLISHED,
             "band.note.g5rv",
+        )
+    if isinstance(parameters, CustomAntennaParameters) and parameters.generator_id == "zs6bkw":
+        return BandDefault(
+            _plan_from_ids(ZS6BKW_DEFAULT_BAND_IDS),
+            BandEvidence.PUBLISHED,
+            "band.note.zs6bkw",
+        )
+    if isinstance(parameters, CustomAntennaParameters) and parameters.generator_id == "zepp":
+        return BandDefault(
+            _harmonic_plan(parameters.frequency_hz, harmonics=(1, 2, 4, 8)),
+            BandEvidence.HEURISTIC,
+            "band.note.zepp",
         )
     if isinstance(parameters, OCFDParameters):
         return BandDefault(

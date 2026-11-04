@@ -17,6 +17,7 @@ from ..antennas.transmission_line import TransmissionLine
 from ..common.time import ensure_utc
 from ..common.units import ensure_non_negative
 from ..common.validation import Diagnostic, Severity, raise_if_errors
+from ..design.band_plan import BandPlan
 from ..measurement import Measurement
 from ..simulation.band_result import BandAnalysisResult
 from ..simulation.run import SimulationRun
@@ -54,6 +55,7 @@ class DesignVariant:
     parameters: AntennaDesignParameters
     antenna: AntennaModel
     provenance: DesignProvenance | None = None
+    band_plan: BandPlan | None = None
 
     def __post_init__(self) -> None:
         if not self.name.strip():
@@ -102,6 +104,9 @@ class DesignVariant:
             antenna=antenna,
             provenance=provenance,
         )
+
+    def with_band_plan(self, band_plan: BandPlan | None) -> DesignVariant:
+        return replace(self, band_plan=band_plan)
 
     def with_loads(self, loads: tuple[LumpedLoad, ...]) -> DesignVariant:
         return replace(self, antenna=self.antenna.with_loads(loads))

@@ -83,7 +83,7 @@ def effective_antenna_type(
         generator = parameters.generator_id
         if generator == "slim_jim":
             return ANTENNA_TYPE_J_POLE
-        if generator == "g5rv":
+        if generator in {"g5rv", "zs6bkw", "zepp"}:
             return ANTENNA_TYPE_WIRE_DIPOLE
         if generator in {
             "j_pole",

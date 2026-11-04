@@ -60,10 +60,12 @@ from ..domain.antennas.vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
 from ..domain.antennas.wire import Wire
 from ..domain.antennas.yagi import ANTENNA_TYPE_YAGI, YagiElement, YagiParameters
 from ..domain.common.validation import Diagnostic, Severity
+from ..domain.design.band_plan import BandPlan, BandSelection
 from ..domain.environment.environment import Environment
 from ..domain.environment.ground import GroundKind, GroundModel
 from ..domain.measurement import Measurement, MeasurementPoint
 from ..domain.projects.project import DesignProvenance, DesignVariant, Project
+from ..domain.simulation.bands import amateur_band_by_id
 from ..domain.simulation.far_field import FarFieldRequest
 from ..domain.simulation.frequency import FrequencyPlan
 from ..domain.simulation.result import (
@@ -637,6 +639,15 @@ class DesignProvenancePayload(StrictModel):
     source_ids: list[str] = Field(default_factory=list)
 
 
+class BandSelectionPayload(StrictModel):
+    band_id: str = Field(min_length=1)
+    points: int = Field(default=15, ge=2, le=1_000)
+
+
+class BandPlanPayload(StrictModel):
+    selections: list[BandSelectionPayload] = Field(default_factory=list)
+
+
 class DesignPayload(StrictModel):
     id: UUID
     name: str = Field(min_length=1)
@@ -644,6 +655,7 @@ class DesignPayload(StrictModel):
     parameters: ParameterPayload
     antenna: AntennaPayload
     provenance: DesignProvenancePayload | None = None
+    band_plan: BandPlanPayload | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -1340,6 +1352,15 @@ def _provenance_to_domain(value: DesignProvenancePayload) -> DesignProvenance:
     )
 
 
+def _band_plan_from_domain(value: BandPlan) -> BandPlanPayload:
+    return BandPlanPayload(
+        selections=[
+            BandSelectionPayload(band_id=selection.band.name, points=selection.points)
+            for selection in value.selections
+        ]
+    )
+
+
 def _design_from_domain(value: DesignVariant) -> DesignPayload:
     return DesignPayload(
         id=value.id,
@@ -1349,6 +1370,9 @@ def _design_from_domain(value: DesignVariant) -> DesignPayload:
         antenna=_antenna_from_domain(value.antenna),
         provenance=(
             _provenance_from_domain(value.provenance) if value.provenance is not None else None
+        ),
+        band_plan=(
+            _band_plan_from_domain(value.band_plan) if value.band_plan is not None else None
         ),
     )
 
@@ -1970,6 +1994,16 @@ def _simulation_run_to_domain(value: SimulationRunPayload) -> SimulationRun:
     )
 
 
+def _band_plan_to_domain(value: BandPlanPayload) -> BandPlan:
+    selections = []
+    for selection in value.selections:
+        band = amateur_band_by_id(selection.band_id)
+        if band is None:
+            raise ValueError(f"unknown amateur band: {selection.band_id}")
+        selections.append(BandSelection(band, points=selection.points))
+    return BandPlan(tuple(selections))
+
+
 def _design_to_domain(value: DesignPayload) -> DesignVariant:
     return DesignVariant(
         id=value.id,
@@ -1980,6 +2014,7 @@ def _design_to_domain(value: DesignPayload) -> DesignVariant:
         provenance=(
             _provenance_to_domain(value.provenance) if value.provenance is not None else None
         ),
+        band_plan=_band_plan_to_domain(value.band_plan) if value.band_plan is not None else None,
     )
 
 

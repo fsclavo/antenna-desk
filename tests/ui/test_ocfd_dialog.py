@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from PySide6.QtWidgets import QDialog
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.antennas.ocfd import OCFDParameters
@@ -22,6 +23,50 @@ def test_ocfd_dialog_builds_an_offset_feed(qtbot: QtBot) -> None:
     assert parameters.feed_ratio == pytest.approx(1.0 / 3.0, abs=0.001)
     assert parameters.transformer_ratio == pytest.approx(4.0)
     assert dialog._ground.currentText() == "Finite ground"
+
+
+def test_ocfd_dialog_defaults_to_harmonic_analysis_bands(qtbot: QtBot) -> None:
+    dialog = OCFDDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+
+    plan = dialog._default_band_plan()
+    assert [selection.band.name for selection in plan.selections] == [
+        "40m",
+        "20m",
+        "10m",
+    ]
+
+
+def test_ocfd_dialog_can_select_analysis_bands(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.design.band_plan import BandPlan, BandSelection
+    from antennadesk.domain.simulation.bands import amateur_band_by_id
+
+    dialog = OCFDDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    band = amateur_band_by_id("15m")
+    assert band is not None
+    plan = BandPlan((BandSelection(band, points=21),))
+
+    class FakeBandDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def plan(self) -> BandPlan:
+            return plan
+
+    monkeypatch.setattr(
+        "antennadesk.ui.dialogs.ocfd_dialog.BandAnalysisDialog",
+        FakeBandDialog,
+    )
+    dialog._choose_band_plan()
+
+    assert dialog.result_band_plan() == plan
 
 
 def test_ocfd_dialog_restores_existing_geometry(qtbot: QtBot) -> None:

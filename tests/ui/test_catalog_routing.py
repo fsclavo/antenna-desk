@@ -28,6 +28,8 @@ from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+from antennadesk.domain.antennas.zepp import zepp_parameters
+from antennadesk.domain.antennas.zs6bkw import zs6bkw_parameters
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.dialogs import antenna_catalog_dialog
 from antennadesk.ui.i18n import Language, Translator
@@ -146,6 +148,8 @@ def _parameters_for(key: str) -> object:
             total_length_m=20.0,
             height_m=10.0,
         ),
+        "zs6bkw": zs6bkw_parameters(),
+        "zepp": zepp_parameters(),
         "g5rv": CustomAntennaParameters(
             frequency_hz=7_100_000.0,
             wires=(
@@ -251,6 +255,8 @@ def test_every_catalog_entry_has_a_change_template_route(
             "CustomAntennaDialog",
             "DoubletDialog",
             "G5RVDialog",
+            "ZS6BKWDialog",
+            "ZeppDialog",
         ):
             monkeypatch.setattr(main_window_module, class_name, fake_factory)
         fake_self = SimpleNamespace(
@@ -286,6 +292,8 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "random_wire": ("random_wire",),
         "doublet": ("doublet",),
         "g5rv": ("g5rv",),
+        "zs6bkw": ("zs6bkw",),
+        "zepp": ("zepp",),
         "j_pole": ("j_pole", False),
         "slim_jim": ("j_pole", True),
         "ringo": ("ringo",),
@@ -332,6 +340,8 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         new_random_wire_antenna=record("random_wire"),
         new_doublet_antenna=record("doublet"),
         new_g5rv_antenna=record("g5rv"),
+        new_zs6bkw_antenna=record("zs6bkw"),
+        new_zepp_antenna=record("zepp"),
         new_j_pole_antenna=record("j_pole"),
         new_ringo_antenna=record("ringo"),
         new_ocfd_antenna=record("ocfd"),

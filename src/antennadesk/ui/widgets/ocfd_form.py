@@ -110,7 +110,7 @@ class OCFDForm(QWidget):
         self._transformer_hint.setWordWrap(True)
 
         form = QFormLayout()
-        form.addRow(translator.t("field.frequency"), self._frequency)
+        form.addRow(translator.t("field.fundamental_frequency"), self._frequency)
         form.addRow(translator.t("field.length"), self._length)
         form.addRow(translator.t("ocfd.feed_offset"), self._feed_ratio)
         form.addRow(translator.t("field.height"), self._height)

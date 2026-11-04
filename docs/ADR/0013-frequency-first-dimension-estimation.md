@@ -55,7 +55,9 @@ Supported:
 - J Pole and Slim Jim;
 - Ringo (heuristic preset);
 - Yagi (2–32 elements from the DL6WU trimming reference);
-- Moxon (Cebik reference scaled by frequency).
+- Moxon (Cebik reference scaled by frequency);
+- T2FD (Cebik wide-long broadband starting dimensions; lowest and highest
+  design frequencies required).
 
 Explicitly unsupported:
 

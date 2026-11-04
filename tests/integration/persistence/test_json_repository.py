@@ -55,6 +55,30 @@ def test_round_trip(
     assert loaded == sample_project
 
 
+def test_round_trip_preserves_design_band_plan(
+    repository: JsonProjectRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    from antennadesk.domain.design.band_plan import BandPlan, BandSelection
+    from antennadesk.domain.simulation.bands import amateur_band_by_id
+
+    bands = []
+    for band_id in ("40m", "20m"):
+        band = amateur_band_by_id(band_id)
+        assert band is not None
+        bands.append(BandSelection(band, points=21))
+    plan = BandPlan(tuple(bands))
+    design = sample_project.designs[0].with_band_plan(plan)
+    project = sample_project.with_design(design, updated_at=sample_project.updated_at)
+    path = tmp_path / "band-plan.antennadesk"
+
+    repository.save(project, path)
+    loaded = repository.load(path)
+
+    assert loaded.designs[0].band_plan == plan
+
+
 def test_saved_document_envelope(
     repository: JsonProjectRepository,
     sample_project: Project,

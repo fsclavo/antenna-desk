@@ -6,6 +6,8 @@ from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
+from antennadesk.domain.antennas.zepp import zepp_parameters
+from antennadesk.domain.antennas.zs6bkw import zs6bkw_parameters
 from antennadesk.ui.template_identity import catalog_key_for, label_key_for
 
 
@@ -37,6 +39,8 @@ def test_catalog_key_for_current_templates() -> None:
     assert catalog_key_for(delta) == "delta_loop"
     assert catalog_key_for(sloper) == "sloper"
     assert catalog_key_for(t2fd) == "t2fd"
+    assert catalog_key_for(zs6bkw_parameters()) == "zs6bkw"
+    assert catalog_key_for(zepp_parameters()) == "zepp"
 
 
 def test_label_key_follows_the_catalog_entry() -> None:
@@ -54,3 +58,5 @@ def test_label_key_follows_the_catalog_entry() -> None:
 
     assert label_key_for(ringo) == "catalog.ringo"
     assert label_key_for(delta) == "catalog.delta_loop"
+    assert label_key_for(zs6bkw_parameters()) == "catalog.zs6bkw"
+    assert label_key_for(zepp_parameters()) == "catalog.zepp"

@@ -297,6 +297,7 @@ def test_registry_covers_every_current_domain_antenna_type() -> None:
         ("ringo", 146_000_000.0, {}),
         ("yagi", 146_000_000.0, {"yagi_elements": 5}),
         ("moxon", 14_170_000.0, {}),
+        ("t2fd", 7_100_000.0, {"highest_frequency_hz": 30_000_000.0}),
     ],
 )
 def test_every_supported_estimator_produces_a_valid_antenna(
@@ -364,6 +365,26 @@ def test_ringo_estimate_is_calibrated_for_the_simplified_geometry() -> None:
     assert parameters.ring_height_m == pytest.approx(0.01 * wavelength, abs=0.005)
 
 
+def test_t2fd_estimate_uses_the_cebik_wide_long_rule() -> None:
+    from antennadesk.domain.antennas.t2fd import T2FDParameters, t2fd_starting_dimensions
+
+    estimate = estimate_intent(
+        _intent(
+            "t2fd",
+            frequency_hz=3_500_000.0,
+            highest_frequency_hz=30_000_000.0,
+        )
+    )
+
+    span_m, spacing_m = t2fd_starting_dimensions(3_500_000.0)
+    assert isinstance(estimate.parameters, T2FDParameters)
+    assert estimate.parameters.length_m == pytest.approx(span_m)
+    assert estimate.parameters.spacing_m == pytest.approx(spacing_m)
+    assert estimate.parameters.highest_frequency_hz == pytest.approx(30_000_000.0)
+    assert estimate.confidence is Confidence.HEURISTIC
+    assert "estimator.warning.t2fd_broadband" in estimate.warnings
+
+
 def test_fan_estimate_uses_the_lowest_band_as_design_frequency() -> None:
     estimate = estimate_intent(
         _intent(
@@ -416,13 +437,15 @@ def test_random_wire_has_no_resonant_estimator() -> None:
 
 
 def test_template_without_an_estimator_is_unsupported() -> None:
-    from antennadesk.domain.antennas.t2fd import T2FDParameters
+    from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 
-    parameters = T2FDParameters(
-        frequency_hz=1_800_000.0,
-        highest_frequency_hz=30_000_000.0,
-        length_m=50.8,
-        spacing_m=1.69,
+    parameters = TrapDipoleParameters(
+        frequency_hz=7_100_000.0,
+        high_band_frequency_hz=14_100_000.0,
+        inner_length_m=10.0,
+        outer_length_m=5.0,
+        trap_frequency_hz=14_100_000.0,
+        trap_inductance_h=10e-6,
     )
 
     assert supports_estimation(parameters) is False

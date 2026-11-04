@@ -106,6 +106,10 @@ from ..domain.antennas.transmission_line import TransmissionLine
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters, yagi_element_length_mismatch
+from ..domain.antennas.zs6bkw import (
+    ZS6BKW_DIPOLE_ID,
+    zs6bkw_with_dimensions,
+)
 from ..domain.common.time import utc_now
 from ..domain.common.validation import Diagnostic, Severity
 from ..domain.design.band_plan import BandDefault, BandPlan, BandSelection, default_band_plan
@@ -115,7 +119,11 @@ from ..domain.design.yagi_reference import MAX_YAGI_ELEMENTS, MIN_YAGI_ELEMENTS
 from ..domain.measurement import Measurement
 from ..domain.projects.project import DesignProvenance, DesignVariant, Project
 from ..domain.simulation.band_result import BandAnalysisResult, BandResult
-from ..domain.simulation.bands import amateur_band_for, band_snapshot_frequencies
+from ..domain.simulation.bands import (
+    amateur_band_by_id,
+    amateur_band_for,
+    band_snapshot_frequencies,
+)
 from ..domain.simulation.budget import choose_batch_pattern_step, choose_pattern_step
 from ..domain.simulation.far_field import FarFieldRequest
 from ..domain.simulation.frequency import FrequencyPlan
@@ -161,6 +169,8 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_VERTICAL,
     CATALOG_TYPE_WIRE_DIPOLE,
     CATALOG_TYPE_YAGI,
+    CATALOG_TYPE_ZEPP,
+    CATALOG_TYPE_ZS6BKW,
     AntennaCatalogDialog,
 )
 from .dialogs.band_analysis_dialog import BandAnalysisDialog
@@ -193,6 +203,8 @@ from .dialogs.transmission_lines_dialog import TransmissionLinesDialog
 from .dialogs.trap_dipole_dialog import TrapDipoleDialog
 from .dialogs.vertical_dialog import VerticalDialog
 from .dialogs.yagi_dialog import YagiDialog
+from .dialogs.zepp_dialog import ZeppDialog
+from .dialogs.zs6bkw_dialog import ZS6BKWDialog
 from .history import ProjectSnapshot, SnapshotCommand, history_action
 from .i18n import Language, Translator
 from .pattern_resolution import (
@@ -1185,6 +1197,9 @@ class MainWindow(QMainWindow):
             parameters = design.parameters
         self._update_provenance_label(design)
         is_custom = isinstance(parameters, CustomAntennaParameters)
+        is_zs6bkw = (
+            isinstance(parameters, CustomAntennaParameters) and parameters.generator_id == "zs6bkw"
+        )
         estimate_supported = parameters is not None and supports_estimation(parameters)
         self._change_template_action.setEnabled(idle and has_project)
         self._design_from_frequency_action.setEnabled(idle and has_project and estimate_supported)
@@ -1197,7 +1212,9 @@ class MainWindow(QMainWindow):
         band_enabled = idle and has_project and self._solver is not None
         self._analyze_bands_action.setEnabled(band_enabled)
         self._analyze_bands_button.setEnabled(band_enabled)
-        optimize_enabled = idle and has_project and not is_custom and self._solver is not None
+        optimize_enabled = (
+            idle and has_project and (not is_custom or is_zs6bkw) and self._solver is not None
+        )
         self._optimize_action.setEnabled(optimize_enabled)
         self._optimize_button.setEnabled(optimize_enabled)
         self._loads_action.setEnabled(idle and has_project)
@@ -1362,6 +1379,8 @@ class MainWindow(QMainWindow):
             self._selected_band_ids = {}
             self._band_plans = {}
             for project_design in project.designs:
+                if project_design.band_plan is not None:
+                    self._band_plans[project_design.id] = project_design.band_plan
                 analysis = self._latest_band_analysis_for(project, project_design.id)
                 if analysis is not None and analysis.bands:
                     self._band_analysis_results[project_design.id] = analysis
@@ -1448,6 +1467,10 @@ class MainWindow(QMainWindow):
                 self._custom_sweep_start.setValue(3.5)
                 self._custom_sweep_stop.setValue(30.0)
                 self._custom_sweep_points.setValue(41)
+            elif parameters.generator_id in {"zs6bkw", "zepp"}:
+                self._custom_sweep_start.setValue(7.0)
+                self._custom_sweep_stop.setValue(29.7)
+                self._custom_sweep_points.setValue(61)
             else:
                 center_mhz = design.parameters.frequency_hz / 1_000_000.0
                 self._custom_sweep_start.setValue(center_mhz * 0.95)
@@ -1479,6 +1502,8 @@ class MainWindow(QMainWindow):
         self._design_id = design_id
         self._form_dirty = False
         self._sweep_custom_initialized = False
+        if design.band_plan is not None:
+            self._band_plans[design_id] = design.band_plan
         self._update_provenance_label(design)
         self._loads = design.antenna.loads
         self._transmission_lines = design.antenna.transmission_lines
@@ -1638,6 +1663,8 @@ class MainWindow(QMainWindow):
         self._band_plans = {}
         self._selected_band_ids = {}
         for project_design in project.designs:
+            if project_design.band_plan is not None:
+                self._band_plans[project_design.id] = project_design.band_plan
             analysis = self._latest_band_analysis_for(project, project_design.id)
             if analysis is not None and analysis.bands:
                 self._band_analysis_results[project_design.id] = analysis
@@ -2181,15 +2208,18 @@ class MainWindow(QMainWindow):
         model = design.antenna
         segmentation = SegmentationPolicy(min_segments_per_wire=3)
         if isinstance(design.parameters, CustomAntennaParameters) and (
-            design.parameters.generator_id == "g5rv"
+            design.parameters.generator_id in {"g5rv", "zs6bkw"}
         ):
-            dipole = model.wire_by_id(G5RV_DIPOLE_ID)
+            dipole_id = (
+                G5RV_DIPOLE_ID if design.parameters.generator_id == "g5rv" else ZS6BKW_DIPOLE_ID
+            )
+            dipole = model.wire_by_id(dipole_id)
             count = segmentation.segments_for(dipole, frequency_plan.stop_hz)
             if count % 2 == 0:
                 count += 1
             segmentation = SegmentationPolicy(
                 min_segments_per_wire=3,
-                wire_segments=((G5RV_DIPOLE_ID, count),),
+                wire_segments=((dipole_id, count),),
             )
         elif isinstance(design.parameters, T2FDParameters):
             base = aligned_policy_for_model(
@@ -2330,6 +2360,15 @@ class MainWindow(QMainWindow):
         if not plan or self._solver is None:
             return
         self._band_plans[design.id] = plan
+        if self._project is not None:
+            current = self._project.design_by_id(design.id)
+            if current.band_plan != plan:
+                self._project = self._project.with_design(
+                    current.with_band_plan(plan),
+                    updated_at=utc_now(),
+                )
+                self._dirty = True
+                self._update_title()
         self._update_band_plan_label()
 
         requests: list[BandSimulationRequest] = []
@@ -2996,14 +3035,15 @@ class MainWindow(QMainWindow):
         else:
             frequency_plan = FrequencyPlan.single(parameters.frequency_hz)
         segmentation = SegmentationPolicy(min_segments_per_wire=3)
-        if parameters.generator_id == "g5rv":
-            dipole = model.wire_by_id(G5RV_DIPOLE_ID)
+        if parameters.generator_id in {"g5rv", "zs6bkw"}:
+            dipole_id = G5RV_DIPOLE_ID if parameters.generator_id == "g5rv" else ZS6BKW_DIPOLE_ID
+            dipole = model.wire_by_id(dipole_id)
             count = segmentation.segments_for(dipole, frequency_plan.stop_hz)
             if count % 2 == 0:
                 count += 1
             segmentation = SegmentationPolicy(
                 min_segments_per_wire=3,
-                wire_segments=((G5RV_DIPOLE_ID, count),),
+                wire_segments=((dipole_id, count),),
             )
         segmentation = aligned_policy_for_model(
             model,
@@ -3042,6 +3082,7 @@ class MainWindow(QMainWindow):
         *,
         default_name: str,
         feed_line: FeedLine | None = None,
+        band_plan: BandPlan | None = None,
     ) -> None:
         name = self._ask_project_name(self._suggested_project_name(parameters, default_name))
         if name is None:
@@ -3052,6 +3093,7 @@ class MainWindow(QMainWindow):
                     project_name=name,
                     variant_name="Initial",
                     parameters=parameters,
+                    band_plan=band_plan,
                 )
             )
             if feed_line is not None:
@@ -3150,6 +3192,7 @@ class MainWindow(QMainWindow):
         self._create_project_from_parameters(
             dialog.result_parameters(),
             default_name=default_name,
+            band_plan=dialog.result_band_plan(),
         )
 
     def new_sloper_antenna(self) -> None:
@@ -3167,6 +3210,28 @@ class MainWindow(QMainWindow):
         self._create_project_from_parameters(
             dialog.result_parameters(),
             default_name="G5RV",
+        )
+
+    def new_zs6bkw_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        dialog = ZS6BKWDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name="ZS6BKW",
+        )
+
+    def new_zepp_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        dialog = ZeppDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name="Zepp",
         )
 
     def new_doublet_antenna(self) -> None:
@@ -3253,6 +3318,7 @@ class MainWindow(QMainWindow):
         self._create_project_from_parameters(
             dialog.result_parameters(),
             default_name="OCFD",
+            band_plan=dialog.result_band_plan(),
         )
 
     @history_action("history.measurement_edit")
@@ -3695,6 +3761,26 @@ class MainWindow(QMainWindow):
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
             return dialog.result_parameters()
+        if selected == CATALOG_TYPE_ZS6BKW:
+            dialog = ZS6BKWDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
+        if selected == CATALOG_TYPE_ZEPP:
+            dialog = ZeppDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
         if selected == CATALOG_TYPE_DOUBLET:
             dialog = DoubletDialog(
                 self._translator,
@@ -3830,7 +3916,14 @@ class MainWindow(QMainWindow):
         if answer != QMessageBox.StandardButton.Yes:
             return
         try:
-            updated_design = design.with_parameters(parameters)
+            band_line = feed_line if feed_line is not None else self._feed_line
+            band_default = default_band_plan(
+                parameters,
+                high_impedance_feed_line=(
+                    band_line is not None and band_line.characteristic_impedance_ohm >= 300.0
+                ),
+            )
+            updated_design = design.with_parameters(parameters).with_band_plan(band_default.plan)
             timestamp = utc_now()
             self._project = self._project.with_design(updated_design, updated_at=timestamp)
             if feed_line is not None:
@@ -3879,6 +3972,10 @@ class MainWindow(QMainWindow):
             self.new_doublet_antenna()
         elif selected == CATALOG_TYPE_G5RV:
             self.new_g5rv_antenna()
+        elif selected == CATALOG_TYPE_ZS6BKW:
+            self.new_zs6bkw_antenna()
+        elif selected == CATALOG_TYPE_ZEPP:
+            self.new_zepp_antenna()
         elif selected == CATALOG_TYPE_J_POLE:
             self.new_j_pole_antenna(folded=False)
         elif selected == CATALOG_TYPE_SLIM_JIM:
@@ -4247,7 +4344,12 @@ class MainWindow(QMainWindow):
         ):
             if hasattr(previous, name) and hasattr(estimated, name):
                 updates[name] = getattr(previous, name)
-        if isinstance(previous, EndFedParameters) and isinstance(estimated, EndFedParameters):
+        if isinstance(previous, T2FDParameters) and isinstance(estimated, T2FDParameters):
+            updates.update(
+                termination_resistance_ohm=previous.termination_resistance_ohm,
+                transformer_ratio=previous.transformer_ratio,
+            )
+        elif isinstance(previous, EndFedParameters) and isinstance(estimated, EndFedParameters):
             updates.update(
                 preset=previous.preset,
                 transformer_ratio=previous.transformer_ratio,
@@ -4310,6 +4412,10 @@ class MainWindow(QMainWindow):
             self.optimize_ringo_elements()
         elif isinstance(parameters, LoopParameters):
             self.optimize_loop_elements()
+        elif (
+            isinstance(parameters, CustomAntennaParameters) and parameters.generator_id == "zs6bkw"
+        ):
+            self.optimize_zs6bkw_elements()
         elif isinstance(parameters, CustomAntennaParameters):
             self._show_error(self._translator.t("error.optimize_custom"))
         else:
@@ -4983,6 +5089,102 @@ class MainWindow(QMainWindow):
         self._ringo_form.set_parameters(selected)
         self._form_dirty = True
         self._apply_fields()
+        self.simulate()
+
+    @history_action("history.optimize")
+    def optimize_zs6bkw_elements(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._solver is None:
+            self._show_error(self._translator.t("error.solver"))
+            return
+        design = self._project.design_by_id(self._design_id)
+        parameters = design.parameters
+        if (
+            not isinstance(parameters, CustomAntennaParameters)
+            or parameters.generator_id != "zs6bkw"
+        ):
+            return
+        dipole = next(wire for wire in parameters.wires if wire.id == ZS6BKW_DIPOLE_ID)
+        line = parameters.transmission_lines[0]
+        band_ids = ("40m", "20m", "17m", "12m", "10m")
+        bands = tuple(
+            ElementOptimizationBand(band.name, band.name, band.center_hz)
+            for band_id in band_ids
+            if (band := amateur_band_by_id(band_id)) is not None
+        )
+        current_band = amateur_band_for(parameters.frequency_hz, tolerance_fraction=0.02)
+        default_band_id = (
+            current_band.name
+            if current_band is not None and current_band.name in band_ids
+            else "40m"
+        )
+
+        def build(values: dict[str, float]) -> CustomAntennaParameters:
+            return zs6bkw_with_dimensions(
+                parameters,
+                dipole_total_length_m=values.get(
+                    "dipole_total_length_m",
+                    dipole.length_m,
+                ),
+                line_length_m=values.get("line_length_m", line.length_m),
+            )
+
+        dialog = ElementOptimizationDialog(
+            self._translator,
+            self._unit_system,
+            self._solver,
+            replace(
+                self._custom_simulation_spec(parameters),
+                feed_line=self._feed_line,
+                matching_network=self._matching_network,
+            ),
+            title_key="element_optimize.zs6bkw_title",
+            variables=(
+                ElementOptimizationVariable(
+                    "dipole_total_length_m",
+                    self._translator.t("zs6bkw.wire_length"),
+                    dipole.length_m,
+                ),
+                ElementOptimizationVariable(
+                    "line_length_m",
+                    self._translator.t("zs6bkw.line_length"),
+                    line.length_m,
+                ),
+            ),
+            build_parameters=build,
+            objectives=(
+                ElementOptimizationObjective.TARGET_IMPEDANCE,
+                ElementOptimizationObjective.MAX_GAIN,
+                ElementOptimizationObjective.MAX_FRONT_TO_BACK,
+                ElementOptimizationObjective.MULTI_OBJECTIVE,
+            ),
+            default_frequency_hz=parameters.frequency_hz,
+            default_band_id=default_band_id,
+            bands=bands,
+            hint_key="element_optimize.zs6bkw_hint",
+            parent=self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        selected = dialog.selected_parameters()
+        if selected is None:
+            return
+        updated = design.with_parameters(selected)
+        self._project = self._project.with_design(updated, updated_at=utc_now())
+        self._loads = updated.antenna.loads
+        self._form_dirty = False
+        self._dirty = True
+        self._invalidate_design_result(self._design_id)
+        self._results.set_result(None)
+        self._results.set_design(updated)
+        self._set_geometry_model(updated)
+        self._design_stack.setCurrentWidget(self._custom_panel)
+        self._update_custom_panel(updated)
+        self._auto_select_view(updated)
+        self._update_title()
+        self._update_actions()
         self.simulate()
 
     @history_action("history.loads")

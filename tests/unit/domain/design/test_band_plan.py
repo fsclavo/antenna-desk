@@ -11,6 +11,8 @@ from antennadesk.domain.antennas.g5rv import g5rv_parameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+from antennadesk.domain.antennas.zepp import zepp_parameters
+from antennadesk.domain.antennas.zs6bkw import zs6bkw_parameters
 from antennadesk.domain.design.band_plan import (
     BandEvidence,
     BandPlan,
@@ -44,6 +46,22 @@ def test_g5rv_default_plan_uses_published_hf_bands() -> None:
 
     assert result.evidence is BandEvidence.PUBLISHED
     assert result.plan.band_ids == ("80m", "40m", "20m", "15m", "10m")
+
+
+def test_zs6bkw_default_plan_uses_the_no_atu_bands() -> None:
+    result = default_band_plan(zs6bkw_parameters())
+
+    assert result.evidence is BandEvidence.PUBLISHED
+    assert result.note_key == "band.note.zs6bkw"
+    assert result.plan.band_ids == ("40m", "20m", "17m", "12m", "10m")
+
+
+def test_zepp_default_plan_uses_experimental_harmonics() -> None:
+    result = default_band_plan(zepp_parameters())
+
+    assert result.evidence is BandEvidence.HEURISTIC
+    assert result.note_key == "band.note.zepp"
+    assert result.plan.band_ids == ("40m", "20m", "10m")
 
 
 def test_ocfd_default_plan_follows_harmonics() -> None:

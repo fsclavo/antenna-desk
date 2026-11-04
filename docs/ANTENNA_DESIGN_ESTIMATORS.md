@@ -67,6 +67,7 @@ warnings, and a dimension tolerance.
 | Ringo | 0.725-wave vertical with a small horizontal matching ring, calibrated for the simplified AntennaDesk geometry | heuristic | Not a universal commercial Ringo formula |
 | Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; optimize for the target |
 | Moxon | Cebik 20 m wire reference scaled by frequency | reference scaled | Gap and tips are sensitive |
+| T2FD | span `300/F(MHz)` ft, spacing `10/F(MHz)` ft | heuristic | Broadband starting geometry; highest design frequency is required; not a resonance calculation |
 
 Ground-mounted radials are placed 1 cm above the ground plane in the NEC deck.
 The estimator and project keep the requested base height; the clearance is a
@@ -180,10 +181,11 @@ for the complete lossless model or for a specific installation.
 
 ## T2FD preset
 
-The T2FD is not a frequency-first resonance estimator. It is a
-**reference-backed starting geometry** for a non-resonant, terminated folded
-dipole. The editor's starting-dimension helper uses the "wide-long" construction
-rule documented by L. B. Cebik, W4RNL:
+The T2FD uses a **reference-backed broadband starting estimate**, not a
+resonance estimate. **Estimate Dimensions...** requires both the lowest and
+highest design frequencies; it preserves the current termination resistance and
+transformer ratio. The editor's starting-dimension helper uses the same
+"wide-long" construction rule documented by L. B. Cebik, W4RNL:
 
 - span (each parallel conductor): `300 / F(MHz)` feet;
 - conductor spacing: `10 / F(MHz)` feet.
@@ -297,7 +299,7 @@ Reference sources currently used:
   and installation effects are not solved analytically.
 - T2FD span, spacing, termination, and transformer are starting points; the
   resistor and transformer are ideal, and the tilted installation is not
-  modeled.
+  modeled. The estimator is a broadband sizing rule, not a resonance claim.
 - Sloper, random-wire, and doublet presets are application starting points; the
   doublet tuner is not modeled as a matching network.
 - The G5RV uses a lossless geometry line and a user-supplied velocity factor;

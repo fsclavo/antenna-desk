@@ -37,6 +37,7 @@ from ...domain.antennas.loop import LoopParameters
 from ...domain.antennas.materials import COPPER
 from ...domain.antennas.moxon import MoxonParameters
 from ...domain.antennas.ocfd import OCFDParameters
+from ...domain.antennas.t2fd import T2FDParameters
 from ...domain.antennas.vertical import VerticalParameters
 from ...domain.antennas.yagi import YagiParameters
 from ...domain.design import (
@@ -98,6 +99,7 @@ class DesignFromFrequencyDialog(QDialog):
         self.resize(760, 680)
 
         frequency_hz = initial_parameters.frequency_hz
+        highest_frequency_hz = frequency_hz * 6.0
         height_m = 10.0
         base_height_m = 0.25
         end_height_m = 10.0
@@ -151,6 +153,10 @@ class DesignFromFrequencyDialog(QDialog):
             end_height_m = parameters.end_height_m
         elif isinstance(parameters, OCFDParameters):
             height_m = parameters.height_m
+        elif isinstance(parameters, T2FDParameters):
+            height_m = parameters.height_m
+            highest_frequency_hz = parameters.highest_frequency_hz
+            orientation = parameters.orientation
         elif isinstance(parameters, JPoleParameters):
             base_height_m = parameters.base_height_m
             folded = parameters.folded
@@ -188,6 +194,12 @@ class DesignFromFrequencyDialog(QDialog):
         self._frequency.setDecimals(6)
         self._frequency.setSuffix(" MHz")
         self._frequency.setValue(frequency_hz / 1_000_000.0)
+
+        self._highest_frequency = QDoubleSpinBox(self)
+        self._highest_frequency.setRange(0.1, 100_000.0)
+        self._highest_frequency.setDecimals(6)
+        self._highest_frequency.setSuffix(" MHz")
+        self._highest_frequency.setValue(highest_frequency_hz / 1_000_000.0)
 
         length_min, length_max = length_bounds(unit_system)
         unit = translator.t(length_unit_key(unit_system))
@@ -262,6 +274,11 @@ class DesignFromFrequencyDialog(QDialog):
         self._rows: dict[str, tuple[QLabel, QWidget]] = {}
         self._add_row("template", "field.template", self._template_value)
         self._add_row("frequency", "field.frequency", self._frequency)
+        self._add_row(
+            "highest_frequency",
+            "t2fd.highest_frequency",
+            self._highest_frequency,
+        )
         self._add_row("height", "field.height", self._height)
         self._add_row("base_height", "field.base_height", self._base_height)
         self._add_row("end_height", "geometry.end_height", self._end_height)
@@ -328,6 +345,7 @@ class DesignFromFrequencyDialog(QDialog):
 
         for signal in (
             self._frequency.valueChanged,
+            self._highest_frequency.valueChanged,
             self._height.valueChanged,
             self._base_height.valueChanged,
             self._end_height.valueChanged,
@@ -378,6 +396,8 @@ class DesignFromFrequencyDialog(QDialog):
             visible.add("fan_bands")
         if family == "endfed":
             visible.update({"height", "end_height"})
+        if family == "t2fd":
+            visible.update({"highest_frequency", "height", "orientation"})
         if family == "yagi":
             visible.add("yagi_elements")
         height_label, _height_widget = self._rows["height"]
@@ -425,6 +445,9 @@ class DesignFromFrequencyDialog(QDialog):
             gap_m=self._gap_m,
             fan_bands_hz=fan_bands,
             yagi_elements=self._yagi_elements.value(),
+            highest_frequency_hz=(
+                self._highest_frequency.value() * 1_000_000.0 if family == "t2fd" else None
+            ),
         )
 
     def _run_estimate(self) -> None:

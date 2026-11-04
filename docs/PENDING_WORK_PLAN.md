@@ -89,15 +89,25 @@ Measure before changing the architecture.
 
 ## Phase 4 — New multiband presets
 
-1. **ZS6BKW**
-   - Derive from the G5RV architecture with its published dimensions.
-   - Use geometry transmission lines, not a lossy lumped approximation.
-   - Add catalog routing, estimator status, evidence, and tests.
-2. **Zepp**
-   - End-fed multiband preset with a matching section.
-   - Document the tuner/feed arrangement and limitations.
-3. Add both to the multiband default resolver only when their evidence and
-   band coverage are documented.
+1. **ZS6BKW (complete)**
+   - Derived from the G5RV architecture with the Cebik/W4RNL 28.4 m / 400 Ω /
+     13.6 m dimensions and the common 450 Ω commercial variant.
+   - Uses a geometry transmission line, catalog routing, evidence, band
+     defaults, NEC reference checks, and UI tests.
+2. **Zepp (simplified preset complete)**
+   - End-fed half-wave radiator with a quarter-wave lossless matching section.
+   - 40/20/10 m harmonic starting plan, experimental label, and explicit
+     second-conductor/choke limitations.
+   - A refined geometry with the second matching conductor and choke model is
+     deferred.
+3. Add the refined Zepp model to the multiband resolver only when its evidence
+   and band coverage are documented.
+
+Completed follow-ups:
+
+- ZS6BKW-specific optimizer for dipole wire length and matching-line length.
+- T2FD **Estimate Dimensions...** using the Cebik wide-long rule and preserving
+  the current termination and transformer.
 
 ## Phase 5 — Validation and references
 
@@ -122,8 +132,8 @@ These are not part of the next implementation session unless priorities change:
 
 ## Recommended execution order
 
-1. Phase 4 — ZS6BKW and Zepp presets.
-2. Phase 5 — independent references for experimental templates.
+1. Phase 5 — independent references for experimental templates.
+2. A refined Zepp model with explicit second conductor and choke.
 3. Phase 2 — only if timing measurements justify the multi-`FR` work.
 4. Phase 6 — deferred/blocked.
 

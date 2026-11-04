@@ -498,3 +498,43 @@ def test_g5rv_custom_generator_uses_the_dipole_summary_and_dashed_line() -> None
     assert "Wire dipole" in scene.summary
     assert "transmission lines: 1" in scene.summary
     assert any(polyline.role == "transmission-line" for polyline in scene.polylines)
+
+
+def test_zepp_custom_generator_uses_the_dipole_summary_and_dashed_line() -> None:
+    from antennadesk.domain.antennas.zepp import zepp_parameters
+
+    parameters = zepp_parameters()
+
+    scene = build_scene(
+        parameters.to_antenna(),
+        antenna_type="custom",
+        parameters=parameters,
+        display_name=None,
+        mode=GeometryViewMode.ELEVATION,
+        translator=TRANSLATOR,
+        unit_system=UnitSystem.METRIC,
+    )
+
+    assert "Wire dipole" in scene.summary
+    assert "transmission lines: 1" in scene.summary
+    assert any(polyline.role == "transmission-line" for polyline in scene.polylines)
+
+
+def test_zs6bkw_custom_generator_uses_the_dipole_summary_and_dashed_line() -> None:
+    from antennadesk.domain.antennas.zs6bkw import zs6bkw_parameters
+
+    parameters = zs6bkw_parameters()
+
+    scene = build_scene(
+        parameters.to_antenna(),
+        antenna_type="custom",
+        parameters=parameters,
+        display_name=None,
+        mode=GeometryViewMode.ELEVATION,
+        translator=TRANSLATOR,
+        unit_system=UnitSystem.METRIC,
+    )
+
+    assert "Wire dipole" in scene.summary
+    assert "transmission lines: 1" in scene.summary
+    assert any(polyline.role == "transmission-line" for polyline in scene.polylines)

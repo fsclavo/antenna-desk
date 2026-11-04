@@ -62,6 +62,7 @@ class DesignIntent:
     fan_bands_hz: tuple[float, ...] = ()
     yagi_elements: int = 5
     end_height_m: float | None = None
+    highest_frequency_hz: float | None = None
 
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
@@ -91,5 +92,9 @@ class DesignIntent:
             raise ValueError("yagi_elements must be at least 2")
         if self.end_height_m is not None:
             ensure_non_negative(self.end_height_m, name="end_height_m")
+        if self.highest_frequency_hz is not None:
+            ensure_positive(self.highest_frequency_hz, name="highest_frequency_hz")
+            if self.highest_frequency_hz <= self.frequency_hz:
+                raise ValueError("highest_frequency_hz must exceed frequency_hz")
         if not math.isfinite(self.azimuth_deg):
             raise ValueError("azimuth_deg must be finite")

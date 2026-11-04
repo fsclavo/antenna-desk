@@ -165,10 +165,12 @@ The second slice adds two multi-wire templates:
 `AntennaDesignParameters` is the union of the supported parameter types.
 `DesignVariant` stores the union and validates that `antenna_type` matches the
 parameters. The canonical model remains the shared `AntennaModel`, so the
-solver adapter does not need geometry-specific branches. Schema version 5 is
+solver adapter does not need geometry-specific branches. Schema version 6 is
 current: parameter payloads are additive, and old `wire_dipole` documents are
-unchanged. Series RLC loads are optional antenna payloads and are emitted as
-`LD 0` cards by the solver adapter.
+unchanged. A design may also store an optional analysis band plan; it is
+intent metadata and never changes the canonical geometry. Series RLC loads are
+optional antenna payloads and are emitted as `LD 0` cards by the solver
+adapter.
 
 The form exposes an antenna-type selector with conditional spacing/sides
 fields. The geometry view is renderer-neutral: `ui/geometry/builder.py`
@@ -220,9 +222,10 @@ Saves are atomic: write a temporary file in the target directory, flush and
 `fsync`, then replace the destination with `os.replace`. Schema version 2 added
 dipole orientation, version 3 added persisted simulation runs, version 4 adds
 optional band/batch metadata, version 5 adds optional OCFD/custom feed
-transformer ratios, and older documents are migrated explicitly.
+transformer ratios, version 6 adds optional per-design analysis band plans, and
+older documents are migrated explicitly.
 
-Simulation runs are persisted in schema version 5. Raw solver text is stored
+Simulation runs are persisted in schema version 6. Raw solver text is stored
 with the normalized result. Project files are compact JSON compressed with
 gzip; plain JSON files from older versions still load. The UI warns at 20 MB
 compressed, blocks files above the 32 MB compressed limit, and offers

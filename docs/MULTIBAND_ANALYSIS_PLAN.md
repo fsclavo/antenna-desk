@@ -116,9 +116,9 @@ than one band, plus presets that are commonly used with a tuner.
 
 ### Future presets
 
-- **ZS6BKW**: G5RV-derived multiband preset already listed as a roadmap
-  candidate.
-- **Zepp**: end-fed multiband preset using a matching section.
+- **ZS6BKW**: implemented with 40/20/17/12/10 m as the documented no-ATU set.
+- **Zepp**: implemented as an experimental 40/20/10 m harmonic plan with a
+  simplified lossless matching section.
 - **Loop on harmonics**: possible, but high feed impedance and pattern changes
   make it a separate study; do not include it in the first wave.
 - **Trap vertical / multiband vertical**: not modelled yet; add only after a
@@ -315,7 +315,8 @@ Proposed defaults:
 - **Doublet**: 80–10 m default when the project has a high-impedance/open-wire
   feed line, with a tuner-required note. The feed line is the persisted proxy
   for the doublet identity; no new parameter field is required.
-- **Future ZS6BKW/Zepp**: add defaults with the preset and its source.
+- **ZS6BKW**: 40/20/17/12/10 m, the documented Cebik/W4RNL no-ATU set.
+- **Zepp**: 40/20/10 m harmonic starting points; experimental and tunable.
 
 No default may be copied from another family without evidence. If a family has
 no documented multiband behavior, it gets the current-band default only.
@@ -424,7 +425,7 @@ Exit criteria: save, reopen, report, and compare preserve the band analysis.
 - Trap dipole two-band defaults.
 - T2FD broadband defaults.
 - Doublet feed-line proxy and tuner-required warning (implemented).
-- ZS6BKW and Zepp when their presets are added.
+- ZS6BKW and Zepp (implemented; Zepp is an experimental simplified model).
 - Review loop harmonic analysis separately.
 
 Exit criteria: every family in the candidate table has a documented default

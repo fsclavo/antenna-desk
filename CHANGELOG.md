@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- OCFD and End-fed generators now label the frequency as the fundamental/design
+  frequency and let the user choose the harmonic analysis band plan at
+  creation. The plan is persisted with the design, restored on reopen, and does
+  not change geometry. Random-wire uses the same selector for its tuner-assisted
+  80–10 m analysis plan.
+- **Zepp** catalog preset: end-fed half-wave radiator with a quarter-wave
+  lossless matching section. It is labeled experimental, includes starting
+  dimensions from frequency, uses 40/20/10 m as a harmonic starting plan, and
+  explicitly omits the second matching conductor, 1:1 choke, and common-mode
+  current.
+- T2FD now has a frequency-first **Estimate Dimensions...** path using the
+  Cebik wide-long broadband starting rule. It requires the lowest and highest
+  design frequencies and preserves the current termination and transformer.
+- ZS6BKW has a template-specific optimizer for dipole wire length and matching
+  line length, while keeping the line impedance and velocity factor fixed.
+- **ZS6BKW** catalog preset with a 28.4 m / 400 Ω / 13.6 m Cebik/W4RNL
+  reference variant and a 27.5 m / 450 Ω / 12.2 m commercial variant, modeled
+  with a lossless geometry transmission line. The default band analysis uses
+  the 40/20/17/12/10 m no-ATU set and a 61-point 7.0–29.7 MHz sweep.
 - **Simulation sweep** in **Advanced simulation** provides Auto (template) and
   Custom Start/Stop/Points modes for every antenna family, including generated
   templates that previously used a fixed sweep with no UI control.
@@ -111,6 +130,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   target frequency. Its default frequency is the lowest element band rather than
   a stale design frequency, and it explains that unchecked elements still
   affect the antenna.
+- Project schema version 6 adds optional per-design analysis band plans on top
+  of the version 5 transformer fields. Older projects migrate without changing
+  their geometry or results.
 - Project schema version 5 adds optional OCFD/custom feed-transformer ratios
   on top of the version 4 band/batch run metadata. Older projects migrate
   without changing their geometry or results.

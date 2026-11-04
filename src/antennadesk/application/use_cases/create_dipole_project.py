@@ -11,6 +11,7 @@ from uuid import UUID
 from ...domain.antennas.design import AntennaDesignParameters, antenna_type_for
 from ...domain.common.ids import new_id
 from ...domain.common.time import utc_now
+from ...domain.design.band_plan import BandPlan
 from ...domain.projects.project import DesignVariant, Project
 
 
@@ -20,6 +21,7 @@ class CreateDipoleProjectCommand:
     variant_name: str
     parameters: AntennaDesignParameters
     description: str = ""
+    band_plan: BandPlan | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +51,7 @@ class CreateDipoleProject:
             antenna_type=antenna_type_for(command.parameters),
             parameters=command.parameters,
             antenna=antenna,
+            band_plan=command.band_plan,
         )
 
         return Project(

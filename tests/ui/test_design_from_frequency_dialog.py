@@ -38,6 +38,14 @@ def _dialog(
 
 
 def _estimated_parameters(family: str) -> AntennaDesignParameters:
+    if family == "t2fd":
+        return estimate_intent(
+            DesignIntent(
+                frequency_hz=7_100_000.0,
+                highest_frequency_hz=30_000_000.0,
+                antenna_type=family,
+            )
+        ).parameters
     return estimate_intent(
         DesignIntent(
             frequency_hz=146_000_000.0,
@@ -187,6 +195,28 @@ def test_dialog_preloads_the_yagi_element_count(qtbot: QtBot) -> None:
     assert len(parameters.elements) == len(initial.elements)
 
 
+def test_dialog_preloads_the_t2fd_band_and_estimates_it(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.t2fd import T2FDParameters
+
+    dialog = _dialog(
+        qtbot,
+        T2FDParameters(
+            frequency_hz=3_500_000.0,
+            highest_frequency_hz=30_000_000.0,
+            length_m=26.13,
+            spacing_m=0.87,
+        ),
+    )
+
+    assert dialog._estimator_type == "t2fd"
+    assert dialog._highest_frequency.value() == pytest.approx(30.0)
+    dialog._run_estimate()
+
+    parameters = dialog.estimated_parameters()
+    assert isinstance(parameters, T2FDParameters)
+    assert parameters.highest_frequency_hz == pytest.approx(30_000_000.0)
+
+
 def test_dialog_shows_estimator_sources(qtbot: QtBot) -> None:
     dialog = _dialog(
         qtbot,
@@ -231,6 +261,7 @@ def test_changing_an_input_invalidates_the_estimate(qtbot: QtBot) -> None:
         "ringo",
         "yagi",
         "moxon",
+        "t2fd",
     ),
 )
 def test_dialog_estimates_every_supported_family(

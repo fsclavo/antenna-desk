@@ -138,7 +138,7 @@ class EndFedForm(QWidget):
 
         form = QFormLayout()
         form.addRow(translator.t("field.template"), self._preset_label)
-        form.addRow(translator.t("field.frequency"), self._frequency)
+        form.addRow(translator.t("field.design_frequency"), self._frequency)
         form.addRow(translator.t("field.length"), self._length)
         form.addRow(translator.t("endfed.feed_height"), self._feed_height)
         form.addRow(translator.t("endfed.end_height"), self._end_height)

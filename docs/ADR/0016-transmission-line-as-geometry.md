@@ -71,7 +71,8 @@ Limitations:
 
 ## Follow-ups
 
-- Add G5RV/ZS6BKW and Zepp presets using geometry TLs.
+- Refine the simplified Zepp model with the explicit second matching conductor
+  and choke (G5RV, ZS6BKW, and the first Zepp preset are implemented).
 - Add a lossy TL model or map line loss to equivalent shunt/load terms.
 - Add crossed-line/phase-reversal support for phased arrays.
 - Add a dedicated pattern/geometry distinction between physical wires and

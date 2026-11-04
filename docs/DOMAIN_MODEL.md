@@ -301,11 +301,13 @@ hatch.
 
 A named design with an identifier, an antenna type identifier (for example
 `wire_dipole`, `trap_dipole`, or `t2fd`), the generating parameters, and the
-derived `AntennaModel`. Construction validates that the antenna type matches the
-parameters and that the derived geometry matches both.
+derived `AntennaModel`. It may also carry an optional analysis `BandPlan`; this
+is user intent and does not alter the geometry. Construction validates that the
+antenna type matches the parameters and that the derived geometry matches both.
 
 `with_parameters()` returns a new variant and updates both the antenna type and
-the derived model; it never mutates the original.
+the derived model; it never mutates the original. `with_band_plan()` updates the
+persisted analysis intention independently of the geometry.
 
 ### Project
 
@@ -335,7 +337,7 @@ Plain JSON files from older versions are still accepted. The envelope is:
 ```json
 {
   "format": "antennadesk-project",
-  "schema_version": 5,
+  "schema_version": 6,
   "project": {
     "id": "11111111-1111-4111-8111-111111111111",
     "name": "40 m dipole",
@@ -400,11 +402,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 5.
+the application writes version 6.
 
 ## Schema policy
 
-- Current version: `5`.
+- Current version: `6`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -414,6 +416,9 @@ the application writes version 5.
   for multiband analyses. Existing runs load with both fields as `null`.
 - Version 5 adds optional feed-transformer ratios to OCFD and custom designs.
   Existing designs load with `1.0`, preserving their raw-impedance behavior.
+- Version 6 adds optional per-design band-intent metadata: the persisted band
+  IDs and sweep point counts chosen for analysis. Existing designs load with
+  no stored plan and use the family default.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -442,8 +447,9 @@ the application writes version 5.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 5.
-  Band analyses store one run per band with a shared `batch_id`.
+- Simulation results are persisted as immutable runs in schema version 6.
+  Band analyses store one run per band with a shared `batch_id`; the selected
+  analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are
   derived per frequency and stored alongside the impedance and power budget;
   see [ADR-0015](ADR/0015-realized-gain-and-directivity.md).

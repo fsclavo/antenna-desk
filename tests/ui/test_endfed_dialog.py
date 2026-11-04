@@ -40,6 +40,19 @@ def test_endfed_dialog_builds_parameters(qtbot: QtBot) -> None:
     assert dialog._form._ground.currentText() == "Finite ground"
 
 
+def test_endfed_dialog_defaults_to_harmonic_analysis_bands(qtbot: QtBot) -> None:
+    dialog = EndFedDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+
+    plan = dialog._default_band_plan()
+
+    assert [selection.band.name for selection in plan.selections] == [
+        "40m",
+        "20m",
+        "10m",
+    ]
+
+
 def test_endfed_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
     original = EndFedParameters(
         frequency_hz=7_100_000.0,

@@ -46,6 +46,8 @@ _GENERATOR_FAMILIES: dict[str, AntennaFamily] = {
     "trap_dipole": AntennaFamily.DIPOLE,
     "t2fd": AntennaFamily.DIPOLE,
     "g5rv": AntennaFamily.DIPOLE,
+    "zs6bkw": AntennaFamily.DIPOLE,
+    "zepp": AntennaFamily.DIPOLE,
 }
 
 

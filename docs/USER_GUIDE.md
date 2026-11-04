@@ -116,8 +116,9 @@ Use the **Estimate Dimensions...** button above the design panel or
 **Design → Estimate Dimensions...** to refine the template already loaded in the
 editor. The dialog supports wire and folded dipoles, loops (generic, quad,
 delta), verticals in 1/4λ, 1/2λ, and 5/8λ, inverted-V, fan dipoles, end-fed
-wires, OCFD, J Pole, Slim Jim, Ringo, Yagi, and Moxon. It does not offer a
-family selector and never changes the antenna type.
+wires, OCFD, J Pole, Slim Jim, Ringo, Yagi, Moxon, and T2FD. It does not offer
+a family selector and never changes the antenna type. The T2FD path asks for the
+highest design frequency and applies the Cebik wide-long broadband rule.
 
 The result is a **starting point**, not a verified construction measurement.
 The dialog shows assumptions, warnings, confidence, and dimension values. Apply
@@ -239,9 +240,10 @@ lowest and highest design frequencies, the element length, the conductor
 spacing, the termination resistance, the feed transformer ratio, the height,
 orientation, azimuth, radius, material, and ground.
 
-**Set starting dimensions from frequency** applies Cebik's wide-long rule:
-about `300/F(MHz)` feet of span and `10/F(MHz)` feet of conductor spacing at the
-lowest design frequency. The default 3.5-30 MHz design starts with an 800 Ω
+**Estimate Dimensions...** applies Cebik's wide-long rule and requires both the
+lowest and highest design frequencies. **Set starting dimensions from frequency**
+in the editor applies the same rule: about `300/F(MHz)` feet of span and
+`10/F(MHz)` feet of conductor spacing at the lowest design frequency. The default 3.5-30 MHz design starts with an 800 Ω
 non-inductive resistor and a 16:1 transformer, following the commercial
 B&W AC3-30 design. A 390-480 Ω resistor with a 4:1 transformer to 75 Ω is the
 other common arrangement; both fields are editable.
@@ -258,8 +260,9 @@ temperature rise, or a feed line as part of the antenna.
 The design panel starts with a 31-point sweep from the lowest to the highest
 design frequency. The pattern is computed at amateur-band snapshots with the
 finest resolution that fits the project storage budget; the effective value is
-reported after a run. The T2FD span and spacing are construction starting
-points, not verified cut lengths.
+reported after a run. **Optimize...** currently adjusts the element length only;
+spacing, termination resistance, and transformer ratio remain manual. The T2FD
+span and spacing are construction starting points, not verified cut lengths.
 
 ## Create a Yagi
 
@@ -345,6 +348,13 @@ frequency-first estimator clamps it to the nearest reachable height and reports
 a warning. End-fed is a first-class experimental template with an inline
 editor.
 
+The frequency is the **design frequency** for the half-wave radiator; the
+matching transformer and counterpoise remain installation-specific. Use
+**Choose analysis bands...** to select the harmonic plan. The default for a
+40 m design is 40/20/10 m, and the chosen plan is stored with the design.
+Random wire is treated as tuner-assisted instead: its default analysis plan is
+80–10 m, but changing that plan does not change the non-resonant wire length.
+
 ## Create a sloper
 
 Choose **File → New Antenna... → Sloper** for an end-fed half-wave wire sloping
@@ -362,7 +372,9 @@ Choose **File → New Antenna... → Random wire** for a non-resonant end-fed wi
 with a 9:1 transformer and a 0.05λ counterpoise. The preset starts with a 17 m
 wire at 10 m height. The length is intentionally non-resonant and is an
 application starting point; tune it for the bands and the matching you use.
-The design is an `EndFedParameters` design with the `random_wire` preset.
+The design is an `EndFedParameters` design with the `random_wire` preset. Its
+80–10 m default is an analysis band plan, not a continuous low/high geometry
+input; use **Choose analysis bands...** in the generator to customize it.
 
 ## Create a G5RV
 
@@ -393,6 +405,51 @@ The published dimensions are reference-backed (Carr, *Practical Antenna
 Handbook*, via the Wikipedia G5RV article); the lossless TL model and the
 installation are simplified. Tune the line length, velocity factor, and feed
 line for your installation.
+
+## Create a ZS6BKW
+
+Choose **File → New Antenna... → ZS6BKW** for a multiband doublet with a
+matching section. The preset offers two documented variants:
+
+- **Cebik/W4RNL reference:** 28.4 m wire with a 13.6 m, 400 Ω matching section.
+- **Commercial variant:** 27.5 m wire with a 12.2 m, 450 Ω matching section.
+
+The dipole height, feed height, azimuth, radius, material, ground, and line
+velocity factor are editable. The matching section is a lossless geometry
+transmission line between the dipole center and a short source wire; add the
+transmitter coax with **Simulation → Feed Line...** when needed.
+
+The Cebik reference gives usable no-ATU matches on **40, 20, 17, 12, and 10 m**;
+80, 30, and 15 m are poor matches without a tuner. The custom design panel
+starts with a **61-point 7.0–29.7 MHz sweep**, and **Band analysis** preselects
+the five no-ATU bands. **Optimize...** opens a ZS6BKW-specific search over the
+dipole wire length and matching-line length; the line impedance and velocity
+factor stay fixed. Dimensions are starting points: height, ground, line velocity
+factor, and installation change the match. See L. B. Cebik, W4RNL, “The G5RV
+Antenna System Re-Visited, Part 3: The Almost-No-ATU ZS6BKW”, and PA0FRI’s
+commercial variant notes.
+
+## Create a Zepp
+
+Choose **File → New Antenna... → Zepp** for a classic end-fed half-wave
+radiator with a quarter-wave parallel-wire matching section. The preset starts
+with:
+
+- radiator = practical half-wave length at the design frequency;
+- matching section = practical quarter-wave length at the design frequency;
+- 400 Ω lossless matching section.
+
+The radiator length, matching-section length and impedance, velocity factor,
+height, feed height, azimuth, radius, material, and ground are editable.
+**Set starting dimensions from frequency** resets the radiator and matching
+section to the half/quarter-wave starting values.
+
+This is a **simplified experimental model**: the matching section is a lossless
+transmission line, its second conductor is not drawn, and the 1:1 choke and
+common-mode current are not modeled. Use a 1:1 choke at the feed point and tune
+the radiator and line for the installation. Band analysis starts with
+**40/20/10 m** harmonic coverage as an experimental starting point; verify each
+band before construction.
 
 ## Create a doublet
 
@@ -439,6 +496,12 @@ realized gain, not the NEC pattern. Actual balun loss and common-mode current
 are not modeled. OCFD is a first-class template: after creation its parameters
 stay in the left design panel and can be edited inline. The generator is
 experimental.
+
+The frequency is the **fundamental design frequency**; the geometry is not
+optimized across a continuous Low–High range. Use **Choose analysis bands...**
+in the generator to select the harmonic band plan. The default for a 40 m
+design is 40/20/10 m. The selected plan is stored with the design and restored
+when the project is reopened.
 
 ## Create a vertical
 

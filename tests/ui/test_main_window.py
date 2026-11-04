@@ -522,6 +522,11 @@ def test_optimize_endfed_applies_to_the_endfed_form(
         def result_parameters(self) -> EndFedParameters:
             return parameters
 
+        def result_band_plan(self):
+            from antennadesk.domain.design.band_plan import default_band_plan
+
+            return default_band_plan(parameters).plan
+
     monkeypatch.setattr(main_window_module, "EndFedDialog", FakeEndFedDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("End-fed", True))
     window.new_endfed_antenna()
@@ -579,6 +584,11 @@ def test_optimize_ocfd_applies_to_the_ocfd_form(
 
         def result_parameters(self) -> OCFDParameters:
             return parameters
+
+        def result_band_plan(self):
+            from antennadesk.domain.design.band_plan import default_band_plan
+
+            return default_band_plan(parameters).plan
 
     monkeypatch.setattr(main_window_module, "OCFDDialog", FakeOCFDDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("OCFD", True))
@@ -639,6 +649,11 @@ def test_synthesize_dimensions_applies_and_simulates(
 
         def result_parameters(self) -> OCFDParameters:
             return parameters
+
+        def result_band_plan(self):
+            from antennadesk.domain.design.band_plan import default_band_plan
+
+            return default_band_plan(parameters).plan
 
     monkeypatch.setattr(main_window_module, "OCFDDialog", FakeOCFDDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("OCFD", True))
@@ -1667,6 +1682,11 @@ def test_new_sloper_uses_the_endfed_preset(
         def result_parameters(self) -> EndFedParameters:
             return parameters
 
+        def result_band_plan(self):
+            from antennadesk.domain.design.band_plan import default_band_plan
+
+            return default_band_plan(parameters).plan
+
     monkeypatch.setattr(main_window_module, "EndFedDialog", FakeEndFedDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Sloper", True))
 
@@ -1753,6 +1773,143 @@ def test_new_g5rv_creates_the_custom_preset_with_a_line(
     assert len(fitted_five.pattern_frequencies_hz) == 5
     assert fitted_five.far_field.theta_count == 19
     assert "5 pattern frequencies" in window._custom_pattern_status.text()
+    window._dirty = False
+
+
+def test_new_zs6bkw_creates_the_custom_preset_with_a_line(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.zs6bkw import zs6bkw_parameters
+
+    parameters = zs6bkw_parameters()
+
+    class FakeZS6BKWDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self):
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "ZS6BKWDialog", FakeZS6BKWDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("ZS6BKW", True))
+
+    window.new_zs6bkw_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "ZS6BKW"
+    design = window._project.designs[0]
+    assert design.parameters.generator_id == "zs6bkw"
+    assert len(design.antenna.transmission_lines) == 1
+    assert window._design_stack.currentWidget() is window._custom_panel
+    assert window._custom_sweep_start.value() == pytest.approx(7.0)
+    assert window._custom_sweep_stop.value() == pytest.approx(29.7)
+    assert window._custom_sweep_points.value() == 61
+    spec = window._custom_simulation_spec(design.parameters)
+    dipole = design.antenna.wire_by_id("zs6bkw-dipole")
+    count = spec.segmentation.segments_for(dipole, spec.frequency_plan.stop_hz)
+    assert count % 2 == 1
+    fitted = window._fit_spec_to_budget(design.antenna, spec)
+    assert fitted.pattern_frequencies_hz
+    window._dirty = False
+
+
+def test_optimize_zs6bkw_updates_wire_and_line_lengths(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.zs6bkw import (
+        ZS6BKW_DIPOLE_ID,
+        zs6bkw_parameters,
+        zs6bkw_with_dimensions,
+    )
+
+    parameters = zs6bkw_parameters()
+    _use_parameters(window, parameters)
+    updated = zs6bkw_with_dimensions(
+        parameters,
+        dipole_total_length_m=29.0,
+        line_length_m=14.0,
+    )
+    captured: dict[str, object] = {}
+    simulated: list[bool] = []
+
+    class FakeOptimizationDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            captured.update(kwargs)
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def selected_parameters(self) -> object:
+            return updated
+
+    monkeypatch.setattr(
+        main_window_module,
+        "ElementOptimizationDialog",
+        FakeOptimizationDialog,
+    )
+    monkeypatch.setattr(window, "simulate", lambda: simulated.append(True))
+
+    assert window._estimate_button.isEnabled() is False
+    assert window._optimize_action.isEnabled() is True
+    window.optimize_current_design()
+
+    variables = captured["variables"]
+    assert isinstance(variables, tuple)
+    assert {variable.name for variable in variables} == {
+        "dipole_total_length_m",
+        "line_length_m",
+    }
+    assert captured["title_key"] == "element_optimize.zs6bkw_title"
+    assert window._project is not None
+    design = window._project.designs[0]
+    assert design.parameters.generator_id == "zs6bkw"
+    dipole = next(wire for wire in design.parameters.wires if wire.id == ZS6BKW_DIPOLE_ID)
+    assert dipole.length_m == pytest.approx(29.0)
+    assert design.parameters.transmission_lines[0].length_m == pytest.approx(14.0)
+    assert simulated == [True]
+    window._dirty = False
+
+
+def test_new_zepp_creates_the_custom_preset_with_a_line(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.zepp import zepp_parameters
+
+    parameters = zepp_parameters()
+
+    class FakeZeppDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self):
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "ZeppDialog", FakeZeppDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Zepp", True))
+
+    window.new_zepp_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "Zepp"
+    design = window._project.designs[0]
+    assert design.parameters.generator_id == "zepp"
+    assert len(design.antenna.transmission_lines) == 1
+    assert window._design_stack.currentWidget() is window._custom_panel
+    assert window._custom_sweep_start.value() == pytest.approx(7.0)
+    assert window._custom_sweep_stop.value() == pytest.approx(29.7)
+    assert window._custom_sweep_points.value() == 61
+    assert window._custom_simulation_spec(design.parameters).frequency_plan.count == 61
     window._dirty = False
 
 
@@ -1943,6 +2100,11 @@ def test_new_ocfd_creates_a_first_class_design(
         def result_parameters(self) -> OCFDParameters:
             return parameters
 
+        def result_band_plan(self):
+            from antennadesk.domain.design.band_plan import default_band_plan
+
+            return default_band_plan(parameters).plan
+
     monkeypatch.setattr(main_window_module, "OCFDDialog", FakeOCFDDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("OCFD", True))
 
@@ -1951,6 +2113,13 @@ def test_new_ocfd_creates_a_first_class_design(
     assert window._project is not None
     assert window._project.name == "OCFD"
     assert window._project.designs[0].antenna_type == "ocfd"
+    assert window._project.designs[0].band_plan is not None
+    assert window._project.designs[0].band_plan.band_ids == ("40m", "20m", "10m")
+    assert window._band_plans[window._project.designs[0].id].band_ids == (
+        "40m",
+        "20m",
+        "10m",
+    )
     assert window._design_stack.currentWidget() is window._ocfd_scroll
     assert window._ocfd_form.parameters() == parameters
     window._ocfd_form._length.setValue(22.0)
@@ -2218,6 +2387,11 @@ def test_new_endfed_creates_a_first_class_design(
         def result_parameters(self) -> EndFedParameters:
             return parameters
 
+        def result_band_plan(self):
+            from antennadesk.domain.design.band_plan import default_band_plan
+
+            return default_band_plan(parameters).plan
+
     monkeypatch.setattr(main_window_module, "EndFedDialog", FakeEndFedDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("End-fed", True))
 
@@ -2226,6 +2400,13 @@ def test_new_endfed_creates_a_first_class_design(
     assert window._project is not None
     assert window._project.name == "End-fed"
     assert window._project.designs[0].antenna_type == "endfed"
+    assert window._project.designs[0].band_plan is not None
+    assert window._project.designs[0].band_plan.band_ids == ("40m", "20m", "10m")
+    assert window._band_plans[window._project.designs[0].id].band_ids == (
+        "40m",
+        "20m",
+        "10m",
+    )
     assert window._design_stack.currentWidget() is window._endfed_scroll
     assert window._endfed_form.parameters() == parameters
     window._dirty = False
@@ -2695,6 +2876,26 @@ def test_design_from_frequency_rejects_a_template_change(
 def test_estimate_is_disabled_for_templates_without_an_estimator(
     window: MainWindow,
 ) -> None:
+    from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+
+    _use_parameters(
+        window,
+        TrapDipoleParameters(
+            frequency_hz=7_100_000.0,
+            high_band_frequency_hz=14_100_000.0,
+            inner_length_m=10.0,
+            outer_length_m=5.0,
+            trap_frequency_hz=14_100_000.0,
+            trap_inductance_h=10e-6,
+        ),
+    )
+
+    assert window._estimate_button.isEnabled() is False
+    assert window._design_from_frequency_action.isEnabled() is False
+    assert "estimator" in window._estimate_button.toolTip().lower()
+
+
+def test_t2fd_can_estimate_and_optimize(window: MainWindow) -> None:
     from antennadesk.domain.antennas.t2fd import T2FDParameters
 
     _use_parameters(
@@ -2707,9 +2908,61 @@ def test_estimate_is_disabled_for_templates_without_an_estimator(
         ),
     )
 
-    assert window._estimate_button.isEnabled() is False
-    assert window._design_from_frequency_action.isEnabled() is False
-    assert "estimator" in window._estimate_button.toolTip().lower()
+    assert window._estimate_button.isEnabled() is True
+    assert window._design_from_frequency_action.isEnabled() is True
+    assert window._optimize_action.isEnabled() is True
+
+
+def test_design_from_frequency_preserves_t2fd_matching(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.t2fd import T2FDParameters
+    from antennadesk.domain.design import Confidence, DimensionEstimate
+
+    current = T2FDParameters(
+        frequency_hz=1_800_000.0,
+        highest_frequency_hz=30_000_000.0,
+        length_m=50.0,
+        spacing_m=1.7,
+        termination_resistance_ohm=390.0,
+        transformer_ratio=4.0,
+    )
+    _use_parameters(window, current)
+    estimated = T2FDParameters(
+        frequency_hz=1_800_000.0,
+        highest_frequency_hz=30_000_000.0,
+        length_m=50.8,
+        spacing_m=1.69,
+    )
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def estimated_estimate(self) -> DimensionEstimate:
+            return DimensionEstimate(
+                parameters=estimated,
+                method_id="test.t2fd",
+                confidence=Confidence.HEURISTIC,
+                tolerance_m=1.0,
+            )
+
+    monkeypatch.setattr(main_window_module, "DesignFromFrequencyDialog", FakeDialog)
+    window._dirty = False
+
+    window.design_from_frequency()
+
+    assert window._project is not None
+    design = window._project.designs[0]
+    assert isinstance(design.parameters, T2FDParameters)
+    assert design.parameters.length_m == pytest.approx(50.8)
+    assert design.parameters.termination_resistance_ohm == pytest.approx(390.0)
+    assert design.parameters.transformer_ratio == pytest.approx(4.0)
+    window._dirty = False
 
 
 def test_apply_design_saves_without_simulating(window: MainWindow) -> None:
@@ -3078,6 +3331,8 @@ def test_band_analysis_reopens_from_a_saved_project(
     )
 
     assert second._design_id is not None
+    assert second._project is not None
+    assert second._project.designs[0].band_plan == plan
     analysis = second._band_analysis_results[second._design_id]
     assert [band.band.name for band in analysis.bands] == ["40m", "20m"]
     assert second._results._bands_tab_index >= 0

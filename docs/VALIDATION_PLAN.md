@@ -256,8 +256,8 @@ Phase 6 adds tests for:
   type/geometry consistency.
 - Schema round trips and rejection of mismatched payloads for the new
   parameter types; schema version 5 adds optional band/batch metadata and
-  OCFD/custom feed-transformer ratios without changing existing design
-  geometry.
+  OCFD/custom feed-transformer ratios; version 6 adds optional per-design
+  analysis band plans without changing existing design geometry.
 - Multiband domain plans, family defaults, per-band result metrics, batch
   cancellation/partial results, band-aware run persistence, and the Bands UI
   tab.
@@ -290,6 +290,12 @@ Phase 6 adds tests for:
 - G5RV preset: published dipole and matching-line dimensions, 300 Ω/450 Ω
   options, custom-generator routing, 41-point wideband custom sweep, automatic
   pattern resolution, and a three-band NEC smoke run with a geometry `TL`.
+- Zepp preset: half-wave radiator, quarter-wave lossless matching section,
+  experimental 40/20/10 m harmonic defaults, and a NEC smoke run with a `TL`.
+- ZS6BKW preset: Cebik/W4RNL 28.4 m / 400 Ω / 13.6 m and commercial
+  27.5 m / 450 Ω / 12.2 m variants, catalog and band-default routing, and a
+  free-space NEC SWR check against Cebik's 1.15 / 1.47 / 1.56 values at
+  40/20/10 m with an explicit 0.3 SWR tolerance.
 - Run-size budget: fitted pattern resolution, project-size estimate, pattern
   disabled fallback, and a specific `solver.output_too_large` diagnostic.
 - Lossless project compression: gzip round trip, compressed-size accounting,

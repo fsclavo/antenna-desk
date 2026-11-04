@@ -44,6 +44,8 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_VERTICAL,
     CATALOG_TYPE_WIRE_DIPOLE,
     CATALOG_TYPE_YAGI,
+    CATALOG_TYPE_ZEPP,
+    CATALOG_TYPE_ZS6BKW,
 )
 
 _KNOWN_CUSTOM_GENERATORS = frozenset(
@@ -62,6 +64,8 @@ _KNOWN_CUSTOM_GENERATORS = frozenset(
         CATALOG_TYPE_TRAP_DIPOLE,
         CATALOG_TYPE_VERTICAL,
         CATALOG_TYPE_YAGI,
+        CATALOG_TYPE_ZEPP,
+        CATALOG_TYPE_ZS6BKW,
     }
 )
 

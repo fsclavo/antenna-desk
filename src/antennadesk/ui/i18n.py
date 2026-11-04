@@ -231,6 +231,38 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Published G5RV dimensions; lossless TL model",
         Language.SPANISH: "Dimensiones publicadas del G5RV; modelo de línea sin pérdidas",
     },
+    "catalog.zs6bkw": {
+        Language.ENGLISH: "ZS6BKW",
+        Language.SPANISH: "ZS6BKW",
+    },
+    "catalog.zs6bkw.description": {
+        Language.ENGLISH: (
+            "Reference-backed multiband doublet with a 400 Ω or 450 Ω matching section."
+        ),
+        Language.SPANISH: (
+            "Doblete multibanda con referencia y sección de adaptación de 400 Ω o 450 Ω."
+        ),
+    },
+    "catalog.evidence.zs6bkw": {
+        Language.ENGLISH: "Cebik/W4RNL and commercial dimensions; lossless TL model",
+        Language.SPANISH: "Dimensiones de Cebik/W4RNL y comercial; modelo de línea sin pérdidas",
+    },
+    "catalog.zepp": {
+        Language.ENGLISH: "Zepp",
+        Language.SPANISH: "Zepp",
+    },
+    "catalog.zepp.description": {
+        Language.ENGLISH: (
+            "Classic end-fed half-wave radiator with a quarter-wave matching section."
+        ),
+        Language.SPANISH: (
+            "Radiador clásico de media onda alimentado en el extremo, con sección de adaptación de cuarto de onda."
+        ),
+    },
+    "catalog.evidence.zepp": {
+        Language.ENGLISH: "Classic starting geometry; simplified lossless TL; experimental",
+        Language.SPANISH: "Geometría inicial clásica; línea sin pérdidas simplificada; experimental",
+    },
     "catalog.doublet": {
         Language.ENGLISH: "Doublet",
         Language.SPANISH: "Doublet",
@@ -712,6 +744,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "NBS TN-688 — five-element Yagi",
         Language.SPANISH: "NBS TN-688 — Yagi de cinco elementos",
     },
+    "source.cebik.t2fd.wide_long": {
+        Language.ENGLISH: "Cebik, W4RNL, “Modeling the T2FD”: wide-long rule",
+        Language.SPANISH: "Cebik, W4RNL, “Modeling the T2FD”: regla wide-long",
+    },
     "source.cebik.moxon_review.table1": {
         Language.ENGLISH: "Cebik, W4RNL — Moxon review, Table 1",
         Language.SPANISH: "Cebik, W4RNL — revisión Moxon, Tabla 1",
@@ -719,6 +755,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "source.antennadesk.heuristic.application_preset": {
         Language.ENGLISH: "AntennaDesk application preset (heuristic)",
         Language.SPANISH: "Preset de aplicación de AntennaDesk (heurístico)",
+    },
+    "estimator.assumption.t2fd_broadband": {
+        Language.ENGLISH: "broadband starting dimensions; not a resonant design",
+        Language.SPANISH: "dimensiones iniciales de banda ancha; no es un diseño resonante",
     },
     "estimator.assumption.height_and_ground": {
         Language.ENGLISH: "height and ground affect the final resonance and feed impedance",
@@ -749,6 +789,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "estimator.assumption.reference_scaling": {
         Language.ENGLISH: "dimensions are scaled from a published reference design",
         Language.SPANISH: "las dimensiones se escalan desde un diseño de referencia publicado",
+    },
+    "estimator.warning.t2fd_broadband": {
+        Language.ENGLISH: "T2FD dimensions are broadband starting points; verify termination and transformer",
+        Language.SPANISH: "Las dimensiones del T2FD son puntos de partida de banda ancha; verificá terminación y transformador",
     },
     "estimator.warning.starting_point": {
         Language.ENGLISH: "starting point only; verify with simulation or measurement",
@@ -827,6 +871,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Nombre del proyecto",
     },
     "field.frequency": {Language.ENGLISH: "Frequency (MHz)", Language.SPANISH: "Frecuencia (MHz)"},
+    "field.fundamental_frequency": {
+        Language.ENGLISH: "Fundamental design frequency (MHz)",
+        Language.SPANISH: "Frecuencia fundamental de diseño (MHz)",
+    },
+    "field.design_frequency": {
+        Language.ENGLISH: "Design frequency (MHz)",
+        Language.SPANISH: "Frecuencia de diseño (MHz)",
+    },
     "field.length": {Language.ENGLISH: "Total length", Language.SPANISH: "Longitud total"},
     "field.element_length": {
         Language.ENGLISH: "Element length",
@@ -991,6 +1043,129 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Dimensiones con referencia de Carr, Practical Antenna Handbook "
             "(vía el artículo de Wikipedia sobre G5RV); el modelo de línea de "
             "transmisión es sin pérdidas y simplificado."
+        ),
+    },
+    "zs6bkw.title": {
+        Language.ENGLISH: "ZS6BKW Generator",
+        Language.SPANISH: "Generador ZS6BKW",
+    },
+    "zs6bkw.wire_length": {
+        Language.ENGLISH: "Wire length",
+        Language.SPANISH: "Longitud del hilo",
+    },
+    "zs6bkw.line_length": {
+        Language.ENGLISH: "Matching line length",
+        Language.SPANISH: "Longitud de la línea de adaptación",
+    },
+    "zs6bkw.variant_label": {
+        Language.ENGLISH: "Preset",
+        Language.SPANISH: "Preset",
+    },
+    "zs6bkw.variant.0": {
+        Language.ENGLISH: "28.4 m wire · 400 Ω / 13.6 m line (Cebik/W4RNL)",
+        Language.SPANISH: "Hilo de 28.4 m · línea de 400 Ω / 13.6 m (Cebik/W4RNL)",
+    },
+    "zs6bkw.variant.1": {
+        Language.ENGLISH: "27.5 m wire · 450 Ω / 12.2 m line (commercial)",
+        Language.SPANISH: "Hilo de 27.5 m · línea de 450 Ω / 12.2 m (comercial)",
+    },
+    "zs6bkw.geometry": {
+        Language.ENGLISH: (
+            "Wire {dipole} {unit} · matching line {line_impedance} Ω / {line_length} {unit}"
+        ),
+        Language.SPANISH: (
+            "Hilo {dipole} {unit} · línea de adaptación {line_impedance} Ω / {line_length} {unit}"
+        ),
+    },
+    "zs6bkw.hint": {
+        Language.ENGLISH: (
+            "Reference-backed ZS6BKW dimensions. The 400 Ω / 13.6 m variant "
+            "follows Cebik/W4RNL; the 450 Ω / 12.2 m variant records the common "
+            "commercial implementation. The matching section is lossless. "
+            "Set the line velocity factor for your hardware; the default "
+            "treats the published length as the electrical length. Add the "
+            "transmitter coax as a Feed Line."
+        ),
+        Language.SPANISH: (
+            "Dimensiones del ZS6BKW con referencia. La variante de 400 Ω / "
+            "13.6 m sigue a Cebik/W4RNL; la de 450 Ω / 12.2 m registra la "
+            "implementación comercial habitual. La sección de adaptación es "
+            "sin pérdidas. Ajustá el factor de velocidad de tu línea; el valor "
+            "por defecto trata la longitud publicada como longitud eléctrica. "
+            "Agregá el coaxil del transmisor como Feed Line."
+        ),
+    },
+    "zs6bkw.evidence": {
+        Language.ENGLISH: (
+            "Dimensions from L. B. Cebik, W4RNL, “The G5RV Antenna System "
+            "Re-Visited, Part 3: The Almost-No-ATU ZS6BKW”, and the 450 Ω "
+            "commercial variant reported by PA0FRI. The transmission-line "
+            "model is lossless and simplified."
+        ),
+        Language.SPANISH: (
+            "Dimensiones de L. B. Cebik, W4RNL, “The G5RV Antenna System "
+            "Re-Visited, Part 3: The Almost-No-ATU ZS6BKW”, y de la variante "
+            "comercial de 450 Ω reportada por PA0FRI. El modelo de línea de "
+            "transmisión es sin pérdidas y simplificado."
+        ),
+    },
+    "zepp.title": {
+        Language.ENGLISH: "Zepp Generator",
+        Language.SPANISH: "Generador Zepp",
+    },
+    "zepp.radiator_length": {
+        Language.ENGLISH: "Radiator length",
+        Language.SPANISH: "Longitud del radiador",
+    },
+    "zepp.line_length": {
+        Language.ENGLISH: "Matching section length",
+        Language.SPANISH: "Longitud de la sección de adaptación",
+    },
+    "zepp.line_impedance": {
+        Language.ENGLISH: "Matching section impedance",
+        Language.SPANISH: "Impedancia de la sección de adaptación",
+    },
+    "zepp.starting_dimensions": {
+        Language.ENGLISH: "Set starting dimensions from frequency",
+        Language.SPANISH: "Establecer dimensiones iniciales desde la frecuencia",
+    },
+    "zepp.geometry": {
+        Language.ENGLISH: (
+            "Radiator {radiator} {unit} · matching section {line_impedance} Ω / {line_length} {unit}"
+        ),
+        Language.SPANISH: (
+            "Radiador {radiator} {unit} · sección de adaptación {line_impedance} Ω / {line_length} {unit}"
+        ),
+    },
+    "zepp.hint": {
+        Language.ENGLISH: (
+            "Classic Zepp starting point: a half-wave end-fed radiator with a "
+            "quarter-wave parallel-wire matching section. The section is modeled "
+            "as a lossless transmission line and its second conductor is not "
+            "drawn. Add a 1:1 choke at the feed point in the real installation. "
+            "Tune the radiator and line length for your height, ground, and "
+            "hardware."
+        ),
+        Language.SPANISH: (
+            "Punto de partida clásico Zepp: radiador de media onda alimentado en "
+            "el extremo con sección de adaptación de cuarto de onda. La sección "
+            "se modela como línea de transmisión sin pérdidas y no se dibuja su "
+            "segundo conductor. Agregá un choque 1:1 en el punto de alimentación "
+            "en la instalación real. Ajustá el radiador y la línea para tu altura, "
+            "terreno y hardware."
+        ),
+    },
+    "zepp.evidence": {
+        Language.ENGLISH: (
+            "Textbook half-wave/quarter-wave starting geometry. The simplified "
+            "lossless transmission-line model omits the second matching conductor, "
+            "the 1:1 choke, common-mode current, and installation effects."
+        ),
+        Language.SPANISH: (
+            "Geometría inicial de libro de media onda/cuarto de onda. El modelo "
+            "simplificado de línea sin pérdidas omite el segundo conductor de "
+            "adaptación, el choque 1:1, la corriente de modo común y los efectos "
+            "de instalación."
         ),
     },
     "doublet.title": {
@@ -1250,6 +1425,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Band analysis",
         Language.SPANISH: "Análisis por bandas",
     },
+    "band.choose": {
+        Language.ENGLISH: "Choose analysis bands...",
+        Language.SPANISH: "Elegir bandas de análisis...",
+    },
+    "band.empty": {
+        Language.ENGLISH: "Select at least one analysis band.",
+        Language.SPANISH: "Seleccioná al menos una banda de análisis.",
+    },
     "band.analyze": {
         Language.ENGLISH: "Analyze Bands...",
         Language.SPANISH: "Analizar bandas...",
@@ -1342,6 +1525,26 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "band.note.g5rv": {
         Language.ENGLISH: "Published G5RV coverage. WARC bands may require a tuner.",
         Language.SPANISH: "Cobertura publicada del G5RV. Las bandas WARC pueden requerir sintonizador.",
+    },
+    "band.note.zepp": {
+        Language.ENGLISH: (
+            "Experimental harmonic bands for the simplified Zepp; tune each band "
+            "and use a 1:1 choke at the feed point."
+        ),
+        Language.SPANISH: (
+            "Bandas armónicas experimentales del Zepp simplificado; ajustá cada "
+            "banda y usá un choque 1:1 en el punto de alimentación."
+        ),
+    },
+    "band.note.zs6bkw": {
+        Language.ENGLISH: (
+            "Cebik/W4RNL no-ATU bands: 40, 20, 17, 12, and 10 m. "
+            "80, 30, and 15 m are poor matches without a tuner."
+        ),
+        Language.SPANISH: (
+            "Bandas sin sintonizador según Cebik/W4RNL: 40, 20, 17, 12 y 10 m. "
+            "80, 30 y 15 m presentan malas adaptaciones sin sintonizador."
+        ),
     },
     "band.note.ocfd": {
         Language.ENGLISH: "Harmonically related bands; verify them with the feed arrangement.",
@@ -2954,6 +3157,23 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "element_optimize.ringo_title": {
         Language.ENGLISH: "Optimize Ringo Elements",
         Language.SPANISH: "Optimizar elementos del Ringo",
+    },
+    "element_optimize.zs6bkw_title": {
+        Language.ENGLISH: "Optimize ZS6BKW",
+        Language.SPANISH: "Optimizar ZS6BKW",
+    },
+    "element_optimize.zs6bkw_hint": {
+        Language.ENGLISH: (
+            "Vary the dipole wire length and matching-line length together. "
+            "The line impedance, velocity factor, and installation stay fixed. "
+            "Verify the chosen match with a full band sweep."
+        ),
+        Language.SPANISH: (
+            "Variá juntas la longitud del hilo y la de la línea de adaptación. "
+            "La impedancia de línea, el factor de velocidad y la instalación "
+            "quedan fijos. Verificá la adaptación elegida con un barrido "
+            "completo de banda."
+        ),
     },
     "element_optimize.yagi_title": {
         Language.ENGLISH: "Optimize Yagi Elements",
