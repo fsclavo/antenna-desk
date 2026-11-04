@@ -124,7 +124,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   58 of the 75 UI modules (`mypy_ui.ini`), English/Spanish translation parity
   tests, and Hypothesis property tests for units and the three importers. The
   3,654-line main-window test module is split into eight feature modules, and
-  the two-port math is cross-checked against scikit-rf.
+  the two-port math is cross-checked against scikit-rf. Every catalog template
+  now has a machine-readable evidence entry, rendered into the validation plan.
 
 ### Changed
 

@@ -35,6 +35,7 @@ Measured on 2026-11-04:
 | Property-based tests | unit round trips, azimuth range, and importer fuzzing with Hypothesis 6.170 |
 | Mutation testing | 0 |
 | Cross-engine numerical checks | 0 |
+| Template evidence entries | 25/25 catalog templates, enforced by a test |
 | Independent RF math oracle | scikit-rf 2.2.0 (BSD-3, dev-only): 11 tests for feed lines, L/Pi/T networks, cascades, and gain |
 | Segment-convergence tests | 2: free space and finite ground |
 | Physics-invariant tests | 0 |
@@ -336,16 +337,19 @@ published-value test.
 
 #### 3.5.7 Evidence registry as code
 
-**Problem.** `VALIDATION_PLAN.md` already carries a stale test count (788 vs
-1,121). The evidence level of each family lives only in prose, so it drifts.
+**Problem.** `VALIDATION_PLAN.md` already carried a stale test count (788 vs
+1,121). The evidence level of each template lived only in prose, so it drifted.
 
-**Change.** Add a machine-readable registry (a module or a JSON file) mapping
-each antenna family to: evidence level (A reference-backed, B published
-heuristic, C experimental), source, tolerance, and known limitation. A test
-asserts that every registered family has an entry and that the docs table is
-generated from the registry. CI fails on drift.
+**Change (implemented 2026-11-04).** `src/antennadesk/domain/design/evidence.py`
+maps every catalog template to evidence level (A reference-backed, B
+published/heuristic, C experimental), source, tolerance, and known limitation.
+`tests/unit/domain/design/test_evidence.py` imports the catalog and asserts
+that the registry keys equal the catalog keys, so a new template fails the build
+until it declares its evidence. The same test compares the generated Markdown
+table with the block in `docs/VALIDATION_PLAN.md`; `scripts/render_evidence_table.py`
+regenerates it.
 
-**Acceptance.** Adding a family without an evidence entry fails the build.
+**Acceptance.** Adding a template without an evidence entry fails the build.
 
 **Effort.** M.
 
@@ -494,7 +498,7 @@ the polarization commit.
 3. (done 2026-11-04) `scikit-rf` oracle for the two-port math.
 4. `PyNEC` cross-engine job.
 5. Published closed-form anchors for the estimators.
-6. Evidence registry as code.
+6. (done 2026-11-04) Evidence registry as code.
 
 ### Phase 3 — Scale (ongoing)
 
@@ -517,6 +521,7 @@ Track these over time; they are the definition of "better QA" for this project:
 | UI files under mypy | 58/75 now, ratchet to 75 |
 | Mutation score, `domain/` + `simulation/` | ≥ 80 % killed |
 | Families with evidence level A or B | all, or an explicit C with a visible warning |
+| Templates with an evidence entry | 25/25, enforced by a test |
 | Reference tests with a named source | 100 % |
 | Numeric assertions with a tolerance rationale | 100 % |
 | Doc-code drift tests | 0 failures |

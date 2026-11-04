@@ -182,6 +182,40 @@ reference does not block an experimental generator. A 10% tolerance is
 acceptable for many dimension/heuristic comparisons, but not universally for
 gain, nulls, or impedance.
 
+<!-- evidence-table:start -->
+| Template | Level | Source | Tolerance | Limitation |
+|---|---|---|---|---|
+| `wire_dipole` | A | NEC-2 User's Guide examples 1 and 3; ARRL Antenna Book, 24th ed., Ch. 2, p. 2.12 | 0.05 Ω impedance; 0.15 dB gain | Free-space and the published ground cases only. |
+| `folded_dipole` | B | ARRL Antenna Book, 24th ed., Ch. 2, pp. 2.12-2.13: an equal-conductor folded dipole has the same gain and four times the resistance | 0.2 dB gain; 0.5 on the resistance ratio | No independent absolute impedance reference. |
+| `loop` | B | ARRL Antenna Book, 24th ed., Ch. 5, p. 5.4, for the quad case; the polygon correction is a calibrated starting rule | 15 Ω for the quad preset only | Delta and arbitrary polygon side counts are structural. |
+| `quad_loop` | A | ARRL Antenna Book, 24th ed., Ch. 5, p. 5.4: about 120 Ω at resonance | 15 Ω | Published quad geometry only. |
+| `delta_loop` | C | Polygon-corrected circumference starting rule; no independent delta-loop reference | Not applicable (structural) | Starting dimensions; verify with a simulation or a measurement. |
+| `vertical` | C | Quarter-wave starting rule; no independent gain reference | Not applicable (structural) | Radial count and the ground model dominate the result. |
+| `loaded_vertical` | C | Quarter-wave starting rule plus a series loading-coil model | Not applicable (structural) | Coil Q and the ground model are not independently validated. |
+| `yagi` | A | NBS TN-688 5-element preset, 9.2 dBd (11.35 dBi) | 0.5 dB | Only the published preset; edited element geometry is experimental. |
+| `moxon` | A | L. B. Cebik, W4RNL, 'The Moxon Rectangle: A Review', Table 1 and text | 1.5 Ω real; 5 Ω reactance; 0.3 dB gain; better than 30 dB F/B | Published 20 m dimensions only. |
+| `ocfd` | B | R. Sanders, VK2WB, 'Analysis of the Off Centre Fed (OCF) dipole', Table 1 | Published 200-350 Ω range, not a strict numeric tolerance | The source does not fully specify its EZNEC ground model. |
+| `inverted_v` | C | Half-wave dipole starting rule with an included-angle heuristic | Not applicable (structural) | No independent numerical reference. |
+| `fan_dipole` | C | Per-band half-wave starting rule; mutual coupling is not modeled | Not applicable (structural) | A coupled fan is not a parallel combination of independent dipoles. |
+| `trap_dipole` | C | Trap-loaded dipole starting geometry | Not applicable (structural) | Traps are ideal; no independent numerical reference. |
+| `t2fd` | B | Cebik wide-long broadband starting rule | Not a strict numeric tolerance | Termination resistor and transformer are ideal. |
+| `endfed` | C | Half-wave end-fed starting rule | Not applicable (structural) | Transformer is an ideal impedance ratio; the counterpoise is wire geometry. |
+| `sloper` | C | End-fed preset with a sloped radiator | Not applicable (structural) | No independent numerical reference. |
+| `random_wire` | C | Random-wire geometry with a tuner-assisted band plan | Not applicable (structural) | No accuracy claim. |
+| `g5rv` | B | Published G5RV dimensions; lossless transmission-line model | Not a strict numeric tolerance | Line loss is not modeled; matching depends on the installation. |
+| `zs6bkw` | A | Cebik/W4RNL SWR values 1.15, 1.47, and 1.56 at 40/20/10 m; commercial 27.5 m variant | 0.3 SWR | Lossless line model. |
+| `zepp` | C | Classic Zepp starting geometry; simplified lossless line | Not applicable (structural) | Experimental; no independent numerical reference. |
+| `j_pole` | C | Quarter-wave radiator and quarter-wave stub starting rule | Not applicable (structural) | No independent numerical reference. |
+| `slim_jim` | C | Folded J-pole starting geometry | Not applicable (structural) | No independent numerical reference. |
+| `ringo` | C | Ringo radiator and ring starting geometry | Not applicable (structural) | No independent numerical reference. |
+| `doublet` | C | Doublet geometry with a feed line | Not applicable (structural) | No independent numerical reference. |
+| `custom` | C | User-defined wire geometry | Not applicable | No accuracy claim; imports and diagnostics only. |
+<!-- evidence-table:end -->
+
+`src/antennadesk/domain/design/evidence.py` is the machine-readable source of
+this table. `scripts/render_evidence_table.py` regenerates it, and a test fails
+when the catalog adds a template without an entry or when the table drifts.
+
 ## Phase 6 — new geometry and measurements (completed; physical validation deferred)
 
 Menu organization tests:
