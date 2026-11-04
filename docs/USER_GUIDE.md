@@ -466,8 +466,9 @@ construction sheet.
 - **Impedance / SWR**: table of frequency, resistance, reactance, magnitude,
   and SWR, plus impedance and SWR charts side by side over the sweep. Resonance points
   where the reactance crosses zero are marked and listed above the table.
-- **Pattern**: selectable **Azimuth** or **Elevation** cuts of NEC power gain
-  for each simulated frequency. The **Cuts** tab shows a line chart and a polar
+- **Pattern**: selectable **Azimuth** or **Elevation** cuts, with a **Metric**
+  selector for **Power gain**, **Directivity**, or **Realized gain**, for each
+  simulated frequency. The **Cuts** tab shows a line chart and a polar
   lobe diagram; the **3D lobe** tab shows a projected wireframe of the complete
   pattern, with each line colored by gain (green low, yellow intermediate, red
   high) and a min/max dBi legend. The interior stays transparent because only
@@ -489,8 +490,11 @@ construction sheet.
   reports elevation above the horizontal plane instead. The marker is the
   highest sampled direction, so the reported angle is quantized to the selected
   pattern resolution. Drag the 3D lobe to rotate
-  it, use the mouse wheel to zoom, and double-click to reset the view. Power
-  gain is not realized gain; see the gain summary below.
+  it, use the mouse wheel to zoom, and double-click to reset the view. The
+  **Metric** selector changes the cuts, polar plot, 3D lobe, and cursor readout.
+  Directivity and realized gain are derived by shifting the power-gain pattern
+  to the corresponding value at its maximum direction. Power gain is not
+  realized gain; see the gain summary below.
 - **Currents**: segment current magnitude for the selected frequency, with the
   feed segment marked.
 - **Measurements**: imported VNA sweeps with measured and simulated SWR,
@@ -519,8 +523,9 @@ The Diagnostics tab summary and the reports show three different metrics:
 The summary also reports the mismatch, matched feed-line, and network loss at
 the frequency with the highest realized gain. These components are evaluated at
 their nominal reference planes and need not add exactly to the difference
-between power gain and realized gain. The pattern charts and CSV pattern export
-still contain NEC power gain; the per-frequency CSV includes the new metrics.
+between power gain and realized gain. The pattern charts can display any of the
+three metrics; the pattern CSV still contains the NEC power-gain columns, while
+the per-frequency CSV includes the new metrics.
 
 Hover the mouse over the Impedance, SWR, Pattern, Currents, or Measurements
 charts to show a cursor at the nearest data point. The floating readout shows
@@ -793,8 +798,8 @@ loops show side length, circumference, side count, and feed side.
 Use **File → Export → CSV...** for the frequency sweep table, **File → Export
 → Pattern CSV...** for the far-field grid (frequency, θ, φ, gains,
 polarization, and E-field components), **File → Export → Pattern PNG...** for
-the current cut/3D pattern image, or one image per band when a band analysis is
-active. **File → Export → Geometry PNG...**,
+the current cut/3D pattern image using the selected metric, or one image per
+band when a band analysis is active. **File → Export → Geometry PNG...**,
 **Geometry SVG...**, **Geometry PDF...**, or **Geometry DXF...** for the
 current geometry view, **File → Export → HTML Report...** for a self-contained
 HTML report, or **File → Export → PDF Report...** for a native PDF with design
@@ -847,9 +852,10 @@ canonical meters and hertz.
 - The feed line is a uniform-line post-processing model. It reports impedance
   and SWR at the transmitter but does not add line loss to the pattern gain or
   realized-gain calculation.
-- Far-field values are NEC power gains. Realized gain and directivity are not
-  separated yet. Relative permeability is not emitted to NEC; conductor
-  conductivity is.
+- Far-field samples are NEC power gains. The pattern view can shift them to
+  directivity or realized gain at the maximum direction, but the pattern CSV
+  keeps the original power-gain columns. Relative permeability is not emitted to
+  NEC; conductor conductivity is.
 - Multiband defaults are starting points. The doublet default is inferred from
   a high-impedance project feed line; the tuner is not modeled as an automatic
   matching network. Variant comparison shows a band summary when analyses are

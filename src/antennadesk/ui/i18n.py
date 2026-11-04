@@ -1482,6 +1482,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Power gain (dBi)",
         Language.SPANISH: "Ganancia de potencia (dBi)",
     },
+    "pattern.metric": {
+        Language.ENGLISH: "Metric",
+        Language.SPANISH: "Métrica",
+    },
+    "pattern.metric.power": {
+        Language.ENGLISH: "Power gain",
+        Language.SPANISH: "Ganancia de potencia",
+    },
+    "pattern.metric.directivity": {
+        Language.ENGLISH: "Directivity",
+        Language.SPANISH: "Directividad",
+    },
+    "pattern.metric.realized": {
+        Language.ENGLISH: "Realized gain",
+        Language.SPANISH: "Ganancia realizada",
+    },
+    "pattern.metric_axis": {
+        Language.ENGLISH: "{metric} (dBi)",
+        Language.SPANISH: "{metric} (dBi)",
+    },
+    "pattern.metric_unavailable": {
+        Language.ENGLISH: "{metric} is unavailable for this frequency.",
+        Language.SPANISH: "{metric} no está disponible para esta frecuencia.",
+    },
     "pattern.none": {
         Language.ENGLISH: "No far-field pattern available.",
         Language.SPANISH: "No hay patrón de campo lejano disponible.",

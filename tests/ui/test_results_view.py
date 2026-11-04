@@ -582,3 +582,41 @@ def test_results_view_saves_one_pattern_image_per_band(
 
     assert saved == paths
     assert all(path.read_bytes().startswith(b"\x89PNG") for path in paths)
+
+
+def test_results_view_selects_the_pattern_gain_metric(qtbot: QtBot) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.simulation.pattern import PatternGainMetric
+    from antennadesk.domain.simulation.result import FarFieldPoint
+
+    points = (
+        FarFieldPoint(0.0, 0.0, 2.0, None, 5.0, 0.0, 0.0, "LINEAR", None, None, None, None),
+        FarFieldPoint(90.0, 0.0, 2.0, None, 2.0, 0.0, 0.0, "LINEAR", None, None, None, None),
+    )
+    base = _make_result()
+    frequency = replace(
+        base.frequencies[0],
+        far_field=points,
+        directivity_db=8.0,
+        realized_gain_db=4.0,
+    )
+    result = replace(base, frequencies=(frequency,))
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    view.set_result(result)
+
+    view._pattern_metric.setCurrentIndex(
+        view._pattern_metric.findData(PatternGainMetric.DIRECTIVITY.value)
+    )
+    view._pattern_cursor.show_at_x(0.0)
+
+    assert "Directivity" in view._pattern_cursor._label.text()
+    assert "8.000 dBi" in view._pattern_cursor._label.text()
+
+    frequency = replace(frequency, directivity_db=None)
+    view.set_result(replace(result, frequencies=(frequency,)))
+    view._pattern_metric.setCurrentIndex(
+        view._pattern_metric.findData(PatternGainMetric.DIRECTIVITY.value)
+    )
+    assert "unavailable" in view._pattern_plot.plotItem.titleLabel.text

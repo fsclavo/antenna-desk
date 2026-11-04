@@ -185,15 +185,15 @@ Acceptance criteria:
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
 | P1 | Independent references for remaining experimental templates | A/B | partial |
-| P1 | Fan dipole V-angle calibration and angle optimization | B | planned |
+| P1 | Fan dipole V-angle calibration and angle optimization | B | investigated; angle optimizer deferred |
 | P1 | Optional ideal transformer/4:1 balun for OCFD | B | done |
 | P1 | Multiband batch engine and per-family band defaults (M6) | B | done |
 | P1 | Band selection UI and band summary results (M6) | B | done |
 | P2 | Persist band-analysis batches and band-aware reports (M6) | B | done |
 | P2 | Cross-band comparison table | B | done |
 | P2 | GPG/Authenticode code signing for release artifacts | n/a | deferred |
-| P2 | Relative permeability export to NEC | B | pending |
-| P2 | Pattern metric selector for power/directivity/realized gain | B | pending |
+| P2 | Relative permeability export to NEC | B | not supported by NEC-2; warning implemented |
+| P2 | Pattern metric selector for power/directivity/realized gain | B | done |
 | P2 | ZS6BKW and Zepp multiband presets | B | pending |
 | P2 | Custom/imported geometry optimization and space constraints | n/a | pending |
 | P2 | Live VNA/hardware control | n/a | deferred |
@@ -208,10 +208,7 @@ Detailed pending-work plan:
 
 Modeling track:
 
-1. Fan dipole V-angle calibration and optional angle optimization.
-2. Relative-permeability export and a pattern-metric selector for realized
-   gain/directivity.
-3. ZS6BKW and Zepp presets using geometry transmission lines.
+1. ZS6BKW and Zepp presets using geometry transmission lines.
 
 Release track:
 

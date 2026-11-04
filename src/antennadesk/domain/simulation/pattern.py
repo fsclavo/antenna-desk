@@ -6,8 +6,40 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
+from enum import StrEnum
 
-from .result import FarFieldPoint
+from .result import FarFieldPoint, FrequencyResult
+
+
+class PatternGainMetric(StrEnum):
+    POWER = "power"
+    DIRECTIVITY = "directivity"
+    REALIZED = "realized"
+
+
+def pattern_gain_offset_db(
+    frequency: FrequencyResult,
+    metric: PatternGainMetric,
+) -> float | None:
+    """Return the constant to add to each power-gain point for a metric.
+
+    Directivity and realized gain are derived at the maximum-gain direction.
+    Applying the difference between that value and the sampled maximum preserves
+    the pattern shape while shifting its peak to the requested metric.
+    """
+
+    if metric is PatternGainMetric.POWER:
+        return 0.0
+    maximum = max_power_gain_db(frequency.far_field)
+    if maximum is None:
+        return None
+    if metric is PatternGainMetric.DIRECTIVITY:
+        target = frequency.directivity_db
+    else:
+        target = frequency.realized_gain_db
+    if target is None or not math.isfinite(target):
+        return None
+    return target - maximum
 
 
 def takeoff_angle_deg(theta_deg: float) -> float:

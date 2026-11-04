@@ -410,8 +410,9 @@ and require `NEC2C`.
 
 - Relative permeability is not emitted to NEC. Conductor conductivity is
   emitted when `SimulationSpec.include_conductor_losses` is true.
-- Far-field values are NEC power gains in dB. Realized gain and directivity are
-  not separated yet.
+- Far-field samples are NEC power gains in dB. The pattern view can display
+  directivity or realized gain by shifting the sampled pattern at its maximum
+  direction; the pattern CSV keeps the power-gain columns.
 - The end-fed transformer is an ideal impedance ratio, not a physical unun
   model; the counterpoise is simulated as wire geometry, not an ideal ground.
 - Series and parallel RLC loads are supported on one segment. L/Pi/T matching

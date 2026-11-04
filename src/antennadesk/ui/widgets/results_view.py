@@ -34,6 +34,7 @@ from ...domain.projects.project import DesignVariant
 from ...domain.simulation.band_result import BandAnalysisResult, BandResult
 from ...domain.simulation.band_summary import summarize_band
 from ...domain.simulation.bands import amateur_band_for
+from ...domain.simulation.pattern import PatternGainMetric, pattern_gain_offset_db
 from ...domain.simulation.resonance import find_resonances
 from ...domain.simulation.result import (
     CurrentSample,
@@ -114,6 +115,10 @@ class ResultsView(QWidget):
         self._pattern_mode_label = QLabel(self._pattern_tab)
         self._pattern_cut = QComboBox(self._pattern_tab)
         self._pattern_cut_label = QLabel(self._pattern_tab)
+        self._pattern_metric = QComboBox(self._pattern_tab)
+        for metric in PatternGainMetric:
+            self._pattern_metric.addItem("", metric.value)
+        self._pattern_metric_label = QLabel(self._pattern_tab)
         self._pattern_plot = self._make_plot()
         self._polar_pattern = PolarPatternView(translator, self._pattern_tab)
         self._pattern_3d = RadiationPattern3DView(translator, self._pattern_tab)
@@ -126,6 +131,9 @@ class ResultsView(QWidget):
         pattern_controls.addSpacing(12)
         pattern_controls.addWidget(self._pattern_cut_label)
         pattern_controls.addWidget(self._pattern_cut)
+        pattern_controls.addSpacing(12)
+        pattern_controls.addWidget(self._pattern_metric_label)
+        pattern_controls.addWidget(self._pattern_metric)
         pattern_controls.addStretch(1)
         pattern_layout = QVBoxLayout(self._pattern_tab)
         pattern_layout.setContentsMargins(0, 0, 0, 0)
@@ -252,6 +260,7 @@ class ResultsView(QWidget):
         self._pattern_frequency.currentIndexChanged.connect(self._on_pattern_frequency_changed)
         self._pattern_mode.currentIndexChanged.connect(self._on_pattern_mode_changed)
         self._pattern_cut.currentIndexChanged.connect(self._render_pattern)
+        self._pattern_metric.currentIndexChanged.connect(self._render_pattern)
         self._currents_frequency.currentIndexChanged.connect(self._render_currents)
         self._bands_table.itemSelectionChanged.connect(self._on_band_selected)
         self._apply_theme()
@@ -516,6 +525,12 @@ class ResultsView(QWidget):
         self._pattern_mode_label.setText(self._translator.t("pattern.mode"))
         self._pattern_mode.setItemText(0, self._translator.t("pattern.mode_azimuth"))
         self._pattern_mode.setItemText(1, self._translator.t("pattern.mode_elevation"))
+        self._pattern_metric_label.setText(self._translator.t("pattern.metric"))
+        for index, metric in enumerate(PatternGainMetric):
+            self._pattern_metric.setItemText(
+                index,
+                self._translator.t(f"pattern.metric.{metric.value}"),
+            )
         self._update_cut_label()
         self._currents_frequency_label.setText(self._translator.t("currents.frequency"))
         self._measurement_selector_label.setText(self._translator.t("measurement.select"))
@@ -815,6 +830,16 @@ class ResultsView(QWidget):
         value = self._pattern_mode.currentData()
         return value if isinstance(value, str) else "azimuth"
 
+    def _pattern_metric_value(self) -> PatternGainMetric:
+        value = self._pattern_metric.currentData()
+        try:
+            return PatternGainMetric(str(value))
+        except ValueError:
+            return PatternGainMetric.POWER
+
+    def _pattern_metric_name(self) -> str:
+        return self._translator.t(f"pattern.metric.{self._pattern_metric_value().value}")
+
     def _update_cut_label(self) -> None:
         key = (
             "pattern.cut_phi" if self._pattern_mode_value() == "elevation" else "pattern.cut_theta"
@@ -878,18 +903,33 @@ class ResultsView(QWidget):
             self._pattern_3d.set_points(())
             return
         mode = self._pattern_mode_value()
+        metric = self._pattern_metric_value()
+        metric_label = self._pattern_metric_name()
+        offset = pattern_gain_offset_db(frequency, metric)
+        if offset is None:
+            self._pattern_cursor.clear()
+            self._pattern_plot.setTitle(
+                self._translator.t("pattern.metric_unavailable", metric=metric_label),
+                color=self._colors.text,
+            )
+            self._polar_pattern.set_points(())
+            self._pattern_3d.set_points(())
+            return
         selected_cut = self._pattern_cut.currentData()
         selected = float(selected_cut) if isinstance(selected_cut, (int, float)) else None
-        points = [
-            (
-                point.theta_deg if mode == "elevation" else point.phi_deg,
-                point.gain_total_db,
+        points = []
+        for point in frequency.far_field:
+            if point.gain_total_db is None or selected is None:
+                continue
+            cut_value = point.phi_deg if mode == "elevation" else point.theta_deg
+            if abs(cut_value - selected) >= 1e-6:
+                continue
+            points.append(
+                (
+                    point.theta_deg if mode == "elevation" else point.phi_deg,
+                    point.gain_total_db + offset,
+                )
             )
-            for point in frequency.far_field
-            if point.gain_total_db is not None
-            and selected is not None
-            and abs((point.phi_deg if mode == "elevation" else point.theta_deg) - selected) < 1e-6
-        ]
         if not points:
             self._pattern_cursor.clear()
             self._pattern_plot.setTitle(self._translator.t("pattern.none"), color=self._colors.text)
@@ -910,7 +950,9 @@ class ResultsView(QWidget):
         self._pattern_plot.setTitle(cut_title, color=self._colors.text)
         self._pattern_plot.setLabel("bottom", axis_label, color=self._colors.text)
         self._pattern_plot.setLabel(
-            "left", self._translator.t("pattern.gain"), color=self._colors.text
+            "left",
+            self._translator.t("pattern.metric_axis", metric=metric_label),
+            color=self._colors.text,
         )
         self._pattern_plot.plot(
             theta,
@@ -923,7 +965,7 @@ class ResultsView(QWidget):
         self._pattern_cursor.set_series(
             (
                 CursorSeries(
-                    self._translator.t("pattern.gain"),
+                    metric_label,
                     tuple(theta),
                     tuple(gain),
                     self._colors.pattern,
@@ -946,11 +988,10 @@ class ResultsView(QWidget):
             self._polar_pattern.set_antenna(float(azimuth))
         else:
             self._polar_pattern.set_antenna(None, vertical=vertical)
-        self._polar_pattern.set_title(
-            self._translator.t(
-                "pattern.polar_elevation" if mode == "elevation" else "pattern.polar_azimuth"
-            )
+        polar_title = self._translator.t(
+            "pattern.polar_elevation" if mode == "elevation" else "pattern.polar_azimuth"
         )
+        self._polar_pattern.set_title(f"{polar_title} · {metric_label}")
         self._polar_pattern.set_points(tuple(zip(theta, gain, strict=True)))
         ground = (
             self._design is not None
@@ -958,7 +999,7 @@ class ResultsView(QWidget):
         )
         self._pattern_3d.set_points(
             tuple(
-                (point.theta_deg, point.phi_deg, point.gain_total_db)
+                (point.theta_deg, point.phi_deg, point.gain_total_db + offset)
                 for point in frequency.far_field
                 if point.gain_total_db is not None
             ),
@@ -972,7 +1013,7 @@ class ResultsView(QWidget):
         values: tuple[tuple[str, float], ...],
     ) -> str:
         symbol = "φ" if mode == "elevation" else "θ"
-        gain = f"{values[0][1]:.3f} dBi" if values else "—"
+        gain = f"{values[0][0]}: {values[0][1]:.3f} dBi" if values else "—"
         return self._translator.t(
             "cursor.gain_readout",
             angle=f"{symbol}={angle_deg:g}°",

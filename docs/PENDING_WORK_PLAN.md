@@ -1,20 +1,19 @@
 # Pending work plan
 
-**Status:** planned, not executed
-**Date:** 2026-11-03
+**Status:** in progress; completed items are marked below
+**Date:** 2026-11-04
 **Scope:** remaining work after the multiband, OCFD, and fan-dipole milestones
 
 This plan orders the open work so each phase is independently shippable and
 testable. It is not a commitment to implement every item in one session.
 
-## Phase 0 — Close the current change set
+## Phase 0 — Close the current change set (complete)
 
-1. Commit the per-band pattern PNG export:
+1. Committed the per-band pattern PNG export:
    - `ResultsView.save_band_pattern_images()`;
    - folder export from the Pattern PNG action when a band analysis is active;
    - tests and documentation.
-2. Confirm the working tree is clean before starting the next phase.
-3. Re-run the full gate:
+2. Re-run the full gate before starting the next phase:
 
 ```text
 uv run ruff check .
@@ -23,57 +22,34 @@ uv run mypy
 NEC2C=... uv run pytest -q
 ```
 
-## Phase 1 — Fan dipole accuracy and tuning
+## Phase 1 — Fan dipole accuracy and tuning (investigation complete; angle work deferred)
 
-### Problem
+**Finding:** a universal V-angle/coupling correction is not justified. See
+[`FAN_DIPOLE_CALIBRATION.md`](FAN_DIPOLE_CALIBRATION.md). The isolated V
+element has a smooth angle-dependent shift, but the coupled 20/10 fan is
+dominated by mutual coupling. Keep the estimator as a starting point, keep the
+warning and optimizer guidance, and defer an angle-variable optimizer until a
+different antenna model is justified.
 
-The fan estimator uses straight half-wave lengths. A fan element is built as a
-V with a different included angle, and it is coupled to the other elements.
-For a 20/10 m fan, the 10 m element alone would have a reasonable SWR, but the
-20 m element loads the feed at 28 MHz. The current optimizer only varies
-lengths; it does not vary angles or explain the interaction strongly enough.
+### Completed
 
-### Tasks
+- Measured standalone V elements from 60° to 180° at 14.1 MHz and 28.4 MHz
+  over finite ground.
+- Measured a coupled 20/10 m fan and compared it with each element alone.
+- Documented that the coupled fan impedance is not a parallel combination of
+  independent dipoles.
+- Decided against an automatic angle or coupling length correction because it
+  would be installation-specific and could hide the interaction.
+- Kept the estimator as a starting point, the V-angle/coupling warning, and
+  the band-aware optimizer. Unchecked elements remain in the antenna, and the
+  optimizer reports the resulting mismatch.
 
-1. **Calibration spike, no code change first**
-   - Measure the resonance of a single V element versus included angle at
-     representative heights and ground models.
-   - Compare with the straight half-wave formula.
-   - Document whether a simple correction is defensible or whether the effect
-     is too installation-dependent.
-   - Do not invent a correction factor without a traceable NEC calibration or
-     published source.
-2. **Estimator improvement (only if the spike supports it)**
-   - Add an optional angle-aware length correction to
-     `estimate_fan_dipole()`.
-   - Label it as an application calibration, not a universal resonance rule.
-   - Add tests for every supported angle/band combination used in presets.
-3. **Angle optimization**
-   - Add fan element angles as optimizer variables with constraints:
-     distinct angles, no overlapping wires, ends above ground.
-   - Keep the existing length variables.
-   - Show angle and length in the variable table.
-   - Warn that angles affect both resonance and coupling.
-4. **Interaction diagnostics**
-   - Make the “all elements remain in the antenna” behavior explicit in the
-     optimizer and results.
-   - Add a diagnostic or summary note when a high-band element is being
-     optimized with lower-band elements present.
-5. **Acceptance criteria**
-   - A 20/10 m fan estimate gives a documented starting point.
-   - The user can select the 10 m band, see its coupling effects, and optimize
-     both length and angle without manually converting units.
-   - The 40 m band is rechecked after tuning 10 m.
-   - No geometry overlap or below-ground ends are produced.
-   - Tests cover estimator, optimizer constraints, UI synchronization, and
-     regression of single-element fans.
+### Deferred
 
-### Risk
-
-A simple length correction may not solve the 20/10 interaction because the
-coupling is physical, not a formula error. If the spike shows that angle
-optimization is the only reliable path, implement that and keep the estimator
-honest as a starting point.
+- Angle-variable optimization and any explicit per-element feed model. These
+  need a different antenna model, not another scalar correction.
+- A 20/10 m preset with measured or optimized dimensions. Add one only with a
+  traceable source or documented measurement.
 
 ## Phase 2 — Multiband performance decision
 
@@ -90,24 +66,26 @@ Measure before changing the architecture.
 6. Acceptance: a measured decision, regression tests for single-band and
    multi-band paths, and no UI regression.
 
-## Phase 3 — Modeling and result metrics
+## Phase 3 — Modeling and result metrics (complete)
 
-### 3.1 Relative permeability
+### 3.1 Relative permeability (investigation complete)
 
-- Verify what NEC-2 can actually accept for conductor/permeability data.
-- If supported, extend the material card writer and round-trip tests.
-- If not supported, document the limitation and remove the misleading
-  “relative permeability export” backlog promise.
-- Keep the domain value even if the solver cannot consume it.
+- NEC-2 does not accept magnetic permeability for the wire model used here.
+- The adapter already emits `solver.permeability_unsupported` when a material
+  has `relative_permeability != 1`, and the domain value remains persisted.
+- The backlog promise was corrected: this is a documented limitation, not an
+  export feature to implement.
 
-### 3.2 Pattern metric selector
+### 3.2 Pattern metric selector (implemented)
 
-- Add a selector for **power gain**, **directivity**, and **realized gain** in
-  the pattern charts and 3D lobe.
-- Keep the current power-gain default.
-- Make the active metric explicit in the chart title, legend, cursor readout,
-  CSV, HTML, and PDF.
-- Add tests for metric selection, cursor readouts, and report labels.
+- Added a selector for **power gain**, **directivity**, and **realized gain**
+  in the pattern chart, polar plot, 3D lobe, and cursor readout.
+- Directivity and realized gain shift the sampled power-gain pattern to the
+  metric value at the maximum direction.
+- CSV/HTML/PDF still report the original power-gain columns; report-specific
+  metric selection remains optional follow-up work.
+- Tests cover the metric offsets, UI selection, cursor labels, and unavailable
+  metrics.
 
 ## Phase 4 — New multiband presets
 
@@ -144,14 +122,12 @@ These are not part of the next implementation session unless priorities change:
 
 ## Recommended execution order
 
-1. Phase 0 — commit and clean tree.
-2. Phase 1 — fan dipole calibration spike, then estimator/angle work.
-3. Phase 3.2 — pattern metric selector (small, high user value).
-4. Phase 3.1 — relative permeability investigation.
-5. Phase 4 — ZS6BKW and Zepp.
-6. Phase 5 — references.
-7. Phase 2 — only if measurements justify the multi-`FR` work.
-8. Phase 6 — deferred/blocked.
+1. Phase 4 — ZS6BKW and Zepp presets.
+2. Phase 5 — independent references for experimental templates.
+3. Phase 2 — only if timing measurements justify the multi-`FR` work.
+4. Phase 6 — deferred/blocked.
+
+Completed: Phase 0, the Phase 1 investigation, Phase 3.1, and Phase 3.2.
 
 ## Quality gate for every phase
 
