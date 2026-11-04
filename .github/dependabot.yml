@@ -17,7 +17,7 @@ updates:
       python:
         patterns: ["*"]
     ignore:
-      # 6.10+ is excluded: 6.12 triggers a shutdown refcount crash with
-      # pyqtgraph. Patches inside the pinned range are still proposed.
+      # 6.12.0 triggers a shutdown refcount crash with pyqtgraph. Block only
+      # that minor; newer versions are proposed and tested before merging.
       - dependency-name: "pyside6-essentials"
-        versions: [">= 6.10"]
+        versions: ["6.12.*"]
