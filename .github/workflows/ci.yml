@@ -288,6 +288,13 @@ jobs:
           enable-cache: true
           prune-cache: true
 
+      # pytest-qt is installed with the dev group and configures Qt at session
+      # start, even when this test does not use it.
+      - name: Install Qt runtime libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libgl1 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-xinerama0 libxcb-randr0 libxcb-render-util0 libxcb-xfixes0 libdbus-1-3 libfontconfig1 libglib2.0-0
+
       - name: Build nec2c
         run: bash spikes/phase0/scripts/build_nec2c.sh
 
@@ -300,4 +307,4 @@ jobs:
           NEC2C: ${{ github.workspace }}/spikes/phase0/build/nec2c
         run: |
           uv run --group cross-engine pytest \
-            tests/integration/simulation/test_necpp_cross_engine.py -q -p no:pytestqt
+            tests/integration/simulation/test_necpp_cross_engine.py -q
