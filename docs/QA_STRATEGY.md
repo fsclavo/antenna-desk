@@ -39,7 +39,7 @@ Measured on 2026-11-04:
 | Independent RF math oracle | scikit-rf 2.2.0 (BSD-3, dev-only): 11 tests for feed lines, L/Pi/T networks, cascades, and gain |
 | Cross-engine oracle | PyNEC 2.3.4 (GPL-3, optional group): 3 free-space cases, 0.1 Ω and 0.05 dB |
 | Segment-convergence tests | 2: free space and finite ground |
-| Physics-invariant tests | 0 |
+| Physics-invariant tests | 5: power budget, pattern integral, rotation, and the integration helper (NEC2C) |
 | `docs/VALIDATION_PLAN.md` test count | fixed in Phase 0 (was 788, now 1,139) |
 
 The suite is in good shape for its size. The gaps are not "more tests"; they are
@@ -238,18 +238,23 @@ assumption.
 These checks need no external reference and catch adapter and normalization bugs
 that reference comparisons miss.
 
-- **Power conservation:** `P_in = P_rad + P_loss` within 1 % for every run.
-- **Pattern integration:** integrate the far-field power pattern over the sphere
-  and derive directivity; compare with the solver's reported gain plus structure
-  efficiency within 0.2 dB. This validates pattern parsing and normalization,
-  which today are checked only at the single maximum-gain point.
-- **Reciprocity:** for a two-port case, `Z12 = Z21` within 1 %.
-- **Rotation invariance:** rotating the antenna azimuth by 90° rotates the
-  pattern and leaves the maximum gain unchanged within 0.05 dB. The
-  polarization milestone already added a free-space NEC check that compares
-  each vertical Yagi and Moxon with its horizontal design rotated around the
-  boom. That is a self-consistency test: valuable, but it does not replace an
-  independent reference. Keep it and classify it as such.
+**Change (implemented 2026-11-04).**
+`tests/integration/simulation/test_physical_invariants.py` runs with `NEC2C`:
+
+- **Power conservation:** `P_in = P_rad + P_loss` within 1 % for a free-space
+  dipole with conductor losses, and the reported efficiency matches
+  `100 · P_rad / P_in` within 0.1 percentage points.
+- **Pattern integration:** integrate the power pattern over the sphere and
+  derive directivity; compare with the reported directivity within 0.1 dB. The
+  test also checks that a synthetic isotropic pattern integrates to 0 dBi.
+  A lossless dipole's directivity and maximum power gain agree within 0.01 dB.
+- **Rotation invariance:** rotating the dipole azimuth by 90° rotates the
+  pattern and leaves the maximum gain unchanged within 0.05 dB.
+
+**Reciprocity is deliberately omitted.** It requires a two-port antenna model,
+which the canonical model does not represent. The link two-ports are validated
+separately against scikit-rf. Adding a two-port antenna model only for this
+test would be scope without a user-facing capability.
 
 **Acceptance.** Each invariant is an integration test that runs with `NEC2C`.
 
@@ -508,10 +513,10 @@ the polarization commit.
    fixture moved to `main_window_support.py` and `tests/ui/conftest.py`. The
    original 3,654-line file is gone; the largest module is 828 lines.
 
-### Phase 2 — Science oracles (two weeks)
+### Phase 2 — Science oracles (complete 2026-11-04)
 
 1. (done 2026-11-04) Segmentation diagnostics and the convergence test.
-2. Physical invariants: power, pattern integral, reciprocity, rotation.
+2. (done 2026-11-04) Physical invariants: power, pattern integral, rotation.
 3. (done 2026-11-04) `scikit-rf` oracle for the two-port math.
 4. (done 2026-11-04) `PyNEC` cross-engine job.
 5. (done 2026-11-04) Published closed-form anchors for the estimators: ARRL

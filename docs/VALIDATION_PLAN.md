@@ -97,6 +97,22 @@ formulation, so this detects implementation and adapter errors, not formulation
 errors. Run it with `uv sync --group cross-engine`; the dedicated CI job
 installs that optional group.
 
+### Physical invariants
+
+`tests/integration/simulation/test_physical_invariants.py` checks properties
+that need no external reference:
+
+- the NEC power budget closes (`P_in = P_rad + P_loss` within 1 %) and the
+  reported efficiency matches `100 · P_rad / P_in` within 0.1 percentage points;
+- integrating the free-space dipole power pattern over the sphere recovers the
+  reported directivity within 0.1 dB;
+- rotating the dipole azimuth by 90° rotates the pattern and leaves the maximum
+  gain unchanged within 0.05 dB.
+
+A synthetic isotropic pattern integrates to 0 dBi within 0.01 dB as a check on
+the integration helper. Reciprocity is omitted because the canonical model has
+no two-port antenna representation.
+
 ## Phase 3 — guided MVP and GUI
 
 UI tests use `pytest-qt` with the Qt offscreen platform:
