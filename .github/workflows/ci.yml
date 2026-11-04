@@ -89,8 +89,8 @@ jobs:
         shell: bash
         run: |
           timeout 180s uv run pytest tests/ui/test_results_view.py -q
-          timeout 180s uv run pytest tests/ui/test_main_window.py -q
-          timeout 180s uv run pytest tests/ui --ignore=tests/ui/test_results_view.py --ignore=tests/ui/test_main_window.py -q
+          timeout 180s uv run pytest tests/ui/test_main_window_*.py -q
+          timeout 180s uv run pytest tests/ui --ignore=tests/ui/test_results_view.py --ignore-glob='*test_main_window_*.py' -q
           timeout 300s uv run pytest tests/acceptance tests/integration tests/unit -q
 
   tests:
@@ -133,8 +133,8 @@ jobs:
         shell: bash
         run: |
           uv run pytest tests/ui/test_results_view.py -q
-          timeout 120s uv run pytest tests/ui/test_main_window.py -vv
-          uv run pytest tests/ui --ignore=tests/ui/test_results_view.py --ignore=tests/ui/test_main_window.py -q
+          timeout 120s uv run pytest tests/ui/test_main_window_*.py -vv
+          uv run pytest tests/ui --ignore=tests/ui/test_results_view.py --ignore-glob='*test_main_window_*.py' -q
           uv run pytest tests/acceptance tests/integration tests/unit -q
 
   solver-linux:
@@ -300,4 +300,4 @@ jobs:
           NEC2C: ${{ github.workspace }}/spikes/phase0/build/nec2c
         run: |
           uv run --group cross-engine pytest \
-            tests/integration/simulation/test_necpp_cross_engine.py -q
+            tests/integration/simulation/test_necpp_cross_engine.py -q -p no:pytestqt
