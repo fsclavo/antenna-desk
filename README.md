@@ -10,8 +10,10 @@ Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.1.0`
 is published; signing is optional and deferred for later releases. Center-fed
 dipoles, folded dipoles, trap dipoles, T2FDs, loops, custom wires, Yagis, Moxon,
 fan dipoles, inverted-Vs, OCFDs, end-fed wires, slopers, random wires, doublets,
-J Poles, Slim Jims, Ringos, verticals, and loaded verticals are supported, with
-schema v3 persistence, lossless gzip compression, and migration. VNA CSV import
+J Poles, Slim Jims, Ringos, verticals, and loaded verticals are supported.
+Yagi and Moxon arrays support horizontal or vertical polarization with a
+horizontal boom. Projects use versioned JSON persistence, lossless gzip
+compression, and explicit migrations. VNA CSV import
 and measured/simulated comparison are available.
 
 ## Launch the GUI
@@ -98,6 +100,7 @@ optional signing steps.
 - [ADR-0020 — Higher pattern storage budget](docs/ADR/0020-higher-pattern-storage-budget.md)
 - [ADR-0021 — Lossless compressed project files](docs/ADR/0021-compressed-project-files.md)
 - [ADR-0022 — Multiband analysis by per-band batches](docs/ADR/0022-multiband-analysis-by-band-batches.md)
+- [ADR-0023 — Yagi and Moxon horizontal/vertical polarization](docs/ADR/0023-yagi-moxon-polarization.md)
 - [Antenna dimension estimators](docs/ANTENNA_DESIGN_ESTIMATORS.md)
 - [Geometry presentation contract](docs/GEOMETRY_PRESENTATION.md)
 - [NEC engine evaluation](docs/spikes/phase0-solver-evaluation.md)
@@ -125,7 +128,8 @@ optional signing steps.
   points by default, and pattern resolution defaults to 5° and can be set to
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` projects with multiple design
-  variants; schema v3 adds persisted simulation runs and migrates older files.
+  variants; schema version 7 persists Yagi/Moxon polarization and migrates
+  older files explicitly.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - VNA CSV import with measured impedance/SWR records and a measured/simulated
   SWR, R, X, or |Z| comparison tab, including resonance differences.

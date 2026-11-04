@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import itertools
 import math
 from datetime import UTC, datetime
 from pathlib import Path
@@ -321,6 +322,38 @@ def test_pattern_3d_uses_a_coarser_mesh_during_interaction(qtbot: QtBot) -> None
     assert view.grab().isNull() is False
     view._end_interaction()
     assert view._interacting is False
+
+
+def test_pattern_3d_reduces_the_full_mesh_resolution_by_40_percent(qtbot: QtBot) -> None:
+    from antennadesk.ui.widgets.radiation_pattern_3d_view import RadiationPattern3DView
+
+    view = RadiationPattern3DView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    points = tuple(
+        (
+            float(theta),
+            float(phi),
+            5.0 + 3.0 * math.sin(math.radians(theta)),
+        )
+        for theta in range(0, 91)
+        for phi in range(0, 361, 2)
+    )
+
+    view.set_points(points, ground=True)
+
+    assert view._full_mesh is not None
+    assert view._interactive_mesh is not None
+    original_vertices = 91 * 181
+    ratio = len(view._full_mesh.vertices) / original_vertices
+    assert 0.45 < ratio < 0.60
+    assert len(view._full_mesh.vertices) > len(view._interactive_mesh.vertices)
+    assert view._full_mesh.raw_max_gain == pytest.approx(8.0)
+    theta_values = sorted({vertex.theta_deg for vertex in view._full_mesh.vertices})
+    phi_values = sorted({vertex.phi_deg for vertex in view._full_mesh.vertices})
+    theta_steps = [second - first for first, second in itertools.pairwise(theta_values)]
+    phi_steps = [second - first for first, second in itertools.pairwise(phi_values)]
+    assert max(theta_steps) - min(theta_steps) < 1e-6
+    assert max(phi_steps) - min(phi_steps) < 1e-6
 
 
 def test_pattern_3d_clips_below_ground_points(qtbot: QtBot) -> None:

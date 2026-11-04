@@ -16,6 +16,7 @@ from ..domain.antennas.load import LumpedLoad, ParallelLoad
 from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
+from ..domain.antennas.polarization import Polarization
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.t2fd import T2FDParameters
 from ..domain.antennas.transmission_line import TransmissionLine
@@ -305,7 +306,14 @@ def design_summary_rows(
                 ("Reflector tip", f"{parameters.reflector_tip_m:.4f} m"),
                 ("Driven tip", f"{parameters.driven_tip_m:.4f} m"),
                 ("Tip gap", f"{parameters.gap_m:.4f} m"),
-                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Polarization", parameters.polarization.value),
+                ("Boom height", f"{parameters.height_m:.4f} m"),
+            ]
+        )
+        if parameters.polarization is Polarization.VERTICAL:
+            rows.append(("Lowest edge", f"{parameters.lowest_edge_m:.4f} m"))
+        rows.extend(
+            [
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground)),
             ]
@@ -318,7 +326,14 @@ def design_summary_rows(
                 ("Type", "Yagi"),
                 ("Elements", str(len(parameters.elements))),
                 ("Boom length", f"{max(positions) - min(positions):.4f} m"),
-                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Polarization", parameters.polarization.value),
+                ("Boom height", f"{parameters.height_m:.4f} m"),
+            ]
+        )
+        if parameters.polarization is Polarization.VERTICAL:
+            rows.append(("Lowest tip", f"{parameters.lowest_tip_m:.4f} m"))
+        rows.extend(
+            [
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Driven element", str(parameters.driven_index + 1)),
                 (

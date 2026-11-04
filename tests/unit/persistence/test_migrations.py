@@ -161,6 +161,30 @@ def test_v5_migration_adds_optional_design_band_plans() -> None:
     assert "band_plan" not in document["project"]["designs"][0]
 
 
+def test_v6_migration_adds_horizontal_polarization_to_arrays() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 6,
+        "project": {
+            "designs": [
+                {"antenna_type": "yagi", "parameters": {}},
+                {"antenna_type": "moxon", "parameters": {}},
+                {"antenna_type": "wire_dipole", "parameters": {}},
+                {"antenna_type": "custom", "parameters": {}},
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert migrated["project"]["designs"][0]["parameters"]["polarization"] == "horizontal"
+    assert migrated["project"]["designs"][1]["parameters"]["polarization"] == "horizontal"
+    assert "polarization" not in migrated["project"]["designs"][2]["parameters"]
+    assert "polarization" not in migrated["project"]["designs"][3]["parameters"]
+    assert "polarization" not in document["project"]["designs"][0]["parameters"]
+
+
 def test_v4_migration_adds_optional_transformer_ratios() -> None:
     document = {
         "format": "antennadesk-project",

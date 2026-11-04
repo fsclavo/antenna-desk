@@ -25,6 +25,7 @@ from ...domain.antennas.j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
 from ...domain.antennas.loop import ANTENNA_TYPE_LOOP, LoopParameters
 from ...domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from ...domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
+from ...domain.antennas.polarization import Polarization
 from ...domain.antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
 from ...domain.antennas.t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
 from ...domain.antennas.trap_dipole import (
@@ -829,6 +830,19 @@ def _add_ringo_dimensions(
     )
 
 
+def _is_vertical_array(parameters: object | None) -> bool:
+    return isinstance(parameters, (YagiParameters, MoxonParameters)) and (
+        parameters.polarization is Polarization.VERTICAL
+    )
+
+
+def _array_wire(model: AntennaModel, wire_id: str, index: int) -> Wire | None:
+    wire = next((item for item in model.wires if item.id == wire_id), None)
+    if wire is None and index < len(model.wires):
+        return model.wires[index]
+    return wire
+
+
 def _add_array_dimensions(
     model: AntennaModel,
     parameters: object | None,
@@ -838,7 +852,66 @@ def _add_array_dimensions(
     translator: Translator,
 ) -> None:
     min_z, max_z = _model_z_extents(model)
+    vertical_array = _is_vertical_array(parameters)
     if not factory.projection.vertical:
+        if vertical_array:
+            notes.append(translator.t("geometry.vertical_plane_edge_on"))
+            if isinstance(parameters, YagiParameters) and len(parameters.elements) >= 2:
+                positions = [element.position_m for element in parameters.elements]
+                dimensions.append(
+                    factory.dimension(
+                        _wire_point(model.wires[0], 0.5),
+                        _wire_point(model.wires[-1], 0.5),
+                        max(positions) - min(positions),
+                        side="below",
+                        priority=60,
+                    )
+                )
+            elif isinstance(parameters, MoxonParameters):
+                reflector = next(
+                    (wire for wire in model.wires if wire.id == "reflector"),
+                    None,
+                )
+                driven = next((wire for wire in model.wires if wire.id == "driven"), None)
+                if reflector is not None and driven is not None:
+                    dimensions.append(
+                        factory.dimension(
+                            _wire_point(reflector, 0.5),
+                            _wire_point(driven, 0.5),
+                            parameters.depth_m,
+                            side="below",
+                            priority=70,
+                        )
+                    )
+                reflector_tip = next(
+                    (wire for wire in model.wires if wire.id == "reflector-tip-1"),
+                    None,
+                )
+                driven_tip = next(
+                    (wire for wire in model.wires if wire.id == "driven-tip-1"),
+                    None,
+                )
+                if reflector_tip is not None:
+                    dimensions.append(
+                        factory.dimension(
+                            reflector_tip.start,
+                            reflector_tip.end,
+                            parameters.reflector_tip_m,
+                            side="above",
+                            priority=45,
+                        )
+                    )
+                if reflector_tip is not None and driven_tip is not None:
+                    dimensions.append(
+                        factory.between_scene(
+                            factory.project(reflector_tip.end),
+                            factory.project(driven_tip.end),
+                            parameters.gap_m,
+                            side="above",
+                            priority=55,
+                        )
+                    )
+            return
         if isinstance(parameters, YagiParameters):
             for index, element in enumerate(model.wires):
                 wire = (
@@ -939,30 +1012,117 @@ def _add_array_dimensions(
                         priority=50,
                     )
                 )
+        return
+
+    if vertical_array and isinstance(parameters, YagiParameters):
+        for index, element in enumerate(parameters.elements):
+            wire = _array_wire(model, f"element-{index + 1}", index)
+            if wire is None:
+                continue
+            dimensions.append(
+                factory.dimension(
+                    wire.start,
+                    wire.end,
+                    element.length_m,
+                    side="right" if index % 2 == 0 else "left",
+                    priority=70
+                    if index in {0, parameters.driven_index, len(parameters.elements) - 1}
+                    else 35,
+                )
+            )
+        if len(parameters.elements) >= 2:
+            positions = [element.position_m for element in parameters.elements]
+            first = _array_wire(model, "element-1", 0)
+            last = _array_wire(model, f"element-{len(parameters.elements)}", len(model.wires) - 1)
+            if first is not None and last is not None:
+                dimensions.append(
+                    factory.dimension(
+                        _wire_point(first, 0.5),
+                        _wire_point(last, 0.5),
+                        max(positions) - min(positions),
+                        side="above",
+                        priority=65,
+                    )
+                )
+    elif vertical_array and isinstance(parameters, MoxonParameters):
+        reflector = next((wire for wire in model.wires if wire.id == "reflector"), None)
+        driven = next((wire for wire in model.wires if wire.id == "driven"), None)
+        if reflector is not None:
+            dimensions.append(
+                factory.dimension(
+                    reflector.start,
+                    reflector.end,
+                    parameters.width_m,
+                    side="left",
+                    priority=85,
+                )
+            )
+        if reflector is not None and driven is not None:
+            dimensions.append(
+                factory.dimension(
+                    _wire_point(reflector, 0.5),
+                    _wire_point(driven, 0.5),
+                    parameters.depth_m,
+                    side="below",
+                    priority=75,
+                )
+            )
+        reflector_tip = next(
+            (wire for wire in model.wires if wire.id == "reflector-tip-1"),
+            None,
+        )
+        driven_tip = next(
+            (wire for wire in model.wires if wire.id == "driven-tip-1"),
+            None,
+        )
+        if reflector_tip is not None:
+            dimensions.append(
+                factory.dimension(
+                    reflector_tip.start,
+                    reflector_tip.end,
+                    parameters.reflector_tip_m,
+                    side="above",
+                    priority=45,
+                )
+            )
+        if reflector_tip is not None and driven_tip is not None:
+            dimensions.append(
+                factory.between_scene(
+                    factory.project(reflector_tip.end),
+                    factory.project(driven_tip.end),
+                    parameters.gap_m,
+                    side="above",
+                    priority=55,
+                )
+            )
+
+    if vertical_array and isinstance(parameters, (YagiParameters, MoxonParameters)):
+        height_m = parameters.height_m
     else:
+        height_m = max_z
+    dimensions.append(
+        factory.vertical_dimension(
+            min(factory.project(wire.start).x_m for wire in model.wires),
+            0.0,
+            height_m,
+            height_m,
+            side="right",
+            priority=80 if vertical_array else 75,
+        )
+    )
+    if isinstance(parameters, (YagiParameters, MoxonParameters)) and not vertical_array:
+        notes.append(translator.t("geometry.front_overlap"))
+    if min_z > 1e-6 and min_z < max_z - 1e-6:
         dimensions.append(
             factory.vertical_dimension(
                 min(factory.project(wire.start).x_m for wire in model.wires),
                 0.0,
-                max_z,
-                max_z,
-                side="right",
-                priority=75,
+                min_z,
+                min_z,
+                side="left",
+                priority=60,
             )
         )
-        if isinstance(parameters, (YagiParameters, MoxonParameters)):
-            notes.append(translator.t("geometry.front_overlap"))
-        if min_z > 1e-6 and min_z < max_z - 1e-6:
-            dimensions.append(
-                factory.vertical_dimension(
-                    min(factory.project(wire.start).x_m for wire in model.wires),
-                    0.0,
-                    min_z,
-                    min_z,
-                    side="left",
-                    priority=60,
-                )
-            )
 
 
 def _add_sloping_array_dimensions(
@@ -1255,6 +1415,7 @@ def _summary(
             positions = [element.position_m for element in parameters.elements]
             element_count = len(parameters.elements)
             boom_m = max(positions) - min(positions)
+            height_m = parameters.height_m
         else:
             element_count = len(model.wires)
             boom_m = (
@@ -1262,15 +1423,23 @@ def _summary(
                 if len(model.wires) >= 2
                 else 0.0
             )
+            height_m = max_z
         parts.extend(
             [
                 f"{translator.t('geometry.elements').lower()} {element_count}",
                 f"{translator.t('geometry.boom_length').lower()} "
                 f"{_format_length(boom_m, translator, unit_system)}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(max_z, translator, unit_system)}",
+                f"{_format_length(height_m, translator, unit_system)}",
             ]
         )
+        if isinstance(parameters, YagiParameters) and (
+            parameters.polarization is Polarization.VERTICAL
+        ):
+            parts.append(
+                f"{translator.t('field.polarization').lower()} "
+                f"{translator.t('orientation.vertical').lower()}"
+            )
     elif isinstance(parameters, MoxonParameters):
         parts.extend(
             [
@@ -1282,6 +1451,15 @@ def _summary(
                 f"{_format_length(parameters.gap_m, translator, unit_system)}",
             ]
         )
+        if parameters.polarization is Polarization.VERTICAL:
+            parts.extend(
+                [
+                    f"{translator.t('field.height').lower()} "
+                    f"{_format_length(parameters.height_m, translator, unit_system)}",
+                    f"{translator.t('field.polarization').lower()} "
+                    f"{translator.t('orientation.vertical').lower()}",
+                ]
+            )
     elif isinstance(parameters, InvertedVParameters):
         parts.extend(
             [

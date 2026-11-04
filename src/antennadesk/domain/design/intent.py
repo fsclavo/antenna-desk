@@ -10,6 +10,7 @@ from enum import StrEnum
 
 from ..antennas.dipole import DipoleOrientation
 from ..antennas.materials import COPPER, ConductorMaterial
+from ..antennas.polarization import Polarization
 from ..common.units import ensure_non_negative, ensure_positive
 from ..environment.ground import FREE_SPACE, GroundModel
 
@@ -47,6 +48,7 @@ class DesignIntent:
     height_m: float = 10.0
     base_height_m: float = 0.0
     orientation: DipoleOrientation = DipoleOrientation.HORIZONTAL
+    polarization: Polarization = Polarization.HORIZONTAL
     azimuth_deg: float = 0.0
     wire_radius_m: float = 0.001
     material: ConductorMaterial = COPPER
@@ -72,6 +74,7 @@ class DesignIntent:
         if not self.antenna_type.strip():
             raise ValueError("antenna_type must not be empty")
         object.__setattr__(self, "orientation", DipoleOrientation(self.orientation))
+        object.__setattr__(self, "polarization", Polarization(self.polarization))
         object.__setattr__(self, "loop_shape", LoopShape(self.loop_shape))
         object.__setattr__(self, "vertical_form", VerticalForm(self.vertical_form))
         if not 0.0 < self.included_angle_deg < 180.0:

@@ -104,6 +104,42 @@ def test_endfed_presets_are_labeled_in_the_summary() -> None:
     assert random_wire["Type"] == "random wire"
 
 
+def test_yagi_and_moxon_summaries_report_polarization_and_clearance() -> None:
+    from antennadesk.domain.antennas.moxon import MoxonParameters
+    from antennadesk.domain.antennas.polarization import Polarization
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+
+    yagi = dict(
+        design_summary_rows(
+            nbs_five_element(
+                frequency_hz=50_100_000.0,
+                height_m=8.0,
+                polarization=Polarization.VERTICAL,
+            )
+        )
+    )
+    moxon = dict(
+        design_summary_rows(
+            MoxonParameters(
+                frequency_hz=14_100_000.0,
+                width_m=10.0,
+                depth_m=2.5,
+                reflector_tip_m=1.0,
+                driven_tip_m=1.0,
+                height_m=10.0,
+                polarization=Polarization.VERTICAL,
+            )
+        )
+    )
+
+    assert yagi["Polarization"] == "vertical"
+    assert yagi["Boom height"] == "8.0000 m"
+    assert "Lowest tip" in yagi
+    assert moxon["Polarization"] == "vertical"
+    assert moxon["Boom height"] == "10.0000 m"
+    assert moxon["Lowest edge"] == "5.0000 m"
+
+
 def test_g5rv_custom_generator_is_labeled_in_the_summary() -> None:
     from antennadesk.domain.antennas.g5rv import g5rv_parameters
 

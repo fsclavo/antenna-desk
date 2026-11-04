@@ -257,7 +257,12 @@ Phase 6 adds tests for:
 - Schema round trips and rejection of mismatched payloads for the new
   parameter types; schema version 5 adds optional band/batch metadata and
   OCFD/custom feed-transformer ratios; version 6 adds optional per-design
-  analysis band plans without changing existing design geometry.
+  analysis band plans; version 7 adds Yagi/Moxon horizontal-or-vertical
+  polarization, with existing arrays migrated as horizontal.
+- Yagi and Moxon vertical polarization: geometry, azimuth, ground-clearance
+  validation, scene contracts for both views, persistence round trips, and a
+  free-space NEC equivalence check against the horizontal design rotated around
+  the boom.
 - Multiband domain plans, family defaults, per-band result metrics, batch
   cancellation/partial results, band-aware run persistence, and the Bands UI
   tab.

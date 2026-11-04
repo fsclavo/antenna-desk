@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from helpers import wait_for_condition
 from PySide6.QtWidgets import QDialog, QFileDialog, QInputDialog, QMessageBox, QWizard
 from pytestqt.qtbot import QtBot
 
@@ -257,9 +258,9 @@ def test_project_is_ready(window: MainWindow) -> None:
 
 def test_simulate_updates_results(window: MainWindow, qtbot: QtBot) -> None:
     window.simulate()
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: not window._simulating and window._thread is None,
-        timeout=15_000,
+        timeout_ms=15_000,
     )
 
     assert window._results._table.rowCount() == 1
@@ -275,9 +276,9 @@ def test_simulate_saves_the_form_before_running(
     window._form._length.setValue(22.0)
 
     window.simulate()
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: not window._simulating and window._thread is None,
-        timeout=15_000,
+        timeout_ms=15_000,
     )
 
     assert window._project is not None
@@ -411,9 +412,9 @@ def test_export_csv_and_html_from_the_current_result(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     window.simulate()
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: not window._simulating and window._thread is None,
-        timeout=15_000,
+        timeout_ms=15_000,
     )
     assert window._export_csv_action.isEnabled() is True
     assert window._export_html_action.isEnabled() is True
@@ -443,9 +444,9 @@ def test_variant_switch_restores_the_cached_result(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     window.simulate()
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: not window._simulating and window._thread is None,
-        timeout=15_000,
+        timeout_ms=15_000,
     )
     assert window._results._table.rowCount() == 1
     assert window._export_csv_action.isEnabled() is True
@@ -486,9 +487,9 @@ def test_optimize_length_applies_and_simulates(
 
     assert window._optimize_action.isEnabled() is True
     window.optimize_length()
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: not window._simulating and window._thread is None,
-        timeout=15_000,
+        timeout_ms=15_000,
     )
 
     assert window._form.parameters().total_length_m == pytest.approx(19.8)
@@ -549,9 +550,9 @@ def test_optimize_endfed_applies_to_the_endfed_form(
 
     assert window._optimize_action.isEnabled() is True
     window.optimize_length()
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: not window._simulating and window._thread is None,
-        timeout=15_000,
+        timeout_ms=15_000,
     )
 
     assert window._endfed_form.parameters().length_m == pytest.approx(21.0)
@@ -612,9 +613,9 @@ def test_optimize_ocfd_applies_to_the_ocfd_form(
 
     assert window._optimize_action.isEnabled() is True
     window.optimize_length()
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: not window._simulating and window._thread is None,
-        timeout=15_000,
+        timeout_ms=15_000,
     )
 
     assert window._ocfd_form.parameters().total_length_m == pytest.approx(21.0)
@@ -675,9 +676,9 @@ def test_synthesize_dimensions_applies_and_simulates(
 
     assert window._optimize_action.isEnabled() is True
     window.synthesize_dimensions()
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: not window._simulating and window._thread is None,
-        timeout=15_000,
+        timeout_ms=15_000,
     )
 
     assert window._ocfd_form.parameters().total_length_m == pytest.approx(21.0)
@@ -712,9 +713,9 @@ def test_simulation_results_persist_across_save_and_open(
     from antennadesk.application.use_cases.open_project import OpenProject
 
     window.simulate()
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: not window._simulating and window._thread is None,
-        timeout=15_000,
+        timeout_ms=15_000,
     )
     assert window._project is not None
     assert len(window._project.simulation_runs) == 1
@@ -862,9 +863,9 @@ def test_optimize_loop_applies_circumference_and_simulates(
     assert window._optimize_action.isEnabled() is True
 
     window.optimize_length()
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: not window._simulating and window._thread is None,
-        timeout=15_000,
+        timeout_ms=15_000,
     )
 
     assert window._project is not None
@@ -918,9 +919,9 @@ def test_compacting_simulation_history_keeps_the_latest_run(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     window.simulate()
-    qtbot.waitUntil(lambda: not window._simulating and window._thread is None, timeout=15_000)
+    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
     window.simulate()
-    qtbot.waitUntil(lambda: not window._simulating and window._thread is None, timeout=15_000)
+    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
     assert window._project is not None
     assert len(window._project.simulation_runs) == 2
     assert window._compact_history_action.isEnabled() is True
@@ -1104,7 +1105,7 @@ def test_new_custom_antenna_is_editable_and_simulatable(
     assert window._custom_simulation_spec(parameters).frequency_plan.count == 100
 
     window.simulate()
-    qtbot.waitUntil(lambda: not window._simulating and window._thread is None, timeout=15_000)
+    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
 
     assert window._results._table.rowCount() == 1
     assert window._status_label.text() == "Simulation completed"
@@ -1211,6 +1212,42 @@ def test_new_yagi_creates_a_first_class_design(
     assert form_parameters.frequency_hz == pytest.approx(parameters.frequency_hz)
     assert len(form_parameters.elements) == len(parameters.elements)
     assert form_parameters.driven_index == parameters.driven_index
+    window._dirty = False
+
+
+def test_new_vertical_yagi_creates_vertical_wires(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.polarization import Polarization
+    from antennadesk.domain.antennas.yagi import YagiParameters, nbs_five_element
+
+    parameters = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        polarization=Polarization.VERTICAL,
+    )
+
+    class FakeYagiDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> YagiParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "YagiDialog", FakeYagiDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Yagi", True))
+
+    window.new_yagi_antenna()
+
+    assert window._project is not None
+    assert window._yagi_form.parameters().polarization is Polarization.VERTICAL
+    model = window._project.designs[0].antenna
+    assert all(wire.start.x_m == pytest.approx(wire.end.x_m) for wire in model.wires)
+    assert all(wire.start.y_m == pytest.approx(wire.end.y_m) for wire in model.wires)
     window._dirty = False
 
 
@@ -2199,6 +2236,47 @@ def test_new_moxon_creates_a_first_class_design(
     window._dirty = False
 
 
+def test_new_vertical_moxon_creates_a_vertical_rectangle(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.moxon import MoxonParameters
+    from antennadesk.domain.antennas.polarization import Polarization
+
+    parameters = MoxonParameters(
+        frequency_hz=14_100_000.0,
+        width_m=10.6,
+        depth_m=2.5,
+        reflector_tip_m=1.0,
+        driven_tip_m=1.0,
+        height_m=10.0,
+        polarization=Polarization.VERTICAL,
+    )
+
+    class FakeMoxonDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> MoxonParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "MoxonDialog", FakeMoxonDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Moxon", True))
+
+    window.new_moxon_antenna()
+
+    assert window._project is not None
+    assert window._moxon_form.parameters() == parameters
+    model = window._project.designs[0].antenna
+    reflector = next(wire for wire in model.wires if wire.id == "reflector")
+    assert reflector.start.x_m == pytest.approx(reflector.end.x_m)
+    assert reflector.start.y_m == pytest.approx(reflector.end.y_m)
+    window._dirty = False
+
+
 def test_new_fan_dipole_creates_a_first_class_design(
     window: MainWindow,
     qtbot: QtBot,
@@ -3027,15 +3105,11 @@ def test_save_sets_clean_history_and_undo_marks_dirty(
 
 def test_simulation_runs_survive_undo_of_a_design_edit(
     window: MainWindow,
-    qtbot: QtBot,
 ) -> None:
     window._form._length.setValue(21.0)
     window.apply_design()
     window.simulate()
-    qtbot.waitUntil(
-        lambda: not window._simulating and window._thread is None,
-        timeout=15_000,
-    )
+    wait_for_condition(lambda: not window._simulating and window._thread is None)
     assert window._project is not None
     runs_after_simulation = len(window._project.simulation_runs)
     assert runs_after_simulation >= 1
@@ -3216,9 +3290,9 @@ def test_analyze_bands_runs_the_selected_band_set(
     monkeypatch.setattr(main_window_module, "BandAnalysisDialog", FakeBandDialog)
 
     window.analyze_bands()
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: not window._simulating and window._thread is None,
-        timeout=5_000,
+        timeout_ms=5_000,
     )
 
     assert window._project is not None
@@ -3233,9 +3307,9 @@ def test_analyze_bands_runs_the_selected_band_set(
     assert len({run.batch_id for run in band_runs}) == 1
 
     window._results._bands_table.selectRow(1)
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: window._selected_band_ids.get(window._design_id) == "20m",
-        timeout=1_000,
+        timeout_ms=1_000,
     )
     window._dirty = False
 
@@ -3268,9 +3342,9 @@ def test_band_analysis_respects_the_pattern_frequency_count(
     )
 
     window.analyze_bands()
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: not window._simulating and window._thread is None,
-        timeout=5_000,
+        timeout_ms=5_000,
     )
 
     assert window._design_id is not None
@@ -3308,9 +3382,9 @@ def test_band_analysis_reopens_from_a_saved_project(
 
     monkeypatch.setattr(main_window_module, "BandAnalysisDialog", FakeBandDialog)
     window.analyze_bands()
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: not window._simulating and window._thread is None,
-        timeout=5_000,
+        timeout_ms=5_000,
     )
     path = tmp_path / "bands.antennadesk"
     assert window._save_to(path) is True
@@ -3387,9 +3461,9 @@ def test_custom_sweep_overrides_a_generated_template(
 
     assert window._sweep_start.isEnabled() is True
     window.simulate()
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: not window._simulating and window._thread is None,
-        timeout=15_000,
+        timeout_ms=15_000,
     )
 
     assert window._last_result is not None
@@ -3448,9 +3522,9 @@ def test_fan_dipole_simulate_covers_all_element_bands(
     window.new_fan_dipole_antenna()
 
     window.simulate()
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: not window._simulating and window._thread is None,
-        timeout=5_000,
+        timeout_ms=5_000,
     )
 
     assert window._design_id is not None
@@ -3490,17 +3564,17 @@ def test_fan_optimizer_opens_on_the_selected_band(
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Fan", True))
     window.new_fan_dipole_antenna()
     window.simulate()
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: not window._simulating and window._thread is None,
-        timeout=5_000,
+        timeout_ms=5_000,
     )
     window._results._bands_table.selectRow(1)
-    qtbot.waitUntil(
+    wait_for_condition(
         lambda: (
             window._design_id is not None
             and window._selected_band_ids.get(window._design_id) == "10m"
         ),
-        timeout=1_000,
+        timeout_ms=1_000,
     )
 
     captured: dict[str, object] = {}

@@ -95,12 +95,34 @@ def _migrate_v5_to_v6(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v6_to_v7(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the default horizontal polarization to Yagi and Moxon designs."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if not isinstance(project, dict):
+        return migrated
+    designs = project.get("designs")
+    if not isinstance(designs, list):
+        return migrated
+    for design in designs:
+        if not isinstance(design, dict):
+            continue
+        if design.get("antenna_type") not in {"yagi", "moxon"}:
+            continue
+        parameters = design.get("parameters")
+        if isinstance(parameters, dict):
+            parameters.setdefault("polarization", "horizontal")
+    return migrated
+
+
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
     3: _migrate_v3_to_v4,
     4: _migrate_v4_to_v5,
     5: _migrate_v5_to_v6,
+    6: _migrate_v6_to_v7,
 }
 
 

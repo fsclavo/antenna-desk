@@ -6,6 +6,7 @@ import math
 
 import pytest
 
+from antennadesk.domain.antennas.polarization import Polarization
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters, nbs_five_element
 from antennadesk.domain.environment.ground import GroundModel
 from antennadesk.domain.simulation.frequency import FrequencyPlan
@@ -36,6 +37,58 @@ def test_yagi_generates_parallel_wires_and_center_feed() -> None:
     assert parameters.generator_name == "Yagi"
     assert parameters.wires[0].start.x_m == pytest.approx(0.0)
     assert parameters.wires[1].start.x_m > parameters.wires[0].start.x_m
+
+
+def test_yagi_vertical_polarization_keeps_the_boom_horizontal() -> None:
+    yagi = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        azimuth_deg=35.0,
+        polarization=Polarization.VERTICAL,
+    )
+    parameters = yagi.to_custom_parameters()
+
+    assert yagi.polarization is Polarization.VERTICAL
+    assert len(parameters.wires) == 5
+    for element, wire in zip(yagi.elements, parameters.wires, strict=True):
+        assert wire.start.x_m == pytest.approx(wire.end.x_m)
+        assert wire.start.y_m == pytest.approx(wire.end.y_m)
+        assert wire.length_m == pytest.approx(element.length_m)
+        midpoint_z = (wire.start.z_m + wire.end.z_m) / 2.0
+        assert midpoint_z == pytest.approx(8.0)
+    driven = parameters.wires[1]
+    assert parameters.feed.offset_m == pytest.approx(driven.length_m / 2.0)
+
+
+def test_yagi_vertical_round_trip_restores_polarization_and_azimuth() -> None:
+    original = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        azimuth_deg=35.0,
+        polarization=Polarization.VERTICAL,
+    )
+
+    restored = YagiParameters.from_custom_parameters(original.to_custom_parameters())
+
+    assert restored.polarization is Polarization.VERTICAL
+    assert restored.height_m == pytest.approx(original.height_m)
+    assert restored.azimuth_deg == pytest.approx(original.azimuth_deg)
+    assert restored.driven_index == original.driven_index
+    assert [element.position_m for element in restored.elements] == pytest.approx(
+        [element.position_m for element in original.elements]
+    )
+    assert [element.length_m for element in restored.elements] == pytest.approx(
+        [element.length_m for element in original.elements]
+    )
+
+
+def test_yagi_vertical_rejects_elements_below_ground() -> None:
+    with pytest.raises(ValueError, match="below ground"):
+        nbs_five_element(
+            frequency_hz=7_100_000.0,
+            height_m=10.0,
+            polarization=Polarization.VERTICAL,
+        )
 
 
 def test_yagi_azimuth_rotates_the_boom() -> None:

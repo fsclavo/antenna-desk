@@ -21,6 +21,8 @@ from antennadesk.domain.antennas.feed_line import FeedLine
 from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.matching_network import LNetwork
 from antennadesk.domain.antennas.materials import COPPER
+from antennadesk.domain.antennas.moxon import moxon_20m_wire
+from antennadesk.domain.antennas.polarization import Polarization
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.antennas.yagi import nbs_five_element
 from antennadesk.domain.design import DesignIntent, LoopShape, estimate_intent
@@ -408,6 +410,89 @@ def test_nbs_five_element_yagi_gain_reference(solver: Nec2cSolver) -> None:
     assert result.status is SimulationStatus.COMPLETED
     assert result.max_total_gain_db == pytest.approx(11.35, abs=0.5)
     assert len(result.frequencies[0].currents) == 5 * 21
+
+
+def test_vertical_yagi_is_the_free_space_horizontal_yagi_rotated(
+    solver: Nec2cSolver,
+) -> None:
+    horizontal = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        ground=GroundModel.free_space(),
+    )
+    vertical = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        polarization=Polarization.VERTICAL,
+        ground=GroundModel.free_space(),
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(50_100_000.0),
+        segmentation=SegmentationPolicy(segments_per_wire=21),
+        include_conductor_losses=False,
+        far_field=FarFieldRequest(
+            enabled=True,
+            theta_start_deg=0.0,
+            theta_stop_deg=180.0,
+            theta_count=37,
+            phi_start_deg=0.0,
+            phi_stop_deg=360.0,
+            phi_count=73,
+        ),
+    )
+
+    horizontal_result = solver.run(horizontal.to_antenna(name="Horizontal Yagi"), spec)
+    vertical_result = solver.run(vertical.to_antenna(name="Vertical Yagi"), spec)
+
+    assert horizontal_result.status is SimulationStatus.COMPLETED
+    assert vertical_result.status is SimulationStatus.COMPLETED
+    assert vertical_result.frequencies[0].impedance_ohm == pytest.approx(
+        horizontal_result.frequencies[0].impedance_ohm,
+        abs=0.5,
+    )
+    assert vertical_result.max_total_gain_db == pytest.approx(
+        horizontal_result.max_total_gain_db,
+        abs=0.1,
+    )
+
+
+def test_vertical_moxon_is_the_free_space_horizontal_moxon_rotated(
+    solver: Nec2cSolver,
+) -> None:
+    horizontal = moxon_20m_wire(height_m=10.0, ground=GroundModel.free_space())
+    vertical = moxon_20m_wire(
+        height_m=10.0,
+        polarization=Polarization.VERTICAL,
+        ground=GroundModel.free_space(),
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(14_170_000.0),
+        segmentation=SegmentationPolicy(segments_per_wire=21),
+        include_conductor_losses=False,
+        far_field=FarFieldRequest(
+            enabled=True,
+            theta_start_deg=0.0,
+            theta_stop_deg=180.0,
+            theta_count=37,
+            phi_start_deg=0.0,
+            phi_stop_deg=360.0,
+            phi_count=73,
+        ),
+    )
+
+    horizontal_result = solver.run(horizontal.to_antenna(name="Horizontal Moxon"), spec)
+    vertical_result = solver.run(vertical.to_antenna(name="Vertical Moxon"), spec)
+
+    assert horizontal_result.status is SimulationStatus.COMPLETED
+    assert vertical_result.status is SimulationStatus.COMPLETED
+    assert vertical_result.frequencies[0].impedance_ohm == pytest.approx(
+        horizontal_result.frequencies[0].impedance_ohm,
+        abs=0.5,
+    )
+    assert vertical_result.max_total_gain_db == pytest.approx(
+        horizontal_result.max_total_gain_db,
+        abs=0.1,
+    )
 
 
 def test_ocfd_published_feedpoint_trend(solver: Nec2cSolver) -> None:

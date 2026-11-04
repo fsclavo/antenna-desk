@@ -26,7 +26,9 @@ Implemented:
 
 Deferred:
 
-- the segmented `FrequencyPlan`/multi-`FR` optimization, pending measurements.
+- the segmented `FrequencyPlan`/multi-`FR` optimization. The 2026-11-04
+  benchmark in [`MULTIBAND_PERFORMANCE.md`](MULTIBAND_PERFORMANCE.md) kept the
+  per-band architecture; revisit only if the measured limits change.
 
 ## Problem
 

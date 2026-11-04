@@ -19,6 +19,8 @@ def test_yagi_dialog_loads_the_nbs_preset(qtbot: QtBot) -> None:
     assert dialog._driven.currentData() == 1
     assert dialog._ground.currentText() == "Free space"
     assert dialog._material.currentText() == "Copper"
+    assert dialog._form._polarization.currentText() == "Horizontal"
+    assert dialog._form._polarization.itemText(1) == "Vertical"
     parameters = dialog.parameters()
     assert len(parameters.elements) == 5
     assert parameters.driven_index == 1
@@ -92,6 +94,44 @@ def test_yagi_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
     assert restored.frequency_hz == pytest.approx(original.frequency_hz)
     assert restored.azimuth_deg == pytest.approx(original.azimuth_deg)
     assert restored.driven_index == original.driven_index
+
+
+def test_yagi_dialog_restores_vertical_polarization(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.polarization import Polarization
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+
+    original = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        polarization=Polarization.VERTICAL,
+    )
+    dialog = YagiDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=original,
+    )
+    qtbot.addWidget(dialog)
+
+    restored = dialog.parameters()
+    assert restored.polarization is Polarization.VERTICAL
+    assert restored.height_m == pytest.approx(original.height_m)
+    assert restored.azimuth_deg == pytest.approx(original.azimuth_deg)
+    assert restored.driven_index == original.driven_index
+    assert dialog._form._polarization.currentData() == "vertical"
+
+
+def test_yagi_dialog_warns_when_vertical_elements_reach_the_ground(qtbot: QtBot) -> None:
+    dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    dialog.show()
+    dialog._form._height.setValue(1.0)
+    index = dialog._form._polarization.findData("vertical")
+    dialog._form._polarization.setCurrentIndex(index)
+
+    assert dialog._form._clearance_warning.isHidden() is False
+    assert "greater than" in dialog._form._clearance_warning.text()
+    with pytest.raises(ValueError, match="below ground"):
+        dialog.parameters()
 
 
 def test_yagi_dialog_scales_elements_when_frequency_changes(qtbot: QtBot) -> None:

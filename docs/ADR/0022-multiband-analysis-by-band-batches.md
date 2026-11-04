@@ -66,6 +66,17 @@ Limitations:
 - A segmented frequency plan in one deck remains a future optimization if
   measurements show that per-band startup or raw output is a problem.
 
+## Amendment 2026-11-04 — performance decision
+
+A reproducible benchmark measured 3, 5, and 8 band batches for OCFD, G5RV, and
+fan-dipole designs. All completed successfully; the eight-band cases took about
+1.3 seconds and produced 5.9–7.4 MB compressed projects with 15 sweep points and
+five 5° pattern frequencies per band on the development machine. See
+[`MULTIBAND_PERFORMANCE.md`](../MULTIBAND_PERFORMANCE.md). The per-band
+architecture remains the chosen path; the segmented `FrequencyPlan` alternative
+is deferred until measurements on target hardware or denser production settings
+show a practical problem.
+
 ## Amendment 2026-11-04 — pattern navigation and per-band snapshot policy
 
 The **Pattern** frequency selector now lists the snapshots from every analyzed

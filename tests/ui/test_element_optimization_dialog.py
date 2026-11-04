@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from helpers import wait_for_condition
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog
 from pytestqt.qtbot import QtBot
@@ -96,7 +97,7 @@ def test_generic_element_dialog_applies_optimized_parameters(qtbot: QtBot) -> No
     dialog.show()
 
     dialog._run.click()
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=5_000)
+    wait_for_condition(lambda: dialog._thread is None, timeout_ms=5_000)
 
     assert dialog._result is not None
     assert dialog._result.status is BoundedStatus.CONVERGED

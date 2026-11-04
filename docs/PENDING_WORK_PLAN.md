@@ -51,20 +51,17 @@ different antenna model is justified.
 - A 20/10 m preset with measured or optimized dimensions. Add one only with a
   traceable source or documented measurement.
 
-## Phase 2 — Multiband performance decision
+## Phase 2 — Multiband performance decision (measured)
 
-Measure before changing the architecture.
+Benchmark and decision: [`MULTIBAND_PERFORMANCE.md`](MULTIBAND_PERFORMANCE.md).
 
-1. Time and size a batch for 3, 5, and 8 bands on representative designs
-   (OCFD, G5RV, fan dipole).
-2. Record solver invocations, build time, peak memory, and compressed project
-   size.
-3. If the batch is acceptable, keep the current per-band architecture.
-4. If not, implement a segmented `FrequencyPlan` and a multi-`FR` NEC deck
-   behind the existing `SimulationSpec` boundary.
-5. Add an ADR before changing the frequency-plan contract.
-6. Acceptance: a measured decision, regression tests for single-band and
-   multi-band paths, and no UI regression.
+1. Timed and sized 3, 5, and 8 bands for OCFD, G5RV, and fan dipole.
+2. Recorded wall time, compressed project size, and process peak RSS.
+3. **Decision:** keep the current one-run-per-band architecture.
+4. No segmented `FrequencyPlan` or multi-`FR` deck is needed now.
+5. Revisit only if pattern resolution, band count, or target hardware changes
+   enough to make batches visibly slow or large.
+6. Acceptance: measured data recorded; no UI or solver regression.
 
 ## Phase 3 — Modeling and result metrics (complete)
 
@@ -134,10 +131,11 @@ These are not part of the next implementation session unless priorities change:
 
 1. Phase 5 — independent references for experimental templates.
 2. A refined Zepp model with explicit second conductor and choke.
-3. Phase 2 — only if timing measurements justify the multi-`FR` work.
+3. Phase 2 — completed; revisit only if the measured limits change.
 4. Phase 6 — deferred/blocked.
 
-Completed: Phase 0, the Phase 1 investigation, Phase 3.1, and Phase 3.2.
+Completed: Phase 0, the Phase 1 investigation, Phase 2 measurement, Phase 3.1,
+and Phase 3.2.
 
 ## Quality gate for every phase
 

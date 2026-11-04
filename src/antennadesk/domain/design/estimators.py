@@ -507,6 +507,7 @@ def estimate_yagi(intent: DesignIntent) -> DimensionEstimate:
         height_m=intent.height_m,
         driven_index=1,
         azimuth_deg=intent.azimuth_deg,
+        polarization=intent.polarization,
         material=intent.material,
         ground=intent.ground,
     )
@@ -576,6 +577,7 @@ def estimate_moxon(intent: DesignIntent) -> DimensionEstimate:
     reference = moxon_20m_wire(
         height_m=intent.height_m,
         azimuth_deg=intent.azimuth_deg,
+        polarization=intent.polarization,
         material=intent.material,
         ground=intent.ground,
     )
@@ -588,6 +590,7 @@ def estimate_moxon(intent: DesignIntent) -> DimensionEstimate:
         driven_tip_m=reference.driven_tip_m * scale,
         height_m=intent.height_m,
         azimuth_deg=intent.azimuth_deg,
+        polarization=intent.polarization,
         wire_radius_m=intent.wire_radius_m,
         material=intent.material,
         ground=intent.ground,

@@ -10,6 +10,7 @@ from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.moxon import MoxonParameters, moxon_20m_wire
+from antennadesk.domain.antennas.polarization import Polarization
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.yagi import YagiParameters
 from antennadesk.domain.design import (
@@ -221,6 +222,36 @@ def test_yagi_supports_two_through_thirty_two_elements() -> None:
         _intent("yagi", yagi_elements=1)
     with pytest.raises(UnsupportedEstimateError):
         estimate_intent(_intent("yagi", yagi_elements=33))
+
+
+def test_yagi_and_moxon_estimates_keep_the_requested_polarization() -> None:
+    yagi = estimate_intent(
+        _intent(
+            "yagi",
+            frequency_hz=144_000_000.0,
+            height_m=8.0,
+            polarization=Polarization.VERTICAL,
+        )
+    )
+    moxon = estimate_intent(
+        _intent(
+            "moxon",
+            frequency_hz=14_170_000.0,
+            height_m=10.0,
+            polarization=Polarization.VERTICAL,
+        )
+    )
+
+    assert isinstance(yagi.parameters, YagiParameters)
+    assert yagi.parameters.polarization is Polarization.VERTICAL
+    assert isinstance(moxon.parameters, MoxonParameters)
+    assert moxon.parameters.polarization is Polarization.VERTICAL
+    assert (
+        estimate_intent(
+            _intent("moxon", frequency_hz=14_170_000.0, height_m=10.0)
+        ).parameters.polarization
+        is Polarization.HORIZONTAL
+    )
 
 
 def test_moxon_scales_the_published_reference() -> None:

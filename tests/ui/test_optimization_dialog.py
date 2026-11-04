@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from helpers import wait_for_condition
 from PySide6.QtWidgets import QDialog
 from pytestqt.qtbot import QtBot
 
@@ -123,7 +124,7 @@ def test_optimization_dialog_runs_and_selects_length(qtbot: QtBot) -> None:
     dialog.show()
 
     dialog._run.click()
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=5_000)
+    wait_for_condition(lambda: dialog._thread is None, timeout_ms=5_000)
 
     assert dialog._result is not None
     assert dialog._result.status is LengthOptimizationStatus.CONVERGED
@@ -162,7 +163,7 @@ def test_optimization_dialog_handles_a_loop_circumference(qtbot: QtBot) -> None:
     dialog.show()
 
     dialog._run.click()
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=5_000)
+    wait_for_condition(lambda: dialog._thread is None, timeout_ms=5_000)
 
     assert dialog._result is not None
     assert dialog._result.status is LengthOptimizationStatus.CONVERGED
@@ -194,7 +195,7 @@ def test_optimization_dialog_minimizes_swr(qtbot: QtBot) -> None:
     dialog.show()
 
     dialog._run.click()
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=5_000)
+    wait_for_condition(lambda: dialog._thread is None, timeout_ms=5_000)
 
     assert dialog._result is not None
     assert dialog._result.status is LengthOptimizationStatus.CONVERGED
@@ -230,7 +231,7 @@ def test_optimization_dialog_targets_a_complex_impedance(qtbot: QtBot) -> None:
     dialog.show()
 
     dialog._run.click()
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=5_000)
+    wait_for_condition(lambda: dialog._thread is None, timeout_ms=5_000)
 
     assert dialog._result is not None
     assert dialog._result.status is LengthOptimizationStatus.CONVERGED
@@ -269,7 +270,7 @@ def test_optimization_dialog_maximizes_gain(qtbot: QtBot) -> None:
     dialog.show()
 
     dialog._run.click()
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=5_000)
+    wait_for_condition(lambda: dialog._thread is None, timeout_ms=5_000)
 
     assert dialog._result is not None
     assert dialog._result.status is LengthOptimizationStatus.CONVERGED
@@ -302,7 +303,7 @@ def test_optimization_dialog_maximizes_efficiency(qtbot: QtBot) -> None:
     dialog.show()
 
     dialog._run.click()
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=5_000)
+    wait_for_condition(lambda: dialog._thread is None, timeout_ms=5_000)
 
     assert dialog._result is not None
     assert dialog._result.status is LengthOptimizationStatus.CONVERGED
@@ -339,7 +340,7 @@ def test_optimization_dialog_balances_swr_and_gain(qtbot: QtBot) -> None:
     assert dialog._swr_weight.isVisible() is True
     assert dialog._gain_weight.isVisible() is True
     dialog._run.click()
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=5_000)
+    wait_for_condition(lambda: dialog._thread is None, timeout_ms=5_000)
 
     assert dialog._result is not None
     assert dialog._result.status is LengthOptimizationStatus.CONVERGED

@@ -140,8 +140,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "catalog.yagi": {Language.ENGLISH: "Yagi", Language.SPANISH: "Yagi"},
     "catalog.yagi.description": {
-        Language.ENGLISH: "Editable multi-element Yagi with an NBS starting preset.",
-        Language.SPANISH: "Yagi editable de múltiples elementos con preset inicial NBS.",
+        Language.ENGLISH: (
+            "Editable multi-element Yagi with horizontal or vertical "
+            "polarization and an NBS starting preset."
+        ),
+        Language.SPANISH: (
+            "Yagi editable de múltiples elementos con polarización horizontal "
+            "o vertical y preset inicial NBS."
+        ),
     },
     "catalog.inverted_v": {
         Language.ENGLISH: "Inverted-V",
@@ -292,8 +298,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Rectángulo Moxon",
     },
     "catalog.moxon.description": {
-        Language.ENGLISH: "Two-element rectangle with bent reflector and driven tips.",
-        Language.SPANISH: "Rectángulo de dos elementos con reflector y puntas dobladas.",
+        Language.ENGLISH: (
+            "Two-element rectangle with bent tips and horizontal or vertical polarization."
+        ),
+        Language.SPANISH: (
+            "Rectángulo de dos elementos con puntas dobladas y polarización horizontal o vertical."
+        ),
     },
     "catalog.ocfd": {
         Language.ENGLISH: "Off-center-fed dipole",
@@ -554,6 +564,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "geometry.edge_on": {
         Language.ENGLISH: "top view is edge-on",
         Language.SPANISH: "la vista superior es de canto",
+    },
+    "geometry.vertical_plane_edge_on": {
+        Language.ENGLISH: "top view: vertical plane is edge-on; use Elevation to see the layout",
+        Language.SPANISH: "vista superior: el plano vertical está de canto; usá Alzado para ver la disposición",
     },
     "geometry.sides_note": {
         Language.ENGLISH: "{sides}-sided polygon shown to scale",
@@ -958,6 +972,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "field.height": {Language.ENGLISH: "Height", Language.SPANISH: "Altura"},
     "field.base_height": {Language.ENGLISH: "Base height", Language.SPANISH: "Altura de base"},
     "field.orientation": {Language.ENGLISH: "Orientation", Language.SPANISH: "Orientación"},
+    "field.polarization": {
+        Language.ENGLISH: "Polarization",
+        Language.SPANISH: "Polarización",
+    },
     "orientation.horizontal": {Language.ENGLISH: "Horizontal", Language.SPANISH: "Horizontal"},
     "orientation.vertical": {Language.ENGLISH: "Vertical", Language.SPANISH: "Vertical"},
     "field.azimuth": {Language.ENGLISH: "Azimuth (°)", Language.SPANISH: "Azimut (°)"},
@@ -2872,14 +2890,39 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Load 20 m wire reference preset",
         Language.SPANISH: "Cargar preset de referencia de 20 m",
     },
+    "moxon.polarization_hint": {
+        Language.ENGLISH: (
+            "Vertical polarization puts the whole rectangle in a vertical "
+            "plane. Height is the boom centerline and must clear the rectangle."
+        ),
+        Language.SPANISH: (
+            "La polarización vertical ubica todo el rectángulo en un plano "
+            "vertical. La altura es la línea central del boom y debe dejar "
+            "libre el rectángulo."
+        ),
+    },
+    "moxon.clearance_warning": {
+        Language.ENGLISH: (
+            "A vertical Moxon needs a boom center height greater than {height} "
+            "{unit} so the rectangle stays above ground."
+        ),
+        Language.SPANISH: (
+            "Un Moxon vertical necesita una altura de centro del boom mayor "
+            "que {height} {unit} para que el rectángulo quede sobre el suelo."
+        ),
+    },
     "moxon.hint": {
         Language.ENGLISH: (
             "The generator creates a reflector and driven element with bent tips. "
-            "The generated antenna is an editable first-class design."
+            "Vertical polarization puts the whole rectangle in a vertical plane "
+            "with a horizontal boom. The generated antenna is an editable "
+            "first-class design."
         ),
         Language.SPANISH: (
             "El generador crea un reflector y un elemento alimentado con puntas "
-            "dobladas. La antena generada es un diseño editable de primera clase."
+            "dobladas. La polarización vertical ubica todo el rectángulo en un "
+            "plano vertical con el boom horizontal. La antena generada es un "
+            "diseño editable de primera clase."
         ),
     },
     "moxon.evidence": {
@@ -3132,14 +3175,37 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "{count} elements · boom {boom} {unit}",
         Language.SPANISH: "{count} elementos · boom {boom} {unit}",
     },
+    "yagi.polarization_hint": {
+        Language.ENGLISH: (
+            "Vertical polarization keeps the boom horizontal and rotates the "
+            "elements around it. Height is the boom centerline."
+        ),
+        Language.SPANISH: (
+            "La polarización vertical mantiene el boom horizontal y gira los "
+            "elementos alrededor de él. La altura es la línea central del boom."
+        ),
+    },
+    "yagi.clearance_warning": {
+        Language.ENGLISH: (
+            "Vertical elements need a boom center height greater than {height} "
+            "{unit} so the longest element stays above ground."
+        ),
+        Language.SPANISH: (
+            "Los elementos verticales necesitan una altura de centro del boom "
+            "mayor que {height} {unit} para que el elemento más largo quede "
+            "sobre el suelo."
+        ),
+    },
     "yagi.hint": {
         Language.ENGLISH: (
-            "Positions and lengths are editable. The generated antenna is an "
+            "Positions and lengths are editable. Polarization rotates the "
+            "elements around a horizontal boom. The generated antenna is an "
             "editable custom-wire design."
         ),
         Language.SPANISH: (
-            "Las posiciones y longitudes son editables. La antena generada es "
-            "un diseño de hilos personalizado editable."
+            "Las posiciones y longitudes son editables. La polarización gira "
+            "los elementos alrededor de un boom horizontal. La antena generada "
+            "es un diseño de hilos personalizado editable."
         ),
     },
     "element_optimize.loop_title": {

@@ -85,8 +85,9 @@ between:
 - **Plan / top**: the true top view. For a vertical loop this is edge-on, which
   is expected; use Elevation to see its polygon. For horizontal arrays such as
   a Yagi or Moxon it shows the element layout, boom spacing, and element
-  lengths. For a ring or radial vertical, a top inset shows the horizontal
-  structure while the main view keeps the installation height.
+  lengths. A vertical Yagi or Moxon is also edge-on in plan; use Elevation for
+  the vertical-element layout. For a ring or radial vertical, a top inset shows
+  the horizontal structure while the main view keeps the installation height.
 - **3D**: isometric wireframe colored by gain (green low, yellow intermediate, red high), with a dBi legend, ground grid, feed marker, axes, and scale.
 
 The default view is selected from the geometry: vertical-plane antennas use
@@ -126,7 +127,9 @@ the estimate to the current design, then use **Optimize...** to refine it with
 NEC. The checkbox **Open an optimizer or synthesis dialog after applying**
 does this in one step when a solver is configured. For Yagi, the frequency
 estimator supports 2 to 32 elements from the DL6WU trimming reference; the
-NBS five-element preset remains available in the Yagi editor.
+NBS five-element preset remains available in the Yagi editor. For Yagi and
+Moxon, **Estimate Dimensions...** keeps the polarization selected in the
+dialog and uses the current boom height.
 
 ## Analyze multiple bands
 
@@ -269,7 +272,12 @@ span and spacing are construction starting points, not verified cut lengths.
 Choose **File → New Antenna... → Yagi** to generate a Yagi as a first-class
 template. The table contains each element's boom position, total length, and
 radius. Add or remove elements, edit the values, and select the driven element.
-**Load NBS 5-element preset** fills the NBS TN-688 0.8λ starting geometry
+**Polarization** selects horizontal or vertical elements. In both cases the
+boom stays horizontal; vertical polarization rotates each element around the
+boom. Height is the boom centerline, so a vertical Yagi needs enough clearance
+for the longest element to stay above ground. The form rejects a geometry whose
+lowest tip would reach the ground. **Load NBS 5-element preset** fills the NBS
+TN-688 0.8λ starting geometry
 scaled to the selected frequency. Changing the frequency in the form rescales
 the current element positions and lengths by the wavelength ratio. If the
 element dimensions do not look consistent with the current frequency, the form
@@ -288,8 +296,12 @@ use **Edit Custom Wires...** only when you want raw coordinates.
 
 Choose **File → New Antenna... → Moxon rectangle** to generate a two-element
 Moxon with a reflector and driven element with bent tips. Set the element
-width, spacing, tip lengths, height, azimuth, radius, material, and ground. The
-dialog reports the remaining tip gap. Use **Load 20 m wire reference preset**
+width, spacing, tip lengths, height, azimuth, polarization, radius, material,
+and ground. Horizontal polarization places the rectangle in a horizontal
+plane. Vertical polarization places the complete rectangle in a vertical plane
+while the boom stays horizontal. Height is the boom centerline, so a vertical
+Moxon needs `height > width / 2` to keep the rectangle above ground. The dialog
+reports the remaining tip gap. Use **Load 20 m wire reference preset**
 to load the published Cebik 20 m dimensions; that preset is reference-backed
 for impedance, gain, and front-to-back ratio. Any edited geometry is
 experimental and has no external reference.
@@ -569,9 +581,11 @@ construction sheet.
   closed lobes. The angular resolution comes from **Pattern resolution** in the
   global **Simulation pattern** group under **Advanced simulation**; higher
   resolution samples the same NEC solution more finely.
-  While you rotate or zoom the 3D lobe, AntennaDesk draws a coarser display
-  mesh; when the movement stops it redraws the full-resolution wireframe. The
-  stored pattern, the cuts, and the exports keep the full resolution. The
+  While you rotate or zoom the 3D lobe, AntennaDesk draws a coarser interactive
+  mesh. When the movement stops it redraws the high-resolution display mesh,
+  capped to **60% of the stored angular resolution** (40% coarser) for large
+  patterns; this only affects the 3D paint. The stored pattern, the cuts, and
+  the exports keep the full simulated resolution. The
   pattern frequency selector lists the pattern snapshot frequencies, not every
   impedance-sweep point. During a band analysis it lists all analyzed bands and
   switches the active band when you choose an entry. The 3D lobe draws a ground plane when the model has

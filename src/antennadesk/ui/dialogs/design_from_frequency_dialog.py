@@ -37,6 +37,7 @@ from ...domain.antennas.loop import LoopParameters
 from ...domain.antennas.materials import COPPER
 from ...domain.antennas.moxon import MoxonParameters
 from ...domain.antennas.ocfd import OCFDParameters
+from ...domain.antennas.polarization import Polarization
 from ...domain.antennas.t2fd import T2FDParameters
 from ...domain.antennas.vertical import VerticalParameters
 from ...domain.antennas.yagi import YagiParameters
@@ -104,6 +105,7 @@ class DesignFromFrequencyDialog(QDialog):
         base_height_m = 0.25
         end_height_m = 10.0
         orientation = DipoleOrientation.HORIZONTAL
+        polarization = Polarization.HORIZONTAL
         loop_shape = LoopShape.LOOP
         vertical_form = VerticalForm.QUARTER_WAVE
         folded = False
@@ -164,6 +166,7 @@ class DesignFromFrequencyDialog(QDialog):
             gap_m = parameters.gap_m
         elif isinstance(parameters, (YagiParameters, MoxonParameters)):
             height_m = parameters.height_m
+            polarization = parameters.polarization
             if isinstance(parameters, YagiParameters):
                 yagi_elements = len(parameters.elements)
         if hasattr(initial_parameters, "azimuth_deg"):
@@ -227,6 +230,12 @@ class DesignFromFrequencyDialog(QDialog):
         orientation_index = self._orientation.findData(orientation.value)
         self._orientation.setCurrentIndex(max(orientation_index, 0))
 
+        self._polarization = QComboBox(self)
+        self._polarization.addItem("", Polarization.HORIZONTAL.value)
+        self._polarization.addItem("", Polarization.VERTICAL.value)
+        polarization_index = self._polarization.findData(polarization.value)
+        self._polarization.setCurrentIndex(max(polarization_index, 0))
+
         self._loop_shape = QComboBox(self)
         self._loop_shape.addItem("", LoopShape.LOOP.value)
         self._loop_shape.addItem("", LoopShape.QUAD.value)
@@ -283,6 +292,7 @@ class DesignFromFrequencyDialog(QDialog):
         self._add_row("base_height", "field.base_height", self._base_height)
         self._add_row("end_height", "geometry.end_height", self._end_height)
         self._add_row("orientation", "field.orientation", self._orientation)
+        self._add_row("polarization", "field.polarization", self._polarization)
         self._add_row("loop_shape", "design_from_frequency.loop_shape", self._loop_shape)
         self._add_row("vertical_form", "design_from_frequency.vertical_form", self._vertical_form)
         self._add_row("j_pole_variant", "field.template", self._j_pole_variant)
@@ -350,6 +360,7 @@ class DesignFromFrequencyDialog(QDialog):
             self._base_height.valueChanged,
             self._end_height.valueChanged,
             self._orientation.currentIndexChanged,
+            self._polarization.currentIndexChanged,
             self._loop_shape.currentIndexChanged,
             self._vertical_form.currentIndexChanged,
             self._j_pole_variant.currentIndexChanged,
@@ -398,6 +409,8 @@ class DesignFromFrequencyDialog(QDialog):
             visible.update({"height", "end_height"})
         if family == "t2fd":
             visible.update({"highest_frequency", "height", "orientation"})
+        if family in {"yagi", "moxon"}:
+            visible.add("polarization")
         if family == "yagi":
             visible.add("yagi_elements")
         height_label, _height_widget = self._rows["height"]
@@ -431,6 +444,7 @@ class DesignFromFrequencyDialog(QDialog):
             base_height_m=length_to_m(self._base_height.value(), self._unit_system),
             end_height_m=length_to_m(self._end_height.value(), self._unit_system),
             orientation=DipoleOrientation(str(self._orientation.currentData())),
+            polarization=Polarization(str(self._polarization.currentData())),
             azimuth_deg=self._azimuth_deg,
             wire_radius_m=self._wire_radius_m,
             material=self._material,
@@ -556,6 +570,8 @@ class DesignFromFrequencyDialog(QDialog):
         self._template_value.setText(self._translator.t(self._template_label_key))
         self._orientation.setItemText(0, self._translator.t("orientation.horizontal"))
         self._orientation.setItemText(1, self._translator.t("orientation.vertical"))
+        self._polarization.setItemText(0, self._translator.t("orientation.horizontal"))
+        self._polarization.setItemText(1, self._translator.t("orientation.vertical"))
         self._loop_shape.setItemText(0, self._translator.t("antenna_type.loop"))
         self._loop_shape.setItemText(1, self._translator.t("catalog.quad_loop"))
         self._loop_shape.setItemText(2, self._translator.t("catalog.delta_loop"))

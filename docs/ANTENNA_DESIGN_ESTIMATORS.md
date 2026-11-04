@@ -9,7 +9,7 @@ the matching network.
 
 ```text
 DesignIntent
-  frequency, family, subtype, environment, constraints
+  frequency, family, subtype, orientation/polarization, environment, constraints
         ↓
 DimensionEstimate
   parameters, method, confidence, assumptions, warnings, tolerance, sources
@@ -65,8 +65,8 @@ warnings, and a dimension tolerance.
 | OCFD | half-wave total, feed at 1/3, 4:1 ideal transformer | heuristic | Existing synthesis can refine length/feed; actual balun ratio depends on height and feed offset |
 | J Pole / Slim Jim | J Pole: total 3/4-wave height, quarter-wave stub, feed at 40% of stub; Slim Jim: half-wave radiator above the folded stub | empirical | Feed offset and stub need tuning |
 | Ringo | 0.725-wave vertical with a small horizontal matching ring, calibrated for the simplified AntennaDesk geometry | heuristic | Not a universal commercial Ringo formula |
-| Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; optimize for the target |
-| Moxon | Cebik 20 m wire reference scaled by frequency | reference scaled | Gap and tips are sensitive |
+| Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; optimize for the target; horizontal or vertical polarization |
+| Moxon | Cebik 20 m wire reference scaled by frequency | reference scaled | Gap and tips are sensitive; horizontal or vertical polarization |
 | T2FD | span `300/F(MHz)` ft, spacing `10/F(MHz)` ft | heuristic | Broadband starting geometry; highest design frequency is required; not a resonance calculation |
 
 Ground-mounted radials are placed 1 cm above the ground plane in the NEC deck.
@@ -232,6 +232,12 @@ The DL6WU reference dimensions assume 4 mm elements at 432 MHz. Element
 diameter correction and boom-mounting correction are not applied; this is a
 starting design for NEC refinement. The existing Yagi editor and optimizer
 remain the path for other published designs or diameter corrections.
+
+The estimator carries the requested `polarization` into the generated
+parameters. Both polarizations keep the boom horizontal. Vertical geometry
+uses `height_m` as the boom centerline and fails when the longest element would
+reach the ground, so the user must raise the boom before applying the estimate.
+The Moxon estimator applies the same rule with `height_m - width_m / 2`.
 
 ## Source policy
 

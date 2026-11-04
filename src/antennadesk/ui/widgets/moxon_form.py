@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.antennas.moxon import MoxonParameters, moxon_20m_wire
+from ...domain.antennas.polarization import Polarization
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
@@ -75,6 +76,13 @@ class MoxonForm(QWidget):
         self._azimuth.setDecimals(1)
         self._azimuth.setSuffix("°")
 
+        self._polarization = QComboBox(self)
+        self._polarization.addItem("", Polarization.HORIZONTAL.value)
+        self._polarization.addItem("", Polarization.VERTICAL.value)
+        self._polarization.setItemText(0, translator.t("orientation.horizontal"))
+        self._polarization.setItemText(1, translator.t("orientation.vertical"))
+        self._polarization.setToolTip(translator.t("moxon.polarization_hint"))
+
         self._radius = QDoubleSpinBox(self)
         self._radius.setRange(0.01, 1_000.0)
         self._radius.setDecimals(3)
@@ -114,6 +122,10 @@ class MoxonForm(QWidget):
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
 
+        self._clearance_warning = QLabel(self)
+        self._clearance_warning.setWordWrap(True)
+        self._clearance_warning.setVisible(False)
+
         form = QFormLayout()
         form.addRow(translator.t("field.frequency"), self._frequency)
         form.addRow(translator.t("moxon.width"), self._width)
@@ -122,6 +134,7 @@ class MoxonForm(QWidget):
         form.addRow(translator.t("moxon.driven_tip"), self._driven_tip)
         form.addRow(translator.t("field.height"), self._height)
         form.addRow(translator.t("field.azimuth"), self._azimuth)
+        form.addRow(translator.t("field.polarization"), self._polarization)
         form.addRow(translator.t("moxon.wire_radius"), self._radius)
         form.addRow(translator.t("field.material"), self._material)
         form.addRow(translator.t("field.ground"), self._ground)
@@ -133,6 +146,7 @@ class MoxonForm(QWidget):
         layout.addLayout(form)
         layout.addWidget(self._reference)
         layout.addWidget(self._geometry)
+        layout.addWidget(self._clearance_warning)
 
         for widget in (
             self._frequency,
@@ -147,6 +161,7 @@ class MoxonForm(QWidget):
             self._conductivity,
         ):
             widget.valueChanged.connect(self._emit_changed)
+        self._polarization.currentIndexChanged.connect(self._emit_changed)
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._ground_changed)
         if parameters is not None:
@@ -185,6 +200,25 @@ class MoxonForm(QWidget):
         value = self._material.currentData()
         return value if isinstance(value, ConductorMaterial) else COPPER
 
+    def _selected_polarization(self) -> Polarization:
+        return Polarization(str(self._polarization.currentData()))
+
+    def _update_clearance_warning(self) -> None:
+        vertical = self._selected_polarization() is Polarization.VERTICAL
+        required = length_to_m(self._width.value(), self._unit_system) / 2.0
+        current = length_to_m(self._height.value(), self._unit_system)
+        invalid = vertical and required > 0.0 and current <= required
+        self._clearance_warning.setText(
+            self._translator.t(
+                "moxon.clearance_warning",
+                height=f"{length_from_m(required, self._unit_system):.3f}",
+                unit=self._translator.t(length_unit_key(self._unit_system)),
+            )
+            if invalid
+            else ""
+        )
+        self._clearance_warning.setVisible(invalid)
+
     def set_parameters(self, parameters: MoxonParameters) -> None:
         self._updating = True
         try:
@@ -197,6 +231,9 @@ class MoxonForm(QWidget):
             self._driven_tip.setValue(length_from_m(parameters.driven_tip_m, self._unit_system))
             self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
             self._azimuth.setValue(parameters.azimuth_deg)
+            polarization_index = self._polarization.findData(parameters.polarization.value)
+            if polarization_index >= 0:
+                self._polarization.setCurrentIndex(polarization_index)
             self._radius.setValue(parameters.wire_radius_m * 1_000.0)
             material_index = self._material.findData(parameters.material)
             if material_index >= 0:
@@ -217,16 +254,21 @@ class MoxonForm(QWidget):
         self._frequency.setValue(frequency_hz / 1_000_000.0)
 
     def _load_reference_preset(self) -> None:
-        self.set_parameters(
-            moxon_20m_wire(
+        try:
+            parameters = moxon_20m_wire(
                 height_m=length_to_m(self._height.value(), self._unit_system),
                 azimuth_deg=self._azimuth.value(),
+                polarization=self._selected_polarization(),
                 material=self._selected_material(),
             )
-        )
+        except ValueError:
+            self._update_clearance_warning()
+            return
+        self.set_parameters(parameters)
         self._emit_changed()
 
     def _update_geometry(self) -> None:
+        self._update_clearance_warning()
         try:
             parameters = self.parameters()
         except (ValueError, TypeError):
@@ -250,6 +292,7 @@ class MoxonForm(QWidget):
             driven_tip_m=length_to_m(self._driven_tip.value(), self._unit_system),
             height_m=length_to_m(self._height.value(), self._unit_system),
             azimuth_deg=self._azimuth.value(),
+            polarization=self._selected_polarization(),
             wire_radius_m=self._radius.value() / 1_000.0,
             material=self._selected_material(),
             ground=self._ground_model(),

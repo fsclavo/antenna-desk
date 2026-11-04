@@ -2,7 +2,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import time
+from collections.abc import Callable
 from datetime import UTC, datetime
+
+from PySide6.QtCore import QCoreApplication
 
 from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
@@ -14,6 +18,23 @@ from antennadesk.domain.simulation.result import (
 )
 from antennadesk.domain.simulation.solver import SolverMetadata
 from antennadesk.domain.simulation.spec import SimulationSpec
+
+
+def wait_for_condition(predicate: Callable[[], bool], *, timeout_ms: int = 5_000) -> None:
+    """Process Qt events without relying on a nested QEventLoop.
+
+    ``qtbot.waitUntil`` uses a nested event loop. After many MainWindow tests
+    on the offscreen platform, that loop can stop delivering queued worker
+    signals even though the worker thread has already finished. Processing
+    posted events directly keeps worker-based UI tests deterministic.
+    """
+
+    deadline = time.monotonic() + timeout_ms / 1000.0
+    while not predicate():
+        if time.monotonic() >= deadline:
+            raise TimeoutError(f"condition not met in {timeout_ms} ms")
+        QCoreApplication.processEvents()
+        time.sleep(0.01)
 
 
 def make_completed_result() -> SimulationResult:

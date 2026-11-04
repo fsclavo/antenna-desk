@@ -29,6 +29,7 @@ from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
+from antennadesk.domain.antennas.polarization import Polarization
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
@@ -200,6 +201,38 @@ def _cases() -> tuple[FamilyCase, ...]:
             6,
             GeometryViewMode.PLAN,
             ("Moxon", "gap"),
+        ),
+        FamilyCase(
+            "yagi_vertical",
+            YagiParameters(
+                frequency_hz=14_100_000.0,
+                elements=(
+                    YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+                    YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+                ),
+                height_m=10.0,
+                polarization=Polarization.VERTICAL,
+            ),
+            "yagi",
+            2,
+            GeometryViewMode.ELEVATION,
+            ("Yagi", "elements 2", "polarization vertical"),
+        ),
+        FamilyCase(
+            "moxon_vertical",
+            MoxonParameters(
+                frequency_hz=14_100_000.0,
+                width_m=10.0,
+                depth_m=3.0,
+                reflector_tip_m=1.0,
+                driven_tip_m=1.0,
+                height_m=10.0,
+                polarization=Polarization.VERTICAL,
+            ),
+            "moxon",
+            6,
+            GeometryViewMode.ELEVATION,
+            ("Moxon", "gap", "polarization vertical"),
         ),
         FamilyCase(
             "fan",

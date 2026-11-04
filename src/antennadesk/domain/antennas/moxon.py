@@ -15,6 +15,7 @@ from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
 from .materials import COPPER, ConductorMaterial
+from .polarization import Polarization
 from .wire import Wire
 
 ANTENNA_TYPE_MOXON = "moxon"
@@ -33,6 +34,7 @@ class MoxonParameters:
     driven_tip_m: float
     height_m: float = 10.0
     azimuth_deg: float = 0.0
+    polarization: Polarization = Polarization.HORIZONTAL
     wire_radius_m: float = 0.001
     material: ConductorMaterial = COPPER
     ground: GroundModel = FREE_SPACE
@@ -52,6 +54,22 @@ class MoxonParameters:
             "azimuth_deg",
             units.normalize_azimuth_degrees(self.azimuth_deg),
         )
+        object.__setattr__(self, "polarization", Polarization(self.polarization))
+        if self.polarization is Polarization.VERTICAL:
+            lowest_edge = self.height_m - self.width_m / 2.0
+            if lowest_edge <= 0.0:
+                raise ValueError(
+                    "a vertical Moxon would extend below ground; "
+                    "increase height_m or reduce width_m"
+                )
+
+    @property
+    def lowest_edge_m(self) -> float:
+        """Return the height of the lowest point of the radiating rectangle."""
+
+        if self.polarization is Polarization.HORIZONTAL:
+            return self.height_m
+        return self.height_m - self.width_m / 2.0
 
     @property
     def gap_m(self) -> float:
@@ -66,12 +84,23 @@ class MoxonParameters:
         cos_angle = math.cos(angle)
         sin_angle = math.sin(angle)
 
-        def rotate(x_m: float, y_m: float) -> Point3D:
-            return Point3D(
-                x_m=x_m * cos_angle - y_m * sin_angle,
-                y_m=x_m * sin_angle + y_m * cos_angle,
-                z_m=self.height_m,
-            )
+        if self.polarization is Polarization.HORIZONTAL:
+
+            def rotate(boom_m: float, element_m: float) -> Point3D:
+                return Point3D(
+                    x_m=boom_m * cos_angle - element_m * sin_angle,
+                    y_m=boom_m * sin_angle + element_m * cos_angle,
+                    z_m=self.height_m,
+                )
+
+        else:
+
+            def rotate(boom_m: float, element_m: float) -> Point3D:
+                return Point3D(
+                    x_m=boom_m * cos_angle,
+                    y_m=boom_m * sin_angle,
+                    z_m=self.height_m + element_m,
+                )
 
         wires = (
             Wire(
@@ -134,6 +163,7 @@ def moxon_20m_wire(
     *,
     height_m: float = 10.0,
     azimuth_deg: float = 0.0,
+    polarization: Polarization = Polarization.HORIZONTAL,
     material: ConductorMaterial = COPPER,
     ground: GroundModel = FREE_SPACE,
 ) -> MoxonParameters:
@@ -152,6 +182,7 @@ def moxon_20m_wire(
         driven_tip_m=4.00 * FOOT_M,
         height_m=height_m,
         azimuth_deg=azimuth_deg,
+        polarization=polarization,
         wire_radius_m=0.000912,
         material=material,
         ground=ground,

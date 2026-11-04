@@ -263,6 +263,26 @@ def test_yagi_parameters_round_trip() -> None:
     assert restored.designs[0].antenna_type == "yagi"
 
 
+def test_vertical_yagi_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.polarization import Polarization
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+
+    parameters = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        azimuth_deg=35.0,
+        polarization=Polarization.VERTICAL,
+    )
+    original = _project(parameters, "Vertical Yagi")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].parameters.polarization is Polarization.VERTICAL
+    assert restored.designs[0].antenna_type == "yagi"
+
+
 def test_moxon_parameters_round_trip() -> None:
     from antennadesk.domain.antennas.moxon import MoxonParameters
 
@@ -280,6 +300,29 @@ def test_moxon_parameters_round_trip() -> None:
     restored = project_from_document(document)
 
     assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "moxon"
+
+
+def test_vertical_moxon_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.moxon import MoxonParameters
+    from antennadesk.domain.antennas.polarization import Polarization
+
+    parameters = MoxonParameters(
+        frequency_hz=14_100_000.0,
+        width_m=10.6,
+        depth_m=2.5,
+        reflector_tip_m=1.0,
+        driven_tip_m=1.0,
+        height_m=10.0,
+        polarization=Polarization.VERTICAL,
+    )
+    original = _project(parameters, "Vertical Moxon")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].parameters.polarization is Polarization.VERTICAL
     assert restored.designs[0].antenna_type == "moxon"
 
 

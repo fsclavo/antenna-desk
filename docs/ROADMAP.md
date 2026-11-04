@@ -172,9 +172,9 @@ Scope:
   a **Bands** results tab showing best SWR, gain, takeoff angle, efficiency,
   and status. The top action bar stays Apply/Estimate/Optimize.
 - Band/batch metadata on simulation runs, schema version 4 migration (extended
-  by version 5 with OCFD/custom transformer fields and version 6 with persisted
-  analysis band plans), and band-aware CSV, HTML, PDF, and comparison
-  summaries.
+  by version 5 with OCFD/custom transformer fields, version 6 with persisted
+  analysis band plans, and version 7 with Yagi/Moxon polarization), and
+  band-aware CSV, HTML, PDF, and comparison summaries.
 - Deferred: a segmented frequency plan in one NEC deck, only if measurements
   show that per-band runs are too slow or too large.
 
@@ -208,7 +208,7 @@ Acceptance criteria:
 | P2 | Live VNA/hardware control | n/a | deferred |
 | P2 | Additional full-wave engines | n/a | deferred |
 | P2 | Physical antenna validation | A | blocked: no measurements |
-| P3 | Segmented frequency plan in one NEC deck | B | deferred |
+| P3 | Segmented frequency plan in one NEC deck | B | deferred; benchmark keeps per-band |
 
 ## Next
 

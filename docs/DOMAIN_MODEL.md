@@ -14,7 +14,9 @@ measurements, and persisted simulation runs.
 - Angles: degrees at the boundary; radians only for trigonometric calculations.
 - Coordinate system: right-handed, Z up.
 - Azimuth: degrees from +X toward +Y, normalized to `[0, 360)`.
-- Height: height of the horizontal wire above ground.
+- Height: height of the horizontal wire above ground. For Yagi and Moxon,
+  `height_m` is the boom/element centerline height; with vertical polarization
+  the elements or rectangle extend symmetrically around it.
 
 The UI may display meters or imperial units; conversion happens at the UI
 boundary through `domain/common/units.py`.
@@ -149,11 +151,14 @@ optimization is not available. Its wire, feed, and load rules are validated by
 ### YagiParameters
 
 A first-class parametric Yagi with an ordered tuple of `YagiElement` values,
-boom height and azimuth, driven-element index, material, and ground. Elements
-store boom position, total length, and radius. `to_antenna()` creates parallel
-straight wires and a center feed on the selected driven element. The NBS
-TN-688 5-element 0.8λ preset is a starting geometry; edited designs are
-experimental.
+boom height and azimuth, polarization, driven-element index, material, and
+ground. Elements store boom position, total length, and radius. Horizontal
+polarization places the elements in a horizontal plane. Vertical polarization
+keeps the boom horizontal and places each element in a vertical plane. In both
+cases `to_antenna()` creates straight wires and a center feed on the selected
+driven element. Vertical geometry is rejected when the longest element would
+reach the ground. The NBS TN-688 5-element 0.8λ preset is a starting geometry;
+edited designs are experimental.
 
 ### RingoParameters
 
@@ -196,9 +201,13 @@ experimental.
 ### MoxonParameters
 
 A first-class two-element Moxon rectangle with element width, spacing,
-reflector/driven tip lengths, height, azimuth, radius, material, and ground.
-`to_antenna()` creates the reflector, driven element, and four bent tip wires;
-the feed is at the center of the driven element. The generator is experimental.
+reflector/driven tip lengths, height, azimuth, polarization, radius, material,
+and ground. Horizontal polarization keeps the rectangle in a horizontal plane.
+Vertical polarization puts the complete rectangle in a vertical plane while
+the boom remains horizontal. `to_antenna()` creates the reflector, driven
+element, and four bent tip wires; the feed is at the center of the driven
+element. Vertical geometry is rejected when `height_m - width_m / 2` would
+reach the ground. The generator is experimental.
 
 ### InvertedVParameters
 
@@ -337,7 +346,7 @@ Plain JSON files from older versions are still accepted. The envelope is:
 ```json
 {
   "format": "antennadesk-project",
-  "schema_version": 6,
+  "schema_version": 7,
   "project": {
     "id": "11111111-1111-4111-8111-111111111111",
     "name": "40 m dipole",
@@ -402,11 +411,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 6.
+the application writes version 7.
 
 ## Schema policy
 
-- Current version: `6`.
+- Current version: `7`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -419,6 +428,9 @@ the application writes version 6.
 - Version 6 adds optional per-design band-intent metadata: the persisted band
   IDs and sweep point counts chosen for analysis. Existing designs load with
   no stored plan and use the family default.
+- Version 7 adds the Yagi and Moxon `polarization` field. Existing arrays load
+  as `horizontal`; vertical arrays add ground-clearance validation and
+  orientation-aware geometry.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -447,7 +459,7 @@ the application writes version 6.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 6.
+- Simulation results are persisted as immutable runs in schema version 7.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are

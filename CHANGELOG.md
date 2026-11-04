@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Yagi and Moxon designs now support selectable **horizontal or vertical
+  polarization** while keeping the boom horizontal. Vertical Yagi elements
+  rotate around the boom; the Moxon rectangle lies in a vertical plane. Height
+  remains the boom centerline and the geometry is rejected when the elements or
+  rectangle would reach the ground. Existing designs and projects default to
+  horizontal. Project schema version 7 migrates them explicitly.
+- The 3D pattern high-resolution paint mesh now uses a 40% coarser angular
+  step for large patterns, reducing vertex and segment counts by about half.
+  Stored far-field data, cuts, and exports are unchanged.
+- Added a reproducible multiband benchmark. The measured 3/5/8-band batches
+  keep the per-band solver architecture; see `docs/MULTIBAND_PERFORMANCE.md`.
 - OCFD and End-fed generators now label the frequency as the fundamental/design
   frequency and let the user choose the harmonic analysis band plan at
   creation. The plan is persisted with the design, restored on reopen, and does

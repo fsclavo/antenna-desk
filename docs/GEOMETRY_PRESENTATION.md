@@ -32,19 +32,26 @@ synthetic shape.
 6. **Default view follows geometry.**
    Vertical planar antennas use a front/elevation view, horizontal planar
    arrays use plan/top, and non-planar models use a front view with a top
-   inset. Users may override the view.
-7. **State resets with the model.**
+   inset. Users may override the view. A vertical Yagi or Moxon is a vertical
+   planar array, so elevation is its default even though the boom is
+   horizontal; its plan view is edge-on and the header must say so.
+7. **Polarization is geometry, not a label.**
+   Horizontal and vertical Yagi/Moxon polarization must change the canonical
+   wire coordinates. The boom remains horizontal in both cases. Dimensions
+   must stay anchored to the real wires: vertical elements use vertical
+   lengths, while boom length and Moxon depth remain horizontal.
+8. **State resets with the model.**
    Changing the model resets zoom, pan, vertical exaggeration, and the default
    view so a new antenna cannot remain off-screen.
-8. **Presentation types are explicit.**
+9. **Presentation types are explicit.**
    A domain type or legacy `generator_id` maps to exactly one presentation
    family. Unknown types fall back to the generic custom view with a visible
    note; they must not guess a loop or folded dipole from the wire count.
-9. **Catalog routing is mandatory.**
+10. **Catalog routing is mandatory.**
    Every `CATALOG_TYPE_*` entry must have a route in both `new_antenna()` and
    `change_template()`/`_parameters_from_catalog()`. A catalog entry that
    returns `None` is a bug.
-10. **Reports and exports share the scene.**
+11. **Reports and exports share the scene.**
     SVG, PDF, PNG, and future formats must use the same scene and dimension
     requests as the interactive view.
 

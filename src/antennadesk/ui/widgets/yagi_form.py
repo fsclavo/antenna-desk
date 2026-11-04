@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
+from ...domain.antennas.polarization import Polarization
 from ...domain.antennas.yagi import YagiElement, YagiParameters, nbs_five_element
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
@@ -60,6 +61,13 @@ class YagiForm(QWidget):
         self._azimuth.setRange(0.0, 360.0)
         self._azimuth.setDecimals(1)
         self._azimuth.setSuffix("°")
+
+        self._polarization = QComboBox(self)
+        self._polarization.addItem("", Polarization.HORIZONTAL.value)
+        self._polarization.addItem("", Polarization.VERTICAL.value)
+        self._polarization.setItemText(0, translator.t("orientation.horizontal"))
+        self._polarization.setItemText(1, translator.t("orientation.vertical"))
+        self._polarization.setToolTip(translator.t("yagi.polarization_hint"))
 
         self._radius = QDoubleSpinBox(self)
         self._radius.setRange(0.01, 1_000.0)
@@ -120,10 +128,15 @@ class YagiForm(QWidget):
         self._frequency_warning.setWordWrap(True)
         self._frequency_warning.setVisible(False)
 
+        self._clearance_warning = QLabel(self)
+        self._clearance_warning.setWordWrap(True)
+        self._clearance_warning.setVisible(False)
+
         form = QFormLayout()
         form.addRow(translator.t("field.frequency"), self._frequency)
         form.addRow(translator.t("field.height"), self._height)
         form.addRow(translator.t("field.azimuth"), self._azimuth)
+        form.addRow(translator.t("field.polarization"), self._polarization)
         form.addRow(translator.t("yagi.radius_mm"), self._radius)
         form.addRow(translator.t("field.material"), self._material)
         form.addRow(translator.t("field.ground"), self._ground)
@@ -144,6 +157,7 @@ class YagiForm(QWidget):
         layout.addLayout(element_buttons)
         layout.addWidget(self._geometry)
         layout.addWidget(self._frequency_warning)
+        layout.addWidget(self._clearance_warning)
 
         self._frequency.valueChanged.connect(self._frequency_changed)
         for widget in (
@@ -154,6 +168,7 @@ class YagiForm(QWidget):
             self._conductivity,
         ):
             widget.valueChanged.connect(self._emit_changed)
+        self._polarization.currentIndexChanged.connect(self._emit_changed)
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._ground_changed)
         self._driven.currentIndexChanged.connect(self._emit_changed)
@@ -223,6 +238,37 @@ class YagiForm(QWidget):
         value = self._material.currentData()
         return value if isinstance(value, ConductorMaterial) else COPPER
 
+    def _selected_polarization(self) -> Polarization:
+        return Polarization(str(self._polarization.currentData()))
+
+    def _longest_element_m(self) -> float:
+        lengths: list[float] = []
+        for row in range(self._table.rowCount()):
+            cell = self._table.item(row, 2)
+            if cell is None:
+                continue
+            try:
+                lengths.append(length_to_m(float(cell.text()), self._unit_system))
+            except ValueError:
+                continue
+        return max(lengths, default=0.0)
+
+    def _update_clearance_warning(self) -> None:
+        vertical = self._selected_polarization() is Polarization.VERTICAL
+        required = self._longest_element_m() / 2.0
+        current = length_to_m(self._height.value(), self._unit_system)
+        invalid = vertical and required > 0.0 and current <= required
+        self._clearance_warning.setText(
+            self._translator.t(
+                "yagi.clearance_warning",
+                height=f"{length_from_m(required, self._unit_system):.3f}",
+                unit=self._translator.t(length_unit_key(self._unit_system)),
+            )
+            if invalid
+            else ""
+        )
+        self._clearance_warning.setVisible(invalid)
+
     def _radius_m(self) -> float:
         return self._radius.value() / 1_000.0
 
@@ -244,14 +290,19 @@ class YagiForm(QWidget):
         self._refresh_driven_values()
 
     def _load_preset(self) -> None:
-        yagi = nbs_five_element(
-            frequency_hz=self._frequency.value() * 1_000_000.0,
-            height_m=length_to_m(self._height.value(), self._unit_system),
-            azimuth_deg=self._azimuth.value(),
-            material=self._selected_material(),
-            ground=self._ground_model(),
-            radius_m=self._radius_m(),
-        )
+        try:
+            yagi = nbs_five_element(
+                frequency_hz=self._frequency.value() * 1_000_000.0,
+                height_m=length_to_m(self._height.value(), self._unit_system),
+                azimuth_deg=self._azimuth.value(),
+                polarization=self._selected_polarization(),
+                material=self._selected_material(),
+                ground=self._ground_model(),
+                radius_m=self._radius_m(),
+            )
+        except ValueError:
+            self._update_clearance_warning()
+            return
         self._table.setRowCount(0)
         self._updating = True
         try:
@@ -320,6 +371,9 @@ class YagiForm(QWidget):
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
             self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
             self._azimuth.setValue(parameters.azimuth_deg)
+            polarization_index = self._polarization.findData(parameters.polarization.value)
+            if polarization_index >= 0:
+                self._polarization.setCurrentIndex(polarization_index)
             if parameters.elements:
                 self._radius.setValue(parameters.elements[0].radius_m * 1_000.0)
             material_index = self._material.findData(parameters.material)
@@ -347,6 +401,7 @@ class YagiForm(QWidget):
         self._frequency.setValue(frequency_hz / 1_000_000.0)
 
     def _update_geometry(self) -> None:
+        self._update_clearance_warning()
         try:
             parameters = self.parameters()
         except (ValueError, TypeError):
@@ -387,6 +442,7 @@ class YagiForm(QWidget):
             height_m=length_to_m(self._height.value(), self._unit_system),
             driven_index=driven_index,
             azimuth_deg=self._azimuth.value(),
+            polarization=self._selected_polarization(),
             material=self._selected_material(),
             ground=self._ground_model(),
         )

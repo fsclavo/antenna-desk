@@ -29,6 +29,9 @@ GAIN_COLOR_BINS = 24
 GAIN_LINE_ALPHA = 190
 INTERACTION_DELAY_MS = 120
 FULL_MESH_THRESHOLD = 4_000
+# The stored far-field pattern is unchanged. The high-resolution paint mesh
+# uses a 40% coarser angular step to keep the 3D view responsive on slower PCs.
+FULL_MESH_RESOLUTION_SCALE = 1.4
 
 
 def gain_color(normalized: float, alpha: int = GAIN_LINE_ALPHA) -> QColor:
@@ -57,6 +60,8 @@ class _MeshVertex:
     y: float
     z: float
     normalized_gain: float
+    theta_deg: float
+    phi_deg: float
     theta_index: int
     phi_index: int
 
@@ -124,6 +129,8 @@ def _build_mesh(points: tuple[tuple[float, float, float], ...]) -> _Mesh | None:
                     y=sin_theta * math.sin(phi_rad),
                     z=cos_theta,
                     normalized_gain=normalized_gain(gain),
+                    theta_deg=theta,
+                    phi_deg=phi,
                     theta_index=theta_position,
                     phi_index=phi_position,
                 )
@@ -166,17 +173,24 @@ def _build_mesh(points: tuple[tuple[float, float, float], ...]) -> _Mesh | None:
     )
 
 
-def _decimated_mesh(mesh: _Mesh) -> _Mesh:
-    """Return a coarser mesh for interactive rotation and zoom."""
+def _retained_positions(count: int, target_count: int) -> tuple[int, ...]:
+    """Return evenly distributed grid positions, including both endpoints."""
 
-    if len(mesh.vertices) <= FULL_MESH_THRESHOLD:
-        return mesh
-    theta_count = max(vertex.theta_index for vertex in mesh.vertices) + 1
-    phi_count = max(vertex.phi_index for vertex in mesh.vertices) + 1
-    theta_stride = max(1, math.ceil(theta_count / 19))
-    phi_stride = max(1, math.ceil(phi_count / 37))
-    theta_positions = sorted({*range(0, theta_count, theta_stride), theta_count - 1})
-    phi_positions = sorted({*range(0, phi_count, phi_stride), phi_count - 1})
+    if count <= target_count:
+        return tuple(range(count))
+    target_count = max(2, target_count)
+    return tuple(
+        sorted({round(index * (count - 1) / (target_count - 1)) for index in range(target_count)})
+    )
+
+
+def _resampled_mesh(
+    mesh: _Mesh,
+    theta_positions: tuple[int, ...],
+    phi_positions: tuple[int, ...],
+) -> _Mesh:
+    """Return a mesh retaining only the requested grid positions."""
+
     vertex_by_grid = {(vertex.theta_index, vertex.phi_index): vertex for vertex in mesh.vertices}
     vertices: list[_MeshVertex] = []
     index_by_grid: dict[tuple[int, int], int] = {}
@@ -226,6 +240,155 @@ def _decimated_mesh(mesh: _Mesh) -> _Mesh:
     )
 
 
+def _interpolated_mesh(
+    mesh: _Mesh,
+    theta_count: int,
+    phi_count: int,
+) -> _Mesh:
+    """Build a regular mesh at the requested angular grid size.
+
+    Interpolating the normalized gain keeps the displayed spacing uniform;
+    selecting every Nth source index would leave alternating 1° and 2° gaps
+    and make the wireframe look irregular.
+    """
+
+    theta_count = max(2, theta_count)
+    phi_count = max(2, phi_count)
+    source_theta_count = max(vertex.theta_index for vertex in mesh.vertices) + 1
+    source_phi_count = max(vertex.phi_index for vertex in mesh.vertices) + 1
+    theta_min = min(vertex.theta_deg for vertex in mesh.vertices)
+    theta_max = max(vertex.theta_deg for vertex in mesh.vertices)
+    phi_min = min(vertex.phi_deg for vertex in mesh.vertices)
+    phi_max = max(vertex.phi_deg for vertex in mesh.vertices)
+    gain_by_grid = {
+        (vertex.theta_index, vertex.phi_index): vertex.normalized_gain for vertex in mesh.vertices
+    }
+
+    def interpolate_gain(theta_position: float, phi_position: float) -> float | None:
+        theta_low = min(max(math.floor(theta_position), 0), source_theta_count - 1)
+        theta_high = min(theta_low + 1, source_theta_count - 1)
+        phi_low = min(max(math.floor(phi_position), 0), source_phi_count - 1)
+        phi_high = min(phi_low + 1, source_phi_count - 1)
+        theta_fraction = theta_position - theta_low
+        phi_fraction = phi_position - phi_low
+        weighted: list[tuple[float, float]] = []
+        for theta_index, theta_weight in (
+            (theta_low, 1.0 - theta_fraction),
+            (theta_high, theta_fraction),
+        ):
+            for phi_index, phi_weight in (
+                (phi_low, 1.0 - phi_fraction),
+                (phi_high, phi_fraction),
+            ):
+                value = gain_by_grid.get((theta_index, phi_index))
+                if value is not None and theta_weight * phi_weight > 0.0:
+                    weighted.append((value, theta_weight * phi_weight))
+        if not weighted:
+            return None
+        total_weight = sum(weight for _value, weight in weighted)
+        return sum(value * weight for value, weight in weighted) / total_weight
+
+    vertices: list[_MeshVertex] = []
+    index_by_grid: dict[tuple[int, int], int] = {}
+    for theta_position in range(theta_count):
+        theta_deg = (
+            theta_min
+            if theta_count == 1
+            else theta_min + (theta_max - theta_min) * theta_position / (theta_count - 1)
+        )
+        source_theta = theta_position * (source_theta_count - 1) / (theta_count - 1)
+        theta_rad = math.radians(theta_deg)
+        sin_theta = math.sin(theta_rad)
+        cos_theta = math.cos(theta_rad)
+        for phi_position in range(phi_count):
+            phi_deg = (
+                phi_min
+                if phi_count == 1
+                else phi_min + (phi_max - phi_min) * phi_position / (phi_count - 1)
+            )
+            source_phi = phi_position * (source_phi_count - 1) / (phi_count - 1)
+            gain = interpolate_gain(source_theta, source_phi)
+            if gain is None:
+                continue
+            phi_rad = math.radians(phi_deg)
+            index_by_grid[(theta_position, phi_position)] = len(vertices)
+            vertices.append(
+                _MeshVertex(
+                    x=sin_theta * math.cos(phi_rad),
+                    y=sin_theta * math.sin(phi_rad),
+                    z=cos_theta,
+                    normalized_gain=gain,
+                    theta_deg=theta_deg,
+                    phi_deg=phi_deg,
+                    theta_index=theta_position,
+                    phi_index=phi_position,
+                )
+            )
+    if len(vertices) < 4:
+        return mesh
+
+    segments: list[tuple[int, int, int]] = []
+    for phi_position in range(phi_count):
+        previous: tuple[int, float] | None = None
+        for theta_position in range(theta_count):
+            index = index_by_grid.get((theta_position, phi_position))
+            if index is None:
+                previous = None
+                continue
+            current = (index, vertices[index].normalized_gain)
+            if previous is not None:
+                segments.append((previous[0], current[0], _segment_bin(previous[1], current[1])))
+            previous = current
+    for theta_position in range(theta_count):
+        previous = None
+        for phi_position in range(phi_count):
+            index = index_by_grid.get((theta_position, phi_position))
+            if index is None:
+                previous = None
+                continue
+            current = (index, vertices[index].normalized_gain)
+            if previous is not None:
+                segments.append((previous[0], current[0], _segment_bin(previous[1], current[1])))
+            previous = current
+
+    return _Mesh(
+        vertices=tuple(vertices),
+        segments=tuple(segments),
+        raw_min_gain=mesh.raw_min_gain,
+        raw_max_gain=mesh.raw_max_gain,
+        min_gain=mesh.min_gain,
+        max_gain=mesh.max_gain,
+        uniform_gain=mesh.uniform_gain,
+        max_point=mesh.max_point,
+    )
+
+
+def _reduced_full_mesh(mesh: _Mesh) -> _Mesh:
+    """Reduce the high-resolution paint mesh by 40% angular resolution."""
+
+    if len(mesh.vertices) <= FULL_MESH_THRESHOLD:
+        return mesh
+    theta_count = max(vertex.theta_index for vertex in mesh.vertices) + 1
+    phi_count = max(vertex.phi_index for vertex in mesh.vertices) + 1
+    return _interpolated_mesh(
+        mesh,
+        round(theta_count / FULL_MESH_RESOLUTION_SCALE),
+        round(phi_count / FULL_MESH_RESOLUTION_SCALE),
+    )
+
+
+def _decimated_mesh(mesh: _Mesh) -> _Mesh:
+    """Return a coarser mesh for interactive rotation and zoom."""
+
+    if len(mesh.vertices) <= FULL_MESH_THRESHOLD:
+        return mesh
+    theta_count = max(vertex.theta_index for vertex in mesh.vertices) + 1
+    phi_count = max(vertex.phi_index for vertex in mesh.vertices) + 1
+    theta_positions = _retained_positions(theta_count, min(theta_count, 19))
+    phi_positions = _retained_positions(phi_count, min(phi_count, 37))
+    return _resampled_mesh(mesh, theta_positions, phi_positions)
+
+
 class RadiationPattern3DView(QWidget):
     def __init__(self, translator: Translator, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -257,10 +420,9 @@ class RadiationPattern3DView(QWidget):
         if ground:
             points = tuple(point for point in points if point[0] <= 90.0 + 1e-6)
         self._points = points
-        self._full_mesh = _build_mesh(points)
-        self._interactive_mesh = (
-            _decimated_mesh(self._full_mesh) if self._full_mesh is not None else None
-        )
+        source_mesh = _build_mesh(points)
+        self._full_mesh = _reduced_full_mesh(source_mesh) if source_mesh is not None else None
+        self._interactive_mesh = _decimated_mesh(source_mesh) if source_mesh is not None else None
         self._ground = ground
         self._stop_interaction_timer()
         self._interacting = False

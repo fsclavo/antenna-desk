@@ -49,6 +49,7 @@ from ..domain.antennas.matching_network import LNetwork, MatchingNetwork, PiNetw
 from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from ..domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
+from ..domain.antennas.polarization import Polarization
 from ..domain.antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
 from ..domain.antennas.t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
 from ..domain.antennas.transmission_line import TransmissionLine
@@ -334,6 +335,7 @@ class MoxonParametersPayload(StrictModel):
     driven_tip_m: float = Field(gt=0.0)
     height_m: float = Field(default=10.0, ge=0.0)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    polarization: Polarization = Polarization.HORIZONTAL
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
@@ -351,6 +353,7 @@ class YagiParametersPayload(StrictModel):
     height_m: float = Field(ge=0.0)
     driven_index: int = Field(default=1, ge=0)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    polarization: Polarization = Polarization.HORIZONTAL
     material: MaterialPayload
     ground: GroundPayload
 
@@ -1056,6 +1059,7 @@ def _moxon_parameters_from_domain(value: MoxonParameters) -> MoxonParametersPayl
         driven_tip_m=value.driven_tip_m,
         height_m=value.height_m,
         azimuth_deg=value.azimuth_deg,
+        polarization=value.polarization,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
@@ -1076,6 +1080,7 @@ def _yagi_parameters_from_domain(value: YagiParameters) -> YagiParametersPayload
         height_m=value.height_m,
         driven_index=value.driven_index,
         azimuth_deg=value.azimuth_deg,
+        polarization=value.polarization,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
     )
@@ -1735,6 +1740,7 @@ def _moxon_parameters_to_domain(value: MoxonParametersPayload) -> MoxonParameter
         driven_tip_m=value.driven_tip_m,
         height_m=value.height_m,
         azimuth_deg=value.azimuth_deg,
+        polarization=value.polarization,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),
@@ -1755,6 +1761,7 @@ def _yagi_parameters_to_domain(value: YagiParametersPayload) -> YagiParameters:
         height_m=value.height_m,
         driven_index=value.driven_index,
         azimuth_deg=value.azimuth_deg,
+        polarization=value.polarization,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),
     )

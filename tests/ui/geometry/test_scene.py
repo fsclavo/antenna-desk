@@ -11,6 +11,8 @@ from antennadesk.domain.antennas.endfed import EndFedParameters
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
 from antennadesk.domain.antennas.loop import LoopParameters
+from antennadesk.domain.antennas.moxon import MoxonParameters
+from antennadesk.domain.antennas.polarization import Polarization
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 from antennadesk.ui.geometry.builder import build_scene, effective_antenna_type
@@ -139,6 +141,61 @@ def test_yagi_plan_keeps_all_elements_and_elevation_warns_about_overlap() -> Non
     assert len(midpoints) == 3
     assert "elements 3" in plan.summary
     assert "front view: elements overlap" in elevation.summary
+
+
+def test_vertical_yagi_elevation_shows_the_vertical_elements_and_boom() -> None:
+    parameters = YagiParameters(
+        frequency_hz=14_100_000.0,
+        elements=(
+            YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+            YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+            YagiElement(position_m=3.5, length_m=9.0, radius_m=0.001),
+        ),
+        height_m=10.0,
+        polarization=Polarization.VERTICAL,
+    )
+
+    plan = _scene(parameters, "yagi", GeometryViewMode.PLAN)
+    elevation = _scene(parameters, "yagi", GeometryViewMode.ELEVATION)
+
+    assert recommended_view(parameters.to_antenna()) is GeometryViewMode.ELEVATION
+    assert len(elevation.polylines) == 3
+    for polyline in elevation.polylines:
+        first, second = polyline.points
+        assert first.x_m == pytest.approx(second.x_m)
+        assert abs(second.y_m - first.y_m) > 1.0
+    assert "polarization vertical" in elevation.summary
+    assert "height 10.00 m" in elevation.summary
+    assert any(dimension.text == "3.50 m" for dimension in elevation.dimensions)
+    assert "vertical plane is edge-on" in plan.summary
+
+
+def test_vertical_moxon_elevation_shows_the_rectangle_and_clearance() -> None:
+    parameters = MoxonParameters(
+        frequency_hz=14_100_000.0,
+        width_m=10.0,
+        depth_m=3.0,
+        reflector_tip_m=1.0,
+        driven_tip_m=1.0,
+        height_m=10.0,
+        polarization=Polarization.VERTICAL,
+    )
+
+    elevation = _scene(parameters, "moxon", GeometryViewMode.ELEVATION)
+    plan = _scene(parameters, "moxon", GeometryViewMode.PLAN)
+
+    assert recommended_view(parameters.to_antenna()) is GeometryViewMode.ELEVATION
+    assert len(elevation.polylines) == 6
+    vertical_wires = [
+        polyline
+        for polyline in elevation.polylines
+        if polyline.points[0].x_m == pytest.approx(polyline.points[1].x_m)
+    ]
+    assert len(vertical_wires) == 2
+    assert "polarization vertical" in elevation.summary
+    assert "height 10.00 m" in elevation.summary
+    assert any(dimension.text == "10.00 m" for dimension in elevation.dimensions)
+    assert "vertical plane is edge-on" in plan.summary
 
 
 def test_slim_jim_exposes_the_gap_and_the_actual_feed_height() -> None:

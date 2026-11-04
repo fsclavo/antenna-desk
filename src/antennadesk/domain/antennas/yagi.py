@@ -15,6 +15,7 @@ from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
 from .materials import COPPER, ConductorMaterial
+from .polarization import Polarization
 from .wire import Wire
 
 YAGI_ELEMENT_ID_PREFIX = "element"
@@ -50,6 +51,7 @@ class YagiParameters:
     height_m: float
     driven_index: int = 1
     azimuth_deg: float = 0.0
+    polarization: Polarization = Polarization.HORIZONTAL
     material: ConductorMaterial = COPPER
     ground: GroundModel = FREE_SPACE
 
@@ -75,6 +77,20 @@ class YagiParameters:
             "azimuth_deg",
             units.normalize_azimuth_degrees(self.azimuth_deg),
         )
+        object.__setattr__(self, "polarization", Polarization(self.polarization))
+        if self.polarization is Polarization.VERTICAL and self.lowest_tip_m <= 0.0:
+            raise ValueError(
+                "vertical Yagi elements would extend below ground; "
+                "increase height_m or reduce the longest element"
+            )
+
+    @property
+    def lowest_tip_m(self) -> float:
+        """Return the height of the lowest point of the longest element."""
+
+        if self.polarization is Polarization.HORIZONTAL:
+            return self.height_m
+        return self.height_m - max(element.length_m for element in self.elements) / 2.0
 
     @property
     def wavelength_m(self) -> float:
@@ -89,33 +105,54 @@ class YagiParameters:
             raise ValueError("a Yagi requires at least two wires")
         wires = parameters.wires
         z_values = [point.z_m for wire in wires for point in (wire.start, wire.end)]
-        if max(z_values) - min(z_values) > 1e-6:
-            raise ValueError("Yagi elements must lie in a horizontal plane")
+        horizontal = max(z_values) - min(z_values) <= 1e-6
+        vertical = all(
+            math.isclose(wire.start.x_m, wire.end.x_m, abs_tol=1e-6)
+            and math.isclose(wire.start.y_m, wire.end.y_m, abs_tol=1e-6)
+            for wire in wires
+        )
+        if not horizontal and not vertical:
+            raise ValueError("Yagi elements must be all horizontal or all vertical")
+        if vertical:
+            centers_z = [(wire.start.z_m + wire.end.z_m) / 2.0 for wire in wires]
+            if max(centers_z) - min(centers_z) > 1e-6:
+                raise ValueError("vertical Yagi elements must share a boom height")
+            polarization = Polarization.VERTICAL
+            height_m = centers_z[0]
+        else:
+            polarization = Polarization.HORIZONTAL
+            height_m = wires[0].start.z_m
 
         first = wires[0]
         first_dx = first.end.x_m - first.start.x_m
         first_dy = first.end.y_m - first.start.y_m
         first_length = math.hypot(first_dx, first_dy)
+        if not horizontal:
+            first_length = abs(first.end.z_m - first.start.z_m)
         if first_length <= 1e-9:
-            raise ValueError("Yagi elements must be horizontal")
-        direction_x = first_dx / first_length
-        direction_y = first_dy / first_length
+            raise ValueError("Yagi elements must have a positive length")
 
         midpoints: list[tuple[float, float]] = []
-        for wire in wires:
-            dx = wire.end.x_m - wire.start.x_m
-            dy = wire.end.y_m - wire.start.y_m
-            length = math.hypot(dx, dy)
-            if length <= 1e-9:
-                raise ValueError("Yagi elements must be horizontal")
-            if abs(direction_x * dy - direction_y * dx) > 1e-6 * length:
-                raise ValueError("Yagi elements must be parallel")
-            midpoints.append(
-                (
-                    (wire.start.x_m + wire.end.x_m) / 2.0,
-                    (wire.start.y_m + wire.end.y_m) / 2.0,
+        if horizontal:
+            direction_x = first_dx / first_length
+            direction_y = first_dy / first_length
+            for wire in wires:
+                dx = wire.end.x_m - wire.start.x_m
+                dy = wire.end.y_m - wire.start.y_m
+                length = math.hypot(dx, dy)
+                if length <= 1e-9:
+                    raise ValueError("Yagi elements must be horizontal")
+                if abs(direction_x * dy - direction_y * dx) > 1e-6 * length:
+                    raise ValueError("Yagi elements must be parallel")
+                midpoints.append(
+                    (
+                        (wire.start.x_m + wire.end.x_m) / 2.0,
+                        (wire.start.y_m + wire.end.y_m) / 2.0,
+                    )
                 )
-            )
+        else:
+            for wire in wires:
+                midpoints.append((wire.start.x_m, wire.start.y_m))
 
         boom_x = midpoints[1][0] - midpoints[0][0]
         boom_y = midpoints[1][1] - midpoints[0][1]
@@ -149,9 +186,10 @@ class YagiParameters:
         return cls(
             frequency_hz=parameters.frequency_hz,
             elements=tuple(element for _index, element in elements_with_index),
-            height_m=first.start.z_m,
+            height_m=height_m,
             driven_index=driven_index,
             azimuth_deg=math.degrees(math.atan2(boom_y, boom_x)),
+            polarization=polarization,
             material=first.material,
             ground=parameters.ground,
         )
@@ -166,16 +204,28 @@ class YagiParameters:
         wires: list[Wire] = []
         for index, element in enumerate(self.elements):
             half_length = element.length_m / 2.0
-            local_start = Point3D(
-                x_m=element.position_m,
-                y_m=-half_length,
-                z_m=self.height_m,
-            )
-            local_end = Point3D(
-                x_m=element.position_m,
-                y_m=half_length,
-                z_m=self.height_m,
-            )
+            if self.polarization is Polarization.HORIZONTAL:
+                local_start = Point3D(
+                    x_m=element.position_m,
+                    y_m=-half_length,
+                    z_m=self.height_m,
+                )
+                local_end = Point3D(
+                    x_m=element.position_m,
+                    y_m=half_length,
+                    z_m=self.height_m,
+                )
+            else:
+                local_start = Point3D(
+                    x_m=element.position_m,
+                    y_m=0.0,
+                    z_m=self.height_m - half_length,
+                )
+                local_end = Point3D(
+                    x_m=element.position_m,
+                    y_m=0.0,
+                    z_m=self.height_m + half_length,
+                )
             start = Point3D(
                 x_m=local_start.x_m * cos_angle - local_start.y_m * sin_angle,
                 y_m=local_start.x_m * sin_angle + local_start.y_m * cos_angle,
@@ -221,6 +271,7 @@ def nbs_five_element(
     frequency_hz: float,
     height_m: float,
     azimuth_deg: float = 0.0,
+    polarization: Polarization = Polarization.HORIZONTAL,
     material: ConductorMaterial = COPPER,
     ground: GroundModel = FREE_SPACE,
     radius_m: float | None = None,
@@ -248,6 +299,7 @@ def nbs_five_element(
         height_m=height_m,
         driven_index=1,
         azimuth_deg=azimuth_deg,
+        polarization=polarization,
         material=material,
         ground=ground,
     )

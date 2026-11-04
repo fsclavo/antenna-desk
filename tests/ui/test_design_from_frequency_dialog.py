@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 from pytestqt.qtbot import QtBot
 
@@ -12,6 +14,7 @@ from antennadesk.domain.antennas.dipole import (
 )
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
 from antennadesk.domain.antennas.loop import LoopParameters
+from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.yagi import YagiParameters
@@ -193,6 +196,38 @@ def test_dialog_preloads_the_yagi_element_count(qtbot: QtBot) -> None:
     parameters = dialog.estimated_parameters()
     assert isinstance(parameters, YagiParameters)
     assert len(parameters.elements) == len(initial.elements)
+
+
+def test_dialog_preloads_and_applies_yagi_polarization(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.polarization import Polarization
+
+    initial = _estimated_parameters("yagi")
+    assert isinstance(initial, YagiParameters)
+    initial = replace(initial, height_m=8.0, polarization=Polarization.VERTICAL)
+    dialog = _dialog(qtbot, initial)
+
+    assert dialog._polarization.currentData() == "vertical"
+    dialog._run_estimate()
+
+    parameters = dialog.estimated_parameters()
+    assert isinstance(parameters, YagiParameters)
+    assert parameters.polarization is Polarization.VERTICAL
+
+
+def test_dialog_preloads_and_applies_moxon_polarization(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.polarization import Polarization
+
+    initial = _estimated_parameters("moxon")
+    assert isinstance(initial, MoxonParameters)
+    initial = replace(initial, height_m=10.0, polarization=Polarization.VERTICAL)
+    dialog = _dialog(qtbot, initial)
+
+    assert dialog._polarization.currentData() == "vertical"
+    dialog._run_estimate()
+
+    parameters = dialog.estimated_parameters()
+    assert isinstance(parameters, MoxonParameters)
+    assert parameters.polarization is Polarization.VERTICAL
 
 
 def test_dialog_preloads_the_t2fd_band_and_estimates_it(qtbot: QtBot) -> None:
