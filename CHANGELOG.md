@@ -123,7 +123,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a coverage job with per-package thresholds, a permissive mypy pass over
   58 of the 75 UI modules (`mypy_ui.ini`), English/Spanish translation parity
   tests, and Hypothesis property tests for units and the three importers. The
-  3,654-line main-window test module is split into eight feature modules.
+  3,654-line main-window test module is split into eight feature modules, and
+  the two-port math is cross-checked against scikit-rf.
 
 ### Changed
 

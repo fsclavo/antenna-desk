@@ -35,6 +35,7 @@ Measured on 2026-11-04:
 | Property-based tests | unit round trips, azimuth range, and importer fuzzing with Hypothesis 6.170 |
 | Mutation testing | 0 |
 | Cross-engine numerical checks | 0 |
+| Independent RF math oracle | scikit-rf 2.2.0 (BSD-3, dev-only): 11 tests for feed lines, L/Pi/T networks, cascades, and gain |
 | Segment-convergence tests | 2: free space and finite ground |
 | Physics-invariant tests | 0 |
 | `docs/VALIDATION_PLAN.md` test count | fixed in Phase 0 (was 788, now 1,139) |
@@ -284,20 +285,26 @@ explained delta. Not part of CI.
 #### 3.5.5 Independent RF math oracle
 
 The feed-line, matching-network, transformer, and cascade math is pure
-two-port algebra. `scikit-rf` 2.2.0 (BSD-3, dev-only) provides an independent
-implementation of transmission-line physics, ABCD/S-parameter conversion, and
-network cascading.
+two-port algebra. `scikit-rf` 2.2.0 (BSD-3) is an independent implementation of
+transmission-line physics and network algebra.
 
-**Change.** Add `scikit-rf` to the dev group and validate:
+**Change (implemented 2026-11-04).** `scikit-rf` is a dev-only dependency.
+`tests/unit/domain/test_two_port_skrf.py` builds each circuit with both
+libraries and compares the input impedance:
 
-- ideal line input impedance against the closed-form `Zin` expression;
-- velocity factor and electrical length;
-- matched-line attenuation;
-- L, Pi, and T network S-parameters;
-- transformer ratio and cascade order.
+- feed line, lossless and lossy, with velocity factor and matched attenuation;
+- L network in both shunt positions;
+- Pi and T networks;
+- feed line plus matching network cascade;
+- `Abcd.__matmul__` order;
+- `transducer_gain_db` against the scikit-rf S-parameters.
 
-This runs on every platform, needs no solver, and closes a module that today is
-checked only against values computed inside the same codebase.
+The eleven tests run in 0.3 s, need no solver, and match the independent
+implementation to better than 1e-9 relative. There is no transformer two-port
+class to compare; the end-fed ratio is a scalar.
+
+**Cost.** Dev-only: it adds numpy, scipy, and pandas to the development
+environment (all BSD-3), not to the application bundle.
 
 **Acceptance.** At least one test per construct, comparing against `skrf` with a
 stated tolerance.
@@ -484,7 +491,7 @@ the polarization commit.
 
 1. (done 2026-11-04) Segmentation diagnostics and the convergence test.
 2. Physical invariants: power, pattern integral, reciprocity, rotation.
-3. `scikit-rf` oracle for the two-port math.
+3. (done 2026-11-04) `scikit-rf` oracle for the two-port math.
 4. `PyNEC` cross-engine job.
 5. Published closed-form anchors for the estimators.
 6. Evidence registry as code.

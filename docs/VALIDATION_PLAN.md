@@ -79,6 +79,15 @@ absolute accuracy. `validate_segmentation` reports
 `segmentation.segment_too_long`, `segmentation.segment_too_short`, and
 `segmentation.radius_ratio_low` when a model violates the guidelines.
 
+### Two-port math
+
+Feed-line and matching-network algebra is checked against `scikit-rf` 2.2.0, an
+independent BSD-3 implementation, in
+`tests/unit/domain/test_two_port_skrf.py`. The comparison covers lossless and
+lossy lines, L/Pi/T networks, cascades, ABCD order, and transducer gain, with a
+`1e-9` relative tolerance. This is an implementation cross-check, not a physical
+reference.
+
 ## Phase 3 — guided MVP and GUI
 
 UI tests use `pytest-qt` with the Qt offscreen platform:
