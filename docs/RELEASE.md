@@ -222,13 +222,14 @@ are absent.
 1. Run `uv run ruff check .`.
 2. Run `uv run ruff format --check .`.
 3. Run `uv run mypy`.
-4. Run `NEC2C=... uv run pytest`.
-5. Update `CHANGELOG.md` and `__version__`.
-6. Build and test the wheel, AppImage, Debian package, and Windows zip.
-7. Tag `v<version>` and push the tag.
-8. Verify the release workflow attached all artifacts and checksums.
-9. Record known limitations and experimental templates in the release notes.
-10. For the initial release, signing may be skipped; keep the SHA-256 checksums
+4. Run `uv run mypy --config-file mypy_ui.ini`.
+5. Run `NEC2C=... uv run pytest`.
+6. Update `CHANGELOG.md` and `__version__`.
+7. Build and test the wheel, AppImage, Debian package, and Windows zip.
+8. Tag `v<version>` and push the tag.
+9. Verify the release workflow attached all artifacts and checksums.
+10. Record known limitations and experimental templates in the release notes.
+11. For the initial release, signing may be skipped; keep the SHA-256 checksums
     and note that signatures are deferred.
 
 ## Current limitations

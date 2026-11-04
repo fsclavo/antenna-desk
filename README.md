@@ -41,11 +41,12 @@ The application looks for `nec2c` in `NEC2C`, on `PATH`, and in
 `spikes/phase0/build/`. If it is not found, use **Tools → Locate NEC2C...** to
 select the executable.
 
-On first launch, a 40 m dipole is loaded so you can press **Simulate**
-immediately. Use **File → New Antenna...** to open the antenna catalog, search
-by type, and choose a wire dipole, folded dipole, loop, Yagi, inverted-V, or
-custom-wire design. The panel also converts an existing design between the
-basic template types.
+AntennaDesk opens on the **Start an antenna project** page. Choose
+**New Antenna...** to open the antenna catalog, search by family, and create the
+first design, or **Open Project...** to load an existing `.antennadesk` file.
+After a project exists, the template is shown read-only in the design panel;
+use **Change...** next to it or **Design → Change Template...** to replace the
+current design with another catalog template.
 
 ## Installation and release
 
@@ -187,9 +188,13 @@ uv run pytest
 uv run ruff check .
 uv run ruff format --check .
 uv run mypy
+uv run mypy --config-file mypy_ui.ini
 ```
 
-The UI tests run offscreen through `pytest-qt`; no display is required.
+`mypy_ui.ini` is a permissive ratchet for the Qt layer: files without existing
+errors are checked in CI, and the remaining UI files are removed from the
+exclusion list as they are fixed. The UI tests run offscreen through
+`pytest-qt`; no display is required.
 
 To run the real solver integration tests, build `nec2c` and point `NEC2C` at
 the executable:

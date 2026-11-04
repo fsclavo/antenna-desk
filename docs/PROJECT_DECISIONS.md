@@ -69,6 +69,8 @@ consequences, it is documented in `docs/ADR/`.
 ## Quality and workflow
 
 - Strict `mypy` for domain and application code.
+- A second, permissive `mypy` pass over `src/antennadesk/ui` using
+  `mypy_ui.ini`, with a file-by-file exclusion ratchet toward full UI coverage.
 - `Ruff` for lint and formatting.
 - `pytest` for unit, integration, and acceptance tests.
 - Coverage is a supporting signal, not proof of electromagnetic validity.

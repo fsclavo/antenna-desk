@@ -15,12 +15,12 @@ Measured on 2026-11-04:
 
 | Fact | Value |
 |---|---|
-| Collected tests | 1,139 |
-| Passing locally without solver | 1,062 passed in 44 s |
-| Passing locally with `NEC2C` set | 1,139 passed in 59 s |
+| Collected tests | 1,255 |
+| Passing locally without solver | 1,153 passed, 102 skipped in 51 s |
+| Passing locally with `NEC2C` set | 1,255 passed in 67 s |
 | Slowest test | 4.9 s (`test_g5rv_dense_sweep_uses_pattern_snapshots`) |
 | UI test isolation | fixed 2026-11-04: deferred deletes were not dispatched, so widgets from one test stayed alive and a later test spent ~66 s in a nested event loop. The teardown in `tests/conftest.py` now closes windows and dispatches `DeferredDelete`; the full suite went from 142 s to 56 s |
-| Test files | 138 (81 unit, 3 integration, 1 acceptance, 53 UI) |
+| Test files | 150 (85 unit, 11 integration, 1 acceptance, 53 UI) |
 | Custom pytest markers | 0 |
 | `parametrize` uses | 24 |
 | `skipif` uses | 2 |
@@ -42,7 +42,7 @@ Measured on 2026-11-04:
 | Cross-engine oracle | PyNEC 2.3.4 (GPL-3, optional group): 3 free-space cases, 0.1 Ω and 0.05 dB |
 | Segment-convergence tests | 2: free space and finite ground |
 | Physics-invariant tests | 5: power budget, pattern integral, rotation, and the integration helper (NEC2C) |
-| `docs/VALIDATION_PLAN.md` test count | fixed in Phase 0 (was 788, now 1,139) |
+| `docs/VALIDATION_PLAN.md` test count | fixed (was 788, now 1,255) |
 
 The suite is in good shape for its size. The gaps are not "more tests"; they are
 *stronger oracles*, *enforced thresholds*, and *consistency between code, docs,
@@ -74,7 +74,7 @@ that was hard to navigate and slow to run in isolation; it is now split.
 
 - Register markers in `pyproject.toml`: `science`, `solver`, `ui`, `slow`,
   `golden`. `--strict-markers` is already enabled, so unregistered markers fail.
-- Tag the 77 solver tests with `@pytest.mark.solver` instead of relying only on
+- Tag the 102 solver tests with `@pytest.mark.solver` instead of relying only on
   `skipif`, so `pytest -m solver` is meaningful and `pytest -m "not solver"` is
   the default fast lane.
 - Add `tests/factories.py` with builders for `AntennaModel`, `SimulationSpec`,
@@ -96,7 +96,7 @@ that was hard to navigate and slow to run in isolation; it is now split.
 
 **Acceptance.** `uv run pytest -m "not solver"` runs in 44 s today; tagging the
 slow tests to reach a sub-20 s lane is still pending. `uv run pytest -m solver`
-runs only the 77 solver tests. The main-window suite is split by feature and no
+runs only the 102 solver tests. The main-window suite is split by feature and no
 main-window module exceeds 1,000 lines. The nec2c adapter suite is also split
 into mechanics, references, families, and patterns modules.
 
@@ -159,8 +159,9 @@ between the domain and the widgets.
 - Keep the PySide6 pin below 6.10 and record the reason in the ADR, not only in
   a comment.
 
-**Acceptance.** `uv run mypy` covers `ui/` at the agreed level; ruff reports no
-new categories; every source file has an SPDX header.
+**Acceptance.** `uv run mypy` plus `uv run mypy --config-file mypy_ui.ini`
+cover `ui/` at the agreed level; ruff reports no new categories; every source
+file has an SPDX header.
 
 **Effort.** L (incremental, one module per session).
 
@@ -502,8 +503,8 @@ Each phase is independently shippable.
 ### Phase 0 — Quick wins (implemented 2026-11-04)
 
 1. `NEC2C` auto-detection in `tests/conftest.py`, so the local command does not
-   silently skip 77 tests. Done, with a pytest header line that reports the
-   solver path.
+   silently skip the solver tests. Done, with a pytest header line that reports
+   the solver path.
 2. Register markers and tag the solver tests. Done: `science`, `solver`,
    `slow`, `golden`, `ui`.
 3. Extend the CI `paths` filter and add `concurrency`. Done for `scripts/**`,
@@ -513,8 +514,9 @@ Each phase is independently shippable.
 4. Replace the manual uv install with `setup-uv` and caching. Done in `ci.yml`
    and `package.yml`. `release.yml` is left unchanged on purpose; it needs a
    release dry run before touching the publishing path.
-5. Fix the stale test count in `VALIDATION_PLAN.md`. Done: 1,121 tests, 77 of
-   them solver tests.
+5. Fix the stale test count in `VALIDATION_PLAN.md`. Done at the time: 1,121
+   tests, 77 of them solver tests. The suite now has 1,255 tests, 102 of them
+   solver tests.
 
 ### Phase 0.1 — UI test isolation (implemented 2026-11-04)
 
@@ -571,8 +573,8 @@ Track these over time; they are the definition of "better QA" for this project:
 
 | Metric | Target |
 |---|---|
-| Solver tests executed in CI | 77/77 on Linux and Windows |
-| Solver tests executed locally | 77/77 when the binary exists |
+| Solver tests executed in CI | 102/102 on Linux and Windows |
+| Solver tests executed locally | 102/102 when the binary exists |
 | Domain coverage (line + branch) | ≥ 95 % |
 | Coverage gates by package | pass; thresholds ratchet up |
 | UI files under mypy | 58/75 now, ratchet to 75 |

@@ -19,6 +19,7 @@ testable. It is not a commitment to implement every item in one session.
 uv run ruff check .
 uv run ruff format --check .
 uv run mypy
+uv run mypy --config-file mypy_ui.ini
 NEC2C=... uv run pytest -q
 ```
 
@@ -143,6 +144,7 @@ and Phase 3.2.
 uv run ruff check .
 uv run ruff format --check .
 uv run mypy
+uv run mypy --config-file mypy_ui.ini
 NEC2C=... uv run pytest -q
 ```
 

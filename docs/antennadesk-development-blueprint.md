@@ -700,7 +700,8 @@ On every PR:
 
 - Install dependencies from `uv.lock`.
 - Ruff.
-- mypy on defined modules.
+- mypy on defined modules, plus the permissive `mypy_ui.ini` ratchet for the Qt
+  layer.
 - pytest.
 - Domain tests without solver dependency.
 - Solver integration where available.
