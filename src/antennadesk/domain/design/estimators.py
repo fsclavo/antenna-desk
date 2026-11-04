@@ -183,7 +183,7 @@ def estimate_vertical(intent: DesignIntent) -> DimensionEstimate:
     elif intent.vertical_form is VerticalForm.FIVE_EIGHTH_WAVE:
         height = five_eighth_wave_length_m(intent.frequency_hz)
         method_id = "vertical.five_eighth_wave"
-        confidence = Confidence.PHYSICAL
+        confidence = Confidence.EMPIRICAL
         warnings = (
             "estimator.warning.starting_point",
             "estimator.warning.vertical_matching",

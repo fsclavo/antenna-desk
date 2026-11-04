@@ -182,6 +182,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Five-eighth-wave vertical estimates now apply the same end-effect factor as
+  the quarter- and half-wave estimates, matching the ARRL 585/f practical
+  formula. The estimated radiator is about 5% shorter than before, and the
+  estimate is labeled empirical instead of physical.
 - A NEC deck line containing only separators (for example `,`) no longer raises
   an `IndexError`; it is ignored like a blank line. Imported files are untrusted
   data, so the parser now reports malformed cards as `ValueError`.

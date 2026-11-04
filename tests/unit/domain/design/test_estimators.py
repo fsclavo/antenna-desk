@@ -115,6 +115,43 @@ def test_vertical_estimate_supports_quarter_half_and_five_eighth() -> None:
     assert any("vertical_matching" in warning for warning in five_eighth.warnings)
 
 
+def test_estimator_lengths_match_the_published_arrl_formulas() -> None:
+    # ARRL practical formulas: L_ft = 468/f, 234/f, and 585/f for the dipole,
+    # quarter-wave vertical, and 5/8-wave vertical respectively.
+    frequency_hz = 7_100_000.0
+    dipole = estimate_intent(_intent("wire_dipole", frequency_hz))
+    quarter = estimate_intent(
+        _intent(
+            "vertical",
+            frequency_hz,
+            vertical_form=VerticalForm.QUARTER_WAVE,
+            radial_count=4,
+        )
+    )
+    five_eighth = estimate_intent(
+        _intent(
+            "vertical",
+            frequency_hz,
+            vertical_form=VerticalForm.FIVE_EIGHTH_WAVE,
+            radial_count=4,
+        )
+    )
+    feet_to_meters = 0.3048
+
+    assert dipole.parameters.total_length_m == pytest.approx(
+        468.0 * feet_to_meters * 1e6 / frequency_hz,
+        rel=0.005,
+    )
+    assert quarter.parameters.height_m == pytest.approx(
+        234.0 * feet_to_meters * 1e6 / frequency_hz,
+        rel=0.005,
+    )
+    assert five_eighth.parameters.height_m == pytest.approx(
+        585.0 * feet_to_meters * 1e6 / frequency_hz,
+        rel=0.005,
+    )
+
+
 def test_inverted_v_and_fan_estimates_keep_angle_and_bands() -> None:
     inverted = estimate_intent(_intent("inverted_v", included_angle_deg=90.0, height_m=12.0))
     fan = estimate_intent(

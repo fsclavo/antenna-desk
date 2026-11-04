@@ -190,7 +190,7 @@ gain, nulls, or impedance.
 | `loop` | B | ARRL Antenna Book, 24th ed., Ch. 5, p. 5.4, for the quad case; the polygon correction is a calibrated starting rule | 15 Ω for the quad preset only | Delta and arbitrary polygon side counts are structural. |
 | `quad_loop` | A | ARRL Antenna Book, 24th ed., Ch. 5, p. 5.4: about 120 Ω at resonance | 15 Ω | Published quad geometry only. |
 | `delta_loop` | C | Polygon-corrected circumference starting rule; no independent delta-loop reference | Not applicable (structural) | Starting dimensions; verify with a simulation or a measurement. |
-| `vertical` | C | Quarter-wave starting rule; no independent gain reference | Not applicable (structural) | Radial count and the ground model dominate the result. |
+| `vertical` | C | ARRL 234/f and 585/f practical length rules; no independent gain reference | Not applicable (structural) | Radial count and the ground model dominate the result. |
 | `loaded_vertical` | C | Quarter-wave starting rule plus a series loading-coil model | Not applicable (structural) | Coil Q and the ground model are not independently validated. |
 | `yagi` | A | NBS TN-688 5-element preset, 9.2 dBd (11.35 dBi) | 0.5 dB | Only the published preset; edited element geometry is experimental. |
 | `moxon` | A | L. B. Cebik, W4RNL, 'The Moxon Rectangle: A Review', Table 1 and text | 1.5 Ω real; 5 Ω reactance; 0.3 dB gain; better than 30 dB F/B | Published 20 m dimensions only. |

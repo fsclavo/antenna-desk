@@ -43,7 +43,8 @@ warnings, and a dimension tolerance.
 - Quarter-wave practical factor: `0.25λ × 0.95`.
 - Half-wave vertical: `0.5λ × 0.95`, using the same end-effect factor as a
   dipole. The feed impedance is high, so matching is required.
-- Five-eighth-wave vertical: `0.625λ`.
+- Five-eighth-wave vertical: `0.625λ × 0.95`, matching the ARRL 585/f
+  practical formula.
 - Resonant full-wave loop: circumference `1.0λ` for an ideal thin circular
   loop, with the polygon correction described below.
 - Folded-dipole starting spacing: `0.02λ`.
@@ -58,7 +59,7 @@ warnings, and a dimension tolerance.
 | Loop / quad / delta | circumference `λ × (1.02895 + 0.05028/N + 0.09665/N²)` | empirical | `N` sides; quad=4, delta=3; calibrated polygon preset |
 | Vertical 1/4 | `0.25λ × 0.95`; radial `0.25λ` | empirical | Radial count/length are starting values |
 | Vertical 1/2 | `0.5λ × 0.95`; radial `0.25λ` | empirical | High feed impedance; matching required |
-| Vertical 5/8 | `0.625λ` | physical | High feed impedance; matching required |
+| Vertical 5/8 | `0.625λ × 0.95`; radial `0.25λ` | empirical | High feed impedance; matching required |
 | Inverted-V | half-wave dipole total, split in two legs | empirical | Included angle affects feed impedance |
 | Fan dipole | one half-wave element per band | empirical | Elements interact; the V angle shifts resonance, especially on the highest band |
 | End-fed | half-wave wire; `0.05λ` counterpoise; 49:1 transformer | heuristic | Transformer and counterpoise are application starting points |

@@ -20,7 +20,25 @@ from antennadesk.domain.design.formulas import (
 def test_shared_formula_factors_are_the_documented_starting_points() -> None:
     assert pytest.approx(0.475) == HALF_WAVE_FACTOR
     assert pytest.approx(0.2375) == QUARTER_WAVE_FACTOR
-    assert pytest.approx(0.625) == FIVE_EIGHTH_WAVE_FACTOR
+    assert pytest.approx(0.59375) == FIVE_EIGHTH_WAVE_FACTOR
+
+
+@pytest.mark.parametrize(
+    ("feet_constant", "factor"),
+    [
+        (468.0, HALF_WAVE_FACTOR),
+        (234.0, QUARTER_WAVE_FACTOR),
+        (585.0, FIVE_EIGHTH_WAVE_FACTOR),
+    ],
+)
+def test_length_factors_match_the_published_arrl_formulas(
+    feet_constant: float,
+    factor: float,
+) -> None:
+    # ARRL practical formulas: L_ft = constant / f_MHz, so L/lambda is constant.
+    published_factor = feet_constant * 0.3048 * 1_000_000.0 / 299_792_458.0
+
+    assert factor == pytest.approx(published_factor, rel=0.005)
 
 
 def test_common_lengths_at_seven_megahertz() -> None:

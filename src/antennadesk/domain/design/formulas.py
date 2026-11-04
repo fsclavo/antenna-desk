@@ -15,7 +15,7 @@ from ..common import units
 END_EFFECT_FACTOR = 0.95
 HALF_WAVE_FACTOR = 0.5 * END_EFFECT_FACTOR
 QUARTER_WAVE_FACTOR = 0.25 * END_EFFECT_FACTOR
-FIVE_EIGHTH_WAVE_FACTOR = 0.625
+FIVE_EIGHTH_WAVE_FACTOR = 0.625 * END_EFFECT_FACTOR
 # AntennaDesk application preset calibrated with NEC-2 for the closed thin-wire
 # polygon used by the loop model.  A polygon needs slightly more conductor than
 # the ideal 1.0λ circular loop, and the correction grows as the side count

@@ -27,7 +27,7 @@ Measured on 2026-11-04:
 | Largest test file | `tests/integration/simulation/test_nec2c_adapter.py`, 1,442 lines. The 3,654-line main-window file is split into eight feature modules; the largest is 828 lines |
 | Source lines | 46,323 total; 30,144 in `ui/` |
 | Type-checked lines | ~16,000 strict, plus 58 of 75 `ui/` files under a permissive ratchet; 17 UI files (219 errors) remain excluded |
-| Coverage, full suite with solver (measured) | 85 % total; domain 91 %, simulation 91 %, persistence 94 %, application 92 %, importers 90 %, reporting 87 %, ui 82 % |
+| Coverage, full suite with solver (measured) | 85 % total; domain 91 %, simulation 91 %, persistence 94 %, application 92 %, importers 91 %, reporting 87 %, ui 82 % |
 | Coverage enforcement | per-package gates in the `coverage` CI job, one point below the measured baseline |
 | Timing sensitivity | one UI failure appeared under coverage instrumentation at ~32 % while another pytest process ran concurrently. The polarization commit added deterministic posted-event processing in `tests/ui/helpers.py`; re-verify under coverage before treating it as open |
 | ADR files | 24, numbered 0001–0023 with a duplicated `0014` |
@@ -111,9 +111,9 @@ catch regressions.
   suite with `--cov --cov-branch`, uploads `coverage.xml`, and gates each package
   with `coverage report --format=total --include=... --fail-under=...`.
   Measured: total 85, domain 91, simulation 91, persistence 94, application 92,
-  importers 90, reporting 87, ui 82. Thresholds sit one point below and ratchet.
+  importers 91, reporting 87, ui 82. Thresholds sit one point below and ratchet.
   The fuzz tests and the NEC deck error-path tests raised importers from 75 to
-  90, so its gate moved from 74 to 88.
+  91, so its gate moved from 74 to 88.
 - A single coverage lane is enough: the full suite with coverage takes 78 s.
   The two-lane plan was based on the pre-isolation 10-minute run.
 - Add mutation testing with `mutmut` (BSD-3, Unix only) on `domain/` and
@@ -315,20 +315,27 @@ stated tolerance.
 #### 3.5.6 Closed-form references for estimators
 
 `docs/ANTENNA_DESIGN_ESTIMATORS.md` requires a source, assumptions, confidence,
-and tolerance for every frequency-first estimator. Today the tests check
+and tolerance for every frequency-first estimator. The tests mostly checked
 *formula consistency*, not agreement with a published value.
 
-**Change.** Add published closed-form anchors, each verified against the printed
-edition before use:
+**Change (implemented 2026-11-04, dimension anchors).** The estimator output is
+a length, so the anchors validate the published length rules:
 
-- half-wave dipole input impedance and directivity (Balanis, *Antenna Theory*);
-- short dipole directivity;
-- small-loop radiation resistance;
-- folded-dipole 4× resistance rule (already covered by the ARRL check);
-- NEC-2 User's Guide examples for the solver, already in place.
+- half-wave: ARRL `468/f` → `0.4758 λ`;
+- quarter-wave: ARRL `234/f` → `0.2379 λ`;
+- 5/8-wave: ARRL `585/f` → `0.5948 λ`.
 
-Record the edition and page in the test docstring. Do not transcribe a value
-from a secondary web source.
+`tests/unit/domain/design/test_formulas.py` compares each factor with the
+published conversion within 0.5 %, and `test_estimators.py` compares the
+estimated dipole and vertical heights end to end. The anchor found that the
+5/8-wave factor lacked the end-effect correction used by the other two; it is
+now `0.625 × 0.95` and the estimate is labeled empirical.
+
+Balanis impedance and directivity values were considered and deliberately not
+added: they describe an idealized `0.5 λ` dipole, while the estimator produces a
+`0.475 λ` practical length, so a direct comparison would be misleading. The
+NEC-2 User's Guide examples and the ARRL gain test already cover the solver's
+absolute accuracy.
 
 **Acceptance.** Every estimator with a closed-form oracle has at least one
 published-value test.
@@ -497,7 +504,8 @@ the polarization commit.
 2. Physical invariants: power, pattern integral, reciprocity, rotation.
 3. (done 2026-11-04) `scikit-rf` oracle for the two-port math.
 4. `PyNEC` cross-engine job.
-5. Published closed-form anchors for the estimators.
+5. (done 2026-11-04) Published closed-form anchors for the estimators: ARRL
+   `468/f`, `234/f`, and `585/f` within 0.5 %.
 6. (done 2026-11-04) Evidence registry as code.
 
 ### Phase 3 — Scale (ongoing)

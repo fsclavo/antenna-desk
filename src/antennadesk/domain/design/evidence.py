@@ -82,7 +82,7 @@ EVIDENCE: dict[str, EvidenceEntry] = {
     "vertical": EvidenceEntry(
         template="vertical",
         level=EvidenceLevel.EXPERIMENTAL,
-        source="Quarter-wave starting rule; no independent gain reference",
+        source="ARRL 234/f and 585/f practical length rules; no independent gain reference",
         tolerance="Not applicable (structural)",
         limitation="Radial count and the ground model dominate the result.",
     ),
