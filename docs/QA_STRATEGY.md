@@ -24,7 +24,7 @@ Measured on 2026-11-04:
 | Custom pytest markers | 0 |
 | `parametrize` uses | 24 |
 | `skipif` uses | 2 |
-| Largest test file | `tests/integration/simulation/test_nec2c_adapter.py`, 1,442 lines. The 3,654-line main-window file is split into eight feature modules; the largest is 828 lines |
+| Largest test file | `tests/ui/test_main_window_presets.py`, 828 lines. The 1,442-line nec2c adapter file is split into four modules |
 | Source lines | 46,323 total; 30,144 in `ui/` |
 | Type-checked lines | ~16,000 strict, plus 58 of 75 `ui/` files under a permissive ratchet; 17 UI files (219 errors) remain excluded |
 | Coverage, full suite with solver (measured) | 85 % total; domain 91 %, simulation 91 %, persistence 94 %, application 92 %, importers 91 %, reporting 87 %, ui 82 % |
@@ -97,8 +97,8 @@ that was hard to navigate and slow to run in isolation; it is now split.
 **Acceptance.** `uv run pytest -m "not solver"` runs in 44 s today; tagging the
 slow tests to reach a sub-20 s lane is still pending. `uv run pytest -m solver`
 runs only the 77 solver tests. The main-window suite is split by feature and no
-main-window module exceeds 1,000 lines. The next candidate is
-`test_nec2c_adapter.py` at 1,442 lines.
+main-window module exceeds 1,000 lines. The nec2c adapter suite is also split
+into mechanics, references, families, and patterns modules.
 
 **Effort.** M.
 

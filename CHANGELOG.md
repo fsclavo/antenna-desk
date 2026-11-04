@@ -132,6 +132,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `mutmut` on the design formulas and intent. A curated MMANA corpus with a
   checksum manifest now covers structural regression and a NEC2C smoke run,
   and analytical closed forms cover the short-dipole and small-loop limits.
+  The 1,442-line nec2c adapter test module is split into four modules.
 
 ### Changed
 
