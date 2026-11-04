@@ -122,6 +122,15 @@ lists 12 curated MMANA-GAL models with size and SHA-256;
 a NEC2C smoke simulation. This is structural regression evidence, not numerical
 validation: the corpus does not include published expected results.
 
+### Analytical oracles
+
+`tests/integration/simulation/test_analytical_oracle.py` compares four
+canonical cases with published closed forms from Balanis, *Antenna Theory*,
+4th ed., Chapters 4 and 5: short-dipole radiation resistance and directivity,
+small-loop radiation resistance, and half-wave dipole directivity. FDTD/FEM
+remains the preferred different-method oracle, but no engine is available in
+the current environment.
+
 ## Phase 3 — guided MVP and GUI
 
 UI tests use `pytest-qt` with the Qt offscreen platform:

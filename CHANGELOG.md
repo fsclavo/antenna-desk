@@ -130,7 +130,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   geometries, physical invariants cover power balance, pattern-integral
   directivity, and rotation invariance, and weekly mutation testing runs
   `mutmut` on the design formulas and intent. A curated MMANA corpus with a
-  checksum manifest now covers structural regression and a NEC2C smoke run.
+  checksum manifest now covers structural regression and a NEC2C smoke run,
+  and analytical closed forms cover the short-dipole and small-loop limits.
 
 ### Changed
 

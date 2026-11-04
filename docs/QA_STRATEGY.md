@@ -37,6 +37,7 @@ Measured on 2026-11-04:
 | Cross-engine numerical checks | 3 free-space cases against nec2++ via PyNEC (dipole, folded dipole, quad loop) |
 | Template evidence entries | 25/25 catalog templates, enforced by a test |
 | Reference corpus | 12 curated MMANA models, SHA-256 manifest, structural and NEC2C smoke tests |
+| Different-method oracles | 4 analytical cases (short dipole R and D, small loop R, half-wave D) |
 | Independent RF math oracle | scikit-rf 2.2.0 (BSD-3, dev-only): 11 tests for feed lines, L/Pi/T networks, cascades, and gain |
 | Cross-engine oracle | PyNEC 2.3.4 (GPL-3, optional group): 3 free-space cases, 0.1 Ω and 0.05 dB |
 | Segment-convergence tests | 2: free space and finite ground |
@@ -294,13 +295,29 @@ errors. It does not replace the published references.
 
 #### 3.5.4 Different-method oracle (offline)
 
-To catch formulation-level errors shared by every NEC-2 derivative, compare two
-or three canonical cases against a different numerical method: FDTD (openEMS) or
-FEM. Run it manually, commit the results with provenance (engine, version,
-mesh, boundary conditions), and treat them as golden values.
+To catch formulation-level errors shared by every NEC-2 derivative, compare
+canonical cases against a different numerical method: FDTD (openEMS) or FEM.
+
+**Change (implemented 2026-11-04, analytical substitute).** No FDTD or FEM
+engine is available in this environment (openEMS and Meep are absent and there
+is no package manager access). `tests/integration/simulation/test_analytical_oracle.py`
+uses published closed forms instead, which are independent of the moment
+method:
+
+- short-dipole radiation resistance `20π²(l/λ)²` and directivity `1.5`;
+- small-loop radiation resistance `31171 (N²A/λ²)²`;
+- half-wave dipole directivity `1.643`.
+
+The four cases run in 0.3 s with `NEC2C`. The small-loop check uses a 15 %
+tolerance because the uniform-current formula is approximate at `C = 0.1 λ`
+(observed difference about 12 %); the other cases match within 1–3 %.
+
+**Remaining:** a true FDTD/FEM golden case. It needs an engine, a mesh, and
+boundary conditions, and stays an offline task for an environment that can
+install one.
 
 **Acceptance.** Two golden cases with a documented method difference and an
-explained delta. Not part of CI.
+explained delta.
 
 **Effort.** L, one-off.
 
@@ -541,7 +558,7 @@ the polarization commit.
    weekly `mutmut` on `formulas.py` and `intent.py`, to be widened as the
    operator set is understood.
 2. (started 2026-11-04) Reference corpus pipeline: 12 curated MMANA models with a checksum manifest, used for structural regression and a NEC2C smoke run. No published numerical results yet.
-3. Different-method golden cases.
+3. (partly done 2026-11-04) Different-method oracle: four analytical closed-form cases replace FDTD/FEM, which is not installable here. A true FDTD/FEM golden case remains offline.
 4. Level 3 measurement protocol and one recorded measurement.
 5. Benchmark and memory tracking.
 
