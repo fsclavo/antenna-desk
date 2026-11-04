@@ -16,3 +16,7 @@ updates:
     groups:
       python:
         patterns: ["*"]
+    ignore:
+      # 6.12 triggers a shutdown refcount crash with pyqtgraph. The pin below
+      # 6.10 is deliberate; re-evaluate it manually.
+      - dependency-name: "pyside6-essentials"
