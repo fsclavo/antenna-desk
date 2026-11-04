@@ -113,6 +113,15 @@ A synthetic isotropic pattern integrates to 0 dBi within 0.01 dB as a check on
 the integration helper. Reciprocity is omitted because the canonical model has
 no two-port antenna representation.
 
+### Reference corpus
+
+`reference_data/` is copyrighted and gitignored. `reference_data.manifest.json`
+lists 12 curated MMANA-GAL models with size and SHA-256;
+`scripts/check_reference_data.py` verifies them, and
+`tests/integration/reference/test_mmana_corpus.py` imports each model and runs
+a NEC2C smoke simulation. This is structural regression evidence, not numerical
+validation: the corpus does not include published expected results.
+
 ## Phase 3 — guided MVP and GUI
 
 UI tests use `pytest-qt` with the Qt offscreen platform:

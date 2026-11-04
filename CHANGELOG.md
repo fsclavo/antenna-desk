@@ -129,7 +129,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   The solver is also cross-checked against nec2++ for three canonical
   geometries, physical invariants cover power balance, pattern-integral
   directivity, and rotation invariance, and weekly mutation testing runs
-  `mutmut` on the design formulas and intent.
+  `mutmut` on the design formulas and intent. A curated MMANA corpus with a
+  checksum manifest now covers structural regression and a NEC2C smoke run.
 
 ### Changed
 

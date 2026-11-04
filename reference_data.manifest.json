@@ -1,0 +1,65 @@
+{
+  "source": "MMANA-GAL sample models supplied by the project owner; not redistributed.",
+  "files": [
+    {
+      "path": "mmana/HF simple/Dipole/3.5and3.8 dipole -1.maa",
+      "size": 329,
+      "sha256": "7817bf22d9aa46575bec959d737051b61817e181b6968592747eb28d9328a10f"
+    },
+    {
+      "path": "mmana/HF simple/Dipole/FD20_1.maa",
+      "size": 388,
+      "sha256": "2a7ad18678f3b6af4e8d60dff9f4673b37668c3a285de4d29d645055c4213d15"
+    },
+    {
+      "path": "mmana/HF simple/Dipole/InvV40.maa",
+      "size": 311,
+      "sha256": "6888db539596b04b326b389c250a78b7fc938f9859540121b12387619534409a"
+    },
+    {
+      "path": "mmana/HF simple/Dipole/0.5 dipole+short radial.maa",
+      "size": 258,
+      "sha256": "32fd8fc1b7b3fea4280af1c5335fe7f0a7d964d16a551f46f3f1229709461e39"
+    },
+    {
+      "path": "mmana/HF simple/Vertical/offcenter GP1.maa",
+      "size": 440,
+      "sha256": "85ba7f9e0b5b20d9374c3bacbae5bc07886a28c2e1e546760c870cdf924504f9"
+    },
+    {
+      "path": "mmana/HF simple/Vertical/Vert20s_75+rad.maa",
+      "size": 347,
+      "sha256": "3094e532770b7ab1d964bae460de31810cfaf0f8bebcc88f75ee2a1fcc06e1ab"
+    },
+    {
+      "path": "mmana/HF simple/Loop/LOOP20r.maa",
+      "size": 369,
+      "sha256": "de20e0bfaad4b6b354f0bcfb0c1cddbd8d0cc35ff193a6d7b2381aeff1dba904"
+    },
+    {
+      "path": "mmana/HF beams/Db54m.maa",
+      "size": 662,
+      "sha256": "a5233604760c25a9dcc312079c869baf32f0559144ff876ee3072bb8f8516187"
+    },
+    {
+      "path": "mmana/HF beams/w2eey.maa",
+      "size": 962,
+      "sha256": "861982d2d9e52a8ad406ec64e8681035ab54f7382f18eb9c37cd5a3ef7dcefaa"
+    },
+    {
+      "path": "mmana/VHF/J-ant144.maa",
+      "size": 509,
+      "sha256": "c8041ad2121b441692845b163924b52ab07a66f56142b131fdee7355f5ecf04e"
+    },
+    {
+      "path": "mmana/VHF/144omni.maa",
+      "size": 887,
+      "sha256": "e64cc71629de395b20cd212be5af1e19c2f8e95f9f3176ff9b5f3b70b50b7a07"
+    },
+    {
+      "path": "mmana/Short/Magnetic loops/Multiturnloop.maa",
+      "size": 1063,
+      "sha256": "f14b3dcbf345fef168f0ff1787ae3561ccb3ccba6fdc208194fd9b1fde7828db"
+    }
+  ]
+}

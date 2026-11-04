@@ -36,6 +36,7 @@ Measured on 2026-11-04:
 | Mutation testing | weekly `mutmut` on `formulas.py` and `intent.py`: 123/175 killed, 52 message-only equivalents, behavioural score 100 % |
 | Cross-engine numerical checks | 3 free-space cases against nec2++ via PyNEC (dipole, folded dipole, quad loop) |
 | Template evidence entries | 25/25 catalog templates, enforced by a test |
+| Reference corpus | 12 curated MMANA models, SHA-256 manifest, structural and NEC2C smoke tests |
 | Independent RF math oracle | scikit-rf 2.2.0 (BSD-3, dev-only): 11 tests for feed lines, L/Pi/T networks, cascades, and gain |
 | Cross-engine oracle | PyNEC 2.3.4 (GPL-3, optional group): 3 free-space cases, 0.1 Ω and 0.05 dB |
 | Segment-convergence tests | 2: free space and finite ground |
@@ -383,17 +384,23 @@ regenerates it.
 #### 3.5.8 Reference corpus pipeline
 
 `reference_data/` is correctly gitignored because it is copyrighted, but that
-also means nothing verifies it is present or current, and none of the 644 MMANA
-models feeds a test.
+also means nothing verified it was present or current, and none of the 644
+MMANA models fed a test.
 
-**Change.**
+**Change (implemented 2026-11-04, structural evidence).**
 
-- Add `scripts/fetch_reference_data.py` with a manifest of file names, sizes,
-  and SHA-256 checksums, plus a documented source for each.
-- Add a test that skips when the corpus is absent and fails in the nightly job
-  when it is expected but missing.
-- Wire 10–20 MMANA models with published results into reference tests, starting
-  with simple dipoles and beams.
+- `reference_data.manifest.json` lists 12 curated MMANA-GAL models with size and
+  SHA-256. `scripts/check_reference_data.py --check` verifies them and
+  `--write` regenerates the manifest. The corpus is not downloaded: the files
+  are copyrighted and supplied by the project owner.
+- `tests/integration/reference/test_mmana_corpus.py` imports each model and
+  runs a NEC2C smoke simulation, asserting a completed status, positive
+  resistance, and finite gain. It skips at module level when the corpus is
+  absent, so CI does not run it.
+- These are **structural regression** tests, not numerical validation: the
+  corpus does not contain published expected results. The models cover
+  dipoles, a folded dipole, an inverted-V, verticals, a loop, two beams, two
+  VHF antennas, and a small magnetic loop.
 
 **Acceptance.** The corpus is reproducible, and at least ten models are used as
 evidence.
@@ -533,7 +540,7 @@ the polarization commit.
 1. (started 2026-11-04) Mutation testing on the domain and simulation layers:
    weekly `mutmut` on `formulas.py` and `intent.py`, to be widened as the
    operator set is understood.
-2. Reference corpus pipeline and the first ten MMANA cases.
+2. (started 2026-11-04) Reference corpus pipeline: 12 curated MMANA models with a checksum manifest, used for structural regression and a NEC2C smoke run. No published numerical results yet.
 3. Different-method golden cases.
 4. Level 3 measurement protocol and one recorded measurement.
 5. Benchmark and memory tracking.
