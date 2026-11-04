@@ -15,9 +15,9 @@ Measured on 2026-11-04:
 
 | Fact | Value |
 |---|---|
-| Collected tests | 1,255 |
-| Passing locally without solver | 1,153 passed, 102 skipped in 51 s |
-| Passing locally with `NEC2C` set | 1,255 passed in 67 s |
+| Collected tests | 1,259 |
+| Passing locally without solver | 1,157 passed, 102 skipped in 55 s |
+| Passing locally with `NEC2C` set | 1,259 passed in 70 s |
 | Slowest test | 4.9 s (`test_g5rv_dense_sweep_uses_pattern_snapshots`) |
 | UI test isolation | fixed 2026-11-04: deferred deletes were not dispatched, so widgets from one test stayed alive and a later test spent ~66 s in a nested event loop. The teardown in `tests/conftest.py` now closes windows and dispatches `DeferredDelete`; the full suite went from 142 s to 56 s |
 | Test files | 150 (85 unit, 11 integration, 1 acceptance, 53 UI) |
@@ -42,7 +42,7 @@ Measured on 2026-11-04:
 | Cross-engine oracle | PyNEC 2.3.4 (GPL-3, optional group): 3 free-space cases, 0.1 Ω and 0.05 dB |
 | Segment-convergence tests | 2: free space and finite ground |
 | Physics-invariant tests | 5: power budget, pattern integral, rotation, and the integration helper (NEC2C) |
-| `docs/VALIDATION_PLAN.md` test count | fixed (was 788, now 1,255) |
+| `docs/VALIDATION_PLAN.md` test count | fixed (was 788, now 1,259) |
 
 The suite is in good shape for its size. The gaps are not "more tests"; they are
 *stronger oracles*, *enforced thresholds*, and *consistency between code, docs,
@@ -515,7 +515,7 @@ Each phase is independently shippable.
    and `package.yml`. `release.yml` is left unchanged on purpose; it needs a
    release dry run before touching the publishing path.
 5. Fix the stale test count in `VALIDATION_PLAN.md`. Done at the time: 1,121
-   tests, 77 of them solver tests. The suite now has 1,255 tests, 102 of them
+   tests, 77 of them solver tests. The suite now has 1,259 tests, 102 of them
    solver tests.
 
 ### Phase 0.1 — UI test isolation (implemented 2026-11-04)

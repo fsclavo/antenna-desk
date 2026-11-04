@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -18,7 +19,9 @@ from antennadesk.ui.dialogs.antenna_catalog_dialog import ENTRIES
 
 START = "<!-- evidence-table:start -->"
 END = "<!-- evidence-table:end -->"
-VALIDATION_PLAN = Path(__file__).resolve().parents[4] / "docs" / "VALIDATION_PLAN.md"
+DOCS = Path(__file__).resolve().parents[4] / "docs"
+VALIDATION_PLAN = DOCS / "VALIDATION_PLAN.md"
+EVIDENCE_AUDIT = DOCS / "EVIDENCE_AUDIT.md"
 
 
 def test_every_catalog_template_has_an_evidence_entry() -> None:
@@ -53,6 +56,23 @@ def test_validation_plan_table_matches_the_registry() -> None:
     block = text.split(START)[1].split(END)[0].strip()
 
     assert block == render_markdown_table()
+
+
+def test_evidence_audit_lists_every_experimental_template() -> None:
+    text = EVIDENCE_AUDIT.read_text(encoding="utf-8")
+
+    for key, entry in EVIDENCE.items():
+        if entry.level is EvidenceLevel.EXPERIMENTAL:
+            assert f"| `{key}` |" in text
+
+
+def test_evidence_audit_summary_counts_match_the_registry() -> None:
+    counts = Counter(entry.level.value for entry in EVIDENCE.values())
+    text = EVIDENCE_AUDIT.read_text(encoding="utf-8")
+
+    assert f"**A, reference-backed:** {counts['A']} templates." in text
+    assert f"**B, published/heuristic:** {counts['B']} templates." in text
+    assert f"**C, experimental:** {counts['C']} templates" in text
 
 
 def test_unknown_template_raises() -> None:

@@ -56,11 +56,11 @@ warnings, and a dimension tolerance.
 |---|---|---|---|
 | Wire dipole | `0.5λ × 0.95` total length | empirical | Height and ground affect resonance |
 | Folded dipole | same element length; `0.02λ` spacing | empirical | Spacing controls step-up impedance |
-| Loop / quad / delta | circumference `λ × (1.02895 + 0.05028/N + 0.09665/N²)` | empirical | `N` sides; quad=4, delta=3; calibrated polygon preset |
-| Vertical 1/4 | `0.25λ × 0.95`; radial `0.25λ` | empirical | Radial count/length are starting values |
+| Loop / quad / delta | circumference `λ × (1.02895 + 0.05028/N + 0.09665/N²)` | empirical | `N` sides; quad=4, delta=3; calibrated polygon preset; the delta case falls in ON4UN's published 1.05–1.06λ range |
+| Vertical 1/4 | `0.25λ × 0.95`; radial `0.25λ` | empirical | ARRL 234/f length rule; radial count/length are starting values |
 | Vertical 1/2 | `0.5λ × 0.95`; radial `0.25λ` | empirical | High feed impedance; matching required |
-| Vertical 5/8 | `0.625λ × 0.95`; radial `0.25λ` | empirical | High feed impedance; matching required |
-| Inverted-V | half-wave dipole total, split in two legs | empirical | Included angle affects feed impedance |
+| Vertical 5/8 | `0.625λ × 0.95`; radial `0.25λ` | empirical | ARRL 585/f length rule; high feed impedance; matching required |
+| Inverted-V | half-wave dipole total, split in two legs | empirical | Included angle affects feed impedance; the 120° case matches the ARRL 465.6/f rule within 1% |
 | Fan dipole | one half-wave element per band | empirical | Elements interact; the V angle shifts resonance, especially on the highest band |
 | End-fed | half-wave wire; `0.05λ` counterpoise; 49:1 transformer | heuristic | Transformer and counterpoise are application starting points |
 | OCFD | half-wave total, feed at 1/3, 4:1 ideal transformer | heuristic | Existing synthesis can refine length/feed; actual balun ratio depends on height and feed offset |
@@ -250,6 +250,10 @@ Reference sources currently used:
 
 - ARRL Antenna Book: dipole end-effect, resonant loop, and vertical length
   factors (quarter-wave, half-wave, five-eighth-wave).
+- ARRL, “Wire Antennas for the Beginner”: 120° inverted-V total length
+  `465.6/f` feet.
+- ON4UN, *Low-Band DXing*, Ch. 10: resonant delta-loop circumference of
+  approximately 1.05–1.06 λ.
 - NBS TN-688: five-element Yagi preset in the editor.
 - DL6WU/Cebik: 2–32 element trimming Yagi starting design.
 - L. B. Cebik, W4RNL, “The Moxon Rectangle: A Review”, Table 1: 20 m wire Moxon.

@@ -109,12 +109,16 @@ Completed follow-ups:
 
 ## Phase 5 — Validation and references
 
-1. Inventory experimental templates without an independent numeric reference.
-2. Add references where a traceable source exists:
+1. **Inventory complete:** [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) records every
+   level C template and why it remains experimental.
+2. **First reference pass complete:** promoted `delta_loop`, `vertical`, and
+   `inverted_v` from C to B using published length rules, with explicit
+   tolerances and regression tests. These validate starting dimensions only.
+3. Add more references where a traceable source exists:
    - impedance, SWR, gain, or pattern metric as appropriate;
    - explicit tolerance per metric.
-3. Keep unverifiable templates labeled experimental.
-4. Do not invent values or copy numbers from another geometry.
+4. Keep unverifiable templates labeled experimental.
+5. Do not invent values or copy numbers from another geometry.
 
 ## Phase 6 — Deferred and blocked work
 
@@ -136,7 +140,7 @@ These are not part of the next implementation session unless priorities change:
 4. Phase 6 — deferred/blocked.
 
 Completed: Phase 0, the Phase 1 investigation, Phase 2 measurement, Phase 3.1,
-and Phase 3.2.
+Phase 3.2, and the Phase 5 evidence inventory/first reference pass.
 
 ## Quality gate for every phase
 

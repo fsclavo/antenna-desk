@@ -74,17 +74,29 @@ EVIDENCE: dict[str, EvidenceEntry] = {
     ),
     "delta_loop": EvidenceEntry(
         template="delta_loop",
-        level=EvidenceLevel.EXPERIMENTAL,
-        source="Polygon-corrected circumference starting rule; no independent delta-loop reference",
-        tolerance="Not applicable (structural)",
-        limitation="Starting dimensions; verify with a simulation or a measurement.",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "ON4UN, Low-Band DXing, Ch. 10: resonant delta-loop circumference "
+            "is approximately 1.05-1.06 wavelengths"
+        ),
+        tolerance="1% on the resonant circumference",
+        limitation=(
+            "Circumference only; feedpoint impedance and polarization depend on "
+            "the feed position and height."
+        ),
     ),
     "vertical": EvidenceEntry(
         template="vertical",
-        level=EvidenceLevel.EXPERIMENTAL,
-        source="ARRL 234/f and 585/f practical length rules; no independent gain reference",
-        tolerance="Not applicable (structural)",
-        limitation="Radial count and the ground model dominate the result.",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "ARRL practical length rules 234/f for a quarter-wave vertical and "
+            "585/f for a 5/8-wave vertical"
+        ),
+        tolerance="0.5% on radiator length",
+        limitation=(
+            "Gain and feedpoint impedance depend on radial count and ground; "
+            "those are not independently validated."
+        ),
     ),
     "loaded_vertical": EvidenceEntry(
         template="loaded_vertical",
@@ -116,10 +128,17 @@ EVIDENCE: dict[str, EvidenceEntry] = {
     ),
     "inverted_v": EvidenceEntry(
         template="inverted_v",
-        level=EvidenceLevel.EXPERIMENTAL,
-        source="Half-wave dipole starting rule with an included-angle heuristic",
-        tolerance="Not applicable (structural)",
-        limitation="No independent numerical reference.",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "ARRL, 'Wire Antennas for the Beginner': 120-degree inverted-V total "
+            "length is 465.6/f MHz feet"
+        ),
+        tolerance="1% on total length for the 120-degree case",
+        limitation=(
+            "The 90-degree case and ground detuning use separate empirical "
+            "starting rules; gain and feedpoint impedance are not independently "
+            "validated."
+        ),
     ),
     "fan_dipole": EvidenceEntry(
         template="fan_dipole",

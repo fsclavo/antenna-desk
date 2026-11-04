@@ -68,6 +68,13 @@ def test_loop_resonance_factor_rejects_fewer_than_three_sides() -> None:
         loop_resonance_factor(2)
 
 
+def test_delta_loop_circumference_matches_the_published_range() -> None:
+    # ON4UN, Low-Band DXing, Ch. 10: a resonant delta loop is about 1.05-1.06λ.
+    for frequency_hz in (3_500_000.0, 7_100_000.0, 14_100_000.0):
+        ratio = loop_circumference_m(frequency_hz, sides=3) / wavelength_m(frequency_hz)
+        assert 1.05 <= ratio <= 1.06
+
+
 def test_five_eighth_vertical_is_longer_than_a_quarter_wave() -> None:
     frequency_hz = 146_000_000.0
     assert five_eighth_wave_length_m(frequency_hz) > quarter_wave_length_m(frequency_hz)

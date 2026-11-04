@@ -139,6 +139,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Audited the experimental templates in
+  [`docs/EVIDENCE_AUDIT.md`](docs/EVIDENCE_AUDIT.md). The delta loop, vertical,
+  and inverted-V generators moved from evidence level C to B after checking
+  their published length rules, with explicit tolerances and regression tests.
+  The remaining experimental templates and their next evidence needs are
+  documented.
 - CI now pins every action by commit SHA, runs `uv lock --check` and
   `pip-audit --skip-editable`, and Dependabot tracks GitHub Actions and Python
   dependencies.

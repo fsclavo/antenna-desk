@@ -193,7 +193,7 @@ Acceptance criteria:
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
-| P1 | Independent references for remaining experimental templates | A/B | partial |
+| P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, and `inverted_v` promoted to B; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
 | P1 | Fan dipole V-angle calibration and angle optimization | B | investigated; angle optimizer deferred |
 | P1 | Optional ideal transformer/4:1 balun for OCFD | B | done |
 | P1 | Multiband batch engine and per-family band defaults (M6) | B | done |
@@ -227,7 +227,10 @@ Release track:
 
 Validation track:
 
-1. Independent references for remaining experimental templates.
+1. Independent references for remaining experimental templates. The first
+   audit promoted `delta_loop`, `vertical`, and `inverted_v` to level B; the
+   remaining level C templates and their next evidence needs are listed in
+   [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md).
 2. Physical measurements when the project owner has data.
 
 ## Definition of done for a generator

@@ -152,6 +152,26 @@ def test_estimator_lengths_match_the_published_arrl_formulas() -> None:
     )
 
 
+def test_inverted_v_total_length_matches_the_published_120_degree_rule() -> None:
+    # ARRL, "Wire Antennas for the Beginner": 120-degree inverted-V total
+    # length is 465.6/f_MHz feet.
+    frequency_hz = 7_100_000.0
+    estimate = estimate_intent(
+        _intent(
+            "inverted_v",
+            frequency_hz,
+            height_m=20.0,
+            included_angle_deg=120.0,
+        )
+    )
+
+    published_length_m = 465.6 * 0.3048 * 1e6 / frequency_hz
+    assert 2.0 * estimate.parameters.leg_length_m == pytest.approx(
+        published_length_m,
+        rel=0.01,
+    )
+
+
 def test_inverted_v_and_fan_estimates_keep_angle_and_bands() -> None:
     inverted = estimate_intent(_intent("inverted_v", included_angle_deg=90.0, height_m=12.0))
     fan = estimate_intent(

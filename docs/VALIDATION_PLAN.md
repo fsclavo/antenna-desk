@@ -240,13 +240,13 @@ gain, nulls, or impedance.
 | `folded_dipole` | B | ARRL Antenna Book, 24th ed., Ch. 2, pp. 2.12-2.13: an equal-conductor folded dipole has the same gain and four times the resistance | 0.2 dB gain; 0.5 on the resistance ratio | No independent absolute impedance reference. |
 | `loop` | B | ARRL Antenna Book, 24th ed., Ch. 5, p. 5.4, for the quad case; the polygon correction is a calibrated starting rule | 15 Ω for the quad preset only | Delta and arbitrary polygon side counts are structural. |
 | `quad_loop` | A | ARRL Antenna Book, 24th ed., Ch. 5, p. 5.4: about 120 Ω at resonance | 15 Ω | Published quad geometry only. |
-| `delta_loop` | C | Polygon-corrected circumference starting rule; no independent delta-loop reference | Not applicable (structural) | Starting dimensions; verify with a simulation or a measurement. |
-| `vertical` | C | ARRL 234/f and 585/f practical length rules; no independent gain reference | Not applicable (structural) | Radial count and the ground model dominate the result. |
+| `delta_loop` | B | ON4UN, Low-Band DXing, Ch. 10: resonant delta-loop circumference is approximately 1.05-1.06 wavelengths | 1% on the resonant circumference | Circumference only; feedpoint impedance and polarization depend on the feed position and height. |
+| `vertical` | B | ARRL practical length rules 234/f for a quarter-wave vertical and 585/f for a 5/8-wave vertical | 0.5% on radiator length | Gain and feedpoint impedance depend on radial count and ground; those are not independently validated. |
 | `loaded_vertical` | C | Quarter-wave starting rule plus a series loading-coil model | Not applicable (structural) | Coil Q and the ground model are not independently validated. |
 | `yagi` | A | NBS TN-688 5-element preset, 9.2 dBd (11.35 dBi) | 0.5 dB | Only the published preset; edited element geometry is experimental. |
 | `moxon` | A | L. B. Cebik, W4RNL, 'The Moxon Rectangle: A Review', Table 1 and text | 1.5 Ω real; 5 Ω reactance; 0.3 dB gain; better than 30 dB F/B | Published 20 m dimensions only. |
 | `ocfd` | B | R. Sanders, VK2WB, 'Analysis of the Off Centre Fed (OCF) dipole', Table 1 | Published 200-350 Ω range, not a strict numeric tolerance | The source does not fully specify its EZNEC ground model. |
-| `inverted_v` | C | Half-wave dipole starting rule with an included-angle heuristic | Not applicable (structural) | No independent numerical reference. |
+| `inverted_v` | B | ARRL, 'Wire Antennas for the Beginner': 120-degree inverted-V total length is 465.6/f MHz feet | 1% on total length for the 120-degree case | The 90-degree case and ground detuning use separate empirical starting rules; gain and feedpoint impedance are not independently validated. |
 | `fan_dipole` | C | Per-band half-wave starting rule; mutual coupling is not modeled | Not applicable (structural) | A coupled fan is not a parallel combination of independent dipoles. |
 | `trap_dipole` | C | Trap-loaded dipole starting geometry | Not applicable (structural) | Traps are ideal; no independent numerical reference. |
 | `t2fd` | B | Cebik wide-long broadband starting rule | Not a strict numeric tolerance | Termination resistor and transformer are ideal. |
@@ -266,6 +266,11 @@ gain, nulls, or impedance.
 `src/antennadesk/domain/design/evidence.py` is the machine-readable source of
 this table. `scripts/render_evidence_table.py` regenerates it, and a test fails
 when the catalog adds a template without an entry or when the table drifts.
+
+The [2026-11-04 evidence audit](EVIDENCE_AUDIT.md) documents the first review of
+the experimental templates. It promoted `delta_loop`, `vertical`, and
+`inverted_v` from C to B after checking published length rules, and records why
+the remaining C templates stay experimental.
 
 ## Phase 6 — new geometry and measurements (completed; physical validation deferred)
 
@@ -478,7 +483,7 @@ Phase 6 adds tests for:
 - Native packaging inputs, `--version`/`--check-solver` CLI behavior, and
   bundled-solver precedence in the executable locator.
 
-The suite currently has 1,255 tests, 102 of which require the solver. Solver
+The suite currently has 1,259 tests, 102 of which require the solver. Solver
 integration tests skip when no `nec2c` executable is available; the test suite
 auto-detects `spikes/phase0/build/nec2c` when `NEC2C` is not set. All tests run
 on Python 3.11, 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI
