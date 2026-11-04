@@ -64,6 +64,21 @@ The half-wave dipole maximum power gain of approximately `2.15 dBi` is a
 standard antenna-theory value. It is used as a sanity check for pattern
 parsing and normalization, not as a substitute for impedance validation.
 
+### Segmentation convergence
+
+The NEC-2 User's Guide, Part III, Section II
+(<https://www.nec2.org/part_3/secii.html>) recommends segment lengths of at most
+`0.1 λ`, `0.05 λ` in critical regions, warns against segments shorter than
+`1e-3 λ`, and requires `Δ/a > 8` for less than 1 % error with the thin-wire
+kernel.
+
+`tests/integration/simulation/test_segmentation_convergence.py` sweeps 7 to 81
+segments on the 30.48 m dipole at 4.8 MHz in free space and at 8 m over finite
+ground. It checks numerical stability against the 61-segment solution, not
+absolute accuracy. `validate_segmentation` reports
+`segmentation.segment_too_long`, `segmentation.segment_too_short`, and
+`segmentation.radius_ratio_low` when a model violates the guidelines.
+
 ## Phase 3 — guided MVP and GUI
 
 UI tests use `pytest-qt` with the Qt offscreen platform:

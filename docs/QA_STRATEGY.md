@@ -35,7 +35,7 @@ Measured on 2026-11-04:
 | Property-based tests | unit round trips, azimuth range, and importer fuzzing with Hypothesis 6.170 |
 | Mutation testing | 0 |
 | Cross-engine numerical checks | 0 |
-| Segment-convergence tests | 0 |
+| Segment-convergence tests | 2: free space and finite ground |
 | Physics-invariant tests | 0 |
 | `docs/VALIDATION_PLAN.md` test count | fixed in Phase 0 (was 788, now 1,139) |
 
@@ -206,22 +206,25 @@ The NEC-2 User's Guide, Part III, Section II
 - Δ/a > 8 for < 1 % error with the thin-wire kernel; the extended kernel
   extends the limit to Δ/a ≈ 2.
 
-`SegmentationPolicy` defaults to 0.05 λ but does not check Δ/a, does not warn
-about very short segments, and has no convergence test. The default is an
-unverified assumption.
+`SegmentationPolicy` defaults to 0.05 λ but did not check Δ/a, did not warn about
+very short segments, and had no convergence test. The default was an unverified
+assumption.
 
-**Change.**
+**Change (implemented 2026-11-04).**
 
-- Add diagnostics to the solver validation layer:
-  `solver.segment_too_long`, `solver.segment_too_short`,
-  `solver.segment_radius_ratio_low`, each carrying the computed ratio and the
-  guideline it violates. Warnings, not errors.
-- Add an integration test that sweeps segment counts on the 30.48 m free-space
-  dipole at 4.8 MHz (7, 11, 15, 21, 31, 41, 61) and asserts that resistance and
-  reactance converge: for n ≥ 21, the difference from n = 61 is within 2 %, and
-  the sequence does not oscillate.
-- Add a second convergence case over finite ground, where segmentation is more
-  sensitive.
+- `validate_segmentation` already reported `segmentation.segment_too_long`,
+  `segmentation.few_segments`, and `segmentation.segment_too_thin`. It now also
+  reports `segmentation.segment_too_short` (Δ < 1e-3 λ) and
+  `segmentation.radius_ratio_low` (2 ≤ Δ/a < 8 with the thin-wire kernel), and
+  its messages carry the computed Δ/λ and Δ/a. All are warnings.
+- `tests/integration/simulation/test_segmentation_convergence.py` sweeps 7 to 81
+  segments on the 30.48 m dipole at 4.8 MHz in free space and at 8 m over finite
+  ground. For n ≥ 31 it checks R within 0.1 Ω (free space) or 0.15 Ω (finite
+  ground) and X within 0.25 Ω or 0.3 Ω of the 61-segment solution; at n = 21 it
+  checks the impedance magnitude within 1 %. Refining to 81 segments must not
+  increase the error.
+- The tolerances come from the observed convergence at the densities the guide
+  recommends, not from an independent physical oracle.
 
 **Acceptance.** The default policy is justified by a test, not by a comment.
 
@@ -479,7 +482,7 @@ the polarization commit.
 
 ### Phase 2 — Science oracles (two weeks)
 
-1. Segmentation diagnostics and the convergence test.
+1. (done 2026-11-04) Segmentation diagnostics and the convergence test.
 2. Physical invariants: power, pattern integral, reciprocity, rotation.
 3. `scikit-rf` oracle for the two-port math.
 4. `PyNEC` cross-engine job.

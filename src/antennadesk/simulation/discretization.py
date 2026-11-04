@@ -110,6 +110,8 @@ def validate_segmentation(
     for segmentation in layout.wires:
         wire = segmentation.wire
         segment_length = segmentation.segment_length_m
+        relative_length = segment_length / wavelength
+        radius_ratio = segment_length / wire.radius_m
 
         if segmentation.segments < 3:
             diagnostics.append(
@@ -124,27 +126,54 @@ def validate_segmentation(
                 )
             )
 
-        if segment_length > wavelength / 10.0:
+        if relative_length > 0.1:
             diagnostics.append(
                 Diagnostic(
                     code="segmentation.segment_too_long",
                     severity=Severity.WARNING,
                     message=(
-                        f"wire {wire.id} has segments longer than lambda/10; "
-                        "NEC accuracy may degrade"
+                        f"wire {wire.id} has segments of {relative_length:.3f} lambda; "
+                        "NEC recommends at most 0.1 lambda"
                     ),
                     field="segmentation",
                 )
             )
 
-        if not spec.extended_thin_wire_kernel and segment_length < 2.0 * wire.radius_m:
+        if relative_length < 1e-3:
+            diagnostics.append(
+                Diagnostic(
+                    code="segmentation.segment_too_short",
+                    severity=Severity.WARNING,
+                    message=(
+                        f"wire {wire.id} has segments of {relative_length:.2e} lambda; "
+                        "NEC recommends at least 1e-3 lambda"
+                    ),
+                    field="segmentation",
+                )
+            )
+
+        if not spec.extended_thin_wire_kernel and 2.0 <= radius_ratio < 8.0:
+            diagnostics.append(
+                Diagnostic(
+                    code="segmentation.radius_ratio_low",
+                    severity=Severity.WARNING,
+                    message=(
+                        f"wire {wire.id} has a segment length to radius ratio of "
+                        f"{radius_ratio:.1f}; the thin-wire kernel needs more than 8 "
+                        "for 1% error"
+                    ),
+                    field="segmentation",
+                )
+            )
+
+        if not spec.extended_thin_wire_kernel and radius_ratio < 2.0:
             diagnostics.append(
                 Diagnostic(
                     code="segmentation.segment_too_thin",
                     severity=Severity.WARNING,
                     message=(
-                        f"wire {wire.id} has segments shorter than twice its radius; "
-                        "the thin-wire approximation may be invalid"
+                        f"wire {wire.id} has a segment length to radius ratio of "
+                        f"{radius_ratio:.2f}; the thin-wire approximation may be invalid"
                     ),
                     field="segmentation",
                 )

@@ -186,6 +186,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `normalize_azimuth_degrees` now returns `0.0` for tiny negative angles. The
   modulo result (`360.0 - 1e-15`) rounded to exactly `360.0`, which violated
   the documented `[0, 360)` range.
+- Added segmentation diagnostics `segmentation.segment_too_short` and
+  `segmentation.radius_ratio_low`, with the computed Δ/λ and Δ/a in the
+  message, following the NEC-2 User's Guide modeling guidelines. The solver
+  integration suite now includes a segmentation-convergence study of the
+  30.48 m dipole in free space and over finite ground.
 - Frequency-first estimator geometries stay above ground: inverted-V estimates
   widen the included angle (and raise the apex if needed), fan-dipole estimates
   use distinct progressively narrower element angles, and end-fed estimates

@@ -176,6 +176,38 @@ def test_thin_wire_warning_is_suppressed_with_extended_kernel() -> None:
     }
 
 
+def test_very_short_segments_warn() -> None:
+    # 20 m / 1000 = 0.02 m at 7.1 MHz is 4.7e-4 lambda, below the NEC limit.
+    model = _model(_wire(length_m=20.0), feed_offset_m=10.0)
+    spec = _spec(segments_per_wire=1000)
+
+    codes = {diagnostic.code for diagnostic in validate_segmentation(model, spec)}
+
+    assert "segmentation.segment_too_short" in codes
+    assert "segmentation.radius_ratio_low" not in codes
+
+
+def test_radius_ratio_between_two_and_eight_warns() -> None:
+    # 20 m / 300 = 0.0667 m over a 0.01 m radius gives a ratio of 6.7.
+    model = _model(_wire(length_m=20.0, radius_m=0.01), feed_offset_m=10.0)
+    spec = _spec(segments_per_wire=300)
+
+    codes = {diagnostic.code for diagnostic in validate_segmentation(model, spec)}
+
+    assert "segmentation.radius_ratio_low" in codes
+    assert "segmentation.segment_too_thin" not in codes
+    assert "segmentation.segment_too_short" not in codes
+
+
+def test_radius_ratio_warning_is_suppressed_with_extended_kernel() -> None:
+    model = _model(_wire(length_m=20.0, radius_m=0.01), feed_offset_m=10.0)
+    spec = _spec(segments_per_wire=300, extended_thin_wire_kernel=True)
+
+    codes = {diagnostic.code for diagnostic in validate_segmentation(model, spec)}
+
+    assert "segmentation.radius_ratio_low" not in codes
+
+
 def test_feed_at_segment_boundary_warns() -> None:
     model = _model(_wire(length_m=20.0), feed_offset_m=10.0)
     spec = _spec(segments_per_wire=20)

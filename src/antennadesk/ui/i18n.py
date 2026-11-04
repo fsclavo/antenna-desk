@@ -4319,6 +4319,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "A segment is longer than lambda/10; NEC accuracy may degrade.",
         Language.SPANISH: "Un segmento supera lambda/10; la precisión de NEC puede degradarse.",
     },
+    "diagnostic.segmentation.segment_too_short": {
+        Language.ENGLISH: "A segment is shorter than 1/1000 of a wavelength; NEC loses accuracy.",
+        Language.SPANISH: (
+            "Un segmento es más corto que 1/1000 de una longitud de onda; NEC pierde precisión."
+        ),
+    },
+    "diagnostic.segmentation.radius_ratio_low": {
+        Language.ENGLISH: (
+            "The segment length to radius ratio is below 8; the thin-wire kernel "
+            "can exceed 1% error."
+        ),
+        Language.SPANISH: (
+            "La relación entre longitud de segmento y radio es menor que 8; el "
+            "kernel de hilo delgado puede superar el 1% de error."
+        ),
+    },
     "diagnostic.segmentation.segment_too_thin": {
         Language.ENGLISH: "A segment is shorter than twice the wire radius.",
         Language.SPANISH: "Un segmento es más corto que dos veces el radio del hilo.",
