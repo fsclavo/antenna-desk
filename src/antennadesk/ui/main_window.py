@@ -107,12 +107,13 @@ from ..domain.antennas.yagi import YagiParameters, yagi_element_length_mismatch
 from ..domain.common.time import utc_now
 from ..domain.common.validation import Diagnostic, Severity
 from ..domain.design.band_plan import BandDefault, BandPlan, BandSelection, default_band_plan
+from ..domain.design.formulas import frequency_for_half_wave_length
 from ..domain.design.yagi_reference import MAX_YAGI_ELEMENTS, MIN_YAGI_ELEMENTS
 from ..domain.environment.ground import GroundModel
 from ..domain.measurement import Measurement
 from ..domain.projects.project import DesignProvenance, DesignVariant, Project
 from ..domain.simulation.band_result import BandAnalysisResult, BandResult
-from ..domain.simulation.bands import band_snapshot_frequencies
+from ..domain.simulation.bands import amateur_band_for, band_snapshot_frequencies
 from ..domain.simulation.budget import choose_batch_pattern_step, choose_pattern_step
 from ..domain.simulation.far_field import FarFieldRequest
 from ..domain.simulation.frequency import FrequencyPlan
@@ -167,6 +168,7 @@ from .dialogs.custom_antenna_dialog import CustomAntennaDialog
 from .dialogs.design_from_frequency_dialog import DesignFromFrequencyDialog
 from .dialogs.doublet_dialog import DoubletDialog
 from .dialogs.element_optimization_dialog import (
+    ElementOptimizationBand,
     ElementOptimizationDialog,
     ElementOptimizationVariable,
 )
@@ -2093,6 +2095,11 @@ class MainWindow(QMainWindow):
                 )
                 if answer != QMessageBox.StandardButton.Yes:
                     return
+            if isinstance(design.parameters, FanDipoleParameters):
+                fan_plan = default_band_plan(design.parameters).plan
+                if len(fan_plan) > 1:
+                    self._start_band_analysis(design, fan_plan)
+                    return
             spec = self._base_simulation_spec(design)
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
@@ -2157,6 +2164,11 @@ class MainWindow(QMainWindow):
             return
         plan = dialog.plan()
         if not plan:
+            return
+        self._start_band_analysis(design, plan)
+
+    def _start_band_analysis(self, design: DesignVariant, plan: BandPlan) -> None:
+        if not plan or self._solver is None:
             return
         self._band_plans[design.id] = plan
         self._update_band_plan_label()
@@ -4521,14 +4533,35 @@ class MainWindow(QMainWindow):
             return
         parameters = design.parameters
         elements = parameters.elements
-        variables = tuple(
-            ElementOptimizationVariable(
-                f"length_{index}",
-                f"{self._translator.t('yagi.element')} {index + 1} · "
-                f"{self._translator.t('yagi.length')}",
-                element.length_m,
+        bands: dict[str, ElementOptimizationBand] = {}
+        variables: list[ElementOptimizationVariable] = []
+        for index, element in enumerate(elements):
+            frequency_hz = frequency_for_half_wave_length(element.length_m)
+            band = amateur_band_for(frequency_hz, tolerance_fraction=0.01)
+            band_id = band.name if band is not None else None
+            if band is not None:
+                bands[band.name] = ElementOptimizationBand(
+                    band_id=band.name,
+                    label=band.name,
+                    frequency_hz=frequency_hz,
+                )
+            variables.append(
+                ElementOptimizationVariable(
+                    f"length_{index}",
+                    f"{self._translator.t('yagi.element')} {index + 1} · "
+                    f"{self._translator.t('yagi.length')}",
+                    element.length_m,
+                    band_id=band_id,
+                )
             )
-            for index, element in enumerate(elements)
+
+        selected_band_id = self._selected_band_ids.get(design.id)
+        if selected_band_id not in bands:
+            selected_band_id = None
+        default_frequency_hz = (
+            bands[selected_band_id].frequency_hz
+            if selected_band_id is not None
+            else parameters.frequency_hz
         )
 
         def build(values: dict[str, float]) -> FanDipoleParameters:
@@ -4552,7 +4585,7 @@ class MainWindow(QMainWindow):
                 matching_network=self._matching_network,
             ),
             title_key="element_optimize.fan_title",
-            variables=variables,
+            variables=tuple(variables),
             build_parameters=build,
             objectives=(
                 ElementOptimizationObjective.TARGET_IMPEDANCE,
@@ -4560,7 +4593,9 @@ class MainWindow(QMainWindow):
                 ElementOptimizationObjective.MAX_FRONT_TO_BACK,
                 ElementOptimizationObjective.MULTI_OBJECTIVE,
             ),
-            default_frequency_hz=parameters.frequency_hz,
+            default_frequency_hz=default_frequency_hz,
+            bands=tuple(sorted(bands.values(), key=lambda band: band.frequency_hz)),
+            default_band_id=selected_band_id,
             parent=self,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:

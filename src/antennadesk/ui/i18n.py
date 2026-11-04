@@ -684,8 +684,15 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "la impedancia del feed descentrado depende del offset y la altura; el preset usa un transformador ideal 4:1, verificá el balún real",
     },
     "estimator.warning.fan_interaction": {
-        Language.ENGLISH: "fan elements interact; optimize the final lengths",
-        Language.SPANISH: "los elementos del fan interactúan; optimizar las longitudes finales",
+        Language.ENGLISH: (
+            "fan elements interact and the V angle shifts resonance, especially "
+            "on the highest band; tune with all bands visible"
+        ),
+        Language.SPANISH: (
+            "los elementos del fan interactúan y el ángulo en V desplaza la "
+            "resonancia, especialmente en la banda más alta; ajustar con todas "
+            "las bandas visibles"
+        ),
     },
     "estimator.warning.endfed_matching": {
         Language.ENGLISH: "end-fed matching and counterpoise are installation-specific",
@@ -2831,6 +2838,33 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "element_optimize.current_value": {
         Language.ENGLISH: "Current value",
         Language.SPANISH: "Valor actual",
+    },
+    "element_optimize.band": {
+        Language.ENGLISH: "Band",
+        Language.SPANISH: "Banda",
+    },
+    "element_optimize.band_custom": {
+        Language.ENGLISH: "Custom frequency",
+        Language.SPANISH: "Frecuencia personalizada",
+    },
+    "element_optimize.frequency_hint": {
+        Language.ENGLISH: (
+            "Selecting a band sets the target frequency; editing the frequency "
+            "switches the selector to Custom."
+        ),
+        Language.SPANISH: (
+            "Elegir una banda ajusta la frecuencia objetivo; editar la frecuencia "
+            "cambia el selector a Personalizada."
+        ),
+    },
+    "element_optimize.band_mismatch": {
+        Language.ENGLISH: (
+            "Selected elements are for {selected}, but the target frequency is in {target}."
+        ),
+        Language.SPANISH: (
+            "Los elementos seleccionados son de {selected}, pero la frecuencia "
+            "objetivo está en {target}."
+        ),
     },
     "element_optimize.pareto": {
         Language.ENGLISH: "Pareto",

@@ -2729,3 +2729,114 @@ def test_ocfd_and_custom_specs_include_the_transformer_ratio(window: MainWindow)
 
     assert ocfd_spec.feed_transformer_ratio == pytest.approx(4.0)
     assert custom_spec.feed_transformer_ratio == pytest.approx(4.0)
+
+
+def test_fan_dipole_simulate_covers_all_element_bands(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
+
+    parameters = FanDipoleParameters(
+        frequency_hz=7_100_000.0,
+        elements=(
+            FanElement(length_m=20.0, included_angle_deg=120.0),
+            FanElement(length_m=5.0, included_angle_deg=100.0),
+        ),
+        apex_height_m=10.0,
+    )
+
+    class FakeFanDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> FanDipoleParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "FanDipoleDialog", FakeFanDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Fan", True))
+    window.new_fan_dipole_antenna()
+
+    window.simulate()
+    qtbot.waitUntil(
+        lambda: not window._simulating and window._thread is None,
+        timeout=5_000,
+    )
+
+    assert window._design_id is not None
+    analysis = window._band_analysis_results[window._design_id]
+    assert [band.band.name for band in analysis.bands] == ["40m", "10m"]
+    assert window._results._bands_tab_index >= 0
+    window._dirty = False
+
+
+def test_fan_optimizer_opens_on_the_selected_band(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
+
+    parameters = FanDipoleParameters(
+        frequency_hz=7_100_000.0,
+        elements=(
+            FanElement(length_m=20.0, included_angle_deg=120.0),
+            FanElement(length_m=5.0, included_angle_deg=100.0),
+        ),
+        apex_height_m=10.0,
+    )
+
+    class FakeFanDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> FanDipoleParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "FanDipoleDialog", FakeFanDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Fan", True))
+    window.new_fan_dipole_antenna()
+    window.simulate()
+    qtbot.waitUntil(
+        lambda: not window._simulating and window._thread is None,
+        timeout=5_000,
+    )
+    window._results._bands_table.selectRow(1)
+    qtbot.waitUntil(
+        lambda: (
+            window._design_id is not None
+            and window._selected_band_ids.get(window._design_id) == "10m"
+        ),
+        timeout=1_000,
+    )
+
+    captured: dict[str, object] = {}
+
+    class FakeOptimizationDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            captured.update(kwargs)
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Rejected
+
+    monkeypatch.setattr(
+        main_window_module,
+        "ElementOptimizationDialog",
+        FakeOptimizationDialog,
+    )
+    window.optimize_fan_dipole_elements()
+
+    from antennadesk.domain.design.formulas import frequency_for_half_wave_length
+
+    assert captured["default_band_id"] == "10m"
+    assert captured["default_frequency_hz"] == pytest.approx(frequency_for_half_wave_length(5.0))
+    band_ids = {band.band_id for band in captured["bands"]}
+    assert band_ids == {"40m", "10m"}
+    window._dirty = False

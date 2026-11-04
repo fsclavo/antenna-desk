@@ -43,10 +43,26 @@ from ...domain.optimization.multi_variable import (
 )
 from ...domain.optimization.pareto import ParetoObjectives, pareto_ranks
 from ...domain.optimization.synthesis import SynthesisTarget
+from ...domain.simulation.bands import amateur_band_for
 from ...domain.simulation.spec import SimulationSpec
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_unit_key
 from ..workers.element_optimization_worker import ElementOptimizationWorker
+
+
+@dataclass(frozen=True, slots=True)
+class ElementOptimizationBand:
+    """One band option for a frequency-dependent element optimization."""
+
+    band_id: str
+    label: str
+    frequency_hz: float
+
+    def __post_init__(self) -> None:
+        if not self.band_id.strip() or not self.label.strip():
+            raise ValueError("band id and label must not be empty")
+        if self.frequency_hz <= 0.0:
+            raise ValueError("band frequency must be positive")
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,12 +73,15 @@ class ElementOptimizationVariable:
     integer: bool = False
     minimum: float | None = None
     maximum: float | None = None
+    band_id: str | None = None
 
     def __post_init__(self) -> None:
         if self.maximum is not None and self.minimum is None:
             raise ValueError("maximum requires a minimum")
         if self.minimum is not None and self.maximum is not None and self.maximum <= self.minimum:
             raise ValueError("variable maximum must exceed minimum")
+        if self.band_id is not None and not self.band_id.strip():
+            raise ValueError("band_id must not be empty when provided")
 
 
 BuildParameters = Callable[[dict[str, float]], AntennaDesignParameters]
@@ -83,6 +102,8 @@ class ElementOptimizationDialog(QDialog):
         default_frequency_hz: float,
         default_target_resistance_ohm: float = 50.0,
         hint_key: str = "element_optimize.hint",
+        bands: tuple[ElementOptimizationBand, ...] = (),
+        default_band_id: str | None = None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -93,6 +114,8 @@ class ElementOptimizationDialog(QDialog):
         self._variables_spec = variables
         self._build = build_parameters
         self._objectives = objectives
+        self._bands = bands
+        self._bands_by_id = {band.band_id: band for band in bands}
         self._thread: QThread | None = None
         self._worker: ElementOptimizationWorker | None = None
         self._cancel_token: EventCancelToken | None = None
@@ -102,6 +125,7 @@ class ElementOptimizationDialog(QDialog):
         self._run_weights = ElementOptimizationWeights()
         self._ordered_evaluations: tuple[BoundedEvaluation, ...] = ()
         self._updating = False
+        self._ready = False
 
         self.setWindowTitle(translator.t(title_key))
         self.resize(1_050, 760)
@@ -115,7 +139,22 @@ class ElementOptimizationDialog(QDialog):
         self._frequency.setRange(0.1, 100_000.0)
         self._frequency.setDecimals(6)
         self._frequency.setSuffix(" MHz")
-        self._frequency.setValue(default_frequency_hz / 1_000_000.0)
+        self._band: QComboBox | None = None
+        initial_frequency_hz = default_frequency_hz
+        if bands:
+            self._band = QComboBox(self)
+            for band in bands:
+                self._band.addItem(band.label, band.band_id)
+            self._band.addItem(translator.t("element_optimize.band_custom"), None)
+            selected_band = self._bands_by_id.get(default_band_id or "")
+            if selected_band is not None:
+                initial_frequency_hz = selected_band.frequency_hz
+            self._band.currentIndexChanged.connect(self._band_changed)
+            self._frequency.valueChanged.connect(self._frequency_changed)
+        self._frequency.setValue(initial_frequency_hz / 1_000_000.0)
+        self._frequency.setToolTip(translator.t("element_optimize.frequency_hint"))
+        if self._band is not None:
+            self._sync_band_to_frequency()
 
         self._target_r = QDoubleSpinBox(self)
         self._target_r.setRange(1.0, 10_000.0)
@@ -170,14 +209,16 @@ class ElementOptimizationDialog(QDialog):
         self._passes.setRange(1, 8)
         self._passes.setValue(4)
 
-        self._table = QTableWidget(len(variables), 5, self)
+        self._table = QTableWidget(len(variables), 6, self)
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self._table.setAlternatingRowColors(True)
         self._table.verticalHeader().setVisible(False)
         self._table.horizontalHeader().setStretchLastSection(True)
+        self._table.itemChanged.connect(self._use_changed)
 
         self._label_objective = QLabel(translator.t("optimize.objective"), self)
+        self._label_band = QLabel(translator.t("element_optimize.band"), self)
         self._label_frequency = QLabel(translator.t("synthesis.target_frequency"), self)
         self._label_r = QLabel(translator.t("synthesis.target_resistance"), self)
         self._label_x = QLabel(translator.t("synthesis.target_reactance"), self)
@@ -188,6 +229,8 @@ class ElementOptimizationDialog(QDialog):
 
         form = QFormLayout()
         form.addRow(self._label_objective, self._objective)
+        if self._band is not None:
+            form.addRow(self._label_band, self._band)
         form.addRow(self._label_frequency, self._frequency)
         form.addRow(self._label_r, self._target_r)
         form.addRow(self._label_x, self._target_x)
@@ -213,6 +256,10 @@ class ElementOptimizationDialog(QDialog):
         self._summary.setWordWrap(True)
         self._hint = QLabel(translator.t(hint_key), self)
         self._hint.setWordWrap(True)
+        self._band_warning = QLabel(self)
+        self._band_warning.setWordWrap(True)
+        self._band_warning.setStyleSheet("color: #9a6700;")
+        self._band_warning.setVisible(False)
 
         self._run = QPushButton(translator.t("element_optimize.run"), self)
         self._cancel = QPushButton(translator.t("optimize.cancel_run"), self)
@@ -234,6 +281,7 @@ class ElementOptimizationDialog(QDialog):
 
         layout = QVBoxLayout(self)
         layout.addLayout(form)
+        layout.addWidget(self._band_warning)
         layout.addWidget(self._table, 1)
         layout.addWidget(self._evaluations_label)
         layout.addWidget(self._evaluations, 1)
@@ -244,6 +292,8 @@ class ElementOptimizationDialog(QDialog):
         self._retranslate()
         self._populate_table()
         self._objective_changed()
+        self._ready = True
+        self._update_band_warning()
         self._update_controls()
 
     def _retranslate(self) -> None:
@@ -254,11 +304,20 @@ class ElementOptimizationDialog(QDialog):
             [
                 t("moxon_optimize.variable"),
                 t("yagi_optimize.use"),
+                t("element_optimize.band"),
                 t("element_optimize.current_value"),
                 t("yagi_optimize.minimum"),
                 t("yagi_optimize.maximum"),
             ]
         )
+        self._label_band.setText(t("element_optimize.band"))
+        if self._band is not None:
+            for index, band in enumerate(self._bands):
+                self._band.setItemText(index, band.label)
+            self._band.setItemText(
+                self._band.count() - 1,
+                t("element_optimize.band_custom"),
+            )
         swr_header = (
             t("table.swr_target")
             if self._objective_value() is ElementOptimizationObjective.TARGET_IMPEDANCE
@@ -289,14 +348,94 @@ class ElementOptimizationDialog(QDialog):
                 use.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
                 use.setCheckState(Qt.CheckState.Checked)
                 self._table.setItem(row, 1, use)
+                band = self._bands_by_id.get(variable.band_id or "")
+                self._table.setItem(row, 2, QTableWidgetItem(band.label if band else ""))
                 self._table.setItem(
                     row,
-                    2,
+                    3,
                     QTableWidgetItem(self._variable_display(variable.current_m, variable)),
                 )
         finally:
             self._updating = False
         self._update_bounds()
+
+    def _band_changed(self, *_args: object) -> None:
+        if not self._ready or self._updating or self._band is None:
+            return
+        band_id = self._band.currentData()
+        if not isinstance(band_id, str):
+            self._update_band_warning()
+            return
+        band = self._bands_by_id.get(band_id)
+        if band is None:
+            return
+        self._updating = True
+        try:
+            self._frequency.setValue(band.frequency_hz / 1_000_000.0)
+        finally:
+            self._updating = False
+        self._update_band_warning()
+
+    def _frequency_changed(self, *_args: object) -> None:
+        if not self._ready or self._updating or self._band is None:
+            return
+        self._sync_band_to_frequency()
+        self._update_band_warning()
+
+    def _sync_band_to_frequency(self) -> None:
+        if self._band is None:
+            return
+        target = self._frequency.value()
+        index = next(
+            (
+                index
+                for index, band in enumerate(self._bands)
+                if math.isclose(band.frequency_hz / 1_000_000.0, target, abs_tol=1e-4)
+            ),
+            self._band.count() - 1,
+        )
+        self._updating = True
+        try:
+            self._band.setCurrentIndex(index)
+        finally:
+            self._updating = False
+
+    def _use_changed(self, item: QTableWidgetItem) -> None:
+        if not self._ready or self._updating or self._band is None or item.column() != 1:
+            return
+        selected = self._selected_indices()
+        if len(selected) != 1:
+            return
+        band_id = self._variables_spec[selected[0]].band_id
+        if band_id is None:
+            return
+        index = self._band.findData(band_id)
+        if index >= 0:
+            self._band.setCurrentIndex(index)
+        self._update_band_warning()
+
+    def _update_band_warning(self) -> None:
+        if self._band is None or self._band.currentData() is None:
+            self._band_warning.setVisible(False)
+            return
+        selected_band_ids = {
+            self._variables_spec[index].band_id
+            for index in self._selected_indices()
+            if self._variables_spec[index].band_id is not None
+        }
+        target_band = amateur_band_for(self._frequency.value() * 1_000_000.0)
+        if not selected_band_ids or target_band is None or target_band.name in selected_band_ids:
+            self._band_warning.setVisible(False)
+            return
+        selected_labels = ", ".join(sorted(selected_band_ids))
+        self._band_warning.setText(
+            self._translator.t(
+                "element_optimize.band_mismatch",
+                selected=selected_labels,
+                target=target_band.name,
+            )
+        )
+        self._band_warning.setVisible(True)
 
     def _update_bounds(self, *_args: object) -> None:
         if self._updating:
@@ -306,9 +445,9 @@ class ElementOptimizationDialog(QDialog):
         try:
             for row, variable in enumerate(self._variables_spec):
                 low, high = self._variable_bounds(variable, factor)
-                self._table.setItem(row, 3, QTableWidgetItem(self._variable_display(low, variable)))
+                self._table.setItem(row, 4, QTableWidgetItem(self._variable_display(low, variable)))
                 self._table.setItem(
-                    row, 4, QTableWidgetItem(self._variable_display(high, variable))
+                    row, 5, QTableWidgetItem(self._variable_display(high, variable))
                 )
         finally:
             self._updating = False
@@ -488,7 +627,7 @@ class ElementOptimizationDialog(QDialog):
 
     def _update_controls(self) -> None:
         running = self._thread is not None
-        for widget in (
+        controls: list[QWidget] = [
             self._objective,
             self._frequency,
             self._target_r,
@@ -502,7 +641,10 @@ class ElementOptimizationDialog(QDialog):
             self._samples,
             self._passes,
             self._table,
-        ):
+        ]
+        if self._band is not None:
+            controls.append(self._band)
+        for widget in controls:
             widget.setEnabled(not running)
         self._run.setEnabled(not running)
         self._cancel.setEnabled(running)

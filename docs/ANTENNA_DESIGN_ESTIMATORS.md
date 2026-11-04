@@ -60,7 +60,7 @@ warnings, and a dimension tolerance.
 | Vertical 1/2 | `0.5λ × 0.95`; radial `0.25λ` | empirical | High feed impedance; matching required |
 | Vertical 5/8 | `0.625λ` | physical | High feed impedance; matching required |
 | Inverted-V | half-wave dipole total, split in two legs | empirical | Included angle affects feed impedance |
-| Fan dipole | one half-wave element per band | empirical | Elements interact |
+| Fan dipole | one half-wave element per band | empirical | Elements interact; the V angle shifts resonance, especially on the highest band |
 | End-fed | half-wave wire; `0.05λ` counterpoise; 49:1 transformer | heuristic | Transformer and counterpoise are application starting points |
 | OCFD | half-wave total, feed at 1/3, 4:1 ideal transformer | heuristic | Existing synthesis can refine length/feed; actual balun ratio depends on height and feed offset |
 | J Pole / Slim Jim | J Pole: total 3/4-wave height, quarter-wave stub, feed at 40% of stub; Slim Jim: half-wave radiator above the folded stub | empirical | Feed offset and stub need tuning |
@@ -86,6 +86,9 @@ geometry above the ground plane:
 - Fan-dipole elements use progressively narrower included angles so their wires
   do not overlap. The apex is raised if a longer element needs it, and the
   estimate carries `estimator.warning.fan_angle_increased` when adjusted.
+  Element lengths are straight half-wave starting points; the V angle and
+  coupling shift the final resonance, especially on the highest band. Use the
+  Bands tab or the element optimizer to tune the final lengths.
 - An end-fed end height outside the wire's vertical reach is clamped to the
   reachable range and the estimate carries
   `estimator.warning.endfed_end_height_clamped`.

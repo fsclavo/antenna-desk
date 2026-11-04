@@ -389,7 +389,15 @@ would overlap, so the model rejects them. The form defaults to 120°/90° and it
 **Add element** button chooses a narrower angle that is not already in use. The
 frequency-first estimator fans the elements at progressively narrower angles and
 raises the apex if needed to keep all ends above ground. The fan dipole is a
-first-class experimental template with an inline editor.
+first-class experimental template with an inline editor. When the elements map
+to distinct amateur bands, **Simulate** automatically runs a band analysis over
+all of them and opens the **Bands** tab.
+
+Estimated element lengths are straight half-wave starting points. The V angle
+and the coupling between elements shift the actual resonance, especially on the
+highest band. Use the Bands tab to tune each element with all bands visible;
+changing a short element while looking only at the lowest band will show almost
+no effect.
 
 ## Create an off-center-fed dipole
 
@@ -733,13 +741,18 @@ rejected, so verify the applied geometry with a full simulation.
 ## Optimize fan dipole elements
 
 For a fan dipole, use **Design → Optimize...**. Select the element
-pairs to include, set the target frequency and R/X, the search margin, and the
-evaluation budget. The optimizer performs a bounded coordinate search over the
-selected total element lengths and reports the best complex impedance match.
+pairs to include, choose the **Band** (or **Custom frequency**), set R/X, the
+search margin, and the evaluation budget. The band selector and target frequency
+stay synchronized, and the element table shows the band associated with each
+element. If only one element is selected, its band is selected automatically.
+Opening the optimizer after selecting a band in the **Bands** tab starts on that
+band.
 
-**Apply element lengths** updates the fan editor and starts the normal full
-sweep. The target is evaluated at one frequency; check the other bands after
-applying because the elements interact.
+The optimizer performs a bounded coordinate search over the selected total
+element lengths and reports the best complex impedance match. Segmentation is
+recomputed for the target frequency. **Apply element lengths** updates the fan
+editor and starts the normal full sweep; check the other bands after applying
+because the elements interact.
 
 ## Synthesize dimensions
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog
 from pytestqt.qtbot import QtBot
 
@@ -142,7 +143,7 @@ def test_generic_element_dialog_supports_integer_variables(qtbot: QtBot) -> None
     assert variables[0].minimum == pytest.approx(3.0)
     assert variables[0].maximum == pytest.approx(5.0)
     assert starts["sides"] == pytest.approx(4.0)
-    assert dialog._table.item(0, 2).text() == "4"
+    assert dialog._table.item(0, 3).text() == "4"
 
 
 def test_element_dialog_supports_explicit_integer_bounds(qtbot: QtBot) -> None:
@@ -178,13 +179,13 @@ def test_element_dialog_supports_explicit_integer_bounds(qtbot: QtBot) -> None:
     assert variables[0].maximum == pytest.approx(8.0)
     assert variables[0].integer is True
     assert starts["element_count"] == pytest.approx(5.0)
-    assert dialog._table.item(0, 3).text() == "2"
-    assert dialog._table.item(0, 4).text() == "8"
+    assert dialog._table.item(0, 4).text() == "2"
+    assert dialog._table.item(0, 5).text() == "8"
 
     dialog._bound_percent.setValue(50.0)
 
-    assert dialog._table.item(0, 3).text() == "2"
-    assert dialog._table.item(0, 4).text() == "8"
+    assert dialog._table.item(0, 4).text() == "2"
+    assert dialog._table.item(0, 5).text() == "8"
 
 
 def test_element_dialog_supports_a_minimum_only_bound(qtbot: QtBot) -> None:
@@ -216,7 +217,7 @@ def test_element_dialog_supports_a_minimum_only_bound(qtbot: QtBot) -> None:
 
     assert variables[0].minimum == pytest.approx(0.1)
     assert variables[0].maximum > variables[0].minimum
-    assert dialog._table.item(0, 3).text() == "0.100"
+    assert dialog._table.item(0, 4).text() == "0.100"
 
 
 def test_element_dialog_rejects_maximum_without_minimum() -> None:
@@ -260,3 +261,58 @@ def test_element_dialog_labels_swr_against_the_target(qtbot: QtBot) -> None:
 
     assert dialog._evaluations.horizontalHeaderItem(4).text() == "SWR"
     assert dialog._target().resistance_ohm == pytest.approx(50.0)
+
+
+def test_element_dialog_syncs_band_frequency_and_selected_element(qtbot: QtBot) -> None:
+    from antennadesk.ui.dialogs.element_optimization_dialog import ElementOptimizationBand
+
+    bands = (
+        ElementOptimizationBand("40m", "40m", 7_100_000.0),
+        ElementOptimizationBand("10m", "10m", 28_400_000.0),
+    )
+    dialog = ElementOptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalSolver(),
+        SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0)),
+        title_key="element_optimize.fan_title",
+        variables=(
+            ElementOptimizationVariable("length_0", "Element 1", 20.0, band_id="40m"),
+            ElementOptimizationVariable("length_1", "Element 2", 5.0, band_id="10m"),
+        ),
+        build_parameters=lambda values: DipoleParameters(
+            frequency_hz=values["__frequency_hz"],
+            total_length_m=20.0,
+            height_m=8.0,
+        ),
+        objectives=(ElementOptimizationObjective.TARGET_IMPEDANCE,),
+        default_frequency_hz=7_100_000.0,
+        bands=bands,
+        default_band_id="10m",
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._frequency.value() == pytest.approx(28.4)
+    assert dialog._band.currentData() == "10m"
+    assert dialog._table.item(0, 2).text() == "40m"
+    assert dialog._table.item(1, 2).text() == "10m"
+
+    dialog._table.item(0, 1).setCheckState(Qt.CheckState.Unchecked)
+    assert dialog._band.currentData() == "10m"
+    assert dialog._frequency.value() == pytest.approx(28.4)
+
+    dialog._table.item(1, 1).setCheckState(Qt.CheckState.Unchecked)
+    dialog._table.item(0, 1).setCheckState(Qt.CheckState.Checked)
+    assert dialog._band.currentData() == "40m"
+    assert dialog._frequency.value() == pytest.approx(7.1)
+
+    dialog._table.item(0, 1).setCheckState(Qt.CheckState.Unchecked)
+    dialog._table.item(1, 1).setCheckState(Qt.CheckState.Checked)
+    dialog._frequency.setValue(7.1)
+    assert dialog._band.currentData() == "40m"
+    assert dialog._band_warning.isHidden() is False
+    assert "10m" in dialog._band_warning.text()
+
+    dialog._frequency.setValue(21.0)
+    assert dialog._band.currentData() is None
+    assert dialog._band_warning.isHidden() is True

@@ -22,6 +22,7 @@ from ...domain.simulation.far_field import FarFieldRequest
 from ...domain.simulation.frequency import FrequencyPlan
 from ...domain.simulation.pattern import front_to_back_db, max_power_gain_db
 from ...domain.simulation.result import SimulationStatus
+from ...domain.simulation.segmentation import aligned_policy_for_model
 from ...domain.simulation.spec import SimulationSpec
 from ..ports.antenna_solver import AntennaSolver
 from ..ports.cancellation import CancelToken
@@ -99,10 +100,19 @@ class OptimizeElements:
         def evaluate(values: Mapping[str, float]) -> BoundedEvaluation:
             try:
                 parameters = command.build_parameters(values)
+                model = parameters.to_antenna(name="Optimization")
+                spec = replace(
+                    evaluation_spec,
+                    segmentation=aligned_policy_for_model(
+                        model,
+                        command.target.frequency_hz,
+                        command.base_spec.segmentation,
+                    ),
+                )
                 result = RunSimulation(self.solver).execute(
                     RunSimulationCommand(
-                        model=parameters.to_antenna(name="Optimization"),
-                        spec=evaluation_spec,
+                        model=model,
+                        spec=spec,
                         cancel_token=command.cancel_token,
                     )
                 )

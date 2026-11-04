@@ -68,6 +68,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Fan dipole **Simulate** now analyzes every distinct element band
+  automatically and opens the Bands tab, so a 10 m element is no longer hidden
+  by a 40 m-only sweep. The estimator warning and user guide now call out the
+  V-angle/coupling shift on the highest band.
+- The fan-element optimizer now has a synchronized Band selector and a Band
+  column, preselects the band active in the Bands tab, warns when the target
+  frequency and selected elements disagree, and recomputes segmentation for the
+  target frequency.
 - Project schema version 5 adds optional OCFD/custom feed-transformer ratios
   on top of the version 4 band/batch run metadata. Older projects migrate
   without changing their geometry or results.
