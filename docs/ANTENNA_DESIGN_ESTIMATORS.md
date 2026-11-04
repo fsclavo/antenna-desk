@@ -85,10 +85,11 @@ geometry above the ground plane:
   carries `estimator.warning.inverted_v_angle_increased`.
 - Fan-dipole elements use progressively narrower included angles so their wires
   do not overlap. The apex is raised if a longer element needs it, and the
-  estimate carries `estimator.warning.fan_angle_increased` when adjusted.
-  Element lengths are straight half-wave starting points; the V angle and
-  coupling shift the final resonance, especially on the highest band. Use the
-  Bands tab or the element optimizer to tune the final lengths.
+  estimate carries `estimator.warning.fan_angle_increased` when adjusted. The
+  design frequency is the lowest selected fan band. Element lengths are straight
+  half-wave starting points; the V angle and coupling shift the final resonance,
+  especially on the highest band. Use the Bands tab or the element optimizer to
+  tune the final lengths.
 - An end-fed end height outside the wire's vertical reach is clamped to the
   reachable range and the estimate carries
   `estimator.warning.endfed_end_height_clamped`.

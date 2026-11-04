@@ -77,8 +77,8 @@ Completed:
   through custom-wire conversion and usable by the synthesis dialog.
 - Fan dipole Simulate now covers every distinct element band automatically and
   surfaces the V-angle/coupling tuning warning. Its element optimizer has a
-  synchronized band selector, per-element band labels, mismatch warning, and
-  target-frequency segmentation.
+  synchronized band selector, per-element band labels, mismatch warning,
+  lowest-element-band default, and target-frequency segmentation.
 - T2FD catalog preset with a broadband series termination, an ideal feed
   transformer, and Cebik wide-long starting dimensions.
 - `v0.1.0` published with wheel/sdist, AppImage, Debian package, Windows zip,

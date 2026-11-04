@@ -4558,11 +4558,15 @@ class MainWindow(QMainWindow):
         selected_band_id = self._selected_band_ids.get(design.id)
         if selected_band_id not in bands:
             selected_band_id = None
-        default_frequency_hz = (
-            bands[selected_band_id].frequency_hz
-            if selected_band_id is not None
-            else parameters.frequency_hz
-        )
+        if selected_band_id is not None:
+            default_frequency_hz = bands[selected_band_id].frequency_hz
+        elif bands:
+            default_frequency_hz = min(
+                bands.values(),
+                key=lambda band: band.frequency_hz,
+            ).frequency_hz
+        else:
+            default_frequency_hz = parameters.frequency_hz
 
         def build(values: dict[str, float]) -> FanDipoleParameters:
             updated = list(elements)
@@ -4596,6 +4600,7 @@ class MainWindow(QMainWindow):
             default_frequency_hz=default_frequency_hz,
             bands=tuple(sorted(bands.values(), key=lambda band: band.frequency_hz)),
             default_band_id=selected_band_id,
+            hint_key="element_optimize.fan_hint",
             parent=self,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:

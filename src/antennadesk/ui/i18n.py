@@ -2890,6 +2890,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Selected dimensions change together. Select a table row to apply a different candidate or Pareto compromise. Verify the applied design with a full simulation.",
         Language.SPANISH: "Las dimensiones seleccionadas cambian juntas. Seleccioná una fila de la tabla para aplicar otro candidato o compromiso de Pareto. Verificá el diseño aplicado con una simulación completa.",
     },
+    "element_optimize.fan_hint": {
+        Language.ENGLISH: (
+            "All fan elements remain in the antenna. The Optimize column only "
+            "selects which lengths are varied; the short element's SWR includes "
+            "coupling from the other elements. To evaluate an element alone, "
+            "remove the other elements in the editor."
+        ),
+        Language.SPANISH: (
+            "Todos los elementos del fan permanecen en la antena. La columna "
+            "Optimizar solo elige qué longitudes se varían; el ROE del elemento "
+            "corto incluye el acoplamiento de los demás. Para evaluar un elemento "
+            "solo, quitá los otros en el editor."
+        ),
+    },
     "element_optimize.yagi_hint": {
         Language.ENGLISH: "Element count adds or removes trailing directors from the DL6WU reference. Existing lengths and gaps are optimized; added directors use reference dimensions. More elements increase boom length and wind load.",
         Language.SPANISH: "La cantidad de elementos agrega o quita directores al final usando la referencia DL6WU. Se optimizan las longitudes y separaciones existentes; los directores agregados usan dimensiones de referencia. Más elementos aumentan el largo del boom y la carga de viento.",
@@ -3055,8 +3069,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Máxima relación frente/espalda",
     },
     "yagi_optimize.use": {
-        Language.ENGLISH: "Use",
-        Language.SPANISH: "Usar",
+        Language.ENGLISH: "Optimize",
+        Language.SPANISH: "Optimizar",
     },
     "yagi_optimize.current": {
         Language.ENGLISH: "Current length",

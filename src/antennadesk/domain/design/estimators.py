@@ -294,7 +294,7 @@ def estimate_fan_dipole(intent: DesignIntent) -> DimensionEstimate:
             )
         )
     parameters = FanDipoleParameters(
-        frequency_hz=intent.frequency_hz,
+        frequency_hz=bands[0],
         elements=tuple(elements),
         apex_height_m=apex_height,
         azimuth_deg=intent.azimuth_deg,

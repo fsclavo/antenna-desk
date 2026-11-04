@@ -123,6 +123,7 @@ def test_inverted_v_and_fan_estimates_keep_angle_and_bands() -> None:
     assert inverted.parameters.leg_length_m > 0.0
     assert inverted.parameters.included_angle_deg == pytest.approx(90.0)
     assert isinstance(fan.parameters, FanDipoleParameters)
+    assert fan.parameters.frequency_hz == pytest.approx(7_100_000.0)
     assert len(fan.parameters.elements) == 2
     angles = [element.included_angle_deg for element in fan.parameters.elements]
     assert angles == pytest.approx([110.0, 90.0])
@@ -357,3 +358,16 @@ def test_ringo_estimate_is_calibrated_for_the_simplified_geometry() -> None:
     assert parameters.radiator_height_m == pytest.approx(0.725 * wavelength, abs=0.01)
     assert parameters.ring_diameter_m == pytest.approx(0.14 * wavelength, abs=0.01)
     assert parameters.ring_height_m == pytest.approx(0.01 * wavelength, abs=0.005)
+
+
+def test_fan_estimate_uses_the_lowest_band_as_design_frequency() -> None:
+    estimate = estimate_intent(
+        _intent(
+            "fan_dipole",
+            frequency_hz=7_100_000.0,
+            fan_bands_hz=(28_400_000.0, 14_100_000.0),
+        )
+    )
+
+    assert isinstance(estimate.parameters, FanDipoleParameters)
+    assert estimate.parameters.frequency_hz == pytest.approx(14_100_000.0)

@@ -75,7 +75,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - The fan-element optimizer now has a synchronized Band selector and a Band
   column, preselects the band active in the Bands tab, warns when the target
   frequency and selected elements disagree, and recomputes segmentation for the
-  target frequency.
+  target frequency. Its default frequency is the lowest element band rather than
+  a stale design frequency, and it explains that unchecked elements still
+  affect the antenna.
 - Project schema version 5 adds optional OCFD/custom feed-transformer ratios
   on top of the version 4 band/batch run metadata. Older projects migrate
   without changing their geometry or results.
