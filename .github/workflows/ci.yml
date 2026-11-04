@@ -76,6 +76,9 @@ jobs:
       - name: mypy
         run: uv run mypy
 
+      - name: mypy (UI, permissive ratchet)
+        run: uv run mypy --config-file mypy_ui.ini
+
       - name: pytest
         shell: bash
         run: |
@@ -203,3 +206,59 @@ jobs:
         env:
           NEC2C: ${{ github.workspace }}/spikes/phase0/build/nec2c.exe
         run: uv run pytest tests/integration/simulation -q
+
+  coverage:
+    name: Coverage (Linux, with solver)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+          prune-cache: true
+
+      - name: Install Qt runtime libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libgl1 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-xinerama0 libxcb-randr0 libxcb-render-util0 libxcb-xfixes0 libdbus-1-3 libfontconfig1 libglib2.0-0
+
+      - name: Build nec2c
+        run: bash spikes/phase0/scripts/build_nec2c.sh
+
+      - name: Sync locked environment
+        run: uv sync --locked --python 3.12
+
+      - name: Full suite with coverage
+        env:
+          NEC2C: ${{ github.workspace }}/spikes/phase0/build/nec2c
+        run: |
+          uv run pytest -q \
+            --cov=antennadesk --cov-branch \
+            --cov-report=term-missing --cov-report=xml
+
+      # Thresholds are one point below the measured baseline and ratchet up.
+      - name: Coverage gate
+        run: |
+          uv run coverage report --format=total --fail-under=84
+          uv run coverage report --format=total --include='src/antennadesk/domain/*' --fail-under=90
+          uv run coverage report --format=total --include='src/antennadesk/simulation/*' --fail-under=90
+          uv run coverage report --format=total --include='src/antennadesk/persistence/*' --fail-under=93
+          uv run coverage report --format=total --include='src/antennadesk/application/*' --fail-under=91
+          uv run coverage report --format=total --include='src/antennadesk/importers/*' --fail-under=74
+          uv run coverage report --format=total --include='src/antennadesk/reporting/*' --fail-under=86
+          uv run coverage report --format=total --include='src/antennadesk/ui/*' --fail-under=81
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: coverage.xml

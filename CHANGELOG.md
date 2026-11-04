@@ -120,6 +120,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   on a developer machine, registers `science`, `solver`, `slow`, `golden`, and
   `ui` markers, and the CI caches the uv environment. The UI teardown now
   dispatches deferred deletes, which cuts the full suite from 142 s to 56 s.
+- Added a coverage job with per-package thresholds, a permissive mypy pass over
+  58 of the 75 UI modules (`mypy_ui.ini`), and English/Spanish translation
+  parity tests.
 
 ### Changed
 

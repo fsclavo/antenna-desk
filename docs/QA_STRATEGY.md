@@ -26,7 +26,7 @@ Measured on 2026-11-04:
 | `skipif` uses | 2 |
 | Largest test file | `tests/ui/test_main_window.py`, 3,657 lines |
 | Source lines | 46,323 total; 30,144 in `ui/` |
-| Type-checked lines | ~16,000 (`ui/` is excluded from strict mypy) |
+| Type-checked lines | ~16,000 strict, plus 58 of 75 `ui/` files under a permissive ratchet; 17 UI files (219 errors) remain excluded |
 | Coverage, non-UI, with solver (measured) | 89 % total; domain 90 %, simulation 91 %, persistence 94 %, application 91 %, importers 75 %, reporting 85 % |
 | Coverage, full suite | not measured; a run with UI exceeded 10 minutes and was stopped |
 | Coverage enforcement | none; `[tool.coverage.*]` is configured but unused |
@@ -102,15 +102,13 @@ catch regressions.
 
 **Change.**
 
-- Add `--cov=antennadesk --cov-branch --cov-report=term-missing --cov-report=xml`
-  to CI and upload `coverage.xml` as an artifact.
-- Measure coverage in two lanes, because a full-suite run with UI exceeded
-  10 minutes: non-UI tests with the solver, and UI tests separately. Combine
-  the data files for the final report.
-- Set `fail_under` per package, starting one point below the measured baseline
-  and ratcheting upward: `domain` 89 → 95, `simulation` 90 → 95,
-  `persistence` 93 → 95, `application` 90 → 95, `importers` 74 → 90,
-  `reporting` 84 → 90, `ui` measured first, then ratcheted.
+- (implemented 2026-11-04) The `coverage` CI job builds `nec2c`, runs the full
+  suite with `--cov --cov-branch`, uploads `coverage.xml`, and gates each package
+  with `coverage report --format=total --include=... --fail-under=...`.
+  Measured: total 85, domain 91, simulation 91, persistence 94, application 92,
+  importers 75, reporting 87, ui 82. Thresholds sit one point below and ratchet.
+- A single coverage lane is enough: the full suite with coverage takes 78 s.
+  The two-lane plan was based on the pre-isolation 10-minute run.
 - Add mutation testing with `mutmut` (BSD-3, Unix only) on `domain/` and
   `simulation/` in a nightly job. Target ≥ 80 % killed. Annotate equivalent
   mutants explicitly; do not lower the target to hide survivors.
@@ -137,9 +135,11 @@ between the domain and the widgets.
 
 **Change.**
 
-- Add a second mypy target for `ui/` that starts permissive
-  (`disallow_untyped_defs = false`, `ignore_missing_imports = true` for PySide6)
-  and ratchets file by file. Do not attempt strict mode in one step.
+- (implemented 2026-11-04) `mypy_ui.ini` runs a permissive pass over
+  `src/antennadesk/ui` with `check_untyped_defs = true`. The 17 files with
+  existing errors (219 total) are listed in an `exclude` ratchet; the other 58
+  are checked in CI. New UI files are checked by default. Remove entries as
+  files reach zero errors.
 - Extend ruff with `S` (bandit), `PT` (pytest style), `T20` (no `print` in
   `src/`), and `RUF100`. Evaluate `ANN` for `src/` separately.
 - Add an SPDX header check for new source files, matching the existing headers.
@@ -460,10 +460,13 @@ the polarization commit.
 
 ### Phase 1 — Foundation (one week)
 
-1. Coverage measurement and per-package thresholds.
-2. mypy coverage for `ui/`, started permissively.
+1. (done 2026-11-04) Coverage measurement and per-package thresholds.
+2. (done 2026-11-04) mypy coverage for `ui/` via `mypy_ui.ini`, started
+   permissively with a 17-file ratchet; 58 of 75 files are checked.
 3. Hypothesis for units, geometry, persistence, and the three importers.
-4. i18n parity test.
+4. (done 2026-11-04) i18n parity test:
+   `tests/unit/ui/test_i18n.py` checks both languages, blank entries,
+   placeholder parity, duplicate literal keys, and the fallback path.
 5. Split `test_main_window.py` into feature modules. The order-dependence is
    already fixed; this is about size and navigation.
 
@@ -493,6 +496,8 @@ Track these over time; they are the definition of "better QA" for this project:
 | Solver tests executed in CI | 77/77 on Linux and Windows |
 | Solver tests executed locally | 77/77 when the binary exists |
 | Domain coverage (line + branch) | ≥ 95 % |
+| Coverage gates by package | pass; thresholds ratchet up |
+| UI files under mypy | 58/75 now, ratchet to 75 |
 | Mutation score, `domain/` + `simulation/` | ≥ 80 % killed |
 | Families with evidence level A or B | all, or an explicit C with a visible warning |
 | Reference tests with a named source | 100 % |

@@ -79,6 +79,7 @@ Before declaring a task complete, run:
 uv run ruff check .
 uv run ruff format --check .
 uv run mypy
+uv run mypy --config-file mypy_ui.ini
 uv run pytest
 ```
 
