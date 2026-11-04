@@ -34,9 +34,10 @@ Measured on 2026-11-04:
 | CI | 4 workflows, green; Linux + Windows, Python 3.11/3.12/3.13 |
 | Property-based tests | unit round trips, azimuth range, and importer fuzzing with Hypothesis 6.170 |
 | Mutation testing | 0 |
-| Cross-engine numerical checks | 0 |
+| Cross-engine numerical checks | 3 free-space cases against nec2++ via PyNEC (dipole, folded dipole, quad loop) |
 | Template evidence entries | 25/25 catalog templates, enforced by a test |
 | Independent RF math oracle | scikit-rf 2.2.0 (BSD-3, dev-only): 11 tests for feed lines, L/Pi/T networks, cascades, and gain |
+| Cross-engine oracle | PyNEC 2.3.4 (GPL-3, optional group): 3 free-space cases, 0.1 Ω and 0.05 dB |
 | Segment-convergence tests | 2: free space and finite ground |
 | Physics-invariant tests | 0 |
 | `docs/VALIDATION_PLAN.md` test count | fixed in Phase 0 (was 788, now 1,139) |
@@ -259,15 +260,24 @@ that reference comparisons miss.
 `PyNEC`/`necpp` 2.3.4 (GPL-3.0-only, Python ≥ 3.11) wraps `nec2++`, an
 independent C++ rewrite of NEC-2.
 
-**Change.** Add it as a dev-only dependency and run a small canonical set
-(dipole, folded dipole, quad loop, Yagi) comparing impedance within 1 % and gain
-within 0.2 dB.
+**Change (implemented 2026-11-04).** PyNEC lives in the optional `cross-engine`
+dependency group, because PyPI has manylinux wheels but no Windows ones; the
+Windows and macOS matrix never installs it. A dedicated Linux job builds
+`nec2c`, syncs the group, and runs
+`tests/integration/simulation/test_necpp_cross_engine.py`. The test compares
+three free-space geometries (dipole, folded dipole, and quad loop) built from
+the same canonical model and segmentation policy:
+
+- impedance within 0.1 Ω;
+- maximum gain within 0.05 dB.
+
+Observed deltas are 0.03–0.07 Ω and at most 0.02 dB.
 
 **Limitation, stated explicitly:** `nec2++` uses the same thin-wire EFIE
 formulation, so this catches implementation and adapter bugs, not formulation
 errors. It does not replace the published references.
 
-**Acceptance.** A nightly job compares both engines and reports deltas.
+**Acceptance.** A dedicated job compares both engines and reports deltas.
 
 **Effort.** M.
 
@@ -503,7 +513,7 @@ the polarization commit.
 1. (done 2026-11-04) Segmentation diagnostics and the convergence test.
 2. Physical invariants: power, pattern integral, reciprocity, rotation.
 3. (done 2026-11-04) `scikit-rf` oracle for the two-port math.
-4. `PyNEC` cross-engine job.
+4. (done 2026-11-04) `PyNEC` cross-engine job.
 5. (done 2026-11-04) Published closed-form anchors for the estimators: ARRL
    `468/f`, `234/f`, and `585/f` within 0.5 %.
 6. (done 2026-11-04) Evidence registry as code.

@@ -45,6 +45,9 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
+cross-engine = [
+    { name = "pynec" },
+]
 dev = [
     { name = "hypothesis" },
     { name = "mypy" },
@@ -67,6 +70,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
+cross-engine = [{ name = "pynec", specifier = ">=2.3,<3" }]
 dev = [
     { name = "hypothesis", specifier = ">=6.170,<7" },
     { name = "mypy", specifier = ">=1.10" },
@@ -1174,6 +1178,26 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/96/25/e47c6188228281372be7e9911a93931e01ec8798c02c93abd680b9b9521f/pyinstaller_hooks_contrib-2026.9.tar.gz", hash = "sha256:2748767901acb5cecd1304652b6c7add5bffcff1d71d01207fe24a5d42942a56", size = 180783, upload-time = "2026-10-20T15:43:54Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/93/fe/ded0e20de0580257d97dbabb4db7ab4d96ad8ade7d41149e66308057cf52/pyinstaller_hooks_contrib-2026.9-py3-none-any.whl", hash = "sha256:fb3e67dd64122561724c48ad0366ac9e8c16e638b63bf7d85de03bf3fdbf06c3", size = 462931, upload-time = "2026-10-20T15:43:52.632Z" },
+]
+
+[[package]]
+name = "pynec"
+version = "2.3.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7d/26/6cd71a6769f254cdd52054620b1f9a86d1aa24ec7e48c2668ab886a5fb15/pynec-2.3.4.tar.gz", hash = "sha256:d448d038d2bcb4265d511b2440a5d5ce26081269a776d45139fb8bf17a475df4", size = 1461325, upload-time = "2026-08-02T22:17:21.023Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cd/d8/aebbff33881214fa3bba73b4824e4c6834c0decd6a47e48390ed17b44ac1/pynec-2.3.4-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:5a609923ea4eeaf2d89657e51963143ff5f6724111e07aa250c65de3d1640aa1", size = 296231, upload-time = "2026-08-02T22:17:07.878Z" },
+    { url = "https://files.pythonhosted.org/packages/c9/64/1bb1e4948fd461a855b50dc75b5f92f074ea039ad9ed445099c7e4a77190/pynec-2.3.4-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d2b5c803e8402a6ca901c2b87659c03218273a6bd763a3eb92167d4adc1db530", size = 5415152, upload-time = "2026-08-02T22:17:09.66Z" },
+    { url = "https://files.pythonhosted.org/packages/fa/f2/1808dc9590ea210674c7c593197d8268265596a36c7457a58f40011dd12f/pynec-2.3.4-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:de0500d6acd83d8d0cff913b4538cd040950a1bea93bda12fc81757bc55023c8", size = 296282, upload-time = "2026-08-02T22:17:11.353Z" },
+    { url = "https://files.pythonhosted.org/packages/65/3c/09dec51bf29a56b00ba6a3b4c092d3b5cf064fcb9cc940f23a61aef6fdaa/pynec-2.3.4-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:783046fc32b1db71645f57b1dce8fdfad43fc297b07ce27ebcff017c7c1f8eca", size = 5417767, upload-time = "2026-08-02T22:17:12.933Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/71/898fe224c9d7f9c20e6d3d82b78bc1ad51fb2be23edcac70134a1b8ed78d/pynec-2.3.4-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:f41e8d2846cc0807de84469d4be8105f7f401f4e741a28db3feeb9d48f493a92", size = 296114, upload-time = "2026-08-02T22:17:14.558Z" },
+    { url = "https://files.pythonhosted.org/packages/06/33/86f923b75233693a1fbbbebddd377e510e7666f6a26999312f0ac8d133f1/pynec-2.3.4-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:a8e732a5814484b2ef12511648fd0e6c38bdfbbd5afa81f816c2ed20cff4509e", size = 5419687, upload-time = "2026-08-02T22:17:15.992Z" },
+    { url = "https://files.pythonhosted.org/packages/f5/38/ef0226bfea17342da286276b2b8d5fa120e384d5f3c1117b5f94e8187902/pynec-2.3.4-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:f0979d46b3d82d167663b6623af948990e3c55c7ae24bd59ee2846e8d93efe7b", size = 296000, upload-time = "2026-08-02T22:17:17.963Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/b0/9d67bcf24ed21043158057c7f6b5e46a3ce3568e2fa06a127919a7b55eb1/pynec-2.3.4-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:99618cecac6488f196c5ea1af175671068563a11507701e7ee966ee5ae48b9fa", size = 5418865, upload-time = "2026-08-02T22:17:19.466Z" },
 ]
 
 [[package]]

@@ -88,6 +88,15 @@ lossy lines, L/Pi/T networks, cascades, ABCD order, and transducer gain, with a
 `1e-9` relative tolerance. This is an implementation cross-check, not a physical
 reference.
 
+### Cross-engine check
+
+The `nec2c` adapter is cross-checked against `nec2++` through PyNEC 2.3.4 for a
+free-space dipole, folded dipole, and quad loop. Impedance agrees within `0.1 Ω`
+and maximum gain within `0.05 dB`. Both engines use the same thin-wire EFIE
+formulation, so this detects implementation and adapter errors, not formulation
+errors. Run it with `uv sync --group cross-engine`; the dedicated CI job
+installs that optional group.
+
 ## Phase 3 — guided MVP and GUI
 
 UI tests use `pytest-qt` with the Qt offscreen platform:

@@ -262,3 +262,36 @@ jobs:
         with:
           name: coverage
           path: coverage.xml
+
+  cross-engine:
+    name: Cross-engine (Linux, nec2++)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+          prune-cache: true
+
+      - name: Build nec2c
+        run: bash spikes/phase0/scripts/build_nec2c.sh
+
+      # PyNEC is optional so the Windows and macOS matrix never builds it.
+      - name: Sync locked environment with the cross-engine group
+        run: uv sync --locked --python 3.12 --group cross-engine
+
+      - name: Cross-engine tests
+        env:
+          NEC2C: ${{ github.workspace }}/spikes/phase0/build/nec2c
+        run: |
+          uv run --group cross-engine pytest \
+            tests/integration/simulation/test_necpp_cross_engine.py -q

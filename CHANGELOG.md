@@ -126,6 +126,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   3,654-line main-window test module is split into eight feature modules, and
   the two-port math is cross-checked against scikit-rf. Every catalog template
   now has a machine-readable evidence entry, rendered into the validation plan.
+  The solver is also cross-checked against nec2++ for three canonical
+  geometries.
 
 ### Changed
 

@@ -51,6 +51,9 @@ dev = [
   "ruff>=0.5",
   "scikit-rf>=2.2,<3",
 ]
+cross-engine = [
+  "pynec>=2.3,<3",
+]
 
 [tool.hatch.version]
 path = "src/antennadesk/__init__.py"
@@ -99,6 +102,7 @@ addopts = "-ra --strict-markers --strict-config"
 markers = [
   "science: numerical reference or physical-invariant test",
   "solver: requires a real nec2c executable",
+  "cross_engine: compares the solver against an independent NEC implementation",
   "slow: takes more than a few seconds",
   "golden: compares against a committed golden file",
   "ui: Qt widget test",
