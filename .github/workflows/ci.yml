@@ -253,7 +253,7 @@ jobs:
           uv run coverage report --format=total --include='src/antennadesk/simulation/*' --fail-under=90
           uv run coverage report --format=total --include='src/antennadesk/persistence/*' --fail-under=93
           uv run coverage report --format=total --include='src/antennadesk/application/*' --fail-under=91
-          uv run coverage report --format=total --include='src/antennadesk/importers/*' --fail-under=74
+          uv run coverage report --format=total --include='src/antennadesk/importers/*' --fail-under=82
           uv run coverage report --format=total --include='src/antennadesk/reporting/*' --fail-under=86
           uv run coverage report --format=total --include='src/antennadesk/ui/*' --fail-under=81
 

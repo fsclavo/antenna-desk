@@ -24,12 +24,11 @@ Measured on 2026-11-04:
 | Custom pytest markers | 0 |
 | `parametrize` uses | 24 |
 | `skipif` uses | 2 |
-| Largest test file | `tests/ui/test_main_window.py`, 3,657 lines |
+| Largest test file | `tests/ui/test_main_window.py`, 3,654 lines |
 | Source lines | 46,323 total; 30,144 in `ui/` |
 | Type-checked lines | ~16,000 strict, plus 58 of 75 `ui/` files under a permissive ratchet; 17 UI files (219 errors) remain excluded |
-| Coverage, non-UI, with solver (measured) | 89 % total; domain 90 %, simulation 91 %, persistence 94 %, application 91 %, importers 75 %, reporting 85 % |
-| Coverage, full suite | not measured; a run with UI exceeded 10 minutes and was stopped |
-| Coverage enforcement | none; `[tool.coverage.*]` is configured but unused |
+| Coverage, full suite with solver (measured) | 85 % total; domain 91 %, simulation 91 %, persistence 94 %, application 92 %, importers 83 %, reporting 87 %, ui 82 % |
+| Coverage enforcement | per-package gates in the `coverage` CI job, one point below the measured baseline |
 | Timing sensitivity | one UI failure appeared under coverage instrumentation at ~32 % while another pytest process ran concurrently. The polarization commit added deterministic posted-event processing in `tests/ui/helpers.py`; re-verify under coverage before treating it as open |
 | ADR files | 24, numbered 0001–0023 with a duplicated `0014` |
 | CI | 4 workflows, green; Linux + Windows, Python 3.11/3.12/3.13 |
@@ -106,7 +105,9 @@ catch regressions.
   suite with `--cov --cov-branch`, uploads `coverage.xml`, and gates each package
   with `coverage report --format=total --include=... --fail-under=...`.
   Measured: total 85, domain 91, simulation 91, persistence 94, application 92,
-  importers 75, reporting 87, ui 82. Thresholds sit one point below and ratchet.
+  importers 83, reporting 87, ui 82. Thresholds sit one point below and ratchet.
+  The importer fuzz tests raised that package from 75 to 83, so its gate moved
+  from 74 to 82.
 - A single coverage lane is enough: the full suite with coverage takes 78 s.
   The two-lane plan was based on the pre-isolation 10-minute run.
 - Add mutation testing with `mutmut` (BSD-3, Unix only) on `domain/` and
