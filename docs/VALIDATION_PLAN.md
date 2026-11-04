@@ -131,6 +131,14 @@ small-loop radiation resistance, and half-wave dipole directivity. FDTD/FEM
 remains the preferred different-method oracle, but no engine is available in
 the current environment.
 
+### Experimental validation
+
+`docs/EXPERIMENTAL_VALIDATION_PROTOCOL.md` defines the level 3 procedure for a
+half-wave dipole: equipment, site record, calibration, impedance/SWR, gain
+comparison, pattern cuts, and a GUM uncertainty budget following IEEE Std
+149-2021. No measurement has been recorded yet; the protocol is ready for when
+a VNA and a suitable site are available.
+
 ## Phase 3 — guided MVP and GUI
 
 UI tests use `pytest-qt` with the Qt offscreen platform:

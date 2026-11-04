@@ -133,6 +133,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   checksum manifest now covers structural regression and a NEC2C smoke run,
   and analytical closed forms cover the short-dipole and small-loop limits.
   The 1,442-line nec2c adapter test module is split into four modules.
+- Added `docs/EXPERIMENTAL_VALIDATION_PROTOCOL.md`, the level 3 measurement
+  protocol for a half-wave dipole with an IEEE 149-2021 / GUM uncertainty
+  budget. No measurement is recorded yet.
 
 ### Changed
 

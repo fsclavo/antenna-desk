@@ -429,16 +429,18 @@ evidence.
 Level 3 is currently deferred. The VNA import exists, but no measurement is
 recorded as validation evidence.
 
-**Change.**
+**Change (protocol implemented 2026-11-04; measurement pending).**
 
 - Adopt IEEE Std 149-2021, *Recommended Practice for Antenna Measurements*, as
   the protocol reference: reference plane, range evaluation, gain standard, and
   uncertainty budget.
-- Extend the measurement schema with uncertainty fields: instrument, cable and
-  connector losses, reference plane, calibration date, and an estimated
-  expanded uncertainty.
-- Document a repeatable procedure for one reference antenna (a half-wave dipole
-  is the cheapest defensible case) and record the result in `docs/`.
+- `docs/EXPERIMENTAL_VALIDATION_PROTOCOL.md` defines the equipment, site
+  record, calibration, impedance/SWR, gain comparison, pattern cuts, and a GUM
+  uncertainty budget for a half-wave dipole.
+- The measurement schema extension is deferred until a real measurement exists.
+  The protocol lists the proposed fields (instrument, reference antenna,
+  cable loss, expanded uncertainty) and stores the budget in `notes` and the
+  attached files in the meantime.
 - Compare measured and simulated results, and explain the difference in terms of
   the documented uncertainty rather than a tolerance.
 
