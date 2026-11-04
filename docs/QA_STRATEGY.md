@@ -20,11 +20,11 @@ Measured on 2026-11-04:
 | Passing locally with `NEC2C` set | 1,139 passed in 59 s |
 | Slowest test | 4.9 s (`test_g5rv_dense_sweep_uses_pattern_snapshots`) |
 | UI test isolation | fixed 2026-11-04: deferred deletes were not dispatched, so widgets from one test stayed alive and a later test spent ~66 s in a nested event loop. The teardown in `tests/conftest.py` now closes windows and dispatches `DeferredDelete`; the full suite went from 142 s to 56 s |
-| Test files | 128 (78 unit, 3 integration, 1 acceptance, 46 UI) |
+| Test files | 138 (81 unit, 3 integration, 1 acceptance, 53 UI) |
 | Custom pytest markers | 0 |
 | `parametrize` uses | 24 |
 | `skipif` uses | 2 |
-| Largest test file | `tests/ui/test_main_window.py`, 3,654 lines |
+| Largest test file | `tests/integration/simulation/test_nec2c_adapter.py`, 1,442 lines. The 3,654-line main-window file is split into eight feature modules; the largest is 828 lines |
 | Source lines | 46,323 total; 30,144 in `ui/` |
 | Type-checked lines | ~16,000 strict, plus 58 of 75 `ui/` files under a permissive ratchet; 17 UI files (219 errors) remain excluded |
 | Coverage, full suite with solver (measured) | 85 % total; domain 91 %, simulation 91 %, persistence 94 %, application 92 %, importers 83 %, reporting 87 %, ui 82 % |
@@ -62,8 +62,8 @@ and CI*.
 ### 3.1 Test taxonomy and infrastructure
 
 **Problem.** There are no markers, so there is no way to select a fast lane, a
-solver lane, or a science lane. `test_main_window.py` is a 3,657-line monolith
-that is hard to navigate and slow to run in isolation.
+solver lane, or a science lane. `test_main_window.py` was a 3,654-line monolith
+that was hard to navigate and slow to run in isolation; it is now split.
 
 **Change.**
 
@@ -74,9 +74,11 @@ that is hard to navigate and slow to run in isolation.
   the default fast lane.
 - Add `tests/factories.py` with builders for `AntennaModel`, `SimulationSpec`,
   `Wire`, and `SimulationResult` to remove repeated literal construction.
-- Split `tests/ui/test_main_window.py` into feature modules (project lifecycle,
-  simulation flow, menu actions, language, units, exports, dialogs, solver
-  locator). Keep one smoke test that drives the full window.
+- (done 2026-11-04) Split `tests/ui/test_main_window.py` into feature modules:
+  project, simulation, templates, presets, optimization, imports,
+  design-from-frequency, and undo. Shared helpers live in
+  `tests/ui/main_window_support.py` and the `window` fixture in
+  `tests/ui/conftest.py`.
 - Replace copy-pasted per-family tests with `@pytest.mark.parametrize` over the
   family registry where the assertion is structural.
 - Add `--durations=20` to the local command and track the top ten slow tests.
@@ -87,9 +89,11 @@ that is hard to navigate and slow to run in isolation.
   `QEvent.Type.DeferredDelete` after every UI test. Without it, a test's runtime
   depends on what ran before, as the 66 s regression showed.
 
-**Acceptance.** `uv run pytest -m "not solver and not slow"` runs in under 20 s;
-`uv run pytest -m solver` runs only the 77 solver tests; no test file exceeds
-1,000 lines.
+**Acceptance.** `uv run pytest -m "not solver"` runs in 44 s today; tagging the
+slow tests to reach a sub-20 s lane is still pending. `uv run pytest -m solver`
+runs only the 77 solver tests. The main-window suite is split by feature and no
+main-window module exceeds 1,000 lines. The next candidate is
+`test_nec2c_adapter.py` at 1,442 lines.
 
 **Effort.** M.
 
@@ -467,8 +471,11 @@ the polarization commit.
 4. (done 2026-11-04) i18n parity test:
    `tests/unit/ui/test_i18n.py` checks both languages, blank entries,
    placeholder parity, duplicate literal keys, and the fallback path.
-5. Split `test_main_window.py` into feature modules. The order-dependence is
-   already fixed; this is about size and navigation.
+5. (done 2026-11-04) Split `test_main_window.py` into eight feature modules
+   (`project`, `simulation`, `templates`, `presets`, `optimization`, `imports`,
+   `design_from_frequency`, `undo`), with shared `FakeSolver` and `window`
+   fixture moved to `main_window_support.py` and `tests/ui/conftest.py`. The
+   original 3,654-line file is gone; the largest module is 828 lines.
 
 ### Phase 2 — Science oracles (two weeks)
 
