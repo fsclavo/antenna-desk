@@ -1,6 +1,6 @@
 # QA strategy
 
-**Status:** proposal
+**Status:** proposal; Phase 0 implemented on 2026-11-04
 **Date:** 2026-11-04
 **Scope:** test infrastructure, static analysis, CI, and numerical/experimental
 validation for the current codebase and the next two milestones.
@@ -16,8 +16,10 @@ Measured on 2026-11-04:
 | Fact | Value |
 |---|---|
 | Collected tests | 1,121 |
-| Passing locally without solver | 1,044 passed, 77 skipped, 62 s |
-| Passing locally with `NEC2C` set | 1,121 passed |
+| Passing locally without solver | 1,044 passed in 41 s |
+| Passing locally with `NEC2C` set | 1,121 passed in 56 s |
+| Slowest test | 4.9 s (`test_g5rv_dense_sweep_uses_pattern_snapshots`) |
+| UI test isolation | fixed 2026-11-04: deferred deletes were not dispatched, so widgets from one test stayed alive and a later test spent ~66 s in a nested event loop. The teardown in `tests/conftest.py` now closes windows and dispatches `DeferredDelete`; the full suite went from 142 s to 56 s |
 | Test files | 128 (78 unit, 3 integration, 1 acceptance, 46 UI) |
 | Custom pytest markers | 0 |
 | `parametrize` uses | 24 |
@@ -28,14 +30,15 @@ Measured on 2026-11-04:
 | Coverage, non-UI, with solver (measured) | 89 % total; domain 90 %, simulation 91 %, persistence 94 %, application 91 %, importers 75 %, reporting 85 % |
 | Coverage, full suite | not measured; a run with UI exceeded 10 minutes and was stopped |
 | Coverage enforcement | none; `[tool.coverage.*]` is configured but unused |
-| Timing sensitivity | one UI failure appeared under coverage instrumentation at ~32 % while another pytest process ran concurrently; not yet reproduced in isolation |
+| Timing sensitivity | one UI failure appeared under coverage instrumentation at ~32 % while another pytest process ran concurrently. The polarization commit added deterministic posted-event processing in `tests/ui/helpers.py`; re-verify under coverage before treating it as open |
+| ADR files | 24, numbered 0001–0023 with a duplicated `0014` |
 | CI | 4 workflows, green; Linux + Windows, Python 3.11/3.12/3.13 |
 | Property-based tests | 0 |
 | Mutation testing | 0 |
 | Cross-engine numerical checks | 0 |
 | Segment-convergence tests | 0 |
 | Physics-invariant tests | 0 |
-| `docs/VALIDATION_PLAN.md` test count | 788 (stale by ~330) |
+| `docs/VALIDATION_PLAN.md` test count | fixed in Phase 0 (was 788, now 1,121) |
 
 The suite is in good shape for its size. The gaps are not "more tests"; they are
 *stronger oracles*, *enforced thresholds*, and *consistency between code, docs,
@@ -81,6 +84,9 @@ that is hard to navigate and slow to run in isolation.
 - Add a flaky-test policy: UI tests wait on Qt signals or an explicit condition,
   never on fixed sleeps. Run the UI suite under coverage in the nightly job to
   expose timing sensitivity, and record the outcome in the job summary.
+- Keep the UI teardown order-independent: close windows and dispatch
+  `QEvent.Type.DeferredDelete` after every UI test. Without it, a test's runtime
+  depends on what ran before, as the 66 s regression showed.
 
 **Acceptance.** `uv run pytest -m "not solver and not slow"` runs in under 20 s;
 `uv run pytest -m solver` runs only the 77 solver tests; no test file exceeds
@@ -111,7 +117,8 @@ catch regressions.
 - Add property-based tests with `hypothesis` (MPL-2.0, dev-only) for:
   - unit conversion round trips (`meters → feet → meters`, `Hz → MHz`);
   - geometry invariants (wire length, connectivity, no below-ground wires);
-  - project JSON round trip and every migration path;
+  - project JSON round trip and every migration path from version 1 to the
+    current version 7;
   - the untrusted-input parsers: NEC deck, MMANA `.maa`, VNA CSV.
 - Add a fuzz corpus for the three importers: no crash, bounded memory, explicit
   diagnostics for malformed input.
@@ -156,8 +163,9 @@ cancellation, and a `paths` filter that ignores `docs/`, `scripts/`, and
 - Replace `python -m pip install uv` with `astral-sh/setup-uv` pinned by SHA,
   `enable-cache: true`, `prune-cache: true`.
 - Add `concurrency: {group: ci-${{ github.ref }}, cancel-in-progress: true}`.
-- Extend `paths` to `docs/**`, `scripts/**`, `packaging/**`, `CHANGELOG.md`,
-  `examples/**`.
+- Extend `paths` to `scripts/**`, `packaging/**`, and `CHANGELOG.md`
+  (implemented). `docs/**` waits for a docs check, so a typo fix does not run
+  the full matrix. `examples/**` is already covered.
 - Remove the duplicated Linux 3.12 cell: the `quality` job already runs it.
 - Upload `coverage.xml`, `junit.xml`, and the pytest failure log as artifacts.
 - Add a `schedule:` nightly job: full matrix, solver on both platforms,
@@ -173,9 +181,9 @@ cancellation, and a `paths` filter that ignores `docs/`, `scripts/`, and
   it (`packaging/debian/copyright`, the AppImage, and the Windows bundle), and
   to add a test that fails when the notice files are missing.
 
-**Acceptance.** A docs-only pull request runs CI. A failing job uploads its
-artifacts. The nightly job is green or files an issue. No action is referenced
-by a mutable tag.
+**Acceptance.** A change to `scripts/` or `packaging/` runs CI. A failing job
+uploads its artifacts. The nightly job is green or files an issue. No action is
+referenced by a mutable tag.
 
 **Effort.** M.
 
@@ -228,7 +236,11 @@ that reference comparisons miss.
   which today are checked only at the single maximum-gain point.
 - **Reciprocity:** for a two-port case, `Z12 = Z21` within 1 %.
 - **Rotation invariance:** rotating the antenna azimuth by 90° rotates the
-  pattern and leaves the maximum gain unchanged within 0.05 dB.
+  pattern and leaves the maximum gain unchanged within 0.05 dB. The
+  polarization milestone already added a free-space NEC check that compares
+  each vertical Yagi and Moxon with its horizontal design rotated around the
+  boom. That is a self-consistency test: valuable, but it does not replace an
+  independent reference. Keep it and classify it as such.
 
 **Acceptance.** Each invariant is an integration test that runs with `NEC2C`.
 
@@ -379,7 +391,11 @@ test. Documentation drifts from code, as the test count already shows.
 - Add a test that every user-visible string in `ui/` resolves through
   `ui/i18n.py`.
 - Add doc-code consistency tests for the evidence registry, the estimator
-  registry, the catalog routes, and the ADR index.
+  registry, the catalog routes, and ADR numbering. There are 24 ADR files
+  numbered 0001–0023, and `0014` is used twice
+  (`0014-l-network-post-processing.md` and
+  `0014-undo-redo-and-chart-cursors.md`); renumber one and add a uniqueness
+  test.
 - Add a `CHANGELOG.md` entry check for user-visible changes.
 - Turn the `AGENTS.md` definition of done into a checklist template used by the
   milestone review.
@@ -412,14 +428,35 @@ surprise in a release.
 
 Each phase is independently shippable.
 
-### Phase 0 — Quick wins (one session)
+### Phase 0 — Quick wins (implemented 2026-11-04)
 
 1. `NEC2C` auto-detection in `tests/conftest.py`, so the local command does not
-   silently skip 77 tests.
-2. Register markers and tag the solver tests.
-3. Extend the CI `paths` filter and add `concurrency`.
-4. Replace the manual uv install with `setup-uv` and caching.
-5. Fix the stale test count in `VALIDATION_PLAN.md`.
+   silently skip 77 tests. Done, with a pytest header line that reports the
+   solver path.
+2. Register markers and tag the solver tests. Done: `science`, `solver`,
+   `slow`, `golden`, `ui`.
+3. Extend the CI `paths` filter and add `concurrency`. Done for `scripts/**`,
+   `packaging/**`, and `CHANGELOG.md`. `docs/**` is deferred to Phase 1, where
+   a docs check will exist; triggering the full matrix for a typo fix would only
+   burn runner minutes.
+4. Replace the manual uv install with `setup-uv` and caching. Done in `ci.yml`
+   and `package.yml`. `release.yml` is left unchanged on purpose; it needs a
+   release dry run before touching the publishing path.
+5. Fix the stale test count in `VALIDATION_PLAN.md`. Done: 1,121 tests, 77 of
+   them solver tests.
+
+### Phase 0.1 — UI test isolation (implemented 2026-11-04)
+
+`test_theme.py` took 66 s in a full run and 0.4 s alone. The profile showed the
+time inside a nested `QEventLoop` from `qtbot.wait`, not in the geometry view.
+`deleteLater` schedules the deletion but the deferred-delete events were never
+dispatched, so widgets from `test_main_window.py` stayed alive and the next test
+paid for their paint and palette events.
+
+The teardown in `tests/conftest.py` now calls `closeAllWindows()`,
+`sendPostedEvents(None, QEvent.Type.DeferredDelete)`, and `processEvents()`
+before collecting. The full suite went from 142 s to 56 s, faster than before
+the polarization commit.
 
 ### Phase 1 — Foundation (one week)
 
@@ -427,7 +464,8 @@ Each phase is independently shippable.
 2. mypy coverage for `ui/`, started permissively.
 3. Hypothesis for units, geometry, persistence, and the three importers.
 4. i18n parity test.
-5. Split `test_main_window.py`.
+5. Split `test_main_window.py` into feature modules. The order-dependence is
+   already fixed; this is about size and navigation.
 
 ### Phase 2 — Science oracles (two weeks)
 
@@ -462,7 +500,7 @@ Track these over time; they are the definition of "better QA" for this project:
 | Doc-code drift tests | 0 failures |
 | Flaky tests per week | 0; a new flake is fixed or quarantined with an issue |
 | Suite runtime, fast lane | < 20 s |
-| Suite runtime, full | < 90 s |
+| Suite runtime, full | < 60 s |
 
 ## 6. Deliberately out of scope
 

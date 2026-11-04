@@ -115,6 +115,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   lists the snapshots, so a 200-point G5RV sweep can show nine bands at 5°
   instead of a 30° pattern at every point. The project-size budget accounts for
   the sweep and pattern snapshot counts separately.
+- Added `docs/QA_STRATEGY.md` and the Phase 0 test tooling: the suite now
+  auto-detects `spikes/phase0/build/nec2c` so solver tests do not skip silently
+  on a developer machine, registers `science`, `solver`, `slow`, `golden`, and
+  `ui` markers, and the CI caches the uv environment. The UI teardown now
+  dispatches deferred deletes, which cuts the full suite from 142 s to 56 s.
 
 ### Changed
 

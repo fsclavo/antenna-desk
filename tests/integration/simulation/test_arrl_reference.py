@@ -26,10 +26,14 @@ from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.simulation.nec2.solver import Nec2cSolver
 
 NEC2C = os.environ.get("NEC2C")
-pytestmark = pytest.mark.skipif(
-    not NEC2C or not Path(NEC2C).is_file(),
-    reason="NEC2C must point to a nec2c executable",
-)
+pytestmark = [
+    pytest.mark.solver,
+    pytest.mark.science,
+    pytest.mark.skipif(
+        not NEC2C or not Path(NEC2C).is_file(),
+        reason="NEC2C must point to a nec2c executable",
+    ),
+]
 
 
 def _solver() -> Nec2cSolver:

@@ -94,6 +94,13 @@ warn_unreachable = true
 minversion = "8.0"
 testpaths = ["tests"]
 addopts = "-ra --strict-markers --strict-config"
+markers = [
+  "science: numerical reference or physical-invariant test",
+  "solver: requires a real nec2c executable",
+  "slow: takes more than a few seconds",
+  "golden: compares against a committed golden file",
+  "ui: Qt widget test",
+]
 
 [tool.coverage.run]
 branch = true

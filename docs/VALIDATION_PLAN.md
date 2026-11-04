@@ -369,10 +369,11 @@ Phase 6 adds tests for:
 - Native packaging inputs, `--version`/`--check-solver` CLI behavior, and
   bundled-solver precedence in the executable locator.
 
-The suite currently has 788 tests with the solver enabled. Solver integration
-tests skip when `NEC2C` is not set. All tests run on Python 3.11,
-3.12, and 3.13 on Linux and Windows through GitHub Actions. UI tests run
-offscreen and do not require a display.
+The suite currently has 1,121 tests, 77 of which require the solver. Solver
+integration tests skip when no `nec2c` executable is available; the test suite
+auto-detects `spikes/phase0/build/nec2c` when `NEC2C` is not set. All tests run
+on Python 3.11, 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI
+tests run offscreen and do not require a display.
 
 Reproducible adapter check:
 
