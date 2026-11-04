@@ -1,4 +1,4 @@
-# ADR-0014 — Project Undo/Redo and chart cursors
+# ADR-0024 — Project Undo/Redo and chart cursors
 
 - **Status:** Accepted
 - **Date:** 2026-11-01

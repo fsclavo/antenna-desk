@@ -91,7 +91,7 @@ optional signing steps.
 - [ADR-0011 — Bounded impedance synthesis](docs/ADR/0011-bounded-impedance-synthesis.md)
 - [ADR-0012 — Geometry presentation and dimension layout](docs/ADR/0012-geometry-presentation.md)
 - [ADR-0013 — Frequency-first dimension estimation](docs/ADR/0013-frequency-first-dimension-estimation.md)
-- [ADR-0014 — Undo/Redo and chart cursors](docs/ADR/0014-undo-redo-and-chart-cursors.md)
+- [ADR-0024 — Undo/Redo and chart cursors](docs/ADR/0024-undo-redo-and-chart-cursors.md)
 - [ADR-0015 — Realized gain and directivity](docs/ADR/0015-realized-gain-and-directivity.md)
 - [ADR-0016 — Transmission line as geometry](docs/ADR/0016-transmission-line-as-geometry.md)
 - [ADR-0017 — Simulation storage budget](docs/ADR/0017-simulation-storage-budget.md)

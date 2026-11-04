@@ -451,21 +451,22 @@ project format, compared against simulation, with the delta explained.
 
 ### 3.7 Consistency and documentation
 
-**Problem.** English and Spanish strings are maintained by hand with no parity
-test. Documentation drifts from code, as the test count already shows.
+**Problem.** English and Spanish strings are maintained by hand; a parity test
+now guards the tables, but documentation can still drift from code.
 
 **Change.**
 
-- Add a test that both translation tables have identical keys, no empty values,
-  and no placeholder mismatch.
+- (done 2026-11-04) `tests/unit/ui/test_i18n.py` checks both translation tables
+  for identical keys, blank values, placeholder parity, duplicate literal keys,
+  and the missing-key fallback.
 - Add a test that every user-visible string in `ui/` resolves through
   `ui/i18n.py`.
-- Add doc-code consistency tests for the evidence registry, the estimator
-  registry, the catalog routes, and ADR numbering. There are 24 ADR files
-  numbered 0001–0023, and `0014` is used twice
-  (`0014-l-network-post-processing.md` and
-  `0014-undo-redo-and-chart-cursors.md`); renumber one and add a uniqueness
-  test.
+- (done 2026-11-04) ADR numbering: 24 ADRs, 0001–0024, with
+  `tests/unit/test_adr_numbering.py` asserting unique, contiguous numbers and a
+  heading that matches the filename. The duplicate `0014` was resolved:
+  undo/redo is now `0024`, and L-network stays `0014`.
+- Pending: estimator-registry and catalog-route consistency; the evidence
+  registry is already covered in 3.5.7.
 - Add a `CHANGELOG.md` entry check for user-visible changes.
 - Turn the `AGENTS.md` definition of done into a checklist template used by the
   milestone review.

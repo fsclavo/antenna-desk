@@ -139,6 +139,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- CI now pins every action by commit SHA, runs `uv lock --check` and
+  `pip-audit --skip-editable`, and Dependabot tracks GitHub Actions and Python
+  dependencies.
+- Renumbered the duplicate ADR 0014: undo/redo is now ADR 0024. Added tests for
+  unique, contiguous ADR numbering and matching headings.
 - **New Variant...** is now **New Design in Project...**, and the design
   selector, menus, comparison dialog, and history labels use “design” instead of
   “variant”.
