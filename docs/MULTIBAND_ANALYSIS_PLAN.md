@@ -2,8 +2,8 @@
 
 **Status:** core implemented; follow-ups open
 **Date:** 2026-11-03
-**Revised:** 2026-11-03 after the centralized design-panel action bar and
-global **Simulation pattern** group.
+**Revised:** 2026-11-04 after the global simulation sweep, all-band Pattern
+frequency selector, and per-band pattern-frequency policy.
 **Scope:** analysis workflow, not new antenna geometry
 
 ## Implementation status
@@ -42,7 +42,10 @@ request and a way to present several band results together.
 
 ## Current behavior
 
-| Family | Current sweep | Can the user see other bands? |
+The sweep values below are the **Auto (template)** defaults. Any design can be
+overridden from **Advanced simulation → Simulation sweep → Custom**.
+
+| Family | Auto sweep | Can the user see other bands? |
 |---|---|---|
 | G5RV | Custom panel, 41 points over 3.5–30 MHz by default | Yes, but as one continuous sweep |
 | OCFD | 31 points, 0.95–1.05 × design frequency | No |
@@ -59,10 +62,11 @@ custom sweep controls.
 
 The recent GUI consolidation is part of the baseline for this plan: the design
 panel now has one action bar (**Apply design**, **Estimate Dimensions...**,
-**Optimize...**) and one global **Simulation pattern** group. Per-form pattern
-controls and the duplicate bottom Apply/Optimize buttons were removed. The
-frequency sweep remains family-specific. Band analysis must join this central
-area and must not reintroduce per-form pattern or band controls.
+**Optimize...**) and collapsible **Advanced simulation** controls for the global
+**Simulation sweep**, **Simulation pattern**, and **Band analysis**. Per-form
+pattern controls and the duplicate bottom Apply/Optimize buttons were removed.
+Band analysis must stay in this central area and must not reintroduce per-form
+pattern or band controls.
 
 ## Goals
 
@@ -163,8 +167,8 @@ Advantages:
 
 - No changes to the NEC adapter, deck writer, parser, or normalization.
 - A failure in one band does not discard the other bands.
-- Each band gets its own representative pattern snapshot, storage budget, and
-  diagnostics while sharing the global angular resolution.
+- Each band gets its own pattern snapshots, storage budget, and diagnostics
+  while sharing the global angular resolution and pattern-frequency policy.
 - Existing single-band Simulate remains the regression baseline.
 - The G5RV can keep its continuous "All HF" mode while gaining a band-list
   mode.

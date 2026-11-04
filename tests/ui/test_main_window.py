@@ -76,8 +76,19 @@ class FakeSolver:
         )
 
 
+def _use_parameters(window: MainWindow, parameters) -> None:
+    assert window._project is not None
+    assert window._design_id is not None
+    current = window._project.design_by_id(window._design_id)
+    window._project = window._project.with_design(
+        current.with_parameters(parameters),
+        updated_at=window._project.updated_at,
+    )
+    window._select_design(current.id)
+
+
 @pytest.fixture
-def window(qtbot: QtBot) -> Iterator[MainWindow]:
+def window(qtbot: QtBot, sample_project) -> Iterator[MainWindow]:
     main_window = MainWindow(
         JsonProjectRepository(),
         FakeSolver(),
@@ -85,14 +96,157 @@ def window(qtbot: QtBot) -> Iterator[MainWindow]:
         UnitSystem.METRIC,
     )
     qtbot.addWidget(main_window)
+    main_window._set_project(
+        sample_project,
+        sample_project.designs[0].id,
+        path=None,
+        dirty=False,
+    )
     yield main_window
     main_window._dirty = False
     main_window.close()
 
 
-def test_default_project_is_ready(window: MainWindow) -> None:
+def test_main_window_starts_without_a_project(qtbot: QtBot) -> None:
+    window = MainWindow(
+        JsonProjectRepository(),
+        FakeSolver(),
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+    )
+    qtbot.addWidget(window)
+
+    assert window._project is None
+    assert window._design_id is None
+    assert window._main_stack.currentWidget() is window._start_page
+    assert window._new_action.isEnabled() is True
+    assert window._open_action.isEnabled() is True
+    assert window._save_action.isEnabled() is False
+    assert window._simulate_action.isEnabled() is False
+    assert window._estimate_button.isEnabled() is False
+    assert window._variant_combo.count() == 0
+    assert window._toolbar.isHidden() is True
+    assert window.windowTitle() == "AntennaDesk — Antenna Designer"
+
+    window.close()
+
+
+def test_new_antenna_from_the_empty_state_creates_a_project(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.dipole import DipoleParameters
+
+    window = MainWindow(
+        JsonProjectRepository(),
+        FakeSolver(),
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+    )
+    qtbot.addWidget(window)
+
+    class FakeCatalog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def selected_key(self) -> str:
+            return "wire_dipole"
+
+    class FakeWizard:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QWizard.DialogCode:
+            return QWizard.DialogCode.Accepted
+
+        def build_parameters(self) -> DipoleParameters:
+            return DipoleParameters(
+                frequency_hz=7_100_000.0,
+                total_length_m=20.0,
+                height_m=8.0,
+            )
+
+        def project_name(self) -> str:
+            return "First antenna"
+
+    monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
+    monkeypatch.setattr(main_window_module, "DipoleWizard", FakeWizard)
+
+    window.new_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "First antenna"
+    assert window._main_stack.currentIndex() == 1
+    assert window._form.parameters().total_length_m == pytest.approx(20.0)
+    window._dirty = False
+    window.close()
+
+
+def test_basic_form_template_is_read_only(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[bool] = []
+    monkeypatch.setattr(window, "change_template", lambda: calls.append(True))
+
+    assert window._form._template_value.text() == "Wire dipole"
+    assert window._form._change_template.text() == "Change..."
+    assert not hasattr(window._form, "_type")
+
+    window._form._change_template.click()
+
+    assert calls == [True]
+
+
+def test_new_template_asks_for_the_project_name_after_the_template(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.ringo import RingoParameters
+
+    parameters = RingoParameters(
+        frequency_hz=7_100_000.0,
+        radiator_height_m=5.0,
+        ring_diameter_m=1.0,
+    )
+    events: list[str] = []
+    suggested: list[str] = []
+
+    class FakeRingoDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            events.append("template")
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> RingoParameters:
+            return parameters
+
+    def fake_get_text(*args: object, **kwargs: object) -> tuple[str, bool]:
+        events.append("name")
+        suggested.append(str(kwargs["text"]))
+        return "My Ringo", True
+
+    monkeypatch.setattr(main_window_module, "RingoDialog", FakeRingoDialog)
+    monkeypatch.setattr(QInputDialog, "getText", fake_get_text)
+
+    window.new_ringo_antenna()
+
+    assert events == ["template", "name"]
+    assert suggested[0].endswith("Ringo")
+    assert window._project is not None
+    assert window._project.name == "My Ringo"
+    window._dirty = False
+
+
+def test_project_is_ready(window: MainWindow) -> None:
     assert window._project is not None
     assert window._project.name == "40 m dipole"
+    assert window._main_stack.currentIndex() == 1
     parameters = window._form.parameters()
     assert parameters.frequency_hz == pytest.approx(7_100_000.0)
     assert parameters.total_length_m == pytest.approx(20.0)
@@ -114,6 +268,25 @@ def test_simulate_updates_results(window: MainWindow, qtbot: QtBot) -> None:
     window._dirty = False
 
 
+def test_simulate_saves_the_form_before_running(
+    window: MainWindow,
+    qtbot: QtBot,
+) -> None:
+    window._form._length.setValue(22.0)
+
+    window.simulate()
+    qtbot.waitUntil(
+        lambda: not window._simulating and window._thread is None,
+        timeout=15_000,
+    )
+
+    assert window._project is not None
+    design = window._project.designs[0]
+    assert design.parameters.total_length_m == pytest.approx(22.0)
+    assert window._results._table.rowCount() == 1
+    window._dirty = False
+
+
 def test_save_project_writes_a_native_file(
     window: MainWindow,
     tmp_path: Path,
@@ -130,10 +303,14 @@ def test_language_switch_updates_actions(window: MainWindow) -> None:
     window._set_language(Language.SPANISH)
     assert window._simulate_action.text() == "Simular"
     assert window._estimate_button.text() == "Estimar dimensiones..."
+    assert window._new_variant_action.text() == "Nuevo diseño en el proyecto..."
+    assert window._variant_label.text() == "Diseño"
 
     window._set_language(Language.ENGLISH)
     assert window._simulate_action.text() == "Simulate"
     assert window._estimate_button.text() == "Estimate Dimensions..."
+    assert window._new_variant_action.text() == "New Design in Project..."
+    assert window._variant_label.text() == "Design"
 
 
 def test_unit_switch_preserves_physical_length(window: MainWindow) -> None:
@@ -557,7 +734,7 @@ def test_switching_to_a_folded_dipole_updates_the_design_and_view(
 ) -> None:
     from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 
-    window._form._type.setCurrentIndex(1)
+    window._form.set_antenna_type("folded_dipole")
     assert window._form.parameters().spacing_m > 0.0
     window._form._length.setValue(20.0)
     window._form._spacing.setValue(0.2)
@@ -577,7 +754,7 @@ def test_switching_to_a_folded_dipole_updates_the_design_and_view(
 def test_switching_to_a_loop_updates_the_design(window: MainWindow) -> None:
     from antennadesk.domain.antennas.loop import LoopParameters
 
-    window._form._type.setCurrentIndex(2)
+    window._form.set_antenna_type("loop")
     window._form._length.setValue(40.0)
     window._form._sides.setValue(8)
     window.apply_design()
@@ -663,7 +840,7 @@ def test_optimize_loop_applies_circumference_and_simulates(
         "OptimizationDialog",
         FakeOptimizationDialog,
     )
-    window._form._type.setCurrentIndex(2)
+    window._form.set_antenna_type("loop")
     window._form._length.setValue(40.0)
     window._form._sides.setValue(4)
     window.apply_design()
@@ -708,7 +885,7 @@ def test_simulation_spec_uses_feed_aligned_per_wire_segmentation(
 def test_loop_simulation_spec_has_connector_and_feed_overrides(
     window: MainWindow,
 ) -> None:
-    window._form._type.setCurrentIndex(2)
+    window._form.set_antenna_type("loop")
     window._form._length.setValue(20.0)
     window._form._sides.setValue(16)
     spec = window._form.simulation_spec()
@@ -1144,9 +1321,11 @@ def test_change_template_replaces_the_current_design(
         included_angle_deg=110.0,
     )
 
+    catalog_kwargs: dict[str, object] = {}
+
     class FakeCatalog:
         def __init__(self, *args: object, **kwargs: object) -> None:
-            pass
+            catalog_kwargs.update(kwargs)
 
         def exec(self) -> QDialog.DialogCode:
             return QDialog.DialogCode.Accepted
@@ -1178,6 +1357,7 @@ def test_change_template_replaces_the_current_design(
     assert window._change_template_action.isEnabled() is True
     window.change_template()
 
+    assert catalog_kwargs["initial_key"] == "wire_dipole"
     assert window._project is not None
     assert window._project.designs[0].antenna_type == "inverted_v"
     assert window._design_stack.currentWidget() is window._inverted_v_scroll
@@ -2130,7 +2310,7 @@ def test_new_ringo_creates_a_first_class_design(
 def test_switching_between_delta_and_quad_changes_the_rendered_polygon(
     window: MainWindow,
 ) -> None:
-    window._form._type.setCurrentIndex(2)
+    window._form.set_antenna_type("loop")
     window._form._length.setValue(40.0)
     window._form._sides.setValue(3)
     window.apply_design()
@@ -2299,6 +2479,19 @@ def test_design_from_frequency_applies_estimated_parameters(
         height_m=8.0,
         sides=3,
     )
+    assert window._project is not None
+    current = window._project.design_by_id(window._design_id)
+    initial = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=42.0,
+        height_m=8.0,
+        sides=4,
+    )
+    window._project = window._project.with_design(
+        current.with_parameters(initial),
+        updated_at=window._project.updated_at,
+    )
+    window._select_design(current.id)
 
     class FakeDialog:
         def __init__(self, *args: object, **kwargs: object) -> None:
@@ -2357,6 +2550,19 @@ def test_design_from_frequency_can_open_the_refiner_after_applying(
         sides=4,
     )
     calls: list[bool] = []
+    assert window._project is not None
+    current = window._project.design_by_id(window._design_id)
+    initial = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=42.0,
+        height_m=8.0,
+        sides=3,
+    )
+    window._project = window._project.with_design(
+        current.with_parameters(initial),
+        updated_at=window._project.updated_at,
+    )
+    window._select_design(current.id)
 
     class FakeDialog:
         def __init__(self, *args: object, **kwargs: object) -> None:
@@ -2389,6 +2595,132 @@ def test_design_from_frequency_can_open_the_refiner_after_applying(
     window.design_from_frequency()
 
     assert calls == [True]
+    window._dirty = False
+
+
+def test_design_from_frequency_passes_the_current_template(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.ringo import RingoParameters
+    from antennadesk.domain.design import Confidence, DimensionEstimate
+
+    initial = RingoParameters(
+        frequency_hz=7_100_000.0,
+        radiator_height_m=5.0,
+        ring_diameter_m=1.0,
+    )
+    estimated = RingoParameters(
+        frequency_hz=7_100_000.0,
+        radiator_height_m=5.2,
+        ring_diameter_m=1.1,
+    )
+    _use_parameters(window, initial)
+    captured: dict[str, object] = {}
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            captured.update(kwargs)
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def estimated_estimate(self) -> DimensionEstimate:
+            return DimensionEstimate(
+                parameters=estimated,
+                method_id="test.ringo",
+                confidence=Confidence.HEURISTIC,
+                tolerance_m=0.1,
+            )
+
+    monkeypatch.setattr(main_window_module, "DesignFromFrequencyDialog", FakeDialog)
+    window._dirty = False
+
+    window.design_from_frequency()
+
+    assert isinstance(captured["initial_parameters"], RingoParameters)
+    assert window._project is not None
+    design = window._project.design_by_id(window._design_id)
+    assert isinstance(design.parameters, RingoParameters)
+    assert design.parameters.radiator_height_m == pytest.approx(5.2)
+    assert design.antenna_type == "ringo"
+    window._dirty = False
+
+
+def test_design_from_frequency_rejects_a_template_change(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.ringo import RingoParameters
+    from antennadesk.domain.design import Confidence, DimensionEstimate
+
+    initial = RingoParameters(
+        frequency_hz=7_100_000.0,
+        radiator_height_m=5.0,
+        ring_diameter_m=1.0,
+    )
+    _use_parameters(window, initial)
+    errors: list[str] = []
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def estimated_estimate(self) -> DimensionEstimate:
+            return DimensionEstimate(
+                parameters=window._form.parameters(),
+                method_id="test.wrong-template",
+                confidence=Confidence.EMPIRICAL,
+                tolerance_m=0.1,
+            )
+
+    monkeypatch.setattr(main_window_module, "DesignFromFrequencyDialog", FakeDialog)
+    monkeypatch.setattr(window, "_show_error", errors.append)
+    window._dirty = False
+
+    window.design_from_frequency()
+
+    assert errors
+    assert "template" in errors[0].lower()
+    assert window._project is not None
+    design = window._project.design_by_id(window._design_id)
+    assert isinstance(design.parameters, RingoParameters)
+    assert design.parameters.radiator_height_m == pytest.approx(5.0)
+    window._dirty = False
+
+
+def test_estimate_is_disabled_for_templates_without_an_estimator(
+    window: MainWindow,
+) -> None:
+    from antennadesk.domain.antennas.t2fd import T2FDParameters
+
+    _use_parameters(
+        window,
+        T2FDParameters(
+            frequency_hz=1_800_000.0,
+            highest_frequency_hz=30_000_000.0,
+            length_m=50.8,
+            spacing_m=1.69,
+        ),
+    )
+
+    assert window._estimate_button.isEnabled() is False
+    assert window._design_from_frequency_action.isEnabled() is False
+    assert "estimator" in window._estimate_button.toolTip().lower()
+
+
+def test_apply_design_saves_without_simulating(window: MainWindow) -> None:
+    window._form._length.setValue(22.0)
+
+    window.apply_design()
+
+    assert window._project is not None
+    assert window._project.designs[0].parameters.total_length_m == pytest.approx(22.0)
+    assert window._results._table.rowCount() == 0
+    assert window._dirty is True
     window._dirty = False
 
 
@@ -2536,7 +2868,10 @@ def test_menu_order_follows_the_standard_desktop_layout(window: MainWindow) -> N
     assert window._design_from_frequency_action.shortcut().toString() == "Ctrl+Shift+E"
 
 
-def test_estimate_dimensions_does_not_require_a_solver(qtbot: QtBot) -> None:
+def test_estimate_dimensions_does_not_require_a_solver(
+    qtbot: QtBot,
+    sample_project,
+) -> None:
     window = MainWindow(
         JsonProjectRepository(),
         None,
@@ -2544,6 +2879,12 @@ def test_estimate_dimensions_does_not_require_a_solver(qtbot: QtBot) -> None:
         UnitSystem.METRIC,
     )
     qtbot.addWidget(window)
+    window._set_project(
+        sample_project,
+        sample_project.designs[0].id,
+        path=None,
+        dirty=False,
+    )
 
     assert window._estimate_button.isEnabled() is True
     assert window._optimize_button.isEnabled() is False
@@ -2633,6 +2974,7 @@ def test_analyze_bands_runs_the_selected_band_set(
     assert [band.band.name for band in analysis.bands] == ["40m", "20m", "10m"]
     assert window._results._bands_tab_index >= 0
     assert window._results._bands_table.rowCount() == 3
+    assert all(len(band.result.spec.pattern_frequencies_hz) == 5 for band in analysis.bands)
     band_runs = [run for run in window._project.simulation_runs if run.band_id is not None]
     assert {run.band_id for run in band_runs} == {"40m", "20m", "10m"}
     assert len({run.batch_id for run in band_runs}) == 1
@@ -2642,6 +2984,45 @@ def test_analyze_bands_runs_the_selected_band_set(
         lambda: window._selected_band_ids.get(window._design_id) == "20m",
         timeout=1_000,
     )
+    window._dirty = False
+
+
+def test_band_analysis_respects_the_pattern_frequency_count(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.design.band_plan import BandPlan, BandSelection
+    from antennadesk.domain.simulation.bands import amateur_band_by_id
+
+    band = amateur_band_by_id("40m")
+    assert band is not None
+    plan = BandPlan((BandSelection(band, points=15),))
+
+    class FakeBandDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def plan(self) -> BandPlan:
+            return plan
+
+    monkeypatch.setattr(main_window_module, "BandAnalysisDialog", FakeBandDialog)
+    window._custom_pattern_frequency_mode.setCurrentIndex(
+        window._custom_pattern_frequency_mode.findData(9)
+    )
+
+    window.analyze_bands()
+    qtbot.waitUntil(
+        lambda: not window._simulating and window._thread is None,
+        timeout=5_000,
+    )
+
+    assert window._design_id is not None
+    analysis = window._band_analysis_results[window._design_id]
+    assert len(analysis.bands[0].result.spec.pattern_frequencies_hz) == 9
     window._dirty = False
 
 
@@ -2712,6 +3093,56 @@ def test_band_analysis_controls_are_centralized(window: MainWindow) -> None:
     assert window._analyze_bands_action.text() == "Analyze Bands..."
     assert window._analyze_bands_action.shortcut().toString() == "Ctrl+Shift+B"
     assert window._band_plan_label.text().startswith("Bands: 40m")
+
+
+def test_advanced_simulation_controls_start_collapsed(window: MainWindow) -> None:
+    assert window._advanced_toggle.text() == "Advanced simulation"
+    assert window._advanced_body.isHidden() is True
+    assert window._advanced_body.isAncestorOf(window._sweep_group) is True
+    assert window._advanced_body.isAncestorOf(window._pattern_group) is True
+    assert window._advanced_body.isAncestorOf(window._band_group) is True
+
+    window._advanced_toggle.setChecked(True)
+
+    assert window._advanced_body.isHidden() is False
+
+
+def test_custom_sweep_overrides_a_generated_template(
+    window: MainWindow,
+    qtbot: QtBot,
+) -> None:
+    from antennadesk.domain.antennas.endfed import EndFedParameters
+
+    _use_parameters(
+        window,
+        EndFedParameters(
+            frequency_hz=7_100_000.0,
+            length_m=20.444,
+            feed_height_m=6.0,
+            end_height_m=6.0,
+        ),
+    )
+    assert window._sweep_mode.currentData() is None
+    assert window._sweep_start.isEnabled() is False
+
+    window._sweep_mode.setCurrentIndex(window._sweep_mode.findData("custom"))
+    window._sweep_start.setValue(7.0)
+    window._sweep_stop.setValue(7.3)
+    window._sweep_points.setValue(11)
+
+    assert window._sweep_start.isEnabled() is True
+    window.simulate()
+    qtbot.waitUntil(
+        lambda: not window._simulating and window._thread is None,
+        timeout=15_000,
+    )
+
+    assert window._last_result is not None
+    plan = window._last_result.spec.frequency_plan
+    assert plan.start_hz == pytest.approx(7_000_000.0)
+    assert plan.stop_hz == pytest.approx(7_300_000.0)
+    assert plan.count == 11
+    window._dirty = False
 
 
 def test_ocfd_and_custom_specs_include_the_transformer_ratio(window: MainWindow) -> None:

@@ -20,7 +20,11 @@ from antennadesk.domain.design import (
     VerticalForm,
     estimate_intent,
 )
-from antennadesk.domain.design.estimators import SUPPORTED_ESTIMATOR_TYPES
+from antennadesk.domain.design.estimators import (
+    SUPPORTED_ESTIMATOR_TYPES,
+    estimator_type_for,
+    supports_estimation,
+)
 from antennadesk.domain.design.formulas import (
     HALF_WAVE_FACTOR,
     half_wave_length_m,
@@ -371,3 +375,56 @@ def test_fan_estimate_uses_the_lowest_band_as_design_frequency() -> None:
 
     assert isinstance(estimate.parameters, FanDipoleParameters)
     assert estimate.parameters.frequency_hz == pytest.approx(14_100_000.0)
+
+
+def test_estimator_type_for_the_current_template() -> None:
+    ringo = estimate_intent(_intent("ringo")).parameters
+    dipole = estimate_intent(_intent("wire_dipole")).parameters
+
+    assert estimator_type_for(ringo) == "ringo"
+    assert estimator_type_for(dipole) == "wire_dipole"
+    assert supports_estimation(ringo) is True
+
+
+def test_loaded_vertical_has_no_frequency_first_estimator() -> None:
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=2.0,
+        loading_coil_enabled=True,
+        loading_coil_offset_m=1.0,
+        loading_coil_inductance_h=100e-6,
+        loading_coil_resistance_ohm=1.0,
+    )
+
+    assert supports_estimation(parameters) is False
+    with pytest.raises(UnsupportedEstimateError):
+        estimator_type_for(parameters)
+
+
+def test_random_wire_has_no_resonant_estimator() -> None:
+    from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
+
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=17.0,
+        preset=EndFedPreset.RANDOM_WIRE,
+    )
+
+    assert supports_estimation(parameters) is False
+    with pytest.raises(UnsupportedEstimateError):
+        estimator_type_for(parameters)
+
+
+def test_template_without_an_estimator_is_unsupported() -> None:
+    from antennadesk.domain.antennas.t2fd import T2FDParameters
+
+    parameters = T2FDParameters(
+        frequency_hz=1_800_000.0,
+        highest_frequency_hz=30_000_000.0,
+        length_m=50.8,
+        spacing_m=1.69,
+    )
+
+    assert supports_estimation(parameters) is False
+    with pytest.raises(UnsupportedEstimateError):
+        estimator_type_for(parameters)

@@ -30,19 +30,38 @@ the `NEC2C` environment variable.
 
 ## First simulation
 
-The application opens with a 40 m horizontal dipole loaded. Press **Simulate**
-(or F5). The design panel on the left shows antenna type, frequency, geometry,
-height, wire diameter, material, ground, reference impedance, and the frequency
-sweep. A single action bar above the panel has **Apply design**, **Estimate
-Dimensions...**, and **Optimize...**. The compact **Simulation pattern** group
-sets the global pattern resolution and pattern frequency count for every
-antenna family.
+The application starts with no project. The start page offers **New Antenna...**
+to create a project from a template and **Open Project...** to load an existing
+`.antennadesk` file. The edit toolbar and the design actions appear only after a
+project is open.
 
-For a frequency-first start, press **Estimate Dimensions...** above the design
-panel, choose the family and target frequency, and apply the estimate. The form
-then shows the resulting dimensions for review.
+Create a design from the catalog, review the generated template, and press
+**Simulate** (or F5). The design panel on the left shows antenna type, frequency,
+geometry, height, wire diameter, material, ground, reference impedance, and the
+frequency sweep. A single action bar above the panel has **Apply design**,
+**Estimate Dimensions...**, and **Optimize...**. **Apply design** saves the
+current form values without simulating; **Simulate** saves them and runs the
+solver. The collapsible **Advanced simulation** section at the bottom of the
+panel contains **Simulation sweep**, **Simulation pattern**, and **Band
+analysis**. The sweep field shows the template's effective range and is read-only
+until **Custom** is selected.
 
-Choose the antenna type in the form:
+For a frequency-first start, select a template first and then press **Estimate
+Dimensions...** above the design panel. The dialog refines only the template
+already loaded in the editor. It preloads the current family, frequency, height,
+orientation, and template-specific fields, so it cannot silently replace a
+Ringo with a Wire Dipole. Apply the estimate, review the resulting dimensions,
+and simulate or optimize. Templates without a frequency-first estimator show
+the action disabled with an explanation; use their own starting-dimension
+controls or change the template explicitly.
+
+The current template is shown read-only in the design panel. Use **Change...**
+next to it or **Design → Change Template...** (Ctrl+Shift+T) to replace it;
+AntennaDesk preselects the current catalog entry and asks for confirmation.
+**Apply design** and **Simulate** only save the current template's parameters;
+they never switch the template.
+
+The basic templates are:
 
 - **Wire dipole**: one straight wire; choose horizontal or vertical. For a
   vertical dipole the height is the base height and the azimuth is disabled.
@@ -51,8 +70,8 @@ Choose the antenna type in the form:
 - **Loop**: a vertical regular polygon; set the circumference, the number of
   sides, and the bottom height above ground.
 
-Changing the type converts the current design when you press **Apply design**
-or **Simulate**. The center shows a dimensioned sketch with a ground line and
+Changing the template converts the current design only after the explicit
+confirmation. The center shows a dimensioned sketch with a ground line and
 scale bar. The sketch draws the actual wire model, so loops keep their polygon
 shape and arrays keep every element. Use the **View** selector to switch
 between:
@@ -85,19 +104,20 @@ exaggerate the height (1x, 1.5x, 2x, 3x) for low horizontal antennas.
 
 Use **Edit → Undo** and **Edit → Redo**, or the standard Ctrl+Z / Ctrl+Shift+Z
 shortcuts, to move through applied project changes: design edits, template
-changes, variants, loads, feed line, matching network, measurements, and design
-estimates. Undo/Redo does not remove completed simulation runs or compact the
+changes, new designs, loads, feed line, matching network, measurements, and
+dimension estimates. Undo/Redo does not remove completed simulation runs or compact the
 solver history. If a form has unapplied changes, AntennaDesk asks before
 discarding them for a project-level undo. Text editors keep their own Ctrl+Z
 while they have focus.
 
-## Design from frequency
+## Estimate dimensions for the current template
 
 Use the **Estimate Dimensions...** button above the design panel or
-**Design → Estimate Dimensions...** to estimate initial dimensions from a
-frequency and an antenna family. The dialog supports wire and folded dipoles,
-loops (generic, quad, delta), verticals in 1/4λ, 1/2λ, and 5/8λ, inverted-V,
-fan dipoles, end-fed wires, OCFD, J Pole, Slim Jim, Ringo, Yagi, and Moxon.
+**Design → Estimate Dimensions...** to refine the template already loaded in the
+editor. The dialog supports wire and folded dipoles, loops (generic, quad,
+delta), verticals in 1/4λ, 1/2λ, and 5/8λ, inverted-V, fan dipoles, end-fed
+wires, OCFD, J Pole, Slim Jim, Ringo, Yagi, and Moxon. It does not offer a
+family selector and never changes the antenna type.
 
 The result is a **starting point**, not a verified construction measurement.
 The dialog shows assumptions, warnings, confidence, and dimension values. Apply
@@ -109,9 +129,10 @@ NBS five-element preset remains available in the Yagi editor.
 
 ## Analyze multiple bands
 
-Use **Simulation → Analyze Bands...** or the central **Band analysis** group to
-run the current design over several amateur bands. The dialog starts from the
-family default and lets you select any catalog band from 160 m to 23 cm, with a sweep
+Use **Simulation → Analyze Bands...** or expand **Advanced simulation** at the
+bottom of the design panel and use its **Band analysis** group to run the
+current design over several amateur bands. The dialog starts from the family
+default and lets you select any catalog band from 160 m to 23 cm, with a sweep
 point count for each band.
 
 Band ranges are generic IARU ranges; local allocations differ and the user is
@@ -136,11 +157,14 @@ angle, efficiency, and status. Selecting a row reuses the existing impedance,
 pattern, currents, diagnostics, and raw-data views for that band. Completed
 bands are kept if another band fails or the analysis is cancelled.
 
-The global **Simulation pattern** group controls the angular resolution.
-Band analysis uses one representative pattern snapshot per band by default, so
-a band list does not multiply the pattern data. CSV, HTML, and PDF exports
-include a band column or summary when a band analysis is active. The G5RV custom
-panel still offers its continuous 3.5-30 MHz sweep as a separate mode.
+The global **Simulation pattern** group in **Advanced simulation** controls the
+angular resolution and the pattern-frequency policy. Band analysis applies that
+policy inside every selected band, so **Auto (bands)** uses the band snapshots
+and a fixed count uses that many snapshots per band. The **Pattern** frequency
+selector lists the snapshots from every analyzed band; selecting one switches
+the impedance, currents, and pattern views to that band. Selecting a row in the
+**Bands** tab does the same. CSV, HTML, and PDF exports include a band column or
+summary when a band analysis is active.
 
 Defaults are evidence-labelled in the dialog. Transformer, tuner, counterpoise,
 ground, and installation effects are not modeled as ideal guarantees; verify
@@ -157,7 +181,10 @@ The Yagi family includes the parametric Yagi and the Moxon rectangle. The Loop
 family includes the generic loop plus delta-loop and quad-loop presets. The
 Vertical family includes the generic vertical radiator and the loaded vertical
 / mobile whip preset. The catalog shows a short description and evidence level
-for each type.
+for each type. For specialized templates, choose the template first, complete
+its generator dialog, and then confirm the project name with a suggested name
+such as “40m Ringo”. The basic dipole/folded/loop wizard includes the project
+name in its first page.
 
 ### Basic templates
 
@@ -173,9 +200,9 @@ For a wire dipole, folded dipole, or loop, the guided wizard asks for:
 
 After creation, adjust the design panel and press **Apply design** or
 **Simulate**. The design panel separates **Family** from **Template**; generated
-templates now have their own inline editors. The Template field shows the current
-template; use **Design → Change Template...** (or Ctrl+Shift+T) to open the
-catalog and replace the current design with another template.
+templates now have their own inline editors. The Template field is read-only;
+use **Change...** next to it or **Design → Change Template...** (or Ctrl+Shift+T)
+to open the catalog and replace the current design with another template.
 
 A full-wave loop normally presents roughly 100-150 Ω at resonance, so a direct
 50 Ω target may be unreachable by changing only its circumference. Use a 2:1
@@ -477,13 +504,14 @@ construction sheet.
   highest gain; the azimuth diagram includes a dashed line showing the antenna
   orientation. Above-ground elevation cuts are drawn as open arcs rather than
   closed lobes. The angular resolution comes from **Pattern resolution** in the
-  global **Simulation pattern** group; higher resolution samples the same NEC
-  solution more finely.
+  global **Simulation pattern** group under **Advanced simulation**; higher
+  resolution samples the same NEC solution more finely.
   While you rotate or zoom the 3D lobe, AntennaDesk draws a coarser display
   mesh; when the movement stops it redraws the full-resolution wireframe. The
   stored pattern, the cuts, and the exports keep the full resolution. The
   pattern frequency selector lists the pattern snapshot frequencies, not every
-  impedance-sweep point. The 3D lobe draws a ground plane when the model has
+  impedance-sweep point. During a band analysis it lists all analyzed bands and
+  switches the active band when you choose an entry. The 3D lobe draws a ground plane when the model has
   ground and only the
   upper-hemisphere pattern is requested. Its maximum-gain marker reports the
   gain and the takeoff angle above the ground plane; for free-space models it
@@ -540,11 +568,16 @@ the palette changes.
 SWR is computed with the reference impedance in the design panel (default
 50 Ω). A low SWR does not prove high efficiency or a useful pattern.
 
-The **Frequency sweep** is disabled by default. When enabled, it uses **1,000
-points** by default and accepts up to 10,000. Frequency points improve the
-impedance/SWR curve. **Pattern resolution** controls the angular sampling of
-the radiation pattern: 30°, 20°, 15°, 10° (normal), 5° (fine, default), 2°
-(very fine), or 1° (maximum).
+The **Simulation sweep** group controls the impedance/SWR frequency plan. In
+**Auto (template)** mode the fields show the effective template range and use
+the generator's default: a 31-point ±5% sweep for most generated templates, a
+100-point sweep for basic and custom designs, the wide G5RV range, and the
+family-specific bands for trap, T2FD, and fan designs. Select **Custom** to
+override Start, Stop, and Points for the next single-design simulation. Band
+analysis ignores this override and uses the per-band point count from its own
+dialog. **Pattern resolution** controls the angular sampling of the radiation
+pattern: 30°, 20°, 15°, 10° (normal), 5° (fine, default), 2° (very fine), or 1°
+(maximum).
 
 The selected pattern resolution is a **maximum**: before a run, AntennaDesk
 estimates the saved project size and may coarsen the pattern to the finest step
@@ -565,7 +598,8 @@ pattern at five frequencies instead of a 30° pattern at every frequency.
 The form shows the estimated number of pattern points. More points produce
 smoother cuts and a smoother 3D lobe, but increase solver time and project
 size; use high resolution for final runs rather than routine exploration.
-Custom designs have their own sweep controls and default to 100 points.
+Custom designs keep their own template sweep controls; **Auto (template)** uses
+them, while **Custom** in **Simulation sweep** overrides them for one run.
 Generated templates use a 31-point sweep around the design frequency to keep
 large radial models responsive. Default segmentation targets 0.05 wavelength
 per segment; this is a standard accuracy/performance compromise. Very large
@@ -642,16 +676,17 @@ In the load editor, **Add parallel trap** calculates the capacitance for a
 parallel LC trap from the entered inductance and resonant frequency. The trap is
 stored as a normal parallel RLC load and emitted as a NEC `LD 1` load.
 
-## Variants and comparison
+## Designs and comparison
 
-Use **Design → Variants → New Variant...** to duplicate the current design,
-**Rename Variant...** to change its name, and **Delete Variant** to remove it. The
-variant selector in the toolbar switches between designs. Completed runs are
-stored in the project; the latest run for each variant is shown when you switch
-or reopen the project.
+Use **Design → Designs → New Design in Project...** to duplicate the current
+design inside the same project, **Rename Design...** to change its name, and
+**Delete Design** to remove it. The design selector in the toolbar switches
+between designs. Completed runs are stored in the project; the latest run for
+each design is shown when you switch or reopen the project.
 
-Simulate the variants you want to compare, then use **Design → Variants → Compare Variants...**. The dialog shows design and result metrics side by side, an SWR
-overlay, and a gain-pattern overlay for the frequency nearest each variant's
+Simulate the designs you want to compare, then use **Design → Designs → Compare
+Designs...**. The dialog shows design and result metrics side by side, an SWR
+overlay, and a gain-pattern overlay for the frequency nearest each design's
 design frequency. Missing results are reported in the dialog.
 
 ## Optimize the current design
@@ -809,7 +844,7 @@ Simulation runs are stored when you save the project, including raw solver
 text. Project files are losslessly gzip-compressed JSON; the 32 MB limit applies
 to the compressed file. Saving above 20 MB compressed shows a warning, and
 **Tools → Compact Simulation History...** keeps only the latest run per
-variant.
+design.
 
 ## Cancel and errors
 
@@ -858,7 +893,7 @@ canonical meters and hertz.
   NEC; conductor conductivity is.
 - Multiband defaults are starting points. The doublet default is inferred from
   a high-impedance project feed line; the tuner is not modeled as an automatic
-  matching network. Variant comparison shows a band summary when analyses are
+  matching network. Design comparison shows a band summary when analyses are
   available, but the main comparison values still use the selected band result.
 - Pattern resolution is angular sampling, not additional electromagnetic
   accuracy. Fine patterns and long frequency sweeps increase runtime and

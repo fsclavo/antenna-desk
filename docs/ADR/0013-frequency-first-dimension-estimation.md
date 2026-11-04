@@ -28,8 +28,10 @@ an optional numerical refinement.
    - display rows.
 4. Expose the estimators through the `EstimateAntennaDimensions` application
    use case.
-5. Add a **Design from Frequency** dialog that estimates, displays assumptions,
-   and applies the parameters to the current design.
+5. Add an **Estimate Dimensions** dialog that estimates, displays assumptions,
+   and applies the parameters to the current design without changing its
+   template or antenna family. The caller passes the current parameters; the
+   dialog preselects the family and preloads its fields.
 6. Keep refinement separate: after applying, users can open the existing
    optimizer, Yagi optimizer, or impedance synthesis. The dialog offers an
    optional one-step handoff when a solver is configured.
@@ -70,6 +72,21 @@ Explicitly unsupported:
   change in the first milestone.
 - **Invent approximations for arbitrary Yagi/Moxon designs.** Rejected:
   unsupported cases must be explicit.
+
+## Amendment 2026-11-04 — estimate only the current template
+
+The dialog originally offered a free family selector and defaulted to a wire
+dipole. That made it possible to replace a Ringo or another loaded template
+without an explicit template change.
+
+The dialog now receives an `AntennaDesignParameters` instance and derives its
+estimator from `estimator_type_for()`. It has no family selector and enforces
+that the result keeps the same `antenna_type`. The main window also rejects any
+result that changes the template and preserves template-identifying fields such
+as the end-fed preset, OCFD feed ratio/transformer, J-Pole folded/gap, Ringo
+ring sides, and Yagi driven index. A loaded vertical, arbitrary custom geometry,
+or a template without a registered estimator is not eligible; the action is
+disabled and explains why.
 
 ## Consequences
 

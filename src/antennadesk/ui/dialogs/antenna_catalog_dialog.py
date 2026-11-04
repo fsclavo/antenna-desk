@@ -219,7 +219,13 @@ ENTRIES: tuple[CatalogEntry, ...] = (
 
 
 class AntennaCatalogDialog(QDialog):
-    def __init__(self, translator: Translator, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        translator: Translator,
+        parent: QWidget | None = None,
+        *,
+        initial_key: str | None = None,
+    ) -> None:
         super().__init__(parent)
         self._translator = translator
         self.setWindowTitle(translator.t("catalog.title"))
@@ -260,7 +266,13 @@ class AntennaCatalogDialog(QDialog):
             item.setData(3, entry.evidence_key)
             self._list.addItem(item)
         if self._list.count():
-            self._list.setCurrentRow(0)
+            initial_row = 0
+            if initial_key is not None:
+                for row in range(self._list.count()):
+                    if self._list.item(row).data(1) == initial_key:
+                        initial_row = row
+                        break
+            self._list.setCurrentRow(initial_row)
 
     def _filter(self, text: str) -> None:
         needle = text.strip().casefold()

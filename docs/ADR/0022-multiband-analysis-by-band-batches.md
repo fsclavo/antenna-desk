@@ -31,8 +31,10 @@ one frequency block harder to isolate.
    bands and returns a partial batch.
 4. Group results in an immutable `BandAnalysisResult`. Each band result keeps
    its own spec, diagnostics, pattern snapshot, and storage budget.
-5. Use one representative far-field snapshot per band by default. The global
-   **Simulation pattern** group continues to own the angular resolution.
+5. Apply the global **Simulation pattern** policy inside each band: Auto uses
+   the band snapshots and a fixed pattern-frequency count uses that many
+   snapshots per band. The storage budget and pattern step are chosen for the
+   whole batch.
 6. Persist each completed band run with a stable `band_id` and shared
    `batch_id`. Project reconstruction groups the latest batch. Schema version 4
    adds both fields as optional metadata.
@@ -59,7 +61,16 @@ Limitations:
 - The project schema gains optional run metadata.
 - The doublet still lacks a persisted preset identity, so it has no family
   default yet.
-- Cross-band variant comparison and per-band pattern PNG export remain
+- Cross-band design comparison and per-band pattern PNG export remain
   follow-ups.
 - A segmented frequency plan in one deck remains a future optimization if
   measurements show that per-band startup or raw output is a problem.
+
+## Amendment 2026-11-04 — pattern navigation and per-band snapshot policy
+
+The **Pattern** frequency selector now lists the snapshots from every analyzed
+band and switches the active band when one is selected; the **Bands** table
+stays synchronized. Band analysis no longer forces a single snapshot per band:
+it applies the global pattern-frequency policy inside each band, and the batch
+budget uses the resulting counts per band. The global pattern and sweep controls
+were moved into **Advanced simulation**.

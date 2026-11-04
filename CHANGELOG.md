@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Simulation sweep** in **Advanced simulation** provides Auto (template) and
+  Custom Start/Stop/Points modes for every antenna family, including generated
+  templates that previously used a fixed sweep with no UI control.
+- During a band analysis, the **Pattern** frequency selector now lists pattern
+  frequencies from every analyzed band and switches the active band when one is
+  selected. The **Bands** tab remains synchronized.
+- Band analysis now applies the global **Pattern frequencies** policy inside
+  each band instead of forcing one snapshot per band.
+- The main window now starts on a **Start an antenna project** page instead of
+  creating a demo 40 m dipole. **New Antenna...** creates the first project and
+  **Open Project...** loads an existing file; project and design controls appear
+  only after a project is open.
+- **Estimate Dimensions...** now refines only the template already loaded in the
+  editor. The dialog preselects the current family, preloads its frequency and
+  template-specific fields, and refuses to replace the template. Templates
+  without an estimator show the action disabled with an explanation.
 - OCFD designs support an optional ideal feed transformer, defaulting to the
   common 4:1 balun for new designs while old projects remain untransformed.
   The ratio is editable, applies to impedance/SWR/realized gain, and preserves
@@ -72,6 +88,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- **New Variant...** is now **New Design in Project...**, and the design
+  selector, menus, comparison dialog, and history labels use “design” instead of
+  “variant”.
+- The basic wire/folded/loop template field is read-only and has a **Change...**
+  button. **Change Template...** preselects the current catalog entry and still
+  requires confirmation before replacing the design.
+- Specialized antenna generators now choose the template first and ask for the
+  project name afterwards, with a suggested band/template name.
+- **Simulation pattern** and **Band analysis** now live in a collapsible
+  **Advanced simulation** section below the design form. The design form starts
+  directly under the Apply/Estimate/Optimize action bar.
+- **Apply design** remains an explicit save without simulation, while
+  **Simulate** saves the current form values and runs the solver.
 - Fan dipole **Simulate** now analyzes every distinct element band
   automatically and opens the Bands tab, so a 10 m element is no longer hidden
   by a 40 m-only sweep. The estimator warning and user guide now call out the

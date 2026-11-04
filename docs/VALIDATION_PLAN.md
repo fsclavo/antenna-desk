@@ -163,7 +163,7 @@ gain, nulls, or impedance.
 Menu organization tests:
 
 - Import/export actions live in File submenus.
-- Design actions are grouped under Design and Variants.
+- Design actions are grouped under Design and Designs.
 - Simulation actions are grouped under Simulation; solver tools under Tools.
 
 Family and template tests:

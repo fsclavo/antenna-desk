@@ -103,6 +103,15 @@ class GeometryView(QWidget):
     def scene(self) -> GeometryScene | None:
         return self._scene
 
+    def clear_model(self) -> None:
+        self._model = None
+        self._parameters = None
+        self._antenna_type = None
+        self._display_name = None
+        self._scene = None
+        self._last_summary = None
+        self.update()
+
     def save_image(self, path: Path) -> None:
         pixmap = self.grab()
         if pixmap.isNull() or not pixmap.save(str(path), "PNG"):

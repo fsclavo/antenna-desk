@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Fernando Sclavo
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Frequency-first dimension estimation dialog."""
+"""Frequency-first dimension estimation for the current template."""
 
 from __future__ import annotations
 
@@ -26,19 +26,19 @@ from PySide6.QtWidgets import (
 from ...application.use_cases.estimate_antenna_dimensions import (
     EstimateAntennaDimensions,
 )
-from ...domain.antennas.design import AntennaDesignParameters
-from ...domain.antennas.dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleOrientation
-from ...domain.antennas.endfed import ANTENNA_TYPE_ENDFED
-from ...domain.antennas.fan_dipole import ANTENNA_TYPE_FAN_DIPOLE
-from ...domain.antennas.folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE
-from ...domain.antennas.inverted_v import ANTENNA_TYPE_INVERTED_V
-from ...domain.antennas.j_pole import ANTENNA_TYPE_J_POLE
-from ...domain.antennas.loop import ANTENNA_TYPE_LOOP
-from ...domain.antennas.moxon import ANTENNA_TYPE_MOXON
-from ...domain.antennas.ocfd import ANTENNA_TYPE_OCFD
-from ...domain.antennas.ringo import ANTENNA_TYPE_RINGO
-from ...domain.antennas.vertical import ANTENNA_TYPE_VERTICAL
-from ...domain.antennas.yagi import ANTENNA_TYPE_YAGI
+from ...domain.antennas.design import AntennaDesignParameters, antenna_type_for
+from ...domain.antennas.dipole import DipoleOrientation, DipoleParameters
+from ...domain.antennas.endfed import EndFedParameters
+from ...domain.antennas.fan_dipole import FanDipoleParameters
+from ...domain.antennas.folded_dipole import FoldedDipoleParameters
+from ...domain.antennas.inverted_v import InvertedVParameters
+from ...domain.antennas.j_pole import JPoleParameters
+from ...domain.antennas.loop import LoopParameters
+from ...domain.antennas.materials import COPPER
+from ...domain.antennas.moxon import MoxonParameters
+from ...domain.antennas.ocfd import OCFDParameters
+from ...domain.antennas.vertical import VerticalParameters
+from ...domain.antennas.yagi import YagiParameters
 from ...domain.design import (
     DesignIntent,
     DimensionEstimate,
@@ -47,7 +47,16 @@ from ...domain.design import (
     UnsupportedEstimateError,
     VerticalForm,
 )
+from ...domain.design.estimators import estimator_type_for
+from ...domain.design.formulas import (
+    five_eighth_wave_length_m,
+    frequency_for_half_wave_length,
+    half_wave_length_m,
+    quarter_wave_length_m,
+)
+from ...domain.environment.ground import FREE_SPACE, GroundModel
 from ..i18n import Translator
+from ..template_identity import label_key_for
 from ..units import (
     UnitSystem,
     length_bounds,
@@ -57,15 +66,24 @@ from ..units import (
 )
 
 
+def _vertical_form_for(height_m: float, frequency_hz: float) -> VerticalForm:
+    choices = (
+        (VerticalForm.QUARTER_WAVE, quarter_wave_length_m(frequency_hz)),
+        (VerticalForm.HALF_WAVE, half_wave_length_m(frequency_hz)),
+        (VerticalForm.FIVE_EIGHTH_WAVE, five_eighth_wave_length_m(frequency_hz)),
+    )
+    return min(choices, key=lambda item: abs(item[1] - height_m))[0]
+
+
 class DesignFromFrequencyDialog(QDialog):
-    """Estimate initial dimensions from a frequency and a family intent."""
+    """Estimate dimensions for the template already loaded in the editor."""
 
     def __init__(
         self,
         translator: Translator,
         unit_system: UnitSystem,
         *,
-        initial_frequency_hz: float = 7_100_000.0,
+        initial_parameters: AntennaDesignParameters,
         can_refine: bool = True,
         parent: QWidget | None = None,
     ) -> None:
@@ -74,31 +92,102 @@ class DesignFromFrequencyDialog(QDialog):
         self._unit_system = unit_system
         self._estimate_use_case = EstimateAntennaDimensions()
         self._estimate: DimensionEstimate | None = None
+        self._estimator_type = estimator_type_for(initial_parameters)
+        self._template_label_key = label_key_for(initial_parameters)
         self.setWindowTitle(translator.t("design_from_frequency.title"))
         self.resize(760, 680)
 
-        self._family = QComboBox(self)
-        for key, antenna_type in (
-            ("antenna_type.wire_dipole", ANTENNA_TYPE_WIRE_DIPOLE),
-            ("antenna_type.folded_dipole", ANTENNA_TYPE_FOLDED_DIPOLE),
-            ("antenna_type.loop", ANTENNA_TYPE_LOOP),
-            ("vertical.title", ANTENNA_TYPE_VERTICAL),
-            ("inverted_v.title", ANTENNA_TYPE_INVERTED_V),
-            ("fan_dipole.title", ANTENNA_TYPE_FAN_DIPOLE),
-            ("endfed.title", ANTENNA_TYPE_ENDFED),
-            ("ocfd.title", ANTENNA_TYPE_OCFD),
-            ("j_pole.title", ANTENNA_TYPE_J_POLE),
-            ("ringo.title", ANTENNA_TYPE_RINGO),
-            ("yagi.title", ANTENNA_TYPE_YAGI),
-            ("moxon.title", ANTENNA_TYPE_MOXON),
-        ):
-            self._family.addItem(translator.t(key), antenna_type)
+        frequency_hz = initial_parameters.frequency_hz
+        height_m = 10.0
+        base_height_m = 0.25
+        end_height_m = 10.0
+        orientation = DipoleOrientation.HORIZONTAL
+        loop_shape = LoopShape.LOOP
+        vertical_form = VerticalForm.QUARTER_WAVE
+        folded = False
+        included_angle = 120.0
+        fan_bands: tuple[float, ...] = ()
+        radial_count = 4
+        radial_length_m: float | None = None
+        feed_offset_m: float | None = None
+        gap_m = 0.01
+        yagi_elements = 5
+        azimuth_deg = 0.0
+        wire_radius_m = 0.001
+        material = COPPER
+        ground: GroundModel = FREE_SPACE
+
+        if isinstance(parameters := initial_parameters, DipoleParameters):
+            height_m = parameters.height_m
+            orientation = parameters.orientation
+        elif isinstance(parameters, FoldedDipoleParameters):
+            height_m = parameters.height_m
+        elif isinstance(parameters, LoopParameters):
+            height_m = parameters.height_m
+            loop_shape = {
+                3: LoopShape.DELTA,
+                4: LoopShape.QUAD,
+            }.get(parameters.sides, LoopShape.LOOP)
+        elif isinstance(parameters, VerticalParameters):
+            base_height_m = parameters.base_height_m
+            vertical_form = _vertical_form_for(parameters.height_m, frequency_hz)
+            radial_count = parameters.radial_count
+            radial_length_m = (
+                parameters.radial_length_m if parameters.radial_length_m > 0.0 else None
+            )
+            azimuth_deg = parameters.radial_angle_deg
+        elif isinstance(parameters, InvertedVParameters):
+            height_m = parameters.apex_height_m
+            included_angle = parameters.included_angle_deg
+        elif isinstance(parameters, FanDipoleParameters):
+            height_m = parameters.apex_height_m
+            if parameters.elements:
+                included_angle = parameters.elements[0].included_angle_deg
+            fan_bands = tuple(
+                frequency_for_half_wave_length(element.length_m) for element in parameters.elements
+            )
+        elif isinstance(parameters, EndFedParameters):
+            height_m = parameters.feed_height_m
+            end_height_m = parameters.end_height_m
+        elif isinstance(parameters, OCFDParameters):
+            height_m = parameters.height_m
+        elif isinstance(parameters, JPoleParameters):
+            base_height_m = parameters.base_height_m
+            folded = parameters.folded
+            feed_offset_m = parameters.feed_offset_m
+            gap_m = parameters.gap_m
+        elif isinstance(parameters, (YagiParameters, MoxonParameters)):
+            height_m = parameters.height_m
+            if isinstance(parameters, YagiParameters):
+                yagi_elements = len(parameters.elements)
+        if hasattr(initial_parameters, "azimuth_deg"):
+            azimuth_deg = initial_parameters.azimuth_deg
+        if hasattr(initial_parameters, "wire_radius_m"):
+            wire_radius_m = initial_parameters.wire_radius_m
+        if isinstance(initial_parameters, YagiParameters) and initial_parameters.elements:
+            wire_radius_m = initial_parameters.elements[0].radius_m
+        if hasattr(initial_parameters, "material"):
+            material = initial_parameters.material
+        if hasattr(initial_parameters, "ground"):
+            ground = initial_parameters.ground
+
+        self._azimuth_deg = azimuth_deg
+        self._wire_radius_m = wire_radius_m
+        self._material = material
+        self._ground = ground
+        self._radial_length_m = radial_length_m
+        self._feed_offset_m = feed_offset_m
+        self._gap_m = gap_m
+
+        self._template_value = QLabel(self)
+        self._template_value.setStyleSheet("font-weight: bold;")
+        self._template_value.setText(translator.t(self._template_label_key))
 
         self._frequency = QDoubleSpinBox(self)
         self._frequency.setRange(0.1, 100_000.0)
         self._frequency.setDecimals(6)
         self._frequency.setSuffix(" MHz")
-        self._frequency.setValue(initial_frequency_hz / 1_000_000.0)
+        self._frequency.setValue(frequency_hz / 1_000_000.0)
 
         length_min, length_max = length_bounds(unit_system)
         unit = translator.t(length_unit_key(unit_system))
@@ -106,59 +195,72 @@ class DesignFromFrequencyDialog(QDialog):
         self._height.setRange(length_min, length_max)
         self._height.setDecimals(3)
         self._height.setSuffix(f" {unit}")
-        self._height.setValue(length_from_m(10.0, unit_system))
+        self._height.setValue(length_from_m(height_m, unit_system))
 
         self._base_height = QDoubleSpinBox(self)
         self._base_height.setRange(0.0, length_max)
         self._base_height.setDecimals(3)
         self._base_height.setSuffix(f" {unit}")
-        self._base_height.setValue(length_from_m(0.25, unit_system))
+        self._base_height.setValue(length_from_m(base_height_m, unit_system))
 
         self._end_height = QDoubleSpinBox(self)
         self._end_height.setRange(0.0, length_max)
         self._end_height.setDecimals(3)
         self._end_height.setSuffix(f" {unit}")
-        self._end_height.setValue(length_from_m(10.0, unit_system))
+        self._end_height.setValue(length_from_m(end_height_m, unit_system))
 
         self._orientation = QComboBox(self)
         self._orientation.addItem("", DipoleOrientation.HORIZONTAL.value)
         self._orientation.addItem("", DipoleOrientation.VERTICAL.value)
+        orientation_index = self._orientation.findData(orientation.value)
+        self._orientation.setCurrentIndex(max(orientation_index, 0))
 
         self._loop_shape = QComboBox(self)
-        self._loop_shape.addItem(translator.t("antenna_type.loop"), LoopShape.LOOP.value)
-        self._loop_shape.addItem(translator.t("catalog.quad_loop"), LoopShape.QUAD.value)
-        self._loop_shape.addItem(translator.t("catalog.delta_loop"), LoopShape.DELTA.value)
+        self._loop_shape.addItem("", LoopShape.LOOP.value)
+        self._loop_shape.addItem("", LoopShape.QUAD.value)
+        self._loop_shape.addItem("", LoopShape.DELTA.value)
+        loop_index = self._loop_shape.findData(loop_shape.value)
+        self._loop_shape.setCurrentIndex(max(loop_index, 0))
+        self._loop_shape.setEnabled(False)
 
         self._vertical_form = QComboBox(self)
-        self._vertical_form.addItem("1/4 λ", VerticalForm.QUARTER_WAVE.value)
-        self._vertical_form.addItem("1/2 λ", VerticalForm.HALF_WAVE.value)
-        self._vertical_form.addItem("5/8 λ", VerticalForm.FIVE_EIGHTH_WAVE.value)
+        self._vertical_form.addItem("", VerticalForm.QUARTER_WAVE.value)
+        self._vertical_form.addItem("", VerticalForm.HALF_WAVE.value)
+        self._vertical_form.addItem("", VerticalForm.FIVE_EIGHTH_WAVE.value)
+        vertical_index = self._vertical_form.findData(vertical_form.value)
+        self._vertical_form.setCurrentIndex(max(vertical_index, 0))
 
         self._j_pole_variant = QComboBox(self)
-        self._j_pole_variant.addItem(translator.t("catalog.j_pole"), False)
-        self._j_pole_variant.addItem(translator.t("catalog.slim_jim"), True)
+        self._j_pole_variant.addItem("", False)
+        self._j_pole_variant.addItem("", True)
+        j_pole_index = self._j_pole_variant.findData(folded)
+        self._j_pole_variant.setCurrentIndex(max(j_pole_index, 0))
+        self._j_pole_variant.setEnabled(False)
 
         self._included_angle = QDoubleSpinBox(self)
         self._included_angle.setRange(1.0, 179.0)
         self._included_angle.setDecimals(1)
         self._included_angle.setSuffix("°")
-        self._included_angle.setValue(120.0)
+        self._included_angle.setValue(included_angle)
 
         self._fan_bands = QLineEdit(self)
         self._fan_bands.setPlaceholderText("7.1, 14.1, 21.0")
-        self._fan_bands.setText(f"{initial_frequency_hz / 1_000_000.0:.3f}")
+        self._fan_bands.setText(
+            ", ".join(f"{band_hz / 1_000_000.0:.3f}" for band_hz in fan_bands)
+            or f"{frequency_hz / 1_000_000.0:.3f}"
+        )
 
         self._radial_count = QSpinBox(self)
-        self._radial_count.setRange(0, 32)
-        self._radial_count.setValue(4)
+        self._radial_count.setRange(0, 128)
+        self._radial_count.setValue(radial_count)
 
         self._yagi_elements = QSpinBox(self)
         self._yagi_elements.setRange(2, 32)
-        self._yagi_elements.setValue(5)
+        self._yagi_elements.setValue(yagi_elements)
 
         self._form = QFormLayout()
         self._rows: dict[str, tuple[QLabel, QWidget]] = {}
-        self._add_row("family", "design_from_frequency.family", self._family)
+        self._add_row("template", "field.template", self._template_value)
         self._add_row("frequency", "field.frequency", self._frequency)
         self._add_row("height", "field.height", self._height)
         self._add_row("base_height", "field.base_height", self._base_height)
@@ -172,10 +274,11 @@ class DesignFromFrequencyDialog(QDialog):
         self._add_row("radial_count", "vertical.radial_count", self._radial_count)
         self._add_row("yagi_elements", "geometry.elements", self._yagi_elements)
 
-        self._estimate_button = QPushButton(
-            translator.t("design_from_frequency.estimate"),
-            self,
-        )
+        self._template_hint = QLabel(self)
+        self._template_hint.setWordWrap(True)
+        self._template_hint.setStyleSheet("font-style: italic;")
+
+        self._estimate_button = QPushButton(self)
         self._estimate_button.clicked.connect(self._run_estimate)
 
         self._results = QTableWidget(0, 2, self)
@@ -195,12 +298,12 @@ class DesignFromFrequencyDialog(QDialog):
         self._warnings.setWordWrap(True)
         self._sources = QLabel(self)
         self._sources.setWordWrap(True)
-        self._hint = QLabel(translator.t("design_from_frequency.hint"), self)
+        self._hint = QLabel(self)
         self._hint.setWordWrap(True)
 
-        self._refine = QCheckBox(translator.t("design_from_frequency.refine_after_apply"), self)
+        self._refine = QCheckBox(self)
         self._refine.setVisible(can_refine)
-        self._apply = QPushButton(translator.t("design_from_frequency.apply"), self)
+        self._apply = QPushButton(self)
         self._apply.setEnabled(False)
         self._apply.clicked.connect(self._accept)
         close = QPushButton(translator.t("action.close"), self)
@@ -214,6 +317,7 @@ class DesignFromFrequencyDialog(QDialog):
 
         layout = QVBoxLayout(self)
         layout.addLayout(self._form)
+        layout.addWidget(self._template_hint)
         layout.addWidget(self._results, 1)
         layout.addWidget(self._assumptions)
         layout.addWidget(self._warnings)
@@ -222,7 +326,6 @@ class DesignFromFrequencyDialog(QDialog):
         layout.addWidget(self._refine)
         layout.addLayout(buttons)
 
-        self._family.currentIndexChanged.connect(self._update_rows)
         for signal in (
             self._frequency.valueChanged,
             self._height.valueChanged,
@@ -248,34 +351,37 @@ class DesignFromFrequencyDialog(QDialog):
         self._rows[key] = (label, widget)
 
     def _update_rows(self) -> None:
-        family = self._family.currentData()
-        visible = {"family", "frequency"}
-        if family in {ANTENNA_TYPE_WIRE_DIPOLE, ANTENNA_TYPE_FOLDED_DIPOLE, ANTENNA_TYPE_LOOP}:
-            visible.add("height")
-        if family == ANTENNA_TYPE_WIRE_DIPOLE:
-            visible.add("orientation")
-        if family == ANTENNA_TYPE_LOOP:
-            visible.add("loop_shape")
-        if family in {ANTENNA_TYPE_VERTICAL, ANTENNA_TYPE_J_POLE}:
-            visible.add("base_height")
-        if family == ANTENNA_TYPE_VERTICAL:
-            visible.update({"vertical_form", "radial_count"})
-        if family == ANTENNA_TYPE_J_POLE:
-            visible.add("j_pole_variant")
-        if family in {ANTENNA_TYPE_INVERTED_V, ANTENNA_TYPE_FAN_DIPOLE}:
-            visible.add("included_angle")
-        if family == ANTENNA_TYPE_FAN_DIPOLE:
-            visible.add("fan_bands")
-        if family == ANTENNA_TYPE_ENDFED:
-            visible.update({"height", "end_height"})
+        family = self._estimator_type
+        visible = {"template", "frequency"}
         if family in {
-            ANTENNA_TYPE_OCFD,
-            ANTENNA_TYPE_YAGI,
-            ANTENNA_TYPE_MOXON,
+            "wire_dipole",
+            "folded_dipole",
+            "loop",
+            "ocfd",
+            "yagi",
+            "moxon",
         }:
             visible.add("height")
-        if family == ANTENNA_TYPE_YAGI:
+        if family == "wire_dipole":
+            visible.add("orientation")
+        if family == "loop":
+            visible.add("loop_shape")
+        if family in {"vertical", "j_pole"}:
+            visible.add("base_height")
+        if family == "vertical":
+            visible.update({"vertical_form", "radial_count"})
+        if family == "j_pole":
+            visible.add("j_pole_variant")
+        if family in {"inverted_v", "fan_dipole"}:
+            visible.add("included_angle")
+        if family == "fan_dipole":
+            visible.add("fan_bands")
+        if family == "endfed":
+            visible.update({"height", "end_height"})
+        if family == "yagi":
             visible.add("yagi_elements")
+        height_label, _height_widget = self._rows["height"]
+        height_label.setObjectName("endfed.feed_height" if family == "endfed" else "field.height")
         for key, (label, widget) in self._rows.items():
             label.setVisible(key in visible)
             widget.setVisible(key in visible)
@@ -290,9 +396,9 @@ class DesignFromFrequencyDialog(QDialog):
         self._sources.clear()
 
     def _build_intent(self) -> DesignIntent:
-        family = str(self._family.currentData())
+        family = self._estimator_type
         fan_bands: tuple[float, ...] = ()
-        if family == ANTENNA_TYPE_FAN_DIPOLE:
+        if family == "fan_dipole":
             raw = self._fan_bands.text().replace(";", ",")
             bands = [float(part.strip()) * 1_000_000.0 for part in raw.split(",") if part.strip()]
             if not bands:
@@ -305,11 +411,18 @@ class DesignFromFrequencyDialog(QDialog):
             base_height_m=length_to_m(self._base_height.value(), self._unit_system),
             end_height_m=length_to_m(self._end_height.value(), self._unit_system),
             orientation=DipoleOrientation(str(self._orientation.currentData())),
+            azimuth_deg=self._azimuth_deg,
+            wire_radius_m=self._wire_radius_m,
+            material=self._material,
+            ground=self._ground,
             loop_shape=LoopShape(str(self._loop_shape.currentData())),
             vertical_form=VerticalForm(str(self._vertical_form.currentData())),
             folded=bool(self._j_pole_variant.currentData()),
             included_angle_deg=self._included_angle.value(),
             radial_count=self._radial_count.value(),
+            radial_length_m=self._radial_length_m,
+            feed_offset_m=self._feed_offset_m,
+            gap_m=self._gap_m,
             fan_bands_hz=fan_bands,
             yagi_elements=self._yagi_elements.value(),
         )
@@ -387,6 +500,13 @@ class DesignFromFrequencyDialog(QDialog):
     def _accept(self) -> None:
         if self._estimate is None:
             return
+        if antenna_type_for(self._estimate.parameters) != self._estimator_type:
+            QMessageBox.warning(
+                self,
+                self._translator.t("design_from_frequency.title"),
+                self._translator.t("error.estimate_changes_template"),
+            )
+            return
         self.accept()
 
     def estimated_estimate(self) -> DimensionEstimate:
@@ -410,6 +530,23 @@ class DesignFromFrequencyDialog(QDialog):
         )
         for label, _widget in self._rows.values():
             label.setText(self._translator.t(label.objectName()))
+        self._template_value.setText(self._translator.t(self._template_label_key))
+        self._orientation.setItemText(0, self._translator.t("orientation.horizontal"))
+        self._orientation.setItemText(1, self._translator.t("orientation.vertical"))
+        self._loop_shape.setItemText(0, self._translator.t("antenna_type.loop"))
+        self._loop_shape.setItemText(1, self._translator.t("catalog.quad_loop"))
+        self._loop_shape.setItemText(2, self._translator.t("catalog.delta_loop"))
+        self._vertical_form.setItemText(0, "1/4 λ")
+        self._vertical_form.setItemText(1, "1/2 λ")
+        self._vertical_form.setItemText(2, "5/8 λ")
+        self._j_pole_variant.setItemText(0, self._translator.t("catalog.j_pole"))
+        self._j_pole_variant.setItemText(1, self._translator.t("catalog.slim_jim"))
+        locked_hint = self._translator.t("design_from_frequency.template_locked")
+        self._loop_shape.setToolTip(locked_hint)
+        self._j_pole_variant.setToolTip(locked_hint)
+        self._template_hint.setText(
+            self._translator.t("design_from_frequency.current_template_hint")
+        )
         self._estimate_button.setText(self._translator.t("design_from_frequency.estimate"))
         self._apply.setText(self._translator.t("design_from_frequency.apply"))
         self._refine.setText(self._translator.t("design_from_frequency.refine_after_apply"))

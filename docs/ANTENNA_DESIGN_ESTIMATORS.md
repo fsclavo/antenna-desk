@@ -135,8 +135,8 @@ and no independent numerical reference is claimed for a mobile installation.
 
 ## Trap dipole starting dimensions
 
-The trap dipole template is not a frequency-first estimator and is not listed
-in the Design from Frequency dialog. The **Set starting dimensions from bands**
+The trap dipole template is not a frequency-first estimator and is not eligible
+for **Estimate Dimensions...**. The **Set starting dimensions from bands**
 button inside its editor is an application helper:
 
 - center section = half-wave factor at the high band;
@@ -275,7 +275,8 @@ Reference sources currently used:
 3. Document the formula, source, assumptions, tolerance, and limitations.
 4. Return a valid `AntennaDesignParameters` and `DimensionEstimate`.
 5. Add domain, application, UI, and registry tests.
-6. Add the family to the Design from Frequency dialog.
+6. Make the current-template **Estimate Dimensions** dialog recognize the new
+   template without adding a free family selector.
 7. Update the user guide and changelog.
 
 ## Current limitations

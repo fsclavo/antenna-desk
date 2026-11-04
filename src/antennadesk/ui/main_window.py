@@ -37,6 +37,7 @@ from PySide6.QtWidgets import (
     QStackedWidget,
     QStyle,
     QToolBar,
+    QToolButton,
     QVBoxLayout,
     QWidget,
     QWizard,
@@ -78,6 +79,7 @@ from ..application.use_cases.update_dipole_design import (
 from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.design import (
     AntennaDesignParameters,
+    antenna_type_for,
     template_load_ids,
     with_primary_dimension,
 )
@@ -107,9 +109,9 @@ from ..domain.antennas.yagi import YagiParameters, yagi_element_length_mismatch
 from ..domain.common.time import utc_now
 from ..domain.common.validation import Diagnostic, Severity
 from ..domain.design.band_plan import BandDefault, BandPlan, BandSelection, default_band_plan
+from ..domain.design.estimators import supports_estimation
 from ..domain.design.formulas import frequency_for_half_wave_length
 from ..domain.design.yagi_reference import MAX_YAGI_ELEMENTS, MIN_YAGI_ELEMENTS
-from ..domain.environment.ground import GroundModel
 from ..domain.measurement import Measurement
 from ..domain.projects.project import DesignProvenance, DesignVariant, Project
 from ..domain.simulation.band_result import BandAnalysisResult, BandResult
@@ -201,6 +203,7 @@ from .pattern_resolution import (
     pattern_counts,
 )
 from .report_pdf import write_report_pdf
+from .template_identity import catalog_key_for
 from .units import UnitSystem, length_from_m, length_unit_key
 from .widgets.dipole_form import DipoleForm
 from .widgets.endfed_form import EndFedForm
@@ -212,6 +215,7 @@ from .widgets.moxon_form import MoxonForm
 from .widgets.ocfd_form import OCFDForm
 from .widgets.results_view import ResultsView
 from .widgets.ringo_form import RingoForm
+from .widgets.start_page import StartPage
 from .widgets.t2fd_form import T2FDForm
 from .widgets.trap_dipole_form import TrapDipoleForm
 from .widgets.vertical_form import VerticalForm
@@ -262,6 +266,7 @@ class MainWindow(QMainWindow):
         self._custom_pattern_step_deg = DEFAULT_PATTERN_STEP_DEG
         self._custom_run_pattern_step_deg: float | None = None
         self._custom_pattern_frequency_count: int | None = None
+        self._sweep_custom_initialized = False
         self._custom_last_budget = None
         self._pending_pattern_diagnostic: Diagnostic | None = None
         self._last_status_key = "status.ready"
@@ -277,8 +282,8 @@ class MainWindow(QMainWindow):
 
         self._build_actions()
         self._build_ui()
+        self._show_empty_state()
         self.retranslate()
-        self._create_default_project()
 
     def _build_actions(self) -> None:
         self._undo_action = QAction(self)
@@ -425,6 +430,7 @@ class MainWindow(QMainWindow):
 
         self._form = DipoleForm(self._translator, self._unit_system)
         self._form.changed.connect(self._on_form_changed)
+        self._form.change_template_requested.connect(lambda: self.change_template())
         self._form_scroll = QScrollArea(self)
         form_scroll = self._form_scroll
         form_scroll.setWidgetResizable(True)
@@ -519,6 +525,40 @@ class MainWindow(QMainWindow):
         self._ringo_scroll.setMinimumWidth(340)
         self._ringo_scroll.setMaximumWidth(480)
 
+        self._sweep_group = QGroupBox(self)
+        self._sweep_group.setTitle(self._translator.t("sweep.group_title"))
+        self._sweep_mode_label = QLabel(self._sweep_group)
+        self._sweep_mode = QComboBox(self._sweep_group)
+        self._sweep_mode.addItem(self._translator.t("sweep.auto"), None)
+        self._sweep_mode.addItem(self._translator.t("sweep.custom"), "custom")
+        self._sweep_mode.currentIndexChanged.connect(self._on_sweep_mode_changed)
+        self._sweep_start_label = QLabel(self._sweep_group)
+        self._sweep_start = QDoubleSpinBox(self._sweep_group)
+        self._sweep_start.setRange(0.1, 100_000.0)
+        self._sweep_start.setDecimals(6)
+        self._sweep_start.setSuffix(" MHz")
+        self._sweep_start.setValue(7.0)
+        self._sweep_stop_label = QLabel(self._sweep_group)
+        self._sweep_stop = QDoubleSpinBox(self._sweep_group)
+        self._sweep_stop.setRange(0.1, 100_000.0)
+        self._sweep_stop.setDecimals(6)
+        self._sweep_stop.setSuffix(" MHz")
+        self._sweep_stop.setValue(7.3)
+        self._sweep_points_label = QLabel(self._sweep_group)
+        self._sweep_points = QSpinBox(self._sweep_group)
+        self._sweep_points.setRange(2, 10_000)
+        self._sweep_points.setValue(DEFAULT_GENERATED_SWEEP_POINTS)
+        sweep_layout = QFormLayout(self._sweep_group)
+        sweep_layout.addRow(self._sweep_mode_label, self._sweep_mode)
+        sweep_layout.addRow(self._sweep_start_label, self._sweep_start)
+        sweep_layout.addRow(self._sweep_stop_label, self._sweep_stop)
+        sweep_layout.addRow(self._sweep_points_label, self._sweep_points)
+        self._sweep_hint = QLabel(self._sweep_group)
+        self._sweep_hint.setWordWrap(True)
+        self._sweep_hint.setStyleSheet("font-style: italic;")
+        sweep_layout.addRow(self._sweep_hint)
+        self._update_sweep_controls()
+
         self._pattern_group = QGroupBox(self)
         self._pattern_group.setTitle(self._translator.t("pattern.settings_title"))
         self._custom_pattern_label = QLabel(
@@ -575,6 +615,20 @@ class MainWindow(QMainWindow):
         band_layout = QHBoxLayout(self._band_group)
         band_layout.addWidget(self._band_plan_label, 1)
         band_layout.addWidget(self._analyze_bands_button)
+
+        self._advanced_toggle = QToolButton(self)
+        self._advanced_toggle.setCheckable(True)
+        self._advanced_toggle.setChecked(False)
+        self._advanced_toggle.setArrowType(Qt.ArrowType.RightArrow)
+        self._advanced_toggle.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self._advanced_toggle.toggled.connect(self._on_advanced_toggled)
+        self._advanced_body = QWidget(self)
+        advanced_layout = QVBoxLayout(self._advanced_body)
+        advanced_layout.setContentsMargins(0, 0, 0, 0)
+        advanced_layout.addWidget(self._sweep_group)
+        advanced_layout.addWidget(self._pattern_group)
+        advanced_layout.addWidget(self._band_group)
+        self._advanced_body.setVisible(False)
 
         self._custom_panel = QWidget(self)
         custom_layout = QVBoxLayout(self._custom_panel)
@@ -653,10 +707,10 @@ class MainWindow(QMainWindow):
         design_actions.addWidget(self._estimate_button)
         design_actions.addWidget(self._optimize_button)
         design_layout.addLayout(design_actions)
-        design_layout.addWidget(self._pattern_group)
-        design_layout.addWidget(self._band_group)
-        design_layout.addWidget(self._provenance_label)
         design_layout.addWidget(self._design_stack, 1)
+        design_layout.addWidget(self._provenance_label)
+        design_layout.addWidget(self._advanced_toggle)
+        design_layout.addWidget(self._advanced_body)
 
         self._geometry = GeometryView(self._translator, self._unit_system)
         self._geometry.setMinimumHeight(300)
@@ -713,11 +767,20 @@ class MainWindow(QMainWindow):
         main_splitter.setStretchFactor(0, 0)
         main_splitter.setStretchFactor(1, 1)
         main_splitter.setSizes([380, 900])
-        self.setCentralWidget(main_splitter)
+
+        self._start_page = StartPage(self._translator, self)
+        self._start_page.new_requested.connect(lambda: self.new_antenna())
+        self._start_page.open_requested.connect(lambda: self.open_project())
+        self._editor_panel = main_splitter
+        self._main_stack = QStackedWidget(self)
+        self._main_stack.addWidget(self._start_page)
+        self._main_stack.addWidget(self._editor_panel)
+        self.setCentralWidget(self._main_stack)
 
         toolbar = QToolBar(self)
         toolbar.setMovable(False)
         toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self._toolbar = toolbar
         self.addToolBar(toolbar)
         self._project_name_label = QLabel(self)
         toolbar.addWidget(self._project_name_label)
@@ -816,6 +879,42 @@ class MainWindow(QMainWindow):
         self.statusBar().addWidget(self._status_label, 1)
         self.statusBar().addPermanentWidget(self._solver_label)
 
+    def _on_advanced_toggled(self, expanded: bool) -> None:
+        self._advanced_body.setVisible(expanded)
+        self._advanced_toggle.setArrowType(
+            Qt.ArrowType.DownArrow if expanded else Qt.ArrowType.RightArrow
+        )
+
+    def _on_sweep_mode_changed(self, _index: int) -> None:
+        custom = self._sweep_mode.currentData() == "custom"
+        if custom and not self._sweep_custom_initialized:
+            self._initialize_sweep_from_template()
+            self._sweep_custom_initialized = True
+        self._update_sweep_controls()
+
+    def _update_sweep_controls(self) -> None:
+        custom = self._sweep_mode.currentData() == "custom"
+        for widget in (self._sweep_start, self._sweep_stop, self._sweep_points):
+            widget.setEnabled(custom)
+
+    def _initialize_sweep_from_template(self) -> None:
+        self._refresh_auto_sweep_display(force=True)
+
+    def _refresh_auto_sweep_display(self, *, force: bool = False) -> None:
+        if not force and self._sweep_mode.currentData() == "custom":
+            return
+        if self._project is None or self._design_id is None:
+            return
+        try:
+            design = self._project.design_by_id(self._design_id)
+            spec = self._base_simulation_spec(design)
+        except Exception:
+            return
+        plan = spec.frequency_plan
+        self._sweep_start.setValue(plan.start_hz / 1_000_000.0)
+        self._sweep_stop.setValue(plan.stop_hz / 1_000_000.0)
+        self._sweep_points.setValue(plan.count)
+
     def retranslate(self) -> None:
         self._update_title()
         self._new_action.setText(self._translator.t("action.new"))
@@ -840,6 +939,7 @@ class MainWindow(QMainWindow):
             self._translator.t("action.design_from_frequency")
         )
         self._apply_button.setText(self._translator.t("action.apply"))
+        self._apply_button.setToolTip(self._translator.t("action.apply.tooltip"))
         self._optimize_button.setText(self._translator.t("action.optimize"))
         self._construction_action.setText(self._translator.t("action.construction"))
         self._loads_action.setText(self._translator.t("action.loads"))
@@ -852,8 +952,17 @@ class MainWindow(QMainWindow):
         self._custom_generator_edit.setText(self._translator.t("action.edit_generator"))
         self._custom_sweep_group.setTitle(self._translator.t("field.sweep"))
         self._custom_sweep.setText(self._translator.t("field.sweep_enabled"))
+        self._sweep_group.setTitle(self._translator.t("sweep.group_title"))
+        self._sweep_mode_label.setText(self._translator.t("sweep.mode"))
+        self._sweep_mode.setItemText(0, self._translator.t("sweep.auto"))
+        self._sweep_mode.setItemText(1, self._translator.t("sweep.custom"))
+        self._sweep_start_label.setText(self._translator.t("field.sweep_start"))
+        self._sweep_stop_label.setText(self._translator.t("field.sweep_stop"))
+        self._sweep_points_label.setText(self._translator.t("field.sweep_points"))
+        self._sweep_hint.setText(self._translator.t("sweep.hint"))
         self._pattern_group.setTitle(self._translator.t("pattern.settings_title"))
         self._band_group.setTitle(self._translator.t("band.group_title"))
+        self._advanced_toggle.setText(self._translator.t("advanced.title"))
         self._analyze_bands_button.setText(self._translator.t("band.analyze"))
         self._analyze_bands_action.setText(self._translator.t("band.analyze"))
         self._update_band_plan_label()
@@ -886,6 +995,7 @@ class MainWindow(QMainWindow):
         self._export_pdf_action.setText(self._translator.t("action.export_pdf"))
         self._compact_history_action.setText(self._translator.t("action.compact_history"))
         self._simulate_action.setText(self._translator.t("action.simulate"))
+        self._simulate_action.setToolTip(self._translator.t("action.simulate.tooltip"))
         self._cancel_action.setText(self._translator.t("action.cancel"))
         self._english_action.setText(self._translator.t("action.english"))
         self._spanish_action.setText(self._translator.t("action.spanish"))
@@ -913,6 +1023,7 @@ class MainWindow(QMainWindow):
         self._height_label.setText(self._translator.t("geometry.vertical_scale"))
         self._zoom_label.setText(self._translator.t("geometry.zoom"))
         self._zoom_combo.setToolTip(self._translator.t("geometry.zoom_hint"))
+        self._start_page.retranslate()
         self._form.retranslate()
         self._geometry.retranslate()
         self._results.retranslate()
@@ -925,11 +1036,11 @@ class MainWindow(QMainWindow):
         self._update_actions()
 
     def _update_title(self) -> None:
-        name = (
-            self._project.name if self._project is not None else self._translator.t("app.untitled")
-        )
+        if self._project is None:
+            self.setWindowTitle(self._translator.t("app.title"))
+            return
         marker = " *" if self._dirty else ""
-        self.setWindowTitle(f"{name}{marker} — AntennaDesk")
+        self.setWindowTitle(f"{self._project.name}{marker} — AntennaDesk")
 
     def _update_provenance_label(self, design: DesignVariant | None) -> None:
         provenance = design.provenance if design is not None else None
@@ -1056,7 +1167,6 @@ class MainWindow(QMainWindow):
         has_result = self._design_id is not None and self._design_id in self._simulation_results
         self._new_action.setEnabled(idle)
         self._apply_button.setEnabled(idle and has_project)
-        self._estimate_button.setEnabled(idle and has_project)
         self._open_action.setEnabled(idle)
         self._save_action.setEnabled(idle and has_project)
         self._save_as_action.setEnabled(idle and has_project)
@@ -1075,8 +1185,15 @@ class MainWindow(QMainWindow):
             parameters = design.parameters
         self._update_provenance_label(design)
         is_custom = isinstance(parameters, CustomAntennaParameters)
+        estimate_supported = parameters is not None and supports_estimation(parameters)
         self._change_template_action.setEnabled(idle and has_project)
-        self._design_from_frequency_action.setEnabled(idle and has_project)
+        self._design_from_frequency_action.setEnabled(idle and has_project and estimate_supported)
+        self._estimate_button.setEnabled(idle and has_project and estimate_supported)
+        estimate_hint = ""
+        if parameters is not None and not estimate_supported:
+            estimate_hint = self._estimate_unavailable_message(parameters)
+        self._estimate_button.setToolTip(estimate_hint)
+        self._design_from_frequency_action.setToolTip(estimate_hint)
         band_enabled = idle and has_project and self._solver is not None
         self._analyze_bands_action.setEnabled(band_enabled)
         self._analyze_bands_button.setEnabled(band_enabled)
@@ -1110,6 +1227,19 @@ class MainWindow(QMainWindow):
         self._custom_edit.setEnabled(idle and has_project and is_custom)
         self._project_name.setEnabled(idle and has_project)
         self._variant_combo.setEnabled(idle and has_designs)
+        self._advanced_toggle.setEnabled(idle and has_project)
+        self._sweep_group.setEnabled(idle and has_project)
+        self._toolbar.setVisible(has_project)
+
+    def _estimate_unavailable_message(self, parameters: AntennaDesignParameters) -> str:
+        if isinstance(parameters, VerticalParameters) and parameters.loading_coil_enabled:
+            return self._translator.t("design_from_frequency.unsupported_loaded_vertical")
+        if (
+            isinstance(parameters, EndFedParameters)
+            and parameters.preset is EndFedPreset.RANDOM_WIRE
+        ):
+            return self._translator.t("design_from_frequency.unsupported_random_wire")
+        return self._translator.t("design_from_frequency.unsupported")
 
     def _discard_form_changes_for_history(self, *, redo: bool) -> bool:
         if not self._form_dirty:
@@ -1348,6 +1478,7 @@ class MainWindow(QMainWindow):
         design = self._project.design_by_id(design_id)
         self._design_id = design_id
         self._form_dirty = False
+        self._sweep_custom_initialized = False
         self._update_provenance_label(design)
         self._loads = design.antenna.loads
         self._transmission_lines = design.antenna.transmission_lines
@@ -1425,6 +1556,7 @@ class MainWindow(QMainWindow):
         self._update_actions()
         self._update_height_control()
         self._update_custom_pattern_status()
+        self._refresh_auto_sweep_display()
 
     @history_action("history.apply_design")
     def _on_variant_changed(self, *_args: object) -> None:
@@ -1450,31 +1582,40 @@ class MainWindow(QMainWindow):
                 return
         self._select_design(design_id)
 
-    def _create_default_project(self) -> None:
-        parameters = DipoleParameters(
-            frequency_hz=7_100_000.0,
-            total_length_m=20.0,
-            height_m=8.0,
-            wire_radius_m=0.001,
-            ground=GroundModel.finite(
-                relative_permittivity=13.0,
-                conductivity_s_per_m=0.005,
-            ),
-        )
-        project = CreateDipoleProject().execute(
-            CreateDipoleProjectCommand(
-                project_name="40 m dipole",
-                variant_name="Initial",
-                parameters=parameters,
-                description="Half-wave dipole for the 40 m band.",
-            )
-        )
-        self._set_project(
-            project,
-            project.designs[0].id,
-            path=None,
-            dirty=False,
-        )
+    def _show_empty_state(self) -> None:
+        self._project = None
+        self._design_id = None
+        self._feed_line = None
+        self._matching_network = None
+        self._current_path = None
+        self._dirty = False
+        self._form_dirty = False
+        self._last_result = None
+        self._simulation_results = {}
+        self._band_analysis_results = {}
+        self._band_plans = {}
+        self._selected_band_ids = {}
+        self._simulation_design_id = None
+        self._band_analysis_design_id = None
+        self._loads = ()
+        self._transmission_lines = ()
+        self._undo_stack.clear()
+        self._clean_signature = None
+        self._clean_run_ids = frozenset()
+        self._project_name_updating = True
+        self._project_name.clear()
+        self._project_name_updating = False
+        self._variant_combo.clear()
+        self._results.set_band_analysis(None)
+        self._results.set_result(None)
+        self._results.set_design(None)
+        self._results.set_measurements(())
+        self._geometry.clear_model()
+        self._main_stack.setCurrentWidget(self._start_page)
+        self._last_status_key = "status.ready"
+        self._update_title()
+        self._update_status_text()
+        self._update_actions()
 
     def _set_project(
         self,
@@ -1514,6 +1655,7 @@ class MainWindow(QMainWindow):
         self._project_name_updating = True
         self._project_name.setText(project.name)
         self._project_name_updating = False
+        self._main_stack.setCurrentWidget(self._editor_panel)
         self._populate_variants(design_id)
         self._select_design(design_id)
         self._undo_stack.clear()
@@ -2014,6 +2156,20 @@ class MainWindow(QMainWindow):
             return self._ringo_simulation_spec(parameters)
         return self._form.simulation_spec()
 
+    def _apply_sweep_override(
+        self,
+        design: DesignVariant,
+        spec: SimulationSpec,
+    ) -> SimulationSpec:
+        if self._sweep_mode.currentData() != "custom":
+            return spec
+        start_hz = self._sweep_start.value() * 1_000_000.0
+        stop_hz = self._sweep_stop.value() * 1_000_000.0
+        if start_hz >= stop_hz:
+            raise ValueError(self._translator.t("error.invalid_sweep"))
+        plan = FrequencyPlan.sweep(start_hz, stop_hz, self._sweep_points.value())
+        return self._replanned_spec(design, spec, plan)
+
     def _replanned_spec(
         self,
         design: DesignVariant,
@@ -2095,12 +2251,15 @@ class MainWindow(QMainWindow):
                 )
                 if answer != QMessageBox.StandardButton.Yes:
                     return
-            if isinstance(design.parameters, FanDipoleParameters):
+            if (
+                isinstance(design.parameters, FanDipoleParameters)
+                and self._sweep_mode.currentData() != "custom"
+            ):
                 fan_plan = default_band_plan(design.parameters).plan
                 if len(fan_plan) > 1:
                     self._start_band_analysis(design, fan_plan)
                     return
-            spec = self._base_simulation_spec(design)
+            spec = self._apply_sweep_override(design, self._base_simulation_spec(design))
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
@@ -2189,7 +2348,10 @@ class MainWindow(QMainWindow):
             )
             spec = replace(
                 spec,
-                pattern_frequencies_hz=(spec.frequency_plan.nearest_frequency(target_hz),),
+                pattern_frequencies_hz=self._custom_pattern_frequencies(
+                    spec.frequency_plan,
+                    target_hz,
+                ),
                 feed_line=self._feed_line,
                 matching_network=self._matching_network,
             )
@@ -2471,7 +2633,9 @@ class MainWindow(QMainWindow):
             candidate_steps=tuple(reversed(PATTERN_STEPS_DEG)),
             counts_for_step=lambda step: pattern_counts(step, ground),
             requested_step_deg=self._custom_run_pattern_step_deg,
-            pattern_frequency_count=1,
+            pattern_frequency_counts=tuple(
+                max(1, len(spec.pattern_frequencies_hz)) for spec in specs
+            ),
         )
         self._custom_last_budget = budget
         self._show_custom_pattern_budget(budget)
@@ -2487,14 +2651,7 @@ class MainWindow(QMainWindow):
         if budget.pattern_step_deg is None:
             return specs
         request = far_field_request(budget.pattern_step_deg, ground)
-        return tuple(
-            replace(
-                spec,
-                far_field=request,
-                pattern_frequencies_hz=spec.pattern_frequencies_hz[:1],
-            )
-            for spec in specs
-        )
+        return tuple(replace(spec, far_field=request) for spec in specs)
 
     def _update_custom_sweep_controls(self) -> None:
         enabled = self._custom_sweep.isChecked()
@@ -2860,16 +3017,55 @@ class MainWindow(QMainWindow):
             feed_transformer_ratio=parameters.feed_transformer_ratio,
         )
 
-    def new_custom_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
+    def _suggested_project_name(
+        self,
+        parameters: AntennaDesignParameters,
+        default_name: str,
+    ) -> str:
+        band = amateur_band_for(parameters.frequency_hz)
+        return f"{band.name} {default_name}" if band is not None else default_name
+
+    def _ask_project_name(self, default_name: str) -> str | None:
         name, accepted = QInputDialog.getText(
             self,
-            self._translator.t("custom.title"),
+            self._translator.t("catalog.title"),
             self._translator.t("field.project_name"),
-            text="Custom antenna",
+            text=default_name,
         )
         if not accepted:
+            return None
+        return name.strip() or default_name
+
+    def _create_project_from_parameters(
+        self,
+        parameters: AntennaDesignParameters,
+        *,
+        default_name: str,
+        feed_line: FeedLine | None = None,
+    ) -> None:
+        name = self._ask_project_name(self._suggested_project_name(parameters, default_name))
+        if name is None:
+            return
+        try:
+            project = CreateDipoleProject().execute(
+                CreateDipoleProjectCommand(
+                    project_name=name,
+                    variant_name="Initial",
+                    parameters=parameters,
+                )
+            )
+            if feed_line is not None:
+                project = project.with_feed_line(
+                    feed_line,
+                    updated_at=project.updated_at,
+                )
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+
+    def new_custom_antenna(self) -> None:
+        if not self._maybe_save_changes():
             return
         dialog = CustomAntennaDialog(
             self._translator,
@@ -2878,130 +3074,58 @@ class MainWindow(QMainWindow):
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        try:
-            project = CreateDipoleProject().execute(
-                CreateDipoleProjectCommand(
-                    project_name=name.strip() or "Custom antenna",
-                    variant_name="Initial",
-                    parameters=dialog.result_parameters(),
-                )
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-            return
-        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name="Custom antenna",
+        )
 
     def new_moxon_antenna(self) -> None:
         if not self._maybe_save_changes():
             return
-        name, accepted = QInputDialog.getText(
-            self,
-            self._translator.t("moxon.title"),
-            self._translator.t("field.project_name"),
-            text="Moxon",
-        )
-        if not accepted:
-            return
         dialog = MoxonDialog(self._translator, self._unit_system, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        try:
-            project = CreateDipoleProject().execute(
-                CreateDipoleProjectCommand(
-                    project_name=name.strip() or "Moxon",
-                    variant_name="Initial",
-                    parameters=dialog.result_parameters(),
-                )
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-            return
-        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name="Moxon",
+        )
 
     def new_yagi_antenna(self) -> None:
         if not self._maybe_save_changes():
             return
-        name, accepted = QInputDialog.getText(
-            self,
-            self._translator.t("yagi.title"),
-            self._translator.t("field.project_name"),
-            text="Yagi",
-        )
-        if not accepted:
-            return
         dialog = YagiDialog(self._translator, self._unit_system, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        try:
-            project = CreateDipoleProject().execute(
-                CreateDipoleProjectCommand(
-                    project_name=name.strip() or "Yagi",
-                    variant_name="Initial",
-                    parameters=dialog.result_parameters(),
-                )
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-            return
-        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name="Yagi",
+        )
 
     def new_ringo_antenna(self) -> None:
         if not self._maybe_save_changes():
             return
-        name, accepted = QInputDialog.getText(
-            self,
-            self._translator.t("ringo.title"),
-            self._translator.t("field.project_name"),
-            text="Ringo",
-        )
-        if not accepted:
-            return
         dialog = RingoDialog(self._translator, self._unit_system, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        try:
-            project = CreateDipoleProject().execute(
-                CreateDipoleProjectCommand(
-                    project_name=name.strip() or "Ringo",
-                    variant_name="Initial",
-                    parameters=dialog.result_parameters(),
-                )
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-            return
-        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name="Ringo",
+        )
 
     def new_j_pole_antenna(self, *, folded: bool) -> None:
         if not self._maybe_save_changes():
             return
         default_name = "Slim Jim" if folded else "J Pole"
-        name, accepted = QInputDialog.getText(
-            self,
-            self._translator.t("j_pole.title"),
-            self._translator.t("field.project_name"),
-            text=default_name,
-        )
-        if not accepted:
-            return
         dialog = JPoleDialog(self._translator, self._unit_system, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         parameters = dialog.result_parameters()
         if folded:
             parameters = replace(parameters, folded=True)
-        try:
-            project = CreateDipoleProject().execute(
-                CreateDipoleProjectCommand(
-                    project_name=name.strip() or default_name,
-                    variant_name="Initial",
-                    parameters=parameters,
-                )
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-            return
-        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+        self._create_project_from_parameters(
+            parameters,
+            default_name=default_name,
+        )
 
     def new_endfed_antenna(
         self,
@@ -3010,19 +3134,11 @@ class MainWindow(QMainWindow):
     ) -> None:
         if not self._maybe_save_changes():
             return
-        title_key, default_name = {
-            EndFedPreset.STANDARD: ("endfed.title", "End-fed"),
-            EndFedPreset.SLOPER: ("endfed.sloper_title", "Sloper"),
-            EndFedPreset.RANDOM_WIRE: ("endfed.random_wire_title", "Random wire"),
+        default_name = {
+            EndFedPreset.STANDARD: "End-fed",
+            EndFedPreset.SLOPER: "Sloper",
+            EndFedPreset.RANDOM_WIRE: "Random wire",
         }[preset]
-        name, accepted = QInputDialog.getText(
-            self,
-            self._translator.t(title_key),
-            self._translator.t("field.project_name"),
-            text=default_name,
-        )
-        if not accepted:
-            return
         dialog = EndFedDialog(
             self._translator,
             self._unit_system,
@@ -3031,18 +3147,10 @@ class MainWindow(QMainWindow):
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        try:
-            project = CreateDipoleProject().execute(
-                CreateDipoleProjectCommand(
-                    project_name=name.strip() or default_name,
-                    variant_name="Initial",
-                    parameters=dialog.result_parameters(),
-                )
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-            return
-        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name=default_name,
+        )
 
     def new_sloper_antenna(self) -> None:
         self.new_endfed_antenna(preset=EndFedPreset.SLOPER)
@@ -3053,179 +3161,72 @@ class MainWindow(QMainWindow):
     def new_g5rv_antenna(self) -> None:
         if not self._maybe_save_changes():
             return
-        name, accepted = QInputDialog.getText(
-            self,
-            self._translator.t("g5rv.title"),
-            self._translator.t("field.project_name"),
-            text="G5RV",
-        )
-        if not accepted:
-            return
         dialog = G5RVDialog(self._translator, self._unit_system, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        try:
-            project = CreateDipoleProject().execute(
-                CreateDipoleProjectCommand(
-                    project_name=name.strip() or "G5RV",
-                    variant_name="Initial",
-                    parameters=dialog.result_parameters(),
-                )
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-            return
-        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name="G5RV",
+        )
 
     def new_doublet_antenna(self) -> None:
         if not self._maybe_save_changes():
             return
-        name, accepted = QInputDialog.getText(
-            self,
-            self._translator.t("doublet.title"),
-            self._translator.t("field.project_name"),
-            text="Doublet",
-        )
-        if not accepted:
-            return
         dialog = DoubletDialog(self._translator, self._unit_system, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        try:
-            project = CreateDipoleProject().execute(
-                CreateDipoleProjectCommand(
-                    project_name=name.strip() or "Doublet",
-                    variant_name="Initial",
-                    parameters=dialog.result_parameters(),
-                )
-            )
-            project = project.with_feed_line(
-                dialog.result_feed_line(),
-                updated_at=project.updated_at,
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-            return
-        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name="Doublet",
+            feed_line=dialog.result_feed_line(),
+        )
 
     def new_fan_dipole_antenna(self) -> None:
         if not self._maybe_save_changes():
             return
-        name, accepted = QInputDialog.getText(
-            self,
-            self._translator.t("fan.title"),
-            self._translator.t("field.project_name"),
-            text="Fan dipole",
-        )
-        if not accepted:
-            return
         dialog = FanDipoleDialog(self._translator, self._unit_system, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        try:
-            project = CreateDipoleProject().execute(
-                CreateDipoleProjectCommand(
-                    project_name=name.strip() or "Fan dipole",
-                    variant_name="Initial",
-                    parameters=dialog.result_parameters(),
-                )
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-            return
-        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name="Fan dipole",
+        )
 
     def new_trap_dipole_antenna(self) -> None:
         if not self._maybe_save_changes():
             return
-        name, accepted = QInputDialog.getText(
-            self,
-            self._translator.t("trap_dipole.title"),
-            self._translator.t("field.project_name"),
-            text="Trap dipole",
-        )
-        if not accepted:
-            return
         dialog = TrapDipoleDialog(self._translator, self._unit_system, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        try:
-            project = CreateDipoleProject().execute(
-                CreateDipoleProjectCommand(
-                    project_name=name.strip() or "Trap dipole",
-                    variant_name="Initial",
-                    parameters=dialog.result_parameters(),
-                )
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-            return
-        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name="Trap dipole",
+        )
 
     def new_t2fd_antenna(self) -> None:
         if not self._maybe_save_changes():
             return
-        name, accepted = QInputDialog.getText(
-            self,
-            self._translator.t("t2fd.title"),
-            self._translator.t("field.project_name"),
-            text="T2FD",
-        )
-        if not accepted:
-            return
         dialog = T2FDDialog(self._translator, self._unit_system, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        try:
-            project = CreateDipoleProject().execute(
-                CreateDipoleProjectCommand(
-                    project_name=name.strip() or "T2FD",
-                    variant_name="Initial",
-                    parameters=dialog.result_parameters(),
-                )
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-            return
-        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name="T2FD",
+        )
 
     def new_inverted_v_antenna(self) -> None:
         if not self._maybe_save_changes():
             return
-        name, accepted = QInputDialog.getText(
-            self,
-            self._translator.t("inverted_v.title"),
-            self._translator.t("field.project_name"),
-            text="Inverted V",
-        )
-        if not accepted:
-            return
         dialog = InvertedVDialog(self._translator, self._unit_system, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        try:
-            project = CreateDipoleProject().execute(
-                CreateDipoleProjectCommand(
-                    project_name=name.strip() or "Inverted V",
-                    variant_name="Initial",
-                    parameters=dialog.result_parameters(),
-                )
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-            return
-        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name="Inverted V",
+        )
 
     def new_vertical_antenna(self, *, mobile: bool = False) -> None:
         if not self._maybe_save_changes():
-            return
-        name, accepted = QInputDialog.getText(
-            self,
-            self._translator.t("vertical.mobile_title" if mobile else "vertical.title"),
-            self._translator.t("field.project_name"),
-            text="Loaded vertical" if mobile else "Vertical",
-        )
-        if not accepted:
             return
         dialog = VerticalDialog(
             self._translator,
@@ -3235,18 +3236,10 @@ class MainWindow(QMainWindow):
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        try:
-            project = CreateDipoleProject().execute(
-                CreateDipoleProjectCommand(
-                    project_name=name.strip() or "Vertical",
-                    variant_name="Initial",
-                    parameters=dialog.result_parameters(),
-                )
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-            return
-        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name="Loaded vertical" if mobile else "Vertical",
+        )
 
     def new_loaded_vertical_antenna(self) -> None:
         self.new_vertical_antenna(mobile=True)
@@ -3254,29 +3247,13 @@ class MainWindow(QMainWindow):
     def new_ocfd_antenna(self) -> None:
         if not self._maybe_save_changes():
             return
-        name, accepted = QInputDialog.getText(
-            self,
-            self._translator.t("ocfd.title"),
-            self._translator.t("field.project_name"),
-            text="OCFD",
-        )
-        if not accepted:
-            return
         dialog = OCFDDialog(self._translator, self._unit_system, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        try:
-            project = CreateDipoleProject().execute(
-                CreateDipoleProjectCommand(
-                    project_name=name.strip() or "OCFD",
-                    variant_name="Initial",
-                    parameters=dialog.result_parameters(),
-                )
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-            return
-        self._set_project(project, project.designs[0].id, path=None, dirty=True)
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name="OCFD",
+        )
 
     @history_action("history.measurement_edit")
     def edit_measurement(self, measurement: Measurement) -> None:
@@ -3808,13 +3785,17 @@ class MainWindow(QMainWindow):
             return
         if not self._maybe_save_changes():
             return
-        catalog = AntennaCatalogDialog(self._translator, self)
+        design = self._project.design_by_id(self._design_id)
+        catalog = AntennaCatalogDialog(
+            self._translator,
+            self,
+            initial_key=catalog_key_for(design.parameters),
+        )
         if catalog.exec() != QDialog.DialogCode.Accepted:
             return
         selected = catalog.selected_key()
         if selected is None:
             return
-        design = self._project.design_by_id(self._design_id)
         feed_line = None
         try:
             if selected == CATALOG_TYPE_DOUBLET:
@@ -4204,10 +4185,13 @@ class MainWindow(QMainWindow):
                 self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
                 return
         design = self._project.design_by_id(self._design_id)
+        if not supports_estimation(design.parameters):
+            self._show_error(self._estimate_unavailable_message(design.parameters))
+            return
         dialog = DesignFromFrequencyDialog(
             self._translator,
             self._unit_system,
-            initial_frequency_hz=design.parameters.frequency_hz,
+            initial_parameters=design.parameters,
             can_refine=self._solver is not None,
             parent=self,
         )
@@ -4215,19 +4199,10 @@ class MainWindow(QMainWindow):
             return
         try:
             estimate = dialog.estimated_estimate()
-            parameters = estimate.parameters
-            preserved: dict[str, object] = {}
-            for name in (
-                "azimuth_deg",
-                "radial_angle_deg",
-                "material",
-                "ground",
-                "wire_radius_m",
-            ):
-                if hasattr(design.parameters, name) and hasattr(parameters, name):
-                    preserved[name] = getattr(design.parameters, name)
-            if preserved:
-                parameters = replace(parameters, **preserved)
+            parameters = self._preserve_estimate_context(
+                design.parameters,
+                estimate.parameters,
+            )
             provenance = DesignProvenance(
                 method_id=estimate.method_id,
                 confidence=estimate.confidence.value,
@@ -4251,6 +4226,55 @@ class MainWindow(QMainWindow):
         refine_requested = getattr(dialog, "refine_requested", lambda: False)()
         if refine_requested and self._solver is not None:
             self._open_refinement_for_current_design()
+
+    def _preserve_estimate_context(
+        self,
+        previous: AntennaDesignParameters,
+        estimated: AntennaDesignParameters,
+    ) -> AntennaDesignParameters:
+        """Keep fields that identify the current template or its matching."""
+
+        if antenna_type_for(previous) != antenna_type_for(estimated):
+            raise ValueError(self._translator.t("error.estimate_changes_template"))
+        updates: dict[str, object] = {}
+        for name in (
+            "azimuth_deg",
+            "radial_angle_deg",
+            "material",
+            "ground",
+            "wire_radius_m",
+            "orientation",
+        ):
+            if hasattr(previous, name) and hasattr(estimated, name):
+                updates[name] = getattr(previous, name)
+        if isinstance(previous, EndFedParameters) and isinstance(estimated, EndFedParameters):
+            updates.update(
+                preset=previous.preset,
+                transformer_ratio=previous.transformer_ratio,
+                counterpoise_length_m=previous.counterpoise_length_m,
+                counterpoise_height_m=previous.counterpoise_height_m,
+                counterpoise_azimuth_deg=previous.counterpoise_azimuth_deg,
+            )
+        elif isinstance(previous, OCFDParameters) and isinstance(estimated, OCFDParameters):
+            updates.update(
+                feed_ratio=previous.feed_ratio,
+                transformer_ratio=previous.transformer_ratio,
+            )
+        elif isinstance(previous, JPoleParameters) and isinstance(estimated, JPoleParameters):
+            updates.update(folded=previous.folded, gap_m=previous.gap_m)
+        elif isinstance(previous, RingoParameters) and isinstance(estimated, RingoParameters):
+            updates["ring_sides"] = previous.ring_sides
+        elif isinstance(previous, YagiParameters) and isinstance(estimated, YagiParameters):
+            updates["driven_index"] = previous.driven_index
+            if previous.elements and estimated.elements:
+                radius_m = previous.elements[0].radius_m
+                estimated = replace(
+                    estimated,
+                    elements=tuple(
+                        replace(element, radius_m=radius_m) for element in estimated.elements
+                    ),
+                )
+        return replace(estimated, **updates)
 
     def _open_refinement_for_current_design(self) -> None:
         self.optimize_current_design()
@@ -5501,6 +5525,7 @@ class MainWindow(QMainWindow):
         self._dirty = True
         self._update_title()
         self._update_actions()
+        self._refresh_auto_sweep_display()
 
     def _project_name_changed(self, _text: str) -> None:
         if self._project_name_updating or self._project is None:

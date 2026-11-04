@@ -7,8 +7,13 @@ from __future__ import annotations
 import math
 
 from ..antennas.custom import ANTENNA_TYPE_CUSTOM
+from ..antennas.design import AntennaDesignParameters, antenna_type_for
 from ..antennas.dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
-from ..antennas.endfed import ANTENNA_TYPE_ENDFED, EndFedParameters
+from ..antennas.endfed import (
+    ANTENNA_TYPE_ENDFED,
+    EndFedParameters,
+    EndFedPreset,
+)
 from ..antennas.fan_dipole import (
     ANTENNA_TYPE_FAN_DIPOLE,
     FanDipoleParameters,
@@ -586,6 +591,43 @@ ESTIMATORS = {
 }
 
 SUPPORTED_ESTIMATOR_TYPES = frozenset(ESTIMATORS)
+
+
+def estimator_type_for(parameters: AntennaDesignParameters) -> str:
+    """Return the estimator key that can refine an existing design.
+
+    This is deliberately limited to the current template.  A loaded vertical,
+    an arbitrary custom geometry, or a template without an estimator is not
+    eligible; callers must ask the user to change the template explicitly
+    instead of silently estimating a different family.
+    """
+
+    if isinstance(parameters, VerticalParameters) and parameters.loading_coil_enabled:
+        raise UnsupportedEstimateError(
+            "a loaded vertical depends on its loading coil and has no "
+            "frequency-first refinement estimator"
+        )
+    if isinstance(parameters, EndFedParameters) and parameters.preset is EndFedPreset.RANDOM_WIRE:
+        raise UnsupportedEstimateError(
+            "a random-wire length is deliberately non-resonant and has no "
+            "frequency-first refinement estimator"
+        )
+    antenna_type = antenna_type_for(parameters)
+    if antenna_type not in ESTIMATORS:
+        raise UnsupportedEstimateError(
+            f"the current template {antenna_type!r} has no frequency-first estimator"
+        )
+    return antenna_type
+
+
+def supports_estimation(parameters: AntennaDesignParameters) -> bool:
+    """Return whether the current template can be estimated without changing it."""
+
+    try:
+        estimator_type_for(parameters)
+    except UnsupportedEstimateError:
+        return False
+    return True
 
 
 def estimate_intent(intent: DesignIntent) -> DimensionEstimate:

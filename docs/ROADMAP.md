@@ -73,6 +73,10 @@ Completed:
   geometry matching line.
 - Per-band multiband analysis for G5RV, OCFD, end-fed presets, fan dipole, trap
   dipole, T2FD, and doublet, with a Bands results tab and band-aware reports.
+  The Pattern frequency selector lists all analyzed bands, and each band uses
+  the global pattern-frequency policy.
+- Global **Simulation sweep** in Advanced simulation: Auto (template) or a
+  custom Start/Stop/Points override for every antenna family.
 - Optional ideal OCFD feed transformer (4:1 default for new designs), preserved
   through custom-wire conversion and usable by the synthesis dialog.
 - Fan dipole Simulate now covers every distinct element band automatically and
@@ -157,8 +161,8 @@ Scope:
   trap dipole, T2FD, and doublet, with evidence and limitation notes. The
   doublet default is inferred from a high-impedance/open-wire project feed line.
 - A batch analysis service that runs the existing single-band solver once per
-  selected band, with progress, cancellation, partial results, and one pattern
-  snapshot per band by default.
+  selected band, with progress, cancellation, partial results, and the global
+  pattern-frequency policy applied inside each band.
 - **Analyze Bands...** UI integrated with the central **Band analysis** group
   and global **Simulation pattern** settings, plus a band selection dialog and
   a **Bands** results tab showing best SWR, gain, takeoff angle, efficiency,

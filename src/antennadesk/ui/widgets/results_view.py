@@ -62,6 +62,7 @@ class ResultsView(QWidget):
         self._result: SimulationResult | None = None
         self._design: DesignVariant | None = None
         self._pattern_frequencies: tuple[FrequencyResult, ...] = ()
+        self._pattern_band_results: tuple[BandResult | None, ...] = ()
         self._band_analysis: BandAnalysisResult | None = None
         self._bands_tab_index = -1
 
@@ -386,36 +387,61 @@ class ResultsView(QWidget):
         self._pattern_frequency.clear()
         self._currents_frequency.clear()
         self._pattern_frequencies = ()
+        self._pattern_band_results = ()
         if result is not None:
             for frequency in result.frequencies:
                 self._currents_frequency.addItem(f"{frequency.frequency_hz / 1e6:g} MHz")
-            self._pattern_frequencies = tuple(
-                frequency for frequency in result.frequencies if frequency.far_field
-            )
-            for frequency in self._pattern_frequencies:
-                band = amateur_band_for(frequency.frequency_hz)
+            entries = self._pattern_entries(result)
+            self._pattern_frequencies = tuple(frequency for _band, frequency in entries)
+            self._pattern_band_results = tuple(band for band, _frequency in entries)
+            for band_result, frequency in entries:
+                band_name = (
+                    band_result.band.name
+                    if band_result is not None
+                    else getattr(amateur_band_for(frequency.frequency_hz), "name", None)
+                )
                 label = f"{frequency.frequency_hz / 1e6:g} MHz"
-                if band is not None:
-                    label += f" ({band.name})"
+                if band_name is not None:
+                    label += f" ({band_name})"
                 self._pattern_frequency.addItem(label)
-        self._pattern_frequency.blockSignals(False)
-        self._currents_frequency.blockSignals(False)
         if self._pattern_frequencies:
             target = (
                 self._design.parameters.frequency_hz
                 if self._design is not None
                 else self._pattern_frequencies[0].frequency_hz
             )
+            candidate_indices = [
+                index
+                for index, band_result in enumerate(self._pattern_band_results)
+                if band_result is None or band_result.result is result
+            ]
+            if not candidate_indices:
+                candidate_indices = list(range(len(self._pattern_frequencies)))
             self._pattern_frequency.setCurrentIndex(
                 min(
-                    range(len(self._pattern_frequencies)),
+                    candidate_indices,
                     key=lambda index: abs(self._pattern_frequencies[index].frequency_hz - target),
                 )
             )
+        self._pattern_frequency.blockSignals(False)
+        self._currents_frequency.blockSignals(False)
         if self._currents_frequency.count() > 0:
             self._currents_frequency.setCurrentIndex(0)
         self._populate_cut_values()
         self._render()
+
+    def _pattern_entries(
+        self,
+        result: SimulationResult,
+    ) -> tuple[tuple[BandResult | None, FrequencyResult], ...]:
+        if self._band_analysis is not None and self._band_analysis.bands:
+            return tuple(
+                (band_result, frequency)
+                for band_result in self._band_analysis.bands
+                for frequency in band_result.result.frequencies
+                if frequency.far_field
+            )
+        return tuple((None, frequency) for frequency in result.frequencies if frequency.far_field)
 
     def set_band_analysis(self, analysis: BandAnalysisResult | None) -> None:
         self._band_analysis = analysis
@@ -818,9 +844,43 @@ class ResultsView(QWidget):
             current=f"{current.magnitude_a:.4f} A",
         )
 
-    def _on_pattern_frequency_changed(self) -> None:
+    def _on_pattern_frequency_changed(self, index: int) -> None:
+        if 0 <= index < len(self._pattern_band_results):
+            band_result = self._pattern_band_results[index]
+            if band_result is not None and band_result.result is not self._result:
+                self.set_result(band_result.result)
+                self._select_pattern_index(index)
+                self._select_bands_row(band_result)
+                self.band_selected.emit(band_result)
+                return
         self._populate_cut_values()
         self._render_pattern()
+
+    def _select_pattern_index(self, index: int) -> None:
+        if not 0 <= index < self._pattern_frequency.count():
+            return
+        self._pattern_frequency.blockSignals(True)
+        self._pattern_frequency.setCurrentIndex(index)
+        self._pattern_frequency.blockSignals(False)
+        self._populate_cut_values()
+        self._render_pattern()
+
+    def _select_bands_row(self, band_result: BandResult) -> None:
+        if self._band_analysis is None:
+            return
+        row = next(
+            (
+                index
+                for index, candidate in enumerate(self._band_analysis.bands)
+                if candidate is band_result
+            ),
+            -1,
+        )
+        if row < 0:
+            return
+        self._bands_table.blockSignals(True)
+        self._bands_table.selectRow(row)
+        self._bands_table.blockSignals(False)
 
     def _on_pattern_mode_changed(self) -> None:
         self._populate_cut_values()

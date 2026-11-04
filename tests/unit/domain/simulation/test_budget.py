@@ -223,6 +223,34 @@ def test_batch_pattern_budget_sums_every_band() -> None:
     assert budget.estimated_project_bytes < DEFAULT_MAX_PROJECT_BYTES
 
 
+def test_batch_pattern_budget_accepts_per_band_pattern_counts() -> None:
+    from antennadesk.domain.simulation.budget import choose_batch_pattern_step
+
+    budget = choose_batch_pattern_step(
+        frequency_counts=(15, 15, 15),
+        segment_counts=(33, 33, 33),
+        candidate_steps=(1.0, 2.0, 5.0, 10.0),
+        counts_for_step=_counts,
+        pattern_frequency_counts=(5, 5, 3),
+    )
+
+    assert budget.far_field_enabled is True
+    assert budget.pattern_frequency_count == 13
+
+
+def test_batch_pattern_budget_rejects_misaligned_pattern_counts() -> None:
+    from antennadesk.domain.simulation.budget import choose_batch_pattern_step
+
+    with pytest.raises(ValueError, match="pattern_frequency_counts"):
+        choose_batch_pattern_step(
+            frequency_counts=(15, 15),
+            segment_counts=(33, 33),
+            candidate_steps=(1.0, 2.0, 5.0, 10.0),
+            counts_for_step=_counts,
+            pattern_frequency_counts=(5,),
+        )
+
+
 def test_batch_pattern_budget_respects_a_requested_maximum() -> None:
     from antennadesk.domain.simulation.budget import choose_batch_pattern_step
 

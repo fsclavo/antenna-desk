@@ -542,6 +542,48 @@ def test_results_view_adds_a_band_summary_tab(qtbot: QtBot) -> None:
     assert view._tabs.count() == 6
 
 
+def test_results_view_lists_all_band_patterns_in_one_selector(qtbot: QtBot) -> None:
+    from dataclasses import replace
+    from uuid import uuid4
+
+    from antennadesk.domain.simulation.band_result import BandAnalysisResult, BandResult
+    from antennadesk.domain.simulation.bands import amateur_band_by_id
+    from antennadesk.domain.simulation.result import FarFieldPoint
+
+    points = (FarFieldPoint(0.0, 0.0, 2.0, None, 2.0, 0.0, 0.0, "LINEAR", None, None, None, None),)
+    base = _make_result()
+    bands = []
+    for band_id, frequency_hz in (("40m", 7_100_000.0), ("20m", 14_100_000.0)):
+        band = amateur_band_by_id(band_id)
+        assert band is not None
+        frequency = replace(
+            base.frequencies[1],
+            frequency_hz=frequency_hz,
+            far_field=points,
+        )
+        bands.append(BandResult(band, replace(base, frequencies=(frequency,))))
+    analysis = BandAnalysisResult(
+        design_id=uuid4(),
+        batch_id=uuid4(),
+        created_at=datetime(2026, 11, 3, tzinfo=UTC),
+        bands=tuple(bands),
+    )
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    view.set_band_analysis(analysis)
+    view.set_result(bands[0].result)
+
+    assert view._pattern_frequency.count() == 2
+    assert view._pattern_frequency.itemText(0).endswith("(40m)")
+    assert view._pattern_frequency.itemText(1).endswith("(20m)")
+
+    with qtbot.waitSignal(view.band_selected, timeout=1_000):
+        view._pattern_frequency.setCurrentIndex(1)
+
+    assert view._result is bands[1].result
+    assert view._bands_table.currentRow() == 1
+
+
 def test_results_view_saves_one_pattern_image_per_band(
     qtbot: QtBot,
     tmp_path: Path,

@@ -15,6 +15,7 @@ def test_form_shows_family_and_template(qtbot: QtBot) -> None:
     qtbot.addWidget(form)
 
     assert form._family_value.text() == "Dipole"
-    index = form._type.findData(ANTENNA_TYPE_LOOP)
-    form._type.setCurrentIndex(index)
+    assert form._template_value.text() == "Wire dipole"
+    form.set_antenna_type(ANTENNA_TYPE_LOOP)
     assert form._family_value.text() == "Loop"
+    assert form._template_value.text() == "Loop"

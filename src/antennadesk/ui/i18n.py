@@ -21,6 +21,52 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Untitled",
         Language.SPANISH: "Sin título",
     },
+    "start.title": {
+        Language.ENGLISH: "Start an antenna project",
+        Language.SPANISH: "Iniciá un proyecto de antena",
+    },
+    "start.description": {
+        Language.ENGLISH: (
+            "Create a project from a template, or open an existing .antennadesk file."
+        ),
+        Language.SPANISH: (
+            "Creá un proyecto a partir de una plantilla o abrí un archivo .antennadesk existente."
+        ),
+    },
+    "start.flow": {
+        Language.ENGLISH: (
+            "Typical flow: choose a template, estimate dimensions if needed, "
+            "refine the design, then simulate."
+        ),
+        Language.SPANISH: (
+            "Flujo típico: elegí una plantilla, estimá las dimensiones si hace "
+            "falta, refiná el diseño y después simulá."
+        ),
+    },
+    "advanced.title": {
+        Language.ENGLISH: "Advanced simulation",
+        Language.SPANISH: "Simulación avanzada",
+    },
+    "sweep.group_title": {
+        Language.ENGLISH: "Simulation sweep",
+        Language.SPANISH: "Barrido de simulación",
+    },
+    "sweep.mode": {Language.ENGLISH: "Sweep", Language.SPANISH: "Barrido"},
+    "sweep.auto": {
+        Language.ENGLISH: "Auto (template)",
+        Language.SPANISH: "Automático (plantilla)",
+    },
+    "sweep.custom": {Language.ENGLISH: "Custom", Language.SPANISH: "Personalizado"},
+    "sweep.hint": {
+        Language.ENGLISH: (
+            "Auto uses the current template's default sweep. Custom overrides "
+            "Start/Stop/Points for the next run."
+        ),
+        Language.SPANISH: (
+            "Automático usa el barrido por defecto de la plantilla actual. "
+            "Personalizado reemplaza Inicio/Fin/Puntos para la próxima corrida."
+        ),
+    },
     "app.about": {
         Language.ENGLISH: "AntennaDesk {version} — GPL-3.0-or-later\nLocal-first antenna design and simulation.",
         Language.SPANISH: "AntennaDesk {version} — GPL-3.0-or-later\nDiseño y simulación de antenas local-first.",
@@ -30,7 +76,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "menu.import": {Language.ENGLISH: "Import", Language.SPANISH: "Importar"},
     "menu.export": {Language.ENGLISH: "Export", Language.SPANISH: "Exportar"},
     "menu.design": {Language.ENGLISH: "Design", Language.SPANISH: "Diseño"},
-    "menu.variants": {Language.ENGLISH: "Variants", Language.SPANISH: "Variantes"},
+    "menu.variants": {Language.ENGLISH: "Designs", Language.SPANISH: "Diseños"},
     "menu.custom_wires": {
         Language.ENGLISH: "Custom Wires",
         Language.SPANISH: "Hilos personalizados",
@@ -312,9 +358,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "action.simulate": {Language.ENGLISH: "Simulate", Language.SPANISH: "Simular"},
     "action.cancel": {Language.ENGLISH: "Cancel", Language.SPANISH: "Cancelar"},
     "action.apply": {Language.ENGLISH: "Apply design", Language.SPANISH: "Aplicar diseño"},
+    "action.apply.tooltip": {
+        Language.ENGLISH: "Save the current form values without running the solver.",
+        Language.SPANISH: "Guardá los valores actuales del formulario sin ejecutar el solver.",
+    },
+    "action.simulate.tooltip": {
+        Language.ENGLISH: "Save the current form values and run the solver.",
+        Language.SPANISH: "Guardá los valores actuales del formulario y ejecutá el solver.",
+    },
     "action.next": {Language.ENGLISH: "Next", Language.SPANISH: "Siguiente"},
     "action.back": {Language.ENGLISH: "Back", Language.SPANISH: "Atrás"},
     "action.finish": {Language.ENGLISH: "Create", Language.SPANISH: "Crear"},
+    "action.change": {Language.ENGLISH: "Change...", Language.SPANISH: "Cambiar..."},
     "action.close": {Language.ENGLISH: "Close", Language.SPANISH: "Cerrar"},
     "action.yes": {Language.ENGLISH: "Yes", Language.SPANISH: "Sí"},
     "action.no": {Language.ENGLISH: "No", Language.SPANISH: "No"},
@@ -510,8 +565,56 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "vertical x{factor}",
     },
     "design_from_frequency.title": {
-        Language.ENGLISH: "Design from frequency",
-        Language.SPANISH: "Diseñar desde frecuencia",
+        Language.ENGLISH: "Estimate Dimensions",
+        Language.SPANISH: "Estimar dimensiones",
+    },
+    "design_from_frequency.current_template_hint": {
+        Language.ENGLISH: (
+            "This estimate refines the current template only; it does not "
+            "change the template or antenna type. Use Change Template for a "
+            "different family."
+        ),
+        Language.SPANISH: (
+            "Esta estimación solo refina la plantilla actual; no cambia la "
+            "plantilla ni el tipo de antena. Usá Cambiar plantilla para otra "
+            "familia."
+        ),
+    },
+    "design_from_frequency.template_locked": {
+        Language.ENGLISH: "Locked to the current template. Use Change Template instead.",
+        Language.SPANISH: "Fijado a la plantilla actual. Usá Cambiar plantilla en su lugar.",
+    },
+    "design_from_frequency.unsupported": {
+        Language.ENGLISH: (
+            "This template has no frequency-first estimator. Use the template "
+            "editor's own controls or change the template explicitly."
+        ),
+        Language.SPANISH: (
+            "Esta plantilla no tiene estimador desde frecuencia. Usá los "
+            "controles del editor de la plantilla o cambiá la plantilla de "
+            "forma explícita."
+        ),
+    },
+    "design_from_frequency.unsupported_loaded_vertical": {
+        Language.ENGLISH: (
+            "A loaded vertical depends on its loading coil, so automatic "
+            "frequency-first estimation is not available."
+        ),
+        Language.SPANISH: (
+            "Una vertical cargada depende de su bobina de carga, por lo que no "
+            "hay estimación automática desde frecuencia."
+        ),
+    },
+    "design_from_frequency.unsupported_random_wire": {
+        Language.ENGLISH: (
+            "A random-wire length is deliberately non-resonant; use its "
+            "template editor to adjust the length and matching."
+        ),
+        Language.SPANISH: (
+            "La longitud de un hilo aleatorio es deliberadamente no resonante; "
+            "usá el editor de la plantilla para ajustar la longitud y la "
+            "adaptación."
+        ),
     },
     "design_from_frequency.family": {
         Language.ENGLISH: "Antenna family",
@@ -1515,9 +1618,9 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Lóbulos de elevación",
     },
     "currents.frequency": {Language.ENGLISH: "Frequency", Language.SPANISH: "Frecuencia"},
-    "compare.title": {Language.ENGLISH: "Compare Variants", Language.SPANISH: "Comparar variantes"},
-    "compare.variant_a": {Language.ENGLISH: "Variant A", Language.SPANISH: "Variante A"},
-    "compare.variant_b": {Language.ENGLISH: "Variant B", Language.SPANISH: "Variante B"},
+    "compare.title": {Language.ENGLISH: "Compare Designs", Language.SPANISH: "Comparar diseños"},
+    "compare.variant_a": {Language.ENGLISH: "Design A", Language.SPANISH: "Diseño A"},
+    "compare.variant_b": {Language.ENGLISH: "Design B", Language.SPANISH: "Diseño B"},
     "compare.metric": {Language.ENGLISH: "Metric", Language.SPANISH: "Métrica"},
     "compare.swr": {Language.ENGLISH: "SWR comparison", Language.SPANISH: "Comparación de ROE"},
     "compare.pattern": {
@@ -1538,24 +1641,24 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "compare.efficiency": {Language.ENGLISH: "Efficiency (%)", Language.SPANISH: "Eficiencia (%)"},
     "compare.no_result": {
-        Language.ENGLISH: "Simulate a variant to include it in the comparison.",
-        Language.SPANISH: "Simulá una variante para incluirla en la comparación.",
+        Language.ENGLISH: "Simulate a design to include it in the comparison.",
+        Language.SPANISH: "Simulá un diseño para incluirlo en la comparación.",
     },
     "action.compare": {
-        Language.ENGLISH: "Compare Variants...",
-        Language.SPANISH: "Comparar variantes...",
+        Language.ENGLISH: "Compare Designs...",
+        Language.SPANISH: "Comparar diseños...",
     },
     "action.new_variant": {
-        Language.ENGLISH: "New Variant...",
-        Language.SPANISH: "Nueva variante...",
+        Language.ENGLISH: "New Design in Project...",
+        Language.SPANISH: "Nuevo diseño en el proyecto...",
     },
     "action.rename_variant": {
-        Language.ENGLISH: "Rename Variant...",
-        Language.SPANISH: "Renombrar variante...",
+        Language.ENGLISH: "Rename Design...",
+        Language.SPANISH: "Renombrar diseño...",
     },
     "action.delete_variant": {
-        Language.ENGLISH: "Delete Variant",
-        Language.SPANISH: "Eliminar variante",
+        Language.ENGLISH: "Delete Design",
+        Language.SPANISH: "Eliminar diseño",
     },
     "action.export_csv": {Language.ENGLISH: "Export CSV...", Language.SPANISH: "Exportar CSV..."},
     "action.export_pattern_csv": {
@@ -1594,24 +1697,27 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Compact Simulation History...",
         Language.SPANISH: "Compactar historial de simulaciones...",
     },
-    "variant.label": {Language.ENGLISH: "Variant", Language.SPANISH: "Variante"},
-    "variant.name": {Language.ENGLISH: "Variant name", Language.SPANISH: "Nombre de la variante"},
-    "variant.new_title": {Language.ENGLISH: "New Variant", Language.SPANISH: "Nueva variante"},
+    "variant.label": {Language.ENGLISH: "Design", Language.SPANISH: "Diseño"},
+    "variant.name": {Language.ENGLISH: "Design name", Language.SPANISH: "Nombre del diseño"},
+    "variant.new_title": {
+        Language.ENGLISH: "New Design in Project",
+        Language.SPANISH: "Nuevo diseño en el proyecto",
+    },
     "variant.rename_title": {
-        Language.ENGLISH: "Rename Variant",
-        Language.SPANISH: "Renombrar variante",
+        Language.ENGLISH: "Rename Design",
+        Language.SPANISH: "Renombrar diseño",
     },
     "variant.delete_title": {
-        Language.ENGLISH: "Delete Variant",
-        Language.SPANISH: "Eliminar variante",
+        Language.ENGLISH: "Delete Design",
+        Language.SPANISH: "Eliminar diseño",
     },
     "variant.delete_confirm": {
-        Language.ENGLISH: "Delete variant “{name}”?",
-        Language.SPANISH: "¿Eliminar la variante “{name}”?",
+        Language.ENGLISH: "Delete design “{name}”?",
+        Language.SPANISH: "¿Eliminar el diseño “{name}”?",
     },
     "variant.last_cannot_delete": {
-        Language.ENGLISH: "A project must keep at least one design variant.",
-        Language.SPANISH: "Un proyecto debe conservar al menos una variante.",
+        Language.ENGLISH: "A project must keep at least one design.",
+        Language.SPANISH: "Un proyecto debe conservar al menos un diseño.",
     },
     "dialog.pattern_csv_title": {
         Language.ENGLISH: "Save pattern CSV",
@@ -1727,8 +1833,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "variant.copy_name": {Language.ENGLISH: "{name} copy", Language.SPANISH: "{name} copia"},
     "error.no_result": {
-        Language.ENGLISH: "Simulate the current variant before exporting.",
-        Language.SPANISH: "Simulá la variante actual antes de exportar.",
+        Language.ENGLISH: "Simulate the current design before exporting.",
+        Language.SPANISH: "Simulá el diseño actual antes de exportar.",
+    },
+    "error.invalid_sweep": {
+        Language.ENGLISH: "Sweep start must be lower than sweep stop.",
+        Language.SPANISH: "El inicio del barrido debe ser menor que el fin.",
+    },
+    "error.estimate_changes_template": {
+        Language.ENGLISH: (
+            "The estimate attempted to change the current template. "
+            "Use Change Template explicitly if you want a different family."
+        ),
+        Language.SPANISH: (
+            "La estimación intentó cambiar la plantilla actual. Usá Cambiar "
+            "plantilla de forma explícita si querés otra familia."
+        ),
     },
     "error.export": {
         Language.ENGLISH: "Could not export: {message}",
@@ -1745,20 +1865,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Cambiar plantilla",
     },
     "history.design_from_frequency": {
-        Language.ENGLISH: "Design from frequency",
-        Language.SPANISH: "Diseñar desde frecuencia",
+        Language.ENGLISH: "Estimate dimensions",
+        Language.SPANISH: "Estimar dimensiones",
     },
     "history.new_variant": {
-        Language.ENGLISH: "New variant",
-        Language.SPANISH: "Nueva variante",
+        Language.ENGLISH: "New design in project",
+        Language.SPANISH: "Nuevo diseño en el proyecto",
     },
     "history.rename_variant": {
-        Language.ENGLISH: "Rename variant",
-        Language.SPANISH: "Renombrar variante",
+        Language.ENGLISH: "Rename design",
+        Language.SPANISH: "Renombrar diseño",
     },
     "history.delete_variant": {
-        Language.ENGLISH: "Delete variant",
-        Language.SPANISH: "Eliminar variante",
+        Language.ENGLISH: "Delete design",
+        Language.SPANISH: "Eliminar diseño",
     },
     "history.feed_line": {
         Language.ENGLISH: "Feed line",
@@ -2802,8 +2922,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Elemento alimentado",
     },
     "yagi.frequency_mismatch": {
-        Language.ENGLISH: "Element dimensions do not match the current frequency. Change the frequency from a known design or use Design from Frequency to rebuild the Yagi.",
-        Language.SPANISH: "Las dimensiones de los elementos no coinciden con la frecuencia actual. Cambiá la frecuencia desde un diseño conocido o usá Diseñar desde frecuencia para regenerar la Yagi.",
+        Language.ENGLISH: "Element dimensions do not match the current frequency. Change the frequency from a known design or use Estimate Dimensions to rebuild the Yagi.",
+        Language.SPANISH: "Las dimensiones de los elementos no coinciden con la frecuencia actual. Cambiá la frecuencia desde un diseño conocido o usá Estimar dimensiones para regenerar la Yagi.",
     },
     "yagi.geometry": {
         Language.ENGLISH: "{count} elements · boom {boom} {unit}",

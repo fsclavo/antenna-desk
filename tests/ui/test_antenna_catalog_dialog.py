@@ -52,6 +52,16 @@ def test_catalog_finds_the_t2fd_entry(qtbot: QtBot) -> None:
     assert visible == [CATALOG_TYPE_T2FD]
 
 
+def test_catalog_can_start_from_the_current_template(qtbot: QtBot) -> None:
+    dialog = AntennaCatalogDialog(
+        Translator(Language.ENGLISH),
+        initial_key=CATALOG_TYPE_YAGI,
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog.selected_key() == CATALOG_TYPE_YAGI
+
+
 def test_catalog_detail_and_loop_selection(qtbot: QtBot) -> None:
     dialog = AntennaCatalogDialog(Translator(Language.SPANISH))
     qtbot.addWidget(dialog)
