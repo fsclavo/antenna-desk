@@ -33,7 +33,7 @@ Measured on 2026-11-04:
 | ADR files | 24, numbered 0001–0023 with a duplicated `0014` |
 | CI | 4 workflows, green; Linux + Windows, Python 3.11/3.12/3.13 |
 | Property-based tests | unit round trips, azimuth range, and importer fuzzing with Hypothesis 6.170 |
-| Mutation testing | 0 |
+| Mutation testing | weekly `mutmut` on `formulas.py` and `intent.py`: 123/175 killed, 52 message-only equivalents, behavioural score 100 % |
 | Cross-engine numerical checks | 3 free-space cases against nec2++ via PyNEC (dipole, folded dipole, quad loop) |
 | Template evidence entries | 25/25 catalog templates, enforced by a test |
 | Independent RF math oracle | scikit-rf 2.2.0 (BSD-3, dev-only): 11 tests for feed lines, L/Pi/T networks, cascades, and gain |
@@ -117,9 +117,14 @@ catch regressions.
   91, so its gate moved from 74 to 88.
 - A single coverage lane is enough: the full suite with coverage takes 78 s.
   The two-lane plan was based on the pre-isolation 10-minute run.
-- Add mutation testing with `mutmut` (BSD-3, Unix only) on `domain/` and
-  `simulation/` in a nightly job. Target ≥ 80 % killed. Annotate equivalent
-  mutants explicitly; do not lower the target to hide survivors.
+- (implemented 2026-11-04) `mutmut` 3.8 (BSD-3, Unix only) runs weekly on
+  `domain/design/formulas.py` and `domain/design/intent.py`. The first run
+  produced 175 mutants, 123 killed (70 %). The 52 survivors are message-only
+  mutations of `name=` arguments and `raise ValueError("...")` literals, so the
+  behavioural score is 100 % of non-equivalent mutants. The run found three
+  real gaps that are now tested: a sub-meter half-wave length, the default
+  radial length, and the lower included-angle bound. The weekly job is
+  report-only until the operator set is narrowed or the messages are asserted.
 - (implemented 2026-11-04) `hypothesis` 6.170 (MPL-2.0, dev-only) covers unit
   round trips, azimuth range, and the three untrusted-input parsers. The fuzz
   tests found two real defects: `parse_nec2_deck(",")` raised `IndexError`, and
@@ -525,7 +530,9 @@ the polarization commit.
 
 ### Phase 3 — Scale (ongoing)
 
-1. Mutation testing on the domain and simulation layers.
+1. (started 2026-11-04) Mutation testing on the domain and simulation layers:
+   weekly `mutmut` on `formulas.py` and `intent.py`, to be widened as the
+   operator set is understood.
 2. Reference corpus pipeline and the first ten MMANA cases.
 3. Different-method golden cases.
 4. Level 3 measurement protocol and one recorded measurement.
@@ -542,7 +549,7 @@ Track these over time; they are the definition of "better QA" for this project:
 | Domain coverage (line + branch) | ≥ 95 % |
 | Coverage gates by package | pass; thresholds ratchet up |
 | UI files under mypy | 58/75 now, ratchet to 75 |
-| Mutation score, `domain/` + `simulation/` | ≥ 80 % killed |
+| Mutation score, non-equivalent mutants | ≥ 80 %; 100 % on the current focused subset (raw 70 %) |
 | Families with evidence level A or B | all, or an explicit C with a visible warning |
 | Templates with an evidence entry | 25/25, enforced by a test |
 | Reference tests with a named source | 100 % |

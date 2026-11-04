@@ -44,6 +44,7 @@ packaging = [
 ]
 dev = [
   "hypothesis>=6.170,<7",
+  "mutmut>=3.8,<4",
   "mypy>=1.10",
   "pytest>=8.0",
   "pytest-cov>=5.0",
@@ -106,6 +107,41 @@ markers = [
   "slow: takes more than a few seconds",
   "golden: compares against a committed golden file",
   "ui: Qt widget test",
+]
+
+[tool.mutmut]
+# Mutation testing is a nightly signal, not a per-PR gate. Start with the
+# smallest high-value package and widen the paths as the score is understood.
+source_paths = [
+  "src/antennadesk/domain/design/formulas.py",
+  "src/antennadesk/domain/design/intent.py",
+]
+pytest_add_cli_args_test_selection = ["tests/unit/domain/design"]
+# The evidence table test reads docs/, which the mutmut working copy omits.
+pytest_add_cli_args = ["--ignore=tests/unit/domain/design/test_evidence.py"]
+also_copy = [
+  "src/antennadesk/__init__.py",
+  "src/antennadesk/application",
+  "src/antennadesk/domain/__init__.py",
+  "src/antennadesk/domain/measurement.py",
+  "src/antennadesk/domain/measurement_comparison.py",
+  "src/antennadesk/domain/antennas",
+  "src/antennadesk/domain/common",
+  "src/antennadesk/domain/environment",
+  "src/antennadesk/domain/optimization",
+  "src/antennadesk/domain/projects",
+  "src/antennadesk/domain/simulation",
+  "src/antennadesk/domain/design/__init__.py",
+  "src/antennadesk/domain/design/band_plan.py",
+  "src/antennadesk/domain/design/estimate.py",
+  "src/antennadesk/domain/design/estimators.py",
+  "src/antennadesk/domain/design/evidence.py",
+  "src/antennadesk/domain/design/yagi_reference.py",
+  "src/antennadesk/importers",
+  "src/antennadesk/persistence",
+  "src/antennadesk/reporting",
+  "src/antennadesk/simulation",
+  "src/antennadesk/ui",
 ]
 
 [tool.coverage.run]

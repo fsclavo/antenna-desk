@@ -22,3 +22,6 @@ reference_data/
 
 # Hypothesis example database
 .hypothesis/
+
+# mutmut working copy
+mutants/

@@ -8,7 +8,10 @@ from antennadesk.domain.design.formulas import (
     FIVE_EIGHTH_WAVE_FACTOR,
     HALF_WAVE_FACTOR,
     QUARTER_WAVE_FACTOR,
+    RADIAL_LENGTH_FACTOR,
+    default_radial_length_m,
     five_eighth_wave_length_m,
+    frequency_for_half_wave_length,
     half_wave_length_m,
     loop_circumference_m,
     loop_resonance_factor,
@@ -71,14 +74,20 @@ def test_five_eighth_vertical_is_longer_than_a_quarter_wave() -> None:
 
 
 def test_frequency_for_half_wave_length_is_the_inverse() -> None:
-    from antennadesk.domain.design.formulas import (
-        frequency_for_half_wave_length,
-        half_wave_length_m,
-    )
-
     frequency_hz = 14_100_000.0
     length_m = half_wave_length_m(frequency_hz)
 
     assert frequency_for_half_wave_length(length_m) == pytest.approx(frequency_hz)
+    # A sub-meter wire is valid: kill the "length <= 1 m" boundary mistake.
+    assert frequency_for_half_wave_length(0.5) == pytest.approx(
+        299_792_458.0 * HALF_WAVE_FACTOR / 0.5
+    )
     with pytest.raises(ValueError):
         frequency_for_half_wave_length(0.0)
+
+
+def test_default_radial_length_is_a_quarter_wavelength() -> None:
+    frequency_hz = 7_100_000.0
+
+    assert pytest.approx(0.25) == RADIAL_LENGTH_FACTOR
+    assert default_radial_length_m(frequency_hz) == pytest.approx(wavelength_m(frequency_hz) * 0.25)

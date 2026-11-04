@@ -127,8 +127,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the two-port math is cross-checked against scikit-rf. Every catalog template
   now has a machine-readable evidence entry, rendered into the validation plan.
   The solver is also cross-checked against nec2++ for three canonical
-  geometries, and physical invariants cover power balance, pattern-integral
-  directivity, and rotation invariance.
+  geometries, physical invariants cover power balance, pattern-integral
+  directivity, and rotation invariance, and weekly mutation testing runs
+  `mutmut` on the design formulas and intent.
 
 ### Changed
 
