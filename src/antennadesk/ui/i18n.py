@@ -1661,6 +1661,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Save pattern image",
         Language.SPANISH: "Guardar imagen de patrón",
     },
+    "dialog.band_pattern_png_title": {
+        Language.ENGLISH: "Select a folder for the band pattern images",
+        Language.SPANISH: "Seleccioná una carpeta para las imágenes de patrón por banda",
+    },
     "dialog.csv_title": {
         Language.ENGLISH: "Export simulation CSV",
         Language.SPANISH: "Exportar CSV de simulación",

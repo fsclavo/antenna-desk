@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from pathlib import Path
 
 import pyqtgraph as pg
@@ -322,6 +323,30 @@ class ResultsView(QWidget):
         pixmap = widget.grab()
         if pixmap.isNull() or not pixmap.save(str(path), "PNG"):
             raise OSError(f"could not write pattern image: {path}")
+
+    def save_band_pattern_images(self, paths: Sequence[Path]) -> tuple[Path, ...]:
+        """Save one current pattern view per band, then restore the selection."""
+
+        analysis = self._band_analysis
+        if analysis is None:
+            raise ValueError("no band analysis is active")
+        if len(paths) != len(analysis.bands):
+            raise ValueError("one path is required per band")
+        current_result = self._result
+        current_pattern_index = self._pattern_frequency.currentIndex()
+        saved: list[Path] = []
+        try:
+            for band_result, path in zip(analysis.bands, paths, strict=True):
+                if not any(frequency.far_field for frequency in band_result.result.frequencies):
+                    continue
+                self.set_result(band_result.result)
+                self.save_pattern_image(path)
+                saved.append(path)
+        finally:
+            self.set_result(current_result)
+            if 0 <= current_pattern_index < self._pattern_frequency.count():
+                self._pattern_frequency.setCurrentIndex(current_pattern_index)
+        return tuple(saved)
 
     def set_design(self, design: DesignVariant | None) -> None:
         self._design = design

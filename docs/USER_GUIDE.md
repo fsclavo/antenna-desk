@@ -793,7 +793,8 @@ loops show side length, circumference, side count, and feed side.
 Use **File → Export → CSV...** for the frequency sweep table, **File → Export
 → Pattern CSV...** for the far-field grid (frequency, θ, φ, gains,
 polarization, and E-field components), **File → Export → Pattern PNG...** for
-the current cut/3D pattern image, **File → Export → Geometry PNG...**,
+the current cut/3D pattern image, or one image per band when a band analysis is
+active. **File → Export → Geometry PNG...**,
 **Geometry SVG...**, **Geometry PDF...**, or **Geometry DXF...** for the
 current geometry view, **File → Export → HTML Report...** for a self-contained
 HTML report, or **File → Export → PDF Report...** for a native PDF with design

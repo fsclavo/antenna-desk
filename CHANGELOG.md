@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   common 4:1 balun for new designs while old projects remain untransformed.
   The ratio is editable, applies to impedance/SWR/realized gain, and preserves
   pattern geometry. Custom designs also carry an optional transformer ratio.
+- Pattern PNG export on a band analysis now writes one image per band into a
+  selected folder while preserving the current pattern selection.
 - Multiband analysis for G5RV, OCFD, end-fed/random-wire/sloper, fan dipole,
   trap dipole, T2FD, and doublet designs. **Analyze Bands...** runs the existing solver
   once per selected band, stores band/batch metadata on simulation runs, and

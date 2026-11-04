@@ -168,7 +168,6 @@ Scope:
   PDF, and comparison summaries.
 - Deferred: a segmented frequency plan in one NEC deck, only if measurements
   show that per-band runs are too slow or too large.
-- Deferred: per-band pattern PNG export.
 
 Acceptance criteria:
 
@@ -186,14 +185,16 @@ Acceptance criteria:
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
 | P1 | Independent references for remaining experimental templates | A/B | partial |
+| P1 | Fan dipole V-angle calibration and angle optimization | B | planned |
 | P1 | Optional ideal transformer/4:1 balun for OCFD | B | done |
 | P1 | Multiband batch engine and per-family band defaults (M6) | B | done |
 | P1 | Band selection UI and band summary results (M6) | B | done |
 | P2 | Persist band-analysis batches and band-aware reports (M6) | B | done |
 | P2 | Cross-band comparison table | B | done |
-| P3 | Per-band pattern PNG export | B | pending |
 | P2 | GPG/Authenticode code signing for release artifacts | n/a | deferred |
 | P2 | Relative permeability export to NEC | B | pending |
+| P2 | Pattern metric selector for power/directivity/realized gain | B | pending |
+| P2 | ZS6BKW and Zepp multiband presets | B | pending |
 | P2 | Custom/imported geometry optimization and space constraints | n/a | pending |
 | P2 | Live VNA/hardware control | n/a | deferred |
 | P2 | Additional full-wave engines | n/a | deferred |
@@ -202,11 +203,15 @@ Acceptance criteria:
 
 ## Next
 
+Detailed pending-work plan:
+[`docs/PENDING_WORK_PLAN.md`](PENDING_WORK_PLAN.md).
+
 Modeling track:
 
-1. Relative-permeability export and a pattern-metric selector for realized
+1. Fan dipole V-angle calibration and optional angle optimization.
+2. Relative-permeability export and a pattern-metric selector for realized
    gain/directivity.
-2. ZS6BKW and Zepp presets using geometry transmission lines.
+3. ZS6BKW and Zepp presets using geometry transmission lines.
 
 Release track:
 

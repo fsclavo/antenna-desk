@@ -5248,9 +5248,37 @@ class MainWindow(QMainWindow):
         if data is None:
             return
         project, design, _result = data
-        suggested = (
-            f"{self._safe_file_name(project.name)}-{self._safe_file_name(design.name)}-pattern.png"
+        stem = f"{self._safe_file_name(project.name)}-{self._safe_file_name(design.name)}"
+        analysis = (
+            self._band_analysis_results.get(self._design_id)
+            if self._design_id is not None
+            else None
         )
+        if analysis is not None and analysis.bands:
+            directory = QFileDialog.getExistingDirectory(
+                self,
+                self._translator.t("dialog.band_pattern_png_title"),
+                str(Path.home()),
+            )
+            if not directory:
+                return
+            paths = tuple(
+                Path(directory) / f"{stem}-{self._safe_file_name(band.band.name)}-pattern.png"
+                for band in analysis.bands
+            )
+            try:
+                saved = self._results.save_band_pattern_images(paths)
+            except Exception as exc:
+                self._show_error(self._translator.t("error.export", message=str(exc)))
+                return
+            if not saved:
+                self._show_error(self._translator.t("error.no_result"))
+                return
+            self._last_status_key = "status.exported"
+            self._update_status_text()
+            return
+
+        suggested = f"{stem}-pattern.png"
         filename, _ = QFileDialog.getSaveFileName(
             self,
             self._translator.t("dialog.pattern_png_title"),

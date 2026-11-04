@@ -540,3 +540,45 @@ def test_results_view_adds_a_band_summary_tab(qtbot: QtBot) -> None:
 
     view.set_band_analysis(None)
     assert view._tabs.count() == 6
+
+
+def test_results_view_saves_one_pattern_image_per_band(
+    qtbot: QtBot,
+    tmp_path: Path,
+) -> None:
+    from dataclasses import replace
+    from uuid import uuid4
+
+    from antennadesk.domain.simulation.band_result import BandAnalysisResult, BandResult
+    from antennadesk.domain.simulation.bands import amateur_band_by_id
+    from antennadesk.domain.simulation.result import FarFieldPoint
+
+    points = (
+        FarFieldPoint(0.0, 0.0, 2.0, None, 2.0, 0.0, 0.0, "LINEAR", None, None, None, None),
+        FarFieldPoint(45.0, 0.0, 1.0, None, 1.0, 0.0, 0.0, None, None, None, None, None),
+    )
+    base = _make_result()
+    result = replace(
+        base,
+        frequencies=tuple(replace(frequency, far_field=points) for frequency in base.frequencies),
+    )
+    bands = tuple(
+        BandResult(amateur_band_by_id(band_id), result)
+        for band_id in ("40m", "20m")
+        if amateur_band_by_id(band_id) is not None
+    )
+    analysis = BandAnalysisResult(
+        design_id=uuid4(),
+        batch_id=uuid4(),
+        created_at=datetime(2026, 11, 3, tzinfo=UTC),
+        bands=bands,
+    )
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    view.set_band_analysis(analysis)
+    paths = tuple(tmp_path / f"{band.band.name}.png" for band in bands)
+
+    saved = view.save_band_pattern_images(paths)
+
+    assert saved == paths
+    assert all(path.read_bytes().startswith(b"\x89PNG") for path in paths)

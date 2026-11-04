@@ -19,14 +19,13 @@ Implemented:
 - per-band metrics and band switching;
 - optional `band_id`/`batch_id` run metadata, schema version 4 migration, and
   history compaction;
-- band-aware CSV, HTML, PDF, and comparison outputs;
+- band-aware CSV, HTML, PDF, comparison, and per-band pattern PNG outputs;
 - a doublet default inferred from a high-impedance/open-wire project feed line;
 - tests for domain defaults, metrics, batch behavior, persistence, UI, and
   reports.
 
 Deferred:
 
-- per-band pattern PNG export;
 - the segmented `FrequencyPlan`/multi-`FR` optimization, pending measurements.
 
 ## Problem
