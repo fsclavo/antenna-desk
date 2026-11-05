@@ -6,6 +6,7 @@ import pytest
 
 from antennadesk.domain.antennas.custom import ANTENNA_TYPE_CUSTOM
 from antennadesk.domain.antennas.dipole import DipoleOrientation
+from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
 from antennadesk.domain.antennas.loop import LoopParameters
@@ -457,7 +458,6 @@ def test_every_supported_estimator_produces_a_valid_antenna(
 
 
 def test_folded_and_endfed_estimates_are_dimensionally_complete() -> None:
-    from antennadesk.domain.antennas.endfed import EndFedParameters
     from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 
     folded = estimate_intent(_intent("folded_dipole")).parameters
@@ -472,6 +472,32 @@ def test_folded_and_endfed_estimates_are_dimensionally_complete() -> None:
     assert endfed.transformer_ratio == pytest.approx(49.0)
     assert endfed.counterpoise_length_m == pytest.approx(wavelength_m(7_100_000.0) * 0.05)
     assert endfed.counterpoise_height_m > 0.0
+
+
+def test_endfed_length_matches_the_arrl_efhw_kit() -> None:
+    # ARRL End-Fed Half-Wave Antenna Kit: 66 ft on 40 m, 33 ft on 20 m,
+    # 16 ft on 10 m, with a 49:1 transformer and a counterpoise connection.
+    # PA9X gives the 0.05λ counterpoise rule of thumb.
+    for frequency_hz, published_length_ft in (
+        (7_100_000.0, 66.0),
+        (14_100_000.0, 33.0),
+        (28_500_000.0, 16.0),
+    ):
+        estimate = estimate_intent(_intent("endfed", frequency_hz=frequency_hz))
+        parameters = estimate.parameters
+
+        assert isinstance(parameters, EndFedParameters)
+        assert parameters.length_m == pytest.approx(
+            published_length_ft * 0.3048,
+            rel=0.05,
+        )
+        assert parameters.transformer_ratio == pytest.approx(49.0)
+        assert parameters.counterpoise_length_m == pytest.approx(
+            wavelength_m(frequency_hz) * 0.05,
+            rel=0.01,
+        )
+        assert "arrl.efhw.kit" in estimate.source_ids
+        assert "pa9x.efhw.counterpoise" in estimate.source_ids
 
 
 def test_ocfd_and_ringo_estimates_have_valid_special_geometry() -> None:
@@ -558,8 +584,6 @@ def test_loaded_vertical_has_no_frequency_first_estimator() -> None:
 
 
 def test_random_wire_has_no_resonant_estimator() -> None:
-    from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
-
     parameters = EndFedParameters(
         frequency_hz=7_100_000.0,
         length_m=17.0,

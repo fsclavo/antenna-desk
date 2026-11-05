@@ -163,10 +163,18 @@ EVIDENCE: dict[str, EvidenceEntry] = {
     ),
     "endfed": EvidenceEntry(
         template="endfed",
-        level=EvidenceLevel.EXPERIMENTAL,
-        source="Half-wave end-fed starting rule",
-        tolerance="Not applicable (structural)",
-        limitation="Transformer is an ideal impedance ratio; the counterpoise is wire geometry.",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "ARRL End-Fed Half-Wave Antenna Kit: 66 ft on 40 m, 33 ft on 20 m, "
+            "16 ft on 10 m, 49:1 transformer, about 2500 Ω; PA9X: counterpoise "
+            "0.05λ of the longest wavelength"
+        ),
+        tolerance="5% on the half-wave wire length; 0.05λ counterpoise; 49:1 ratio",
+        limitation=(
+            "The 49:1 transformer is an ideal ratio; the counterpoise is a "
+            "straight wire; height, ground, and the common-mode choke are not "
+            "modeled."
+        ),
     ),
     "sloper": EvidenceEntry(
         template="sloper",

@@ -20,6 +20,7 @@ visible limitation.
 | `inverted_v` | C | B | ARRL, “Wire Antennas for the Beginner”: a 120° inverted-V total length is `465.6/f` feet | 1 % on total length at 120° |
 | `j_pole` | C | B | M0UKD, “Slim Jim and J Pole calculator”: 0.75 λ overall, with a 0.5 λ radiator and a 0.25 λ stub; ARRL QST, Feb 2003, conventional 2 m J-pole | 1 % on the half-wave and quarter-wave sections; 10 % on the overall height against the ARRL 2 m construction |
 | `slim_jim` | C | B | F. Judd, G2BCX, “Slim Jim - 2 metre aerial”, *Practical Wireless*, 1978: about 60 in overall at 145 MHz; M0UKD calculator section fractions | 1 % on the sections; 5 % on the overall length at 2 m |
+| `endfed` | C | B | ARRL End-Fed Half-Wave Antenna Kit: 66 ft on 40 m, 33 ft on 20 m, 16 ft on 10 m, 49:1 transformer, about 2500 Ω; PA9X: counterpoise 0.05 λ of the longest wavelength | 5 % on the half-wave wire length; 0.05 λ counterpoise; 49:1 ratio |
 
 The corresponding tests are:
 
@@ -29,11 +30,12 @@ The corresponding tests are:
 - `tests/unit/domain/design/test_estimators.py::test_j_pole_matches_the_published_three_quarter_wave_rule`
 - `tests/unit/domain/design/test_estimators.py::test_j_pole_overall_height_matches_the_arrl_two_metre_construction`
 - `tests/unit/domain/design/test_estimators.py::test_slim_jim_matches_the_published_two_metre_length`
+- `tests/unit/domain/design/test_estimators.py::test_endfed_length_matches_the_arrl_efhw_kit`
 
-The first three rows were added on 2026-11-04; the J Pole and Slim Jim rows
-were added on 2026-11-05. These promotions validate a **starting dimension**,
-not gain, feedpoint impedance, or pattern accuracy. The limitations remain
-explicit in the evidence registry.
+The first three rows were added on 2026-11-04; the J Pole, Slim Jim, and
+end-fed rows were added on 2026-11-05. These promotions validate a **starting
+dimension**, not gain, feedpoint impedance, or pattern accuracy. The
+limitations remain explicit in the evidence registry.
 
 ## Remaining level C templates
 
@@ -42,7 +44,6 @@ explicit in the evidence registry.
 | `loaded_vertical` | The loading coil is an ideal series model; coil Q and ground are not independently validated. | A published mobile-whip design with measured impedance and coil details. |
 | `fan_dipole` | Mutual coupling and the V angle are installation-specific; the elements are not independent dipoles. | A published coupled-fan measurement, not a scalar angle correction. |
 | `trap_dipole` | Traps are ideal parallel LC circuits; no independent impedance or resonance reference. | A published trap design with measured trap and antenna impedance. |
-| `endfed` | The transformer is an ideal ratio and the counterpoise is simplified geometry. | A published end-fed half-wave measurement with transformer and counterpoise specified. |
 | `sloper` | The slope and feed arrangement are installation-specific. | A documented reference installation with geometry and measured pattern. |
 | `random_wire` | Performance depends on the tuner and the installation; the length is deliberately non-resonant. | No universal numeric reference; keep experimental. |
 | `zepp` | The current preset omits the second matching conductor and the choke. | A refined model plus a published Zepp or end-fed Zepp measurement. |
@@ -63,8 +64,8 @@ explicit in the evidence registry.
 ## Current summary
 
 - **A, reference-backed:** 5 templates.
-- **B, published/heuristic:** 10 templates.
-- **C, experimental:** 10 templates, all with a documented limitation.
+- **B, published/heuristic:** 11 templates.
+- **C, experimental:** 9 templates, all with a documented limitation.
 
 The machine-readable registry and the generated table in
 [`VALIDATION_PLAN.md`](VALIDATION_PLAN.md) remain the source of truth.

@@ -144,8 +144,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   and inverted-V generators moved from evidence level C to B after checking
   their published length rules, with explicit tolerances and regression tests.
   The J Pole and Slim Jim estimators also moved from C to B after checking
-  M0UKD's 0.75λ section rule and the G2BCX 2 m Slim Jim length. The remaining
-  experimental templates and their next evidence needs are documented.
+  M0UKD's 0.75λ section rule and the G2BCX 2 m Slim Jim length. The end-fed
+  estimator moved to B after matching the ARRL EFHW kit's 66/33/16 ft lengths
+  and PA9X's 0.05λ counterpoise rule. The remaining experimental templates and
+  their next evidence needs are documented.
 - CI now pins every action by commit SHA, runs `uv lock --check` and
   `pip-audit --skip-editable`, and Dependabot tracks GitHub Actions and Python
   dependencies. Dependabot keeps PySide6 in its own group so Qt upgrades are

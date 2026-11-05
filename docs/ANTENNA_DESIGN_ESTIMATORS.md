@@ -62,7 +62,7 @@ warnings, and a dimension tolerance.
 | Vertical 5/8 | `0.625λ × 0.95`; radial `0.25λ` | empirical | ARRL 585/f length rule; high feed impedance; matching required |
 | Inverted-V | half-wave dipole total, split in two legs | empirical | Included angle affects feed impedance; the 120° case matches the ARRL 465.6/f rule within 1% |
 | Fan dipole | one half-wave element per band | empirical | Elements interact; the V angle shifts resonance, especially on the highest band |
-| End-fed | half-wave wire; `0.05λ` counterpoise; 49:1 transformer | heuristic | Transformer and counterpoise are application starting points |
+| End-fed | published EFHW wire: 66 ft on 40 m, 33 ft on 20 m, 16 ft on 10 m; `0.05λ` counterpoise; 49:1 transformer | heuristic | ARRL kit and PA9X rule; transformer and counterpoise remain starting points |
 | OCFD | half-wave total, feed at 1/3, 4:1 ideal transformer | heuristic | Existing synthesis can refine length/feed; actual balun ratio depends on height and feed offset |
 | J Pole / Slim Jim | J Pole: 0.75λ overall, 0.5λ radiator, 0.25λ stub; Slim Jim: 0.5λ radiator above a 0.25λ folded stub and gap | empirical | M0UKD published rule and G2BCX 2 m length; feed offset and stub still need tuning |
 | Ringo | 0.725-wave vertical with a small horizontal matching ring, calibrated for the simplified AntennaDesk geometry | heuristic | Not a universal commercial Ringo formula |
@@ -110,12 +110,16 @@ geometry above the ground plane:
 
 ## End-fed starting point
 
-The end-fed estimate includes a 49:1 ideal transformer and a `0.05λ`
-counterpoise as application starting points. The transformer is applied as a
-feed-point impedance transformation for the reported impedance and SWR; it is
-not a physical unun model. The counterpoise is geometry, not an ideal ground.
-Both values vary with the installation, feed height, ground, and routing, so
-verify them with simulation or measurement.
+The ARRL End-Fed Half-Wave Antenna Kit publishes 66 ft for 40 m, 33 ft for
+20 m, and 16 ft for 10 m, with a 49:1 transformer and a counterpoise
+connection. PA9X documents the `0.05λ` counterpoise rule of thumb. The
+estimator matches those wire lengths within 5%.
+
+The transformer is applied as an ideal feed-point impedance transformation for
+the reported impedance and SWR; it is not a physical unun model. The
+counterpoise is geometry, not an ideal ground. Height, ground, feed-line
+routing, and the common-mode choke are not modeled, so verify the final
+installation with simulation or measurement.
 
 ## Loop polygon correction
 
