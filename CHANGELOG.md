@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- CI has a report-only benchmark job for the NEC output parser, pattern metrics,
+  and compressed project save/load. It uploads `benchmark.json` and does not
+  enforce a threshold yet.
 - The test suite has a fast unit-test lane: `pytest -m "fast and not slow"`
   runs 713 tests in about 7 s. `fast`, `ui`, and `solver` markers are applied
   automatically by path or fixture; the two G5RV pattern-budget tests are

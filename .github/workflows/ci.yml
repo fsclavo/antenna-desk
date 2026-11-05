@@ -5,6 +5,7 @@ on:
     paths:
       - "src/**"
       - "tests/**"
+      - "benchmarks/**"
       - "examples/**"
       - "spikes/phase0/**"
       - "pyproject.toml"
@@ -19,6 +20,7 @@ on:
     paths:
       - "src/**"
       - "tests/**"
+      - "benchmarks/**"
       - "examples/**"
       - "spikes/phase0/**"
       - "pyproject.toml"
@@ -95,6 +97,37 @@ jobs:
           timeout 180s uv run pytest tests/ui/test_main_window_*.py -q
           timeout 180s uv run pytest tests/ui --ignore=tests/ui/test_results_view.py --ignore-glob='*test_main_window_*.py' -q
           timeout 300s uv run pytest tests/acceptance tests/integration tests/unit -q
+
+  benchmark:
+    name: Benchmarks (report only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+          prune-cache: true
+
+      - name: Sync locked environment
+        run: uv sync --locked --python 3.12
+
+      - name: Run benchmarks
+        run: uv run pytest benchmarks --benchmark-only --benchmark-json=benchmark.json -q
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: benchmark
+          path: benchmark.json
 
   tests:
     name: Tests (${{ matrix.os }}, Python ${{ matrix.python-version }})

@@ -34,6 +34,7 @@ Measured on 2026-11-04:
 | CI | 4 workflows, green; Linux + Windows, Python 3.11/3.12/3.13 |
 | Property-based tests | unit round trips, azimuth range, importer fuzzing, all 13 estimator families, and project/migration round trips with Hypothesis 6.170 |
 | Mutation testing | weekly `mutmut` on `formulas.py` and `intent.py`: 123/175 killed, 52 message-only equivalents, behavioural score 100 % |
+| Benchmarks in CI | 3 report-only cases: NEC output parser, pattern metrics, compressed project save/load |
 | Cross-engine numerical checks | 3 free-space cases against nec2++ via PyNEC (dipole, folded dipole, quad loop) |
 | Template evidence entries | 25/25 catalog templates, enforced by a test |
 | Reference corpus | 12 curated MMANA models, SHA-256 manifest, structural and NEC2C smoke tests |
@@ -498,8 +499,9 @@ tracked.
 
 **Change.**
 
-- Add `pytest-benchmark` cases for the output parser, pattern metrics, and
-  project save/load.
+- (done 2026-11-05) `pytest-benchmark` covers the NEC output parser, pattern
+  metrics (`max_power_gain_db` and `front_to_back_db`), and compressed project
+  save/load. The CI benchmark job is report-only and uploads `benchmark.json`.
 - Track peak RSS and wall time for 3, 5, and 8 bands; fail on a documented
   regression threshold.
 - Enforce a suite runtime budget in CI and report the ten slowest tests.

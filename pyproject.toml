@@ -48,6 +48,8 @@ dev = [
   "mutmut>=3.8,<4",
   "mypy>=1.10",
   "pytest>=8.0",
+  # BSD-2-Clause, dev-only: report-only performance benchmarks in CI.
+  "pytest-benchmark>=5.0,<6",
   "pytest-cov>=5.0",
   "pytest-qt>=4.4",
   "ruff>=0.5",
@@ -82,6 +84,8 @@ known-first-party = ["antennadesk"]
 # parametrized cases intentionally assert only the exception type; tests that
 # care about a message pass match explicitly.
 "tests/**" = ["S101", "PT011", "ANN"]
+# Benchmarks are test-like and embed fixed-width solver output.
+"benchmarks/**" = ["E501", "S101", "ANN", "PT011"]
 # CLI entry points print their result by design.
 "src/antennadesk/ui/app.py" = ["T201"]
 "scripts/**" = ["T201", "ANN"]
@@ -115,6 +119,7 @@ markers = [
   "cross_engine: compares the solver against an independent NEC implementation",
   "slow: takes more than a few seconds",
   "fast: quick unit-test lane that excludes slow, UI, and solver suites",
+  "benchmark: report-only performance benchmark",
   "golden: compares against a committed golden file",
   "ui: Qt widget test",
 ]
