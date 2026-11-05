@@ -21,6 +21,7 @@ from ...domain.antennas.polarization import Polarization
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from .form_i18n import FormLabels, retranslate_combo
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -37,6 +38,7 @@ class MoxonForm(QWidget):
     ) -> None:
         super().__init__(parent)
         self._translator = translator
+        self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
         self._updating = False
 
@@ -127,19 +129,19 @@ class MoxonForm(QWidget):
         self._clearance_warning.setVisible(False)
 
         form = QFormLayout()
-        form.addRow(translator.t("field.frequency"), self._frequency)
-        form.addRow(translator.t("moxon.width"), self._width)
-        form.addRow(translator.t("moxon.depth"), self._depth)
-        form.addRow(translator.t("moxon.reflector_tip"), self._reflector_tip)
-        form.addRow(translator.t("moxon.driven_tip"), self._driven_tip)
-        form.addRow(translator.t("field.height"), self._height)
-        form.addRow(translator.t("field.azimuth"), self._azimuth)
-        form.addRow(translator.t("field.polarization"), self._polarization)
-        form.addRow(translator.t("moxon.wire_radius"), self._radius)
-        form.addRow(translator.t("field.material"), self._material)
-        form.addRow(translator.t("field.ground"), self._ground)
-        form.addRow(translator.t("field.permittivity"), self._permittivity)
-        form.addRow(translator.t("field.conductivity"), self._conductivity)
+        form.addRow(self._labels.label("field.frequency"), self._frequency)
+        form.addRow(self._labels.label("moxon.width"), self._width)
+        form.addRow(self._labels.label("moxon.depth"), self._depth)
+        form.addRow(self._labels.label("moxon.reflector_tip"), self._reflector_tip)
+        form.addRow(self._labels.label("moxon.driven_tip"), self._driven_tip)
+        form.addRow(self._labels.label("field.height"), self._height)
+        form.addRow(self._labels.label("field.azimuth"), self._azimuth)
+        form.addRow(self._labels.label("field.polarization"), self._polarization)
+        form.addRow(self._labels.label("moxon.wire_radius"), self._radius)
+        form.addRow(self._labels.label("field.material"), self._material)
+        form.addRow(self._labels.label("field.ground"), self._ground)
+        form.addRow(self._labels.label("field.permittivity"), self._permittivity)
+        form.addRow(self._labels.label("field.conductivity"), self._conductivity)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -167,6 +169,30 @@ class MoxonForm(QWidget):
         if parameters is not None:
             self.set_parameters(parameters)
         self._update_ground_controls()
+        self._update_geometry()
+
+    def retranslate(self) -> None:
+        self._labels.retranslate()
+        self._polarization.setItemText(
+            0,
+            self._translator.t("orientation.horizontal"),
+        )
+        self._polarization.setItemText(
+            1,
+            self._translator.t("orientation.vertical"),
+        )
+        self._polarization.setToolTip(self._translator.t("moxon.polarization_hint"))
+        self._reference.setText(self._translator.t("moxon.reference_preset"))
+        retranslate_combo(
+            self._material,
+            self._translator,
+            ("material.copper", "material.aluminum"),
+        )
+        retranslate_combo(
+            self._ground,
+            self._translator,
+            ("ground.free_space", "ground.perfect", "ground.finite"),
+        )
         self._update_geometry()
 
     def _emit_changed(self, *_args: object) -> None:

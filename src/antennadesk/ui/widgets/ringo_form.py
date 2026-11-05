@@ -20,6 +20,7 @@ from ...domain.antennas.ringo import MAX_RING_SIDES, MIN_RING_SIDES, RingoParame
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from .form_i18n import FormLabels, retranslate_combo
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -36,6 +37,7 @@ class RingoForm(QWidget):
     ) -> None:
         super().__init__(parent)
         self._translator = translator
+        self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
         self._updating = False
 
@@ -101,16 +103,16 @@ class RingoForm(QWidget):
         self._geometry.setWordWrap(True)
 
         form = QFormLayout()
-        form.addRow(translator.t("field.frequency"), self._frequency)
-        form.addRow(translator.t("ringo.radiator_height"), self._radiator_height)
-        form.addRow(translator.t("ringo.ring_diameter"), self._ring_diameter)
-        form.addRow(translator.t("ringo.ring_height"), self._ring_height)
-        form.addRow(translator.t("ringo.ring_sides"), self._ring_sides)
-        form.addRow(translator.t("ringo.wire_radius"), self._radius)
-        form.addRow(translator.t("field.material"), self._material)
-        form.addRow(translator.t("field.ground"), self._ground)
-        form.addRow(translator.t("field.permittivity"), self._permittivity)
-        form.addRow(translator.t("field.conductivity"), self._conductivity)
+        form.addRow(self._labels.label("field.frequency"), self._frequency)
+        form.addRow(self._labels.label("ringo.radiator_height"), self._radiator_height)
+        form.addRow(self._labels.label("ringo.ring_diameter"), self._ring_diameter)
+        form.addRow(self._labels.label("ringo.ring_height"), self._ring_height)
+        form.addRow(self._labels.label("ringo.ring_sides"), self._ring_sides)
+        form.addRow(self._labels.label("ringo.wire_radius"), self._radius)
+        form.addRow(self._labels.label("field.material"), self._material)
+        form.addRow(self._labels.label("field.ground"), self._ground)
+        form.addRow(self._labels.label("field.permittivity"), self._permittivity)
+        form.addRow(self._labels.label("field.conductivity"), self._conductivity)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -133,6 +135,20 @@ class RingoForm(QWidget):
         if parameters is not None:
             self.set_parameters(parameters)
         self._update_ground_controls()
+        self._update_geometry()
+
+    def retranslate(self) -> None:
+        self._labels.retranslate()
+        retranslate_combo(
+            self._material,
+            self._translator,
+            ("material.copper", "material.aluminum"),
+        )
+        retranslate_combo(
+            self._ground,
+            self._translator,
+            ("ground.free_space", "ground.perfect", "ground.finite"),
+        )
         self._update_geometry()
 
     def _emit_changed(self, *_args: object) -> None:

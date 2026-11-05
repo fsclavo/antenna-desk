@@ -22,6 +22,7 @@ from ...domain.design.formulas import half_wave_length_m
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from .form_i18n import FormLabels, retranslate_combo
 
 MATERIALS = (COPPER, ALUMINUM)
 DEFAULT_LOW_BAND_HZ = 7_100_000.0
@@ -41,6 +42,7 @@ class TrapDipoleForm(QWidget):
     ) -> None:
         super().__init__(parent)
         self._translator = translator
+        self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
         self._updating = False
 
@@ -141,22 +143,22 @@ class TrapDipoleForm(QWidget):
         self._geometry.setWordWrap(True)
 
         form = QFormLayout()
-        form.addRow(translator.t("trap_dipole.low_band"), self._frequency)
-        form.addRow(translator.t("trap_dipole.high_band"), self._high_band)
-        form.addRow(translator.t("trap_dipole.inner_length"), self._inner_length)
-        form.addRow(translator.t("trap_dipole.outer_length"), self._outer_length)
+        form.addRow(self._labels.label("trap_dipole.low_band"), self._frequency)
+        form.addRow(self._labels.label("trap_dipole.high_band"), self._high_band)
+        form.addRow(self._labels.label("trap_dipole.inner_length"), self._inner_length)
+        form.addRow(self._labels.label("trap_dipole.outer_length"), self._outer_length)
         form.addRow(self._start)
-        form.addRow(translator.t("trap_dipole.trap_frequency"), self._trap_frequency)
-        form.addRow(translator.t("trap_dipole.trap_inductance"), self._trap_inductance)
-        form.addRow(translator.t("trap_dipole.trap_capacitance"), self._trap_capacitance)
+        form.addRow(self._labels.label("trap_dipole.trap_frequency"), self._trap_frequency)
+        form.addRow(self._labels.label("trap_dipole.trap_inductance"), self._trap_inductance)
+        form.addRow(self._labels.label("trap_dipole.trap_capacitance"), self._trap_capacitance)
         form.addRow(self._height_label, self._height)
-        form.addRow(translator.t("field.orientation"), self._orientation)
-        form.addRow(translator.t("field.azimuth"), self._azimuth)
-        form.addRow(translator.t("trap_dipole.wire_radius"), self._radius)
-        form.addRow(translator.t("field.material"), self._material)
-        form.addRow(translator.t("field.ground"), self._ground)
-        form.addRow(translator.t("field.permittivity"), self._permittivity)
-        form.addRow(translator.t("field.conductivity"), self._conductivity)
+        form.addRow(self._labels.label("field.orientation"), self._orientation)
+        form.addRow(self._labels.label("field.azimuth"), self._azimuth)
+        form.addRow(self._labels.label("trap_dipole.wire_radius"), self._radius)
+        form.addRow(self._labels.label("field.material"), self._material)
+        form.addRow(self._labels.label("field.ground"), self._ground)
+        form.addRow(self._labels.label("field.permittivity"), self._permittivity)
+        form.addRow(self._labels.label("field.conductivity"), self._conductivity)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -205,6 +207,28 @@ class TrapDipoleForm(QWidget):
     def _ground_changed(self, *_args: object) -> None:
         self._update_ground_controls()
         self._emit_changed()
+
+    def retranslate(self) -> None:
+        self._labels.retranslate()
+        self._start.setText(self._translator.t("trap_dipole.starting_dimensions"))
+        retranslate_combo(
+            self._orientation,
+            self._translator,
+            ("orientation.horizontal", "orientation.vertical"),
+        )
+        retranslate_combo(
+            self._material,
+            self._translator,
+            ("material.copper", "material.aluminum"),
+        )
+        retranslate_combo(
+            self._ground,
+            self._translator,
+            ("ground.free_space", "ground.perfect", "ground.finite"),
+        )
+        self._update_orientation_controls()
+        self._update_band_controls()
+        self._update_geometry()
 
     def _update_ground_controls(self) -> None:
         finite = self._ground.currentData() == GroundKind.FINITE.value

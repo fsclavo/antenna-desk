@@ -271,6 +271,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Switching the language now retranslates every antenna-family editor, not only
+  the dipole form. The Preferences dialog applies the change consistently to
+  all open forms.
 - Three translation keys used by the UI were missing and rendered as raw keys:
   `dialog.all_files`, `error.import_nec`, and `measurement.impedance_error`.
   The antenna wizard placeholder now uses `wizard.project_placeholder`.

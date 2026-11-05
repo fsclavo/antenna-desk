@@ -19,6 +19,7 @@ from ...domain.antennas.ocfd import OCFD_REFERENCE_TRANSFORMER_RATIO, OCFDParame
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from .form_i18n import FormLabels, retranslate_combo
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -35,6 +36,7 @@ class OCFDForm(QWidget):
     ) -> None:
         super().__init__(parent)
         self._translator = translator
+        self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
         self._updating = False
 
@@ -110,17 +112,17 @@ class OCFDForm(QWidget):
         self._transformer_hint.setWordWrap(True)
 
         form = QFormLayout()
-        form.addRow(translator.t("field.fundamental_frequency"), self._frequency)
-        form.addRow(translator.t("field.length"), self._length)
-        form.addRow(translator.t("ocfd.feed_offset"), self._feed_ratio)
-        form.addRow(translator.t("field.height"), self._height)
-        form.addRow(translator.t("field.azimuth"), self._azimuth)
-        form.addRow(translator.t("ocfd.wire_radius"), self._radius)
-        form.addRow(translator.t("field.material"), self._material)
-        form.addRow(translator.t("field.ground"), self._ground)
-        form.addRow(translator.t("field.permittivity"), self._permittivity)
-        form.addRow(translator.t("field.conductivity"), self._conductivity)
-        form.addRow(translator.t("ocfd.transformer_ratio"), self._transformer)
+        form.addRow(self._labels.label("field.fundamental_frequency"), self._frequency)
+        form.addRow(self._labels.label("field.length"), self._length)
+        form.addRow(self._labels.label("ocfd.feed_offset"), self._feed_ratio)
+        form.addRow(self._labels.label("field.height"), self._height)
+        form.addRow(self._labels.label("field.azimuth"), self._azimuth)
+        form.addRow(self._labels.label("ocfd.wire_radius"), self._radius)
+        form.addRow(self._labels.label("field.material"), self._material)
+        form.addRow(self._labels.label("field.ground"), self._ground)
+        form.addRow(self._labels.label("field.permittivity"), self._permittivity)
+        form.addRow(self._labels.label("field.conductivity"), self._conductivity)
+        form.addRow(self._labels.label("ocfd.transformer_ratio"), self._transformer)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -145,6 +147,21 @@ class OCFDForm(QWidget):
         if parameters is not None:
             self.set_parameters(parameters)
         self._update_ground_controls()
+        self._update_geometry()
+
+    def retranslate(self) -> None:
+        self._labels.retranslate()
+        self._transformer_hint.setText(self._translator.t("ocfd.transformer_hint"))
+        retranslate_combo(
+            self._material,
+            self._translator,
+            ("material.copper", "material.aluminum"),
+        )
+        retranslate_combo(
+            self._ground,
+            self._translator,
+            ("ground.free_space", "ground.perfect", "ground.finite"),
+        )
         self._update_geometry()
 
     def _emit_changed(self, *_args: object) -> None:

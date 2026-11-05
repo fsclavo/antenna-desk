@@ -20,6 +20,7 @@ from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from .form_i18n import FormLabels, retranslate_combo
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -36,6 +37,7 @@ class JPoleForm(QWidget):
     ) -> None:
         super().__init__(parent)
         self._translator = translator
+        self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
         self._updating = False
 
@@ -114,19 +116,19 @@ class JPoleForm(QWidget):
         self._geometry.setWordWrap(True)
 
         form = QFormLayout()
-        form.addRow(translator.t("field.frequency"), self._frequency)
-        form.addRow(translator.t("j_pole.radiator_height"), self._radiator_height)
-        form.addRow(translator.t("j_pole.stub_length"), self._stub_length)
-        form.addRow(translator.t("j_pole.spacing"), self._spacing)
-        form.addRow(translator.t("j_pole.feed_offset"), self._feed_offset)
-        form.addRow(translator.t("j_pole.gap"), self._gap)
-        form.addRow(translator.t("j_pole.base_height"), self._base_height)
+        form.addRow(self._labels.label("field.frequency"), self._frequency)
+        form.addRow(self._labels.label("j_pole.radiator_height"), self._radiator_height)
+        form.addRow(self._labels.label("j_pole.stub_length"), self._stub_length)
+        form.addRow(self._labels.label("j_pole.spacing"), self._spacing)
+        form.addRow(self._labels.label("j_pole.feed_offset"), self._feed_offset)
+        form.addRow(self._labels.label("j_pole.gap"), self._gap)
+        form.addRow(self._labels.label("j_pole.base_height"), self._base_height)
         form.addRow(self._folded)
-        form.addRow(translator.t("j_pole.wire_radius"), self._radius)
-        form.addRow(translator.t("field.material"), self._material)
-        form.addRow(translator.t("field.ground"), self._ground)
-        form.addRow(translator.t("field.permittivity"), self._permittivity)
-        form.addRow(translator.t("field.conductivity"), self._conductivity)
+        form.addRow(self._labels.label("j_pole.wire_radius"), self._radius)
+        form.addRow(self._labels.label("field.material"), self._material)
+        form.addRow(self._labels.label("field.ground"), self._ground)
+        form.addRow(self._labels.label("field.permittivity"), self._permittivity)
+        form.addRow(self._labels.label("field.conductivity"), self._conductivity)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -152,6 +154,21 @@ class JPoleForm(QWidget):
         if parameters is not None:
             self.set_parameters(parameters)
         self._update_ground_controls()
+        self._update_geometry()
+
+    def retranslate(self) -> None:
+        self._labels.retranslate()
+        self._folded.setText(self._translator.t("j_pole.folded"))
+        retranslate_combo(
+            self._material,
+            self._translator,
+            ("material.copper", "material.aluminum"),
+        )
+        retranslate_combo(
+            self._ground,
+            self._translator,
+            ("ground.free_space", "ground.perfect", "ground.finite"),
+        )
         self._update_geometry()
 
     def _emit_changed(self, *_args: object) -> None:

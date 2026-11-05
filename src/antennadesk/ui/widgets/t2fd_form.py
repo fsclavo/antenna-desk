@@ -27,6 +27,7 @@ from ...domain.antennas.t2fd import (
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from .form_i18n import FormLabels, retranslate_combo
 
 MATERIALS = (COPPER, ALUMINUM)
 DEFAULT_LOWEST_FREQUENCY_HZ = 3_500_000.0
@@ -45,6 +46,7 @@ class T2FDForm(QWidget):
     ) -> None:
         super().__init__(parent)
         self._translator = translator
+        self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
         self._updating = False
 
@@ -143,21 +145,21 @@ class T2FDForm(QWidget):
         self._geometry.setWordWrap(True)
 
         form = QFormLayout()
-        form.addRow(translator.t("t2fd.lowest_frequency"), self._lowest_frequency)
-        form.addRow(translator.t("t2fd.highest_frequency"), self._highest_frequency)
-        form.addRow(translator.t("t2fd.length"), self._length)
-        form.addRow(translator.t("t2fd.spacing"), self._spacing)
+        form.addRow(self._labels.label("t2fd.lowest_frequency"), self._lowest_frequency)
+        form.addRow(self._labels.label("t2fd.highest_frequency"), self._highest_frequency)
+        form.addRow(self._labels.label("t2fd.length"), self._length)
+        form.addRow(self._labels.label("t2fd.spacing"), self._spacing)
         form.addRow(self._start)
-        form.addRow(translator.t("t2fd.termination"), self._termination)
-        form.addRow(translator.t("t2fd.transformer"), self._transformer)
+        form.addRow(self._labels.label("t2fd.termination"), self._termination)
+        form.addRow(self._labels.label("t2fd.transformer"), self._transformer)
         form.addRow(self._height_label, self._height)
-        form.addRow(translator.t("field.orientation"), self._orientation)
-        form.addRow(translator.t("field.azimuth"), self._azimuth)
-        form.addRow(translator.t("t2fd.wire_radius"), self._radius)
-        form.addRow(translator.t("field.material"), self._material)
-        form.addRow(translator.t("field.ground"), self._ground)
-        form.addRow(translator.t("field.permittivity"), self._permittivity)
-        form.addRow(translator.t("field.conductivity"), self._conductivity)
+        form.addRow(self._labels.label("field.orientation"), self._orientation)
+        form.addRow(self._labels.label("field.azimuth"), self._azimuth)
+        form.addRow(self._labels.label("t2fd.wire_radius"), self._radius)
+        form.addRow(self._labels.label("field.material"), self._material)
+        form.addRow(self._labels.label("field.ground"), self._ground)
+        form.addRow(self._labels.label("field.permittivity"), self._permittivity)
+        form.addRow(self._labels.label("field.conductivity"), self._conductivity)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -206,6 +208,28 @@ class T2FDForm(QWidget):
     def _ground_changed(self, *_args: object) -> None:
         self._update_ground_controls()
         self._emit_changed()
+
+    def retranslate(self) -> None:
+        self._labels.retranslate()
+        self._start.setText(self._translator.t("t2fd.starting_dimensions"))
+        retranslate_combo(
+            self._orientation,
+            self._translator,
+            ("orientation.horizontal", "orientation.vertical"),
+        )
+        retranslate_combo(
+            self._material,
+            self._translator,
+            ("material.copper", "material.aluminum"),
+        )
+        retranslate_combo(
+            self._ground,
+            self._translator,
+            ("ground.free_space", "ground.perfect", "ground.finite"),
+        )
+        self._update_orientation_controls()
+        self._update_band_controls()
+        self._update_geometry()
 
     def _update_ground_controls(self) -> None:
         finite = self._ground.currentData() == GroundKind.FINITE.value

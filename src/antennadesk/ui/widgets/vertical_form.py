@@ -22,6 +22,7 @@ from ...domain.antennas.vertical import MAX_RADIALS, VerticalParameters
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from .form_i18n import FormLabels, retranslate_combo
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -40,6 +41,7 @@ class VerticalForm(QWidget):
     ) -> None:
         super().__init__(parent)
         self._translator = translator
+        self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
         self._updating = False
 
@@ -130,9 +132,15 @@ class VerticalForm(QWidget):
 
         coil_form = QFormLayout(self._coil_group)
         coil_form.addRow(self._coil_enabled)
-        coil_form.addRow(translator.t("vertical.loading_coil_offset"), self._coil_offset)
-        coil_form.addRow(translator.t("vertical.loading_coil_inductance"), self._coil_inductance)
-        coil_form.addRow(translator.t("vertical.loading_coil_resistance"), self._coil_resistance)
+        coil_form.addRow(self._labels.label("vertical.loading_coil_offset"), self._coil_offset)
+        coil_form.addRow(
+            self._labels.label("vertical.loading_coil_inductance"),
+            self._coil_inductance,
+        )
+        coil_form.addRow(
+            self._labels.label("vertical.loading_coil_resistance"),
+            self._coil_resistance,
+        )
         coil_form.addRow(self._coil_summary)
 
         if parameters is None and mobile:
@@ -143,17 +151,17 @@ class VerticalForm(QWidget):
             self._coil_offset.setValue(length_from_m(1.0, unit_system))
 
         form = QFormLayout()
-        form.addRow(translator.t("field.frequency"), self._frequency)
-        form.addRow(translator.t("vertical.height"), self._height)
-        form.addRow(translator.t("vertical.base_height"), self._base_height)
-        form.addRow(translator.t("vertical.radial_count"), self._radial_count)
-        form.addRow(translator.t("vertical.radial_length"), self._radial_length)
-        form.addRow(translator.t("vertical.radial_angle"), self._radial_angle)
-        form.addRow(translator.t("vertical.wire_radius"), self._radius)
-        form.addRow(translator.t("field.material"), self._material)
-        form.addRow(translator.t("field.ground"), self._ground)
-        form.addRow(translator.t("field.permittivity"), self._permittivity)
-        form.addRow(translator.t("field.conductivity"), self._conductivity)
+        form.addRow(self._labels.label("field.frequency"), self._frequency)
+        form.addRow(self._labels.label("vertical.height"), self._height)
+        form.addRow(self._labels.label("vertical.base_height"), self._base_height)
+        form.addRow(self._labels.label("vertical.radial_count"), self._radial_count)
+        form.addRow(self._labels.label("vertical.radial_length"), self._radial_length)
+        form.addRow(self._labels.label("vertical.radial_angle"), self._radial_angle)
+        form.addRow(self._labels.label("vertical.wire_radius"), self._radius)
+        form.addRow(self._labels.label("field.material"), self._material)
+        form.addRow(self._labels.label("field.ground"), self._ground)
+        form.addRow(self._labels.label("field.permittivity"), self._permittivity)
+        form.addRow(self._labels.label("field.conductivity"), self._conductivity)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -206,6 +214,22 @@ class VerticalForm(QWidget):
     def _coil_toggled(self, _checked: bool) -> None:
         self._update_coil_controls()
         self._emit_changed()
+
+    def retranslate(self) -> None:
+        self._labels.retranslate()
+        self._coil_group.setTitle(self._translator.t("vertical.loading_coil"))
+        self._coil_enabled.setText(self._translator.t("vertical.loading_coil_enabled"))
+        retranslate_combo(
+            self._material,
+            self._translator,
+            ("material.copper", "material.aluminum"),
+        )
+        retranslate_combo(
+            self._ground,
+            self._translator,
+            ("ground.free_space", "ground.perfect", "ground.finite"),
+        )
+        self._update_geometry()
 
     def _update_coil_controls(self) -> None:
         enabled = self._coil_enabled.isChecked()
