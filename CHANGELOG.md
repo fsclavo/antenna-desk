@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Mutation testing now includes `dipole.py`: 240/304 mutants killed (79 %), and
+  the 64 survivors are message-only. The run found and fixed a missing
+  conductor-material assertion in `to_antenna()`.
 - CI has a report-only benchmark job for the NEC output parser, pattern metrics,
   and compressed project save/load. It uploads `benchmark.json` and does not
   enforce a threshold yet.

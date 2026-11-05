@@ -130,8 +130,12 @@ markers = [
 source_paths = [
   "src/antennadesk/domain/design/formulas.py",
   "src/antennadesk/domain/design/intent.py",
+  "src/antennadesk/domain/antennas/dipole.py",
 ]
-pytest_add_cli_args_test_selection = ["tests/unit/domain/design"]
+pytest_add_cli_args_test_selection = [
+  "tests/unit/domain/design",
+  "tests/unit/domain/test_dipole.py",
+]
 # The evidence table test reads docs/, which the mutmut working copy omits.
 pytest_add_cli_args = ["--ignore=tests/unit/domain/design/test_evidence.py"]
 also_copy = [

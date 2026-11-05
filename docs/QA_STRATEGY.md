@@ -33,7 +33,7 @@ Measured on 2026-11-04:
 | ADR files | 24, numbered 0001–0023 with a duplicated `0014` |
 | CI | 4 workflows, green; Linux + Windows, Python 3.11/3.12/3.13 |
 | Property-based tests | unit round trips, azimuth range, importer fuzzing, all 13 estimator families, and project/migration round trips with Hypothesis 6.170 |
-| Mutation testing | weekly `mutmut` on `formulas.py` and `intent.py`: 123/175 killed, 52 message-only equivalents, behavioural score 100 % |
+| Mutation testing | weekly `mutmut` on `formulas.py`, `intent.py`, and `dipole.py`: 240/304 killed, 64 message-only equivalents, behavioural score 100 % |
 | Benchmarks in CI | 3 report-only cases: NEC output parser, pattern metrics, compressed project save/load |
 | Cross-engine numerical checks | 3 free-space cases against nec2++ via PyNEC (dipole, folded dipole, quad loop) |
 | Template evidence entries | 25/25 catalog templates, enforced by a test |
@@ -121,14 +121,15 @@ catch regressions.
   91, so its gate moved from 74 to 88.
 - A single coverage lane is enough: the full suite with coverage takes 78 s.
   The two-lane plan was based on the pre-isolation 10-minute run.
-- (implemented 2026-11-04) `mutmut` 3.8 (BSD-3, Unix only) runs weekly on
-  `domain/design/formulas.py` and `domain/design/intent.py`. The first run
-  produced 175 mutants, 123 killed (70 %). The 52 survivors are message-only
-  mutations of `name=` arguments and `raise ValueError("...")` literals, so the
-  behavioural score is 100 % of non-equivalent mutants. The run found three
-  real gaps that are now tested: a sub-meter half-wave length, the default
-  radial length, and the lower included-angle bound. The weekly job is
-  report-only until the operator set is narrowed or the messages are asserted.
+- (implemented 2026-11-05) `mutmut` 3.8 (BSD-3, Unix only) runs weekly on
+  `domain/design/formulas.py`, `domain/design/intent.py`, and
+  `domain/antennas/dipole.py`. The widened run produced 304 mutants, 240 killed
+  (79 %). The 64 survivors are message-only mutations of `name=` arguments and
+  `raise ValueError("...")` literals, so the behavioural score is 100 % of
+  non-equivalent mutants. The run found one real gap now covered by a test:
+  `to_antenna()` could silently replace the conductor material with `None`.
+  The weekly job is report-only until the operator set is narrowed or the
+  messages are asserted.
 - (implemented 2026-11-04) `hypothesis` 6.170 (MPL-2.0, dev-only) covers unit
   round trips, azimuth range, and the three untrusted-input parsers. The fuzz
   tests found two real defects: `parse_nec2_deck(",")` raised `IndexError`, and
@@ -576,9 +577,9 @@ the polarization commit.
 
 ### Phase 3 — Scale (ongoing)
 
-1. (started 2026-11-04) Mutation testing on the domain and simulation layers:
-   weekly `mutmut` on `formulas.py` and `intent.py`, to be widened as the
-   operator set is understood.
+1. (started 2026-11-04; widened 2026-11-05) Mutation testing on the domain
+   and simulation layers: weekly `mutmut` on `formulas.py`, `intent.py`, and
+   `dipole.py`, to be widened as the operator set is understood.
 2. (started 2026-11-04) Reference corpus pipeline: 12 curated MMANA models with a checksum manifest, used for structural regression and a NEC2C smoke run. No published numerical results yet.
 3. (partly done 2026-11-04) Different-method oracle: four analytical closed-form cases replace FDTD/FEM, which is not installable here. A true FDTD/FEM golden case remains offline.
 4. Level 3 measurement protocol and one recorded measurement.

@@ -6,7 +6,8 @@ import math
 
 import pytest
 
-from antennadesk.domain.antennas.dipole import DipoleParameters
+from antennadesk.domain.antennas.dipole import DipoleOrientation, DipoleParameters
+from antennadesk.domain.antennas.materials import ALUMINUM
 from antennadesk.domain.environment.ground import GroundModel
 
 
@@ -26,6 +27,26 @@ def test_dipole_generates_centered_wire(dipole_parameters: DipoleParameters) -> 
     assert wire.end.z_m == pytest.approx(8.0)
     assert antenna.feed.wire_id == "radiator"
     assert antenna.feed.offset_m == pytest.approx(10.0)
+
+
+@pytest.mark.parametrize(
+    "orientation",
+    [DipoleOrientation.HORIZONTAL, DipoleOrientation.VERTICAL],
+)
+def test_dipole_to_antenna_preserves_the_conductor_material(
+    orientation: DipoleOrientation,
+) -> None:
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        orientation=orientation,
+        material=ALUMINUM,
+    )
+
+    antenna = parameters.to_antenna()
+
+    assert all(wire.material is ALUMINUM for wire in antenna.wires)
 
 
 def test_azimuth_rotates_the_wire() -> None:
