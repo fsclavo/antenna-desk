@@ -16,9 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   and compressed project save/load. It uploads `benchmark.json` and does not
   enforce a threshold yet.
 - The test suite has a fast unit-test lane: `pytest -m "fast and not slow"`
-  runs 713 tests in about 7 s. `fast`, `ui`, and `solver` markers are applied
+  runs 719 tests in about 8 s. `fast`, `ui`, and `solver` markers are applied
   automatically by path or fixture; the two G5RV pattern-budget tests are
   marked `slow`.
+- A changelog structure test checks the Unreleased entry, release dates,
+  unique versions, descending order, and Keep a Changelog subsection names.
 - A static UI translation test checks every literal key passed to the
   translator and every literal text setter, so missing keys and untranslated
   labels fail the build.

@@ -15,14 +15,14 @@ Measured on 2026-11-04:
 
 | Fact | Value |
 |---|---|
-| Collected tests | 1,286 |
-| Passing locally with `NEC2C` set | 1,286 passed, 1 skipped (PyNEC) in about 76 s |
-| Fast unit-test lane | 713 passed, 1 skipped in about 7.4 s (`pytest -m "fast and not slow"`) |
+| Collected tests | 1,292 |
+| Passing locally with `NEC2C` set | 1,292 passed, 1 skipped (PyNEC) in about 77 s |
+| Fast unit-test lane | 719 passed, 1 skipped in about 8 s (`pytest -m "fast and not slow"`) |
 | Slowest test | 7.4 s (`test_g5rv_default_budgeted_pattern_completes`) |
 | UI test isolation | fixed 2026-11-04: deferred deletes were not dispatched, so widgets from one test stayed alive and a later test spent ~66 s in a nested event loop. The teardown in `tests/conftest.py` now closes windows and dispatches `DeferredDelete`; the full suite went from 142 s to 56 s |
-| Test files | 153 (88 unit, 11 integration, 1 acceptance, 53 UI) |
+| Test files | 154 (89 unit, 11 integration, 1 acceptance, 53 UI) |
 | Custom pytest markers | 7 (`science`, `solver`, `cross_engine`, `slow`, `fast`, `golden`, `ui`), with `fast`/`ui`/`solver` applied by path or fixture |
-| `parametrize` uses | 32 |
+| `parametrize` uses | 33 |
 | `skipif` uses | 10 |
 | Largest test file | `tests/ui/test_main_window_presets.py`, 828 lines. The 1,442-line nec2c adapter file is split into four modules |
 | Source lines | 46,323 total; 30,144 in `ui/` |
@@ -77,7 +77,7 @@ that was hard to navigate and slow to run in isolation; it is now split.
   `golden`. `--strict-markers` is already enabled, so unregistered markers fail.
 - (done 2026-11-05) `tests/conftest.py` adds `fast` to unit tests, `ui` to UI
   tests, and `solver` to tests that request the solver fixture.
-  `pytest -m "fast and not slow"` runs 713 tests in about 7 s.
+  `pytest -m "fast and not slow"` runs 719 tests in about 8 s.
 - Add `tests/factories.py` with builders for `AntennaModel`, `SimulationSpec`,
   `Wire`, and `SimulationResult` to remove repeated literal construction.
 - (done 2026-11-04) Split `tests/ui/test_main_window.py` into feature modules:
@@ -95,8 +95,8 @@ that was hard to navigate and slow to run in isolation; it is now split.
   `QEvent.Type.DeferredDelete` after every UI test. Without it, a test's runtime
   depends on what ran before, as the 66 s regression showed.
 
-**Acceptance.** `uv run pytest -m "fast and not slow"` runs 713 tests in about
-7 s, below the 20 s target. `uv run pytest -m solver` selects the solver tests,
+**Acceptance.** `uv run pytest -m "fast and not slow"` runs 719 tests in about
+8 s, below the 20 s target. `uv run pytest -m solver` selects the solver tests,
 and `uv run pytest -m "not slow"` skips the two G5RV pattern-budget tests. The
 main-window suite is split by feature and no main-window module exceeds 1,000
 lines. The nec2c adapter suite is also split into mechanics, references,
@@ -484,7 +484,11 @@ now guards the tables, but documentation can still drift from code.
   documented doublet alias), that New Antenna covers every entry, and that the
   catalog evidence label matches the evidence registry level. The evidence
   registry itself is covered in 3.5.7.
-- Add a `CHANGELOG.md` entry check for user-visible changes.
+- (done 2026-11-05) `tests/unit/test_changelog.py` checks that the Unreleased
+  section is non-empty, release headings have ISO dates and unique versions,
+  releases are in descending date order, and subsections use Keep a Changelog
+  names. It cannot prove that every user-visible change is described, but it
+  catches an empty or malformed changelog before release.
 - Turn the `AGENTS.md` definition of done into a checklist template used by the
   milestone review.
 
