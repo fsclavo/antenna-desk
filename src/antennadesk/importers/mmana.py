@@ -89,7 +89,8 @@ def parse_mmana_file(text: str) -> MmanaImportResult:
     if source_line is None:
         raise ValueError("MMANA file has no wire source")
     source_match = _SOURCE_PATTERN.match(source_line.split(",")[0].strip())
-    assert source_match is not None
+    if source_match is None:
+        raise ValueError("MMANA source line is invalid")
     source_wire_index = int(source_match.group(1))
     suffix = source_match.group(2).lower()
     if not 1 <= source_wire_index <= len(wires):

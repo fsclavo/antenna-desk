@@ -133,8 +133,10 @@ def _best_evaluation(
         return None
 
     def distance(evaluation: LengthEvaluation) -> float:
-        assert evaluation.impedance_ohm is not None
-        return abs(evaluation.impedance_ohm.imag - target_reactance_ohm)
+        impedance = evaluation.impedance_ohm
+        if impedance is None:
+            raise ValueError("evaluation has no impedance")
+        return abs(impedance.imag - target_reactance_ohm)
 
     return min(valid, key=distance)
 
@@ -240,10 +242,15 @@ def optimize_length(
     while len(evaluations) < spec.max_evaluations:
         if cancelled():
             return finish(LengthOptimizationStatus.CANCELLED, "optimization cancelled")
-        assert low.impedance_ohm is not None
-        assert high.impedance_ohm is not None
-        low_value = low.impedance_ohm.imag - target
-        high_value = high.impedance_ohm.imag - target
+        low_impedance = low.impedance_ohm
+        high_impedance = high.impedance_ohm
+        if low_impedance is None or high_impedance is None:
+            return finish(
+                LengthOptimizationStatus.ERROR,
+                "bracket evaluation has no impedance",
+            )
+        low_value = low_impedance.imag - target
+        high_value = high_impedance.imag - target
         denominator = high_value - low_value
         if denominator == 0.0:
             length = (low.length_m + high.length_m) / 2.0
@@ -290,8 +297,10 @@ def _best_target_impedance_evaluation(
         return None
 
     def distance(evaluation: LengthEvaluation) -> tuple[float, float]:
-        assert evaluation.impedance_ohm is not None
-        return (abs(evaluation.impedance_ohm - target), evaluation.length_m)
+        impedance = evaluation.impedance_ohm
+        if impedance is None:
+            raise ValueError("evaluation has no impedance")
+        return (abs(impedance - target), evaluation.length_m)
 
     return min(valid, key=distance)
 

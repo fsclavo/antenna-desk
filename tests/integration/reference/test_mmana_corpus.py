@@ -80,6 +80,7 @@ def test_reference_model_simulates(relative_path: str) -> None:
 
     assert result.status is SimulationStatus.COMPLETED
     impedance = result.frequencies[0].impedance_ohm
-    assert math.isfinite(impedance.real) and impedance.real > 0.0
+    assert math.isfinite(impedance.real)
+    assert impedance.real > 0.0
     assert result.max_total_gain_db is not None
     assert math.isfinite(result.max_total_gain_db)

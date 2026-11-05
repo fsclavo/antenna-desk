@@ -839,7 +839,8 @@ class GeometryView(QWidget):
             )
 
     def _paint_three_d(self, painter: QPainter, rect: QRectF) -> None:
-        assert self._model is not None
+        if self._model is None:
+            return
         xs = [point.x_m for wire in self._model.wires for point in (wire.start, wire.end)]
         ys = [point.y_m for wire in self._model.wires for point in (wire.start, wire.end)]
         zs = [point.z_m for wire in self._model.wires for point in (wire.start, wire.end)]
@@ -990,7 +991,8 @@ class GeometryView(QWidget):
         )
 
     def _load_marks(self) -> tuple[tuple[Point3D, str, float], ...]:
-        assert self._model is not None
+        if self._model is None:
+            return ()
         marks: list[tuple[Point3D, str, float]] = []
         for index, load in enumerate(self._model.loads, start=1):
             wire = self._model.wire_by_id(load.wire_id)
@@ -1022,7 +1024,8 @@ class GeometryView(QWidget):
         )
 
     def _multi_wire_plan_summary(self, width_m: float, depth_m: float, unit: str) -> str:
-        assert self._model is not None
+        if self._model is None:
+            return ""
         if self._antenna_type == ANTENNA_TYPE_FOLDED_DIPOLE:
             long_wires = sorted(self._model.wires, key=lambda wire: wire.length_m, reverse=True)[:2]
             element_m = long_wires[0].length_m
@@ -1059,7 +1062,8 @@ class GeometryView(QWidget):
         )
 
     def _folded_spacing_m(self) -> float:
-        assert self._model is not None
+        if self._model is None:
+            return 0.0
         long_wires = sorted(self._model.wires, key=lambda wire: wire.length_m, reverse=True)[:2]
         if len(long_wires) < 2:
             return 0.0

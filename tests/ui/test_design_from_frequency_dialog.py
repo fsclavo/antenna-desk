@@ -283,7 +283,7 @@ def test_changing_an_input_invalidates_the_estimate(qtbot: QtBot) -> None:
 
 @pytest.mark.parametrize(
     "family",
-    (
+    [
         "wire_dipole",
         "folded_dipole",
         "loop",
@@ -297,7 +297,7 @@ def test_changing_an_input_invalidates_the_estimate(qtbot: QtBot) -> None:
         "yagi",
         "moxon",
         "t2fd",
-    ),
+    ],
 )
 def test_dialog_estimates_every_supported_family(
     qtbot: QtBot,

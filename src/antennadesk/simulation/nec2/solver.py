@@ -66,7 +66,7 @@ class Nec2cSolver:
             raise SolverNotAvailable(f"nec2c executable not found: {self._executable}")
 
         try:
-            completed = subprocess.run(
+            completed = subprocess.run(  # noqa: S603 - configured executable, no shell
                 [str(self._executable), "-v"],
                 capture_output=True,
                 text=True,
@@ -247,7 +247,7 @@ class Nec2cSolver:
 
         try:
             input_path.write_text(input_text, encoding="utf-8", newline="\n")
-            process: subprocess.Popen[str] = subprocess.Popen(
+            process: subprocess.Popen[str] = subprocess.Popen(  # noqa: S603 - configured executable
                 [
                     str(self._executable),
                     "-i",

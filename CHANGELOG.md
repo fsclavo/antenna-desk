@@ -157,6 +157,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Updated PySide6 from 6.9.3 to 6.11.3 after the full CI matrix and a repeated
   shutdown stress of the main window and pyqtgraph views. The 6.12 exclusion
   remains; ADR-0025 records the evaluation and the upgrade procedure.
+- Ruff now enables bandit (`S`), pytest-style (`PT`), `T20`, and annotation
+  (`ANN`) checks. Runtime assertions in the source were replaced with explicit
+  guards or early returns; tests exempt `S101`/`PT011`/`ANN`, and CLI entry
+  points exempt `T201`.
 - Renumbered the duplicate ADR 0014: undo/redo is now ADR 0024. Added tests for
   unique, contiguous ADR numbering and matching headings.
 - All 75 UI modules, including the antenna wizard, are now type-checked: the

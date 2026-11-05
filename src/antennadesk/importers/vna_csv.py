@@ -105,11 +105,16 @@ def parse_vna_csv(text: str) -> ParsedVnaCsv:
     mode: str
     if r_index is not None and x_index is not None:
         mode = "rx"
+        first_index, second_index = r_index, x_index
     elif real_index is not None and imag_index is not None:
         mode = "complex"
+        first_index, second_index = real_index, imag_index
     elif magnitude_index is not None and phase_index is not None:
         mode = "polar"
+        first_index, second_index = magnitude_index, phase_index
     else:
+        raise VnaCsvError("no supported impedance or S11 columns found")
+    if first_index is None or second_index is None:
         raise VnaCsvError("no supported impedance or S11 columns found")
 
     raw_frequencies: list[float] = []
@@ -118,18 +123,8 @@ def parse_vna_csv(text: str) -> ParsedVnaCsv:
     for line_number, row in enumerate(rows[1:], start=2):
         try:
             frequency = float(row[frequency_index])
-            if mode == "rx":
-                assert r_index is not None and x_index is not None
-                first = float(row[r_index])
-                second = float(row[x_index])
-            elif mode == "complex":
-                assert real_index is not None and imag_index is not None
-                first = float(row[real_index])
-                second = float(row[imag_index])
-            else:
-                assert magnitude_index is not None and phase_index is not None
-                first = float(row[magnitude_index])
-                second = float(row[phase_index])
+            first = float(row[first_index])
+            second = float(row[second_index])
         except (IndexError, ValueError):
             warnings.append(f"skipped row {line_number}: invalid numeric value")
             continue

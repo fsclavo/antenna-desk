@@ -327,8 +327,8 @@ def _scene(case: FamilyCase, mode: GeometryViewMode) -> GeometryScene:
     )
 
 
-@pytest.mark.parametrize("case", CASES, ids=lambda case: case.name)
-@pytest.mark.parametrize("mode", (GeometryViewMode.ELEVATION, GeometryViewMode.PLAN))
+@pytest.mark.parametrize("case", list(CASES), ids=lambda case: case.name)
+@pytest.mark.parametrize("mode", [GeometryViewMode.ELEVATION, GeometryViewMode.PLAN])
 def test_family_scene_preserves_wires_and_positive_dimensions(
     case: FamilyCase,
     mode: GeometryViewMode,
@@ -358,12 +358,12 @@ def test_family_scene_preserves_wires_and_positive_dimensions(
         assert expected in scene.summary
 
 
-@pytest.mark.parametrize("case", CASES, ids=lambda case: case.name)
+@pytest.mark.parametrize("case", list(CASES), ids=lambda case: case.name)
 def test_family_default_view_matches_geometry_policy(case: FamilyCase) -> None:
     assert recommended_view(case.parameters.to_antenna()) is case.default_view
 
 
-@pytest.mark.parametrize("case", CASES, ids=lambda case: case.name)
+@pytest.mark.parametrize("case", list(CASES), ids=lambda case: case.name)
 def test_family_layout_is_inside_safe_area_without_label_overlap(
     qtbot: QtBot,
     case: FamilyCase,

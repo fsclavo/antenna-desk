@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import math
 from datetime import datetime
-from typing import Any, Literal, Self
+from typing import Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -662,7 +662,7 @@ class DesignPayload(StrictModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _coerce_parameters(cls, data: Any) -> Any:
+    def _coerce_parameters(cls, data: object) -> object:
         if not isinstance(data, dict):
             return data
         antenna_type = data.get("antenna_type")

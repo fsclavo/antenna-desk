@@ -2638,10 +2638,12 @@ class MainWindow(QMainWindow):
                     ),
                     field="far_field",
                 )
-            assert budget.pattern_step_deg is not None
+            pattern_step_deg = budget.pattern_step_deg
+            if pattern_step_deg is None:
+                raise ValueError("far-field pattern step is missing")
             return replace(
                 spec,
-                far_field=far_field_request(budget.pattern_step_deg, ground),
+                far_field=far_field_request(pattern_step_deg, ground),
                 pattern_frequencies_hz=pattern_frequencies,
             )
         self._pending_pattern_diagnostic = Diagnostic(
@@ -5564,7 +5566,8 @@ class MainWindow(QMainWindow):
         self._update_status_text()
 
     def _unique_variant_name(self, base: str) -> str:
-        assert self._project is not None
+        if self._project is None:
+            raise ValueError(self._translator.t("error.no_project"))
         names = {design.name for design in self._project.designs}
         if base not in names:
             return base

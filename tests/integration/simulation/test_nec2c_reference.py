@@ -367,17 +367,18 @@ def test_moxon_20m_wire_reference(solver: Nec2cSolver) -> None:
         for point in frequency.far_field
         if abs(point.theta_deg - 90.0) < 0.1 and abs(point.phi_deg - 180.0) < 0.1
     )
-    assert forward is not None and rear is not None
+    assert forward is not None
+    assert rear is not None
     assert forward - rear > 30.0
 
 
 @pytest.mark.parametrize(
     ("frequency_hz", "reference_swr"),
-    (
+    [
         (7_150_000.0, 1.15),
         (14_175_000.0, 1.47),
         (28_800_000.0, 1.56),
-    ),
+    ],
 )
 def test_zs6bkw_reference_swr(
     solver: Nec2cSolver, frequency_hz: float, reference_swr: float

@@ -72,14 +72,22 @@ target-version = "py311"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "S", "PT", "T20", "ANN"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["antennadesk"]
 
 [tool.ruff.lint.per-file-ignores]
+# Tests use assert as their primary mechanism. PT011 is ignored because many
+# parametrized cases intentionally assert only the exception type; tests that
+# care about a message pass match explicitly.
+"tests/**" = ["S101", "PT011", "ANN"]
+# CLI entry points print their result by design.
+"src/antennadesk/ui/app.py" = ["T201"]
+"scripts/**" = ["T201", "ANN"]
+"spikes/**" = ["T201", "S603", "ANN"]
 # The parser fixture reproduces fixed-width nec2c output.
-"tests/unit/simulation/test_parser.py" = ["E501"]
+"tests/unit/simulation/test_parser.py" = ["E501", "S101", "PT011", "ANN"]
 # Translation tables and HTML templates naturally contain long strings.
 "src/antennadesk/ui/i18n.py" = ["E501"]
 "src/antennadesk/reporting/html_report.py" = ["E501"]

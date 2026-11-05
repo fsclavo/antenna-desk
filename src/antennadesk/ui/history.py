@@ -7,12 +7,15 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any
+from typing import Any, ParamSpec, TypeVar, cast
 from uuid import UUID
 
 from PySide6.QtGui import QUndoCommand
 
 from ..domain.projects.project import Project
+
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 @dataclass(frozen=True, slots=True)
@@ -59,21 +62,22 @@ class SnapshotCommand(QUndoCommand):
         self._restore(self._after)
 
 
-def history_action(label_key: str):
+def history_action(label_key: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Record a project change around a MainWindow method.
 
     Nested decorated actions share the outer transaction.
     """
 
-    def decorator(method: Callable[..., Any]):
+    def decorator(method: Callable[P, R]) -> Callable[P, R]:
         @wraps(method)
-        def wrapper(self, *args: object, **kwargs: object):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            self = cast(Any, args[0])
             if getattr(self, "_history_restoring", False) or getattr(self, "_history_depth", 0):
-                return method(self, *args, **kwargs)
+                return method(*args, **kwargs)
             before = self._history_snapshot()
             self._history_depth = 1
             try:
-                result = method(self, *args, **kwargs)
+                result = method(*args, **kwargs)
             finally:
                 self._history_depth = 0
             after = self._history_snapshot()

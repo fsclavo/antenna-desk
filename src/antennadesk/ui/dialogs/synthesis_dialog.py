@@ -108,15 +108,13 @@ class SynthesisDialog(QDialog):
         self._min_b = self._length_spin(length_min, length_max)
         self._max_b = self._length_spin(length_min, length_max)
 
-        if self._is_ocfd:
-            assert isinstance(base_parameters, OCFDParameters)
+        if isinstance(base_parameters, OCFDParameters):
             center = base_parameters.total_length_m * scale
             self._set_length_pair(self._min_a, self._max_a, center, 0.85, 1.15)
             self._set_ratio_pair(self._min_b, self._max_b, base_parameters.feed_ratio)
             self._label_a_key = "field.length"
             self._label_b_key = "ocfd.feed_offset"
-        else:
-            assert isinstance(base_parameters, JPoleParameters)
+        elif isinstance(base_parameters, JPoleParameters):
             center = base_parameters.radiator_height_m * scale
             minimum = 0.85 * center
             if not self._folded:
@@ -158,6 +156,8 @@ class SynthesisDialog(QDialog):
                 self._min_b.setValue(max(self._min_b.value(), length_from_m(0.01, unit_system)))
                 self._label_a_key = "j_pole.radiator_height"
                 self._label_b_key = "j_pole.feed_offset"
+        else:
+            raise TypeError("synthesis supports OCFD, J Pole and Slim Jim designs")
 
         self._max_evaluations = QSpinBox(self)
         self._max_evaluations.setRange(9, 225)
@@ -344,7 +344,8 @@ class SynthesisDialog(QDialog):
                 total_length_m=values["length_m"],
                 feed_ratio=values["feed_ratio"],
             )
-        assert isinstance(self._base_parameters, JPoleParameters)
+        if not isinstance(self._base_parameters, JPoleParameters):
+            raise TypeError("synthesis supports OCFD, J Pole and Slim Jim designs")
         if self._folded:
             return replace(
                 self._base_parameters,

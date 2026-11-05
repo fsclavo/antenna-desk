@@ -443,7 +443,7 @@ def test_t2fd_default_design_completes_with_a_broadband_match(
 
 @pytest.mark.parametrize(
     ("key", "frequency_hz"),
-    (
+    [
         ("wire_dipole", 1_800_000.0),
         ("wire_dipole", 28_500_000.0),
         ("folded_dipole", 7_100_000.0),
@@ -463,7 +463,7 @@ def test_t2fd_default_design_completes_with_a_broadband_match(
         ("trap_dipole", 7_100_000.0),
         ("t2fd", 3_500_000.0),
         ("t2fd", 14_100_000.0),
-    ),
+    ],
 )
 def test_estimated_families_solve_above_ground(
     solver: Nec2cSolver,

@@ -152,8 +152,10 @@ between the domain and the widgets.
   `src/antennadesk/ui` with `check_untyped_defs = true`. All 75 files are
   checked in CI; the `exclude` ratchet reached zero. New UI files are checked
   by default.
-- Extend ruff with `S` (bandit), `PT` (pytest style), `T20` (no `print` in
-  `src/`), and `RUF100`. Evaluate `ANN` for `src/` separately.
+- (done 2026-11-05) Ruff enables `S` (bandit), `PT` (pytest style), `T20`
+  (no `print` in `src/`), and `ANN` (annotations). Tests ignore `S101`,
+  `PT011`, and `ANN`; CLI entry points ignore `T201`; runtime assertions in the
+  source were replaced with explicit guards or early returns.
 - Add an SPDX header check for new source files, matching the existing headers.
 - (done 2026-11-05) Keep the PySide6 pin below 6.12 and record the reason in
   ADR-0025, not only in a comment.

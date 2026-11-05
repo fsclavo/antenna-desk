@@ -86,13 +86,11 @@ def write_nec2_input(model: AntennaModel, spec: SimulationSpec) -> Nec2Deck:
     if ground.kind is GroundKind.PERFECT:
         lines.append("GN 1")
     elif ground.kind is GroundKind.FINITE:
-        assert ground.relative_permittivity is not None
-        assert ground.conductivity_s_per_m is not None
-        lines.append(
-            "GN 0 0 0 0 "
-            f"{_format(ground.relative_permittivity)} "
-            f"{_format(ground.conductivity_s_per_m)}"
-        )
+        permittivity = ground.relative_permittivity
+        conductivity = ground.conductivity_s_per_m
+        if permittivity is None or conductivity is None:
+            raise ValueError("finite ground requires permittivity and conductivity")
+        lines.append(f"GN 0 0 0 0 {_format(permittivity)} {_format(conductivity)}")
 
     if spec.extended_thin_wire_kernel:
         lines.append("EK")
