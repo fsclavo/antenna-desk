@@ -260,6 +260,53 @@ def test_j_pole_uses_total_three_quarter_wave_height() -> None:
     assert parameters.feed_offset_m == pytest.approx(parameters.stub_length_m * 0.4)
 
 
+def test_j_pole_matches_the_published_three_quarter_wave_rule() -> None:
+    # M0UKD, "Slim Jim and J Pole calculator": a J pole is 0.75λ tall,
+    # with a 0.5λ radiator and a 0.25λ matching stub. The project applies
+    # the ARRL 0.95 end-effect factor used by the other wire estimators.
+    frequency_hz = 146_000_000.0
+    estimate = estimate_intent(_intent("j_pole", frequency_hz=frequency_hz, folded=False))
+    parameters = estimate.parameters
+
+    assert isinstance(parameters, JPoleParameters)
+    wavelength = wavelength_m(frequency_hz)
+    assert parameters.radiator_height_m == pytest.approx(0.75 * wavelength * 0.95, rel=0.01)
+    assert parameters.stub_length_m == pytest.approx(0.25 * wavelength * 0.95, rel=0.01)
+    assert "m0ukd.j_pole_slim_jim.calculator" in estimate.source_ids
+
+
+def test_j_pole_overall_height_matches_the_arrl_two_metre_construction() -> None:
+    # ARRL QST, Feb 2003, "The DBJ-1": the conventional 2 m ribbon J-pole
+    # uses a 37.25 in radiator and a 16.5 in matching stub. The 10% tolerance
+    # covers the twin-lead velocity factor, which the bare-wire estimator
+    # does not model.
+    frequency_hz = 146_000_000.0
+    estimate = estimate_intent(_intent("j_pole", frequency_hz=frequency_hz, folded=False))
+    parameters = estimate.parameters
+
+    assert isinstance(parameters, JPoleParameters)
+    published_height_m = (37.25 + 16.5) * 0.0254
+    assert parameters.radiator_height_m == pytest.approx(published_height_m, rel=0.10)
+
+
+def test_slim_jim_matches_the_published_two_metre_length() -> None:
+    # F. Judd, G2BCX, "Slim Jim - 2 metre aerial", Practical Wireless, 1978:
+    # about 60 inches overall at 145 MHz. Scale the published length to the
+    # test frequency and allow 5% for the velocity factor and feed details.
+    frequency_hz = 146_000_000.0
+    estimate = estimate_intent(_intent("j_pole", frequency_hz=frequency_hz, folded=True))
+    parameters = estimate.parameters
+
+    assert isinstance(parameters, JPoleParameters)
+    wavelength = wavelength_m(frequency_hz)
+    assert parameters.radiator_height_m == pytest.approx(0.5 * wavelength * 0.95, rel=0.01)
+    assert parameters.stub_length_m == pytest.approx(0.25 * wavelength * 0.95, rel=0.01)
+    published_length_m = 60.0 * 0.0254 * 145_000_000.0 / frequency_hz
+    overall_length_m = parameters.stub_length_m + parameters.gap_m + parameters.radiator_height_m
+    assert overall_length_m == pytest.approx(published_length_m, rel=0.05)
+    assert "m0ukd.j_pole_slim_jim.calculator" in estimate.source_ids
+
+
 def test_yagi_supports_two_through_thirty_two_elements() -> None:
     for count in range(2, 33):
         estimate = estimate_intent(_intent("yagi", frequency_hz=144_000_000.0, yagi_elements=count))

@@ -33,6 +33,7 @@ RINGO_REFERENCE_FREQUENCY_HZ = 50_100_000.0
 SOURCE_ARRL_DIPOLE = "arrl.antenna_book.dipole.end_effect"
 SOURCE_ARRL_LOOP = "arrl.antenna_book.loop.resonant_circumference"
 SOURCE_ARRL_VERTICAL = "arrl.antenna_book.vertical.quarter_wave"
+SOURCE_M0UKD_J_POLE = "m0ukd.j_pole_slim_jim.calculator"
 SOURCE_NBS_YAGI = "nbs.tn688.five_element"
 SOURCE_CEBIK_MOXON = "cebik.moxon_review.table1"
 SOURCE_CEBIK_T2FD = "cebik.t2fd.wide_long"

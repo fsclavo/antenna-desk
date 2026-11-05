@@ -207,17 +207,34 @@ EVIDENCE: dict[str, EvidenceEntry] = {
     ),
     "j_pole": EvidenceEntry(
         template="j_pole",
-        level=EvidenceLevel.EXPERIMENTAL,
-        source="Quarter-wave radiator and quarter-wave stub starting rule",
-        tolerance="Not applicable (structural)",
-        limitation="No independent numerical reference.",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "M0UKD, 'Slim Jim and J Pole calculator': a J pole is 0.75λ tall, "
+            "with a 0.5λ radiator and a 0.25λ matching stub; ARRL QST, Feb 2003, "
+            "conventional 2 m J-pole dimensions"
+        ),
+        tolerance=(
+            "1% on the half-wave and quarter-wave sections; 10% on the overall "
+            "height against the ARRL 2 m construction"
+        ),
+        limitation=(
+            "Starting dimensions only; the 50 Ω feed offset, ground, mast, and "
+            "feed-line coupling are not independently validated."
+        ),
     ),
     "slim_jim": EvidenceEntry(
         template="slim_jim",
-        level=EvidenceLevel.EXPERIMENTAL,
-        source="Folded J-pole starting geometry",
-        tolerance="Not applicable (structural)",
-        limitation="No independent numerical reference.",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "F. Judd, G2BCX, 'Slim Jim - 2 metre aerial', Practical Wireless, "
+            "1978: about 60 in overall at 145 MHz; M0UKD calculator: 0.5λ "
+            "radiator above a 0.25λ stub with a small gap"
+        ),
+        tolerance="1% on the half-wave and quarter-wave sections; 5% on the overall length at 2 m",
+        limitation=(
+            "Starting dimensions only; the feed point, fold spacing, and the "
+            "effect of the feed line are not independently validated."
+        ),
     ),
     "ringo": EvidenceEntry(
         template="ringo",

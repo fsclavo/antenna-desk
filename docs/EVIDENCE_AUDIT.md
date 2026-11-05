@@ -1,6 +1,6 @@
 # Evidence audit
 
-**Date:** 2026-11-04
+**Date:** 2026-11-05
 **Scope:** catalog templates classified as experimental in
 `src/antennadesk/domain/design/evidence.py`.
 
@@ -11,23 +11,29 @@ source and a stated tolerance; level A requires a numerical comparison with an
 independent source. A missing reference keeps the template at level C with a
 visible limitation.
 
-## Promoted in this pass
+## Promoted so far
 
 | Template | Previous | Current | Published reference | Tolerance |
 |---|---|---|---|---|
 | `delta_loop` | C | B | ON4UN, *Low-Band DXing*, Ch. 10: a resonant delta loop is approximately 1.05–1.06 λ | 1 % on resonant circumference |
 | `vertical` | C | B | ARRL practical length rules: `234/f` for a quarter-wave vertical and `585/f` for a 5/8-wave vertical | 0.5 % on radiator length |
 | `inverted_v` | C | B | ARRL, “Wire Antennas for the Beginner”: a 120° inverted-V total length is `465.6/f` feet | 1 % on total length at 120° |
+| `j_pole` | C | B | M0UKD, “Slim Jim and J Pole calculator”: 0.75 λ overall, with a 0.5 λ radiator and a 0.25 λ stub; ARRL QST, Feb 2003, conventional 2 m J-pole | 1 % on the half-wave and quarter-wave sections; 10 % on the overall height against the ARRL 2 m construction |
+| `slim_jim` | C | B | F. Judd, G2BCX, “Slim Jim - 2 metre aerial”, *Practical Wireless*, 1978: about 60 in overall at 145 MHz; M0UKD calculator section fractions | 1 % on the sections; 5 % on the overall length at 2 m |
 
 The corresponding tests are:
 
 - `tests/unit/domain/design/test_formulas.py::test_delta_loop_circumference_matches_the_published_range`
 - `tests/unit/domain/design/test_estimators.py::test_estimator_lengths_match_the_published_arrl_formulas`
 - `tests/unit/domain/design/test_estimators.py::test_inverted_v_total_length_matches_the_published_120_degree_rule`
+- `tests/unit/domain/design/test_estimators.py::test_j_pole_matches_the_published_three_quarter_wave_rule`
+- `tests/unit/domain/design/test_estimators.py::test_j_pole_overall_height_matches_the_arrl_two_metre_construction`
+- `tests/unit/domain/design/test_estimators.py::test_slim_jim_matches_the_published_two_metre_length`
 
-These promotions validate a **starting dimension**, not gain, feedpoint
-impedance, or pattern accuracy. The limitations remain explicit in the evidence
-registry.
+The first three rows were added on 2026-11-04; the J Pole and Slim Jim rows
+were added on 2026-11-05. These promotions validate a **starting dimension**,
+not gain, feedpoint impedance, or pattern accuracy. The limitations remain
+explicit in the evidence registry.
 
 ## Remaining level C templates
 
@@ -40,8 +46,6 @@ registry.
 | `sloper` | The slope and feed arrangement are installation-specific. | A documented reference installation with geometry and measured pattern. |
 | `random_wire` | Performance depends on the tuner and the installation; the length is deliberately non-resonant. | No universal numeric reference; keep experimental. |
 | `zepp` | The current preset omits the second matching conductor and the choke. | A refined model plus a published Zepp or end-fed Zepp measurement. |
-| `j_pole` | Published construction data exist, but this simplified feed and stub model has no independent numeric check. | A reference design with measured feedpoint impedance at a specified frequency. |
-| `slim_jim` | Folded construction and feed placement are not independently validated. | A published Slim Jim measurement with the fold spacing and feed point. |
 | `ringo` | The simplified radiator and matching ring are an application preset, not a published commercial model. | Manufacturer data or an independent measurement. |
 | `doublet` | Feed-line length, impedance, and tuner settings dominate the result. | A documented doublet installation with feed-line and tuner details. |
 | `custom` | User-defined geometry has no fixed reference. | Imports and diagnostics only; no accuracy claim. |
@@ -59,8 +63,8 @@ registry.
 ## Current summary
 
 - **A, reference-backed:** 5 templates.
-- **B, published/heuristic:** 8 templates.
-- **C, experimental:** 12 templates, all with a documented limitation.
+- **B, published/heuristic:** 10 templates.
+- **C, experimental:** 10 templates, all with a documented limitation.
 
 The machine-readable registry and the generated table in
 [`VALIDATION_PLAN.md`](VALIDATION_PLAN.md) remain the source of truth.

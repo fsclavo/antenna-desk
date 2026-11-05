@@ -64,7 +64,7 @@ warnings, and a dimension tolerance.
 | Fan dipole | one half-wave element per band | empirical | Elements interact; the V angle shifts resonance, especially on the highest band |
 | End-fed | half-wave wire; `0.05λ` counterpoise; 49:1 transformer | heuristic | Transformer and counterpoise are application starting points |
 | OCFD | half-wave total, feed at 1/3, 4:1 ideal transformer | heuristic | Existing synthesis can refine length/feed; actual balun ratio depends on height and feed offset |
-| J Pole / Slim Jim | J Pole: total 3/4-wave height, quarter-wave stub, feed at 40% of stub; Slim Jim: half-wave radiator above the folded stub | empirical | Feed offset and stub need tuning |
+| J Pole / Slim Jim | J Pole: 0.75λ overall, 0.5λ radiator, 0.25λ stub; Slim Jim: 0.5λ radiator above a 0.25λ folded stub and gap | empirical | M0UKD published rule and G2BCX 2 m length; feed offset and stub still need tuning |
 | Ringo | 0.725-wave vertical with a small horizontal matching ring, calibrated for the simplified AntennaDesk geometry | heuristic | Not a universal commercial Ringo formula |
 | Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; optimize for the target; horizontal or vertical polarization |
 | Moxon | Cebik 20 m wire reference scaled by frequency | reference scaled | Gap and tips are sensitive; horizontal or vertical polarization |
@@ -74,6 +74,18 @@ Ground-mounted radials are placed 1 cm above the ground plane in the NEC deck.
 The estimator and project keep the requested base height; the clearance is a
 solver constraint, not a design dimension. NEC-2 rejects horizontal radials
 lying exactly on a ground plane.
+
+### J Pole and Slim Jim starting point
+
+M0UKD's published calculator defines the J pole as 0.75 λ overall, split into a
+0.5 λ radiator and a 0.25 λ matching stub. The Slim Jim keeps the same
+quarter-wave stub, adds a small gap, and folds the half-wave radiator alongside
+it. The estimator applies the project's 0.95 end-effect factor to both
+sections. F. Judd, G2BCX, “Slim Jim - 2 metre aerial”, *Practical Wireless*,
+1978, gives about 60 in overall for 2 m.
+
+The 50 Ω feed position is a tuning starting point, not a validated impedance.
+Ground, mast, and feed-line coupling are not modeled.
 
 
 ## Ground and fan constraints

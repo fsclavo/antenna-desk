@@ -48,6 +48,7 @@ from .formulas import (
     SOURCE_CEBIK_MOXON,
     SOURCE_CEBIK_T2FD,
     SOURCE_DL6WU_YAGI,
+    SOURCE_M0UKD_J_POLE,
     default_radial_length_m,
     five_eighth_wave_length_m,
     half_wave_length_m,
@@ -434,7 +435,7 @@ def estimate_j_pole(intent: DesignIntent) -> DimensionEstimate:
         method_id="j_pole.half_wave_radiator_quarter_wave_stub",
         confidence=Confidence.EMPIRICAL,
         tolerance_m=radiator * 0.04,
-        source_ids=(SOURCE_ARRL_DIPOLE,),
+        source_ids=(SOURCE_ARRL_DIPOLE, SOURCE_M0UKD_J_POLE),
         assumptions=("estimator.assumption.height_and_ground",),
         warnings=(
             "estimator.warning.starting_point",

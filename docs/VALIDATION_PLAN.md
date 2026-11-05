@@ -256,8 +256,8 @@ gain, nulls, or impedance.
 | `g5rv` | B | Published G5RV dimensions; lossless transmission-line model | Not a strict numeric tolerance | Line loss is not modeled; matching depends on the installation. |
 | `zs6bkw` | A | Cebik/W4RNL SWR values 1.15, 1.47, and 1.56 at 40/20/10 m; commercial 27.5 m variant | 0.3 SWR | Lossless line model. |
 | `zepp` | C | Classic Zepp starting geometry; simplified lossless line | Not applicable (structural) | Experimental; no independent numerical reference. |
-| `j_pole` | C | Quarter-wave radiator and quarter-wave stub starting rule | Not applicable (structural) | No independent numerical reference. |
-| `slim_jim` | C | Folded J-pole starting geometry | Not applicable (structural) | No independent numerical reference. |
+| `j_pole` | B | M0UKD, 'Slim Jim and J Pole calculator': a J pole is 0.75λ tall, with a 0.5λ radiator and a 0.25λ matching stub; ARRL QST, Feb 2003, conventional 2 m J-pole dimensions | 1% on the half-wave and quarter-wave sections; 10% on the overall height against the ARRL 2 m construction | Starting dimensions only; the 50 Ω feed offset, ground, mast, and feed-line coupling are not independently validated. |
+| `slim_jim` | B | F. Judd, G2BCX, 'Slim Jim - 2 metre aerial', Practical Wireless, 1978: about 60 in overall at 145 MHz; M0UKD calculator: 0.5λ radiator above a 0.25λ stub with a small gap | 1% on the half-wave and quarter-wave sections; 5% on the overall length at 2 m | Starting dimensions only; the feed point, fold spacing, and the effect of the feed line are not independently validated. |
 | `ringo` | C | Ringo radiator and ring starting geometry | Not applicable (structural) | No independent numerical reference. |
 | `doublet` | C | Doublet geometry with a feed line | Not applicable (structural) | No independent numerical reference. |
 | `custom` | C | User-defined wire geometry | Not applicable | No accuracy claim; imports and diagnostics only. |
@@ -267,10 +267,11 @@ gain, nulls, or impedance.
 this table. `scripts/render_evidence_table.py` regenerates it, and a test fails
 when the catalog adds a template without an entry or when the table drifts.
 
-The [2026-11-04 evidence audit](EVIDENCE_AUDIT.md) documents the first review of
-the experimental templates. It promoted `delta_loop`, `vertical`, and
-`inverted_v` from C to B after checking published length rules, and records why
-the remaining C templates stay experimental.
+The 2026-11-04 and 2026-11-05 [evidence audits](EVIDENCE_AUDIT.md) document the
+reviews of the experimental templates. The first promoted `delta_loop`,
+`vertical`, and `inverted_v` from C to B after checking published length rules.
+The second promoted `j_pole` and `slim_jim` after checking M0UKD's 0.75 λ rule
+and the G2BCX 2 m Slim Jim length. The remaining C templates stay experimental.
 
 ## Phase 6 — new geometry and measurements (completed; physical validation deferred)
 

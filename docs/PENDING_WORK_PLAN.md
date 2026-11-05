@@ -111,9 +111,10 @@ Completed follow-ups:
 
 1. **Inventory complete:** [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) records every
    level C template and why it remains experimental.
-2. **First reference pass complete:** promoted `delta_loop`, `vertical`, and
-   `inverted_v` from C to B using published length rules, with explicit
-   tolerances and regression tests. These validate starting dimensions only.
+2. **Reference passes complete so far:** promoted `delta_loop`, `vertical`,
+   `inverted_v`, `j_pole`, and `slim_jim` from C to B using published length
+   rules, with explicit tolerances and regression tests. These validate
+   starting dimensions only.
 3. Add more references where a traceable source exists:
    - impedance, SWR, gain, or pattern metric as appropriate;
    - explicit tolerance per metric.

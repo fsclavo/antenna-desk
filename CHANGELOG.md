@@ -143,8 +143,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   [`docs/EVIDENCE_AUDIT.md`](docs/EVIDENCE_AUDIT.md). The delta loop, vertical,
   and inverted-V generators moved from evidence level C to B after checking
   their published length rules, with explicit tolerances and regression tests.
-  The remaining experimental templates and their next evidence needs are
-  documented.
+  The J Pole and Slim Jim estimators also moved from C to B after checking
+  M0UKD's 0.75λ section rule and the G2BCX 2 m Slim Jim length. The remaining
+  experimental templates and their next evidence needs are documented.
 - CI now pins every action by commit SHA, runs `uv lock --check` and
   `pip-audit --skip-editable`, and Dependabot tracks GitHub Actions and Python
   dependencies. Dependabot keeps PySide6 in its own group so Qt upgrades are
