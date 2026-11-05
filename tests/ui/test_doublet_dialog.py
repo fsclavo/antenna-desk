@@ -54,3 +54,19 @@ def test_doublet_dialog_restores_parameters_and_line(qtbot: QtBot) -> None:
     assert dialog.parameters() == parameters
     assert dialog.feed_line() == line
     assert dialog._azimuth.isEnabled() is False
+
+
+def test_doublet_dialog_accepts_the_published_94_foot_design(qtbot: QtBot) -> None:
+    dialog = DoubletDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+
+    dialog._length.setValue(94.0 * 0.3048)
+    dialog._line_length.setValue(41.0 * 0.3048)
+    dialog._line_impedance.setValue(450.0)
+
+    parameters = dialog.parameters()
+    line = dialog.feed_line()
+
+    assert parameters.total_length_m == pytest.approx(94.0 * 0.3048, abs=0.001)
+    assert line.characteristic_impedance_ohm == pytest.approx(450.0)
+    assert line.length_m == pytest.approx(41.0 * 0.3048, abs=0.001)

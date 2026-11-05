@@ -23,6 +23,7 @@ visible limitation.
 | `endfed` | C | B | ARRL End-Fed Half-Wave Antenna Kit: 66 ft on 40 m, 33 ft on 20 m, 16 ft on 10 m, 49:1 transformer, about 2500 Ω; PA9X: counterpoise 0.05 λ of the longest wavelength | 5 % on the half-wave wire length; 0.05 λ counterpoise; 49:1 ratio |
 | `trap_dipole` | C | B | RSARS, “W3DZZ Multi-band Antenna 80-40-20-15-10m”: 33 ft inner and 22 ft outer sections, 7.1 MHz traps, 5.024 µH and 100 pF | 1 % on the 33/22 ft sections; 2 % on trap resonance |
 | `sloper` | C | B | Chameleon Antenna CHA LEFS Feather manual: 66.5 ft EFHW radiator, 49:1 transformer, far end about 25 ft, feed transformer about 3 ft | 5 % on the radiator length and deployment heights |
+| `doublet` | C | B | VU3DXR, “94-Foot Multi Band Doublet Antenna”: 94 ft total, 41 ft of 450 Ω ladder line, 1:1 current balun, tuner | 5 % on the radiator and feed-line lengths; 450 Ω line |
 
 The corresponding tests are:
 
@@ -35,11 +36,13 @@ The corresponding tests are:
 - `tests/unit/domain/design/test_estimators.py::test_endfed_length_matches_the_arrl_efhw_kit`
 - `tests/unit/domain/test_trap_dipole.py::test_w3dzz_parameters_match_the_published_sections`
 - `tests/unit/domain/test_endfed.py::test_sloper_reference_matches_the_chameleon_lefs_geometry`
+- `tests/unit/domain/test_doublet.py::test_doublet_reference_matches_the_published_94_foot_design`
+- `tests/ui/test_doublet_dialog.py::test_doublet_dialog_accepts_the_published_94_foot_design`
 
 The first three rows were added on 2026-11-04; the J Pole, Slim Jim, end-fed,
-trap-dipole, and sloper rows were added on 2026-11-05. These promotions
-validate a **starting dimension**, not gain, feedpoint impedance, or pattern
-accuracy. The limitations remain explicit in the evidence registry.
+trap-dipole, sloper, and doublet rows were added on 2026-11-05. These
+promotions validate a **starting dimension**, not gain, feedpoint impedance, or
+pattern accuracy. The limitations remain explicit in the evidence registry.
 
 ## Remaining level C templates
 
@@ -50,7 +53,6 @@ accuracy. The limitations remain explicit in the evidence registry.
 | `random_wire` | Performance depends on the tuner and the installation; the length is deliberately non-resonant. | No universal numeric reference; keep experimental. |
 | `zepp` | The current preset omits the second matching conductor and the choke. | A refined model plus a published Zepp or end-fed Zepp measurement. |
 | `ringo` | The simplified radiator and matching ring are an application preset, not a published commercial model. | Manufacturer data or an independent measurement. |
-| `doublet` | Feed-line length, impedance, and tuner settings dominate the result. | A documented doublet installation with feed-line and tuner details. |
 | `custom` | User-defined geometry has no fixed reference. | Imports and diagnostics only; no accuracy claim. |
 
 ## Rules for the next audit
@@ -66,8 +68,8 @@ accuracy. The limitations remain explicit in the evidence registry.
 ## Current summary
 
 - **A, reference-backed:** 5 templates.
-- **B, published/heuristic:** 13 templates.
-- **C, experimental:** 7 templates, all with a documented limitation.
+- **B, published/heuristic:** 14 templates.
+- **C, experimental:** 6 templates, all with a documented limitation.
 
 The machine-readable registry and the generated table in
 [`VALIDATION_PLAN.md`](VALIDATION_PLAN.md) remain the source of truth.

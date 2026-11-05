@@ -268,10 +268,17 @@ EVIDENCE: dict[str, EvidenceEntry] = {
     ),
     "doublet": EvidenceEntry(
         template="doublet",
-        level=EvidenceLevel.EXPERIMENTAL,
-        source="Doublet geometry with a feed line",
-        tolerance="Not applicable (structural)",
-        limitation="No independent numerical reference.",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "VU3DXR, '94-Foot Multi Band Doublet Antenna': 94 ft total, 41 ft "
+            "of 450 Ω ladder line, 1:1 current balun, and a tuner"
+        ),
+        tolerance="5% on the radiator and feed-line lengths; 450 Ω line",
+        limitation=(
+            "The tuner and balun are not modeled; feed-line length, impedance, "
+            "and installation dominate the match. The editor default is a "
+            "half-wave dipole, so the 94 ft design is a starting point."
+        ),
     ),
     "custom": EvidenceEntry(
         template="custom",

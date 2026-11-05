@@ -259,7 +259,7 @@ gain, nulls, or impedance.
 | `j_pole` | B | M0UKD, 'Slim Jim and J Pole calculator': a J pole is 0.75λ tall, with a 0.5λ radiator and a 0.25λ matching stub; ARRL QST, Feb 2003, conventional 2 m J-pole dimensions | 1% on the half-wave and quarter-wave sections; 10% on the overall height against the ARRL 2 m construction | Starting dimensions only; the 50 Ω feed offset, ground, mast, and feed-line coupling are not independently validated. |
 | `slim_jim` | B | F. Judd, G2BCX, 'Slim Jim - 2 metre aerial', Practical Wireless, 1978: about 60 in overall at 145 MHz; M0UKD calculator: 0.5λ radiator above a 0.25λ stub with a small gap | 1% on the half-wave and quarter-wave sections; 5% on the overall length at 2 m | Starting dimensions only; the feed point, fold spacing, and the effect of the feed line are not independently validated. |
 | `ringo` | C | Ringo radiator and ring starting geometry | Not applicable (structural) | No independent numerical reference. |
-| `doublet` | C | Doublet geometry with a feed line | Not applicable (structural) | No independent numerical reference. |
+| `doublet` | B | VU3DXR, '94-Foot Multi Band Doublet Antenna': 94 ft total, 41 ft of 450 Ω ladder line, 1:1 current balun, and a tuner | 5% on the radiator and feed-line lengths; 450 Ω line | The tuner and balun are not modeled; feed-line length, impedance, and installation dominate the match. The editor default is a half-wave dipole, so the 94 ft design is a starting point. |
 | `custom` | C | User-defined wire geometry | Not applicable | No accuracy claim; imports and diagnostics only. |
 <!-- evidence-table:end -->
 
@@ -270,10 +270,11 @@ when the catalog adds a template without an entry or when the table drifts.
 The 2026-11-04 and 2026-11-05 [evidence audits](EVIDENCE_AUDIT.md) document the
 reviews of the experimental templates. The first promoted `delta_loop`,
 `vertical`, and `inverted_v` from C to B after checking published length rules.
-The second promoted `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, and
-`sloper` after checking M0UKD's 0.75 λ rule, the G2BCX 2 m Slim Jim length,
-the ARRL EFHW kit lengths, the W3DZZ section and trap values, and the Chameleon
-LEFS deployment. The remaining C templates stay experimental.
+The second promoted `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`,
+and `doublet` after checking M0UKD's 0.75 λ rule, the G2BCX 2 m Slim Jim
+length, the ARRL EFHW kit lengths, the W3DZZ section and trap values, the
+Chameleon LEFS deployment, and the 94-ft doublet dimensions. The remaining C
+templates stay experimental.
 
 ## Phase 6 — new geometry and measurements (completed; physical validation deferred)
 
