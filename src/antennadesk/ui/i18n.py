@@ -89,6 +89,13 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "menu.language": {Language.ENGLISH: "Language", Language.SPANISH: "Idioma"},
     "menu.help": {Language.ENGLISH: "Help", Language.SPANISH: "Ayuda"},
     "menu.units": {Language.ENGLISH: "Units", Language.SPANISH: "Unidades"},
+    "menu.font_size": {
+        Language.ENGLISH: "Font Size",
+        Language.SPANISH: "Tamaño de fuente",
+    },
+    "font_size.small": {Language.ENGLISH: "Small", Language.SPANISH: "Pequeño"},
+    "font_size.medium": {Language.ENGLISH: "Normal", Language.SPANISH: "Normal"},
+    "font_size.large": {Language.ENGLISH: "Large", Language.SPANISH: "Grande"},
     "action.new": {Language.ENGLISH: "New Antenna...", Language.SPANISH: "Nueva antena..."},
     "catalog.title": {
         Language.ENGLISH: "New Antenna",

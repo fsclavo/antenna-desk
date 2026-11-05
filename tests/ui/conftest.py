@@ -8,12 +8,25 @@ from collections.abc import Iterator
 
 import pytest
 from main_window_support import FakeSolver
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QApplication
 from pytestqt.qtbot import QtBot
 
 from antennadesk.persistence.json_repository import JsonProjectRepository
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
 from antennadesk.ui.units import UnitSystem
+
+
+@pytest.fixture(autouse=True)
+def _restore_application_font(qtbot: QtBot) -> Iterator[None]:
+    app = QApplication.instance()
+    original = QFont(app.font()) if isinstance(app, QApplication) else None
+    try:
+        yield
+    finally:
+        if isinstance(app, QApplication) and original is not None:
+            app.setFont(original)
 
 
 @pytest.fixture

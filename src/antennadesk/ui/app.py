@@ -16,6 +16,7 @@ from ..persistence.json_repository import JsonProjectRepository
 from ..simulation.nec2.solver import Nec2cSolver
 from .i18n import Language, Translator
 from .main_window import MainWindow
+from .preferences import FontSizeController, QSettingsPreferencesStore
 from .solver_locator import find_nec2c
 
 
@@ -40,6 +41,10 @@ def main() -> int:
     if icon_path.is_file():
         app.setWindowIcon(QIcon(str(icon_path)))
 
+    preferences = QSettingsPreferencesStore()
+    font_size_controller = FontSizeController(app.font())
+    font_size_controller.apply(preferences.load_font_size())
+
     language = (
         Language.SPANISH
         if QLocale.system().language() == QLocale.Language.Spanish
@@ -48,7 +53,13 @@ def main() -> int:
     translator = Translator(language)
     executable = find_nec2c()
     solver = Nec2cSolver(executable) if executable is not None else None
-    window = MainWindow(JsonProjectRepository(), solver, translator)
+    window = MainWindow(
+        JsonProjectRepository(),
+        solver,
+        translator,
+        preferences=preferences,
+        font_size_controller=font_size_controller,
+    )
     window.show()
     return app.exec()
 

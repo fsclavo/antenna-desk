@@ -937,11 +937,16 @@ Use **File → Save** / **Save As...** to write a versioned `.antennadesk` JSON
 project, and **File → Open Project...** to reopen it. The application prompts
 before discarding unsaved changes.
 
-## Language and units
+## Language, units, and font size
 
 Use **Tools → Language** for English or Español. Use **Tools → Units** for
 metric (m, mm) or imperial (ft, in). The domain and project files always store
 canonical meters and hertz.
+
+Use **Tools → Font Size** for Small, Normal, or Large. Normal restores the
+system default. The choice is saved and applied at startup. It scales most
+standard widgets. The antenna sketch, pattern views, the start-page headline,
+and exported reports keep their own fixed typography.
 
 ## Current limitations
 

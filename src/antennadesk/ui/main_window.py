@@ -14,10 +14,12 @@ from PySide6.QtGui import (
     QAction,
     QActionGroup,
     QCloseEvent,
+    QFont,
     QKeySequence,
     QUndoStack,
 )
 from PySide6.QtWidgets import (
+    QApplication,
     QCheckBox,
     QComboBox,
     QDialog,
@@ -220,6 +222,12 @@ from .pattern_resolution import (
     far_field_request,
     pattern_counts,
 )
+from .preferences import (
+    FontSize,
+    FontSizeController,
+    InMemoryPreferencesStore,
+    PreferencesStore,
+)
 from .report_pdf import write_report_pdf
 from .template_identity import catalog_key_for
 from .units import UnitSystem, length_from_m, length_unit_key
@@ -255,12 +263,21 @@ class MainWindow(QMainWindow):
         translator: Translator,
         unit_system: UnitSystem = UnitSystem.METRIC,
         parent: QWidget | None = None,
+        *,
+        preferences: PreferencesStore | None = None,
+        font_size_controller: FontSizeController | None = None,
     ) -> None:
         super().__init__(parent)
         self._repository = repository
         self._solver = solver
         self._translator = translator
         self._unit_system = unit_system
+        self._preferences = preferences if preferences is not None else InMemoryPreferencesStore()
+        if font_size_controller is None:
+            app = QApplication.instance()
+            base_font = app.font() if isinstance(app, QApplication) else QFont()
+            font_size_controller = FontSizeController(base_font)
+        self._font_size_controller = font_size_controller
 
         self._project: Project | None = None
         self._design_id: UUID | None = None
@@ -434,6 +451,22 @@ class MainWindow(QMainWindow):
         self._units_group.addAction(self._imperial_action)
         self._metric_action.setChecked(self._unit_system is UnitSystem.METRIC)
         self._imperial_action.setChecked(self._unit_system is UnitSystem.IMPERIAL)
+
+        self._font_size_group = QActionGroup(self)
+        self._font_size_group.setExclusive(True)
+        self._font_small_action = QAction(self)
+        self._font_small_action.setCheckable(True)
+        self._font_small_action.triggered.connect(lambda: self._set_font_size(FontSize.SMALL))
+        self._font_medium_action = QAction(self)
+        self._font_medium_action.setCheckable(True)
+        self._font_medium_action.triggered.connect(lambda: self._set_font_size(FontSize.MEDIUM))
+        self._font_large_action = QAction(self)
+        self._font_large_action.setCheckable(True)
+        self._font_large_action.triggered.connect(lambda: self._set_font_size(FontSize.LARGE))
+        self._font_size_group.addAction(self._font_small_action)
+        self._font_size_group.addAction(self._font_medium_action)
+        self._font_size_group.addAction(self._font_large_action)
+        self._update_font_size_actions()
 
         style = self.style()
         self._new_action.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_FileIcon))
@@ -888,6 +921,10 @@ class MainWindow(QMainWindow):
         self._units_menu = self._tools_menu.addMenu("")
         self._units_menu.addAction(self._metric_action)
         self._units_menu.addAction(self._imperial_action)
+        self._font_size_menu = self._tools_menu.addMenu("")
+        self._font_size_menu.addAction(self._font_small_action)
+        self._font_size_menu.addAction(self._font_medium_action)
+        self._font_size_menu.addAction(self._font_large_action)
 
         self._help_menu = self.menuBar().addMenu("")
         self._help_menu.addAction(self._about_action)
@@ -1019,6 +1056,9 @@ class MainWindow(QMainWindow):
         self._spanish_action.setText(self._translator.t("action.spanish"))
         self._metric_action.setText(self._translator.t("units.metric"))
         self._imperial_action.setText(self._translator.t("units.imperial"))
+        self._font_small_action.setText(self._translator.t("font_size.small"))
+        self._font_medium_action.setText(self._translator.t("font_size.medium"))
+        self._font_large_action.setText(self._translator.t("font_size.large"))
         self._edit_menu.setTitle(self._translator.t("menu.edit"))
         self._refresh_history_actions()
         self._file_menu.setTitle(self._translator.t("menu.file"))
@@ -1031,6 +1071,7 @@ class MainWindow(QMainWindow):
         self._tools_menu.setTitle(self._translator.t("menu.tools"))
         self._language_menu.setTitle(self._translator.t("menu.language"))
         self._units_menu.setTitle(self._translator.t("menu.units"))
+        self._font_size_menu.setTitle(self._translator.t("menu.font_size"))
         self._help_menu.setTitle(self._translator.t("menu.help"))
         self._project_name_label.setText(self._translator.t("field.project_name"))
         self._variant_label.setText(self._translator.t("variant.label"))
@@ -5675,6 +5716,17 @@ class MainWindow(QMainWindow):
         self._english_action.setChecked(language is Language.ENGLISH)
         self._spanish_action.setChecked(language is Language.SPANISH)
         self.retranslate()
+
+    def _update_font_size_actions(self) -> None:
+        size = self._font_size_controller.size
+        self._font_small_action.setChecked(size is FontSize.SMALL)
+        self._font_medium_action.setChecked(size is FontSize.MEDIUM)
+        self._font_large_action.setChecked(size is FontSize.LARGE)
+
+    def _set_font_size(self, size: FontSize) -> None:
+        self._font_size_controller.apply(size)
+        self._preferences.save_font_size(size)
+        self._update_font_size_actions()
 
     def _set_unit_system(self, unit_system: UnitSystem) -> None:
         self._unit_system = unit_system
