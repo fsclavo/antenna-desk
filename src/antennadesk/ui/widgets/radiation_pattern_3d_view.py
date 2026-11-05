@@ -118,8 +118,8 @@ def _build_mesh(points: tuple[tuple[float, float, float], ...]) -> _Mesh | None:
         sin_theta = math.sin(theta_rad)
         cos_theta = math.cos(theta_rad)
         for phi_position, phi in enumerate(phi_values):
-            gain = gain_by_grid.get((theta_position, phi_position))
-            if gain is None:
+            grid_gain = gain_by_grid.get((theta_position, phi_position))
+            if grid_gain is None:
                 continue
             phi_rad = math.radians(phi)
             vertex_by_grid[(theta_position, phi_position)] = len(vertices)
@@ -128,7 +128,7 @@ def _build_mesh(points: tuple[tuple[float, float, float], ...]) -> _Mesh | None:
                     x=sin_theta * math.cos(phi_rad),
                     y=sin_theta * math.sin(phi_rad),
                     z=cos_theta,
-                    normalized_gain=normalized_gain(gain),
+                    normalized_gain=normalized_gain(grid_gain),
                     theta_deg=theta,
                     phi_deg=phi,
                     theta_index=theta_position,
@@ -671,9 +671,9 @@ class RadiationPattern3DView(QWidget):
                 )
             painter.setPen(self._colors.secondary_text)
             painter.setFont(QFont("Sans Serif", 7))
-            label = screen_world(0.0, -0.88, 0.0)
+            ground_label = screen_world(0.0, -0.88, 0.0)
             painter.drawText(
-                QRectF(label.x() - 30.0, label.y() + 4.0, 60.0, 14.0),
+                QRectF(ground_label.x() - 30.0, ground_label.y() + 4.0, 60.0, 14.0),
                 Qt.AlignmentFlag.AlignCenter,
                 self._translator.t("pattern.ground"),
             )
@@ -685,10 +685,10 @@ class RadiationPattern3DView(QWidget):
         painter.drawEllipse(marker, 3.5, 3.5)
         painter.setBrush(Qt.BrushStyle.NoBrush)
 
-        label = self._max_gain_label(max_point)
+        max_label = self._max_gain_label(max_point)
         painter.setFont(QFont("Sans Serif", 8))
         metrics = painter.fontMetrics()
-        label_width = min(metrics.horizontalAdvance(label) + 10.0, rect.width() - 12.0)
+        label_width = min(metrics.horizontalAdvance(max_label) + 10.0, rect.width() - 12.0)
         label_height = 18.0
         label_x = marker.x() + 8.0
         label_y = marker.y() - label_height - 4.0
@@ -712,13 +712,17 @@ class RadiationPattern3DView(QWidget):
         painter.drawText(
             label_rect.adjusted(5.0, 0.0, -5.0, 0.0),
             Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-            label,
+            max_label,
         )
 
         origin = screen(0.0, 0.0, min_gain)
         painter.setPen(QPen(self._colors.axis, 1.5))
-        for theta, phi, axis_label in ((90.0, 0.0, "X"), (90.0, 90.0, "Y"), (0.0, 0.0, "Z")):
-            end = screen(theta, phi, max_gain)
+        for axis_theta, axis_phi, axis_label in (
+            (90.0, 0.0, "X"),
+            (90.0, 90.0, "Y"),
+            (0.0, 0.0, "Z"),
+        ):
+            end = screen(axis_theta, axis_phi, max_gain)
             painter.drawLine(origin, end)
             painter.setFont(QFont("Sans Serif", 7))
             painter.setPen(self._colors.secondary_text)

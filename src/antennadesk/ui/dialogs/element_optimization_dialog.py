@@ -418,11 +418,11 @@ class ElementOptimizationDialog(QDialog):
         if self._band is None or self._band.currentData() is None:
             self._band_warning.setVisible(False)
             return
-        selected_band_ids = {
-            self._variables_spec[index].band_id
-            for index in self._selected_indices()
-            if self._variables_spec[index].band_id is not None
-        }
+        selected_band_ids: set[str] = set()
+        for index in self._selected_indices():
+            band_id = self._variables_spec[index].band_id
+            if band_id is not None:
+                selected_band_ids.add(band_id)
         target_band = amateur_band_for(self._frequency.value() * 1_000_000.0)
         if not selected_band_ids or target_band is None or target_band.name in selected_band_ids:
             self._band_warning.setVisible(False)
@@ -569,7 +569,7 @@ class ElementOptimizationDialog(QDialog):
         self._apply.setEnabled(False)
         self._cancel_token = EventCancelToken()
         command = OptimizeElementsCommand(
-            build_parameters=self._build_with_frequency,
+            build_parameters=lambda values: self._build_with_frequency(dict(values)),
             variables=variables,
             start_values=starts,
             target=target,

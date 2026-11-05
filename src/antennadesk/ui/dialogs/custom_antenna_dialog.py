@@ -30,6 +30,7 @@ from ...domain.antennas.geometry import Point3D
 from ...domain.antennas.load import LumpedLoad
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.antennas.wire import Wire
+from ...domain.common.validation import Diagnostic
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
@@ -53,7 +54,7 @@ class CustomAntennaDialog(QDialog):
         self._loads: tuple[LumpedLoad, ...] = parameters.loads if parameters else ()
         self._generator_id = parameters.generator_id if parameters else None
         self._generator_name = parameters.generator_name if parameters else None
-        self._warnings = ()
+        self._warnings: tuple[Diagnostic, ...] = ()
         self.setWindowTitle(translator.t("custom.title"))
         self.resize(980, 620)
 
@@ -374,5 +375,5 @@ class CustomAntennaDialog(QDialog):
     def result_parameters(self) -> CustomAntennaParameters:
         return self._parameters
 
-    def result_warnings(self) -> tuple[object, ...]:
+    def result_warnings(self) -> tuple[Diagnostic, ...]:
         return self._warnings

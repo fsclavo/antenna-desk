@@ -383,7 +383,7 @@ class SynthesisDialog(QDialog):
         self._apply.setEnabled(False)
         self._cancel_token = EventCancelToken()
         command = SynthesizeAntennaCommand(
-            build_parameters=self._build_parameters,
+            build_parameters=lambda values: self._build_parameters(dict(values)),
             variables=variables,
             target=target,
             base_spec=self._base_spec,

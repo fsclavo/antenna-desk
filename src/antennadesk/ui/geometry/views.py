@@ -43,7 +43,7 @@ def _normalize(vector: tuple[float, float, float]) -> tuple[float, float, float]
     length = math.sqrt(sum(value * value for value in vector))
     if length <= 1e-15:
         return (0.0, 0.0, 1.0)
-    return tuple(value / length for value in vector)
+    return (vector[0] / length, vector[1] / length, vector[2] / length)
 
 
 def _cross(
@@ -95,9 +95,9 @@ def _plane_normal(points: tuple[Point3D, ...]) -> tuple[float, float, float]:
                 break
         if len(directions) >= 8:
             break
-    for index, first in enumerate(directions):
-        for second in directions[index + 1 :]:
-            normal = _cross(first, second)
+    for index, first_direction in enumerate(directions):
+        for second_direction in directions[index + 1 :]:
+            normal = _cross(first_direction, second_direction)
             if math.sqrt(sum(value * value for value in normal)) > 1e-6:
                 return _normalize(normal)
     first_direction = directions[0] if directions else (1.0, 0.0, 0.0)

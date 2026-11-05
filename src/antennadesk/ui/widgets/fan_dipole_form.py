@@ -196,11 +196,11 @@ class FanDipoleForm(QWidget):
         self._update_geometry()
 
     def _add_element(self) -> None:
-        used = {
-            float(self._table.item(row, 1).text())
-            for row in range(self._table.rowCount())
-            if self._table.item(row, 1) is not None
-        }
+        used: set[float] = set()
+        for row in range(self._table.rowCount()):
+            item = self._table.item(row, 1)
+            if item is not None:
+                used.add(float(item.text()))
         angle = max(10.0, min(used, default=120.0) - 20.0)
         self._append_element(FanElement(length_m=5.0, included_angle_deg=angle))
 

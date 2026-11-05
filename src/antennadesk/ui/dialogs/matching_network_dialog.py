@@ -58,29 +58,34 @@ class MatchingNetworkDialog(QDialog):
             self._topology.setCurrentIndex(2)
         self._topology.currentIndexChanged.connect(self._topology_changed)
 
+        def initial_value(name: str, default: float) -> float:
+            if network is None:
+                return default
+            return float(getattr(network, name, default))
+
         self._series_l = QDoubleSpinBox(self)
         self._series_l.setRange(0.0, 1_000_000.0)
         self._series_l.setDecimals(3)
         self._series_l.setSuffix(" µH")
-        self._series_l.setValue((network.series_inductance_h * 1e6) if network else 1.0)
+        self._series_l.setValue(initial_value("series_inductance_h", 1.0) * 1e6)
 
         self._series_c = QDoubleSpinBox(self)
         self._series_c.setRange(0.0, 1_000_000.0)
         self._series_c.setDecimals(3)
         self._series_c.setSuffix(" pF")
-        self._series_c.setValue((network.series_capacitance_f * 1e12) if network else 0.0)
+        self._series_c.setValue(initial_value("series_capacitance_f", 0.0) * 1e12)
 
         self._shunt_l = QDoubleSpinBox(self)
         self._shunt_l.setRange(0.0, 1_000_000.0)
         self._shunt_l.setDecimals(3)
         self._shunt_l.setSuffix(" µH")
-        self._shunt_l.setValue((network.shunt_inductance_h * 1e6) if network else 0.0)
+        self._shunt_l.setValue(initial_value("shunt_inductance_h", 0.0) * 1e6)
 
         self._shunt_c = QDoubleSpinBox(self)
         self._shunt_c.setRange(0.0, 1_000_000.0)
         self._shunt_c.setDecimals(3)
         self._shunt_c.setSuffix(" pF")
-        self._shunt_c.setValue((network.shunt_capacitance_f * 1e12) if network else 100.0)
+        self._shunt_c.setValue(initial_value("shunt_capacitance_f", 100.0) * 1e12)
 
         self._shunt_at_input = QCheckBox(translator.t("matching_network.shunt_at_input"), self)
         self._shunt_at_input.setChecked(

@@ -89,6 +89,10 @@ class OCFDDialog(QDialog):
             self._band_plan_label.clear()
             self._band_plan_button.setEnabled(False)
             return
+        if plan is None:
+            self._band_plan_label.clear()
+            self._band_plan_button.setEnabled(False)
+            return
         self._band_plan_button.setEnabled(True)
         self._band_plan_label.setText(
             self._translator.t(
