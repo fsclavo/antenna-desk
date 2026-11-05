@@ -15,8 +15,8 @@ Measured on 2026-11-04:
 
 | Fact | Value |
 |---|---|
-| Collected tests | 1,292 |
-| Passing locally with `NEC2C` set | 1,292 passed, 1 skipped (PyNEC) in about 77 s |
+| Collected tests | 1,293 |
+| Passing locally with `NEC2C` set | 1,293 passed, 1 skipped (PyNEC) in about 75 s |
 | Fast unit-test lane | 719 passed, 1 skipped in about 8 s (`pytest -m "fast and not slow"`) |
 | Slowest test | 7.4 s (`test_g5rv_default_budgeted_pattern_completes`) |
 | UI test isolation | fixed 2026-11-04: deferred deletes were not dispatched, so widgets from one test stayed alive and a later test spent ~66 s in a nested event loop. The teardown in `tests/conftest.py` now closes windows and dispatches `DeferredDelete`; the full suite went from 142 s to 56 s |
@@ -27,7 +27,7 @@ Measured on 2026-11-04:
 | Largest test file | `tests/ui/test_main_window_presets.py`, 828 lines. The 1,442-line nec2c adapter file is split into four modules |
 | Source lines | 46,323 total; 30,144 in `ui/` |
 | Type-checked lines | ~16,000 strict, plus all 75 `ui/` files under a permissive pass |
-| Coverage, full suite with solver (measured) | 85 % total; domain 91 %, simulation 91 %, persistence 94 %, application 92 %, importers 91 %, reporting 87 %, ui 82 % |
+| Coverage, full suite with solver (measured) | 85 % total; domain 91 %, simulation 91 %, persistence 94 %, application 92 %, importers 90 %, reporting 87 %, ui 82 % |
 | Coverage enforcement | per-package gates in the `coverage` CI job, one point below the measured baseline |
 | Timing sensitivity | one UI failure appeared under coverage instrumentation at ~32 % while another pytest process ran concurrently. The polarization commit added deterministic posted-event processing in `tests/ui/helpers.py`; re-verify under coverage before treating it as open |
 | ADR files | 24, numbered 0001–0023 with a duplicated `0014` |
@@ -115,10 +115,9 @@ catch regressions.
 - (implemented 2026-11-04) The `coverage` CI job builds `nec2c`, runs the full
   suite with `--cov --cov-branch`, uploads `coverage.xml`, and gates each package
   with `coverage report --format=total --include=... --fail-under=...`.
-  Measured: total 85, domain 91, simulation 91, persistence 94, application 92,
-  importers 91, reporting 87, ui 82. Thresholds sit one point below and ratchet.
-  The fuzz tests and the NEC deck error-path tests raised importers from 75 to
-  91, so its gate moved from 74 to 88.
+  Measured on 2026-11-05: total 85, domain 91, simulation 91, persistence 94,
+  application 92, importers 90, reporting 87, ui 82. Thresholds sit one point
+  below and ratchet; the importers gate moved from 88 to 89 in this pass.
 - A single coverage lane is enough: the full suite with coverage takes 78 s.
   The two-lane plan was based on the pre-isolation 10-minute run.
 - (implemented 2026-11-05) `mutmut` 3.8 (BSD-3, Unix only) runs weekly on

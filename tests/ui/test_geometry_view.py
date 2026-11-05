@@ -5,7 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from PySide6.QtGui import QPixmap
+from PySide6.QtCore import QRectF
+from PySide6.QtGui import QPainter, QPixmap
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.antennas.dipole import DipoleParameters
@@ -409,3 +410,20 @@ def test_geometry_view_exports_vector_svg_pdf_and_dxf(
     assert "LWPOLYLINE" in entity_types
     assert "DIMENSION" in entity_types
     assert "ANTENNA_WIRES" in document.layers
+
+
+def test_geometry_view_without_a_model_is_safe(qtbot: QtBot) -> None:
+    view = GeometryView(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(view)
+    view.set_model(None)
+
+    assert view._load_marks() == ()
+    assert view._multi_wire_plan_summary(1.0, 1.0, "m") == ""
+    assert view._folded_spacing_m() == 0.0
+
+    pixmap = QPixmap(20, 20)
+    painter = QPainter(pixmap)
+    try:
+        view._paint_three_d(painter, QRectF(0.0, 0.0, 20.0, 20.0))
+    finally:
+        painter.end()

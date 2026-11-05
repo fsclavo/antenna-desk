@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   runs 719 tests in about 8 s. `fast`, `ui`, and `solver` markers are applied
   automatically by path or fixture; the two G5RV pattern-budget tests are
   marked `slow`.
+- Re-measured coverage after the property, i18n, and catalog tests: 85 % total,
+  importers 90 %. The importers gate moved from 88 to 89; the other gates were
+  already one point below their measured values.
 - A changelog structure test checks the Unreleased entry, release dates,
   unique versions, descending order, and Keep a Changelog subsection names.
 - A static UI translation test checks every literal key passed to the
