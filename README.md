@@ -247,8 +247,8 @@ uv run python scripts/run_reference_simulation.py \
   to a segment center.
 - Known diagnostic codes are localized in the UI; the raw solver detail remains
   available in English in the tooltip and raw-output tab.
-- PySide6 is pinned below 6.10 because 6.12 triggered a shutdown refcount crash
-  with pyqtgraph in this environment.
+- PySide6 is pinned below 6.12 because 6.12 triggered a shutdown refcount crash
+  with pyqtgraph in this environment. 6.11.3 was evaluated in ADR-0025.
 
 ## License
 

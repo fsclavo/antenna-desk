@@ -28,6 +28,7 @@ classifiers = [
 dependencies = [
   "pydantic>=2.7,<3",
   # PySide6 6.12 triggered a shutdown refcount crash with pyqtgraph.
+  # 6.11.3 was evaluated on 2026-11-05; see ADR-0025.
   "pyside6-essentials>=6.9.2,<6.12",
   "pyqtgraph>=0.13,<1",
   "ezdxf>=1.4,<2",

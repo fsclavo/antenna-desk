@@ -212,8 +212,8 @@ are absent.
   runtime.
 - Debian/Ubuntu systems with `libc6 >= 2.35` for the `.deb`.
 - Windows with Python 3.11–3.13; the zip bundles its own Python runtime.
-- The UI uses PySide6 below 6.10; do not raise that pin without re-running the
-  shutdown regression tests.
+- The UI uses PySide6 below 6.12; do not raise that pin without re-running the
+  shutdown regression tests in ADR-0025.
 - `ezdxf` is an optional export dependency but is installed with the package
   for DXF export.
 

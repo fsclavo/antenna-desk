@@ -151,7 +151,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   dependencies. Dependabot keeps PySide6 in its own group so Qt upgrades are
   evaluated deliberately instead of riding along with routine updates.
 - Updated pydantic from 2.14.1 to 2.14.3, which includes the 2.14.2 security
-  fixes. PySide6 stays pinned below 6.10.
+  fixes. PySide6 is handled in a separate update.
+- Updated PySide6 from 6.9.3 to 6.11.3 after the full CI matrix and a repeated
+  shutdown stress of the main window and pyqtgraph views. The 6.12 exclusion
+  remains; ADR-0025 records the evaluation and the upgrade procedure.
 - Renumbered the duplicate ADR 0014: undo/redo is now ADR 0024. Added tests for
   unique, contiguous ADR numbering and matching headings.
 - All 75 UI modules, including the antenna wizard, are now type-checked: the

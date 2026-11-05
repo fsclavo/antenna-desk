@@ -155,8 +155,8 @@ between the domain and the widgets.
 - Extend ruff with `S` (bandit), `PT` (pytest style), `T20` (no `print` in
   `src/`), and `RUF100`. Evaluate `ANN` for `src/` separately.
 - Add an SPDX header check for new source files, matching the existing headers.
-- Keep the PySide6 pin below 6.10 and record the reason in the ADR, not only in
-  a comment.
+- (done 2026-11-05) Keep the PySide6 pin below 6.12 and record the reason in
+  ADR-0025, not only in a comment.
 
 **Acceptance.** `uv run mypy` plus `uv run mypy --config-file mypy_ui.ini`
 cover `ui/` at the agreed level; ruff reports no new categories; every source

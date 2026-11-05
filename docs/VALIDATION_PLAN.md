@@ -560,5 +560,6 @@ and require `NEC2C`.
   segment density or solver accuracy.
 - Feed-line results are post-processed at the transmitter. The line does not
   alter the simulated antenna currents, pattern, or power gain.
-- PySide6 is pinned below 6.10 because 6.12 triggered a shutdown refcount
-  crash with pyqtgraph in the test environment.
+- PySide6 is pinned below 6.12 because 6.12 triggered a shutdown refcount
+  crash with pyqtgraph in the test environment. ADR-0025 records the 6.11.3
+  evaluation and the upgrade procedure.

@@ -30,8 +30,9 @@ amateur radio. The project is GPL-3.0-or-later.
   project files use canonical meters.
 - Run simulations in a worker thread; never block the Qt event loop.
 - UI tests use `pytest-qt` with the offscreen platform.
-- PySide6 is pinned below 6.10 because 6.12 triggered a shutdown refcount crash
-  with pyqtgraph. Re-evaluate the pin deliberately.
+- PySide6 is pinned below 6.12 because 6.12 triggered a shutdown refcount crash
+  with pyqtgraph. 6.11.3 was evaluated on 2026-11-05 (ADR-0025); re-evaluate
+  6.12 deliberately before widening the range.
 
 ## Geometry presentation
 

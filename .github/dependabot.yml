@@ -20,7 +20,7 @@ updates:
       pyside6:
         patterns: ["pyside6-essentials"]
     ignore:
-      # PySide6 is deliberately pinned below 6.10: 6.12 triggered a shutdown
+      # PySide6 is deliberately pinned below 6.12: 6.12 triggered a shutdown
       # refcount crash with pyqtgraph. Qt minor upgrades need a separate,
       # deliberate evaluation, so they are not mixed with routine updates.
       - dependency-name: "pyside6-essentials"
