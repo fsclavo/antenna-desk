@@ -201,6 +201,7 @@ Acceptance criteria:
 | P2 | Persist band-analysis batches and band-aware reports (M6) | B | done |
 | P2 | Cross-band comparison table | B | done |
 | P2 | GPG/Authenticode code signing for release artifacts | n/a | deferred |
+| P2 | Evaluate PySide6 6.11.3 against the deliberate `<6.10` pin | n/a | pending; Qt upgrades are isolated in Dependabot |
 | P2 | Relative permeability export to NEC | B | not supported by NEC-2; warning implemented |
 | P2 | Pattern metric selector for power/directivity/realized gain | B | done |
 | P2 | ZS6BKW and Zepp multiband presets | B | done |

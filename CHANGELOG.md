@@ -147,7 +147,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   documented.
 - CI now pins every action by commit SHA, runs `uv lock --check` and
   `pip-audit --skip-editable`, and Dependabot tracks GitHub Actions and Python
-  dependencies.
+  dependencies. Dependabot keeps PySide6 in its own group so Qt upgrades are
+  evaluated deliberately instead of riding along with routine updates.
+- Updated pydantic from 2.14.1 to 2.14.3, which includes the 2.14.2 security
+  fixes. PySide6 stays pinned below 6.10.
 - Renumbered the duplicate ADR 0014: undo/redo is now ADR 0024. Added tests for
   unique, contiguous ADR numbering and matching headings.
 - All 75 UI modules, including the antenna wizard, are now type-checked: the
