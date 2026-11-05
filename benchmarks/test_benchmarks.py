@@ -4,10 +4,11 @@
 
 Run with::
 
-    uv run pytest benchmarks --benchmark-only --benchmark-json=benchmark.json
+    uv run pytest benchmarks --benchmark-only -p no:pytestqt --benchmark-json=benchmark.json
 
 The CI job uploads the JSON artifact but does not enforce a threshold yet, so
-machine-to-machine noise cannot fail a build.
+machine-to-machine noise cannot fail a build. The pytest-qt plugin is disabled
+because these benchmarks use only domain and persistence code.
 """
 
 from __future__ import annotations
