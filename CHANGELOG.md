@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Hypothesis property tests now cover all 13 estimator families and the
+  project document, repository, and v1-to-current migration round trips. The
+  geometry properties found and fixed the zero-height and vertical-array
+  clearance edge cases below.
 - Yagi and Moxon designs now support selectable **horizontal or vertical
   polarization** while keeping the boom horizontal. Vertical Yagi elements
   rotate around the boom; the Moxon rectangle lies in a vertical plane. Height
@@ -218,6 +222,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Estimator edge cases found by the new geometry property tests: OCFD and
+  horizontal Yagi/Moxon estimates with zero height now clamp to 0.01 m, and
+  vertical Yagi/Moxon estimates whose elements would cross the ground raise a
+  clear unsupported-estimate error instead of a domain validation error.
 - Five-eighth-wave vertical estimates now apply the same end-effect factor as
   the quarter- and half-wave estimates, matching the ARRL 585/f practical
   formula. The estimated radiator is about 5% shorter than before, and the

@@ -32,6 +32,7 @@ from ..antennas.ocfd import (
     OCFD_REFERENCE_TRANSFORMER_RATIO,
     OCFDParameters,
 )
+from ..antennas.polarization import Polarization
 from ..antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
 from ..antennas.t2fd import ANTENNA_TYPE_T2FD, T2FDParameters, t2fd_starting_dimensions
 from ..antennas.vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
@@ -379,11 +380,12 @@ def estimate_endfed(intent: DesignIntent) -> DimensionEstimate:
 
 def estimate_ocfd(intent: DesignIntent) -> DimensionEstimate:
     length = half_wave_length_m(intent.frequency_hz)
+    height_m = max(intent.height_m, 0.01)
     parameters = OCFDParameters(
         frequency_hz=intent.frequency_hz,
         total_length_m=length,
         feed_ratio=1.0 / 3.0,
-        height_m=intent.height_m,
+        height_m=height_m,
         azimuth_deg=intent.azimuth_deg,
         wire_radius_m=intent.wire_radius_m,
         material=intent.material,
@@ -404,7 +406,7 @@ def estimate_ocfd(intent: DesignIntent) -> DimensionEstimate:
         rows=(
             _length_row("field.length", length),
             _length_row("geometry.feed_offset", parameters.feed_offset_m),
-            _length_row("field.height", intent.height_m),
+            _length_row("field.height", height_m),
         ),
     )
 
@@ -509,10 +511,19 @@ def estimate_yagi(intent: DesignIntent) -> DimensionEstimate:
         )
         for length, spacing in normalized
     )
+    height_m = max(intent.height_m, 0.01)
+    if intent.polarization is Polarization.VERTICAL:
+        half_length = max(element.length_m for element in elements) / 2.0
+        if height_m <= half_length:
+            raise UnsupportedEstimateError(
+                f"a vertical Yagi at {intent.frequency_hz / 1e6:.3f} MHz needs "
+                f"height_m > {half_length:.2f} m; increase height_m or use "
+                "horizontal polarization"
+            )
     parameters = YagiParameters(
         frequency_hz=intent.frequency_hz,
         elements=elements,
-        height_m=intent.height_m,
+        height_m=height_m,
         driven_index=1,
         azimuth_deg=intent.azimuth_deg,
         polarization=intent.polarization,
@@ -526,7 +537,7 @@ def estimate_yagi(intent: DesignIntent) -> DimensionEstimate:
             "geometry.boom_length",
             elements[-1].position_m - elements[0].position_m,
         ),
-        _length_row("field.height", intent.height_m),
+        _length_row("field.height", height_m),
     )
     return DimensionEstimate(
         parameters=parameters,
@@ -582,13 +593,20 @@ def estimate_t2fd(intent: DesignIntent) -> DimensionEstimate:
 
 
 def estimate_moxon(intent: DesignIntent) -> DimensionEstimate:
-    reference = moxon_20m_wire(
-        height_m=intent.height_m,
-        azimuth_deg=intent.azimuth_deg,
-        polarization=intent.polarization,
-        material=intent.material,
-        ground=intent.ground,
-    )
+    height_m = max(intent.height_m, 0.01)
+    try:
+        reference = moxon_20m_wire(
+            height_m=height_m,
+            azimuth_deg=intent.azimuth_deg,
+            polarization=intent.polarization,
+            material=intent.material,
+            ground=intent.ground,
+        )
+    except ValueError as exc:
+        raise UnsupportedEstimateError(
+            f"a vertical Moxon at {intent.frequency_hz / 1e6:.3f} MHz needs "
+            "a higher height_m; increase height_m or use horizontal polarization"
+        ) from exc
     scale = MOXON_REFERENCE_FREQUENCY_HZ / intent.frequency_hz
     parameters = MoxonParameters(
         frequency_hz=intent.frequency_hz,
@@ -596,7 +614,7 @@ def estimate_moxon(intent: DesignIntent) -> DimensionEstimate:
         depth_m=reference.depth_m * scale,
         reflector_tip_m=reference.reflector_tip_m * scale,
         driven_tip_m=reference.driven_tip_m * scale,
-        height_m=intent.height_m,
+        height_m=height_m,
         azimuth_deg=intent.azimuth_deg,
         polarization=intent.polarization,
         wire_radius_m=intent.wire_radius_m,
@@ -618,7 +636,7 @@ def estimate_moxon(intent: DesignIntent) -> DimensionEstimate:
             _length_row("geometry.width", parameters.width_m),
             _length_row("geometry.depth", parameters.depth_m),
             _length_row("geometry.gap", parameters.gap_m),
-            _length_row("field.height", intent.height_m),
+            _length_row("field.height", height_m),
         ),
     )
 

@@ -97,6 +97,10 @@ geometry above the ground plane:
 - An inverted-V estimate widens the included angle, and raises the apex if
   needed, when the requested apex would put the ends below ground. The estimate
   carries `estimator.warning.inverted_v_angle_increased`.
+- OCFD and horizontal Yagi/Moxon estimates raise a zero height to 0.01 m.
+  Vertical Yagi/Moxon estimates require a height above half the longest
+  element or rectangle width; the estimator rejects a lower height with a
+  clear error instead of emitting invalid geometry.
 - Fan-dipole elements use progressively narrower included angles so their wires
   do not overlap. The apex is raised if a longer element needs it, and the
   estimate carries `estimator.warning.fan_angle_increased` when adjusted. The

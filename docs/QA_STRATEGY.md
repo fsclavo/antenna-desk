@@ -32,7 +32,7 @@ Measured on 2026-11-04:
 | Timing sensitivity | one UI failure appeared under coverage instrumentation at ~32 % while another pytest process ran concurrently. The polarization commit added deterministic posted-event processing in `tests/ui/helpers.py`; re-verify under coverage before treating it as open |
 | ADR files | 24, numbered 0001–0023 with a duplicated `0014` |
 | CI | 4 workflows, green; Linux + Windows, Python 3.11/3.12/3.13 |
-| Property-based tests | unit round trips, azimuth range, and importer fuzzing with Hypothesis 6.170 |
+| Property-based tests | unit round trips, azimuth range, importer fuzzing, all 13 estimator families, and project/migration round trips with Hypothesis 6.170 |
 | Mutation testing | weekly `mutmut` on `formulas.py` and `intent.py`: 123/175 killed, 52 message-only equivalents, behavioural score 100 % |
 | Cross-engine numerical checks | 3 free-space cases against nec2++ via PyNEC (dipole, folded dipole, quad loop) |
 | Template evidence entries | 25/25 catalog templates, enforced by a test |
@@ -132,7 +132,12 @@ catch regressions.
   tests found two real defects: `parse_nec2_deck(",")` raised `IndexError`, and
   `normalize_azimuth_degrees(-1e-15)` returned `360.0`. Both are fixed with
   deterministic regression tests.
-- Remaining: geometry invariants and project/migration round trips.
+- (implemented 2026-11-05) `hypothesis` also covers the canonical geometry and
+  persistence: every estimator family must produce a valid model, and project
+  documents plus the v1-to-current migration must round-trip. The geometry
+  properties found three real edge cases: OCFD and horizontal Yagi/Moxon
+  estimates with zero height, and vertical Yagi/Moxon arrays below ground
+  clearance. These are fixed with clamping or an explicit estimator error.
 
 **Acceptance.** CI fails on a coverage regression. The nightly mutation job
 reports a score and a survivor list. Each importer has at least one Hypothesis
@@ -537,8 +542,9 @@ the polarization commit.
 1. (done 2026-11-04) Coverage measurement and per-package thresholds.
 2. (done 2026-11-04) mypy coverage for `ui/` via `mypy_ui.ini`, started
    permissively with a ratchet; all 75 files are checked.
-3. (partly done 2026-11-04) Hypothesis for units and the three importers,
-   including a fuzz corpus; geometry and persistence are pending.
+3. (done 2026-11-05) Hypothesis for units, the three importers, all estimator
+   families, and project/migration round trips; the geometry properties found
+   and fixed the zero-height and vertical-array clearance edge cases.
 4. (done 2026-11-04) i18n parity test:
    `tests/unit/ui/test_i18n.py` checks both languages, blank entries,
    placeholder parity, duplicate literal keys, and the fallback path.

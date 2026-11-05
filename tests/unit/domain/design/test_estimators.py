@@ -610,3 +610,46 @@ def test_template_without_an_estimator_is_unsupported() -> None:
     assert supports_estimation(parameters) is False
     with pytest.raises(UnsupportedEstimateError):
         estimator_type_for(parameters)
+
+
+def test_ocfd_clamps_zero_height_to_the_ground_plane() -> None:
+    from antennadesk.domain.antennas.ocfd import OCFDParameters
+
+    estimate = estimate_intent(_intent("ocfd", height_m=0.0))
+
+    assert isinstance(estimate.parameters, OCFDParameters)
+    assert estimate.parameters.height_m == pytest.approx(0.01)
+
+
+def test_horizontal_yagi_and_moxon_accept_zero_height() -> None:
+    yagi = estimate_intent(_intent("yagi", height_m=0.0)).parameters
+    moxon = estimate_intent(_intent("moxon", height_m=0.0)).parameters
+
+    assert isinstance(yagi, YagiParameters)
+    assert isinstance(moxon, MoxonParameters)
+    assert yagi.height_m == pytest.approx(0.01)
+    assert moxon.height_m == pytest.approx(0.01)
+
+
+def test_vertical_yagi_rejects_a_height_below_the_element_half_length() -> None:
+    with pytest.raises(UnsupportedEstimateError, match="vertical Yagi"):
+        estimate_intent(
+            _intent(
+                "yagi",
+                frequency_hz=14_100_000.0,
+                height_m=1.0,
+                polarization=Polarization.VERTICAL,
+            )
+        )
+
+
+def test_vertical_moxon_rejects_a_height_below_the_half_width() -> None:
+    with pytest.raises(UnsupportedEstimateError, match="vertical Moxon"):
+        estimate_intent(
+            _intent(
+                "moxon",
+                frequency_hz=14_100_000.0,
+                height_m=1.0,
+                polarization=Polarization.VERTICAL,
+            )
+        )
