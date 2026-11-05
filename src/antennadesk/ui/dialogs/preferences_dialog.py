@@ -52,9 +52,9 @@ class PreferencesDialog(QDialog):
         self._select(self._font_size, preferences.font_size.value)
 
         form = QFormLayout()
-        form.addRow(QLabel(translator.t("menu.language"), self), self._language)
-        form.addRow(QLabel(translator.t("menu.units"), self), self._units)
-        form.addRow(QLabel(translator.t("menu.font_size"), self), self._font_size)
+        form.addRow(QLabel(translator.t("preferences.language"), self), self._language)
+        form.addRow(QLabel(translator.t("preferences.units"), self), self._units)
+        form.addRow(QLabel(translator.t("preferences.font_size"), self), self._font_size)
 
         hint = QLabel(translator.t("preferences.hint"), self)
         hint.setWordWrap(True)

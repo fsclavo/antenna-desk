@@ -12,7 +12,6 @@ from uuid import UUID, uuid4
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import (
     QAction,
-    QActionGroup,
     QCloseEvent,
     QFont,
     QKeySequence,
@@ -430,48 +429,6 @@ class MainWindow(QMainWindow):
         self._cancel_action = QAction(self)
         self._cancel_action.setShortcut(QKeySequence("Ctrl+."))
         self._cancel_action.triggered.connect(lambda: self.cancel_simulation())
-
-        self._language_group = QActionGroup(self)
-        self._language_group.setExclusive(True)
-        self._english_action = QAction(self)
-        self._english_action.setCheckable(True)
-        self._english_action.triggered.connect(lambda: self._set_language(Language.ENGLISH))
-        self._spanish_action = QAction(self)
-        self._spanish_action.setCheckable(True)
-        self._spanish_action.triggered.connect(lambda: self._set_language(Language.SPANISH))
-        self._language_group.addAction(self._english_action)
-        self._language_group.addAction(self._spanish_action)
-        self._english_action.setChecked(self._translator.language is Language.ENGLISH)
-        self._spanish_action.setChecked(self._translator.language is Language.SPANISH)
-
-        self._units_group = QActionGroup(self)
-        self._units_group.setExclusive(True)
-        self._metric_action = QAction(self)
-        self._metric_action.setCheckable(True)
-        self._metric_action.triggered.connect(lambda: self._set_unit_system(UnitSystem.METRIC))
-        self._imperial_action = QAction(self)
-        self._imperial_action.setCheckable(True)
-        self._imperial_action.triggered.connect(lambda: self._set_unit_system(UnitSystem.IMPERIAL))
-        self._units_group.addAction(self._metric_action)
-        self._units_group.addAction(self._imperial_action)
-        self._metric_action.setChecked(self._unit_system is UnitSystem.METRIC)
-        self._imperial_action.setChecked(self._unit_system is UnitSystem.IMPERIAL)
-
-        self._font_size_group = QActionGroup(self)
-        self._font_size_group.setExclusive(True)
-        self._font_small_action = QAction(self)
-        self._font_small_action.setCheckable(True)
-        self._font_small_action.triggered.connect(lambda: self._set_font_size(FontSize.SMALL))
-        self._font_medium_action = QAction(self)
-        self._font_medium_action.setCheckable(True)
-        self._font_medium_action.triggered.connect(lambda: self._set_font_size(FontSize.MEDIUM))
-        self._font_large_action = QAction(self)
-        self._font_large_action.setCheckable(True)
-        self._font_large_action.triggered.connect(lambda: self._set_font_size(FontSize.LARGE))
-        self._font_size_group.addAction(self._font_small_action)
-        self._font_size_group.addAction(self._font_medium_action)
-        self._font_size_group.addAction(self._font_large_action)
-        self._update_font_size_actions()
 
         style = self.style()
         self._new_action.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_FileIcon))
@@ -937,17 +894,6 @@ class MainWindow(QMainWindow):
         self._tools_menu.addSeparator()
         self._tools_menu.addAction(self._locate_solver_action)
         self._tools_menu.addAction(self._compact_history_action)
-        self._tools_menu.addSeparator()
-        self._language_menu = self._tools_menu.addMenu("")
-        self._language_menu.addAction(self._english_action)
-        self._language_menu.addAction(self._spanish_action)
-        self._units_menu = self._tools_menu.addMenu("")
-        self._units_menu.addAction(self._metric_action)
-        self._units_menu.addAction(self._imperial_action)
-        self._font_size_menu = self._tools_menu.addMenu("")
-        self._font_size_menu.addAction(self._font_small_action)
-        self._font_size_menu.addAction(self._font_medium_action)
-        self._font_size_menu.addAction(self._font_large_action)
 
         self._help_menu = self.menuBar().addMenu("")
         self._help_menu.addAction(self._about_action)
@@ -1076,13 +1022,6 @@ class MainWindow(QMainWindow):
         self._simulate_action.setText(self._translator.t("action.simulate"))
         self._simulate_action.setToolTip(self._translator.t("action.simulate.tooltip"))
         self._cancel_action.setText(self._translator.t("action.cancel"))
-        self._english_action.setText(self._translator.t("action.english"))
-        self._spanish_action.setText(self._translator.t("action.spanish"))
-        self._metric_action.setText(self._translator.t("units.metric"))
-        self._imperial_action.setText(self._translator.t("units.imperial"))
-        self._font_small_action.setText(self._translator.t("font_size.small"))
-        self._font_medium_action.setText(self._translator.t("font_size.medium"))
-        self._font_large_action.setText(self._translator.t("font_size.large"))
         self._edit_menu.setTitle(self._translator.t("menu.edit"))
         self._refresh_history_actions()
         self._file_menu.setTitle(self._translator.t("menu.file"))
@@ -1093,9 +1032,6 @@ class MainWindow(QMainWindow):
         self._custom_menu.setTitle(self._translator.t("menu.custom_wires"))
         self._simulation_menu.setTitle(self._translator.t("menu.simulation"))
         self._tools_menu.setTitle(self._translator.t("menu.tools"))
-        self._language_menu.setTitle(self._translator.t("menu.language"))
-        self._units_menu.setTitle(self._translator.t("menu.units"))
-        self._font_size_menu.setTitle(self._translator.t("menu.font_size"))
         self._help_menu.setTitle(self._translator.t("menu.help"))
         self._project_name_label.setText(self._translator.t("field.project_name"))
         self._variant_label.setText(self._translator.t("variant.label"))
@@ -5762,13 +5698,8 @@ class MainWindow(QMainWindow):
 
     def _apply_preferences(self, preferences: UiPreferences) -> None:
         self._translator.set_language(preferences.language)
-        self._english_action.setChecked(preferences.language is Language.ENGLISH)
-        self._spanish_action.setChecked(preferences.language is Language.SPANISH)
         self._font_size_controller.apply(preferences.font_size)
-        self._update_font_size_actions()
         self._unit_system = preferences.unit_system
-        self._metric_action.setChecked(preferences.unit_system is UnitSystem.METRIC)
-        self._imperial_action.setChecked(preferences.unit_system is UnitSystem.IMPERIAL)
         self._form.set_unit_system(preferences.unit_system)
         self._geometry.set_unit_system(preferences.unit_system)
         self.retranslate()
@@ -5777,28 +5708,17 @@ class MainWindow(QMainWindow):
 
     def _set_language(self, language: Language) -> None:
         self._translator.set_language(language)
-        self._english_action.setChecked(language is Language.ENGLISH)
-        self._spanish_action.setChecked(language is Language.SPANISH)
         self.retranslate()
         self._update_form_panel_widths()
         self._save_preferences()
 
-    def _update_font_size_actions(self) -> None:
-        size = self._font_size_controller.size
-        self._font_small_action.setChecked(size is FontSize.SMALL)
-        self._font_medium_action.setChecked(size is FontSize.MEDIUM)
-        self._font_large_action.setChecked(size is FontSize.LARGE)
-
     def _set_font_size(self, size: FontSize) -> None:
         self._font_size_controller.apply(size)
-        self._update_font_size_actions()
         self._update_form_panel_widths()
         self._save_preferences()
 
     def _set_unit_system(self, unit_system: UnitSystem) -> None:
         self._unit_system = unit_system
-        self._metric_action.setChecked(unit_system is UnitSystem.METRIC)
-        self._imperial_action.setChecked(unit_system is UnitSystem.IMPERIAL)
         self._form.set_unit_system(unit_system)
         self._geometry.set_unit_system(unit_system)
         self._update_form_panel_widths()

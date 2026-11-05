@@ -151,7 +151,7 @@ def test_in_memory_store_round_trips_preferences() -> None:
     assert store.load() == preferences
 
 
-def test_main_window_font_actions_apply_and_persist(qtbot: QtBot) -> None:
+def test_main_window_font_size_applies_and_persists(qtbot: QtBot) -> None:
     app = _application()
     base = QFont("Sans Serif", 10)
     app.setFont(base)
@@ -167,23 +167,20 @@ def test_main_window_font_actions_apply_and_persist(qtbot: QtBot) -> None:
     )
     qtbot.addWidget(window)
 
-    assert window._font_medium_action.isChecked() is True
-    assert window._font_small_action.isChecked() is False
-    assert window._font_large_action.isChecked() is False
+    assert window._font_size_controller.size is FontSize.MEDIUM
 
-    window._font_large_action.trigger()
+    window._set_font_size(FontSize.LARGE)
 
     assert app.font().pointSizeF() == pytest.approx(12.0)
     assert preferences.load().font_size is FontSize.LARGE
-    assert window._font_large_action.isChecked() is True
-    assert window._font_medium_action.isChecked() is False
+    assert window._font_size_controller.size is FontSize.LARGE
     assert window._dirty is False
 
-    window._font_medium_action.trigger()
+    window._set_font_size(FontSize.MEDIUM)
 
     assert app.font().pointSizeF() == pytest.approx(10.0)
     assert preferences.load().font_size is FontSize.MEDIUM
-    assert window._font_medium_action.isChecked() is True
+    assert window._font_size_controller.size is FontSize.MEDIUM
 
 
 def test_main_window_starts_with_the_saved_font_size(qtbot: QtBot) -> None:
@@ -204,8 +201,7 @@ def test_main_window_starts_with_the_saved_font_size(qtbot: QtBot) -> None:
     qtbot.addWidget(window)
 
     assert app.font().pointSizeF() == pytest.approx(12.0)
-    assert window._font_large_action.isChecked() is True
-    assert window._font_medium_action.isChecked() is False
+    assert window._font_size_controller.size is FontSize.LARGE
 
 
 def test_language_and_units_are_persisted(window: MainWindow) -> None:
@@ -240,7 +236,7 @@ def test_preferences_action_applies_accepted_values(
     assert window._font_size_controller.size is FontSize.LARGE
     assert window._unit_system is UnitSystem.IMPERIAL
     assert window._simulate_action.text() == "Simular"
-    assert window._imperial_action.isChecked() is True
+    assert window._current_preferences() == accepted
     assert window._preferences.load() == accepted
     assert window._dirty is False
 
@@ -271,30 +267,34 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
     )
 
 
-def test_preferences_menu_and_action_retranslate(window: MainWindow) -> None:
+def test_preferences_action_retranslates_and_replaces_quick_menus(
+    window: MainWindow,
+) -> None:
     assert window._preferences_action in window._tools_menu.actions()
-    assert window._font_size_menu.menuAction() in window._tools_menu.actions()
+    assert not hasattr(window, "_language_menu")
+    assert not hasattr(window, "_units_menu")
+    assert not hasattr(window, "_font_size_menu")
 
     window._set_language(Language.SPANISH)
 
     assert window._preferences_action.text() == "Preferencias..."
-    assert window._font_size_menu.title() == "Tamaño de fuente"
-    assert window._font_small_action.text() == "Pequeño"
-    assert window._font_medium_action.text() == "Normal"
-    assert window._font_large_action.text() == "Grande"
 
     window._set_language(Language.ENGLISH)
 
     assert window._preferences_action.text() == "Preferences..."
-    assert window._font_size_menu.title() == "Font Size"
-    assert window._font_small_action.text() == "Small"
-    assert window._font_medium_action.text() == "Normal"
-    assert window._font_large_action.text() == "Large"
+
+    tools_titles = [action.text() for action in window._tools_menu.actions()]
+    assert "Preferences..." in tools_titles
+    assert "Language" not in tools_titles
+    assert "Units" not in tools_titles
+    assert "Font Size" not in tools_titles
 
 
 def test_preferences_keys_exist_in_both_languages() -> None:
     keys = (
-        "menu.font_size",
+        "preferences.font_size",
+        "preferences.language",
+        "preferences.units",
         "font_size.small",
         "font_size.medium",
         "font_size.large",

@@ -86,19 +86,25 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Simulación",
     },
     "menu.tools": {Language.ENGLISH: "Tools", Language.SPANISH: "Herramientas"},
-    "menu.language": {Language.ENGLISH: "Language", Language.SPANISH: "Idioma"},
     "menu.help": {Language.ENGLISH: "Help", Language.SPANISH: "Ayuda"},
-    "menu.units": {Language.ENGLISH: "Units", Language.SPANISH: "Unidades"},
-    "menu.font_size": {
-        Language.ENGLISH: "Font Size",
-        Language.SPANISH: "Tamaño de fuente",
-    },
     "font_size.small": {Language.ENGLISH: "Small", Language.SPANISH: "Pequeño"},
     "font_size.medium": {Language.ENGLISH: "Normal", Language.SPANISH: "Normal"},
     "font_size.large": {Language.ENGLISH: "Large", Language.SPANISH: "Grande"},
     "preferences.title": {
         Language.ENGLISH: "Preferences",
         Language.SPANISH: "Preferencias",
+    },
+    "preferences.language": {
+        Language.ENGLISH: "Language",
+        Language.SPANISH: "Idioma",
+    },
+    "preferences.units": {
+        Language.ENGLISH: "Units",
+        Language.SPANISH: "Unidades",
+    },
+    "preferences.font_size": {
+        Language.ENGLISH: "Font Size",
+        Language.SPANISH: "Tamaño de fuente",
     },
     "preferences.hint": {
         Language.ENGLISH: (

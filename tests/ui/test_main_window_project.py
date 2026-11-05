@@ -364,8 +364,10 @@ def test_menu_order_follows_the_standard_desktop_layout(window: MainWindow) -> N
 
     assert menu_titles == ["File", "Edit", "Design", "Simulation", "Tools", "Help"]
     tools_titles = [action.text() for action in window._tools_menu.actions()]
-    assert "Language" in tools_titles
-    assert "Units" in tools_titles
+    assert "Preferences..." in tools_titles
+    assert "Language" not in tools_titles
+    assert "Units" not in tools_titles
+    assert "Font Size" not in tools_titles
     assert window._change_template_action.shortcut().toString() == "Ctrl+Shift+T"
     assert window._design_from_frequency_action.shortcut().toString() == "Ctrl+Shift+E"
 

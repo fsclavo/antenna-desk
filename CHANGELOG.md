@@ -16,8 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Exported reports keep their fixed typography.
 - **Tools → Preferences...** now sets language, display units, and font size in
   one dialog. Language and units persist across restarts, and dialog initial
-  sizes follow the font preset. The existing Language, Units, and Font Size
-  submenus remain as shortcuts and also persist their choices.
+  sizes follow the font preset. The redundant Language, Units, and Font Size
+  submenus were removed; Preferences is the single entry point.
 - Mutation testing now includes `dipole.py`: 240/304 mutants killed (79 %), and
   the 64 survivors are message-only. The run found and fixed a missing
   conductor-material assertion in `to_antenna()`.

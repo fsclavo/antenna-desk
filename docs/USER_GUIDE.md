@@ -941,8 +941,7 @@ before discarding unsaved changes.
 
 Use **Tools → Preferences...** to set the language (English or Español), the
 display units (metric m/mm or imperial ft/in), and the font size (Small,
-Normal, or Large). The **Language**, **Units**, and **Font Size** submenus are
-shortcuts to the same settings.
+Normal, or Large). All three settings live in that single dialog.
 
 Preferences are saved and applied at startup. **Normal** restores the system
 font. The font preset scales the standard widgets, the antenna sketch, the
