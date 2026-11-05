@@ -159,32 +159,32 @@ def write_dxf(scene: GeometryScene, path: Path, title: str) -> None:
                     ),
                 },
             )
-    for dimension in scene.angular_dimensions:
+    for angular in scene.angular_dimensions:
         base = _angular_base(
-            dimension.center,
-            dimension.first,
-            dimension.second,
+            angular.center,
+            angular.first,
+            angular.second,
             max(span * 0.12, 0.1),
         )
         try:
             modelspace.add_angular_dim_3p(
                 base=base,
-                center=(dimension.center.x_m, dimension.center.y_m),
-                p1=(dimension.first.x_m, dimension.first.y_m),
-                p2=(dimension.second.x_m, dimension.second.y_m),
-                text=dimension.text,
+                center=(angular.center.x_m, angular.center.y_m),
+                p1=(angular.first.x_m, angular.first.y_m),
+                p2=(angular.second.x_m, angular.second.y_m),
+                text=angular.text,
                 override=dimension_style,
                 dxfattribs={"layer": LAYER_DIMENSIONS},
             ).render()
         except Exception:
             modelspace.add_text(
-                dimension.text,
+                angular.text,
                 height=text_height,
                 dxfattribs={
                     "layer": LAYER_TEXT,
                     "insert": (
-                        dimension.center.x_m,
-                        dimension.center.y_m + text_height,
+                        angular.center.x_m,
+                        angular.center.y_m + text_height,
                     ),
                 },
             )

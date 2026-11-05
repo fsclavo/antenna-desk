@@ -1015,15 +1015,15 @@ def _add_array_dimensions(
         return
 
     if vertical_array and isinstance(parameters, YagiParameters):
-        for index, element in enumerate(parameters.elements):
-            wire = _array_wire(model, f"element-{index + 1}", index)
-            if wire is None:
+        for index, yagi_element in enumerate(parameters.elements):
+            array_wire = _array_wire(model, f"element-{index + 1}", index)
+            if array_wire is None:
                 continue
             dimensions.append(
                 factory.dimension(
-                    wire.start,
-                    wire.end,
-                    element.length_m,
+                    array_wire.start,
+                    array_wire.end,
+                    yagi_element.length_m,
                     side="right" if index % 2 == 0 else "left",
                     priority=70
                     if index in {0, parameters.driven_index, len(parameters.elements) - 1}
@@ -1259,13 +1259,13 @@ def _angular_dimensions(
     if effective_type == ANTENNA_TYPE_FAN_DIPOLE:
         dimensions: list[AngularDimension] = []
         for index in range(0, len(model.wires) - 1, 2):
-            first = model.wires[index]
-            second = model.wires[index + 1]
-            apex = _shared_endpoint(first, second)
+            first_wire = model.wires[index]
+            second_wire = model.wires[index + 1]
+            apex = _shared_endpoint(first_wire, second_wire)
             if apex is None:
                 continue
-            first_end = first.end if first.start == apex else first.start
-            second_end = second.end if second.start == apex else second.start
+            first_end = first_wire.end if first_wire.start == apex else first_wire.start
+            second_end = second_wire.end if second_wire.start == apex else second_wire.start
             angle = _included_angle(apex, first_end, second_end)
             dimensions.append(
                 AngularDimension(

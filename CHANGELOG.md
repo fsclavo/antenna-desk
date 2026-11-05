@@ -150,8 +150,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   dependencies.
 - Renumbered the duplicate ADR 0014: undo/redo is now ADR 0024. Added tests for
   unique, contiguous ADR numbering and matching headings.
-- Ten more UI modules are now type-checked: 68 of 75 files, with 7 remaining
-  in the mypy ratchet.
+- Thirteen more UI modules are now type-checked: 71 of 75 files, with 4
+  remaining in the mypy ratchet.
 - **New Variant...** is now **New Design in Project...**, and the design
   selector, menus, comparison dialog, and history labels use “design” instead of
   “variant”.

@@ -8,7 +8,7 @@ import math
 from collections.abc import Mapping
 from uuid import UUID
 
-import pyqtgraph as pg
+import pyqtgraph as pg  # type: ignore  # pyqtgraph ships no type stubs
 from PySide6.QtCore import QEvent
 from PySide6.QtWidgets import (
     QComboBox,
@@ -219,6 +219,9 @@ class ComparisonDialog(QDialog):
         else:
             primary = "—"
             secondary = "—"
+        height_m = getattr(parameters, "height_m", None)
+        azimuth_deg = getattr(parameters, "azimuth_deg", None)
+        wire_radius_m = getattr(parameters, "wire_radius_m", None)
         return [
             (
                 t("field.antenna_type"),
@@ -227,9 +230,12 @@ class ComparisonDialog(QDialog):
             (t("field.frequency"), f"{parameters.frequency_hz / 1e6:.6f} MHz"),
             (t("field.primary_dimension"), primary),
             (t("field.secondary_dimension"), secondary),
-            (t("field.height"), f"{parameters.height_m:.3f} m"),
-            (t("field.azimuth"), f"{parameters.azimuth_deg:.1f}°"),
-            (t("field.diameter"), f"{parameters.wire_radius_m * 2000.0:.3f} mm"),
+            (t("field.height"), f"{height_m:.3f} m" if height_m is not None else "—"),
+            (t("field.azimuth"), f"{azimuth_deg:.1f}°" if azimuth_deg is not None else "—"),
+            (
+                t("field.diameter"),
+                f"{wire_radius_m * 2000.0:.3f} mm" if wire_radius_m is not None else "—",
+            ),
             (t("table.resistance"), f"{frequency.impedance_ohm.real:.3f}" if frequency else "—"),
             (t("table.reactance"), f"{frequency.impedance_ohm.imag:+.3f}" if frequency else "—"),
             (t("table.impedance"), f"{abs(frequency.impedance_ohm):.3f}" if frequency else "—"),
@@ -296,9 +302,12 @@ class ComparisonDialog(QDialog):
             self._band_table.insertRow(row)
             self._band_table.setItem(row, 0, QTableWidgetItem(band_id))
             for column, analysis in ((1, analysis_a), (2, analysis_b)):
+                analysis_result = (
+                    analysis.result_for_band(band_id) if analysis is not None else None
+                )
                 summary = (
-                    summarize_band(band, analysis.result_for_band(band_id).result)
-                    if analysis is not None and analysis.result_for_band(band_id) is not None
+                    summarize_band(band, analysis_result.result)
+                    if analysis_result is not None
                     else None
                 )
                 self._band_table.setItem(
