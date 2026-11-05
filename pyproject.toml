@@ -114,6 +114,7 @@ markers = [
   "solver: requires a real nec2c executable",
   "cross_engine: compares the solver against an independent NEC implementation",
   "slow: takes more than a few seconds",
+  "fast: quick unit-test lane that excludes slow, UI, and solver suites",
   "golden: compares against a committed golden file",
   "ui: Qt widget test",
 ]

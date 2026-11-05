@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The test suite has a fast unit-test lane: `pytest -m "fast and not slow"`
+  runs 713 tests in about 7 s. `fast`, `ui`, and `solver` markers are applied
+  automatically by path or fixture; the two G5RV pattern-budget tests are
+  marked `slow`.
 - A static UI translation test checks every literal key passed to the
   translator and every literal text setter, so missing keys and untranslated
   labels fail the build.

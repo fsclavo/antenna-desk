@@ -22,6 +22,7 @@ NEC2C = os.environ.get("NEC2C")
 pytestmark = [
     pytest.mark.solver,
     pytest.mark.science,
+    pytest.mark.slow,
     pytest.mark.skipif(
         not NEC2C or not Path(NEC2C).is_file(),
         reason="NEC2C must point to a nec2c executable",

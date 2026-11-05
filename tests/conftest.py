@@ -96,6 +96,23 @@ def repository() -> JsonProjectRepository:
     return JsonProjectRepository()
 
 
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Apply path- and fixture-based markers automatically.
+
+    ``fast`` is the unit-test lane; UI and solver markers keep those suites
+    selectable without annotating every test by hand. A unit test that becomes
+    slow can still be tagged ``slow`` and will drop out of the fast lane.
+    """
+
+    for item in items:
+        if item.nodeid.startswith("tests/unit/"):
+            item.add_marker(pytest.mark.fast)
+        if item.nodeid.startswith("tests/ui/"):
+            item.add_marker(pytest.mark.ui)
+        if "solver" in item.fixturenames:
+            item.add_marker(pytest.mark.solver)
+
+
 def pytest_report_header(config: pytest.Config) -> str:
     """Report whether the solver tests will run or skip."""
     solver = os.environ.get("NEC2C")

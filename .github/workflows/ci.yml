@@ -85,6 +85,9 @@ jobs:
       - name: mypy (UI, permissive ratchet)
         run: uv run mypy --config-file mypy_ui.ini
 
+      - name: Fast tests
+        run: uv run pytest -m "fast and not slow" -q
+
       - name: pytest
         shell: bash
         run: |
