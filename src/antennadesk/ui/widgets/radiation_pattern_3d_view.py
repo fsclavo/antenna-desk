@@ -19,9 +19,10 @@ from PySide6.QtGui import (
     QPen,
     QWheelEvent,
 )
-from PySide6.QtWidgets import QSizePolicy, QWidget
+from PySide6.QtWidgets import QApplication, QSizePolicy, QWidget
 
 from ...domain.simulation.pattern import takeoff_angle_deg
+from ..fonts import scaled_font
 from ..i18n import Translator
 from ..theme import theme_colors
 
@@ -407,6 +408,13 @@ class RadiationPattern3DView(QWidget):
         self._colors = theme_colors(self.palette())
         self.setMinimumHeight(280)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        app = QApplication.instance()
+        if isinstance(app, QApplication):
+            app.fontChanged.connect(self._on_application_font_changed)
+
+    def _on_application_font_changed(self, font: QFont) -> None:
+        del font
+        self.update()
 
     def sizeHint(self) -> QSize:
         return QSize(640, 420)
@@ -539,7 +547,7 @@ class RadiationPattern3DView(QWidget):
         mesh = self._interactive_mesh if self._interacting else self._full_mesh
         if mesh is None or len(mesh.vertices) < 4:
             painter.setPen(self._colors.secondary_text)
-            painter.setFont(QFont("Sans Serif", 9))
+            painter.setFont(scaled_font(9))
             painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, self._translator.t("pattern.none"))
             return
 
@@ -670,7 +678,7 @@ class RadiationPattern3DView(QWidget):
                     ),
                 )
             painter.setPen(self._colors.secondary_text)
-            painter.setFont(QFont("Sans Serif", 7))
+            painter.setFont(scaled_font(7))
             ground_label = screen_world(0.0, -0.88, 0.0)
             painter.drawText(
                 QRectF(ground_label.x() - 30.0, ground_label.y() + 4.0, 60.0, 14.0),
@@ -686,7 +694,7 @@ class RadiationPattern3DView(QWidget):
         painter.setBrush(Qt.BrushStyle.NoBrush)
 
         max_label = self._max_gain_label(max_point)
-        painter.setFont(QFont("Sans Serif", 8))
+        painter.setFont(scaled_font(8))
         metrics = painter.fontMetrics()
         label_width = min(metrics.horizontalAdvance(max_label) + 10.0, rect.width() - 12.0)
         label_height = 18.0
@@ -724,7 +732,7 @@ class RadiationPattern3DView(QWidget):
         ):
             end = screen(axis_theta, axis_phi, max_gain)
             painter.drawLine(origin, end)
-            painter.setFont(QFont("Sans Serif", 7))
+            painter.setFont(scaled_font(7))
             painter.setPen(self._colors.secondary_text)
             painter.drawText(
                 QRectF(end.x() + 4.0, end.y() - 8.0, 16.0, 16.0),
@@ -740,7 +748,7 @@ class RadiationPattern3DView(QWidget):
         )
 
         painter.setPen(self._colors.secondary_text)
-        painter.setFont(QFont("Sans Serif", 8))
+        painter.setFont(scaled_font(8))
         painter.drawText(
             QRectF(rect.left() + 14.0, rect.top() + 8.0, rect.width() - 28.0, 18.0),
             self._translator.t("pattern.3d_polar"),
@@ -767,7 +775,7 @@ class RadiationPattern3DView(QWidget):
             10.0,
             min(120.0, draw_rect.height() * 0.38),
         )
-        painter.setFont(QFont("Sans Serif", 7))
+        painter.setFont(scaled_font(7))
         if uniform:
             painter.setPen(QPen(gain_color(0.5, 255), 0.8))
             painter.setBrush(gain_color(0.5, 255))

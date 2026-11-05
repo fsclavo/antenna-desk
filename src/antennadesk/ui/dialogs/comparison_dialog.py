@@ -10,7 +10,9 @@ from uuid import UUID
 
 import pyqtgraph as pg  # type: ignore  # pyqtgraph ships no type stubs
 from PySide6.QtCore import QEvent
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
+    QApplication,
     QComboBox,
     QDialog,
     QDialogButtonBox,
@@ -33,6 +35,7 @@ from ...domain.simulation.band_result import BandAnalysisResult
 from ...domain.simulation.band_summary import summarize_band
 from ...domain.simulation.bands import AmateurBand
 from ...domain.simulation.result import FrequencyResult, SimulationResult
+from ..fonts import apply_plot_fonts
 from ..i18n import Translator
 from ..theme import theme_colors
 
@@ -123,6 +126,12 @@ class ComparisonDialog(QDialog):
         self._combo_b.currentIndexChanged.connect(self._refresh)
         self._apply_theme()
         self._refresh()
+        app = QApplication.instance()
+        if isinstance(app, QApplication):
+            app.fontChanged.connect(self._on_application_font_changed)
+
+    def _plots(self) -> tuple[pg.PlotWidget, ...]:
+        return (self._swr_plot, self._pattern_plot)
 
     @staticmethod
     def _make_plot() -> pg.PlotWidget:
@@ -130,9 +139,13 @@ class ComparisonDialog(QDialog):
         plot.showGrid(x=True, y=True, alpha=0.3)
         return plot
 
+    def _on_application_font_changed(self, font: QFont) -> None:
+        del font
+        apply_plot_fonts(self._plots())
+
     def _apply_theme(self) -> None:
         self._colors = theme_colors(self.palette())
-        for plot in (self._swr_plot, self._pattern_plot):
+        for plot in self._plots():
             plot.setBackground(self._colors.plot_background)
             for axis_name in ("left", "bottom"):
                 axis = plot.getAxis(axis_name)
@@ -141,6 +154,7 @@ class ComparisonDialog(QDialog):
             legend = plot.plotItem.legend
             if legend is not None:
                 legend.setLabelTextColor(self._colors.text)
+        apply_plot_fonts(self._plots())
 
     def changeEvent(self, event: QEvent) -> None:
         if event.type() == QEvent.Type.PaletteChange:

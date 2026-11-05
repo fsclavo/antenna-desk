@@ -5,8 +5,10 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget
 
+from ..fonts import scaled_pixel_font
 from ..i18n import Translator
 
 
@@ -23,7 +25,7 @@ class StartPage(QWidget):
         self._title = QLabel(self)
         self._title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._title.setWordWrap(True)
-        self._title.setStyleSheet("font-size: 22px; font-weight: 600;")
+        self._apply_title_font()
 
         self._description = QLabel(self)
         self._description.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -56,7 +58,24 @@ class StartPage(QWidget):
         layout.addWidget(self._flow)
         layout.addStretch(2)
 
+        app = QApplication.instance()
+        if isinstance(app, QApplication):
+            app.fontChanged.connect(self._on_application_font_changed)
+
         self.retranslate()
+
+    def _apply_title_font(self) -> None:
+        self._title.setFont(
+            scaled_pixel_font(
+                22,
+                QFont.Weight.DemiBold,
+                self.font().family(),
+            )
+        )
+
+    def _on_application_font_changed(self, font: QFont) -> None:
+        del font
+        self._apply_title_font()
 
     def retranslate(self) -> None:
         self._title.setText(self._translator.t("start.title"))

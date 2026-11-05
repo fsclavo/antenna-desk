@@ -944,9 +944,10 @@ metric (m, mm) or imperial (ft, in). The domain and project files always store
 canonical meters and hertz.
 
 Use **Tools → Font Size** for Small, Normal, or Large. Normal restores the
-system default. The choice is saved and applied at startup. It scales most
-standard widgets. The antenna sketch, pattern views, the start-page headline,
-and exported reports keep their own fixed typography.
+system default. The choice is saved and applied at startup. It scales the
+standard widgets, the antenna sketch, the pattern views, the chart axes and
+legends, and the start-page headline. Exported reports keep their own fixed
+typography.
 
 ## Current limitations
 

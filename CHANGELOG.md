@@ -11,9 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Persistent UI font-size presets (**Small**, **Normal**, **Large**) under
   **Tools → Font Size**. Normal restores the system default; the choice is
-  applied at startup. Most standard widgets scale, while custom-painted
-  diagrams, the start-page headline, and exported reports keep their fixed
-  typography.
+  applied at startup. Standard widgets, custom-painted sketches, pattern views,
+  chart axes and legends, and the start-page headline follow the preset.
+  Exported reports keep their fixed typography.
 - Mutation testing now includes `dipole.py`: 240/304 mutants killed (79 %), and
   the 64 survivors are message-only. The run found and fixed a missing
   conductor-material assertion in `to_antenna()`.

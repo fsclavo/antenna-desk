@@ -28,7 +28,7 @@ from PySide6.QtGui import (
     QWheelEvent,
 )
 from PySide6.QtSvg import QSvgGenerator
-from PySide6.QtWidgets import QSizePolicy, QWidget
+from PySide6.QtWidgets import QApplication, QSizePolicy, QWidget
 
 from ...domain.antennas.antenna import AntennaModel
 from ...domain.antennas.dipole import ANTENNA_TYPE_WIRE_DIPOLE
@@ -36,6 +36,7 @@ from ...domain.antennas.folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE
 from ...domain.antennas.geometry import Point3D
 from ...domain.antennas.j_pole import ANTENNA_TYPE_J_POLE
 from ...domain.antennas.loop import ANTENNA_TYPE_LOOP
+from ..fonts import scaled_font
 from ..geometry.builder import build_scene, effective_antenna_type, type_label
 from ..geometry.dxf_export import write_dxf
 from ..geometry.layout import (
@@ -88,6 +89,13 @@ class GeometryView(QWidget):
         self._colors = theme_colors(self.palette())
         self.setMinimumHeight(280)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        app = QApplication.instance()
+        if isinstance(app, QApplication):
+            app.fontChanged.connect(self._on_application_font_changed)
+
+    def _on_application_font_changed(self, font: QFont) -> None:
+        del font
+        self.update()
 
     def sizeHint(self) -> QSize:
         return QSize(700, 330)
@@ -340,7 +348,7 @@ class GeometryView(QWidget):
         if self._model is None:
             self._draw_header(painter, rect, None)
             painter.setPen(self._colors.secondary_text)
-            painter.setFont(QFont("Sans Serif", 10))
+            painter.setFont(scaled_font(10))
             painter.drawText(
                 rect,
                 Qt.AlignmentFlag.AlignCenter,
@@ -436,7 +444,7 @@ class GeometryView(QWidget):
                     )
                 )
         reserved_tuple = tuple(reserved)
-        font_metrics = QFontMetricsF(QFont("Sans Serif", 8))
+        font_metrics = QFontMetricsF(scaled_font(8))
         placed = layout_dimensions(
             scene,
             transform,
@@ -598,7 +606,7 @@ class GeometryView(QWidget):
         painter: QPainter,
         placed: tuple[PlacedDimension, ...],
     ) -> None:
-        painter.setFont(QFont("Sans Serif", 8))
+        painter.setFont(scaled_font(8))
         for item in placed:
             painter.fillRect(item.text_rect, self._colors.background)
             painter.setPen(self._colors.text)
@@ -613,7 +621,7 @@ class GeometryView(QWidget):
         painter: QPainter,
         placed: tuple[PlacedAngularDimension, ...],
     ) -> None:
-        painter.setFont(QFont("Sans Serif", 8))
+        painter.setFont(scaled_font(8))
         for item in placed:
             painter.setPen(QPen(self._colors.light_line, 1.0))
             for first, second in item.extension_lines:
@@ -670,7 +678,7 @@ class GeometryView(QWidget):
         *,
         color: QColor | None = None,
     ) -> None:
-        font = QFont("Sans Serif", 8)
+        font = scaled_font(8)
         painter.setFont(font)
         metrics = QFontMetricsF(font)
         text_rect = QRectF(
@@ -709,7 +717,7 @@ class GeometryView(QWidget):
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawRect(outer)
             painter.setPen(self._colors.secondary_text)
-            painter.setFont(QFont("Sans Serif", 7))
+            painter.setFont(scaled_font(7))
             painter.drawText(
                 QRectF(outer.left() + 6.0, outer.top() + 3.0, outer.width() - 12.0, 14.0),
                 Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
@@ -761,7 +769,7 @@ class GeometryView(QWidget):
             painter.setBrush(self._colors.feed)
             painter.drawEllipse(point, 2.5, 2.5)
             painter.setBrush(Qt.BrushStyle.NoBrush)
-        metrics = QFontMetricsF(QFont("Sans Serif", 7))
+        metrics = QFontMetricsF(scaled_font(7))
         placed = layout_dimensions(
             GeometryScene(
                 polylines=inset.polylines,
@@ -798,7 +806,7 @@ class GeometryView(QWidget):
                     self._draw_arrowhead(painter, item.line_end, QPointF(ux, uy), size=4.0)
             painter.fillRect(item.text_rect, self._colors.background)
             painter.setPen(self._colors.text)
-            painter.setFont(QFont("Sans Serif", 7))
+            painter.setFont(scaled_font(7))
             painter.drawText(
                 item.text_rect,
                 Qt.AlignmentFlag.AlignCenter,
@@ -816,14 +824,14 @@ class GeometryView(QWidget):
         if self._suppress_header:
             return
         painter.setPen(self._colors.text)
-        painter.setFont(QFont("Sans Serif", 10, QFont.Weight.Bold))
+        painter.setFont(scaled_font(10, QFont.Weight.Bold))
         painter.drawText(
             QRectF(rect.left() + 16.0, rect.top() + 8.0, rect.width() - 32.0, 20.0),
             Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
             self._translator.t("panel.geometry"),
         )
         if summary:
-            font = QFont("Sans Serif", 8)
+            font = scaled_font(8)
             painter.setFont(font)
             metrics = QFontMetricsF(font)
             text = metrics.elidedText(
@@ -1139,7 +1147,7 @@ class GeometryView(QWidget):
             QPointF(x_left + bar_length, bar_y - 5.0),
             QPointF(x_left + bar_length, bar_y + 5.0),
         )
-        painter.setFont(QFont("Sans Serif", 8))
+        painter.setFont(scaled_font(8))
         painter.setPen(self._colors.secondary_text)
         painter.drawText(
             QRectF(x_left, bar_y - 22.0, 120.0, 16.0),
@@ -1172,7 +1180,7 @@ class GeometryView(QWidget):
         painter.setPen(QPen(self._colors.light_line, 1.0))
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawEllipse(center, radius, radius)
-        painter.setFont(QFont("Sans Serif", 7))
+        painter.setFont(scaled_font(7))
         painter.setPen(self._colors.secondary_text)
         painter.drawText(
             QRectF(center.x() - 8.0, center.y() - radius - 12.0, 16.0, 12.0),
@@ -1207,7 +1215,7 @@ class GeometryView(QWidget):
     ) -> None:
         if color is None:
             color = self._colors.text
-        font = QFont("Sans Serif", font_size)
+        font = scaled_font(font_size)
         painter.setFont(font)
         metrics = QFontMetricsF(font)
         text_rect = metrics.boundingRect(text)
@@ -1237,7 +1245,7 @@ class GeometryView(QWidget):
             angle -= 180.0
         while angle < -90.0:
             angle += 180.0
-        font = QFont("Sans Serif", font_size)
+        font = scaled_font(font_size)
         painter.save()
         painter.translate(center)
         painter.rotate(angle)

@@ -11,6 +11,8 @@ from PySide6.QtCore import QSettings
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
 
+from .fonts import set_current_font_scale
+
 FONT_SIZE_KEY = "ui/font_size"
 _MIN_POINT_SIZE = 6.0
 _MIN_PIXEL_SIZE = 8
@@ -94,6 +96,7 @@ class FontSizeController:
         return font
 
     def apply(self, size: FontSize) -> None:
+        set_current_font_scale(_FONT_SCALE[size])
         app = QApplication.instance()
         if isinstance(app, QApplication):
             app.setFont(self.font_for(size))

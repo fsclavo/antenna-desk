@@ -10,8 +10,9 @@ from pathlib import Path
 
 import pyqtgraph as pg  # type: ignore  # pyqtgraph ships no type stubs
 from PySide6.QtCore import QEvent, Qt, Signal
-from PySide6.QtGui import QFontDatabase
+from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import (
+    QApplication,
     QComboBox,
     QHBoxLayout,
     QHeaderView,
@@ -43,6 +44,7 @@ from ...domain.simulation.result import (
     SimulationStatus,
 )
 from ...reporting.result_summary import representative_gain_frequency
+from ..fonts import apply_plot_fonts, scaled_font_copy
 from ..i18n import Translator
 from ..theme import theme_colors
 from .chart_cursor import ChartCursor, CursorSeries
@@ -266,6 +268,18 @@ class ResultsView(QWidget):
         self._bands_table.itemSelectionChanged.connect(self._on_band_selected)
         self._apply_theme()
         self.retranslate()
+        app = QApplication.instance()
+        if isinstance(app, QApplication):
+            app.fontChanged.connect(self._on_application_font_changed)
+
+    def _plots(self) -> tuple[pg.PlotWidget, ...]:
+        return (
+            self._impedance_plot,
+            self._swr_plot,
+            self._pattern_plot,
+            self._currents_plot,
+            self._measurement_plot,
+        )
 
     @staticmethod
     def _make_plot() -> pg.PlotWidget:
@@ -273,14 +287,14 @@ class ResultsView(QWidget):
         plot.showGrid(x=True, y=True, alpha=0.3)
         return plot
 
+    def _on_application_font_changed(self, font: QFont) -> None:
+        del font
+        apply_plot_fonts(self._plots())
+        self._apply_raw_fonts()
+
     def _apply_theme(self) -> None:
         self._colors = theme_colors(self.palette())
-        for plot in (
-            self._impedance_plot,
-            self._swr_plot,
-            self._pattern_plot,
-            self._currents_plot,
-        ):
+        for plot in self._plots():
             plot.setBackground(self._colors.plot_background)
             for axis_name in ("left", "bottom"):
                 axis = plot.getAxis(axis_name)
@@ -289,6 +303,7 @@ class ResultsView(QWidget):
             legend = plot.plotItem.legend
             if legend is not None:
                 legend.setLabelTextColor(self._colors.text)
+        apply_plot_fonts(self._plots())
         for cursor in (
             self._impedance_cursor,
             self._swr_cursor,
@@ -318,13 +333,18 @@ class ResultsView(QWidget):
         table.verticalHeader().setVisible(False)
         table.horizontalHeader().setStretchLastSection(True)
 
-    @staticmethod
-    def _make_text_view() -> QPlainTextEdit:
+    def _make_text_view(self) -> QPlainTextEdit:
         view = QPlainTextEdit()
         view.setReadOnly(True)
         view.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
-        view.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
+        view.setFont(scaled_font_copy(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)))
         return view
+
+    def _apply_raw_fonts(self) -> None:
+        for view in (self._raw_input, self._raw_output):
+            view.setFont(
+                scaled_font_copy(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
+            )
 
     def save_pattern_image(self, path: Path) -> None:
         widget = (

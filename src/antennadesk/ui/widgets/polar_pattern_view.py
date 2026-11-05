@@ -8,8 +8,9 @@ import math
 
 from PySide6.QtCore import QEvent, QPointF, QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QFont, QPainter, QPaintEvent, QPen, QPolygonF
-from PySide6.QtWidgets import QSizePolicy, QWidget
+from PySide6.QtWidgets import QApplication, QSizePolicy, QWidget
 
+from ..fonts import scaled_font
 from ..i18n import Translator
 from ..theme import theme_colors
 
@@ -33,6 +34,13 @@ class PolarPatternView(QWidget):
         self._colors = theme_colors(self.palette())
         self.setMinimumHeight(220)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        app = QApplication.instance()
+        if isinstance(app, QApplication):
+            app.fontChanged.connect(self._on_application_font_changed)
+
+    def _on_application_font_changed(self, font: QFont) -> None:
+        del font
+        self.update()
 
     def sizeHint(self) -> QSize:
         return QSize(420, 320)
@@ -85,7 +93,7 @@ class PolarPatternView(QWidget):
         ]
         if len(points) < 2:
             painter.setPen(self._colors.secondary_text)
-            painter.setFont(QFont("Sans Serif", 9))
+            painter.setFont(scaled_font(9))
             painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, self._translator.t("pattern.none"))
             return
 
@@ -100,7 +108,7 @@ class PolarPatternView(QWidget):
         if radius < 30.0:
             return
 
-        painter.setFont(QFont("Sans Serif", 8))
+        painter.setFont(scaled_font(8))
         painter.setPen(QPen(self._colors.light_line, 1.0))
         for step in range(4):
             ratio = (step + 1) / 4.0
@@ -200,7 +208,7 @@ class PolarPatternView(QWidget):
         )
 
         painter.setPen(self._colors.secondary_text)
-        painter.setFont(QFont("Sans Serif", 8))
+        painter.setFont(scaled_font(8))
         title = self._title or self._translator.t("pattern.polar")
         if self._cut_phi is not None:
             title = f"{title} · {self._cut_symbol}={self._cut_phi:g}°"
@@ -221,7 +229,7 @@ class PolarPatternView(QWidget):
         *,
         color: QColor | None = None,
     ) -> None:
-        font = QFont("Sans Serif", 7)
+        font = scaled_font(7)
         painter.setFont(font)
         metrics = painter.fontMetrics()
         width = metrics.horizontalAdvance(text) + 6.0

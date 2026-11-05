@@ -13,6 +13,7 @@ from PySide6.QtWidgets import QApplication
 from pytestqt.qtbot import QtBot
 
 from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.ui.fonts import current_font_scale, set_current_font_scale
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
 from antennadesk.ui.units import UnitSystem
@@ -22,11 +23,13 @@ from antennadesk.ui.units import UnitSystem
 def _restore_application_font(qtbot: QtBot) -> Iterator[None]:
     app = QApplication.instance()
     original = QFont(app.font()) if isinstance(app, QApplication) else None
+    original_scale = current_font_scale()
     try:
         yield
     finally:
         if isinstance(app, QApplication) and original is not None:
             app.setFont(original)
+        set_current_font_scale(original_scale)
 
 
 @pytest.fixture
