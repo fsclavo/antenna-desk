@@ -359,12 +359,14 @@ class DipoleForm(QWidget):
             antenna_type = ANTENNA_TYPE_LOOP
             length_m = parameters.circumference_m
             self._sides.setValue(parameters.sides)
-        else:
+        elif isinstance(parameters, DipoleParameters):
             antenna_type = ANTENNA_TYPE_WIRE_DIPOLE
             length_m = parameters.total_length_m
             orientation_index = self._orientation.findData(parameters.orientation.value)
             if orientation_index >= 0:
                 self._orientation.setCurrentIndex(orientation_index)
+        else:
+            raise TypeError(f"unsupported parameters: {type(parameters).__name__}")
 
         self._antenna_type = antenna_type
         self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
@@ -416,31 +418,43 @@ class DipoleForm(QWidget):
             raise ValueError("invalid ground model")
 
         diameter_m = diameter_to_m(self._diameter.value(), self._unit_system)
-        common = {
-            "frequency_hz": self._frequency.value() * 1_000_000.0,
-            "height_m": length_to_m(self._height.value(), self._unit_system),
-            "azimuth_deg": self._azimuth.value(),
-            "wire_radius_m": diameter_m / 2.0,
-            "material": material,
-            "ground": ground,
-        }
+        frequency_hz = self._frequency.value() * 1_000_000.0
+        height_m = length_to_m(self._height.value(), self._unit_system)
+        azimuth_deg = self._azimuth.value()
+        wire_radius_m = diameter_m / 2.0
+        length_m = length_to_m(self._length.value(), self._unit_system)
         antenna_type = self._antenna_type
         if antenna_type == ANTENNA_TYPE_FOLDED_DIPOLE:
             return FoldedDipoleParameters(
-                total_length_m=length_to_m(self._length.value(), self._unit_system),
+                frequency_hz=frequency_hz,
+                height_m=height_m,
+                azimuth_deg=azimuth_deg,
+                wire_radius_m=wire_radius_m,
+                material=material,
+                ground=ground,
+                total_length_m=length_m,
                 spacing_m=length_to_m(self._spacing.value(), self._unit_system),
-                **common,
             )
         if antenna_type == ANTENNA_TYPE_LOOP:
             return LoopParameters(
-                circumference_m=length_to_m(self._length.value(), self._unit_system),
+                frequency_hz=frequency_hz,
+                height_m=height_m,
+                azimuth_deg=azimuth_deg,
+                wire_radius_m=wire_radius_m,
+                material=material,
+                ground=ground,
+                circumference_m=length_m,
                 sides=self._sides.value(),
-                **common,
             )
         return DipoleParameters(
-            total_length_m=length_to_m(self._length.value(), self._unit_system),
+            frequency_hz=frequency_hz,
+            height_m=height_m,
+            azimuth_deg=azimuth_deg,
+            wire_radius_m=wire_radius_m,
+            material=material,
+            ground=ground,
+            total_length_m=length_m,
             orientation=DipoleOrientation(self._orientation.currentData()),
-            **common,
         )
 
     def antenna_type(self) -> str:

@@ -26,7 +26,7 @@ Measured on 2026-11-04:
 | `skipif` uses | 2 |
 | Largest test file | `tests/ui/test_main_window_presets.py`, 828 lines. The 1,442-line nec2c adapter file is split into four modules |
 | Source lines | 46,323 total; 30,144 in `ui/` |
-| Type-checked lines | ~16,000 strict, plus 72 of 75 `ui/` files under a permissive ratchet; 3 UI files (142 errors) remain excluded |
+| Type-checked lines | ~16,000 strict, plus 73 of 75 `ui/` files under a permissive ratchet; 2 UI files (99 errors) remain excluded |
 | Coverage, full suite with solver (measured) | 85 % total; domain 91 %, simulation 91 %, persistence 94 %, application 92 %, importers 91 %, reporting 87 %, ui 82 % |
 | Coverage enforcement | per-package gates in the `coverage` CI job, one point below the measured baseline |
 | Timing sensitivity | one UI failure appeared under coverage instrumentation at ~32 % while another pytest process ran concurrently. The polarization commit added deterministic posted-event processing in `tests/ui/helpers.py`; re-verify under coverage before treating it as open |
@@ -149,8 +149,8 @@ between the domain and the widgets.
 **Change.**
 
 - (implemented 2026-11-04) `mypy_ui.ini` runs a permissive pass over
-  `src/antennadesk/ui` with `check_untyped_defs = true`. The 3 files with
-  existing errors (142 total) are listed in an `exclude` ratchet; the other 72
+  `src/antennadesk/ui` with `check_untyped_defs = true`. The 2 files with
+  existing errors (99 total) are listed in an `exclude` ratchet; the other 73
   are checked in CI. New UI files are checked by default. Remove entries as
   files reach zero errors.
 - Extend ruff with `S` (bandit), `PT` (pytest style), `T20` (no `print` in
@@ -535,7 +535,7 @@ the polarization commit.
 
 1. (done 2026-11-04) Coverage measurement and per-package thresholds.
 2. (done 2026-11-04) mypy coverage for `ui/` via `mypy_ui.ini`, started
-   permissively with a ratchet; 72 of 75 files are checked.
+   permissively with a ratchet; 73 of 75 files are checked.
 3. (partly done 2026-11-04) Hypothesis for units and the three importers,
    including a fuzz corpus; geometry and persistence are pending.
 4. (done 2026-11-04) i18n parity test:
@@ -577,7 +577,7 @@ Track these over time; they are the definition of "better QA" for this project:
 | Solver tests executed locally | 102/102 when the binary exists |
 | Domain coverage (line + branch) | ≥ 95 % |
 | Coverage gates by package | pass; thresholds ratchet up |
-| UI files under mypy | 72/75 now, ratchet to 75 |
+| UI files under mypy | 73/75 now, ratchet to 75 |
 | Mutation score, non-equivalent mutants | ≥ 80 %; 100 % on the current focused subset (raw 70 %) |
 | Families with evidence level A or B | all, or an explicit C with a visible warning |
 | Templates with an evidence entry | 25/25, enforced by a test |
