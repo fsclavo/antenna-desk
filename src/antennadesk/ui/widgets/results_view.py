@@ -8,7 +8,7 @@ import math
 from collections.abc import Sequence
 from pathlib import Path
 
-import pyqtgraph as pg
+import pyqtgraph as pg  # type: ignore  # pyqtgraph ships no type stubs
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QFontDatabase
 from PySide6.QtWidgets import (
@@ -35,7 +35,7 @@ from ...domain.simulation.band_result import BandAnalysisResult, BandResult
 from ...domain.simulation.band_summary import summarize_band
 from ...domain.simulation.bands import amateur_band_for
 from ...domain.simulation.pattern import PatternGainMetric, pattern_gain_offset_db
-from ...domain.simulation.resonance import find_resonances
+from ...domain.simulation.resonance import ResonancePoint, find_resonances
 from ...domain.simulation.result import (
     CurrentSample,
     FrequencyResult,
@@ -672,7 +672,7 @@ class ResultsView(QWidget):
             )
 
         if len(frequencies) < 2:
-            resonances = ()
+            resonances: tuple[ResonancePoint, ...] = ()
             self._resonance_label.setText("")
             self._resonance_label.setVisible(False)
         else:
@@ -1182,25 +1182,29 @@ class ResultsView(QWidget):
                 return abs(point.impedance_ohm)
             return point.swr(measurement.reference_impedance_ohm)
 
-        measured = [
+        measured_series = [
             (point.frequency_hz / 1e6, measured_value(point)) for point in measurement.points
         ]
-        measured = [(frequency, value) for frequency, value in measured if math.isfinite(value)]
-        simulated: list[tuple[float, float]] = []
+        measured_series = [
+            (frequency, value) for frequency, value in measured_series if math.isfinite(value)
+        ]
+        simulated_series: list[tuple[float, float]] = []
         if self._result is not None and self._result.frequencies:
             for frequency in self._result.frequencies:
                 if metric == "resistance":
-                    value = frequency.impedance_ohm.real
+                    metric_value = frequency.impedance_ohm.real
                 elif metric == "reactance":
-                    value = frequency.impedance_ohm.imag
+                    metric_value = frequency.impedance_ohm.imag
                 elif metric == "magnitude":
-                    value = abs(frequency.impedance_ohm)
+                    metric_value = abs(frequency.impedance_ohm)
                 else:
-                    value = frequency.swr
-                if math.isfinite(value):
-                    simulated.append((frequency.frequency_hz / 1e6, value))
+                    metric_value = frequency.swr
+                if math.isfinite(metric_value):
+                    simulated_series.append((frequency.frequency_hz / 1e6, metric_value))
 
-        title_key = "measurement.comparison_title" if simulated else "measurement.measured_title"
+        title_key = (
+            "measurement.comparison_title" if simulated_series else "measurement.measured_title"
+        )
         self._measurement_plot.setTitle(
             self._translator.t(title_key, metric=metric_label),
             color=self._colors.text,
@@ -1209,38 +1213,38 @@ class ResultsView(QWidget):
             "bottom", self._translator.t("table.frequency"), color=self._colors.text
         )
         self._measurement_plot.setLabel("left", metric_label, color=self._colors.text)
-        if measured:
+        if measured_series:
             self._measurement_plot.plot(
-                [point[0] for point in measured],
-                [point[1] for point in measured],
+                [point[0] for point in measured_series],
+                [point[1] for point in measured_series],
                 pen=pg.mkPen(metric_colors[metric], width=2),
                 name=self._translator.t("measurement.measured"),
             )
-        if simulated:
+        if simulated_series:
             self._measurement_plot.plot(
-                [point[0] for point in simulated],
-                [point[1] for point in simulated],
+                [point[0] for point in simulated_series],
+                [point[1] for point in simulated_series],
                 pen=pg.mkPen(self._colors.pattern, width=2, style=Qt.PenStyle.DashLine),
                 name=self._translator.t("measurement.simulated"),
             )
 
         cursor_series: list[CursorSeries] = []
-        if measured:
+        if measured_series:
             cursor_series.append(
                 CursorSeries(
                     self._translator.t("measurement.measured"),
-                    tuple(point[0] for point in measured),
-                    tuple(point[1] for point in measured),
+                    tuple(point[0] for point in measured_series),
+                    tuple(point[1] for point in measured_series),
                     metric_colors[metric],
                     metric_label,
                 )
             )
-        if simulated:
+        if simulated_series:
             cursor_series.append(
                 CursorSeries(
                     self._translator.t("measurement.simulated"),
-                    tuple(point[0] for point in simulated),
-                    tuple(point[1] for point in simulated),
+                    tuple(point[0] for point in simulated_series),
+                    tuple(point[1] for point in simulated_series),
                     self._colors.pattern,
                     metric_label,
                 )
@@ -1364,7 +1368,7 @@ class ResultsView(QWidget):
     def _gain_summary_text(self) -> str:
         if self._result is None:
             return ""
-        metrics = (
+        metrics: tuple[float | None, ...] = (
             self._result.max_total_gain_db,
             self._result.max_directivity_db,
             self._result.max_realized_gain_db,
