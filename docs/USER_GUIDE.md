@@ -443,25 +443,27 @@ commercial variant notes.
 
 ## Create a Zepp
 
-Choose **File → New Antenna... → Zepp** for a classic end-fed half-wave
-radiator with a quarter-wave parallel-wire matching section. The preset starts
-with:
+Choose **File → New Antenna... → Zepp** for a classic 3/4-wave end-fed Zepp.
+The preset starts with:
 
 - radiator = practical half-wave length at the design frequency;
-- matching section = practical quarter-wave length at the design frequency;
-- 400 Ω lossless matching section.
+- matching stub = practical quarter-wave length at the design frequency;
+- conductor spacing = 0.05 m, about 469 Ω with a 1 mm radius;
+- feed/base height = 1 m; the radiator sits one stub length above the base.
 
-The radiator length, matching-section length and impedance, velocity factor,
-height, feed height, azimuth, radius, material, and ground are editable.
-**Set starting dimensions from frequency** resets the radiator and matching
-section to the half/quarter-wave starting values.
+The matching section is real geometry: one conductor connects to the radiator,
+the second is open at the antenna end, and both join at the base connector. The
+feed is the midpoint of that connector. The radiator length, stub length,
+spacing, base height, azimuth, radius, material, and ground are editable. The
+estimated impedance is shown for the current spacing and radius. **Set starting
+dimensions from frequency** resets the radiator and stub to the half/quarter-wave
+starting values.
 
-This is a **simplified experimental model**: the matching section is a lossless
-transmission line, its second conductor is not drawn, and the 1:1 choke and
-common-mode current are not modeled. Use a 1:1 choke at the feed point and tune
-the radiator and line for the installation. Band analysis starts with
-**40/20/10 m** harmonic coverage as an experimental starting point; verify each
-band before construction.
+The 1:1 common-mode choke at the transmitter end is required but not modeled;
+NEC-2 has no choke or ferrite element. The coax and common-mode current are also
+outside the model. Band analysis starts with odd harmonics (40/15 m for a 7.1
+MHz design); even harmonics have severe stub imbalance. Tune the radiator and
+stub for the installed height, ground, and hardware.
 
 ## Create a doublet
 

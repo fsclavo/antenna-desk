@@ -223,10 +223,23 @@ EVIDENCE: dict[str, EvidenceEntry] = {
     ),
     "zepp": EvidenceEntry(
         template="zepp",
-        level=EvidenceLevel.EXPERIMENTAL,
-        source="Classic Zepp starting geometry; simplified lossless line",
-        tolerance="Not applicable (structural)",
-        limitation="Experimental; no independent numerical reference.",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "ARRL Antenna Book, 24th ed., Ch. 20: a true Zepp is an end-fed "
+            "half-wave radiator matched by a quarter-wave open-wire line; "
+            "W8JI, 'End-fed vertical J-pole and horizontal Zepp': a 1/4λ stub "
+            "feeding a 1/2λ element with a 1:1 current balun at the tuner"
+        ),
+        tolerance=(
+            "5% on the half-wave and quarter-wave starting lengths; the "
+            "conductor spacing and radius set the stub impedance"
+        ),
+        limitation=(
+            "Starting dimensions only. The 1:1 common-mode choke, coaxial feed "
+            "line, common-mode current, and installation are not modeled; the "
+            "stub balance degrades on even harmonics and the match requires "
+            "tuning."
+        ),
     ),
     "j_pole": EvidenceEntry(
         template="j_pole",

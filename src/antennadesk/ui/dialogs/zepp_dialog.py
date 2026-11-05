@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Fernando Sclavo
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Guided classic Zepp preset with a geometry matching section."""
+"""Guided classic Zepp generator with a real two-wire matching stub."""
 
 from __future__ import annotations
 
@@ -21,8 +21,10 @@ from PySide6.QtWidgets import (
 from ...domain.antennas.custom import CustomAntennaParameters
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.antennas.zepp import (
+    ZEPP_DEFAULT_BASE_HEIGHT_M,
+    ZEPP_DEFAULT_SPACING_M,
     ZEPP_DESIGN_FREQUENCY_HZ,
-    ZEPP_LINE_IMPEDANCE_OHM,
+    parallel_wire_impedance_ohm,
     zepp_parameters,
     zepp_starting_dimensions,
 )
@@ -49,9 +51,9 @@ class ZeppDialog(QDialog):
         initial_frequency_hz = (
             frequency_hz if frequency_hz is not None else ZEPP_DESIGN_FREQUENCY_HZ
         )
-        radiator_m, line_m = zepp_starting_dimensions(initial_frequency_hz)
+        radiator_m, matching_m = zepp_starting_dimensions(initial_frequency_hz)
         self.setWindowTitle(translator.t("zepp.title"))
-        self.resize(620, 720)
+        self.resize(640, 760)
 
         self._frequency = QDoubleSpinBox(self)
         self._frequency.setRange(0.1, 100_000.0)
@@ -64,36 +66,34 @@ class ZeppDialog(QDialog):
         self._radiator_length.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._radiator_length.setValue(length_from_m(radiator_m, unit_system))
 
-        self._line_length = QDoubleSpinBox(self)
-        self._line_length.setDecimals(3)
-        self._line_length.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
-        self._line_length.setValue(length_from_m(line_m, unit_system))
+        self._matching_length = QDoubleSpinBox(self)
+        self._matching_length.setDecimals(3)
+        self._matching_length.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._matching_length.setValue(length_from_m(matching_m, unit_system))
 
-        self._line_impedance = QDoubleSpinBox(self)
-        self._line_impedance.setRange(1.0, 1_000.0)
-        self._line_impedance.setDecimals(1)
-        self._line_impedance.setSuffix(" Ω")
-        self._line_impedance.setValue(ZEPP_LINE_IMPEDANCE_OHM)
+        self._spacing = QDoubleSpinBox(self)
+        self._spacing.setDecimals(3)
+        self._spacing.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._spacing.setRange(
+            length_from_m(0.01, unit_system),
+            length_from_m(10.0, unit_system),
+        )
+        self._spacing.setSingleStep(length_from_m(0.01, unit_system))
+        self._spacing.setValue(length_from_m(ZEPP_DEFAULT_SPACING_M, unit_system))
 
-        self._height = QDoubleSpinBox(self)
-        self._height.setDecimals(3)
-        self._height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
-        self._height.setValue(length_from_m(10.0, unit_system))
+        self._impedance = QLabel(self)
 
-        self._feed_height = QDoubleSpinBox(self)
-        self._feed_height.setDecimals(3)
-        self._feed_height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
-        self._feed_height.setValue(length_from_m(1.0, unit_system))
+        self._base_height = QDoubleSpinBox(self)
+        self._base_height.setDecimals(3)
+        self._base_height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._base_height.setRange(0.0, length_from_m(1_000.0, unit_system))
+        self._base_height.setSingleStep(length_from_m(0.1, unit_system))
+        self._base_height.setValue(length_from_m(ZEPP_DEFAULT_BASE_HEIGHT_M, unit_system))
 
         self._azimuth = QDoubleSpinBox(self)
         self._azimuth.setRange(0.0, 360.0)
         self._azimuth.setDecimals(1)
         self._azimuth.setSuffix("°")
-
-        self._velocity = QDoubleSpinBox(self)
-        self._velocity.setRange(0.01, 1.0)
-        self._velocity.setDecimals(3)
-        self._velocity.setValue(1.0)
 
         self._radius = QDoubleSpinBox(self)
         self._radius.setRange(0.01, 1_000.0)
@@ -137,13 +137,12 @@ class ZeppDialog(QDialog):
         form = QFormLayout()
         form.addRow(translator.t("field.frequency"), self._frequency)
         form.addRow(translator.t("zepp.radiator_length"), self._radiator_length)
-        form.addRow(translator.t("zepp.line_length"), self._line_length)
-        form.addRow(translator.t("zepp.line_impedance"), self._line_impedance)
+        form.addRow(translator.t("zepp.matching_length"), self._matching_length)
+        form.addRow(translator.t("zepp.spacing"), self._spacing)
+        form.addRow(translator.t("zepp.impedance"), self._impedance)
         form.addRow(self._start)
-        form.addRow(translator.t("field.height"), self._height)
-        form.addRow(translator.t("g5rv.feed_height"), self._feed_height)
+        form.addRow(translator.t("zepp.base_height"), self._base_height)
         form.addRow(translator.t("field.azimuth"), self._azimuth)
-        form.addRow(translator.t("g5rv.velocity_factor"), self._velocity)
         form.addRow(translator.t("g5rv.wire_radius"), self._radius)
         form.addRow(translator.t("field.material"), self._material)
         form.addRow(translator.t("field.ground"), self._ground)
@@ -180,12 +179,10 @@ class ZeppDialog(QDialog):
         for spin in (
             self._frequency,
             self._radiator_length,
-            self._line_length,
-            self._line_impedance,
-            self._height,
-            self._feed_height,
+            self._matching_length,
+            self._spacing,
+            self._base_height,
             self._azimuth,
-            self._velocity,
             self._radius,
         ):
             spin.valueChanged.connect(self._update_geometry)
@@ -215,19 +212,38 @@ class ZeppDialog(QDialog):
         value = self._material.currentData()
         return value if isinstance(value, ConductorMaterial) else COPPER
 
+    def _spacing_m(self) -> float:
+        return length_to_m(self._spacing.value(), self._unit_system)
+
+    def _radius_m(self) -> float:
+        return self._radius.value() / 1_000.0
+
+    def _estimated_impedance(self) -> float | None:
+        try:
+            return parallel_wire_impedance_ohm(self._spacing_m(), self._radius_m())
+        except ValueError:
+            return None
+
     def _apply_starting_dimensions(self) -> None:
-        radiator_m, line_m = zepp_starting_dimensions(self._frequency.value() * 1_000_000.0)
+        radiator_m, matching_m = zepp_starting_dimensions(self._frequency.value() * 1_000_000.0)
         self._radiator_length.setValue(length_from_m(radiator_m, self._unit_system))
-        self._line_length.setValue(length_from_m(line_m, self._unit_system))
+        self._matching_length.setValue(length_from_m(matching_m, self._unit_system))
 
     def _update_geometry(self, *_args: object) -> None:
         unit = self._translator.t(length_unit_key(self._unit_system))
+        impedance = self._estimated_impedance()
+        base_height_m = length_to_m(self._base_height.value(), self._unit_system)
+        top_height_m = base_height_m + length_to_m(self._matching_length.value(), self._unit_system)
+        self._impedance.setText("—" if impedance is None else f"{impedance:.1f} Ω")
         self._geometry.setText(
             self._translator.t(
                 "zepp.geometry",
                 radiator=f"{self._radiator_length.value():.3f}",
-                line_length=f"{self._line_length.value():.3f}",
-                line_impedance=f"{self._line_impedance.value():g}",
+                matching=f"{self._matching_length.value():.3f}",
+                spacing=f"{self._spacing.value():.3f}",
+                impedance="—" if impedance is None else f"{impedance:.1f}",
+                base_height=f"{self._base_height.value():.3f}",
+                top_height=f"{length_from_m(top_height_m, self._unit_system):.3f}",
                 unit=unit,
             )
         )
@@ -236,13 +252,11 @@ class ZeppDialog(QDialog):
         return zepp_parameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
             radiator_length_m=length_to_m(self._radiator_length.value(), self._unit_system),
-            matching_line_length_m=length_to_m(self._line_length.value(), self._unit_system),
-            matching_line_impedance_ohm=self._line_impedance.value(),
-            height_m=length_to_m(self._height.value(), self._unit_system),
-            feed_height_m=length_to_m(self._feed_height.value(), self._unit_system),
+            matching_section_length_m=length_to_m(self._matching_length.value(), self._unit_system),
+            spacing_m=self._spacing_m(),
+            base_height_m=length_to_m(self._base_height.value(), self._unit_system),
             azimuth_deg=self._azimuth.value(),
-            line_velocity_factor=self._velocity.value(),
-            wire_radius_m=self._radius.value() / 1_000.0,
+            wire_radius_m=self._radius_m(),
             material=self._selected_material(),
             ground=self._ground_model(),
         )

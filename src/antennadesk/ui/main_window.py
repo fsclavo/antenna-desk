@@ -107,6 +107,7 @@ from ..domain.antennas.transmission_line import TransmissionLine
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters, yagi_element_length_mismatch
+from ..domain.antennas.zepp import ZEPP_BASE_ID
 from ..domain.antennas.zs6bkw import (
     ZS6BKW_DIPOLE_ID,
     zs6bkw_with_dimensions,
@@ -3054,6 +3055,13 @@ class MainWindow(QMainWindow):
             segmentation = SegmentationPolicy(
                 min_segments_per_wire=3,
                 wire_segments=((dipole_id, count),),
+            )
+        elif parameters.generator_id == "zepp":
+            # The base connector is a short source jumper; one segment keeps
+            # the delta gap centered and avoids a spurious too-short warning.
+            segmentation = SegmentationPolicy(
+                min_segments_per_wire=1,
+                wire_segments=((ZEPP_BASE_ID, 1),),
             )
         segmentation = aligned_policy_for_model(
             model,

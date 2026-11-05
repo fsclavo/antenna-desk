@@ -259,15 +259,13 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "catalog.zepp.description": {
         Language.ENGLISH: (
-            "Classic end-fed half-wave radiator with a quarter-wave matching section."
+            "Classic end-fed half-wave radiator with a real two-conductor "
+            "quarter-wave matching stub."
         ),
         Language.SPANISH: (
-            "Radiador clásico de media onda alimentado en el extremo, con sección de adaptación de cuarto de onda."
+            "Radiador clásico de media onda alimentado en el extremo, con stub de "
+            "adaptación real de dos conductores y cuarto de onda."
         ),
-    },
-    "catalog.evidence.zepp": {
-        Language.ENGLISH: "Classic starting geometry; simplified lossless TL; experimental",
-        Language.SPANISH: "Geometría inicial clásica; línea sin pérdidas simplificada; experimental",
     },
     "catalog.doublet": {
         Language.ENGLISH: "Doublet",
@@ -484,6 +482,32 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "geometry.j_pole_plan": {
         Language.ENGLISH: "{template} top view · spacing {spacing}",
         Language.SPANISH: "Vista superior {template} · separación {spacing}",
+    },
+    "geometry.zepp_summary": {
+        Language.ENGLISH: (
+            "{template} · radiator {radiator} · stub {stub} · spacing {spacing} · ≈{impedance} Ω"
+        ),
+        Language.SPANISH: (
+            "{template} · radiador {radiator} · stub {stub} · separación {spacing} · ≈{impedance} Ω"
+        ),
+    },
+    "geometry.zepp_note": {
+        Language.ENGLISH: (
+            "Two-wire quarter-wave stub; the 1:1 choke and coaxial feed are not drawn"
+        ),
+        Language.SPANISH: (
+            "Stub de cuarto de onda de dos conductores; el choque 1:1 y la "
+            "alimentación coaxil no se dibujan"
+        ),
+    },
+    "geometry.zepp_legacy_note": {
+        Language.ENGLISH: (
+            "Legacy simplified Zepp model; recreate the design to use the two-wire stub"
+        ),
+        Language.SPANISH: (
+            "Modelo Zepp simplificado heredado; recreá el diseño para usar el "
+            "stub de dos conductores"
+        ),
     },
     "geometry.radiator": {
         Language.ENGLISH: "Radiator",
@@ -1143,13 +1167,21 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Radiator length",
         Language.SPANISH: "Longitud del radiador",
     },
-    "zepp.line_length": {
+    "zepp.matching_length": {
         Language.ENGLISH: "Matching section length",
         Language.SPANISH: "Longitud de la sección de adaptación",
     },
-    "zepp.line_impedance": {
-        Language.ENGLISH: "Matching section impedance",
-        Language.SPANISH: "Impedancia de la sección de adaptación",
+    "zepp.spacing": {
+        Language.ENGLISH: "Conductor spacing",
+        Language.SPANISH: "Separación entre conductores",
+    },
+    "zepp.impedance": {
+        Language.ENGLISH: "Estimated impedance",
+        Language.SPANISH: "Impedancia estimada",
+    },
+    "zepp.base_height": {
+        Language.ENGLISH: "Feed/base height",
+        Language.SPANISH: "Altura de alimentación/base",
     },
     "zepp.starting_dimensions": {
         Language.ENGLISH: "Set starting dimensions from frequency",
@@ -1157,41 +1189,49 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "zepp.geometry": {
         Language.ENGLISH: (
-            "Radiator {radiator} {unit} · matching section {line_impedance} Ω / {line_length} {unit}"
+            "Radiator {radiator} {unit} · matching section {matching} {unit} · "
+            "spacing {spacing} {unit} · ≈{impedance} Ω · base {base_height} {unit} · "
+            "top {top_height} {unit}"
         ),
         Language.SPANISH: (
-            "Radiador {radiator} {unit} · sección de adaptación {line_impedance} Ω / {line_length} {unit}"
+            "Radiador {radiator} {unit} · sección de adaptación {matching} {unit} · "
+            "separación {spacing} {unit} · ≈{impedance} Ω · base {base_height} {unit} · "
+            "altura superior {top_height} {unit}"
         ),
     },
     "zepp.hint": {
         Language.ENGLISH: (
-            "Classic Zepp starting point: a half-wave end-fed radiator with a "
-            "quarter-wave parallel-wire matching section. The section is modeled "
-            "as a lossless transmission line and its second conductor is not "
-            "drawn. Add a 1:1 choke at the feed point in the real installation. "
-            "Tune the radiator and line length for your height, ground, and "
-            "hardware."
+            "The matching section is drawn as two real conductors: one connects "
+            "to the radiator, the other is open at the antenna end, and both meet "
+            "at the base feed connector. A 1:1 common-mode choke at the "
+            "transmitter end is required but is not modeled. The coax, "
+            "common-mode current, and installation effects are not modeled; tune "
+            "the radiator and stub for your height, ground, and hardware."
         ),
         Language.SPANISH: (
-            "Punto de partida clásico Zepp: radiador de media onda alimentado en "
-            "el extremo con sección de adaptación de cuarto de onda. La sección "
-            "se modela como línea de transmisión sin pérdidas y no se dibuja su "
-            "segundo conductor. Agregá un choque 1:1 en el punto de alimentación "
-            "en la instalación real. Ajustá el radiador y la línea para tu altura, "
-            "terreno y hardware."
+            "La sección de adaptación se dibuja como dos conductores reales: uno "
+            "se conecta al radiador, el otro queda abierto en el extremo de la "
+            "antena y ambos se unen en el conector de alimentación de la base. Se "
+            "requiere un choque de modo común 1:1 en el extremo del transmisor, "
+            "pero no se modela. No se modelan el coaxil, la corriente de modo "
+            "común ni los efectos de la instalación; ajustá el radiador y el stub "
+            "para tu altura, terreno y hardware."
         ),
     },
     "zepp.evidence": {
         Language.ENGLISH: (
-            "Textbook half-wave/quarter-wave starting geometry. The simplified "
-            "lossless transmission-line model omits the second matching conductor, "
-            "the 1:1 choke, common-mode current, and installation effects."
+            "Classic 3/4-wave end-fed Zepp topology: a half-wave radiator with a "
+            "quarter-wave parallel-wire stub. The second stub conductor is real "
+            "geometry; the 1:1 choke and coaxial feed are not modeled, so the "
+            "match and common-mode current are not independently validated."
         ),
         Language.SPANISH: (
-            "Geometría inicial de libro de media onda/cuarto de onda. El modelo "
-            "simplificado de línea sin pérdidas omite el segundo conductor de "
-            "adaptación, el choque 1:1, la corriente de modo común y los efectos "
-            "de instalación."
+            "Topología clásica Zepp alimentada en el extremo de 3/4 de onda: "
+            "radiador de media onda con stub de cuarto de onda de dos "
+            "conductores. El segundo conductor del stub es geometría real; el "
+            "choque 1:1 y la alimentación coaxil no se modelan, por lo que la "
+            "adaptación y la corriente de modo común no están validadas de forma "
+            "independiente."
         ),
     },
     "doublet.title": {
@@ -1554,12 +1594,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "band.note.zepp": {
         Language.ENGLISH: (
-            "Experimental harmonic bands for the simplified Zepp; tune each band "
-            "and use a 1:1 choke at the feed point."
+            "Odd-harmonic analysis plan for the 3/4-wave Zepp; the stub balance "
+            "degrades on even harmonics. Tune each band and use a 1:1 choke at "
+            "the transmitter end."
         ),
         Language.SPANISH: (
-            "Bandas armónicas experimentales del Zepp simplificado; ajustá cada "
-            "banda y usá un choque 1:1 en el punto de alimentación."
+            "Plan de análisis por armónicos impares para el Zepp de 3/4 de onda; "
+            "el balance del stub se degrada en armónicos pares. Ajustá cada banda "
+            "y usá un choque 1:1 en el extremo del transmisor."
         ),
     },
     "band.note.zs6bkw": {

@@ -92,14 +92,15 @@ Benchmark and decision: [`MULTIBAND_PERFORMANCE.md`](MULTIBAND_PERFORMANCE.md).
      13.6 m dimensions and the common 450 Ω commercial variant.
    - Uses a geometry transmission line, catalog routing, evidence, band
      defaults, NEC reference checks, and UI tests.
-2. **Zepp (simplified preset complete)**
-   - End-fed half-wave radiator with a quarter-wave lossless matching section.
-   - 40/20/10 m harmonic starting plan, experimental label, and explicit
-     second-conductor/choke limitations.
-   - A refined geometry with the second matching conductor and choke model is
-     deferred.
-3. Add the refined Zepp model to the multiband resolver only when its evidence
-   and band coverage are documented.
+2. **Zepp (refined preset complete)**
+   - Real two-wire quarter-wave stub: one conductor feeds the half-wave
+     radiator, the second is open at the antenna end, and a base connector
+     carries the balanced feed.
+   - A 1:1 common-mode choke is a construction requirement; NEC-2 cannot model
+     it. The coax and common-mode current remain outside the model.
+   - Odd-harmonic starting plan (40/15 m at 7.1 MHz); even harmonics are not
+     recommended because the stub balance degrades.
+   - Published starting dimensions, evidence level B.
 
 Completed follow-ups:
 
@@ -137,12 +138,12 @@ These are not part of the next implementation session unless priorities change:
 ## Recommended execution order
 
 1. Phase 5 — independent references for experimental templates.
-2. A refined Zepp model with explicit second conductor and choke.
-3. Phase 2 — completed; revisit only if the measured limits change.
-4. Phase 6 — deferred/blocked.
+2. Phase 2 — completed; revisit only if the measured limits change.
+3. Phase 6 — deferred/blocked.
 
 Completed: Phase 0, the Phase 1 investigation, Phase 2 measurement, Phase 3.1,
-Phase 3.2, and the Phase 5 evidence inventory/first reference pass.
+Phase 3.2, the Phase 5 evidence inventory/first reference pass, and the refined
+Zepp model.
 
 ## Quality gate for every phase
 

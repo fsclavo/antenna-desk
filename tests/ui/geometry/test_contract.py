@@ -36,6 +36,7 @@ from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+from antennadesk.domain.antennas.zepp import zepp_parameters
 from antennadesk.ui.geometry.builder import (
     SUPPORTED_PRESENTATION_TYPES,
     build_scene,
@@ -288,6 +289,14 @@ def _cases() -> tuple[FamilyCase, ...]:
             18,
             GeometryViewMode.ELEVATION,
             ("Ringo", "diameter 0.50 m"),
+        ),
+        FamilyCase(
+            "zepp",
+            zepp_parameters(),
+            "zepp",
+            4,
+            GeometryViewMode.ELEVATION,
+            ("Zepp", "stub 10.03 m", "spacing 0.050 m"),
         ),
         FamilyCase(
             "custom",

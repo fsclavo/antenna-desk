@@ -139,7 +139,7 @@ def default_band_plan(
         )
     if isinstance(parameters, CustomAntennaParameters) and parameters.generator_id == "zepp":
         return BandDefault(
-            _harmonic_plan(parameters.frequency_hz, harmonics=(1, 2, 4, 8)),
+            _harmonic_plan(parameters.frequency_hz, harmonics=(1, 3, 5)),
             BandEvidence.HEURISTIC,
             "band.note.zepp",
         )

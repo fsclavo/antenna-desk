@@ -71,8 +71,9 @@ Limitations:
 
 ## Follow-ups
 
-- Refine the simplified Zepp model with the explicit second matching conductor
-  and choke (G5RV, ZS6BKW, and the first Zepp preset are implemented).
+- Refined Zepp model with a real second matching conductor and an explicit
+  unmodeled 1:1 choke requirement (2026-11-05). G5RV and ZS6BKW continue to use
+  the mathematical TL; the Zepp now uses real stub wires.
 - Add a lossy TL model or map line loss to equivalent shunt/load terms.
 - Add crossed-line/phase-reversal support for phased arrays.
 - Add a dedicated pattern/geometry distinction between physical wires and

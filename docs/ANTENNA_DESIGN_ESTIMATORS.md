@@ -65,6 +65,7 @@ warnings, and a dimension tolerance.
 | End-fed | published EFHW wire: 66 ft on 40 m, 33 ft on 20 m, 16 ft on 10 m; `0.05λ` counterpoise; 49:1 transformer | heuristic | ARRL kit and PA9X rule; transformer and counterpoise remain starting points |
 | OCFD | half-wave total, feed at 1/3, 4:1 ideal transformer | heuristic | Existing synthesis can refine length/feed; actual balun ratio depends on height and feed offset |
 | J Pole / Slim Jim | J Pole: 0.75λ overall, 0.5λ radiator, 0.25λ stub; Slim Jim: 0.5λ radiator above a 0.25λ folded stub and gap | empirical | M0UKD published rule and G2BCX 2 m length; feed offset and stub still need tuning |
+| Zepp | 0.5λ radiator above a 0.25λ two-wire stub; spacing and radius set the stub impedance | empirical | Published 3/4-wave topology; the real second conductor is modeled, but the 1:1 choke and common-mode current are not |
 | Ringo | 0.725-wave vertical with a small horizontal matching ring, calibrated for the simplified AntennaDesk geometry | heuristic | Not a universal commercial Ringo formula |
 | Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; optimize for the target; horizontal or vertical polarization |
 | Moxon | Cebik 20 m wire reference scaled by frequency | reference scaled | Gap and tips are sensitive; horizontal or vertical polarization |
@@ -189,6 +190,32 @@ These catalog presets are not frequency-first estimators:
   matching network. Tune the dipole length and line for the bands you use.
 
 No independent numerical reference is claimed for these presets.
+
+## Zepp preset
+
+The Zepp preset follows the classic 3/4-wave end-fed topology: a 0.5 λ
+radiator connects to the top of one conductor of a 0.25 λ parallel-wire stub.
+The second conductor is open at the antenna end; a short base connector joins
+both conductors, and the feed point is its midpoint. The stub is real geometry,
+so its current and radiation are part of the result.
+
+The parallel-wire characteristic impedance is estimated with
+
+```text
+Z0 = 276 log10(D / r)
+```
+
+where `D` is the center-to-center spacing and `r` is the conductor radius. The
+default 0.05 m spacing with a 1 mm radius is about 469 Ω. The formula ignores
+insulation, nearby conductors, and the finite stub length, so it is a geometric
+starting value.
+
+The 1:1 common-mode choke at the transmitter end is a construction requirement,
+not a solver element. NEC-2 has no ferrite or common-mode choke model. The coax,
+common-mode current, and installation effects are not modeled. Use odd
+harmonics of the design frequency for analysis; even harmonics have severe
+current imbalance in the stub. Tune the radiator and stub for the installed
+height, ground, and hardware.
 
 ## G5RV preset
 

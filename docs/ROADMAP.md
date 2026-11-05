@@ -73,8 +73,9 @@ Completed:
   geometry matching line.
 - ZS6BKW catalog preset with the Cebik/W4RNL reference dimensions and the
   common 450 Ω commercial variant, using a lossless geometry matching line.
-- Zepp catalog preset with a half-wave end-fed radiator and a quarter-wave
-  lossless matching section, labeled experimental.
+- Zepp catalog preset with a real two-wire quarter-wave matching stub, an
+  explicit 1:1 choke requirement, and an odd-harmonic analysis plan; labeled
+  with published starting dimensions.
 - Per-band multiband analysis for G5RV, OCFD, end-fed presets, fan dipole, trap
   dipole, T2FD, and doublet, with a Bands results tab and band-aware reports.
   The Pattern frequency selector lists all analyzed bands, and each band uses
@@ -193,7 +194,7 @@ Acceptance criteria:
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
-| P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, and `doublet` promoted to B; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
+| P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, and `zepp` promoted to B; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
 | P1 | Fan dipole V-angle calibration and angle optimization | B | investigated; angle optimizer deferred |
 | P1 | Optional ideal transformer/4:1 balun for OCFD | B | done |
 | P1 | Multiband batch engine and per-family band defaults (M6) | B | done |
@@ -218,8 +219,9 @@ Detailed pending-work plan:
 
 Modeling track:
 
-1. Deferred: refined Zepp matching-section geometry with an explicit second
-   conductor and choke model.
+1. Completed on 2026-11-05: refined Zepp matching-section geometry with a real
+   second conductor and an explicit 1:1 choke requirement. The choke remains a
+   construction note because NEC-2 cannot model it.
 
 Release track:
 
@@ -229,9 +231,10 @@ Release track:
 Validation track:
 
 1. Independent references for remaining experimental templates. The reference
-   passes promoted `delta_loop`, `vertical`, `inverted_v`, `j_pole`, and
-   `slim_jim` to level B; the remaining level C templates and their next
-   evidence needs are listed in [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md).
+   passes promoted `delta_loop`, `vertical`, `inverted_v`, `j_pole`,
+   `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, and `zepp` to
+   level B; the remaining level C templates and their next evidence needs are
+   listed in [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md).
 2. Physical measurements when the project owner has data.
 
 ## Definition of done for a generator

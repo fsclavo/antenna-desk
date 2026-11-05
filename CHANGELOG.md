@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   and compressed project save/load. It uploads `benchmark.json` and does not
   enforce a threshold yet.
 - The test suite has a fast unit-test lane: `pytest -m "fast and not slow"`
-  runs 726 tests in about 8 s. `fast`, `ui`, and `solver` markers are applied
+  runs 735 tests in about 6 s. `fast`, `ui`, and `solver` markers are applied
   automatically by path or fixture; the two G5RV pattern-budget tests are
   marked `slow`.
 - Every native artifact now carries `COPYING`, `THIRD_PARTY_NOTICES.md`, the
@@ -53,11 +53,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   creation. The plan is persisted with the design, restored on reopen, and does
   not change geometry. Random-wire uses the same selector for its tuner-assisted
   80–10 m analysis plan.
-- **Zepp** catalog preset: end-fed half-wave radiator with a quarter-wave
-  lossless matching section. It is labeled experimental, includes starting
-  dimensions from frequency, uses 40/20/10 m as a harmonic starting plan, and
-  explicitly omits the second matching conductor, 1:1 choke, and common-mode
-  current.
+- **Zepp** catalog preset: half-wave end-fed radiator with a real two-conductor
+  quarter-wave matching stub. One conductor feeds the radiator, the second is
+  open at the antenna end, and the feed is the middle of the base connector.
+  The 1:1 common-mode choke is an explicit construction requirement because
+  NEC-2 cannot model it; the coax and common-mode current are not modeled. The
+  preset includes starting dimensions from frequency and an odd-harmonic
+  analysis plan. Projects saved with the earlier simplified transmission-line
+  geometry keep their saved wires.
+- Construction sheets now handle custom-generator wires instead of raising an
+  error. The Zepp sheet lists the radiator, matching stub, conductor spacing,
+  estimated stub impedance, and the unmodeled 1:1 choke requirement.
 - T2FD now has a frequency-first **Estimate Dimensions...** path using the
   Cebik wide-long broadband starting rule. It requires the lowest and highest
   design frequencies and preserves the current termination and transformer.
@@ -178,7 +184,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the W3DZZ 33/22 ft sections and its 7.1 MHz, 5.024 µH / 100 pF traps. The
   sloper moved to B after matching the Chameleon LEFS Feather's 66.5 ft
   radiator and 3 ft → 25 ft deployment. The doublet moved to B after checking
-  the 94 ft radiator and 41 ft of 450 Ω line. The remaining experimental
+  the 94 ft radiator and 41 ft of 450 Ω line. The Zepp moved to B after
+  replacing the simplified transmission-line model with the published
+  3/4-wave, real two-conductor stub topology. The remaining experimental
   templates and their next evidence needs are documented.
 - CI now pins every action by commit SHA, runs `uv lock --check` and
   `pip-audit --skip-editable`, and Dependabot tracks GitHub Actions and Python

@@ -341,21 +341,26 @@ def test_g5rv_preset_with_geometry_line_solves(solver: Nec2cSolver) -> None:
     assert all(frequency.impedance_ohm.real > 0.0 for frequency in result.frequencies)
 
 
-def test_zepp_preset_with_geometry_matching_section_solves(solver: Nec2cSolver) -> None:
-    from antennadesk.domain.antennas.zepp import zepp_parameters
+def test_zepp_preset_with_two_wire_stub_solves(solver: Nec2cSolver) -> None:
+    from antennadesk.domain.antennas.zepp import ZEPP_BASE_ID, zepp_parameters
 
     parameters = zepp_parameters()
     model = parameters.to_antenna(name="Zepp")
     spec = SimulationSpec(
         frequency_plan=FrequencyPlan.sweep(7_000_000.0, 14_300_000.0, 3),
-        segmentation=SegmentationPolicy(min_segments_per_wire=9),
+        segmentation=SegmentationPolicy(
+            target_segment_length_wavelengths=0.02,
+            min_segments_per_wire=1,
+            wire_segments=((ZEPP_BASE_ID, 1),),
+        ),
         include_conductor_losses=False,
     )
 
     result = solver.run(model, spec)
 
     assert result.status is SimulationStatus.COMPLETED
-    assert "TL " in result.raw_input
+    assert result.raw_input.count("GW ") == 4
+    assert "TL " not in result.raw_input
     assert len(result.frequencies) == 3
     assert all(frequency.impedance_ohm.real > 0.0 for frequency in result.frequencies)
 

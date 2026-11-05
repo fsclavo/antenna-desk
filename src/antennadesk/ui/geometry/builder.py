@@ -35,6 +35,12 @@ from ...domain.antennas.trap_dipole import (
 from ...domain.antennas.vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
 from ...domain.antennas.wire import Wire
 from ...domain.antennas.yagi import ANTENNA_TYPE_YAGI, YagiParameters
+from ...domain.antennas.zepp import (
+    ZEPP_MATCHING_FEED_ID,
+    ZEPP_MATCHING_OPEN_ID,
+    ZEPP_RADIATOR_ID,
+    parallel_wire_impedance_ohm,
+)
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_unit_key
 from .scene import (
@@ -54,6 +60,8 @@ from .views import (
     plan_projection,
 )
 
+ZEPP_PRESENTATION_TYPE = "zepp"
+
 _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_WIRE_DIPOLE: "antenna_type.wire_dipole",
     ANTENNA_TYPE_FOLDED_DIPOLE: "antenna_type.folded_dipole",
@@ -69,6 +77,7 @@ _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_RINGO: "catalog.ringo",
     ANTENNA_TYPE_TRAP_DIPOLE: "catalog.trap_dipole",
     ANTENNA_TYPE_T2FD: "catalog.t2fd",
+    ZEPP_PRESENTATION_TYPE: "catalog.zepp",
 }
 
 SUPPORTED_PRESENTATION_TYPES = frozenset({*_TYPE_KEYS, ANTENNA_TYPE_CUSTOM})
@@ -84,7 +93,9 @@ def effective_antenna_type(
         generator = parameters.generator_id
         if generator == "slim_jim":
             return ANTENNA_TYPE_J_POLE
-        if generator in {"g5rv", "zs6bkw", "zepp"}:
+        if generator == "zepp":
+            return ZEPP_PRESENTATION_TYPE
+        if generator in {"g5rv", "zs6bkw"}:
             return ANTENNA_TYPE_WIRE_DIPOLE
         if generator in {
             "j_pole",
@@ -1380,6 +1391,31 @@ def _summary(
             gap=_format_length(folded_gap, translator, unit_system),
             spacing=_format_length(spacing_m, translator, unit_system),
         )
+    elif antenna_type == ZEPP_PRESENTATION_TYPE:
+        radiator = next((wire for wire in model.wires if wire.id == ZEPP_RADIATOR_ID), None)
+        stub = next((wire for wire in model.wires if wire.id == ZEPP_MATCHING_FEED_ID), None)
+        open_stub = next((wire for wire in model.wires if wire.id == ZEPP_MATCHING_OPEN_ID), None)
+        if radiator is not None and stub is not None and open_stub is not None:
+            spacing_m = math.hypot(
+                open_stub.start.x_m - stub.start.x_m,
+                open_stub.start.y_m - stub.start.y_m,
+            )
+            impedance_ohm = parallel_wire_impedance_ohm(spacing_m, stub.radius_m)
+            return translator.t(
+                "geometry.zepp_summary",
+                template=label,
+                radiator=_format_length(radiator.length_m, translator, unit_system),
+                stub=_format_length(stub.length_m, translator, unit_system),
+                spacing=_format_length(spacing_m, translator, unit_system),
+                impedance=f"{impedance_ohm:.0f}",
+            )
+        parts.extend(
+            [
+                f"{len(model.wires)} {translator.t('geometry.wires')}",
+                f"{translator.t('field.height').lower()} "
+                f"{_format_length(max_z, translator, unit_system)}",
+            ]
+        )
     elif isinstance(parameters, RingoParameters) or antenna_type == ANTENNA_TYPE_RINGO:
         if isinstance(parameters, RingoParameters):
             radiator_length = parameters.radiator_height_m
@@ -1712,6 +1748,13 @@ def build_scene(
     angular_dimensions: list[AngularDimension] = []
     insets: list[SceneInset] = []
     notes: list[str] = []
+    if effective_type == ZEPP_PRESENTATION_TYPE:
+        note_key = (
+            "geometry.zepp_note"
+            if any(wire.id == ZEPP_MATCHING_FEED_ID for wire in model.wires)
+            else "geometry.zepp_legacy_note"
+        )
+        notes.append(translator.t(note_key))
     if model.transmission_lines:
         notes.append(
             translator.t(

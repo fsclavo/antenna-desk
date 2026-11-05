@@ -358,7 +358,7 @@ def test_new_zs6bkw_creates_the_custom_preset_with_a_line(
     window._dirty = False
 
 
-def test_new_zepp_creates_the_custom_preset_with_a_line(
+def test_new_zepp_creates_the_refined_custom_preset(
     window: MainWindow,
     qtbot: QtBot,
     monkeypatch: pytest.MonkeyPatch,
@@ -386,7 +386,8 @@ def test_new_zepp_creates_the_custom_preset_with_a_line(
     assert window._project.name == "Zepp"
     design = window._project.designs[0]
     assert design.parameters.generator_id == "zepp"
-    assert len(design.antenna.transmission_lines) == 1
+    assert len(design.antenna.wires) == 4
+    assert len(design.antenna.transmission_lines) == 0
     assert window._design_stack.currentWidget() is window._custom_panel
     assert window._custom_sweep_start.value() == pytest.approx(7.0)
     assert window._custom_sweep_stop.value() == pytest.approx(29.7)

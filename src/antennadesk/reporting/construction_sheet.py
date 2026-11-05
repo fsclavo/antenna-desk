@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Fernando Sclavo
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Printable construction sheet for a dipole design."""
+"""Printable construction sheet for a design."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ import html
 import math
 from pathlib import Path
 
+from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.dipole import DipoleParameters
 from ..domain.antennas.endfed import EndFedParameters
 from ..domain.antennas.fan_dipole import FanDipoleParameters
@@ -22,6 +23,12 @@ from ..domain.antennas.t2fd import T2FDParameters
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
+from ..domain.antennas.zepp import (
+    ZEPP_MATCHING_FEED_ID,
+    ZEPP_MATCHING_OPEN_ID,
+    ZEPP_RADIATOR_ID,
+    parallel_wire_impedance_ohm,
+)
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import FrequencyResult, SimulationResult
@@ -277,6 +284,53 @@ Feed it {feed_offset_m:.4f} m from the start ({parameters.feed_ratio * 100:.1f}%
         construction_note = f"""<p>Cut one conductor to {parameters.circumference_m:.4f} m and
 close it into {parameters.sides} equal sides of {parameters.side_length_m:.4f} m.
 Feed the midpoint of the first side.</p>"""
+    elif isinstance(parameters, CustomAntennaParameters):
+        radiator = next(
+            (wire for wire in antenna.wires if wire.id == ZEPP_RADIATOR_ID),
+            None,
+        )
+        matching_feed = next(
+            (wire for wire in antenna.wires if wire.id == ZEPP_MATCHING_FEED_ID),
+            None,
+        )
+        matching_open = next(
+            (wire for wire in antenna.wires if wire.id == ZEPP_MATCHING_OPEN_ID),
+            None,
+        )
+        if (
+            parameters.generator_id == "zepp"
+            and radiator is not None
+            and matching_feed is not None
+            and matching_open is not None
+        ):
+            spacing_m = math.hypot(
+                matching_open.start.x_m - matching_feed.start.x_m,
+                matching_open.start.y_m - matching_feed.start.y_m,
+            )
+            impedance_ohm = parallel_wire_impedance_ohm(spacing_m, matching_feed.radius_m)
+            feed_rows = f"""
+<tr><th>Radiator length</th><td>{radiator.length_m:.4f} m</td></tr>
+<tr><th>Matching stub length</th><td>{matching_feed.length_m:.4f} m</td></tr>
+<tr><th>Conductor spacing</th><td>{spacing_m:.4f} m</td></tr>
+<tr><th>Estimated stub impedance</th><td>{impedance_ohm:.1f} Ω</td></tr>
+<tr><th>Feed/base height</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Radiator height</th><td>{radiator.start.z_m:.4f} m</td></tr>
+"""
+            construction_note = f"""<p>Cut the radiator to {radiator.length_m:.4f} m and
+two matching-stub conductors to {matching_feed.length_m:.4f} m. Join one stub
+conductor to the radiator, leave the second open at the antenna end, and join
+both at the base connector. Feed the middle of the base connector through a
+1:1 common-mode choke. The choke and coaxial feed are not modeled.</p>"""
+        else:
+            total_conductor_m = sum(wire.length_m for wire in antenna.wires)
+            feed_rows = f"""
+<tr><th>Wires</th><td>{len(antenna.wires)}</td></tr>
+<tr><th>Total conductor</th><td>{total_conductor_m:.4f} m</td></tr>
+<tr><th>Feed wire</th><td>{_escape(antenna.feed.wire_id)}</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+            construction_note = """<p>Custom geometry: use the wire table and feed
+point above. Verify every connection and the feed gap before construction.</p>"""
     else:
         raise TypeError(f"unsupported antenna parameters: {type(parameters)!r}")
 

@@ -56,12 +56,12 @@ def test_zs6bkw_default_plan_uses_the_no_atu_bands() -> None:
     assert result.plan.band_ids == ("40m", "20m", "17m", "12m", "10m")
 
 
-def test_zepp_default_plan_uses_experimental_harmonics() -> None:
+def test_zepp_default_plan_uses_odd_harmonics() -> None:
     result = default_band_plan(zepp_parameters())
 
     assert result.evidence is BandEvidence.HEURISTIC
     assert result.note_key == "band.note.zepp"
-    assert result.plan.band_ids == ("40m", "20m", "10m")
+    assert result.plan.band_ids == ("40m", "15m")
 
 
 def test_ocfd_default_plan_follows_harmonics() -> None:

@@ -131,7 +131,7 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         label_key="catalog.zepp",
         family_key="catalog.family.dipole",
         description_key="catalog.zepp.description",
-        evidence_key="catalog.evidence.zepp",
+        evidence_key="catalog.evidence.published",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_DOUBLET,

@@ -334,3 +334,19 @@ def test_construction_sheet_lists_transmission_lines(sample_project: Project) ->
     assert "Transmission line 1" in sheet
     assert "300 Ω" in sheet
     assert "VF 0.9" in sheet
+
+
+def test_zepp_construction_sheet_lists_the_stub_and_choke(sample_project: Project) -> None:
+    from antennadesk.domain.antennas.zepp import zepp_parameters
+
+    design = sample_project.designs[0].with_parameters(zepp_parameters())
+    project = sample_project.with_design(design, updated_at=sample_project.updated_at)
+
+    sheet = render_construction_sheet(project, design, None)
+
+    assert "Radiator length" in sheet
+    assert "Matching stub length" in sheet
+    assert "Conductor spacing" in sheet
+    assert "Estimated stub impedance" in sheet
+    assert "1:1 common-mode choke" in sheet
+    assert "10.0283" in sheet

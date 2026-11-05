@@ -557,7 +557,7 @@ def test_g5rv_custom_generator_uses_the_dipole_summary_and_dashed_line() -> None
     assert any(polyline.role == "transmission-line" for polyline in scene.polylines)
 
 
-def test_zepp_custom_generator_uses_the_dipole_summary_and_dashed_line() -> None:
+def test_zepp_custom_generator_draws_the_second_stub_conductor() -> None:
     from antennadesk.domain.antennas.zepp import zepp_parameters
 
     parameters = zepp_parameters()
@@ -572,9 +572,51 @@ def test_zepp_custom_generator_uses_the_dipole_summary_and_dashed_line() -> None
         unit_system=UnitSystem.METRIC,
     )
 
-    assert "Wire dipole" in scene.summary
-    assert "transmission lines: 1" in scene.summary
-    assert any(polyline.role == "transmission-line" for polyline in scene.polylines)
+    assert "Zepp" in scene.summary
+    assert "stub 10.03 m" in scene.summary
+    assert "spacing 0.050 m" in scene.summary
+    assert "transmission lines" not in scene.summary
+    assert len([line for line in scene.polylines if line.role == "wire"]) == 4
+    assert not any(polyline.role == "transmission-line" for polyline in scene.polylines)
+
+
+def test_legacy_zepp_project_keeps_the_simplified_geometry_with_a_note() -> None:
+    from antennadesk.domain.antennas.custom import CustomAntennaParameters
+    from antennadesk.domain.antennas.feed import FeedPoint
+    from antennadesk.domain.antennas.geometry import Point3D
+    from antennadesk.domain.antennas.materials import COPPER
+    from antennadesk.domain.antennas.wire import Wire
+
+    parameters = CustomAntennaParameters(
+        frequency_hz=7_100_000.0,
+        wires=(
+            Wire("zepp-source", Point3D(0.0, 0.0, 1.0), Point3D(0.0, 0.0, 1.1), 0.001, COPPER),
+            Wire(
+                "zepp-radiator",
+                Point3D(0.0, 0.0, 10.0),
+                Point3D(20.0, 0.0, 10.0),
+                0.001,
+                COPPER,
+            ),
+        ),
+        feed=FeedPoint("zepp-radiator", 0.0),
+        generator_id="zepp",
+        generator_name="Zepp",
+    )
+
+    assert effective_antenna_type("custom", parameters) == "zepp"
+    scene = build_scene(
+        parameters.to_antenna(),
+        antenna_type="custom",
+        parameters=parameters,
+        display_name=None,
+        mode=GeometryViewMode.ELEVATION,
+        translator=TRANSLATOR,
+        unit_system=UnitSystem.METRIC,
+    )
+
+    assert any("Legacy simplified Zepp model" in note for note in scene.notes)
+    assert len([line for line in scene.polylines if line.role == "wire"]) == 2
 
 
 def test_zs6bkw_custom_generator_uses_the_dipole_summary_and_dashed_line() -> None:

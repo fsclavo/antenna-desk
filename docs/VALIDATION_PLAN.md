@@ -255,7 +255,7 @@ gain, nulls, or impedance.
 | `random_wire` | C | Random-wire geometry with a tuner-assisted band plan | Not applicable (structural) | No accuracy claim. |
 | `g5rv` | B | Published G5RV dimensions; lossless transmission-line model | Not a strict numeric tolerance | Line loss is not modeled; matching depends on the installation. |
 | `zs6bkw` | A | Cebik/W4RNL SWR values 1.15, 1.47, and 1.56 at 40/20/10 m; commercial 27.5 m variant | 0.3 SWR | Lossless line model. |
-| `zepp` | C | Classic Zepp starting geometry; simplified lossless line | Not applicable (structural) | Experimental; no independent numerical reference. |
+| `zepp` | B | ARRL Antenna Book, 24th ed., Ch. 20: a true Zepp is an end-fed half-wave radiator matched by a quarter-wave open-wire line; W8JI, 'End-fed vertical J-pole and horizontal Zepp': a 1/4λ stub feeding a 1/2λ element with a 1:1 current balun at the tuner | 5% on the half-wave and quarter-wave starting lengths; the conductor spacing and radius set the stub impedance | Starting dimensions only. The 1:1 common-mode choke, coaxial feed line, common-mode current, and installation are not modeled; the stub balance degrades on even harmonics and the match requires tuning. |
 | `j_pole` | B | M0UKD, 'Slim Jim and J Pole calculator': a J pole is 0.75λ tall, with a 0.5λ radiator and a 0.25λ matching stub; ARRL QST, Feb 2003, conventional 2 m J-pole dimensions | 1% on the half-wave and quarter-wave sections; 10% on the overall height against the ARRL 2 m construction | Starting dimensions only; the 50 Ω feed offset, ground, mast, and feed-line coupling are not independently validated. |
 | `slim_jim` | B | F. Judd, G2BCX, 'Slim Jim - 2 metre aerial', Practical Wireless, 1978: about 60 in overall at 145 MHz; M0UKD calculator: 0.5λ radiator above a 0.25λ stub with a small gap | 1% on the half-wave and quarter-wave sections; 5% on the overall length at 2 m | Starting dimensions only; the feed point, fold spacing, and the effect of the feed line are not independently validated. |
 | `ringo` | C | Ringo radiator and ring starting geometry | Not applicable (structural) | No independent numerical reference. |
@@ -413,8 +413,10 @@ Phase 6 adds tests for:
 - G5RV preset: published dipole and matching-line dimensions, 300 Ω/450 Ω
   options, custom-generator routing, 41-point wideband custom sweep, automatic
   pattern resolution, and a three-band NEC smoke run with a geometry `TL`.
-- Zepp preset: half-wave radiator, quarter-wave lossless matching section,
-  experimental 40/20/10 m harmonic defaults, and a NEC smoke run with a `TL`.
+- Zepp preset: half-wave radiator, real two-conductor quarter-wave stub with
+  an open second conductor, base-connector feed, odd-harmonic 40/15 m starting
+  defaults, an explicit unmodeled 1:1 choke requirement, and a NEC smoke run
+  with four wires and no `TL` card.
 - ZS6BKW preset: Cebik/W4RNL 28.4 m / 400 Ω / 13.6 m and commercial
   27.5 m / 450 Ω / 12.2 m variants, catalog and band-default routing, and a
   free-space NEC SWR check against Cebik's 1.15 / 1.47 / 1.56 values at

@@ -34,5 +34,7 @@
   "yagi:elevation": "64eb052c75f28ccac71ad8760656065de83c768cbd6eebe06fbeb8ae25f96a61",
   "yagi:plan": "8101309e132f34f4fec9254b52b00db18867223765aa54366cb4ba8b484f8386",
   "yagi_vertical:elevation": "0c5ae3476ae3853d3109fad748b9b0c946548a41049ff0b621679d53dfefd755",
-  "yagi_vertical:plan": "a4ac815e97c314e100d8c7573a095752a987d2107c8404aa02cff04dadbe2a7e"
+  "yagi_vertical:plan": "a4ac815e97c314e100d8c7573a095752a987d2107c8404aa02cff04dadbe2a7e",
+  "zepp:elevation": "4799d66fc29291a501f58961c97869994317cb6ba1916c4d754af434930a0dcf",
+  "zepp:plan": "bd1f08fa44f04eceb1e04472bb59fe28c2fe824811dbbac02451a425ae6ac43c"
 }
