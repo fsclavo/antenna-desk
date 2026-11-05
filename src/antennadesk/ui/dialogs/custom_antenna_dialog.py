@@ -32,6 +32,7 @@ from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.antennas.wire import Wire
 from ...domain.common.validation import Diagnostic
 from ...domain.environment.ground import GroundKind, GroundModel
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
 
@@ -56,7 +57,7 @@ class CustomAntennaDialog(QDialog):
         self._generator_name = parameters.generator_name if parameters else None
         self._warnings: tuple[Diagnostic, ...] = ()
         self.setWindowTitle(translator.t("custom.title"))
-        self.resize(980, 620)
+        self.resize(*scaled_dialog_size(980, 620))
 
         self._name = QLabel(translator.t("custom.metric_hint"), self)
         self._frequency = QDoubleSpinBox(self)

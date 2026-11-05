@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.vertical import VerticalParameters
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
 from ..widgets.vertical_form import VerticalForm
@@ -57,7 +58,7 @@ class VerticalDialog(QDialog):
         self._geometry = self._form._geometry
 
         self.setWindowTitle(translator.t("vertical.mobile_title" if mobile else "vertical.title"))
-        self.resize(560, 700)
+        self.resize(*scaled_dialog_size(560, 700))
 
         self._hint = QLabel(
             translator.t("vertical.mobile_hint" if mobile else "vertical.hint"), self

@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 
 CATALOG_TYPE_WIRE_DIPOLE = "wire_dipole"
@@ -245,7 +246,7 @@ class AntennaCatalogDialog(QDialog):
         super().__init__(parent)
         self._translator = translator
         self.setWindowTitle(translator.t("catalog.title"))
-        self.resize(680, 500)
+        self.resize(*scaled_dialog_size(680, 500))
 
         self._search = QLineEdit(self)
         self._search.setPlaceholderText(translator.t("catalog.search"))

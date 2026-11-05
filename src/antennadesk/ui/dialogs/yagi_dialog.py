@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.yagi import YagiParameters
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
 from ..widgets.yagi_form import YagiForm
@@ -44,7 +45,7 @@ class YagiDialog(QDialog):
         self._load_preset = self._form._load_preset
 
         self.setWindowTitle(translator.t("yagi.title"))
-        self.resize(920, 720)
+        self.resize(*scaled_dialog_size(920, 720))
 
         self._hint = QLabel(translator.t("yagi.hint"), self)
         self._hint.setWordWrap(True)

@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 
 from ...domain.antennas.endfed import EndFedParameters, EndFedPreset
 from ...domain.design.band_plan import BandPlan, default_band_plan
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
 from ..widgets.endfed_form import EndFedForm
@@ -56,7 +57,7 @@ class EndFedDialog(QDialog):
             EndFedPreset.RANDOM_WIRE: "endfed.random_wire_title",
         }[preset]
         self.setWindowTitle(translator.t(title_key))
-        self.resize(620, 720)
+        self.resize(*scaled_dialog_size(620, 720))
 
         hint_key = {
             EndFedPreset.STANDARD: "endfed.hint",

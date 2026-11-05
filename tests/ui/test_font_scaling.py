@@ -15,10 +15,21 @@ import antennadesk.ui.widgets.polar_pattern_view as polar_module
 import antennadesk.ui.widgets.radiation_pattern_3d_view as pattern_3d_module
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.projects.project import Project
+from antennadesk.persistence.json_repository import JsonProjectRepository
 from antennadesk.ui.dialogs.comparison_dialog import ComparisonDialog
-from antennadesk.ui.fonts import scaled_font, scaled_pixel_font
+from antennadesk.ui.dialogs.feed_line_dialog import FeedLineDialog
+from antennadesk.ui.fonts import (
+    scaled_dialog_size,
+    scaled_font,
+    scaled_pixel_font,
+)
 from antennadesk.ui.i18n import Language, Translator
-from antennadesk.ui.preferences import FontSize, FontSizeController
+from antennadesk.ui.main_window import MainWindow
+from antennadesk.ui.preferences import (
+    FontSize,
+    FontSizeController,
+    InMemoryPreferencesStore,
+)
 from antennadesk.ui.units import UnitSystem
 from antennadesk.ui.widgets.geometry_view import GeometryView
 from antennadesk.ui.widgets.polar_pattern_view import PolarPatternView
@@ -53,6 +64,48 @@ def test_scaled_fonts_follow_the_active_preset() -> None:
     controller.apply(FontSize.MEDIUM)
     assert scaled_font(8.0).pointSizeF() == pytest.approx(8.0)
     assert scaled_pixel_font(22).pixelSize() == 22
+
+
+def test_scaled_dialog_size_follows_the_preset() -> None:
+    controller = _controller()
+
+    controller.apply(FontSize.LARGE)
+    assert scaled_dialog_size(440, 260) == (528, 312)
+
+    controller.apply(FontSize.SMALL)
+    assert scaled_dialog_size(440, 260) == (396, 240)
+
+    controller.apply(FontSize.MEDIUM)
+    assert scaled_dialog_size(440, 260) == (440, 260)
+
+
+def test_feed_line_dialog_uses_the_scaled_initial_size(qtbot: QtBot) -> None:
+    controller = _controller()
+    controller.apply(FontSize.LARGE)
+    dialog = FeedLineDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+
+    assert dialog.width() == 528
+    assert dialog.height() == 312
+
+
+def test_form_panels_widen_for_large_spanish_forms(qtbot: QtBot) -> None:
+    controller = _controller()
+    controller.apply(FontSize.LARGE)
+    window = MainWindow(
+        JsonProjectRepository(),
+        None,
+        Translator(Language.SPANISH),
+        UnitSystem.METRIC,
+        preferences=InMemoryPreferencesStore(),
+        font_size_controller=controller,
+    )
+    qtbot.addWidget(window)
+
+    for form, scroll, _base_max_width in window._form_panels:
+        assert scroll.maximumWidth() >= form.minimumSizeHint().width() + 24
+
+    assert window._yagi_scroll.maximumWidth() > 520
 
 
 def test_start_page_title_tracks_the_preset(qtbot: QtBot) -> None:

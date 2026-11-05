@@ -26,6 +26,7 @@ from ...domain.antennas.g5rv import (
 )
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.environment.ground import GroundKind, GroundModel
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
 
@@ -46,7 +47,7 @@ class G5RVDialog(QDialog):
         self._unit_system = unit_system
         self._parameters: CustomAntennaParameters | None = None
         self.setWindowTitle(translator.t("g5rv.title"))
-        self.resize(620, 700)
+        self.resize(*scaled_dialog_size(620, 700))
 
         self._frequency = QDoubleSpinBox(self)
         self._frequency.setRange(0.1, 100_000.0)

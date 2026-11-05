@@ -45,6 +45,7 @@ from ...domain.optimization.pareto import ParetoObjectives, pareto_ranks
 from ...domain.optimization.synthesis import SynthesisTarget
 from ...domain.simulation.bands import amateur_band_for
 from ...domain.simulation.spec import SimulationSpec
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_unit_key
 from ..workers.element_optimization_worker import ElementOptimizationWorker
@@ -128,7 +129,7 @@ class ElementOptimizationDialog(QDialog):
         self._ready = False
 
         self.setWindowTitle(translator.t(title_key))
-        self.resize(1_050, 760)
+        self.resize(*scaled_dialog_size(1_050, 760))
 
         self._objective = QComboBox(self)
         for objective in objectives:

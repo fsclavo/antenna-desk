@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.trap_dipole import TrapDipoleParameters
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
 from ..widgets.trap_dipole_form import TrapDipoleForm
@@ -55,7 +56,7 @@ class TrapDipoleDialog(QDialog):
         self._geometry = self._form._geometry
 
         self.setWindowTitle(translator.t("trap_dipole.title"))
-        self.resize(600, 760)
+        self.resize(*scaled_dialog_size(600, 760))
 
         self._hint = QLabel(translator.t("trap_dipole.hint"), self)
         self._hint.setWordWrap(True)

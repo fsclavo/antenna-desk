@@ -35,7 +35,7 @@ from ...domain.simulation.band_result import BandAnalysisResult
 from ...domain.simulation.band_summary import summarize_band
 from ...domain.simulation.bands import AmateurBand
 from ...domain.simulation.result import FrequencyResult, SimulationResult
-from ..fonts import apply_plot_fonts
+from ..fonts import apply_plot_fonts, scaled_dialog_size
 from ..i18n import Translator
 from ..theme import theme_colors
 
@@ -57,7 +57,7 @@ class ComparisonDialog(QDialog):
         self._band_analyses = band_analyses or {}
         self._colors = theme_colors(self.palette())
         self.setWindowTitle(translator.t("compare.title"))
-        self.resize(960, 780)
+        self.resize(*scaled_dialog_size(960, 780))
 
         self._combo_a = QComboBox(self)
         self._combo_b = QComboBox(self)

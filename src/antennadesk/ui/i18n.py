@@ -96,6 +96,25 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "font_size.small": {Language.ENGLISH: "Small", Language.SPANISH: "Pequeño"},
     "font_size.medium": {Language.ENGLISH: "Normal", Language.SPANISH: "Normal"},
     "font_size.large": {Language.ENGLISH: "Large", Language.SPANISH: "Grande"},
+    "preferences.title": {
+        Language.ENGLISH: "Preferences",
+        Language.SPANISH: "Preferencias",
+    },
+    "preferences.hint": {
+        Language.ENGLISH: (
+            "Language, units, and font size apply after you accept. Project "
+            "files always store metric SI units."
+        ),
+        Language.SPANISH: (
+            "El idioma, las unidades y el tamaño de fuente se aplican al "
+            "aceptar. Los archivos de proyecto siempre guardan unidades SI "
+            "métricas."
+        ),
+    },
+    "action.preferences": {
+        Language.ENGLISH: "Preferences...",
+        Language.SPANISH: "Preferencias...",
+    },
     "action.new": {Language.ENGLISH: "New Antenna...", Language.SPANISH: "Nueva antena..."},
     "catalog.title": {
         Language.ENGLISH: "New Antenna",

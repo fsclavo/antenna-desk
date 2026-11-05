@@ -24,6 +24,7 @@ from ...reporting.construction_sheet import (
     write_construction_sheet,
 )
 from ..construction_pdf import write_construction_pdf
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 
 
@@ -42,7 +43,7 @@ class ConstructionDialog(QDialog):
         self._design = design
         self._result = result
         self.setWindowTitle(translator.t("construction.title"))
-        self.resize(820, 720)
+        self.resize(*scaled_dialog_size(820, 720))
 
         self._browser = QTextBrowser(self)
         self._browser.setOpenExternalLinks(False)

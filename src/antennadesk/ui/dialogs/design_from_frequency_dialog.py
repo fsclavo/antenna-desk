@@ -57,6 +57,7 @@ from ...domain.design.formulas import (
     quarter_wave_length_m,
 )
 from ...domain.environment.ground import FREE_SPACE, GroundModel
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..template_identity import label_key_for
 from ..units import (
@@ -97,7 +98,7 @@ class DesignFromFrequencyDialog(QDialog):
         self._estimator_type = estimator_type_for(initial_parameters)
         self._template_label_key = label_key_for(initial_parameters)
         self.setWindowTitle(translator.t("design_from_frequency.title"))
-        self.resize(760, 680)
+        self.resize(*scaled_dialog_size(760, 680))
 
         frequency_hz = initial_parameters.frequency_hz
         highest_frequency_hz = frequency_hz * 6.0

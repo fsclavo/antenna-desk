@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.measurement import Measurement
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 
 
@@ -31,7 +32,7 @@ class MeasurementDetailsDialog(QDialog):
         super().__init__(parent)
         self._translator = translator
         self.setWindowTitle(translator.t("measurement.details_title"))
-        self.resize(520, 360)
+        self.resize(*scaled_dialog_size(520, 360))
 
         self._name = QLineEdit(default_name, self)
         self._calibration = QLineEdit(self)

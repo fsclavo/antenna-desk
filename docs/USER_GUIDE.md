@@ -939,15 +939,16 @@ before discarding unsaved changes.
 
 ## Language, units, and font size
 
-Use **Tools → Language** for English or Español. Use **Tools → Units** for
-metric (m, mm) or imperial (ft, in). The domain and project files always store
-canonical meters and hertz.
+Use **Tools → Preferences...** to set the language (English or Español), the
+display units (metric m/mm or imperial ft/in), and the font size (Small,
+Normal, or Large). The **Language**, **Units**, and **Font Size** submenus are
+shortcuts to the same settings.
 
-Use **Tools → Font Size** for Small, Normal, or Large. Normal restores the
-system default. The choice is saved and applied at startup. It scales the
-standard widgets, the antenna sketch, the pattern views, the chart axes and
-legends, and the start-page headline. Exported reports keep their own fixed
-typography.
+Preferences are saved and applied at startup. **Normal** restores the system
+font. The font preset scales the standard widgets, the antenna sketch, the
+pattern views, the chart axes and legends, the start-page headline, and dialog
+initial sizes. Exported reports keep their own fixed typography. The domain and
+project files always store canonical meters and hertz.
 
 ## Current limitations
 

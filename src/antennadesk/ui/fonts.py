@@ -70,6 +70,13 @@ def scaled_font_copy(font: QFont) -> QFont:
     return scaled
 
 
+def scaled_dialog_size(width: int, height: int) -> tuple[int, int]:
+    """Scale a dialog's preferred size with the active font preset."""
+
+    scale = current_font_scale()
+    return max(320, round(width * scale)), max(240, round(height * scale))
+
+
 def apply_plot_fonts(plots: Iterable[pg.PlotWidget]) -> None:
     """Apply the active font scale to pyqtgraph axes, titles, and legends."""
 

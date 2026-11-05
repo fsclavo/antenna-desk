@@ -22,6 +22,7 @@ from ...domain.antennas.feed_line import FeedLine
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.design.formulas import half_wave_length_m
 from ...domain.environment.ground import GroundKind, GroundModel
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
 
@@ -45,7 +46,7 @@ class DoubletDialog(QDialog):
         self._parameters: DipoleParameters | None = None
         self._feed_line: FeedLine | None = None
         self.setWindowTitle(translator.t("doublet.title"))
-        self.resize(620, 760)
+        self.resize(*scaled_dialog_size(620, 760))
 
         initial_frequency_hz = (
             parameters.frequency_hz if parameters is not None else frequency_hz

@@ -25,6 +25,7 @@ from ...domain.antennas.matching_network import (
     TNetwork,
     design_l_network,
 )
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 
 
@@ -42,7 +43,7 @@ class MatchingNetworkDialog(QDialog):
         self._network = network
         self._frequency_hz = frequency_hz
         self.setWindowTitle(translator.t("matching_network.title"))
-        self.resize(480, 440)
+        self.resize(*scaled_dialog_size(480, 440))
 
         self._enabled = QCheckBox(translator.t("matching_network.enabled"), self)
         self._enabled.setChecked(network is not None)

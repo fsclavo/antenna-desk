@@ -204,6 +204,7 @@ from .dialogs.measurement_details_dialog import MeasurementDetailsDialog
 from .dialogs.moxon_dialog import MoxonDialog
 from .dialogs.ocfd_dialog import OCFDDialog
 from .dialogs.optimization_dialog import OptimizationDialog
+from .dialogs.preferences_dialog import PreferencesDialog
 from .dialogs.ringo_dialog import RingoDialog
 from .dialogs.synthesis_dialog import SynthesisDialog
 from .dialogs.t2fd_dialog import T2FDDialog
@@ -227,6 +228,7 @@ from .preferences import (
     FontSizeController,
     InMemoryPreferencesStore,
     PreferencesStore,
+    UiPreferences,
 )
 from .report_pdf import write_report_pdf
 from .template_identity import catalog_key_for
@@ -353,6 +355,9 @@ class MainWindow(QMainWindow):
 
         self._locate_solver_action = QAction(self)
         self._locate_solver_action.triggered.connect(lambda: self.locate_solver())
+
+        self._preferences_action = QAction(self)
+        self._preferences_action.triggered.connect(lambda: self.show_preferences())
 
         self._feed_line_action = QAction(self)
         self._feed_line_action.triggered.connect(lambda: self.configure_feed_line())
@@ -575,6 +580,22 @@ class MainWindow(QMainWindow):
         self._ringo_scroll.setWidget(self._ringo_form)
         self._ringo_scroll.setMinimumWidth(340)
         self._ringo_scroll.setMaximumWidth(480)
+
+        self._form_panels = (
+            (self._form, self._form_scroll, 480),
+            (self._ocfd_form, self._ocfd_scroll, 480),
+            (self._vertical_form, self._vertical_scroll, 480),
+            (self._inverted_v_form, self._inverted_v_scroll, 480),
+            (self._yagi_form, self._yagi_scroll, 520),
+            (self._moxon_form, self._moxon_scroll, 480),
+            (self._fan_dipole_form, self._fan_dipole_scroll, 480),
+            (self._trap_dipole_form, self._trap_dipole_scroll, 500),
+            (self._t2fd_form, self._t2fd_scroll, 500),
+            (self._endfed_form, self._endfed_scroll, 480),
+            (self._j_pole_form, self._j_pole_scroll, 480),
+            (self._ringo_form, self._ringo_scroll, 480),
+        )
+        self._update_form_panel_widths()
 
         self._sweep_group = QGroupBox(self)
         self._sweep_group.setTitle(self._translator.t("sweep.group_title"))
@@ -912,6 +933,8 @@ class MainWindow(QMainWindow):
         self._simulation_menu.addAction(self._matching_network_action)
 
         self._tools_menu = self.menuBar().addMenu("")
+        self._tools_menu.addAction(self._preferences_action)
+        self._tools_menu.addSeparator()
         self._tools_menu.addAction(self._locate_solver_action)
         self._tools_menu.addAction(self._compact_history_action)
         self._tools_menu.addSeparator()
@@ -980,6 +1003,7 @@ class MainWindow(QMainWindow):
         self._save_action.setText(self._translator.t("action.save"))
         self._save_as_action.setText(self._translator.t("action.save_as"))
         self._locate_solver_action.setText(self._translator.t("action.locate_solver"))
+        self._preferences_action.setText(self._translator.t("action.preferences"))
         self._feed_line_action.setText(self._translator.t("action.feed_line"))
         self._matching_network_action.setText(self._translator.t("action.matching_network"))
         self._exit_action.setText(self._translator.t("action.exit"))
@@ -5711,11 +5735,53 @@ class MainWindow(QMainWindow):
         self._update_solver_status()
         self._update_actions()
 
+    def _current_preferences(self) -> UiPreferences:
+        return UiPreferences(
+            font_size=self._font_size_controller.size,
+            language=self._translator.language,
+            unit_system=self._unit_system,
+        )
+
+    def _save_preferences(self) -> None:
+        self._preferences.save(self._current_preferences())
+
+    def _update_form_panel_widths(self) -> None:
+        for form, scroll, base_max_width in self._form_panels:
+            needed = form.minimumSizeHint().width() + 24
+            scroll.setMinimumWidth(340)
+            scroll.setMaximumWidth(max(base_max_width, needed))
+
+    def show_preferences(self) -> None:
+        dialog = PreferencesDialog(
+            self._translator,
+            self._current_preferences(),
+            self,
+        )
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self._apply_preferences(dialog.preferences())
+
+    def _apply_preferences(self, preferences: UiPreferences) -> None:
+        self._translator.set_language(preferences.language)
+        self._english_action.setChecked(preferences.language is Language.ENGLISH)
+        self._spanish_action.setChecked(preferences.language is Language.SPANISH)
+        self._font_size_controller.apply(preferences.font_size)
+        self._update_font_size_actions()
+        self._unit_system = preferences.unit_system
+        self._metric_action.setChecked(preferences.unit_system is UnitSystem.METRIC)
+        self._imperial_action.setChecked(preferences.unit_system is UnitSystem.IMPERIAL)
+        self._form.set_unit_system(preferences.unit_system)
+        self._geometry.set_unit_system(preferences.unit_system)
+        self.retranslate()
+        self._update_form_panel_widths()
+        self._save_preferences()
+
     def _set_language(self, language: Language) -> None:
         self._translator.set_language(language)
         self._english_action.setChecked(language is Language.ENGLISH)
         self._spanish_action.setChecked(language is Language.SPANISH)
         self.retranslate()
+        self._update_form_panel_widths()
+        self._save_preferences()
 
     def _update_font_size_actions(self) -> None:
         size = self._font_size_controller.size
@@ -5725,8 +5791,9 @@ class MainWindow(QMainWindow):
 
     def _set_font_size(self, size: FontSize) -> None:
         self._font_size_controller.apply(size)
-        self._preferences.save_font_size(size)
         self._update_font_size_actions()
+        self._update_form_panel_widths()
+        self._save_preferences()
 
     def _set_unit_system(self, unit_system: UnitSystem) -> None:
         self._unit_system = unit_system
@@ -5734,6 +5801,8 @@ class MainWindow(QMainWindow):
         self._imperial_action.setChecked(unit_system is UnitSystem.IMPERIAL)
         self._form.set_unit_system(unit_system)
         self._geometry.set_unit_system(unit_system)
+        self._update_form_panel_widths()
+        self._save_preferences()
 
     def _on_view_mode_changed(self) -> None:
         value = self._view_combo.currentData()

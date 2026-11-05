@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.t2fd import T2FDParameters
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
 from ..widgets.t2fd_form import T2FDForm
@@ -55,7 +56,7 @@ class T2FDDialog(QDialog):
         self._band_warning = self._form._band_warning
 
         self.setWindowTitle(translator.t("t2fd.title"))
-        self.resize(620, 780)
+        self.resize(*scaled_dialog_size(620, 780))
 
         self._hint = QLabel(translator.t("t2fd.hint"), self)
         self._hint.setWordWrap(True)

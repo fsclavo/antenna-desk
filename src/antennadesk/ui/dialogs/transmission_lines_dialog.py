@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 
 from ...domain.antennas.transmission_line import TransmissionLine
 from ...domain.antennas.wire import Wire
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
 
@@ -43,7 +44,7 @@ class TransmissionLinesDialog(QDialog):
         self._wires = dict(wires)
         self._transmission_lines = list(transmission_lines)
         self.setWindowTitle(translator.t("transmission_lines.title"))
-        self.resize(900, 560)
+        self.resize(*scaled_dialog_size(900, 560))
 
         self._table = QTableWidget(0, 7, self)
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)

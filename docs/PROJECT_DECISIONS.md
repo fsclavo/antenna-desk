@@ -47,6 +47,8 @@ consequences, it is documented in `docs/ADR/`.
 - Domain code must not import PySide6, SciPy, or concrete solver libraries.
 - Persistence: **dataclasses** in the domain; **Pydantic v2** only at the
   persistence/schema-validation boundary.
+- UI preferences (language, units, font size) use **QSettings**; they are not
+  project data.
 - Internal geometry convention: right-handed axes, **Z up**, azimuth from
   **+X toward +Y**, normalized to `[0, 360)`; the geometry compass labels the
   X/Y axes. Radiation-pattern cuts keep their own theta/phi convention with an

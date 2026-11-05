@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.fan_dipole import FanDipoleParameters
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
 from ..widgets.fan_dipole_form import FanDipoleForm
@@ -40,7 +41,7 @@ class FanDipoleDialog(QDialog):
         self._remove_element = self._form._remove_element
 
         self.setWindowTitle(translator.t("fan.title"))
-        self.resize(620, 620)
+        self.resize(*scaled_dialog_size(620, 620))
 
         self._hint = QLabel(translator.t("fan.hint"), self)
         self._hint.setWordWrap(True)

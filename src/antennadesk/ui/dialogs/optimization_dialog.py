@@ -42,6 +42,7 @@ from ...domain.optimization.length import (
     rank_evaluations,
 )
 from ...domain.simulation.spec import SimulationSpec
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import (
     UnitSystem,
@@ -77,7 +78,7 @@ class OptimizationDialog(QDialog):
         self._run_spec: LengthOptimizationSpec | None = None
 
         self.setWindowTitle(translator.t("optimize.title"))
-        self.resize(960, 820)
+        self.resize(*scaled_dialog_size(960, 820))
 
         unit = translator.t(length_unit_key(unit_system))
         length_min, length_max = length_bounds(unit_system)

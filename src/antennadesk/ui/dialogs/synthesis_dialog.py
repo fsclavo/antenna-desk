@@ -39,6 +39,7 @@ from ...domain.optimization.synthesis import (
     rank_evaluations,
 )
 from ...domain.simulation.spec import SimulationSpec
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import (
     UnitSystem,
@@ -80,7 +81,7 @@ class SynthesisDialog(QDialog):
         self._is_ocfd = isinstance(base_parameters, OCFDParameters)
         self._folded = isinstance(base_parameters, JPoleParameters) and base_parameters.folded
         self.setWindowTitle(translator.t("synthesis.title"))
-        self.resize(1_000, 760)
+        self.resize(*scaled_dialog_size(1_000, 760))
 
         length_min, length_max = length_bounds(unit_system)
         scale = 1.0

@@ -41,23 +41,25 @@ def main() -> int:
     if icon_path.is_file():
         app.setWindowIcon(QIcon(str(icon_path)))
 
-    preferences = QSettingsPreferencesStore()
-    font_size_controller = FontSizeController(app.font())
-    font_size_controller.apply(preferences.load_font_size())
-
-    language = (
+    system_language = (
         Language.SPANISH
         if QLocale.system().language() == QLocale.Language.Spanish
         else Language.ENGLISH
     )
-    translator = Translator(language)
+    preferences_store = QSettingsPreferencesStore()
+    preferences = preferences_store.load(default_language=system_language)
+    font_size_controller = FontSizeController(app.font())
+    font_size_controller.apply(preferences.font_size)
+
+    translator = Translator(preferences.language)
     executable = find_nec2c()
     solver = Nec2cSolver(executable) if executable is not None else None
     window = MainWindow(
         JsonProjectRepository(),
         solver,
         translator,
-        preferences=preferences,
+        preferences.unit_system,
+        preferences=preferences_store,
         font_size_controller=font_size_controller,
     )
     window.show()

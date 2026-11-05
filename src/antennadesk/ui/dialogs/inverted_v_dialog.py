@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.inverted_v import InvertedVParameters
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
 from ..widgets.inverted_v_form import InvertedVForm
@@ -48,7 +49,7 @@ class InvertedVDialog(QDialog):
         self._geometry = self._form._geometry
 
         self.setWindowTitle(translator.t("inverted_v.title"))
-        self.resize(560, 560)
+        self.resize(*scaled_dialog_size(560, 560))
 
         self._hint = QLabel(translator.t("inverted_v.hint"), self)
         self._hint.setWordWrap(True)

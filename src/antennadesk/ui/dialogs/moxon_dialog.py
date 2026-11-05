@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.moxon import MoxonParameters
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
 from ..widgets.moxon_form import MoxonForm
@@ -37,7 +38,7 @@ class MoxonDialog(QDialog):
             self._form.set_frequency_hz(frequency_hz)
 
         self.setWindowTitle(translator.t("moxon.title"))
-        self.resize(560, 620)
+        self.resize(*scaled_dialog_size(560, 620))
 
         self._hint = QLabel(translator.t("moxon.hint"), self)
         self._hint.setWordWrap(True)

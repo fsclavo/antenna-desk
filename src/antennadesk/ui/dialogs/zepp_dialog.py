@@ -29,6 +29,7 @@ from ...domain.antennas.zepp import (
     zepp_starting_dimensions,
 )
 from ...domain.environment.ground import GroundKind, GroundModel
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
 
@@ -53,7 +54,7 @@ class ZeppDialog(QDialog):
         )
         radiator_m, matching_m = zepp_starting_dimensions(initial_frequency_hz)
         self.setWindowTitle(translator.t("zepp.title"))
-        self.resize(640, 760)
+        self.resize(*scaled_dialog_size(640, 760))
 
         self._frequency = QDoubleSpinBox(self)
         self._frequency.setRange(0.1, 100_000.0)

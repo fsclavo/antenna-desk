@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 
 from ...domain.design.band_plan import BandDefault, BandPlan, BandSelection
 from ...domain.simulation.bands import AMATEUR_BANDS, amateur_band_by_id, amateur_band_for
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 
 PRESET_DEFAULT = "default"
@@ -53,7 +54,7 @@ class BandAnalysisDialog(QDialog):
         self._applying = False
 
         self.setWindowTitle(translator.t("band.dialog_title"))
-        self.resize(560, 620)
+        self.resize(*scaled_dialog_size(560, 620))
 
         self._preset = QComboBox(self)
         for key in (

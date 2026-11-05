@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.feed_line import FeedLine
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
 
@@ -35,7 +36,7 @@ class FeedLineDialog(QDialog):
         self._feed_line = feed_line
 
         self.setWindowTitle(translator.t("feed_line.title"))
-        self.resize(440, 260)
+        self.resize(*scaled_dialog_size(440, 260))
 
         self._enabled = QCheckBox(translator.t("feed_line.enabled"), self)
         self._enabled.setChecked(feed_line is not None)

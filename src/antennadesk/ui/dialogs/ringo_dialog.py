@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.ringo import RingoParameters
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
 from ..widgets.ringo_form import RingoForm
@@ -36,7 +37,7 @@ class RingoDialog(QDialog):
         if frequency_hz is not None and parameters is None:
             self._form.set_frequency_hz(frequency_hz)
         self.setWindowTitle(translator.t("ringo.title"))
-        self.resize(560, 620)
+        self.resize(*scaled_dialog_size(560, 620))
 
         self._hint = QLabel(translator.t("ringo.hint"), self)
         self._hint.setWordWrap(True)

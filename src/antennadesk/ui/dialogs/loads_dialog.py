@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.load import LoadKind, LumpedLoad, ParallelLoad, SeriesLoad
+from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
 
@@ -45,7 +46,7 @@ class LoadsDialog(QDialog):
         self._loads = list(loads)
         self._protected_load_ids = protected_load_ids
         self.setWindowTitle(translator.t("loads.title"))
-        self.resize(720, 480)
+        self.resize(*scaled_dialog_size(720, 480))
 
         self._table = QTableWidget(0, 6, self)
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
