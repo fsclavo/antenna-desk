@@ -185,10 +185,18 @@ EVIDENCE: dict[str, EvidenceEntry] = {
     ),
     "sloper": EvidenceEntry(
         template="sloper",
-        level=EvidenceLevel.EXPERIMENTAL,
-        source="End-fed preset with a sloped radiator",
-        tolerance="Not applicable (structural)",
-        limitation="No independent numerical reference.",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "Chameleon Antenna CHA LEFS Feather operator's manual: 66.5 ft "
+            "EFHW radiator, 49:1 transformer, far end about 25 ft, feed "
+            "transformer about 3 ft; tested 40/20/15/10 m sloper patterns"
+        ),
+        tolerance="5% on the radiator length and deployment heights",
+        limitation=(
+            "The transformer, feed line, choke, and site coupling are not "
+            "modeled; the editor's default sloper is 10 m to 0.5 m, so the "
+            "published geometry is a starting point, not the default."
+        ),
     ),
     "random_wire": EvidenceEntry(
         template="random_wire",

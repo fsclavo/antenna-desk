@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
+from antennadesk.domain.antennas.endfed import (
+    EndFedParameters,
+    EndFedPreset,
+    sloper_parameters,
+)
 from antennadesk.domain.antennas.family import (
     AntennaFamily,
     antenna_family,
@@ -38,6 +42,16 @@ def test_endfed_rejects_below_ground_heights() -> None:
             length_m=20.0,
             end_height_m=-1.0,
         )
+
+
+def test_sloper_reference_matches_the_chameleon_lefs_geometry() -> None:
+    parameters = sloper_parameters()
+
+    assert parameters.preset is EndFedPreset.SLOPER
+    assert parameters.length_m == pytest.approx(66.5 * 0.3048, rel=0.01)
+    assert parameters.feed_height_m == pytest.approx(3.0 * 0.3048, rel=0.05)
+    assert parameters.end_height_m == pytest.approx(25.0 * 0.3048, rel=0.05)
+    assert parameters.transformer_ratio == pytest.approx(49.0)
 
 
 def test_endfed_rejects_a_slope_steeper_than_the_wire() -> None:

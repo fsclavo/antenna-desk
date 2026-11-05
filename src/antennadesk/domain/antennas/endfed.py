@@ -21,6 +21,13 @@ from .wire import Wire
 ANTENNA_TYPE_ENDFED = "endfed"
 RADIATOR_ID = "radiator"
 
+# Chameleon Antenna CHA LEFS Feather manual: 66.5 ft EFHW radiator, 49:1
+# transformer near 3 ft, far end at about 25 ft.
+SLOPER_REFERENCE_LENGTH_M = 66.5 * 0.3048
+SLOPER_REFERENCE_FEED_HEIGHT_M = 3.0 * 0.3048
+SLOPER_REFERENCE_END_HEIGHT_M = 25.0 * 0.3048
+SLOPER_REFERENCE_TRANSFORMER_RATIO = 49.0
+
 
 class EndFedPreset(StrEnum):
     STANDARD = "endfed"
@@ -145,3 +152,24 @@ class EndFedParameters:
                 EndFedPreset.RANDOM_WIRE: "Random wire",
             }[self.preset],
         )
+
+
+def sloper_parameters(
+    *,
+    wire_radius_m: float = 0.001,
+    material: ConductorMaterial = COPPER,
+    ground: GroundModel = FREE_SPACE,
+) -> EndFedParameters:
+    """Return the published Chameleon LEFS 40 m EFHW sloper geometry."""
+
+    return EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=SLOPER_REFERENCE_LENGTH_M,
+        feed_height_m=SLOPER_REFERENCE_FEED_HEIGHT_M,
+        end_height_m=SLOPER_REFERENCE_END_HEIGHT_M,
+        wire_radius_m=wire_radius_m,
+        material=material,
+        ground=ground,
+        transformer_ratio=SLOPER_REFERENCE_TRANSFORMER_RATIO,
+        preset=EndFedPreset.SLOPER,
+    )

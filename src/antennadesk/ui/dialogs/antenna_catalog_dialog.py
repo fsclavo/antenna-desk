@@ -103,7 +103,7 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         label_key="catalog.sloper",
         family_key="catalog.family.dipole",
         description_key="catalog.sloper.description",
-        evidence_key="catalog.evidence.experimental",
+        evidence_key="catalog.evidence.published",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_RANDOM_WIRE,

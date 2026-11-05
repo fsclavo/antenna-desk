@@ -251,7 +251,7 @@ gain, nulls, or impedance.
 | `trap_dipole` | B | RSARS, 'W3DZZ Multi-band Antenna 80-40-20-15-10m': 33 ft inner and 22 ft outer sections, 7.1 MHz traps, 5.024 µH and 100 pF | 1% on the 33/22 ft sections; 2% on the trap resonance | The feed line and tuner are not modeled; the trap is an ideal parallel LC, and the default starting dimensions are a full-size 80/20 m trap dipole rather than W3DZZ. |
 | `t2fd` | B | Cebik wide-long broadband starting rule | Not a strict numeric tolerance | Termination resistor and transformer are ideal. |
 | `endfed` | B | ARRL End-Fed Half-Wave Antenna Kit: 66 ft on 40 m, 33 ft on 20 m, 16 ft on 10 m, 49:1 transformer, about 2500 Ω; PA9X: counterpoise 0.05λ of the longest wavelength | 5% on the half-wave wire length; 0.05λ counterpoise; 49:1 ratio | The 49:1 transformer is an ideal ratio; the counterpoise is a straight wire; height, ground, and the common-mode choke are not modeled. |
-| `sloper` | C | End-fed preset with a sloped radiator | Not applicable (structural) | No independent numerical reference. |
+| `sloper` | B | Chameleon Antenna CHA LEFS Feather operator's manual: 66.5 ft EFHW radiator, 49:1 transformer, far end about 25 ft, feed transformer about 3 ft; tested 40/20/15/10 m sloper patterns | 5% on the radiator length and deployment heights | The transformer, feed line, choke, and site coupling are not modeled; the editor's default sloper is 10 m to 0.5 m, so the published geometry is a starting point, not the default. |
 | `random_wire` | C | Random-wire geometry with a tuner-assisted band plan | Not applicable (structural) | No accuracy claim. |
 | `g5rv` | B | Published G5RV dimensions; lossless transmission-line model | Not a strict numeric tolerance | Line loss is not modeled; matching depends on the installation. |
 | `zs6bkw` | A | Cebik/W4RNL SWR values 1.15, 1.47, and 1.56 at 40/20/10 m; commercial 27.5 m variant | 0.3 SWR | Lossless line model. |
@@ -270,10 +270,10 @@ when the catalog adds a template without an entry or when the table drifts.
 The 2026-11-04 and 2026-11-05 [evidence audits](EVIDENCE_AUDIT.md) document the
 reviews of the experimental templates. The first promoted `delta_loop`,
 `vertical`, and `inverted_v` from C to B after checking published length rules.
-The second promoted `j_pole`, `slim_jim`, `endfed`, and `trap_dipole` after
-checking M0UKD's 0.75 λ rule, the G2BCX 2 m Slim Jim length, the ARRL EFHW kit
-lengths, and the W3DZZ section and trap values. The remaining C templates stay
-experimental.
+The second promoted `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, and
+`sloper` after checking M0UKD's 0.75 λ rule, the G2BCX 2 m Slim Jim length,
+the ARRL EFHW kit lengths, the W3DZZ section and trap values, and the Chameleon
+LEFS deployment. The remaining C templates stay experimental.
 
 ## Phase 6 — new geometry and measurements (completed; physical validation deferred)
 
