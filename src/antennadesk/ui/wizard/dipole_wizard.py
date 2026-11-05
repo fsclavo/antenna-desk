@@ -583,7 +583,7 @@ class DipoleWizard(QWizard):
         initial_frequency_hz: float = 7_100_000.0,
         initial_antenna_type: str = ANTENNA_TYPE_WIRE_DIPOLE,
         initial_sides: int | None = None,
-        parent: QWizard | None = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
+from typing import Any, cast
 from uuid import UUID, uuid4
 
 from PySide6.QtCore import Qt, QThread
@@ -124,7 +125,11 @@ from ..domain.simulation.bands import (
     amateur_band_for,
     band_snapshot_frequencies,
 )
-from ..domain.simulation.budget import choose_batch_pattern_step, choose_pattern_step
+from ..domain.simulation.budget import (
+    PatternBudget,
+    choose_batch_pattern_step,
+    choose_pattern_step,
+)
 from ..domain.simulation.far_field import FarFieldRequest
 from ..domain.simulation.frequency import FrequencyPlan
 from ..domain.simulation.result import SimulationResult, SimulationStatus
@@ -279,7 +284,7 @@ class MainWindow(QMainWindow):
         self._custom_run_pattern_step_deg: float | None = None
         self._custom_pattern_frequency_count: int | None = None
         self._sweep_custom_initialized = False
-        self._custom_last_budget = None
+        self._custom_last_budget: PatternBudget | None = None
         self._pending_pattern_diagnostic: Diagnostic | None = None
         self._last_status_key = "status.ready"
         self._thread: QThread | None = None
@@ -1362,6 +1367,7 @@ class MainWindow(QMainWindow):
                 updated_at=utc_now(),
             )
             self._project = project
+            selected_id: UUID | None
             if snapshot.design_id is not None:
                 try:
                     project.design_by_id(snapshot.design_id)
@@ -1703,6 +1709,7 @@ class MainWindow(QMainWindow):
         if not project_name:
             raise ValueError("project name must not be empty")
         previous_design = self._project.design_by_id(self._design_id)
+        parameters: AntennaDesignParameters
         loads_override = self._loads if self._loads != previous_design.antenna.loads else None
         transmission_lines_override = (
             self._transmission_lines
@@ -2631,6 +2638,7 @@ class MainWindow(QMainWindow):
                     ),
                     field="far_field",
                 )
+            assert budget.pattern_step_deg is not None
             return replace(
                 spec,
                 far_field=far_field_request(budget.pattern_step_deg, ground),
@@ -3564,7 +3572,7 @@ class MainWindow(QMainWindow):
         if not isinstance(parameters, CustomAntennaParameters):
             return
         if parameters.generator_id == "inverted_v":
-            dialog: QDialog = InvertedVDialog(
+            dialog: Any = InvertedVDialog(
                 self._translator,
                 self._unit_system,
                 self,
@@ -3685,7 +3693,7 @@ class MainWindow(QMainWindow):
                 return None
             return wizard.build_parameters()
         if selected == CATALOG_TYPE_MOXON:
-            dialog = MoxonDialog(
+            dialog: Any = MoxonDialog(
                 self._translator,
                 self._unit_system,
                 self,
@@ -3883,6 +3891,7 @@ class MainWindow(QMainWindow):
         if selected is None:
             return
         feed_line = None
+        parameters: AntennaDesignParameters | None = None
         try:
             if selected == CATALOG_TYPE_DOUBLET:
                 dialog = DoubletDialog(
@@ -4376,7 +4385,7 @@ class MainWindow(QMainWindow):
                         replace(element, radius_m=radius_m) for element in estimated.elements
                     ),
                 )
-        return replace(estimated, **updates)
+        return replace(cast(Any, estimated), **updates)
 
     def _open_refinement_for_current_design(self) -> None:
         self.optimize_current_design()
@@ -4632,11 +4641,11 @@ class MainWindow(QMainWindow):
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        parameters = dialog.selected_parameters()
-        if parameters is None:
+        selected_parameters = dialog.selected_parameters()
+        if not isinstance(selected_parameters, YagiParameters):
             return
         try:
-            self._yagi_form.set_parameters(parameters)
+            self._yagi_form.set_parameters(selected_parameters)
             self._form_dirty = True
             self._apply_fields()
         except Exception as exc:
@@ -4735,11 +4744,11 @@ class MainWindow(QMainWindow):
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        parameters = dialog.selected_parameters()
-        if parameters is None:
+        selected_parameters = dialog.selected_parameters()
+        if not isinstance(selected_parameters, FanDipoleParameters):
             return
         try:
-            self._fan_dipole_form.set_parameters(parameters)
+            self._fan_dipole_form.set_parameters(selected_parameters)
             self._form_dirty = True
             self._apply_fields()
         except Exception as exc:
@@ -4817,11 +4826,11 @@ class MainWindow(QMainWindow):
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        parameters = dialog.selected_parameters()
-        if parameters is None:
+        selected_parameters = dialog.selected_parameters()
+        if not isinstance(selected_parameters, MoxonParameters):
             return
         try:
-            self._moxon_form.set_parameters(parameters)
+            self._moxon_form.set_parameters(selected_parameters)
             self._form_dirty = True
             self._apply_fields()
         except Exception as exc:
@@ -4956,7 +4965,7 @@ class MainWindow(QMainWindow):
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         selected = dialog.selected_parameters()
-        if selected is None:
+        if not isinstance(selected, VerticalParameters):
             return
         self._vertical_form.set_parameters(selected)
         self._form_dirty = True
@@ -5013,7 +5022,7 @@ class MainWindow(QMainWindow):
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         selected = dialog.selected_parameters()
-        if selected is None:
+        if not isinstance(selected, InvertedVParameters):
             return
         self._inverted_v_form.set_parameters(selected)
         self._form_dirty = True
@@ -5084,7 +5093,7 @@ class MainWindow(QMainWindow):
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         selected = dialog.selected_parameters()
-        if selected is None:
+        if not isinstance(selected, RingoParameters):
             return
         self._ringo_form.set_parameters(selected)
         self._form_dirty = True
