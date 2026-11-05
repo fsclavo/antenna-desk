@@ -15,12 +15,12 @@ Measured on 2026-11-04:
 
 | Fact | Value |
 |---|---|
-| Collected tests | 1,293 |
-| Passing locally with `NEC2C` set | 1,293 passed, 1 skipped (PyNEC) in about 75 s |
-| Fast unit-test lane | 719 passed, 1 skipped in about 8 s (`pytest -m "fast and not slow"`) |
+| Collected tests | 1,294 |
+| Passing locally with `NEC2C` set | 1,294 passed, 1 skipped (PyNEC) in about 75 s |
+| Fast unit-test lane | 720 passed, 1 skipped in about 8 s (`pytest -m "fast and not slow"`) |
 | Slowest test | 7.4 s (`test_g5rv_default_budgeted_pattern_completes`) |
 | UI test isolation | fixed 2026-11-04: deferred deletes were not dispatched, so widgets from one test stayed alive and a later test spent ~66 s in a nested event loop. The teardown in `tests/conftest.py` now closes windows and dispatches `DeferredDelete`; the full suite went from 142 s to 56 s |
-| Test files | 154 (89 unit, 11 integration, 1 acceptance, 53 UI) |
+| Test files | 155 (90 unit, 11 integration, 1 acceptance, 53 UI) |
 | Custom pytest markers | 7 (`science`, `solver`, `cross_engine`, `slow`, `fast`, `golden`, `ui`), with `fast`/`ui`/`solver` applied by path or fixture |
 | `parametrize` uses | 33 |
 | `skipif` uses | 10 |
@@ -77,7 +77,7 @@ that was hard to navigate and slow to run in isolation; it is now split.
   `golden`. `--strict-markers` is already enabled, so unregistered markers fail.
 - (done 2026-11-05) `tests/conftest.py` adds `fast` to unit tests, `ui` to UI
   tests, and `solver` to tests that request the solver fixture.
-  `pytest -m "fast and not slow"` runs 719 tests in about 8 s.
+  `pytest -m "fast and not slow"` runs 720 tests in about 8 s.
 - Add `tests/factories.py` with builders for `AntennaModel`, `SimulationSpec`,
   `Wire`, and `SimulationResult` to remove repeated literal construction.
 - (done 2026-11-04) Split `tests/ui/test_main_window.py` into feature modules:
@@ -95,7 +95,7 @@ that was hard to navigate and slow to run in isolation; it is now split.
   `QEvent.Type.DeferredDelete` after every UI test. Without it, a test's runtime
   depends on what ran before, as the 66 s regression showed.
 
-**Acceptance.** `uv run pytest -m "fast and not slow"` runs 719 tests in about
+**Acceptance.** `uv run pytest -m "fast and not slow"` runs 720 tests in about
 8 s, below the 20 s target. `uv run pytest -m solver` selects the solver tests,
 and `uv run pytest -m "not slow"` skips the two G5RV pattern-budget tests. The
 main-window suite is split by feature and no main-window module exceeds 1,000
@@ -163,7 +163,9 @@ between the domain and the widgets.
   (no `print` in `src/`), and `ANN` (annotations). Tests ignore `S101`,
   `PT011`, and `ANN`; CLI entry points ignore `T201`; runtime assertions in the
   source were replaced with explicit guards or early returns.
-- Add an SPDX header check for new source files, matching the existing headers.
+- (done 2026-11-05) `tests/unit/test_spdx_headers.py` checks the SPDX
+  copyright and GPL-3.0-or-later identifier in Python, shell, PowerShell,
+  spec, and desktop files under `src`, `tests`, `scripts`, and `packaging`.
 - (done 2026-11-05) Keep the PySide6 pin below 6.12 and record the reason in
   ADR-0025, not only in a comment.
 
