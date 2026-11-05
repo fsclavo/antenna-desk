@@ -18,7 +18,6 @@ from PySide6.QtWidgets import (
     QWizardPage,
 )
 
-from ...domain.antennas.design import AntennaDesignParameters
 from ...domain.antennas.dipole import (
     ANTENNA_TYPE_WIRE_DIPOLE,
     DipoleOrientation,
@@ -633,30 +632,45 @@ class DipoleWizard(QWizard):
     def frequency_hz(self) -> float:
         return self.project_page.frequency_hz()
 
-    def build_parameters(self) -> AntennaDesignParameters:
-        common = {
-            "frequency_hz": self.frequency_hz(),
-            "height_m": self.geometry_page.height_m(),
-            "azimuth_deg": self.geometry_page.azimuth_deg(),
-            "wire_radius_m": self.conductor_page.radius_m(),
-            "material": self.conductor_page.material(),
-            "ground": self.ground_page.ground(),
-        }
+    def build_parameters(
+        self,
+    ) -> DipoleParameters | FoldedDipoleParameters | LoopParameters:
+        frequency_hz = self.frequency_hz()
+        height_m = self.geometry_page.height_m()
+        azimuth_deg = self.geometry_page.azimuth_deg()
+        wire_radius_m = self.conductor_page.radius_m()
+        material = self.conductor_page.material()
+        ground = self.ground_page.ground()
         antenna_type = self.project_page.antenna_type()
         if antenna_type == ANTENNA_TYPE_FOLDED_DIPOLE:
             return FoldedDipoleParameters(
+                frequency_hz=frequency_hz,
+                height_m=height_m,
+                azimuth_deg=azimuth_deg,
+                wire_radius_m=wire_radius_m,
+                material=material,
+                ground=ground,
                 total_length_m=self.geometry_page.length_m(),
                 spacing_m=self.geometry_page.spacing_m(),
-                **common,
             )
         if antenna_type == ANTENNA_TYPE_LOOP:
             return LoopParameters(
+                frequency_hz=frequency_hz,
+                height_m=height_m,
+                azimuth_deg=azimuth_deg,
+                wire_radius_m=wire_radius_m,
+                material=material,
+                ground=ground,
                 circumference_m=self.geometry_page.length_m(),
                 sides=self.geometry_page.sides(),
-                **common,
             )
         return DipoleParameters(
+            frequency_hz=frequency_hz,
+            height_m=height_m,
+            azimuth_deg=azimuth_deg,
+            wire_radius_m=wire_radius_m,
+            material=material,
+            ground=ground,
             total_length_m=self.geometry_page.length_m(),
             orientation=self.geometry_page.orientation(),
-            **common,
         )
