@@ -17,6 +17,7 @@ from antennadesk.domain.antennas.trap_dipole import (
     TRAP_LEFT_ID,
     TRAP_RIGHT_ID,
     TrapDipoleParameters,
+    w3dzz_parameters,
 )
 
 
@@ -52,6 +53,20 @@ def test_trap_dipole_builds_a_center_fed_wire_and_two_traps() -> None:
     assert all(load.capacitance_f == pytest.approx(expected_c) for load in custom.loads)
     assert antenna == custom.to_antenna(name="Trap")
     assert custom.generator_id == "trap_dipole"
+
+
+def test_w3dzz_parameters_match_the_published_sections() -> None:
+    parameters = w3dzz_parameters()
+
+    assert parameters.inner_length_m == pytest.approx(2.0 * 33.0 * 0.3048, rel=0.01)
+    assert parameters.outer_length_m == pytest.approx(22.0 * 0.3048, rel=0.01)
+    assert parameters.total_length_m == pytest.approx(110.0 * 0.3048, rel=0.01)
+    assert parameters.trap_positions_m == pytest.approx(
+        (22.0 * 0.3048, 88.0 * 0.3048),
+        rel=0.01,
+    )
+    assert parameters.trap_frequency_hz == pytest.approx(7_100_000.0)
+    assert parameters.trap_capacitance_f == pytest.approx(100e-12, rel=0.02)
 
 
 def test_trap_dipole_vertical_orientation_uses_base_height() -> None:

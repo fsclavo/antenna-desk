@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   and compressed project save/load. It uploads `benchmark.json` and does not
   enforce a threshold yet.
 - The test suite has a fast unit-test lane: `pytest -m "fast and not slow"`
-  runs 723 tests in about 8 s. `fast`, `ui`, and `solver` markers are applied
+  runs 724 tests in about 8 s. `fast`, `ui`, and `solver` markers are applied
   automatically by path or fixture; the two G5RV pattern-budget tests are
   marked `slow`.
 - Every native artifact now carries `COPYING`, `THIRD_PARTY_NOTICES.md`, the
@@ -174,8 +174,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   The J Pole and Slim Jim estimators also moved from C to B after checking
   M0UKD's 0.75λ section rule and the G2BCX 2 m Slim Jim length. The end-fed
   estimator moved to B after matching the ARRL EFHW kit's 66/33/16 ft lengths
-  and PA9X's 0.05λ counterpoise rule. The remaining experimental templates and
-  their next evidence needs are documented.
+  and PA9X's 0.05λ counterpoise rule. The trap dipole moved to B after checking
+  the W3DZZ 33/22 ft sections and its 7.1 MHz, 5.024 µH / 100 pF traps. The
+  remaining experimental templates and their next evidence needs are
+  documented.
 - CI now pins every action by commit SHA, runs `uv lock --check` and
   `pip-audit --skip-editable`, and Dependabot tracks GitHub Actions and Python
   dependencies. Dependabot keeps PySide6 in its own group so Qt upgrades are

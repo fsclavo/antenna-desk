@@ -23,6 +23,15 @@ TRAP_LEFT_ID = "trap-left"
 TRAP_RIGHT_ID = "trap-right"
 ANTENNA_TYPE_TRAP_DIPOLE = "trap_dipole"
 
+# RSARS, "W3DZZ Multi-band Antenna 80-40-20-15-10m": 33 ft (10.07 m) inner
+# sections, 22 ft (6.70 m) outer sections, 7.1 MHz traps, 5.024 uH and 100 pF.
+W3DZZ_INNER_SECTION_M = 33.0 * 0.3048
+W3DZZ_OUTER_SECTION_M = 22.0 * 0.3048
+W3DZZ_TRAP_FREQUENCY_HZ = 7_100_000.0
+W3DZZ_TRAP_INDUCTANCE_H = 5.024e-6
+W3DZZ_LOW_BAND_HZ = 3_500_000.0
+W3DZZ_HIGH_BAND_HZ = 7_100_000.0
+
 
 @dataclass(frozen=True, slots=True)
 class TrapDipoleParameters:
@@ -155,3 +164,30 @@ class TrapDipoleParameters:
             self,
             outer_length_m=(total_length_m - self.inner_length_m) / 2.0,
         )
+
+
+def w3dzz_parameters(
+    *,
+    height_m: float = 10.0,
+    orientation: DipoleOrientation = DipoleOrientation.HORIZONTAL,
+    azimuth_deg: float = 0.0,
+    wire_radius_m: float = 0.001,
+    material: ConductorMaterial = COPPER,
+    ground: GroundModel = FREE_SPACE,
+) -> TrapDipoleParameters:
+    """Return the published W3DZZ 80-40-20-15-10 m trap-dipole dimensions."""
+
+    return TrapDipoleParameters(
+        frequency_hz=W3DZZ_LOW_BAND_HZ,
+        high_band_frequency_hz=W3DZZ_HIGH_BAND_HZ,
+        inner_length_m=2.0 * W3DZZ_INNER_SECTION_M,
+        outer_length_m=W3DZZ_OUTER_SECTION_M,
+        trap_frequency_hz=W3DZZ_TRAP_FREQUENCY_HZ,
+        trap_inductance_h=W3DZZ_TRAP_INDUCTANCE_H,
+        height_m=height_m,
+        orientation=orientation,
+        azimuth_deg=azimuth_deg,
+        wire_radius_m=wire_radius_m,
+        material=material,
+        ground=ground,
+    )

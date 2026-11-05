@@ -149,10 +149,17 @@ EVIDENCE: dict[str, EvidenceEntry] = {
     ),
     "trap_dipole": EvidenceEntry(
         template="trap_dipole",
-        level=EvidenceLevel.EXPERIMENTAL,
-        source="Trap-loaded dipole starting geometry",
-        tolerance="Not applicable (structural)",
-        limitation="Traps are ideal; no independent numerical reference.",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "RSARS, 'W3DZZ Multi-band Antenna 80-40-20-15-10m': 33 ft inner and "
+            "22 ft outer sections, 7.1 MHz traps, 5.024 µH and 100 pF"
+        ),
+        tolerance="1% on the 33/22 ft sections; 2% on the trap resonance",
+        limitation=(
+            "The feed line and tuner are not modeled; the trap is an ideal "
+            "parallel LC, and the default starting dimensions are a full-size "
+            "80/20 m trap dipole rather than W3DZZ."
+        ),
     ),
     "t2fd": EvidenceEntry(
         template="t2fd",
