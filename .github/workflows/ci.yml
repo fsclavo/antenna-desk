@@ -121,7 +121,7 @@ jobs:
         run: uv sync --locked --python 3.12
 
       - name: Run benchmarks
-        run: uv run pytest benchmarks --benchmark-only -p no:pytestqt --benchmark-json=benchmark.json -q
+        run: uv run pytest benchmarks --benchmark-only -p no:pytest-qt --benchmark-json=benchmark.json -q
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7

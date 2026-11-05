@@ -186,7 +186,7 @@ Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 uv sync
 uv run pytest -m "fast and not slow"   # quick unit-test lane, about 8 s
 uv run pytest                          # full suite
-uv run pytest benchmarks --benchmark-only -p no:pytestqt   # report-only performance benchmarks
+uv run pytest benchmarks --benchmark-only -p no:pytest-qt   # report-only performance benchmarks
 uv run ruff check .
 uv run ruff format --check .
 uv run mypy
