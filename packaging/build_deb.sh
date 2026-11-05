@@ -76,6 +76,11 @@ install -m 644 "$ROOT/packaging/antennadesk.png" \
   "$STAGE/usr/share/icons/hicolor/256x256/apps/antennadesk.png"
 install -m 644 "$ROOT/packaging/debian/copyright" \
   "$STAGE/usr/share/doc/antennadesk/copyright"
+install -m 644 "$ROOT/LICENSE" "$STAGE/usr/share/doc/antennadesk/COPYING"
+install -m 644 "$ROOT/packaging/licenses/THIRD_PARTY_NOTICES.md" \
+  "$STAGE/usr/share/doc/antennadesk/THIRD_PARTY_NOTICES.md"
+install -m 644 "$ROOT/packaging/licenses/LGPL-3.0.txt" \
+  "$STAGE/usr/share/doc/antennadesk/LGPL-3.0.txt"
 
 cat > "$STAGE/DEBIAN/postinst" <<'EOF'
 #!/bin/sh

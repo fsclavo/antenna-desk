@@ -15,12 +15,12 @@ Measured on 2026-11-04:
 
 | Fact | Value |
 |---|---|
-| Collected tests | 1,294 |
-| Passing locally with `NEC2C` set | 1,294 passed, 1 skipped (PyNEC) in about 75 s |
-| Fast unit-test lane | 720 passed, 1 skipped in about 8 s (`pytest -m "fast and not slow"`) |
+| Collected tests | 1,297 |
+| Passing locally with `NEC2C` set | 1,297 passed, 1 skipped (PyNEC) in about 80 s |
+| Fast unit-test lane | 723 passed, 1 skipped in about 8 s (`pytest -m "fast and not slow"`) |
 | Slowest test | 7.4 s (`test_g5rv_default_budgeted_pattern_completes`) |
 | UI test isolation | fixed 2026-11-04: deferred deletes were not dispatched, so widgets from one test stayed alive and a later test spent ~66 s in a nested event loop. The teardown in `tests/conftest.py` now closes windows and dispatches `DeferredDelete`; the full suite went from 142 s to 56 s |
-| Test files | 155 (90 unit, 11 integration, 1 acceptance, 53 UI) |
+| Test files | 156 (91 unit, 11 integration, 1 acceptance, 53 UI) |
 | Custom pytest markers | 7 (`science`, `solver`, `cross_engine`, `slow`, `fast`, `golden`, `ui`), with `fast`/`ui`/`solver` applied by path or fixture |
 | `parametrize` uses | 33 |
 | `skipif` uses | 10 |
@@ -35,6 +35,7 @@ Measured on 2026-11-04:
 | Property-based tests | unit round trips, azimuth range, importer fuzzing, all 13 estimator families, and project/migration round trips with Hypothesis 6.170 |
 | Mutation testing | weekly `mutmut` on `formulas.py`, `intent.py`, and `dipole.py`: 240/304 killed, 64 message-only equivalents, behavioural score 100 % |
 | Benchmarks in CI | 3 report-only cases: NEC output parser, pattern metrics, compressed project save/load |
+| Native artifact license audit | COPYING, third-party notices, LGPL-3.0, dependency licenses, and nec2c source/patch; packaging fails if missing |
 | Cross-engine numerical checks | 3 free-space cases against nec2++ via PyNEC (dipole, folded dipole, quad loop) |
 | Template evidence entries | 25/25 catalog templates, enforced by a test |
 | Reference corpus | 12 curated MMANA models, SHA-256 manifest, structural and NEC2C smoke tests |
@@ -77,7 +78,7 @@ that was hard to navigate and slow to run in isolation; it is now split.
   `golden`. `--strict-markers` is already enabled, so unregistered markers fail.
 - (done 2026-11-05) `tests/conftest.py` adds `fast` to unit tests, `ui` to UI
   tests, and `solver` to tests that request the solver fixture.
-  `pytest -m "fast and not slow"` runs 720 tests in about 8 s.
+  `pytest -m "fast and not slow"` runs 723 tests in about 8 s.
 - Add `tests/factories.py` with builders for `AntennaModel`, `SimulationSpec`,
   `Wire`, and `SimulationResult` to remove repeated literal construction.
 - (done 2026-11-04) Split `tests/ui/test_main_window.py` into feature modules:
@@ -95,7 +96,7 @@ that was hard to navigate and slow to run in isolation; it is now split.
   `QEvent.Type.DeferredDelete` after every UI test. Without it, a test's runtime
   depends on what ran before, as the 66 s regression showed.
 
-**Acceptance.** `uv run pytest -m "fast and not slow"` runs 720 tests in about
+**Acceptance.** `uv run pytest -m "fast and not slow"` runs 723 tests in about
 8 s, below the 20 s target. `uv run pytest -m solver` selects the solver tests,
 and `uv run pytest -m "not slow"` skips the two G5RV pattern-budget tests. The
 main-window suite is split by feature and no main-window module exceeds 1,000
@@ -199,11 +200,14 @@ cancellation, and a `paths` filter that ignores `docs/`, `scripts/`, and
 - Add `uv lock --check` and an OSV or `pip-audit` scan of `uv.lock`.
 - Add a bundle smoke test: build the frozen artifact, run `--version` and
   `--check-solver`, assert the bundled `nec2c` is found.
-- License audit: ADR 0001 already records that the `nec2c` fork is GPL-3 and
-  that distribution requires shipping the engine source, `COPYING`, and
-  notices. The remaining work is to verify that every artifact actually does
-  it (`packaging/debian/copyright`, the AppImage, and the Windows bundle), and
-  to add a test that fails when the notice files are missing.
+- (done 2026-11-05) License audit: every native artifact includes `COPYING`,
+  `licenses/THIRD_PARTY_NOTICES.md`, `licenses/LGPL-3.0.txt`, the installed
+  dependency license files, and the pinned nec2c source tarball plus Windows
+  patch (or a `SOURCE.txt` with the exact URL and commit). The packaging scripts
+  run `collect_bundle_licenses.py` and `check_bundle_licenses.py`; a unit test
+  fails when a required notice is missing. The Debian copyright file points to
+  the bundled notices. A legal review before a public release is still
+  recommended.
 
 **Acceptance.** A change to `scripts/` or `packaging/` runs CI. A failing job
 uploads its artifacts. The nightly job is green or files an issue. No action is

@@ -118,3 +118,13 @@ nec2_manual_example3_finite   Z=111.1200+11.0080j (manual 111.117+11.0075j)
    those geometries.
 4. Review the license and distribution text with legal counsel before the
    first public release.
+
+## Amendment 2026-11-05 — distribution notices
+
+The native artifacts now include `COPYING`, `licenses/THIRD_PARTY_NOTICES.md`,
+`licenses/LGPL-3.0.txt`, the installed dependency license files, and the pinned
+nec2c source tarball plus Windows patch (or a `SOURCE.txt` with the exact URL
+and commit). The packaging scripts run `collect_bundle_licenses.py` and
+`check_bundle_licenses.py`; `tests/unit/test_packaging_licenses.py` fails when a
+required notice is missing. A legal review before a public release is still
+recommended.

@@ -44,6 +44,11 @@ if (-not (Test-Path $Executable)) {
 }
 Copy-Item $Nec2c (Join-Path $Bundle "nec2c.exe")
 
+uv run python packaging\collect_bundle_licenses.py $Bundle
+if ($LASTEXITCODE -ne 0) { throw "license collection failed" }
+uv run python packaging\check_bundle_licenses.py $Bundle
+if ($LASTEXITCODE -ne 0) { throw "license audit failed" }
+
 if ($env:WINDOWS_SIGN_CERT) {
   $SignTool = (Get-Command signtool.exe -ErrorAction SilentlyContinue).Source
   if (-not $SignTool) {

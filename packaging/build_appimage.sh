@@ -54,6 +54,12 @@ cp -a "$BUNDLE" "$APP_DIR/usr/bin/$APP_NAME"
 install -m 644 "$ROOT/src/antennadesk/ui/resources/antennadesk.svg" "$APP_DIR/antennadesk.svg"
 install -m 644 "$ROOT/src/antennadesk/ui/resources/antennadesk.svg" \
   "$APP_DIR/usr/share/icons/hicolor/scalable/apps/antennadesk.svg"
+install -d "$APP_DIR/usr/share/doc/antennadesk"
+install -m 644 "$ROOT/LICENSE" "$APP_DIR/usr/share/doc/antennadesk/COPYING"
+install -m 644 "$ROOT/packaging/licenses/THIRD_PARTY_NOTICES.md" \
+  "$APP_DIR/usr/share/doc/antennadesk/THIRD_PARTY_NOTICES.md"
+install -m 644 "$ROOT/packaging/licenses/LGPL-3.0.txt" \
+  "$APP_DIR/usr/share/doc/antennadesk/LGPL-3.0.txt"
 
 cat > "$APP_DIR/antennadesk.desktop" <<EOF
 [Desktop Entry]

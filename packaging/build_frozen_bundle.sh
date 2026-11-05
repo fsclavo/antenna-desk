@@ -42,3 +42,6 @@ if [[ ! -x "$BUNDLE/AntennaDesk" ]]; then
 fi
 
 install -m 755 "$NEC2C_BINARY" "$BUNDLE/nec2c"
+
+uv run python packaging/collect_bundle_licenses.py "$BUNDLE"
+uv run python packaging/check_bundle_licenses.py "$BUNDLE"

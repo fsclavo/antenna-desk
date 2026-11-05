@@ -10,6 +10,9 @@ License: GPL-3.0-or-later
  Foundation, either version 3 of the License, or (at your option) any later
  version.
  .
+ Third-party license texts and notices are installed under
+ /opt/antennadesk/licenses/ and /usr/share/doc/antennadesk/.
+ .
  On Debian systems, the complete text of the GNU General Public License
  version 3 can be found in /usr/share/common-licenses/GPL-3.
 
@@ -21,3 +24,10 @@ License: GPL-3.0
  .
  On Debian systems, the complete text of the GNU General Public License
  version 3 can be found in /usr/share/common-licenses/GPL-3.
+
+Files: opt/antennadesk/licenses/*
+Copyright: respective upstream authors
+License: GPL-3.0-or-later, LGPL-3.0, MIT, BSD-3-Clause, PSF-2.0, Apache-2.0, or BSD-2-Clause
+ The exact license for each bundled component is recorded in
+ opt/antennadesk/licenses/THIRD_PARTY_NOTICES.md and in the license files next
+ to it.

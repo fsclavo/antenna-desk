@@ -64,6 +64,22 @@ package installs the frozen bundle under `/opt/antennadesk`, with
 `/usr/bin/antennadesk` as the launcher, the desktop entry, icons, copyright,
 and a generated Debian changelog.
 
+## License notices
+
+Every native artifact includes:
+
+- `COPYING`, the GPL-3.0 text;
+- `licenses/THIRD_PARTY_NOTICES.md`;
+- `licenses/LGPL-3.0.txt`;
+- the installed license files for the bundled Python dependencies;
+- `licenses/nec2c/` with the pinned source tarball and Windows patch, or a
+  `SOURCE.txt` with the exact URL and commit.
+
+`packaging/collect_bundle_licenses.py` collects them and
+`packaging/check_bundle_licenses.py` fails the build if a required notice is
+missing. The Debian package also installs the notices under
+`/usr/share/doc/antennadesk`.
+
 ## Build the Windows bundle
 
 Requirements:

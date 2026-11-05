@@ -90,6 +90,7 @@ known-first-party = ["antennadesk"]
 "src/antennadesk/ui/app.py" = ["T201"]
 "scripts/**" = ["T201", "ANN"]
 "spikes/**" = ["T201", "S603", "ANN"]
+"packaging/**" = ["T201"]
 # The parser fixture reproduces fixed-width nec2c output.
 "tests/unit/simulation/test_parser.py" = ["E501", "S101", "PT011", "ANN"]
 # Translation tables and HTML templates naturally contain long strings.
