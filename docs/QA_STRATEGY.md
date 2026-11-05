@@ -466,8 +466,10 @@ now guards the tables, but documentation can still drift from code.
 - (done 2026-11-04) `tests/unit/ui/test_i18n.py` checks both translation tables
   for identical keys, blank values, placeholder parity, duplicate literal keys,
   and the missing-key fallback.
-- Add a test that every user-visible string in `ui/` resolves through
-  `ui/i18n.py`.
+- (done 2026-11-05) `tests/unit/ui/test_i18n_usage.py` scans `ui/` for literal
+  keys passed to `t()`, `_label()`, and `_add_row()`, and rejects non-technical
+  literals in the visible text setters. It found and fixed three missing keys
+  and the untranslated wizard placeholder.
 - (done 2026-11-04) ADR numbering: 24 ADRs, 0001–0024, with
   `tests/unit/test_adr_numbering.py` asserting unique, contiguous numbers and a
   heading that matches the filename. The duplicate `0014` was resolved:

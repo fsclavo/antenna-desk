@@ -71,7 +71,7 @@ class ProjectPage(QWizardPage):
         self._setting_frequency = False
 
         self._name = QLineEdit(self)
-        self._name.setPlaceholderText("40 m dipole")
+        self._name.setPlaceholderText(self._translator.t("wizard.project_placeholder"))
         self._name.textChanged.connect(self.completeChanged)
         self._name_edited = False
         self._name.textEdited.connect(self._on_name_edited)

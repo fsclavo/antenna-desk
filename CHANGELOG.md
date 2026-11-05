@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- A static UI translation test checks every literal key passed to the
+  translator and every literal text setter, so missing keys and untranslated
+  labels fail the build.
 - Hypothesis property tests now cover all 13 estimator families and the
   project document, repository, and v1-to-current migration round trips. The
   geometry properties found and fixed the zero-height and vertical-array
@@ -226,6 +229,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Three translation keys used by the UI were missing and rendered as raw keys:
+  `dialog.all_files`, `error.import_nec`, and `measurement.impedance_error`.
+  The antenna wizard placeholder now uses `wizard.project_placeholder`.
 - Estimator edge cases found by the new geometry property tests: OCFD and
   horizontal Yagi/Moxon estimates with zero height now clamp to 0.01 m, and
   vertical Yagi/Moxon estimates whose elements would cross the ground raise a

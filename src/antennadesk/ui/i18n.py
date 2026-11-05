@@ -1968,6 +1968,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Could not import MMANA file: {message}",
         Language.SPANISH: "No se pudo importar el archivo MMANA: {message}",
     },
+    "error.import_nec": {
+        Language.ENGLISH: "Could not import NEC deck: {message}",
+        Language.SPANISH: "No se pudo importar el archivo NEC: {message}",
+    },
     "dialog.nec_title": {
         Language.ENGLISH: "Import NEC deck",
         Language.SPANISH: "Importar archivo NEC",
@@ -4091,6 +4095,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Simulated X (Ω)",
         Language.SPANISH: "X simulada (Ω)",
     },
+    "measurement.impedance_error": {
+        Language.ENGLISH: "Impedance error (Ω)",
+        Language.SPANISH: "Error de impedancia (Ω)",
+    },
     "measurement.comparison_summary": {
         Language.ENGLISH: "Compared {count} points · mean |ΔZ| = {mean} Ω · max = {maximum} Ω",
         Language.SPANISH: "Comparados {count} puntos · |ΔZ| medio = {mean} Ω · máximo = {maximum} Ω",
@@ -4422,6 +4430,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "AntennaDesk project (*.antennadesk);;All files (*)",
         Language.SPANISH: "Proyecto AntennaDesk (*.antennadesk);;Todos los archivos (*)",
     },
+    "dialog.all_files": {
+        Language.ENGLISH: "All files (*)",
+        Language.SPANISH: "Todos los archivos (*)",
+    },
     "dialog.solver_title": {
         Language.ENGLISH: "Select nec2c executable",
         Language.SPANISH: "Seleccionar el ejecutable nec2c",
@@ -4463,6 +4475,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Cancelá la simulación en curso antes de cerrar la ventana.",
     },
     "wizard.title": {Language.ENGLISH: "New Antenna", Language.SPANISH: "Nueva antena"},
+    "wizard.project_placeholder": {
+        Language.ENGLISH: "40 m dipole",
+        Language.SPANISH: "dipolo de 40 m",
+    },
     "wizard.project_page": {Language.ENGLISH: "Frequency", Language.SPANISH: "Frecuencia"},
     "wizard.project_page_desc": {
         Language.ENGLISH: "Choose a project name, a band, or a custom frequency.",
