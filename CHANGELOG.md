@@ -165,6 +165,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (`ANN`) checks. Runtime assertions in the source were replaced with explicit
   guards or early returns; tests exempt `S101`/`PT011`/`ANN`, and CLI entry
   points exempt `T201`.
+- Catalog evidence labels now follow the evidence registry: the J Pole, Slim
+  Jim, end-fed, inverted-V, OCFD, and vertical entries say “published starting
+  dimensions” instead of “experimental”. Tests cross-check estimator support,
+  catalog identity, New Antenna routes, and both language tables.
 - Renumbered the duplicate ADR 0014: undo/redo is now ADR 0024. Added tests for
   unique, contiguous ADR numbering and matching headings.
 - All 75 UI modules, including the antenna wizard, are now type-checked: the

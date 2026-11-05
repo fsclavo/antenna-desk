@@ -373,6 +373,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Experimental; no independent numeric reference",
         Language.SPANISH: "Experimental; sin referencia numérica independiente",
     },
+    "catalog.evidence.published": {
+        Language.ENGLISH: (
+            "Published starting dimensions; no independent impedance or pattern validation"
+        ),
+        Language.SPANISH: (
+            "Dimensiones iniciales publicadas; sin validación independiente de impedancia o patrón"
+        ),
+    },
     "catalog.evidence.custom": {
         Language.ENGLISH: "User-defined geometry",
         Language.SPANISH: "Geometría definida por el usuario",

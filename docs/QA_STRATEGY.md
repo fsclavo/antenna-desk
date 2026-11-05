@@ -472,8 +472,13 @@ now guards the tables, but documentation can still drift from code.
   `tests/unit/test_adr_numbering.py` asserting unique, contiguous numbers and a
   heading that matches the filename. The duplicate `0014` was resolved:
   undo/redo is now `0024`, and L-network stays `0014`.
-- Pending: estimator-registry and catalog-route consistency; the evidence
-  registry is already covered in 3.5.7.
+- (done 2026-11-05) Estimator-registry and catalog-route consistency:
+  `tests/ui/test_catalog_routing.py` checks that every catalog entry has the
+  expected estimator support, that every estimator type is covered by at least
+  one catalog route, that the parameter-to-catalog identity matches (with the
+  documented doublet alias), that New Antenna covers every entry, and that the
+  catalog evidence label matches the evidence registry level. The evidence
+  registry itself is covered in 3.5.7.
 - Add a `CHANGELOG.md` entry check for user-visible changes.
 - Turn the `AGENTS.md` definition of done into a checklist template used by the
   milestone review.

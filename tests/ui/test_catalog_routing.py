@@ -30,10 +30,18 @@ from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 from antennadesk.domain.antennas.zepp import zepp_parameters
 from antennadesk.domain.antennas.zs6bkw import zs6bkw_parameters
+from antennadesk.domain.design import UnsupportedEstimateError
+from antennadesk.domain.design.estimators import (
+    SUPPORTED_ESTIMATOR_TYPES,
+    estimator_type_for,
+    supports_estimation,
+)
+from antennadesk.domain.design.evidence import EVIDENCE, EvidenceLevel
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.dialogs import antenna_catalog_dialog
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
+from antennadesk.ui.template_identity import catalog_key_for
 from antennadesk.ui.units import UnitSystem
 
 
@@ -187,6 +195,7 @@ def _parameters_for(key: str) -> object:
             spacing_m=0.05,
             feed_offset_m=0.1,
             base_height_m=0.25,
+            folded=True,
         ),
         "ringo": RingoParameters(
             frequency_hz=29_000_000.0,
@@ -300,6 +309,11 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "custom": ("custom",),
     }
 
+    catalog_keys = {entry.key for entry in antenna_catalog_dialog.ENTRIES}
+    assert set(routes) == catalog_keys, (
+        f"New Antenna route table is out of date: {set(routes) ^ catalog_keys}"
+    )
+
     class FakeCatalog:
         selected = "wire_dipole"
 
@@ -389,3 +403,65 @@ def test_delta_and_quad_change_template_use_the_loop_wizard(
         assert isinstance(result, LoopParameters)
         assert result.sides == expected_sides
         assert captured[-1]["initial_antenna_type"] == "loop"
+
+
+ESTIMATORLESS_CATALOG_KEYS = frozenset(
+    {
+        "custom",
+        "g5rv",
+        "loaded_vertical",
+        "random_wire",
+        "trap_dipole",
+        "zepp",
+        "zs6bkw",
+    }
+)
+
+
+def test_every_catalog_entry_has_the_expected_estimator_support() -> None:
+    covered: set[str] = set()
+
+    for entry in antenna_catalog_dialog.ENTRIES:
+        parameters = _parameters_for(entry.key)
+        if entry.key in ESTIMATORLESS_CATALOG_KEYS:
+            assert supports_estimation(parameters) is False, entry.key
+            with pytest.raises(UnsupportedEstimateError):
+                estimator_type_for(parameters)
+            continue
+        estimator = estimator_type_for(parameters)
+        assert estimator in SUPPORTED_ESTIMATOR_TYPES, entry.key
+        covered.add(estimator)
+
+    assert covered == SUPPORTED_ESTIMATOR_TYPES
+
+
+def test_catalog_identity_maps_every_template_except_the_doublet_alias() -> None:
+    for entry in antenna_catalog_dialog.ENTRIES:
+        parameters = _parameters_for(entry.key)
+        if entry.key == "doublet":
+            # The doublet is a dipole plus a project feed line; the canonical
+            # parameters cannot distinguish it from a wire dipole.
+            assert catalog_key_for(parameters) == "wire_dipole"
+        else:
+            assert catalog_key_for(parameters) == entry.key
+
+
+def test_catalog_evidence_label_matches_the_registry_level() -> None:
+    for entry in antenna_catalog_dialog.ENTRIES:
+        level = EVIDENCE[entry.key].level
+        if entry.evidence_key == "catalog.evidence.experimental":
+            assert level is EvidenceLevel.EXPERIMENTAL, entry.key
+        if entry.evidence_key == "catalog.evidence.published":
+            assert level is EvidenceLevel.PUBLISHED, entry.key
+
+
+def test_catalog_entry_strings_exist_in_both_languages() -> None:
+    for entry in antenna_catalog_dialog.ENTRIES:
+        for key in (
+            entry.label_key,
+            entry.family_key,
+            entry.description_key,
+            entry.evidence_key,
+        ):
+            for language in (Language.ENGLISH, Language.SPANISH):
+                assert Translator(language).t(key) != key, f"missing {key!r} in {language.value}"
