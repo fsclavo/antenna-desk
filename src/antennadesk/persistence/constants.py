@@ -8,5 +8,5 @@ from typing import Final
 
 PROJECT_FORMAT: Final = "antennadesk-project"
 SCHEMA_VERSION: Final = 8
-MAX_PROJECT_SIZE_BYTES: Final = 32 * 1024 * 1024
-PROJECT_SIZE_WARNING_BYTES: Final = 20 * 1024 * 1024
+MAX_PROJECT_SIZE_BYTES: Final = 64 * 1024 * 1024
+PROJECT_SIZE_WARNING_BYTES: Final = 32 * 1024 * 1024

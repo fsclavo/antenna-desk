@@ -47,7 +47,7 @@ All six batches completed without solver errors or partial results.
 
 Keep the current **one solver run per band** architecture.
 
-The measured batches are small compared with the 20 MB warning and 32 MB
+The measured batches are small compared with the 32 MB warning and 64 MB
 project limit, and the wall time for eight bands is around one second on this
 machine. A segmented `FrequencyPlan` and multi-`FR` deck would add a
 cross-cutting contract change without a demonstrated need at this point.

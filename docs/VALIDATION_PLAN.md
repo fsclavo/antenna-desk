@@ -552,7 +552,7 @@ and require `NEC2C`.
   networks with optional component Q/loss are post-processed before the feed
   line; general transmission-line geometry is not implemented.
 - Project files store normalized results and raw solver text; many long runs
-  can reach the 32 MB project-size limit.
+  can reach the 64 MB project-size limit.
 - Some generated templates remain experimental or heuristic. Folded dipoles
   still lack an independent impedance reference; loops have the ARRL quad-loop
   resistance check. End-fed, J Pole/Slim Jim, Ringo, fan dipole, and vertical

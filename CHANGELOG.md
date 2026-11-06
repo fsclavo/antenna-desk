@@ -189,6 +189,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Saving a project now serializes and compresses the payload in a worker thread
+  and shows a modal **Preparing project...** progress dialog for large projects.
+  The payload is serialized once and then written atomically, so the Qt event
+  loop stays responsive and Linux does not show a “not responding” warning.
+- Raised the compressed project-size warning to **32 MB** and the hard limit to
+  **64 MB**, keeping room for longer sweeps and high-resolution pattern
+  snapshots. The save warning and compaction guidance are unchanged.
 - Added a published **102 in mobile-whip** example to the loaded-vertical
   generator: 14.1 MHz, 2.5908 m radiator, and a 4.511 µH base loading coil from
   K7MEM/ARRL. The `loaded_vertical` evidence level moved to B for that preset

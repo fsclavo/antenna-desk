@@ -4,14 +4,17 @@
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
 import pytest
 from helpers import wait_for_condition
 from main_window_support import FakeSolver
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QDialog, QInputDialog, QMessageBox, QWizard
 from pytestqt.qtbot import QtBot
 
+from antennadesk.domain.projects.project import Project
 from antennadesk.persistence.json_repository import JsonProjectRepository
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.i18n import Language, Translator
@@ -177,6 +180,47 @@ def test_save_project_writes_a_native_file(
 
     assert path.is_file()
     assert window._dirty is False
+
+
+def test_save_serializes_the_project_once(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "once.antennadesk"
+    original = window._repository.prepare_payload
+    calls: list[int] = []
+
+    def counted(project: Project) -> bytes:
+        calls.append(1)
+        return original(project)
+
+    monkeypatch.setattr(window._repository, "prepare_payload", counted)
+
+    assert window._save_to(path) is True
+    assert len(calls) == 1
+    assert path.is_file()
+
+
+def test_save_processes_events_while_preparing_the_payload(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "responsive.antennadesk"
+    original = window._repository.prepare_payload
+    events: list[str] = []
+
+    def slow(project: Project) -> bytes:
+        time.sleep(0.2)
+        return original(project)
+
+    monkeypatch.setattr(window._repository, "prepare_payload", slow)
+    QTimer.singleShot(20, lambda: events.append("event"))
+
+    assert window._save_to(path) is True
+    assert events == ["event"]
+    assert path.is_file()
 
 
 def test_editing_form_marks_project_dirty(window: MainWindow) -> None:
@@ -384,8 +428,8 @@ def test_save_warns_and_can_cancel_a_large_project(
     path = tmp_path / "large.antennadesk"
     monkeypatch.setattr(
         window._repository,
-        "serialized_size",
-        lambda project: 21 * 1024 * 1024,
+        "prepare_payload",
+        lambda project: b"x" * (33 * 1024 * 1024),
     )
     monkeypatch.setattr(
         QMessageBox,
@@ -406,8 +450,8 @@ def test_save_blocks_a_project_above_the_hard_limit(
     path = tmp_path / "too-large.antennadesk"
     monkeypatch.setattr(
         window._repository,
-        "serialized_size",
-        lambda project: 33 * 1024 * 1024,
+        "prepare_payload",
+        lambda project: b"x" * (65 * 1024 * 1024),
     )
     messages: list[str] = []
     monkeypatch.setattr(
@@ -419,7 +463,7 @@ def test_save_blocks_a_project_above_the_hard_limit(
     assert window._save_to(path) is False
     assert path.exists() is False
     assert messages
-    assert "32 MB" in messages[0]
+    assert "64 MB" in messages[0]
     window._dirty = False
 
 

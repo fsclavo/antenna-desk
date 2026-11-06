@@ -570,6 +570,20 @@ def test_serialized_size_matches_written_file(
     assert repository.serialized_size(sample_project) == path.stat().st_size
 
 
+def test_prepared_payload_can_be_written_without_recompression(
+    repository: JsonProjectRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "prepared.antennadesk"
+
+    payload = repository.prepare_payload(sample_project)
+    repository.write_payload(path, payload)
+
+    assert path.read_bytes() == payload
+    assert repository.serialized_size(sample_project) == len(payload)
+
+
 def test_round_trip_with_a_project_feed_line(
     repository: JsonProjectRepository,
     sample_project: Project,

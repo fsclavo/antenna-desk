@@ -50,13 +50,14 @@ class JsonProjectRepository:
             return gzip.decompress(data)
         return data
 
-    def serialized_size(self, project: Project) -> int:
-        """Return the compressed on-disk size of the project."""
+    def prepare_payload(self, project: Project) -> bytes:
+        """Serialize and compress a project without writing it to disk."""
 
-        return len(self._compress(self._serialize(project).encode("utf-8")))
+        return self._compress(self._serialize(project).encode("utf-8"))
 
-    def save(self, project: Project, path: Path) -> None:
-        payload = self._compress(self._serialize(project).encode("utf-8"))
+    def write_payload(self, path: Path, payload: bytes) -> None:
+        """Write a prepared payload atomically, enforcing the size limit."""
+
         size = len(payload)
         if size > MAX_PROJECT_SIZE_BYTES:
             raise ProjectTooLargeError(
@@ -64,6 +65,14 @@ class JsonProjectRepository:
                 f"limit is {MAX_PROJECT_SIZE_BYTES} bytes)"
             )
         self._atomic_write(path, payload)
+
+    def serialized_size(self, project: Project) -> int:
+        """Return the compressed on-disk size of the project."""
+
+        return len(self.prepare_payload(project))
+
+    def save(self, project: Project, path: Path) -> None:
+        self.write_payload(path, self.prepare_payload(project))
 
     def load(self, path: Path) -> Project:
         if not path.is_file():

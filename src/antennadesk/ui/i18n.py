@@ -1567,6 +1567,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Dimensiones estimadas aplicadas. Elegí un optimizador o síntesis para refinarlas.",
     },
     "status.cancelling": {Language.ENGLISH: "Cancelling...", Language.SPANISH: "Cancelando..."},
+    "status.preparing_save": {
+        Language.ENGLISH: "Preparing project...",
+        Language.SPANISH: "Preparando proyecto...",
+    },
     "status.saved": {Language.ENGLISH: "Project saved.", Language.SPANISH: "Proyecto guardado."},
     "status.opened": {Language.ENGLISH: "Project opened.", Language.SPANISH: "Proyecto abierto."},
     "status.no_project": {

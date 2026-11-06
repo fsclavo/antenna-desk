@@ -231,8 +231,8 @@ and older documents are migrated explicitly.
 
 Simulation runs are persisted in schema version 8. Raw solver text is stored
 with the normalized result. Project files are compact JSON compressed with
-gzip; plain JSON files from older versions still load. The UI warns at 20 MB
-compressed, blocks files above the 32 MB compressed limit, and offers
+gzip; plain JSON files from older versions still load. The UI warns at 32 MB
+compressed, blocks files above the 64 MB compressed limit, and offers
 simulation-history compaction.
 
 Multiband analysis is an application-level batch over the existing single-band

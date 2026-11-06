@@ -16,6 +16,12 @@ class ProjectRepository(Protocol):
     def save(self, project: Project, path: Path) -> None:
         """Write *project* to *path*, replacing any existing file atomically."""
 
+    def prepare_payload(self, project: Project) -> bytes:
+        """Serialize and compress *project* without writing it to disk."""
+
+    def write_payload(self, path: Path, payload: bytes) -> None:
+        """Write a prepared payload atomically."""
+
     def load(self, path: Path) -> Project:
         """Read and validate a project from *path*."""
 

@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, cast
 from uuid import UUID, uuid4
 
-from PySide6.QtCore import Qt, QThread
+from PySide6.QtCore import QEventLoop, Qt, QThread
 from PySide6.QtGui import (
     QAction,
     QCloseEvent,
@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMainWindow,
     QMessageBox,
+    QProgressDialog,
     QPushButton,
     QScrollArea,
     QSpinBox,
@@ -251,6 +252,7 @@ from .widgets.vertical_form import VerticalForm
 from .widgets.yagi_form import YagiForm
 from .wizard.dipole_wizard import DipoleWizard
 from .workers.band_analysis_worker import BandAnalysisWorker
+from .workers.save_project_worker import SaveProjectWorker
 from .workers.simulation_worker import SimulationWorker
 
 DEFAULT_GENERATED_SWEEP_POINTS = 31
@@ -4140,13 +4142,76 @@ class MainWindow(QMainWindow):
             path = path.with_suffix(".antennadesk")
         return self._save_to(path)
 
+    def _save_progress_dialog(self) -> QProgressDialog:
+        dialog = QProgressDialog(
+            self._translator.t("status.preparing_save"),
+            "",
+            0,
+            0,
+            self,
+        )
+        dialog.setWindowTitle(self._translator.t("dialog.save_title"))
+        dialog.setWindowModality(Qt.WindowModality.WindowModal)
+        dialog.setCancelButton(None)
+        dialog.setMinimumDuration(250)
+        dialog.setAutoClose(False)
+        dialog.setAutoReset(False)
+        dialog.setValue(0)
+        return dialog
+
+    def _prepare_project_payload(self, save_project: SaveProject, project: Project) -> bytes:
+        """Serialize and compress the project without blocking the event loop."""
+
+        thread = QThread(self)
+        worker = SaveProjectWorker(save_project, project)
+        worker.moveToThread(thread)
+        result: dict[str, object] = {}
+        loop = QEventLoop()
+
+        def prepared(payload: object) -> None:
+            result["payload"] = payload
+            loop.quit()
+
+        def failed(message: str) -> None:
+            result["error"] = message
+            loop.quit()
+
+        worker.prepared.connect(prepared)
+        worker.failed.connect(failed)
+        worker.prepared.connect(thread.quit)
+        worker.failed.connect(thread.quit)
+        thread.started.connect(worker.run)
+        thread.finished.connect(loop.quit)
+        thread.finished.connect(worker.deleteLater)
+        thread.finished.connect(thread.deleteLater)
+        thread.start()
+        try:
+            loop.exec()
+        finally:
+            thread.quit()
+            thread.wait()
+
+        error = result.get("error")
+        if isinstance(error, str):
+            raise ValueError(error)
+        payload = result.get("payload")
+        if not isinstance(payload, bytes):
+            raise RuntimeError("save worker produced no payload")
+        return payload
+
     def _save_to(self, path: Path) -> bool:
         before = self._history_snapshot()
         try:
             project = self._apply_fields()
             after = self._history_snapshot()
             self._record_history("history.save", before, after)
-            size = self._repository.serialized_size(project)
+            save_project = SaveProject(self._repository)
+            progress = self._save_progress_dialog()
+            try:
+                payload = self._prepare_project_payload(save_project, project)
+            finally:
+                progress.close()
+            size = len(payload)
             if size > MAX_PROJECT_SIZE_BYTES:
                 self._show_error(
                     self._translator.t(
@@ -4169,7 +4234,11 @@ class MainWindow(QMainWindow):
                 )
                 if answer != QMessageBox.StandardButton.Save:
                     return False
-            SaveProject(self._repository).execute(project, path)
+            QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+            try:
+                save_project.write(path, payload)
+            finally:
+                QApplication.restoreOverrideCursor()
         except Exception as exc:
             self._show_error(self._translator.t("error.save", message=str(exc)))
             return False

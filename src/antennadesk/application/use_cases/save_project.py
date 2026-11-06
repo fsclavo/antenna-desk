@@ -16,6 +16,16 @@ from ..ports.project_repository import ProjectRepository
 class SaveProject:
     repository: ProjectRepository
 
-    def execute(self, project: Project, path: Path) -> None:
+    def prepare(self, project: Project) -> bytes:
+        """Validate and serialize a project without writing it to disk."""
+
         raise_if_errors(project.validate())
-        self.repository.save(project, path)
+        return self.repository.prepare_payload(project)
+
+    def write(self, path: Path, payload: bytes) -> None:
+        """Write an already prepared payload atomically."""
+
+        self.repository.write_payload(path, payload)
+
+    def execute(self, project: Project, path: Path) -> None:
+        self.write(path, self.prepare(project))

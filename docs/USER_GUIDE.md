@@ -955,8 +955,8 @@ HTML report, or **File → Export → PDF Report...** for a native PDF with desi
 parameters, configuration, solver metadata, fingerprint, diagnostics,
 impedance, resonance, and charts.
 Simulation runs are stored when you save the project, including raw solver
-text. Project files are losslessly gzip-compressed JSON; the 32 MB limit applies
-to the compressed file. Saving above 20 MB compressed shows a warning, and
+text. Project files are losslessly gzip-compressed JSON; the 64 MB limit applies
+to the compressed file. Saving above 32 MB compressed shows a warning, and
 **Tools → Compact Simulation History...** keeps only the latest run per
 design.
 
@@ -971,6 +971,13 @@ Invalid designs are rejected before the solver runs.
 Use **File → Save** / **Save As...** to write a versioned `.antennadesk` JSON
 project, and **File → Open Project...** to reopen it. The application prompts
 before discarding unsaved changes.
+
+Project serialization and gzip compression run in a worker thread. For a large
+project, a modal **Preparing project...** progress dialog appears while the
+payload is prepared; the window remains responsive and the operating system
+does not report the application as unresponsive. The payload is serialized once
+and then written atomically; the 32 MB warning and 64 MB hard limit still
+apply.
 
 ## Language, units, and font size
 
@@ -1006,7 +1013,7 @@ domain and project files always store canonical meters and hertz.
   searches for generated templates. Custom/imported designs are excluded, and
   there are no boom-length or turning-radius constraints.
 - Project files store normalized results and raw solver text; many long runs
-  can reach the 32 MB project limit.
+  can reach the 64 MB project limit.
 - The feed line is a uniform-line post-processing model. It reports impedance
   and SWR at the transmitter but does not add line loss to the pattern gain or
   realized-gain calculation.
