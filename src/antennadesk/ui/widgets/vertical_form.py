@@ -18,7 +18,13 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
-from ...domain.antennas.vertical import MAX_RADIALS, VerticalParameters
+from ...domain.antennas.vertical import (
+    MAX_RADIALS,
+    MOBILE_EXAMPLE_COIL_INDUCTANCE_H,
+    MOBILE_EXAMPLE_FREQUENCY_HZ,
+    MOBILE_EXAMPLE_HEIGHT_M,
+    VerticalParameters,
+)
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..units import (
@@ -252,6 +258,26 @@ class VerticalForm(QWidget):
         self._radial_length.setEnabled(enabled)
         self._radial_angle.setEnabled(enabled)
         self._update_geometry()
+
+    def load_mobile_example(self) -> None:
+        """Load the published 102-inch, 14.1 MHz mobile-whip example."""
+
+        self._updating = True
+        try:
+            self._frequency.setValue(MOBILE_EXAMPLE_FREQUENCY_HZ / 1_000_000.0)
+            self._height.setValue(length_from_m(MOBILE_EXAMPLE_HEIGHT_M, self._unit_system))
+            self._base_height.setValue(0.0)
+            self._radial_count.setValue(0)
+            self._coil_enabled.setChecked(True)
+            self._coil_offset.setValue(0.0)
+            self._coil_inductance.setValue(MOBILE_EXAMPLE_COIL_INDUCTANCE_H * 1e6)
+            self._coil_resistance.setValue(0.0)
+        finally:
+            self._updating = False
+        self._update_radial_controls()
+        self._update_coil_controls()
+        self._update_geometry()
+        self.changed.emit()
 
     def _update_ground_controls(self) -> None:
         finite = self._ground.currentData() == GroundKind.FINITE.value

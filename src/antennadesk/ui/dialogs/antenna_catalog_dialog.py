@@ -223,7 +223,7 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         label_key="catalog.loaded_vertical",
         family_key="catalog.family.vertical",
         description_key="catalog.loaded_vertical.description",
-        evidence_key="catalog.evidence.experimental",
+        evidence_key="catalog.evidence.published",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_CUSTOM,

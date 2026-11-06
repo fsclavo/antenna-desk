@@ -17,6 +17,7 @@ visible limitation.
 |---|---|---|---|---|
 | `delta_loop` | C | B | ON4UN, *Low-Band DXing*, Ch. 10: a resonant delta loop is approximately 1.05–1.06 λ | 1 % on resonant circumference |
 | `vertical` | C | B | ARRL practical length rules: `234/f` for a quarter-wave vertical and `585/f` for a 5/8-wave vertical | 0.5 % on radiator length |
+| `loaded_vertical` | C | B | K7MEM, “Short Loaded Vertical”, citing ARRL Antenna Book, 17th ed., pp. 16-5 to 16-11: a 102 in whip at 14.1 MHz needs a 4.511 µH base loading coil | 5 % on the 102 in whip length and 4.511 µH coil inductance; published example only |
 | `inverted_v` | C | B | ARRL, “Wire Antennas for the Beginner”: a 120° inverted-V total length is `465.6/f` feet | 1 % on total length at 120° |
 | `j_pole` | C | B | M0UKD, “Slim Jim and J Pole calculator”: 0.75 λ overall, with a 0.5 λ radiator and a 0.25 λ stub; ARRL QST, Feb 2003, conventional 2 m J-pole | 1 % on the half-wave and quarter-wave sections; 10 % on the overall height against the ARRL 2 m construction |
 | `slim_jim` | C | B | F. Judd, G2BCX, “Slim Jim - 2 metre aerial”, *Practical Wireless*, 1978: about 60 in overall at 145 MHz; M0UKD calculator section fractions | 1 % on the sections; 5 % on the overall length at 2 m |
@@ -30,6 +31,7 @@ The corresponding tests are:
 
 - `tests/unit/domain/design/test_formulas.py::test_delta_loop_circumference_matches_the_published_range`
 - `tests/unit/domain/design/test_estimators.py::test_estimator_lengths_match_the_published_arrl_formulas`
+- `tests/ui/test_vertical_dialog.py::test_loaded_vertical_dialog_loads_the_published_mobile_example`
 - `tests/unit/domain/design/test_estimators.py::test_inverted_v_total_length_matches_the_published_120_degree_rule`
 - `tests/unit/domain/design/test_estimators.py::test_j_pole_matches_the_published_three_quarter_wave_rule`
 - `tests/unit/domain/design/test_estimators.py::test_j_pole_overall_height_matches_the_arrl_two_metre_construction`
@@ -43,15 +45,16 @@ The corresponding tests are:
 - `tests/unit/domain/test_zepp.py::test_zepp_has_an_open_second_stub_conductor`
 
 The first three rows were added on 2026-11-04; the J Pole, Slim Jim, end-fed,
-trap-dipole, sloper, doublet, and Zepp rows were added on 2026-11-05. These
-promotions validate a **starting dimension**, not gain, feedpoint impedance, or
-pattern accuracy. The limitations remain explicit in the evidence registry.
+trap-dipole, sloper, doublet, and Zepp rows were added on 2026-11-05. The loaded
+vertical row was added on 2026-11-06 for the published mobile-whip example
+preset. These promotions validate a **starting dimension**, not gain, feedpoint
+impedance, or pattern accuracy. The limitations remain explicit in the evidence
+registry.
 
 ## Remaining level C templates
 
 | Template | Why it remains experimental | Possible next evidence |
 |---|---|---|
-| `loaded_vertical` | The loading coil is an ideal series model; coil Q and ground are not independently validated. | A published mobile-whip design with measured impedance and coil details. |
 | `fan_dipole` | Mutual coupling and the V angle are installation-specific; the elements are not independent dipoles. | A published coupled-fan measurement, not a scalar angle correction. |
 | `random_wire` | Performance depends on the tuner and the installation; the length is deliberately non-resonant. | No universal numeric reference; keep experimental. |
 | `ringo` | The simplified radiator and matching ring are an application preset, not a published commercial model. | Manufacturer data or an independent measurement. |
@@ -59,14 +62,14 @@ pattern accuracy. The limitations remain explicit in the evidence registry.
 
 ## Follow-up review of the remaining level C templates (2026-11-06)
 
-The five remaining level C templates were reviewed for a possible promotion.
-No template was promoted: the available sources either describe a different
-geometry or depend on installation details that the current model cannot
-represent. This is a deliberate decision, not a missing citation.
+The remaining level C templates were reviewed for a possible promotion.
+`loaded_vertical` was promoted through the published 102 in mobile example.
+The other four keep their level because the available sources either describe a
+different geometry or depend on installation details that the current model
+cannot represent. This is a deliberate decision, not a missing citation.
 
 | Template | Sources considered | Why it remains C |
 |---|---|---|
-| `loaded_vertical` | K7MEM, *Short Loaded Vertical* (citing ARRL Antenna Book, 17th ed., pp. 16-5 to 16-11): a 102 in whip at 14.1 MHz needs a 4.511 µH loading coil. W8JI, *Mobile and loaded antenna*: measured 25.8 + j0 Ω for a 160 m mobile antenna with a top hat and vehicle ground. | The published examples include a top hat, vehicle ground, and coil Q that the ideal series-coil model does not represent. A universal loaded-vertical rule would be an invented generalization. |
 | `ringo` | Cushcraft AR-2 Ringo: 1.2 m height and 12.7 cm ring diameter, 135–160 MHz. Cushcraft AR-6 Ringo: 3.1 m height and 33 cm ring diameter, 50–54 MHz. | AntennaDesk's estimator is a simplified 0.725λ application preset, not the commercial half-wave Ringo geometry. Comparing the two would mix different antennas. |
 | `fan_dipole` | No source found that provides a universal coupled-fan correction. Mutual coupling depends on element spacing, angle, height, and ground. | A scalar length or angle correction would hide the interaction and would not be a traceable reference for the generated geometry. |
 | `random_wire` | No universal reference; performance depends on the tuner, counterpoise, and installation. | The template is intentionally non-resonant and tuner-assisted. No general numeric claim is possible. |
@@ -83,10 +86,11 @@ The detailed sources are:
   <https://www.universal-radio.com/catalog/hamants/0634.html> (10.1 ft height,
   13 in ring diameter, 50–54 MHz).
 
-The next evidence step for `loaded_vertical` or `ringo` would require a new
-preset that exactly reproduces a published geometry and a model that includes
-the missing top hat, coil Q, or commercial matching ring. Until then, both keep
-their visible experimental warning.
+The next evidence step for `ringo` would require a preset that exactly
+reproduces the commercial geometry and a model that includes its matching ring.
+The loaded-vertical example now covers only the published 102 in whip; arbitrary
+loaded verticals, top hats, and measured coil Q remain outside the model. The
+four remaining C templates keep their visible experimental warning.
 
 ## Rules for the next audit
 
@@ -101,8 +105,8 @@ their visible experimental warning.
 ## Current summary
 
 - **A, reference-backed:** 5 templates.
-- **B, published/heuristic:** 15 templates.
-- **C, experimental:** 5 templates, all with a documented limitation.
+- **B, published/heuristic:** 16 templates.
+- **C, experimental:** 4 templates, all with a documented limitation.
 
 The machine-readable registry and the generated table in
 [`VALIDATION_PLAN.md`](VALIDATION_PLAN.md) remain the source of truth.

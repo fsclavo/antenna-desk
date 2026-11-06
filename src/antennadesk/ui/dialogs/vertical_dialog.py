@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QLabel,
     QMessageBox,
+    QPushButton,
     QScrollArea,
     QVBoxLayout,
     QWidget,
@@ -82,6 +83,14 @@ class VerticalDialog(QDialog):
 
         layout = QVBoxLayout(self)
         layout.addWidget(scroll, 1)
+        if mobile:
+            self._example = QPushButton(
+                translator.t("vertical.mobile_example"),
+                self,
+            )
+            self._example.setToolTip(translator.t("vertical.mobile_example_hint"))
+            self._example.clicked.connect(self._form.load_mobile_example)
+            layout.addWidget(self._example)
         layout.addWidget(self._hint)
         layout.addWidget(self._evidence)
         layout.addStretch(1)

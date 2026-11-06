@@ -97,6 +97,37 @@ def test_loaded_vertical_dialog_uses_mobile_preset(qtbot: QtBot) -> None:
     assert parameters.loading_coil_inductance_h == pytest.approx(10e-6)
 
 
+def test_loaded_vertical_dialog_loads_the_published_mobile_example(
+    qtbot: QtBot,
+) -> None:
+    from antennadesk.domain.antennas.vertical import (
+        MOBILE_EXAMPLE_COIL_INDUCTANCE_H,
+        MOBILE_EXAMPLE_FREQUENCY_HZ,
+        MOBILE_EXAMPLE_HEIGHT_M,
+    )
+
+    dialog = VerticalDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        mobile=True,
+    )
+    qtbot.addWidget(dialog)
+
+    dialog._example.click()
+
+    parameters = dialog.parameters()
+    assert parameters.frequency_hz == pytest.approx(MOBILE_EXAMPLE_FREQUENCY_HZ)
+    assert parameters.height_m == pytest.approx(
+        MOBILE_EXAMPLE_HEIGHT_M,
+        abs=0.001,
+    )
+    assert parameters.radial_count == 0
+    assert parameters.loading_coil_enabled is True
+    assert parameters.loading_coil_offset_m == pytest.approx(0.0)
+    assert parameters.loading_coil_inductance_h == pytest.approx(MOBILE_EXAMPLE_COIL_INDUCTANCE_H)
+    assert parameters.loading_coil_resistance_ohm == pytest.approx(0.0)
+
+
 def test_vertical_dialog_restores_a_loading_coil(qtbot: QtBot) -> None:
     from antennadesk.domain.antennas.vertical import VerticalParameters
 

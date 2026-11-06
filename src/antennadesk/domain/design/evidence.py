@@ -100,10 +100,19 @@ EVIDENCE: dict[str, EvidenceEntry] = {
     ),
     "loaded_vertical": EvidenceEntry(
         template="loaded_vertical",
-        level=EvidenceLevel.EXPERIMENTAL,
-        source="Quarter-wave starting rule plus a series loading-coil model",
-        tolerance="Not applicable (structural)",
-        limitation="Coil Q and the ground model are not independently validated.",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "K7MEM, 'Short Loaded Vertical', citing ARRL Antenna Book, 17th ed., "
+            "pp. 16-5 to 16-11: a 102 in whip at 14.1 MHz needs a 4.511 µH base "
+            "loading coil"
+        ),
+        tolerance="5% on the 102 in whip length and the 4.511 µH coil inductance",
+        limitation=(
+            "Only the published 14.1 MHz mobile example is reference-backed. The "
+            "coil is an ideal series load; coil Q, ground, and the mobile "
+            "installation are not modeled. Other loaded verticals remain "
+            "experimental."
+        ),
     ),
     "yagi": EvidenceEntry(
         template="yagi",

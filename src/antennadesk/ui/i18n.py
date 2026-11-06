@@ -3179,12 +3179,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "vertical.mobile_evidence": {
         Language.ENGLISH: (
-            "Experimental preset: the loading coil uses the existing series-load "
-            "model and there is no independent reference for a mobile installation."
+            "Starting dimensions: only the published 102 in / 14.1 MHz example is "
+            "reference-backed. Coil Q, ground, and the installation are not "
+            "modeled; other loaded verticals remain experimental."
         ),
         Language.SPANISH: (
-            "Preset experimental: la bobina usa el modelo de carga serie existente "
-            "y no hay una referencia independiente para una instalación móvil."
+            "Dimensiones de partida: solo el ejemplo publicado de 102 in / "
+            "14.1 MHz tiene referencia. No se modelan la Q de la bobina, el suelo "
+            "ni la instalación; otras verticales cargadas siguen siendo "
+            "experimentales."
+        ),
+    },
+    "vertical.mobile_example": {
+        Language.ENGLISH: "Load 102 in example",
+        Language.SPANISH: "Cargar ejemplo de 102 in",
+    },
+    "vertical.mobile_example_hint": {
+        Language.ENGLISH: (
+            "Sets 14.1 MHz, a 102 in whip, and a 4.511 µH base loading coil. "
+            "Coil Q, ground, and the installation are not modeled."
+        ),
+        Language.SPANISH: (
+            "Configura 14.1 MHz, un whip de 102 in y una bobina de carga de "
+            "4.511 µH en la base. No se modelan la Q de la bobina, el suelo ni "
+            "la instalación."
         ),
     },
     "inverted_v.apex_height": {

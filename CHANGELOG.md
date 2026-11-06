@@ -184,10 +184,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- Reviewed the five remaining level C templates for Phase 5. No template was
-  promoted: the published loaded-vertical and Ringo sources describe different
-  geometries or installation details than the current models. The review,
-  sources, and model gaps are recorded in
+- Added a published **102 in mobile-whip** example to the loaded-vertical
+  generator: 14.1 MHz, 2.5908 m radiator, and a 4.511 µH base loading coil from
+  K7MEM/ARRL. The `loaded_vertical` evidence level moved to B for that preset
+  only; arbitrary loaded verticals remain experimental.
+- Reviewed the remaining level C templates for Phase 5. `ringo`, `fan_dipole`,
+  `random_wire`, and `custom` were not promoted because the published sources
+  describe different geometries or installation details than the current
+  models. The review, sources, and model gaps are recorded in
   [`docs/EVIDENCE_AUDIT.md`](docs/EVIDENCE_AUDIT.md).
 - Audited the experimental templates in
   [`docs/EVIDENCE_AUDIT.md`](docs/EVIDENCE_AUDIT.md). The delta loop, vertical,

@@ -23,6 +23,13 @@ LOADING_COIL_ID = "loading-coil"
 MAX_RADIALS = 128
 ANTENNA_TYPE_VERTICAL = "vertical"
 
+# Published mobile-whip example: K7MEM, "Short Loaded Vertical", citing the
+# ARRL Antenna Book, 17th ed., pp. 16-5 to 16-11. A 102 in whip at 14.1 MHz
+# requires a 4.511 µH base loading coil.
+MOBILE_EXAMPLE_FREQUENCY_HZ = 14_100_000.0
+MOBILE_EXAMPLE_HEIGHT_M = 2.5908
+MOBILE_EXAMPLE_COIL_INDUCTANCE_H = 4.511e-6
+
 
 @dataclass(frozen=True, slots=True)
 class VerticalParameters:
