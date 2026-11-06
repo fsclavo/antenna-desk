@@ -19,8 +19,16 @@ from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.antennas.ringo import MAX_RING_SIDES, MIN_RING_SIDES, RingoParameters
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
-from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from ..units import (
+    UnitSystem,
+    length_from_m,
+    length_to_m,
+    length_unit_key,
+    radius_from_m,
+    radius_to_m,
+)
 from .form_i18n import FormLabels, retranslate_combo
+from .form_units import apply_length_suffixes, apply_radius_units
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -67,10 +75,8 @@ class RingoForm(QWidget):
         self._ring_sides.setValue(16)
 
         self._radius = QDoubleSpinBox(self)
-        self._radius.setRange(0.01, 1_000.0)
-        self._radius.setDecimals(3)
-        self._radius.setSuffix(" mm")
-        self._radius.setValue(1.0)
+        apply_radius_units(translator, unit_system, self._radius)
+        self._radius.setValue(radius_from_m(0.001, unit_system))
 
         self._material = QComboBox(self)
         for material in MATERIALS:
@@ -182,6 +188,25 @@ class RingoForm(QWidget):
         value = self._material.currentData()
         return value if isinstance(value, ConductorMaterial) else COPPER
 
+    def set_unit_system(self, unit_system: UnitSystem) -> None:
+        if unit_system is self._unit_system:
+            return
+        try:
+            parameters = self.parameters()
+        except (ValueError, TypeError):
+            parameters = None
+        self._unit_system = unit_system
+        apply_radius_units(self._translator, unit_system, self._radius)
+        apply_length_suffixes(
+            self._translator,
+            unit_system,
+            self._radiator_height,
+            self._ring_diameter,
+            self._ring_height,
+        )
+        if parameters is not None:
+            self.set_parameters(parameters)
+
     def set_parameters(self, parameters: RingoParameters) -> None:
         self._updating = True
         try:
@@ -194,7 +219,7 @@ class RingoForm(QWidget):
             )
             self._ring_height.setValue(length_from_m(parameters.ring_height_m, self._unit_system))
             self._ring_sides.setValue(parameters.ring_sides)
-            self._radius.setValue(parameters.wire_radius_m * 1_000.0)
+            self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
             material_index = self._material.findData(parameters.material)
             if material_index >= 0:
                 self._material.setCurrentIndex(material_index)
@@ -236,7 +261,7 @@ class RingoForm(QWidget):
             ring_diameter_m=length_to_m(self._ring_diameter.value(), self._unit_system),
             ring_height_m=length_to_m(self._ring_height.value(), self._unit_system),
             ring_sides=self._ring_sides.value(),
-            wire_radius_m=self._radius.value() / 1_000.0,
+            wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),
             ground=self._ground_model(),
         )

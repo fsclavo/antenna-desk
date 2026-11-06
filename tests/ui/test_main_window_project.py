@@ -371,6 +371,7 @@ def test_menu_order_follows_the_standard_desktop_layout(window: MainWindow) -> N
     assert "Language" not in tools_titles
     assert "Units" not in tools_titles
     assert "Font Size" not in tools_titles
+    assert window._preferences_action.shortcut().toString() == "Ctrl+,"
     assert window._change_template_action.shortcut().toString() == "Ctrl+Shift+T"
     assert window._design_from_frequency_action.shortcut().toString() == "Ctrl+Shift+E"
 

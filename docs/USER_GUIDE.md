@@ -939,16 +939,17 @@ before discarding unsaved changes.
 
 ## Language, units, and font size
 
-Use **Edit → Preferences...** to set the language (English or Español), the
-display units (metric m/mm or imperial ft/in), and the font size (Small,
-Normal, or Large). All three settings live in that single dialog.
+Use **Edit → Preferences...** (`Ctrl+,`) to set the language (English or
+Español), the display units (metric m/mm or imperial ft/in), and the font size
+(Small, Normal, or Large). All three settings live in that single dialog.
 
 Preferences are saved and applied at startup. **Normal** restores the system
 font. The font preset scales the standard widgets, the antenna sketch, the
 pattern views, the chart axes and legends, the start-page headline, and dialog
-initial sizes. Changing the language updates every antenna-family editor.
-Exported reports keep their own fixed typography. The domain and project files
-always store canonical meters and hertz.
+initial sizes. Changing the language updates every antenna-family editor, and
+changing the units converts every editor without losing the physical
+dimensions. Exported reports keep their own fixed typography. The domain and
+project files always store canonical meters and hertz.
 
 ## Current limitations
 

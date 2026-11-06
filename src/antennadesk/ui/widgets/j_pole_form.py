@@ -19,8 +19,16 @@ from ...domain.antennas.j_pole import JPoleParameters
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
-from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from ..units import (
+    UnitSystem,
+    length_from_m,
+    length_to_m,
+    length_unit_key,
+    radius_from_m,
+    radius_to_m,
+)
 from .form_i18n import FormLabels, retranslate_combo
+from .form_units import apply_length_suffixes, apply_radius_units
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -80,10 +88,8 @@ class JPoleForm(QWidget):
         self._folded = QCheckBox(translator.t("j_pole.folded"), self)
 
         self._radius = QDoubleSpinBox(self)
-        self._radius.setRange(0.01, 1_000.0)
-        self._radius.setDecimals(3)
-        self._radius.setSuffix(" mm")
-        self._radius.setValue(1.0)
+        apply_radius_units(translator, unit_system, self._radius)
+        self._radius.setValue(radius_from_m(0.001, unit_system))
 
         self._material = QComboBox(self)
         for material in MATERIALS:
@@ -202,6 +208,28 @@ class JPoleForm(QWidget):
         value = self._material.currentData()
         return value if isinstance(value, ConductorMaterial) else COPPER
 
+    def set_unit_system(self, unit_system: UnitSystem) -> None:
+        if unit_system is self._unit_system:
+            return
+        try:
+            parameters = self.parameters()
+        except (ValueError, TypeError):
+            parameters = None
+        self._unit_system = unit_system
+        apply_radius_units(self._translator, unit_system, self._radius)
+        apply_length_suffixes(
+            self._translator,
+            unit_system,
+            self._radiator_height,
+            self._stub_length,
+            self._spacing,
+            self._feed_offset,
+            self._gap,
+            self._base_height,
+        )
+        if parameters is not None:
+            self.set_parameters(parameters)
+
     def set_parameters(self, parameters: JPoleParameters) -> None:
         self._updating = True
         try:
@@ -212,9 +240,10 @@ class JPoleForm(QWidget):
             self._stub_length.setValue(length_from_m(parameters.stub_length_m, self._unit_system))
             self._spacing.setValue(length_from_m(parameters.spacing_m, self._unit_system))
             self._feed_offset.setValue(length_from_m(parameters.feed_offset_m, self._unit_system))
+            self._gap.setValue(length_from_m(parameters.gap_m, self._unit_system))
             self._base_height.setValue(length_from_m(parameters.base_height_m, self._unit_system))
             self._folded.setChecked(parameters.folded)
-            self._radius.setValue(parameters.wire_radius_m * 1_000.0)
+            self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
             material_index = self._material.findData(parameters.material)
             if material_index >= 0:
                 self._material.setCurrentIndex(material_index)
@@ -259,7 +288,7 @@ class JPoleForm(QWidget):
             gap_m=length_to_m(self._gap.value(), self._unit_system),
             base_height_m=length_to_m(self._base_height.value(), self._unit_system),
             folded=self._folded.isChecked(),
-            wire_radius_m=self._radius.value() / 1_000.0,
+            wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),
             ground=self._ground_model(),
         )

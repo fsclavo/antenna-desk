@@ -46,6 +46,22 @@ def diameter_unit_key(system: UnitSystem) -> str:
     return "unit.mm" if system is UnitSystem.METRIC else "unit.in"
 
 
+def radius_from_m(value_m: float, system: UnitSystem) -> float:
+    if system is UnitSystem.METRIC:
+        return units.mm_from_m(value_m)
+    return units.in_from_m(value_m)
+
+
+def radius_to_m(value: float, system: UnitSystem) -> float:
+    if system is UnitSystem.METRIC:
+        return units.m_from_mm(value)
+    return units.m_from_in(value)
+
+
+def radius_unit_key(system: UnitSystem) -> str:
+    return "unit.mm" if system is UnitSystem.METRIC else "unit.in"
+
+
 def length_bounds(system: UnitSystem) -> tuple[float, float]:
     if system is UnitSystem.METRIC:
         return 0.1, 10_000.0

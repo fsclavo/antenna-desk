@@ -26,8 +26,16 @@ from ...domain.antennas.t2fd import (
 )
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
-from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from ..units import (
+    UnitSystem,
+    length_from_m,
+    length_to_m,
+    length_unit_key,
+    radius_from_m,
+    radius_to_m,
+)
 from .form_i18n import FormLabels, retranslate_combo
+from .form_units import apply_length_suffixes, apply_radius_units
 
 MATERIALS = (COPPER, ALUMINUM)
 DEFAULT_LOWEST_FREQUENCY_HZ = 3_500_000.0
@@ -106,10 +114,8 @@ class T2FDForm(QWidget):
         self._azimuth.setSuffix("°")
 
         self._radius = QDoubleSpinBox(self)
-        self._radius.setRange(0.01, 1_000.0)
-        self._radius.setDecimals(3)
-        self._radius.setSuffix(" mm")
-        self._radius.setValue(1.0)
+        apply_radius_units(translator, unit_system, self._radius)
+        self._radius.setValue(radius_from_m(0.001, unit_system))
 
         self._material = QComboBox(self)
         for material in MATERIALS:
@@ -282,6 +288,25 @@ class T2FDForm(QWidget):
         value = self._orientation.currentData()
         return DipoleOrientation(value) if isinstance(value, str) else DipoleOrientation.HORIZONTAL
 
+    def set_unit_system(self, unit_system: UnitSystem) -> None:
+        if unit_system is self._unit_system:
+            return
+        try:
+            parameters = self.parameters()
+        except (ValueError, TypeError):
+            parameters = None
+        self._unit_system = unit_system
+        apply_radius_units(self._translator, unit_system, self._radius)
+        apply_length_suffixes(
+            self._translator,
+            unit_system,
+            self._length,
+            self._spacing,
+            self._height,
+        )
+        if parameters is not None:
+            self.set_parameters(parameters)
+
     def set_parameters(self, parameters: T2FDParameters) -> None:
         self._updating = True
         try:
@@ -296,7 +321,7 @@ class T2FDForm(QWidget):
             if orientation_index >= 0:
                 self._orientation.setCurrentIndex(orientation_index)
             self._azimuth.setValue(parameters.azimuth_deg)
-            self._radius.setValue(parameters.wire_radius_m * 1_000.0)
+            self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
             material_index = self._material.findData(parameters.material)
             if material_index >= 0:
                 self._material.setCurrentIndex(material_index)
@@ -351,7 +376,7 @@ class T2FDForm(QWidget):
             termination_resistance_ohm=self._termination.value(),
             transformer_ratio=self._transformer.value(),
             azimuth_deg=self._azimuth.value(),
-            wire_radius_m=self._radius.value() / 1_000.0,
+            wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),
             ground=self._ground_model(),
         )

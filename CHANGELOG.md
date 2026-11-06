@@ -274,6 +274,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Switching the language now retranslates every antenna-family editor, not only
   the dipole form. The Preferences dialog applies the change consistently to
   all open forms.
+- Switching display units now converts every antenna-family editor and keeps
+  its physical dimensions; previously only the dipole form and the sketch
+  changed units. **Ctrl+,** opens the Preferences dialog.
+- The Yagi editor now populates its driven-element selector when it starts from
+  the default preset.
 - Three translation keys used by the UI were missing and rendered as raw keys:
   `dialog.all_files`, `error.import_nec`, and `measurement.impedance_error`.
   The antenna wizard placeholder now uses `wizard.project_placeholder`.

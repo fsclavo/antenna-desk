@@ -18,8 +18,16 @@ from ...domain.antennas.inverted_v import InvertedVParameters
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
-from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from ..units import (
+    UnitSystem,
+    length_from_m,
+    length_to_m,
+    length_unit_key,
+    radius_from_m,
+    radius_to_m,
+)
 from .form_i18n import FormLabels, retranslate_combo
+from .form_units import apply_length_suffixes, apply_radius_units
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -68,10 +76,8 @@ class InvertedVForm(QWidget):
         self._azimuth.setSuffix("°")
 
         self._radius = QDoubleSpinBox(self)
-        self._radius.setRange(0.01, 1_000.0)
-        self._radius.setDecimals(3)
-        self._radius.setSuffix(" mm")
-        self._radius.setValue(1.0)
+        apply_radius_units(translator, unit_system, self._radius)
+        self._radius.setValue(radius_from_m(0.001, unit_system))
 
         self._material = QComboBox(self)
         for material in MATERIALS:
@@ -183,6 +189,24 @@ class InvertedVForm(QWidget):
         value = self._material.currentData()
         return value if isinstance(value, ConductorMaterial) else COPPER
 
+    def set_unit_system(self, unit_system: UnitSystem) -> None:
+        if unit_system is self._unit_system:
+            return
+        try:
+            parameters = self.parameters()
+        except (ValueError, TypeError):
+            parameters = None
+        self._unit_system = unit_system
+        apply_radius_units(self._translator, unit_system, self._radius)
+        apply_length_suffixes(
+            self._translator,
+            unit_system,
+            self._apex_height,
+            self._leg_length,
+        )
+        if parameters is not None:
+            self.set_parameters(parameters)
+
     def set_parameters(self, parameters: InvertedVParameters) -> None:
         self._updating = True
         try:
@@ -191,7 +215,7 @@ class InvertedVForm(QWidget):
             self._leg_length.setValue(length_from_m(parameters.leg_length_m, self._unit_system))
             self._included_angle.setValue(parameters.included_angle_deg)
             self._azimuth.setValue(parameters.azimuth_deg)
-            self._radius.setValue(parameters.wire_radius_m * 1_000.0)
+            self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
             material_index = self._material.findData(parameters.material)
             if material_index >= 0:
                 self._material.setCurrentIndex(material_index)
@@ -232,7 +256,7 @@ class InvertedVForm(QWidget):
             apex_height_m=length_to_m(self._apex_height.value(), self._unit_system),
             included_angle_deg=self._included_angle.value(),
             azimuth_deg=self._azimuth.value(),
-            wire_radius_m=self._radius.value() / 1_000.0,
+            wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),
             ground=self._ground_model(),
         )

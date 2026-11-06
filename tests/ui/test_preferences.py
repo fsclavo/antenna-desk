@@ -235,6 +235,7 @@ def test_preferences_action_applies_accepted_values(
     assert window._translator.language is Language.SPANISH
     assert window._font_size_controller.size is FontSize.LARGE
     assert window._unit_system is UnitSystem.IMPERIAL
+    assert window._ocfd_form._length.suffix().strip() == "ft"
     assert window._simulate_action.text() == "Simular"
     assert window._current_preferences() == accepted
     assert window._preferences.load() == accepted

@@ -3233,9 +3233,9 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Element length",
         Language.SPANISH: "Longitud del elemento",
     },
-    "yagi.radius_mm": {
-        Language.ENGLISH: "Element radius (mm)",
-        Language.SPANISH: "Radio del elemento (mm)",
+    "yagi.radius": {
+        Language.ENGLISH: "Element radius",
+        Language.SPANISH: "Radio del elemento",
     },
     "yagi.add_element": {
         Language.ENGLISH: "Add element",

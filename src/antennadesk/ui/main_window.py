@@ -356,6 +356,7 @@ class MainWindow(QMainWindow):
         self._locate_solver_action.triggered.connect(lambda: self.locate_solver())
 
         self._preferences_action = QAction(self)
+        self._preferences_action.setShortcut(QKeySequence("Ctrl+,"))
         self._preferences_action.triggered.connect(lambda: self.show_preferences())
 
         self._feed_line_action = QAction(self)
@@ -5711,8 +5712,7 @@ class MainWindow(QMainWindow):
         self._translator.set_language(preferences.language)
         self._font_size_controller.apply(preferences.font_size)
         self._unit_system = preferences.unit_system
-        self._form.set_unit_system(preferences.unit_system)
-        self._geometry.set_unit_system(preferences.unit_system)
+        self._apply_unit_system_to_forms(preferences.unit_system)
         self.retranslate()
         self._update_form_panel_widths()
         self._save_preferences()
@@ -5728,10 +5728,27 @@ class MainWindow(QMainWindow):
         self._update_form_panel_widths()
         self._save_preferences()
 
+    def _apply_unit_system_to_forms(self, unit_system: UnitSystem) -> None:
+        for form in (
+            self._form,
+            self._ocfd_form,
+            self._vertical_form,
+            self._inverted_v_form,
+            self._yagi_form,
+            self._moxon_form,
+            self._fan_dipole_form,
+            self._trap_dipole_form,
+            self._t2fd_form,
+            self._endfed_form,
+            self._j_pole_form,
+            self._ringo_form,
+        ):
+            form.set_unit_system(unit_system)
+        self._geometry.set_unit_system(unit_system)
+
     def _set_unit_system(self, unit_system: UnitSystem) -> None:
         self._unit_system = unit_system
-        self._form.set_unit_system(unit_system)
-        self._geometry.set_unit_system(unit_system)
+        self._apply_unit_system_to_forms(unit_system)
         self._update_form_panel_widths()
         self._save_preferences()
 

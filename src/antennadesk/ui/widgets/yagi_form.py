@@ -25,8 +25,16 @@ from ...domain.antennas.polarization import Polarization
 from ...domain.antennas.yagi import YagiElement, YagiParameters, nbs_five_element
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
-from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from ..units import (
+    UnitSystem,
+    length_from_m,
+    length_to_m,
+    length_unit_key,
+    radius_from_m,
+    radius_to_m,
+)
 from .form_i18n import FormLabels, retranslate_combo
+from .form_units import apply_length_suffixes, apply_radius_units
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -72,10 +80,8 @@ class YagiForm(QWidget):
         self._polarization.setToolTip(translator.t("yagi.polarization_hint"))
 
         self._radius = QDoubleSpinBox(self)
-        self._radius.setRange(0.01, 1_000.0)
-        self._radius.setDecimals(3)
-        self._radius.setSuffix(" mm")
-        self._radius.setValue(6.35)
+        apply_radius_units(translator, unit_system, self._radius)
+        self._radius.setValue(radius_from_m(0.00635, unit_system))
 
         self._material = QComboBox(self)
         for material in MATERIALS:
@@ -109,7 +115,7 @@ class YagiForm(QWidget):
                 translator.t("yagi.element"),
                 translator.t("yagi.position"),
                 translator.t("yagi.length"),
-                translator.t("yagi.radius_mm"),
+                translator.t("yagi.radius"),
             ]
         )
         self._table.verticalHeader().setVisible(False)
@@ -139,7 +145,7 @@ class YagiForm(QWidget):
         form.addRow(self._labels.label("field.height"), self._height)
         form.addRow(self._labels.label("field.azimuth"), self._azimuth)
         form.addRow(self._labels.label("field.polarization"), self._polarization)
-        form.addRow(self._labels.label("yagi.radius_mm"), self._radius)
+        form.addRow(self._labels.label("yagi.radius"), self._radius)
         form.addRow(self._labels.label("field.material"), self._material)
         form.addRow(self._labels.label("field.ground"), self._ground)
         form.addRow(self._labels.label("field.permittivity"), self._permittivity)
@@ -225,7 +231,7 @@ class YagiForm(QWidget):
                 self._translator.t("yagi.element"),
                 self._translator.t("yagi.position"),
                 self._translator.t("yagi.length"),
-                self._translator.t("yagi.radius_mm"),
+                self._translator.t("yagi.radius"),
             ]
         )
         self._add.setText(self._translator.t("yagi.add_element"))
@@ -303,7 +309,7 @@ class YagiForm(QWidget):
         self._clearance_warning.setVisible(invalid)
 
     def _radius_m(self) -> float:
-        return self._radius.value() / 1_000.0
+        return radius_to_m(self._radius.value(), self._unit_system)
 
     def _append_element(self, element: YagiElement) -> None:
         row = self._table.rowCount()
@@ -312,14 +318,15 @@ class YagiForm(QWidget):
             f"element-{row + 1}",
             f"{length_from_m(element.position_m, self._unit_system):.3f}",
             f"{length_from_m(element.length_m, self._unit_system):.3f}",
-            f"{element.radius_m * 1_000.0:.3f}",
+            f"{radius_from_m(element.radius_m, self._unit_system):.4f}",
         )
+        previous_updating = self._updating
         self._updating = True
         try:
             for column, value in enumerate(values):
                 self._table.setItem(row, column, QTableWidgetItem(value))
         finally:
-            self._updating = False
+            self._updating = previous_updating
         self._refresh_driven_values()
 
     def _load_preset(self) -> None:
@@ -349,8 +356,6 @@ class YagiForm(QWidget):
         self._update_geometry()
 
     def _refresh_driven_values(self, *_args: object) -> None:
-        if self._updating:
-            return
         current = self._driven.currentData()
         self._driven.blockSignals(True)
         self._driven.clear()
@@ -363,7 +368,8 @@ class YagiForm(QWidget):
             index = self._driven.findData(current)
             if index >= 0:
                 self._driven.setCurrentIndex(index)
-        self._emit_changed()
+        if not self._updating:
+            self._emit_changed()
 
     def _add_element(self) -> None:
         wavelength = 299_792_458.0 / (self._frequency.value() * 1_000_000.0)
@@ -394,8 +400,25 @@ class YagiForm(QWidget):
         return YagiElement(
             position_m=length_to_m(float(text(1)), self._unit_system),
             length_m=length_to_m(float(text(2)), self._unit_system),
-            radius_m=float(text(3)) / 1_000.0,
+            radius_m=radius_to_m(float(text(3)), self._unit_system),
         )
+
+    def set_unit_system(self, unit_system: UnitSystem) -> None:
+        if unit_system is self._unit_system:
+            return
+        try:
+            parameters = self.parameters()
+        except (ValueError, TypeError):
+            parameters = None
+        self._unit_system = unit_system
+        apply_radius_units(self._translator, unit_system, self._radius)
+        apply_length_suffixes(
+            self._translator,
+            unit_system,
+            self._height,
+        )
+        if parameters is not None:
+            self.set_parameters(parameters)
 
     def set_parameters(self, parameters: YagiParameters) -> None:
         self._updating = True
@@ -408,7 +431,9 @@ class YagiForm(QWidget):
             if polarization_index >= 0:
                 self._polarization.setCurrentIndex(polarization_index)
             if parameters.elements:
-                self._radius.setValue(parameters.elements[0].radius_m * 1_000.0)
+                self._radius.setValue(
+                    radius_from_m(parameters.elements[0].radius_m, self._unit_system)
+                )
             material_index = self._material.findData(parameters.material)
             if material_index >= 0:
                 self._material.setCurrentIndex(material_index)
