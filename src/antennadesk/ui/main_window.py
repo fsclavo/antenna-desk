@@ -861,6 +861,8 @@ class MainWindow(QMainWindow):
         self._edit_menu = self.menuBar().addMenu("")
         self._edit_menu.addAction(self._undo_action)
         self._edit_menu.addAction(self._redo_action)
+        self._edit_menu.addSeparator()
+        self._edit_menu.addAction(self._preferences_action)
 
         self._design_menu = self.menuBar().addMenu("")
         self._variants_menu = self._design_menu.addMenu("")
@@ -890,8 +892,6 @@ class MainWindow(QMainWindow):
         self._simulation_menu.addAction(self._matching_network_action)
 
         self._tools_menu = self.menuBar().addMenu("")
-        self._tools_menu.addAction(self._preferences_action)
-        self._tools_menu.addSeparator()
         self._tools_menu.addAction(self._locate_solver_action)
         self._tools_menu.addAction(self._compact_history_action)
 

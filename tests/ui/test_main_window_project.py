@@ -336,6 +336,7 @@ def test_main_menu_is_grouped_by_task(window: MainWindow) -> None:
 
     assert edit_menu_titles[0].startswith("Undo")
     assert edit_menu_titles[1].startswith("Redo")
+    assert "Preferences..." in edit_menu_titles
     assert "Import NEC Deck..." in import_menu_titles
     assert "Import MMANA File..." in import_menu_titles
     assert "Export CSV..." in export_menu_titles
@@ -363,8 +364,10 @@ def test_menu_order_follows_the_standard_desktop_layout(window: MainWindow) -> N
     menu_titles = [action.text() for action in window.menuBar().actions() if action.text()]
 
     assert menu_titles == ["File", "Edit", "Design", "Simulation", "Tools", "Help"]
+    edit_titles = [action.text() for action in window._edit_menu.actions()]
     tools_titles = [action.text() for action in window._tools_menu.actions()]
-    assert "Preferences..." in tools_titles
+    assert "Preferences..." in edit_titles
+    assert "Preferences..." not in tools_titles
     assert "Language" not in tools_titles
     assert "Units" not in tools_titles
     assert "Font Size" not in tools_titles

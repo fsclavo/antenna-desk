@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   applied at startup. Standard widgets, custom-painted sketches, pattern views,
   chart axes and legends, and the start-page headline follow the preset.
   Exported reports keep their fixed typography.
-- **Tools → Preferences...** now sets language, display units, and font size in
+- **Edit → Preferences...** now sets language, display units, and font size in
   one dialog. Language and units persist across restarts, and dialog initial
   sizes follow the font preset. The redundant Language, Units, and Font Size
   submenus were removed; Preferences is the single entry point.

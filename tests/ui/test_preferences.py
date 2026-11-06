@@ -270,7 +270,8 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
 def test_preferences_action_retranslates_and_replaces_quick_menus(
     window: MainWindow,
 ) -> None:
-    assert window._preferences_action in window._tools_menu.actions()
+    assert window._preferences_action in window._edit_menu.actions()
+    assert window._preferences_action not in window._tools_menu.actions()
     assert not hasattr(window, "_language_menu")
     assert not hasattr(window, "_units_menu")
     assert not hasattr(window, "_font_size_menu")
@@ -283,8 +284,10 @@ def test_preferences_action_retranslates_and_replaces_quick_menus(
 
     assert window._preferences_action.text() == "Preferences..."
 
+    edit_titles = [action.text() for action in window._edit_menu.actions()]
     tools_titles = [action.text() for action in window._tools_menu.actions()]
-    assert "Preferences..." in tools_titles
+    assert "Preferences..." in edit_titles
+    assert "Preferences..." not in tools_titles
     assert "Language" not in tools_titles
     assert "Units" not in tools_titles
     assert "Font Size" not in tools_titles

@@ -939,7 +939,7 @@ before discarding unsaved changes.
 
 ## Language, units, and font size
 
-Use **Tools → Preferences...** to set the language (English or Español), the
+Use **Edit → Preferences...** to set the language (English or Español), the
 display units (metric m/mm or imperial ft/in), and the font size (Small,
 Normal, or Large). All three settings live in that single dialog.
 
