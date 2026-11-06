@@ -1588,11 +1588,13 @@ class MainWindow(QMainWindow):
                 self._band_analysis_results[design_id] = analysis
                 self._remember_band_plan(analysis)
         result = self._simulation_results.get(design_id)
+        active_band: BandResult | None = None
         if analysis is not None and analysis.bands:
             selected_id = self._selected_band_ids.get(design_id, analysis.bands[0].band.name)
             selected = analysis.result_for_band(selected_id) or analysis.bands[0]
             self._selected_band_ids[design_id] = selected.band.name
             result = selected.result
+            active_band = selected
             self._simulation_results[design_id] = result
             self._results.set_band_analysis(analysis)
         else:
@@ -1604,7 +1606,7 @@ class MainWindow(QMainWindow):
                     self._simulation_results[design_id] = result
         self._last_result = result
         self._update_band_plan_label()
-        self._results.set_result(result)
+        self._results.set_result(result, band=active_band)
         self._last_status_key = (
             self._result_status_key(result.status) if result is not None else "status.ready"
         )
@@ -2522,7 +2524,7 @@ class MainWindow(QMainWindow):
                 self._update_title()
         self._results.set_band_analysis(analysis)
         if analysis.bands:
-            self._results.set_result(analysis.bands[0].result)
+            self._results.set_result(analysis.bands[0].result, band=analysis.bands[0])
         self._results.show_bands()
         self._update_actions()
         self._update_status_text()

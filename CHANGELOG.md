@@ -189,6 +189,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Multiband results now place the **Bands** tab first. Double-clicking a band
+  opens its impedance/SWR charts, and those titles include the active band name.
 - Saving a project now serializes and compresses the payload in a worker thread
   and shows a modal **Preparing project...** progress dialog for large projects.
   The payload is serialized once and then written atomically, so the Qt event

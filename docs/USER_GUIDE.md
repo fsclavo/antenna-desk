@@ -155,11 +155,13 @@ resonance guarantees:
 - **Doublet**: 80-10 m when the project uses a high-impedance/open-wire feed
   line; otherwise select bands manually.
 
-The analysis runs the solver once per band and builds a **Bands** results tab.
-Each row shows the best SWR, its frequency, the sampled power gain, takeoff
-angle, efficiency, and status. Selecting a row reuses the existing impedance,
-pattern, currents, diagnostics, and raw-data views for that band. Completed
-bands are kept if another band fails or the analysis is cancelled.
+The analysis runs the solver once per band and builds a **Bands** results tab,
+shown first. Each row shows the best SWR, its frequency, the sampled power gain,
+takeoff angle, efficiency, and status. Selecting a row reuses the existing
+impedance, pattern, currents, diagnostics, and raw-data views for that band;
+double-clicking a row opens the impedance/SWR charts directly. The active band
+name appears in those chart titles. Completed bands are kept if another band
+fails or the analysis is cancelled.
 
 The global **Simulation pattern** group in **Advanced simulation** controls the
 angular resolution and the pattern-frequency policy. Band analysis applies that
@@ -599,9 +601,11 @@ with a large top load.
 
 ## Read the results
 
-- **Bands**: appears after a band analysis. One row per selected band with best
-  SWR, frequency at best SWR, sampled power gain, takeoff angle, efficiency, and
-  status. Selecting a row switches the other tabs to that band's result.
+- **Bands**: appears first after a band analysis. One row per selected band with
+  best SWR, frequency at best SWR, sampled power gain, takeoff angle, efficiency,
+  and status. Selecting a row switches the other tabs to that band's result;
+  double-clicking a row opens the impedance/SWR charts, whose titles show the
+  active band.
 - **Impedance / SWR**: table of frequency, resistance, reactance, magnitude,
   and SWR, plus impedance and SWR charts side by side over the sweep. Resonance points
   where the reactance crosses zero are marked and listed above the table.

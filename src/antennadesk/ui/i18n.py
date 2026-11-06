@@ -1647,6 +1647,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Eficiencia",
     },
     "band.table.status": {Language.ENGLISH: "Status", Language.SPANISH: "Estado"},
+    "band.double_click_hint": {
+        Language.ENGLISH: "Double-click a band to open its impedance and SWR charts.",
+        Language.SPANISH: (
+            "Hacé doble clic en una banda para abrir sus gráficos de impedancia y ROE."
+        ),
+    },
     "band.selected": {
         Language.ENGLISH: "Bands: {bands}",
         Language.SPANISH: "Bandas: {bands}",
