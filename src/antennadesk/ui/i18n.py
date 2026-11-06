@@ -1068,6 +1068,51 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Conductivity (S/m)",
         Language.SPANISH: "Conductividad (S/m)",
     },
+    "field.soil_preset": {
+        Language.ENGLISH: "Soil preset",
+        Language.SPANISH: "Tipo de suelo",
+    },
+    "soil.custom": {
+        Language.ENGLISH: "Custom / measured",
+        Language.SPANISH: "Personalizado / medido",
+    },
+    "soil.average": {
+        Language.ENGLISH: "Average soil / clay",
+        Language.SPANISH: "Suelo promedio / arcilla",
+    },
+    "soil.rich": {
+        Language.ENGLISH: "Rich soil / loam",
+        Language.SPANISH: "Suelo rico / limo",
+    },
+    "soil.dry_sand": {
+        Language.ENGLISH: "Dry sand",
+        Language.SPANISH: "Arena seca",
+    },
+    "soil.rocky": {
+        Language.ENGLISH: "Rocky soil",
+        Language.SPANISH: "Suelo rocoso",
+    },
+    "soil.fresh_water": {
+        Language.ENGLISH: "Fresh water",
+        Language.SPANISH: "Agua dulce",
+    },
+    "soil.salt_water": {
+        Language.ENGLISH: "Salt water",
+        Language.SPANISH: "Agua salada",
+    },
+    "soil.hint": {
+        Language.ENGLISH: (
+            "Typical HF starting values adapted from the ARRL/Terman ground "
+            "table. Moisture, frequency, and local geology change the real "
+            "values; edit the numbers or choose Custom for measurements."
+        ),
+        Language.SPANISH: (
+            "Valores típicos de partida para HF adaptados de la tabla de suelo "
+            "ARRL/Terman. La humedad, la frecuencia y la geología local cambian "
+            "los valores reales; editá los números o elegí Personalizado para "
+            "usar mediciones."
+        ),
+    },
     "field.reference_impedance": {
         Language.ENGLISH: "Reference impedance (Ω)",
         Language.SPANISH: "Impedancia de referencia (Ω)",

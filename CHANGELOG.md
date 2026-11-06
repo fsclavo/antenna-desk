@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Finite-ground editors now offer a **Soil preset** list with typical starting
+  values for average soil / clay, rich soil / loam, dry sand, rocky soil, fresh
+  water, and salt water. The permittivity and conductivity fields remain
+  editable; changing either value switches the preset to **Custom / measured**.
+  The presets are broad HF starting points, not measured site data.
 - Persistent UI font-size presets (**Small**, **Normal**, **Large**) in
   **Edit → Preferences...**. Normal restores the system default; the choice is
   applied at startup. Standard widgets, custom-painted sketches, pattern views,

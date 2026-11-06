@@ -40,6 +40,7 @@ from ..units import (
     radius_to_m,
 )
 from ..widgets.form_units import apply_radius_units
+from ..widgets.ground_presets import GroundPresetController
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -134,6 +135,14 @@ class ZeppDialog(QDialog):
         self._conductivity.setSingleStep(0.001)
         self._conductivity.setValue(0.005)
         self._conductivity.setSuffix(" S/m")
+        self._soil = QComboBox(self)
+        self._ground_presets = GroundPresetController(
+            self._ground,
+            self._soil,
+            self._permittivity,
+            self._conductivity,
+            translator,
+        )
 
         self._start = QPushButton(self)
         self._start.clicked.connect(self._apply_starting_dimensions)
@@ -153,6 +162,7 @@ class ZeppDialog(QDialog):
         form.addRow(translator.t("g5rv.wire_radius"), self._radius)
         form.addRow(translator.t("field.material"), self._material)
         form.addRow(translator.t("field.ground"), self._ground)
+        form.addRow(translator.t("field.soil_preset"), self._soil)
         form.addRow(translator.t("field.permittivity"), self._permittivity)
         form.addRow(translator.t("field.conductivity"), self._conductivity)
 
@@ -282,6 +292,7 @@ class ZeppDialog(QDialog):
         return self._parameters
 
     def retranslate(self) -> None:
+        self._ground_presets.retranslate()
         self.setWindowTitle(self._translator.t("zepp.title"))
         self._start.setText(self._translator.t("zepp.starting_dimensions"))
         self._update_geometry()

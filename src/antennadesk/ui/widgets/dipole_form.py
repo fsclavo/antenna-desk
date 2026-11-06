@@ -53,6 +53,7 @@ from ..units import (
     length_to_m,
     length_unit_key,
 )
+from .ground_presets import GroundPresetController
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -127,6 +128,14 @@ class DipoleForm(QWidget):
         self._conductivity.setSingleStep(0.001)
         self._conductivity.setValue(0.005)
         self._conductivity.setSuffix(" S/m")
+        self._soil = QComboBox(self)
+        self._ground_presets = GroundPresetController(
+            self._ground,
+            self._soil,
+            self._permittivity,
+            self._conductivity,
+            translator,
+        )
 
         self._reference = QDoubleSpinBox(self)
         self._reference.setRange(1.0, 1_000.0)
@@ -162,6 +171,7 @@ class DipoleForm(QWidget):
         form.addRow(self._label("field.diameter"), self._diameter)
         form.addRow(self._label("field.material"), self._material)
         form.addRow(self._label("field.ground"), self._ground)
+        form.addRow(self._label("field.soil_preset"), self._soil)
         form.addRow(self._label("field.permittivity"), self._permittivity)
         form.addRow(self._label("field.conductivity"), self._conductivity)
         form.addRow(self._label("field.reference_impedance"), self._reference)
@@ -244,6 +254,7 @@ class DipoleForm(QWidget):
         }
 
     def retranslate(self) -> None:
+        self._ground_presets.retranslate()
         self._group.setTitle(self._translator.t("panel.design"))
         self._sweep_group.setTitle(self._translator.t("field.sweep"))
         self._sweep.setText(self._translator.t("field.sweep_enabled"))

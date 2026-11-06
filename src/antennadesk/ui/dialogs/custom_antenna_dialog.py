@@ -43,6 +43,7 @@ from ..units import (
     radius_to_m,
     radius_unit_key,
 )
+from ..widgets.ground_presets import GroundPresetController
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -103,6 +104,14 @@ class CustomAntennaDialog(QDialog):
         self._conductivity.setSingleStep(0.001)
         self._conductivity.setValue(0.005)
         self._conductivity.setSuffix(" S/m")
+        self._soil = QComboBox(self)
+        self._ground_presets = GroundPresetController(
+            self._ground,
+            self._soil,
+            self._permittivity,
+            self._conductivity,
+            translator,
+        )
 
         self._table = QTableWidget(0, 8, self)
         self._table.setHorizontalHeaderLabels(
@@ -155,6 +164,7 @@ class CustomAntennaDialog(QDialog):
         form.addRow(translator.t("field.frequency"), self._frequency)
         form.addRow(translator.t("field.material"), self._material)
         form.addRow(translator.t("field.ground"), self._ground)
+        form.addRow(translator.t("field.soil_preset"), self._soil)
         form.addRow(translator.t("field.permittivity"), self._permittivity)
         form.addRow(translator.t("field.conductivity"), self._conductivity)
         form.addRow(translator.t("custom.feed_wire"), self._feed_wire)

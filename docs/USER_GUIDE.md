@@ -200,7 +200,15 @@ For a wire dipole, folded dipole, or loop, the guided wizard asks for:
    suggested length is a heuristic, not a universal final dimension.
 3. Wire material and diameter.
 4. Ground model. Finite ground asks for relative permittivity and conductivity.
+   A **Soil preset** list provides typical starting values for average soil /
+   clay, rich soil / loam, dry sand, rocky soil, fresh water, and salt water.
+   The two numeric fields remain editable; changing either one switches the
+   preset to **Custom / measured**.
 5. A summary before creating the project.
+
+The soil presets are broad HF starting points adapted from the ARRL/Terman
+ground table. Moisture, frequency, and local geology change the real values, so
+use them as a first approximation, not as a measurement of the installation.
 
 After creation, adjust the design panel and press **Apply design** or
 **Simulate**. The design panel separates **Family** from **Template**; generated

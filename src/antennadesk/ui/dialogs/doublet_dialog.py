@@ -33,6 +33,7 @@ from ..units import (
     radius_to_m,
 )
 from ..widgets.form_units import apply_radius_units
+from ..widgets.ground_presets import GroundPresetController
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -156,6 +157,14 @@ class DoubletDialog(QDialog):
         self._conductivity.setDecimals(6)
         self._conductivity.setSingleStep(0.001)
         self._conductivity.setSuffix(" S/m")
+        self._soil = QComboBox(self)
+        self._ground_presets = GroundPresetController(
+            self._ground,
+            self._soil,
+            self._permittivity,
+            self._conductivity,
+            translator,
+        )
         self._conductivity.setValue(initial_ground.conductivity_s_per_m or 0.005)
 
         self._line_impedance = QDoubleSpinBox(self)
@@ -193,6 +202,7 @@ class DoubletDialog(QDialog):
         form.addRow(translator.t("field.wire_radius"), self._radius)
         form.addRow(translator.t("field.material"), self._material)
         form.addRow(translator.t("field.ground"), self._ground)
+        form.addRow(translator.t("field.soil_preset"), self._soil)
         form.addRow(translator.t("field.permittivity"), self._permittivity)
         form.addRow(translator.t("field.conductivity"), self._conductivity)
         form.addRow(

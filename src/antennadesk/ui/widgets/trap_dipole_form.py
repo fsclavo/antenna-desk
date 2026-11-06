@@ -31,6 +31,7 @@ from ..units import (
 )
 from .form_i18n import FormLabels, retranslate_combo
 from .form_units import apply_length_suffixes, apply_radius_units
+from .ground_presets import GroundPresetController
 
 MATERIALS = (COPPER, ALUMINUM)
 DEFAULT_LOW_BAND_HZ = 7_100_000.0
@@ -141,6 +142,14 @@ class TrapDipoleForm(QWidget):
         self._conductivity.setSingleStep(0.001)
         self._conductivity.setValue(0.005)
         self._conductivity.setSuffix(" S/m")
+        self._soil = QComboBox(self)
+        self._ground_presets = GroundPresetController(
+            self._ground,
+            self._soil,
+            self._permittivity,
+            self._conductivity,
+            translator,
+        )
 
         self._trap_warning = QLabel(self)
         self._trap_warning.setWordWrap(True)
@@ -163,6 +172,7 @@ class TrapDipoleForm(QWidget):
         form.addRow(self._labels.label("trap_dipole.wire_radius"), self._radius)
         form.addRow(self._labels.label("field.material"), self._material)
         form.addRow(self._labels.label("field.ground"), self._ground)
+        form.addRow(self._labels.label("field.soil_preset"), self._soil)
         form.addRow(self._labels.label("field.permittivity"), self._permittivity)
         form.addRow(self._labels.label("field.conductivity"), self._conductivity)
 
@@ -215,6 +225,7 @@ class TrapDipoleForm(QWidget):
         self._emit_changed()
 
     def retranslate(self) -> None:
+        self._ground_presets.retranslate()
         self._labels.retranslate()
         self._start.setText(self._translator.t("trap_dipole.starting_dimensions"))
         retranslate_combo(

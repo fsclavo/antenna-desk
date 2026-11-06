@@ -28,6 +28,7 @@ from ..units import (
 )
 from .form_i18n import FormLabels, retranslate_combo
 from .form_units import apply_length_suffixes, apply_radius_units
+from .ground_presets import GroundPresetController
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -105,6 +106,14 @@ class InvertedVForm(QWidget):
         self._conductivity.setSingleStep(0.001)
         self._conductivity.setValue(0.005)
         self._conductivity.setSuffix(" S/m")
+        self._soil = QComboBox(self)
+        self._ground_presets = GroundPresetController(
+            self._ground,
+            self._soil,
+            self._permittivity,
+            self._conductivity,
+            translator,
+        )
 
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
@@ -118,6 +127,7 @@ class InvertedVForm(QWidget):
         form.addRow(self._labels.label("inverted_v.wire_radius"), self._radius)
         form.addRow(self._labels.label("field.material"), self._material)
         form.addRow(self._labels.label("field.ground"), self._ground)
+        form.addRow(self._labels.label("field.soil_preset"), self._soil)
         form.addRow(self._labels.label("field.permittivity"), self._permittivity)
         form.addRow(self._labels.label("field.conductivity"), self._conductivity)
 
@@ -145,6 +155,7 @@ class InvertedVForm(QWidget):
         self._update_geometry()
 
     def retranslate(self) -> None:
+        self._ground_presets.retranslate()
         self._labels.retranslate()
         retranslate_combo(
             self._material,

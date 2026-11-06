@@ -44,6 +44,7 @@ from ..units import (
     length_to_m,
     length_unit_key,
 )
+from ..widgets.ground_presets import GroundPresetController
 
 BANDS: tuple[tuple[str, float | None], ...] = (
     ("160 m", 1.85),
@@ -430,9 +431,18 @@ class GroundPage(QWizardPage):
         self._conductivity.setSingleStep(0.001)
         self._conductivity.setValue(0.005)
         self._conductivity.setSuffix(" S/m")
+        self._soil = QComboBox(self)
+        self._ground_presets = GroundPresetController(
+            self._ground,
+            self._soil,
+            self._permittivity,
+            self._conductivity,
+            translator,
+        )
 
         form = QFormLayout(self)
         form.addRow(self._label("field.ground"), self._ground)
+        form.addRow(self._label("field.soil_preset"), self._soil)
         form.addRow(self._label("field.permittivity"), self._permittivity)
         form.addRow(self._label("field.conductivity"), self._conductivity)
 
@@ -447,6 +457,7 @@ class GroundPage(QWizardPage):
         return label
 
     def retranslate(self) -> None:
+        self._ground_presets.retranslate()
         for label in self.findChildren(QLabel):
             key = label.objectName()
             if key:
