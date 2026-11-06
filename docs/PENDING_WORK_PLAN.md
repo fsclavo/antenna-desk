@@ -141,11 +141,30 @@ These are not part of the next implementation session unless priorities change:
 - General radial-screen and transmission-line geometry beyond the current
   supported subset.
 
+## Phase 7 — Antenna expansion backlog
+
+The ordered antenna backlog lives in
+[`ROADMAP.md`](ROADMAP.md#antenna-backlog). The immediate sequence is:
+
+1. Inverted L.
+2. Horizontal loop / sky loop.
+3. Elevated radials / ground screen.
+4. Magnetic loop, as a separate model with a tuning capacitor and losses.
+5. Yagi folded driven element.
+6. Gamma / beta / hairpin match.
+7. Balun/unun with a frequency-dependent loss model.
+
+The remaining medium and large candidates are ordered after those seven in the
+roadmap table. Items 15–19 require architectural work or a much larger test
+surface and should wait until the single-feed families are stable.
+
 ## Recommended execution order
 
-1. Phase 5 — independent references for experimental templates.
-2. Phase 2 — completed; revisit only if the measured limits change.
-3. Phase 6 — deferred/blocked.
+1. Phase 7 — antenna expansion, in the order listed in the antenna backlog.
+2. Phase 5 — references for each new family as it lands, plus any remaining
+   experimental-template work.
+3. Phase 2 — completed; revisit only if the measured limits change.
+4. Phase 6 — deferred/blocked.
 
 Completed: Phase 0, the Phase 1 investigation, Phase 2 measurement, Phase 3.1,
 Phase 3.2, the Phase 5 evidence inventory/first reference pass, and the refined

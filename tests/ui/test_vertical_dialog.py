@@ -79,6 +79,25 @@ def test_vertical_dialog_can_enable_a_loading_coil(qtbot: QtBot) -> None:
     assert "12.000 µH" in dialog._form._coil_summary.text()
 
 
+def test_vertical_dialog_can_enable_a_top_hat(qtbot: QtBot) -> None:
+    dialog = VerticalDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    assert form._top_hat_enabled.isChecked() is False
+    assert form._top_hat_radius.isEnabled() is False
+
+    form._top_hat_enabled.setChecked(True)
+    form._top_hat_radius.setValue(0.5)
+    form._top_hat_wire_count.setValue(6)
+
+    parameters = dialog.parameters()
+    assert parameters.top_hat_enabled is True
+    assert parameters.top_hat_radius_m == pytest.approx(0.5)
+    assert parameters.top_hat_wire_count == 6
+    assert form._top_hat_radius.isEnabled() is True
+
+
 def test_loaded_vertical_dialog_uses_mobile_preset(qtbot: QtBot) -> None:
     dialog = VerticalDialog(
         Translator(Language.ENGLISH),

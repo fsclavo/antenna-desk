@@ -540,11 +540,17 @@ the design panel updates it when you apply the vertical fields, and the loads
 list and reports show it as a series load on the radiator. Disable **Use
 loading coil** to remove it.
 
+The **Capacitive top hat** group adds horizontal wires at the top of the
+radiator. Set the hat radius and wire count; the wires are part of the generated
+geometry and survive the round trip through **Edit Custom Wires...**. The hat
+improves the short-radiator current distribution, but the model still uses an
+ideal coil and does not include coil Q, a vehicle body, or a mast.
+
 The generator is experimental: geometry and radial topology are tested, but it
-has no independent numerical performance reference. The feed is at the base of
-the radiator, so the usual delta-gap warning can appear. The design panel keeps
-the height, base, radial, and coil fields editable; use **Edit Custom Wires...**
-for raw coordinates.
+has no independent numerical performance reference beyond the published
+loaded-vertical example. The feed is at the base of the radiator, so the usual
+delta-gap warning can appear. The design panel keeps the height, base, radial,
+and coil fields editable; use **Edit Custom Wires...** for raw coordinates.
 
 ## Create a loaded vertical / mobile whip
 
@@ -553,14 +559,16 @@ vertical with a series loading coil. The mobile preset starts with a 2.0 m
 radiator, a 0.25 m base height, four 1.0 m radials, and a 10 µH coil at 1.0 m.
 These are application starting points, not calculated resonance values: tune
 the height, coil position, and inductance with the solver for your band and
-installation.
+installation. **Load 102 in example** sets the published K7MEM/ARRL starting
+dimensions for 14.1 MHz: a 2.5908 m whip and a 4.511 µH base coil.
 
 The radial plane is a simplified counterpoise. It does not model a vehicle
 body, roof, or chassis, so treat mobile performance as qualitative until you
 have measurements or a more detailed model. The loaded vertical uses the same
 first-class `VerticalParameters` as the generic vertical; the coil is stored as
 a series load on the radiator and appears in the loads editor, reports, and
-construction sheet.
+construction sheet. A capacitive top hat is also available for short verticals
+with a large top load.
 
 ## Read the results
 

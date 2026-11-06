@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.antennas.vertical import (
     MAX_RADIALS,
+    MAX_TOP_HAT_WIRES,
     MOBILE_EXAMPLE_COIL_INDUCTANCE_H,
     MOBILE_EXAMPLE_FREQUENCY_HZ,
     MOBILE_EXAMPLE_HEIGHT_M,
@@ -155,6 +156,30 @@ class VerticalForm(QWidget):
         )
         coil_form.addRow(self._coil_summary)
 
+        self._top_hat_group = QGroupBox(translator.t("vertical.top_hat"), self)
+        self._top_hat_enabled = QCheckBox(
+            translator.t("vertical.top_hat_enabled"),
+            self._top_hat_group,
+        )
+        self._top_hat_radius = QDoubleSpinBox(self._top_hat_group)
+        self._top_hat_radius.setDecimals(3)
+        self._top_hat_radius.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._top_hat_radius.setValue(length_from_m(0.5, unit_system))
+        self._top_hat_wire_count = QSpinBox(self._top_hat_group)
+        self._top_hat_wire_count.setRange(1, MAX_TOP_HAT_WIRES)
+        self._top_hat_wire_count.setValue(4)
+
+        top_hat_form = QFormLayout(self._top_hat_group)
+        top_hat_form.addRow(self._top_hat_enabled)
+        top_hat_form.addRow(
+            self._labels.label("vertical.top_hat_radius"),
+            self._top_hat_radius,
+        )
+        top_hat_form.addRow(
+            self._labels.label("vertical.top_hat_wires"),
+            self._top_hat_wire_count,
+        )
+
         if parameters is None and mobile:
             self._height.setValue(length_from_m(2.0, unit_system))
             self._radial_count.setValue(4)
@@ -179,6 +204,7 @@ class VerticalForm(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addLayout(form)
         layout.addWidget(self._coil_group)
+        layout.addWidget(self._top_hat_group)
         layout.addWidget(self._geometry)
 
         for widget in (
@@ -192,6 +218,8 @@ class VerticalForm(QWidget):
             self._coil_offset,
             self._coil_inductance,
             self._coil_resistance,
+            self._top_hat_radius,
+            self._top_hat_wire_count,
         ):
             widget.valueChanged.connect(self._emit_changed)
         self._height.valueChanged.connect(self._height_changed)
@@ -199,11 +227,13 @@ class VerticalForm(QWidget):
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._ground_changed)
         self._coil_enabled.toggled.connect(self._coil_toggled)
+        self._top_hat_enabled.toggled.connect(self._top_hat_toggled)
         if parameters is not None:
             self.set_parameters(parameters)
         self._update_ground_controls()
         self._update_radial_controls()
         self._update_coil_controls()
+        self._update_top_hat_controls()
         self._update_geometry()
 
     def _emit_changed(self, *_args: object) -> None:
@@ -227,10 +257,18 @@ class VerticalForm(QWidget):
         self._update_coil_controls()
         self._emit_changed()
 
+    def _top_hat_toggled(self, checked: bool) -> None:
+        if checked and self._top_hat_radius.value() <= 0.0:
+            self._top_hat_radius.setValue(length_from_m(0.5, self._unit_system))
+        self._update_top_hat_controls()
+        self._emit_changed()
+
     def retranslate(self) -> None:
         self._labels.retranslate()
         self._coil_group.setTitle(self._translator.t("vertical.loading_coil"))
         self._coil_enabled.setText(self._translator.t("vertical.loading_coil_enabled"))
+        self._top_hat_group.setTitle(self._translator.t("vertical.top_hat"))
+        self._top_hat_enabled.setText(self._translator.t("vertical.top_hat_enabled"))
         retranslate_combo(
             self._material,
             self._translator,
@@ -259,6 +297,11 @@ class VerticalForm(QWidget):
         self._radial_angle.setEnabled(enabled)
         self._update_geometry()
 
+    def _update_top_hat_controls(self) -> None:
+        enabled = self._top_hat_enabled.isChecked()
+        self._top_hat_radius.setEnabled(enabled)
+        self._top_hat_wire_count.setEnabled(enabled)
+
     def load_mobile_example(self) -> None:
         """Load the published 102-inch, 14.1 MHz mobile-whip example."""
 
@@ -272,10 +315,12 @@ class VerticalForm(QWidget):
             self._coil_offset.setValue(0.0)
             self._coil_inductance.setValue(MOBILE_EXAMPLE_COIL_INDUCTANCE_H * 1e6)
             self._coil_resistance.setValue(0.0)
+            self._top_hat_enabled.setChecked(False)
         finally:
             self._updating = False
         self._update_radial_controls()
         self._update_coil_controls()
+        self._update_top_hat_controls()
         self._update_geometry()
         self.changed.emit()
 
@@ -317,6 +362,7 @@ class VerticalForm(QWidget):
             self._base_height,
             self._radial_length,
             self._coil_offset,
+            self._top_hat_radius,
         )
         if parameters is not None:
             self.set_parameters(parameters)
@@ -349,11 +395,18 @@ class VerticalForm(QWidget):
             )
             self._coil_inductance.setValue(parameters.loading_coil_inductance_h * 1e6)
             self._coil_resistance.setValue(parameters.loading_coil_resistance_ohm)
+            self._top_hat_enabled.setChecked(parameters.top_hat_enabled)
+            self._top_hat_radius.setValue(
+                length_from_m(parameters.top_hat_radius_m, self._unit_system)
+            )
+            if parameters.top_hat_wire_count > 0:
+                self._top_hat_wire_count.setValue(parameters.top_hat_wire_count)
         finally:
             self._updating = False
         self._update_ground_controls()
         self._update_radial_controls()
         self._update_coil_controls()
+        self._update_top_hat_controls()
         self._update_geometry()
 
     def set_frequency_hz(self, frequency_hz: float) -> None:
@@ -392,6 +445,7 @@ class VerticalForm(QWidget):
             self._coil_summary.setText("")
 
     def parameters(self) -> VerticalParameters:
+        top_hat_enabled = self._top_hat_enabled.isChecked()
         return VerticalParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
             height_m=length_to_m(self._height.value(), self._unit_system),
@@ -406,4 +460,11 @@ class VerticalForm(QWidget):
             loading_coil_offset_m=length_to_m(self._coil_offset.value(), self._unit_system),
             loading_coil_inductance_h=self._coil_inductance.value() * 1e-6,
             loading_coil_resistance_ohm=self._coil_resistance.value(),
+            top_hat_enabled=top_hat_enabled,
+            top_hat_radius_m=(
+                length_to_m(self._top_hat_radius.value(), self._unit_system)
+                if top_hat_enabled
+                else 0.0
+            ),
+            top_hat_wire_count=(self._top_hat_wire_count.value() if top_hat_enabled else 0),
         )

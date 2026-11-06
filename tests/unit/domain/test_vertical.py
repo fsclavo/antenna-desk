@@ -128,6 +128,53 @@ def test_vertical_rejects_an_invalid_loading_coil() -> None:
         )
 
 
+def test_vertical_top_hat_generates_horizontal_wires() -> None:
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=2.0,
+        base_height_m=0.25,
+        radial_count=4,
+        radial_length_m=1.0,
+        top_hat_enabled=True,
+        top_hat_radius_m=2.0,
+        top_hat_wire_count=4,
+    )
+
+    custom = parameters.to_custom_parameters()
+    hat_wires = [wire for wire in custom.wires if wire.id.startswith("top-hat-")]
+
+    assert len(hat_wires) == 4
+    for wire in hat_wires:
+        assert wire.start.z_m == pytest.approx(2.25)
+        assert wire.end.z_m == pytest.approx(2.25)
+        assert math.hypot(wire.end.x_m, wire.end.y_m) == pytest.approx(2.0)
+
+    restored = VerticalParameters.from_custom_parameters(custom)
+    assert restored.top_hat_enabled is True
+    assert restored.top_hat_radius_m == pytest.approx(2.0)
+    assert restored.top_hat_wire_count == 4
+    assert restored.radial_count == 4
+
+
+def test_vertical_rejects_an_invalid_top_hat() -> None:
+    with pytest.raises(ValueError, match="top_hat_radius_m"):
+        VerticalParameters(
+            frequency_hz=7_100_000.0,
+            height_m=2.0,
+            top_hat_enabled=True,
+            top_hat_radius_m=0.0,
+            top_hat_wire_count=4,
+        )
+    with pytest.raises(ValueError, match="top_hat_wire_count"):
+        VerticalParameters(
+            frequency_hz=7_100_000.0,
+            height_m=2.0,
+            top_hat_enabled=True,
+            top_hat_radius_m=1.0,
+            top_hat_wire_count=0,
+        )
+
+
 def test_vertical_loading_coil_survives_custom_round_trip() -> None:
     original = VerticalParameters(
         frequency_hz=7_100_000.0,

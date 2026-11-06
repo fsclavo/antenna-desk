@@ -192,6 +192,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   52 MHz, 3.05 m radiator, 0.33 m ring, and a 0.05 m ring-height modeling
   assumption. It remains evidence level C because the matching-ring model is
   simplified.
+- The vertical generator now supports a **capacitive top hat**: a configurable
+  number of horizontal wires at the radiator top, with radius and wire count.
+  The hat survives the custom-wire round trip. Coil Q, vehicle ground, and mast
+  effects remain outside the model.
 - Reviewed the remaining level C templates for Phase 5. `ringo`, `fan_dipole`,
   `random_wire`, and `custom` were not promoted because the published sources
   describe different geometries or installation details than the current

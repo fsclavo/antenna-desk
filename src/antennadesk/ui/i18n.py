@@ -3150,6 +3150,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Coil resistance",
         Language.SPANISH: "Resistencia de la bobina",
     },
+    "vertical.top_hat": {
+        Language.ENGLISH: "Capacitive top hat",
+        Language.SPANISH: "Sombrero capacitivo",
+    },
+    "vertical.top_hat_enabled": {
+        Language.ENGLISH: "Enable top hat",
+        Language.SPANISH: "Habilitar sombrero capacitivo",
+    },
+    "vertical.top_hat_radius": {
+        Language.ENGLISH: "Hat radius",
+        Language.SPANISH: "Radio del sombrero",
+    },
+    "vertical.top_hat_wires": {
+        Language.ENGLISH: "Hat wires",
+        Language.SPANISH: "Hilos del sombrero",
+    },
     "vertical.loading_coil_summary": {
         Language.ENGLISH: "Series {inductance} µH at {offset} {unit} · R {resistance} Ω",
         Language.SPANISH: "Serie {inductance} µH a {offset} {unit} · R {resistance} Ω",

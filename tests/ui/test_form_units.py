@@ -25,7 +25,15 @@ from antennadesk.ui.widgets.yagi_form import YagiForm
 
 FORMS = (
     (OCFDForm, ("_length", "_height")),
-    (VerticalForm, ("_height", "_base_height", "_radial_length", "_coil_offset")),
+    (
+        VerticalForm,
+        (
+            "_height",
+            "_base_height",
+            "_radial_length",
+            "_coil_offset",
+        ),
+    ),
     (InvertedVForm, ("_apex_height", "_leg_length")),
     (YagiForm, ("_height",)),
     (MoxonForm, ("_width", "_depth", "_reflector_tip", "_driven_tip", "_height")),
@@ -128,6 +136,22 @@ def test_unit_switch_preserves_physical_lengths(
             abs=0.002,
         )
     assert changes == []
+
+
+def test_vertical_top_hat_radius_converts(qtbot: QtBot) -> None:
+    form = VerticalForm(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(form)
+    form._top_hat_enabled.setChecked(True)
+    form._top_hat_radius.setValue(0.5)
+    before_m = length_to_m(form._top_hat_radius.value(), UnitSystem.METRIC)
+
+    form.set_unit_system(UnitSystem.IMPERIAL)
+
+    assert form._top_hat_radius.suffix().strip() == "ft"
+    assert length_to_m(
+        form._top_hat_radius.value(),
+        UnitSystem.IMPERIAL,
+    ) == pytest.approx(before_m, rel=1e-3, abs=0.002)
 
 
 def test_fan_dipole_table_lengths_convert(qtbot: QtBot) -> None:

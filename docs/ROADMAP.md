@@ -212,6 +212,45 @@ Acceptance criteria:
 | P2 | Physical antenna validation | A | blocked: no measurements |
 | P3 | Segmented frequency plan in one NEC deck | B | deferred; benchmark keeps per-band |
 
+### Antenna backlog
+
+Ordered expansion backlog proposed on 2026-11-06. Effort assumes one
+experienced developer; validation is the realistic ceiling for the current
+canonical wire model, not a promise. `A` requires an exact published geometry
+with an independent numeric metric; `B` requires a published rule or starting
+point; `C` is structural/experimental only.
+
+| Order | Candidate | Type | Effort | Value | Validation | Notes |
+|---:|---|---|---|---|---|---|
+| 1 | Inverted L | New family | M | High | B/A | Common 160/80/40 m wire; fits the current single-feed model. |
+| 2 | Horizontal loop / sky loop | Modification of `loop` | S–M | High | B/A | Reuse the polygon; add orientation/plane and scene tests. |
+| 3 | Elevated radials / ground screen | Modification of `vertical` | S–M | High | B/A | Existing radial fields; add elevated radials, mesh/screen presets. |
+| 4 | Magnetic loop | New family | L | High | B/C; A only with an exact published design | Needs gap, tuning capacitor, ESR/loss, efficiency, bandwidth, and matching. Not a variant of the full-wave loop. |
+| 5 | Yagi folded driven element | Modification of `yagi` | M | Medium | B/A | Two wires plus connectors; changes feed impedance and matching. |
+| 6 | Gamma / beta / hairpin match | Modification of `yagi` | M | Medium | B/A | Geometry and feed hardware; may coexist with the matching-network dialog. |
+| 7 | Balun/unun with losses | Cross-cutting model | M | High | B/C | Frequency-dependent loss model; improves EFHW, OCFD, G5RV, and T2FD. |
+| 8 | Capacity hat / top-loaded vertical | Modification of `vertical` | M | High | B/A | Short verticals on low bands; needs hat geometry and possibly loading. |
+| 9 | Explicit EFHW presets for the existing EndFed + OCFD/G5RV variants | Presets/UX, not a new family | S | Medium–high | A/B | `EndFedParameters` with `EndFedPreset.STANDARD` already models an EFHW using a half-wave wire and 49:1 transformer. The work is naming clarity plus published 40/20/10 m presets and an optional band plan; OCFD/G5RV variants remain presets. Quick win; can be advanced ahead of the sequence if needed. |
+| 10 | Half-square / bobtail curtain | New family | M | Medium | B/A | Multi-wire geometry and feed; published designs exist. |
+| 11 | Biquad / double biquad | New family | M | Medium | B/A | Two loops and reflector; needs a scene contract and tests. |
+| 12 | Beverage | New family | M | Medium | B/A | Receiving antenna; termination, ground, and long-wire geometry. |
+| 13 | Loaded / linked dipole | New family or `dipole` variant | M | Medium | B/C | Portable/SOTA use; existing load model helps, but coil Q and links need care. |
+| 14 | Wire sag / tapered elements / boom correction | Geometry model | M | Medium | B/C | Realism for Yagi and wire antennas; touches geometry and solver inputs. |
+| 15 | Phased verticals / arrays | Architectural | XL | High | B/A | Requires multiple sources, phase, and feed networks; not a simple family. |
+| 16 | Quad beam / hexbeam | New family | L | Medium–high | B/A | Multi-element loop geometry; feed and scene complexity. |
+| 17 | Log-periodic | New family | L | Medium | A/B | Many elements and a feed network; high test burden. |
+| 18 | Discone | New family | L | Medium | B/C | Many wires and broadband behavior; niche VHF/UHF value. |
+| 19 | Trapped / multiband Yagi | New family | L | High | B/C | Traps and multiple elements; difficult independent validation. |
+
+Items 1–7 are the immediate recommended sequence. Items 8–14 are the next
+medium-sized candidates; items 15–19 are large or architectural and should not
+start until the single-feed families and the shared geometry/load model are
+stable.
+
+EFHW is deliberately **not** listed as a new family: the standard `EndFed`
+template already models it. Item 9 covers explicit EFHW presets, labels, and
+band planning for that existing family.
+
 ## Next
 
 Detailed pending-work plan:

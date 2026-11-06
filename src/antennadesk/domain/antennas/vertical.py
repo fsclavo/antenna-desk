@@ -21,6 +21,7 @@ from .wire import Wire
 RADIATOR_ID = "radiator"
 LOADING_COIL_ID = "loading-coil"
 MAX_RADIALS = 128
+MAX_TOP_HAT_WIRES = 32
 ANTENNA_TYPE_VERTICAL = "vertical"
 
 # Published mobile-whip example: K7MEM, "Short Loaded Vertical", citing the
@@ -56,6 +57,9 @@ class VerticalParameters:
     loading_coil_offset_m: float = 0.0
     loading_coil_inductance_h: float = 0.0
     loading_coil_resistance_ohm: float = 0.0
+    top_hat_enabled: bool = False
+    top_hat_radius_m: float = 0.0
+    top_hat_wire_count: int = 0
 
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
@@ -89,6 +93,13 @@ class VerticalParameters:
             )
             if self.loading_coil_offset_m > self.height_m:
                 raise ValueError("loading_coil_offset_m must not exceed height_m")
+        ensure_non_negative(self.top_hat_radius_m, name="top_hat_radius_m")
+        if not 0 <= self.top_hat_wire_count <= MAX_TOP_HAT_WIRES:
+            raise ValueError(f"top_hat_wire_count must be between 0 and {MAX_TOP_HAT_WIRES}")
+        if self.top_hat_enabled:
+            ensure_positive(self.top_hat_radius_m, name="top_hat_radius_m")
+            if self.top_hat_wire_count < 1:
+                raise ValueError("top_hat_wire_count must be positive")
 
     @property
     def top_height_m(self) -> float:
@@ -117,7 +128,39 @@ class VerticalParameters:
             raise ValueError("vertical radiator must be vertical")
         base_z = min(radiator.start.z_m, radiator.end.z_m)
         top_z = max(radiator.start.z_m, radiator.end.z_m)
-        radials = [wire for wire in parameters.wires if wire.id != radiator.id]
+        radials: list[Wire] = []
+        hat_wires: list[Wire] = []
+        for wire in parameters.wires:
+            if wire.id == radiator.id:
+                continue
+            endpoints = (wire.start, wire.end)
+            base_endpoint = next(
+                (
+                    point
+                    for point in endpoints
+                    if math.isclose(point.z_m, base_z, abs_tol=1e-6)
+                    and math.hypot(point.x_m, point.y_m) < 1e-6
+                ),
+                None,
+            )
+            if base_endpoint is not None:
+                radials.append(wire)
+                continue
+            top_endpoint = next(
+                (
+                    point
+                    for point in endpoints
+                    if math.isclose(point.z_m, top_z, abs_tol=1e-6)
+                    and math.hypot(point.x_m, point.y_m) < 1e-6
+                ),
+                None,
+            )
+            if top_endpoint is None:
+                raise ValueError("all non-radiator wires must start at the vertical base or top")
+            far_endpoint = wire.end if top_endpoint == wire.start else wire.start
+            if not math.isclose(far_endpoint.z_m, top_z, abs_tol=1e-6):
+                raise ValueError("top-hat wires must be horizontal")
+            hat_wires.append(wire)
         radial_lengths: list[float] = []
         radial_angles: list[float] = []
         for radial in radials:
@@ -136,6 +179,10 @@ class VerticalParameters:
             far_endpoint = radial.end if base_endpoint == radial.start else radial.start
             radial_lengths.append(math.hypot(far_endpoint.x_m, far_endpoint.y_m))
             radial_angles.append(math.degrees(math.atan2(far_endpoint.y_m, far_endpoint.x_m)))
+        hat_lengths: list[float] = []
+        for wire in hat_wires:
+            far = wire.end if math.isclose(wire.start.z_m, top_z, abs_tol=1e-6) else wire.start
+            hat_lengths.append(math.hypot(far.x_m, far.y_m))
         coil = next(
             (
                 load
@@ -162,6 +209,9 @@ class VerticalParameters:
             loading_coil_offset_m=coil.offset_m if coil is not None else 0.0,
             loading_coil_inductance_h=coil.inductance_h if coil is not None else 0.0,
             loading_coil_resistance_ohm=coil.resistance_ohm if coil is not None else 0.0,
+            top_hat_enabled=bool(hat_wires),
+            top_hat_radius_m=(sum(hat_lengths) / len(hat_lengths) if hat_lengths else 0.0),
+            top_hat_wire_count=len(hat_wires),
         )
 
     def to_antenna(self, *, name: str = "Vertical") -> AntennaModel:
@@ -190,6 +240,24 @@ class VerticalParameters:
                             x_m=self.radial_length_m * math.cos(angle),
                             y_m=self.radial_length_m * math.sin(angle),
                             z_m=self.base_height_m,
+                        ),
+                        radius_m=self.wire_radius_m,
+                        material=self.material,
+                    )
+                )
+        if self.top_hat_enabled:
+            top = Point3D(x_m=0.0, y_m=0.0, z_m=self.top_height_m)
+            step = 360.0 / self.top_hat_wire_count
+            for index in range(self.top_hat_wire_count):
+                angle = math.radians(index * step)
+                wires.append(
+                    Wire(
+                        id=f"top-hat-{index + 1}",
+                        start=top,
+                        end=Point3D(
+                            x_m=self.top_hat_radius_m * math.cos(angle),
+                            y_m=self.top_hat_radius_m * math.sin(angle),
+                            z_m=self.top_height_m,
                         ),
                         radius_m=self.wire_radius_m,
                         material=self.material,
