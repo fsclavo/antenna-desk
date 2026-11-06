@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Persistent UI font-size presets (**Small**, **Normal**, **Large**) under
-  **Tools → Font Size**. Normal restores the system default; the choice is
+- Persistent UI font-size presets (**Small**, **Normal**, **Large**) in
+  **Edit → Preferences...**. Normal restores the system default; the choice is
   applied at startup. Standard widgets, custom-painted sketches, pattern views,
   chart axes and legends, and the start-page headline follow the preset.
   Exported reports keep their fixed typography.
