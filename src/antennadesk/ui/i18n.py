@@ -98,6 +98,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Language",
         Language.SPANISH: "Idioma",
     },
+    "preferences.language_system": {
+        Language.ENGLISH: "System",
+        Language.SPANISH: "Sistema",
+    },
+    "preferences.restore_defaults": {
+        Language.ENGLISH: "Restore Defaults",
+        Language.SPANISH: "Restaurar valores",
+    },
     "preferences.units": {
         Language.ENGLISH: "Units",
         Language.SPANISH: "Unidades",
@@ -108,13 +116,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "preferences.hint": {
         Language.ENGLISH: (
-            "Language, units, and font size apply after you accept. Project "
-            "files always store metric SI units."
+            "Language, units, and font size apply after you accept. System "
+            "follows the operating system language. Project files always store "
+            "metric SI units."
         ),
         Language.SPANISH: (
             "El idioma, las unidades y el tamaño de fuente se aplican al "
-            "aceptar. Los archivos de proyecto siempre guardan unidades SI "
-            "métricas."
+            "aceptar. Sistema sigue el idioma del sistema operativo. Los "
+            "archivos de proyecto siempre guardan unidades SI métricas."
         ),
     },
     "action.preferences": {
@@ -436,6 +445,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Acerca de AntennaDesk",
     },
     "action.simulate": {Language.ENGLISH: "Simulate", Language.SPANISH: "Simular"},
+    "action.ok": {Language.ENGLISH: "OK", Language.SPANISH: "Aceptar"},
     "action.cancel": {Language.ENGLISH: "Cancel", Language.SPANISH: "Cancelar"},
     "action.apply": {Language.ENGLISH: "Apply design", Language.SPANISH: "Aplicar diseño"},
     "action.apply.tooltip": {

@@ -89,6 +89,29 @@ def test_feed_line_dialog_uses_the_scaled_initial_size(qtbot: QtBot) -> None:
     assert dialog.height() == 312
 
 
+def test_main_window_renders_large_spanish(qtbot: QtBot) -> None:
+    controller = _controller()
+    controller.apply(FontSize.LARGE)
+    window = MainWindow(
+        JsonProjectRepository(),
+        None,
+        Translator(Language.SPANISH),
+        UnitSystem.METRIC,
+        preferences=InMemoryPreferencesStore(),
+        font_size_controller=controller,
+    )
+    qtbot.addWidget(window)
+    window.resize(1200, 800)
+    window.show()
+    qtbot.wait(20)
+
+    assert window.grab().isNull() is False
+    assert window._form_scroll.horizontalScrollBar().isVisible() is False
+
+    for form, scroll, _base_max_width in window._form_panels:
+        assert scroll.maximumWidth() >= form.minimumSizeHint().width() + 24
+
+
 def test_form_panels_widen_for_large_spanish_forms(qtbot: QtBot) -> None:
     controller = _controller()
     controller.apply(FontSize.LARGE)
@@ -105,6 +128,7 @@ def test_form_panels_widen_for_large_spanish_forms(qtbot: QtBot) -> None:
     for form, scroll, _base_max_width in window._form_panels:
         assert scroll.maximumWidth() >= form.minimumSizeHint().width() + 24
 
+    assert window._design_panel.minimumWidth() >= window._yagi_form.minimumSizeHint().width()
     assert window._yagi_scroll.maximumWidth() > 520
 
 

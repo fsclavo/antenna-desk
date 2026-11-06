@@ -226,8 +226,10 @@ from .preferences import (
     FontSize,
     FontSizeController,
     InMemoryPreferencesStore,
+    LanguagePreference,
     PreferencesStore,
     UiPreferences,
+    resolve_language,
 )
 from .report_pdf import write_report_pdf
 from .template_identity import catalog_key_for
@@ -267,12 +269,16 @@ class MainWindow(QMainWindow):
         *,
         preferences: PreferencesStore | None = None,
         font_size_controller: FontSizeController | None = None,
+        language_preference: LanguagePreference | None = None,
     ) -> None:
         super().__init__(parent)
         self._repository = repository
         self._solver = solver
         self._translator = translator
         self._unit_system = unit_system
+        self._language_preference = (
+            language_preference if language_preference is not None else LanguagePreference.SYSTEM
+        )
         self._preferences = preferences if preferences is not None else InMemoryPreferencesStore()
         if font_size_controller is None:
             app = QApplication.instance()
@@ -741,6 +747,8 @@ class MainWindow(QMainWindow):
         design_layout.addWidget(self._provenance_label)
         design_layout.addWidget(self._advanced_toggle)
         design_layout.addWidget(self._advanced_body)
+        self._design_panel = design_panel
+        self._update_form_panel_widths()
 
         self._geometry = GeometryView(self._translator, self._unit_system)
         self._geometry.setMinimumHeight(300)
@@ -796,7 +804,8 @@ class MainWindow(QMainWindow):
         main_splitter.addWidget(right_splitter)
         main_splitter.setStretchFactor(0, 0)
         main_splitter.setStretchFactor(1, 1)
-        main_splitter.setSizes([380, 900])
+        self._main_splitter = main_splitter
+        main_splitter.setSizes([self._preferred_form_panel_width(), 900])
 
         self._start_page = StartPage(self._translator, self)
         self._start_page.new_requested.connect(lambda: self.new_antenna())
@@ -5686,18 +5695,34 @@ class MainWindow(QMainWindow):
     def _current_preferences(self) -> UiPreferences:
         return UiPreferences(
             font_size=self._font_size_controller.size,
-            language=self._translator.language,
+            language=self._language_preference,
             unit_system=self._unit_system,
         )
 
     def _save_preferences(self) -> None:
         self._preferences.save(self._current_preferences())
 
+    def _preferred_form_panel_width(self) -> int:
+        widest = max(
+            form.minimumSizeHint().width() for form, _scroll, _base_max_width in self._form_panels
+        )
+        return max(380, min(680, widest + 24))
+
     def _update_form_panel_widths(self) -> None:
         for form, scroll, base_max_width in self._form_panels:
             needed = form.minimumSizeHint().width() + 24
             scroll.setMinimumWidth(340)
             scroll.setMaximumWidth(max(base_max_width, needed))
+        design_panel = getattr(self, "_design_panel", None)
+        if design_panel is not None:
+            required = self._preferred_form_panel_width()
+            design_panel.setMinimumWidth(required)
+            splitter = getattr(self, "_main_splitter", None)
+            if splitter is not None:
+                sizes = splitter.sizes()
+                total = sum(sizes)
+                if len(sizes) == 2 and total > required and sizes[0] < required:
+                    splitter.setSizes([required, total - required])
 
     def show_preferences(self) -> None:
         dialog = PreferencesDialog(
@@ -5709,7 +5734,8 @@ class MainWindow(QMainWindow):
             self._apply_preferences(dialog.preferences())
 
     def _apply_preferences(self, preferences: UiPreferences) -> None:
-        self._translator.set_language(preferences.language)
+        self._language_preference = preferences.language
+        self._translator.set_language(resolve_language(preferences.language))
         self._font_size_controller.apply(preferences.font_size)
         self._unit_system = preferences.unit_system
         self._apply_unit_system_to_forms(preferences.unit_system)
@@ -5718,6 +5744,7 @@ class MainWindow(QMainWindow):
         self._save_preferences()
 
     def _set_language(self, language: Language) -> None:
+        self._language_preference = LanguagePreference(language.value)
         self._translator.set_language(language)
         self.retranslate()
         self._update_form_panel_widths()

@@ -24,8 +24,10 @@ from antennadesk.ui.preferences import (
     FontSize,
     FontSizeController,
     InMemoryPreferencesStore,
+    LanguagePreference,
     QSettingsPreferencesStore,
     UiPreferences,
+    resolve_language,
 )
 from antennadesk.ui.units import UnitSystem
 
@@ -34,6 +36,15 @@ def _application() -> QApplication:
     app = QApplication.instance()
     assert isinstance(app, QApplication)
     return app
+
+
+def test_system_language_resolves_to_a_supported_language() -> None:
+    assert resolve_language(LanguagePreference.ENGLISH) is Language.ENGLISH
+    assert resolve_language(LanguagePreference.SPANISH) is Language.SPANISH
+    assert resolve_language(LanguagePreference.SYSTEM) in (
+        Language.ENGLISH,
+        Language.SPANISH,
+    )
 
 
 def test_font_sizes_are_relative_to_the_base_font() -> None:
@@ -84,7 +95,7 @@ def test_qsettings_store_round_trips_all_preferences(tmp_path: Path) -> None:
     store = QSettingsPreferencesStore(QSettings(str(path), QSettings.Format.IniFormat))
     preferences = UiPreferences(
         font_size=FontSize.LARGE,
-        language=Language.SPANISH,
+        language=LanguagePreference.SPANISH,
         unit_system=UnitSystem.IMPERIAL,
     )
 
@@ -103,12 +114,12 @@ def test_missing_preferences_use_the_startup_defaults(tmp_path: Path) -> None:
     )
 
     preferences = store.load(
-        default_language=Language.SPANISH,
+        default_language=LanguagePreference.SPANISH,
         default_unit_system=UnitSystem.IMPERIAL,
     )
 
     assert preferences.font_size is FontSize.MEDIUM
-    assert preferences.language is Language.SPANISH
+    assert preferences.language is LanguagePreference.SPANISH
     assert preferences.unit_system is UnitSystem.IMPERIAL
 
 
@@ -123,27 +134,27 @@ def test_invalid_stored_preferences_fall_back_to_defaults(tmp_path: Path) -> Non
     store = QSettingsPreferencesStore(settings)
 
     preferences = store.load(
-        default_language=Language.SPANISH,
+        default_language=LanguagePreference.SPANISH,
         default_unit_system=UnitSystem.IMPERIAL,
     )
 
     assert preferences.font_size is FontSize.MEDIUM
-    assert preferences.language is Language.SPANISH
+    assert preferences.language is LanguagePreference.SPANISH
     assert preferences.unit_system is UnitSystem.IMPERIAL
 
 
 def test_in_memory_store_round_trips_preferences() -> None:
     store = InMemoryPreferencesStore()
     defaults = store.load(
-        default_language=Language.SPANISH,
+        default_language=LanguagePreference.SPANISH,
         default_unit_system=UnitSystem.IMPERIAL,
     )
-    assert defaults.language is Language.SPANISH
+    assert defaults.language is LanguagePreference.SPANISH
     assert defaults.unit_system is UnitSystem.IMPERIAL
 
     preferences = UiPreferences(
         font_size=FontSize.SMALL,
-        language=Language.ENGLISH,
+        language=LanguagePreference.ENGLISH,
         unit_system=UnitSystem.METRIC,
     )
     store.save(preferences)
@@ -210,7 +221,7 @@ def test_language_and_units_are_persisted(window: MainWindow) -> None:
 
     saved = window._preferences.load()
 
-    assert saved.language is Language.SPANISH
+    assert saved.language is LanguagePreference.SPANISH
     assert saved.unit_system is UnitSystem.IMPERIAL
 
 
@@ -220,7 +231,7 @@ def test_preferences_action_applies_accepted_values(
 ) -> None:
     accepted = UiPreferences(
         font_size=FontSize.LARGE,
-        language=Language.SPANISH,
+        language=LanguagePreference.SPANISH,
         unit_system=UnitSystem.IMPERIAL,
     )
     monkeypatch.setattr(
@@ -233,6 +244,7 @@ def test_preferences_action_applies_accepted_values(
     window.show_preferences()
 
     assert window._translator.language is Language.SPANISH
+    assert window._language_preference is LanguagePreference.SPANISH
     assert window._font_size_controller.size is FontSize.LARGE
     assert window._unit_system is UnitSystem.IMPERIAL
     assert window._ocfd_form._length.suffix().strip() == "ft"
@@ -247,25 +259,41 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
         Translator(Language.ENGLISH),
         UiPreferences(
             font_size=FontSize.SMALL,
-            language=Language.SPANISH,
+            language=LanguagePreference.SPANISH,
             unit_system=UnitSystem.IMPERIAL,
         ),
     )
     qtbot.addWidget(dialog)
 
-    assert dialog._language.currentData() == Language.SPANISH.value
+    assert dialog._language.currentData() == LanguagePreference.SPANISH.value
     assert dialog._units.currentData() == UnitSystem.IMPERIAL.value
     assert dialog._font_size.currentData() == FontSize.SMALL.value
 
-    dialog._language.setCurrentIndex(dialog._language.findData(Language.ENGLISH.value))
+    dialog._language.setCurrentIndex(dialog._language.findData(LanguagePreference.ENGLISH.value))
     dialog._units.setCurrentIndex(dialog._units.findData(UnitSystem.METRIC.value))
     dialog._font_size.setCurrentIndex(dialog._font_size.findData(FontSize.LARGE.value))
 
     assert dialog.preferences() == UiPreferences(
         font_size=FontSize.LARGE,
-        language=Language.ENGLISH,
+        language=LanguagePreference.ENGLISH,
         unit_system=UnitSystem.METRIC,
     )
+
+
+def test_preferences_dialog_restores_defaults(qtbot: QtBot) -> None:
+    dialog = PreferencesDialog(
+        Translator(Language.ENGLISH),
+        UiPreferences(
+            font_size=FontSize.LARGE,
+            language=LanguagePreference.SPANISH,
+            unit_system=UnitSystem.IMPERIAL,
+        ),
+    )
+    qtbot.addWidget(dialog)
+
+    dialog._restore_defaults()
+
+    assert dialog.preferences() == UiPreferences()
 
 
 def test_preferences_action_retranslates_and_replaces_quick_menus(
@@ -298,13 +326,17 @@ def test_preferences_keys_exist_in_both_languages() -> None:
     keys = (
         "preferences.font_size",
         "preferences.language",
+        "preferences.language_system",
         "preferences.units",
+        "preferences.restore_defaults",
         "font_size.small",
         "font_size.medium",
         "font_size.large",
         "preferences.title",
         "preferences.hint",
         "action.preferences",
+        "action.ok",
+        "action.cancel",
     )
     for key in keys:
         assert Translator(Language.ENGLISH).t(key) != key

@@ -7,16 +7,19 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QLocale
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
 from .. import __version__
 from ..persistence.json_repository import JsonProjectRepository
 from ..simulation.nec2.solver import Nec2cSolver
-from .i18n import Language, Translator
+from .i18n import Translator
 from .main_window import MainWindow
-from .preferences import FontSizeController, QSettingsPreferencesStore
+from .preferences import (
+    FontSizeController,
+    QSettingsPreferencesStore,
+    resolve_language,
+)
 from .solver_locator import find_nec2c
 
 
@@ -41,17 +44,12 @@ def main() -> int:
     if icon_path.is_file():
         app.setWindowIcon(QIcon(str(icon_path)))
 
-    system_language = (
-        Language.SPANISH
-        if QLocale.system().language() == QLocale.Language.Spanish
-        else Language.ENGLISH
-    )
     preferences_store = QSettingsPreferencesStore()
-    preferences = preferences_store.load(default_language=system_language)
+    preferences = preferences_store.load()
     font_size_controller = FontSizeController(app.font())
     font_size_controller.apply(preferences.font_size)
 
-    translator = Translator(preferences.language)
+    translator = Translator(resolve_language(preferences.language))
     executable = find_nec2c()
     solver = Nec2cSolver(executable) if executable is not None else None
     window = MainWindow(
@@ -61,6 +59,7 @@ def main() -> int:
         preferences.unit_system,
         preferences=preferences_store,
         font_size_controller=font_size_controller,
+        language_preference=preferences.language,
     )
     window.show()
     return app.exec()

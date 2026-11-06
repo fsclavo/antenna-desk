@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol, TypeVar
 
-from PySide6.QtCore import QSettings
+from PySide6.QtCore import QLocale, QSettings
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
 
@@ -29,18 +29,38 @@ class FontSize(StrEnum):
     LARGE = "large"
 
 
+class LanguagePreference(StrEnum):
+    SYSTEM = "system"
+    ENGLISH = "en"
+    SPANISH = "es"
+
+
 _FONT_SCALE: dict[FontSize, float] = {
     FontSize.SMALL: 0.9,
     FontSize.MEDIUM: 1.0,
     FontSize.LARGE: 1.2,
 }
-_PreferenceEnum = TypeVar("_PreferenceEnum", FontSize, Language, UnitSystem)
+_PreferenceEnum = TypeVar(
+    "_PreferenceEnum",
+    FontSize,
+    LanguagePreference,
+    UnitSystem,
+)
+
+
+def resolve_language(preference: LanguagePreference) -> Language:
+    if preference is LanguagePreference.ENGLISH:
+        return Language.ENGLISH
+    if preference is LanguagePreference.SPANISH:
+        return Language.SPANISH
+    system = QLocale.system().language()
+    return Language.SPANISH if system == QLocale.Language.Spanish else Language.ENGLISH
 
 
 @dataclass(frozen=True, slots=True)
 class UiPreferences:
     font_size: FontSize = FontSize.MEDIUM
-    language: Language = Language.ENGLISH
+    language: LanguagePreference = LanguagePreference.SYSTEM
     unit_system: UnitSystem = UnitSystem.METRIC
 
 
@@ -50,7 +70,7 @@ class PreferencesStore(Protocol):
     def load(
         self,
         *,
-        default_language: Language = Language.ENGLISH,
+        default_language: LanguagePreference = LanguagePreference.SYSTEM,
         default_unit_system: UnitSystem = UnitSystem.METRIC,
     ) -> UiPreferences: ...
 
@@ -66,12 +86,16 @@ class QSettingsPreferencesStore:
     def load(
         self,
         *,
-        default_language: Language = Language.ENGLISH,
+        default_language: LanguagePreference = LanguagePreference.SYSTEM,
         default_unit_system: UnitSystem = UnitSystem.METRIC,
     ) -> UiPreferences:
         return UiPreferences(
             font_size=self._load_enum(FONT_SIZE_KEY, FontSize, FontSize.MEDIUM),
-            language=self._load_enum(LANGUAGE_KEY, Language, default_language),
+            language=self._load_enum(
+                LANGUAGE_KEY,
+                LanguagePreference,
+                default_language,
+            ),
             unit_system=self._load_enum(
                 UNIT_SYSTEM_KEY,
                 UnitSystem,
@@ -109,7 +133,7 @@ class InMemoryPreferencesStore:
     def load(
         self,
         *,
-        default_language: Language = Language.ENGLISH,
+        default_language: LanguagePreference = LanguagePreference.SYSTEM,
         default_unit_system: UnitSystem = UnitSystem.METRIC,
     ) -> UiPreferences:
         if self._preferences is not None:

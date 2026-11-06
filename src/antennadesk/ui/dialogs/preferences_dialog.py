@@ -15,8 +15,8 @@ from PySide6.QtWidgets import (
 )
 
 from ..fonts import scaled_dialog_size
-from ..i18n import Language, Translator
-from ..preferences import FontSize, UiPreferences
+from ..i18n import Translator
+from ..preferences import FontSize, LanguagePreference, UiPreferences
 from ..units import UnitSystem
 
 
@@ -36,8 +36,18 @@ class PreferencesDialog(QDialog):
         self.setSizeGripEnabled(True)
 
         self._language = QComboBox(self)
-        self._language.addItem(translator.t("action.english"), Language.ENGLISH.value)
-        self._language.addItem(translator.t("action.spanish"), Language.SPANISH.value)
+        self._language.addItem(
+            translator.t("preferences.language_system"),
+            LanguagePreference.SYSTEM.value,
+        )
+        self._language.addItem(
+            translator.t("action.english"),
+            LanguagePreference.ENGLISH.value,
+        )
+        self._language.addItem(
+            translator.t("action.spanish"),
+            LanguagePreference.SPANISH.value,
+        )
         self._select(self._language, preferences.language.value)
 
         self._units = QComboBox(self)
@@ -63,6 +73,15 @@ class PreferencesDialog(QDialog):
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
             parent=self,
         )
+        restore = buttons.addButton(
+            translator.t("preferences.restore_defaults"),
+            QDialogButtonBox.ButtonRole.ResetRole,
+        )
+        restore.clicked.connect(self._restore_defaults)
+        buttons.button(QDialogButtonBox.StandardButton.Ok).setText(translator.t("action.ok"))
+        buttons.button(QDialogButtonBox.StandardButton.Cancel).setText(
+            translator.t("action.cancel")
+        )
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
 
@@ -78,6 +97,11 @@ class PreferencesDialog(QDialog):
         if index >= 0:
             combo.setCurrentIndex(index)
 
+    def _restore_defaults(self) -> None:
+        self._select(self._language, LanguagePreference.SYSTEM.value)
+        self._select(self._units, UnitSystem.METRIC.value)
+        self._select(self._font_size, FontSize.MEDIUM.value)
+
     def preferences(self) -> UiPreferences:
         language = self._language.currentData()
         unit_system = self._units.currentData()
@@ -86,7 +110,11 @@ class PreferencesDialog(QDialog):
             font_size=(
                 FontSize(font_size) if isinstance(font_size, str) else self._initial.font_size
             ),
-            language=(Language(language) if isinstance(language, str) else self._initial.language),
+            language=(
+                LanguagePreference(language)
+                if isinstance(language, str)
+                else self._initial.language
+            ),
             unit_system=(
                 UnitSystem(unit_system)
                 if isinstance(unit_system, str)

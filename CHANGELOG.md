@@ -16,8 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Exported reports keep their fixed typography.
 - **Edit → Preferences...** now sets language, display units, and font size in
   one dialog. Language and units persist across restarts, and dialog initial
-  sizes follow the font preset. The redundant Language, Units, and Font Size
-  submenus were removed; Preferences is the single entry point.
+  sizes follow the font preset. The language selector includes **System** to
+  follow the operating system, and **Restore Defaults** returns to System,
+  metric units, and Normal font size. The redundant Language, Units, and Font
+  Size submenus were removed; Preferences is the single entry point.
 - Mutation testing now includes `dipole.py`: 240/304 mutants killed (79 %), and
   the 64 survivors are message-only. The run found and fixed a missing
   conductor-material assertion in `to_antenna()`.
@@ -277,6 +279,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Switching display units now converts every antenna-family editor and keeps
   its physical dimensions; previously only the dipole form and the sketch
   changed units. **Ctrl+,** opens the Preferences dialog.
+- The main editor panel now reserves enough width for the widest family form
+  at the active language and font preset, avoiding a horizontal scrollbar at
+  **Large**. The Preferences dialog uses translated OK/Cancel labels.
 - The Yagi editor now populates its driven-element selector when it starts from
   the default preset.
 - Three translation keys used by the UI were missing and rendered as raw keys:
