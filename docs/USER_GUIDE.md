@@ -948,9 +948,9 @@ Preferences are saved and applied at startup. **Normal** restores the system
 font. The font preset scales the standard widgets, the antenna sketch, the
 pattern views, the chart axes and legends, the start-page headline, and dialog
 initial sizes. Changing the language updates every antenna-family editor, and
-changing the units converts every editor without losing the physical
-dimensions. Exported reports keep their own fixed typography. The domain and
-project files always store canonical meters and hertz.
+changing the units converts every editor and generator dialog without losing
+the physical dimensions. Exported reports keep their own fixed typography. The
+domain and project files always store canonical meters and hertz.
 
 ## Current limitations
 

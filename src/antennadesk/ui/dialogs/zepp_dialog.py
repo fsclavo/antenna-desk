@@ -31,7 +31,15 @@ from ...domain.antennas.zepp import (
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..fonts import scaled_dialog_size
 from ..i18n import Translator
-from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from ..units import (
+    UnitSystem,
+    length_from_m,
+    length_to_m,
+    length_unit_key,
+    radius_from_m,
+    radius_to_m,
+)
+from ..widgets.form_units import apply_radius_units
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -97,10 +105,8 @@ class ZeppDialog(QDialog):
         self._azimuth.setSuffix("°")
 
         self._radius = QDoubleSpinBox(self)
-        self._radius.setRange(0.01, 1_000.0)
-        self._radius.setDecimals(3)
-        self._radius.setSuffix(" mm")
-        self._radius.setValue(1.0)
+        apply_radius_units(translator, unit_system, self._radius)
+        self._radius.setValue(radius_from_m(0.001, unit_system))
 
         self._material = QComboBox(self)
         for material in MATERIALS:
@@ -217,7 +223,7 @@ class ZeppDialog(QDialog):
         return length_to_m(self._spacing.value(), self._unit_system)
 
     def _radius_m(self) -> float:
-        return self._radius.value() / 1_000.0
+        return radius_to_m(self._radius.value(), self._unit_system)
 
     def _estimated_impedance(self) -> float | None:
         try:

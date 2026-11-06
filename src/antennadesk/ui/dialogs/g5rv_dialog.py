@@ -28,7 +28,15 @@ from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..fonts import scaled_dialog_size
 from ..i18n import Translator
-from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from ..units import (
+    UnitSystem,
+    length_from_m,
+    length_to_m,
+    length_unit_key,
+    radius_from_m,
+    radius_to_m,
+)
+from ..widgets.form_units import apply_radius_units
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -73,10 +81,8 @@ class G5RVDialog(QDialog):
         self._azimuth.setSuffix("°")
 
         self._radius = QDoubleSpinBox(self)
-        self._radius.setRange(0.01, 1_000.0)
-        self._radius.setDecimals(3)
-        self._radius.setSuffix(" mm")
-        self._radius.setValue(1.0)
+        apply_radius_units(translator, unit_system, self._radius)
+        self._radius.setValue(radius_from_m(0.001, unit_system))
 
         self._line_option = QComboBox(self)
         for index, _option in enumerate(G5RV_LINE_OPTIONS):
@@ -226,7 +232,7 @@ class G5RVDialog(QDialog):
             line_impedance_ohm=option.characteristic_impedance_ohm,
             line_length_m=option.length_m,
             line_velocity_factor=self._velocity.value(),
-            wire_radius_m=self._radius.value() / 1_000.0,
+            wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),
             ground=self._ground_model(),
         )

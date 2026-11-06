@@ -24,7 +24,15 @@ from ...domain.design.formulas import half_wave_length_m
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..fonts import scaled_dialog_size
 from ..i18n import Translator
-from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from ..units import (
+    UnitSystem,
+    length_from_m,
+    length_to_m,
+    length_unit_key,
+    radius_from_m,
+    radius_to_m,
+)
+from ..widgets.form_units import apply_radius_units
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -61,7 +69,7 @@ class DoubletDialog(QDialog):
             parameters.orientation if parameters is not None else DipoleOrientation.HORIZONTAL
         )
         initial_azimuth = parameters.azimuth_deg if parameters is not None else 0.0
-        initial_radius_mm = parameters.wire_radius_m * 1_000.0 if parameters is not None else 1.0
+        initial_radius_m = parameters.wire_radius_m if parameters is not None else 0.001
         initial_material = parameters.material if parameters is not None else COPPER
         initial_ground = (
             parameters.ground
@@ -115,10 +123,8 @@ class DoubletDialog(QDialog):
         self._azimuth.setValue(initial_azimuth)
 
         self._radius = QDoubleSpinBox(self)
-        self._radius.setRange(0.01, 1_000.0)
-        self._radius.setDecimals(3)
-        self._radius.setSuffix(" mm")
-        self._radius.setValue(initial_radius_mm)
+        apply_radius_units(translator, unit_system, self._radius)
+        self._radius.setValue(radius_from_m(initial_radius_m, unit_system))
 
         self._material = QComboBox(self)
         for material in MATERIALS:
@@ -284,7 +290,7 @@ class DoubletDialog(QDialog):
             height_m=length_to_m(self._height.value(), self._unit_system),
             orientation=self._selected_orientation(),
             azimuth_deg=self._azimuth.value(),
-            wire_radius_m=self._radius.value() / 1_000.0,
+            wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),
             ground=self._ground_model(),
         )

@@ -5315,6 +5315,7 @@ class MainWindow(QMainWindow):
             self._simulation_results,
             self,
             band_analyses=self._band_analysis_results,
+            unit_system=self._unit_system,
         )
         dialog.exec()
 

@@ -3713,7 +3713,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "custom.end_x": {Language.ENGLISH: "End X", Language.SPANISH: "Fin X"},
     "custom.end_y": {Language.ENGLISH: "End Y", Language.SPANISH: "Fin Y"},
     "custom.end_z": {Language.ENGLISH: "End Z", Language.SPANISH: "Fin Z"},
-    "custom.radius": {Language.ENGLISH: "Radius (mm)", Language.SPANISH: "Radio (mm)"},
+    "custom.radius": {
+        Language.ENGLISH: "Radius ({unit})",
+        Language.SPANISH: "Radio ({unit})",
+    },
     "custom.add_wire": {
         Language.ENGLISH: "Add wire",
         Language.SPANISH: "Agregar hilo",

@@ -38,6 +38,13 @@ from ...domain.simulation.result import FrequencyResult, SimulationResult
 from ..fonts import apply_plot_fonts, scaled_dialog_size
 from ..i18n import Translator
 from ..theme import theme_colors
+from ..units import (
+    UnitSystem,
+    diameter_from_m,
+    diameter_unit_key,
+    length_from_m,
+    length_unit_key,
+)
 
 
 class ComparisonDialog(QDialog):
@@ -49,12 +56,14 @@ class ComparisonDialog(QDialog):
         parent: QWidget | None = None,
         *,
         band_analyses: Mapping[UUID, BandAnalysisResult] | None = None,
+        unit_system: UnitSystem = UnitSystem.METRIC,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._project = project
         self._results = results
         self._band_analyses = band_analyses or {}
+        self._unit_system = unit_system
         self._colors = theme_colors(self.palette())
         self.setWindowTitle(translator.t("compare.title"))
         self.resize(*scaled_dialog_size(960, 780))
@@ -215,20 +224,26 @@ class ComparisonDialog(QDialog):
             else None
         )
         parameters = design.parameters
+        length_unit = t(length_unit_key(self._unit_system))
+        diameter_unit = t(diameter_unit_key(self._unit_system))
+
+        def length(value_m: float) -> str:
+            return f"{length_from_m(value_m, self._unit_system):.3f} {length_unit}"
+
         if isinstance(parameters, FoldedDipoleParameters):
-            primary = f"{parameters.total_length_m:.3f} m"
-            secondary = f"{parameters.spacing_m:.3f} m"
+            primary = length(parameters.total_length_m)
+            secondary = length(parameters.spacing_m)
         elif isinstance(parameters, LoopParameters):
-            primary = f"{parameters.circumference_m:.3f} m"
+            primary = length(parameters.circumference_m)
             secondary = str(parameters.sides)
         elif isinstance(parameters, DipoleParameters):
-            primary = f"{parameters.total_length_m:.3f} m"
+            primary = length(parameters.total_length_m)
             secondary = "—"
         elif isinstance(parameters, TrapDipoleParameters):
-            primary = f"{parameters.total_length_m:.3f} m"
+            primary = length(parameters.total_length_m)
             secondary = f"{parameters.trap_frequency_hz / 1e6:.3f} MHz"
         elif isinstance(parameters, T2FDParameters):
-            primary = f"{parameters.length_m:.3f} m"
+            primary = length(parameters.length_m)
             secondary = f"{parameters.termination_resistance_ohm:g} Ω"
         else:
             primary = "—"
@@ -244,11 +259,18 @@ class ComparisonDialog(QDialog):
             (t("field.frequency"), f"{parameters.frequency_hz / 1e6:.6f} MHz"),
             (t("field.primary_dimension"), primary),
             (t("field.secondary_dimension"), secondary),
-            (t("field.height"), f"{height_m:.3f} m" if height_m is not None else "—"),
+            (
+                t("field.height"),
+                length(height_m) if height_m is not None else "—",
+            ),
             (t("field.azimuth"), f"{azimuth_deg:.1f}°" if azimuth_deg is not None else "—"),
             (
                 t("field.diameter"),
-                f"{wire_radius_m * 2000.0:.3f} mm" if wire_radius_m is not None else "—",
+                (
+                    f"{diameter_from_m(wire_radius_m * 2.0, self._unit_system):.4f} {diameter_unit}"
+                    if wire_radius_m is not None
+                    else "—"
+                ),
             ),
             (t("table.resistance"), f"{frequency.impedance_ohm.real:.3f}" if frequency else "—"),
             (t("table.reactance"), f"{frequency.impedance_ohm.imag:+.3f}" if frequency else "—"),

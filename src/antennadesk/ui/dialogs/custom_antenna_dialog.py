@@ -34,7 +34,15 @@ from ...domain.common.validation import Diagnostic
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..fonts import scaled_dialog_size
 from ..i18n import Translator
-from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from ..units import (
+    UnitSystem,
+    length_from_m,
+    length_to_m,
+    length_unit_key,
+    radius_from_m,
+    radius_to_m,
+    radius_unit_key,
+)
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -106,7 +114,10 @@ class CustomAntennaDialog(QDialog):
                 translator.t("custom.end_x"),
                 translator.t("custom.end_y"),
                 translator.t("custom.end_z"),
-                translator.t("custom.radius"),
+                translator.t(
+                    "custom.radius",
+                    unit=translator.t(radius_unit_key(unit_system)),
+                ),
             ]
         )
         self._table.verticalHeader().setVisible(False)
@@ -209,10 +220,14 @@ class CustomAntennaDialog(QDialog):
             length_from_m(wire.end.x_m, self._unit_system),
             length_from_m(wire.end.y_m, self._unit_system),
             length_from_m(wire.end.z_m, self._unit_system),
-            wire.radius_m * 1000.0,
+            radius_from_m(wire.radius_m, self._unit_system),
         ]
         for column, value in enumerate(values):
-            text = f"{value:.3f}" if isinstance(value, float) else str(value)
+            if isinstance(value, float):
+                decimals = 4 if column == 7 else 3
+                text = f"{value:.{decimals}f}"
+            else:
+                text = str(value)
             self._table.setItem(row, column, QTableWidgetItem(text))
 
     def _add_wire(self) -> None:
@@ -290,7 +305,7 @@ class CustomAntennaDialog(QDialog):
             id=item(0),
             start=Point3D(coordinate(1), coordinate(2), coordinate(3)),
             end=Point3D(coordinate(4), coordinate(5), coordinate(6)),
-            radius_m=float(item(7)) / 1000.0,
+            radius_m=radius_to_m(float(item(7)), self._unit_system),
             material=self._selected_material(),
         )
 
