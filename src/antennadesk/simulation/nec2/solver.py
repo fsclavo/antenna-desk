@@ -143,6 +143,23 @@ class Nec2cSolver:
                         field="geometry",
                     )
                 )
+                if ground.kind is GroundKind.FINITE:
+                    diagnostics.append(
+                        Diagnostic(
+                            code="geometry.ground_mounted_wires",
+                            severity=Severity.WARNING,
+                            message=(
+                                "conductors at or near ground level (for example, "
+                                "ground-mounted radials) are approximated by a "
+                                f"{GROUND_CLEARANCE_M:.3f} m NEC clearance. NEC-2 does "
+                                "not model buried or soil-contact wires, so impedance "
+                                "and gain may be numerically unreliable. Use a "
+                                "sensitivity study and measurement, or raise the "
+                                "radial plane."
+                            ),
+                            field="geometry",
+                        )
+                    )
 
         if (
             model.environment.ground.kind is not GroundKind.FREE_SPACE

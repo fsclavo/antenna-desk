@@ -292,6 +292,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Finite-ground simulations with conductors at or near ground level now add a
+  warning that the 1 cm NEC clearance is not a buried-wire model. The warning
+  explains that impedance and gain can be numerically unreliable and points to
+  a sensitivity study, measurement, or a higher radial plane.
 - Vertical top-hat parameters are now persisted in schema version 8. Version 7
   projects that already contain `top-hat-*` wires migrate the radius and wire
   count from the saved geometry instead of failing the consistency check.

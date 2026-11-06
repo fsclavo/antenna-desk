@@ -250,6 +250,9 @@ def test_freshly_estimated_ground_mounted_vertical_completes(
     assert result.status is SimulationStatus.COMPLETED
     assert result.frequencies[0].impedance_ohm.real > 0.0
     assert any(diagnostic.code == "geometry.ground_clearance" for diagnostic in result.diagnostics)
+    assert any(
+        diagnostic.code == "geometry.ground_mounted_wires" for diagnostic in result.diagnostics
+    )
 
 
 def test_loaded_vertical_with_a_series_coil_solves(solver: Nec2cSolver) -> None:

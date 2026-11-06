@@ -519,18 +519,29 @@ when the project is reopened.
 
 ## Create a vertical
 
-Ground-mounted radials are modeled **1 cm above the ground plane** so NEC-2 can
-evaluate them. The canonical design keeps the base height you enter; the small
-clearance is applied only to the solver deck and is reported as an
+Ground-mounted radials are approximated **1 cm above the ground plane** so
+NEC-2 can evaluate them. The canonical design keeps the base height you enter;
+the small clearance is applied only to the solver deck and is reported as an
 informational diagnostic. Without it, `nec2c` rejects radials lying exactly on
 the ground with exit code 255.
 
+That clearance is a numerical workaround, not a buried-wire or soil-contact
+model. On finite ground the solver adds a warning when a conductor is at or
+near ground level: impedance and gain can be numerically unreliable, and a
+positive input resistance does not prove that the result is converged. Use
+on-ground results for relative trends, run a sensitivity study over radial
+count, radial length, and soil parameters, and validate the final design with a
+feedpoint measurement. Do not tune a loading coil around a single on-ground
+run.
+
 Choose **File → New Antenna... → Vertical + radials** to generate a first-class
-vertical radiator with an optional radial plane. Set the radiator height, base height,
-radial count, radial length, first radial angle, wire radius, material, and
-ground. The base height is also the radial-plane height. The default is 0.25 m;
-over finite ground keep at least this height to avoid numerical instability very
-close to the soil.
+vertical radiator with an optional radial plane. Set the radiator height, base
+height, radial count, radial length, first radial angle, wire radius, material,
+and ground. The base height is also the radial-plane height. The default is
+0.25 m. For a numerically stable model over finite ground, raise the radial
+plane to about 0.75–1 m for 40 m. A 0.25 m plane can still produce invalid
+negative resistance depending on radial length and automatic segmentation; the
+solver reports that case as an error.
 
 The **Loading coil** group adds a series coil at a selected height above the
 radiator base. The model is an ideal series inductor with optional series

@@ -4465,6 +4465,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "NEC pueda evaluar los hilos montados sobre el suelo."
         ),
     },
+    "diagnostic.geometry.ground_mounted_wires": {
+        Language.ENGLISH: (
+            "Conductors at or near ground level (for example, ground-mounted "
+            "radials) use a 1 cm NEC clearance. NEC-2 does not model buried or "
+            "soil-contact wires, so impedance and gain may be numerically "
+            "unreliable. Use a sensitivity study and measurement, or raise the "
+            "radial plane."
+        ),
+        Language.SPANISH: (
+            "Los conductores al nivel del suelo o muy cerca de él (por ejemplo, "
+            "radiales apoyados) usan un despeje NEC de 1 cm. NEC-2 no modela "
+            "hilos enterrados ni en contacto con el suelo, así que la impedancia "
+            "y la ganancia pueden no ser confiables numéricamente. Usá un estudio "
+            "de sensibilidad y medición, o elevá el plano de radiales."
+        ),
+    },
     "diagnostic.geometry.below_ground": {
         Language.ENGLISH: (
             "The model has wires below the ground plane. Raise the geometry above z = 0."
