@@ -174,8 +174,9 @@ Scope:
   and status. The top action bar stays Apply/Estimate/Optimize.
 - Band/batch metadata on simulation runs, schema version 4 migration (extended
   by version 5 with OCFD/custom transformer fields, version 6 with persisted
-  analysis band plans, and version 7 with Yagi/Moxon polarization), and
-  band-aware CSV, HTML, PDF, and comparison summaries.
+  analysis band plans, version 7 with Yagi/Moxon polarization, and version 8
+  with vertical top-hat fields), and band-aware CSV, HTML, PDF, and comparison
+  summaries.
 - Deferred: a segmented frequency plan in one NEC deck, only if measurements
   show that per-band runs are too slow or too large.
 

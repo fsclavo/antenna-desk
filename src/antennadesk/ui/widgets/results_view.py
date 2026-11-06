@@ -978,7 +978,12 @@ class ResultsView(QWidget):
         frequency = self._selected_pattern_frequency()
         if frequency is None:
             self._pattern_cursor.clear()
-            self._pattern_plot.setTitle(self._translator.t("pattern.none"), color=self._colors.text)
+            title = (
+                self._translator.t("pattern.negative_resistance")
+                if any(item.impedance_ohm.real <= 0.0 for item in self._result.frequencies)
+                else self._translator.t("pattern.none")
+            )
+            self._pattern_plot.setTitle(title, color=self._colors.text)
             self._polar_pattern.set_points(())
             self._pattern_3d.set_points(())
             return
@@ -988,10 +993,12 @@ class ResultsView(QWidget):
         offset = pattern_gain_offset_db(frequency, metric)
         if offset is None:
             self._pattern_cursor.clear()
-            self._pattern_plot.setTitle(
-                self._translator.t("pattern.metric_unavailable", metric=metric_label),
-                color=self._colors.text,
+            title = (
+                self._translator.t("pattern.negative_resistance")
+                if frequency.impedance_ohm.real <= 0.0
+                else self._translator.t("pattern.metric_unavailable", metric=metric_label)
             )
+            self._pattern_plot.setTitle(title, color=self._colors.text)
             self._polar_pattern.set_points(())
             self._pattern_3d.set_points(())
             return
@@ -1012,7 +1019,12 @@ class ResultsView(QWidget):
             )
         if not points:
             self._pattern_cursor.clear()
-            self._pattern_plot.setTitle(self._translator.t("pattern.none"), color=self._colors.text)
+            title = (
+                self._translator.t("pattern.negative_resistance")
+                if frequency.impedance_ohm.real <= 0.0
+                else self._translator.t("pattern.none")
+            )
+            self._pattern_plot.setTitle(title, color=self._colors.text)
             self._polar_pattern.set_points(())
             self._pattern_3d.set_points(())
             return

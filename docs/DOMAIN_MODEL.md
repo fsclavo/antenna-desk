@@ -346,7 +346,7 @@ Plain JSON files from older versions are still accepted. The envelope is:
 ```json
 {
   "format": "antennadesk-project",
-  "schema_version": 7,
+  "schema_version": 8,
   "project": {
     "id": "11111111-1111-4111-8111-111111111111",
     "name": "40 m dipole",
@@ -411,11 +411,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 7.
+the application writes version 8.
 
 ## Schema policy
 
-- Current version: `7`.
+- Current version: `8`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -431,6 +431,9 @@ the application writes version 7.
 - Version 7 adds the Yagi and Moxon `polarization` field. Existing arrays load
   as `horizontal`; vertical arrays add ground-clearance validation and
   orientation-aware geometry.
+- Version 8 adds the vertical top-hat fields. Existing vertical designs load
+  with the top hat disabled; the migration infers the hat radius and wire count
+  from any saved `top-hat-*` wires.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -459,7 +462,7 @@ the application writes version 7.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 7.
+- Simulation results are persisted as immutable runs in schema version 8.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are

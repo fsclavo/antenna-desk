@@ -185,6 +185,88 @@ def test_v6_migration_adds_horizontal_polarization_to_arrays() -> None:
     assert "polarization" not in document["project"]["designs"][0]["parameters"]
 
 
+def test_v7_migration_adds_top_hat_fields_to_verticals() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 7,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "vertical",
+                    "parameters": {},
+                    "antenna": {
+                        "wires": [
+                            {
+                                "id": "top-hat-1",
+                                "start": {"x_m": 0.0, "y_m": 0.0, "z_m": 9.0},
+                                "end": {"x_m": 0.5, "y_m": 0.0, "z_m": 9.0},
+                            },
+                            {
+                                "id": "top-hat-2",
+                                "start": {"x_m": 0.0, "y_m": 0.0, "z_m": 9.0},
+                                "end": {"x_m": 0.0, "y_m": 0.5, "z_m": 9.0},
+                            },
+                        ]
+                    },
+                },
+                {
+                    "antenna_type": "vertical",
+                    "parameters": {},
+                    "antenna": {"wires": []},
+                },
+                {
+                    "antenna_type": "wire_dipole",
+                    "parameters": {},
+                    "antenna": {"wires": []},
+                },
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    first = migrated["project"]["designs"][0]["parameters"]
+    assert first["top_hat_enabled"] is True
+    assert first["top_hat_wire_count"] == 2
+    assert first["top_hat_radius_m"] == pytest.approx(0.5)
+    second = migrated["project"]["designs"][1]["parameters"]
+    assert second["top_hat_enabled"] is False
+    assert second["top_hat_wire_count"] == 0
+    assert second["top_hat_radius_m"] == 0.0
+    assert "top_hat_enabled" not in migrated["project"]["designs"][2]["parameters"]
+    assert "top_hat_enabled" not in document["project"]["designs"][0]["parameters"]
+
+
+def test_v7_migration_marks_negative_resistance_runs() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 7,
+        "project": {
+            "designs": [],
+            "simulation_runs": [
+                {
+                    "result": {
+                        "status": "completed",
+                        "frequencies": [
+                            {"impedance_real_ohm": -10.0},
+                            {"impedance_real_ohm": -5.0},
+                        ],
+                        "diagnostics": [],
+                    }
+                }
+            ],
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    result = migrated["project"]["simulation_runs"][0]["result"]
+    assert result["status"] == "error"
+    assert result["diagnostics"][0]["code"] == "normalization.negative_resistance"
+    assert result["diagnostics"][0]["severity"] == "error"
+
+
 def test_v4_migration_adds_optional_transformer_ratios() -> None:
     document = {
         "format": "antennadesk-project",

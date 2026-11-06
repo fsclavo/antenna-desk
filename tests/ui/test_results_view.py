@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import itertools
 import math
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -68,6 +69,22 @@ def test_results_view_shows_currents_and_resonance(qtbot: QtBot) -> None:
     view._currents_cursor.show_at_x(2.0)
     assert "segment 2" in view._currents_cursor._label.text()
     assert "0.2000 A" in view._currents_cursor._label.text()
+
+
+def test_results_view_reports_negative_resistance_instead_of_an_empty_pattern(
+    qtbot: QtBot,
+) -> None:
+    result = _make_result()
+    frequencies = tuple(
+        replace(frequency, impedance_ohm=complex(-10.0, 20.0)) for frequency in result.frequencies
+    )
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+
+    view.set_result(replace(result, frequencies=frequencies))
+
+    expected = Translator(Language.ENGLISH).t("pattern.negative_resistance")
+    assert view._pattern_plot.plotItem.titleLabel.text == expected
 
 
 def test_results_view_localizes_known_diagnostics(qtbot: QtBot) -> None:

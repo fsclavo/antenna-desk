@@ -107,6 +107,7 @@ def normalize_nec2_result(
             )
         )
     frequency_results: list[FrequencyResult] = []
+    negative_resistance_hz: list[float] = []
     main_count = spec.frequency_plan.count
     parsed_main = parsed.frequencies[:main_count]
     parsed_patterns = parsed.frequencies[main_count:] if spec.pattern_frequencies_hz else ()
@@ -158,6 +159,9 @@ def normalize_nec2_result(
                 )
             )
             continue
+
+        if input_parameters.impedance_ohm.real <= 0.0:
+            negative_resistance_hz.append(parsed_frequency.frequency_hz)
 
         currents = tuple(
             CurrentSample(
@@ -233,6 +237,26 @@ def normalize_nec2_result(
             )
         )
 
+    if negative_resistance_hz:
+        all_negative = len(negative_resistance_hz) == len(frequency_results)
+        first = negative_resistance_hz[0] / 1e6
+        last = negative_resistance_hz[-1] / 1e6
+        range_text = (
+            f"{first:g} MHz" if len(negative_resistance_hz) == 1 else f"{first:g}-{last:g} MHz"
+        )
+        problems.append(
+            Diagnostic(
+                code="normalization.negative_resistance",
+                severity=(Severity.ERROR if all_negative else Severity.WARNING),
+                message=(
+                    f"negative input resistance at {range_text} ({len(negative_resistance_hz)} "
+                    "frequency/frequencies); the passive antenna model is invalid. "
+                    "Check the radial height and ground model; far-field gains are unavailable."
+                ),
+                field="impedance",
+            )
+        )
+
     if spec.pattern_frequencies_hz:
         expected_patterns = len(spec.pattern_frequencies_hz)
         if len(pattern_by_main_index) < expected_patterns and len(frequency_results) >= main_count:
@@ -252,6 +276,10 @@ def normalize_nec2_result(
     if not frequency_results:
         status = SimulationStatus.ERROR
     elif len(frequency_results) < main_count:
+        status = SimulationStatus.PARTIAL
+    elif negative_resistance_hz and len(negative_resistance_hz) == len(frequency_results):
+        status = SimulationStatus.ERROR
+    elif negative_resistance_hz:
         status = SimulationStatus.PARTIAL
     else:
         status = SimulationStatus.COMPLETED

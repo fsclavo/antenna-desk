@@ -292,6 +292,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Vertical top-hat parameters are now persisted in schema version 8. Version 7
+  projects that already contain `top-hat-*` wires migrate the radius and wire
+  count from the saved geometry instead of failing the consistency check.
+- Simulations with negative input resistance are no longer marked completed
+  without gains. They report a diagnostic explaining that the passive model is
+  invalid and that the radial height or ground model must be corrected; the
+  pattern views no longer appear silently empty.
 - Switching the language now retranslates every antenna-family editor, not only
   the dipole form. The Preferences dialog applies the change consistently to
   all open forms.

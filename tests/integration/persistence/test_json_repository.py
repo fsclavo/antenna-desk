@@ -55,6 +55,45 @@ def test_round_trip(
     assert loaded == sample_project
 
 
+def test_round_trip_preserves_vertical_top_hat(
+    repository: JsonProjectRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    from uuid import uuid4
+
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+    from antennadesk.domain.projects.project import DesignVariant
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=9.0,
+        base_height_m=0.25,
+        radial_count=14,
+        radial_length_m=12.863,
+        loading_coil_enabled=True,
+        loading_coil_inductance_h=10e-6,
+        top_hat_enabled=True,
+        top_hat_radius_m=0.5,
+        top_hat_wire_count=4,
+    )
+    design = DesignVariant(
+        id=uuid4(),
+        name="Vertical",
+        antenna_type="vertical",
+        parameters=parameters,
+        antenna=parameters.to_antenna(),
+    )
+    project = replace(sample_project, designs=(design,))
+    path = tmp_path / "vertical.antennadesk"
+
+    repository.save(project, path)
+    loaded = repository.load(path)
+
+    assert loaded.designs[0].parameters == parameters
+    assert loaded.designs[0].antenna == design.antenna
+
+
 def test_round_trip_preserves_design_band_plan(
     repository: JsonProjectRepository,
     sample_project: Project,

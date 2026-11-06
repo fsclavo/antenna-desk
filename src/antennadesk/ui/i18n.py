@@ -1926,6 +1926,15 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "No far-field pattern available.",
         Language.SPANISH: "No hay patrón de campo lejano disponible.",
     },
+    "pattern.negative_resistance": {
+        Language.ENGLISH: (
+            "No pattern: negative input resistance. Check the radial height and ground model."
+        ),
+        Language.SPANISH: (
+            "Sin patrón: resistencia de entrada negativa. Revisá la altura de los "
+            "radiales y el modelo de suelo."
+        ),
+    },
     "pattern.polar": {
         Language.ENGLISH: "Elevation lobes",
         Language.SPANISH: "Lóbulos de elevación",
@@ -4387,6 +4396,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "diagnostic.normalization.impedance_missing": {
         Language.ENGLISH: "The solver output has no impedance data.",
         Language.SPANISH: "La salida del solver no tiene datos de impedancia.",
+    },
+    "diagnostic.normalization.negative_resistance": {
+        Language.ENGLISH: (
+            "Negative input resistance: the passive antenna model is invalid. "
+            "Check the radial height and ground model; far-field gains are unavailable."
+        ),
+        Language.SPANISH: (
+            "Resistencia de entrada negativa: el modelo pasivo de la antena no es "
+            "válido. Revisá la altura de los radiales y el modelo de suelo; las "
+            "ganancias de campo lejano no están disponibles."
+        ),
     },
     "diagnostic.project.design.duplicate_id": {
         Language.ENGLISH: "Two designs use the same identifier.",

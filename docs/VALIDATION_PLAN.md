@@ -376,7 +376,8 @@ Phase 6 adds tests for:
   parameter types; schema version 5 adds optional band/batch metadata and
   OCFD/custom feed-transformer ratios; version 6 adds optional per-design
   analysis band plans; version 7 adds Yagi/Moxon horizontal-or-vertical
-  polarization, with existing arrays migrated as horizontal.
+  polarization, with existing arrays migrated as horizontal; version 8 adds
+  vertical top-hat fields and infers them from saved top-hat wires.
 - Yagi and Moxon vertical polarization: geometry, azimuth, ground-clearance
   validation, scene contracts for both views, persistence round trips, and a
   free-space NEC equivalence check against the horizontal design rotated around

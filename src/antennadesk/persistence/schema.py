@@ -294,6 +294,9 @@ class VerticalParametersPayload(StrictModel):
     loading_coil_offset_m: float = Field(default=0.0, ge=0.0)
     loading_coil_inductance_h: float = Field(default=0.0, ge=0.0)
     loading_coil_resistance_ohm: float = Field(default=0.0, ge=0.0)
+    top_hat_enabled: bool = False
+    top_hat_radius_m: float = Field(default=0.0, ge=0.0)
+    top_hat_wire_count: int = Field(default=0, ge=0, le=32)
 
 
 class EndFedParametersPayload(StrictModel):
@@ -944,6 +947,9 @@ def _vertical_parameters_from_domain(
         loading_coil_offset_m=value.loading_coil_offset_m,
         loading_coil_inductance_h=value.loading_coil_inductance_h,
         loading_coil_resistance_ohm=value.loading_coil_resistance_ohm,
+        top_hat_enabled=value.top_hat_enabled,
+        top_hat_radius_m=value.top_hat_radius_m,
+        top_hat_wire_count=value.top_hat_wire_count,
     )
 
 
@@ -1625,6 +1631,9 @@ def _vertical_parameters_to_domain(value: VerticalParametersPayload) -> Vertical
         loading_coil_offset_m=value.loading_coil_offset_m,
         loading_coil_inductance_h=value.loading_coil_inductance_h,
         loading_coil_resistance_ohm=value.loading_coil_resistance_ohm,
+        top_hat_enabled=value.top_hat_enabled,
+        top_hat_radius_m=value.top_hat_radius_m,
+        top_hat_wire_count=value.top_hat_wire_count,
     )
 
 

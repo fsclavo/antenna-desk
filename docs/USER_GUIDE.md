@@ -554,6 +554,12 @@ loaded-vertical example. The feed is at the base of the radiator, so the usual
 delta-gap warning can appear. The design panel keeps the height, base, radial,
 and coil fields editable; use **Edit Custom Wires...** for raw coordinates.
 
+If a simulation reports **negative input resistance**, the passive model is
+numerically invalid and the far-field gains are discarded. Raise the base and
+radial plane (about 0.75–1 m for 40 m is a safer starting point), or use a
+ground model that matches the installation, then simulate again. Do not tune the
+coil around a negative resistance: the result has no physical meaning.
+
 ## Create a loaded vertical / mobile whip
 
 Choose **File → New Antenna... → Loaded vertical / mobile whip** for a short
