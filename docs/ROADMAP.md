@@ -194,7 +194,7 @@ Acceptance criteria:
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
-| P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, and `zepp` promoted to B; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
+| P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, and `zepp` promoted to B. The remaining five C templates were reviewed on 2026-11-06; no safe promotion without a new preset/model; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
 | P1 | Fan dipole V-angle calibration and angle optimization | B | investigated; angle optimizer deferred |
 | P1 | Optional ideal transformer/4:1 balun for OCFD | B | done |
 | P1 | Multiband batch engine and per-family band defaults (M6) | B | done |

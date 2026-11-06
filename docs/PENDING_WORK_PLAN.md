@@ -122,6 +122,11 @@ Completed follow-ups:
    - explicit tolerance per metric.
 4. Keep unverifiable templates labeled experimental.
 5. Do not invent values or copy numbers from another geometry.
+6. **Remaining C audit complete (2026-11-06):** reviewed
+   `loaded_vertical`, `ringo`, `fan_dipole`, `random_wire`, and `custom`.
+   No promotion was safe with the current models; see
+   [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md). The `loaded_vertical` and `ringo`
+   cases need a new preset or model coverage before they can move to B.
 
 ## Phase 6 — Deferred and blocked work
 

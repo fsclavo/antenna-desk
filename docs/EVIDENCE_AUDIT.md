@@ -57,6 +57,37 @@ pattern accuracy. The limitations remain explicit in the evidence registry.
 | `ringo` | The simplified radiator and matching ring are an application preset, not a published commercial model. | Manufacturer data or an independent measurement. |
 | `custom` | User-defined geometry has no fixed reference. | Imports and diagnostics only; no accuracy claim. |
 
+## Follow-up review of the remaining level C templates (2026-11-06)
+
+The five remaining level C templates were reviewed for a possible promotion.
+No template was promoted: the available sources either describe a different
+geometry or depend on installation details that the current model cannot
+represent. This is a deliberate decision, not a missing citation.
+
+| Template | Sources considered | Why it remains C |
+|---|---|---|
+| `loaded_vertical` | K7MEM, *Short Loaded Vertical* (citing ARRL Antenna Book, 17th ed., pp. 16-5 to 16-11): a 102 in whip at 14.1 MHz needs a 4.511 µH loading coil. W8JI, *Mobile and loaded antenna*: measured 25.8 + j0 Ω for a 160 m mobile antenna with a top hat and vehicle ground. | The published examples include a top hat, vehicle ground, and coil Q that the ideal series-coil model does not represent. A universal loaded-vertical rule would be an invented generalization. |
+| `ringo` | Cushcraft AR-2 Ringo: 1.2 m height and 12.7 cm ring diameter, 135–160 MHz. Cushcraft AR-6 Ringo: 3.1 m height and 33 cm ring diameter, 50–54 MHz. | AntennaDesk's estimator is a simplified 0.725λ application preset, not the commercial half-wave Ringo geometry. Comparing the two would mix different antennas. |
+| `fan_dipole` | No source found that provides a universal coupled-fan correction. Mutual coupling depends on element spacing, angle, height, and ground. | A scalar length or angle correction would hide the interaction and would not be a traceable reference for the generated geometry. |
+| `random_wire` | No universal reference; performance depends on the tuner, counterpoise, and installation. | The template is intentionally non-resonant and tuner-assisted. No general numeric claim is possible. |
+| `custom` | User-defined geometry has no fixed reference. | Imports and diagnostics are structural; any accuracy claim would depend on the imported model. |
+
+The detailed sources are:
+
+- K7MEM, “Short Loaded Vertical”, <https://k7mem.com/Ant_Loaded_Vertical.html>
+- W8JI, “Mobile and loaded antenna”,
+  <https://www.w8ji.com/mobile_and_loaded_antenna.htm>
+- Universal Radio, Cushcraft AR2 Ringo specifications,
+  <https://www.universal-radio.com/catalog/hamants/0633.html>
+- Universal Radio, Cushcraft AR6 Ringo specifications,
+  <https://www.universal-radio.com/catalog/hamants/0634.html> (10.1 ft height,
+  13 in ring diameter, 50–54 MHz).
+
+The next evidence step for `loaded_vertical` or `ringo` would require a new
+preset that exactly reproduces a published geometry and a model that includes
+the missing top hat, coil Q, or commercial matching ring. Until then, both keep
+their visible experimental warning.
+
 ## Rules for the next audit
 
 1. Prefer a named source that specifies the geometry and the measured metric.

@@ -184,6 +184,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Reviewed the five remaining level C templates for Phase 5. No template was
+  promoted: the published loaded-vertical and Ringo sources describe different
+  geometries or installation details than the current models. The review,
+  sources, and model gaps are recorded in
+  [`docs/EVIDENCE_AUDIT.md`](docs/EVIDENCE_AUDIT.md).
 - Audited the experimental templates in
   [`docs/EVIDENCE_AUDIT.md`](docs/EVIDENCE_AUDIT.md). The delta loop, vertical,
   and inverted-V generators moved from evidence level C to B after checking
