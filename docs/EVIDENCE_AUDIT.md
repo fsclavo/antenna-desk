@@ -89,9 +89,9 @@ The detailed sources are:
 The next evidence step for `ringo` would require a model that reproduces the
 commercial matching ring; the AR-6 preset is a geometry starting point only.
 The loaded-vertical example now covers only the published 102 in whip. A
-capacitive top hat is modeled as horizontal wires, but coil Q, vehicle ground,
-and mast effects remain outside the model. The four remaining C templates keep
-their visible experimental warning.
+capacitive top hat is modeled as horizontal wires, and coil Q is exposed as an
+editor convenience, but vehicle ground and mast effects remain outside the
+model. The four remaining C templates keep their visible experimental warning.
 
 ## Rules for the next audit
 

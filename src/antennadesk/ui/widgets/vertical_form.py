@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+import math
+
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -140,6 +142,11 @@ class VerticalForm(QWidget):
         self._coil_resistance.setRange(0.0, 10_000.0)
         self._coil_resistance.setDecimals(3)
         self._coil_resistance.setSuffix(" Ω")
+        self._coil_q = QDoubleSpinBox(self._coil_group)
+        self._coil_q.setRange(0.0, 100_000.0)
+        self._coil_q.setDecimals(1)
+        self._coil_q.setValue(0.0)
+        self._coil_q.setToolTip(translator.t("vertical.loading_coil_q_hint"))
         self._coil_summary = QLabel(self._coil_group)
         self._coil_summary.setWordWrap(True)
 
@@ -153,6 +160,10 @@ class VerticalForm(QWidget):
         coil_form.addRow(
             self._labels.label("vertical.loading_coil_resistance"),
             self._coil_resistance,
+        )
+        coil_form.addRow(
+            self._labels.label("vertical.loading_coil_q"),
+            self._coil_q,
         )
         coil_form.addRow(self._coil_summary)
 
@@ -208,7 +219,6 @@ class VerticalForm(QWidget):
         layout.addWidget(self._geometry)
 
         for widget in (
-            self._frequency,
             self._base_height,
             self._radial_length,
             self._radial_angle,
@@ -216,12 +226,14 @@ class VerticalForm(QWidget):
             self._permittivity,
             self._conductivity,
             self._coil_offset,
-            self._coil_inductance,
-            self._coil_resistance,
             self._top_hat_radius,
             self._top_hat_wire_count,
         ):
             widget.valueChanged.connect(self._emit_changed)
+        self._frequency.valueChanged.connect(self._coil_electrical_changed)
+        self._coil_inductance.valueChanged.connect(self._coil_electrical_changed)
+        self._coil_resistance.valueChanged.connect(self._coil_resistance_changed)
+        self._coil_q.valueChanged.connect(self._coil_q_changed)
         self._height.valueChanged.connect(self._height_changed)
         self._radial_count.valueChanged.connect(self._radial_count_changed)
         self._material.currentIndexChanged.connect(self._emit_changed)
@@ -257,6 +269,55 @@ class VerticalForm(QWidget):
         self._update_coil_controls()
         self._emit_changed()
 
+    def _coil_reactance_ohm(self) -> float:
+        frequency_hz = self._frequency.value() * 1_000_000.0
+        inductance_h = self._coil_inductance.value() * 1e-6
+        return 2.0 * math.pi * frequency_hz * inductance_h
+
+    def _coil_q_from_resistance(self) -> float:
+        reactance = self._coil_reactance_ohm()
+        resistance = self._coil_resistance.value()
+        if reactance <= 0.0 or resistance <= 0.0:
+            return 0.0
+        return reactance / resistance
+
+    def _coil_resistance_from_q(self) -> float:
+        reactance = self._coil_reactance_ohm()
+        q = self._coil_q.value()
+        if reactance <= 0.0 or q <= 0.0:
+            return 0.0
+        return reactance / q
+
+    def _coil_electrical_changed(self, *_args: object) -> None:
+        if self._updating:
+            return
+        self._updating = True
+        try:
+            self._coil_resistance.setValue(self._coil_resistance_from_q())
+        finally:
+            self._updating = False
+        self._emit_changed()
+
+    def _coil_resistance_changed(self, *_args: object) -> None:
+        if self._updating:
+            return
+        self._updating = True
+        try:
+            self._coil_q.setValue(self._coil_q_from_resistance())
+        finally:
+            self._updating = False
+        self._emit_changed()
+
+    def _coil_q_changed(self, *_args: object) -> None:
+        if self._updating:
+            return
+        self._updating = True
+        try:
+            self._coil_resistance.setValue(self._coil_resistance_from_q())
+        finally:
+            self._updating = False
+        self._emit_changed()
+
     def _top_hat_toggled(self, checked: bool) -> None:
         if checked and self._top_hat_radius.value() <= 0.0:
             self._top_hat_radius.setValue(length_from_m(0.5, self._unit_system))
@@ -269,6 +330,7 @@ class VerticalForm(QWidget):
         self._coil_enabled.setText(self._translator.t("vertical.loading_coil_enabled"))
         self._top_hat_group.setTitle(self._translator.t("vertical.top_hat"))
         self._top_hat_enabled.setText(self._translator.t("vertical.top_hat_enabled"))
+        self._coil_q.setToolTip(self._translator.t("vertical.loading_coil_q_hint"))
         retranslate_combo(
             self._material,
             self._translator,
@@ -286,6 +348,7 @@ class VerticalForm(QWidget):
         self._coil_offset.setEnabled(enabled)
         self._coil_inductance.setEnabled(enabled)
         self._coil_resistance.setEnabled(enabled)
+        self._coil_q.setEnabled(enabled)
         maximum = self._height.value()
         self._coil_offset.setMaximum(maximum)
         if self._coil_offset.value() > maximum:
@@ -315,6 +378,7 @@ class VerticalForm(QWidget):
             self._coil_offset.setValue(0.0)
             self._coil_inductance.setValue(MOBILE_EXAMPLE_COIL_INDUCTANCE_H * 1e6)
             self._coil_resistance.setValue(0.0)
+            self._coil_q.setValue(0.0)
             self._top_hat_enabled.setChecked(False)
         finally:
             self._updating = False
@@ -395,6 +459,7 @@ class VerticalForm(QWidget):
             )
             self._coil_inductance.setValue(parameters.loading_coil_inductance_h * 1e6)
             self._coil_resistance.setValue(parameters.loading_coil_resistance_ohm)
+            self._coil_q.setValue(self._coil_q_from_resistance())
             self._top_hat_enabled.setChecked(parameters.top_hat_enabled)
             self._top_hat_radius.setValue(
                 length_from_m(parameters.top_hat_radius_m, self._unit_system)

@@ -3146,6 +3146,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Inductance",
         Language.SPANISH: "Inductancia",
     },
+    "vertical.loading_coil_q": {
+        Language.ENGLISH: "Coil Q",
+        Language.SPANISH: "Q de la bobina",
+    },
+    "vertical.loading_coil_q_hint": {
+        Language.ENGLISH: (
+            "Q is derived from the coil reactance and series resistance. "
+            "Enter 0 for an ideal lossless coil."
+        ),
+        Language.SPANISH: (
+            "La Q se deriva de la reactancia de la bobina y la resistencia "
+            "serie. Ingresá 0 para una bobina ideal sin pérdidas."
+        ),
+    },
     "vertical.loading_coil_resistance": {
         Language.ENGLISH: "Coil resistance",
         Language.SPANISH: "Resistencia de la bobina",

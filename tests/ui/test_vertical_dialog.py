@@ -79,6 +79,29 @@ def test_vertical_dialog_can_enable_a_loading_coil(qtbot: QtBot) -> None:
     assert "12.000 µH" in dialog._form._coil_summary.text()
 
 
+def test_vertical_loading_coil_q_and_resistance_stay_consistent(
+    qtbot: QtBot,
+) -> None:
+    dialog = VerticalDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    form = dialog._form
+    form._coil_enabled.setChecked(True)
+    form._frequency.setValue(14.1)
+    form._coil_inductance.setValue(4.511)
+
+    form._coil_q.setValue(100.0)
+
+    reactance = 2.0 * 3.141592653589793 * 14_100_000.0 * 4.511e-6
+    assert form._coil_resistance.value() == pytest.approx(
+        reactance / 100.0,
+        abs=0.001,
+    )
+
+    form._coil_resistance.setValue(2.0)
+
+    assert form._coil_q.value() == pytest.approx(reactance / 2.0, abs=0.1)
+
+
 def test_vertical_dialog_can_enable_a_top_hat(qtbot: QtBot) -> None:
     dialog = VerticalDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(dialog)

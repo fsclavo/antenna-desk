@@ -535,10 +535,12 @@ close to the soil.
 The **Loading coil** group adds a series coil at a selected height above the
 radiator base. The model is an ideal series inductor with optional series
 resistance; enter a measured or estimated coil resistance when you need a more
-realistic efficiency estimate. The coil is part of the vertical template, so
-the design panel updates it when you apply the vertical fields, and the loads
-list and reports show it as a series load on the radiator. Disable **Use
-loading coil** to remove it.
+realistic efficiency estimate. **Coil Q** is shown as a derived value and can
+also be entered: leaving Q at 0 means a lossless coil, while a positive Q sets
+the series resistance from `Q = 2πfL / R`. Editing the resistance updates Q.
+The coil is part of the vertical template, so the design panel updates it when
+you apply the vertical fields, and the loads list and reports show it as a
+series load on the radiator. Disable **Use loading coil** to remove it.
 
 The **Capacitive top hat** group adds horizontal wires at the top of the
 radiator. Set the hat radius and wire count; the wires are part of the generated

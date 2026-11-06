@@ -194,8 +194,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   simplified.
 - The vertical generator now supports a **capacitive top hat**: a configurable
   number of horizontal wires at the radiator top, with radius and wire count.
-  The hat survives the custom-wire round trip. Coil Q, vehicle ground, and mast
-  effects remain outside the model.
+  The hat survives the custom-wire round trip.
+- The loaded-vertical editor now exposes **coil Q** and keeps it consistent with
+  the series resistance and coil reactance. Q remains an input aid; vehicle
+  ground and mast effects remain outside the model.
 - Reviewed the remaining level C templates for Phase 5. `ringo`, `fan_dipole`,
   `random_wire`, and `custom` were not promoted because the published sources
   describe different geometries or installation details than the current
