@@ -21,6 +21,15 @@ RADIATOR_ID = "radiator"
 MIN_RING_SIDES = 3
 MAX_RING_SIDES = 128
 
+# Cushcraft AR-6 Ringo published dimensions: 50-54 MHz, 3.1 m overall height,
+# 33 cm ring diameter. The ring height is not published; 0.05 m is an explicit
+# modeling assumption, so the radiator is 3.05 m.
+CUSHCRAFT_AR6_FREQUENCY_HZ = 52_000_000.0
+CUSHCRAFT_AR6_HEIGHT_M = 3.1
+CUSHCRAFT_AR6_RING_DIAMETER_M = 0.33
+CUSHCRAFT_AR6_RING_HEIGHT_M = 0.05
+CUSHCRAFT_AR6_RADIATOR_HEIGHT_M = CUSHCRAFT_AR6_HEIGHT_M - CUSHCRAFT_AR6_RING_HEIGHT_M
+
 
 @dataclass(frozen=True, slots=True)
 class RingoParameters:

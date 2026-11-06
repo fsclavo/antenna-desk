@@ -194,7 +194,7 @@ Acceptance criteria:
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
-| P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, `loaded_vertical` (published preset), `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, and `zepp` promoted to B. The remaining four C templates were reviewed on 2026-11-06; no safe promotion without a new preset/model; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
+| P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, `loaded_vertical` (published preset), `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, and `zepp` promoted to B. The remaining four C templates were reviewed on 2026-11-06; the Ringo now has a Cushcraft AR-6 starting-dimensions preset, but promotion needs a matching-ring model; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
 | P1 | Fan dipole V-angle calibration and angle optimization | B | investigated; angle optimizer deferred |
 | P1 | Optional ideal transformer/4:1 balun for OCFD | B | done |
 | P1 | Multiband batch engine and per-family band defaults (M6) | B | done |

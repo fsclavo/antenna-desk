@@ -70,7 +70,7 @@ cannot represent. This is a deliberate decision, not a missing citation.
 
 | Template | Sources considered | Why it remains C |
 |---|---|---|
-| `ringo` | Cushcraft AR-2 Ringo: 1.2 m height and 12.7 cm ring diameter, 135–160 MHz. Cushcraft AR-6 Ringo: 3.1 m height and 33 cm ring diameter, 50–54 MHz. | AntennaDesk's estimator is a simplified 0.725λ application preset, not the commercial half-wave Ringo geometry. Comparing the two would mix different antennas. |
+| `ringo` | Cushcraft AR-2 Ringo: 1.2 m height and 12.7 cm ring diameter, 135–160 MHz. Cushcraft AR-6 Ringo: 3.1 m height and 33 cm ring diameter, 50–54 MHz. | A preset with the AR-6 starting dimensions is available (52 MHz, 3.05 m radiator, 0.33 m ring, 0.05 m ring height assumption). It remains C because the simplified matching ring and the 0.725λ estimator are not the commercial antenna's electrical model. |
 | `fan_dipole` | No source found that provides a universal coupled-fan correction. Mutual coupling depends on element spacing, angle, height, and ground. | A scalar length or angle correction would hide the interaction and would not be a traceable reference for the generated geometry. |
 | `random_wire` | No universal reference; performance depends on the tuner, counterpoise, and installation. | The template is intentionally non-resonant and tuner-assisted. No general numeric claim is possible. |
 | `custom` | User-defined geometry has no fixed reference. | Imports and diagnostics are structural; any accuracy claim would depend on the imported model. |
@@ -86,8 +86,8 @@ The detailed sources are:
   <https://www.universal-radio.com/catalog/hamants/0634.html> (10.1 ft height,
   13 in ring diameter, 50–54 MHz).
 
-The next evidence step for `ringo` would require a preset that exactly
-reproduces the commercial geometry and a model that includes its matching ring.
+The next evidence step for `ringo` would require a model that reproduces the
+commercial matching ring; the AR-6 preset is a geometry starting point only.
 The loaded-vertical example now covers only the published 102 in whip; arbitrary
 loaded verticals, top hats, and measured coil Q remain outside the model. The
 four remaining C templates keep their visible experimental warning.

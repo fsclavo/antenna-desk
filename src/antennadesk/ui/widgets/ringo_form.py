@@ -16,7 +16,15 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
-from ...domain.antennas.ringo import MAX_RING_SIDES, MIN_RING_SIDES, RingoParameters
+from ...domain.antennas.ringo import (
+    CUSHCRAFT_AR6_FREQUENCY_HZ,
+    CUSHCRAFT_AR6_RADIATOR_HEIGHT_M,
+    CUSHCRAFT_AR6_RING_DIAMETER_M,
+    CUSHCRAFT_AR6_RING_HEIGHT_M,
+    MAX_RING_SIDES,
+    MIN_RING_SIDES,
+    RingoParameters,
+)
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..units import (
@@ -187,6 +195,36 @@ class RingoForm(QWidget):
     def _selected_material(self) -> ConductorMaterial:
         value = self._material.currentData()
         return value if isinstance(value, ConductorMaterial) else COPPER
+
+    def load_cushcraft_ar6_example(self) -> None:
+        """Load the published Cushcraft AR-6 starting dimensions."""
+
+        self._updating = True
+        try:
+            self._frequency.setValue(CUSHCRAFT_AR6_FREQUENCY_HZ / 1_000_000.0)
+            self._radiator_height.setValue(
+                length_from_m(
+                    CUSHCRAFT_AR6_RADIATOR_HEIGHT_M,
+                    self._unit_system,
+                )
+            )
+            self._ring_diameter.setValue(
+                length_from_m(
+                    CUSHCRAFT_AR6_RING_DIAMETER_M,
+                    self._unit_system,
+                )
+            )
+            self._ring_height.setValue(
+                length_from_m(
+                    CUSHCRAFT_AR6_RING_HEIGHT_M,
+                    self._unit_system,
+                )
+            )
+            self._ring_sides.setValue(16)
+        finally:
+            self._updating = False
+        self._update_geometry()
+        self.changed.emit()
 
     def set_unit_system(self, unit_system: UnitSystem) -> None:
         if unit_system is self._unit_system:

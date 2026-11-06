@@ -2524,12 +2524,29 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "ringo.evidence": {
         Language.ENGLISH: (
-            "Experimental generator: geometry is tested, but there is no "
-            "independent numerical reference for this configuration."
+            "Experimental generator: the Cushcraft AR-6 starting dimensions are "
+            "published, but the simplified matching ring is not an exact "
+            "electrical model and its impedance and pattern are not validated."
         ),
         Language.SPANISH: (
-            "Generador experimental: se prueba la geometría, pero no hay una "
-            "referencia numérica independiente para esta configuración."
+            "Generador experimental: las dimensiones iniciales de la Cushcraft "
+            "AR-6 están publicadas, pero el anillo de adaptación simplificado no "
+            "es un modelo eléctrico exacto y no se validan impedancia ni patrón."
+        ),
+    },
+    "ringo.ar6_example": {
+        Language.ENGLISH: "Load Cushcraft AR-6 dimensions",
+        Language.SPANISH: "Cargar dimensiones Cushcraft AR-6",
+    },
+    "ringo.ar6_example_hint": {
+        Language.ENGLISH: (
+            "Sets 52 MHz, 3.1 m overall height, and a 0.33 m ring. The ring is "
+            "modeled at 0.05 m above the base, so the radiator is 3.05 m."
+        ),
+        Language.SPANISH: (
+            "Configura 52 MHz, 3.1 m de altura total y un anillo de 0.33 m. El "
+            "anillo se modela a 0.05 m de la base, por lo que el radiador mide "
+            "3.05 m."
         ),
     },
     "j_pole.title": {

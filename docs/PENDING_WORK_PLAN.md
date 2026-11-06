@@ -125,8 +125,9 @@ Completed follow-ups:
 6. **Remaining C audit complete (2026-11-06):** the published 102 in mobile-whip
    example promoted `loaded_vertical` to B for that preset. The other four
    templates (`ringo`, `fan_dipole`, `random_wire`, and `custom`) remain C; see
-   [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md). A Ringo promotion still needs a
-   preset that reproduces the commercial geometry.
+   [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md). The Ringo generator now has a
+   Cushcraft AR-6 starting-dimensions preset, but promotion still needs a model
+   of the commercial matching ring.
 
 ## Phase 6 — Deferred and blocked work
 

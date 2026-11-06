@@ -188,6 +188,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   generator: 14.1 MHz, 2.5908 m radiator, and a 4.511 µH base loading coil from
   K7MEM/ARRL. The `loaded_vertical` evidence level moved to B for that preset
   only; arbitrary loaded verticals remain experimental.
+- Added a **Cushcraft AR-6** starting-dimensions preset to the Ringo generator:
+  52 MHz, 3.05 m radiator, 0.33 m ring, and a 0.05 m ring-height modeling
+  assumption. It remains evidence level C because the matching-ring model is
+  simplified.
 - Reviewed the remaining level C templates for Phase 5. `ringo`, `fan_dipole`,
   `random_wire`, and `custom` were not promoted because the published sources
   describe different geometries or installation details than the current

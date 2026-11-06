@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QLabel,
     QMessageBox,
+    QPushButton,
     QVBoxLayout,
     QWidget,
 )
@@ -44,6 +45,13 @@ class RingoDialog(QDialog):
         self._evidence = QLabel(translator.t("ringo.evidence"), self)
         self._evidence.setWordWrap(True)
 
+        self._example = QPushButton(
+            translator.t("ringo.ar6_example"),
+            self,
+        )
+        self._example.setToolTip(translator.t("ringo.ar6_example_hint"))
+        self._example.clicked.connect(self._form.load_cushcraft_ar6_example)
+
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
             parent=self,
@@ -53,6 +61,7 @@ class RingoDialog(QDialog):
 
         layout = QVBoxLayout(self)
         layout.addWidget(self._form)
+        layout.addWidget(self._example)
         layout.addWidget(self._hint)
         layout.addWidget(self._evidence)
         layout.addStretch(1)
