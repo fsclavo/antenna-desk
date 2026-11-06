@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
     QHBoxLayout,
+    QHeaderView,
     QLabel,
     QPushButton,
     QTableWidget,
@@ -108,6 +109,7 @@ class FanDipoleForm(QWidget):
         )
         self._table.verticalHeader().setVisible(False)
         self._table.setAlternatingRowColors(True)
+        self._table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self._table.itemChanged.connect(self._emit_changed)
         self._add = QPushButton(translator.t("fan.add_element"), self)
         self._remove = QPushButton(translator.t("fan.remove_element"), self)

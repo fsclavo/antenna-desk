@@ -285,6 +285,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - The G5RV, ZS6BKW, Zepp, and Doublet dialogs now show wire radius in mm or
   inches. The custom-wire table and the design comparison table also use the
   selected display units for radius, diameter, lengths, and heights.
+- Fan-dipole, Yagi, and load tables size their columns to their headers, so
+  Spanish headers are no longer clipped at **Large**.
 - The Yagi editor now populates its driven-element selector when it starts from
   the default preset.
 - Three translation keys used by the UI were missing and rendered as raw keys:

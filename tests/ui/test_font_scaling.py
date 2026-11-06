@@ -7,7 +7,7 @@ from __future__ import annotations
 import pytest
 from helpers import make_completed_result
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QTableWidget
 from pytestqt.qtbot import QtBot
 
 import antennadesk.ui.widgets.geometry_view as geometry_module
@@ -17,7 +17,10 @@ from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.projects.project import Project
 from antennadesk.persistence.json_repository import JsonProjectRepository
 from antennadesk.ui.dialogs.comparison_dialog import ComparisonDialog
+from antennadesk.ui.dialogs.fan_dipole_dialog import FanDipoleDialog
 from antennadesk.ui.dialogs.feed_line_dialog import FeedLineDialog
+from antennadesk.ui.dialogs.loads_dialog import LoadsDialog
+from antennadesk.ui.dialogs.yagi_dialog import YagiDialog
 from antennadesk.ui.fonts import (
     scaled_dialog_size,
     scaled_font,
@@ -130,6 +133,31 @@ def test_form_panels_widen_for_large_spanish_forms(qtbot: QtBot) -> None:
 
     assert window._design_panel.minimumWidth() >= window._yagi_form.minimumSizeHint().width()
     assert window._yagi_scroll.maximumWidth() > 520
+
+
+def test_element_tables_fit_their_headers_at_large(qtbot: QtBot) -> None:
+    controller = _controller()
+    controller.apply(FontSize.LARGE)
+    translator = Translator(Language.SPANISH)
+    dialogs = (
+        FanDipoleDialog(translator, UnitSystem.METRIC),
+        YagiDialog(translator, UnitSystem.METRIC),
+        LoadsDialog(translator, UnitSystem.METRIC, {}, ()),
+    )
+
+    for dialog in dialogs:
+        qtbot.addWidget(dialog)
+        dialog.show()
+        qtbot.wait(10)
+        for table in dialog.findChildren(QTableWidget):
+            header = table.horizontalHeader()
+            for column in range(header.count()):
+                item = table.horizontalHeaderItem(column)
+                if item is None:
+                    continue
+                assert header.sectionSize(column) >= header.fontMetrics().horizontalAdvance(
+                    item.text()
+                )
 
 
 def test_start_page_title_tracks_the_preset(qtbot: QtBot) -> None:

@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
     QHBoxLayout,
+    QHeaderView,
     QLabel,
     QPushButton,
     QTableWidget,
@@ -120,6 +121,7 @@ class YagiForm(QWidget):
         )
         self._table.verticalHeader().setVisible(False)
         self._table.setAlternatingRowColors(True)
+        self._table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self._table.itemChanged.connect(self._refresh_driven_values)
 
         self._add = QPushButton(translator.t("yagi.add_element"), self)

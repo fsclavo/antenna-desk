@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
     QHBoxLayout,
+    QHeaderView,
     QMessageBox,
     QPushButton,
     QTableWidget,
@@ -51,6 +52,7 @@ class LoadsDialog(QDialog):
         self._table = QTableWidget(0, 6, self)
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self._table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self._table.verticalHeader().setVisible(False)
         self._table.setAlternatingRowColors(True)
 
