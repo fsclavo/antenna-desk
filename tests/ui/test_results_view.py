@@ -583,10 +583,15 @@ def test_results_view_adds_a_band_summary_tab(qtbot: QtBot) -> None:
     assert view._bands_table.item(0, 0).text() == "40m"
     assert view._bands_table.item(0, 2).text() == "1.500"
     assert view._bands_table.item(0, 7).text() == "Simulation completed"
-    assert "Double-click" in view._bands_hint.text()
+    assert view._tabs.tabToolTip(view._bands_tab_index) == ""
+    assert not view._band_bar.isHidden()
+    assert view._band_selector.count() == 2
+    assert view._band_selector.itemText(0) == "40m"
+    assert view._band_selector.itemText(1) == "20m"
 
     with qtbot.waitSignal(view.band_selected, timeout=1_000):
-        view._bands_table.selectRow(1)
+        view._band_selector.setCurrentIndex(1)
+    assert view._bands_table.currentRow() == 1
     assert view._result is not None
     assert view._result.frequencies[0].frequency_hz == 7_000_000.0
     assert "20m" in view._impedance_plot.plotItem.titleLabel.text
@@ -595,6 +600,8 @@ def test_results_view_adds_a_band_summary_tab(qtbot: QtBot) -> None:
     view._tabs.setCurrentWidget(view._bands_tab)
     view._on_band_double_clicked(view._bands_table.item(0, 0))
     assert view._tabs.currentWidget() is view._impedance_tab
+    assert view._band_selector.currentIndex() == 0
+    assert view._result is bands[0].result
 
     view.show_measurements()
     assert view._tabs.currentWidget() is view._measurements_tab
@@ -605,6 +612,8 @@ def test_results_view_adds_a_band_summary_tab(qtbot: QtBot) -> None:
     assert view._tabs.count() == 6
     assert view._bands_tab_index == -1
     assert view._tabs.currentWidget() is view._impedance_tab
+    assert view._band_bar.isHidden()
+    assert view._band_selector.count() == 0
     assert "40m" not in view._impedance_plot.plotItem.titleLabel.text
 
 

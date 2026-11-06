@@ -69,6 +69,19 @@ class ResultsView(QWidget):
         self._active_band: BandResult | None = None
         self._bands_tab_index = -1
 
+        self._band_bar = QWidget(self)
+        self._band_label = QLabel(self._band_bar)
+        self._band_selector = QComboBox(self._band_bar)
+        self._band_selector.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self._band_selector.currentIndexChanged.connect(self._on_band_selector_changed)
+        band_bar_layout = QHBoxLayout(self._band_bar)
+        band_bar_layout.setContentsMargins(0, 0, 0, 4)
+        band_bar_layout.setSpacing(6)
+        band_bar_layout.addWidget(self._band_label)
+        band_bar_layout.addWidget(self._band_selector)
+        band_bar_layout.addStretch(1)
+        self._band_bar.setVisible(False)
+
         self._tabs = QTabWidget(self)
         self._impedance_tab = QWidget(self)
         self._pattern_tab = QWidget(self)
@@ -79,11 +92,8 @@ class ResultsView(QWidget):
         self._bands_tab = QWidget(self)
         self._bands_table = QTableWidget(0, 8, self._bands_tab)
         self._configure_table(self._bands_table)
-        self._bands_hint = QLabel(self._bands_tab)
-        self._bands_hint.setWordWrap(True)
         bands_layout = QVBoxLayout(self._bands_tab)
         bands_layout.setContentsMargins(0, 0, 0, 0)
-        bands_layout.addWidget(self._bands_hint)
         bands_layout.addWidget(self._bands_table)
 
         self._table = QTableWidget(0, 5, self._impedance_tab)
@@ -255,6 +265,7 @@ class ResultsView(QWidget):
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self._band_bar)
         layout.addWidget(self._tabs)
 
         self._impedance_cursor = ChartCursor(self._impedance_plot)
@@ -413,6 +424,8 @@ class ResultsView(QWidget):
     ) -> None:
         self._result = result
         self._active_band = band if band is not None else self._band_for_result(result)
+        if band is not None:
+            self._sync_band_selector(band)
         self._pattern_frequency.blockSignals(True)
         self._currents_frequency.blockSignals(True)
         self._pattern_frequency.clear()
@@ -491,6 +504,10 @@ class ResultsView(QWidget):
     def set_band_analysis(self, analysis: BandAnalysisResult | None) -> None:
         self._band_analysis = analysis
         self._active_band = None
+        self._band_selector.blockSignals(True)
+        self._band_selector.clear()
+        self._band_selector.blockSignals(False)
+        self._band_bar.setVisible(False)
         self._bands_table.blockSignals(True)
         self._bands_table.setRowCount(0)
         if analysis is None or not analysis.bands:
@@ -514,10 +531,12 @@ class ResultsView(QWidget):
             self._bands_tab_index,
             self._translator.t("tab.bands"),
         )
-        self._tabs.setTabToolTip(
-            self._bands_tab_index,
-            self._translator.t("band.double_click_hint"),
-        )
+        self._band_selector.blockSignals(True)
+        for band_result in analysis.bands:
+            self._band_selector.addItem(band_result.band.name)
+        self._band_selector.setCurrentIndex(0)
+        self._band_selector.blockSignals(False)
+        self._band_bar.setVisible(True)
         self._render_bands()
         if self._bands_table.rowCount():
             self._bands_table.selectRow(0)
@@ -568,6 +587,17 @@ class ResultsView(QWidget):
         self._bands_table.selectRow(item.row())
         self._tabs.setCurrentWidget(self._impedance_tab)
 
+    def _on_band_selector_changed(self, index: int) -> None:
+        analysis = self._band_analysis
+        if analysis is None or not 0 <= index < len(analysis.bands):
+            return
+        if index >= self._bands_table.rowCount():
+            return
+        current = self._bands_table.currentRow()
+        self._bands_table.selectRow(index)
+        if current == index and self._active_band is not analysis.bands[index]:
+            self._on_band_selected()
+
     def retranslate(self) -> None:
         for widget, key in (
             (self._impedance_tab, "tab.impedance"),
@@ -583,12 +613,7 @@ class ResultsView(QWidget):
                 self._bands_tab_index,
                 self._translator.t("tab.bands"),
             )
-            self._tabs.setTabToolTip(
-                self._bands_tab_index,
-                self._translator.t("band.double_click_hint"),
-            )
-        self._bands_hint.setText(self._translator.t("band.double_click_hint"))
-        self._bands_table.setToolTip(self._translator.t("band.double_click_hint"))
+        self._band_label.setText(self._translator.t("band.table.band"))
         self._bands_table.setHorizontalHeaderLabels(
             [
                 self._translator.t("band.table.band"),
@@ -955,6 +980,25 @@ class ResultsView(QWidget):
         self._bands_table.blockSignals(True)
         self._bands_table.selectRow(row)
         self._bands_table.blockSignals(False)
+        self._sync_band_selector(band_result)
+
+    def _sync_band_selector(self, band_result: BandResult) -> None:
+        analysis = self._band_analysis
+        if analysis is None:
+            return
+        index = next(
+            (
+                candidate_index
+                for candidate_index, candidate in enumerate(analysis.bands)
+                if candidate is band_result
+            ),
+            -1,
+        )
+        if index < 0 or index >= self._band_selector.count():
+            return
+        self._band_selector.blockSignals(True)
+        self._band_selector.setCurrentIndex(index)
+        self._band_selector.blockSignals(False)
 
     def _on_pattern_mode_changed(self) -> None:
         self._populate_cut_values()
