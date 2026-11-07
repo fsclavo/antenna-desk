@@ -345,6 +345,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Yagi folded and beta/hairpin matching hardware can no longer be saved with
+  spacing or length smaller than twice the driven-element radius. Changing the
+  Yagi frequency no longer rescales the matching hardware. Schema 15 repairs
+  previously saved undersized values to four radii spacing and eight radii
+  hairpin length, which avoids overlapping conductors and NEC-2 segment-length
+  warnings that produced negative input resistance.
 - Yagi optimization now keeps the element count fixed. It only adjusts the
   selected element lengths and boom gaps; it no longer adds or removes
   directors.

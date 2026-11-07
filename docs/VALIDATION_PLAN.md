@@ -385,7 +385,8 @@ Phase 6 adds tests for:
   the magnetic-loop design type without changing existing designs; version 12
   adds the optional folded Yagi driven element as a straight-element default;
   version 13 adds the optional beta/hairpin Yagi match with no-match defaults;
-  version 14 adds the optional balun/unun loss model and result field.
+  version 14 adds the optional balun/unun loss model and result field; version
+  15 repairs undersized Yagi matching hardware.
 - Yagi and Moxon vertical polarization: geometry, azimuth, ground-clearance
   validation, scene contracts for both views, persistence round trips, and a
   free-space NEC equivalence check against the horizontal design rotated around

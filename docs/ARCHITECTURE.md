@@ -168,7 +168,7 @@ The second slice adds two multi-wire templates:
 `AntennaDesignParameters` is the union of the supported parameter types.
 `DesignVariant` stores the union and validates that `antenna_type` matches the
 parameters. The canonical model remains the shared `AntennaModel`, so the
-solver adapter does not need geometry-specific branches. Schema version 14 is
+solver adapter does not need geometry-specific branches. Schema version 15 is
 current: parameter payloads are additive, and old `wire_dipole` documents are
 unchanged. A design may also store an optional analysis band plan; it is
 intent metadata and never changes the canonical geometry. Series RLC loads are
@@ -230,9 +230,11 @@ version 7 adds Yagi/Moxon polarization, version 8 adds vertical top-hat fields,
 version 9 adds the inverted-L design type, version 10 adds loop orientation,
 version 11 adds the magnetic-loop design type, version 12 adds the folded Yagi
 driven element, version 13 adds the beta/hairpin Yagi match, version 14 adds the
-project balun/unun loss model, and older documents are migrated explicitly.
+project balun/unun loss model, version 15 repairs Yagi matching hardware that is
+narrower than the conductor diameter, and older documents are migrated
+explicitly.
 
-Simulation runs are persisted in schema version 14. Raw solver text is stored
+Simulation runs are persisted in schema version 15. Raw solver text is stored
 with the normalized result. Project files are compact JSON compressed with
 gzip; plain JSON files from older versions still load. The UI warns at 32 MB
 compressed, blocks files above the 64 MB compressed limit, and offers

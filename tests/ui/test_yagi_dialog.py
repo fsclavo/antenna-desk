@@ -151,6 +151,22 @@ def test_yagi_dialog_supports_a_beta_hairpin_match(qtbot: QtBot) -> None:
     assert len(parameters.to_antenna().wires) == 10
 
 
+def test_yagi_dialog_does_not_scale_matching_hardware_with_frequency(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.yagi import YagiMatchType
+
+    dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    index = dialog._match_type.findData(YagiMatchType.BETA_HAIRPIN.value)
+    dialog._match_type.setCurrentIndex(index)
+    dialog._match_length.setValue(0.2)
+    dialog._match_spacing.setValue(0.1)
+
+    dialog._form._frequency.setValue(7.1)
+
+    assert dialog._match_length.value() == pytest.approx(0.2)
+    assert dialog._match_spacing.value() == pytest.approx(0.1)
+
+
 def test_yagi_dialog_disables_match_with_folded_driven(qtbot: QtBot) -> None:
     from antennadesk.domain.antennas.yagi import YagiMatchType
 

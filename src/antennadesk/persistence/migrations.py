@@ -246,6 +246,53 @@ def _migrate_v10_to_v11(document: dict[str, Any]) -> dict[str, Any]:
     return copy.deepcopy(document)
 
 
+def _migrate_v14_to_v15(document: dict[str, Any]) -> dict[str, Any]:
+    """Repair Yagi matching hardware that is narrower than the wire diameter."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if isinstance(project, dict):
+        designs = project.get("designs")
+        if isinstance(designs, list):
+            for design in designs:
+                if not isinstance(design, dict):
+                    continue
+                if design.get("antenna_type") != "yagi":
+                    continue
+                parameters = design.get("parameters")
+                if not isinstance(parameters, dict):
+                    continue
+                elements = parameters.get("elements")
+                driven_index = parameters.get("driven_index", 1)
+                if not isinstance(elements, list) or not isinstance(driven_index, int):
+                    continue
+                if not 0 <= driven_index < len(elements):
+                    continue
+                driven = elements[driven_index]
+                if not isinstance(driven, dict):
+                    continue
+                radius = driven.get("radius_m")
+                if not isinstance(radius, (int, float)) or radius <= 0.0:
+                    continue
+                minimum_spacing = 4.0 * radius
+                minimum_length = 8.0 * radius
+                if parameters.get("driven_folded"):
+                    spacing = parameters.get("driven_fold_spacing_m", 0.1)
+                    if isinstance(spacing, (int, float)) and spacing < minimum_spacing:
+                        parameters["driven_fold_spacing_m"] = minimum_spacing
+                if parameters.get("match_type") == "beta_hairpin":
+                    if parameters.get("driven_folded"):
+                        parameters["match_type"] = "none"
+                        continue
+                    spacing = parameters.get("match_spacing_m", 0.1)
+                    if isinstance(spacing, (int, float)) and spacing < minimum_spacing:
+                        parameters["match_spacing_m"] = minimum_spacing
+                    length = parameters.get("match_length_m", 0.2)
+                    if isinstance(length, (int, float)) and length < minimum_length:
+                        parameters["match_length_m"] = minimum_length
+    return migrated
+
+
 def _migrate_v13_to_v14(document: dict[str, Any]) -> dict[str, Any]:
     """Add the optional project balun/unun loss model."""
 
@@ -324,6 +371,7 @@ MIGRATIONS: dict[int, Migration] = {
     11: _migrate_v11_to_v12,
     12: _migrate_v12_to_v13,
     13: _migrate_v13_to_v14,
+    14: _migrate_v14_to_v15,
 }
 
 

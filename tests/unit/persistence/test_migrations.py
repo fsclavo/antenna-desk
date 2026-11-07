@@ -394,6 +394,37 @@ def test_v13_migration_adds_project_balun_loss_field() -> None:
     assert "balun_loss_db" in migrated["project"]["simulation_runs"][0]["result"]["frequencies"][0]
 
 
+def test_v14_migration_repairs_undersized_yagi_match_hardware() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 14,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "yagi",
+                    "parameters": {
+                        "elements": [
+                            {"position_m": 0.0, "length_m": 1.0, "radius_m": 0.00635},
+                            {"position_m": 0.2, "length_m": 1.0, "radius_m": 0.00635},
+                        ],
+                        "driven_index": 1,
+                        "match_type": "beta_hairpin",
+                        "match_length_m": 0.019,
+                        "match_spacing_m": 0.01,
+                    },
+                }
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    parameters = migrated["project"]["designs"][0]["parameters"]
+    assert parameters["match_spacing_m"] == pytest.approx(0.0254)
+    assert parameters["match_length_m"] == pytest.approx(0.0508)
+
+
 def test_v4_migration_adds_optional_transformer_ratios() -> None:
     document = {
         "format": "antennadesk-project",

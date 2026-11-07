@@ -2197,12 +2197,22 @@ def _band_plan_to_domain(value: BandPlanPayload) -> BandPlan:
 
 
 def _design_to_domain(value: DesignPayload) -> DesignVariant:
+    parameters = _parameters_to_domain(value)
+    saved_antenna = _antenna_to_domain(value.antenna)
+    antenna = saved_antenna
+    if isinstance(parameters, YagiParameters):
+        # A Yagi geometry is always derived from its element table. Regenerate
+        # it so migrations that repair saved parameters cannot leave stale
+        # wires behind, while preserving user loads and transmission lines.
+        antenna = parameters.to_antenna(name=saved_antenna.name)
+        antenna = antenna.with_loads(saved_antenna.loads)
+        antenna = antenna.with_transmission_lines(saved_antenna.transmission_lines)
     return DesignVariant(
         id=value.id,
         name=value.name,
         antenna_type=value.antenna_type,
-        parameters=_parameters_to_domain(value),
-        antenna=_antenna_to_domain(value.antenna),
+        parameters=parameters,
+        antenna=antenna,
         provenance=(
             _provenance_to_domain(value.provenance) if value.provenance is not None else None
         ),

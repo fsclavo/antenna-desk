@@ -132,8 +132,8 @@ optional signing steps.
   points by default, and pattern resolution defaults to 5° and can be set to
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` projects with multiple design
-  variants; schema version 14 adds frequency-dependent balun/unun loss and
-  migrates older files explicitly.
+  variants; schema version 15 adds frequency-dependent balun/unun loss and
+  repairs undersized Yagi matching hardware, migrating older files explicitly.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - VNA CSV import with measured impedance/SWR records and a measured/simulated
   SWR, R, X, or |Z| comparison tab, including resonance differences.

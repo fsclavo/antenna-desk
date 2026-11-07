@@ -183,8 +183,9 @@ Scope:
   vertical top-hat fields, version 9 with the inverted-L design type, and
   version 10 with loop orientation, version 11 with the magnetic-loop design
   type, version 12 with the folded Yagi driven element, version 13 with the
-  beta/hairpin Yagi match, and version 14 with the balun/unun loss model), and
-  band-aware CSV, HTML, PDF, and comparison summaries.
+  beta/hairpin Yagi match, version 14 with the balun/unun loss model, and
+  version 15 with the Yagi matching-hardware repair), and band-aware CSV, HTML,
+  PDF, and comparison summaries.
 - Deferred: a segmented frequency plan in one NEC deck, only if measurements
   show that per-band runs are too slow or too large.
 

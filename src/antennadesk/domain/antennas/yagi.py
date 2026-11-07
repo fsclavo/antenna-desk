@@ -87,6 +87,9 @@ class YagiParameters:
         if self.driven_folded:
             ensure_positive(self.driven_fold_spacing_m, name="driven_fold_spacing_m")
         object.__setattr__(self, "match_type", YagiMatchType(self.match_type))
+        driven_radius = elements[self.driven_index].radius_m
+        if self.driven_folded and self.driven_fold_spacing_m <= 2.0 * driven_radius:
+            raise ValueError("driven_fold_spacing_m must exceed twice the driven-element radius")
         if self.match_type is not YagiMatchType.NONE:
             ensure_positive(self.match_length_m, name="match_length_m")
             ensure_positive(self.match_spacing_m, name="match_spacing_m")
@@ -94,6 +97,10 @@ class YagiParameters:
                 raise ValueError("a matching harness needs a straight driven element")
             if self.match_spacing_m >= elements[self.driven_index].length_m:
                 raise ValueError("match_spacing_m must be shorter than the driven element")
+            if self.match_spacing_m <= 2.0 * driven_radius:
+                raise ValueError("match_spacing_m must exceed twice the driven-element radius")
+            if self.match_length_m <= 2.0 * driven_radius:
+                raise ValueError("match_length_m must exceed twice the driven-element radius")
         object.__setattr__(
             self,
             "azimuth_deg",

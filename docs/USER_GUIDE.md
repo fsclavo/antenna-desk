@@ -298,9 +298,13 @@ the driven element with two parallel conductors and two end connectors; set
 **Fold spacing** to control the feed impedance and matching. Alternatively,
 select **Feed match → Beta / hairpin** to split the straight driven element and
 add a shorted stub along the boom; set its length and spacing. A folded driven
-element and a beta/hairpin match cannot be combined. A gamma match is not
-modeled because NEC-2 is unreliable for close-spaced gamma assemblies; use the
-Matching Network dialog for an equivalent. **Load NBS 5-element preset** fills
+element and a beta/hairpin match cannot be combined. Hairpin length and spacing
+must exceed twice the driven-element radius, otherwise the conductors overlap and
+NEC-2 can report negative resistance. Matching hardware is not rescaled when the
+frequency changes; tune it separately. Projects saved with undersized matching
+hardware are repaired on load by schema 15. A gamma match is not modeled because
+NEC-2 is unreliable for close-spaced gamma assemblies; use the Matching Network
+dialog for an equivalent. **Load NBS 5-element preset** fills
 the NBS TN-688 0.8λ starting geometry scaled to the selected frequency. Changing the frequency in the form rescales
 the current element positions and lengths by the wavelength ratio. If the
 element dimensions do not look consistent with the current frequency, the form

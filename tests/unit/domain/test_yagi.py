@@ -166,6 +166,24 @@ def test_yagi_beta_hairpin_rejects_folded_driven_and_bad_spacing() -> None:
             match_type=YagiMatchType.BETA_HAIRPIN,
             match_spacing_m=100.0,
         )
+    with pytest.raises(ValueError, match="twice the driven-element radius"):
+        nbs_five_element(
+            frequency_hz=50_100_000.0,
+            height_m=8.0,
+            radius_m=0.00635,
+            match_type=YagiMatchType.BETA_HAIRPIN,
+            match_spacing_m=0.01,
+            match_length_m=0.2,
+        )
+    with pytest.raises(ValueError, match="twice the driven-element radius"):
+        nbs_five_element(
+            frequency_hz=50_100_000.0,
+            height_m=8.0,
+            radius_m=0.00635,
+            match_type=YagiMatchType.BETA_HAIRPIN,
+            match_spacing_m=0.1,
+            match_length_m=0.01,
+        )
 
 
 def test_yagi_vertical_folded_driven_element_round_trips() -> None:

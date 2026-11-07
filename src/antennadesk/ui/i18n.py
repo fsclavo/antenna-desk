@@ -2056,11 +2056,13 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "pattern.negative_resistance": {
         Language.ENGLISH: (
-            "No pattern: negative input resistance. Check the radial height and ground model."
+            "No pattern: negative input resistance. Check very short gaps or "
+            "matching wires, segmentation, radial height, and the ground model."
         ),
         Language.SPANISH: (
-            "Sin patrón: resistencia de entrada negativa. Revisá la altura de los "
-            "radiales y el modelo de suelo."
+            "Sin patrón: resistencia de entrada negativa. Revisá gaps o hilos de "
+            "adaptación muy cortos, la segmentación, la altura de los radiales y el "
+            "modelo de suelo."
         ),
     },
     "pattern.polar": {
@@ -3657,6 +3659,28 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "beta/hairpin · length {length} {unit} · spacing {spacing} {unit}",
         Language.SPANISH: "beta/horquilla · longitud {length} {unit} · separación {spacing} {unit}",
     },
+    "yagi.match_clearance_warning": {
+        Language.ENGLISH: (
+            "Hairpin length and spacing must be greater than twice the driven-element "
+            "radius (minimum {minimum} {unit}); otherwise the conductors overlap."
+        ),
+        Language.SPANISH: (
+            "La longitud y la separación de la horquilla deben superar el doble del "
+            "radio del elemento alimentado (mínimo {minimum} {unit}); de lo contrario "
+            "los conductores se superponen."
+        ),
+    },
+    "yagi.fold_spacing_clearance": {
+        Language.ENGLISH: (
+            "Fold spacing must be greater than twice the driven-element radius "
+            "(minimum {minimum} {unit}); otherwise the conductors overlap."
+        ),
+        Language.SPANISH: (
+            "La separación del plegado debe superar el doble del radio del elemento "
+            "alimentado (mínimo {minimum} {unit}); de lo contrario los conductores se "
+            "superponen."
+        ),
+    },
     "yagi.match_hint": {
         Language.ENGLISH: (
             "A beta/hairpin is a shorted stub across the driven-element gap. It "
@@ -4780,12 +4804,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "diagnostic.normalization.negative_resistance": {
         Language.ENGLISH: (
             "Negative input resistance: the passive antenna model is invalid. "
-            "Check the radial height and ground model; far-field gains are unavailable."
+            "Check very short gaps or matching wires, segmentation, radial height, "
+            "and the ground model; far-field gains are unavailable."
         ),
         Language.SPANISH: (
             "Resistencia de entrada negativa: el modelo pasivo de la antena no es "
-            "válido. Revisá la altura de los radiales y el modelo de suelo; las "
-            "ganancias de campo lejano no están disponibles."
+            "válido. Revisá gaps o hilos de adaptación muy cortos, la segmentación, "
+            "la altura de los radiales y el modelo de suelo; las ganancias de campo "
+            "lejano no están disponibles."
         ),
     },
     "diagnostic.project.design.duplicate_id": {

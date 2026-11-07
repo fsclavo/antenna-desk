@@ -346,6 +346,37 @@ def test_folded_yagi_parameters_round_trip() -> None:
     assert restored.designs[0].parameters.driven_fold_spacing_m == pytest.approx(0.1)
 
 
+def test_stale_yagi_geometry_is_regenerated_after_migration() -> None:
+    from antennadesk.domain.antennas.yagi import YagiMatchType, nbs_five_element
+
+    parameters = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        radius_m=0.00635,
+        match_type=YagiMatchType.BETA_HAIRPIN,
+        match_length_m=0.2,
+        match_spacing_m=0.1,
+    )
+    document = document_from_project(_project(parameters, "Stale Yagi")).model_dump(mode="json")
+    document["schema_version"] = 14
+    payload = document["project"]["designs"][0]["parameters"]
+    payload["match_length_m"] = 0.019
+    payload["match_spacing_m"] = 0.01
+
+    from antennadesk.persistence.migrations import migrate_document
+
+    migrated = migrate_document(document)
+    restored = project_from_document(ProjectDocument.model_validate(migrated))
+    design = restored.designs[0]
+
+    assert design.parameters.match_spacing_m == pytest.approx(0.0254)
+    assert design.parameters.match_length_m == pytest.approx(0.0508)
+    assert design.antenna.feed.offset_m == pytest.approx(0.0127)
+    wire_ids = {wire.id for wire in design.antenna.wires}
+    assert "element-2-hairpin-a" in wire_ids
+    assert "element-2-feed" in wire_ids
+
+
 def test_beta_hairpin_yagi_parameters_round_trip() -> None:
     from antennadesk.domain.antennas.yagi import YagiMatchType, nbs_five_element
 

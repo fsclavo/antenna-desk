@@ -3083,7 +3083,7 @@ class MainWindow(QMainWindow):
             segmentation=aligned_policy_for_model(
                 model,
                 frequency_hz * 1.05,
-                SegmentationPolicy(min_segments_per_wire=3),
+                SegmentationPolicy(min_segments_per_wire=1),
             ),
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
         )

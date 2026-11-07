@@ -181,6 +181,10 @@ class YagiForm(QWidget):
         self._clearance_warning.setWordWrap(True)
         self._clearance_warning.setVisible(False)
 
+        self._match_warning = QLabel(self)
+        self._match_warning.setWordWrap(True)
+        self._match_warning.setVisible(False)
+
         form = QFormLayout()
         form.addRow(self._labels.label("field.frequency"), self._frequency)
         form.addRow(self._labels.label("field.height"), self._height)
@@ -214,6 +218,7 @@ class YagiForm(QWidget):
         layout.addWidget(self._geometry)
         layout.addWidget(self._frequency_warning)
         layout.addWidget(self._clearance_warning)
+        layout.addWidget(self._match_warning)
 
         self._frequency.valueChanged.connect(self._frequency_changed)
         for widget in (
@@ -269,9 +274,6 @@ class YagiForm(QWidget):
                     except ValueError:
                         continue
                     cell.setText(f"{length_from_m(current_m * scale, self._unit_system):.3f}")
-            for widget in (self._match_length, self._match_spacing):
-                current_m = length_to_m(widget.value(), self._unit_system)
-                widget.setValue(length_from_m(current_m * scale, self._unit_system))
         finally:
             self._updating = False
         self._refresh_driven_values()
@@ -569,8 +571,45 @@ class YagiForm(QWidget):
     def set_frequency_hz(self, frequency_hz: float) -> None:
         self._frequency.setValue(frequency_hz / 1_000_000.0)
 
+    def _update_match_warning(self) -> None:
+        driven_row = self._driven.currentData()
+        if not isinstance(driven_row, int):
+            self._match_warning.setVisible(False)
+            return
+        try:
+            radius_m = self._element_from_row(driven_row).radius_m
+        except (ValueError, TypeError):
+            self._match_warning.setVisible(False)
+            return
+        invalid: list[str] = []
+        if self._driven_folded.isChecked():
+            spacing_m = length_to_m(self._driven_fold_spacing.value(), self._unit_system)
+            if spacing_m <= 2.0 * radius_m:
+                invalid.append(
+                    self._translator.t(
+                        "yagi.fold_spacing_clearance",
+                        minimum=f"{length_from_m(2.0 * radius_m, self._unit_system):.3f}",
+                        unit=self._translator.t(length_unit_key(self._unit_system)),
+                    )
+                )
+        if self._selected_match_type() is YagiMatchType.BETA_HAIRPIN:
+            spacing_m = length_to_m(self._match_spacing.value(), self._unit_system)
+            length_m = length_to_m(self._match_length.value(), self._unit_system)
+            minimum = 2.0 * radius_m
+            if spacing_m <= minimum or length_m <= minimum:
+                invalid.append(
+                    self._translator.t(
+                        "yagi.match_clearance_warning",
+                        minimum=f"{length_from_m(minimum, self._unit_system):.3f}",
+                        unit=self._translator.t(length_unit_key(self._unit_system)),
+                    )
+                )
+        self._match_warning.setText(" ".join(invalid))
+        self._match_warning.setVisible(bool(invalid))
+
     def _update_geometry(self) -> None:
         self._update_clearance_warning()
+        self._update_match_warning()
         try:
             parameters = self.parameters()
         except (ValueError, TypeError):

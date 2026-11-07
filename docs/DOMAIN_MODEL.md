@@ -448,11 +448,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 14.
+the application writes version 15.
 
 ## Schema policy
 
-- Current version: `14`.
+- Current version: `15`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -482,6 +482,10 @@ the application writes version 14.
   with no matching harness.
 - Version 14 adds the optional project-level balun/unun loss model and the
   per-frequency `balun_loss_db` result field.
+- Version 15 repairs saved Yagi folded/match spacing values that were smaller
+  than twice the driven-element radius. The repair uses four radii spacing and
+  eight radii hairpin length to keep the conductors separate and the short
+  wires representable by NEC-2.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -510,7 +514,7 @@ the application writes version 14.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 14.
+- Simulation results are persisted as immutable runs in schema version 15.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are

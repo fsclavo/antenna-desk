@@ -264,7 +264,9 @@ def normalize_nec2_result(
                 message=(
                     f"negative input resistance at {range_text} ({len(negative_resistance_hz)} "
                     "frequency/frequencies); the passive antenna model is invalid. "
-                    "Check the radial height and ground model; far-field gains are unavailable."
+                    "Check the geometry, very short gaps or matching wires, "
+                    "segmentation, radial height, and ground model; far-field "
+                    "gains are unavailable."
                 ),
                 field="impedance",
             )
