@@ -95,6 +95,7 @@ class ResultsView(QWidget):
         bands_layout = QVBoxLayout(self._bands_tab)
         bands_layout.setContentsMargins(0, 0, 0, 0)
         bands_layout.addWidget(self._bands_table)
+        self._bands_tab.setVisible(False)
 
         self._table = QTableWidget(0, 5, self._impedance_tab)
         self._configure_table(self._table)
@@ -516,6 +517,7 @@ class ResultsView(QWidget):
                     self._tabs.setCurrentWidget(self._impedance_tab)
                 self._tabs.removeTab(self._bands_tab_index)
                 self._bands_tab_index = -1
+                self._bands_tab.setVisible(False)
             self._bands_table.blockSignals(False)
             if self._result is not None:
                 self._render_impedance()

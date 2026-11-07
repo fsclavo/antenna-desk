@@ -308,6 +308,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The Bands page no longer appears as a floating table over the results tabs
+  before the first multiband analysis. It stays hidden until the analysis
+  inserts it.
 - Finite-ground simulations with conductors at or near ground level now add a
   warning that the 1 cm NEC clearance is not a buried-wire model. The warning
   explains that impedance and gain can be numerically unreliable and points to

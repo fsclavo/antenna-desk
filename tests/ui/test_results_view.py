@@ -573,6 +573,9 @@ def test_results_view_adds_a_band_summary_tab(qtbot: QtBot) -> None:
         created_at=datetime(2026, 11, 3, tzinfo=UTC),
         bands=bands,
     )
+    assert view._bands_tab.isHidden()
+    assert not view._bands_table.isVisibleTo(view)
+    assert view._tabs.indexOf(view._bands_tab) == -1
 
     view.set_band_analysis(analysis)
 
@@ -588,6 +591,9 @@ def test_results_view_adds_a_band_summary_tab(qtbot: QtBot) -> None:
     assert view._band_selector.count() == 2
     assert view._band_selector.itemText(0) == "40m"
     assert view._band_selector.itemText(1) == "20m"
+    view.show_bands()
+    assert view._tabs.currentWidget() is view._bands_tab
+    assert not view._bands_tab.isHidden()
 
     with qtbot.waitSignal(view.band_selected, timeout=1_000):
         view._band_selector.setCurrentIndex(1)
@@ -614,6 +620,8 @@ def test_results_view_adds_a_band_summary_tab(qtbot: QtBot) -> None:
     assert view._tabs.currentWidget() is view._impedance_tab
     assert view._band_bar.isHidden()
     assert view._band_selector.count() == 0
+    assert view._bands_tab.isHidden()
+    assert not view._bands_table.isVisibleTo(view)
     assert "40m" not in view._impedance_plot.plotItem.titleLabel.text
 
 
