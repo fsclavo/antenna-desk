@@ -910,22 +910,15 @@ dimension; the SWR/gain balance is a weighted score, not a Pareto optimizer.
 
 ## Optimize Yagi elements
 
-For a Yagi, use **Design → Optimize...**. Select which element
-lengths, boom gaps, and element count to include, choose the objective
-(**target impedance**, **maximum gain**, or **maximum front-to-back ratio**),
-and set the search margin and evaluation budget. Target impedance also asks for
-R/X; gain and front-to-back require a far-field pattern request. The optimizer
-performs a bounded coordinate search over the selected variables. The first
-element stays fixed, gaps keep a fixed 0.1 m minimum, and the element order
-remains valid; radii stay fixed. **Element count** adds or removes trailing
-directors from the DL6WU reference scaled to the design frequency and never
-removes the driven element. The count range runs from the driven element up to
-32 elements; a design with more than 32 elements can only keep or remove its
-current elements. Existing element lengths and gaps remain the optimized
-variables; newly added directors use the reference dimensions until the design
-is applied and edited. More elements generally increase gain but also boom
-length and wind load; there is no boom-length constraint yet, so choose the
-count range deliberately.
+For a Yagi, use **Design → Optimize...**. Select which element lengths and
+boom gaps to include, choose the objective (**target impedance**, **maximum
+gain**, or **maximum front-to-back ratio**), and set the search margin and
+evaluation budget. Target impedance also asks for R/X; gain and front-to-back
+require a far-field pattern request. The optimizer performs a bounded coordinate
+search over the selected variables. The **element count is fixed**: the
+optimizer never adds or removes elements. The first element position stays
+fixed, gaps keep a fixed 0.1 m minimum, and the element order remains valid;
+radii stay fixed. To change the number of elements, edit the Yagi before optimizing.
 
 The evaluation table is ranked by the selected objective and shows R, X, SWR,
 gain, F/B, efficiency, and the objective value. The SWR column is relative to

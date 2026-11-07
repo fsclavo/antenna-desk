@@ -51,8 +51,8 @@ Completed:
 - Single-dimension and multi-element optimization, target impedance, gain,
   front-to-back, efficiency, weighted multi-objective search, Pareto ranks, and
   integer variables.
-- Yagi element-count optimization: trailing directors are added from the
-  DL6WU reference or removed, with the driven element preserved.
+- Yagi element optimization: element lengths and boom gaps are searched while
+  the element count stays fixed.
 - End-fed counterpoise geometry and an ideal feed transformer ratio, with
   estimator starting values.
 - VNA CSV import, measurement conditions/reference plane, measured/simulated
@@ -136,8 +136,8 @@ Deferred:
   fan-dipole, Moxon, vertical, inverted-V, Ringo, and loop variables.
 - Weighted multi-objective search with Pareto ranks and candidate selection.
 - Integer variables for radial count, loop side count, and Ringo ring sides.
-- Yagi element count as a discrete search variable, with reference-based
-  director addition and driven-element preservation.
+- Yagi element lengths and boom gaps as bounded variables, with the element
+  count fixed.
 - VNA CSV import and measured/simulated SWR, R, X, and |Z| comparison.
 - Measurement conditions and reference-plane metadata.
 - Bounded impedance synthesis for OCFD, J Pole, and Slim Jim.

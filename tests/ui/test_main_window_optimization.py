@@ -288,7 +288,7 @@ def test_optimize_yagi_applies_and_simulates(
 ) -> None:
     from dataclasses import replace
 
-    from antennadesk.domain.antennas.yagi import nbs_five_element
+    from antennadesk.domain.antennas.yagi import YagiParameters, nbs_five_element
 
     parameters = nbs_five_element(frequency_hz=14_100_000.0, height_m=12.0)
 
@@ -334,13 +334,16 @@ def test_optimize_yagi_applies_and_simulates(
 
     variables = captured["variables"]
     assert isinstance(variables, tuple)
-    count_variable = next(variable for variable in variables if variable.name == "element_count")
-    assert count_variable.integer is True
-    assert count_variable.minimum == 2.0
-    assert count_variable.maximum == 32.0
+    assert all(variable.name != "element_count" for variable in variables)
+    assert len(variables) == 2 * len(parameters.elements) - 1
     gap_variable = next(variable for variable in variables if variable.name == "gap_1")
     assert gap_variable.minimum == 0.1
     assert captured["hint_key"] == "element_optimize.yagi_hint"
+
+    build = captured["build_parameters"]
+    built = build({variable.name: variable.current_m for variable in variables})
+    assert isinstance(built, YagiParameters)
+    assert len(built.elements) == len(parameters.elements)
 
     assert window._yagi_form.parameters().elements[0].length_m == pytest.approx(
         optimized.elements[0].length_m, abs=1e-3

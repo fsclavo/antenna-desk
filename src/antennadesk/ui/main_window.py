@@ -65,7 +65,6 @@ from ..application.use_cases.delete_design_variant import (
 )
 from ..application.use_cases.open_project import OpenProject
 from ..application.use_cases.optimize_elements import ElementOptimizationObjective
-from ..application.use_cases.optimize_yagi_elements import resize_yagi
 from ..application.use_cases.record_simulation_run import (
     RecordSimulationRun,
     RecordSimulationRunCommand,
@@ -121,7 +120,6 @@ from ..domain.common.validation import Diagnostic, Severity
 from ..domain.design.band_plan import BandDefault, BandPlan, BandSelection, default_band_plan
 from ..domain.design.estimators import supports_estimation
 from ..domain.design.formulas import frequency_for_half_wave_length
-from ..domain.design.yagi_reference import MAX_YAGI_ELEMENTS, MIN_YAGI_ELEMENTS
 from ..domain.measurement import Measurement
 from ..domain.projects.project import DesignProvenance, DesignVariant, Project
 from ..domain.simulation.band_result import BandAnalysisResult, BandResult
@@ -4879,20 +4877,7 @@ class MainWindow(QMainWindow):
             return
         parameters = design.parameters
         elements = parameters.elements
-        minimum_elements = max(MIN_YAGI_ELEMENTS, parameters.driven_index + 1)
-        maximum_elements = max(len(elements), MAX_YAGI_ELEMENTS)
         variables = []
-        if maximum_elements > minimum_elements:
-            variables.append(
-                ElementOptimizationVariable(
-                    "element_count",
-                    self._translator.t("yagi.element_count"),
-                    float(len(elements)),
-                    integer=True,
-                    minimum=float(minimum_elements),
-                    maximum=float(maximum_elements),
-                )
-            )
         for index, element in enumerate(elements):
             variables.append(
                 ElementOptimizationVariable(
@@ -4915,15 +4900,10 @@ class MainWindow(QMainWindow):
 
         def build(values: dict[str, float]) -> YagiParameters:
             frequency_hz = values.get("__frequency_hz", parameters.frequency_hz)
-            count = round(values.get("element_count", len(elements)))
-            resized = resize_yagi(
-                replace(parameters, frequency_hz=frequency_hz),
-                count,
-            )
-            updated = list(resized.elements)
-            for index in range(min(len(updated), len(elements))):
+            updated = list(elements)
+            for index, element in enumerate(updated):
                 if (name := f"length_{index}") in values:
-                    updated[index] = replace(updated[index], length_m=values[name])
+                    updated[index] = replace(element, length_m=values[name])
             positions = [updated[0].position_m]
             for index in range(1, len(updated)):
                 default_gap = updated[index].position_m - updated[index - 1].position_m
@@ -4932,7 +4912,7 @@ class MainWindow(QMainWindow):
                 replace(element, position_m=positions[index])
                 for index, element in enumerate(updated)
             ]
-            return replace(resized, elements=tuple(updated))
+            return replace(parameters, frequency_hz=frequency_hz, elements=tuple(updated))
 
         dialog = ElementOptimizationDialog(
             self._translator,

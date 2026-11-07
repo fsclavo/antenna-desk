@@ -3544,10 +3544,6 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Element",
         Language.SPANISH: "Elemento",
     },
-    "yagi.element_count": {
-        Language.ENGLISH: "Element count",
-        Language.SPANISH: "Cantidad de elementos",
-    },
     "yagi.position": {
         Language.ENGLISH: "Boom position",
         Language.SPANISH: "Posición en el boom",
@@ -3748,8 +3744,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         ),
     },
     "element_optimize.yagi_hint": {
-        Language.ENGLISH: "Element count adds or removes trailing directors from the DL6WU reference. Existing lengths and gaps are optimized; added directors use reference dimensions. More elements increase boom length and wind load.",
-        Language.SPANISH: "La cantidad de elementos agrega o quita directores al final usando la referencia DL6WU. Se optimizan las longitudes y separaciones existentes; los directores agregados usan dimensiones de referencia. Más elementos aumentan el largo del boom y la carga de viento.",
+        Language.ENGLISH: "The element count is fixed; only the selected element lengths and boom gaps are optimized. The first element position stays fixed, gaps keep a 0.1 m minimum, and radii stay fixed. To change the number of elements, edit the Yagi before optimizing.",
+        Language.SPANISH: "La cantidad de elementos queda fija; solo se optimizan las longitudes y separaciones seleccionadas. La posición del primer elemento queda fija, las separaciones mantienen un mínimo de 0,1 m y los radios no cambian. Para cambiar la cantidad de elementos, editá la Yagi antes de optimizar.",
     },
     "element_optimize.loop_hint": {
         Language.ENGLISH: "Full-wave loops typically show 100-150 Ω at resonance, so the target resistance defaults to 100 Ω. Use a 2:1 balun or Matching Network for a 50 Ω system; the loop shape and side count are preserved.",

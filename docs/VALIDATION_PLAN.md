@@ -488,8 +488,9 @@ Phase 6 adds tests for:
 - VNA CSV import, measurement conditions/reference plane, project records, and
   measured/simulated R/X/|Z|/SWR comparison, including resonance differences.
 - Multi-element optimization for Yagi, fan dipole, Moxon, vertical, inverted-V,
-  Ringo, and loop, with integer variables, Pareto ranks, candidate selection,
-  and Yagi element-count search with reference-based director addition.
+  Ringo, and loop, with integer variables for radial counts, loop sides, and
+  Ringo ring sides, Pareto ranks, and candidate selection. Yagi optimization
+  keeps the element count fixed.
 - Frequency-first estimator provenance, loop polygon correction, and
   target-relative SWR in optimization results.
 - Native packaging inputs, `--version`/`--check-solver` CLI behavior, and

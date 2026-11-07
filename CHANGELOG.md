@@ -332,6 +332,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Yagi optimization now keeps the element count fixed. It only adjusts the
+  selected element lengths and boom gaps; it no longer adds or removes
+  directors.
 - The Bands page no longer appears as a floating table over the results tabs
   before the first multiband analysis. It stays hidden until the analysis
   inserts it.
