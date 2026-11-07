@@ -243,7 +243,9 @@ the design panel share the same taxonomy.
 A first-class vertical radiator with height, base/radial-plane height, optional
 radial count/length/angle, wire radius, material, and ground. `to_antenna()`
 creates the vertical wire and evenly spaced radial wires connected at the base,
-with the feed at the radiator base. It is experimental.
+with the feed at the radiator base. The editor's ground, elevated, and screen
+radial systems are UI-only starting presets; only the numeric fields are
+persisted. It is experimental.
 
 An optional loading coil is described by `loading_coil_enabled`,
 `loading_coil_offset_m` (measured from the radiator base),

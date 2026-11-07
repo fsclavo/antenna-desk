@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Changed
+### Added
 
-- Development after 0.2.0 is tracked in this section.
+- Vertical and loaded-vertical editors now offer a **Radial system** selector
+  with starting presets for no radials, ground radials, elevated radials, and
+  a dense ground-screen approximation. The presets set the base/radial-plane
+  height, radial count, and radial length; the numeric fields remain editable
+  and the preset itself is not persisted.
 
 ## [0.2.0] - 2026-11-06
 

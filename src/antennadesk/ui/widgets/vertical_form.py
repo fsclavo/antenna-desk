@@ -41,6 +41,7 @@ from ..units import (
 from .form_i18n import FormLabels, retranslate_combo
 from .form_units import apply_length_suffixes, apply_radius_units
 from .ground_presets import GroundPresetController
+from .radial_presets import RadialPresetController
 
 MATERIALS = (COPPER, ALUMINUM)
 
@@ -92,6 +93,17 @@ class VerticalForm(QWidget):
         self._radial_angle.setRange(0.0, 360.0)
         self._radial_angle.setDecimals(1)
         self._radial_angle.setSuffix("°")
+
+        self._radial_preset = QComboBox(self)
+        self._radial_presets = RadialPresetController(
+            self._radial_preset,
+            self._frequency,
+            self._base_height,
+            self._radial_count,
+            self._radial_length,
+            translator,
+            unit_system,
+        )
 
         self._radius = QDoubleSpinBox(self)
         apply_radius_units(translator, unit_system, self._radius)
@@ -211,6 +223,7 @@ class VerticalForm(QWidget):
         form.addRow(self._labels.label("field.frequency"), self._frequency)
         form.addRow(self._labels.label("vertical.height"), self._height)
         form.addRow(self._labels.label("vertical.base_height"), self._base_height)
+        form.addRow(self._labels.label("vertical.radial_system"), self._radial_preset)
         form.addRow(self._labels.label("vertical.radial_count"), self._radial_count)
         form.addRow(self._labels.label("vertical.radial_length"), self._radial_length)
         form.addRow(self._labels.label("vertical.radial_angle"), self._radial_angle)
@@ -336,6 +349,7 @@ class VerticalForm(QWidget):
 
     def retranslate(self) -> None:
         self._ground_presets.retranslate()
+        self._radial_presets.retranslate()
         self._labels.retranslate()
         self._coil_group.setTitle(self._translator.t("vertical.loading_coil"))
         self._coil_enabled.setText(self._translator.t("vertical.loading_coil_enabled"))
@@ -429,6 +443,7 @@ class VerticalForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
+        self._radial_presets.set_unit_system(unit_system)
         apply_radius_units(self._translator, unit_system, self._radius)
         apply_length_suffixes(
             self._translator,

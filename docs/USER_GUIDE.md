@@ -577,6 +577,15 @@ plane to about 0.75–1 m for 40 m. A 0.25 m plane can still produce invalid
 negative resistance depending on radial length and automatic segmentation; the
 solver reports that case as an error.
 
+The **Radial system** list provides starting presets: **No radials**, **Ground
+radials** (16 radial wires at 0.25λ), **Elevated radials** (four wires at
+0.25λ with a 2 m radial plane), and **Ground screen** (a dense 32-wire,
+0.10λ radial approximation). The presets write the base/radial-plane height,
+radial count, and radial length; they do not replace the numeric fields. Editing
+any of those fields switches the selector to **Custom / measured**. The
+ground-screen preset is a dense radial approximation, not a bonded mesh or a
+buried-wire model.
+
 The **Loading coil** group adds a series coil at a selected height above the
 radiator base. The model is an ideal series inductor with optional series
 resistance; enter a measured or estimated coil resistance when you need a more
@@ -617,7 +626,9 @@ dimensions for 14.1 MHz: a 2.5908 m whip and a 4.511 µH base coil.
 
 The radial plane is a simplified counterpoise. It does not model a vehicle
 body, roof, or chassis, so treat mobile performance as qualitative until you
-have measurements or a more detailed model. The loaded vertical uses the same
+have measurements or a more detailed model. The same **Radial system** presets
+are available in the loaded-vertical editor; choose **Custom / measured** to
+keep the mobile-specific radial dimensions. The loaded vertical uses the same
 first-class `VerticalParameters` as the generic vertical; the coil is stored as
 a series load on the radiator and appears in the loads editor, reports, and
 construction sheet. A capacitive top hat is also available for short verticals

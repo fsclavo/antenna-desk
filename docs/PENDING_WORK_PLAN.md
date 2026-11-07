@@ -152,8 +152,9 @@ The ordered antenna backlog lives in
    until a published reference supplies a traceable numeric metric.
 2. **Completed 2026-11-06:** horizontal/sky loop as a loop-orientation option,
    with schema 10 persistence, plan/elevation scene handling, and tests.
-3. Elevated radials / ground screen (next).
-4. Magnetic loop, as a separate model with a tuning capacitor and losses.
+3. **Completed 2026-11-06:** elevated-radial and ground-screen starting presets
+   over the existing vertical radial fields, with editable numeric values.
+4. Magnetic loop, as a separate model with a tuning capacitor and losses (next).
 5. Yagi folded driven element.
 6. Gamma / beta / hairpin match.
 7. Balun/unun with a frequency-dependent loss model.

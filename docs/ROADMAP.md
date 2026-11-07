@@ -38,7 +38,8 @@ Completed:
 - Solver adapter, normalized results, persistence, imports, and reports.
 - Guided dipole, folded dipole, trap dipole, T2FD, loop (generic, delta, quad,
   and horizontal/sky), vertical (1/4λ, 1/2λ, and 5/8λ with radials, plus a
-  loading-coil option and a mobile-whip preset), inverted-V, inverted-L, fan
+  loading-coil option, radial-system presets, and a mobile-whip preset),
+  inverted-V, inverted-L, fan
   dipole, end-fed, sloper, random wire, doublet, OCFD, J Pole, Slim Jim, Ringo,
   Yagi, Moxon, and custom-wire designs.
 - Series/parallel RLC loads and traps; L/Pi/T matching networks with component
@@ -230,7 +231,7 @@ point; `C` is structural/experimental only.
 |---:|---|---|---|---|---|---|
 | 1 | Inverted L | New family | M | High | C (B/A possible) | **Implemented on 2026-11-06:** first-class family with an editor, catalog route, persistence, geometry, reports, and tests. It remains experimental and has no estimator until a published reference is added. |
 | 2 | Horizontal loop / sky loop | Modification of `loop` | S–M | High | B/A | **Implemented on 2026-11-06:** the loop editor now selects vertical or horizontal orientation, with schema 10 persistence, plan/elevation scene handling, and dimension/report tests. |
-| 3 | Elevated radials / ground screen | Modification of `vertical` | S–M | High | B/A | Existing radial fields; add elevated radials, mesh/screen presets. |
+| 3 | Elevated radials / ground screen | Modification of `vertical` | S–M | High | B/A | **Implemented on 2026-11-06:** the vertical editor has no-radial, ground-radial, elevated-radial, and dense ground-screen starting presets over the existing radial fields. The screen is a dense radial approximation, not a bonded mesh. |
 | 4 | Magnetic loop | New family | L | High | B/C; A only with an exact published design | Needs gap, tuning capacitor, ESR/loss, efficiency, bandwidth, and matching. Not a variant of the full-wave loop. |
 | 5 | Yagi folded driven element | Modification of `yagi` | M | Medium | B/A | Two wires plus connectors; changes feed impedance and matching. |
 | 6 | Gamma / beta / hairpin match | Modification of `yagi` | M | Medium | B/A | Geometry and feed hardware; may coexist with the matching-network dialog. |

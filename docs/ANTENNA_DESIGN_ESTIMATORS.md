@@ -150,6 +150,27 @@ At resonance a full-wave loop normally presents roughly `100-150 Ω` at the
 feed point. Changing only its circumference cannot bring that to `50 Ω`; use a
 `2:1` balun or the Matching Network dialog for a `50 Ω` system.
 
+## Radial-system presets
+
+The vertical and loaded-vertical editors offer UI-only radial starting points.
+They are not persisted; only the numeric base height, radial count, radial
+length, and radial angle are saved with the design. Selecting a preset and then
+editing a numeric radial field switches the selector to **Custom / measured**.
+
+| Preset | Base/radial plane | Radial count | Radial length | Status |
+|---|---|---|---|---|
+| Ground radials | 0.25 m | 16 | `0.25λ` | Empirical quarter-wave starting length |
+| Elevated radials | 2.0 m | 4 | `0.25λ` | Application starting point; height is installation-specific |
+| Ground screen | 0.25 m | 32 | `0.10λ` | Dense radial approximation, not a bonded mesh |
+
+The quarter-wave radial is the ARRL practical starting rule already used by the
+vertical estimator. The elevated-plane height and the compact screen length are
+application starting points, not published universal rules. The screen is a
+dense radial field; it does not model a bonded wire mesh, a buried conductor,
+or a solid ground plane. Verify radial count, length, height, and soil with a
+sensitivity sweep and a feedpoint measurement. Confidence: heuristic. Tolerance:
+not applicable to these presets.
+
 ## Loaded vertical preset
 
 The loaded vertical / mobile whip catalog preset is not a frequency-first

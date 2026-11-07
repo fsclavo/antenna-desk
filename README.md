@@ -163,6 +163,8 @@ optional signing steps.
 - Optional L/Pi/T matching networks at the feedpoint, with automatic L design
   from a load R/X, optional component Q/loss, evaluation before the feed line,
   and a parallel-trap helper in the load editor.
+- Vertical radial-system presets for ground radials, elevated radials, and a
+  dense ground-screen approximation, with editable numeric fields.
 - Printable/HTML construction sheet with type-aware dimensions, feed position,
   loads, and simulated result.
 - CSV, PNG, SVG, PDF, and layered DXF export for results, patterns, and

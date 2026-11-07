@@ -3228,6 +3228,41 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Base height",
         Language.SPANISH: "Altura de la base",
     },
+    "vertical.radial_system": {
+        Language.ENGLISH: "Radial system",
+        Language.SPANISH: "Sistema de radiales",
+    },
+    "vertical.radial_system_hint": {
+        Language.ENGLISH: (
+            "Starting presets only. They set the base/radial-plane height, "
+            "radial count, and radial length; the numeric fields stay editable."
+        ),
+        Language.SPANISH: (
+            "Solo presets de inicio. Ajustan la altura de base/plano de "
+            "radiales, la cantidad y la longitud; los campos numéricos siguen "
+            "siendo editables."
+        ),
+    },
+    "radial_preset.custom": {
+        Language.ENGLISH: "Custom / measured",
+        Language.SPANISH: "Personalizado / medido",
+    },
+    "radial_preset.none": {
+        Language.ENGLISH: "No radials",
+        Language.SPANISH: "Sin radiales",
+    },
+    "radial_preset.ground": {
+        Language.ENGLISH: "Ground radials (16 x 0.25λ)",
+        Language.SPANISH: "Radiales de suelo (16 x 0,25λ)",
+    },
+    "radial_preset.elevated": {
+        Language.ENGLISH: "Elevated radials (4 x 0.25λ)",
+        Language.SPANISH: "Radiales elevados (4 x 0,25λ)",
+    },
+    "radial_preset.screen": {
+        Language.ENGLISH: "Ground screen (32 x 0.10λ)",
+        Language.SPANISH: "Pantalla de suelo (32 x 0,10λ)",
+    },
     "vertical.radial_count": {
         Language.ENGLISH: "Radial count",
         Language.SPANISH: "Cantidad de radiales",
