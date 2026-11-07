@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Development after 0.2.0 is tracked in this section.
+
+## [0.2.0] - 2026-11-06
+
 ### Added
 
 - The loop editor now supports **vertical** and **horizontal / sky-loop**
@@ -795,6 +801,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Project documentation: blueprint, ADR-0001, project decisions, and solver
   evaluation.
 
-[Unreleased]: https://github.com/fsclavo/antenna-desk/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/fsclavo/antenna-desk/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/fsclavo/antenna-desk/releases/tag/v0.2.0
 [0.1.0]: https://github.com/fsclavo/antenna-desk/releases/tag/v0.1.0
 [0.1.0.dev0]: https://github.com/fsclavo/antenna-desk/releases/tag/v0.1.0.dev0

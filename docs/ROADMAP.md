@@ -93,6 +93,8 @@ Completed:
   transformer, and Cebik wide-long starting dimensions.
 - `v0.1.0` published with wheel/sdist, AppImage, Debian package, Windows zip,
   and SHA-256 checksums. Signing is optional and deferred.
+- `v0.2.0` adds inverted-L and horizontal/sky-loop generators, schema 10,
+  the soil presets, asynchronous project saves, and the band-analysis UI.
 
 Deferred:
 
@@ -149,7 +151,8 @@ Deferred:
   Windows zip, and checksums (completed).
 - Optional GPG detached signatures and Windows Authenticode signing hooks
   (completed, deferred for the initial release).
-- Published `v0.1.0` with unsigned, SHA-256-verified artifacts (completed).
+- Published `v0.1.0` and `v0.2.0` with unsigned, SHA-256-verified artifacts
+  (completed).
 - Keep the wheel/sdist smoke test as the fallback distribution path
   (completed).
 
@@ -267,7 +270,7 @@ Modeling track:
 
 Release track:
 
-1. `v0.1.0` is published with checksum-verified unsigned artifacts.
+1. `v0.2.0` is published with checksum-verified unsigned artifacts.
 2. Add GPG/Authenticode signing in a later release if required.
 
 Validation track:
