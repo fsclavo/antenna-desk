@@ -569,6 +569,44 @@ def test_ringo_parameters_round_trip() -> None:
     assert restored.designs[0].antenna_type == "ringo"
 
 
+def test_half_square_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
+
+    parameters = scv_parameters(
+        ScvKind.HALF_SQUARE,
+        7_150_000.0,
+        base_height_m=1.5,
+        feed_offset_m=0.25,
+        azimuth_deg=35.0,
+    )
+    original = _project(parameters, "Half square")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "half_square"
+
+
+def test_bobtail_curtain_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
+
+    parameters = scv_parameters(
+        ScvKind.BOBTAIL_CURTAIN,
+        7_050_000.0,
+        base_height_m=2.0,
+        feed_offset_m=1.0,
+        azimuth_deg=270.0,
+    )
+    original = _project(parameters, "Bobtail curtain")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "bobtail_curtain"
+
+
 def test_design_provenance_round_trips_through_the_schema() -> None:
     from antennadesk.domain.projects.project import DesignProvenance
 

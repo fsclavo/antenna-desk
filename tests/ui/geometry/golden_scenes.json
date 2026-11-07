@@ -1,4 +1,6 @@
 {
+  "bobtail_curtain:elevation": "e2df8d2365a9996d8c21fb2ec198959f10c19069f40c54ddd72c547c38a657dc",
+  "bobtail_curtain:plan": "6eda56a51d17c4fa9feee1ad92c460fbb48c24074d4062a5cb8b00549e45ad6c",
   "custom:elevation": "85a6134f2b2c87fa7b23e90e96b73b06baa1227fe31060de275b929eced3e26e",
   "custom:plan": "22d209675ffa56f650bfaf98f5544750ea63e41ae9961c78c2c2accf05cedd0f",
   "delta:elevation": "086095fa70d5971006500cce57a9d14bbfbbb37d46fddba1e87dd3f2a7c604e2",
@@ -11,6 +13,8 @@
   "fan:plan": "24ef59117f2298d32dddd94f09aa11e0b324cb3e5bf759598f0a506c284906b8",
   "folded:elevation": "ffb8d772bfc212fc61a332eff15cc8f6e8f034f8166fab142b001e4ce85c883f",
   "folded:plan": "1dcf77bd724bfbcd88935f0414cf465b648170cf640c37e9af3a356ded31d2f9",
+  "half_square:elevation": "547ec011c93e93a20ecf7c01cb44699a093ec4af6d9fb1b864d3b5586ab3d3c6",
+  "half_square:plan": "835806b8c0de5bde326e74280856f6271afadcfd4f328ef71d12928a2dfd9c53",
   "inverted_l:elevation": "3e78aad19bfba3e8358b9feb424466bf553ab98a37bf4c6a24e1c145ce1275bf",
   "inverted_l:plan": "5bc6465caecf20c31af6c0eed5a2ef0456b70a4382c63ee0969307ddbdf26c2e",
   "inverted_v:elevation": "33d3a4bfd33985247eb3dc5a9738da593532ecf9b0ebc35f18a13586eedb97cb",

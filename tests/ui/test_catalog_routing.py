@@ -25,6 +25,7 @@ from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
 from antennadesk.domain.antennas.ringo import RingoParameters
+from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
@@ -213,6 +214,8 @@ def _parameters_for(key: str) -> object:
             radiator_height_m=5.0,
             ring_diameter_m=0.5,
         ),
+        "half_square": scv_parameters(ScvKind.HALF_SQUARE, 7_150_000.0),
+        "bobtail_curtain": scv_parameters(ScvKind.BOBTAIL_CURTAIN, 7_150_000.0),
         "custom": CustomAntennaParameters(
             frequency_hz=7_100_000.0,
             wires=(
@@ -264,6 +267,7 @@ def test_every_catalog_entry_has_a_change_template_route(
             "MoxonDialog",
             "YagiDialog",
             "RingoDialog",
+            "ScvDialog",
             "JPoleDialog",
             "EndFedDialog",
             "FanDipoleDialog",
@@ -321,6 +325,8 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "j_pole": ("j_pole", False),
         "slim_jim": ("j_pole", True),
         "ringo": ("ringo",),
+        "half_square": ("half_square",),
+        "bobtail_curtain": ("bobtail_curtain",),
         "custom": ("custom",),
     }
 
@@ -375,6 +381,8 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         new_zepp_antenna=record("zepp"),
         new_j_pole_antenna=record("j_pole"),
         new_ringo_antenna=record("ringo"),
+        new_half_square_antenna=record("half_square"),
+        new_bobtail_curtain_antenna=record("bobtail_curtain"),
         new_ocfd_antenna=record("ocfd"),
         new_vertical_antenna=record("vertical"),
         new_loaded_vertical_antenna=record("loaded_vertical"),
@@ -430,6 +438,8 @@ ESTIMATORLESS_CATALOG_KEYS = frozenset(
         "loaded_vertical",
         "magnetic_loop",
         "random_wire",
+        "half_square",
+        "bobtail_curtain",
         "trap_dipole",
         "zepp",
         "zs6bkw",

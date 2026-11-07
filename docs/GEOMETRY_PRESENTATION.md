@@ -97,8 +97,11 @@ A small number of smoke images for light/dark themes is acceptable.
    pattern step or snapshot count in the family builder.
 9. Reporting and construction-sheet rows.
 10. Geometry presentation builder and semantic dimensions.
-11. Scene, layout, routing, legacy, and export tests.
-12. User-guide and changelog updates.
+11. Family optimizer descriptor and QA, or an explicit unavailable reason with
+    a visible explanation. See `ADR/0026-family-optimizer-architecture.md` and
+    `OPTIMIZER_PHASE_A_PLAN.md`.
+12. Scene, layout, routing, legacy, and export tests.
+13. User-guide and changelog updates.
 
 ## Anti-patterns
 

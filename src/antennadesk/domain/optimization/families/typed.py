@@ -1,0 +1,938 @@
+# SPDX-FileCopyrightText: 2026 Fernando Sclavo
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""Optimizer descriptors for the remaining first-class typed families."""
+
+from __future__ import annotations
+
+import math
+from collections.abc import Mapping
+from dataclasses import replace
+
+from ...antennas.endfed import EndFedParameters
+from ...antennas.fan_dipole import FanDipoleParameters, FanElement
+from ...antennas.folded_dipole import FoldedDipoleParameters
+from ...antennas.inverted_l import InvertedLParameters
+from ...antennas.inverted_v import InvertedVParameters
+from ...antennas.j_pole import JPoleParameters
+from ...antennas.loop import LoopParameters
+from ...antennas.moxon import MoxonParameters
+from ...antennas.ocfd import OCFDParameters
+from ...antennas.ringo import RingoParameters
+from ...antennas.t2fd import T2FDParameters
+from ...antennas.trap_dipole import TrapDipoleParameters
+from ..constraints import ConstraintViolation
+from ..descriptor import (
+    AntennaOptimizerDescriptor,
+    FamilyOptimizationObjective,
+    ParameterBuilder,
+    ParameterValidator,
+)
+from ..variables import OptimizationVariable, VariableKind
+from .common import (
+    COMMON_OBJECTIVES,
+    around,
+    collect,
+    non_negative_violation,
+    positive_violation,
+    radius_around,
+    violation,
+)
+
+
+def _length(
+    name: str,
+    label_key: str,
+    group: str,
+    value: float,
+    fraction: float = 0.2,
+    minimum: float = 0.1,
+) -> OptimizationVariable:
+    low, high = around(value, fraction, minimum=minimum)
+    return OptimizationVariable(name, label_key, group, low, high, step=0.01)
+
+
+def _radius(value: float) -> OptimizationVariable:
+    low, high = radius_around(value)
+    return OptimizationVariable(
+        "wire_radius_m",
+        "field.wire_radius",
+        "optimize.group.conductor",
+        low,
+        high,
+        unit="radius",
+        step=0.0001,
+    )
+
+
+def _choice_ratio(name: str, label_key: str, value: float) -> OptimizationVariable:
+    choices = tuple(sorted({value, 1.0, 4.0, 6.0, 9.0, 16.0, 49.0}))
+    return OptimizationVariable(
+        name,
+        label_key,
+        "optimize.group.loads",
+        choices[0],
+        choices[-1],
+        kind=VariableKind.CHOICE,
+        unit="ratio",
+        choices=choices,
+    )
+
+
+def _descriptor(
+    key: str,
+    variables: tuple[OptimizationVariable, ...],
+    initial: Mapping[str, float],
+    build_parameters: ParameterBuilder,
+    validate: ParameterValidator,
+    default_objective: FamilyOptimizationObjective = FamilyOptimizationObjective.TARGET_IMPEDANCE,
+) -> AntennaOptimizerDescriptor:
+    return AntennaOptimizerDescriptor(
+        key=key,
+        variables=variables,
+        initial_values=initial,
+        build_parameters=build_parameters,
+        validate=validate,
+        objectives=COMMON_OBJECTIVES,
+        default_objective=default_objective,
+    )
+
+
+def folded_dipole_descriptor(parameters: FoldedDipoleParameters) -> AntennaOptimizerDescriptor:
+    variables = (
+        _length(
+            "total_length_m",
+            "field.length",
+            "optimize.group.geometry",
+            parameters.total_length_m,
+            0.15,
+        ),
+        _length(
+            "height_m", "field.height", "optimize.group.geometry", parameters.height_m, 0.25, 0.0
+        ),
+        _length(
+            "spacing_m", "field.spacing", "optimize.group.geometry", parameters.spacing_m, 0.5, 0.01
+        ),
+        _radius(parameters.wire_radius_m),
+    )
+    initial = {
+        "total_length_m": parameters.total_length_m,
+        "height_m": parameters.height_m,
+        "spacing_m": parameters.spacing_m,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+
+    def build(values: Mapping[str, float]) -> FoldedDipoleParameters:
+        return replace(
+            parameters,
+            total_length_m=values["total_length_m"],
+            height_m=values["height_m"],
+            spacing_m=values["spacing_m"],
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        return collect(
+            positive_violation("total_length_m", values["total_length_m"]),
+            non_negative_violation("height_m", values["height_m"]),
+            positive_violation("spacing_m", values["spacing_m"]),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+        )
+
+    return _descriptor("folded_dipole", variables, initial, build, validate)
+
+
+def loop_descriptor(parameters: LoopParameters) -> AntennaOptimizerDescriptor:
+    variables = (
+        _length(
+            "circumference_m",
+            "field.circumference",
+            "optimize.group.geometry",
+            parameters.circumference_m,
+            0.15,
+        ),
+        _length(
+            "height_m", "field.height", "optimize.group.geometry", parameters.height_m, 0.25, 0.0
+        ),
+        _radius(parameters.wire_radius_m),
+    )
+    initial = {
+        "circumference_m": parameters.circumference_m,
+        "height_m": parameters.height_m,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+
+    def build(values: Mapping[str, float]) -> LoopParameters:
+        return replace(
+            parameters,
+            circumference_m=values["circumference_m"],
+            height_m=values["height_m"],
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        return collect(
+            positive_violation("circumference_m", values["circumference_m"]),
+            non_negative_violation("height_m", values["height_m"]),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+        )
+
+    return _descriptor("loop", variables, initial, build, validate)
+
+
+def inverted_v_descriptor(parameters: InvertedVParameters) -> AntennaOptimizerDescriptor:
+    angle_low = max(30.0, parameters.included_angle_deg - 20.0)
+    angle_high = min(175.0, parameters.included_angle_deg + 20.0)
+    variables = (
+        _length(
+            "leg_length_m",
+            "inverted_v.leg_length",
+            "optimize.group.geometry",
+            parameters.leg_length_m,
+            0.15,
+        ),
+        _length(
+            "apex_height_m",
+            "inverted_v.apex_height",
+            "optimize.group.geometry",
+            parameters.apex_height_m,
+            0.25,
+            0.1,
+        ),
+        OptimizationVariable(
+            "included_angle_deg",
+            "inverted_v.included_angle",
+            "optimize.group.geometry",
+            angle_low,
+            angle_high,
+            unit="deg",
+            step=1.0,
+        ),
+        _radius(parameters.wire_radius_m),
+    )
+    initial = {
+        "leg_length_m": parameters.leg_length_m,
+        "apex_height_m": parameters.apex_height_m,
+        "included_angle_deg": parameters.included_angle_deg,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+
+    def build(values: Mapping[str, float]) -> InvertedVParameters:
+        return replace(
+            parameters,
+            leg_length_m=values["leg_length_m"],
+            apex_height_m=values["apex_height_m"],
+            included_angle_deg=values["included_angle_deg"],
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        angle = values["included_angle_deg"]
+        end_height = values["apex_height_m"] - values["leg_length_m"] * math.cos(
+            math.radians(angle) / 2.0
+        )
+        return collect(
+            positive_violation("leg_length_m", values["leg_length_m"]),
+            non_negative_violation("apex_height_m", values["apex_height_m"]),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+            None
+            if 0.0 < angle < 180.0
+            else violation("included_angle_deg", 1.0, "optimize.constraint.positive"),
+            None
+            if end_height >= 0.0
+            else violation("apex_height_m", -end_height, "optimize.constraint.positive"),
+        )
+
+    return _descriptor("inverted_v", variables, initial, build, validate)
+
+
+def inverted_l_descriptor(parameters: InvertedLParameters) -> AntennaOptimizerDescriptor:
+    variables = (
+        _length(
+            "vertical_height_m",
+            "inverted_l.vertical_height",
+            "optimize.group.geometry",
+            parameters.vertical_height_m,
+        ),
+        _length(
+            "horizontal_length_m",
+            "inverted_l.horizontal_length",
+            "optimize.group.geometry",
+            parameters.horizontal_length_m,
+        ),
+        _length(
+            "base_height_m",
+            "field.base_height",
+            "optimize.group.geometry",
+            parameters.base_height_m,
+            0.5,
+            0.0,
+        ),
+        _radius(parameters.wire_radius_m),
+    )
+    initial = {
+        "vertical_height_m": parameters.vertical_height_m,
+        "horizontal_length_m": parameters.horizontal_length_m,
+        "base_height_m": parameters.base_height_m,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+
+    def build(values: Mapping[str, float]) -> InvertedLParameters:
+        return replace(
+            parameters,
+            vertical_height_m=values["vertical_height_m"],
+            horizontal_length_m=values["horizontal_length_m"],
+            base_height_m=values["base_height_m"],
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        return collect(
+            positive_violation("vertical_height_m", values["vertical_height_m"]),
+            positive_violation("horizontal_length_m", values["horizontal_length_m"]),
+            non_negative_violation("base_height_m", values["base_height_m"]),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+        )
+
+    return _descriptor("inverted_l", variables, initial, build, validate)
+
+
+def j_pole_descriptor(parameters: JPoleParameters) -> AntennaOptimizerDescriptor:
+    variables = [
+        _length(
+            "radiator_height_m",
+            "j_pole.radiator_height",
+            "optimize.group.geometry",
+            parameters.radiator_height_m,
+            0.15,
+        ),
+        _length(
+            "stub_length_m",
+            "j_pole.stub_length",
+            "optimize.group.geometry",
+            parameters.stub_length_m,
+            0.15,
+        ),
+        _length(
+            "spacing_m",
+            "j_pole.spacing",
+            "optimize.group.geometry",
+            parameters.spacing_m,
+            0.5,
+            0.01,
+        ),
+        _length(
+            "feed_offset_m",
+            "j_pole.feed_offset",
+            "optimize.group.feed",
+            parameters.feed_offset_m,
+            0.5,
+            0.0,
+        ),
+        _length(
+            "base_height_m",
+            "j_pole.base_height",
+            "optimize.group.geometry",
+            parameters.base_height_m,
+            0.5,
+            0.01,
+        ),
+        _radius(parameters.wire_radius_m),
+    ]
+    if parameters.folded:
+        variables.append(
+            _length("gap_m", "j_pole.gap", "optimize.group.geometry", parameters.gap_m, 0.5, 0.001)
+        )
+    initial = {
+        "radiator_height_m": parameters.radiator_height_m,
+        "stub_length_m": parameters.stub_length_m,
+        "spacing_m": parameters.spacing_m,
+        "feed_offset_m": parameters.feed_offset_m,
+        "base_height_m": parameters.base_height_m,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+    if parameters.folded:
+        initial["gap_m"] = parameters.gap_m
+
+    def build(values: Mapping[str, float]) -> JPoleParameters:
+        return replace(
+            parameters,
+            radiator_height_m=values["radiator_height_m"],
+            stub_length_m=values["stub_length_m"],
+            spacing_m=values["spacing_m"],
+            feed_offset_m=values["feed_offset_m"],
+            base_height_m=values["base_height_m"],
+            gap_m=values.get("gap_m", parameters.gap_m),
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        issues: list[ConstraintViolation | None] = [
+            positive_violation("radiator_height_m", values["radiator_height_m"]),
+            positive_violation("stub_length_m", values["stub_length_m"]),
+            positive_violation("spacing_m", values["spacing_m"]),
+            non_negative_violation("feed_offset_m", values["feed_offset_m"]),
+            positive_violation("base_height_m", values["base_height_m"]),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+        ]
+        if values["feed_offset_m"] >= values["stub_length_m"]:
+            issues.append(
+                violation(
+                    "feed_offset_m",
+                    values["feed_offset_m"] - values["stub_length_m"] + 1e-9,
+                    "optimize.constraint.feed_offset",
+                )
+            )
+        if not parameters.folded and values["radiator_height_m"] < values["stub_length_m"]:
+            issues.append(
+                violation(
+                    "radiator_height_m",
+                    values["stub_length_m"] - values["radiator_height_m"],
+                    "optimize.constraint.positive",
+                )
+            )
+        if "gap_m" in values:
+            issues.append(positive_violation("gap_m", values["gap_m"]))
+        return collect(*issues)
+
+    return _descriptor("j_pole", tuple(variables), initial, build, validate)
+
+
+def ringo_descriptor(parameters: RingoParameters) -> AntennaOptimizerDescriptor:
+    variables = (
+        _length(
+            "radiator_height_m",
+            "ringo.radiator_height",
+            "optimize.group.geometry",
+            parameters.radiator_height_m,
+            0.15,
+        ),
+        _length(
+            "ring_diameter_m",
+            "ringo.ring_diameter",
+            "optimize.group.geometry",
+            parameters.ring_diameter_m,
+            0.5,
+            0.01,
+        ),
+        _length(
+            "ring_height_m",
+            "ringo.ring_height",
+            "optimize.group.geometry",
+            parameters.ring_height_m,
+            0.5,
+            0.01,
+        ),
+        _radius(parameters.wire_radius_m),
+    )
+    initial = {
+        "radiator_height_m": parameters.radiator_height_m,
+        "ring_diameter_m": parameters.ring_diameter_m,
+        "ring_height_m": parameters.ring_height_m,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+
+    def build(values: Mapping[str, float]) -> RingoParameters:
+        return replace(
+            parameters,
+            radiator_height_m=values["radiator_height_m"],
+            ring_diameter_m=values["ring_diameter_m"],
+            ring_height_m=values["ring_height_m"],
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        return collect(
+            positive_violation("radiator_height_m", values["radiator_height_m"]),
+            positive_violation("ring_diameter_m", values["ring_diameter_m"]),
+            positive_violation("ring_height_m", values["ring_height_m"]),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+        )
+
+    return _descriptor("ringo", variables, initial, build, validate)
+
+
+def ocfd_descriptor(parameters: OCFDParameters) -> AntennaOptimizerDescriptor:
+    variables = (
+        _length(
+            "total_length_m",
+            "field.length",
+            "optimize.group.geometry",
+            parameters.total_length_m,
+            0.15,
+        ),
+        OptimizationVariable(
+            "feed_ratio",
+            "ocfd.feed_offset",
+            "optimize.group.feed",
+            0.05,
+            0.95,
+            unit="fraction",
+            step=0.01,
+        ),
+        _length(
+            "height_m", "field.height", "optimize.group.geometry", parameters.height_m, 0.25, 0.0
+        ),
+        _radius(parameters.wire_radius_m),
+        _choice_ratio("transformer_ratio", "ocfd.transformer_ratio", parameters.transformer_ratio),
+    )
+    initial = {
+        "total_length_m": parameters.total_length_m,
+        "feed_ratio": parameters.feed_ratio,
+        "height_m": parameters.height_m,
+        "wire_radius_m": parameters.wire_radius_m,
+        "transformer_ratio": parameters.transformer_ratio,
+    }
+
+    def build(values: Mapping[str, float]) -> OCFDParameters:
+        return replace(
+            parameters,
+            total_length_m=values["total_length_m"],
+            feed_ratio=values["feed_ratio"],
+            height_m=values["height_m"],
+            wire_radius_m=values["wire_radius_m"],
+            transformer_ratio=values["transformer_ratio"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        return collect(
+            positive_violation("total_length_m", values["total_length_m"]),
+            None
+            if 0.0 < values["feed_ratio"] < 1.0
+            else violation("feed_ratio", 1.0, "optimize.constraint.positive"),
+            non_negative_violation("height_m", values["height_m"]),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+            positive_violation("transformer_ratio", values["transformer_ratio"]),
+        )
+
+    return _descriptor("ocfd", variables, initial, build, validate)
+
+
+def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescriptor:
+    variables: list[OptimizationVariable] = [
+        _length("length_m", "field.length", "optimize.group.geometry", parameters.length_m, 0.12),
+        _length(
+            "feed_height_m",
+            "endfed.feed_height",
+            "optimize.group.feed",
+            parameters.feed_height_m,
+            0.25,
+            0.0,
+        ),
+        _length(
+            "end_height_m",
+            "endfed.end_height",
+            "optimize.group.feed",
+            parameters.end_height_m,
+            0.25,
+            0.0,
+        ),
+        _radius(parameters.wire_radius_m),
+        _choice_ratio(
+            "transformer_ratio",
+            "endfed.transformer_ratio",
+            parameters.transformer_ratio,
+        ),
+    ]
+    initial = {
+        "length_m": parameters.length_m,
+        "feed_height_m": parameters.feed_height_m,
+        "end_height_m": parameters.end_height_m,
+        "wire_radius_m": parameters.wire_radius_m,
+        "transformer_ratio": parameters.transformer_ratio,
+    }
+    if parameters.counterpoise_length_m > 0.0:
+        low, high = around(parameters.counterpoise_length_m, 0.3, minimum=0.1)
+        variables.append(
+            OptimizationVariable(
+                "counterpoise_length_m",
+                "endfed.counterpoise_length",
+                "optimize.group.loads",
+                low,
+                high,
+                step=0.01,
+            )
+        )
+        initial["counterpoise_length_m"] = parameters.counterpoise_length_m
+        low, high = around(parameters.counterpoise_height_m, 0.5, minimum=0.0)
+        variables.append(
+            OptimizationVariable(
+                "counterpoise_height_m",
+                "endfed.counterpoise_height",
+                "optimize.group.loads",
+                low,
+                high,
+                step=0.01,
+            )
+        )
+        initial["counterpoise_height_m"] = parameters.counterpoise_height_m
+        if parameters.counterpoise_azimuth_deg is not None:
+            variables.append(
+                OptimizationVariable(
+                    "counterpoise_azimuth_deg",
+                    "endfed.counterpoise_azimuth",
+                    "optimize.group.loads",
+                    0.0,
+                    360.0,
+                    unit="deg",
+                    step=1.0,
+                )
+            )
+            initial["counterpoise_azimuth_deg"] = parameters.counterpoise_azimuth_deg
+
+    def build(values: Mapping[str, float]) -> EndFedParameters:
+        return replace(
+            parameters,
+            length_m=values["length_m"],
+            feed_height_m=values["feed_height_m"],
+            end_height_m=values["end_height_m"],
+            wire_radius_m=values["wire_radius_m"],
+            transformer_ratio=values["transformer_ratio"],
+            counterpoise_length_m=values.get(
+                "counterpoise_length_m", parameters.counterpoise_length_m
+            ),
+            counterpoise_height_m=values.get(
+                "counterpoise_height_m", parameters.counterpoise_height_m
+            ),
+            counterpoise_azimuth_deg=values.get(
+                "counterpoise_azimuth_deg", parameters.counterpoise_azimuth_deg
+            ),
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        issues: list[ConstraintViolation | None] = [
+            positive_violation("length_m", values["length_m"]),
+            non_negative_violation("feed_height_m", values["feed_height_m"]),
+            non_negative_violation("end_height_m", values["end_height_m"]),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+            positive_violation("transformer_ratio", values["transformer_ratio"]),
+        ]
+        if abs(values["end_height_m"] - values["feed_height_m"]) > values["length_m"] + 1e-9:
+            issues.append(
+                violation(
+                    "end_height_m",
+                    abs(values["end_height_m"] - values["feed_height_m"]) - values["length_m"],
+                    "optimize.constraint.endfed_height",
+                )
+            )
+        if "counterpoise_length_m" in values:
+            issues.append(
+                non_negative_violation("counterpoise_length_m", values["counterpoise_length_m"])
+            )
+            issues.append(
+                non_negative_violation("counterpoise_height_m", values["counterpoise_height_m"])
+            )
+        return collect(*issues)
+
+    return _descriptor("endfed", tuple(variables), initial, build, validate)
+
+
+def fan_dipole_descriptor(parameters: FanDipoleParameters) -> AntennaOptimizerDescriptor:
+    variables: list[OptimizationVariable] = []
+    initial: dict[str, float] = {}
+    for index, element in enumerate(parameters.elements):
+        length_low, length_high = around(element.length_m, 0.15, minimum=0.1)
+        variables.append(
+            OptimizationVariable(
+                f"length_{index}",
+                "field.element_length",
+                "optimize.group.geometry",
+                length_low,
+                length_high,
+                step=0.01,
+            )
+        )
+        initial[f"length_{index}"] = element.length_m
+        angle_low = max(10.0, element.included_angle_deg - 15.0)
+        angle_high = min(175.0, element.included_angle_deg + 15.0)
+        variables.append(
+            OptimizationVariable(
+                f"angle_{index}",
+                "inverted_v.included_angle",
+                "optimize.group.geometry",
+                angle_low,
+                angle_high,
+                unit="deg",
+                step=1.0,
+            )
+        )
+        initial[f"angle_{index}"] = element.included_angle_deg
+    apex_low, apex_high = around(parameters.apex_height_m, 0.25, minimum=0.5)
+    variables.append(
+        OptimizationVariable(
+            "apex_height_m",
+            "field.height",
+            "optimize.group.geometry",
+            apex_low,
+            apex_high,
+            step=0.01,
+        )
+    )
+    initial["apex_height_m"] = parameters.apex_height_m
+    variables.append(_radius(parameters.wire_radius_m))
+    initial["wire_radius_m"] = parameters.wire_radius_m
+
+    def build(values: Mapping[str, float]) -> FanDipoleParameters:
+        elements = tuple(
+            FanElement(
+                length_m=values[f"length_{index}"],
+                included_angle_deg=values[f"angle_{index}"],
+            )
+            for index in range(len(parameters.elements))
+        )
+        return replace(
+            parameters,
+            elements=elements,
+            apex_height_m=values["apex_height_m"],
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        issues: list[ConstraintViolation | None] = [
+            positive_violation("apex_height_m", values["apex_height_m"]),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+        ]
+        angles: list[float] = []
+        for index, _element in enumerate(parameters.elements):
+            length = values[f"length_{index}"]
+            angle = values[f"angle_{index}"]
+            angles.append(angle)
+            issues.append(positive_violation(f"length_{index}", length))
+            if not 0.0 < angle <= 180.0:
+                issues.append(violation(f"angle_{index}", 1.0, "optimize.constraint.positive"))
+            end_height = values["apex_height_m"] - (length / 2.0) * math.cos(
+                math.radians(angle) / 2.0
+            )
+            if end_height < 0.0:
+                issues.append(
+                    violation(
+                        f"length_{index}",
+                        -end_height,
+                        "optimize.constraint.positive",
+                    )
+                )
+        for index, first in enumerate(angles):
+            for second in angles[index + 1 :]:
+                if math.isclose(first, second, abs_tol=0.5):
+                    issues.append(
+                        violation(
+                            "included_angle_deg",
+                            0.5 - abs(first - second),
+                            "optimize.constraint.fan_angles",
+                        )
+                    )
+        return collect(*issues)
+
+    return _descriptor("fan_dipole", tuple(variables), initial, build, validate)
+
+
+def trap_dipole_descriptor(parameters: TrapDipoleParameters) -> AntennaOptimizerDescriptor:
+    variables = (
+        _length(
+            "inner_length_m",
+            "trap_dipole.inner_length",
+            "optimize.group.geometry",
+            parameters.inner_length_m,
+            0.15,
+        ),
+        _length(
+            "outer_length_m",
+            "trap_dipole.outer_length",
+            "optimize.group.geometry",
+            parameters.outer_length_m,
+            0.2,
+        ),
+        _length(
+            "height_m", "field.height", "optimize.group.geometry", parameters.height_m, 0.25, 0.0
+        ),
+        OptimizationVariable(
+            "trap_frequency_hz",
+            "trap_dipole.trap_frequency",
+            "optimize.group.loads",
+            max(parameters.frequency_hz * 1.05, parameters.trap_frequency_hz * 0.85),
+            max(
+                parameters.trap_frequency_hz * 1.15,
+                max(parameters.frequency_hz * 1.05, parameters.trap_frequency_hz * 0.85) + 1000.0,
+            ),
+            unit="Hz",
+            step=1000.0,
+        ),
+        OptimizationVariable(
+            "trap_inductance_h",
+            "trap_dipole.trap_inductance",
+            "optimize.group.loads",
+            max(1e-9, parameters.trap_inductance_h * 0.5),
+            parameters.trap_inductance_h * 1.5,
+            unit="H",
+            step=1e-7,
+        ),
+        _radius(parameters.wire_radius_m),
+    )
+    initial = {
+        "inner_length_m": parameters.inner_length_m,
+        "outer_length_m": parameters.outer_length_m,
+        "height_m": parameters.height_m,
+        "trap_frequency_hz": parameters.trap_frequency_hz,
+        "trap_inductance_h": parameters.trap_inductance_h,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+
+    def build(values: Mapping[str, float]) -> TrapDipoleParameters:
+        return replace(
+            parameters,
+            inner_length_m=values["inner_length_m"],
+            outer_length_m=values["outer_length_m"],
+            height_m=values["height_m"],
+            trap_frequency_hz=values["trap_frequency_hz"],
+            trap_inductance_h=values["trap_inductance_h"],
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        return collect(
+            positive_violation("inner_length_m", values["inner_length_m"]),
+            positive_violation("outer_length_m", values["outer_length_m"]),
+            non_negative_violation("height_m", values["height_m"]),
+            positive_violation("trap_frequency_hz", values["trap_frequency_hz"]),
+            positive_violation("trap_inductance_h", values["trap_inductance_h"]),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+            None
+            if values["trap_frequency_hz"] > parameters.frequency_hz
+            else violation("trap_frequency_hz", 1.0, "optimize.constraint.trap_frequency"),
+        )
+
+    return _descriptor("trap_dipole", variables, initial, build, validate)
+
+
+def t2fd_descriptor(parameters: T2FDParameters) -> AntennaOptimizerDescriptor:
+    variables = (
+        _length("length_m", "t2fd.length", "optimize.group.geometry", parameters.length_m, 0.15),
+        _length(
+            "spacing_m", "t2fd.spacing", "optimize.group.geometry", parameters.spacing_m, 0.3, 0.01
+        ),
+        _length(
+            "height_m", "field.height", "optimize.group.geometry", parameters.height_m, 0.25, 0.0
+        ),
+        OptimizationVariable(
+            "termination_resistance_ohm",
+            "t2fd.termination",
+            "optimize.group.loads",
+            *around(
+                parameters.termination_resistance_ohm,
+                0.5,
+                minimum=10.0,
+            ),
+            unit="ohm",
+            step=1.0,
+        ),
+        _choice_ratio(
+            "transformer_ratio",
+            "t2fd.transformer",
+            parameters.transformer_ratio,
+        ),
+        _radius(parameters.wire_radius_m),
+    )
+    initial = {
+        "length_m": parameters.length_m,
+        "spacing_m": parameters.spacing_m,
+        "height_m": parameters.height_m,
+        "termination_resistance_ohm": parameters.termination_resistance_ohm,
+        "transformer_ratio": parameters.transformer_ratio,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+
+    def build(values: Mapping[str, float]) -> T2FDParameters:
+        return replace(
+            parameters,
+            length_m=values["length_m"],
+            spacing_m=values["spacing_m"],
+            height_m=values["height_m"],
+            termination_resistance_ohm=values["termination_resistance_ohm"],
+            transformer_ratio=values["transformer_ratio"],
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        return collect(
+            positive_violation("length_m", values["length_m"]),
+            positive_violation("spacing_m", values["spacing_m"]),
+            non_negative_violation("height_m", values["height_m"]),
+            positive_violation("termination_resistance_ohm", values["termination_resistance_ohm"]),
+            positive_violation("transformer_ratio", values["transformer_ratio"]),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+        )
+
+    return _descriptor("t2fd", variables, initial, build, validate)
+
+
+def moxon_descriptor(parameters: MoxonParameters) -> AntennaOptimizerDescriptor:
+    variables = (
+        _length("width_m", "moxon.width", "optimize.group.geometry", parameters.width_m, 0.15),
+        _length("depth_m", "moxon.depth", "optimize.group.geometry", parameters.depth_m, 0.25),
+        _length(
+            "reflector_tip_m",
+            "moxon.reflector_tip",
+            "optimize.group.geometry",
+            parameters.reflector_tip_m,
+            0.5,
+            0.001,
+        ),
+        _length(
+            "driven_tip_m",
+            "moxon.driven_tip",
+            "optimize.group.geometry",
+            parameters.driven_tip_m,
+            0.5,
+            0.001,
+        ),
+        _length(
+            "height_m", "field.height", "optimize.group.geometry", parameters.height_m, 0.25, 0.1
+        ),
+        _radius(parameters.wire_radius_m),
+    )
+    initial = {
+        "width_m": parameters.width_m,
+        "depth_m": parameters.depth_m,
+        "reflector_tip_m": parameters.reflector_tip_m,
+        "driven_tip_m": parameters.driven_tip_m,
+        "height_m": parameters.height_m,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+
+    def build(values: Mapping[str, float]) -> MoxonParameters:
+        return replace(
+            parameters,
+            width_m=values["width_m"],
+            depth_m=values["depth_m"],
+            reflector_tip_m=values["reflector_tip_m"],
+            driven_tip_m=values["driven_tip_m"],
+            height_m=values["height_m"],
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        issues: list[ConstraintViolation | None] = [
+            positive_violation("width_m", values["width_m"]),
+            positive_violation("depth_m", values["depth_m"]),
+            positive_violation("reflector_tip_m", values["reflector_tip_m"]),
+            positive_violation("driven_tip_m", values["driven_tip_m"]),
+            positive_violation("height_m", values["height_m"]),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+        ]
+        if values["reflector_tip_m"] + values["driven_tip_m"] >= values["depth_m"]:
+            issues.append(
+                violation(
+                    "reflector_tip_m",
+                    values["reflector_tip_m"] + values["driven_tip_m"] - values["depth_m"],
+                    "optimize.constraint.moxon_gap",
+                )
+            )
+        return collect(*issues)
+
+    return _descriptor(
+        "moxon",
+        variables,
+        initial,
+        build,
+        validate,
+        default_objective=FamilyOptimizationObjective.MAX_GAIN,
+    )

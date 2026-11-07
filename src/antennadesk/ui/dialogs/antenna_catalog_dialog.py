@@ -42,6 +42,8 @@ CATALOG_TYPE_ZS6BKW = "zs6bkw"
 CATALOG_TYPE_ZEPP = "zepp"
 CATALOG_TYPE_J_POLE = "j_pole"
 CATALOG_TYPE_RINGO = "ringo"
+CATALOG_TYPE_HALF_SQUARE = "half_square"
+CATALOG_TYPE_BOBTAIL_CURTAIN = "bobtail_curtain"
 CATALOG_TYPE_SLIM_JIM = "slim_jim"
 CATALOG_TYPE_INVERTED_V = "inverted_v"
 CATALOG_TYPE_INVERTED_L = "inverted_l"
@@ -85,6 +87,20 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         label_key="catalog.j_pole",
         family_key="catalog.family.vertical",
         description_key="catalog.j_pole.description",
+        evidence_key="catalog.evidence.published",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_HALF_SQUARE,
+        label_key="catalog.half_square",
+        family_key="catalog.family.vertical",
+        description_key="catalog.half_square.description",
+        evidence_key="catalog.evidence.published",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_BOBTAIL_CURTAIN,
+        label_key="catalog.bobtail_curtain",
+        family_key="catalog.family.vertical",
+        description_key="catalog.bobtail_curtain.description",
         evidence_key="catalog.evidence.published",
     ),
     CatalogEntry(

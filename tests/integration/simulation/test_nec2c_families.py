@@ -351,6 +351,45 @@ def test_slim_jim_runs_with_the_feed_offset_above_the_base(
     assert result.frequencies[0].swr is not None
 
 
+@pytest.mark.parametrize(
+    ("kind", "wire_count", "maximum_swr"),
+    [
+        ("half_square", 3, 1.6),
+        ("bobtail_curtain", 5, 1.8),
+    ],
+)
+def test_published_scv_geometry_runs_and_matches_the_feed_impedance_range(
+    solver: Nec2cSolver,
+    kind: str,
+    wire_count: int,
+    maximum_swr: float,
+) -> None:
+    from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
+
+    parameters = scv_parameters(ScvKind(kind), 7_150_000.0)
+    model = parameters.to_antenna()
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(7_150_000.0),
+        segmentation=aligned_policy_for_model(
+            model,
+            7_150_000.0,
+            SegmentationPolicy(min_segments_per_wire=3),
+        ),
+        include_conductor_losses=False,
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+    result = solver.run(model, spec)
+
+    assert len(model.wires) == wire_count
+    assert result.status is SimulationStatus.COMPLETED
+    assert result.frequencies
+    frequency = result.frequencies[0]
+    assert frequency.impedance_ohm.real > 0.0
+    assert frequency.swr is not None
+    assert frequency.swr < maximum_swr
+
+
 def test_dl6wu_yagi_estimator_produces_a_runnable_model(
     solver: Nec2cSolver,
 ) -> None:

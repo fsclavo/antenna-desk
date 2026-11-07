@@ -110,8 +110,13 @@ published reference supplies a traceable numeric metric or measured impedance.
 ## Current summary
 
 - **A, reference-backed:** 5 templates.
-- **B, published/heuristic:** 16 templates.
+- **B, published/heuristic:** 18 templates.
 - **C, experimental:** 6 templates, all with a documented limitation.
+
+The `half_square` and `bobtail_curtain` templates entered the catalog at level B
+on 2026-11-07 from Cebik's published 7.15 MHz dimensions. They are new
+templates, not promotions from level C; the free-space starting geometry is
+published, while pattern, ground, and matching remain unvalidated.
 
 The machine-readable registry and the generated table in
 [`VALIDATION_PLAN.md`](VALIDATION_PLAN.md) remain the source of truth.

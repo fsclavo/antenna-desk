@@ -287,12 +287,7 @@ def test_new_inverted_l_creates_a_first_class_design(
     assert window._design_stack.currentWidget() is window._inverted_l_scroll
     assert window._view_combo.currentData() == "elevation"
     assert window._inverted_l_form.parameters() == parameters
-    assert window._optimize_action.isEnabled() is False
-
-    errors: list[str] = []
-    monkeypatch.setattr(window, "_show_error", errors.append)
-    window.optimize_current_design()
-    assert errors == [window._translator.t("error.optimize_inverted_l")]
+    assert window._optimize_action.isEnabled() is True
     window._dirty = False
 
 
@@ -338,7 +333,7 @@ def test_new_magnetic_loop_creates_a_first_class_design(
     errors: list[str] = []
     monkeypatch.setattr(window, "_show_error", errors.append)
     window.optimize_current_design()
-    assert errors == [window._translator.t("error.optimize_magnetic_loop")]
+    assert errors == [window._translator.t("optimize.unavailable.magnetic_loop")]
 
     from antennadesk.ui.units import UnitSystem
 

@@ -152,10 +152,28 @@ feed point. Changing only its circumference cannot bring that to `50 Ω`; use a
 
 ## Families without an estimator
 
-The inverted-L and magnetic-loop templates have no frequency-first estimator.
-They are generated from explicit geometry, and the UI disables **Estimate
-Dimensions...** for them. The magnetic loop also requires a user-supplied tuning
-capacitance; its default is a starting point, not a calculated resonance value.
+The inverted-L, magnetic-loop, half-square, and bobtail-curtain templates have
+no frequency-first estimator. They are generated from explicit geometry, and
+the UI disables **Estimate Dimensions...** for them. The magnetic loop also
+requires a user-supplied tuning capacitance; its default is a starting point,
+not a calculated resonance value.
+
+## Half-square and bobtail-curtain starting dimensions
+
+The **Load Cebik 7.15 MHz reference** button in the shared array editor scales
+the published free-space dimensions by frequency:
+
+- Half square: `62.4 ft` horizontal by `39 ft` vertical at `7.15 MHz`.
+- Bobtail curtain: `125 ft` horizontal by `38 ft` vertical at `7.15 MHz`.
+
+The half square is fed at a top corner and the bobtail at the top junction of
+the center vertical. Cebik's Table 1 reports about `4.6 dBi` and `65 Ω` for the
+half square and about `6.3 dBi` and `40 Ω` at the center/top junction for the
+bobtail. Those values are not AntennaDesk validation targets: the model uses
+the published starting geometry only, and ground, support height, feed line,
+and matching remain installation-specific. The generic **Optimize...** action
+can sweep the overall horizontal span, but it does not optimize the vertical
+height or the feed offset.
 
 ## Radial-system presets
 

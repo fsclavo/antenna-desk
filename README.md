@@ -12,7 +12,7 @@ dipoles, folded dipoles, trap dipoles, T2FDs, vertical and horizontal loops,
 magnetic loops, custom wires, Yagis, Moxon, fan dipoles, inverted-Vs,
 inverted-Ls, OCFDs,
 end-fed wires, slopers, random wires, doublets, J Poles, Slim Jims, Ringos,
-verticals, and loaded verticals are supported.
+half squares, bobtail curtains, verticals, and loaded verticals are supported.
 Yagi and Moxon arrays support horizontal or vertical polarization with a
 horizontal boom, plus optional folded driven elements and beta/hairpin
 matching stubs. Projects use versioned JSON persistence, lossless gzip
@@ -105,6 +105,8 @@ optional signing steps.
 - [ADR-0021 — Lossless compressed project files](docs/ADR/0021-compressed-project-files.md)
 - [ADR-0022 — Multiband analysis by per-band batches](docs/ADR/0022-multiband-analysis-by-band-batches.md)
 - [ADR-0023 — Yagi and Moxon horizontal/vertical polarization](docs/ADR/0023-yagi-moxon-polarization.md)
+- [ADR-0026 — Family optimizer architecture](docs/ADR/0026-family-optimizer-architecture.md)
+- [Optimizer Phase A plan](docs/OPTIMIZER_PHASE_A_PLAN.md)
 - [Antenna dimension estimators](docs/ANTENNA_DESIGN_ESTIMATORS.md)
 - [Geometry presentation contract](docs/GEOMETRY_PRESENTATION.md)
 - [NEC engine evaluation](docs/spikes/phase0-solver-evaluation.md)
@@ -132,27 +134,27 @@ optional signing steps.
   points by default, and pattern resolution defaults to 5° and can be set to
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` projects with multiple design
-  variants; schema version 15 adds frequency-dependent balun/unun loss and
-  repairs undersized Yagi matching hardware, migrating older files explicitly.
+  variants; schema version 16 adds half-square and bobtail-curtain designs,
+  schema 15 adds frequency-dependent balun/unun loss and repairs undersized
+  Yagi matching hardware, and older files migrate explicitly.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - VNA CSV import with measured impedance/SWR records and a measured/simulated
   SWR, R, X, or |Z| comparison tab, including resonance differences.
 - Currents tab and resonance markers on impedance/SWR sweeps.
-- Bounded antenna-dimension optimization for a selectable target impedance
-  `R + jX`, target reactance, minimum SWR, maximum SWR bandwidth, maximum power
-  gain, maximum efficiency, or a weighted SWR/gain balance: wire-dipole,
-  folded-dipole, OCFD, end-fed wire, or loop dimensions, with an evaluation
-  log, ranked result table, and sensitivity table.
-- Bounded two-variable impedance synthesis for OCFD, J Pole, and Slim Jim
-  designs, with a target frequency/R/X, evaluation log, and apply-and-simulate
-  flow.
-- Bounded multi-element optimization for target impedance, maximum gain,
-  maximum front-to-back ratio, or a weighted gain/F-B/SWR/efficiency score,
-  with template-specific variables, integer variables (including Yagi element
-  count), Pareto ranks, candidate selection, and apply-and-simulate flow.
-- Bounded fan-dipole element-length optimization against a target impedance.
-- Bounded Moxon optimization of width, spacing, and tip dimensions for target
-  impedance, gain, or front-to-back ratio.
+- Family-driven antenna optimization with one explicit descriptor per typed
+  family, no generic fallback, and a joint deterministic differential-evolution
+  plus local-search engine. Every geometry, feed, and family-load variable is
+  searched together; topology remains a user choice. Supported families include
+  dipoles, loops, verticals, inverted-V/L, J Pole, Ringo, SCV, OCFD, EndFed,
+  fan/trap/T2FD, Yagi, and Moxon, with target impedance, minimum SWR, maximum
+  gain, maximum front-to-back, maximum efficiency, maximum bandwidth, and
+  weighted multi-objective scores.
+- Balanced, thorough, and fast optimizer budgets with automatic extension,
+  evaluation counting, deterministic seeds, ranked result tables, sensitivity
+  reports, and Apply Best routed through an exhaustive editor adapter.
+- Explicit optimizer unavailability for magnetic loops, random wires, arbitrary
+  custom geometry, imports, and G5RV/ZS6BKW/Zepp/doublet generators that still
+  use custom geometry.
 - Custom straight-wire antennas with a coordinate editor, template-to-custom
   conversion, a parametric Yagi generator with an editable element table and
   NBS starting preset, Moxon, fan dipole, end-fed with optional counterpoise
@@ -169,6 +171,9 @@ optional signing steps.
   dense ground-screen approximation, with editable numeric fields.
 - Top-loaded vertical geometry with a capacitive hat and loading coil, including
   report and scene dimensions.
+- Half-square and bobtail-curtain self-contained vertical arrays with
+  top-junction feeds, adjustable feed offset, geometry dimensions, reports, and
+  construction sheets.
 - Explicit EFHW labeling and published 40/20/10 m preset buttons for the
   end-fed template.
 - Project-level balun/unun insertion-loss model with a frequency-dependent
@@ -237,10 +242,13 @@ uv run python scripts/run_reference_simulation.py \
   generator supports a radial screen. General transmission-line geometry and
   arbitrary radial screens are not modeled. The feed line is a uniform
   post-processing model; it does not change the antenna pattern or power gain.
-- Optimization covers primary-dimension, multi-element, integer, and Pareto
-  searches for generated templates. Custom/imported designs are excluded, and
-  there are no boom-length or turning-radius constraints. Synthesis is a
-  bounded starting point, not a global inverse solver.
+- Optimization covers every first-class typed family through explicit
+  descriptors and a joint hybrid search over geometry, feed, and family-load
+  variables. Magnetic loops, random wires, custom/imported geometry, and
+  G5RV/ZS6BKW/Zepp/doublet custom generators are explicitly unavailable until
+  their models are converted or improved. Band-aware, robust, and Pareto modes
+  are future work; synthesis remains a bounded starting point, not a global
+  inverse solver.
 - Far-field values are NEC power gains. Realized gain and directivity are not
   separated. Relative permeability is not emitted to NEC. Conductor
   conductivity is emitted when `SimulationSpec.include_conductor_losses` is

@@ -20,6 +20,7 @@ from .magnetic_loop import MagneticLoopParameters
 from .moxon import MoxonParameters
 from .ocfd import OCFDParameters
 from .ringo import RingoParameters
+from .scv import ScvParameters
 from .t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
 from .trap_dipole import ANTENNA_TYPE_TRAP_DIPOLE, TrapDipoleParameters
 from .vertical import VerticalParameters
@@ -47,6 +48,8 @@ _GENERATOR_FAMILIES: dict[str, AntennaFamily] = {
     "j_pole": AntennaFamily.VERTICAL,
     "slim_jim": AntennaFamily.VERTICAL,
     "ringo": AntennaFamily.VERTICAL,
+    "half_square": AntennaFamily.VERTICAL,
+    "bobtail_curtain": AntennaFamily.VERTICAL,
     "trap_dipole": AntennaFamily.DIPOLE,
     "t2fd": AntennaFamily.DIPOLE,
     "g5rv": AntennaFamily.DIPOLE,
@@ -81,6 +84,8 @@ def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
     if isinstance(parameters, JPoleParameters):
         return AntennaFamily.VERTICAL
     if isinstance(parameters, RingoParameters):
+        return AntennaFamily.VERTICAL
+    if isinstance(parameters, ScvParameters):
         return AntennaFamily.VERTICAL
     if isinstance(parameters, (T2FDParameters, TrapDipoleParameters)):
         return AntennaFamily.DIPOLE
@@ -120,6 +125,8 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return "j_pole"
     if isinstance(parameters, RingoParameters):
         return "ringo"
+    if isinstance(parameters, ScvParameters):
+        return parameters.kind.value
     if isinstance(parameters, TrapDipoleParameters):
         return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(parameters, T2FDParameters):

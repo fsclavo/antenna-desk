@@ -44,6 +44,11 @@ amateur radio. The project is GPL-3.0-or-later.
   family builder/domain module.
 - Frequency-first estimators must declare a source, assumptions, confidence,
   and tolerance in `docs/ANTENNA_DESIGN_ESTIMATORS.md`.
+- Every new antenna family must include a family optimizer descriptor and its
+  registry, field-coverage, budget, constraint, determinism, Apply Best, and
+  solver QA, or an explicit unavailable reason when a trustworthy optimizer is
+  not possible. See `docs/ADR/0026-family-optimizer-architecture.md` and
+  `docs/OPTIMIZER_PHASE_A_PLAN.md`.
 
 ## Correctness and science
 

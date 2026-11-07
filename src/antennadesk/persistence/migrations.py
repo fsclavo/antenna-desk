@@ -293,6 +293,12 @@ def _migrate_v14_to_v15(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v15_to_v16(document: dict[str, Any]) -> dict[str, Any]:
+    """Introduce the half-square and bobtail-curtain design types."""
+
+    return copy.deepcopy(document)
+
+
 def _migrate_v13_to_v14(document: dict[str, Any]) -> dict[str, Any]:
     """Add the optional project balun/unun loss model."""
 
@@ -372,6 +378,7 @@ MIGRATIONS: dict[int, Migration] = {
     12: _migrate_v12_to_v13,
     13: _migrate_v13_to_v14,
     14: _migrate_v14_to_v15,
+    15: _migrate_v15_to_v16,
 }
 
 

@@ -104,9 +104,18 @@ Benchmark and decision: [`MULTIBAND_PERFORMANCE.md`](MULTIBAND_PERFORMANCE.md).
 
 Completed follow-ups:
 
-- ZS6BKW-specific optimizer for dipole wire length and matching-line length.
+- Family optimizer redesign (ADR-0026): explicit descriptor per typed family,
+  joint hybrid search over every geometry/feed/load dimension, explicit
+  unavailable reasons, no fallback, and apply-best routing through an exhaustive
+  adapter. See `OPTIMIZER_PHASE_A_PLAN.md`.
 - T2FD **Estimate Dimensions...** using the Cebik wide-long rule and preserving
   the current termination and transformer.
+
+Deferred follow-ups:
+
+- The old ZS6BKW-specific length/line optimizer is superseded by the unified
+  family optimizer, but ZS6BKW remains a custom generator until Phase B, so its
+  Optimize action is explicitly unavailable.
 
 ## Phase 5 — Validation and references
 
@@ -170,6 +179,10 @@ The ordered antenna backlog lives in
    independently validated loading design.
 9. **Completed 2026-11-07:** explicit EFHW labeling and published 40/20/10 m
    preset buttons for the existing EndFed template.
+10. **Completed 2026-11-07:** half-square and bobtail-curtain self-contained
+    vertical arrays with a shared editor, top-junction feed, schema-16
+    persistence, published Cebik dimensions, and a frequency-first estimator
+    deliberately deferred until a dedicated estimator is justified.
 
 The remaining medium and large candidates are ordered after those seven in the
 roadmap table. Items 15–19 require architectural work or a much larger test

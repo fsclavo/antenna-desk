@@ -260,6 +260,23 @@ def test_top_loaded_vertical_construction_sheet_lists_the_hat(
     assert "top-hat wires of 0.7500 m" in sheet
 
 
+def test_scv_construction_sheet_lists_the_array_wires(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
+
+    design = sample_project.designs[0]
+    scv = design.with_parameters(scv_parameters(ScvKind.BOBTAIL_CURTAIN, 7_150_000.0))
+    sheet = render_construction_sheet(sample_project, scv, None)
+
+    assert "Bobtail curtain" in sheet
+    assert "Horizontal segment" in sheet
+    assert "19.0500 m each" in sheet
+    assert "three vertical wires of 11.5824 m" in sheet
+    assert "two top wires of 19.0500 m each" in sheet
+    assert "top junction of the center vertical" in sheet
+
+
 def test_beta_hairpin_yagi_construction_sheet_lists_the_stub(
     sample_project: Project,
 ) -> None:

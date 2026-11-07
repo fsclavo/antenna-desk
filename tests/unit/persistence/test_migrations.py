@@ -425,6 +425,26 @@ def test_v14_migration_repairs_undersized_yagi_match_hardware() -> None:
     assert parameters["match_length_m"] == pytest.approx(0.0508)
 
 
+def test_v15_migration_introduces_the_self_contained_vertical_arrays() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 15,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "wire_dipole",
+                    "parameters": {"total_length_m": 20.0},
+                }
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert migrated["project"]["designs"][0] == document["project"]["designs"][0]
+
+
 def test_v4_migration_adds_optional_transformer_ratios() -> None:
     document = {
         "format": "antennadesk-project",

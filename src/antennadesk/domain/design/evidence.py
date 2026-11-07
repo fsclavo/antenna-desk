@@ -317,6 +317,35 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         tolerance="Not applicable (structural)",
         limitation="No independent numerical reference.",
     ),
+    "half_square": EvidenceEntry(
+        template="half_square",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "L. B. Cebik, W4RNL, 'SCVs: A Family Album', Table 1 (7.15 MHz): "
+            "62.4 ft horizontal by 39 ft vertical, about 4.6 dBi and 65 ohm"
+        ),
+        tolerance="5% on the frequency-scaled horizontal and vertical dimensions",
+        limitation=(
+            "Published free-space, maximum-gain starting geometry only. Pattern, "
+            "feedpoint impedance, ground, support height, feed line, and the "
+            "matching network are not independently validated."
+        ),
+    ),
+    "bobtail_curtain": EvidenceEntry(
+        template="bobtail_curtain",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "L. B. Cebik, W4RNL, 'SCVs: A Family Album', Table 1 (7.15 MHz): "
+            "125 ft horizontal by 38 ft vertical, about 6.3 dBi and 40 ohm at "
+            "the center-wire/top-horizontal junction"
+        ),
+        tolerance="5% on the frequency-scaled horizontal and vertical dimensions",
+        limitation=(
+            "Published free-space, maximum-gain starting geometry only. Pattern, "
+            "feedpoint impedance versus feed height, ground, support height, and "
+            "the feed line are not independently validated."
+        ),
+    ),
     "doublet": EvidenceEntry(
         template="doublet",
         level=EvidenceLevel.PUBLISHED,

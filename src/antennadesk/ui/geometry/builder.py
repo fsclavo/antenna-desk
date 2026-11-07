@@ -42,6 +42,11 @@ from ...domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from ...domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
 from ...domain.antennas.polarization import Polarization
 from ...domain.antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
+from ...domain.antennas.scv import (
+    ANTENNA_TYPE_BOBTAIL_CURTAIN,
+    ANTENNA_TYPE_HALF_SQUARE,
+    ScvParameters,
+)
 from ...domain.antennas.t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
 from ...domain.antennas.trap_dipole import (
     ANTENNA_TYPE_TRAP_DIPOLE,
@@ -92,6 +97,8 @@ _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_ENDFED: "catalog.endfed",
     ANTENNA_TYPE_J_POLE: "catalog.j_pole",
     ANTENNA_TYPE_RINGO: "catalog.ringo",
+    ANTENNA_TYPE_HALF_SQUARE: "catalog.half_square",
+    ANTENNA_TYPE_BOBTAIL_CURTAIN: "catalog.bobtail_curtain",
     ANTENNA_TYPE_TRAP_DIPOLE: "catalog.trap_dipole",
     ANTENNA_TYPE_T2FD: "catalog.t2fd",
     ZEPP_PRESENTATION_TYPE: "catalog.zepp",
@@ -117,6 +124,8 @@ def effective_antenna_type(
         if generator in {
             "j_pole",
             "ringo",
+            "half_square",
+            "bobtail_curtain",
             "yagi",
             "moxon",
             "fan_dipole",
@@ -859,6 +868,97 @@ def _j_pole_gap_inset(
         polylines=polylines,
         dimensions=dimensions,
     )
+
+
+def _add_scv_dimensions(
+    model: AntennaModel,
+    parameters: ScvParameters | None,
+    factory: _Factory,
+    dimensions: list[Dimension],
+    notes: list[str],
+    translator: Translator,
+) -> None:
+    min_z, max_z = _model_z_extents(model)
+    verticals = tuple(
+        wire
+        for wire in model.wires
+        if math.hypot(
+            wire.end.x_m - wire.start.x_m,
+            wire.end.y_m - wire.start.y_m,
+        )
+        <= 1e-9
+    )
+    if len(verticals) < 2:
+        return
+    top_points = [wire.start if wire.start.z_m >= wire.end.z_m else wire.end for wire in verticals]
+    top_pairs = [
+        (first, second)
+        for index, first in enumerate(top_points)
+        for second in top_points[index + 1 :]
+    ]
+    left_top, right_top = max(
+        top_pairs,
+        key=lambda pair: factory.project(pair[0]).distance_to(factory.project(pair[1])),
+    )
+    if isinstance(parameters, ScvParameters):
+        horizontal_length = parameters.horizontal_length_m
+        vertical_height = parameters.vertical_height_m
+    else:
+        horizontal_length = max(
+            math.hypot(
+                point.x_m - other.x_m,
+                point.y_m - other.y_m,
+            )
+            for wire in verticals
+            for point in (wire.start, wire.end)
+            for other_wire in verticals
+            for other in (other_wire.start, other_wire.end)
+            if math.isclose(point.z_m, max_z, abs_tol=1e-6)
+            and math.isclose(other.z_m, max_z, abs_tol=1e-6)
+        )
+        vertical_height = max_z - min_z
+    if factory.projection.vertical:
+        dimensions.append(
+            factory.dimension(
+                left_top,
+                right_top,
+                horizontal_length,
+                side="above",
+                priority=85,
+            )
+        )
+        dimensions.append(
+            factory.vertical_dimension(
+                factory.project(right_top).x_m,
+                min_z,
+                max_z,
+                vertical_height,
+                side="right",
+                priority=80,
+            )
+        )
+        if min_z > 1e-6:
+            dimensions.append(
+                factory.vertical_dimension(
+                    factory.project(left_top).x_m,
+                    0.0,
+                    min_z,
+                    min_z,
+                    side="left",
+                    priority=60,
+                )
+            )
+    else:
+        dimensions.append(
+            factory.dimension(
+                left_top,
+                right_top,
+                horizontal_length,
+                side="above",
+                priority=80,
+            )
+        )
+        notes.append(translator.t("geometry.vertical_plane_edge_on"))
 
 
 def _add_ringo_dimensions(
@@ -1819,6 +1919,50 @@ def _summary(
                 f"{_format_length(ring_height, translator, unit_system)}",
             ]
         )
+    elif isinstance(parameters, ScvParameters) or antenna_type in {
+        ANTENNA_TYPE_HALF_SQUARE,
+        ANTENNA_TYPE_BOBTAIL_CURTAIN,
+    }:
+        if isinstance(parameters, ScvParameters):
+            horizontal_length = parameters.horizontal_length_m
+            vertical_height = parameters.vertical_height_m
+            vertical_count = parameters.vertical_count
+        else:
+            verticals = tuple(
+                wire
+                for wire in model.wires
+                if math.hypot(
+                    wire.end.x_m - wire.start.x_m,
+                    wire.end.y_m - wire.start.y_m,
+                )
+                <= 1e-9
+            )
+            vertical_count = len(verticals)
+            bases = [
+                (point.x_m, point.y_m)
+                for wire in verticals
+                for point in (wire.start, wire.end)
+                if math.isclose(point.z_m, min_z, abs_tol=1e-6)
+            ]
+            horizontal_length = max(
+                (
+                    math.hypot(first[0] - second[0], first[1] - second[1])
+                    for first in bases
+                    for second in bases
+                ),
+                default=0.0,
+            )
+            vertical_height = max_z - min_z
+        parts.extend(
+            [
+                f"{translator.t('scv.horizontal_length').lower()} "
+                f"{_format_length(horizontal_length, translator, unit_system)}",
+                f"{translator.t('scv.vertical_height').lower()} "
+                f"{_format_length(vertical_height, translator, unit_system)}",
+                f"{translator.t('scv.vertical_elements').lower()} {vertical_count}",
+                translator.t("scv.feed_top"),
+            ]
+        )
     elif isinstance(parameters, YagiParameters) or antenna_type == ANTENNA_TYPE_YAGI:
         if isinstance(parameters, YagiParameters):
             positions = [element.position_m for element in parameters.elements]
@@ -2195,6 +2339,15 @@ def build_scene(
         )
     elif effective_type == ANTENNA_TYPE_RINGO:
         _add_ringo_dimensions(model, factory, dimensions, insets, translator)
+    elif effective_type in {ANTENNA_TYPE_HALF_SQUARE, ANTENNA_TYPE_BOBTAIL_CURTAIN}:
+        _add_scv_dimensions(
+            model,
+            parameters if isinstance(parameters, ScvParameters) else None,
+            factory,
+            dimensions,
+            notes,
+            translator,
+        )
     elif effective_type in {ANTENNA_TYPE_YAGI, ANTENNA_TYPE_MOXON}:
         _add_array_dimensions(
             model,

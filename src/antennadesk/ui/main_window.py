@@ -102,6 +102,7 @@ from ..domain.antennas.matching_network import MatchingNetwork
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
+from ..domain.antennas.scv import ScvKind, ScvParameters
 from ..domain.antennas.t2fd import (
     T2FD_DRIVEN_WIRE_ID,
     T2FD_TERMINATED_WIRE_ID,
@@ -122,6 +123,7 @@ from ..domain.design.band_plan import BandDefault, BandPlan, BandSelection, defa
 from ..domain.design.estimators import supports_estimation
 from ..domain.design.formulas import frequency_for_half_wave_length
 from ..domain.measurement import Measurement
+from ..domain.optimization.registry import optimizer_availability
 from ..domain.projects.project import DesignProvenance, DesignVariant, Project
 from ..domain.simulation.band_result import BandAnalysisResult, BandResult
 from ..domain.simulation.bands import (
@@ -155,6 +157,7 @@ from ..reporting.csv_export import (
 from ..reporting.html_report import write_html_report
 from ..simulation.nec2.solver import Nec2cSolver
 from .dialogs.antenna_catalog_dialog import (
+    CATALOG_TYPE_BOBTAIL_CURTAIN,
     CATALOG_TYPE_CUSTOM,
     CATALOG_TYPE_DELTA_LOOP,
     CATALOG_TYPE_DOUBLET,
@@ -162,6 +165,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_FAN_DIPOLE,
     CATALOG_TYPE_FOLDED_DIPOLE,
     CATALOG_TYPE_G5RV,
+    CATALOG_TYPE_HALF_SQUARE,
     CATALOG_TYPE_INVERTED_L,
     CATALOG_TYPE_INVERTED_V,
     CATALOG_TYPE_J_POLE,
@@ -197,6 +201,7 @@ from .dialogs.element_optimization_dialog import (
     ElementOptimizationVariable,
 )
 from .dialogs.endfed_dialog import EndFedDialog
+from .dialogs.family_optimization_dialog import FamilyOptimizationDialog
 from .dialogs.fan_dipole_dialog import FanDipoleDialog
 from .dialogs.feed_line_dialog import FeedLineDialog
 from .dialogs.g5rv_dialog import G5RVDialog
@@ -212,6 +217,7 @@ from .dialogs.ocfd_dialog import OCFDDialog
 from .dialogs.optimization_dialog import OptimizationDialog
 from .dialogs.preferences_dialog import PreferencesDialog
 from .dialogs.ringo_dialog import RingoDialog
+from .dialogs.scv_dialog import ScvDialog
 from .dialogs.synthesis_dialog import SynthesisDialog
 from .dialogs.t2fd_dialog import T2FDDialog
 from .dialogs.transmission_lines_dialog import TransmissionLinesDialog
@@ -222,6 +228,7 @@ from .dialogs.zepp_dialog import ZeppDialog
 from .dialogs.zs6bkw_dialog import ZS6BKWDialog
 from .history import ProjectSnapshot, SnapshotCommand, history_action
 from .i18n import Language, Translator
+from .optimization_adapters import adapter_for
 from .pattern_resolution import (
     DEFAULT_PATTERN_SNAPSHOT_COUNT,
     DEFAULT_PATTERN_STEP_DEG,
@@ -239,7 +246,7 @@ from .preferences import (
     resolve_language,
 )
 from .report_pdf import write_report_pdf
-from .template_identity import catalog_key_for
+from .template_identity import catalog_key_for, label_key_for
 from .units import UnitSystem, length_from_m, length_unit_key
 from .widgets.dipole_form import DipoleForm
 from .widgets.endfed_form import EndFedForm
@@ -253,6 +260,7 @@ from .widgets.moxon_form import MoxonForm
 from .widgets.ocfd_form import OCFDForm
 from .widgets.results_view import ResultsView
 from .widgets.ringo_form import RingoForm
+from .widgets.scv_form import ScvForm
 from .widgets.start_page import StartPage
 from .widgets.t2fd_form import T2FDForm
 from .widgets.trap_dipole_form import TrapDipoleForm
@@ -578,6 +586,14 @@ class MainWindow(QMainWindow):
         self._ringo_scroll.setMinimumWidth(340)
         self._ringo_scroll.setMaximumWidth(480)
 
+        self._scv_form = ScvForm(self._translator, self._unit_system, parent=self)
+        self._scv_form.changed.connect(self._on_form_changed)
+        self._scv_scroll = QScrollArea(self)
+        self._scv_scroll.setWidgetResizable(True)
+        self._scv_scroll.setWidget(self._scv_form)
+        self._scv_scroll.setMinimumWidth(340)
+        self._scv_scroll.setMaximumWidth(480)
+
         self._form_panels = (
             (self._form, self._form_scroll, 480),
             (self._ocfd_form, self._ocfd_scroll, 480),
@@ -593,6 +609,7 @@ class MainWindow(QMainWindow):
             (self._endfed_form, self._endfed_scroll, 480),
             (self._j_pole_form, self._j_pole_scroll, 480),
             (self._ringo_form, self._ringo_scroll, 480),
+            (self._scv_form, self._scv_scroll, 480),
         )
         self._update_form_panel_widths()
 
@@ -762,6 +779,7 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._endfed_scroll)
         self._design_stack.addWidget(self._j_pole_scroll)
         self._design_stack.addWidget(self._ringo_scroll)
+        self._design_stack.addWidget(self._scv_scroll)
         self._design_stack.addWidget(self._custom_panel)
         self._apply_button = QPushButton(self)
         self._apply_button.clicked.connect(lambda: self.apply_design())
@@ -1106,6 +1124,7 @@ class MainWindow(QMainWindow):
         self._endfed_form.retranslate()
         self._j_pole_form.retranslate()
         self._ringo_form.retranslate()
+        self._scv_form.retranslate()
         self._geometry.retranslate()
         self._results.retranslate()
         if self._project is not None and self._design_id is not None:
@@ -1267,9 +1286,6 @@ class MainWindow(QMainWindow):
             parameters = design.parameters
         self._update_provenance_label(design)
         is_custom = isinstance(parameters, CustomAntennaParameters)
-        is_zs6bkw = (
-            isinstance(parameters, CustomAntennaParameters) and parameters.generator_id == "zs6bkw"
-        )
         estimate_supported = parameters is not None and supports_estimation(parameters)
         self._change_template_action.setEnabled(idle and has_project)
         self._design_from_frequency_action.setEnabled(idle and has_project and estimate_supported)
@@ -1282,15 +1298,16 @@ class MainWindow(QMainWindow):
         band_enabled = idle and has_project and self._solver is not None
         self._analyze_bands_action.setEnabled(band_enabled)
         self._analyze_bands_button.setEnabled(band_enabled)
-        optimize_enabled = (
-            idle
-            and has_project
-            and (not is_custom or is_zs6bkw)
-            and not isinstance(parameters, (InvertedLParameters, MagneticLoopParameters))
-            and self._solver is not None
-        )
+        optimizer = optimizer_availability(parameters) if parameters is not None else None
+        optimize_available = optimizer is not None and optimizer.available
+        optimize_enabled = idle and has_project and optimize_available and self._solver is not None
+        optimize_hint = ""
+        if optimizer is not None and not optimizer.available and optimizer.reason_key:
+            optimize_hint = self._translator.t(optimizer.reason_key)
         self._optimize_action.setEnabled(optimize_enabled)
         self._optimize_button.setEnabled(optimize_enabled)
+        self._optimize_action.setToolTip(optimize_hint)
+        self._optimize_button.setToolTip(optimize_hint)
         self._loads_action.setEnabled(idle and has_project)
         self._transmission_lines_action.setEnabled(idle and has_project)
         self._edit_custom_action.setEnabled(idle and has_project and is_custom)
@@ -1527,7 +1544,16 @@ class MainWindow(QMainWindow):
         )
         self._custom_generator_edit.setVisible(
             parameters.generator_id
-            in {"inverted_l", "inverted_v", "magnetic_loop", "ocfd", "yagi", "vertical"}
+            in {
+                "inverted_l",
+                "inverted_v",
+                "magnetic_loop",
+                "ocfd",
+                "yagi",
+                "vertical",
+                "half_square",
+                "bobtail_curtain",
+            }
         )
         index = (
             0
@@ -1626,6 +1652,9 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, RingoParameters):
             self._design_stack.setCurrentWidget(self._ringo_scroll)
             self._ringo_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, ScvParameters):
+            self._design_stack.setCurrentWidget(self._scv_scroll)
+            self._scv_form.set_parameters(design.parameters)
         else:
             self._design_stack.setCurrentWidget(self._form_scroll)
             self._form.set_parameters(design.parameters, reset_sweep=True)
@@ -2201,6 +2230,37 @@ class MainWindow(QMainWindow):
             self._update_actions()
             self._update_height_control()
             return self._project
+        if isinstance(previous_design.parameters, ScvParameters):
+            parameters = self._scv_form.parameters()
+            updated = UpdateDipoleDesign().execute(
+                UpdateDipoleDesignCommand(
+                    project=self._project,
+                    design_id=self._design_id,
+                    parameters=parameters,
+                    loads=loads_override,
+                    transmission_lines=transmission_lines_override,
+                )
+            )
+            updated = replace(updated, name=project_name)
+            self._project = updated
+            design = updated.design_by_id(self._design_id)
+            if parameters != previous_design.parameters or attachments_changed:
+                self._invalidate_design_result(self._design_id)
+                self._results.set_result(None)
+            self._loads = design.antenna.loads
+            self._transmission_lines = design.antenna.transmission_lines
+            self._results.set_design(design)
+            self._set_geometry_model(design)
+            self._auto_select_view(design)
+            self._project_name_updating = True
+            self._project_name.setText(project_name)
+            self._project_name_updating = False
+            self._form_dirty = False
+            self._dirty = True
+            self._update_title()
+            self._update_actions()
+            self._update_height_control()
+            return self._project
         if isinstance(previous_design.parameters, CustomAntennaParameters):
             design = previous_design
             if (
@@ -2353,6 +2413,8 @@ class MainWindow(QMainWindow):
             return self._j_pole_simulation_spec(parameters)
         if isinstance(parameters, RingoParameters):
             return self._ringo_simulation_spec(parameters)
+        if isinstance(parameters, ScvParameters):
+            return self._scv_simulation_spec(parameters)
         return self._form.simulation_spec()
 
     def _apply_sweep_override(
@@ -3239,6 +3301,23 @@ class MainWindow(QMainWindow):
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
         )
 
+    def _scv_simulation_spec(self, parameters: ScvParameters) -> SimulationSpec:
+        model = parameters.to_antenna()
+        frequency_hz = parameters.frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                frequency_hz * 0.95,
+                frequency_hz * 1.05,
+                DEFAULT_GENERATED_SWEEP_POINTS,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz * 1.05,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
     def _custom_simulation_spec(
         self,
         parameters: CustomAntennaParameters,
@@ -3378,6 +3457,23 @@ class MainWindow(QMainWindow):
             dialog.result_parameters(),
             default_name="Ringo",
         )
+
+    def new_scv_antenna(self, *, kind: ScvKind) -> None:
+        if not self._maybe_save_changes():
+            return
+        dialog = ScvDialog(self._translator, self._unit_system, self, kind=kind)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name=kind.template_name,
+        )
+
+    def new_half_square_antenna(self) -> None:
+        self.new_scv_antenna(kind=ScvKind.HALF_SQUARE)
+
+    def new_bobtail_curtain_antenna(self) -> None:
+        self.new_scv_antenna(kind=ScvKind.BOBTAIL_CURTAIN)
 
     def new_j_pole_antenna(self, *, folded: bool) -> None:
         if not self._maybe_save_changes():
@@ -3852,6 +3948,13 @@ class MainWindow(QMainWindow):
                 self,
                 parameters=VerticalParameters.from_custom_parameters(parameters),
             )
+        elif parameters.generator_id in {"half_square", "bobtail_curtain"}:
+            dialog = ScvDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                parameters=ScvParameters.from_custom_parameters(parameters),
+            )
         else:
             return
         if dialog.exec() != QDialog.DialogCode.Accepted:
@@ -3970,6 +4073,22 @@ class MainWindow(QMainWindow):
                 self._translator,
                 self._unit_system,
                 self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
+        if selected in {CATALOG_TYPE_HALF_SQUARE, CATALOG_TYPE_BOBTAIL_CURTAIN}:
+            kind = (
+                ScvKind.HALF_SQUARE
+                if selected == CATALOG_TYPE_HALF_SQUARE
+                else ScvKind.BOBTAIL_CURTAIN
+            )
+            dialog = ScvDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                kind=kind,
                 frequency_hz=frequency_hz,
             )
             if dialog.exec() != QDialog.DialogCode.Accepted:
@@ -4268,6 +4387,10 @@ class MainWindow(QMainWindow):
             self.new_j_pole_antenna(folded=True)
         elif selected == CATALOG_TYPE_RINGO:
             self.new_ringo_antenna()
+        elif selected == CATALOG_TYPE_HALF_SQUARE:
+            self.new_half_square_antenna()
+        elif selected == CATALOG_TYPE_BOBTAIL_CURTAIN:
+            self.new_bobtail_curtain_antenna()
         elif selected == CATALOG_TYPE_OCFD:
             self.new_ocfd_antenna()
         elif selected == CATALOG_TYPE_DELTA_LOOP:
@@ -4638,11 +4761,12 @@ class MainWindow(QMainWindow):
         if not supports_estimation(design.parameters):
             self._show_error(self._estimate_unavailable_message(design.parameters))
             return
+        optimizer_available = optimizer_availability(design.parameters).available
         dialog = DesignFromFrequencyDialog(
             self._translator,
             self._unit_system,
             initial_parameters=design.parameters,
-            can_refine=self._solver is not None,
+            can_refine=self._solver is not None and optimizer_available,
             parent=self,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
@@ -4674,7 +4798,7 @@ class MainWindow(QMainWindow):
         self._update_actions()
         self._update_status_text()
         refine_requested = getattr(dialog, "refine_requested", lambda: False)()
-        if refine_requested and self._solver is not None:
+        if refine_requested and self._solver is not None and optimizer_available:
             self._open_refinement_for_current_design()
 
     def _preserve_estimate_context(
@@ -4753,37 +4877,45 @@ class MainWindow(QMainWindow):
             except Exception as exc:
                 self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
                 return
-        parameters = self._project.design_by_id(self._design_id).parameters
-        if isinstance(parameters, InvertedLParameters):
-            self._show_error(self._translator.t("error.optimize_inverted_l"))
+        design = self._project.design_by_id(self._design_id)
+        availability = optimizer_availability(design.parameters)
+        if availability.descriptor is None:
+            self._show_error(
+                self._translator.t(availability.reason_key or "optimize.unavailable.unsupported")
+            )
             return
-        if isinstance(parameters, MagneticLoopParameters):
-            self._show_error(self._translator.t("error.optimize_magnetic_loop"))
+        adapter = adapter_for(design.parameters)
+        if adapter is None:
+            self._show_error(self._translator.t("optimize.unavailable.unsupported"))
             return
-        if isinstance(parameters, (OCFDParameters, JPoleParameters)):
-            self.synthesize_dimensions()
-        elif isinstance(parameters, YagiParameters):
-            self.optimize_yagi_elements()
-        elif isinstance(parameters, FanDipoleParameters):
-            self.optimize_fan_dipole_elements()
-        elif isinstance(parameters, MoxonParameters):
-            self.optimize_moxon_elements()
-        elif isinstance(parameters, VerticalParameters):
-            self.optimize_vertical_elements()
-        elif isinstance(parameters, InvertedVParameters):
-            self.optimize_inverted_v_elements()
-        elif isinstance(parameters, RingoParameters):
-            self.optimize_ringo_elements()
-        elif isinstance(parameters, LoopParameters):
-            self.optimize_loop_elements()
-        elif (
-            isinstance(parameters, CustomAntennaParameters) and parameters.generator_id == "zs6bkw"
-        ):
-            self.optimize_zs6bkw_elements()
-        elif isinstance(parameters, CustomAntennaParameters):
-            self._show_error(self._translator.t("error.optimize_custom"))
-        else:
-            self.optimize_length()
+        base_spec = replace(
+            adapter.simulation_spec(self, design.parameters),
+            feed_line=self._feed_line,
+            matching_network=self._matching_network,
+            balun_loss=self._balun_loss,
+        )
+        dialog = FamilyOptimizationDialog(
+            self._translator,
+            self._unit_system,
+            self._solver,
+            availability.descriptor,
+            base_spec,
+            self,
+            topology_label=self._translator.t(label_key_for(design.parameters)),
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        selected = dialog.selected_parameters()
+        if selected is None:
+            return
+        try:
+            adapter.apply_parameters(self, selected)
+            self._form_dirty = True
+            self._apply_fields()
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self.simulate()
 
     @history_action("history.optimize")
     def optimize_length(self) -> None:
@@ -4808,6 +4940,8 @@ class MainWindow(QMainWindow):
             base_spec = self._trap_dipole_simulation_spec(design.parameters)
         elif isinstance(design.parameters, T2FDParameters):
             base_spec = self._t2fd_simulation_spec(design.parameters)
+        elif isinstance(design.parameters, ScvParameters):
+            base_spec = self._scv_simulation_spec(design.parameters)
         else:
             base_spec = self._form.simulation_spec()
         base_spec = replace(
@@ -4839,6 +4973,8 @@ class MainWindow(QMainWindow):
                 self._trap_dipole_form.set_parameters(parameters)
             elif isinstance(parameters, T2FDParameters):
                 self._t2fd_form.set_parameters(parameters)
+            elif isinstance(parameters, ScvParameters):
+                self._scv_form.set_parameters(parameters)
             else:
                 self._form.set_parameters(parameters, reset_sweep=False)
             self._apply_fields()
@@ -6087,6 +6223,7 @@ class MainWindow(QMainWindow):
             self._endfed_form,
             self._j_pole_form,
             self._ringo_form,
+            self._scv_form,
         ):
             form.set_unit_system(unit_system)
         self._geometry.set_unit_system(unit_system)

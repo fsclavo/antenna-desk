@@ -112,6 +112,51 @@ def test_optimize_endfed_applies_to_the_endfed_form(
     window._dirty = False
 
 
+def test_every_supported_optimizer_has_a_ui_adapter() -> None:
+    from antennadesk.domain.optimization.registry import SUPPORTED_OPTIMIZER_TYPES
+    from antennadesk.ui.optimization_adapters import ADAPTERS
+
+    assert set(ADAPTERS) == SUPPORTED_OPTIMIZER_TYPES
+
+
+def test_optimize_bobtail_curtain_applies_to_the_scv_form(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
+
+    parameters = scv_parameters(ScvKind.BOBTAIL_CURTAIN, 7_150_000.0)
+    use_parameters(window, parameters)
+    optimized = replace(parameters, horizontal_length_m=39.0)
+
+    class FakeFamilyOptimizationDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def selected_parameters(self) -> object:
+            return optimized
+
+    monkeypatch.setattr(
+        main_window_module,
+        "FamilyOptimizationDialog",
+        FakeFamilyOptimizationDialog,
+    )
+    monkeypatch.setattr(window, "simulate", lambda: None)
+
+    assert window._optimize_action.isEnabled() is True
+    window.optimize_current_design()
+
+    assert window._scv_form.parameters().horizontal_length_m == pytest.approx(39.0)
+    assert window._project is not None
+    assert window._project.designs[0].parameters.horizontal_length_m == pytest.approx(39.0)
+    window._dirty = False
+
+
 def test_optimize_ocfd_applies_to_the_ocfd_form(
     window: MainWindow,
     qtbot: QtBot,
@@ -355,61 +400,21 @@ def test_optimize_yagi_applies_and_simulates(
     window._dirty = False
 
 
-def test_optimize_zs6bkw_updates_wire_and_line_lengths(
+def test_zs6bkw_optimizer_requires_a_typed_generator(
     window: MainWindow,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from antennadesk.domain.antennas.zs6bkw import (
-        ZS6BKW_DIPOLE_ID,
-        zs6bkw_parameters,
-        zs6bkw_with_dimensions,
-    )
+    from antennadesk.domain.antennas.zs6bkw import zs6bkw_parameters
 
-    parameters = zs6bkw_parameters()
-    use_parameters(window, parameters)
-    updated = zs6bkw_with_dimensions(
-        parameters,
-        dipole_total_length_m=29.0,
-        line_length_m=14.0,
-    )
-    captured: dict[str, object] = {}
-    simulated: list[bool] = []
-
-    class FakeOptimizationDialog:
-        def __init__(self, *args: object, **kwargs: object) -> None:
-            captured.update(kwargs)
-
-        def exec(self) -> QDialog.DialogCode:
-            return QDialog.DialogCode.Accepted
-
-        def selected_parameters(self) -> object:
-            return updated
-
-    monkeypatch.setattr(
-        main_window_module,
-        "ElementOptimizationDialog",
-        FakeOptimizationDialog,
-    )
-    monkeypatch.setattr(window, "simulate", lambda: simulated.append(True))
+    use_parameters(window, zs6bkw_parameters())
+    errors: list[str] = []
+    monkeypatch.setattr(window, "_show_error", errors.append)
 
     assert window._estimate_button.isEnabled() is False
-    assert window._optimize_action.isEnabled() is True
+    assert window._optimize_action.isEnabled() is False
     window.optimize_current_design()
 
-    variables = captured["variables"]
-    assert isinstance(variables, tuple)
-    assert {variable.name for variable in variables} == {
-        "dipole_total_length_m",
-        "line_length_m",
-    }
-    assert captured["title_key"] == "element_optimize.zs6bkw_title"
-    assert window._project is not None
-    design = window._project.designs[0]
-    assert design.parameters.generator_id == "zs6bkw"
-    dipole = next(wire for wire in design.parameters.wires if wire.id == ZS6BKW_DIPOLE_ID)
-    assert dipole.length_m == pytest.approx(29.0)
-    assert design.parameters.transmission_lines[0].length_m == pytest.approx(14.0)
-    assert simulated == [True]
+    assert errors == [window._translator.t("optimize.unavailable.custom_generator")]
     window._dirty = False
 
 

@@ -58,6 +58,12 @@ from ..domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from ..domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
 from ..domain.antennas.polarization import Polarization
 from ..domain.antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
+from ..domain.antennas.scv import (
+    ANTENNA_TYPE_BOBTAIL_CURTAIN,
+    ANTENNA_TYPE_HALF_SQUARE,
+    ScvKind,
+    ScvParameters,
+)
 from ..domain.antennas.t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
 from ..domain.antennas.transmission_line import TransmissionLine
 from ..domain.antennas.trap_dipole import (
@@ -247,6 +253,19 @@ class RingoParametersPayload(StrictModel):
     ring_diameter_m: float = Field(gt=0.0)
     ring_height_m: float = Field(default=0.0, ge=0.0)
     ring_sides: int = Field(default=16, ge=3, le=128)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class ScvParametersPayload(StrictModel):
+    kind: ScvKind
+    frequency_hz: float = Field(gt=0.0)
+    horizontal_length_m: float = Field(gt=0.0)
+    vertical_height_m: float = Field(gt=0.0)
+    base_height_m: float = Field(default=2.5, ge=0.0)
+    feed_offset_m: float = Field(default=0.0, ge=0.0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
@@ -618,6 +637,7 @@ ParameterPayload = (
     | EndFedParametersPayload
     | JPoleParametersPayload
     | RingoParametersPayload
+    | ScvParametersPayload
     | T2FDParametersPayload
     | TrapDipoleParametersPayload
     | CustomParametersPayload
@@ -649,6 +669,12 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_J_POLE
     if isinstance(value, RingoParametersPayload):
         return ANTENNA_TYPE_RINGO
+    if isinstance(value, ScvParametersPayload):
+        return (
+            ANTENNA_TYPE_HALF_SQUARE
+            if value.kind is ScvKind.HALF_SQUARE
+            else ANTENNA_TYPE_BOBTAIL_CURTAIN
+        )
     if isinstance(value, TrapDipoleParametersPayload):
         return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(value, T2FDParametersPayload):
@@ -689,6 +715,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return JPoleParametersPayload
     if antenna_type == ANTENNA_TYPE_RINGO:
         return RingoParametersPayload
+    if antenna_type in {ANTENNA_TYPE_HALF_SQUARE, ANTENNA_TYPE_BOBTAIL_CURTAIN}:
+        return ScvParametersPayload
     if antenna_type == ANTENNA_TYPE_TRAP_DIPOLE:
         return TrapDipoleParametersPayload
     if antenna_type == ANTENNA_TYPE_T2FD:
@@ -978,6 +1006,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _j_pole_parameters_from_domain(value)
     if isinstance(value, RingoParameters):
         return _ringo_parameters_from_domain(value)
+    if isinstance(value, ScvParameters):
+        return _scv_parameters_from_domain(value)
     if isinstance(value, TrapDipoleParameters):
         return _trap_dipole_parameters_from_domain(value)
     if isinstance(value, T2FDParameters):
@@ -1061,6 +1091,21 @@ def _ringo_parameters_from_domain(value: RingoParameters) -> RingoParametersPayl
         ring_diameter_m=value.ring_diameter_m,
         ring_height_m=value.ring_height_m,
         ring_sides=value.ring_sides,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _scv_parameters_from_domain(value: ScvParameters) -> ScvParametersPayload:
+    return ScvParametersPayload(
+        kind=value.kind,
+        frequency_hz=value.frequency_hz,
+        horizontal_length_m=value.horizontal_length_m,
+        vertical_height_m=value.vertical_height_m,
+        base_height_m=value.base_height_m,
+        feed_offset_m=value.feed_offset_m,
+        azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
@@ -1699,6 +1744,17 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, RingoParametersPayload):
             raise ValueError("Ringo parameters have the wrong shape")
         return _ringo_parameters_to_domain(value.parameters)
+    if value.antenna_type in {ANTENNA_TYPE_HALF_SQUARE, ANTENNA_TYPE_BOBTAIL_CURTAIN}:
+        if not isinstance(value.parameters, ScvParametersPayload):
+            raise ValueError("self-contained vertical array parameters have the wrong shape")
+        expected_kind = (
+            ScvKind.HALF_SQUARE
+            if value.antenna_type == ANTENNA_TYPE_HALF_SQUARE
+            else ScvKind.BOBTAIL_CURTAIN
+        )
+        if value.parameters.kind is not expected_kind:
+            raise ValueError("antenna_type does not match the array variant")
+        return _scv_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_TRAP_DIPOLE:
         if not isinstance(value.parameters, TrapDipoleParametersPayload):
             raise ValueError("trap dipole parameters have the wrong shape")
@@ -1804,6 +1860,21 @@ def _ringo_parameters_to_domain(value: RingoParametersPayload) -> RingoParameter
         ring_diameter_m=value.ring_diameter_m,
         ring_height_m=value.ring_height_m,
         ring_sides=value.ring_sides,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _scv_parameters_to_domain(value: ScvParametersPayload) -> ScvParameters:
+    return ScvParameters(
+        frequency_hz=value.frequency_hz,
+        kind=value.kind,
+        horizontal_length_m=value.horizontal_length_m,
+        vertical_height_m=value.vertical_height_m,
+        base_height_m=value.base_height_m,
+        feed_offset_m=value.feed_offset_m,
+        azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),

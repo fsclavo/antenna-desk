@@ -18,11 +18,13 @@ from ..domain.antennas.magnetic_loop import MagneticLoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
+from ..domain.antennas.scv import ScvKind, ScvParameters
 from ..domain.antennas.t2fd import T2FDParameters
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
 from .dialogs.antenna_catalog_dialog import (
+    CATALOG_TYPE_BOBTAIL_CURTAIN,
     CATALOG_TYPE_CUSTOM,
     CATALOG_TYPE_DELTA_LOOP,
     CATALOG_TYPE_DOUBLET,
@@ -30,6 +32,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_FAN_DIPOLE,
     CATALOG_TYPE_FOLDED_DIPOLE,
     CATALOG_TYPE_G5RV,
+    CATALOG_TYPE_HALF_SQUARE,
     CATALOG_TYPE_INVERTED_L,
     CATALOG_TYPE_INVERTED_V,
     CATALOG_TYPE_J_POLE,
@@ -64,6 +67,8 @@ _KNOWN_CUSTOM_GENERATORS = frozenset(
         CATALOG_TYPE_MOXON,
         CATALOG_TYPE_OCFD,
         CATALOG_TYPE_RINGO,
+        CATALOG_TYPE_HALF_SQUARE,
+        CATALOG_TYPE_BOBTAIL_CURTAIN,
         CATALOG_TYPE_SLIM_JIM,
         CATALOG_TYPE_T2FD,
         CATALOG_TYPE_TRAP_DIPOLE,
@@ -127,6 +132,12 @@ def catalog_key_for(parameters: AntennaDesignParameters) -> str:
         return CATALOG_TYPE_SLIM_JIM if parameters.folded else CATALOG_TYPE_J_POLE
     if isinstance(parameters, RingoParameters):
         return CATALOG_TYPE_RINGO
+    if isinstance(parameters, ScvParameters):
+        return (
+            CATALOG_TYPE_HALF_SQUARE
+            if parameters.kind is ScvKind.HALF_SQUARE
+            else CATALOG_TYPE_BOBTAIL_CURTAIN
+        )
     if isinstance(parameters, CustomAntennaParameters):
         generator_id = parameters.generator_id
         if generator_id in _KNOWN_CUSTOM_GENERATORS:

@@ -20,6 +20,7 @@ from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.polarization import Polarization
 from ..domain.antennas.ringo import RingoParameters
+from ..domain.antennas.scv import ScvParameters
 from ..domain.antennas.t2fd import T2FDParameters
 from ..domain.antennas.transmission_line import TransmissionLine
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
@@ -270,6 +271,29 @@ def design_summary_rows(
                 ]
             )
         rows.append(("Azimuth", f"{parameters.azimuth_deg:.1f}°"))
+    if isinstance(parameters, ScvParameters):
+        rows.extend(
+            [
+                ("Type", parameters.template_name.lower()),
+                ("Horizontal length", f"{parameters.horizontal_length_m:.4f} m"),
+                ("Vertical height", f"{parameters.vertical_height_m:.4f} m"),
+                ("Vertical elements", str(parameters.vertical_count)),
+                (
+                    "Horizontal segment",
+                    f"{parameters.horizontal_segment_m:.4f} m each",
+                ),
+                ("Base height", f"{parameters.base_height_m:.4f} m"),
+                ("Top height", f"{parameters.top_height_m:.4f} m"),
+                (
+                    "Feed offset below top",
+                    f"{parameters.feed_offset_m:.4f} m",
+                ),
+                ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        return tuple(rows)
     if isinstance(parameters, RingoParameters):
         rows.extend(
             [

@@ -118,15 +118,18 @@ Use the **Estimate Dimensions...** button above the design panel or
 **Design → Estimate Dimensions...** to refine the template already loaded in the
 editor. The dialog supports wire and folded dipoles, loops (generic, quad,
 delta), verticals in 1/4λ, 1/2λ, and 5/8λ, inverted-V, fan dipoles, end-fed
-wires, OCFD, J Pole, Slim Jim, Ringo, Yagi, Moxon, and T2FD. It does not offer
-a family selector and never changes the antenna type. The T2FD path asks for the
-highest design frequency and applies the Cebik wide-long broadband rule.
+wires, OCFD, J Pole, Slim Jim, Ringo, Yagi, Moxon, and T2FD. The half-square
+and bobtail-curtain templates have no frequency-first estimator; set their
+dimensions from a published design or tune them with the solver. The estimator
+does not offer a family selector and never changes the antenna type. The T2FD
+path asks for the highest design frequency and applies the Cebik wide-long
+broadband rule.
 
 The result is a **starting point**, not a verified construction measurement.
 The dialog shows assumptions, warnings, confidence, and dimension values. Apply
 the estimate to the current design, then use **Optimize...** to refine it with
-NEC. The checkbox **Open an optimizer or synthesis dialog after applying**
-does this in one step when a solver is configured. For Yagi, the frequency
+NEC. The checkbox **Open the family optimizer after applying** does this in one
+step when a solver is configured and the family has an optimizer. For Yagi, the frequency
 estimator supports 2 to 32 elements from the DL6WU trimming reference; the
 NBS five-element preset remains available in the Yagi editor. For Yagi and
 Moxon, **Estimate Dimensions...** keeps the polarization selected in the
@@ -190,7 +193,8 @@ and fan dipole. The Yagi family includes the parametric Yagi and the Moxon
 rectangle. The Loop family includes the generic vertical/horizontal loop plus
 delta-loop, quad-loop, and magnetic-loop presets; the loop editor switches the
 plane with the **Orientation** field. The Vertical family includes the generic vertical radiator,
-the inverted-L, and the loaded vertical / mobile whip preset. The catalog
+the inverted-L, the half square, the bobtail curtain, and the loaded
+vertical / mobile whip preset. The catalog
 shows a short description and evidence level for each type. For specialized
 templates, choose the template first, complete
 its generator dialog, and then confirm the project name with a suggested name
@@ -225,11 +229,10 @@ use **Change...** next to it or **Design → Change Template...** (or Ctrl+Shift
 to open the catalog and replace the current design with another template.
 
 A full-wave loop normally presents roughly 100-150 Ω at resonance, so a direct
-50 Ω target may be unreachable by changing only its circumference. Use a 2:1
-balun or the Matching Network dialog for a 50 Ω system. The loop optimizer
-keeps the selected loop shape, orientation, and side count fixed and starts its
-target resistance at 100 Ω; change it to 50 Ω only if you are not using a
-balun. The
+50 Ω target may require a matching network. Use a 2:1 balun or the Matching
+Network dialog for a 50 Ω system. The loop optimizer keeps the selected loop
+shape, orientation, and side count fixed and searches circumference, height,
+and conductor radius jointly. The
 suggested circumference includes a polygon correction calibrated for the
 AntennaDesk loop model; it is still a starting point, so verify it with a
 simulation.
@@ -280,9 +283,11 @@ temperature rise, or a feed line as part of the antenna.
 The design panel starts with a 31-point sweep from the lowest to the highest
 design frequency. The pattern is computed at amateur-band snapshots with the
 finest resolution that fits the project storage budget; the effective value is
-reported after a run. **Optimize...** currently adjusts the element length only;
-spacing, termination resistance, and transformer ratio remain manual. The T2FD
-span and spacing are construction starting points, not verified cut lengths.
+reported after a run. **Optimize...** searches element length, conductor
+spacing, height, termination resistance, ideal transformer ratio, and conductor
+radius together. The termination resistor and transformer remain ideal models,
+and the span and spacing are construction starting points, not verified cut
+lengths.
 
 ## Create a Yagi
 
@@ -365,11 +370,10 @@ ground.
 
 The generator is experimental: the bent-wire geometry is tested, but there is
 no independent numerical reference for gain, impedance, or the matching
-network. **Estimate Dimensions...** and the generic **Optimize...** action are
-disabled for this template until a source-backed estimator and a primary
-dimension policy exist; set the dimensions from a known design or tune them
-with the solver. The elevation view is selected automatically; Plan shows the
-vertical section edge-on.
+network. **Estimate Dimensions...** is disabled until a source-backed estimator
+exists; **Optimize...** searches the vertical height, horizontal run, base
+height, and conductor radius jointly. The elevation view is selected
+automatically; Plan shows the vertical section edge-on.
 
 ## Create a Ringo
 
@@ -378,6 +382,32 @@ a horizontal matching ring at its base. Set radiator height, ring diameter,
 ring height, ring side count, radius, material, and ground. The ring height
 must be positive when using a ground model; the default is 0.25 m. Ringo is a
 first-class experimental template with an inline editor.
+
+## Create a half square or bobtail curtain
+
+Choose **File → New Antenna... → Half square** or **Bobtail curtain** to generate
+a self-contained vertical array. Both variants are monoband, broadside, and
+vertically polarized:
+
+- The **half square** has two quarter-wave verticals joined by one half-wave top
+  wire. It is fed at the top corner of one outer vertical.
+- The **bobtail curtain** has three quarter-wave verticals joined by two
+  half-wave top wires. It is fed at the top junction of the center vertical.
+
+The shared editor selects the array type and sets the overall horizontal span,
+vertical height, base height, feed offset, azimuth, wire radius, material, and
+ground. The **feed offset below top junction** moves the feed down the fed
+vertical as a matching adjustment; zero is the published current-feed point.
+Do not feed either array at a bottom corner: that is a high-voltage point and
+produces a very high impedance. The **Load Cebik 7.15 MHz reference** button
+loads the published 62.4 x 39 ft half-square or 125 x 38 ft bobtail dimensions.
+Those are free-space, maximum-gain starting dimensions scaled by frequency;
+they are not independently validated for gain, impedance, or a specific site.
+The construction sheet lists the individual vertical and top-wire cuts. The
+elevation view is selected automatically; Plan shows the vertical plane
+edge-on. Neither template has a frequency-first estimator; **Optimize...**
+searches the horizontal span, vertical height, base height, feed offset, and
+conductor radius jointly.
 
 ## Create a J Pole or Slim Jim
 
@@ -479,10 +509,11 @@ transmitter coax with **Simulation → Feed Line...** when needed.
 The Cebik reference gives usable no-ATU matches on **40, 20, 17, 12, and 10 m**;
 80, 30, and 15 m are poor matches without a tuner. The custom design panel
 starts with a **61-point 7.0–29.7 MHz sweep**, and **Band analysis** preselects
-the five no-ATU bands. **Optimize...** opens a ZS6BKW-specific search over the
-dipole wire length and matching-line length; the line impedance and velocity
-factor stay fixed. Dimensions are starting points: height, ground, line velocity
-factor, and installation change the match. See L. B. Cebik, W4RNL, “The G5RV
+the five no-ATU bands. The ZS6BKW is still stored as custom generator geometry,
+so **Optimize...** is disabled until it becomes a typed family. Edit the wire
+and matching-line lengths manually; the line impedance and velocity factor stay
+fixed. Dimensions are starting points: height, ground, line velocity factor, and
+installation change the match. See L. B. Cebik, W4RNL, “The G5RV
 Antenna System Re-Visited, Part 3: The Almost-No-ATU ZS6BKW”, and PA0FRI’s
 commercial variant notes.
 
@@ -578,8 +609,9 @@ with a fine SWR sweep or a measurement, and use the existing matching-network
 dialog when a direct 50 Ω feed is not practical.
 
 The generator is experimental. It has no frequency-first estimator and no
-generic optimizer; **Estimate Dimensions...** and **Optimize...** are disabled
-for this template. The construction sheet reports the loop dimensions, gap,
+family optimizer; **Estimate Dimensions...** and **Optimize...** are disabled
+for this template because the ideal capacitor and loss model are not accurate
+enough for optimization. The construction sheet reports the loop dimensions, gap,
 capacitance, ESR, efficiency, and the simulated SWR bandwidth when a sweep is
 available.
 
@@ -893,126 +925,111 @@ design frequency. Missing results are reported in the dialog.
 
 ## Optimize the current design
 
-Use **Optimize...** in the design panel or the **Design** menu. The dialog adapts
-to the current template: single-dimension, multi-element, or impedance
-synthesis. For single-dimension templates, choose the
-objective: **target impedance** (selectable `R + jX`), **target reactance**
-(0 Ω for series resonance), **minimum SWR**, **maximum SWR bandwidth**,
-**maximum power gain**, **maximum efficiency**, or **balanced SWR + gain**.
-Set the minimum and maximum dimension and the maximum number of solver
-evaluations. For target impedance, target reactance, and minimum-SWR searches,
-also set the objective tolerance. For **maximum SWR bandwidth**, set the SWR
-limit and use a frequency sweep; the grid resolution is controlled by the
-evaluation limit. Gain objectives require a far-field request. Efficiency uses
-the solver's power budget.
+Use **Optimize...** in the design panel or the **Design** menu. The dialog is
+driven by an explicit optimizer descriptor for the current family. There is no
+generic dipole fallback: a family either has its own descriptor or the action is
+disabled with an explanation.
 
-**Target impedance** is the most direct option when the load matters, for
-example an OCFD where 200 Ω is a reasonable starting target. The optimizer
-evaluates the bounded dimension range and selects the point with the smallest
-complex impedance error, then reports that error and the resulting SWR. For
-target-impedance searches, SWR is relative to the target resistance, not the
-50 Ω simulation reference; target reactance is treated as a reactance to be
-cancelled by the matching network, while the complex impedance error still
-includes it. A single dimension may not reach both R and X exactly; the error
-makes the remaining mismatch visible. OCFD, end-fed wire, wire-dipole,
-folded-dipole, and loop designs support this dimension search. The evaluation
-table is ranked
-from best to worst for the selected objective; the **Rank** column is separate
-from the original evaluation number, and failed evaluations appear last.
+### Variables and topology
 
-For **balanced SWR + gain**, set non-negative SWR and gain weights. The dialog
-maximizes `gain_weight × gain_dBi − swr_weight × max(SWR − 1, 0)` at the design
-frequency; this is a transparent weighted score, not a Pareto front. The
-optimized dimension is the total length for a wire dipole or folded-dipole
-element, and the circumference for a loop. The dialog evaluates the design at
-the design frequency, shows resistance, reactance, SWR, bandwidth, gain, and
-efficiency for every evaluation, and reports the best dimension. A sensitivity
-table evaluates the best dimension at ±10 mm and ±25 mm so construction
-tolerances are visible.
+The dialog lists every optimizer variable, grouped into **Geometry**, **Feed**,
+**Family loads**, and **Conductor**. All variables are enabled by default; clear
+a checkbox to lock it. Locking a variable is allowed, but the run is marked as a
+partial optimization. The conductor radius is included as a lockable variable;
+material and ground remain installation context.
 
-Press **Apply best dimension** to update the design; the application then runs
-the full sweep/pattern simulation with the current settings. The optimizer is
-bounded by the dimension range and evaluation limit. It changes only one
-dimension; the SWR/gain balance is a weighted score, not a Pareto optimizer.
+The topology is chosen in the family editor and stays fixed during a run:
+orientation, polarization, loop sides, Yagi element count, folded elements,
+matching type, SCV variant, EndFed preset, and whether the top hat, loading
+coil, radial system, or counterpoise exists. Change the topology in the editor
+first, then optimize. To compare topologies, duplicate the design variant and
+optimize each one separately.
 
-## Optimize Yagi elements
+The optimizer searches all enabled geometry, feed, and family-load dimensions
+jointly with a deterministic hybrid of differential evolution and a bounded
+local pattern search. It is not a one-dimensional sweep and not a
+coordinate-only search. Frequency, band plan, ground model, material, and
+pointing azimuth remain design context; they are not silently optimized.
 
-For a Yagi, use **Design → Optimize...**. Select which element lengths and
-boom gaps to include, choose the objective (**target impedance**, **maximum
-gain**, or **maximum front-to-back ratio**), and set the search margin and
-evaluation budget. Target impedance also asks for R/X; gain and front-to-back
-require a far-field pattern request. The optimizer performs a bounded coordinate
-search over the selected variables. The **element count is fixed**: the
-optimizer never adds or removes elements. The first element position stays
-fixed, gaps keep a fixed 0.1 m minimum, and the element order remains valid;
-radii stay fixed. To change the number of elements, edit the Yagi before optimizing.
+### Objectives and constraints
 
-The evaluation table is ranked by the selected objective and shows R, X, SWR,
-gain, F/B, efficiency, and the objective value. The SWR column is relative to
-the target resistance shown in the dialog; it is 50 Ω unless you select target
-impedance and enter a different value. **Multi-objective** combines
-gain, F/B, SWR penalty, and efficiency with user weights. The table also shows a
-Pareto rank (1 = non-dominated front) for the selected metrics. Select any
-table row to apply that candidate; without a selection the best weighted score
-is applied. **Apply element lengths** updates the Yagi
-editor and starts the normal full sweep/pattern simulation. This is a numerical
-starting point; verify the applied design with a full simulation and, where
-possible, a measurement.
+Choose the objective supported by the current descriptor:
 
-## Optimize Moxon dimensions
+- **Target impedance** with selectable `R + jX`;
+- **Minimum SWR**;
+- **Maximum power gain**;
+- **Maximum front-to-back ratio**;
+- **Maximum efficiency**;
+- **Maximum SWR bandwidth**;
+- **Balanced** weighted gain/front-to-back/SWR/efficiency. The weighted terms
+  are normalized (3 dB of gain, 10 dB of front-to-back, `SWR - 1`, and
+  efficiency as a fraction) so the weights are comparable.
 
-For a Moxon, use **Design → Optimize...**. Choose the objective
-(target impedance, maximum gain, or maximum front-to-back), the dimensions to
-include, the search margin, and the evaluation budget. Target impedance also
-asks for R/X; gain and F/B require a far-field request. The optimizer varies the
-selected width, spacing, reflector tip, and driven tip together. Some families
-also expose discrete variables such as radial count, loop side count, or Ringo
-ring sides; those are searched as integers.
+Gain and front-to-back require a far-field request. Bandwidth requires a
+frequency sweep. The optional **Maximum SWR** field adds a soft constraint; the
+hard constraints are the family geometry rules, minimum conductor spacing,
+element ordering, feed limits, and positive dimensions.
 
-The evaluation table is ranked by the selected objective and reports R, X, SWR,
-gain, F/B, and the objective value. **Apply dimensions** updates the Moxon
-editor and starts the normal full sweep. Invalid tip/spacing combinations are
-rejected, so verify the applied geometry with a full simulation.
+### Budget and results
 
-## Optimize fan dipole elements
+Choose a search budget:
 
-For a fan dipole, use **Design → Optimize...**. Select the element
-pairs to include, choose the **Band** (or **Custom frequency**), set R/X, the
-search margin, and the evaluation budget. The band selector and target frequency
-stay synchronized, and the element table shows the band associated with each
-element. If only one element is selected, its band is selected automatically.
-Opening the optimizer after selecting a band in the **Bands** tab starts on that
-band; otherwise it starts on the lowest element band, not on a stale design
-frequency.
+- **Fast** for a quick exploratory run;
+- **Balanced** as the recommended default;
+- **Thorough** for a final design.
 
-The **Optimize** column selects which lengths are varied. Every element remains
-in the antenna, so the SWR of the short element includes coupling from the
-others. To evaluate an element alone, remove the other elements in the fan
-editor. The optimizer performs a bounded coordinate search and reports the best
-complex impedance match; segmentation is recomputed for the target frequency.
-**Apply element lengths** updates the fan editor and starts the normal full
-sweep; check the other bands after applying because the elements interact.
+The budget is counted in solver runs and shown before starting. If the best
+score is still improving near the end of the budget, the run extends
+automatically up to twice the initial budget. A larger budget can take
+considerably longer; the dialog estimates the run count. The random seed is
+exposed for reproducibility.
 
-## Synthesize dimensions
+The result table is ranked from best to worst and reports the score, R, X, SWR,
+gain, front-to-back, efficiency, and any error. The summary reports the status,
+evaluation count, and best score. The sensitivity line ranks the variables that
+most affect the score, so fragile dimensions are visible before construction.
+**Apply Best...** writes the result to the correct family editor and starts the
+normal full sweep/pattern simulation. Verify the applied design with the full
+simulation and, where possible, a measurement.
 
-For an **OCFD**, **J Pole**, or **Slim Jim**, use **Design → Optimize...**.
-Set the target frequency and the desired feed-point
-resistance/reactance, then choose bounds for the two search variables:
+### Families with a family optimizer
 
-- OCFD: total wire length and feed ratio.
-- J Pole: radiator height and feed-offset position.
-- Slim Jim: radiator height and stub length.
+The following typed families have a complete joint optimizer:
 
-The dialog evaluates a bounded grid at the target frequency and reports the
-best resistance, reactance, SWR, and impedance error. The result table is
-ranked by complex impedance error, so the first row is the best candidate;
-failed evaluations appear last. **Apply dimensions** updates the design and
-starts the normal full sweep/pattern simulation.
+- wire dipole and folded dipole;
+- loop;
+- vertical, including radial system, loading coil, and top hat;
+- inverted-V and inverted-L;
+- J Pole and Slim Jim;
+- Ringo;
+- half square and bobtail curtain;
+- OCFD, EndFed/EFHW, and sloper;
+- fan dipole, trap dipole, and T2FD;
+- Yagi and Moxon.
 
-This is a numerical starting point, not a guarantee that the target is
-physically reachable. Verify the applied design with a full sweep, check
-construction tolerances, and treat the result as experimental until it has an
-independent validation reference.
+For a Yagi, the element count is fixed; the optimizer varies every element
+length, every inter-element gap, height, folded-driven spacing when enabled, and
+beta/hairpin length and spacing when selected. Polarization and match type
+remain editor choices. For a fan dipole, both lengths and included angles are
+optimized together, with a constraint that keeps the wires distinct. For a
+Moxon, width, depth, both tip lengths, height, and radius are searched jointly.
+
+### Families without an optimizer
+
+The Optimize action is disabled, with a tooltip explaining the reason, for:
+
+- **Magnetic loop**: the ideal tuning capacitor and ESR model are not accurate
+  enough to optimize efficiency or bandwidth without false precision.
+- **Random wire**: deliberately non-resonant and tuner-assisted.
+- **Custom geometry and imported designs**: the topology is not parameterized.
+- **G5RV, ZS6BKW, Zepp, and doublet**: these are still represented as custom
+  generator geometry and must become typed families before they get an
+  optimizer.
+
+The old one-dimensional length search and OCFD/J-Pole synthesis dialog have been
+superseded by the family optimizer for the affected typed families. Bounded
+impedance synthesis remains an internal application capability, not a separate
+menu action.
 
 ## Construction sheet
 
@@ -1091,9 +1108,12 @@ domain and project files always store canonical meters and hertz.
 - NEC import supports a practical subset (GW, EX, FR, GE/GN, LD 0/1), not the
   full language; unsupported cards are reported. MMANA import covers basic wire
   geometry and source only; ground and loads are not imported.
-- Optimization covers primary-dimension, multi-element, integer, and Pareto
-  searches for generated templates. Custom/imported designs are excluded, and
-  there are no boom-length or turning-radius constraints.
+- Optimization covers every geometry, feed, and family-load variable of the
+  supported typed families with a joint hybrid search. Custom/imported designs,
+  magnetic loops, random wires, and G5RV/ZS6BKW/Zepp/doublet custom generators
+  are excluded until they have trusted typed descriptors. There are no
+  boom-length or turning-radius constraints, and band-aware/robust/Pareto modes
+  remain future work.
 - Project files store normalized results and raw solver text; many long runs
   can reach the 64 MB project limit.
 - The feed line is a uniform-line post-processing model. It reports impedance

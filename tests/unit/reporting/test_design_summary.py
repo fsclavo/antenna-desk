@@ -234,6 +234,19 @@ def test_top_loaded_vertical_summary_reports_the_capacity_hat() -> None:
     assert rows["Top hat radius"] == "0.7500 m"
 
 
+def test_scv_summary_reports_the_published_array_geometry() -> None:
+    from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
+
+    rows = dict(design_summary_rows(scv_parameters(ScvKind.BOBTAIL_CURTAIN, 7_150_000.0)))
+
+    assert rows["Type"] == "bobtail curtain"
+    assert rows["Horizontal length"] == "38.1000 m"
+    assert rows["Vertical height"] == "11.5824 m"
+    assert rows["Vertical elements"] == "3"
+    assert rows["Horizontal segment"] == "19.0500 m each"
+    assert rows["Total conductor"] == "72.8472 m"
+
+
 def test_magnetic_loop_summary_reports_tuning_and_loss_fields() -> None:
     from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
 

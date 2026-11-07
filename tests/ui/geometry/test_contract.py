@@ -33,6 +33,7 @@ from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
 from antennadesk.domain.antennas.polarization import Polarization
 from antennadesk.domain.antennas.ringo import RingoParameters
+from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
@@ -389,6 +390,27 @@ def _cases() -> tuple[FamilyCase, ...]:
             ("Ringo", "diameter 0.50 m"),
         ),
         FamilyCase(
+            "half_square",
+            scv_parameters(ScvKind.HALF_SQUARE, 7_150_000.0),
+            "half_square",
+            3,
+            GeometryViewMode.ELEVATION,
+            (
+                "Half square",
+                "overall horizontal length",
+                "vertical height",
+                "vertical elements 2",
+            ),
+        ),
+        FamilyCase(
+            "bobtail_curtain",
+            scv_parameters(ScvKind.BOBTAIL_CURTAIN, 7_150_000.0),
+            "bobtail_curtain",
+            5,
+            GeometryViewMode.ELEVATION,
+            ("Bobtail curtain", "overall horizontal length", "vertical elements 3"),
+        ),
+        FamilyCase(
             "zepp",
             zepp_parameters(),
             "zepp",
@@ -526,6 +548,7 @@ def test_every_domain_antenna_type_has_a_presentation_family() -> None:
         moxon,
         ocfd,
         ringo,
+        scv,
         t2fd,
         vertical,
         yagi,
@@ -545,6 +568,7 @@ def test_every_domain_antenna_type_has_a_presentation_family() -> None:
         moxon,
         ocfd,
         ringo,
+        scv,
         t2fd,
         vertical,
         yagi,
@@ -585,6 +609,8 @@ def test_legacy_generator_ids_map_to_presentation_types() -> None:
         VerticalParameters(frequency_hz=7_100_000.0, height_m=10.0),
         OCFDParameters(frequency_hz=7_100_000.0, total_length_m=40.0),
         EndFedParameters(frequency_hz=7_100_000.0, length_m=20.0),
+        scv_parameters(ScvKind.HALF_SQUARE, 7_150_000.0),
+        scv_parameters(ScvKind.BOBTAIL_CURTAIN, 7_150_000.0),
     )
 
     for item in parameters:

@@ -261,6 +261,8 @@ gain, nulls, or impedance.
 | `j_pole` | B | M0UKD, 'Slim Jim and J Pole calculator': a J pole is 0.75λ tall, with a 0.5λ radiator and a 0.25λ matching stub; ARRL QST, Feb 2003, conventional 2 m J-pole dimensions | 1% on the half-wave and quarter-wave sections; 10% on the overall height against the ARRL 2 m construction | Starting dimensions only; the 50 Ω feed offset, ground, mast, and feed-line coupling are not independently validated. |
 | `slim_jim` | B | F. Judd, G2BCX, 'Slim Jim - 2 metre aerial', Practical Wireless, 1978: about 60 in overall at 145 MHz; M0UKD calculator: 0.5λ radiator above a 0.25λ stub with a small gap | 1% on the half-wave and quarter-wave sections; 5% on the overall length at 2 m | Starting dimensions only; the feed point, fold spacing, and the effect of the feed line are not independently validated. |
 | `ringo` | C | Ringo radiator and ring starting geometry | Not applicable (structural) | No independent numerical reference. |
+| `half_square` | B | L. B. Cebik, W4RNL, 'SCVs: A Family Album', Table 1 (7.15 MHz): 62.4 ft horizontal by 39 ft vertical, about 4.6 dBi and 65 ohm | 5% on the frequency-scaled horizontal and vertical dimensions | Published free-space, maximum-gain starting geometry only. Pattern, feedpoint impedance, ground, support height, feed line, and the matching network are not independently validated. |
+| `bobtail_curtain` | B | L. B. Cebik, W4RNL, 'SCVs: A Family Album', Table 1 (7.15 MHz): 125 ft horizontal by 38 ft vertical, about 6.3 dBi and 40 ohm at the center-wire/top-horizontal junction | 5% on the frequency-scaled horizontal and vertical dimensions | Published free-space, maximum-gain starting geometry only. Pattern, feedpoint impedance versus feed height, ground, support height, and the feed line are not independently validated. |
 | `doublet` | B | VU3DXR, '94-Foot Multi Band Doublet Antenna': 94 ft total, 41 ft of 450 Ω ladder line, 1:1 current balun, and a tuner | 5% on the radiator and feed-line lengths; 450 Ω line | The tuner and balun are not modeled; feed-line length, impedance, and installation dominate the match. The editor default is a half-wave dipole, so the 94 ft design is a starting point. |
 | `custom` | C | User-defined wire geometry | Not applicable | No accuracy claim; imports and diagnostics only. |
 <!-- evidence-table:end -->
@@ -491,16 +493,18 @@ Phase 6 adds tests for:
   resistance has the ARRL reference described below.
 - VNA CSV import, measurement conditions/reference plane, project records, and
   measured/simulated R/X/|Z|/SWR comparison, including resonance differences.
-- Multi-element optimization for Yagi, fan dipole, Moxon, vertical, inverted-V,
-  Ringo, and loop, with integer variables for radial counts, loop sides, and
-  Ringo ring sides, Pareto ranks, and candidate selection. Yagi optimization
-  keeps the element count fixed.
+- Family optimizer descriptors and a joint differential-evolution plus local
+  search for every first-class typed family, with an exhaustive registry,
+  field-coverage classification, hard/soft constraints, integer and choice
+  variables, deterministic seeds, budget extension, sensitivity, Apply Best
+  adapters, and explicit unavailable reasons. Yagi optimization keeps the
+  element count, polarization, and match topology fixed.
 - Frequency-first estimator provenance, loop polygon correction, and
   target-relative SWR in optimization results.
 - Native packaging inputs, `--version`/`--check-solver` CLI behavior, and
   bundled-solver precedence in the executable locator.
 
-The suite currently has 1,259 tests, 102 of which require the solver. Solver
+The suite currently has over 1,600 tests, over 110 of which require the solver. Solver
 integration tests skip when no `nec2c` executable is available; the test suite
 auto-detects `spikes/phase0/build/nec2c` when `NEC2C` is not set. All tests run
 on Python 3.11, 3.12, and 3.13 on Linux and Windows through GitHub Actions. UI
@@ -569,9 +573,11 @@ and require `NEC2C`.
   radial models rely on structural tests and visible warnings.
 - VNA CSV import and measurement records are implemented; live instrument
   control is not.
-- Optimization covers primary-dimension, multi-element, integer, and Pareto
-  searches for generated templates. Custom/imported designs are excluded, and
-  there are no boom-length or turning-radius constraints.
+- Optimization covers all first-class typed families through explicit
+  descriptors and joint geometry/feed/load searches. Magnetic loops, random
+  wires, custom/imported geometry, and G5RV/ZS6BKW/Zepp/doublet custom
+  generators are explicitly unavailable. Band-aware, robust, and Pareto modes
+  are future work, and there are no boom-length or turning-radius constraints.
 - Pattern resolution changes angular sampling only; it does not change NEC
   segment density or solver accuracy.
 - Feed-line results are post-processed at the transmitter. The line does not

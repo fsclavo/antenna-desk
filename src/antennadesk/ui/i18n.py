@@ -210,6 +210,36 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Vertical radiator with a parallel matching stub.",
         Language.SPANISH: "Radiador vertical con stub de adaptación paralelo.",
     },
+    "catalog.half_square": {
+        Language.ENGLISH: "Half square",
+        Language.SPANISH: "Medio cuadrado",
+    },
+    "catalog.half_square.description": {
+        Language.ENGLISH: (
+            "Two quarter-wave verticals joined by a half-wave top wire, fed at a "
+            "top corner; broadside and vertically polarized."
+        ),
+        Language.SPANISH: (
+            "Dos verticales de cuarto de onda unidas por un hilo superior de media "
+            "onda, alimentadas en una esquina superior; bidireccional y polarización "
+            "vertical."
+        ),
+    },
+    "catalog.bobtail_curtain": {
+        Language.ENGLISH: "Bobtail curtain",
+        Language.SPANISH: "Cortina bobtail",
+    },
+    "catalog.bobtail_curtain.description": {
+        Language.ENGLISH: (
+            "Three quarter-wave verticals joined by two half-wave top wires, fed "
+            "at the top of the center vertical; broadside and vertically polarized."
+        ),
+        Language.SPANISH: (
+            "Tres verticales de cuarto de onda unidas por dos hilos superiores de "
+            "media onda, alimentadas en la parte superior de la vertical central; "
+            "bidireccional y polarización vertical."
+        ),
+    },
     "catalog.slim_jim": {
         Language.ENGLISH: "Slim Jim",
         Language.SPANISH: "Slim Jim",
@@ -813,12 +843,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Aplicar al diseño actual",
     },
     "design_from_frequency.refine_after_apply": {
-        Language.ENGLISH: "Open an optimizer or synthesis dialog after applying",
-        Language.SPANISH: "Abrir un optimizador o síntesis después de aplicar",
+        Language.ENGLISH: "Open the family optimizer after applying",
+        Language.SPANISH: "Abrir el optimizador de familia después de aplicar",
     },
     "design_from_frequency.hint": {
-        Language.ENGLISH: "These are starting dimensions, not verified construction values. Apply them and refine with the existing optimizer or synthesis if needed.",
-        Language.SPANISH: "Son dimensiones iniciales, no valores de construcción verificados. Aplicarlas y refinar con el optimizador o la síntesis existente si hace falta.",
+        Language.ENGLISH: "These are starting dimensions, not verified construction values. Apply them and refine with the family optimizer when available.",
+        Language.SPANISH: "Son dimensiones iniciales, no valores de construcción verificados. Aplicarlas y refinar con el optimizador de familia cuando esté disponible.",
     },
     "design_from_frequency.confidence": {
         Language.ENGLISH: "Confidence: {value}",
@@ -1648,8 +1678,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Dimensiones estimadas aplicadas. Revisalas y simulá.",
     },
     "status.estimate_apply_manual_refine": {
-        Language.ENGLISH: "Estimated dimensions applied. Choose an optimization or synthesis tool to refine them.",
-        Language.SPANISH: "Dimensiones estimadas aplicadas. Elegí un optimizador o síntesis para refinarlas.",
+        Language.ENGLISH: "Estimated dimensions applied. Open the family optimizer to refine them when available.",
+        Language.SPANISH: "Dimensiones estimadas aplicadas. Abrí el optimizador de familia para refinarlas cuando esté disponible.",
     },
     "status.cancelling": {Language.ENGLISH: "Cancelling...", Language.SPANISH: "Cancelando..."},
     "status.preparing_save": {
@@ -2753,6 +2783,100 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "inverted_v.title": {
         Language.ENGLISH: "Inverted-V Generator",
         Language.SPANISH: "Generador de V invertida",
+    },
+    "scv.title": {
+        Language.ENGLISH: "Half-Square / Bobtail-Curtain Generator",
+        Language.SPANISH: "Generador de medio cuadrado / cortina bobtail",
+    },
+    "scv.kind": {
+        Language.ENGLISH: "Array type",
+        Language.SPANISH: "Tipo de conjunto",
+    },
+    "scv.kind.half_square": {
+        Language.ENGLISH: "Half square",
+        Language.SPANISH: "Medio cuadrado",
+    },
+    "scv.kind.bobtail_curtain": {
+        Language.ENGLISH: "Bobtail curtain",
+        Language.SPANISH: "Cortina bobtail",
+    },
+    "scv.horizontal_length": {
+        Language.ENGLISH: "Overall horizontal length",
+        Language.SPANISH: "Longitud horizontal total",
+    },
+    "scv.vertical_height": {
+        Language.ENGLISH: "Vertical height",
+        Language.SPANISH: "Altura vertical",
+    },
+    "scv.vertical_elements": {
+        Language.ENGLISH: "Vertical elements",
+        Language.SPANISH: "Elementos verticales",
+    },
+    "scv.feed_top": {
+        Language.ENGLISH: "feed at top junction",
+        Language.SPANISH: "alimentación en la unión superior",
+    },
+    "scv.feed_offset": {
+        Language.ENGLISH: "Feed offset below top junction",
+        Language.SPANISH: "Offset de alimentación bajo la unión superior",
+    },
+    "scv.wire_radius": {
+        Language.ENGLISH: "Wire radius (mm)",
+        Language.SPANISH: "Radio del hilo (mm)",
+    },
+    "scv.geometry": {
+        Language.ENGLISH: "{type} · horizontal {horizontal} {unit} · vertical {vertical} {unit}",
+        Language.SPANISH: ("{type} · horizontal {horizontal} {unit} · vertical {vertical} {unit}"),
+    },
+    "scv.load_reference": {
+        Language.ENGLISH: "Load Cebik 7.15 MHz reference",
+        Language.SPANISH: "Cargar referencia Cebik de 7,15 MHz",
+    },
+    "scv.load_reference_hint": {
+        Language.ENGLISH: "Load the published 62.4 x 39 ft or 125 x 38 ft dimensions.",
+        Language.SPANISH: "Carga las dimensiones publicadas de 62,4 x 39 ft o 125 x 38 ft.",
+    },
+    "scv.hint": {
+        Language.ENGLISH: (
+            "Both arrays are monoband, broadside, vertically polarized wire "
+            "antennas. The half square uses two quarter-wave verticals and a "
+            "half-wave top; the bobtail curtain adds a third vertical and a "
+            "second top section. Feed at the top junction of an outer vertical "
+            "(half square) or the center vertical (bobtail), not at a bottom "
+            "voltage point. Moving the feed down the fed vertical is a matching "
+            "adjustment. The published Cebik dimensions are a free-space starting "
+            "point; ground, support height, and the feed line remain "
+            "installation-specific."
+        ),
+        Language.SPANISH: (
+            "Ambos conjuntos son antenas de hilo monobanda, bidireccionales y con "
+            "polarización vertical. El medio cuadrado usa dos verticales de cuarto "
+            "de onda y un hilo superior de media onda; la cortina bobtail agrega "
+            "una tercera vertical y un segundo tramo superior. Alimentá en la unión "
+            "superior de una vertical externa (medio cuadrado) o de la vertical "
+            "central (bobtail), no en un punto de tensión inferior. Mover la "
+            "alimentación hacia abajo de la vertical alimentada es un ajuste de "
+            "adaptación. Las dimensiones publicadas de Cebik son un punto de "
+            "partida en espacio libre; el suelo, la altura de soporte y la línea "
+            "de alimentación dependen de la instalación."
+        ),
+    },
+    "scv.evidence": {
+        Language.ENGLISH: (
+            "Published Cebik 7.15 MHz free-space starting geometry: half square "
+            "62.4 ft by 39 ft, about 4.6 dBi and 65 ohm; bobtail curtain 125 ft by "
+            "38 ft, about 6.3 dBi and 40 ohm at the center-wire/top junction. "
+            "AntennaDesk does not independently validate the pattern, feedpoint "
+            "impedance, ground, or matching."
+        ),
+        Language.SPANISH: (
+            "Geometría inicial publicada por Cebik para 7,15 MHz en espacio libre: "
+            "medio cuadrado de 62,4 ft por 39 ft, unos 4,6 dBi y 65 ohm; cortina "
+            "bobtail de 125 ft por 38 ft, unos 6,3 dBi y 40 ohm en la unión de la "
+            "vertical central con el hilo superior. AntennaDesk no valida "
+            "independientemente el patrón, la impedancia de alimentación, el suelo "
+            "ni la adaptación."
+        ),
     },
     "ringo.title": {
         Language.ENGLISH: "Ringo Generator",
@@ -4499,6 +4623,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Gain weight",
         Language.SPANISH: "Peso de ganancia",
     },
+    "optimize.efficiency_weight": {
+        Language.ENGLISH: "Efficiency weight",
+        Language.SPANISH: "Peso de eficiencia",
+    },
+    "optimize.max_swr_constraint": {
+        Language.ENGLISH: "Maximum SWR constraint",
+        Language.SPANISH: "Restricción de SWR máximo",
+    },
     "optimize.bandwidth_result": {
         Language.ENGLISH: "Bandwidth {value} MHz",
         Language.SPANISH: "Ancho de banda {value} MHz",
@@ -4559,6 +4691,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Sensitivity",
         Language.SPANISH: "Sensibilidad",
     },
+    "optimize.score": {
+        Language.ENGLISH: "Score",
+        Language.SPANISH: "Puntuación",
+    },
     "optimize.rank": {Language.ENGLISH: "Rank", Language.SPANISH: "Ranking"},
     "optimize.iteration": {Language.ENGLISH: "#", Language.SPANISH: "#"},
     "optimize.length": {Language.ENGLISH: "Dimension", Language.SPANISH: "Dimensión"},
@@ -4572,6 +4708,188 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Cancel the running optimization before closing.",
         Language.SPANISH: "Cancelá la optimización en curso antes de cerrar.",
     },
+    "optimize.family_title": {
+        Language.ENGLISH: "Family Optimizer",
+        Language.SPANISH: "Optimizador de familia",
+    },
+    "optimize.variables": {
+        Language.ENGLISH: "Design variables",
+        Language.SPANISH: "Variables de diseño",
+    },
+    "optimize.use": {
+        Language.ENGLISH: "Use",
+        Language.SPANISH: "Usar",
+    },
+    "optimize.current": {
+        Language.ENGLISH: "Current",
+        Language.SPANISH: "Actual",
+    },
+    "optimize.minimum": {
+        Language.ENGLISH: "Minimum",
+        Language.SPANISH: "Mínimo",
+    },
+    "optimize.maximum": {
+        Language.ENGLISH: "Maximum",
+        Language.SPANISH: "Máximo",
+    },
+    "optimize.budget_profile": {
+        Language.ENGLISH: "Search budget",
+        Language.SPANISH: "Presupuesto de búsqueda",
+    },
+    "optimize.budget.fast": {
+        Language.ENGLISH: "Fast",
+        Language.SPANISH: "Rápido",
+    },
+    "optimize.budget.balanced": {
+        Language.ENGLISH: "Balanced (recommended)",
+        Language.SPANISH: "Balanceado (recomendado)",
+    },
+    "optimize.budget.thorough": {
+        Language.ENGLISH: "Thorough",
+        Language.SPANISH: "Exhaustivo",
+    },
+    "optimize.seed": {
+        Language.ENGLISH: "Random seed",
+        Language.SPANISH: "Semilla aleatoria",
+    },
+    "optimize.run_family": {
+        Language.ENGLISH: "Run optimization",
+        Language.SPANISH: "Ejecutar optimización",
+    },
+    "optimize.apply_best": {
+        Language.ENGLISH: "Apply Best...",
+        Language.SPANISH: "Aplicar mejor...",
+    },
+    "optimize.locked_partial": {
+        Language.ENGLISH: "Partial optimization: some variables are locked.",
+        Language.SPANISH: "Optimización parcial: algunas variables están bloqueadas.",
+    },
+    "optimize.family_summary": {
+        Language.ENGLISH: "Status: {status} · Evaluations: {count} · Best score: {score}",
+        Language.SPANISH: "Estado: {status} · Evaluaciones: {count} · Mejor puntuación: {score}",
+    },
+    "optimize.no_feasible": {
+        Language.ENGLISH: "No feasible design was found within the selected bounds and constraints.",
+        Language.SPANISH: "No se encontró un diseño factible dentro de los límites y restricciones elegidos.",
+    },
+    "optimize.budget_hint": {
+        Language.ENGLISH: "Estimated solver runs: {count}, including sensitivity probes. The search may extend automatically.",
+        Language.SPANISH: "Corridas estimadas del solver: {count}, incluyendo sondas de sensibilidad. La búsqueda puede extenderse automáticamente.",
+    },
+    "optimize.budget_hint_sweep": {
+        Language.ENGLISH: (
+            "Estimated solver runs: {count} ({points} frequencies per candidate). "
+            "Bandwidth optimization is expensive; the search may extend automatically."
+        ),
+        Language.SPANISH: (
+            "Corridas estimadas del solver: {count} ({points} frecuencias por candidato). "
+            "La optimización por ancho de banda es costosa; la búsqueda puede extenderse automáticamente."
+        ),
+    },
+    "optimize.group": {
+        Language.ENGLISH: "Group",
+        Language.SPANISH: "Grupo",
+    },
+    "optimize.group.geometry": {
+        Language.ENGLISH: "Geometry",
+        Language.SPANISH: "Geometría",
+    },
+    "optimize.group.feed": {
+        Language.ENGLISH: "Feed",
+        Language.SPANISH: "Alimentación",
+    },
+    "optimize.group.loads": {
+        Language.ENGLISH: "Family loads",
+        Language.SPANISH: "Cargas de familia",
+    },
+    "optimize.group.conductor": {
+        Language.ENGLISH: "Conductor",
+        Language.SPANISH: "Conductor",
+    },
+    "optimize.constraint.positive": {
+        Language.ENGLISH: "This dimension must be positive.",
+        Language.SPANISH: "Esta dimensión debe ser positiva.",
+    },
+    "optimize.constraint.non_negative": {
+        Language.ENGLISH: "This dimension must not be negative.",
+        Language.SPANISH: "Esta dimensión no puede ser negativa.",
+    },
+    "optimize.constraint.radial_count": {
+        Language.ENGLISH: "The radial system requires at least one radial.",
+        Language.SPANISH: "El sistema de radiales requiere al menos un radial.",
+    },
+    "optimize.constraint.coil_offset": {
+        Language.ENGLISH: "The loading-coil offset must lie within the radiator.",
+        Language.SPANISH: "El offset de la bobina debe quedar dentro del radiador.",
+    },
+    "optimize.constraint.top_hat_wires": {
+        Language.ENGLISH: "The top hat requires at least one wire.",
+        Language.SPANISH: "El top hat requiere al menos un hilo.",
+    },
+    "optimize.constraint.conductor_spacing": {
+        Language.ENGLISH: "The conductor spacing is too small for the wire diameter.",
+        Language.SPANISH: "La separación entre conductores es demasiado pequeña para el diámetro del hilo.",
+    },
+    "optimize.constraint.match_length": {
+        Language.ENGLISH: "The hairpin match is shorter than the minimum conductor spacing.",
+        Language.SPANISH: "El match hairpin es más corto que la separación mínima entre conductores.",
+    },
+    "optimize.constraint.feed_offset": {
+        Language.ENGLISH: "The feed offset must be shorter than the fed element.",
+        Language.SPANISH: "El offset de alimentación debe ser menor que el elemento alimentado.",
+    },
+    "optimize.constraint.endfed_height": {
+        Language.ENGLISH: "The height difference must not exceed the end-fed wire length.",
+        Language.SPANISH: "La diferencia de altura no puede superar la longitud del hilo alimentado en el extremo.",
+    },
+    "optimize.constraint.fan_angles": {
+        Language.ENGLISH: "Fan-dipole elements must use distinct included angles.",
+        Language.SPANISH: "Los elementos del dipolo abanico deben usar ángulos incluidos distintos.",
+    },
+    "optimize.constraint.trap_frequency": {
+        Language.ENGLISH: "The trap frequency must be above the low-band design frequency.",
+        Language.SPANISH: "La frecuencia de la trampa debe estar por encima de la frecuencia de diseño de la banda baja.",
+    },
+    "optimize.constraint.moxon_gap": {
+        Language.ENGLISH: "The Moxon tips must leave a gap between the elements.",
+        Language.SPANISH: "Las puntas del Moxon deben dejar una brecha entre los elementos.",
+    },
+    "optimize.constraint.vertical_clearance": {
+        Language.ENGLISH: "A vertically polarized array must clear the ground.",
+        Language.SPANISH: "Un conjunto con polarización vertical debe quedar por encima del suelo.",
+    },
+    "optimize.unavailable.pending_family": {
+        Language.ENGLISH: "This family is waiting for its descriptor in the family-optimizer migration.",
+        Language.SPANISH: "Esta familia espera su descriptor en la migración al optimizador de familias.",
+    },
+    "optimize.unavailable.magnetic_loop": {
+        Language.ENGLISH: "The magnetic-loop capacitor and loss model are not accurate enough for an optimizer.",
+        Language.SPANISH: "El modelo de capacitor y pérdidas del lazo magnético no es suficientemente preciso para un optimizador.",
+    },
+    "optimize.unavailable.random_wire": {
+        Language.ENGLISH: "A random wire is deliberately non-resonant and tuner-assisted; it has no stable optimum.",
+        Language.SPANISH: "Un hilo aleatorio es deliberadamente no resonante y depende de un tuner; no tiene un óptimo estable.",
+    },
+    "optimize.unavailable.custom_generator": {
+        Language.ENGLISH: "This generator must first become a typed family before it can be optimized.",
+        Language.SPANISH: "Este generador debe convertirse primero en una familia tipada antes de poder optimizarse.",
+    },
+    "optimize.unavailable.custom_geometry": {
+        Language.ENGLISH: "Arbitrary custom geometry has no parameterized topology to optimize.",
+        Language.SPANISH: "La geometría personalizada arbitraria no tiene una topología parametrizada para optimizar.",
+    },
+    "optimize.unavailable.unsupported": {
+        Language.ENGLISH: "This antenna type has no registered optimizer.",
+        Language.SPANISH: "Este tipo de antena no tiene un optimizador registrado.",
+    },
+    "element_optimize.objective.min_swr": {
+        Language.ENGLISH: "Minimum SWR",
+        Language.SPANISH: "SWR mínimo",
+    },
+    "element_optimize.objective.max_efficiency": {
+        Language.ENGLISH: "Maximum efficiency",
+        Language.SPANISH: "Máxima eficiencia",
+    },
     "optimize_status.converged": {
         Language.ENGLISH: "converged",
         Language.SPANISH: "convergió",
@@ -4579,6 +4897,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize_status.max_evaluations": {
         Language.ENGLISH: "maximum evaluations reached",
         Language.SPANISH: "máximo de evaluaciones alcanzado",
+    },
+    "optimize_status.no_feasible": {
+        Language.ENGLISH: "no feasible design",
+        Language.SPANISH: "sin diseño factible",
     },
     "optimize_status.no_bracket": {
         Language.ENGLISH: "target not bracketed",

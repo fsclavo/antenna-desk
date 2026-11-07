@@ -21,6 +21,7 @@ from ..domain.antennas.magnetic_loop import MagneticLoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
+from ..domain.antennas.scv import ScvKind, ScvParameters
 from ..domain.antennas.t2fd import T2FDParameters
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
@@ -175,6 +176,36 @@ length is {parameters.total_conductor_length_m:.4f} m.</p>"""
 and two end connectors of {parameters.spacing_m:.4f} m. Join them at both
 ends and feed the center of one element. The total conductor length is
 {parameters.total_conductor_length_m:.4f} m.</p>"""
+    elif isinstance(parameters, ScvParameters):
+        if parameters.kind is ScvKind.HALF_SQUARE:
+            feed_point = "the top corner of one outer vertical"
+            wire_note = (
+                f"Cut two vertical wires of {parameters.vertical_height_m:.4f} m and "
+                f"one top wire of {parameters.horizontal_length_m:.4f} m."
+            )
+        else:
+            feed_point = "the top junction of the center vertical and the top wires"
+            wire_note = (
+                f"Cut three vertical wires of {parameters.vertical_height_m:.4f} m and "
+                f"two top wires of {parameters.horizontal_segment_m:.4f} m each."
+            )
+        feed_rows = f"""
+<tr><th>Type</th><td>{parameters.template_name}</td></tr>
+<tr><th>Horizontal length</th><td>{parameters.horizontal_length_m:.4f} m</td></tr>
+<tr><th>Horizontal segment</th><td>{parameters.horizontal_segment_m:.4f} m each</td></tr>
+<tr><th>Vertical height</th><td>{parameters.vertical_height_m:.4f} m</td></tr>
+<tr><th>Vertical elements</th><td>{parameters.vertical_count}</td></tr>
+<tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
+<tr><th>Top height</th><td>{parameters.top_height_m:.4f} m</td></tr>
+<tr><th>Feed offset below top</th><td>{parameters.feed_offset_m:.4f} m</td></tr>
+<tr><th>Total conductor</th><td>{parameters.total_conductor_length_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Build a {parameters.template_name.lower()} with
+{parameters.vertical_count} vertical elements joined at the top.
+{wire_note} Keep the bottom ends insulated from ground and feed
+{feed_point}. The feed is {parameters.feed_offset_m:.4f} m below the top
+junction at {feed_height_m:.4f} m above ground.</p>"""
     elif isinstance(parameters, RingoParameters):
         feed_rows = f"""
 <tr><th>Radiator height</th><td>{parameters.radiator_height_m:.4f} m</td></tr>

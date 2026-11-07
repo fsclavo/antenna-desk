@@ -19,6 +19,12 @@ from .magnetic_loop import ANTENNA_TYPE_MAGNETIC_LOOP, MagneticLoopParameters
 from .moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from .ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
 from .ringo import ANTENNA_TYPE_RINGO, RingoParameters
+from .scv import (
+    ANTENNA_TYPE_BOBTAIL_CURTAIN,
+    ANTENNA_TYPE_HALF_SQUARE,
+    ScvKind,
+    ScvParameters,
+)
 from .t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
 from .trap_dipole import ANTENNA_TYPE_TRAP_DIPOLE, TrapDipoleParameters
 from .vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
@@ -39,6 +45,7 @@ AntennaDesignParameters = (
     | EndFedParameters
     | JPoleParameters
     | RingoParameters
+    | ScvParameters
     | T2FDParameters
     | TrapDipoleParameters
     | CustomAntennaParameters
@@ -84,6 +91,12 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_J_POLE
     if isinstance(parameters, RingoParameters):
         return ANTENNA_TYPE_RINGO
+    if isinstance(parameters, ScvParameters):
+        return (
+            ANTENNA_TYPE_HALF_SQUARE
+            if parameters.kind is ScvKind.HALF_SQUARE
+            else ANTENNA_TYPE_BOBTAIL_CURTAIN
+        )
     if isinstance(parameters, TrapDipoleParameters):
         return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(parameters, T2FDParameters):
@@ -106,6 +119,8 @@ def primary_dimension_m(parameters: AntennaDesignParameters) -> float:
         return parameters.height_m
     if isinstance(parameters, InvertedVParameters):
         return parameters.leg_length_m
+    if isinstance(parameters, ScvParameters):
+        return parameters.horizontal_length_m
     if isinstance(parameters, EndFedParameters):
         return parameters.length_m
     if isinstance(parameters, TrapDipoleParameters):
@@ -131,6 +146,8 @@ def with_primary_dimension(
         return replace(parameters, height_m=dimension_m)
     if isinstance(parameters, InvertedVParameters):
         return replace(parameters, leg_length_m=dimension_m)
+    if isinstance(parameters, ScvParameters):
+        return replace(parameters, horizontal_length_m=dimension_m)
     if isinstance(parameters, EndFedParameters):
         return replace(parameters, length_m=dimension_m)
     if isinstance(parameters, TrapDipoleParameters):

@@ -32,7 +32,7 @@ adapters
   persistence: JsonProjectRepository, Pydantic schema, migrations, atomic writes
   simulation/nec2: input writer, parser, process runner, normalization
   simulation: discretization, SWR normalization, fingerprint
-  optimization: bounded length search, evaluation log, sensitivity
+  optimization: family descriptors and hybrid deterministic engine
   reporting: CSV, self-contained HTML, construction sheet, SVG charts
 ```
 
@@ -127,27 +127,40 @@ Reports are generated from the immutable result and the project snapshot. The
 HTML report includes the fingerprint, solver version, specification,
 diagnostics, impedance table, resonance points, and SVG charts.
 
-## Phase 5 flow
+## Family optimizer flow
 
 ```text
 AntennaDesignParameters + base SimulationSpec
         │
         ▼
-OptimizeAntennaDimension
-  ├─ single-frequency, no-pattern evaluation spec at the design frequency
-  ├─ bounded reactance search (endpoints, coarse scan, interpolation)
-  ├─ evaluation log
-  └─ ±10/25 mm sensitivity probes
+optimizer_availability(parameters)
+  ├─ explicit family descriptor, or
+  └─ explicit unavailable reason (no fallback)
         │
         ▼
-OptimizationDialog ── Apply best dimension ──► design update ──► full simulation
+FamilyOptimizationDialog
+  ├─ all variables, lock controls, topology shown as context
+  ├─ objective, weights, soft constraints
+  └─ budget profile, seed, solver-run estimate
         │
-        └─ ConstructionDialog / construction sheet (dimensions + last result)
+        ▼
+OptimizeAntenna (application use case)
+  ├─ descriptor builder and hard-constraint validation
+  ├─ per-candidate model, segmentation, and solver run
+  ├─ metric extraction and objective scoring
+  └─ deterministic hybrid engine:
+       differential evolution + bounded local pattern search
+       + feasibility ranking + cache + sensitivity
+        │
+        ▼
+Apply Best through exhaustive UI adapter ──► family editor ──► full simulation
 ```
 
-Optimization runs in a worker thread. The final full-sweep/pattern simulation is
-performed after applying the dimension so the normal result/report path remains
-the single source of truth.
+Optimization runs in a worker thread with cancellation. The final
+full-sweep/pattern simulation is performed after applying the result so the
+normal result/report path remains the single source of truth. The UI adapter
+registry is exhaustive: a supported optimizer cannot silently write into the
+basic dipole form.
 
 ## Phase 6 — new geometry (completed; physical validation deferred)
 
@@ -168,7 +181,7 @@ The second slice adds two multi-wire templates:
 `AntennaDesignParameters` is the union of the supported parameter types.
 `DesignVariant` stores the union and validates that `antenna_type` matches the
 parameters. The canonical model remains the shared `AntennaModel`, so the
-solver adapter does not need geometry-specific branches. Schema version 15 is
+solver adapter does not need geometry-specific branches. Schema version 16 is
 current: parameter payloads are additive, and old `wire_dipole` documents are
 unchanged. A design may also store an optional analysis band plan; it is
 intent metadata and never changes the canonical geometry. Series RLC loads are
@@ -231,10 +244,10 @@ version 9 adds the inverted-L design type, version 10 adds loop orientation,
 version 11 adds the magnetic-loop design type, version 12 adds the folded Yagi
 driven element, version 13 adds the beta/hairpin Yagi match, version 14 adds the
 project balun/unun loss model, version 15 repairs Yagi matching hardware that is
-narrower than the conductor diameter, and older documents are migrated
-explicitly.
+narrower than the conductor diameter, version 16 adds half-square and
+bobtail-curtain designs, and older documents are migrated explicitly.
 
-Simulation runs are persisted in schema version 15. Raw solver text is stored
+Simulation runs are persisted in schema version 16. Raw solver text is stored
 with the normalized result. Project files are compact JSON compressed with
 gzip; plain JSON files from older versions still load. The UI warns at 32 MB
 compressed, blocks files above the 64 MB compressed limit, and offers
@@ -279,6 +292,9 @@ prerequisite for the user workflow.
 - The end-fed feed transformer is an ideal impedance ratio; it is not a
   physical unun model. The counterpoise is ordinary wire geometry.
 - Relative permeability is not emitted to NEC.
-- Custom and imported designs are excluded from the guided optimizer. Space
-  constraints are limited to variable bounds and the Yagi minimum-gap rule.
+- Custom and imported designs, magnetic loops, random wires, and the
+  G5RV/ZS6BKW/Zepp/doublet custom generators have an explicit unavailable
+  optimizer reason. Space constraints are limited to variable bounds, family
+  geometry rules, and the Yagi minimum-gap rule; band-aware, robust, and Pareto
+  modes are future work.
 - One full-wave engine (NEC-2) is supported; additional engines are deferred.

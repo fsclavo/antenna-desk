@@ -718,6 +718,50 @@ def test_new_ringo_creates_a_first_class_design(
     window._dirty = False
 
 
+def test_new_scv_templates_use_the_shared_array_editor(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.scv import ScvKind, ScvParameters
+
+    parameters = ScvParameters(
+        frequency_hz=7_150_000.0,
+        kind=ScvKind.BOBTAIL_CURTAIN,
+        horizontal_length_m=38.1,
+        vertical_height_m=11.5,
+        base_height_m=1.5,
+        feed_offset_m=0.5,
+        azimuth_deg=30.0,
+    )
+
+    class FakeScvDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> object:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "ScvDialog", FakeScvDialog)
+    monkeypatch.setattr(
+        QInputDialog,
+        "getText",
+        lambda *args, **kwargs: ("Bobtail curtain", True),
+    )
+
+    window.new_bobtail_curtain_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "Bobtail curtain"
+    assert window._project.designs[0].antenna_type == "bobtail_curtain"
+    assert window._design_stack.currentWidget() is window._scv_scroll
+    assert window._scv_form.parameters() == parameters
+    window._dirty = False
+
+
 def test_switching_between_delta_and_quad_changes_the_rendered_polygon(
     window: MainWindow,
 ) -> None:

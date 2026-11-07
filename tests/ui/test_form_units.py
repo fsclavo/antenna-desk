@@ -18,6 +18,7 @@ from antennadesk.ui.widgets.j_pole_form import JPoleForm
 from antennadesk.ui.widgets.moxon_form import MoxonForm
 from antennadesk.ui.widgets.ocfd_form import OCFDForm
 from antennadesk.ui.widgets.ringo_form import RingoForm
+from antennadesk.ui.widgets.scv_form import ScvForm
 from antennadesk.ui.widgets.t2fd_form import T2FDForm
 from antennadesk.ui.widgets.trap_dipole_form import TrapDipoleForm
 from antennadesk.ui.widgets.vertical_form import VerticalForm
@@ -62,6 +63,10 @@ FORMS = (
         ),
     ),
     (RingoForm, ("_radiator_height", "_ring_diameter", "_ring_height")),
+    (
+        ScvForm,
+        ("_horizontal_length", "_vertical_height", "_base_height", "_feed_offset"),
+    ),
 )
 
 

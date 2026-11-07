@@ -158,8 +158,8 @@ loss model are not included. The generator is experimental.
 
 User-defined straight wires with a frequency, feed, ground, optional loads, and
 an optional ideal feed-transformer ratio. It is the escape hatch for geometries
-outside the guided templates. It has no single primary dimension, so length
-optimization is not available. Its wire, feed, and load rules are validated by
+outside the guided templates. It has no parameterized topology, so the family
+optimizer is explicitly unavailable. Its wire, feed, and load rules are validated by
 `AntennaModel`.
 
 ### YagiParameters
@@ -448,11 +448,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 15.
+the application writes version 16.
 
 ## Schema policy
 
-- Current version: `15`.
+- Current version: `16`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -486,6 +486,9 @@ the application writes version 15.
   than twice the driven-element radius. The repair uses four radii spacing and
   eight radii hairpin length to keep the conductors separate and the short
   wires representable by NEC-2.
+- Version 16 introduces the half-square and bobtail-curtain self-contained
+  vertical-array types. Existing designs are unchanged; the new variants use
+  `ScvParametersPayload` with an explicit `kind` discriminator.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -507,14 +510,16 @@ the application writes version 15.
   matching networks are post-processed at the feedpoint, and the vertical
   generator has a radial screen. Transmission-line two-ports between wire
   points are modeled as geometry; arbitrary radial screens are not.
-- Optimization and synthesis operate on generated parameters. Custom and
-  imported designs are excluded from the guided optimizer.
+- Optimization operates on typed generated parameters. Magnetic loops, random
+  wires, arbitrary custom/imported geometry, and G5RV/ZS6BKW/Zepp/doublet
+  custom generators have explicit unavailable reasons. Band-aware, robust, and
+  Pareto optimizer modes are future work.
 - Measurements are imported from CSV; there is no live instrument-control
   adapter.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 15.
+- Simulation results are persisted as immutable runs in schema version 16.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are
@@ -565,13 +570,22 @@ Phase 2 adds solver-independent simulation types:
   records.
 - `ResonancePoint` and `find_resonances()`: series reactance zero crossings
   from a frequency sweep.
-- `LengthOptimizationSpec`: min/max length, objective (reactance, minimum SWR,
-  or maximum SWR bandwidth), target reactance, SWR limit, evaluation/tolerance
-  limits, and sensitivity offsets.
-- `LengthEvaluation`: length, impedance, SWR, error, and iteration index.
-- `LengthSensitivityPoint`: length offset and resulting impedance/SWR.
-- `LengthOptimizationResult`: status, best length/impedance/SWR, evaluation
-  log, and sensitivity points.
+- `OptimizationVariable`: bounded continuous, integer, or choice variable with
+  a label, group, unit, bounds, step, and optional default lock.
+- `AntennaOptimizerDescriptor`: the family contract: variables, initial values,
+  parameter builder, hard validator, supported objectives, default objective,
+  start points, and future band-aware/robust flags.
+- `OptimizationBudget` and `budget_for()`: Fast, Balanced, and Thorough
+  evaluation budgets with stagnation patience and automatic extension.
+- `CandidateEvaluation` and `OptimizerRunResult`: feasibility, normalized
+  violation, score, metrics, errors, cancellation, seed, evaluation log, and
+  sensitivity points.
+- `OptimizeAntennaCommand`/`OptimizeAntennaResult`: the application boundary
+  that rebuilds the model and segmentation for every candidate, runs the solver
+  through the port, extracts metrics, and returns the best parameters.
+- The legacy `LengthOptimizationSpec`, `LengthEvaluation`, and
+  `LengthOptimizationResult` remain for the old use case and tests, but the
+  main UI no longer selects that path for supported typed families.
 - `SimulationRun`: immutable snapshot linked to a design, with creation time
   and the normalized `SimulationResult`; optional `band_id` and `batch_id`
   identify a run inside a band analysis.
@@ -597,12 +611,14 @@ Editing a design removes its current result view, but earlier run snapshots
 remain in the project. A project can contain multiple design variants; the GUI
 edits the selected variant.
 
-Dimension optimization is a bounded one-dimensional search over the primary
-dimension (dipole/folded element length or loop circumference)
-at the design frequency. It uses the solver through the same application port,
-logs every evaluation, and computes ±10/25 mm sensitivity probes around the
-best dimension. The final full-sweep/pattern simulation is run separately after
-the user applies the optimized dimension.
+Family optimization is a joint bounded search over every declared geometry,
+feed, and family-load variable. A family either has a descriptor or an explicit
+unavailable reason; there is no generic primary-dimension fallback. The engine
+runs deterministic differential evolution followed by bounded local pattern
+search, ranks feasible candidates before infeasible ones, caches repeated
+evaluations, logs every solver call, and reports sensitivity around the best
+design. The final full-sweep/pattern simulation is run separately after the user
+applies the optimized result through the family editor adapter.
 
 ## Design intent and dimension estimates
 

@@ -1,6 +1,6 @@
 # AntennaDesk roadmap and backlog
 
-**Updated:** 2026-11-05
+**Updated:** 2026-11-07
 **Status:** active roadmap after catalog, measurement, optimization, and
 packaging work.
 
@@ -48,11 +48,14 @@ Completed:
   estimator, with source identifiers, confidence, assumptions, warnings, and a
   loop polygon correction calibrated with NEC-2. The trap dipole and T2FD use
   starting-dimension helpers in their editors instead.
-- Single-dimension and multi-element optimization, target impedance, gain,
-  front-to-back, efficiency, weighted multi-objective search, Pareto ranks, and
-  integer variables.
-- Yagi element optimization: element lengths and boom gaps are searched while
-  the element count stays fixed.
+- Family-specific optimization descriptors with a joint deterministic hybrid
+  engine, target impedance, gain, front-to-back, efficiency, bandwidth, and
+  weighted multi-objective scores, all typed geometry/feed/load variables,
+  explicit unavailable reasons, and no generic fallback.
+- Yagi element optimization: every element length, every inter-element gap,
+  height, folded spacing when enabled, and beta/hairpin dimensions when
+  selected are searched together; the element count and polarization stay
+  fixed.
 - End-fed counterpoise geometry and an ideal feed transformer ratio, with
   estimator starting values.
 - VNA CSV import, measurement conditions/reference plane, measured/simulated
@@ -132,12 +135,17 @@ Deferred:
 
 ### M4 — Advanced design and measurement (completed)
 
-- Multi-element optimization and constrained geometry, including Yagi,
-  fan-dipole, Moxon, vertical, inverted-V, Ringo, and loop variables.
-- Weighted multi-objective search with Pareto ranks and candidate selection.
-- Integer variables for radial count, loop side count, and Ringo ring sides.
-- Yagi element lengths and boom gaps as bounded variables, with the element
-  count fixed.
+- Family optimizer redesign completed 2026-11-07 (see ADR-0026): explicit
+  descriptor per typed family, joint differential-evolution plus local search,
+  all geometry/feed/family-load variables, Fast/Balanced/Thorough budgets with
+  automatic extension, deterministic seeds, hard/soft constraints, sensitivity,
+  and an exhaustive Apply Best adapter.
+- Supported typed families: dipoles, loop, vertical/inverted-V/inverted-L,
+  J Pole/Slim Jim, Ringo, SCV, OCFD, EndFed, fan/trap/T2FD, Yagi, and Moxon.
+- Explicitly unavailable optimizers: magnetic loop, random wire, arbitrary
+  custom/imported geometry, and G5RV/ZS6BKW/Zepp/doublet custom generators.
+- Yagi element lengths and boom gaps are bounded variables; the element count,
+  polarization, folded/match topology, and driven index remain user choices.
 - VNA CSV import and measured/simulated SWR, R, X, and |Z| comparison.
 - Measurement conditions and reference-plane metadata.
 - Bounded impedance synthesis for OCFD, J Pole, and Slim Jim.
@@ -205,7 +213,7 @@ Acceptance criteria:
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
 | P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, `loaded_vertical` (published preset), `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, and `zepp` promoted to B. The inverted-L was added as C on 2026-11-06. The other four C templates were reviewed the same day; the Ringo now has a Cushcraft AR-6 starting-dimensions preset, but promotion needs a matching-ring model; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
-| P1 | Fan dipole V-angle calibration and angle optimization | B | investigated; angle optimizer deferred |
+| P1 | Fan dipole V-angle calibration and angle optimization | B | investigated; lengths and angles are now searched jointly by the family optimizer, but the calibration warning remains |
 | P1 | Optional ideal transformer/4:1 balun for OCFD | B | done |
 | P1 | Multiband batch engine and per-family band defaults (M6) | B | done |
 | P1 | Band selection UI and band summary results (M6) | B | done |
@@ -216,6 +224,8 @@ Acceptance criteria:
 | P2 | Relative permeability export to NEC | B | not supported by NEC-2; warning implemented |
 | P2 | Pattern metric selector for power/directivity/realized gain | B | done |
 | P2 | ZS6BKW and Zepp multiband presets | B | done |
+| P2 | Convert G5RV, ZS6BKW, Zepp, and doublet to typed families and add optimizers | B | pending (Phase B) |
+| P2 | Band-aware, robust, and Pareto optimizer modes | B | pending (Phase C) |
 | P2 | Custom/imported geometry optimization and space constraints | n/a | pending |
 | P2 | Live VNA/hardware control | n/a | deferred |
 | P2 | Additional full-wave engines | n/a | deferred |
@@ -241,7 +251,7 @@ point; `C` is structural/experimental only.
 | 7 | Balun/unun with losses | Cross-cutting model | M | High | B/C | **Implemented on 2026-11-07:** project-level matched insertion loss with a power-law frequency fit. It reduces realized gain and is reported per frequency; it does not alter geometry, impedance, or SWR. Apply it to EFHW, OCFD, G5RV, T2FD, or any other design. |
 | 8 | Capacity hat / top-loaded vertical | Modification of `vertical` | M | High | B/A | **Implemented:** the vertical template already has a capacitive top hat and loading coil. Reports, construction sheet, and scene summary now expose the hat geometry, with a dedicated scene contract case. The hat remains an application starting point, not an independently validated loading design. |
 | 9 | Explicit EFHW presets for the existing EndFed + OCFD/G5RV variants | Presets/UX, not a new family | S | Medium–high | A/B | **Implemented on 2026-11-07:** the EndFed editor is labeled EFHW, exposes 40/20/10 m preset buttons using the published 66/33/16 ft lengths and 49:1 transformer, and keeps the existing harmonic band plan. OCFD/G5RV variants remain presets. |
-| 10 | Half-square / bobtail curtain | New family | M | Medium | B/A | Multi-wire geometry and feed; published designs exist. |
+| 10 | Half-square / bobtail curtain | New family | M | Medium | B/A | **Implemented on 2026-11-07:** one self-contained vertical-array family with half-square and bobtail-curtain variants, top-junction feed with adjustable offset, schema-16 persistence, catalog routes, editor, geometry dimensions, reports, and construction sheet. The Cebik 7.15 MHz dimensions are the published starting point; pattern, ground, and matching remain unvalidated and there is no frequency-first estimator. |
 | 11 | Biquad / double biquad | New family | M | Medium | B/A | Two loops and reflector; needs a scene contract and tests. |
 | 12 | Beverage | New family | M | Medium | B/A | Receiving antenna; termination, ground, and long-wire geometry. |
 | 13 | Loaded / linked dipole | New family or `dipole` variant | M | Medium | B/C | Portable/SOTA use; existing load model helps, but coil Q and links need care. |

@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Replaced the mixed optimization paths with a **family optimizer
+  architecture**. Each supported typed family has an explicit descriptor and
+  QA coverage; there is no generic dipole fallback. The shared engine combines
+  deterministic differential evolution with bounded local refinement, searches
+  all geometry, feed, and family-load variables jointly, and keeps topology,
+  frequency, ground, and material as user context. The dialog exposes every
+  variable, lock controls, objective and constraints, Fast/Balanced/Thorough
+  budgets with automatic extension, a reproducible seed, ranked results,
+  sensitivity, and Apply Best routed through an exhaustive editor adapter.
+  Magnetic loops, random wires, arbitrary custom/imported geometry, and the
+  G5RV/ZS6BKW/Zepp/doublet custom generators report an explicit unavailable
+  reason instead of falling back.
+- Added a first-class **Half square / Bobtail curtain** family. Both variants
+  share one self-contained vertical-array editor, are fed at a top junction
+  with an adjustable feed offset, persist in schema 16, and include catalog
+  routes, geometry dimensions, reports, and a construction sheet. The default
+  dimensions scale Cebik's published 7.15 MHz 62.4 x 39 ft and 125 x 38 ft
+  starting geometries; pattern, ground, and matching remain unvalidated.
 - The EndFed template is now labeled **End-fed half-wave (EFHW)** and offers
   explicit 40/20/10 m preset buttons using the published ARRL 66/33/16 ft
   lengths, 49:1 transformer, and 0.05λ counterpoise starting point.
@@ -38,6 +56,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   a dense ground-screen approximation. The presets set the base/radial-plane
   height, radial count, and radial length; the numeric fields remain editable
   and the preset itself is not persisted.
+
+### Fixed
+
+- **Apply Best** now uses the family-specific editor adapter. A half-square or
+  bobtail-curtain result updates the shared array editor instead of passing
+  `ScvParameters` to the basic dipole form; the same exhaustive adapter covers
+  every other supported typed family.
 
 ## [0.2.0] - 2026-11-06
 
