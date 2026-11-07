@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added a first-class **Inverted L** generator: a vertical section fed at the
+  base, a horizontal top run, configurable base height and azimuth, a
+  dedicated editor, catalog route, schema-9 persistence, geometry dimensions,
+  reports, construction sheet, and tests. It is labeled experimental until an
+  independent reference exists.
 - Finite-ground editors now offer a **Soil preset** list with typical starting
   values for average soil / clay, rich soil / loam, dry sand, rocky soil, fresh
   water, and salt water. The permittivity and conductivity fields remain

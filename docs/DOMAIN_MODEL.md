@@ -2,9 +2,9 @@
 
 This document describes the current domain. It covers the generated antenna
 families (dipoles, loops, verticals, Yagi, Moxon, fan dipole, inverted-V,
-end-fed, OCFD, J Pole/Slim Jim, and Ringo), custom wires, one feed point per
-antenna, basic ground models, loads, matching networks, feed lines, imported
-measurements, and persisted simulation runs.
+inverted-L, end-fed, OCFD, J Pole/Slim Jim, and Ringo), custom wires, one feed
+point per antenna, basic ground models, loads, matching networks, feed lines,
+imported measurements, and persisted simulation runs.
 
 ## Units and coordinates
 
@@ -217,6 +217,16 @@ creates two sloping wires meeting at the apex, with a center feed at the apex.
 The leg ends must stay at or above ground. It is experimental; its geometry and
 scaling are tested, but it has no independent numerical performance reference.
 
+### InvertedLParameters
+
+A first-class bent end-fed wire with a vertical section fed at the base and a
+horizontal top run. Parameters are frequency, vertical height, horizontal
+length, base height, azimuth, wire radius, material, and ground. `to_antenna()`
+creates a vertical wire, a horizontal wire meeting at the top corner, and a feed
+at the base of the vertical section. `base_height_m` keeps the feedpoint and
+corner above ground. The generator is experimental and has no independent
+numerical reference yet.
+
 ### Antenna families
 
 `AntennaFamily` groups designs as Dipole, Yagi, Loop, Vertical, or Custom.
@@ -411,11 +421,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 8.
+the application writes version 9.
 
 ## Schema policy
 
-- Current version: `8`.
+- Current version: `9`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -434,6 +444,7 @@ the application writes version 8.
 - Version 8 adds the vertical top-hat fields. Existing vertical designs load
   with the top hat disabled; the migration infers the hat radius and wire count
   from any saved `top-hat-*` wires.
+- Version 9 adds the inverted-L design type. Existing designs are unchanged.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -462,7 +473,7 @@ the application writes version 8.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 8.
+- Simulation results are persisted as immutable runs in schema version 9.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are

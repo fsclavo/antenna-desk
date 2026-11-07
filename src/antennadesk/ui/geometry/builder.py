@@ -20,6 +20,12 @@ from ...domain.antennas.folded_dipole import (
     FoldedDipoleParameters,
 )
 from ...domain.antennas.geometry import Point3D
+from ...domain.antennas.inverted_l import (
+    ANTENNA_TYPE_INVERTED_L,
+    HORIZONTAL_ID,
+    VERTICAL_ID,
+    InvertedLParameters,
+)
 from ...domain.antennas.inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
 from ...domain.antennas.j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
 from ...domain.antennas.loop import ANTENNA_TYPE_LOOP, LoopParameters
@@ -69,6 +75,7 @@ _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_OCFD: "catalog.ocfd",
     ANTENNA_TYPE_VERTICAL: "catalog.vertical",
     ANTENNA_TYPE_INVERTED_V: "catalog.inverted_v",
+    ANTENNA_TYPE_INVERTED_L: "catalog.inverted_l",
     ANTENNA_TYPE_YAGI: "catalog.yagi",
     ANTENNA_TYPE_MOXON: "catalog.moxon",
     ANTENNA_TYPE_FAN_DIPOLE: "catalog.fan_dipole",
@@ -104,6 +111,7 @@ def effective_antenna_type(
             "moxon",
             "fan_dipole",
             "inverted_v",
+            "inverted_l",
             "vertical",
             "ocfd",
             "endfed",
@@ -1136,6 +1144,72 @@ def _add_array_dimensions(
         )
 
 
+def _add_inverted_l_dimensions(
+    model: AntennaModel,
+    parameters: InvertedLParameters,
+    factory: _Factory,
+    dimensions: list[Dimension],
+    notes: list[str],
+    translator: Translator,
+) -> None:
+    vertical = next((wire for wire in model.wires if wire.id == VERTICAL_ID), model.wires[0])
+    horizontal = next((wire for wire in model.wires if wire.id == HORIZONTAL_ID), model.wires[-1])
+    if factory.projection.vertical:
+        dimensions.append(
+            factory.dimension(
+                vertical.start,
+                vertical.end,
+                parameters.vertical_height_m,
+                side="auto",
+                priority=85,
+            )
+        )
+        dimensions.append(
+            factory.dimension(
+                horizontal.start,
+                horizontal.end,
+                parameters.horizontal_length_m,
+                side="above",
+                priority=75,
+            )
+        )
+        dimensions.append(
+            factory.vertical_dimension(
+                max(
+                    factory.project(horizontal.start).x_m,
+                    factory.project(horizontal.end).x_m,
+                ),
+                0.0,
+                parameters.top_height_m,
+                parameters.top_height_m,
+                side="right",
+                priority=70,
+            )
+        )
+        if parameters.base_height_m > 0.0:
+            dimensions.append(
+                factory.vertical_dimension(
+                    factory.project(vertical.start).x_m,
+                    0.0,
+                    parameters.base_height_m,
+                    parameters.base_height_m,
+                    side="left",
+                    priority=55,
+                )
+            )
+    else:
+        dimensions.append(
+            factory.dimension(
+                horizontal.start,
+                horizontal.end,
+                parameters.horizontal_length_m,
+                side="above",
+                priority=75,
+            )
+        )
+        notes.append(translator.t("geometry.vertical_plane_edge_on"))
+
+
 def _add_sloping_array_dimensions(
     model: AntennaModel,
     parameters: object | None,
@@ -1496,6 +1570,17 @@ def _summary(
                     f"{translator.t('orientation.vertical').lower()}",
                 ]
             )
+    elif isinstance(parameters, InvertedLParameters):
+        parts.extend(
+            [
+                f"{translator.t('inverted_l.vertical_height').lower()} "
+                f"{_format_length(parameters.vertical_height_m, translator, unit_system)}",
+                f"{translator.t('inverted_l.horizontal_length').lower()} "
+                f"{_format_length(parameters.horizontal_length_m, translator, unit_system)}",
+                f"{translator.t('field.height').lower()} "
+                f"{_format_length(parameters.top_height_m, translator, unit_system)}",
+            ]
+        )
     elif isinstance(parameters, InvertedVParameters):
         parts.extend(
             [
@@ -1793,6 +1878,18 @@ def build_scene(
             notes,
             translator,
         )
+    elif effective_type == ANTENNA_TYPE_INVERTED_L:
+        if isinstance(parameters, InvertedLParameters):
+            _add_inverted_l_dimensions(
+                model,
+                parameters,
+                factory,
+                dimensions,
+                notes,
+                translator,
+            )
+        else:
+            _add_sloping_array_dimensions(model, parameters, factory, dimensions)
     elif effective_type in {
         ANTENNA_TYPE_INVERTED_V,
         ANTENNA_TYPE_FAN_DIPOLE,

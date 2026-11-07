@@ -152,6 +152,28 @@ def test_folded_dipole_construction_sheet(sample_project: Project) -> None:
     assert "40.4000 m" in sheet
 
 
+def test_inverted_l_construction_sheet(sample_project: Project) -> None:
+    from antennadesk.domain.antennas.inverted_l import InvertedLParameters
+
+    design = sample_project.designs[0]
+    parameters = InvertedLParameters(
+        frequency_hz=7_100_000.0,
+        vertical_height_m=10.0,
+        horizontal_length_m=20.0,
+        base_height_m=1.0,
+        azimuth_deg=35.0,
+    )
+    inverted_l = design.with_parameters(parameters)
+    sheet = render_construction_sheet(sample_project, inverted_l, None)
+
+    assert "Vertical section" in sheet
+    assert "Horizontal top run" in sheet
+    assert "Total wire length" in sheet
+    assert "30.0000 m" in sheet
+    assert "11.0000 m" in sheet
+    assert "Feed the base of the vertical section" in sheet
+
+
 def test_loop_construction_sheet(sample_project: Project) -> None:
     from antennadesk.domain.antennas.loop import LoopParameters
 

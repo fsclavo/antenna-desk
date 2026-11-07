@@ -226,6 +226,49 @@ def test_new_inverted_v_creates_a_first_class_design(
     window._dirty = False
 
 
+def test_new_inverted_l_creates_a_first_class_design(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.inverted_l import InvertedLParameters
+
+    parameters = InvertedLParameters(
+        frequency_hz=7_100_000.0,
+        vertical_height_m=10.0,
+        horizontal_length_m=20.0,
+        base_height_m=1.0,
+    )
+
+    class FakeInvertedLDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> InvertedLParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "InvertedLDialog", FakeInvertedLDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Inv L", True))
+
+    window.new_inverted_l_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "Inv L"
+    assert window._project.designs[0].antenna_type == "inverted_l"
+    assert window._design_stack.currentWidget() is window._inverted_l_scroll
+    assert window._view_combo.currentData() == "elevation"
+    assert window._inverted_l_form.parameters() == parameters
+    assert window._optimize_action.isEnabled() is False
+
+    errors: list[str] = []
+    monkeypatch.setattr(window, "_show_error", errors.append)
+    window.optimize_current_design()
+    assert errors == [window._translator.t("error.optimize_inverted_l")]
+    window._dirty = False
+
+
 def test_change_template_replaces_the_current_design(
     window: MainWindow,
     monkeypatch: pytest.MonkeyPatch,

@@ -23,6 +23,7 @@ from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanEleme
 from antennadesk.domain.antennas.feed import FeedPoint
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.geometry import Point3D
+from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
 from antennadesk.domain.antennas.loop import LoopParameters
@@ -172,6 +173,19 @@ def _cases() -> tuple[FamilyCase, ...]:
             2,
             GeometryViewMode.ELEVATION,
             ("Inverted-V", "included angle"),
+        ),
+        FamilyCase(
+            "inverted_l",
+            InvertedLParameters(
+                frequency_hz=7_100_000.0,
+                vertical_height_m=10.0,
+                horizontal_length_m=20.0,
+                base_height_m=1.0,
+            ),
+            "inverted_l",
+            2,
+            GeometryViewMode.ELEVATION,
+            ("Inverted L", "vertical height", "horizontal length"),
         ),
         FamilyCase(
             "yagi",
@@ -420,6 +434,7 @@ def test_every_domain_antenna_type_has_a_presentation_family() -> None:
         endfed,
         fan_dipole,
         folded_dipole,
+        inverted_l,
         inverted_v,
         j_pole,
         loop,
@@ -437,6 +452,7 @@ def test_every_domain_antenna_type_has_a_presentation_family() -> None:
         endfed,
         fan_dipole,
         folded_dipole,
+        inverted_l,
         inverted_v,
         j_pole,
         loop,
@@ -470,6 +486,11 @@ def test_legacy_generator_ids_map_to_presentation_types() -> None:
             frequency_hz=29_000_000.0,
             radiator_height_m=5.0,
             ring_diameter_m=0.5,
+        ),
+        InvertedLParameters(
+            frequency_hz=7_100_000.0,
+            vertical_height_m=10.0,
+            horizontal_length_m=20.0,
         ),
         VerticalParameters(frequency_hz=7_100_000.0, height_m=10.0),
         OCFDParameters(frequency_hz=7_100_000.0, total_length_m=40.0),

@@ -38,8 +38,9 @@ Completed:
 - Solver adapter, normalized results, persistence, imports, and reports.
 - Guided dipole, folded dipole, trap dipole, T2FD, loop (generic, delta, quad),
   vertical (1/4λ, 1/2λ, and 5/8λ with radials, plus a loading-coil option and a
-  mobile-whip preset), inverted-V, fan dipole, end-fed, sloper, random wire,
-  doublet, OCFD, J Pole, Slim Jim, Ringo, Yagi, Moxon, and custom-wire designs.
+  mobile-whip preset), inverted-V, inverted-L, fan dipole, end-fed, sloper,
+  random wire, doublet, OCFD, J Pole, Slim Jim, Ringo, Yagi, Moxon, and
+  custom-wire designs.
 - Series/parallel RLC loads and traps; L/Pi/T matching networks with component
   Q/loss; uniform feed-line post-processing.
 - Frequency-first dimension estimation for the families with a documented
@@ -174,9 +175,9 @@ Scope:
   and status. The top action bar stays Apply/Estimate/Optimize.
 - Band/batch metadata on simulation runs, schema version 4 migration (extended
   by version 5 with OCFD/custom transformer fields, version 6 with persisted
-  analysis band plans, version 7 with Yagi/Moxon polarization, and version 8
-  with vertical top-hat fields), and band-aware CSV, HTML, PDF, and comparison
-  summaries.
+  analysis band plans, version 7 with Yagi/Moxon polarization, version 8 with
+  vertical top-hat fields, and version 9 with the inverted-L design type), and
+  band-aware CSV, HTML, PDF, and comparison summaries.
 - Deferred: a segmented frequency plan in one NEC deck, only if measurements
   show that per-band runs are too slow or too large.
 
@@ -195,7 +196,7 @@ Acceptance criteria:
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
-| P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, `loaded_vertical` (published preset), `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, and `zepp` promoted to B. The remaining four C templates were reviewed on 2026-11-06; the Ringo now has a Cushcraft AR-6 starting-dimensions preset, but promotion needs a matching-ring model; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
+| P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, `loaded_vertical` (published preset), `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, and `zepp` promoted to B. The inverted-L was added as C on 2026-11-06. The other four C templates were reviewed the same day; the Ringo now has a Cushcraft AR-6 starting-dimensions preset, but promotion needs a matching-ring model; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
 | P1 | Fan dipole V-angle calibration and angle optimization | B | investigated; angle optimizer deferred |
 | P1 | Optional ideal transformer/4:1 balun for OCFD | B | done |
 | P1 | Multiband batch engine and per-family band defaults (M6) | B | done |
@@ -223,8 +224,8 @@ point; `C` is structural/experimental only.
 
 | Order | Candidate | Type | Effort | Value | Validation | Notes |
 |---:|---|---|---|---|---|---|
-| 1 | Inverted L | New family | M | High | B/A | Common 160/80/40 m wire; fits the current single-feed model. |
-| 2 | Horizontal loop / sky loop | Modification of `loop` | S–M | High | B/A | Reuse the polygon; add orientation/plane and scene tests. |
+| 1 | Inverted L | New family | M | High | C (B/A possible) | **Implemented on 2026-11-06:** first-class family with an editor, catalog route, persistence, geometry, reports, and tests. It remains experimental and has no estimator until a published reference is added. |
+| 2 | Horizontal loop / sky loop | Modification of `loop` | S–M | High | B/A | Next item. Reuse the polygon; add orientation/plane and scene tests. |
 | 3 | Elevated radials / ground screen | Modification of `vertical` | S–M | High | B/A | Existing radial fields; add elevated radials, mesh/screen presets. |
 | 4 | Magnetic loop | New family | L | High | B/C; A only with an exact published design | Needs gap, tuning capacitor, ESR/loss, efficiency, bandwidth, and matching. Not a variant of the full-wave loop. |
 | 5 | Yagi folded driven element | Modification of `yagi` | M | Medium | B/A | Two wires plus connectors; changes feed impedance and matching. |

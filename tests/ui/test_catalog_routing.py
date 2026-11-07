@@ -16,6 +16,7 @@ from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanEleme
 from antennadesk.domain.antennas.feed import FeedPoint
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.geometry import Point3D
+from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
 from antennadesk.domain.antennas.loop import LoopParameters
@@ -100,6 +101,11 @@ def _parameters_for(key: str) -> object:
             frequency_hz=7_100_000.0,
             leg_length_m=10.0,
             apex_height_m=12.0,
+        ),
+        "inverted_l": InvertedLParameters(
+            frequency_hz=7_100_000.0,
+            vertical_height_m=10.0,
+            horizontal_length_m=20.0,
         ),
         "yagi": YagiParameters(
             frequency_hz=14_100_000.0,
@@ -258,6 +264,7 @@ def test_every_catalog_entry_has_a_change_template_route(
             "FanDipoleDialog",
             "TrapDipoleDialog",
             "T2FDDialog",
+            "InvertedLDialog",
             "InvertedVDialog",
             "OCFDDialog",
             "VerticalDialog",
@@ -291,6 +298,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "vertical": ("vertical",),
         "loaded_vertical": ("loaded_vertical",),
         "inverted_v": ("inverted_v",),
+        "inverted_l": ("inverted_l",),
         "yagi": ("yagi",),
         "moxon": ("moxon",),
         "fan_dipole": ("fan_dipole",),
@@ -346,6 +354,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         new_yagi_antenna=record("yagi"),
         new_moxon_antenna=record("moxon"),
         new_inverted_v_antenna=record("inverted_v"),
+        new_inverted_l_antenna=record("inverted_l"),
         new_fan_dipole_antenna=record("fan_dipole"),
         new_trap_dipole_antenna=record("trap_dipole"),
         new_t2fd_antenna=record("t2fd"),
@@ -409,6 +418,7 @@ ESTIMATORLESS_CATALOG_KEYS = frozenset(
     {
         "custom",
         "g5rv",
+        "inverted_l",
         "loaded_vertical",
         "random_wire",
         "trap_dipole",

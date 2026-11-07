@@ -123,11 +123,12 @@ Completed follow-ups:
 4. Keep unverifiable templates labeled experimental.
 5. Do not invent values or copy numbers from another geometry.
 6. **Remaining C audit complete (2026-11-06):** the published 102 in mobile-whip
-   example promoted `loaded_vertical` to B for that preset. The other four
-   templates (`ringo`, `fan_dipole`, `random_wire`, and `custom`) remain C; see
-   [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md). The Ringo generator now has a
-   Cushcraft AR-6 starting-dimensions preset, but promotion still needs a model
-   of the commercial matching ring.
+   example promoted `loaded_vertical` to B for that preset. The four previously
+   reviewed templates (`ringo`, `fan_dipole`, `random_wire`, and `custom`)
+   remain C, and the newly added `inverted_l` starts at C pending a published
+   reference; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md). The Ringo generator
+   now has a Cushcraft AR-6 starting-dimensions preset, but promotion still
+   needs a model of the commercial matching ring.
 
 ## Phase 6 — Deferred and blocked work
 
@@ -146,8 +147,10 @@ These are not part of the next implementation session unless priorities change:
 The ordered antenna backlog lives in
 [`ROADMAP.md`](ROADMAP.md#antenna-backlog). The immediate sequence is:
 
-1. Inverted L.
-2. Horizontal loop / sky loop.
+1. **Completed 2026-11-06:** Inverted L as a first-class family with an editor,
+   catalog route, persistence, geometry, reports, and tests. Evidence stays C
+   until a published reference supplies a traceable numeric metric.
+2. Horizontal loop / sky loop (next).
 3. Elevated radials / ground screen.
 4. Magnetic loop, as a separate model with a tuning capacitor and losses.
 5. Yagi folded driven element.

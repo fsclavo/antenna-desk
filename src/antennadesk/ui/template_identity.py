@@ -10,6 +10,7 @@ from ..domain.antennas.dipole import DipoleParameters
 from ..domain.antennas.endfed import EndFedParameters, EndFedPreset
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
+from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.loop import LoopParameters
@@ -28,6 +29,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_FAN_DIPOLE,
     CATALOG_TYPE_FOLDED_DIPOLE,
     CATALOG_TYPE_G5RV,
+    CATALOG_TYPE_INVERTED_L,
     CATALOG_TYPE_INVERTED_V,
     CATALOG_TYPE_J_POLE,
     CATALOG_TYPE_LOADED_VERTICAL,
@@ -98,6 +100,8 @@ def catalog_key_for(parameters: AntennaDesignParameters) -> str:
         )
     if isinstance(parameters, InvertedVParameters):
         return CATALOG_TYPE_INVERTED_V
+    if isinstance(parameters, InvertedLParameters):
+        return CATALOG_TYPE_INVERTED_L
     if isinstance(parameters, YagiParameters):
         return CATALOG_TYPE_YAGI
     if isinstance(parameters, MoxonParameters):

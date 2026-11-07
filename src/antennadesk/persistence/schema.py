@@ -36,6 +36,7 @@ from ..domain.antennas.folded_dipole import (
     FoldedDipoleParameters,
 )
 from ..domain.antennas.geometry import Point3D
+from ..domain.antennas.inverted_l import ANTENNA_TYPE_INVERTED_L, InvertedLParameters
 from ..domain.antennas.inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
 from ..domain.antennas.j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
 from ..domain.antennas.load import LoadKind, LumpedLoad, ParallelLoad, SeriesLoad
@@ -274,6 +275,17 @@ class InvertedVParametersPayload(StrictModel):
     leg_length_m: float = Field(gt=0.0)
     apex_height_m: float = Field(ge=0.0)
     included_angle_deg: float = Field(default=120.0, gt=0.0, lt=180.0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class InvertedLParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    vertical_height_m: float = Field(gt=0.0)
+    horizontal_length_m: float = Field(gt=0.0)
+    base_height_m: float = Field(default=0.0, ge=0.0)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
@@ -558,6 +570,7 @@ ParameterPayload = (
     | OCFDParametersPayload
     | VerticalParametersPayload
     | InvertedVParametersPayload
+    | InvertedLParametersPayload
     | YagiParametersPayload
     | MoxonParametersPayload
     | FanDipoleParametersPayload
@@ -581,6 +594,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_VERTICAL
     if isinstance(value, InvertedVParametersPayload):
         return ANTENNA_TYPE_INVERTED_V
+    if isinstance(value, InvertedLParametersPayload):
+        return ANTENNA_TYPE_INVERTED_L
     if isinstance(value, YagiParametersPayload):
         return ANTENNA_TYPE_YAGI
     if isinstance(value, MoxonParametersPayload):
@@ -615,6 +630,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return VerticalParametersPayload
     if antenna_type == ANTENNA_TYPE_INVERTED_V:
         return InvertedVParametersPayload
+    if antenna_type == ANTENNA_TYPE_INVERTED_L:
+        return InvertedLParametersPayload
     if antenna_type == ANTENNA_TYPE_YAGI:
         return YagiParametersPayload
     if antenna_type == ANTENNA_TYPE_MOXON:
@@ -880,6 +897,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _vertical_parameters_from_domain(value)
     if isinstance(value, InvertedVParameters):
         return _inverted_v_parameters_from_domain(value)
+    if isinstance(value, InvertedLParameters):
+        return _inverted_l_parameters_from_domain(value)
     if isinstance(value, YagiParameters):
         return _yagi_parameters_from_domain(value)
     if isinstance(value, MoxonParameters):
@@ -923,6 +942,21 @@ def _inverted_v_parameters_from_domain(
         leg_length_m=value.leg_length_m,
         apex_height_m=value.apex_height_m,
         included_angle_deg=value.included_angle_deg,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _inverted_l_parameters_from_domain(
+    value: InvertedLParameters,
+) -> InvertedLParametersPayload:
+    return InvertedLParametersPayload(
+        frequency_hz=value.frequency_hz,
+        vertical_height_m=value.vertical_height_m,
+        horizontal_length_m=value.horizontal_length_m,
+        base_height_m=value.base_height_m,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
@@ -1548,6 +1582,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, InvertedVParametersPayload):
             raise ValueError("inverted-V parameters have the wrong shape")
         return _inverted_v_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_INVERTED_L:
+        if not isinstance(value.parameters, InvertedLParametersPayload):
+            raise ValueError("inverted-L parameters have the wrong shape")
+        return _inverted_l_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_YAGI:
         if not isinstance(value.parameters, YagiParametersPayload):
             raise ValueError("Yagi parameters have the wrong shape")
@@ -1609,6 +1647,21 @@ def _inverted_v_parameters_to_domain(
         leg_length_m=value.leg_length_m,
         apex_height_m=value.apex_height_m,
         included_angle_deg=value.included_angle_deg,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _inverted_l_parameters_to_domain(
+    value: InvertedLParametersPayload,
+) -> InvertedLParameters:
+    return InvertedLParameters(
+        frequency_hz=value.frequency_hz,
+        vertical_height_m=value.vertical_height_m,
+        horizontal_length_m=value.horizontal_length_m,
+        base_height_m=value.base_height_m,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),

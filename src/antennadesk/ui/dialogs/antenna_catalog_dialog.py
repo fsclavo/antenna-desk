@@ -43,6 +43,7 @@ CATALOG_TYPE_J_POLE = "j_pole"
 CATALOG_TYPE_RINGO = "ringo"
 CATALOG_TYPE_SLIM_JIM = "slim_jim"
 CATALOG_TYPE_INVERTED_V = "inverted_v"
+CATALOG_TYPE_INVERTED_L = "inverted_l"
 CATALOG_TYPE_OCFD = "ocfd"
 CATALOG_TYPE_CUSTOM = "custom"
 
@@ -168,6 +169,13 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         family_key="catalog.family.dipole",
         description_key="catalog.inverted_v.description",
         evidence_key="catalog.evidence.published",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_INVERTED_L,
+        label_key="catalog.inverted_l",
+        family_key="catalog.family.vertical",
+        description_key="catalog.inverted_l.description",
+        evidence_key="catalog.evidence.experimental",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_OCFD,

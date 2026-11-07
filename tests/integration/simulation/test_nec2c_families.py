@@ -121,6 +121,39 @@ def test_vertical_generator_produces_a_usable_sweep(solver: Nec2cSolver) -> None
     assert result.max_total_gain_db is not None
 
 
+def test_inverted_l_produces_a_usable_sweep(solver: Nec2cSolver) -> None:
+    from antennadesk.domain.antennas.inverted_l import InvertedLParameters
+
+    parameters = InvertedLParameters(
+        frequency_hz=7_100_000.0,
+        vertical_height_m=10.0,
+        horizontal_length_m=20.0,
+        base_height_m=1.0,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    )
+    model = parameters.to_antenna()
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.sweep(7_000_000.0, 7_200_000.0, 5),
+        segmentation=aligned_policy_for_model(
+            model,
+            7_200_000.0,
+            SegmentationPolicy(min_segments_per_wire=3),
+        ),
+        include_conductor_losses=False,
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert len(result.frequencies) == 5
+    assert all(frequency.impedance_ohm.real > 0.0 for frequency in result.frequencies)
+    assert all(frequency.swr is not None for frequency in result.frequencies)
+
+
 def test_j_pole_defaults_to_a_ground_clear_base(solver: Nec2cSolver) -> None:
     from antennadesk.domain.antennas.j_pole import JPoleParameters
 

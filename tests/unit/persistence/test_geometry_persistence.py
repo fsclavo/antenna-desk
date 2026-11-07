@@ -232,6 +232,25 @@ def test_vertical_parameters_round_trip() -> None:
     assert restored.designs[0].antenna_type == "vertical"
 
 
+def test_inverted_l_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.inverted_l import InvertedLParameters
+
+    parameters = InvertedLParameters(
+        frequency_hz=7_100_000.0,
+        vertical_height_m=10.0,
+        horizontal_length_m=20.0,
+        base_height_m=1.0,
+        azimuth_deg=35.0,
+    )
+    original = _project(parameters, "Inverted L")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "inverted_l"
+
+
 def test_inverted_v_parameters_round_trip() -> None:
     from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 

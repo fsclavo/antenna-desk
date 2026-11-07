@@ -356,6 +356,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Two sloping wires fed at the apex, with adjustable included angle.",
         Language.SPANISH: "Dos hilos inclinados alimentados en el vértice, con ángulo ajustable.",
     },
+    "catalog.inverted_l": {
+        Language.ENGLISH: "Inverted L",
+        Language.SPANISH: "L invertida",
+    },
+    "catalog.inverted_l.description": {
+        Language.ENGLISH: "End-fed vertical section with a horizontal top wire.",
+        Language.SPANISH: "Sección vertical alimentada en la base con un tramo horizontal superior.",
+    },
     "catalog.delta_loop": {
         Language.ENGLISH: "Delta loop",
         Language.SPANISH: "Lazo delta",
@@ -2538,6 +2546,50 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Yagi Generator",
         Language.SPANISH: "Generador de Yagi",
     },
+    "inverted_l.title": {
+        Language.ENGLISH: "Inverted-L Generator",
+        Language.SPANISH: "Generador de L invertida",
+    },
+    "inverted_l.vertical_height": {
+        Language.ENGLISH: "Vertical height",
+        Language.SPANISH: "Altura vertical",
+    },
+    "inverted_l.horizontal_length": {
+        Language.ENGLISH: "Horizontal length",
+        Language.SPANISH: "Longitud horizontal",
+    },
+    "inverted_l.wire_radius": {
+        Language.ENGLISH: "Wire radius (mm)",
+        Language.SPANISH: "Radio del hilo (mm)",
+    },
+    "inverted_l.geometry": {
+        Language.ENGLISH: "Total wire {total} {unit} · top {top} {unit}",
+        Language.SPANISH: "Hilo total {total} {unit} · parte superior {top} {unit}",
+    },
+    "inverted_l.hint": {
+        Language.ENGLISH: (
+            "The vertical section is fed at the base and continues into a "
+            "horizontal top wire. Define the azimuth as the direction of the "
+            "horizontal run; base height keeps the feed and corner above ground."
+        ),
+        Language.SPANISH: (
+            "La sección vertical se alimenta en la base y continúa en un tramo "
+            "horizontal superior. El azimut define la dirección del tramo "
+            "horizontal; la altura de base mantiene la alimentación y la esquina "
+            "sobre el suelo."
+        ),
+    },
+    "inverted_l.evidence": {
+        Language.ENGLISH: (
+            "Experimental generator: the bent-wire geometry is tested, but "
+            "there is no independent numerical reference for this configuration."
+        ),
+        Language.SPANISH: (
+            "Generador experimental: se prueba la geometría de hilo doblado, "
+            "pero no hay una referencia numérica independiente para esta "
+            "configuración."
+        ),
+    },
     "inverted_v.title": {
         Language.ENGLISH: "Inverted-V Generator",
         Language.SPANISH: "Generador de V invertida",
@@ -4249,6 +4301,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "error.optimize_custom": {
         Language.ENGLISH: "Custom or imported geometry has no generic optimizer. Select variables explicitly or use a template.",
         Language.SPANISH: "La geometría personalizada o importada no tiene un optimizador genérico. Seleccioná variables explícitamente o usá una plantilla.",
+    },
+    "error.optimize_inverted_l": {
+        Language.ENGLISH: (
+            "The inverted-L generator has no generic optimizer yet. Adjust the "
+            "vertical height and horizontal run directly, or optimize a related "
+            "wire design."
+        ),
+        Language.SPANISH: (
+            "El generador de L invertida todavía no tiene un optimizador "
+            "genérico. Ajustá la altura vertical y el tramo horizontal "
+            "directamente, u optimizá un diseño de hilo relacionado."
+        ),
     },
     "synthesis.title": {
         Language.ENGLISH: "Synthesize Antenna Dimensions",

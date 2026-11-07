@@ -9,6 +9,7 @@ import pytest
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.endfed import EndFedParameters
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
+from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.moxon import MoxonParameters
@@ -239,6 +240,31 @@ def test_ringo_gets_a_top_inset_with_the_matching_ring() -> None:
     inset = next(inset for inset in scene.insets if inset.label == "top view")
     assert len(inset.polylines) == 18
     assert "diameter 0.50 m" in scene.summary
+
+
+def test_inverted_l_elevation_shows_the_vertical_and_horizontal_runs() -> None:
+    parameters = InvertedLParameters(
+        frequency_hz=7_100_000.0,
+        vertical_height_m=10.0,
+        horizontal_length_m=20.0,
+        base_height_m=1.0,
+    )
+
+    scene = _scene(parameters, "inverted_l", GeometryViewMode.ELEVATION)
+    plan = _scene(parameters, "inverted_l", GeometryViewMode.PLAN)
+
+    assert recommended_view(parameters.to_antenna()) is GeometryViewMode.ELEVATION
+    assert len(scene.polylines) == 2
+    assert scene.summary.startswith("Inverted L")
+    assert "vertical height 10.00 m" in scene.summary
+    assert "horizontal length 20.00 m" in scene.summary
+    assert "vertical plane is edge-on" in plan.summary
+    assert all(dimension.start.distance_to(dimension.end) > 0.0 for dimension in scene.dimensions)
+    dimension_texts = {dimension.text for dimension in scene.dimensions}
+    assert "10.00 m" in dimension_texts
+    assert "20.00 m" in dimension_texts
+    assert "11.00 m" in dimension_texts
+    assert "1.00 m" in dimension_texts
 
 
 def test_recommended_view_uses_the_geometry_shape() -> None:

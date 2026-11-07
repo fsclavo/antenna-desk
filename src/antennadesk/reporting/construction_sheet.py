@@ -13,6 +13,7 @@ from ..domain.antennas.dipole import DipoleParameters
 from ..domain.antennas.endfed import EndFedParameters
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
+from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.loop import LoopParameters
@@ -244,6 +245,21 @@ transformer; the counterpoise is {counterpoise}.</p>"""
         construction_note = f"""<p>Build {len(parameters.elements)} parallel elements on a
 {max(positions) - min(positions):.4f} m boom. Feed the center of element
 {parameters.driven_index + 1}.</p>"""
+    elif isinstance(parameters, InvertedLParameters):
+        feed_rows = f"""
+<tr><th>Vertical section</th><td>{parameters.vertical_height_m:.4f} m</td></tr>
+<tr><th>Horizontal top run</th><td>{parameters.horizontal_length_m:.4f} m</td></tr>
+<tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
+<tr><th>Top height</th><td>{parameters.top_height_m:.4f} m</td></tr>
+<tr><th>Total wire length</th><td>{parameters.total_length_m:.4f} m</td></tr>
+<tr><th>Azimuth</th><td>{parameters.azimuth_deg:.1f}°</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Cut one conductor to {parameters.total_length_m:.4f} m.
+Install {parameters.vertical_height_m:.4f} m vertically with the base
+{parameters.base_height_m:.4f} m above ground, then run the remaining
+{parameters.horizontal_length_m:.4f} m horizontally at
+{parameters.top_height_m:.4f} m. Feed the base of the vertical section.</p>"""
     elif isinstance(parameters, InvertedVParameters):
         feed_rows = f"""
 <tr><th>Leg length</th><td>{parameters.leg_length_m:.4f} m</td></tr>

@@ -183,12 +183,13 @@ Use **File → New Antenna...** to open the antenna catalog. Search or filter by
 **Antenna Type** and choose the desired generator. The catalog is grouped by
 antenna family: Dipole, Yagi, Loop, Vertical, and Custom. The Dipole family
 contains the straight dipole, folded dipole, trap dipole, T2FD, end-fed wire,
-sloper, random wire, doublet, inverted-V, off-center-fed dipole, and fan dipole.
-The Yagi family includes the parametric Yagi and the Moxon rectangle. The Loop
-family includes the generic loop plus delta-loop and quad-loop presets. The
-Vertical family includes the generic vertical radiator and the loaded vertical
-/ mobile whip preset. The catalog shows a short description and evidence level
-for each type. For specialized templates, choose the template first, complete
+sloper, random wire, doublet, inverted-V, inverted-L, off-center-fed dipole,
+and fan dipole. The Yagi family includes the parametric Yagi and the Moxon
+rectangle. The Loop family includes the generic loop plus delta-loop and
+quad-loop presets. The Vertical family includes the generic vertical radiator,
+the inverted-L, and the loaded vertical / mobile whip preset. The catalog
+shows a short description and evidence level for each type. For specialized
+templates, choose the template first, complete
 its generator dialog, and then confirm the project name with a suggested name
 such as “40m Ringo”. The basic dipole/folded/loop wizard includes the project
 name in its first page.
@@ -336,6 +337,23 @@ Simulate it and judge the modeled performance; the design panel keeps the
 generator fields editable. Use **Edit Custom Wires...** for raw coordinates. The
 elevation view is selected automatically so the included angle is visible; Plan
 remains available.
+
+## Create an inverted-L
+
+Choose **File → New Antenna... → Inverted L** to generate a bent end-fed wire
+with a vertical section and a horizontal top run. Set the vertical height, the
+horizontal length, the base height, azimuth, wire radius, material, and ground.
+The feed is at the base of the vertical section; the azimuth is the direction
+of the horizontal run. Base height keeps the feedpoint and the top corner above
+ground.
+
+The generator is experimental: the bent-wire geometry is tested, but there is
+no independent numerical reference for gain, impedance, or the matching
+network. **Estimate Dimensions...** and the generic **Optimize...** action are
+disabled for this template until a source-backed estimator and a primary
+dimension policy exist; set the dimensions from a known design or tune them
+with the solver. The elevation view is selected automatically; Plan shows the
+vertical section edge-on.
 
 ## Create a Ringo
 

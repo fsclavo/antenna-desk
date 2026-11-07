@@ -149,6 +149,16 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "validated."
         ),
     ),
+    "inverted_l": EvidenceEntry(
+        template="inverted_l",
+        level=EvidenceLevel.EXPERIMENTAL,
+        source="Bent end-fed wire starting geometry; no independent numerical reference",
+        tolerance="Not applicable (structural)",
+        limitation=(
+            "Vertical height, horizontal run, ground, and matching determine the "
+            "result; tune them with the solver or a measurement."
+        ),
+    ),
     "fan_dipole": EvidenceEntry(
         template="fan_dipole",
         level=EvidenceLevel.EXPERIMENTAL,

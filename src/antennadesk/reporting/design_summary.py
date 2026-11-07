@@ -10,6 +10,7 @@ from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
 from ..domain.antennas.endfed import EndFedParameters, EndFedPreset
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
+from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.load import LumpedLoad, ParallelLoad
@@ -188,6 +189,18 @@ def design_summary_rows(
                     f"R={parameters.loading_coil_resistance_ohm:g} Ω",
                 )
             )
+    elif isinstance(parameters, InvertedLParameters):
+        rows.extend(
+            [
+                ("Type", "inverted L"),
+                ("Vertical height", f"{parameters.vertical_height_m:.4f} m"),
+                ("Horizontal length", f"{parameters.horizontal_length_m:.4f} m"),
+                ("Total wire length", f"{parameters.total_length_m:.4f} m"),
+                ("Base height", f"{parameters.base_height_m:.4f} m"),
+                ("Top height", f"{parameters.top_height_m:.4f} m"),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+            ]
+        )
     elif isinstance(parameters, InvertedVParameters):
         rows.extend(
             [

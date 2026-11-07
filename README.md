@@ -9,8 +9,9 @@ measurements, optimization, matching, and reporting flows are implemented.
 Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.1.0`
 is published; signing is optional and deferred for later releases. Center-fed
 dipoles, folded dipoles, trap dipoles, T2FDs, loops, custom wires, Yagis, Moxon,
-fan dipoles, inverted-Vs, OCFDs, end-fed wires, slopers, random wires, doublets,
-J Poles, Slim Jims, Ringos, verticals, and loaded verticals are supported.
+fan dipoles, inverted-Vs, inverted-Ls, OCFDs, end-fed wires, slopers, random
+wires, doublets, J Poles, Slim Jims, Ringos, verticals, and loaded verticals are
+supported.
 Yagi and Moxon arrays support horizontal or vertical polarization with a
 horizontal boom. Projects use versioned JSON persistence, lossless gzip
 compression, and explicit migrations. VNA CSV import
@@ -129,8 +130,8 @@ optional signing steps.
   points by default, and pattern resolution defaults to 5° and can be set to
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` projects with multiple design
-  variants; schema version 8 persists Yagi/Moxon polarization and vertical
-  top-hat fields, and migrates older files explicitly.
+  variants; schema version 9 adds the inverted-L design type and migrates older
+  files explicitly.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - VNA CSV import with measured impedance/SWR records and a measured/simulated
   SWR, R, X, or |Z| comparison tab, including resonance differences.
@@ -153,10 +154,10 @@ optional signing steps.
 - Custom straight-wire antennas with a coordinate editor, template-to-custom
   conversion, a parametric Yagi generator with an editable element table and
   NBS starting preset, Moxon, fan dipole, end-fed with optional counterpoise
-  and transformer, J Pole, Slim Jim, Ringo, inverted-V, off-center-fed dipole,
-  and vertical generators, experimental ground radial generator, practical
-  NEC-2 deck import, and basic MMANA-GAL `.maa` geometry import, plus
-  series/parallel RLC loads, load markers, and report rows.
+  and transformer, J Pole, Slim Jim, Ringo, inverted-V, inverted-L,
+  off-center-fed dipole, and vertical generators, experimental ground radial
+  generator, practical NEC-2 deck import, and basic MMANA-GAL `.maa` geometry
+  import, plus series/parallel RLC loads, load markers, and report rows.
 - Optional transmitter-side feed line with characteristic impedance, length,
   velocity factor, matched loss, and transformed impedance/SWR.
 - Optional L/Pi/T matching networks at the feedpoint, with automatic L design

@@ -267,6 +267,24 @@ def test_v7_migration_marks_negative_resistance_runs() -> None:
     assert result["diagnostics"][0]["severity"] == "error"
 
 
+def test_v8_migration_keeps_existing_designs_unchanged() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 8,
+        "project": {
+            "designs": [
+                {"antenna_type": "wire_dipole", "parameters": {"frequency_hz": 7_100_000.0}}
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert migrated["project"]["designs"][0] == document["project"]["designs"][0]
+    assert "inverted_l" not in migrated["project"]["designs"][0]
+
+
 def test_v4_migration_adds_optional_transformer_ratios() -> None:
     document = {
         "format": "antennadesk-project",

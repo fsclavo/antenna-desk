@@ -12,6 +12,7 @@ from .dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
 from .endfed import EndFedParameters
 from .fan_dipole import FanDipoleParameters
 from .folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE, FoldedDipoleParameters
+from .inverted_l import InvertedLParameters
 from .inverted_v import InvertedVParameters
 from .j_pole import JPoleParameters
 from .loop import ANTENNA_TYPE_LOOP, LoopParameters
@@ -34,6 +35,7 @@ class AntennaFamily(StrEnum):
 
 _GENERATOR_FAMILIES: dict[str, AntennaFamily] = {
     "inverted_v": AntennaFamily.DIPOLE,
+    "inverted_l": AntennaFamily.VERTICAL,
     "fan_dipole": AntennaFamily.DIPOLE,
     "endfed": AntennaFamily.DIPOLE,
     "ocfd": AntennaFamily.DIPOLE,
@@ -62,6 +64,8 @@ def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
         return AntennaFamily.VERTICAL
     if isinstance(parameters, InvertedVParameters):
         return AntennaFamily.DIPOLE
+    if isinstance(parameters, InvertedLParameters):
+        return AntennaFamily.VERTICAL
     if isinstance(parameters, YagiParameters):
         return AntennaFamily.YAGI
     if isinstance(parameters, MoxonParameters):
@@ -96,6 +100,8 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return "vertical"
     if isinstance(parameters, InvertedVParameters):
         return "inverted_v"
+    if isinstance(parameters, InvertedLParameters):
+        return "inverted_l"
     if isinstance(parameters, YagiParameters):
         return "yagi"
     if isinstance(parameters, MoxonParameters):

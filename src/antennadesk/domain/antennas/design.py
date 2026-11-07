@@ -11,6 +11,7 @@ from .dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
 from .endfed import ANTENNA_TYPE_ENDFED, EndFedParameters
 from .fan_dipole import ANTENNA_TYPE_FAN_DIPOLE, FanDipoleParameters
 from .folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE, FoldedDipoleParameters
+from .inverted_l import ANTENNA_TYPE_INVERTED_L, InvertedLParameters
 from .inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
 from .j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
 from .loop import ANTENNA_TYPE_LOOP, LoopParameters
@@ -29,6 +30,7 @@ AntennaDesignParameters = (
     | OCFDParameters
     | VerticalParameters
     | InvertedVParameters
+    | InvertedLParameters
     | YagiParameters
     | MoxonParameters
     | FanDipoleParameters
@@ -64,6 +66,8 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_VERTICAL
     if isinstance(parameters, InvertedVParameters):
         return ANTENNA_TYPE_INVERTED_V
+    if isinstance(parameters, InvertedLParameters):
+        return ANTENNA_TYPE_INVERTED_L
     if isinstance(parameters, YagiParameters):
         return ANTENNA_TYPE_YAGI
     if isinstance(parameters, MoxonParameters):

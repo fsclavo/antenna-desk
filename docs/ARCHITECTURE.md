@@ -168,7 +168,7 @@ The second slice adds two multi-wire templates:
 `AntennaDesignParameters` is the union of the supported parameter types.
 `DesignVariant` stores the union and validates that `antenna_type` matches the
 parameters. The canonical model remains the shared `AntennaModel`, so the
-solver adapter does not need geometry-specific branches. Schema version 8 is
+solver adapter does not need geometry-specific branches. Schema version 9 is
 current: parameter payloads are additive, and old `wire_dipole` documents are
 unchanged. A design may also store an optional analysis band plan; it is
 intent metadata and never changes the canonical geometry. Series RLC loads are
@@ -227,9 +227,10 @@ dipole orientation, version 3 added persisted simulation runs, version 4 adds
 optional band/batch metadata, version 5 adds optional OCFD/custom feed
 transformer ratios, version 6 adds optional per-design analysis band plans,
 version 7 adds Yagi/Moxon polarization, version 8 adds vertical top-hat fields,
-and older documents are migrated explicitly.
+version 9 adds the inverted-L design type, and older documents are migrated
+explicitly.
 
-Simulation runs are persisted in schema version 8. Raw solver text is stored
+Simulation runs are persisted in schema version 9. Raw solver text is stored
 with the normalized result. Project files are compact JSON compressed with
 gzip; plain JSON files from older versions still load. The UI warns at 32 MB
 compressed, blocks files above the 64 MB compressed limit, and offers

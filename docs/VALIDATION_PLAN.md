@@ -247,6 +247,7 @@ gain, nulls, or impedance.
 | `moxon` | A | L. B. Cebik, W4RNL, 'The Moxon Rectangle: A Review', Table 1 and text | 1.5 Ω real; 5 Ω reactance; 0.3 dB gain; better than 30 dB F/B | Published 20 m dimensions only. |
 | `ocfd` | B | R. Sanders, VK2WB, 'Analysis of the Off Centre Fed (OCF) dipole', Table 1 | Published 200-350 Ω range, not a strict numeric tolerance | The source does not fully specify its EZNEC ground model. |
 | `inverted_v` | B | ARRL, 'Wire Antennas for the Beginner': 120-degree inverted-V total length is 465.6/f MHz feet | 1% on total length for the 120-degree case | The 90-degree case and ground detuning use separate empirical starting rules; gain and feedpoint impedance are not independently validated. |
+| `inverted_l` | C | Bent end-fed wire starting geometry; no independent numerical reference | Not applicable (structural) | Vertical height, horizontal run, ground, and matching determine the result; tune them with the solver or a measurement. |
 | `fan_dipole` | C | Per-band half-wave starting rule; mutual coupling is not modeled | Not applicable (structural) | A coupled fan is not a parallel combination of independent dipoles. |
 | `trap_dipole` | B | RSARS, 'W3DZZ Multi-band Antenna 80-40-20-15-10m': 33 ft inner and 22 ft outer sections, 7.1 MHz traps, 5.024 µH and 100 pF | 1% on the 33/22 ft sections; 2% on the trap resonance | The feed line and tuner are not modeled; the trap is an ideal parallel LC, and the default starting dimensions are a full-size 80/20 m trap dipole rather than W3DZZ. |
 | `t2fd` | B | Cebik wide-long broadband starting rule | Not a strict numeric tolerance | Termination resistor and transformer are ideal. |
@@ -377,7 +378,8 @@ Phase 6 adds tests for:
   OCFD/custom feed-transformer ratios; version 6 adds optional per-design
   analysis band plans; version 7 adds Yagi/Moxon horizontal-or-vertical
   polarization, with existing arrays migrated as horizontal; version 8 adds
-  vertical top-hat fields and infers them from saved top-hat wires.
+  vertical top-hat fields and infers them from saved top-hat wires; version 9
+  adds the inverted-L design type without changing existing designs.
 - Yagi and Moxon vertical polarization: geometry, azimuth, ground-clearance
   validation, scene contracts for both views, persistence round trips, and a
   free-space NEC equivalence check against the horizontal design rotated around

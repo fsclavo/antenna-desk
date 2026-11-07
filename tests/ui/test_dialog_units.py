@@ -13,12 +13,13 @@ from antennadesk.ui.dialogs.comparison_dialog import ComparisonDialog
 from antennadesk.ui.dialogs.custom_antenna_dialog import CustomAntennaDialog
 from antennadesk.ui.dialogs.doublet_dialog import DoubletDialog
 from antennadesk.ui.dialogs.g5rv_dialog import G5RVDialog
+from antennadesk.ui.dialogs.inverted_l_dialog import InvertedLDialog
 from antennadesk.ui.dialogs.zepp_dialog import ZeppDialog
 from antennadesk.ui.dialogs.zs6bkw_dialog import ZS6BKWDialog
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem, radius_to_m
 
-RADIUS_DIALOGS = (G5RVDialog, ZS6BKWDialog, ZeppDialog, DoubletDialog)
+RADIUS_DIALOGS = (G5RVDialog, ZS6BKWDialog, ZeppDialog, DoubletDialog, InvertedLDialog)
 
 
 @pytest.mark.parametrize("dialog_type", RADIUS_DIALOGS)

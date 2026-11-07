@@ -215,6 +215,12 @@ def _migrate_v7_to_v8(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v8_to_v9(document: dict[str, Any]) -> dict[str, Any]:
+    """Introduce the inverted-L design type; existing designs are unchanged."""
+
+    return copy.deepcopy(document)
+
+
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
@@ -223,6 +229,7 @@ MIGRATIONS: dict[int, Migration] = {
     5: _migrate_v5_to_v6,
     6: _migrate_v6_to_v7,
     7: _migrate_v7_to_v8,
+    8: _migrate_v8_to_v9,
 }
 
 
