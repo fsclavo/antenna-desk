@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 from ...domain.antennas.dipole import DipoleParameters
 from ...domain.antennas.folded_dipole import FoldedDipoleParameters
 from ...domain.antennas.loop import LoopParameters
+from ...domain.antennas.magnetic_loop import MagneticLoopParameters
 from ...domain.antennas.t2fd import T2FDParameters
 from ...domain.antennas.trap_dipole import TrapDipoleParameters
 from ...domain.projects.project import DesignVariant, Project
@@ -236,6 +237,9 @@ class ComparisonDialog(QDialog):
         elif isinstance(parameters, LoopParameters):
             primary = length(parameters.circumference_m)
             secondary = str(parameters.sides)
+        elif isinstance(parameters, MagneticLoopParameters):
+            primary = length(parameters.diameter_m)
+            secondary = f"{parameters.tuning_capacitance_f * 1e12:.3f} pF"
         elif isinstance(parameters, DipoleParameters):
             primary = length(parameters.total_length_m)
             secondary = "—"

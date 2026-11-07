@@ -173,6 +173,29 @@ def test_loop_summary_reports_orientation_and_the_correct_height() -> None:
     assert "Top height" not in horizontal
 
 
+def test_magnetic_loop_summary_reports_tuning_and_loss_fields() -> None:
+    from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
+
+    rows = dict(
+        design_summary_rows(
+            MagneticLoopParameters(
+                frequency_hz=7_100_000.0,
+                diameter_m=1.0,
+                tuning_capacitance_f=180e-12,
+                gap_length_m=0.04,
+                capacitor_esr_ohm=0.2,
+            )
+        )
+    )
+
+    assert rows["Type"] == "magnetic loop"
+    assert rows["Diameter"] == "1.0000 m"
+    assert rows["Tuning gap"] == "0.0400 m"
+    assert rows["Tuning capacitance"] == "180.000 pF"
+    assert rows["Capacitor ESR"] == "0.200 Ω"
+    assert "Capacitor reactance" in rows
+
+
 def test_g5rv_custom_generator_is_labeled_in_the_summary() -> None:
     from antennadesk.domain.antennas.g5rv import g5rv_parameters
 

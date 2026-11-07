@@ -47,6 +47,10 @@ from ..domain.antennas.loop import (
     LoopOrientation,
     LoopParameters,
 )
+from ..domain.antennas.magnetic_loop import (
+    ANTENNA_TYPE_MAGNETIC_LOOP,
+    MagneticLoopParameters,
+)
 from ..domain.antennas.matching_network import LNetwork, MatchingNetwork, PiNetwork, TNetwork
 from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
@@ -201,6 +205,20 @@ class LoopParametersPayload(StrictModel):
     orientation: LoopOrientation = LoopOrientation.VERTICAL
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class MagneticLoopParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    diameter_m: float = Field(gt=0.0)
+    tuning_capacitance_f: float = Field(default=200e-12, gt=0.0)
+    height_m: float = Field(default=1.0, ge=0.0)
+    sides: int = Field(default=36, ge=8, le=128, multiple_of=2)
+    gap_length_m: float = Field(default=0.05, gt=0.0)
+    capacitor_esr_ohm: float = Field(default=0.0, ge=0.0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.005, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
 
@@ -569,6 +587,7 @@ ParameterPayload = (
     DipoleParametersPayload
     | FoldedDipoleParametersPayload
     | LoopParametersPayload
+    | MagneticLoopParametersPayload
     | OCFDParametersPayload
     | VerticalParametersPayload
     | InvertedVParametersPayload
@@ -614,6 +633,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(value, T2FDParametersPayload):
         return ANTENNA_TYPE_T2FD
+    if isinstance(value, MagneticLoopParametersPayload):
+        return ANTENNA_TYPE_MAGNETIC_LOOP
     if isinstance(value, CustomParametersPayload):
         return ANTENNA_TYPE_CUSTOM
     return ANTENNA_TYPE_LOOP
@@ -626,6 +647,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return FoldedDipoleParametersPayload
     if antenna_type == ANTENNA_TYPE_LOOP:
         return LoopParametersPayload
+    if antenna_type == ANTENNA_TYPE_MAGNETIC_LOOP:
+        return MagneticLoopParametersPayload
     if antenna_type == ANTENNA_TYPE_OCFD:
         return OCFDParametersPayload
     if antenna_type == ANTENNA_TYPE_VERTICAL:
@@ -887,6 +910,24 @@ def _loop_parameters_from_domain(value: LoopParameters) -> LoopParametersPayload
     )
 
 
+def _magnetic_loop_parameters_from_domain(
+    value: MagneticLoopParameters,
+) -> MagneticLoopParametersPayload:
+    return MagneticLoopParametersPayload(
+        frequency_hz=value.frequency_hz,
+        diameter_m=value.diameter_m,
+        tuning_capacitance_f=value.tuning_capacitance_f,
+        height_m=value.height_m,
+        sides=value.sides,
+        gap_length_m=value.gap_length_m,
+        capacitor_esr_ohm=value.capacitor_esr_ohm,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
 def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
     if isinstance(value, DipoleParameters):
         return _dipole_parameters_from_domain(value)
@@ -894,6 +935,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _folded_parameters_from_domain(value)
     if isinstance(value, LoopParameters):
         return _loop_parameters_from_domain(value)
+    if isinstance(value, MagneticLoopParameters):
+        return _magnetic_loop_parameters_from_domain(value)
     if isinstance(value, OCFDParameters):
         return _ocfd_parameters_from_domain(value)
     if isinstance(value, VerticalParameters):
@@ -1574,6 +1617,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, LoopParametersPayload):
             raise ValueError("loop parameters have the wrong shape")
         return _loop_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_MAGNETIC_LOOP:
+        if not isinstance(value.parameters, MagneticLoopParametersPayload):
+            raise ValueError("magnetic-loop parameters have the wrong shape")
+        return _magnetic_loop_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_OCFD:
         if not isinstance(value.parameters, OCFDParametersPayload):
             raise ValueError("OCFD parameters have the wrong shape")
@@ -1666,6 +1713,24 @@ def _inverted_l_parameters_to_domain(
         vertical_height_m=value.vertical_height_m,
         horizontal_length_m=value.horizontal_length_m,
         base_height_m=value.base_height_m,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _magnetic_loop_parameters_to_domain(
+    value: MagneticLoopParametersPayload,
+) -> MagneticLoopParameters:
+    return MagneticLoopParameters(
+        frequency_hz=value.frequency_hz,
+        diameter_m=value.diameter_m,
+        tuning_capacitance_f=value.tuning_capacitance_f,
+        height_m=value.height_m,
+        sides=value.sides,
+        gap_length_m=value.gap_length_m,
+        capacitor_esr_ohm=value.capacitor_esr_ohm,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),

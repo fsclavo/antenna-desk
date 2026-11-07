@@ -97,6 +97,7 @@ from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.load import LumpedLoad
 from ..domain.antennas.loop import LoopParameters
+from ..domain.antennas.magnetic_loop import MagneticLoopParameters
 from ..domain.antennas.matching_network import MatchingNetwork
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
@@ -167,6 +168,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_J_POLE,
     CATALOG_TYPE_LOADED_VERTICAL,
     CATALOG_TYPE_LOOP,
+    CATALOG_TYPE_MAGNETIC_LOOP,
     CATALOG_TYPE_MOXON,
     CATALOG_TYPE_OCFD,
     CATALOG_TYPE_QUAD_LOOP,
@@ -202,6 +204,7 @@ from .dialogs.inverted_l_dialog import InvertedLDialog
 from .dialogs.inverted_v_dialog import InvertedVDialog
 from .dialogs.j_pole_dialog import JPoleDialog
 from .dialogs.loads_dialog import LoadsDialog
+from .dialogs.magnetic_loop_dialog import MagneticLoopDialog
 from .dialogs.matching_network_dialog import MatchingNetworkDialog
 from .dialogs.measurement_details_dialog import MeasurementDetailsDialog
 from .dialogs.moxon_dialog import MoxonDialog
@@ -245,6 +248,7 @@ from .widgets.geometry_view import GeometryView, GeometryViewMode
 from .widgets.inverted_l_form import InvertedLForm
 from .widgets.inverted_v_form import InvertedVForm
 from .widgets.j_pole_form import JPoleForm
+from .widgets.magnetic_loop_form import MagneticLoopForm
 from .widgets.moxon_form import MoxonForm
 from .widgets.ocfd_form import OCFDForm
 from .widgets.results_view import ResultsView
@@ -495,6 +499,18 @@ class MainWindow(QMainWindow):
         self._inverted_l_scroll.setMinimumWidth(340)
         self._inverted_l_scroll.setMaximumWidth(480)
 
+        self._magnetic_loop_form = MagneticLoopForm(
+            self._translator,
+            self._unit_system,
+            parent=self,
+        )
+        self._magnetic_loop_form.changed.connect(self._on_form_changed)
+        self._magnetic_loop_scroll = QScrollArea(self)
+        self._magnetic_loop_scroll.setWidgetResizable(True)
+        self._magnetic_loop_scroll.setWidget(self._magnetic_loop_form)
+        self._magnetic_loop_scroll.setMinimumWidth(340)
+        self._magnetic_loop_scroll.setMaximumWidth(480)
+
         self._yagi_form = YagiForm(self._translator, self._unit_system, parent=self)
         self._yagi_form.changed.connect(self._on_form_changed)
         self._yagi_scroll = QScrollArea(self)
@@ -565,6 +581,7 @@ class MainWindow(QMainWindow):
             (self._vertical_form, self._vertical_scroll, 480),
             (self._inverted_v_form, self._inverted_v_scroll, 480),
             (self._inverted_l_form, self._inverted_l_scroll, 480),
+            (self._magnetic_loop_form, self._magnetic_loop_scroll, 480),
             (self._yagi_form, self._yagi_scroll, 520),
             (self._moxon_form, self._moxon_scroll, 480),
             (self._fan_dipole_form, self._fan_dipole_scroll, 480),
@@ -733,6 +750,7 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._vertical_scroll)
         self._design_stack.addWidget(self._inverted_v_scroll)
         self._design_stack.addWidget(self._inverted_l_scroll)
+        self._design_stack.addWidget(self._magnetic_loop_scroll)
         self._design_stack.addWidget(self._yagi_scroll)
         self._design_stack.addWidget(self._moxon_scroll)
         self._design_stack.addWidget(self._fan_dipole_scroll)
@@ -1074,6 +1092,7 @@ class MainWindow(QMainWindow):
         self._vertical_form.retranslate()
         self._inverted_v_form.retranslate()
         self._inverted_l_form.retranslate()
+        self._magnetic_loop_form.retranslate()
         self._yagi_form.retranslate()
         self._moxon_form.retranslate()
         self._fan_dipole_form.retranslate()
@@ -1261,7 +1280,7 @@ class MainWindow(QMainWindow):
             idle
             and has_project
             and (not is_custom or is_zs6bkw)
-            and not isinstance(parameters, InvertedLParameters)
+            and not isinstance(parameters, (InvertedLParameters, MagneticLoopParameters))
             and self._solver is not None
         )
         self._optimize_action.setEnabled(optimize_enabled)
@@ -1500,7 +1519,8 @@ class MainWindow(QMainWindow):
             )
         )
         self._custom_generator_edit.setVisible(
-            parameters.generator_id in {"inverted_l", "inverted_v", "ocfd", "yagi", "vertical"}
+            parameters.generator_id
+            in {"inverted_l", "inverted_v", "magnetic_loop", "ocfd", "yagi", "vertical"}
         )
         index = (
             0
@@ -1572,6 +1592,9 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, InvertedLParameters):
             self._design_stack.setCurrentWidget(self._inverted_l_scroll)
             self._inverted_l_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, MagneticLoopParameters):
+            self._design_stack.setCurrentWidget(self._magnetic_loop_scroll)
+            self._magnetic_loop_form.set_parameters(design.parameters)
         elif isinstance(design.parameters, YagiParameters):
             self._design_stack.setCurrentWidget(self._yagi_scroll)
             self._yagi_form.set_parameters(design.parameters)
@@ -1861,6 +1884,37 @@ class MainWindow(QMainWindow):
             return self._project
         if isinstance(previous_design.parameters, InvertedLParameters):
             parameters = self._inverted_l_form.parameters()
+            updated = UpdateDipoleDesign().execute(
+                UpdateDipoleDesignCommand(
+                    project=self._project,
+                    design_id=self._design_id,
+                    parameters=parameters,
+                    loads=loads_override,
+                    transmission_lines=transmission_lines_override,
+                )
+            )
+            updated = replace(updated, name=project_name)
+            self._project = updated
+            design = updated.design_by_id(self._design_id)
+            if parameters != previous_design.parameters or attachments_changed:
+                self._invalidate_design_result(self._design_id)
+                self._results.set_result(None)
+            self._loads = design.antenna.loads
+            self._transmission_lines = design.antenna.transmission_lines
+            self._results.set_design(design)
+            self._set_geometry_model(design)
+            self._auto_select_view(design)
+            self._project_name_updating = True
+            self._project_name.setText(project_name)
+            self._project_name_updating = False
+            self._form_dirty = False
+            self._dirty = True
+            self._update_title()
+            self._update_actions()
+            self._update_height_control()
+            return self._project
+        if isinstance(previous_design.parameters, MagneticLoopParameters):
+            parameters = self._magnetic_loop_form.parameters()
             updated = UpdateDipoleDesign().execute(
                 UpdateDipoleDesignCommand(
                     project=self._project,
@@ -2254,6 +2308,8 @@ class MainWindow(QMainWindow):
             return self._inverted_v_simulation_spec(parameters)
         if isinstance(parameters, InvertedLParameters):
             return self._inverted_l_simulation_spec(parameters)
+        if isinstance(parameters, MagneticLoopParameters):
+            return self._magnetic_loop_simulation_spec(parameters)
         if isinstance(parameters, YagiParameters):
             return self._yagi_simulation_spec(parameters)
         if isinstance(parameters, MoxonParameters):
@@ -2962,6 +3018,26 @@ class MainWindow(QMainWindow):
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
         )
 
+    def _magnetic_loop_simulation_spec(
+        self,
+        parameters: MagneticLoopParameters,
+    ) -> SimulationSpec:
+        model = parameters.to_antenna(name="Magnetic loop")
+        frequency_hz = parameters.frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                frequency_hz * 0.90,
+                frequency_hz * 1.10,
+                101,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz * 1.10,
+                SegmentationPolicy(min_segments_per_wire=1),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
     def _yagi_simulation_spec(self, parameters: YagiParameters) -> SimulationSpec:
         model = parameters.to_antenna(name="Yagi")
         frequency_hz = parameters.frequency_hz
@@ -3417,6 +3493,17 @@ class MainWindow(QMainWindow):
             default_name="Inverted L",
         )
 
+    def new_magnetic_loop_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        dialog = MagneticLoopDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name="Magnetic loop",
+        )
+
     def new_vertical_antenna(self, *, mobile: bool = False) -> None:
         if not self._maybe_save_changes():
             return
@@ -3704,6 +3791,13 @@ class MainWindow(QMainWindow):
                 self,
                 parameters=InvertedLParameters.from_custom_parameters(parameters),
             )
+        elif parameters.generator_id == "magnetic_loop":
+            dialog = MagneticLoopDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                parameters=MagneticLoopParameters.from_custom_parameters(parameters),
+            )
         elif parameters.generator_id == "ocfd":
             dialog = OCFDDialog(
                 self._translator,
@@ -3975,6 +4069,16 @@ class MainWindow(QMainWindow):
             return (
                 dialog.result_parameters() if dialog.exec() == QDialog.DialogCode.Accepted else None
             )
+        if selected == CATALOG_TYPE_MAGNETIC_LOOP:
+            dialog = MagneticLoopDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            return (
+                dialog.result_parameters() if dialog.exec() == QDialog.DialogCode.Accepted else None
+            )
         if selected == CATALOG_TYPE_OCFD:
             dialog = OCFDDialog(
                 self._translator,
@@ -4103,6 +4207,8 @@ class MainWindow(QMainWindow):
             self.new_inverted_v_antenna()
         elif selected == CATALOG_TYPE_INVERTED_L:
             self.new_inverted_l_antenna()
+        elif selected == CATALOG_TYPE_MAGNETIC_LOOP:
+            self.new_magnetic_loop_antenna()
         elif selected == CATALOG_TYPE_FAN_DIPOLE:
             self.new_fan_dipole_antenna()
         elif selected == CATALOG_TYPE_TRAP_DIPOLE:
@@ -4612,6 +4718,9 @@ class MainWindow(QMainWindow):
         parameters = self._project.design_by_id(self._design_id).parameters
         if isinstance(parameters, InvertedLParameters):
             self._show_error(self._translator.t("error.optimize_inverted_l"))
+            return
+        if isinstance(parameters, MagneticLoopParameters):
+            self._show_error(self._translator.t("error.optimize_magnetic_loop"))
             return
         if isinstance(parameters, (OCFDParameters, JPoleParameters)):
             self.synthesize_dimensions()
@@ -5938,6 +6047,8 @@ class MainWindow(QMainWindow):
             self._ocfd_form,
             self._vertical_form,
             self._inverted_v_form,
+            self._inverted_l_form,
+            self._magnetic_loop_form,
             self._yagi_form,
             self._moxon_form,
             self._fan_dipole_form,

@@ -12,6 +12,10 @@ from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
 from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
+from antennadesk.domain.antennas.magnetic_loop import (
+    CAPACITOR_WIRE_ID,
+    MagneticLoopParameters,
+)
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.polarization import Polarization
 from antennadesk.domain.antennas.ringo import RingoParameters
@@ -298,6 +302,30 @@ def test_horizontal_loop_plan_shows_the_polygon_and_elevation_is_edge_on() -> No
     assert all(
         dimension.start.distance_to(dimension.end) > 0.0 for dimension in elevation.dimensions
     )
+
+
+def test_magnetic_loop_shows_the_gap_and_capacitor_in_elevation() -> None:
+    parameters = MagneticLoopParameters(
+        frequency_hz=7_100_000.0,
+        diameter_m=1.0,
+        height_m=1.5,
+        sides=8,
+        gap_length_m=0.05,
+        capacitor_esr_ohm=0.2,
+    )
+
+    scene = _scene(parameters, "magnetic_loop", GeometryViewMode.ELEVATION)
+    plan = _scene(parameters, "magnetic_loop", GeometryViewMode.PLAN)
+
+    assert recommended_view(parameters.to_antenna()) is GeometryViewMode.ELEVATION
+    assert len(scene.polylines) == parameters.sides + 2
+    assert "Magnetic loop" in scene.summary
+    assert "diameter 1.00 m" in scene.summary
+    assert "gap 0.050 m" in scene.summary
+    assert "200.000 pF" in scene.summary
+    assert all(dimension.start.distance_to(dimension.end) > 0.0 for dimension in scene.dimensions)
+    assert "vertical plane is edge-on" in plan.summary
+    assert CAPACITOR_WIRE_ID in {wire.id for wire in parameters.to_antenna().wires}
 
 
 def test_recommended_view_uses_the_geometry_shape() -> None:

@@ -310,6 +310,21 @@ def test_v9_migration_adds_vertical_orientation_to_loops() -> None:
     assert "orientation" not in migrated["project"]["designs"][1]["parameters"]
 
 
+def test_v10_migration_keeps_existing_designs_unchanged() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 10,
+        "project": {
+            "designs": [{"antenna_type": "loop", "parameters": {"frequency_hz": 7_100_000.0}}]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert migrated["project"]["designs"][0] == document["project"]["designs"][0]
+
+
 def test_v4_migration_adds_optional_transformer_ratios() -> None:
     document = {
         "format": "antennadesk-project",

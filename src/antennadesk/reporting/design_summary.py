@@ -15,6 +15,7 @@ from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.load import LumpedLoad, ParallelLoad
 from ..domain.antennas.loop import LoopOrientation, LoopParameters
+from ..domain.antennas.magnetic_loop import MagneticLoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.polarization import Polarization
@@ -222,6 +223,23 @@ def design_summary_rows(
                     f"{parameters.feed_offset_m:.4f} m ({parameters.feed_ratio * 100:.1f}%)",
                 ),
                 ("Height", f"{parameters.height_m:.4f} m"),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+            ]
+        )
+    elif isinstance(parameters, MagneticLoopParameters):
+        rows.extend(
+            [
+                ("Type", "magnetic loop"),
+                ("Diameter", f"{parameters.diameter_m:.4f} m"),
+                ("Circumference", f"{parameters.circumference_m:.4f} m"),
+                ("Loop conductor", f"{parameters.loop_conductor_length_m:.4f} m"),
+                ("Sides", str(parameters.sides)),
+                ("Bottom height", f"{parameters.height_m:.4f} m"),
+                ("Top height", f"{parameters.top_height_m:.4f} m"),
+                ("Tuning gap", f"{parameters.gap_length_m:.4f} m"),
+                ("Tuning capacitance", f"{parameters.tuning_capacitance_f * 1e12:.3f} pF"),
+                ("Capacitor ESR", f"{parameters.capacitor_esr_ohm:.3f} Ω"),
+                ("Capacitor reactance", f"{parameters.capacitor_reactance_ohm:.2f} Ω"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
             ]
         )

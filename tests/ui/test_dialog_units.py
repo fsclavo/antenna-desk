@@ -14,12 +14,19 @@ from antennadesk.ui.dialogs.custom_antenna_dialog import CustomAntennaDialog
 from antennadesk.ui.dialogs.doublet_dialog import DoubletDialog
 from antennadesk.ui.dialogs.g5rv_dialog import G5RVDialog
 from antennadesk.ui.dialogs.inverted_l_dialog import InvertedLDialog
+from antennadesk.ui.dialogs.magnetic_loop_dialog import MagneticLoopDialog
 from antennadesk.ui.dialogs.zepp_dialog import ZeppDialog
 from antennadesk.ui.dialogs.zs6bkw_dialog import ZS6BKWDialog
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem, radius_to_m
 
-RADIUS_DIALOGS = (G5RVDialog, ZS6BKWDialog, ZeppDialog, DoubletDialog, InvertedLDialog)
+RADIUS_DIALOGS = (
+    G5RVDialog,
+    ZS6BKWDialog,
+    ZeppDialog,
+    DoubletDialog,
+    InvertedLDialog,
+)
 
 
 @pytest.mark.parametrize("dialog_type", RADIUS_DIALOGS)
@@ -43,6 +50,18 @@ def test_generator_dialog_uses_selected_radius_units(
         else [parameters.wire_radius_m]
     )
     assert all(radius == pytest.approx(0.001, abs=1e-6) for radius in radii)
+
+
+def test_magnetic_loop_dialog_uses_selected_radius_units(qtbot: QtBot) -> None:
+    dialog = MagneticLoopDialog(Translator(Language.ENGLISH), UnitSystem.IMPERIAL)
+    qtbot.addWidget(dialog)
+
+    assert dialog._radius.suffix().strip() == "in"
+    assert radius_to_m(dialog._radius.value(), UnitSystem.IMPERIAL) == pytest.approx(
+        0.005,
+        abs=1e-5,
+    )
+    assert dialog.parameters().wire_radius_m == pytest.approx(0.005, abs=1e-5)
 
 
 def test_custom_dialog_uses_selected_radius_units(qtbot: QtBot) -> None:

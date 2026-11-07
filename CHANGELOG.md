@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added a first-class **Magnetic loop** generator: a vertical small loop with a
+  top gap, ideal series tuning capacitor with ESR, conductor-loss simulation,
+  efficiency and SWR-bandwidth reporting, schema-11 persistence, a dedicated
+  editor, catalog route, reports, and construction sheet. A coupling loop and
+  detailed capacitor loss model are not included; the template is experimental.
 - Vertical and loaded-vertical editors now offer a **Radial system** selector
   with starting presets for no radials, ground radials, elevated radials, and
   a dense ground-screen approximation. The presets set the base/radial-plane

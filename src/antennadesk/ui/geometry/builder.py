@@ -33,6 +33,11 @@ from ...domain.antennas.loop import (
     LoopOrientation,
     LoopParameters,
 )
+from ...domain.antennas.magnetic_loop import (
+    ANTENNA_TYPE_MAGNETIC_LOOP,
+    CAPACITOR_WIRE_ID,
+    MagneticLoopParameters,
+)
 from ...domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from ...domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
 from ...domain.antennas.polarization import Polarization
@@ -80,6 +85,7 @@ _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_VERTICAL: "catalog.vertical",
     ANTENNA_TYPE_INVERTED_V: "catalog.inverted_v",
     ANTENNA_TYPE_INVERTED_L: "catalog.inverted_l",
+    ANTENNA_TYPE_MAGNETIC_LOOP: "catalog.magnetic_loop",
     ANTENNA_TYPE_YAGI: "catalog.yagi",
     ANTENNA_TYPE_MOXON: "catalog.moxon",
     ANTENNA_TYPE_FAN_DIPOLE: "catalog.fan_dipole",
@@ -116,6 +122,7 @@ def effective_antenna_type(
             "fan_dipole",
             "inverted_v",
             "inverted_l",
+            "magnetic_loop",
             "vertical",
             "ocfd",
             "endfed",
@@ -578,6 +585,89 @@ def _add_loop_dimensions(
             notes.append(factory.translator.t("geometry.edge_on"))
     if parameters is not None and parameters.sides > 8:
         notes.append(factory.translator.t("geometry.sides_note", sides=parameters.sides))
+
+
+def _add_magnetic_loop_dimensions(
+    model: AntennaModel,
+    parameters: MagneticLoopParameters,
+    factory: _Factory,
+    dimensions: list[Dimension],
+    notes: list[str],
+) -> None:
+    projected = tuple(
+        factory.project(point) for wire in model.wires for point in (wire.start, wire.end)
+    )
+    extents = _scene_extents(projected)
+    if extents is None:
+        return
+    min_x, max_x, min_y, max_y = extents
+    min_z, max_z = _model_z_extents(model)
+    if factory.projection.vertical:
+        dimensions.append(
+            factory.horizontal_dimension(
+                min_y,
+                min_x,
+                max_x,
+                parameters.diameter_m,
+                side="below",
+                priority=70,
+            )
+        )
+        dimensions.append(
+            factory.vertical_dimension(
+                max_x,
+                0.0,
+                min_z,
+                parameters.height_m,
+                side="right",
+                priority=75,
+            )
+        )
+        dimensions.append(
+            factory.vertical_dimension(
+                min_x,
+                0.0,
+                max_z,
+                parameters.top_height_m,
+                side="left",
+                priority=60,
+            )
+        )
+        capacitor = next(
+            (wire for wire in model.wires if wire.id == CAPACITOR_WIRE_ID),
+            None,
+        )
+        if capacitor is not None:
+            dimensions.append(
+                factory.dimension(
+                    capacitor.start,
+                    capacitor.end,
+                    parameters.gap_length_m,
+                    side="above",
+                    priority=50,
+                )
+            )
+    else:
+        dimensions.append(
+            factory.horizontal_dimension(
+                min_y,
+                min_x,
+                max_x,
+                parameters.diameter_m,
+                side="below",
+                priority=70,
+            )
+        )
+        dimensions.append(
+            factory.between_scene(
+                ScenePoint(min_x, min_y),
+                ScenePoint(min_x, max_y),
+                max_y - min_y,
+                side="left",
+                priority=60,
+            )
+        )
+        notes.append(factory.translator.t("geometry.vertical_plane_edge_on"))
 
 
 def _add_j_pole_dimensions(
@@ -1438,6 +1528,21 @@ def _summary(
                         f"{_format_length(parameters.top_height_m, translator, unit_system)}",
                     ]
                 )
+    elif isinstance(parameters, MagneticLoopParameters):
+        parts.extend(
+            [
+                f"{translator.t('magnetic_loop.diameter').lower()} "
+                f"{_format_length(parameters.diameter_m, translator, unit_system)}",
+                f"{translator.t('field.circumference').lower()} "
+                f"{_format_length(parameters.circumference_m, translator, unit_system)}",
+                f"{translator.t('field.sides').lower()} {parameters.sides}",
+                f"{translator.t('magnetic_loop.gap').lower()} "
+                f"{_format_length(parameters.gap_length_m, translator, unit_system)}",
+                f"{translator.t('magnetic_loop.capacitance').lower()} "
+                f"{parameters.tuning_capacitance_f * 1e12:.3f} pF",
+                f"{translator.t('magnetic_loop.esr').lower()} {parameters.capacitor_esr_ohm:.3f} Ω",
+            ]
+        )
     elif isinstance(parameters, FoldedDipoleParameters):
         parts.extend(
             [
@@ -1896,6 +2001,17 @@ def build_scene(
             dimensions,
             notes,
         )
+    elif effective_type == ANTENNA_TYPE_MAGNETIC_LOOP:
+        if isinstance(parameters, MagneticLoopParameters):
+            _add_magnetic_loop_dimensions(
+                model,
+                parameters,
+                factory,
+                dimensions,
+                notes,
+            )
+        else:
+            _add_loop_dimensions(model, None, factory, dimensions, notes)
     elif effective_type in {ANTENNA_TYPE_FOLDED_DIPOLE, ANTENNA_TYPE_T2FD}:
         _add_folded_dimensions(model, factory, dimensions, insets, translator)
     elif effective_type == ANTENNA_TYPE_J_POLE:

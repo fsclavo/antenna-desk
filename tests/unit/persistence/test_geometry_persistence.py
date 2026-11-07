@@ -12,10 +12,12 @@ from antennadesk.domain.antennas.design import AntennaDesignParameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
+from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
 from antennadesk.domain.projects.project import Project
 from antennadesk.persistence.schema import (
     FoldedDipoleParametersPayload,
     LoopParametersPayload,
+    MagneticLoopParametersPayload,
     ProjectDocument,
     document_from_project,
     project_from_document,
@@ -250,6 +252,29 @@ def test_horizontal_loop_parameters_round_trip() -> None:
     assert document.project.designs[0].parameters.orientation == LoopOrientation.HORIZONTAL
     assert restored.designs[0].parameters == parameters
     assert restored.designs[0].antenna == original.designs[0].antenna
+
+
+def test_magnetic_loop_parameters_round_trip() -> None:
+    parameters = MagneticLoopParameters(
+        frequency_hz=7_100_000.0,
+        diameter_m=1.0,
+        tuning_capacitance_f=180e-12,
+        height_m=1.5,
+        sides=36,
+        gap_length_m=0.04,
+        capacitor_esr_ohm=0.2,
+        azimuth_deg=35.0,
+        wire_radius_m=0.005,
+    )
+    original = _project(parameters, "Magnetic loop")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert isinstance(document.project.designs[0].parameters, MagneticLoopParametersPayload)
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna == original.designs[0].antenna
+    assert restored.designs[0].antenna_type == "magnetic_loop"
 
 
 def test_inverted_l_parameters_round_trip() -> None:

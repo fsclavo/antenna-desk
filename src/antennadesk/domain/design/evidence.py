@@ -85,6 +85,20 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "the feed position and height."
         ),
     ),
+    "magnetic_loop": EvidenceEntry(
+        template="magnetic_loop",
+        level=EvidenceLevel.EXPERIMENTAL,
+        source=(
+            "Small-loop geometry with an ideal series tuning capacitor; no "
+            "independent numerical reference for the generated design"
+        ),
+        tolerance="Not applicable (structural)",
+        limitation=(
+            "The capacitor is an ideal series RLC element with optional ESR; the "
+            "coupling loop, capacitor voltage, and detailed loss mechanisms are "
+            "not modeled. Tune the capacitance with the solver or a measurement."
+        ),
+    ),
     "vertical": EvidenceEntry(
         template="vertical",
         level=EvidenceLevel.PUBLISHED,

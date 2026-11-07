@@ -25,6 +25,7 @@ CATALOG_TYPE_FOLDED_DIPOLE = "folded_dipole"
 CATALOG_TYPE_LOOP = "loop"
 CATALOG_TYPE_DELTA_LOOP = "delta_loop"
 CATALOG_TYPE_QUAD_LOOP = "quad_loop"
+CATALOG_TYPE_MAGNETIC_LOOP = "magnetic_loop"
 CATALOG_TYPE_VERTICAL = "vertical"
 CATALOG_TYPE_LOADED_VERTICAL = "loaded_vertical"
 CATALOG_TYPE_YAGI = "yagi"
@@ -218,6 +219,13 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         family_key="catalog.family.loop",
         description_key="catalog.quad_loop.description",
         evidence_key="catalog.evidence.builtin",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_MAGNETIC_LOOP,
+        label_key="catalog.magnetic_loop",
+        family_key="catalog.family.loop",
+        description_key="catalog.magnetic_loop.description",
+        evidence_key="catalog.evidence.experimental",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_VERTICAL,

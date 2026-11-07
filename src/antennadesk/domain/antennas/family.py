@@ -16,6 +16,7 @@ from .inverted_l import InvertedLParameters
 from .inverted_v import InvertedVParameters
 from .j_pole import JPoleParameters
 from .loop import ANTENNA_TYPE_LOOP, LoopParameters
+from .magnetic_loop import MagneticLoopParameters
 from .moxon import MoxonParameters
 from .ocfd import OCFDParameters
 from .ringo import RingoParameters
@@ -42,6 +43,7 @@ _GENERATOR_FAMILIES: dict[str, AntennaFamily] = {
     "yagi": AntennaFamily.YAGI,
     "moxon": AntennaFamily.YAGI,
     "vertical": AntennaFamily.VERTICAL,
+    "magnetic_loop": AntennaFamily.LOOP,
     "j_pole": AntennaFamily.VERTICAL,
     "slim_jim": AntennaFamily.VERTICAL,
     "ringo": AntennaFamily.VERTICAL,
@@ -57,6 +59,8 @@ def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
     if isinstance(parameters, (DipoleParameters, FoldedDipoleParameters)):
         return AntennaFamily.DIPOLE
     if isinstance(parameters, LoopParameters):
+        return AntennaFamily.LOOP
+    if isinstance(parameters, MagneticLoopParameters):
         return AntennaFamily.LOOP
     if isinstance(parameters, OCFDParameters):
         return AntennaFamily.DIPOLE
@@ -94,6 +98,8 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_FOLDED_DIPOLE
     if isinstance(parameters, LoopParameters):
         return ANTENNA_TYPE_LOOP
+    if isinstance(parameters, MagneticLoopParameters):
+        return "magnetic_loop"
     if isinstance(parameters, OCFDParameters):
         return "ocfd"
     if isinstance(parameters, VerticalParameters):

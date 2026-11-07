@@ -380,6 +380,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Four-sided loop preset; the loop editor opens with four sides.",
         Language.SPANISH: "Preset de lazo de cuatro lados; el editor abre con cuatro lados.",
     },
+    "catalog.magnetic_loop": {
+        Language.ENGLISH: "Magnetic loop",
+        Language.SPANISH: "Lazo magnético",
+    },
+    "catalog.magnetic_loop.description": {
+        Language.ENGLISH: (
+            "Small tuned loop with a top gap and series capacitor; experimental "
+            "loss and matching model."
+        ),
+        Language.SPANISH: (
+            "Lazo pequeño sintonizado con gap superior y capacitor serie; "
+            "modelo de pérdidas y adaptación experimental."
+        ),
+    },
     "catalog.vertical": {
         Language.ENGLISH: "Vertical + radials",
         Language.SPANISH: "Vertical + radiales",
@@ -1045,6 +1059,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Dipolo plegado",
     },
     "antenna_type.loop": {Language.ENGLISH: "Loop", Language.SPANISH: "Lazo"},
+    "antenna_type.magnetic_loop": {
+        Language.ENGLISH: "Magnetic loop",
+        Language.SPANISH: "Lazo magnético",
+    },
     "antenna_type.trap_dipole": {
         Language.ENGLISH: "Trap dipole",
         Language.SPANISH: "Dipolo con trampas",
@@ -2596,6 +2614,83 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Generador experimental: se prueba la geometría de hilo doblado, "
             "pero no hay una referencia numérica independiente para esta "
             "configuración."
+        ),
+    },
+    "magnetic_loop.title": {
+        Language.ENGLISH: "Magnetic-Loop Generator",
+        Language.SPANISH: "Generador de lazo magnético",
+    },
+    "magnetic_loop.diameter": {
+        Language.ENGLISH: "Loop diameter",
+        Language.SPANISH: "Diámetro del lazo",
+    },
+    "magnetic_loop.height": {
+        Language.ENGLISH: "Bottom height",
+        Language.SPANISH: "Altura inferior",
+    },
+    "magnetic_loop.sides": {
+        Language.ENGLISH: "Polygon sides",
+        Language.SPANISH: "Lados del polígono",
+    },
+    "magnetic_loop.gap": {
+        Language.ENGLISH: "Tuning gap",
+        Language.SPANISH: "Gap de sintonía",
+    },
+    "magnetic_loop.capacitance": {
+        Language.ENGLISH: "Tuning capacitance",
+        Language.SPANISH: "Capacidad de sintonía",
+    },
+    "magnetic_loop.esr": {
+        Language.ENGLISH: "Capacitor ESR",
+        Language.SPANISH: "ESR del capacitor",
+    },
+    "magnetic_loop.geometry": {
+        Language.ENGLISH: (
+            "Diameter {diameter} {unit} · path {circumference} {unit} · "
+            "top {top} {unit} · gap {gap} {unit} · {capacitance} pF"
+        ),
+        Language.SPANISH: (
+            "Diámetro {diameter} {unit} · recorrido {circumference} {unit} · "
+            "superior {top} {unit} · gap {gap} {unit} · {capacitance} pF"
+        ),
+    },
+    "magnetic_loop.model_hint": {
+        Language.ENGLISH: (
+            "The capacitor is an ideal series RLC element with the entered ESR. "
+            "Conductor loss comes from the material and radius; a coupling loop "
+            "and capacitor voltage are not modeled."
+        ),
+        Language.SPANISH: (
+            "El capacitor es un elemento RLC serie ideal con la ESR ingresada. "
+            "La pérdida del conductor surge del material y el radio; no se "
+            "modelan el lazo de acoplamiento ni la tensión del capacitor."
+        ),
+    },
+    "magnetic_loop.hint": {
+        Language.ENGLISH: (
+            "The loop is a vertical regular polygon with a gap centred on the "
+            "top side. The feed is at the midpoint of the bottom side. Tune the "
+            "capacitance with a fine SWR sweep or a measurement."
+        ),
+        Language.SPANISH: (
+            "El lazo es un polígono regular vertical con un gap centrado en el "
+            "lado superior. La alimentación está en el punto medio del lado "
+            "inferior. Sintonizá la capacidad con un barrido fino de ROE o una "
+            "medición."
+        ),
+    },
+    "magnetic_loop.evidence": {
+        Language.ENGLISH: (
+            "Experimental model: geometry, gap, and series capacitor are tested, "
+            "but there is no independent numerical reference for the generated "
+            "design. Efficiency and bandwidth depend on conductor loss, capacitor "
+            "ESR, and the matching network."
+        ),
+        Language.SPANISH: (
+            "Modelo experimental: se prueban la geometría, el gap y el capacitor "
+            "serie, pero no hay una referencia numérica independiente para el "
+            "diseño generado. La eficiencia y el ancho de banda dependen de la "
+            "pérdida del conductor, la ESR del capacitor y la red de adaptación."
         ),
     },
     "inverted_v.title": {
@@ -4344,6 +4439,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "error.optimize_custom": {
         Language.ENGLISH: "Custom or imported geometry has no generic optimizer. Select variables explicitly or use a template.",
         Language.SPANISH: "La geometría personalizada o importada no tiene un optimizador genérico. Seleccioná variables explícitamente o usá una plantilla.",
+    },
+    "error.optimize_magnetic_loop": {
+        Language.ENGLISH: (
+            "The magnetic-loop generator has no generic optimizer yet. Tune the "
+            "capacitance with the SWR sweep or a measurement."
+        ),
+        Language.SPANISH: (
+            "El generador de lazo magnético todavía no tiene un optimizador "
+            "genérico. Sintonizá el capacitor con el barrido de ROE o una "
+            "medición."
+        ),
     },
     "error.optimize_inverted_l": {
         Language.ENGLISH: (

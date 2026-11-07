@@ -150,6 +150,13 @@ At resonance a full-wave loop normally presents roughly `100-150 Ω` at the
 feed point. Changing only its circumference cannot bring that to `50 Ω`; use a
 `2:1` balun or the Matching Network dialog for a `50 Ω` system.
 
+## Families without an estimator
+
+The inverted-L and magnetic-loop templates have no frequency-first estimator.
+They are generated from explicit geometry, and the UI disables **Estimate
+Dimensions...** for them. The magnetic loop also requires a user-supplied tuning
+capacitance; its default is a starting point, not a calculated resonance value.
+
 ## Radial-system presets
 
 The vertical and loaded-vertical editors offer UI-only radial starting points.

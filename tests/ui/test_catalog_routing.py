@@ -20,6 +20,7 @@ from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
 from antennadesk.domain.antennas.loop import LoopParameters
+from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
 from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
@@ -84,6 +85,10 @@ def _parameters_for(key: str) -> object:
             circumference_m=40.0,
             height_m=8.0,
             sides=4,
+        ),
+        "magnetic_loop": MagneticLoopParameters(
+            frequency_hz=7_100_000.0,
+            diameter_m=1.0,
         ),
         "ocfd": OCFDParameters(frequency_hz=7_100_000.0, total_length_m=40.0),
         "vertical": VerticalParameters(frequency_hz=7_100_000.0, height_m=10.0),
@@ -266,6 +271,7 @@ def test_every_catalog_entry_has_a_change_template_route(
             "T2FDDialog",
             "InvertedLDialog",
             "InvertedVDialog",
+            "MagneticLoopDialog",
             "OCFDDialog",
             "VerticalDialog",
             "CustomAntennaDialog",
@@ -294,6 +300,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "loop": ("basic", "loop", None),
         "delta_loop": ("basic", "loop", 3),
         "quad_loop": ("basic", "loop", 4),
+        "magnetic_loop": ("magnetic_loop",),
         "ocfd": ("ocfd",),
         "vertical": ("vertical",),
         "loaded_vertical": ("loaded_vertical",),
@@ -355,6 +362,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         new_moxon_antenna=record("moxon"),
         new_inverted_v_antenna=record("inverted_v"),
         new_inverted_l_antenna=record("inverted_l"),
+        new_magnetic_loop_antenna=record("magnetic_loop"),
         new_fan_dipole_antenna=record("fan_dipole"),
         new_trap_dipole_antenna=record("trap_dipole"),
         new_t2fd_antenna=record("t2fd"),
@@ -420,6 +428,7 @@ ESTIMATORLESS_CATALOG_KEYS = frozenset(
         "g5rv",
         "inverted_l",
         "loaded_vertical",
+        "magnetic_loop",
         "random_wire",
         "trap_dipole",
         "zepp",

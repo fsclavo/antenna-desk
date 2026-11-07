@@ -9,7 +9,8 @@ measurements, optimization, matching, and reporting flows are implemented.
 Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.2.0`
 is published; signing is optional and deferred for later releases. Center-fed
 dipoles, folded dipoles, trap dipoles, T2FDs, vertical and horizontal loops,
-custom wires, Yagis, Moxon, fan dipoles, inverted-Vs, inverted-Ls, OCFDs,
+magnetic loops, custom wires, Yagis, Moxon, fan dipoles, inverted-Vs,
+inverted-Ls, OCFDs,
 end-fed wires, slopers, random wires, doublets, J Poles, Slim Jims, Ringos,
 verticals, and loaded verticals are supported.
 Yagi and Moxon arrays support horizontal or vertical polarization with a
@@ -130,8 +131,8 @@ optional signing steps.
   points by default, and pattern resolution defaults to 5° and can be set to
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` projects with multiple design
-  variants; schema version 10 adds loop orientation and migrates older files
-  explicitly.
+  variants; schema version 11 adds the magnetic-loop design type and migrates
+  older files explicitly.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - VNA CSV import with measured impedance/SWR records and a measured/simulated
   SWR, R, X, or |Z| comparison tab, including resonance differences.
@@ -165,6 +166,8 @@ optional signing steps.
   and a parallel-trap helper in the load editor.
 - Vertical radial-system presets for ground radials, elevated radials, and a
   dense ground-screen approximation, with editable numeric fields.
+- Magnetic-loop generator with a top gap, ideal series tuning capacitor and
+  ESR, conductor-loss simulation, and efficiency/SWR-bandwidth reporting.
 - Printable/HTML construction sheet with type-aware dimensions, feed position,
   loads, and simulated result.
 - CSV, PNG, SVG, PDF, and layered DXF export for results, patterns, and

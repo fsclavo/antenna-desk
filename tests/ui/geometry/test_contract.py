@@ -27,6 +27,7 @@ from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
 from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
+from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
 from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
@@ -154,6 +155,20 @@ def _cases() -> tuple[FamilyCase, ...]:
             4,
             GeometryViewMode.PLAN,
             ("Quad loop", "orientation horizontal", "height 8.00 m"),
+        ),
+        FamilyCase(
+            "magnetic_loop",
+            MagneticLoopParameters(
+                frequency_hz=7_100_000.0,
+                diameter_m=1.0,
+                height_m=1.5,
+                sides=8,
+                gap_length_m=0.05,
+            ),
+            "magnetic_loop",
+            10,
+            GeometryViewMode.ELEVATION,
+            ("Magnetic loop", "diameter 1.00 m", "gap 0.050 m", "200.000 pF"),
         ),
         FamilyCase(
             "ocfd",
@@ -452,6 +467,7 @@ def test_every_domain_antenna_type_has_a_presentation_family() -> None:
         inverted_v,
         j_pole,
         loop,
+        magnetic_loop,
         moxon,
         ocfd,
         ringo,
@@ -470,6 +486,7 @@ def test_every_domain_antenna_type_has_a_presentation_family() -> None:
         inverted_v,
         j_pole,
         loop,
+        magnetic_loop,
         moxon,
         ocfd,
         ringo,
@@ -505,6 +522,10 @@ def test_legacy_generator_ids_map_to_presentation_types() -> None:
             frequency_hz=7_100_000.0,
             vertical_height_m=10.0,
             horizontal_length_m=20.0,
+        ),
+        MagneticLoopParameters(
+            frequency_hz=7_100_000.0,
+            diameter_m=1.0,
         ),
         VerticalParameters(frequency_hz=7_100_000.0, height_m=10.0),
         OCFDParameters(frequency_hz=7_100_000.0, total_length_m=40.0),

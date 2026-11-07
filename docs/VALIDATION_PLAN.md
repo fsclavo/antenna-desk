@@ -241,6 +241,7 @@ gain, nulls, or impedance.
 | `loop` | B | ARRL Antenna Book, 24th ed., Ch. 5, p. 5.4, for the quad case; the polygon correction is a calibrated starting rule | 15 Ω for the quad preset only | Delta and arbitrary polygon side counts are structural. |
 | `quad_loop` | A | ARRL Antenna Book, 24th ed., Ch. 5, p. 5.4: about 120 Ω at resonance | 15 Ω | Published quad geometry only. |
 | `delta_loop` | B | ON4UN, Low-Band DXing, Ch. 10: resonant delta-loop circumference is approximately 1.05-1.06 wavelengths | 1% on the resonant circumference | Circumference only; feedpoint impedance and polarization depend on the feed position and height. |
+| `magnetic_loop` | C | Small-loop geometry with an ideal series tuning capacitor; no independent numerical reference for the generated design | Not applicable (structural) | The capacitor is an ideal series RLC element with optional ESR; the coupling loop, capacitor voltage, and detailed loss mechanisms are not modeled. Tune the capacitance with the solver or a measurement. |
 | `vertical` | B | ARRL practical length rules 234/f for a quarter-wave vertical and 585/f for a 5/8-wave vertical | 0.5% on radiator length | Gain and feedpoint impedance depend on radial count and ground; those are not independently validated. |
 | `loaded_vertical` | B | K7MEM, 'Short Loaded Vertical', citing ARRL Antenna Book, 17th ed., pp. 16-5 to 16-11: a 102 in whip at 14.1 MHz needs a 4.511 µH base loading coil | 5% on the 102 in whip length and the 4.511 µH coil inductance | Only the published 14.1 MHz mobile example is reference-backed. The coil is an ideal series load; coil Q, ground, and the mobile installation are not modeled. Other loaded verticals remain experimental. |
 | `yagi` | A | NBS TN-688 5-element preset, 9.2 dBd (11.35 dBi) | 0.5 dB | Only the published preset; edited element geometry is experimental. |
@@ -380,7 +381,8 @@ Phase 6 adds tests for:
   polarization, with existing arrays migrated as horizontal; version 8 adds
   vertical top-hat fields and infers them from saved top-hat wires; version 9
   adds the inverted-L design type without changing existing designs; version 10
-  adds loop orientation and migrates existing loops as vertical.
+  adds loop orientation and migrates existing loops as vertical; version 11 adds
+  the magnetic-loop design type without changing existing designs.
 - Yagi and Moxon vertical polarization: geometry, azimuth, ground-clearance
   validation, scene contracts for both views, persistence round trips, and a
   free-space NEC equivalence check against the horizontal design rotated around

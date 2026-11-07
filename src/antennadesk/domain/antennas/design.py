@@ -15,6 +15,7 @@ from .inverted_l import ANTENNA_TYPE_INVERTED_L, InvertedLParameters
 from .inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
 from .j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
 from .loop import ANTENNA_TYPE_LOOP, LoopParameters
+from .magnetic_loop import ANTENNA_TYPE_MAGNETIC_LOOP, MagneticLoopParameters
 from .moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from .ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
 from .ringo import ANTENNA_TYPE_RINGO, RingoParameters
@@ -27,6 +28,7 @@ AntennaDesignParameters = (
     DipoleParameters
     | FoldedDipoleParameters
     | LoopParameters
+    | MagneticLoopParameters
     | OCFDParameters
     | VerticalParameters
     | InvertedVParameters
@@ -60,6 +62,8 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_FOLDED_DIPOLE
     if isinstance(parameters, LoopParameters):
         return ANTENNA_TYPE_LOOP
+    if isinstance(parameters, MagneticLoopParameters):
+        return ANTENNA_TYPE_MAGNETIC_LOOP
     if isinstance(parameters, OCFDParameters):
         return ANTENNA_TYPE_OCFD
     if isinstance(parameters, VerticalParameters):

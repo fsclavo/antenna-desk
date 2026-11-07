@@ -296,6 +296,60 @@ def test_new_inverted_l_creates_a_first_class_design(
     window._dirty = False
 
 
+def test_new_magnetic_loop_creates_a_first_class_design(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
+
+    parameters = MagneticLoopParameters(
+        frequency_hz=7_100_000.0,
+        diameter_m=1.0,
+        tuning_capacitance_f=180e-12,
+        height_m=1.5,
+        gap_length_m=0.04,
+        capacitor_esr_ohm=0.2,
+    )
+
+    class FakeMagneticLoopDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> MagneticLoopParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "MagneticLoopDialog", FakeMagneticLoopDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Mag loop", True))
+
+    window.new_magnetic_loop_antenna()
+
+    assert window._project is not None
+    assert window._project.name == "Mag loop"
+    assert window._project.designs[0].antenna_type == "magnetic_loop"
+    assert window._design_stack.currentWidget() is window._magnetic_loop_scroll
+    assert window._view_combo.currentData() == "elevation"
+    assert window._magnetic_loop_form.parameters() == parameters
+    assert window._estimate_button.isEnabled() is False
+    assert window._optimize_action.isEnabled() is False
+
+    errors: list[str] = []
+    monkeypatch.setattr(window, "_show_error", errors.append)
+    window.optimize_current_design()
+    assert errors == [window._translator.t("error.optimize_magnetic_loop")]
+
+    from antennadesk.ui.units import UnitSystem
+
+    window._set_unit_system(UnitSystem.IMPERIAL)
+    assert window._magnetic_loop_form._diameter.suffix().strip() == "ft"
+    assert window._magnetic_loop_form.parameters().diameter_m == pytest.approx(1.0, abs=0.01)
+    window._set_unit_system(UnitSystem.METRIC)
+    assert window._magnetic_loop_form._diameter.suffix().strip() == "m"
+    window._dirty = False
+
+
 def test_change_template_replaces_the_current_design(
     window: MainWindow,
     monkeypatch: pytest.MonkeyPatch,

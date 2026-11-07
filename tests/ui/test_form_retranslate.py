@@ -16,6 +16,7 @@ from antennadesk.ui.widgets.fan_dipole_form import FanDipoleForm
 from antennadesk.ui.widgets.inverted_l_form import InvertedLForm
 from antennadesk.ui.widgets.inverted_v_form import InvertedVForm
 from antennadesk.ui.widgets.j_pole_form import JPoleForm
+from antennadesk.ui.widgets.magnetic_loop_form import MagneticLoopForm
 from antennadesk.ui.widgets.moxon_form import MoxonForm
 from antennadesk.ui.widgets.ocfd_form import OCFDForm
 from antennadesk.ui.widgets.ringo_form import RingoForm
@@ -29,6 +30,7 @@ FORMS = (
     (VerticalForm, "vertical.height"),
     (InvertedLForm, "inverted_l.vertical_height"),
     (InvertedVForm, "inverted_v.apex_height"),
+    (MagneticLoopForm, "magnetic_loop.diameter"),
     (YagiForm, "field.frequency"),
     (MoxonForm, "moxon.width"),
     (FanDipoleForm, "field.frequency"),

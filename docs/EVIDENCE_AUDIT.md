@@ -1,6 +1,6 @@
 # Evidence audit
 
-**Date:** 2026-11-05; updated 2026-11-06
+**Date:** 2026-11-05; updated 2026-11-07
 **Scope:** catalog templates classified as experimental in
 `src/antennadesk/domain/design/evidence.py`.
 
@@ -55,6 +55,7 @@ registry.
 
 | Template | Why it remains experimental | Possible next evidence |
 |---|---|---|
+| `magnetic_loop` | Small-loop geometry with an ideal series tuning capacitor and optional ESR; the coupling loop and detailed capacitor loss are not modeled. | A published magnetic-loop design with dimensions, capacitor ESR, measured impedance, and efficiency. |
 | `inverted_l` | Bent end-fed geometry; no independent numeric reference for this configuration. | A published inverted-L design with dimensions and measured impedance. |
 | `fan_dipole` | Mutual coupling and the V angle are installation-specific; the elements are not independent dipoles. | A published coupled-fan measurement, not a scalar angle correction. |
 | `random_wire` | Performance depends on the tuner and the installation; the length is deliberately non-resonant. | No universal numeric reference; keep experimental. |
@@ -93,8 +94,8 @@ The loaded-vertical example now covers only the published 102 in whip. A
 capacitive top hat is modeled as horizontal wires, and coil Q is exposed as an
 editor convenience, but vehicle ground and mast effects remain outside the
 model. The four previously reviewed C templates keep their visible experimental
-warning; the newly added inverted-L is also C until a published reference
-supplies a traceable numeric metric.
+warning. The inverted-L and magnetic-loop families also start at C until a
+published reference supplies a traceable numeric metric or measured impedance.
 
 ## Rules for the next audit
 
@@ -110,7 +111,7 @@ supplies a traceable numeric metric.
 
 - **A, reference-backed:** 5 templates.
 - **B, published/heuristic:** 16 templates.
-- **C, experimental:** 5 templates, all with a documented limitation.
+- **C, experimental:** 6 templates, all with a documented limitation.
 
 The machine-readable registry and the generated table in
 [`VALIDATION_PLAN.md`](VALIDATION_PLAN.md) remain the source of truth.

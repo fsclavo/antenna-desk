@@ -143,6 +143,17 @@ or the horizontal polygon within its plane. The feed is at the midpoint of the
 first side. A square loop uses four sides; a larger side count approximates a
 circular loop.
 
+### MagneticLoopParameters
+
+A first-class vertical small loop with a top gap and a series tuning capacitor.
+Parameters are frequency, diameter, tuning capacitance, bottom height, polygon
+side count, gap length, capacitor ESR, azimuth, wire radius, material, and
+ground. `to_antenna()` creates the split loop conductor, a short capacitor wire
+across the gap, a series capacitor load with optional ESR, and a feed at the
+midpoint of the bottom side. Conductor loss is computed by the solver from the
+material and radius. A coupling loop, capacitor voltage, and detailed capacitor
+loss model are not included. The generator is experimental.
+
 ### CustomAntennaParameters
 
 User-defined straight wires with a frequency, feed, ground, optional loads, and
@@ -313,9 +324,10 @@ reconstructs OCFD parameters from legacy custom designs.
 ### AntennaDesignParameters
 
 `AntennaDesignParameters` is the union of `DipoleParameters`,
-`FoldedDipoleParameters`, `LoopParameters`, `OCFDParameters`,
-`VerticalParameters`, `InvertedVParameters`, `InvertedLParameters`,
-`YagiParameters`, `MoxonParameters`, `FanDipoleParameters`, `EndFedParameters`,
+`FoldedDipoleParameters`, `LoopParameters`, `MagneticLoopParameters`,
+`OCFDParameters`, `VerticalParameters`, `InvertedVParameters`,
+`InvertedLParameters`, `YagiParameters`, `MoxonParameters`,
+`FanDipoleParameters`, `EndFedParameters`,
 `JPoleParameters`, `RingoParameters`, `TrapDipoleParameters`,
 `T2FDParameters`, and `CustomAntennaParameters`. `antenna_type_for()` maps a
 parameter object to its native type; `custom` remains the arbitrary-wire escape
@@ -426,11 +438,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 10.
+the application writes version 11.
 
 ## Schema policy
 
-- Current version: `10`.
+- Current version: `11`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -452,6 +464,8 @@ the application writes version 10.
 - Version 9 adds the inverted-L design type. Existing designs are unchanged.
 - Version 10 adds the loop `orientation` field. Existing loops load as
   `vertical`; horizontal or sky loops use `horizontal`.
+- Version 11 adds the magnetic-loop design type. Existing designs are
+  unchanged.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -480,7 +494,7 @@ the application writes version 10.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 10.
+- Simulation results are persisted as immutable runs in schema version 11.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are

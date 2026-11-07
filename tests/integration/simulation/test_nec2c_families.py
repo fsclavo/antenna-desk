@@ -188,6 +188,42 @@ def test_horizontal_loop_produces_a_usable_sweep(solver: Nec2cSolver) -> None:
     assert all(frequency.swr is not None for frequency in result.frequencies)
 
 
+def test_magnetic_loop_produces_a_solvable_model(solver: Nec2cSolver) -> None:
+    from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
+
+    parameters = MagneticLoopParameters(
+        frequency_hz=7_100_000.0,
+        diameter_m=1.0,
+        tuning_capacitance_f=200e-12,
+        height_m=1.5,
+        sides=24,
+        gap_length_m=0.05,
+        capacitor_esr_ohm=0.2,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    )
+    model = parameters.to_antenna()
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(7_100_000.0),
+        segmentation=aligned_policy_for_model(
+            model,
+            7_100_000.0,
+            SegmentationPolicy(min_segments_per_wire=1),
+        ),
+        include_conductor_losses=True,
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert result.frequencies
+    assert math.isfinite(result.frequencies[0].impedance_ohm.real)
+    assert math.isfinite(result.frequencies[0].impedance_ohm.imag)
+
+
 def test_j_pole_defaults_to_a_ground_clear_base(solver: Nec2cSolver) -> None:
     from antennadesk.domain.antennas.j_pole import JPoleParameters
 

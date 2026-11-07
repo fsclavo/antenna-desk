@@ -17,6 +17,7 @@ from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.loop import LoopOrientation, LoopParameters
+from ..domain.antennas.magnetic_loop import MagneticLoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
@@ -30,6 +31,7 @@ from ..domain.antennas.zepp import (
     ZEPP_RADIATOR_ID,
     parallel_wire_impedance_ohm,
 )
+from ..domain.optimization.length import measure_bandwidth_hz
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import FrequencyResult, SimulationResult
@@ -290,6 +292,25 @@ The apex is {parameters.apex_height_m:.4f} m above ground.</p>"""
 """
         construction_note = f"""<p>Cut one conductor to {parameters.total_length_m:.4f} m.
 Feed it {feed_offset_m:.4f} m from the start ({parameters.feed_ratio * 100:.1f}% of its length).</p>"""
+    elif isinstance(parameters, MagneticLoopParameters):
+        feed_rows = f"""
+<tr><th>Loop diameter</th><td>{parameters.diameter_m:.4f} m</td></tr>
+<tr><th>Loop circumference</th><td>{parameters.circumference_m:.4f} m</td></tr>
+<tr><th>Metal conductor length</th><td>{parameters.loop_conductor_length_m:.4f} m</td></tr>
+<tr><th>Polygon sides</th><td>{parameters.sides}</td></tr>
+<tr><th>Tuning gap</th><td>{parameters.gap_length_m:.4f} m</td></tr>
+<tr><th>Tuning capacitance</th><td>{parameters.tuning_capacitance_f * 1e12:.3f} pF</td></tr>
+<tr><th>Capacitor ESR</th><td>{parameters.capacitor_esr_ohm:.3f} Ω</td></tr>
+<tr><th>Bottom height</th><td>{parameters.height_m:.4f} m</td></tr>
+<tr><th>Top height</th><td>{parameters.top_height_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Form a {parameters.diameter_m:.4f} m loop with
+{parameters.sides} sides. Leave a {parameters.gap_length_m:.4f} m gap at the top
+and install a {parameters.tuning_capacitance_f * 1e12:.3f} pF capacitor with
+about {parameters.capacitor_esr_ohm:.3f} Ω ESR. Feed the midpoint of the bottom
+side. Conductor loss comes from the selected material and wire radius; a
+coupling loop and the capacitor voltage are not modeled.</p>"""
     elif isinstance(parameters, LoopParameters):
         horizontal = parameters.orientation is LoopOrientation.HORIZONTAL
         height_row = (
@@ -359,6 +380,24 @@ point above. Verify every connection and the feed gap before construction.</p>""
     else:
         raise TypeError(f"unsupported antenna parameters: {type(parameters)!r}")
 
+    bandwidth_row = ""
+    if result is not None and len(result.frequencies) >= 2:
+        swr_points = [
+            (item.frequency_hz, item.swr)
+            for item in result.frequencies
+            if item.swr is not None and math.isfinite(item.swr)
+        ]
+        if len(swr_points) >= 2:
+            bandwidth_hz = measure_bandwidth_hz(
+                [point[0] for point in swr_points],
+                [point[1] for point in swr_points],
+                center_hz=parameters.frequency_hz,
+                swr_limit=2.0,
+            )
+            if bandwidth_hz > 0.0:
+                bandwidth_row = (
+                    f"<tr><th>SWR ≤ 2 bandwidth</th><td>{bandwidth_hz / 1e3:.1f} kHz</td></tr>"
+                )
     simulation_rows = ""
     if result is not None and frequency is not None:
         simulation_rows = f"""
@@ -367,6 +406,7 @@ point above. Verify every connection and the feed gap before construction.</p>""
 <tr><th>SWR ({result.spec.reference_impedance_ohm:g} Ω)</th><td>{_swr_text(frequency)}</td></tr>
 <tr><th>Efficiency</th><td>{f"{efficiency:.2f} %" if efficiency is not None else "—"}</td></tr>
 {"".join(f"<tr><th>{_escape(label)}</th><td>{_escape(value)}</td></tr>" for label, value in gain_metric_rows(result))}
+{bandwidth_row}
 <tr><th>Resonance</th><td>{_escape(_resonance_text(result))}</td></tr>
 <tr><th>Solver</th><td>{_escape(result.solver.name)} {_escape(result.solver.version)}</td></tr>
 <tr><th>Fingerprint</th><td><code>{_escape(result.model_fingerprint)}</code></td></tr>

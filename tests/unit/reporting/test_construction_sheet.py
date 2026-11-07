@@ -214,6 +214,69 @@ def test_horizontal_loop_construction_sheet(sample_project: Project) -> None:
     assert "in a horizontal plane" in sheet
 
 
+def test_magnetic_loop_construction_sheet_lists_gap_and_capacitor(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
+
+    design = sample_project.designs[0]
+    parameters = MagneticLoopParameters(
+        frequency_hz=7_100_000.0,
+        diameter_m=1.0,
+        tuning_capacitance_f=180e-12,
+        gap_length_m=0.04,
+        capacitor_esr_ohm=0.2,
+    )
+    loop = design.with_parameters(parameters)
+    sheet = render_construction_sheet(sample_project, loop, None)
+
+    assert "Loop diameter" in sheet
+    assert "Tuning gap" in sheet
+    assert "Tuning capacitance" in sheet
+    assert "180.000 pF" in sheet
+    assert "Capacitor ESR" in sheet
+    assert "0.200 Ω" in sheet
+    assert "Feed the midpoint of the bottom" in sheet
+
+
+def test_construction_sheet_reports_swr_bandwidth(sample_project: Project) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
+
+    base = _make_result()
+    frequency = base.frequencies[0]
+    result = replace(
+        base,
+        frequencies=tuple(
+            replace(
+                frequency,
+                frequency_hz=hz,
+                impedance_ohm=complex(50.0, 0.0),
+                swr=swr,
+            )
+            for hz, swr in (
+                (7_000_000.0, 1.5),
+                (7_050_000.0, 1.2),
+                (7_100_000.0, 1.1),
+                (7_150_000.0, 1.3),
+                (7_200_000.0, 1.8),
+            )
+        ),
+    )
+    design = sample_project.designs[0]
+    loop = design.with_parameters(
+        MagneticLoopParameters(
+            frequency_hz=7_100_000.0,
+            diameter_m=1.0,
+        )
+    )
+    sheet = render_construction_sheet(sample_project, loop, result)
+
+    assert "SWR ≤ 2 bandwidth" in sheet
+    assert "200.0 kHz" in sheet
+
+
 def test_construction_sheet_lists_series_loads(sample_project: Project) -> None:
     from antennadesk.domain.antennas.load import SeriesLoad
 

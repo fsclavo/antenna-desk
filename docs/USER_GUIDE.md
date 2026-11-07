@@ -188,8 +188,8 @@ contains the straight dipole, folded dipole, trap dipole, T2FD, end-fed wire,
 sloper, random wire, doublet, inverted-V, inverted-L, off-center-fed dipole,
 and fan dipole. The Yagi family includes the parametric Yagi and the Moxon
 rectangle. The Loop family includes the generic vertical/horizontal loop plus
-delta-loop and quad-loop presets; the loop editor switches the plane with the
-**Orientation** field. The Vertical family includes the generic vertical radiator,
+delta-loop, quad-loop, and magnetic-loop presets; the loop editor switches the
+plane with the **Orientation** field. The Vertical family includes the generic vertical radiator,
 the inverted-L, and the loaded vertical / mobile whip preset. The catalog
 shows a short description and evidence level for each type. For specialized
 templates, choose the template first, complete
@@ -550,6 +550,27 @@ optimized across a continuous Low–High range. Use **Choose analysis bands...**
 in the generator to select the harmonic band plan. The default for a 40 m
 design is 40/20/10 m. The selected plan is stored with the design and restored
 when the project is reopened.
+
+## Create a magnetic loop
+
+Choose **File → New Antenna... → Magnetic loop** to generate a small vertical
+loop with a gap at the top and a series tuning capacitor. Set the loop diameter,
+bottom height, polygon side count, gap length, tuning capacitance, capacitor
+ESR, azimuth, wire radius, material, and ground. The feed is at the midpoint of
+the bottom side.
+
+The capacitor is an ideal series RLC element. Conductor loss comes from the
+material and wire radius; the capacitor ESR is the entered series resistance.
+A coupling loop, capacitor voltage rating, and detailed capacitor loss model
+are not included. The default capacitance is only a starting point: tune it
+with a fine SWR sweep or a measurement, and use the existing matching-network
+dialog when a direct 50 Ω feed is not practical.
+
+The generator is experimental. It has no frequency-first estimator and no
+generic optimizer; **Estimate Dimensions...** and **Optimize...** are disabled
+for this template. The construction sheet reports the loop dimensions, gap,
+capacitance, ESR, efficiency, and the simulated SWR bandwidth when a sweep is
+available.
 
 ## Create a vertical
 
