@@ -23,9 +23,11 @@ from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvParameters
 from ..domain.antennas.t2fd import T2FDParameters
 from ..domain.antennas.transmission_line import TransmissionLine
+from ..domain.antennas.transmission_line_doublet import TransmissionLineDoubletParameters
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
+from ..domain.antennas.zepp import ZeppParameters, parallel_wire_impedance_ohm
 from ..domain.environment.ground import GroundModel
 from ..domain.projects.project import DesignVariant
 
@@ -271,6 +273,46 @@ def design_summary_rows(
                 ]
             )
         rows.append(("Azimuth", f"{parameters.azimuth_deg:.1f}°"))
+    if isinstance(parameters, TransmissionLineDoubletParameters):
+        rows.extend(
+            [
+                ("Type", parameters.template_name),
+                ("Dipole length", f"{parameters.dipole_total_length_m:.4f} m"),
+                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Feed height", f"{parameters.feed_height_m:.4f} m"),
+                (
+                    "Matching line",
+                    f"{parameters.line_impedance_ohm:g} Ω, "
+                    f"{parameters.line_length_m:.4f} m, "
+                    f"vf={parameters.line_velocity_factor:.3f}",
+                ),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        return tuple(rows)
+    if isinstance(parameters, ZeppParameters):
+        impedance = parallel_wire_impedance_ohm(
+            parameters.spacing_m,
+            parameters.wire_radius_m,
+        )
+        rows.extend(
+            [
+                ("Type", "Zepp"),
+                ("Radiator length", f"{parameters.radiator_length_m:.4f} m"),
+                ("Matching section", f"{parameters.matching_section_length_m:.4f} m"),
+                ("Spacing", f"{parameters.spacing_m:.4f} m"),
+                ("Base height", f"{parameters.base_height_m:.4f} m"),
+                (
+                    "Radiator height",
+                    f"{parameters.base_height_m + parameters.matching_section_length_m:.4f} m",
+                ),
+                ("Estimated stub impedance", f"{impedance:.1f} Ω"),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        return tuple(rows)
     if isinstance(parameters, ScvParameters):
         rows.extend(
             [

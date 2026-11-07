@@ -66,6 +66,12 @@ from ..domain.antennas.scv import (
 )
 from ..domain.antennas.t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
 from ..domain.antennas.transmission_line import TransmissionLine
+from ..domain.antennas.transmission_line_doublet import (
+    ANTENNA_TYPE_G5RV,
+    ANTENNA_TYPE_ZS6BKW,
+    DoubletPreset,
+    TransmissionLineDoubletParameters,
+)
 from ..domain.antennas.trap_dipole import (
     ANTENNA_TYPE_TRAP_DIPOLE,
     TrapDipoleParameters,
@@ -78,6 +84,7 @@ from ..domain.antennas.yagi import (
     YagiMatchType,
     YagiParameters,
 )
+from ..domain.antennas.zepp import ANTENNA_TYPE_ZEPP, ZeppParameters
 from ..domain.common.validation import Diagnostic, Severity
 from ..domain.design.band_plan import BandPlan, BandSelection
 from ..domain.environment.environment import Environment
@@ -295,6 +302,33 @@ class T2FDParametersPayload(StrictModel):
     orientation: DipoleOrientation = DipoleOrientation.HORIZONTAL
     termination_resistance_ohm: float = Field(default=800.0, gt=0.0)
     transformer_ratio: float = Field(default=16.0, gt=0.0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class TransmissionLineDoubletParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    preset: DoubletPreset
+    dipole_total_length_m: float = Field(gt=0.0)
+    height_m: float = Field(default=10.0, ge=0.0)
+    feed_height_m: float = Field(default=1.0, ge=0.0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    line_impedance_ohm: float = Field(default=450.0, gt=0.0)
+    line_length_m: float = Field(default=10.36, gt=0.0)
+    line_velocity_factor: float = Field(default=1.0, gt=0.0, le=1.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class ZeppParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    radiator_length_m: float = Field(gt=0.0)
+    matching_section_length_m: float = Field(gt=0.0)
+    spacing_m: float = Field(default=0.05, gt=0.0)
+    base_height_m: float = Field(default=1.0, ge=0.0)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
@@ -639,7 +673,9 @@ ParameterPayload = (
     | RingoParametersPayload
     | ScvParametersPayload
     | T2FDParametersPayload
+    | TransmissionLineDoubletParametersPayload
     | TrapDipoleParametersPayload
+    | ZeppParametersPayload
     | CustomParametersPayload
 )
 
@@ -679,6 +715,10 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(value, T2FDParametersPayload):
         return ANTENNA_TYPE_T2FD
+    if isinstance(value, TransmissionLineDoubletParametersPayload):
+        return ANTENNA_TYPE_G5RV if value.preset is DoubletPreset.G5RV else ANTENNA_TYPE_ZS6BKW
+    if isinstance(value, ZeppParametersPayload):
+        return ANTENNA_TYPE_ZEPP
     if isinstance(value, MagneticLoopParametersPayload):
         return ANTENNA_TYPE_MAGNETIC_LOOP
     if isinstance(value, CustomParametersPayload):
@@ -721,6 +761,10 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return TrapDipoleParametersPayload
     if antenna_type == ANTENNA_TYPE_T2FD:
         return T2FDParametersPayload
+    if antenna_type in {ANTENNA_TYPE_G5RV, ANTENNA_TYPE_ZS6BKW}:
+        return TransmissionLineDoubletParametersPayload
+    if antenna_type == ANTENNA_TYPE_ZEPP:
+        return ZeppParametersPayload
     if antenna_type == ANTENNA_TYPE_CUSTOM:
         return CustomParametersPayload
     return None
@@ -1012,6 +1056,10 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _trap_dipole_parameters_from_domain(value)
     if isinstance(value, T2FDParameters):
         return _t2fd_parameters_from_domain(value)
+    if isinstance(value, TransmissionLineDoubletParameters):
+        return _transmission_line_doublet_parameters_from_domain(value)
+    if isinstance(value, ZeppParameters):
+        return _zepp_parameters_from_domain(value)
     if isinstance(value, CustomAntennaParameters):
         return _custom_parameters_from_domain(value)
     raise TypeError(f"unsupported antenna parameters: {type(value)!r}")
@@ -1141,6 +1189,39 @@ def _t2fd_parameters_from_domain(value: T2FDParameters) -> T2FDParametersPayload
         orientation=value.orientation,
         termination_resistance_ohm=value.termination_resistance_ohm,
         transformer_ratio=value.transformer_ratio,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _transmission_line_doublet_parameters_from_domain(
+    value: TransmissionLineDoubletParameters,
+) -> TransmissionLineDoubletParametersPayload:
+    return TransmissionLineDoubletParametersPayload(
+        frequency_hz=value.frequency_hz,
+        preset=value.preset,
+        dipole_total_length_m=value.dipole_total_length_m,
+        height_m=value.height_m,
+        feed_height_m=value.feed_height_m,
+        azimuth_deg=value.azimuth_deg,
+        line_impedance_ohm=value.line_impedance_ohm,
+        line_length_m=value.line_length_m,
+        line_velocity_factor=value.line_velocity_factor,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _zepp_parameters_from_domain(value: ZeppParameters) -> ZeppParametersPayload:
+    return ZeppParametersPayload(
+        frequency_hz=value.frequency_hz,
+        radiator_length_m=value.radiator_length_m,
+        matching_section_length_m=value.matching_section_length_m,
+        spacing_m=value.spacing_m,
+        base_height_m=value.base_height_m,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
@@ -1763,6 +1844,19 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, T2FDParametersPayload):
             raise ValueError("T2FD parameters have the wrong shape")
         return _t2fd_parameters_to_domain(value.parameters)
+    if value.antenna_type in {ANTENNA_TYPE_G5RV, ANTENNA_TYPE_ZS6BKW}:
+        if not isinstance(value.parameters, TransmissionLineDoubletParametersPayload):
+            raise ValueError("transmission-line doublet parameters have the wrong shape")
+        expected = (
+            DoubletPreset.G5RV if value.antenna_type == ANTENNA_TYPE_G5RV else DoubletPreset.ZS6BKW
+        )
+        if value.parameters.preset is not expected:
+            raise ValueError("antenna_type does not match the doublet preset")
+        return _transmission_line_doublet_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_ZEPP:
+        if not isinstance(value.parameters, ZeppParametersPayload):
+            raise ValueError("Zepp parameters have the wrong shape")
+        return _zepp_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_CUSTOM:
         if not isinstance(value.parameters, CustomParametersPayload):
             raise ValueError("custom parameters have the wrong shape")
@@ -1910,6 +2004,39 @@ def _t2fd_parameters_to_domain(value: T2FDParametersPayload) -> T2FDParameters:
         orientation=value.orientation,
         termination_resistance_ohm=value.termination_resistance_ohm,
         transformer_ratio=value.transformer_ratio,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _transmission_line_doublet_parameters_to_domain(
+    value: TransmissionLineDoubletParametersPayload,
+) -> TransmissionLineDoubletParameters:
+    return TransmissionLineDoubletParameters(
+        frequency_hz=value.frequency_hz,
+        preset=value.preset,
+        dipole_total_length_m=value.dipole_total_length_m,
+        height_m=value.height_m,
+        feed_height_m=value.feed_height_m,
+        azimuth_deg=value.azimuth_deg,
+        line_impedance_ohm=value.line_impedance_ohm,
+        line_length_m=value.line_length_m,
+        line_velocity_factor=value.line_velocity_factor,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _zepp_parameters_to_domain(value: ZeppParametersPayload) -> ZeppParameters:
+    return ZeppParameters(
+        frequency_hz=value.frequency_hz,
+        radiator_length_m=value.radiator_length_m,
+        matching_section_length_m=value.matching_section_length_m,
+        spacing_m=value.spacing_m,
+        base_height_m=value.base_height_m,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),

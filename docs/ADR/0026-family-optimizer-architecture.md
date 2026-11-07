@@ -278,7 +278,7 @@ Optimizable families:
 - OCFD, EndFed/EFHW/sloper;
 - fan dipole, trap dipole, T2FD;
 - Yagi, Moxon;
-- G5RV, ZS6BKW, Zepp, and doublet after conversion to typed parameters.
+- typed G5RV, ZS6BKW, and Zepp; the doublet radiator uses the dipole descriptor.
 
 Explicitly unavailable:
 
@@ -296,9 +296,10 @@ ideal matching network must not hide a poor geometry inside the geometry score.
 
 ### 14. Custom generator families
 
-G5RV, ZS6BKW, Zepp, and doublet are converted to first-class typed parameter
-models before they receive optimizers. Optimizer adapters over arbitrary
-`CustomAntennaParameters` are not accepted as a long-term solution.
+G5RV, ZS6BKW, and Zepp are first-class typed parameter models (completed
+2026-11-07). The doublet is a typed dipole plus a project-level feed line.
+Optimizer adapters over arbitrary `CustomAntennaParameters` are not accepted as
+a long-term solution.
 
 ## Consequences
 
@@ -346,8 +347,9 @@ models before they receive optimizers. Optimizer adapters over arbitrary
    first-class typed family. The four initial pilots were dipole, vertical,
    Yagi, and SCV; the amendment above records the widened coverage. The generic
    fallback is removed and unsupported families carry explicit reasons.
-2. **Phase B — custom-generator conversion:** G5RV, ZS6BKW, Zepp, and doublet
-   become typed parameter models before they receive optimizers.
+2. **Phase B — custom-generator conversion (completed 2026-11-07):** G5RV,
+   ZS6BKW, and Zepp became typed parameter models with optimizers. The doublet
+   was already typed as a dipole plus a project-level feed line.
 3. **Phase C — advanced quality:** band-aware and robust modes, Pareto front,
    persisted optimization summaries, and recommendations.
 4. **Phase D — permanent policy (completed 2026-11-07):** the new-family
@@ -371,16 +373,18 @@ migrated every typed family with a first-class parameter model:
 - fan dipole, trap dipole, T2FD;
 - Yagi and Moxon.
 
+Phase B was completed on 2026-11-07: G5RV, ZS6BKW, and Zepp now have typed
+parameter models, inline editors, persistence, reports, and family optimizers.
+The doublet was already a typed dipole plus a project-level feed line, and its
+radiator uses the dipole optimizer.
+
 The following remain explicitly unavailable:
 
 - magnetic loop;
 - random wire;
-- arbitrary custom geometry and imported designs;
-- G5RV, ZS6BKW, Zepp, and doublet, which still use custom generator geometry
-  and must be converted to typed parameters first.
+- arbitrary custom geometry and imported designs.
 
-Phase B is therefore reduced to the custom-generator conversion; band-aware,
-robust, and Pareto modes remain Phase C.
+Band-aware, robust, and Pareto modes remain Phase C.
 
 ## Follow-up
 

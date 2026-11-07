@@ -23,14 +23,15 @@ from dataclasses import dataclass
 
 from ..common import units
 from ..common.units import ensure_non_negative, ensure_positive
-from ..design.formulas import half_wave_length_m, quarter_wave_length_m
 from ..environment.ground import FREE_SPACE, GroundModel
+from .antenna import AntennaModel
 from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
 from .materials import COPPER, ConductorMaterial
 from .wire import Wire
 
+ANTENNA_TYPE_ZEPP = "zepp"
 ZEPP_RADIATOR_ID = "zepp-radiator"
 ZEPP_MATCHING_FEED_ID = "zepp-matching-feed"
 ZEPP_MATCHING_OPEN_ID = "zepp-matching-open"
@@ -39,6 +40,80 @@ ZEPP_DESIGN_FREQUENCY_HZ = 7_100_000.0
 ZEPP_DEFAULT_SPACING_M = 0.05
 ZEPP_DEFAULT_BASE_HEIGHT_M = 1.0
 ZEPP_CHOKE_RATIO = 1.0
+
+
+@dataclass(frozen=True, slots=True)
+class ZeppParameters:
+    """Typed classic Zepp geometry with a real matching stub."""
+
+    frequency_hz: float
+    radiator_length_m: float
+    matching_section_length_m: float
+    spacing_m: float = ZEPP_DEFAULT_SPACING_M
+    base_height_m: float = ZEPP_DEFAULT_BASE_HEIGHT_M
+    azimuth_deg: float = 0.0
+    wire_radius_m: float = 0.001
+    material: ConductorMaterial = COPPER
+    ground: GroundModel = FREE_SPACE
+
+    def __post_init__(self) -> None:
+        ensure_positive(self.frequency_hz, name="frequency_hz")
+        ensure_positive(self.radiator_length_m, name="radiator_length_m")
+        ensure_positive(self.matching_section_length_m, name="matching_section_length_m")
+        ensure_positive(self.spacing_m, name="spacing_m")
+        ensure_non_negative(self.base_height_m, name="base_height_m")
+        ensure_positive(self.wire_radius_m, name="wire_radius_m")
+        if self.spacing_m <= 2.0 * self.wire_radius_m:
+            raise ValueError("spacing_m must be greater than the conductor diameter")
+        object.__setattr__(
+            self,
+            "azimuth_deg",
+            units.normalize_azimuth_degrees(self.azimuth_deg),
+        )
+
+    @property
+    def template_name(self) -> str:
+        return "Zepp"
+
+    def to_antenna(self, *, name: str | None = None) -> AntennaModel:
+        return self.to_custom_parameters().to_antenna(name=name or self.template_name)
+
+    def to_custom_parameters(self) -> CustomAntennaParameters:
+        return zepp_parameters(
+            frequency_hz=self.frequency_hz,
+            radiator_length_m=self.radiator_length_m,
+            matching_section_length_m=self.matching_section_length_m,
+            spacing_m=self.spacing_m,
+            base_height_m=self.base_height_m,
+            azimuth_deg=self.azimuth_deg,
+            wire_radius_m=self.wire_radius_m,
+            material=self.material,
+            ground=self.ground,
+        )
+
+
+def zepp_starting_parameters(
+    *,
+    frequency_hz: float = ZEPP_DESIGN_FREQUENCY_HZ,
+    base_height_m: float = ZEPP_DEFAULT_BASE_HEIGHT_M,
+    spacing_m: float = ZEPP_DEFAULT_SPACING_M,
+    azimuth_deg: float = 0.0,
+    wire_radius_m: float = 0.001,
+    material: ConductorMaterial = COPPER,
+    ground: GroundModel = FREE_SPACE,
+) -> ZeppParameters:
+    radiator_m, matching_m = zepp_starting_dimensions(frequency_hz)
+    return ZeppParameters(
+        frequency_hz=frequency_hz,
+        radiator_length_m=radiator_m,
+        matching_section_length_m=matching_m,
+        spacing_m=spacing_m,
+        base_height_m=base_height_m,
+        azimuth_deg=azimuth_deg,
+        wire_radius_m=wire_radius_m,
+        material=material,
+        ground=ground,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,6 +140,8 @@ def zepp_choke() -> ZeppChoke:
 
 def zepp_starting_dimensions(frequency_hz: float) -> tuple[float, float]:
     """Return the classic half-wave radiator and quarter-wave stub lengths."""
+
+    from ..design.formulas import half_wave_length_m, quarter_wave_length_m
 
     ensure_positive(frequency_hz, name="frequency_hz")
     return half_wave_length_m(frequency_hz), quarter_wave_length_m(frequency_hz)

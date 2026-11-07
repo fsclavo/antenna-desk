@@ -20,8 +20,13 @@ from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
+from antennadesk.domain.antennas.transmission_line_doublet import (
+    DoubletPreset,
+    doublet_starting_parameters,
+)
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+from antennadesk.domain.antennas.zepp import zepp_starting_parameters
 from antennadesk.domain.optimization.descriptor import FamilyOptimizationObjective
 from antennadesk.domain.optimization.engine import OptimizationBudget
 from antennadesk.domain.optimization.registry import optimizer_availability
@@ -84,6 +89,8 @@ def _samples() -> list[object]:
             driven_tip_m=1.0,
             height_m=10.0,
         ),
+        doublet_starting_parameters(DoubletPreset.G5RV),
+        zepp_starting_parameters(),
     ]
 
 

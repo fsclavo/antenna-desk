@@ -19,6 +19,10 @@ from PySide6.QtWidgets import (
 
 from ...domain.antennas.custom import CustomAntennaParameters
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
+from ...domain.antennas.transmission_line_doublet import (
+    DoubletPreset,
+    TransmissionLineDoubletParameters,
+)
 from ...domain.antennas.zs6bkw import (
     ZS6BKW_DESIGN_FREQUENCY_HZ,
     ZS6BKW_VARIANTS,
@@ -240,6 +244,28 @@ class ZS6BKWDialog(QDialog):
             material=self._selected_material(),
             ground=self._ground_model(),
         )
+
+    def typed_parameters(self) -> TransmissionLineDoubletParameters:
+        variant = self._selected_variant()
+        return TransmissionLineDoubletParameters(
+            frequency_hz=self._frequency.value() * 1_000_000.0,
+            preset=DoubletPreset.ZS6BKW,
+            dipole_total_length_m=variant.dipole_total_length_m,
+            height_m=length_to_m(self._height.value(), self._unit_system),
+            feed_height_m=length_to_m(self._feed_height.value(), self._unit_system),
+            azimuth_deg=self._azimuth.value(),
+            line_impedance_ohm=variant.characteristic_impedance_ohm,
+            line_length_m=variant.line_length_m,
+            line_velocity_factor=self._velocity.value(),
+            wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
+            material=self._selected_material(),
+            ground=self._ground_model(),
+        )
+
+    def typed_result_parameters(self) -> TransmissionLineDoubletParameters:
+        if self._parameters is None:
+            raise ValueError("the dialog has not produced parameters")
+        return self.typed_parameters()
 
     def _accept(self) -> None:
         try:

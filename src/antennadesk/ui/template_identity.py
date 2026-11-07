@@ -20,9 +20,13 @@ from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvKind, ScvParameters
 from ..domain.antennas.t2fd import T2FDParameters
+from ..domain.antennas.transmission_line_doublet import (
+    TransmissionLineDoubletParameters,
+)
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
+from ..domain.antennas.zepp import ZeppParameters
 from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_BOBTAIL_CURTAIN,
     CATALOG_TYPE_CUSTOM,
@@ -138,6 +142,14 @@ def catalog_key_for(parameters: AntennaDesignParameters) -> str:
             if parameters.kind is ScvKind.HALF_SQUARE
             else CATALOG_TYPE_BOBTAIL_CURTAIN
         )
+    if isinstance(parameters, TransmissionLineDoubletParameters):
+        return (
+            CATALOG_TYPE_G5RV
+            if parameters.preset.value == CATALOG_TYPE_G5RV
+            else CATALOG_TYPE_ZS6BKW
+        )
+    if isinstance(parameters, ZeppParameters):
+        return CATALOG_TYPE_ZEPP
     if isinstance(parameters, CustomAntennaParameters):
         generator_id = parameters.generator_id
         if generator_id in _KNOWN_CUSTOM_GENERATORS:

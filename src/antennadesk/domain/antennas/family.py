@@ -22,9 +22,11 @@ from .ocfd import OCFDParameters
 from .ringo import RingoParameters
 from .scv import ScvParameters
 from .t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
+from .transmission_line_doublet import TransmissionLineDoubletParameters
 from .trap_dipole import ANTENNA_TYPE_TRAP_DIPOLE, TrapDipoleParameters
 from .vertical import VerticalParameters
 from .yagi import YagiParameters
+from .zepp import ZeppParameters
 
 
 class AntennaFamily(StrEnum):
@@ -89,6 +91,10 @@ def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
         return AntennaFamily.VERTICAL
     if isinstance(parameters, (T2FDParameters, TrapDipoleParameters)):
         return AntennaFamily.DIPOLE
+    if isinstance(parameters, TransmissionLineDoubletParameters):
+        return AntennaFamily.DIPOLE
+    if isinstance(parameters, ZeppParameters):
+        return AntennaFamily.DIPOLE
     if isinstance(parameters, CustomAntennaParameters):
         if parameters.generator_id is not None:
             return _GENERATOR_FAMILIES.get(parameters.generator_id, AntennaFamily.CUSTOM)
@@ -131,6 +137,10 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(parameters, T2FDParameters):
         return ANTENNA_TYPE_T2FD
+    if isinstance(parameters, TransmissionLineDoubletParameters):
+        return parameters.preset.antenna_type
+    if isinstance(parameters, ZeppParameters):
+        return "zepp"
     if isinstance(parameters, CustomAntennaParameters):
         return parameters.generator_id or "custom"
     raise TypeError(f"unsupported antenna parameters: {type(parameters)!r}")

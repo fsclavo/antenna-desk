@@ -26,9 +26,16 @@ from .scv import (
     ScvParameters,
 )
 from .t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
+from .transmission_line_doublet import (
+    ANTENNA_TYPE_G5RV,
+    ANTENNA_TYPE_ZS6BKW,
+    DoubletPreset,
+    TransmissionLineDoubletParameters,
+)
 from .trap_dipole import ANTENNA_TYPE_TRAP_DIPOLE, TrapDipoleParameters
 from .vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
 from .yagi import ANTENNA_TYPE_YAGI, YagiParameters
+from .zepp import ANTENNA_TYPE_ZEPP, ZeppParameters
 
 AntennaDesignParameters = (
     DipoleParameters
@@ -47,7 +54,9 @@ AntennaDesignParameters = (
     | RingoParameters
     | ScvParameters
     | T2FDParameters
+    | TransmissionLineDoubletParameters
     | TrapDipoleParameters
+    | ZeppParameters
     | CustomAntennaParameters
 )
 
@@ -101,6 +110,10 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(parameters, T2FDParameters):
         return ANTENNA_TYPE_T2FD
+    if isinstance(parameters, TransmissionLineDoubletParameters):
+        return ANTENNA_TYPE_G5RV if parameters.preset is DoubletPreset.G5RV else ANTENNA_TYPE_ZS6BKW
+    if isinstance(parameters, ZeppParameters):
+        return ANTENNA_TYPE_ZEPP
     if isinstance(parameters, CustomAntennaParameters):
         return ANTENNA_TYPE_CUSTOM
     raise TypeError(f"unsupported antenna parameters: {type(parameters)!r}")
@@ -127,6 +140,10 @@ def primary_dimension_m(parameters: AntennaDesignParameters) -> float:
         return parameters.total_length_m
     if isinstance(parameters, T2FDParameters):
         return parameters.length_m
+    if isinstance(parameters, TransmissionLineDoubletParameters):
+        return parameters.dipole_total_length_m
+    if isinstance(parameters, ZeppParameters):
+        return parameters.radiator_length_m
     raise TypeError(f"antenna has no single primary dimension: {type(parameters)!r}")
 
 
@@ -154,4 +171,8 @@ def with_primary_dimension(
         return parameters.with_total_length(dimension_m)
     if isinstance(parameters, T2FDParameters):
         return parameters.with_length(dimension_m)
+    if isinstance(parameters, TransmissionLineDoubletParameters):
+        return replace(parameters, dipole_total_length_m=dimension_m)
+    if isinstance(parameters, ZeppParameters):
+        return replace(parameters, radiator_length_m=dimension_m)
     raise TypeError(f"antenna has no single primary dimension: {type(parameters)!r}")

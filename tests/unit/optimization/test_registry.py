@@ -26,10 +26,15 @@ from antennadesk.domain.antennas.ocfd import OCFDParameters
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
+from antennadesk.domain.antennas.transmission_line_doublet import (
+    DoubletPreset,
+    doublet_starting_parameters,
+)
 from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.antennas.yagi import YagiElement, YagiMatchType, YagiParameters
+from antennadesk.domain.antennas.zepp import zepp_starting_parameters
 from antennadesk.domain.optimization.registry import (
     KNOWN_PARAMETER_TYPES,
     SUPPORTED_OPTIMIZER_TYPES,
@@ -278,6 +283,9 @@ def _typed_samples() -> list[AntennaDesignParameters]:
             driven_tip_m=1.0,
             height_m=10.0,
         ),
+        doublet_starting_parameters(DoubletPreset.G5RV),
+        doublet_starting_parameters(DoubletPreset.ZS6BKW),
+        zepp_starting_parameters(),
     ]
 
 

@@ -23,6 +23,7 @@ from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvKind, ScvParameters
 from ..domain.antennas.t2fd import T2FDParameters
+from ..domain.antennas.transmission_line_doublet import TransmissionLineDoubletParameters
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
@@ -30,6 +31,7 @@ from ..domain.antennas.zepp import (
     ZEPP_MATCHING_FEED_ID,
     ZEPP_MATCHING_OPEN_ID,
     ZEPP_RADIATOR_ID,
+    ZeppParameters,
     parallel_wire_impedance_ohm,
 )
 from ..domain.optimization.length import measure_bandwidth_hz
@@ -394,6 +396,41 @@ coupling loop and the capacitor voltage are not modeled.</p>"""
         construction_note = f"""<p>Cut one conductor to {parameters.circumference_m:.4f} m and
 close it into {parameters.sides} equal sides of {parameters.side_length_m:.4f} m
 in a {plane} plane. Feed the midpoint of the first side.</p>"""
+    elif isinstance(parameters, TransmissionLineDoubletParameters):
+        feed_rows = f"""
+<tr><th>Type</th><td>{parameters.template_name}</td></tr>
+<tr><th>Dipole length</th><td>{parameters.dipole_total_length_m:.4f} m</td></tr>
+<tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
+<tr><th>Matching line</th><td>{parameters.line_impedance_ohm:g} Ω, {parameters.line_length_m:.4f} m, vf={parameters.line_velocity_factor:.3f}</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Cut one dipole conductor to
+{parameters.dipole_total_length_m:.4f} m and install it at
+{parameters.height_m:.4f} m. Add a short source stub at the center and a
+{parameters.line_length_m:.4f} m, {parameters.line_impedance_ohm:g} Ω matching line.
+The line velocity factor is {parameters.line_velocity_factor:.3f}; the published
+dimensions are starting points.</p>"""
+    elif isinstance(parameters, ZeppParameters):
+        impedance = parallel_wire_impedance_ohm(
+            parameters.spacing_m,
+            parameters.wire_radius_m,
+        )
+        feed_rows = f"""
+<tr><th>Radiator length</th><td>{parameters.radiator_length_m:.4f} m</td></tr>
+<tr><th>Matching section</th><td>{parameters.matching_section_length_m:.4f} m</td></tr>
+<tr><th>Conductor spacing</th><td>{parameters.spacing_m:.4f} m</td></tr>
+<tr><th>Estimated stub impedance</th><td>{impedance:.1f} Ω</td></tr>
+<tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
+<tr><th>Radiator height</th><td>{parameters.base_height_m + parameters.matching_section_length_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Cut the radiator to
+{parameters.radiator_length_m:.4f} m and two matching-stub conductors to
+{parameters.matching_section_length_m:.4f} m, spaced
+{parameters.spacing_m:.4f} m. Join the stub conductors at the base and feed the
+center of that connector; leave the antenna end of the second conductor open.
+The estimated stub impedance is {impedance:.1f} Ω. The 1:1 common-mode choke is
+a construction requirement and is not part of the NEC model.</p>"""
     elif isinstance(parameters, CustomAntennaParameters):
         radiator = next(
             (wire for wire in antenna.wires if wire.id == ZEPP_RADIATOR_ID),

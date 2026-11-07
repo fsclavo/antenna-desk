@@ -24,6 +24,7 @@ from ...domain.antennas.zepp import (
     ZEPP_DEFAULT_BASE_HEIGHT_M,
     ZEPP_DEFAULT_SPACING_M,
     ZEPP_DESIGN_FREQUENCY_HZ,
+    ZeppParameters,
     parallel_wire_impedance_ohm,
     zepp_parameters,
     zepp_starting_dimensions,
@@ -277,6 +278,24 @@ class ZeppDialog(QDialog):
             material=self._selected_material(),
             ground=self._ground_model(),
         )
+
+    def typed_parameters(self) -> ZeppParameters:
+        return ZeppParameters(
+            frequency_hz=self._frequency.value() * 1_000_000.0,
+            radiator_length_m=length_to_m(self._radiator_length.value(), self._unit_system),
+            matching_section_length_m=length_to_m(self._matching_length.value(), self._unit_system),
+            spacing_m=self._spacing_m(),
+            base_height_m=length_to_m(self._base_height.value(), self._unit_system),
+            azimuth_deg=self._azimuth.value(),
+            wire_radius_m=self._radius_m(),
+            material=self._selected_material(),
+            ground=self._ground_model(),
+        )
+
+    def typed_result_parameters(self) -> ZeppParameters:
+        if self._parameters is None:
+            raise ValueError("the dialog has not produced parameters")
+        return self.typed_parameters()
 
     def _accept(self) -> None:
         try:

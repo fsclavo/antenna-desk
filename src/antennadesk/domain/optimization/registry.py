@@ -26,9 +26,11 @@ from ..antennas.ocfd import OCFDParameters
 from ..antennas.ringo import RingoParameters
 from ..antennas.scv import ScvParameters
 from ..antennas.t2fd import T2FDParameters
+from ..antennas.transmission_line_doublet import TransmissionLineDoubletParameters
 from ..antennas.trap_dipole import TrapDipoleParameters
 from ..antennas.vertical import VerticalParameters
 from ..antennas.yagi import YagiParameters
+from ..antennas.zepp import ZeppParameters
 from .descriptor import AntennaOptimizerDescriptor
 from .families.dipole import dipole_descriptor
 from .families.scv import scv_descriptor
@@ -44,7 +46,9 @@ from .families.typed import (
     ocfd_descriptor,
     ringo_descriptor,
     t2fd_descriptor,
+    transmission_line_doublet_descriptor,
     trap_dipole_descriptor,
+    zepp_descriptor,
 )
 from .families.vertical import vertical_descriptor
 from .families.yagi import yagi_descriptor
@@ -108,6 +112,10 @@ def optimizer_availability(
         return OptimizerAvailability(descriptor=t2fd_descriptor(parameters))
     if isinstance(parameters, MoxonParameters):
         return OptimizerAvailability(descriptor=moxon_descriptor(parameters))
+    if isinstance(parameters, TransmissionLineDoubletParameters):
+        return OptimizerAvailability(descriptor=transmission_line_doublet_descriptor(parameters))
+    if isinstance(parameters, ZeppParameters):
+        return OptimizerAvailability(descriptor=zepp_descriptor(parameters))
     if isinstance(parameters, MagneticLoopParameters):
         return OptimizerAvailability(reason_key=_REASON_MAGNETIC_LOOP)
     if isinstance(parameters, CustomAntennaParameters):
@@ -135,6 +143,8 @@ SUPPORTED_OPTIMIZER_TYPES = frozenset(
         T2FDParameters,
         YagiParameters,
         MoxonParameters,
+        TransmissionLineDoubletParameters,
+        ZeppParameters,
     }
 )
 

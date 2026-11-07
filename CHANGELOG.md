@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added first-class typed **G5RV**, **ZS6BKW**, and **Zepp** designs with inline
+  editors, schema-17 persistence, reports, construction rows, scene summaries,
+  and family optimizers. Existing custom-generator projects remain loadable;
+  the doublet is already a typed dipole radiator plus a project-level feed line.
 - Replaced the mixed optimization paths with a **family optimizer
   architecture**. Each supported typed family has an explicit descriptor and
   QA coverage; there is no generic dipole fallback. The shared engine combines

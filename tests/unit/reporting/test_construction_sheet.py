@@ -277,6 +277,38 @@ def test_scv_construction_sheet_lists_the_array_wires(
     assert "top junction of the center vertical" in sheet
 
 
+def test_typed_transmission_line_doublet_construction_sheet(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.transmission_line_doublet import (
+        DoubletPreset,
+        doublet_starting_parameters,
+    )
+
+    design = sample_project.designs[0]
+    doublet = design.with_parameters(doublet_starting_parameters(DoubletPreset.G5RV))
+    sheet = render_construction_sheet(sample_project, doublet, None)
+
+    assert "G5RV" in sheet
+    assert "Matching line" in sheet
+    assert "matching line" in sheet
+    assert "31.1000 m" in sheet
+
+
+def test_typed_zepp_construction_sheet_lists_the_stub(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.zepp import zepp_starting_parameters
+
+    design = sample_project.designs[0]
+    zepp = design.with_parameters(zepp_starting_parameters())
+    sheet = render_construction_sheet(sample_project, zepp, None)
+
+    assert "Matching section" in sheet
+    assert "Estimated stub impedance" in sheet
+    assert "two matching-stub conductors" in sheet
+
+
 def test_beta_hairpin_yagi_construction_sheet_lists_the_stub(
     sample_project: Project,
 ) -> None:

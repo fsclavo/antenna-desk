@@ -22,9 +22,13 @@ from antennadesk.ui.widgets.ocfd_form import OCFDForm
 from antennadesk.ui.widgets.ringo_form import RingoForm
 from antennadesk.ui.widgets.scv_form import ScvForm
 from antennadesk.ui.widgets.t2fd_form import T2FDForm
+from antennadesk.ui.widgets.transmission_line_doublet_form import (
+    TransmissionLineDoubletForm,
+)
 from antennadesk.ui.widgets.trap_dipole_form import TrapDipoleForm
 from antennadesk.ui.widgets.vertical_form import VerticalForm
 from antennadesk.ui.widgets.yagi_form import YagiForm
+from antennadesk.ui.widgets.zepp_form import ZeppForm
 
 FORMS = (
     (OCFDForm, "field.fundamental_frequency"),
@@ -41,6 +45,8 @@ FORMS = (
     (JPoleForm, "j_pole.radiator_height"),
     (RingoForm, "ringo.radiator_height"),
     (ScvForm, "scv.horizontal_length"),
+    (TransmissionLineDoubletForm, "g5rv.line_impedance"),
+    (ZeppForm, "zepp.radiator_length"),
 )
 
 

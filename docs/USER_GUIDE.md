@@ -479,7 +479,7 @@ the electrical length. The transmitter coax is not part of the antenna model;
 add it with **Simulation → Feed Line...** if you want its loss and impedance
 transformation.
 
-The preset is multiband: the custom design panel starts with a **41-point
+The preset is multiband: the design panel starts with a **41-point
 3.5–30 MHz sweep** so you can inspect the G5RV bands. The pattern resolution is
 **Auto (max)** by default: AntennaDesk estimates the saved project size and
 uses the finest pattern step that fits. The 41-point default uses a 1° pattern
@@ -490,8 +490,10 @@ The panel shows the requested and effective resolution after a run.
 
 The published dimensions are reference-backed (Carr, *Practical Antenna
 Handbook*, via the Wikipedia G5RV article); the lossless TL model and the
-installation are simplified. Tune the line length, velocity factor, and feed
-line for your installation.
+installation are simplified. **Optimize...** searches dipole length, height,
+feed height, line impedance, line length, velocity factor, and conductor radius
+jointly. Tune the final line length, velocity factor, and feed line for your
+installation.
 
 ## Create a ZS6BKW
 
@@ -507,13 +509,12 @@ transmission line between the dipole center and a short source wire; add the
 transmitter coax with **Simulation → Feed Line...** when needed.
 
 The Cebik reference gives usable no-ATU matches on **40, 20, 17, 12, and 10 m**;
-80, 30, and 15 m are poor matches without a tuner. The custom design panel
-starts with a **61-point 7.0–29.7 MHz sweep**, and **Band analysis** preselects
-the five no-ATU bands. The ZS6BKW is still stored as custom generator geometry,
-so **Optimize...** is disabled until it becomes a typed family. Edit the wire
-and matching-line lengths manually; the line impedance and velocity factor stay
-fixed. Dimensions are starting points: height, ground, line velocity factor, and
-installation change the match. See L. B. Cebik, W4RNL, “The G5RV
+80, 30, and 15 m are poor matches without a tuner. The design panel starts with
+a **61-point 7.0–29.7 MHz sweep**, and **Band analysis** preselects
+the five no-ATU bands. **Optimize...** searches the wire length, height, feed
+height, line impedance, line length, velocity factor, and conductor radius
+jointly. Dimensions are starting points: height, ground, line velocity factor,
+and installation change the match. See L. B. Cebik, W4RNL, “The G5RV
 Antenna System Re-Visited, Part 3: The Almost-No-ATU ZS6BKW”, and PA0FRI’s
 commercial variant notes.
 
@@ -538,8 +539,10 @@ starting values.
 The 1:1 common-mode choke at the transmitter end is required but not modeled;
 NEC-2 has no choke or ferrite element. The coax and common-mode current are also
 outside the model. Band analysis starts with odd harmonics (40/15 m for a 7.1
-MHz design); even harmonics have severe stub imbalance. Tune the radiator and
-stub for the installed height, ground, and hardware.
+MHz design); even harmonics have severe stub imbalance. **Optimize...** searches
+radiator length, stub length, conductor spacing, base height, and conductor
+radius jointly. Tune the radiator and stub for the installed height, ground,
+and hardware.
 
 ## Create a doublet
 
@@ -1004,6 +1007,8 @@ The following typed families have a complete joint optimizer:
 - Ringo;
 - half square and bobtail curtain;
 - OCFD, EndFed/EFHW, and sloper;
+- typed G5RV, ZS6BKW, and Zepp;
+- the doublet radiator as a dipole, with its feed line in the matching stage;
 - fan dipole, trap dipole, and T2FD;
 - Yagi and Moxon.
 
@@ -1022,9 +1027,11 @@ The Optimize action is disabled, with a tooltip explaining the reason, for:
   enough to optimize efficiency or bandwidth without false precision.
 - **Random wire**: deliberately non-resonant and tuner-assisted.
 - **Custom geometry and imported designs**: the topology is not parameterized.
-- **G5RV, ZS6BKW, Zepp, and doublet**: these are still represented as custom
-  generator geometry and must become typed families before they get an
-  optimizer.
+
+G5RV, ZS6BKW, Zepp, and the doublet are typed families and have a family
+optimizer. The doublet remains a dipole plus a project-level feed line, so its
+radiator is optimized with the dipole descriptor and its feed line belongs to
+the separate matching stage.
 
 The old one-dimensional length search and OCFD/J-Pole synthesis dialog have been
 superseded by the family optimizer for the affected typed families. Bounded
@@ -1109,11 +1116,10 @@ domain and project files always store canonical meters and hertz.
   full language; unsupported cards are reported. MMANA import covers basic wire
   geometry and source only; ground and loads are not imported.
 - Optimization covers every geometry, feed, and family-load variable of the
-  supported typed families with a joint hybrid search. Custom/imported designs,
-  magnetic loops, random wires, and G5RV/ZS6BKW/Zepp/doublet custom generators
-  are excluded until they have trusted typed descriptors. There are no
-  boom-length or turning-radius constraints, and band-aware/robust/Pareto modes
-  remain future work.
+  supported typed families with a joint hybrid search, including G5RV, ZS6BKW,
+  and Zepp. Custom/imported designs, magnetic loops, and random wires are
+  excluded. There are no boom-length or turning-radius constraints, and
+  band-aware/robust/Pareto modes remain future work.
 - Project files store normalized results and raw solver text; many long runs
   can reach the 64 MB project limit.
 - The feed line is a uniform-line post-processing model. It reports impedance

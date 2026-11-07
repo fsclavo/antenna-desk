@@ -9,8 +9,9 @@
 > implementation, disabling the other typed families or leaving their incomplete
 > legacy paths exposed would have been a user-facing regression. Phase A was
 > therefore widened to cover every family with a first-class typed parameter
-> model. Magnetic loop, random wire, arbitrary custom/imported geometry, and the
-> G5RV/ZS6BKW/Zepp/doublet custom generators remain explicitly unavailable.
+> model. Magnetic loop, random wire, and arbitrary custom/imported geometry
+> remain explicitly unavailable. Phase B later converted G5RV, ZS6BKW, and Zepp
+> to typed families with optimizers; see ADR-0026.
 
 ## Goal
 
@@ -373,7 +374,8 @@ Phase A is complete only when:
 - `ruff check .` and `ruff format --check .` pass.
 - `mypy` passes for 147 source files; `mypy --config-file mypy_ui.ini` passes
   for 93 UI files.
-- Full suite: **1610 passed, 1 skipped**. The skip is the PyNEC cross-engine
+- Full suite after the completed Phase B typed-preset conversion:
+  **1638 passed, 1 skipped**. The skip is the PyNEC cross-engine
   comparison because PyNEC is not installed.
 - NEC2C family-optimizer smoke tests: **8 passed** across dipole, vertical,
   inverted-V, loop, EndFed, SCV, Yagi, and Moxon.
@@ -381,8 +383,9 @@ Phase A is complete only when:
   cancellation, budget formulas, registry and field coverage, adapter
   exhaustiveness, descriptor round-trips, dialog execution, Apply Best routing,
   and a real NEC2C run for representative families.
-- Unsupported optimizers are explicit: magnetic loop, random wire, arbitrary
-  custom/imported geometry, and G5RV/ZS6BKW/Zepp/doublet custom generators.
+- Unsupported optimizers are explicit: magnetic loop, random wire, and
+  arbitrary custom/imported geometry. Phase B completed the typed
+  G5RV/ZS6BKW/Zepp optimizers; the doublet uses the dipole descriptor.
 
 ## Definition of done for Phase A
 

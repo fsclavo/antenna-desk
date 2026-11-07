@@ -14,7 +14,12 @@ from ..antennas.endfed import EndFedParameters, EndFedPreset
 from ..antennas.fan_dipole import FanDipoleParameters
 from ..antennas.ocfd import OCFDParameters
 from ..antennas.t2fd import T2FDParameters
+from ..antennas.transmission_line_doublet import (
+    DoubletPreset,
+    TransmissionLineDoubletParameters,
+)
 from ..antennas.trap_dipole import TrapDipoleParameters
+from ..antennas.zepp import ZeppParameters
 from ..simulation.bands import (
     AMATEUR_BANDS,
     AmateurBand,
@@ -124,6 +129,24 @@ def default_band_plan(
             _plan_from_ids(HF_BAND_IDS),
             BandEvidence.TUNABLE,
             "band.note.doublet",
+        )
+    if isinstance(parameters, TransmissionLineDoubletParameters):
+        if parameters.preset is DoubletPreset.G5RV:
+            return BandDefault(
+                _plan_from_ids(G5RV_DEFAULT_BAND_IDS),
+                BandEvidence.PUBLISHED,
+                "band.note.g5rv",
+            )
+        return BandDefault(
+            _plan_from_ids(ZS6BKW_DEFAULT_BAND_IDS),
+            BandEvidence.PUBLISHED,
+            "band.note.zs6bkw",
+        )
+    if isinstance(parameters, ZeppParameters):
+        return BandDefault(
+            _harmonic_plan(parameters.frequency_hz, harmonics=(1, 3, 5)),
+            BandEvidence.HEURISTIC,
+            "band.note.zepp",
         )
     if isinstance(parameters, CustomAntennaParameters) and parameters.generator_id == "g5rv":
         return BandDefault(

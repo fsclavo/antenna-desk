@@ -689,6 +689,31 @@ def test_g5rv_custom_generator_uses_the_dipole_summary_and_dashed_line() -> None
     assert any(polyline.role == "transmission-line" for polyline in scene.polylines)
 
 
+def test_typed_g5rv_and_zs6bkw_use_their_own_summary_and_line() -> None:
+    from antennadesk.domain.antennas.transmission_line_doublet import (
+        DoubletPreset,
+        doublet_starting_parameters,
+    )
+
+    for preset in (DoubletPreset.G5RV, DoubletPreset.ZS6BKW):
+        parameters = doublet_starting_parameters(preset)
+        scene = build_scene(
+            parameters.to_antenna(),
+            antenna_type=preset.antenna_type,
+            parameters=parameters,
+            display_name=None,
+            mode=GeometryViewMode.ELEVATION,
+            translator=TRANSLATOR,
+            unit_system=UnitSystem.METRIC,
+        )
+
+        assert parameters.template_name in scene.summary
+        assert "matching-line impedance" in scene.summary
+        assert "transmission lines: 1" in scene.summary
+        assert any(polyline.role == "transmission-line" for polyline in scene.polylines)
+        assert len([line for line in scene.polylines if line.role == "wire"]) == 2
+
+
 def test_zepp_custom_generator_draws_the_second_stub_conductor() -> None:
     from antennadesk.domain.antennas.zepp import zepp_parameters
 

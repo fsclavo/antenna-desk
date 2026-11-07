@@ -141,9 +141,11 @@ Deferred:
   automatic extension, deterministic seeds, hard/soft constraints, sensitivity,
   and an exhaustive Apply Best adapter.
 - Supported typed families: dipoles, loop, vertical/inverted-V/inverted-L,
-  J Pole/Slim Jim, Ringo, SCV, OCFD, EndFed, fan/trap/T2FD, Yagi, and Moxon.
-- Explicitly unavailable optimizers: magnetic loop, random wire, arbitrary
-  custom/imported geometry, and G5RV/ZS6BKW/Zepp/doublet custom generators.
+  J Pole/Slim Jim, Ringo, SCV, OCFD, EndFed, typed G5RV/ZS6BKW/Zepp,
+  fan/trap/T2FD, Yagi, and Moxon. The doublet radiator uses the dipole
+  descriptor and its feed line remains in the matching stage.
+- Explicitly unavailable optimizers: magnetic loop, random wire, and arbitrary
+  custom/imported geometry.
 - Yagi element lengths and boom gaps are bounded variables; the element count,
   polarization, folded/match topology, and driven index remain user choices.
 - VNA CSV import and measured/simulated SWR, R, X, and |Z| comparison.
@@ -224,7 +226,7 @@ Acceptance criteria:
 | P2 | Relative permeability export to NEC | B | not supported by NEC-2; warning implemented |
 | P2 | Pattern metric selector for power/directivity/realized gain | B | done |
 | P2 | ZS6BKW and Zepp multiband presets | B | done |
-| P2 | Convert G5RV, ZS6BKW, Zepp, and doublet to typed families and add optimizers | B | pending (Phase B) |
+| P2 | Convert G5RV, ZS6BKW, Zepp, and doublet to typed families and add optimizers | B | done 2026-11-07: G5RV/ZS6BKW/Zepp typed with schema 17; doublet was already a typed dipole plus feed line |
 | P2 | Band-aware, robust, and Pareto optimizer modes | B | pending (Phase C) |
 | P2 | Custom/imported geometry optimization and space constraints | n/a | pending |
 | P2 | Live VNA/hardware control | n/a | deferred |

@@ -19,7 +19,9 @@ from ...antennas.moxon import MoxonParameters
 from ...antennas.ocfd import OCFDParameters
 from ...antennas.ringo import RingoParameters
 from ...antennas.t2fd import T2FDParameters
+from ...antennas.transmission_line_doublet import TransmissionLineDoubletParameters
 from ...antennas.trap_dipole import TrapDipoleParameters
+from ...antennas.zepp import ZeppParameters
 from ..constraints import ConstraintViolation
 from ..descriptor import (
     AntennaOptimizerDescriptor,
@@ -862,6 +864,192 @@ def t2fd_descriptor(parameters: T2FDParameters) -> AntennaOptimizerDescriptor:
         )
 
     return _descriptor("t2fd", variables, initial, build, validate)
+
+
+def transmission_line_doublet_descriptor(
+    parameters: TransmissionLineDoubletParameters,
+) -> AntennaOptimizerDescriptor:
+    line_choices = tuple(
+        sorted(
+            {
+                parameters.line_impedance_ohm,
+                300.0,
+                400.0,
+                450.0,
+                600.0,
+            }
+        )
+    )
+    velocity_low = max(0.5, parameters.line_velocity_factor - 0.1)
+    velocity_high = min(1.0, parameters.line_velocity_factor + 0.05)
+    if velocity_high <= velocity_low:
+        velocity_high = velocity_low + 0.01
+    variables = (
+        _length(
+            "dipole_total_length_m",
+            "field.length",
+            "optimize.group.geometry",
+            parameters.dipole_total_length_m,
+            0.15,
+        ),
+        _length(
+            "height_m",
+            "field.height",
+            "optimize.group.geometry",
+            parameters.height_m,
+            0.25,
+            0.0,
+        ),
+        _length(
+            "feed_height_m",
+            "endfed.feed_height",
+            "optimize.group.feed",
+            parameters.feed_height_m,
+            0.5,
+            0.0,
+        ),
+        OptimizationVariable(
+            "line_impedance_ohm",
+            "g5rv.line_impedance",
+            "optimize.group.loads",
+            line_choices[0],
+            line_choices[-1],
+            kind=VariableKind.CHOICE,
+            unit="ohm",
+            choices=line_choices,
+            step=1.0,
+        ),
+        _length(
+            "line_length_m",
+            "g5rv.line_length",
+            "optimize.group.loads",
+            parameters.line_length_m,
+            0.25,
+            0.1,
+        ),
+        OptimizationVariable(
+            "line_velocity_factor",
+            "g5rv.velocity_factor",
+            "optimize.group.loads",
+            velocity_low,
+            velocity_high,
+            step=0.001,
+        ),
+        _radius(parameters.wire_radius_m),
+    )
+    initial = {
+        "dipole_total_length_m": parameters.dipole_total_length_m,
+        "height_m": parameters.height_m,
+        "feed_height_m": parameters.feed_height_m,
+        "line_impedance_ohm": parameters.line_impedance_ohm,
+        "line_length_m": parameters.line_length_m,
+        "line_velocity_factor": parameters.line_velocity_factor,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+
+    def build(values: Mapping[str, float]) -> TransmissionLineDoubletParameters:
+        return replace(
+            parameters,
+            dipole_total_length_m=values["dipole_total_length_m"],
+            height_m=values["height_m"],
+            feed_height_m=values["feed_height_m"],
+            line_impedance_ohm=values["line_impedance_ohm"],
+            line_length_m=values["line_length_m"],
+            line_velocity_factor=values["line_velocity_factor"],
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        return collect(
+            positive_violation("dipole_total_length_m", values["dipole_total_length_m"]),
+            non_negative_violation("height_m", values["height_m"]),
+            non_negative_violation("feed_height_m", values["feed_height_m"]),
+            positive_violation("line_impedance_ohm", values["line_impedance_ohm"]),
+            positive_violation("line_length_m", values["line_length_m"]),
+            None
+            if 0.0 < values["line_velocity_factor"] <= 1.0
+            else violation("line_velocity_factor", 1.0, "optimize.constraint.positive"),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+        )
+
+    return _descriptor(
+        parameters.preset.antenna_type,
+        variables,
+        initial,
+        build,
+        validate,
+    )
+
+
+def zepp_descriptor(parameters: ZeppParameters) -> AntennaOptimizerDescriptor:
+    variables = (
+        _length(
+            "radiator_length_m",
+            "zepp.radiator_length",
+            "optimize.group.geometry",
+            parameters.radiator_length_m,
+            0.15,
+        ),
+        _length(
+            "matching_section_length_m",
+            "zepp.matching_length",
+            "optimize.group.geometry",
+            parameters.matching_section_length_m,
+            0.15,
+        ),
+        _length(
+            "spacing_m",
+            "zepp.spacing",
+            "optimize.group.geometry",
+            parameters.spacing_m,
+            0.5,
+            max(0.002, 2.0 * parameters.wire_radius_m + 0.001),
+        ),
+        _length(
+            "base_height_m",
+            "field.base_height",
+            "optimize.group.geometry",
+            parameters.base_height_m,
+            0.5,
+            0.01,
+        ),
+        _radius(parameters.wire_radius_m),
+    )
+    initial = {
+        "radiator_length_m": parameters.radiator_length_m,
+        "matching_section_length_m": parameters.matching_section_length_m,
+        "spacing_m": parameters.spacing_m,
+        "base_height_m": parameters.base_height_m,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+
+    def build(values: Mapping[str, float]) -> ZeppParameters:
+        return replace(
+            parameters,
+            radiator_length_m=values["radiator_length_m"],
+            matching_section_length_m=values["matching_section_length_m"],
+            spacing_m=values["spacing_m"],
+            base_height_m=values["base_height_m"],
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        return collect(
+            positive_violation("radiator_length_m", values["radiator_length_m"]),
+            positive_violation("matching_section_length_m", values["matching_section_length_m"]),
+            positive_violation("spacing_m", values["spacing_m"]),
+            None
+            if values["spacing_m"] > 2.0 * values["wire_radius_m"]
+            else violation(
+                "spacing_m",
+                2.0 * values["wire_radius_m"] - values["spacing_m"] + 1e-9,
+                "optimize.constraint.conductor_spacing",
+            ),
+            non_negative_violation("base_height_m", values["base_height_m"]),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+        )
+
+    return _descriptor("zepp", variables, initial, build, validate)
 
 
 def moxon_descriptor(parameters: MoxonParameters) -> AntennaOptimizerDescriptor:

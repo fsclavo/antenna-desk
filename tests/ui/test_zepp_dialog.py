@@ -35,6 +35,10 @@ def test_zepp_dialog_builds_the_classic_starting_geometry(qtbot: QtBot) -> None:
     assert parameters.transmission_lines == ()
     assert "468.9" in dialog._impedance.text()
     assert dialog.windowTitle() == "Zepp Generator"
+    typed = dialog.typed_parameters()
+    assert typed.radiator_length_m == pytest.approx(radiator_m, abs=1e-3)
+    assert typed.matching_section_length_m == pytest.approx(matching_m, abs=1e-3)
+    assert typed.spacing_m == pytest.approx(ZEPP_DEFAULT_SPACING_M)
 
 
 def test_zepp_dialog_can_reset_starting_dimensions(qtbot: QtBot) -> None:

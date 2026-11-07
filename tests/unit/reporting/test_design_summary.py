@@ -247,6 +247,29 @@ def test_scv_summary_reports_the_published_array_geometry() -> None:
     assert rows["Total conductor"] == "72.8472 m"
 
 
+def test_typed_transmission_line_doublet_summary() -> None:
+    from antennadesk.domain.antennas.transmission_line_doublet import (
+        DoubletPreset,
+        doublet_starting_parameters,
+    )
+
+    rows = dict(design_summary_rows(doublet_starting_parameters(DoubletPreset.ZS6BKW)))
+
+    assert rows["Type"] == "ZS6BKW"
+    assert rows["Dipole length"] == "28.4000 m"
+    assert rows["Matching line"] == "400 Ω, 13.6000 m, vf=1.000"
+
+
+def test_typed_zepp_summary() -> None:
+    from antennadesk.domain.antennas.zepp import zepp_starting_parameters
+
+    rows = dict(design_summary_rows(zepp_starting_parameters()))
+
+    assert rows["Type"] == "Zepp"
+    assert rows["Matching section"] == "10.0283 m"
+    assert rows["Estimated stub impedance"] == "468.9 Ω"
+
+
 def test_magnetic_loop_summary_reports_tuning_and_loss_fields() -> None:
     from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
 

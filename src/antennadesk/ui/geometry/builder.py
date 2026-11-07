@@ -48,6 +48,11 @@ from ...domain.antennas.scv import (
     ScvParameters,
 )
 from ...domain.antennas.t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
+from ...domain.antennas.transmission_line_doublet import (
+    ANTENNA_TYPE_G5RV,
+    ANTENNA_TYPE_ZS6BKW,
+    TransmissionLineDoubletParameters,
+)
 from ...domain.antennas.trap_dipole import (
     ANTENNA_TYPE_TRAP_DIPOLE,
     TrapDipoleParameters,
@@ -101,6 +106,8 @@ _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_BOBTAIL_CURTAIN: "catalog.bobtail_curtain",
     ANTENNA_TYPE_TRAP_DIPOLE: "catalog.trap_dipole",
     ANTENNA_TYPE_T2FD: "catalog.t2fd",
+    ANTENNA_TYPE_G5RV: "catalog.g5rv",
+    ANTENNA_TYPE_ZS6BKW: "catalog.zs6bkw",
     ZEPP_PRESENTATION_TYPE: "catalog.zepp",
 }
 
@@ -2053,6 +2060,36 @@ def _summary(
                 f"{translator.t('geometry.elements').lower()} {len(parameters.elements)}",
                 f"{translator.t('field.height').lower()} "
                 f"{_format_length(parameters.apex_height_m, translator, unit_system)}",
+            ]
+        )
+    elif isinstance(parameters, TransmissionLineDoubletParameters):
+        parts.extend(
+            [
+                f"{translator.t('field.length').lower()} "
+                f"{_format_length(parameters.dipole_total_length_m, translator, unit_system)}",
+                f"{translator.t('field.height').lower()} "
+                f"{_format_length(parameters.height_m, translator, unit_system)}",
+                f"{translator.t('g5rv.line_impedance').lower()} "
+                f"{parameters.line_impedance_ohm:g} Ω",
+                f"{translator.t('g5rv.line_length').lower()} "
+                f"{_format_length(parameters.line_length_m, translator, unit_system)}",
+            ]
+        )
+    elif antenna_type in {ANTENNA_TYPE_G5RV, ANTENNA_TYPE_ZS6BKW}:
+        longest = max(model.wires, key=lambda wire: wire.length_m, default=None)
+        line = model.transmission_lines[0] if model.transmission_lines else None
+        parts.extend(
+            [
+                f"{translator.t('field.length').lower()} "
+                f"{_format_length(longest.length_m, translator, unit_system)}"
+                if longest is not None
+                else f"{len(model.wires)} {translator.t('geometry.wires')}",
+                f"{translator.t('field.height').lower()} "
+                f"{_format_length(max_z, translator, unit_system)}",
+                f"{translator.t('g5rv.line_impedance').lower()} "
+                f"{line.characteristic_impedance_ohm:g} Ω"
+                if line is not None
+                else f"{translator.t('geometry.wires')} {len(model.wires)}",
             ]
         )
     elif isinstance(parameters, EndFedParameters) or antenna_type == ANTENNA_TYPE_ENDFED:

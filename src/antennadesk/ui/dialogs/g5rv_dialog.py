@@ -25,6 +25,10 @@ from ...domain.antennas.g5rv import (
     g5rv_parameters,
 )
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
+from ...domain.antennas.transmission_line_doublet import (
+    DoubletPreset,
+    TransmissionLineDoubletParameters,
+)
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..fonts import scaled_dialog_size
 from ..i18n import Translator
@@ -246,6 +250,28 @@ class G5RVDialog(QDialog):
             material=self._selected_material(),
             ground=self._ground_model(),
         )
+
+    def typed_parameters(self) -> TransmissionLineDoubletParameters:
+        option = self._selected_line()
+        return TransmissionLineDoubletParameters(
+            frequency_hz=self._frequency.value() * 1_000_000.0,
+            preset=DoubletPreset.G5RV,
+            dipole_total_length_m=G5RV_DIPOLE_TOTAL_LENGTH_M,
+            height_m=length_to_m(self._height.value(), self._unit_system),
+            feed_height_m=length_to_m(self._feed_height.value(), self._unit_system),
+            azimuth_deg=self._azimuth.value(),
+            line_impedance_ohm=option.characteristic_impedance_ohm,
+            line_length_m=option.length_m,
+            line_velocity_factor=self._velocity.value(),
+            wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
+            material=self._selected_material(),
+            ground=self._ground_model(),
+        )
+
+    def typed_result_parameters(self) -> TransmissionLineDoubletParameters:
+        if self._parameters is None:
+            raise ValueError("the dialog has not produced parameters")
+        return self.typed_parameters()
 
     def _accept(self) -> None:
         try:

@@ -1215,6 +1215,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "450 Ω / 10.36 m (34 ft)",
         Language.SPANISH: "450 Ω / 10.36 m (34 pies)",
     },
+    "g5rv.line_impedance": {
+        Language.ENGLISH: "Matching-line impedance",
+        Language.SPANISH: "Impedancia de la línea de adaptación",
+    },
+    "g5rv.line_length": {
+        Language.ENGLISH: "Matching-line length",
+        Language.SPANISH: "Longitud de la línea de adaptación",
+    },
     "g5rv.velocity_factor": {
         Language.ENGLISH: "Line velocity factor",
         Language.SPANISH: "Factor de velocidad de la línea",

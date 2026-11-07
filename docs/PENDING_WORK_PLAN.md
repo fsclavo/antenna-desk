@@ -110,12 +110,9 @@ Completed follow-ups:
   adapter. See `OPTIMIZER_PHASE_A_PLAN.md`.
 - T2FD **Estimate Dimensions...** using the Cebik wide-long rule and preserving
   the current termination and transformer.
-
-Deferred follow-ups:
-
-- The old ZS6BKW-specific length/line optimizer is superseded by the unified
-  family optimizer, but ZS6BKW remains a custom generator until Phase B, so its
-  Optimize action is explicitly unavailable.
+- G5RV, ZS6BKW, and Zepp are typed families with inline editors and family
+  optimizers (schema 17). The old custom-generator designs remain loadable for
+  compatibility; the doublet remains a dipole plus a project-level feed line.
 
 ## Phase 5 — Validation and references
 

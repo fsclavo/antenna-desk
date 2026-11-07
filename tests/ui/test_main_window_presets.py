@@ -680,6 +680,49 @@ def test_new_j_pole_creates_a_first_class_design(
     window._dirty = False
 
 
+def test_typed_transmission_line_preset_uses_the_inline_editor(
+    window: MainWindow,
+) -> None:
+    from main_window_support import use_parameters
+
+    from antennadesk.domain.antennas.transmission_line_doublet import (
+        DoubletPreset,
+        doublet_starting_parameters,
+    )
+
+    doublet = doublet_starting_parameters(DoubletPreset.G5RV)
+    use_parameters(window, doublet)
+    assert window._project is not None
+    assert window._project.designs[0].antenna_type == "g5rv"
+    assert window._design_stack.currentWidget() is window._doublet_scroll
+    assert window._doublet_form.parameters() == doublet
+    assert window._optimize_action.isEnabled() is True
+    window._dirty = False
+
+
+def test_typed_zepp_preset_uses_the_inline_editor(
+    window: MainWindow,
+) -> None:
+    from main_window_support import use_parameters
+
+    from antennadesk.domain.antennas.zepp import zepp_starting_parameters
+
+    zepp = zepp_starting_parameters()
+    use_parameters(window, zepp)
+    assert window._project is not None
+    assert window._project.designs[0].antenna_type == "zepp"
+    assert window._design_stack.currentWidget() is window._zepp_scroll
+    restored = window._zepp_form.parameters()
+    assert restored.frequency_hz == pytest.approx(zepp.frequency_hz)
+    assert restored.radiator_length_m == pytest.approx(zepp.radiator_length_m, abs=1e-3)
+    assert restored.matching_section_length_m == pytest.approx(
+        zepp.matching_section_length_m, abs=1e-3
+    )
+    assert restored.spacing_m == pytest.approx(zepp.spacing_m, abs=1e-3)
+    assert window._optimize_action.isEnabled() is True
+    window._dirty = False
+
+
 def test_new_ringo_creates_a_first_class_design(
     window: MainWindow,
     qtbot: QtBot,

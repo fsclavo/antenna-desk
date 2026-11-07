@@ -27,6 +27,11 @@ def test_zs6bkw_dialog_builds_the_reference_preset(qtbot: QtBot) -> None:
     assert line.characteristic_impedance_ohm == pytest.approx(400.0)
     assert line.length_m == pytest.approx(13.6)
     assert dialog.windowTitle() == "ZS6BKW Generator"
+    typed = dialog.typed_parameters()
+    assert typed.preset.value == "zs6bkw"
+    assert typed.dipole_total_length_m == pytest.approx(28.4)
+    assert typed.line_impedance_ohm == pytest.approx(400.0)
+    assert typed.line_length_m == pytest.approx(13.6)
 
 
 def test_zs6bkw_dialog_can_select_the_commercial_variant(qtbot: QtBot) -> None:

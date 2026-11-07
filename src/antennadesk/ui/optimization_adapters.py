@@ -26,9 +26,13 @@ from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvParameters
 from ..domain.antennas.t2fd import T2FDParameters
+from ..domain.antennas.transmission_line_doublet import (
+    TransmissionLineDoubletParameters,
+)
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
+from ..domain.antennas.zepp import ZeppParameters
 from ..domain.simulation.spec import SimulationSpec
 
 
@@ -102,6 +106,14 @@ ADAPTERS: dict[type[AntennaDesignParameters], OptimizationUiAdapter] = {
     MoxonParameters: OptimizationUiAdapter(
         lambda window, parameters: window._moxon_simulation_spec(parameters),
         lambda window, parameters: window._moxon_form.set_parameters(parameters),
+    ),
+    TransmissionLineDoubletParameters: OptimizationUiAdapter(
+        lambda window, parameters: window._doublet_simulation_spec(parameters),
+        lambda window, parameters: window._doublet_form.set_parameters(parameters),
+    ),
+    ZeppParameters: OptimizationUiAdapter(
+        lambda window, parameters: window._zepp_simulation_spec(parameters),
+        lambda window, parameters: window._zepp_form.set_parameters(parameters),
     ),
 }
 

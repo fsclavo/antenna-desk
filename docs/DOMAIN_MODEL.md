@@ -312,14 +312,23 @@ other user loads. The default starting dimensions use Cebik's wide-long rule,
 `300/F(MHz)` feet of span and `10/F(MHz)` feet of spacing at the lowest design
 frequency. See [ADR-0018](ADR/0018-t2fd-termination-and-transformer.md).
 
-### G5RV preset
+### TransmissionLineDoubletParameters and ZeppParameters
 
-The G5RV catalog preset is a `CustomAntennaParameters` design with
-`generator_id="g5rv"` and `generator_name="G5RV"`. It generates a 31.1 m
-dipole, a short source wire, and a geometry `TransmissionLine` matching section
-(300 Ω / 8.84 m or 450 Ω / 10.36 m). The line is lossless and does not radiate.
-The preset is an antenna configuration, not a new first-class parameter type;
-the generic custom-wire and transmission-line editors remain available.
+`TransmissionLineDoubletParameters` is a typed G5RV or ZS6BKW design. It stores
+the preset, dipole length, height, feed height, azimuth, matching-line
+impedance, line length, velocity factor, radius, material, and ground.
+`to_antenna()` creates a short source wire, the dipole, and a lossless geometry
+`TransmissionLine`. Legacy custom-generator G5RV/ZS6BKW documents remain
+loadable as `CustomAntennaParameters`.
+
+`ZeppParameters` stores the radiator length, matching-section length, conductor
+spacing, base height, azimuth, radius, material, and ground. `to_antenna()`
+creates the four-wire radiator/stub/base geometry; the 1:1 choke remains a
+construction requirement and is not a solver element.
+
+The **doublet** catalog preset remains `DipoleParameters` plus a project-level
+`FeedLine`; its radiator uses the dipole optimizer and its feed line belongs to
+the separate matching stage.
 
 ### OCFDParameters
 
@@ -338,8 +347,9 @@ reconstructs OCFD parameters from legacy custom designs.
 `OCFDParameters`, `VerticalParameters`, `InvertedVParameters`,
 `InvertedLParameters`, `YagiParameters`, `MoxonParameters`,
 `FanDipoleParameters`, `EndFedParameters`,
-`JPoleParameters`, `RingoParameters`, `TrapDipoleParameters`,
-`T2FDParameters`, and `CustomAntennaParameters`. `antenna_type_for()` maps a
+`JPoleParameters`, `RingoParameters`, `ScvParameters`,
+`TransmissionLineDoubletParameters`, `TrapDipoleParameters`,
+`T2FDParameters`, `ZeppParameters`, and `CustomAntennaParameters`. `antenna_type_for()` maps a
 parameter object to its native type; `custom` remains the arbitrary-wire escape
 hatch.
 
@@ -448,11 +458,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 16.
+the application writes version 17.
 
 ## Schema policy
 
-- Current version: `16`.
+- Current version: `17`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -489,6 +499,9 @@ the application writes version 16.
 - Version 16 introduces the half-square and bobtail-curtain self-contained
   vertical-array types. Existing designs are unchanged; the new variants use
   `ScvParametersPayload` with an explicit `kind` discriminator.
+- Version 17 introduces typed G5RV, ZS6BKW, and Zepp parameter payloads.
+  Existing custom-generator designs remain valid and load as custom geometry;
+  new designs use the typed families and their optimizers.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -510,16 +523,16 @@ the application writes version 16.
   matching networks are post-processed at the feedpoint, and the vertical
   generator has a radial screen. Transmission-line two-ports between wire
   points are modeled as geometry; arbitrary radial screens are not.
-- Optimization operates on typed generated parameters. Magnetic loops, random
-  wires, arbitrary custom/imported geometry, and G5RV/ZS6BKW/Zepp/doublet
-  custom generators have explicit unavailable reasons. Band-aware, robust, and
-  Pareto optimizer modes are future work.
+- Optimization operates on typed generated parameters, including typed G5RV,
+  ZS6BKW, and Zepp. Magnetic loops, random wires, and arbitrary custom/imported
+  geometry have explicit unavailable reasons. Band-aware, robust, and Pareto
+  optimizer modes are future work.
 - Measurements are imported from CSV; there is no live instrument-control
   adapter.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 16.
+- Simulation results are persisted as immutable runs in schema version 17.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are

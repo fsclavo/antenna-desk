@@ -134,9 +134,10 @@ optional signing steps.
   points by default, and pattern resolution defaults to 5° and can be set to
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` projects with multiple design
-  variants; schema version 16 adds half-square and bobtail-curtain designs,
-  schema 15 adds frequency-dependent balun/unun loss and repairs undersized
-  Yagi matching hardware, and older files migrate explicitly.
+  variants; schema version 17 adds typed G5RV, ZS6BKW, and Zepp designs,
+  schema 16 adds half-square and bobtail-curtain designs, schema 15 adds
+  frequency-dependent balun/unun loss and repairs undersized Yagi matching
+  hardware, and older files migrate explicitly.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - VNA CSV import with measured impedance/SWR records and a measured/simulated
   SWR, R, X, or |Z| comparison tab, including resonance differences.
@@ -152,9 +153,11 @@ optional signing steps.
 - Balanced, thorough, and fast optimizer budgets with automatic extension,
   evaluation counting, deterministic seeds, ranked result tables, sensitivity
   reports, and Apply Best routed through an exhaustive editor adapter.
+- First-class typed **G5RV**, **ZS6BKW**, and **Zepp** presets with their own
+  editors, matching-line geometry, reports, and family optimizers. The doublet
+  remains a dipole plus a project-level feed line.
 - Explicit optimizer unavailability for magnetic loops, random wires, arbitrary
-  custom geometry, imports, and G5RV/ZS6BKW/Zepp/doublet generators that still
-  use custom geometry.
+  custom geometry, and imports.
 - Custom straight-wire antennas with a coordinate editor, template-to-custom
   conversion, a parametric Yagi generator with an editable element table and
   NBS starting preset, Moxon, fan dipole, end-fed with optional counterpoise
@@ -244,11 +247,11 @@ uv run python scripts/run_reference_simulation.py \
   post-processing model; it does not change the antenna pattern or power gain.
 - Optimization covers every first-class typed family through explicit
   descriptors and a joint hybrid search over geometry, feed, and family-load
-  variables. Magnetic loops, random wires, custom/imported geometry, and
-  G5RV/ZS6BKW/Zepp/doublet custom generators are explicitly unavailable until
-  their models are converted or improved. Band-aware, robust, and Pareto modes
-  are future work; synthesis remains a bounded starting point, not a global
-  inverse solver.
+  variables, including typed G5RV, ZS6BKW, and Zepp presets. Magnetic loops,
+  random wires, and custom/imported geometry are explicitly unavailable; the
+  doublet is a dipole plus a project-level feed line. Band-aware, robust, and
+  Pareto modes are future work; synthesis remains a bounded starting point, not
+  a global inverse solver.
 - Far-field values are NEC power gains. Realized gain and directivity are not
   separated. Relative permeability is not emitted to NEC. Conductor
   conductivity is emitted when `SimulationSpec.include_conductor_losses` is

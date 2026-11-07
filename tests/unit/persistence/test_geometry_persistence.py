@@ -607,6 +607,45 @@ def test_bobtail_curtain_parameters_round_trip() -> None:
     assert restored.designs[0].antenna_type == "bobtail_curtain"
 
 
+def test_typed_transmission_line_doublet_round_trip() -> None:
+    from antennadesk.domain.antennas.transmission_line_doublet import (
+        DoubletPreset,
+        doublet_starting_parameters,
+    )
+
+    parameters = doublet_starting_parameters(
+        DoubletPreset.ZS6BKW,
+        frequency_hz=7_100_000.0,
+        line_impedance_ohm=450.0,
+        line_length_m=12.2,
+        line_velocity_factor=0.9,
+    )
+    original = _project(parameters, "ZS6BKW")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "zs6bkw"
+
+
+def test_typed_zepp_round_trip() -> None:
+    from antennadesk.domain.antennas.zepp import zepp_starting_parameters
+
+    parameters = zepp_starting_parameters(
+        frequency_hz=7_100_000.0,
+        spacing_m=0.08,
+        base_height_m=1.5,
+    )
+    original = _project(parameters, "Zepp")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "zepp"
+
+
 def test_design_provenance_round_trips_through_the_schema() -> None:
     from antennadesk.domain.projects.project import DesignProvenance
 

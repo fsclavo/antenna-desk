@@ -109,10 +109,14 @@ from ..domain.antennas.t2fd import (
     T2FDParameters,
 )
 from ..domain.antennas.transmission_line import TransmissionLine
+from ..domain.antennas.transmission_line_doublet import (
+    DoubletPreset,
+    TransmissionLineDoubletParameters,
+)
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters, yagi_element_length_mismatch
-from ..domain.antennas.zepp import ZEPP_BASE_ID
+from ..domain.antennas.zepp import ZEPP_BASE_ID, ZeppParameters
 from ..domain.antennas.zs6bkw import (
     ZS6BKW_DIPOLE_ID,
     zs6bkw_with_dimensions,
@@ -263,9 +267,11 @@ from .widgets.ringo_form import RingoForm
 from .widgets.scv_form import ScvForm
 from .widgets.start_page import StartPage
 from .widgets.t2fd_form import T2FDForm
+from .widgets.transmission_line_doublet_form import TransmissionLineDoubletForm
 from .widgets.trap_dipole_form import TrapDipoleForm
 from .widgets.vertical_form import VerticalForm
 from .widgets.yagi_form import YagiForm
+from .widgets.zepp_form import ZeppForm
 from .wizard.dipole_wizard import DipoleWizard
 from .workers.band_analysis_worker import BandAnalysisWorker
 from .workers.save_project_worker import SaveProjectWorker
@@ -594,6 +600,27 @@ class MainWindow(QMainWindow):
         self._scv_scroll.setMinimumWidth(340)
         self._scv_scroll.setMaximumWidth(480)
 
+        self._doublet_form = TransmissionLineDoubletForm(
+            self._translator,
+            self._unit_system,
+            parent=self,
+            preset=DoubletPreset.G5RV,
+        )
+        self._doublet_form.changed.connect(self._on_form_changed)
+        self._doublet_scroll = QScrollArea(self)
+        self._doublet_scroll.setWidgetResizable(True)
+        self._doublet_scroll.setWidget(self._doublet_form)
+        self._doublet_scroll.setMinimumWidth(340)
+        self._doublet_scroll.setMaximumWidth(480)
+
+        self._zepp_form = ZeppForm(self._translator, self._unit_system, parent=self)
+        self._zepp_form.changed.connect(self._on_form_changed)
+        self._zepp_scroll = QScrollArea(self)
+        self._zepp_scroll.setWidgetResizable(True)
+        self._zepp_scroll.setWidget(self._zepp_form)
+        self._zepp_scroll.setMinimumWidth(340)
+        self._zepp_scroll.setMaximumWidth(480)
+
         self._form_panels = (
             (self._form, self._form_scroll, 480),
             (self._ocfd_form, self._ocfd_scroll, 480),
@@ -610,6 +637,8 @@ class MainWindow(QMainWindow):
             (self._j_pole_form, self._j_pole_scroll, 480),
             (self._ringo_form, self._ringo_scroll, 480),
             (self._scv_form, self._scv_scroll, 480),
+            (self._doublet_form, self._doublet_scroll, 480),
+            (self._zepp_form, self._zepp_scroll, 480),
         )
         self._update_form_panel_widths()
 
@@ -780,6 +809,8 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._j_pole_scroll)
         self._design_stack.addWidget(self._ringo_scroll)
         self._design_stack.addWidget(self._scv_scroll)
+        self._design_stack.addWidget(self._doublet_scroll)
+        self._design_stack.addWidget(self._zepp_scroll)
         self._design_stack.addWidget(self._custom_panel)
         self._apply_button = QPushButton(self)
         self._apply_button.clicked.connect(lambda: self.apply_design())
@@ -1125,6 +1156,8 @@ class MainWindow(QMainWindow):
         self._j_pole_form.retranslate()
         self._ringo_form.retranslate()
         self._scv_form.retranslate()
+        self._doublet_form.retranslate()
+        self._zepp_form.retranslate()
         self._geometry.retranslate()
         self._results.retranslate()
         if self._project is not None and self._design_id is not None:
@@ -1655,6 +1688,12 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, ScvParameters):
             self._design_stack.setCurrentWidget(self._scv_scroll)
             self._scv_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, TransmissionLineDoubletParameters):
+            self._design_stack.setCurrentWidget(self._doublet_scroll)
+            self._doublet_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, ZeppParameters):
+            self._design_stack.setCurrentWidget(self._zepp_scroll)
+            self._zepp_form.set_parameters(design.parameters)
         else:
             self._design_stack.setCurrentWidget(self._form_scroll)
             self._form.set_parameters(design.parameters, reset_sweep=True)
@@ -2261,6 +2300,44 @@ class MainWindow(QMainWindow):
             self._update_actions()
             self._update_height_control()
             return self._project
+        if isinstance(
+            previous_design.parameters,
+            (TransmissionLineDoubletParameters, ZeppParameters),
+        ):
+            parameters = (
+                self._doublet_form.parameters()
+                if isinstance(previous_design.parameters, TransmissionLineDoubletParameters)
+                else self._zepp_form.parameters()
+            )
+            updated = UpdateDipoleDesign().execute(
+                UpdateDipoleDesignCommand(
+                    project=self._project,
+                    design_id=self._design_id,
+                    parameters=parameters,
+                    loads=loads_override,
+                    transmission_lines=transmission_lines_override,
+                )
+            )
+            updated = replace(updated, name=project_name)
+            self._project = updated
+            design = updated.design_by_id(self._design_id)
+            if parameters != previous_design.parameters or attachments_changed:
+                self._invalidate_design_result(self._design_id)
+                self._results.set_result(None)
+            self._loads = design.antenna.loads
+            self._transmission_lines = design.antenna.transmission_lines
+            self._results.set_design(design)
+            self._set_geometry_model(design)
+            self._auto_select_view(design)
+            self._project_name_updating = True
+            self._project_name.setText(project_name)
+            self._project_name_updating = False
+            self._form_dirty = False
+            self._dirty = True
+            self._update_title()
+            self._update_actions()
+            self._update_height_control()
+            return self._project
         if isinstance(previous_design.parameters, CustomAntennaParameters):
             design = previous_design
             if (
@@ -2415,6 +2492,10 @@ class MainWindow(QMainWindow):
             return self._ringo_simulation_spec(parameters)
         if isinstance(parameters, ScvParameters):
             return self._scv_simulation_spec(parameters)
+        if isinstance(parameters, TransmissionLineDoubletParameters):
+            return self._doublet_simulation_spec(parameters)
+        if isinstance(parameters, ZeppParameters):
+            return self._zepp_simulation_spec(parameters)
         return self._form.simulation_spec()
 
     def _apply_sweep_override(
@@ -3318,6 +3399,43 @@ class MainWindow(QMainWindow):
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
         )
 
+    def _doublet_simulation_spec(
+        self,
+        parameters: TransmissionLineDoubletParameters,
+    ) -> SimulationSpec:
+        model = parameters.to_antenna()
+        frequency_hz = parameters.frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                frequency_hz * 0.95,
+                frequency_hz * 1.05,
+                DEFAULT_GENERATED_SWEEP_POINTS,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz * 1.05,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
+    def _zepp_simulation_spec(self, parameters: ZeppParameters) -> SimulationSpec:
+        model = parameters.to_antenna()
+        frequency_hz = parameters.frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                frequency_hz * 0.95,
+                frequency_hz * 1.05,
+                DEFAULT_GENERATED_SWEEP_POINTS,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz * 1.05,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
     def _custom_simulation_spec(
         self,
         parameters: CustomAntennaParameters,
@@ -3529,7 +3647,7 @@ class MainWindow(QMainWindow):
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         self._create_project_from_parameters(
-            dialog.result_parameters(),
+            getattr(dialog, "typed_result_parameters", dialog.result_parameters)(),
             default_name="G5RV",
         )
 
@@ -3540,7 +3658,7 @@ class MainWindow(QMainWindow):
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         self._create_project_from_parameters(
-            dialog.result_parameters(),
+            getattr(dialog, "typed_result_parameters", dialog.result_parameters)(),
             default_name="ZS6BKW",
         )
 
@@ -3551,7 +3669,7 @@ class MainWindow(QMainWindow):
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         self._create_project_from_parameters(
-            dialog.result_parameters(),
+            getattr(dialog, "typed_result_parameters", dialog.result_parameters)(),
             default_name="Zepp",
         )
 
@@ -4140,7 +4258,7 @@ class MainWindow(QMainWindow):
             )
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
-            return dialog.result_parameters()
+            return getattr(dialog, "typed_result_parameters", dialog.result_parameters)()
         if selected == CATALOG_TYPE_ZS6BKW:
             dialog = ZS6BKWDialog(
                 self._translator,
@@ -4150,7 +4268,7 @@ class MainWindow(QMainWindow):
             )
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
-            return dialog.result_parameters()
+            return getattr(dialog, "typed_result_parameters", dialog.result_parameters)()
         if selected == CATALOG_TYPE_ZEPP:
             dialog = ZeppDialog(
                 self._translator,
@@ -4160,7 +4278,7 @@ class MainWindow(QMainWindow):
             )
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
-            return dialog.result_parameters()
+            return getattr(dialog, "typed_result_parameters", dialog.result_parameters)()
         if selected == CATALOG_TYPE_DOUBLET:
             dialog = DoubletDialog(
                 self._translator,
@@ -6224,6 +6342,8 @@ class MainWindow(QMainWindow):
             self._j_pole_form,
             self._ringo_form,
             self._scv_form,
+            self._doublet_form,
+            self._zepp_form,
         ):
             form.set_unit_system(unit_system)
         self._geometry.set_unit_system(unit_system)

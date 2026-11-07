@@ -574,10 +574,10 @@ and require `NEC2C`.
 - VNA CSV import and measurement records are implemented; live instrument
   control is not.
 - Optimization covers all first-class typed families through explicit
-  descriptors and joint geometry/feed/load searches. Magnetic loops, random
-  wires, custom/imported geometry, and G5RV/ZS6BKW/Zepp/doublet custom
-  generators are explicitly unavailable. Band-aware, robust, and Pareto modes
-  are future work, and there are no boom-length or turning-radius constraints.
+  descriptors and joint geometry/feed/load searches, including typed G5RV,
+  ZS6BKW, and Zepp. Magnetic loops, random wires, and custom/imported geometry
+  are explicitly unavailable. Band-aware, robust, and Pareto modes are future
+  work, and there are no boom-length or turning-radius constraints.
 - Pattern resolution changes angular sampling only; it does not change NEC
   segment density or solver accuracy.
 - Feed-line results are post-processed at the transmitter. The line does not

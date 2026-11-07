@@ -25,6 +25,11 @@ def test_g5rv_dialog_builds_the_default_450_ohm_preset(qtbot: QtBot) -> None:
     assert line.length_m == pytest.approx(10.36)
     assert line.velocity_factor == pytest.approx(1.0)
     assert "450" in dialog._geometry.text()
+    typed = dialog.typed_parameters()
+    assert typed.preset.value == "g5rv"
+    assert typed.dipole_total_length_m == pytest.approx(G5RV_DIPOLE_TOTAL_LENGTH_M)
+    assert typed.line_impedance_ohm == pytest.approx(450.0)
+    assert typed.line_length_m == pytest.approx(10.36)
 
 
 def test_g5rv_dialog_can_select_the_300_ohm_line(qtbot: QtBot) -> None:

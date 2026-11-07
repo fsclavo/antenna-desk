@@ -39,7 +39,7 @@ from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.antennas.yagi import YagiElement, YagiMatchType, YagiParameters
-from antennadesk.domain.antennas.zepp import zepp_parameters
+from antennadesk.domain.antennas.zepp import zepp_parameters, zepp_starting_parameters
 from antennadesk.ui.geometry.builder import (
     SUPPORTED_PRESENTATION_TYPES,
     build_scene,
@@ -409,6 +409,14 @@ def _cases() -> tuple[FamilyCase, ...]:
             5,
             GeometryViewMode.ELEVATION,
             ("Bobtail curtain", "overall horizontal length", "vertical elements 3"),
+        ),
+        FamilyCase(
+            "typed_zepp",
+            zepp_starting_parameters(),
+            "zepp",
+            4,
+            GeometryViewMode.ELEVATION,
+            ("Zepp", "radiator 20.06 m", "stub 10.03 m", "spacing 0.050 m"),
         ),
         FamilyCase(
             "zepp",
