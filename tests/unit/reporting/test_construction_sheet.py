@@ -280,19 +280,40 @@ def test_scv_construction_sheet_lists_the_array_wires(
 def test_typed_transmission_line_doublet_construction_sheet(
     sample_project: Project,
 ) -> None:
+    from datetime import UTC, datetime
+
     from antennadesk.domain.antennas.transmission_line_doublet import (
         DoubletPreset,
         doublet_starting_parameters,
     )
+    from antennadesk.domain.optimization.summary import (
+        OptimizationMode,
+        OptimizationSummary,
+    )
 
     design = sample_project.designs[0]
     doublet = design.with_parameters(doublet_starting_parameters(DoubletPreset.G5RV))
+    doublet = doublet.with_optimization_summary(
+        OptimizationSummary(
+            mode=OptimizationMode.BAND_AWARE,
+            objective="min_swr",
+            status="converged",
+            budget_profile="balanced",
+            evaluations=180,
+            seed=3,
+            best_values={"dipole_total_length_m": 31.1},
+            best_metrics={"swr": 1.2},
+            completed_at=datetime(2026, 11, 7, 12, 0, tzinfo=UTC),
+        )
+    )
     sheet = render_construction_sheet(sample_project, doublet, None)
 
     assert "G5RV" in sheet
     assert "Matching line" in sheet
     assert "matching line" in sheet
     assert "31.1000 m" in sheet
+    assert "Last optimization" in sheet
+    assert "band_aware" in sheet
 
 
 def test_typed_zepp_construction_sheet_lists_the_stub(

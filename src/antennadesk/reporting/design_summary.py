@@ -53,6 +53,26 @@ def design_provenance_rows(design: DesignVariant) -> tuple[tuple[str, str], ...]
     )
 
 
+def optimization_summary_rows(design: DesignVariant) -> tuple[tuple[str, str], ...]:
+    summary = design.optimization_summary
+    if summary is None:
+        return ()
+    return (
+        (
+            "Last optimization",
+            f"{summary.mode.value} · {summary.objective} · {summary.status}",
+        ),
+        (
+            "Optimization budget",
+            f"{summary.budget_profile} · {summary.evaluations} evaluations · seed {summary.seed}",
+        ),
+        (
+            "Optimization completed",
+            summary.completed_at.strftime("%Y-%m-%d %H:%M"),
+        ),
+    )
+
+
 def design_summary_rows(
     parameters: AntennaDesignParameters,
 ) -> tuple[tuple[str, str], ...]:

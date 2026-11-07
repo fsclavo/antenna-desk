@@ -112,6 +112,81 @@ def test_optimize_endfed_applies_to_the_endfed_form(
     window._dirty = False
 
 
+def test_optimize_current_design_persists_the_run_summary(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dataclasses import replace
+    from datetime import UTC, datetime
+
+    from antennadesk.application.use_cases.optimize_antenna import (
+        OptimizeAntennaResult,
+    )
+    from antennadesk.domain.optimization.engine import (
+        BudgetProfile,
+        OptimizationStatus,
+        budget_for,
+    )
+    from antennadesk.domain.optimization.summary import (
+        OptimizationMode,
+        OptimizationSummary,
+    )
+
+    assert window._project is not None
+    current = window._project.designs[0]
+    optimized = replace(current.parameters, total_length_m=19.5)
+    summary = OptimizationSummary(
+        mode=OptimizationMode.SINGLE,
+        objective="min_swr",
+        status="converged",
+        budget_profile="fast",
+        evaluations=60,
+        seed=0,
+        best_values={"total_length_m": 19.5},
+        best_metrics={"swr": 1.1},
+        completed_at=datetime(2026, 11, 7, 12, 0, tzinfo=UTC),
+    )
+    result = OptimizeAntennaResult(
+        status=OptimizationStatus.CONVERGED,
+        best_parameters=optimized,
+        best_values={"total_length_m": 19.5},
+        best_score=1.1,
+        best_metrics={"swr": 1.1},
+        evaluations=(),
+        sensitivity=(),
+        budget=budget_for(BudgetProfile.FAST, 3),
+        seed=0,
+        summary=summary,
+    )
+
+    class FakeFamilyOptimizationDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def selected_parameters(self) -> object:
+            return optimized
+
+        def selected_result(self) -> OptimizeAntennaResult:
+            return result
+
+    monkeypatch.setattr(
+        main_window_module,
+        "FamilyOptimizationDialog",
+        FakeFamilyOptimizationDialog,
+    )
+    monkeypatch.setattr(window, "simulate", lambda: None)
+
+    window.optimize_current_design()
+
+    stored = window._project.designs[0].optimization_summary
+    assert stored == summary
+    assert window._project.designs[0].parameters.total_length_m == pytest.approx(19.5)
+    window._dirty = False
+
+
 def test_every_supported_optimizer_has_a_ui_adapter() -> None:
     from antennadesk.domain.optimization.registry import SUPPORTED_OPTIMIZER_TYPES
     from antennadesk.ui.optimization_adapters import ADAPTERS

@@ -235,7 +235,9 @@ The optimization action is disabled with a reason when no descriptor exists.
 
 ### 10. Persistence and reproducibility
 
-Each optimization run persists a compact summary, not every evaluation:
+Each applied optimization result persists a compact summary, not every
+evaluation. A run that the user discards leaves the design and its previous
+summary unchanged:
 
 - method and version;
 - seed;
@@ -350,8 +352,9 @@ a long-term solution.
 2. **Phase B — custom-generator conversion (completed 2026-11-07):** G5RV,
    ZS6BKW, and Zepp became typed parameter models with optimizers. The doublet
    was already typed as a dipole plus a project-level feed line.
-3. **Phase C — advanced quality:** band-aware and robust modes, Pareto front,
-   persisted optimization summaries, and recommendations.
+3. **Phase C — advanced quality (completed 2026-11-07):** band-aware and
+   robust modes, Pareto front, persisted optimization summaries, and
+   recommendations. See `OPTIMIZER_PHASE_C_PLAN.md`.
 4. **Phase D — permanent policy (completed 2026-11-07):** the new-family
    checklist in `AGENTS.md` and `GEOMETRY_PRESENTATION.md` now requires the
    optimizer descriptor and QA, or an explicit unavailable reason.
@@ -378,18 +381,23 @@ parameter models, inline editors, persistence, reports, and family optimizers.
 The doublet was already a typed dipole plus a project-level feed line, and its
 radiator uses the dipole optimizer.
 
+Phase C was completed on 2026-11-07. Band-aware mode evaluates every listed
+band edge and aggregates worst-case metrics. Robust mode evaluates nominal and
+± dimensional-tolerance corners and adds a variance penalty. The result exposes
+a descriptive Pareto front over shared metrics, deterministic recommendations,
+and a compact summary persisted with the design (schema version 18).
+
 The following remain explicitly unavailable:
 
 - magnetic loop;
 - random wire;
 - arbitrary custom geometry and imported designs.
 
-Band-aware, robust, and Pareto modes remain Phase C.
-
 ## Follow-up
 
-- See [OPTIMIZER_PHASE_A_PLAN.md](../OPTIMIZER_PHASE_A_PLAN.md) for the detailed
-  Phase A work breakdown and acceptance criteria.
+- See [OPTIMIZER_PHASE_A_PLAN.md](../OPTIMIZER_PHASE_A_PLAN.md) and
+  [OPTIMIZER_PHASE_C_PLAN.md](../OPTIMIZER_PHASE_C_PLAN.md) for the detailed
+  implementation records and acceptance criteria.
 - Do not add a new antenna family without an optimizer descriptor or an explicit
   unavailable reason and its tests.
 - Revisit magnetic-loop optimization only after a more trustworthy capacitor

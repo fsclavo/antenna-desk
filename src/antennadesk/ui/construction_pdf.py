@@ -17,6 +17,7 @@ from ..reporting.design_summary import (
     design_provenance_rows,
     design_summary_rows,
     load_summary_rows,
+    optimization_summary_rows,
 )
 from .i18n import Translator
 
@@ -100,6 +101,7 @@ def write_construction_pdf(
     section(translator.t("construction.dimensions"))
     for label, value in (
         *design_summary_rows(design.parameters),
+        *optimization_summary_rows(design),
         *design_provenance_rows(design),
         *load_summary_rows(design.antenna.loads),
     ):

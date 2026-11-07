@@ -672,6 +672,53 @@ def test_design_provenance_round_trips_through_the_schema() -> None:
     assert restored.designs[0].provenance == provenance
 
 
+def test_optimization_summary_round_trips_through_the_schema() -> None:
+    from datetime import UTC, datetime
+
+    from antennadesk.domain.optimization.summary import (
+        OptimizationMode,
+        OptimizationRecommendation,
+        OptimizationSummary,
+        RecommendationSeverity,
+    )
+
+    project = _project(
+        DipoleParameters(frequency_hz=7_100_000.0, total_length_m=20.0, height_m=8.0),
+        "Dipole",
+    )
+    design = project.designs[0]
+    summary = OptimizationSummary(
+        mode=OptimizationMode.ROBUST,
+        objective="multi_objective",
+        status="converged",
+        budget_profile="balanced",
+        evaluations=240,
+        seed=11,
+        best_values={"total_length_m": 20.2, "height_m": 8.4},
+        best_metrics={"swr": 1.1, "max_gain_db": 2.2},
+        completed_at=datetime(2026, 11, 7, 12, 30, tzinfo=UTC),
+        band_edges_hz=(7_000_000.0, 7_100_000.0, 7_200_000.0),
+        tolerance=0.01,
+        weights={"gain": 1.0, "front_to_back": 1.0, "swr": 1.0},
+        constraints=("swr<=2",),
+        recommendations=(
+            OptimizationRecommendation(
+                "optimize.recommend.sensitive",
+                RecommendationSeverity.WARNING,
+                variables=("height_m",),
+            ),
+        ),
+    )
+    project = project.with_design(
+        design.with_optimization_summary(summary),
+        updated_at=project.updated_at,
+    )
+
+    restored = project_from_document(document_from_project(project))
+
+    assert restored.designs[0].optimization_summary == summary
+
+
 def test_matching_network_round_trips_through_the_project_schema() -> None:
     from antennadesk.domain.antennas.matching_network import LNetwork
 

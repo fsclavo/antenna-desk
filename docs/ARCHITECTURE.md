@@ -181,7 +181,7 @@ The second slice adds two multi-wire templates:
 `AntennaDesignParameters` is the union of the supported parameter types.
 `DesignVariant` stores the union and validates that `antenna_type` matches the
 parameters. The canonical model remains the shared `AntennaModel`, so the
-solver adapter does not need geometry-specific branches. Schema version 17 is
+solver adapter does not need geometry-specific branches. Schema version 18 is
 current: parameter payloads are additive, and old `wire_dipole` documents are
 unchanged. A design may also store an optional analysis band plan; it is
 intent metadata and never changes the canonical geometry. Series RLC loads are
@@ -245,10 +245,11 @@ version 11 adds the magnetic-loop design type, version 12 adds the folded Yagi
 driven element, version 13 adds the beta/hairpin Yagi match, version 14 adds the
 project balun/unun loss model, version 15 repairs Yagi matching hardware that is
 narrower than the conductor diameter, version 16 adds half-square and
-bobtail-curtain designs, version 17 adds typed G5RV/ZS6BKW/Zepp designs, and
-older documents are migrated explicitly.
+bobtail-curtain designs, version 17 adds typed G5RV/ZS6BKW/Zepp designs,
+version 18 adds optional optimization summaries, and older documents are
+migrated explicitly.
 
-Simulation runs are persisted in schema version 17. Raw solver text is stored
+Simulation runs are persisted in schema version 18. Raw solver text is stored
 with the normalized result. Project files are compact JSON compressed with
 gzip; plain JSON files from older versions still load. The UI warns at 32 MB
 compressed, blocks files above the 64 MB compressed limit, and offers
@@ -297,5 +298,7 @@ prerequisite for the user workflow.
   explicit unavailable optimizer reason. Typed G5RV, ZS6BKW, and Zepp have
   family optimizers; the doublet radiator uses the dipole optimizer. Space
   constraints are limited to variable bounds, family geometry rules, and the
-  Yagi minimum-gap rule; band-aware, robust, and Pareto modes are future work.
+  Yagi minimum-gap rule. Band-aware and robust modes evaluate multiple
+  operating points; the Pareto front is descriptive; and each run stores a
+  compact summary with the design.
 - One full-wave engine (NEC-2) is supported; additional engines are deferred.

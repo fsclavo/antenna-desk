@@ -20,6 +20,7 @@ from ..common.units import ensure_non_negative
 from ..common.validation import Diagnostic, Severity, raise_if_errors
 from ..design.band_plan import BandPlan
 from ..measurement import Measurement
+from ..optimization.summary import OptimizationSummary
 from ..simulation.band_result import BandAnalysisResult
 from ..simulation.run import SimulationRun
 
@@ -57,6 +58,7 @@ class DesignVariant:
     antenna: AntennaModel
     provenance: DesignProvenance | None = None
     band_plan: BandPlan | None = None
+    optimization_summary: OptimizationSummary | None = None
 
     def __post_init__(self) -> None:
         if not self.name.strip():
@@ -104,10 +106,20 @@ class DesignVariant:
             parameters=parameters,
             antenna=antenna,
             provenance=provenance,
+            # A manual or estimator-driven parameter change makes the previous
+            # optimizer summary stale. The Apply Best path attaches its own
+            # summary after the form has been written back.
+            optimization_summary=None,
         )
 
     def with_band_plan(self, band_plan: BandPlan | None) -> DesignVariant:
         return replace(self, band_plan=band_plan)
+
+    def with_optimization_summary(
+        self,
+        optimization_summary: OptimizationSummary | None,
+    ) -> DesignVariant:
+        return replace(self, optimization_summary=optimization_summary)
 
     def with_loads(self, loads: tuple[LumpedLoad, ...]) -> DesignVariant:
         return replace(self, antenna=self.antenna.with_loads(loads))

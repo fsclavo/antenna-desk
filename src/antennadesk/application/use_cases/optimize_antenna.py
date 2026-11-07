@@ -8,7 +8,9 @@ import math
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 
+from ...domain.antennas.antenna import AntennaModel
 from ...domain.antennas.design import AntennaDesignParameters
+from ...domain.common.time import utc_now
 from ...domain.common.validation import Severity
 from ...domain.optimization.constraints import OptimizationMetric, SoftConstraint
 from ...domain.optimization.descriptor import (
@@ -17,14 +19,23 @@ from ...domain.optimization.descriptor import (
     OptimizationWeights,
 )
 from ...domain.optimization.engine import (
+    BudgetProfile,
     CandidateEvaluation,
     OptimizationBudget,
     OptimizationStatus,
+    OptimizerRunResult,
     SensitivityPoint,
     optimize_design,
 )
 from ...domain.optimization.length import measure_bandwidth_hz
+from ...domain.optimization.pareto import ParetoCandidate, pareto_front
+from ...domain.optimization.recommendations import (
+    RecommendationContext,
+    build_recommendations,
+)
+from ...domain.optimization.summary import OptimizationMode, OptimizationSummary
 from ...domain.optimization.synthesis import swr_for_resistance
+from ...domain.optimization.variables import OptimizationVariable, VariableKind
 from ...domain.simulation.far_field import FarFieldRequest
 from ...domain.simulation.frequency import FrequencyPlan
 from ...domain.simulation.pattern import front_to_back_db, max_power_gain_db
@@ -34,6 +45,10 @@ from ...domain.simulation.spec import SimulationSpec
 from ..ports.antenna_solver import AntennaSolver
 from ..ports.cancellation import CancelToken
 from .run_simulation import RunSimulation, RunSimulationCommand
+
+DEFAULT_BAND_AWARE_SPAN = 0.05
+ROBUST_SPREAD_PENALTY = 0.1
+ROBUST_DIMENSION_UNITS = frozenset({"m", "radius"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +63,10 @@ class OptimizeAntennaCommand:
     soft_constraints: tuple[SoftConstraint, ...] = ()
     locked_variables: frozenset[str] = frozenset()
     seed: int = 0
+    mode: OptimizationMode = OptimizationMode.SINGLE
+    band_edges_hz: tuple[float, ...] = ()
+    robust_tolerance: float = 0.0
+    budget_profile: BudgetProfile = BudgetProfile.BALANCED
     cancel_token: CancelToken | None = None
     progress: Callable[[int, float | None], None] | None = None
 
@@ -58,6 +77,33 @@ class OptimizeAntennaCommand:
             raise ValueError("target_reactance_ohm must be finite")
         if self.objective not in self.descriptor.objectives:
             raise ValueError(f"objective {self.objective.value!r} is not supported")
+        object.__setattr__(self, "mode", OptimizationMode(self.mode))
+        object.__setattr__(self, "band_edges_hz", tuple(self.band_edges_hz))
+        for frequency in self.band_edges_hz:
+            if not math.isfinite(frequency) or frequency <= 0.0:
+                raise ValueError("band edges must be positive and finite")
+        if (
+            self.mode is not OptimizationMode.SINGLE
+            and self.band_edges_hz
+            and len(set(self.band_edges_hz)) < 2
+        ):
+            raise ValueError("band-aware modes require at least two distinct edges")
+        if not math.isfinite(self.robust_tolerance) or self.robust_tolerance < 0.0:
+            raise ValueError("robust_tolerance must be non-negative and finite")
+        if self.robust_tolerance >= 1.0:
+            raise ValueError("robust_tolerance must be smaller than 1")
+        if self.mode is OptimizationMode.ROBUST and self.robust_tolerance == 0.0:
+            raise ValueError("robust mode requires a positive tolerance")
+        if self.mode is not OptimizationMode.ROBUST and self.robust_tolerance != 0.0:
+            raise ValueError("robust_tolerance is only used in robust mode")
+        if self.mode is not OptimizationMode.SINGLE and (
+            self.objective is FamilyOptimizationObjective.MAX_BANDWIDTH
+            or any(
+                constraint.metric is OptimizationMetric.BANDWIDTH_HZ
+                for constraint in self.soft_constraints
+            )
+        ):
+            raise ValueError("bandwidth optimization requires single-frequency mode")
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,7 +117,24 @@ class OptimizeAntennaResult:
     sensitivity: tuple[SensitivityPoint, ...]
     budget: OptimizationBudget
     seed: int
+    summary: OptimizationSummary | None = None
+    pareto: tuple[ParetoCandidate, ...] = ()
     message: str = ""
+
+
+class _EvaluationCancelled(Exception):
+    """Internal control flow for a cancelled solver run."""
+
+
+class _EvaluationFailure(Exception):
+    """Internal control flow for an unusable solver result."""
+
+
+@dataclass(frozen=True, slots=True)
+class _PointOutcome:
+    result: SimulationResult | None = None
+    error: str | None = None
+    cancelled: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,6 +181,7 @@ class OptimizeAntenna:
             raise ValueError("this objective or constraint requires a far-field request")
         if needs_sweep and command.base_spec.frequency_plan.count < 2:
             raise ValueError("this objective or constraint requires a frequency sweep")
+        band_edges = _resolved_band_edges(command)
 
         def evaluate(values: Mapping[str, float]) -> CandidateEvaluation:
             full_values = dict(descriptor.initial_values)
@@ -134,47 +198,26 @@ class OptimizeAntenna:
                 )
             try:
                 parameters = descriptor.build_parameters(full_values)
-                model = parameters.to_antenna(name="Optimization")
-                frequency_hz = parameters.frequency_hz
-                frequency_plan = (
-                    command.base_spec.frequency_plan
-                    if needs_sweep
-                    else FrequencyPlan.single(frequency_hz)
-                )
-                far_field = (
-                    command.base_spec.far_field if needs_pattern else FarFieldRequest(enabled=False)
-                )
-                segmentation = (
-                    command.base_spec.segmentation
-                    if needs_sweep
-                    else aligned_policy_for_model(
-                        model,
-                        frequency_hz,
-                        command.base_spec.segmentation,
+                if command.mode is OptimizationMode.SINGLE:
+                    metrics = _single_metrics(
+                        command,
+                        self.solver,
+                        parameters,
+                        needs_pattern=needs_pattern,
+                        needs_sweep=needs_sweep,
                     )
-                )
-                result = RunSimulation(self.solver).execute(
-                    RunSimulationCommand(
-                        model=model,
-                        spec=replace(
-                            command.base_spec,
-                            frequency_plan=frequency_plan,
-                            segmentation=segmentation,
-                            far_field=far_field,
-                        ),
-                        cancel_token=command.cancel_token,
+                else:
+                    metrics = _multi_metrics(
+                        command,
+                        self.solver,
+                        descriptor,
+                        full_values,
+                        parameters,
+                        band_edges,
+                        needs_pattern=needs_pattern,
                     )
-                )
-            except Exception as exc:
-                return CandidateEvaluation(
-                    index=0,
-                    values=full_values,
-                    score=None,
-                    feasible=False,
-                    violation=1.0,
-                    error=str(exc),
-                )
-            if result.status is SimulationStatus.CANCELLED:
+                score = _multi_score(command, metrics)
+            except _EvaluationCancelled:
                 return CandidateEvaluation(
                     index=0,
                     values=full_values,
@@ -183,34 +226,16 @@ class OptimizeAntenna:
                     cancelled=True,
                     error="cancelled",
                 )
-            if result.status is not SimulationStatus.COMPLETED or not result.frequencies:
-                message = next(
-                    (
-                        diagnostic.message
-                        for diagnostic in result.diagnostics
-                        if diagnostic.severity is Severity.ERROR
-                    ),
-                    result.status.value,
-                )
+            except (_EvaluationFailure, ValueError) as exc:
                 return CandidateEvaluation(
                     index=0,
                     values=full_values,
                     score=None,
                     feasible=False,
                     violation=1.0,
-                    error=message,
+                    error=str(exc),
                 )
-            try:
-                metrics = _metrics(
-                    result,
-                    frequency_hz,
-                    command.target_resistance_ohm,
-                    command.target_reactance_ohm,
-                    needs_gain=needs_pattern,
-                    needs_bandwidth=needs_sweep,
-                )
-                score = _score(command, metrics)
-            except ValueError as exc:
+            except Exception as exc:
                 return CandidateEvaluation(
                     index=0,
                     values=full_values,
@@ -247,6 +272,7 @@ class OptimizeAntenna:
                 best_parameters = descriptor.build_parameters(full_values)
             except Exception:
                 best_parameters = None
+        summary = _summary_for(command, engine_result, band_edges)
         return OptimizeAntennaResult(
             status=engine_result.status,
             best_parameters=best_parameters,
@@ -257,8 +283,311 @@ class OptimizeAntenna:
             sensitivity=engine_result.sensitivity,
             budget=command.budget,
             seed=engine_result.seed,
+            summary=summary,
+            pareto=pareto_front(engine_result.evaluations),
             message=engine_result.message,
         )
+
+
+def _resolved_band_edges(command: OptimizeAntennaCommand) -> tuple[float, ...]:
+    if command.mode is OptimizationMode.SINGLE:
+        return ()
+    if command.band_edges_hz:
+        return tuple(sorted(set(command.band_edges_hz)))
+    try:
+        parameters = command.descriptor.build_parameters(command.descriptor.initial_values)
+        frequency_hz = parameters.frequency_hz
+    except Exception:
+        frequency_hz = (
+            command.base_spec.frequency_plan.start_hz + command.base_spec.frequency_plan.stop_hz
+        ) / 2.0
+    return (
+        frequency_hz * (1.0 - DEFAULT_BAND_AWARE_SPAN),
+        frequency_hz,
+        frequency_hz * (1.0 + DEFAULT_BAND_AWARE_SPAN),
+    )
+
+
+def _spec_for_point(
+    command: OptimizeAntennaCommand,
+    model: AntennaModel,
+    frequency_hz: float,
+    *,
+    needs_pattern: bool,
+    needs_sweep: bool,
+) -> SimulationSpec:
+    if needs_sweep:
+        return replace(
+            command.base_spec,
+            far_field=(
+                command.base_spec.far_field if needs_pattern else FarFieldRequest(enabled=False)
+            ),
+        )
+    return replace(
+        command.base_spec,
+        frequency_plan=FrequencyPlan.single(frequency_hz),
+        segmentation=aligned_policy_for_model(
+            model,
+            frequency_hz,
+            command.base_spec.segmentation,
+        ),
+        far_field=(
+            command.base_spec.far_field if needs_pattern else FarFieldRequest(enabled=False)
+        ),
+    )
+
+
+def _run_point(
+    command: OptimizeAntennaCommand,
+    solver: AntennaSolver,
+    model: AntennaModel,
+    frequency_hz: float,
+    *,
+    needs_pattern: bool,
+    needs_sweep: bool,
+) -> _PointOutcome:
+    try:
+        result = RunSimulation(solver).execute(
+            RunSimulationCommand(
+                model=model,
+                spec=_spec_for_point(
+                    command,
+                    model,
+                    frequency_hz,
+                    needs_pattern=needs_pattern,
+                    needs_sweep=needs_sweep,
+                ),
+                cancel_token=command.cancel_token,
+            )
+        )
+    except Exception as exc:
+        return _PointOutcome(error=str(exc))
+    if result.status is SimulationStatus.CANCELLED:
+        return _PointOutcome(cancelled=True, error="cancelled")
+    if result.status is not SimulationStatus.COMPLETED or not result.frequencies:
+        message = next(
+            (
+                diagnostic.message
+                for diagnostic in result.diagnostics
+                if diagnostic.severity is Severity.ERROR
+            ),
+            result.status.value,
+        )
+        return _PointOutcome(error=message)
+    return _PointOutcome(result=result)
+
+
+def _single_metrics(
+    command: OptimizeAntennaCommand,
+    solver: AntennaSolver,
+    parameters: AntennaDesignParameters,
+    *,
+    needs_pattern: bool,
+    needs_sweep: bool,
+) -> dict[str, float]:
+    model = parameters.to_antenna(name="Optimization")
+    frequency_hz = parameters.frequency_hz
+    outcome = _run_point(
+        command,
+        solver,
+        model,
+        frequency_hz,
+        needs_pattern=needs_pattern,
+        needs_sweep=needs_sweep,
+    )
+    if outcome.cancelled:
+        raise _EvaluationCancelled
+    if outcome.error is not None or outcome.result is None:
+        raise _EvaluationFailure(outcome.error or "simulation failed")
+    return _metrics(
+        outcome.result,
+        frequency_hz,
+        command.target_resistance_ohm,
+        command.target_reactance_ohm,
+        needs_gain=needs_pattern,
+        needs_bandwidth=needs_sweep,
+    )
+
+
+def _multi_metrics(
+    command: OptimizeAntennaCommand,
+    solver: AntennaSolver,
+    descriptor: AntennaOptimizerDescriptor,
+    full_values: Mapping[str, float],
+    parameters: AntennaDesignParameters,
+    band_edges: tuple[float, ...],
+    *,
+    needs_pattern: bool,
+) -> dict[str, float]:
+    factors = (
+        (-command.robust_tolerance, 0.0, command.robust_tolerance)
+        if command.mode is OptimizationMode.ROBUST
+        else (0.0,)
+    )
+    scenario_metrics: list[dict[str, float]] = []
+    nominal_metrics: dict[str, float] | None = None
+    all_points: list[tuple[float, dict[str, float]]] = []
+    for factor in factors:
+        if factor == 0.0:
+            scenario_parameters = parameters
+        else:
+            scenario_parameters = descriptor.build_parameters(
+                _perturbed_values(full_values, descriptor.variables, factor)
+            )
+        model = scenario_parameters.to_antenna(name="Optimization")
+        points: list[tuple[float, dict[str, float]]] = []
+        for frequency_hz in band_edges:
+            outcome = _run_point(
+                command,
+                solver,
+                model,
+                frequency_hz,
+                needs_pattern=needs_pattern,
+                needs_sweep=False,
+            )
+            if outcome.cancelled:
+                raise _EvaluationCancelled
+            if outcome.error is not None or outcome.result is None:
+                raise _EvaluationFailure(outcome.error or "simulation failed")
+            points.append(
+                (
+                    frequency_hz,
+                    _metrics(
+                        outcome.result,
+                        frequency_hz,
+                        command.target_resistance_ohm,
+                        command.target_reactance_ohm,
+                        needs_gain=needs_pattern,
+                        needs_bandwidth=False,
+                    ),
+                )
+            )
+        aggregated = _aggregate_metrics(points, parameters.frequency_hz)
+        all_points.extend(points)
+        if factor == 0.0:
+            nominal_metrics = aggregated
+        scenario_metrics.append(aggregated)
+    if nominal_metrics is None:
+        nominal_metrics = scenario_metrics[0]
+    combined = dict(nominal_metrics)
+    for name, reducer in (
+        ("swr", max),
+        ("target_error_ohm", max),
+        ("target_swr", max),
+        ("max_gain_db", min),
+        ("front_to_back_db", min),
+        ("efficiency_percent", min),
+    ):
+        values = [metrics[name] for metrics in scenario_metrics if name in metrics]
+        if values:
+            combined[name] = reducer(values)
+    scenario_scores = [_score(command, metrics) for metrics in scenario_metrics]
+    if command.mode is OptimizationMode.ROBUST:
+        combined["optimization_score_spread"] = max(scenario_scores) - min(scenario_scores)
+    swr_values = [metrics["swr"] for _, metrics in all_points]
+    combined["swr_spread"] = max(swr_values) - min(swr_values)
+    combined["multi_point_count"] = float(len(band_edges))
+    combined["worst_frequency_hz"] = max(all_points, key=lambda item: item[1]["swr"])[0]
+    return combined
+
+
+def _aggregate_metrics(
+    points: list[tuple[float, dict[str, float]]],
+    nominal_frequency_hz: float,
+) -> dict[str, float]:
+    nearest = min(points, key=lambda item: abs(item[0] - nominal_frequency_hz))[1]
+    metrics = dict(nearest)
+    metrics["swr"] = max(item[1]["swr"] for item in points)
+    metrics["target_error_ohm"] = max(item[1]["target_error_ohm"] for item in points)
+    metrics["target_swr"] = max(item[1]["target_swr"] for item in points)
+    for name, reducer in (
+        ("max_gain_db", min),
+        ("front_to_back_db", min),
+        ("efficiency_percent", min),
+    ):
+        values = [item[1][name] for item in points if name in item[1]]
+        if values:
+            metrics[name] = reducer(values)
+    swr_values = [item[1]["swr"] for item in points]
+    metrics["swr_spread"] = max(swr_values) - min(swr_values)
+    return metrics
+
+
+def _perturbed_values(
+    values: Mapping[str, float],
+    variables: tuple[OptimizationVariable, ...],
+    factor: float,
+) -> dict[str, float]:
+    perturbed = dict(values)
+    for variable in variables:
+        if variable.kind is VariableKind.CONTINUOUS and variable.unit in ROBUST_DIMENSION_UNITS:
+            adjusted = values[variable.name] * (1.0 + factor)
+            perturbed[variable.name] = variable.clamp(adjusted)
+    return perturbed
+
+
+def _multi_score(
+    command: OptimizeAntennaCommand,
+    metrics: Mapping[str, float],
+) -> float:
+    if command.mode is OptimizationMode.SINGLE:
+        return _score(command, metrics)
+    spread = metrics.get("optimization_score_spread")
+    score = _score(command, metrics)
+    if command.mode is OptimizationMode.ROBUST and spread is not None:
+        score += ROBUST_SPREAD_PENALTY * abs(spread)
+    return score
+
+
+def _max_swr_constraint(constraints: tuple[SoftConstraint, ...]) -> float | None:
+    for constraint in constraints:
+        if constraint.metric is OptimizationMetric.SWR:
+            return constraint.maximum
+    return None
+
+
+def _summary_for(
+    command: OptimizeAntennaCommand,
+    result: OptimizerRunResult,
+    band_edges: tuple[float, ...],
+) -> OptimizationSummary:
+    recommendations = build_recommendations(
+        RecommendationContext(
+            status=result.status,
+            mode=command.mode,
+            objective=command.objective,
+            best_score=result.best_score,
+            best_metrics=result.best_metrics,
+            sensitivity=result.sensitivity,
+            locked_variables=len(command.locked_variables),
+            max_swr_constraint=_max_swr_constraint(command.soft_constraints),
+            tolerance=command.robust_tolerance,
+        )
+    )
+    return OptimizationSummary(
+        mode=command.mode,
+        objective=command.objective.value,
+        status=result.status.value,
+        budget_profile=command.budget_profile.value,
+        evaluations=len(result.evaluations),
+        seed=result.seed,
+        best_values=dict(result.best_values or {}),
+        best_metrics=dict(result.best_metrics),
+        completed_at=utc_now(),
+        band_edges_hz=band_edges if command.mode is not OptimizationMode.SINGLE else (),
+        tolerance=(command.robust_tolerance if command.mode is OptimizationMode.ROBUST else 0.0),
+        weights={
+            "gain": command.weights.gain,
+            "front_to_back": command.weights.front_to_back,
+            "swr": command.weights.swr,
+            "efficiency": command.weights.efficiency,
+        },
+        constraints=tuple(
+            f"{constraint.metric.value}<={constraint.maximum:g}"
+            for constraint in command.soft_constraints
+        ),
+        recommendations=recommendations,
+    )
 
 
 def _metrics(

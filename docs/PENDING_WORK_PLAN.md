@@ -113,6 +113,8 @@ Completed follow-ups:
 - G5RV, ZS6BKW, and Zepp are typed families with inline editors and family
   optimizers (schema 17). The old custom-generator designs remain loadable for
   compatibility; the doublet remains a dipole plus a project-level feed line.
+- Phase C advanced optimizer quality: band-aware and robust modes, Pareto front,
+  persisted summaries, and recommendations. See `OPTIMIZER_PHASE_C_PLAN.md`.
 
 ## Phase 5 — Validation and references
 

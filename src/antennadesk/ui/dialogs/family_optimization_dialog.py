@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QMessageBox,
     QPushButton,
     QSpinBox,
@@ -39,6 +40,12 @@ from ...domain.optimization.descriptor import (
     OptimizationWeights,
 )
 from ...domain.optimization.engine import BudgetProfile, budget_for
+from ...domain.optimization.summary import (
+    OptimizationMode,
+    OptimizationRecommendation,
+    OptimizationSummary,
+    RecommendationSeverity,
+)
 from ...domain.optimization.variables import OptimizationVariable, VariableKind
 from ...domain.simulation.spec import SimulationSpec
 from ..fonts import scaled_dialog_size
@@ -70,6 +77,8 @@ class FamilyOptimizationDialog(QDialog):
         parent: QWidget | None = None,
         *,
         topology_label: str | None = None,
+        band_edges_hz: tuple[float, ...] = (),
+        last_summary: OptimizationSummary | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
@@ -77,6 +86,8 @@ class FamilyOptimizationDialog(QDialog):
         self._solver = solver
         self._descriptor = descriptor
         self._base_spec = base_spec
+        self._band_edges_hz = tuple(band_edges_hz)
+        self._last_summary = last_summary
         self._thread: QThread | None = None
         self._worker: FamilyOptimizationWorker | None = None
         self._cancel_token: EventCancelToken | None = None
@@ -96,6 +107,28 @@ class FamilyOptimizationDialog(QDialog):
         if index >= 0:
             self._objective.setCurrentIndex(index)
         self._objective.currentIndexChanged.connect(self._objective_changed)
+
+        self._mode = QComboBox(self)
+        for mode in (
+            OptimizationMode.SINGLE,
+            OptimizationMode.BAND_AWARE,
+            OptimizationMode.ROBUST,
+        ):
+            self._mode.addItem(translator.t(f"optimize.mode.{mode.value}"), mode.value)
+        self._mode.currentIndexChanged.connect(self._mode_changed)
+
+        self._band_edges = QLineEdit(self)
+        self._band_edges.setPlaceholderText(translator.t("optimize.band_edges_hint"))
+        self._band_edges.setText(
+            ", ".join(f"{frequency_hz / 1e6:.6f}" for frequency_hz in self._initial_band_edges())
+        )
+
+        self._robust_tolerance = QDoubleSpinBox(self)
+        self._robust_tolerance.setRange(0.1, 10.0)
+        self._robust_tolerance.setDecimals(2)
+        self._robust_tolerance.setSingleStep(0.1)
+        self._robust_tolerance.setValue(1.0)
+        self._robust_tolerance.setSuffix(" %")
 
         self._target_r = QDoubleSpinBox(self)
         self._target_r.setRange(1.0, 10_000.0)
@@ -166,6 +199,21 @@ class FamilyOptimizationDialog(QDialog):
         self._summary.setWordWrap(True)
         self._sensitivity = QLabel(self)
         self._sensitivity.setWordWrap(True)
+        self._last_summary_label = QLabel(self)
+        self._last_summary_label.setWordWrap(True)
+        if last_summary is not None:
+            self._last_summary_label.setText(self._summary_line(last_summary))
+        self._recommendations = QLabel(self)
+        self._recommendations.setWordWrap(True)
+        self._pareto_label = QLabel(translator.t("optimize.pareto"), self)
+        self._pareto = QTableWidget(0, 8, self)
+        self._pareto.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self._pareto.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self._pareto.setAlternatingRowColors(True)
+        self._pareto.verticalHeader().setVisible(False)
+        self._pareto.horizontalHeader().setStretchLastSection(True)
+        self._pareto_label.setVisible(False)
+        self._pareto.setVisible(False)
 
         self._run = QPushButton(translator.t("optimize.run_family"), self)
         self._cancel = QPushButton(translator.t("optimize.cancel_run"), self)
@@ -181,6 +229,12 @@ class FamilyOptimizationDialog(QDialog):
         self._target_r_label = QLabel(translator.t("synthesis.target_resistance"), self)
         self._target_x_label = QLabel(translator.t("synthesis.target_reactance"), self)
         self._objective_label = QLabel(translator.t("optimize.objective"), self)
+        self._mode_label = QLabel(translator.t("optimize.mode"), self)
+        self._band_edges_label = QLabel(translator.t("optimize.band_edges"), self)
+        self._robust_tolerance_label = QLabel(
+            translator.t("optimize.robust_tolerance"),
+            self,
+        )
         self._budget_label = QLabel(translator.t("optimize.budget_profile"), self)
         self._seed_label = QLabel(translator.t("optimize.seed"), self)
         self._weight_gain_label = QLabel(translator.t("optimize.gain_weight"), self)
@@ -192,6 +246,9 @@ class FamilyOptimizationDialog(QDialog):
         if topology_label:
             form.addRow(QLabel(translator.t("field.template"), self), QLabel(topology_label, self))
         form.addRow(self._objective_label, self._objective)
+        form.addRow(self._mode_label, self._mode)
+        form.addRow(self._band_edges_label, self._band_edges)
+        form.addRow(self._robust_tolerance_label, self._robust_tolerance)
         form.addRow(self._target_r_label, self._target_r)
         form.addRow(self._target_x_label, self._target_x)
         form.addRow(self._weight_gain_label, self._weight_gain)
@@ -227,6 +284,18 @@ class FamilyOptimizationDialog(QDialog):
                 translator.t("optimize.message"),
             ]
         )
+        self._pareto.setHorizontalHeaderLabels(
+            [
+                translator.t("optimize.rank"),
+                translator.t("optimize.score"),
+                translator.t("table.resistance"),
+                translator.t("table.reactance"),
+                translator.t("table.swr"),
+                translator.t("optimize.gain"),
+                translator.t("yagi_optimize.front_to_back"),
+                translator.t("optimize.efficiency"),
+            ]
+        )
 
         buttons = QHBoxLayout()
         buttons.addWidget(self._run)
@@ -237,16 +306,21 @@ class FamilyOptimizationDialog(QDialog):
 
         layout = QVBoxLayout(self)
         layout.addLayout(form)
+        layout.addWidget(self._last_summary_label)
         layout.addWidget(self._locked_hint)
         layout.addWidget(self._table, 1)
         layout.addWidget(self._evaluations_label)
         layout.addWidget(self._evaluations, 1)
+        layout.addWidget(self._pareto_label)
+        layout.addWidget(self._pareto, 1)
         layout.addWidget(self._summary)
         layout.addWidget(self._sensitivity)
+        layout.addWidget(self._recommendations)
         layout.addLayout(buttons)
 
         self._ready = True
         self._objective_changed()
+        self._mode_changed()
         self._budget_changed()
         self._update_controls()
 
@@ -257,6 +331,118 @@ class FamilyOptimizationDialog(QDialog):
         box.setSingleStep(0.1)
         box.setValue(value)
         return box
+
+    def _initial_band_edges(self) -> tuple[float, ...]:
+        if self._band_edges_hz:
+            return tuple(sorted(set(self._band_edges_hz)))
+        plan = self._base_spec.frequency_plan
+        if plan.is_single:
+            return (
+                plan.start_hz * 0.95,
+                plan.start_hz,
+                plan.start_hz * 1.05,
+            )
+        return (
+            plan.start_hz,
+            (plan.start_hz + plan.stop_hz) / 2.0,
+            plan.stop_hz,
+        )
+
+    def _mode_value(self) -> OptimizationMode:
+        return OptimizationMode(str(self._mode.currentData()))
+
+    def _mode_changed(self, *_args: object) -> None:
+        if not self._ready:
+            return
+        mode = self._mode_value()
+        band_aware = mode is not OptimizationMode.SINGLE
+        robust = mode is OptimizationMode.ROBUST
+        for band_widget in (self._band_edges, self._band_edges_label):
+            band_widget.setEnabled(band_aware)
+        for tolerance_widget in (self._robust_tolerance, self._robust_tolerance_label):
+            tolerance_widget.setEnabled(robust)
+        self._budget_changed()
+
+    def _parse_band_edges(self) -> tuple[float, ...]:
+        text = self._band_edges.text().replace(";", ",")
+        try:
+            values = [float(part) for part in text.split(",") if part.strip()]
+        except ValueError as exc:
+            raise ValueError(self._translator.t("optimize.band_edges_invalid")) from exc
+        if len(values) < 2:
+            raise ValueError(self._translator.t("optimize.band_edges_invalid"))
+        if any(not math.isfinite(value) or value <= 0.0 for value in values):
+            raise ValueError(self._translator.t("optimize.band_edges_invalid"))
+        return tuple(sorted({value * 1e6 for value in values}))
+
+    def _scenario_count(self) -> int:
+        return 3 if self._mode_value() is OptimizationMode.ROBUST else 1
+
+    def _summary_line(self, summary: OptimizationSummary) -> str:
+        try:
+            objective = FamilyOptimizationObjective(summary.objective)
+        except ValueError:
+            objective_key = "optimize.objective"
+        else:
+            objective_key = _OBJECTIVE_KEYS.get(objective, "optimize.objective")
+        return self._translator.t(
+            "optimize.last_summary",
+            date=summary.completed_at.strftime("%Y-%m-%d %H:%M"),
+            mode=self._translator.t(f"optimize.mode.{summary.mode.value}"),
+            objective=self._translator.t(objective_key),
+            status=self._translator.t(f"optimize_status.{summary.status}"),
+            count=summary.evaluations,
+            swr=self._number(summary.best_metrics.get("swr")),
+        )
+
+    def _recommendations_text(
+        self,
+        recommendations: tuple[OptimizationRecommendation, ...],
+    ) -> str:
+        if not recommendations:
+            return ""
+        lines: list[str] = []
+        for recommendation in recommendations:
+            severity = self._translator.t(
+                "optimize.recommend.warning"
+                if recommendation.severity is RecommendationSeverity.WARNING
+                else "optimize.recommend.info"
+            )
+            labels = ", ".join(
+                self._translator.t(
+                    next(
+                        (
+                            variable.label_key
+                            for variable in self._variables
+                            if variable.name == name
+                        ),
+                        name,
+                    )
+                )
+                for name in recommendation.variables
+            )
+            lines.append(f"{severity}: " + self._translator.t(recommendation.key, variables=labels))
+        return self._translator.t("optimize.recommendations") + ": " + "\n".join(lines)
+
+    def _populate_pareto(self, result: OptimizeAntennaResult) -> None:
+        self._pareto.setRowCount(len(result.pareto))
+        for row, candidate in enumerate(result.pareto):
+            metrics = candidate.metrics
+            values = [
+                str(row + 1),
+                self._number(candidate.score),
+                self._number(metrics.get("resistance_ohm")),
+                self._number(metrics.get("reactance_ohm")),
+                self._number(metrics.get("swr")),
+                self._number(metrics.get("max_gain_db")),
+                self._number(metrics.get("front_to_back_db")),
+                self._number(metrics.get("efficiency_percent")),
+            ]
+            for column, value in enumerate(values):
+                self._pareto.setItem(row, column, QTableWidgetItem(value))
+        visible = bool(result.pareto)
+        self._pareto_label.setVisible(visible)
+        self._pareto.setVisible(visible)
 
     def _populate_variables(self) -> None:
         self._updating = True
@@ -369,15 +555,26 @@ class FamilyOptimizationDialog(QDialog):
         count = len(self._selected_indices())
         budget = budget_for(self._budget_profile(), max(1, count))
         multiplier = 1
+        points = self._base_spec.frequency_plan.count
         if self._objective_value() is FamilyOptimizationObjective.MAX_BANDWIDTH:
-            multiplier = max(1, self._base_spec.frequency_plan.count)
+            multiplier = max(1, points)
+            key = "optimize.budget_hint_sweep"
+        elif self._mode_value() is not OptimizationMode.SINGLE:
+            try:
+                points = len(self._parse_band_edges())
+            except ValueError:
+                points = 3
+            multiplier = points * self._scenario_count()
+            key = "optimize.budget_hint_quality"
+        else:
+            key = "optimize.budget_hint"
         runs = (budget.total + 2 * max(1, count)) * multiplier
-        key = "optimize.budget_hint_sweep" if multiplier > 1 else "optimize.budget_hint"
         self._budget_hint.setText(
             self._translator.t(
                 key,
                 count=runs,
-                points=self._base_spec.frequency_plan.count,
+                points=points,
+                scenarios=self._scenario_count(),
             )
         )
         self._update_controls()
@@ -390,6 +587,7 @@ class FamilyOptimizationDialog(QDialog):
         self._apply.setEnabled(not running and self._selected_parameters is not None)
         for widget in (
             self._objective,
+            self._mode,
             self._target_r,
             self._target_x,
             self._weight_gain,
@@ -402,6 +600,9 @@ class FamilyOptimizationDialog(QDialog):
             self._max_swr_enabled,
         ):
             widget.setEnabled(not running)
+        mode = self._mode_value()
+        self._band_edges.setEnabled(not running and mode is not OptimizationMode.SINGLE)
+        self._robust_tolerance.setEnabled(not running and mode is OptimizationMode.ROBUST)
         self._max_swr.setEnabled(not running and self._max_swr_enabled.isChecked())
         if running:
             self._apply.setEnabled(False)
@@ -432,7 +633,9 @@ class FamilyOptimizationDialog(QDialog):
                 ),
             )
         self._cancel_token = EventCancelToken()
+        mode = self._mode_value()
         try:
+            band_edges = self._parse_band_edges() if mode is not OptimizationMode.SINGLE else ()
             command = OptimizeAntennaCommand(
                 descriptor=self._descriptor,
                 base_spec=self._base_spec,
@@ -449,6 +652,14 @@ class FamilyOptimizationDialog(QDialog):
                 soft_constraints=constraints,
                 locked_variables=locked,
                 seed=self._seed.value(),
+                mode=mode,
+                band_edges_hz=band_edges,
+                robust_tolerance=(
+                    self._robust_tolerance.value() / 100.0
+                    if mode is OptimizationMode.ROBUST
+                    else 0.0
+                ),
+                budget_profile=self._budget_profile(),
                 cancel_token=self._cancel_token,
             )
         except (ValueError, TypeError) as exc:
@@ -457,8 +668,12 @@ class FamilyOptimizationDialog(QDialog):
         self._result = None
         self._selected_parameters = None
         self._evaluations.setRowCount(0)
+        self._pareto.setRowCount(0)
+        self._pareto_label.setVisible(False)
+        self._pareto.setVisible(False)
         self._summary.setText(self._translator.t("optimize.running"))
         self._sensitivity.setText("")
+        self._recommendations.setText("")
         self._apply.setEnabled(False)
         thread = QThread(self)
         worker = FamilyOptimizationWorker(self._solver, command)
@@ -468,8 +683,10 @@ class FamilyOptimizationDialog(QDialog):
         worker.failed.connect(self._on_failed)
         worker.finished.connect(thread.quit)
         worker.failed.connect(thread.quit)
-        thread.finished.connect(worker.deleteLater)
-        thread.finished.connect(thread.deleteLater)
+        # The dialog owns the thread, and Python owns the worker until the
+        # finished slot drops the reference after the event loop has stopped.
+        # Deleting the worker explicitly from its own thread's finished signal
+        # can race with Shiboken wrapper destruction on some PySide6 versions.
         thread.finished.connect(self._on_thread_finished)
         self._thread = thread
         self._worker = worker
@@ -486,8 +703,14 @@ class FamilyOptimizationDialog(QDialog):
         self._result = result
         self._selected_parameters = result.best_parameters
         self._populate_evaluations(result)
+        self._populate_pareto(result)
         self._summary.setText(self._summary_text(result))
         self._sensitivity.setText(self._sensitivity_text(result))
+        if result.summary is not None:
+            self._last_summary_label.setText(self._summary_line(result.summary))
+            self._recommendations.setText(
+                self._recommendations_text(result.summary.recommendations)
+            )
 
     def _on_failed(self, message: str) -> None:
         self._summary.setText(self._translator.t("error.optimize", message=message))

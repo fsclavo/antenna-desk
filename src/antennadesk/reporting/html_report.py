@@ -17,6 +17,7 @@ from .design_summary import (
     design_provenance_rows,
     design_summary_rows,
     load_summary_rows,
+    optimization_summary_rows,
     transmission_line_summary_rows,
 )
 from .result_summary import gain_metric_rows
@@ -175,6 +176,7 @@ def render_html_report(
         f"<tr><th>{_escape(label)}</th><td>{_escape(value)}</td></tr>"
         for label, value in (
             *design_summary_rows(parameters),
+            *optimization_summary_rows(design),
             *design_provenance_rows(design),
             *load_summary_rows(design.antenna.loads),
             *transmission_line_summary_rows(design.antenna.transmission_lines),

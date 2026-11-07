@@ -4,7 +4,55 @@ from __future__ import annotations
 
 from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
-from antennadesk.reporting.design_summary import design_summary_rows
+from antennadesk.reporting.design_summary import (
+    design_summary_rows,
+    optimization_summary_rows,
+)
+
+
+def test_optimization_summary_rows_describe_the_last_run() -> None:
+    from datetime import UTC, datetime
+
+    from antennadesk.application.use_cases.create_dipole_project import (
+        CreateDipoleProject,
+        CreateDipoleProjectCommand,
+    )
+    from antennadesk.domain.antennas.dipole import DipoleParameters
+    from antennadesk.domain.optimization.summary import (
+        OptimizationMode,
+        OptimizationSummary,
+    )
+
+    project = CreateDipoleProject().execute(
+        CreateDipoleProjectCommand(
+            project_name="Summary",
+            variant_name="Dipole",
+            parameters=DipoleParameters(
+                frequency_hz=7_100_000.0,
+                total_length_m=20.0,
+                height_m=8.0,
+            ),
+        )
+    )
+    design = project.designs[0].with_optimization_summary(
+        OptimizationSummary(
+            mode=OptimizationMode.BAND_AWARE,
+            objective="min_swr",
+            status="converged",
+            budget_profile="balanced",
+            evaluations=180,
+            seed=9,
+            best_values={"total_length_m": 20.1},
+            best_metrics={"swr": 1.2},
+            completed_at=datetime(2026, 11, 7, 12, 0, tzinfo=UTC),
+        )
+    )
+
+    rows = dict(optimization_summary_rows(design))
+
+    assert rows["Last optimization"] == "band_aware · min_swr · converged"
+    assert "180 evaluations" in rows["Optimization budget"]
+    assert rows["Optimization completed"] == "2026-11-07 12:00"
 
 
 def test_loaded_vertical_summary_reports_the_template_and_coil() -> None:

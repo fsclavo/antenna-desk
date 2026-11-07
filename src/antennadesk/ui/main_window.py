@@ -5020,20 +5020,42 @@ class MainWindow(QMainWindow):
             base_spec,
             self,
             topology_label=self._translator.t(label_key_for(design.parameters)),
+            band_edges_hz=self._optimizer_band_edges(design),
+            last_summary=design.optimization_summary,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         selected = dialog.selected_parameters()
         if selected is None:
             return
+        result = getattr(dialog, "selected_result", lambda: None)()
         try:
             adapter.apply_parameters(self, selected)
             self._form_dirty = True
             self._apply_fields()
+            if result is not None and result.summary is not None:
+                current = self._project.design_by_id(self._design_id)
+                self._project = self._project.with_design(
+                    current.with_optimization_summary(result.summary),
+                    updated_at=utc_now(),
+                )
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
         self.simulate()
+
+    def _optimizer_band_edges(self, design: DesignVariant) -> tuple[float, ...]:
+        plan = self._current_band_plan(design)
+        edges: list[float] = []
+        for selection in plan.selections:
+            edges.extend(
+                (
+                    selection.band.start_hz,
+                    selection.band.center_hz,
+                    selection.band.stop_hz,
+                )
+            )
+        return tuple(dict.fromkeys(edges))
 
     @history_action("history.optimize")
     def optimize_length(self) -> None:

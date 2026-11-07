@@ -305,6 +305,12 @@ def _migrate_v16_to_v17(document: dict[str, Any]) -> dict[str, Any]:
     return copy.deepcopy(document)
 
 
+def _migrate_v17_to_v18(document: dict[str, Any]) -> dict[str, Any]:
+    """Introduce persisted optimization summaries."""
+
+    return copy.deepcopy(document)
+
+
 def _migrate_v13_to_v14(document: dict[str, Any]) -> dict[str, Any]:
     """Add the optional project balun/unun loss model."""
 
@@ -386,6 +392,7 @@ MIGRATIONS: dict[int, Migration] = {
     14: _migrate_v14_to_v15,
     15: _migrate_v15_to_v16,
     16: _migrate_v16_to_v17,
+    17: _migrate_v17_to_v18,
 }
 
 

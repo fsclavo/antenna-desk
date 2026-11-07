@@ -590,8 +590,8 @@ class ElementOptimizationDialog(QDialog):
         worker.failed.connect(self._on_failed)
         worker.finished.connect(thread.quit)
         worker.failed.connect(thread.quit)
-        thread.finished.connect(worker.deleteLater)
-        thread.finished.connect(thread.deleteLater)
+        # Keep ownership in the dialog and Python. Explicit deleteLater calls
+        # from the finished signal can race with Shiboken wrapper destruction.
         thread.finished.connect(self._on_thread_finished)
         self._thread = thread
         self._worker = worker

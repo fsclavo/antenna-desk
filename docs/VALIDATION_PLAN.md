@@ -498,7 +498,9 @@ Phase 6 adds tests for:
   field-coverage classification, hard/soft constraints, integer and choice
   variables, deterministic seeds, budget extension, sensitivity, Apply Best
   adapters, and explicit unavailable reasons. Yagi optimization keeps the
-  element count, polarization, and match topology fixed.
+  element count, polarization, and match topology fixed. Band-aware and robust
+  modes are verified by solver-call counts; Pareto ranking, recommendation
+  rules, and schema-18 summary round trips have dedicated unit and UI tests.
 - Frequency-first estimator provenance, loop polygon correction, and
   target-relative SWR in optimization results.
 - Native packaging inputs, `--version`/`--check-solver` CLI behavior, and
@@ -576,8 +578,9 @@ and require `NEC2C`.
 - Optimization covers all first-class typed families through explicit
   descriptors and joint geometry/feed/load searches, including typed G5RV,
   ZS6BKW, and Zepp. Magnetic loops, random wires, and custom/imported geometry
-  are explicitly unavailable. Band-aware, robust, and Pareto modes are future
-  work, and there are no boom-length or turning-radius constraints.
+  are explicitly unavailable. Band-aware and robust modes evaluate multiple
+  operating points, the Pareto front is descriptive, and summaries persist in
+  schema 18. There are no boom-length or turning-radius constraints.
 - Pattern resolution changes angular sampling only; it does not change NEC
   segment density or solver accuracy.
 - Feed-line results are post-processed at the transmitter. The line does not

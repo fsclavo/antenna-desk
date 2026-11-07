@@ -90,6 +90,12 @@ from ..domain.design.band_plan import BandPlan, BandSelection
 from ..domain.environment.environment import Environment
 from ..domain.environment.ground import GroundKind, GroundModel
 from ..domain.measurement import Measurement, MeasurementPoint
+from ..domain.optimization.summary import (
+    OptimizationMode,
+    OptimizationRecommendation,
+    OptimizationSummary,
+    RecommendationSeverity,
+)
 from ..domain.projects.project import DesignProvenance, DesignVariant, Project
 from ..domain.simulation.bands import amateur_band_by_id
 from ..domain.simulation.far_field import FarFieldRequest
@@ -788,6 +794,37 @@ class BandPlanPayload(StrictModel):
     selections: list[BandSelectionPayload] = Field(default_factory=list)
 
 
+class OptimizationRecommendationPayload(StrictModel):
+    key: str = Field(min_length=1)
+    severity: str = Field(default="info", pattern="^(info|warning)$")
+    variables: list[str] = Field(default_factory=list)
+
+
+class OptimizationSummaryPayload(StrictModel):
+    method: str = Field(min_length=1)
+    version: int = Field(default=1, ge=1)
+    mode: str = Field(pattern="^(single|band_aware|robust)$")
+    objective: str = Field(min_length=1)
+    status: str = Field(min_length=1)
+    budget_profile: str = Field(min_length=1)
+    evaluations: int = Field(ge=0)
+    seed: int = Field(ge=0)
+    best_values: dict[str, float] = Field(default_factory=dict)
+    best_metrics: dict[str, float] = Field(default_factory=dict)
+    band_edges_hz: list[float] = Field(default_factory=list)
+    tolerance: float = Field(default=0.0, ge=0.0, lt=1.0)
+    weights: dict[str, float] = Field(default_factory=dict)
+    constraints: list[str] = Field(default_factory=list)
+    recommendations: list[OptimizationRecommendationPayload] = Field(default_factory=list)
+    completed_at: datetime
+
+    @model_validator(mode="after")
+    def _validate_completed_at(self) -> Self:
+        if self.completed_at.tzinfo is None or self.completed_at.utcoffset() is None:
+            raise ValueError("completed_at must be timezone-aware")
+        return self
+
+
 class DesignPayload(StrictModel):
     id: UUID
     name: str = Field(min_length=1)
@@ -796,6 +833,7 @@ class DesignPayload(StrictModel):
     antenna: AntennaPayload
     provenance: DesignProvenancePayload | None = None
     band_plan: BandPlanPayload | None = None
+    optimization_summary: OptimizationSummaryPayload | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -1606,6 +1644,66 @@ def _provenance_to_domain(value: DesignProvenancePayload) -> DesignProvenance:
     )
 
 
+def _optimization_summary_from_domain(
+    value: OptimizationSummary,
+) -> OptimizationSummaryPayload:
+    return OptimizationSummaryPayload(
+        method=value.method,
+        version=value.version,
+        mode=value.mode.value,
+        objective=value.objective,
+        status=value.status,
+        budget_profile=value.budget_profile,
+        evaluations=value.evaluations,
+        seed=value.seed,
+        best_values=dict(value.best_values),
+        best_metrics=dict(value.best_metrics),
+        band_edges_hz=list(value.band_edges_hz),
+        tolerance=value.tolerance,
+        weights=dict(value.weights),
+        constraints=list(value.constraints),
+        recommendations=[
+            OptimizationRecommendationPayload(
+                key=recommendation.key,
+                severity=recommendation.severity.value,
+                variables=list(recommendation.variables),
+            )
+            for recommendation in value.recommendations
+        ],
+        completed_at=value.completed_at,
+    )
+
+
+def _optimization_summary_to_domain(
+    value: OptimizationSummaryPayload,
+) -> OptimizationSummary:
+    return OptimizationSummary(
+        mode=OptimizationMode(value.mode),
+        objective=value.objective,
+        status=value.status,
+        budget_profile=value.budget_profile,
+        evaluations=value.evaluations,
+        seed=value.seed,
+        best_values=dict(value.best_values),
+        best_metrics=dict(value.best_metrics),
+        completed_at=value.completed_at,
+        method=value.method,
+        version=value.version,
+        band_edges_hz=tuple(value.band_edges_hz),
+        tolerance=value.tolerance,
+        weights=dict(value.weights),
+        constraints=tuple(value.constraints),
+        recommendations=tuple(
+            OptimizationRecommendation(
+                key=recommendation.key,
+                severity=RecommendationSeverity(recommendation.severity),
+                variables=tuple(recommendation.variables),
+            )
+            for recommendation in value.recommendations
+        ),
+    )
+
+
 def _band_plan_from_domain(value: BandPlan) -> BandPlanPayload:
     return BandPlanPayload(
         selections=[
@@ -1627,6 +1725,11 @@ def _design_from_domain(value: DesignVariant) -> DesignPayload:
         ),
         band_plan=(
             _band_plan_from_domain(value.band_plan) if value.band_plan is not None else None
+        ),
+        optimization_summary=(
+            _optimization_summary_from_domain(value.optimization_summary)
+            if value.optimization_summary is not None
+            else None
         ),
     )
 
@@ -2415,6 +2518,11 @@ def _design_to_domain(value: DesignPayload) -> DesignVariant:
             _provenance_to_domain(value.provenance) if value.provenance is not None else None
         ),
         band_plan=_band_plan_to_domain(value.band_plan) if value.band_plan is not None else None,
+        optimization_summary=(
+            _optimization_summary_to_domain(value.optimization_summary)
+            if value.optimization_summary is not None
+            else None
+        ),
     )
 
 

@@ -4699,6 +4699,118 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Sensitivity",
         Language.SPANISH: "Sensibilidad",
     },
+    "optimize.mode": {
+        Language.ENGLISH: "Operating mode",
+        Language.SPANISH: "Modo de operación",
+    },
+    "optimize.mode.single": {
+        Language.ENGLISH: "Single frequency",
+        Language.SPANISH: "Frecuencia única",
+    },
+    "optimize.mode.band_aware": {
+        Language.ENGLISH: "Band-aware",
+        Language.SPANISH: "Consciente de banda",
+    },
+    "optimize.mode.robust": {
+        Language.ENGLISH: "Robust (tolerance)",
+        Language.SPANISH: "Robusto (tolerancia)",
+    },
+    "optimize.band_edges": {
+        Language.ENGLISH: "Band edges (MHz)",
+        Language.SPANISH: "Bordes de banda (MHz)",
+    },
+    "optimize.band_edges_hint": {
+        Language.ENGLISH: "Comma-separated frequencies in MHz; at least two.",
+        Language.SPANISH: "Frecuencias separadas por comas en MHz; al menos dos.",
+    },
+    "optimize.band_edges_invalid": {
+        Language.ENGLISH: "Enter at least two positive frequencies in MHz.",
+        Language.SPANISH: "Introduce al menos dos frecuencias positivas en MHz.",
+    },
+    "optimize.robust_tolerance": {
+        Language.ENGLISH: "Dimensional tolerance",
+        Language.SPANISH: "Tolerancia dimensional",
+    },
+    "optimize.pareto": {
+        Language.ENGLISH: "Pareto front (non-dominated trade-offs)",
+        Language.SPANISH: "Frente de Pareto (compromisos no dominados)",
+    },
+    "optimize.recommendations": {
+        Language.ENGLISH: "Recommendations",
+        Language.SPANISH: "Recomendaciones",
+    },
+    "optimize.recommend.warning": {
+        Language.ENGLISH: "Warning",
+        Language.SPANISH: "Advertencia",
+    },
+    "optimize.recommend.info": {
+        Language.ENGLISH: "Note",
+        Language.SPANISH: "Nota",
+    },
+    "optimize.recommend.no_feasible": {
+        Language.ENGLISH: (
+            "No feasible candidate was found. Widen the variable bounds, relax a "
+            "constraint, or unlock more variables."
+        ),
+        Language.SPANISH: (
+            "No se encontró ningún candidato factible. Amplía los límites de las "
+            "variables, relaja una restricción o desbloquea más variables."
+        ),
+    },
+    "optimize.recommend.cancelled": {
+        Language.ENGLISH: "The run was cancelled; the best candidate so far is not a completed result.",
+        Language.SPANISH: "La ejecución se canceló; el mejor candidato hasta ahora no es un resultado completo.",
+    },
+    "optimize.recommend.budget": {
+        Language.ENGLISH: "The evaluation budget was exhausted. Try the Thorough profile for a wider search.",
+        Language.SPANISH: "Se agotó el presupuesto de evaluaciones. Prueba el perfil Exhaustivo para una búsqueda más amplia.",
+    },
+    "optimize.recommend.locked": {
+        Language.ENGLISH: "Some variables were locked, so this is a partial optimization. Unlock them to search the full design.",
+        Language.SPANISH: "Algunas variables estaban bloqueadas, así que esta es una optimización parcial. Desbloquéalas para buscar el diseño completo.",
+    },
+    "optimize.recommend.high_swr": {
+        Language.ENGLISH: "The best design still has high SWR at the evaluated points. Consider a matching network or a different topology.",
+        Language.SPANISH: "El mejor diseño aún tiene una ROE alta en los puntos evaluados. Considera una red de adaptación u otra topología.",
+    },
+    "optimize.recommend.high_swr_constraint": {
+        Language.ENGLISH: "The SWR constraint was not met. Relax it or add a matching stage before applying the result.",
+        Language.SPANISH: "No se cumplió la restricción de ROE. Relájala o añade una etapa de adaptación antes de aplicar el resultado.",
+    },
+    "optimize.recommend.band_spread": {
+        Language.ENGLISH: "SWR varies strongly across the evaluated points. Check the band edges before applying the result.",
+        Language.SPANISH: "La ROE varía mucho entre los puntos evaluados. Revisa los bordes de banda antes de aplicar el resultado.",
+    },
+    "optimize.recommend.robust": {
+        Language.ENGLISH: "The score is sensitive to the dimensional tolerance. Tighten construction tolerances or re-run in band-aware mode.",
+        Language.SPANISH: "La puntuación es sensible a la tolerancia dimensional. Ajusta las tolerancias de construcción o vuelve a ejecutar en modo consciente de banda.",
+    },
+    "optimize.recommend.sensitive": {
+        Language.ENGLISH: "{variables} has the largest effect on the score. Control that dimension during construction.",
+        Language.SPANISH: "{variables} tiene el mayor efecto en la puntuación. Controla esa dimensión durante la construcción.",
+    },
+    "optimize.last_summary": {
+        Language.ENGLISH: (
+            "Last run: {date} · {mode} · {objective} · {status} · "
+            "{count} evaluations · best SWR {swr}"
+        ),
+        Language.SPANISH: (
+            "Última ejecución: {date} · {mode} · {objective} · {status} · "
+            "{count} evaluaciones · mejor ROE {swr}"
+        ),
+    },
+    "optimize.budget_hint_quality": {
+        Language.ENGLISH: (
+            "Estimated solver runs: {count} ({points} frequencies x {scenarios} "
+            "scenario(s) per candidate). Quality modes are expensive; the search "
+            "may extend automatically."
+        ),
+        Language.SPANISH: (
+            "Corridas estimadas del solver: {count} ({points} frecuencias x "
+            "{scenarios} escenario(s) por candidato). Los modos de calidad son "
+            "costosos; la búsqueda puede extenderse automáticamente."
+        ),
+    },
     "optimize.score": {
         Language.ENGLISH: "Score",
         Language.SPANISH: "Puntuación",

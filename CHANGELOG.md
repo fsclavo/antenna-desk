@@ -22,9 +22,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   variable, lock controls, objective and constraints, Fast/Balanced/Thorough
   budgets with automatic extension, a reproducible seed, ranked results,
   sensitivity, and Apply Best routed through an exhaustive editor adapter.
-  Magnetic loops, random wires, arbitrary custom/imported geometry, and the
-  G5RV/ZS6BKW/Zepp/doublet custom generators report an explicit unavailable
-  reason instead of falling back.
+  Magnetic loops, random wires, and arbitrary custom/imported geometry report
+  an explicit unavailable reason instead of falling back.
+- Optimization now supports **band-aware** and **robust** operating modes, a
+  descriptive **Pareto front**, deterministic post-run recommendations, and a
+  compact **optimization summary** persisted with each design in schema 18.
+  Band-aware runs aggregate worst-case metrics across editable band edges;
+  robust runs add ± dimensional-tolerance corners and a variance penalty.
+  Summaries keep the mode, objective, status, seed, evaluation count, winning
+  vector, metrics, and recommendation keys without storing every evaluation.
 - Added a first-class **Half square / Bobtail curtain** family. Both variants
   share one self-contained vertical-array editor, are fed at a top junction
   with an adjustable feed offset, persist in schema 16, and include catalog
@@ -67,6 +73,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   bobtail-curtain result updates the shared array editor instead of passing
   `ScvParameters` to the basic dipole form; the same exhaustive adapter covers
   every other supported typed family.
+- Removed an intermittent PySide6 shutdown crash in the optimizer dialogs by
+  letting the dialog and Python own the worker thread and worker object instead
+  of deleting them from the thread's own `finished` signal.
 
 ## [0.2.0] - 2026-11-06
 

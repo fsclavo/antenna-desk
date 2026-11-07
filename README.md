@@ -107,6 +107,7 @@ optional signing steps.
 - [ADR-0023 — Yagi and Moxon horizontal/vertical polarization](docs/ADR/0023-yagi-moxon-polarization.md)
 - [ADR-0026 — Family optimizer architecture](docs/ADR/0026-family-optimizer-architecture.md)
 - [Optimizer Phase A plan](docs/OPTIMIZER_PHASE_A_PLAN.md)
+- [Optimizer Phase C plan](docs/OPTIMIZER_PHASE_C_PLAN.md)
 - [Antenna dimension estimators](docs/ANTENNA_DESIGN_ESTIMATORS.md)
 - [Geometry presentation contract](docs/GEOMETRY_PRESENTATION.md)
 - [NEC engine evaluation](docs/spikes/phase0-solver-evaluation.md)
@@ -134,10 +135,11 @@ optional signing steps.
   points by default, and pattern resolution defaults to 5° and can be set to
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` projects with multiple design
-  variants; schema version 17 adds typed G5RV, ZS6BKW, and Zepp designs,
-  schema 16 adds half-square and bobtail-curtain designs, schema 15 adds
-  frequency-dependent balun/unun loss and repairs undersized Yagi matching
-  hardware, and older files migrate explicitly.
+  variants; schema version 18 adds persisted optimization summaries, schema 17
+  adds typed G5RV, ZS6BKW, and Zepp designs, schema 16 adds half-square and
+  bobtail-curtain designs, schema 15 adds frequency-dependent balun/unun loss
+  and repairs undersized Yagi matching hardware, and older files migrate
+  explicitly.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - VNA CSV import with measured impedance/SWR records and a measured/simulated
   SWR, R, X, or |Z| comparison tab, including resonance differences.
@@ -153,6 +155,10 @@ optional signing steps.
 - Balanced, thorough, and fast optimizer budgets with automatic extension,
   evaluation counting, deterministic seeds, ranked result tables, sensitivity
   reports, and Apply Best routed through an exhaustive editor adapter.
+- Band-aware and robust optimization modes, a descriptive Pareto front,
+  deterministic post-run recommendations, and a compact run summary persisted
+  with the design so the result can be audited without storing every
+  evaluation.
 - First-class typed **G5RV**, **ZS6BKW**, and **Zepp** presets with their own
   editors, matching-line geometry, reports, and family optimizers. The doublet
   remains a dipole plus a project-level feed line.
@@ -249,9 +255,10 @@ uv run python scripts/run_reference_simulation.py \
   descriptors and a joint hybrid search over geometry, feed, and family-load
   variables, including typed G5RV, ZS6BKW, and Zepp presets. Magnetic loops,
   random wires, and custom/imported geometry are explicitly unavailable; the
-  doublet is a dipole plus a project-level feed line. Band-aware, robust, and
-  Pareto modes are future work; synthesis remains a bounded starting point, not
-  a global inverse solver.
+  doublet is a dipole plus a project-level feed line. Band-aware and robust
+  modes evaluate several operating points, the Pareto front is descriptive, and
+  run summaries persist with the design. Synthesis remains a bounded starting
+  point, not a global inverse solver.
 - Far-field values are NEC power gains. Realized gain and directivity are not
   separated. Relative permeability is not emitted to NEC. Conductor
   conductivity is emitted when `SimulationSpec.include_conductor_losses` is

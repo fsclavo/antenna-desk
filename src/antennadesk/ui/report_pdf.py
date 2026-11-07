@@ -27,6 +27,7 @@ from ..reporting.design_summary import (
     design_provenance_rows,
     design_summary_rows,
     load_summary_rows,
+    optimization_summary_rows,
     transmission_line_summary_rows,
 )
 from ..reporting.result_summary import gain_metric_rows
@@ -238,6 +239,7 @@ def write_report_pdf(
     section(translator.t("panel.design"))
     for label, value in (
         *design_summary_rows(design.parameters),
+        *optimization_summary_rows(design),
         *design_provenance_rows(design),
         *load_summary_rows(design.antenna.loads),
         *transmission_line_summary_rows(design.antenna.transmission_lines),

@@ -139,7 +139,9 @@ Deferred:
   descriptor per typed family, joint differential-evolution plus local search,
   all geometry/feed/family-load variables, Fast/Balanced/Thorough budgets with
   automatic extension, deterministic seeds, hard/soft constraints, sensitivity,
-  and an exhaustive Apply Best adapter.
+  and an exhaustive Apply Best adapter. Phase C adds band-aware and robust
+  modes, a descriptive Pareto front, deterministic recommendations, and
+  schema-18 persisted run summaries.
 - Supported typed families: dipoles, loop, vertical/inverted-V/inverted-L,
   J Pole/Slim Jim, Ringo, SCV, OCFD, EndFed, typed G5RV/ZS6BKW/Zepp,
   fan/trap/T2FD, Yagi, and Moxon. The doublet radiator uses the dipole
@@ -227,7 +229,7 @@ Acceptance criteria:
 | P2 | Pattern metric selector for power/directivity/realized gain | B | done |
 | P2 | ZS6BKW and Zepp multiband presets | B | done |
 | P2 | Convert G5RV, ZS6BKW, Zepp, and doublet to typed families and add optimizers | B | done 2026-11-07: G5RV/ZS6BKW/Zepp typed with schema 17; doublet was already a typed dipole plus feed line |
-| P2 | Band-aware, robust, and Pareto optimizer modes | B | pending (Phase C) |
+| P2 | Band-aware, robust, Pareto, persisted summaries, and recommendations | B | done 2026-11-07 (Phase C, schema 18) |
 | P2 | Custom/imported geometry optimization and space constraints | n/a | pending |
 | P2 | Live VNA/hardware control | n/a | deferred |
 | P2 | Additional full-wave engines | n/a | deferred |

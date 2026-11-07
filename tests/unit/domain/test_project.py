@@ -50,6 +50,35 @@ def test_design_with_parameters_returns_a_new_value(sample_project: Project) -> 
     assert design.parameters.total_length_m == pytest.approx(20.0)
 
 
+def test_parameter_change_clears_a_stale_optimization_summary(
+    sample_project: Project,
+) -> None:
+    from datetime import UTC
+
+    from antennadesk.domain.optimization.summary import (
+        OptimizationMode,
+        OptimizationSummary,
+    )
+
+    design = sample_project.designs[0]
+    summary = OptimizationSummary(
+        mode=OptimizationMode.SINGLE,
+        objective="min_swr",
+        status="converged",
+        budget_profile="balanced",
+        evaluations=12,
+        seed=0,
+        best_values={"total_length_m": 20.0},
+        best_metrics={"swr": 1.1},
+        completed_at=datetime(2026, 11, 7, tzinfo=UTC),
+    )
+    optimized = design.with_optimization_summary(summary)
+
+    edited = optimized.with_parameters(design.parameters.with_length(19.5))
+
+    assert edited.optimization_summary is None
+
+
 def test_project_rejects_duplicate_design_ids(sample_project: Project) -> None:
     design = sample_project.designs[0]
     duplicate = replace(design, name="Second variant")

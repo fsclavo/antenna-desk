@@ -973,6 +973,27 @@ frequency sweep. The optional **Maximum SWR** field adds a soft constraint; the
 hard constraints are the family geometry rules, minimum conductor spacing,
 element ordering, feed limits, and positive dimensions.
 
+### Operating modes
+
+The **Operating mode** selector controls how many operating points each
+candidate is evaluated at:
+
+- **Single frequency** is the default and uses the design frequency once.
+- **Band-aware** evaluates every listed band edge and reports the worst SWR,
+  impedance error, gain, front-to-back ratio, and efficiency. The list defaults
+  to the current band plan (start, center, and stop of each selected band) and
+  can be edited as comma-separated MHz values.
+- **Robust (tolerance)** evaluates the band edges at the nominal geometry and at
+  two deterministic dimensional-tolerance corners (± the selected percentage of
+  every length and radius). The score adds a variance penalty, so a design that
+  only performs well at the nominal dimensions ranks lower.
+
+Band-aware and robust modes multiply the solver runs by the number of
+frequencies and tolerance scenarios. The budget hint shows the resulting
+estimate. Bandwidth optimization is only available in single-frequency mode
+because it already requires a frequency sweep. The maximum-SWR soft constraint
+uses the worst evaluated point in these modes.
+
 ### Budget and results
 
 Choose a search budget:
@@ -991,9 +1012,23 @@ The result table is ranked from best to worst and reports the score, R, X, SWR,
 gain, front-to-back, efficiency, and any error. The summary reports the status,
 evaluation count, and best score. The sensitivity line ranks the variables that
 most affect the score, so fragile dimensions are visible before construction.
+
+When at least two metrics are available, the dialog also shows the non-dominated
+Pareto front: candidates that trade one metric for another, such as lower SWR
+against higher gain or a smaller target-impedance error. These candidates are
+informational; **Apply Best...** still uses the ranked best score.
+
+Deterministic **Recommendations** point out a failed search, an exhausted
+budget, locked variables, high SWR, strong band-edge variation, tolerance
+sensitivity, or the single dimension that most affects the score. They describe
+the modeled search, not a guaranteed physical outcome.
+
 **Apply Best...** writes the result to the correct family editor and starts the
-normal full sweep/pattern simulation. Verify the applied design with the full
-simulation and, where possible, a measurement.
+normal full sweep/pattern simulation. The run summary (mode, objective, status,
+seed, evaluation count, band edges, tolerance, winning vector, metrics, and
+recommendation keys) is stored with the design in schema version 18 and shown
+the next time the optimizer dialog opens. Verify the applied design with the
+full simulation and, where possible, a measurement.
 
 ### Families with a family optimizer
 
@@ -1118,8 +1153,9 @@ domain and project files always store canonical meters and hertz.
 - Optimization covers every geometry, feed, and family-load variable of the
   supported typed families with a joint hybrid search, including G5RV, ZS6BKW,
   and Zepp. Custom/imported designs, magnetic loops, and random wires are
-  excluded. There are no boom-length or turning-radius constraints, and
-  band-aware/robust/Pareto modes remain future work.
+  excluded. There are no boom-length or turning-radius constraints. Band-aware,
+  robust, Pareto, persisted-summary, and recommendation support is implemented;
+  the Pareto front is descriptive and is not itself optimized.
 - Project files store normalized results and raw solver text; many long runs
   can reach the 64 MB project limit.
 - The feed line is a uniform-line post-processing model. It reports impedance

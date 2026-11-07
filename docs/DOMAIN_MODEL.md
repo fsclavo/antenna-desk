@@ -362,8 +362,16 @@ is user intent and does not alter the geometry. Construction validates that the
 antenna type matches the parameters and that the derived geometry matches both.
 
 `with_parameters()` returns a new variant and updates both the antenna type and
-the derived model; it never mutates the original. `with_band_plan()` updates the
-persisted analysis intention independently of the geometry.
+the derived model; it never mutates the original, and it clears any previous
+`OptimizationSummary` because that summary no longer describes the design.
+`with_band_plan()` updates the persisted analysis intention independently of the
+geometry.
+
+`OptimizationSummary` records the mode, objective, status, budget profile,
+evaluation count, seed, band edges, robust tolerance, winning vector and
+metrics, weights, constraint descriptions, recommendation keys, and completion
+timestamp of an applied optimizer run. The full evaluation log is not persisted;
+the summary is compact enough to keep with every design.
 
 ### Project
 
@@ -458,11 +466,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 17.
+the application writes version 18.
 
 ## Schema policy
 
-- Current version: `17`.
+- Current version: `18`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -502,6 +510,8 @@ the application writes version 17.
 - Version 17 introduces typed G5RV, ZS6BKW, and Zepp parameter payloads.
   Existing custom-generator designs remain valid and load as custom geometry;
   new designs use the typed families and their optimizers.
+- Version 18 adds the optional `optimization_summary` field to each design.
+  Old documents migrate with no summary.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -525,14 +535,15 @@ the application writes version 17.
   points are modeled as geometry; arbitrary radial screens are not.
 - Optimization operates on typed generated parameters, including typed G5RV,
   ZS6BKW, and Zepp. Magnetic loops, random wires, and arbitrary custom/imported
-  geometry have explicit unavailable reasons. Band-aware, robust, and Pareto
-  optimizer modes are future work.
+  geometry have explicit unavailable reasons. Band-aware and robust modes
+  evaluate multiple operating points; the Pareto front is descriptive; and a
+  compact `OptimizationSummary` is persisted with the design.
 - Measurements are imported from CSV; there is no live instrument-control
   adapter.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 17.
+- Simulation results are persisted as immutable runs in schema version 18.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are
