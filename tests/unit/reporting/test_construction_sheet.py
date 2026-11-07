@@ -234,6 +234,32 @@ def test_folded_yagi_construction_sheet_lists_the_fold(sample_project: Project) 
     assert "second conductor remains passive" in sheet
 
 
+def test_top_loaded_vertical_construction_sheet_lists_the_hat(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    design = sample_project.designs[0]
+    vertical = design.with_parameters(
+        VerticalParameters(
+            frequency_hz=7_100_000.0,
+            height_m=5.0,
+            base_height_m=0.25,
+            radial_count=4,
+            radial_length_m=2.5,
+            top_hat_enabled=True,
+            top_hat_radius_m=0.75,
+            top_hat_wire_count=4,
+        )
+    )
+    sheet = render_construction_sheet(sample_project, vertical, None)
+
+    assert "Top hat wires" in sheet
+    assert "Top hat radius" in sheet
+    assert "0.7500 m" in sheet
+    assert "top-hat wires of 0.7500 m" in sheet
+
+
 def test_beta_hairpin_yagi_construction_sheet_lists_the_stub(
     sample_project: Project,
 ) -> None:

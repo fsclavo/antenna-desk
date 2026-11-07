@@ -164,6 +164,12 @@ The ordered antenna backlog lives in
    is unreliable for close-spaced gamma assemblies; use the matching network.
 7. **Completed 2026-11-07:** project-level balun/unun insertion loss with a
    frequency-dependent power-law fit, applied to realized gain and reports.
+8. **Completed:** capacitive top-hat and loading-coil support in the vertical
+   template, now included in reports, construction sheets, and the scene
+   contract. The hat remains an application starting point, not an
+   independently validated loading design.
+9. **Completed 2026-11-07:** explicit EFHW labeling and published 40/20/10 m
+   preset buttons for the existing EndFed template.
 
 The remaining medium and large candidates are ordered after those seven in the
 roadmap table. Items 15–19 require architectural work or a much larger test

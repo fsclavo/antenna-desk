@@ -108,8 +108,8 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         ),
         tolerance="0.5% on radiator length",
         limitation=(
-            "Gain and feedpoint impedance depend on radial count and ground; "
-            "those are not independently validated."
+            "Gain and feedpoint impedance depend on radial count, ground, and any "
+            "capacitive top hat; those are not independently validated."
         ),
     ),
     "loaded_vertical": EvidenceEntry(

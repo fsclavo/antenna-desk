@@ -168,12 +168,12 @@ def design_summary_rows(
             ]
         )
     elif isinstance(parameters, VerticalParameters):
+        type_name = "loaded vertical" if parameters.loading_coil_enabled else "vertical"
+        if parameters.top_hat_enabled:
+            type_name = "top-loaded vertical"
         rows.extend(
             [
-                (
-                    "Type",
-                    "loaded vertical" if parameters.loading_coil_enabled else "vertical",
-                ),
+                ("Type", type_name),
                 ("Radiator height", f"{parameters.height_m:.4f} m"),
                 ("Base height", f"{parameters.base_height_m:.4f} m"),
                 ("Top height", f"{parameters.top_height_m:.4f} m"),
@@ -189,6 +189,13 @@ def design_summary_rows(
                     f"{parameters.loading_coil_offset_m:.4f} m; "
                     f"R={parameters.loading_coil_resistance_ohm:g} Ω",
                 )
+            )
+        if parameters.top_hat_enabled:
+            rows.extend(
+                [
+                    ("Top hat wires", str(parameters.top_hat_wire_count)),
+                    ("Top hat radius", f"{parameters.top_hat_radius_m:.4f} m"),
+                ]
             )
     elif isinstance(parameters, InvertedLParameters):
         rows.extend(

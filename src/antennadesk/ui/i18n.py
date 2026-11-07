@@ -317,12 +317,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Dipolo alimentado en el centro para línea abierta y sintonizador.",
     },
     "catalog.endfed": {
-        Language.ENGLISH: "End-fed wire",
-        Language.SPANISH: "Hilo alimentado en el extremo",
+        Language.ENGLISH: "End-fed wire / EFHW",
+        Language.SPANISH: "Hilo alimentado en el extremo / EFHW",
     },
     "catalog.endfed.description": {
-        Language.ENGLISH: "Single wire fed at one end, optionally sloping.",
-        Language.SPANISH: "Hilo alimentado en un extremo, opcionalmente inclinado.",
+        Language.ENGLISH: (
+            "Single wire fed at one end; the EFHW preset uses the published "
+            "40/20/10 m lengths and a 49:1 transformer."
+        ),
+        Language.SPANISH: (
+            "Hilo único alimentado en un extremo; el preset EFHW usa las "
+            "longitudes publicadas de 40/20/10 m y un transformador 49:1."
+        ),
     },
     "catalog.fan_dipole": {
         Language.ENGLISH: "Fan dipole",
@@ -3043,8 +3049,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         ),
     },
     "endfed.preset.endfed": {
-        Language.ENGLISH: "End-fed wire",
-        Language.SPANISH: "Hilo alimentado en el extremo",
+        Language.ENGLISH: "End-fed half-wave (EFHW)",
+        Language.SPANISH: "Media onda alimentada en el extremo (EFHW)",
+    },
+    "endfed.efhw_presets": {
+        Language.ENGLISH: "EFHW band preset",
+        Language.SPANISH: "Preset EFHW por banda",
     },
     "endfed.preset.sloper": {
         Language.ENGLISH: "Sloper",
@@ -3111,8 +3121,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         ),
     },
     "endfed.title": {
-        Language.ENGLISH: "End-Fed Wire Generator",
-        Language.SPANISH: "Generador de hilo alimentado en el extremo",
+        Language.ENGLISH: "End-Fed Half-Wave (EFHW) Generator",
+        Language.SPANISH: "Generador de media onda alimentada (EFHW)",
     },
     "endfed.feed_height": {
         Language.ENGLISH: "Feed height",
@@ -3157,14 +3167,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "endfed.hint": {
         Language.ENGLISH: (
-            "The wire is fed at one end. The optional counterpoise is modeled as "
+            "The wire is fed at one end. The EFHW band buttons load the published "
+            "ARRL 40/20/10 m lengths and a 49:1 transformer, plus a 0.05λ "
+            "counterpoise starting point. The optional counterpoise is modeled as "
             "a drop plus a horizontal wire. The transformer ratio is an ideal "
             "post-processing step: 49:1 means the antenna-side impedance is "
             "divided by 49 for the reported impedance and SWR."
         ),
         Language.SPANISH: (
-            "El hilo se alimenta en un extremo. El contrapeso opcional se modela "
-            "como una bajada más un tramo horizontal. La relación del "
+            "El hilo se alimenta en un extremo. Los botones EFHW cargan las "
+            "longitudes publicadas de ARRL para 40/20/10 m y un transformador "
+            "49:1, más un contrapeso inicial de 0,05λ. El contrapeso opcional se "
+            "modela como una bajada más un tramo horizontal. La relación del "
             "transformador es un post-proceso ideal: 49:1 significa que la "
             "impedancia del lado de la antena se divide por 49 para la "
             "impedancia y la ROE informadas."
@@ -3172,15 +3186,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "endfed.evidence": {
         Language.ENGLISH: (
-            "Experimental generator: geometry is tested, but there is no "
-            "independent numerical reference for this configuration. The "
-            "transformer ratio and counterpoise are installation-specific."
+            "The EFHW preset uses the published ARRL 66/33/16 ft radiator "
+            "lengths and 49:1 transformer ratio. The counterpoise, installation, "
+            "and edited geometry remain starting points, not independently "
+            "validated impedance predictions."
         ),
         Language.SPANISH: (
-            "Generador experimental: se prueba la geometría, pero no hay una "
-            "referencia numérica independiente para esta configuración. La "
-            "relación del transformador y el contrapeso dependen de la "
-            "instalación."
+            "El preset EFHW usa las longitudes publicadas de ARRL de 66/33/16 ft "
+            "y una relación de transformador 49:1. El contrapeso, la instalación "
+            "y la geometría editada siguen siendo puntos de partida, no "
+            "predicciones de impedancia validadas independientemente."
         ),
     },
     "fan.title": {

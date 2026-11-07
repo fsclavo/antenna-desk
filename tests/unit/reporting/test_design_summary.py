@@ -211,6 +211,29 @@ def test_loop_summary_reports_orientation_and_the_correct_height() -> None:
     assert "Top height" not in horizontal
 
 
+def test_top_loaded_vertical_summary_reports_the_capacity_hat() -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    rows = dict(
+        design_summary_rows(
+            VerticalParameters(
+                frequency_hz=7_100_000.0,
+                height_m=5.0,
+                base_height_m=0.25,
+                radial_count=4,
+                radial_length_m=2.5,
+                top_hat_enabled=True,
+                top_hat_radius_m=0.75,
+                top_hat_wire_count=4,
+            )
+        )
+    )
+
+    assert rows["Type"] == "top-loaded vertical"
+    assert rows["Top hat wires"] == "4"
+    assert rows["Top hat radius"] == "0.7500 m"
+
+
 def test_magnetic_loop_summary_reports_tuning_and_loss_fields() -> None:
     from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
 

@@ -10,12 +10,19 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
     QFormLayout,
+    QHBoxLayout,
     QLabel,
+    QPushButton,
     QVBoxLayout,
     QWidget,
 )
 
-from ...domain.antennas.endfed import EndFedParameters, EndFedPreset
+from ...domain.antennas.endfed import (
+    EFHW_PRESET_LENGTHS_M,
+    EndFedParameters,
+    EndFedPreset,
+    efhw_parameters,
+)
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.design.formulas import half_wave_length_m
 from ...domain.environment.ground import GroundKind, GroundModel
@@ -147,6 +154,19 @@ class EndFedForm(QWidget):
         )
 
         self._preset_label = QLabel(self)
+        self._efhw_label = QLabel(translator.t("endfed.efhw_presets"), self)
+        self._efhw_widget = QWidget(self)
+        efhw_layout = QHBoxLayout(self._efhw_widget)
+        efhw_layout.setContentsMargins(0, 0, 0, 0)
+        efhw_layout.addWidget(self._efhw_label, 1)
+        self._efhw_buttons: dict[str, QPushButton] = {}
+        for band_id in EFHW_PRESET_LENGTHS_M:
+            button = QPushButton(band_id, self._efhw_widget)
+            button.clicked.connect(
+                lambda _checked=False, band=band_id: self._load_efhw_preset(band)
+            )
+            efhw_layout.addWidget(button)
+            self._efhw_buttons[band_id] = button
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
 
@@ -178,6 +198,7 @@ class EndFedForm(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addLayout(form)
+        layout.addWidget(self._efhw_widget)
         layout.addWidget(self._geometry)
 
         for widget in (
@@ -205,12 +226,14 @@ class EndFedForm(QWidget):
             self._update_preset_label()
         self._update_ground_controls()
         self._update_counterpoise_controls()
+        self._update_efhw_visibility()
         self._update_geometry()
 
     def retranslate(self) -> None:
         self._ground_presets.retranslate()
         self._labels.retranslate()
         self._counterpoise_enabled.setText(self._translator.t("endfed.counterpoise_enabled"))
+        self._efhw_label.setText(self._translator.t("endfed.efhw_presets"))
         retranslate_combo(
             self._material,
             self._translator,
@@ -222,6 +245,7 @@ class EndFedForm(QWidget):
             ("ground.free_space", "ground.perfect", "ground.finite"),
         )
         self._update_preset_label()
+        self._update_efhw_visibility()
         self._update_geometry()
 
     def _update_preset_label(self) -> None:
@@ -249,6 +273,36 @@ class EndFedForm(QWidget):
         self._counterpoise_enabled.setChecked(True)
         self._counterpoise_length.setValue(length_from_m(0.05 * wavelength_m, self._unit_system))
         self._update_preset_label()
+
+    def _update_efhw_visibility(self) -> None:
+        self._efhw_widget.setVisible(self._preset is EndFedPreset.STANDARD)
+
+    def _load_efhw_preset(self, band_id: str) -> None:
+        if self._preset is not EndFedPreset.STANDARD:
+            return
+        parameters = efhw_parameters(
+            band_id,
+            feed_height_m=length_to_m(self._feed_height.value(), self._unit_system),
+            end_height_m=length_to_m(self._end_height.value(), self._unit_system),
+            azimuth_deg=self._azimuth.value(),
+            wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
+            material=self._selected_material(),
+            ground=self._ground_model(),
+        )
+        self._updating = True
+        try:
+            self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
+            self._length.setValue(length_from_m(parameters.length_m, self._unit_system))
+            self._transformer.setValue(parameters.transformer_ratio)
+            self._counterpoise_enabled.setChecked(True)
+            self._counterpoise_length.setValue(
+                length_from_m(parameters.counterpoise_length_m, self._unit_system)
+            )
+        finally:
+            self._updating = False
+        self._update_counterpoise_controls()
+        self._update_geometry()
+        self.changed.emit()
 
     def _emit_changed(self, *_args: object) -> None:
         if not self._updating:

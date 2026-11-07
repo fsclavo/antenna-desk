@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The EndFed template is now labeled **End-fed half-wave (EFHW)** and offers
+  explicit 40/20/10 m preset buttons using the published ARRL 66/33/16 ft
+  lengths, 49:1 transformer, and 0.05λ counterpoise starting point.
+- Top-loaded vertical reports, construction sheets, and scene summaries now
+  include the capacitive-hat wire count and radius. A mixed radial/top-hat/
+  loading-coil scene contract covers the existing vertical template.
 - Added a project-level **Balun/Unun loss** model with a frequency-dependent
   power-law fit. It reduces realized gain and is reported per frequency without
   changing geometry, impedance, or SWR; the setting is saved with the project

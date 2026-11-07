@@ -40,6 +40,25 @@ def test_endfed_dialog_builds_parameters(qtbot: QtBot) -> None:
     assert dialog._form._ground.currentText() == "Finite ground"
 
 
+def test_endfed_dialog_loads_efhw_band_presets(qtbot: QtBot) -> None:
+    dialog = EndFedDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+
+    button = dialog._form._efhw_buttons["40m"]
+    button.click()
+    parameters = dialog.parameters()
+
+    assert parameters.length_m == pytest.approx(66.0 * 0.3048, abs=1e-3)
+    assert parameters.transformer_ratio == pytest.approx(49.0)
+    assert parameters.frequency_hz == pytest.approx(7_100_000.0)
+    assert parameters.counterpoise_length_m > 0.0
+
+    dialog._form._efhw_buttons["10m"].click()
+    parameters = dialog.parameters()
+    assert parameters.length_m == pytest.approx(16.0 * 0.3048, abs=1e-3)
+    assert parameters.frequency_hz == pytest.approx(28_400_000.0)
+
+
 def test_endfed_dialog_defaults_to_harmonic_analysis_bands(qtbot: QtBot) -> None:
     dialog = EndFedDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(dialog)

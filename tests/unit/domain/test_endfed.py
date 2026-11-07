@@ -122,6 +122,26 @@ def test_endfed_rejects_an_invalid_transformer_ratio() -> None:
         )
 
 
+def test_efhw_presets_use_the_published_arrl_lengths() -> None:
+    from antennadesk.domain.antennas.endfed import efhw_parameters
+
+    expected = {"40m": 66.0 * 0.3048, "20m": 33.0 * 0.3048, "10m": 16.0 * 0.3048}
+    for band_id, length_m in expected.items():
+        parameters = efhw_parameters(band_id)
+
+        assert parameters.length_m == pytest.approx(length_m)
+        assert parameters.transformer_ratio == pytest.approx(49.0)
+        assert parameters.counterpoise_length_m > 0.0
+        assert parameters.preset is EndFedPreset.STANDARD
+
+
+def test_efhw_presets_reject_an_unknown_band() -> None:
+    from antennadesk.domain.antennas.endfed import efhw_parameters
+
+    with pytest.raises(ValueError, match="unsupported EFHW"):
+        efhw_parameters("30m")
+
+
 def test_endfed_presets_keep_their_generator_name_and_template_id() -> None:
     sloper = EndFedParameters(
         frequency_hz=7_100_000.0,

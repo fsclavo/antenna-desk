@@ -192,6 +192,26 @@ def _cases() -> tuple[FamilyCase, ...]:
             ("Vertical", "radials 4"),
         ),
         FamilyCase(
+            "vertical_top_hat",
+            VerticalParameters(
+                frequency_hz=7_100_000.0,
+                height_m=5.0,
+                base_height_m=0.25,
+                radial_count=4,
+                radial_length_m=2.5,
+                top_hat_enabled=True,
+                top_hat_radius_m=0.75,
+                top_hat_wire_count=4,
+                loading_coil_enabled=True,
+                loading_coil_offset_m=0.0,
+                loading_coil_inductance_h=10e-6,
+            ),
+            "vertical",
+            9,
+            GeometryViewMode.ELEVATION,
+            ("Vertical", "capacitive top hat 4 x 0.75 m", "loading coil"),
+        ),
+        FamilyCase(
             "inverted_v",
             InvertedVParameters(
                 frequency_hz=7_100_000.0,

@@ -167,6 +167,10 @@ optional signing steps.
   and a parallel-trap helper in the load editor.
 - Vertical radial-system presets for ground radials, elevated radials, and a
   dense ground-screen approximation, with editable numeric fields.
+- Top-loaded vertical geometry with a capacitive hat and loading coil, including
+  report and scene dimensions.
+- Explicit EFHW labeling and published 40/20/10 m preset buttons for the
+  end-fed template.
 - Project-level balun/unun insertion-loss model with a frequency-dependent
   power-law fit and per-frequency reporting.
 - Magnetic-loop generator with a top gap, ideal series tuning capacitor and

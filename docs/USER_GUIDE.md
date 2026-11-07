@@ -389,21 +389,21 @@ the base connector out of the NEC ground plane. Slim Jim adds the top connector
 and is also available by enabling **Folded** in the J Pole editor. Both are
 first-class experimental templates.
 
-## Create an end-fed wire
+## Create an end-fed half-wave (EFHW)
 
-Choose **File → New Antenna... → End-fed wire** to generate a wire fed at one
-end, optionally sloping between feed and far-end heights. Set the physical wire
-length, feed height, end height, azimuth, radius, material, and ground; the
-horizontal run is derived from the height difference. Enable
-**Use counterpoise** to model it as a drop from the feed plus a horizontal
-wire; disable it to remove
-the counterpoise while keeping its last values for later. The transformer
-ratio is an ideal feed-point transformation: `49` means a 49:1 unun, so the
-antenna-side impedance is divided by 49 for the reported impedance and SWR.
-If the requested end height is outside the wire's vertical reach, the
-frequency-first estimator clamps it to the nearest reachable height and reports
-a warning. End-fed is a first-class experimental template with an inline
-editor.
+Choose **File → New Antenna... → End-fed wire / EFHW** to generate a wire fed at
+one end, optionally sloping between feed and far-end heights. Set the physical
+wire length, feed height, end height, azimuth, radius, material, and ground; the
+horizontal run is derived from the height difference. The **EFHW band preset**
+buttons load the published ARRL 40/20/10 m lengths (66/33/16 ft), a 49:1
+transformer, and a 0.05λ counterpoise starting point. Enable **Use counterpoise**
+to model it as a drop from the feed plus a horizontal wire; disable it to remove
+the counterpoise while keeping its last values for later. The transformer ratio
+is an ideal feed-point transformation: `49` means a 49:1 unun, so the
+antenna-side impedance is divided by 49 for the reported impedance and SWR. If
+the requested end height is outside the wire's vertical reach, the frequency-
+first estimator clamps it to the nearest reachable height and reports a warning.
+EFHW is a first-class experimental template with an inline editor.
 
 The frequency is the **design frequency** for the half-wave radiator; the
 matching transformer and counterpoise remain installation-specific. Use

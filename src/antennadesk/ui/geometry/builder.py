@@ -1992,6 +1992,12 @@ def _summary(
                 f"{parameters.loading_coil_inductance_h * 1e6:.3f} µH @ "
                 f"{_format_length(parameters.loading_coil_offset_m, translator, unit_system)}"
             )
+        if isinstance(parameters, VerticalParameters) and parameters.top_hat_enabled:
+            parts.append(
+                f"{translator.t('vertical.top_hat').lower()} "
+                f"{parameters.top_hat_wire_count} x "
+                f"{_format_length(parameters.top_hat_radius_m, translator, unit_system)}"
+            )
     elif isinstance(parameters, T2FDParameters):
         height_label = (
             translator.t("field.base_height")

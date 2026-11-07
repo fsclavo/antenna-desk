@@ -296,16 +296,26 @@ Install {parameters.vertical_height_m:.4f} m vertically with the base
 the apex with an included angle of {parameters.included_angle_deg:.1f}°.
 The apex is {parameters.apex_height_m:.4f} m above ground.</p>"""
     elif isinstance(parameters, VerticalParameters):
+        top_hat_rows = ""
+        top_hat_note = ""
+        if parameters.top_hat_enabled:
+            top_hat_rows = f"""
+<tr><th>Top hat wires</th><td>{parameters.top_hat_wire_count}</td></tr>
+<tr><th>Top hat radius</th><td>{parameters.top_hat_radius_m:.4f} m</td></tr>
+"""
+            top_hat_note = f""" Add {parameters.top_hat_wire_count} horizontal
+top-hat wires of {parameters.top_hat_radius_m:.4f} m at the radiator top."""
         feed_rows = f"""
 <tr><th>Radiator height</th><td>{parameters.height_m:.4f} m</td></tr>
 <tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
 <tr><th>Radials</th><td>{parameters.radial_count}</td></tr>
 <tr><th>Radial length</th><td>{parameters.radial_length_m:.4f} m</td></tr>
+{top_hat_rows}
 <tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
 """
         construction_note = f"""<p>Install a {parameters.height_m:.4f} m vertical radiator with its base
 {parameters.base_height_m:.4f} m above ground. Add {parameters.radial_count} radials of
-{parameters.radial_length_m:.4f} m in the base plane.</p>"""
+{parameters.radial_length_m:.4f} m in the base plane.{top_hat_note}</p>"""
     elif isinstance(parameters, OCFDParameters):
         other_leg_m = max(feed_wire.length_m - feed_offset_m, 0.0)
         feed_rows = f"""

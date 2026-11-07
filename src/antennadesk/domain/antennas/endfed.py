@@ -28,6 +28,22 @@ SLOPER_REFERENCE_FEED_HEIGHT_M = 3.0 * 0.3048
 SLOPER_REFERENCE_END_HEIGHT_M = 25.0 * 0.3048
 SLOPER_REFERENCE_TRANSFORMER_RATIO = 49.0
 
+# ARRL End-Fed Half-Wave Antenna Kit: 66 ft on 40 m, 33 ft on 20 m, 16 ft on
+# 10 m, with a 49:1 transformer. The counterpoise is the PA9X 0.05-wavelength
+# starting rule.
+EFHW_PRESET_LENGTHS_M = {
+    "40m": 66.0 * 0.3048,
+    "20m": 33.0 * 0.3048,
+    "10m": 16.0 * 0.3048,
+}
+EFHW_PRESET_FREQUENCIES_HZ = {
+    "40m": 7_100_000.0,
+    "20m": 14_100_000.0,
+    "10m": 28_400_000.0,
+}
+EFHW_TRANSFORMER_RATIO = 49.0
+EFHW_COUNTERPOISE_FRACTION = 0.05
+
 
 class EndFedPreset(StrEnum):
     STANDARD = "endfed"
@@ -152,6 +168,38 @@ class EndFedParameters:
                 EndFedPreset.RANDOM_WIRE: "Random wire",
             }[self.preset],
         )
+
+
+def efhw_parameters(
+    band_id: str,
+    *,
+    feed_height_m: float = 10.0,
+    end_height_m: float = 10.0,
+    azimuth_deg: float = 0.0,
+    wire_radius_m: float = 0.001,
+    material: ConductorMaterial = COPPER,
+    ground: GroundModel = FREE_SPACE,
+) -> EndFedParameters:
+    """Return the published ARRL EFHW kit starting geometry for a band."""
+
+    if band_id not in EFHW_PRESET_LENGTHS_M:
+        raise ValueError(f"unsupported EFHW preset band: {band_id!r}")
+    frequency_hz = EFHW_PRESET_FREQUENCIES_HZ[band_id]
+    wavelength_m = units.wavelength_m(frequency_hz)
+    return EndFedParameters(
+        frequency_hz=frequency_hz,
+        length_m=EFHW_PRESET_LENGTHS_M[band_id],
+        feed_height_m=feed_height_m,
+        end_height_m=end_height_m,
+        azimuth_deg=azimuth_deg,
+        wire_radius_m=wire_radius_m,
+        material=material,
+        ground=ground,
+        transformer_ratio=EFHW_TRANSFORMER_RATIO,
+        counterpoise_length_m=EFHW_COUNTERPOISE_FRACTION * wavelength_m,
+        counterpoise_height_m=0.1,
+        preset=EndFedPreset.STANDARD,
+    )
 
 
 def sloper_parameters(
