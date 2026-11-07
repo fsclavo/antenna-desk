@@ -140,6 +140,39 @@ def test_yagi_and_moxon_summaries_report_polarization_and_clearance() -> None:
     assert moxon["Lowest edge"] == "5.0000 m"
 
 
+def test_loop_summary_reports_orientation_and_the_correct_height() -> None:
+    from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
+
+    vertical = dict(
+        design_summary_rows(
+            LoopParameters(
+                frequency_hz=7_100_000.0,
+                circumference_m=40.0,
+                height_m=8.0,
+                sides=4,
+            )
+        )
+    )
+    horizontal = dict(
+        design_summary_rows(
+            LoopParameters(
+                frequency_hz=7_100_000.0,
+                circumference_m=40.0,
+                height_m=8.0,
+                sides=4,
+                orientation=LoopOrientation.HORIZONTAL,
+            )
+        )
+    )
+
+    assert vertical["Orientation"] == "vertical"
+    assert vertical["Bottom height"] == "8.0000 m"
+    assert vertical["Top height"] == "22.1421 m"
+    assert horizontal["Orientation"] == "horizontal"
+    assert horizontal["Height"] == "8.0000 m"
+    assert "Top height" not in horizontal
+
+
 def test_g5rv_custom_generator_is_labeled_in_the_summary() -> None:
     from antennadesk.domain.antennas.g5rv import g5rv_parameters
 

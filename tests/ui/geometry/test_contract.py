@@ -26,7 +26,7 @@ from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
-from antennadesk.domain.antennas.loop import LoopParameters
+from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
 from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
@@ -140,6 +140,20 @@ def _cases() -> tuple[FamilyCase, ...]:
             4,
             GeometryViewMode.ELEVATION,
             ("Quad loop", "sides 4"),
+        ),
+        FamilyCase(
+            "sky_loop",
+            LoopParameters(
+                frequency_hz=7_100_000.0,
+                circumference_m=40.0,
+                height_m=8.0,
+                sides=4,
+                orientation=LoopOrientation.HORIZONTAL,
+            ),
+            "loop",
+            4,
+            GeometryViewMode.PLAN,
+            ("Quad loop", "orientation horizontal", "height 8.00 m"),
         ),
         FamilyCase(
             "ocfd",

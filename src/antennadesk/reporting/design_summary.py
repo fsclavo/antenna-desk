@@ -14,7 +14,7 @@ from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.load import LumpedLoad, ParallelLoad
-from ..domain.antennas.loop import LoopParameters
+from ..domain.antennas.loop import LoopOrientation, LoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.polarization import Polarization
@@ -229,14 +229,22 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", "loop"),
+                ("Orientation", parameters.orientation.value),
                 ("Circumference", f"{parameters.circumference_m:.4f} m"),
                 ("Sides", str(parameters.sides)),
                 ("Equivalent diameter", f"{parameters.diameter_m:.4f} m"),
-                ("Bottom height", f"{parameters.height_m:.4f} m"),
-                ("Top height", f"{parameters.top_height_m:.4f} m"),
-                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
             ]
         )
+        if parameters.orientation is LoopOrientation.HORIZONTAL:
+            rows.append(("Height", f"{parameters.height_m:.4f} m"))
+        else:
+            rows.extend(
+                [
+                    ("Bottom height", f"{parameters.height_m:.4f} m"),
+                    ("Top height", f"{parameters.top_height_m:.4f} m"),
+                ]
+            )
+        rows.append(("Azimuth", f"{parameters.azimuth_deg:.1f}°"))
     if isinstance(parameters, RingoParameters):
         rows.extend(
             [

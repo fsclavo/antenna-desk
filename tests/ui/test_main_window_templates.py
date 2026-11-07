@@ -69,6 +69,33 @@ def test_switching_to_a_loop_updates_the_design(window: MainWindow) -> None:
     window._dirty = False
 
 
+def test_loop_orientation_switches_between_vertical_and_horizontal(
+    window: MainWindow,
+) -> None:
+    from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
+
+    window._form.set_antenna_type("loop")
+    assert window._form._orientation.isHidden() is False
+    assert window._form.parameters().orientation is LoopOrientation.VERTICAL
+    assert window._form._labels()["field.height"].text() == "Base height"
+
+    window._form._orientation.setCurrentIndex(0)
+    window._form._length.setValue(40.0)
+    window._form._height.setValue(10.0)
+    window.apply_design()
+
+    assert window._project is not None
+    parameters = window._project.designs[0].parameters
+    assert isinstance(parameters, LoopParameters)
+    assert parameters.orientation is LoopOrientation.HORIZONTAL
+    assert window._form._labels()["field.height"].text() == "Height"
+    assert all(
+        wire.start.z_m == pytest.approx(10.0) for wire in window._project.designs[0].antenna.wires
+    )
+    assert window._view_combo.currentData() == "plan"
+    window._dirty = False
+
+
 def test_new_antenna_uses_the_current_antenna_type(
     window: MainWindow,
     monkeypatch: pytest.MonkeyPatch,

@@ -44,6 +44,7 @@ from ..domain.antennas.loop import (
     ANTENNA_TYPE_LOOP,
     MAX_SIDES,
     MIN_SIDES,
+    LoopOrientation,
     LoopParameters,
 )
 from ..domain.antennas.matching_network import LNetwork, MatchingNetwork, PiNetwork, TNetwork
@@ -197,6 +198,7 @@ class LoopParametersPayload(StrictModel):
     circumference_m: float = Field(gt=0.0)
     height_m: float = Field(ge=0.0)
     sides: int = Field(default=16, ge=MIN_SIDES, le=MAX_SIDES)
+    orientation: LoopOrientation = LoopOrientation.VERTICAL
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
@@ -877,6 +879,7 @@ def _loop_parameters_from_domain(value: LoopParameters) -> LoopParametersPayload
         circumference_m=value.circumference_m,
         height_m=value.height_m,
         sides=value.sides,
+        orientation=value.orientation,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
@@ -1550,6 +1553,7 @@ def _loop_parameters_to_domain(value: LoopParametersPayload) -> LoopParameters:
         circumference_m=value.circumference_m,
         height_m=value.height_m,
         sides=value.sides,
+        orientation=value.orientation,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),

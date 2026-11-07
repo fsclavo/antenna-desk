@@ -30,7 +30,7 @@ from ...domain.antennas.folded_dipole import (
     ANTENNA_TYPE_FOLDED_DIPOLE,
     FoldedDipoleParameters,
 )
-from ...domain.antennas.loop import ANTENNA_TYPE_LOOP, LoopParameters
+from ...domain.antennas.loop import ANTENNA_TYPE_LOOP, LoopOrientation, LoopParameters
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.environment.ground import GroundKind, GroundModel
 from ...domain.simulation.frequency import FrequencyPlan
@@ -370,6 +370,9 @@ class DipoleForm(QWidget):
             antenna_type = ANTENNA_TYPE_LOOP
             length_m = parameters.circumference_m
             self._sides.setValue(parameters.sides)
+            orientation_index = self._orientation.findData(parameters.orientation.value)
+            if orientation_index >= 0:
+                self._orientation.setCurrentIndex(orientation_index)
         elif isinstance(parameters, DipoleParameters):
             antenna_type = ANTENNA_TYPE_WIRE_DIPOLE
             length_m = parameters.total_length_m
@@ -450,6 +453,7 @@ class DipoleForm(QWidget):
             return LoopParameters(
                 frequency_hz=frequency_hz,
                 height_m=height_m,
+                orientation=LoopOrientation(self._orientation.currentData()),
                 azimuth_deg=azimuth_deg,
                 wire_radius_m=wire_radius_m,
                 material=material,
@@ -482,9 +486,19 @@ class DipoleForm(QWidget):
             raise ValueError(f"unsupported dipole template: {antenna_type!r}")
         if antenna_type == self._antenna_type:
             return
+        previous_type = self._antenna_type
         self._antenna_type = antenna_type
+        if antenna_type == ANTENNA_TYPE_LOOP and previous_type != ANTENNA_TYPE_LOOP:
+            self._set_orientation(LoopOrientation.VERTICAL.value)
+        elif previous_type == ANTENNA_TYPE_LOOP and antenna_type != ANTENNA_TYPE_LOOP:
+            self._set_orientation(DipoleOrientation.HORIZONTAL.value)
         self._update_type_controls()
         self._emit_changed()
+
+    def _set_orientation(self, value: str) -> None:
+        index = self._orientation.findData(value)
+        if index >= 0:
+            self._orientation.setCurrentIndex(index)
 
     def simulation_spec(self) -> SimulationSpec:
         parameters = self.parameters()
@@ -523,7 +537,7 @@ class DipoleForm(QWidget):
         is_dipole = antenna_type == ANTENNA_TYPE_WIRE_DIPOLE
         is_folded = antenna_type == ANTENNA_TYPE_FOLDED_DIPOLE
         is_loop = antenna_type == ANTENNA_TYPE_LOOP
-        self._set_row_visible(self._orientation, is_dipole)
+        self._set_row_visible(self._orientation, is_dipole or is_loop)
         self._set_row_visible(self._spacing, is_folded)
         self._set_row_visible(self._sides, is_loop)
         self._family_value.setText(
@@ -548,8 +562,12 @@ class DipoleForm(QWidget):
 
     def _update_orientation_labels(self) -> None:
         is_dipole = self._antenna_type == ANTENNA_TYPE_WIRE_DIPOLE
-        vertical = is_dipole and self._orientation.currentData() == DipoleOrientation.VERTICAL.value
-        self._azimuth.setEnabled(not vertical)
+        is_loop = self._antenna_type == ANTENNA_TYPE_LOOP
+        vertical = self._orientation.currentData() in {
+            DipoleOrientation.VERTICAL.value,
+            LoopOrientation.VERTICAL.value,
+        } and (is_dipole or is_loop)
+        self._azimuth.setEnabled(not (is_dipole and vertical))
         labels = self._labels()
         height_label = labels.get("field.height")
         if height_label is not None:

@@ -16,7 +16,7 @@ from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
-from ..domain.antennas.loop import LoopParameters
+from ..domain.antennas.loop import LoopOrientation, LoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.ringo import RingoParameters
@@ -291,15 +291,24 @@ The apex is {parameters.apex_height_m:.4f} m above ground.</p>"""
         construction_note = f"""<p>Cut one conductor to {parameters.total_length_m:.4f} m.
 Feed it {feed_offset_m:.4f} m from the start ({parameters.feed_ratio * 100:.1f}% of its length).</p>"""
     elif isinstance(parameters, LoopParameters):
+        horizontal = parameters.orientation is LoopOrientation.HORIZONTAL
+        height_row = (
+            f"<tr><th>Plane height</th><td>{parameters.height_m:.4f} m</td></tr>"
+            if horizontal
+            else f"<tr><th>Base height</th><td>{parameters.height_m:.4f} m</td></tr>"
+        )
         feed_rows = f"""
+<tr><th>Orientation</th><td>{parameters.orientation.value}</td></tr>
 <tr><th>Side length</th><td>{parameters.side_length_m:.4f} m</td></tr>
+{height_row}
 <tr><th>Feed side</th><td>{_escape(antenna.feed.wire_id)}</td></tr>
 <tr><th>Feed location</th><td>midpoint of the first side</td></tr>
 <tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
 """
+        plane = "horizontal" if horizontal else "vertical"
         construction_note = f"""<p>Cut one conductor to {parameters.circumference_m:.4f} m and
-close it into {parameters.sides} equal sides of {parameters.side_length_m:.4f} m.
-Feed the midpoint of the first side.</p>"""
+close it into {parameters.sides} equal sides of {parameters.side_length_m:.4f} m
+in a {plane} plane. Feed the midpoint of the first side.</p>"""
     elif isinstance(parameters, CustomAntennaParameters):
         radiator = next(
             (wire for wire in antenna.wires if wire.id == ZEPP_RADIATOR_ID),

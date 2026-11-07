@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The loop editor now supports **vertical** and **horizontal / sky-loop**
+  orientation. Horizontal loops use plan view by default, keep their polygon
+  when dimensioned and reported, and persist in schema 10 with existing loops
+  migrated as vertical.
 - Added a first-class **Inverted L** generator: a vertical section fed at the
   base, a horizontal top run, configurable base height and azimuth, a
   dedicated editor, catalog route, schema-9 persistence, geometry dimensions,

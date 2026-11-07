@@ -8,10 +8,10 @@ electromagnetic engine.
 measurements, optimization, matching, and reporting flows are implemented.
 Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.1.0`
 is published; signing is optional and deferred for later releases. Center-fed
-dipoles, folded dipoles, trap dipoles, T2FDs, loops, custom wires, Yagis, Moxon,
-fan dipoles, inverted-Vs, inverted-Ls, OCFDs, end-fed wires, slopers, random
-wires, doublets, J Poles, Slim Jims, Ringos, verticals, and loaded verticals are
-supported.
+dipoles, folded dipoles, trap dipoles, T2FDs, vertical and horizontal loops,
+custom wires, Yagis, Moxon, fan dipoles, inverted-Vs, inverted-Ls, OCFDs,
+end-fed wires, slopers, random wires, doublets, J Poles, Slim Jims, Ringos,
+verticals, and loaded verticals are supported.
 Yagi and Moxon arrays support horizontal or vertical polarization with a
 horizontal boom. Projects use versioned JSON persistence, lossless gzip
 compression, and explicit migrations. VNA CSV import
@@ -130,8 +130,8 @@ optional signing steps.
   points by default, and pattern resolution defaults to 5° and can be set to
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` projects with multiple design
-  variants; schema version 9 adds the inverted-L design type and migrates older
-  files explicitly.
+  variants; schema version 10 adds loop orientation and migrates older files
+  explicitly.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - VNA CSV import with measured impedance/SWR records and a measured/simulated
   SWR, R, X, or |Z| comparison tab, including resonance differences.

@@ -221,6 +221,25 @@ def _migrate_v8_to_v9(document: dict[str, Any]) -> dict[str, Any]:
     return copy.deepcopy(document)
 
 
+def _migrate_v9_to_v10(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the loop orientation field, preserving the vertical default."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if isinstance(project, dict):
+        designs = project.get("designs")
+        if isinstance(designs, list):
+            for design in designs:
+                if not isinstance(design, dict):
+                    continue
+                if design.get("antenna_type") != "loop":
+                    continue
+                parameters = design.get("parameters")
+                if isinstance(parameters, dict) and "orientation" not in parameters:
+                    parameters["orientation"] = "vertical"
+    return migrated
+
+
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
@@ -230,6 +249,7 @@ MIGRATIONS: dict[int, Migration] = {
     6: _migrate_v6_to_v7,
     7: _migrate_v7_to_v8,
     8: _migrate_v8_to_v9,
+    9: _migrate_v9_to_v10,
 }
 
 

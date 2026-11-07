@@ -176,8 +176,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Dos elementos paralelos unidos en los extremos, con separación ajustable.",
     },
     "catalog.loop.description": {
-        Language.ENGLISH: "Regular-polygon loop in a vertical plane.",
-        Language.SPANISH: "Lazo poligonal regular en un plano vertical.",
+        Language.ENGLISH: "Regular-polygon loop in a vertical or horizontal plane.",
+        Language.SPANISH: "Lazo poligonal regular en un plano vertical u horizontal.",
     },
     "catalog.yagi": {Language.ENGLISH: "Yagi", Language.SPANISH: "Yagi"},
     "catalog.yagi.description": {
@@ -650,6 +650,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "geometry.vertical_plane_edge_on": {
         Language.ENGLISH: "top view: vertical plane is edge-on; use Elevation to see the layout",
         Language.SPANISH: "vista superior: el plano vertical está de canto; usá Alzado para ver la disposición",
+    },
+    "geometry.horizontal_plane_edge_on": {
+        Language.ENGLISH: "elevation: horizontal loop is edge-on; use Plan to see the layout",
+        Language.SPANISH: "alzado: el lazo horizontal está de canto; usá Planta para ver la disposición",
+    },
+    "geometry.top_height": {
+        Language.ENGLISH: "top height",
+        Language.SPANISH: "altura superior",
     },
     "geometry.sides_note": {
         Language.ENGLISH: "{sides}-sided polygon shown to scale",

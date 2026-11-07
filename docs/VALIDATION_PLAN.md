@@ -379,7 +379,8 @@ Phase 6 adds tests for:
   analysis band plans; version 7 adds Yagi/Moxon horizontal-or-vertical
   polarization, with existing arrays migrated as horizontal; version 8 adds
   vertical top-hat fields and infers them from saved top-hat wires; version 9
-  adds the inverted-L design type without changing existing designs.
+  adds the inverted-L design type without changing existing designs; version 10
+  adds loop orientation and migrates existing loops as vertical.
 - Yagi and Moxon vertical polarization: geometry, azimuth, ground-clearance
   validation, scene contracts for both views, persistence round trips, and a
   free-space NEC equivalence check against the horizontal design rotated around

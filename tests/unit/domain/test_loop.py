@@ -6,7 +6,7 @@ import math
 
 import pytest
 
-from antennadesk.domain.antennas.loop import LoopParameters
+from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
 
 
 def _parameters(**overrides: object) -> LoopParameters:
@@ -93,3 +93,36 @@ def test_loop_top_height_is_exact_for_an_odd_number_of_sides() -> None:
 
     assert parameters.top_height_m == pytest.approx(actual_top)
     assert parameters.top_height_m < parameters.height_m + parameters.diameter_m
+
+
+def test_horizontal_loop_lies_in_a_plane_at_the_configured_height() -> None:
+    parameters = _parameters(orientation=LoopOrientation.HORIZONTAL)
+    antenna = parameters.to_antenna()
+    points = [point for wire in antenna.wires for point in (wire.start, wire.end)]
+
+    assert all(point.z_m == pytest.approx(parameters.height_m) for point in points)
+    assert all(
+        math.hypot(point.x_m, point.y_m) == pytest.approx(parameters.diameter_m / 2.0)
+        for point in points
+    )
+    assert parameters.top_height_m == pytest.approx(parameters.height_m)
+    assert antenna.feed.wire_id == "loop-0"
+    assert antenna.feed.offset_m == pytest.approx(parameters.side_length_m / 2.0)
+
+
+def test_horizontal_loop_azimuth_rotates_the_polygon_in_plan() -> None:
+    parameters = _parameters(
+        orientation=LoopOrientation.HORIZONTAL,
+        azimuth_deg=90.0,
+    )
+    wire = parameters.to_antenna().wires[0]
+
+    assert wire.start.x_m == pytest.approx(0.0, abs=1e-12)
+    assert wire.start.y_m == pytest.approx(parameters.diameter_m / 2.0)
+    assert wire.start.z_m == pytest.approx(parameters.height_m)
+
+
+def test_loop_orientation_accepts_a_string() -> None:
+    parameters = _parameters(orientation="horizontal")
+
+    assert parameters.orientation is LoopOrientation.HORIZONTAL

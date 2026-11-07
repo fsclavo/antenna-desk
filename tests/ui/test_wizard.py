@@ -96,7 +96,35 @@ def test_wizard_builds_a_loop(qtbot: QtBot) -> None:
     assert isinstance(parameters, LoopParameters)
     assert parameters.circumference_m > 35.0
     assert parameters.sides == 16
+    assert parameters.orientation.value == "vertical"
     assert len(parameters.to_antenna().wires) == 16
+
+
+def test_wizard_builds_a_horizontal_loop(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.loop import (
+        ANTENNA_TYPE_LOOP,
+        LoopOrientation,
+        LoopParameters,
+    )
+
+    wizard = DipoleWizard(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        initial_frequency_hz=7_100_000.0,
+        initial_antenna_type=ANTENNA_TYPE_LOOP,
+    )
+    qtbot.addWidget(wizard)
+    wizard.geometry_page.initializePage()
+    wizard.geometry_page._orientation.setCurrentIndex(0)
+
+    parameters = wizard.build_parameters()
+
+    assert isinstance(parameters, LoopParameters)
+    assert parameters.orientation is LoopOrientation.HORIZONTAL
+    assert all(
+        wire.start.z_m == pytest.approx(parameters.height_m)
+        for wire in parameters.to_antenna().wires
+    )
 
 
 def test_wizard_builds_a_folded_dipole(qtbot: QtBot) -> None:

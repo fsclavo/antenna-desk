@@ -11,7 +11,7 @@ from antennadesk.application.use_cases.create_dipole_project import (
 from antennadesk.domain.antennas.design import AntennaDesignParameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
-from antennadesk.domain.antennas.loop import LoopParameters
+from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
 from antennadesk.domain.projects.project import Project
 from antennadesk.persistence.schema import (
     FoldedDipoleParametersPayload,
@@ -230,6 +230,26 @@ def test_vertical_parameters_round_trip() -> None:
 
     assert restored.designs[0].parameters == parameters
     assert restored.designs[0].antenna_type == "vertical"
+
+
+def test_horizontal_loop_parameters_round_trip() -> None:
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=40.0,
+        height_m=8.0,
+        sides=4,
+        orientation=LoopOrientation.HORIZONTAL,
+        azimuth_deg=35.0,
+    )
+    original = _project(parameters, "Horizontal loop")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert isinstance(document.project.designs[0].parameters, LoopParametersPayload)
+    assert document.project.designs[0].parameters.orientation == LoopOrientation.HORIZONTAL
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna == original.designs[0].antenna
 
 
 def test_inverted_l_parameters_round_trip() -> None:

@@ -121,24 +121,27 @@ conductor length is `2 * total_length_m + 2 * spacing_m`.
 
 ### LoopParameters
 
-User-facing parameters for a vertical regular-polygon loop:
+User-facing parameters for a regular-polygon loop:
 
 - `frequency_hz`
 - `circumference_m`: total conductor length
-- `height_m`: bottom of the loop above ground
+- `height_m`: bottom of a vertical loop or plane height of a horizontal loop
 - `sides`: 3–128 straight sides
+- `orientation`: `vertical` or `horizontal`
 - `azimuth_deg`
 - `wire_radius_m`
 - `material`
 - `ground`
 
 `to_antenna()` generates one wire per side, connected end-to-start into a
-closed polygon in a vertical plane. `height_m` is the bottom above ground;
-`top_height_m` is the highest actual polygon vertex, which is not
-`height_m + diameter_m` for odd side counts. `azimuth_deg` rotates the loop
-plane around the vertical axis. The feed is at the midpoint of the first side.
-A square loop uses four sides; a larger side count approximates a circular
-loop.
+closed polygon. A vertical loop lies in a vertical plane with `height_m` as its
+bottom above ground; `top_height_m` is the highest actual polygon vertex, which
+is not `height_m + diameter_m` for odd side counts. A horizontal or sky loop
+lies in a horizontal plane at `height_m`; its `top_height_m` is the plane
+height. `azimuth_deg` rotates the vertical loop plane around the vertical axis,
+or the horizontal polygon within its plane. The feed is at the midpoint of the
+first side. A square loop uses four sides; a larger side count approximates a
+circular loop.
 
 ### CustomAntennaParameters
 
@@ -309,8 +312,8 @@ reconstructs OCFD parameters from legacy custom designs.
 
 `AntennaDesignParameters` is the union of `DipoleParameters`,
 `FoldedDipoleParameters`, `LoopParameters`, `OCFDParameters`,
-`VerticalParameters`, `InvertedVParameters`, `YagiParameters`,
-`MoxonParameters`, `FanDipoleParameters`, `EndFedParameters`,
+`VerticalParameters`, `InvertedVParameters`, `InvertedLParameters`,
+`YagiParameters`, `MoxonParameters`, `FanDipoleParameters`, `EndFedParameters`,
 `JPoleParameters`, `RingoParameters`, `TrapDipoleParameters`,
 `T2FDParameters`, and `CustomAntennaParameters`. `antenna_type_for()` maps a
 parameter object to its native type; `custom` remains the arbitrary-wire escape
@@ -421,11 +424,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 9.
+the application writes version 10.
 
 ## Schema policy
 
-- Current version: `9`.
+- Current version: `10`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -445,6 +448,8 @@ the application writes version 9.
   with the top hat disabled; the migration infers the hat radius and wire count
   from any saved `top-hat-*` wires.
 - Version 9 adds the inverted-L design type. Existing designs are unchanged.
+- Version 10 adds the loop `orientation` field. Existing loops load as
+  `vertical`; horizontal or sky loops use `horizontal`.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -473,7 +478,7 @@ the application writes version 9.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 9.
+- Simulation results are persisted as immutable runs in schema version 10.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are

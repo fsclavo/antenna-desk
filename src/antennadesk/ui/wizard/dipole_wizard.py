@@ -27,7 +27,11 @@ from ...domain.antennas.folded_dipole import (
     ANTENNA_TYPE_FOLDED_DIPOLE,
     FoldedDipoleParameters,
 )
-from ...domain.antennas.loop import ANTENNA_TYPE_LOOP, LoopParameters
+from ...domain.antennas.loop import (
+    ANTENNA_TYPE_LOOP,
+    LoopOrientation,
+    LoopParameters,
+)
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.common import units
 from ...domain.environment.ground import GroundKind, GroundModel
@@ -289,7 +293,8 @@ class GeometryPage(QWizardPage):
     def _update_type_labels(self) -> None:
         antenna_type = self.antenna_type()
         is_wire = antenna_type == ANTENNA_TYPE_WIRE_DIPOLE
-        self._set_row_visible(self._orientation, is_wire)
+        is_loop = antenna_type == ANTENNA_TYPE_LOOP
+        self._set_row_visible(self._orientation, is_wire or is_loop)
         self._set_row_visible(self._spacing, antenna_type == ANTENNA_TYPE_FOLDED_DIPOLE)
         self._set_row_visible(self._sides, antenna_type == ANTENNA_TYPE_LOOP)
         length_key = {
@@ -306,9 +311,13 @@ class GeometryPage(QWizardPage):
     def _update_orientation_labels(self) -> None:
         antenna_type = self.antenna_type()
         is_wire = antenna_type == ANTENNA_TYPE_WIRE_DIPOLE
-        vertical = is_wire and self._orientation.currentData() == DipoleOrientation.VERTICAL.value
-        self._azimuth.setEnabled(not vertical)
-        base_height = vertical or antenna_type == ANTENNA_TYPE_LOOP
+        is_loop = antenna_type == ANTENNA_TYPE_LOOP
+        vertical = self._orientation.currentData() in {
+            DipoleOrientation.VERTICAL.value,
+            LoopOrientation.VERTICAL.value,
+        } and (is_wire or is_loop)
+        self._azimuth.setEnabled(not (is_wire and vertical))
+        base_height = vertical
         for label in self.findChildren(QLabel):
             if label.objectName() == "field.height":
                 label.setText(
@@ -316,14 +325,27 @@ class GeometryPage(QWizardPage):
                 )
                 break
 
+    def _set_orientation(self, value: str) -> None:
+        index = self._orientation.findData(value)
+        if index >= 0:
+            self._orientation.setCurrentIndex(index)
+
     def orientation(self) -> DipoleOrientation:
         return DipoleOrientation(self._orientation.currentData())
 
+    def loop_orientation(self) -> LoopOrientation:
+        return LoopOrientation(self._orientation.currentData())
+
     def initializePage(self) -> None:
         antenna_type = self.antenna_type()
-        if not self._initialized or antenna_type != getattr(self, "_last_type", None):
+        previous_type = getattr(self, "_last_type", None)
+        if not self._initialized or antenna_type != previous_type:
             self._initialized = True
             self._last_type = antenna_type
+            if antenna_type == ANTENNA_TYPE_LOOP and previous_type != ANTENNA_TYPE_LOOP:
+                self._set_orientation(LoopOrientation.VERTICAL.value)
+            elif previous_type == ANTENNA_TYPE_LOOP and antenna_type != ANTENNA_TYPE_LOOP:
+                self._set_orientation(DipoleOrientation.HORIZONTAL.value)
             self._suggest_length()
         self._update_type_labels()
 
@@ -548,7 +570,12 @@ class ReviewPage(QWizardPage):
             primary = f"{length_from_m(parameters.circumference_m, self._unit_system):.3f} {unit}"
             secondary_label = self._translator.t("field.sides")
             secondary = str(parameters.sides)
-            height_label = self._translator.t("field.base_height")
+            height_key = (
+                "field.height"
+                if parameters.orientation is LoopOrientation.HORIZONTAL
+                else "field.base_height"
+            )
+            height_label = self._translator.t(height_key)
             azimuth = f"{parameters.azimuth_deg:.1f}"
         else:
             primary_label = self._translator.t("field.length")
@@ -668,6 +695,7 @@ class DipoleWizard(QWizard):
             return LoopParameters(
                 frequency_hz=frequency_hz,
                 height_m=height_m,
+                orientation=self.geometry_page.loop_orientation(),
                 azimuth_deg=azimuth_deg,
                 wire_radius_m=wire_radius_m,
                 material=material,

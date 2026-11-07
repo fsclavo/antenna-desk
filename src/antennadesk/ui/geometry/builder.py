@@ -28,7 +28,11 @@ from ...domain.antennas.inverted_l import (
 )
 from ...domain.antennas.inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
 from ...domain.antennas.j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
-from ...domain.antennas.loop import ANTENNA_TYPE_LOOP, LoopParameters
+from ...domain.antennas.loop import (
+    ANTENNA_TYPE_LOOP,
+    LoopOrientation,
+    LoopParameters,
+)
 from ...domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from ...domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
 from ...domain.antennas.polarization import Polarization
@@ -492,6 +496,9 @@ def _add_loop_dimensions(
         return
     min_x, max_x, min_y, max_y = extents
     min_z, max_z = _model_z_extents(model)
+    horizontal_loop = (
+        parameters is not None and parameters.orientation is LoopOrientation.HORIZONTAL
+    )
     if factory.projection.vertical:
         dimensions.append(
             factory.horizontal_dimension(
@@ -503,37 +510,50 @@ def _add_loop_dimensions(
                 priority=65,
             )
         )
-        dimensions.append(
-            factory.vertical_dimension(
-                max_x,
-                min_z,
-                max_z,
-                max_z - min_z,
-                side="right",
-                priority=60,
-            )
-        )
-        dimensions.append(
-            factory.vertical_dimension(
-                min_x,
-                0.0,
-                min_z,
-                min_z,
-                side="left",
-                priority=75,
-            )
-        )
-        if len(model.wires) <= 12:
-            first = model.wires[0]
+        if horizontal_loop:
             dimensions.append(
-                factory.dimension(
-                    first.start,
-                    first.end,
-                    first.length_m,
-                    side="auto",
-                    priority=35,
+                factory.vertical_dimension(
+                    max_x,
+                    0.0,
+                    min_z,
+                    min_z,
+                    side="right",
+                    priority=75,
                 )
             )
+            notes.append(factory.translator.t("geometry.horizontal_plane_edge_on"))
+        else:
+            dimensions.append(
+                factory.vertical_dimension(
+                    max_x,
+                    min_z,
+                    max_z,
+                    max_z - min_z,
+                    side="right",
+                    priority=60,
+                )
+            )
+            dimensions.append(
+                factory.vertical_dimension(
+                    min_x,
+                    0.0,
+                    min_z,
+                    min_z,
+                    side="left",
+                    priority=75,
+                )
+            )
+            if len(model.wires) <= 12:
+                first = model.wires[0]
+                dimensions.append(
+                    factory.dimension(
+                        first.start,
+                        first.end,
+                        first.length_m,
+                        side="auto",
+                        priority=35,
+                    )
+                )
     else:
         dimensions.append(
             factory.horizontal_dimension(
@@ -554,7 +574,7 @@ def _add_loop_dimensions(
                 priority=60,
             )
         )
-        if max_y - min_y <= 1e-9:
+        if not horizontal_loop and max_y - min_y <= 1e-9:
             notes.append(factory.translator.t("geometry.edge_on"))
     if parameters is not None and parameters.sides > 8:
         notes.append(factory.translator.t("geometry.sides_note", sides=parameters.sides))
@@ -1398,6 +1418,26 @@ def _summary(
                 f"{translator.t('field.sides').lower()} {sides}",
             ]
         )
+        if isinstance(parameters, LoopParameters):
+            horizontal = parameters.orientation is LoopOrientation.HORIZONTAL
+            orientation = translator.t(
+                "orientation.horizontal" if horizontal else "orientation.vertical"
+            ).lower()
+            parts.append(f"{translator.t('field.orientation').lower()} {orientation}")
+            if horizontal:
+                parts.append(
+                    f"{translator.t('field.height').lower()} "
+                    f"{_format_length(parameters.height_m, translator, unit_system)}"
+                )
+            else:
+                parts.extend(
+                    [
+                        f"{translator.t('field.base_height').lower()} "
+                        f"{_format_length(parameters.height_m, translator, unit_system)}",
+                        f"{translator.t('geometry.top_height').lower()} "
+                        f"{_format_length(parameters.top_height_m, translator, unit_system)}",
+                    ]
+                )
     elif isinstance(parameters, FoldedDipoleParameters):
         parts.extend(
             [

@@ -194,6 +194,26 @@ def test_loop_construction_sheet(sample_project: Project) -> None:
     assert "8 equal sides" in sheet
 
 
+def test_horizontal_loop_construction_sheet(sample_project: Project) -> None:
+    from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
+
+    design = sample_project.designs[0]
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=40.0,
+        height_m=8.0,
+        sides=4,
+        orientation=LoopOrientation.HORIZONTAL,
+    )
+    loop = design.with_parameters(parameters)
+    sheet = render_construction_sheet(sample_project, loop, None)
+
+    assert "<td>horizontal</td>" in sheet
+    assert "Plane height" in sheet
+    assert "8.0000 m" in sheet
+    assert "in a horizontal plane" in sheet
+
+
 def test_construction_sheet_lists_series_loads(sample_project: Project) -> None:
     from antennadesk.domain.antennas.load import SeriesLoad
 

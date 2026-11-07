@@ -11,7 +11,7 @@ from antennadesk.domain.antennas.endfed import EndFedParameters
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
-from antennadesk.domain.antennas.loop import LoopParameters
+from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.polarization import Polarization
 from antennadesk.domain.antennas.ringo import RingoParameters
@@ -265,6 +265,39 @@ def test_inverted_l_elevation_shows_the_vertical_and_horizontal_runs() -> None:
     assert "20.00 m" in dimension_texts
     assert "11.00 m" in dimension_texts
     assert "1.00 m" in dimension_texts
+
+
+def test_horizontal_loop_plan_shows_the_polygon_and_elevation_is_edge_on() -> None:
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=40.0,
+        height_m=8.0,
+        sides=4,
+        orientation=LoopOrientation.HORIZONTAL,
+    )
+
+    plan = _scene(parameters, "loop", GeometryViewMode.PLAN)
+    elevation = _scene(parameters, "loop", GeometryViewMode.ELEVATION)
+
+    assert recommended_view(parameters.to_antenna()) is GeometryViewMode.PLAN
+    assert len(plan.polylines) == 4
+    assert (
+        len(
+            {
+                (round(point.x_m, 6), round(point.y_m, 6))
+                for polyline in plan.polylines
+                for point in polyline.points
+            }
+        )
+        == 4
+    )
+    assert "orientation horizontal" in plan.summary
+    assert "height 8.00 m" in plan.summary
+    assert "horizontal loop is edge-on" in elevation.summary
+    assert all(dimension.start.distance_to(dimension.end) > 0.0 for dimension in plan.dimensions)
+    assert all(
+        dimension.start.distance_to(dimension.end) > 0.0 for dimension in elevation.dimensions
+    )
 
 
 def test_recommended_view_uses_the_geometry_shape() -> None:

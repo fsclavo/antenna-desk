@@ -56,7 +56,7 @@ warnings, and a dimension tolerance.
 |---|---|---|---|
 | Wire dipole | `0.5λ × 0.95` total length | empirical | Height and ground affect resonance |
 | Folded dipole | same element length; `0.02λ` spacing | empirical | Spacing controls step-up impedance |
-| Loop / quad / delta | circumference `λ × (1.02895 + 0.05028/N + 0.09665/N²)` | empirical | `N` sides; quad=4, delta=3; calibrated polygon preset; the delta case falls in ON4UN's published 1.05–1.06λ range |
+| Loop / quad / delta | circumference `λ × (1.02895 + 0.05028/N + 0.09665/N²)` | empirical | `N` sides; quad=4, delta=3; calibrated polygon preset; the delta case falls in ON4UN's published 1.05–1.06λ range; vertical and horizontal loops share the same circumference rule |
 | Vertical 1/4 | `0.25λ × 0.95`; radial `0.25λ` | empirical | ARRL 234/f length rule; radial count/length are starting values |
 | Vertical 1/2 | `0.5λ × 0.95`; radial `0.25λ` | empirical | High feed impedance; matching required |
 | Vertical 5/8 | `0.625λ × 0.95`; radial `0.25λ` | empirical | ARRL 585/f length rule; high feed impedance; matching required |
@@ -141,6 +141,10 @@ calibrated with NEC-2 using the AntennaDesk loop model in free space for
 not a universal loop formula. Height above ground, ground model, wire diameter,
 insulation, and nearby objects shift resonance, so the result remains a
 starting point.
+
+The loop estimator is orientation-agnostic. Applying a frequency estimate keeps
+the loop editor's current `vertical` or `horizontal` orientation and only
+changes the starting circumference, side count, and height intent.
 
 At resonance a full-wave loop normally presents roughly `100-150 Ω` at the
 feed point. Changing only its circumference cannot bring that to `50 Ω`; use a

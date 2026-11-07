@@ -31,8 +31,8 @@ synthetic shape.
    in the header. Never draw a dimension below the ground line.
 6. **Default view follows geometry.**
    Vertical planar antennas use a front/elevation view, horizontal planar
-   arrays use plan/top, and non-planar models use a front view with a top
-   inset. Users may override the view. A vertical Yagi or Moxon is a vertical
+   antennas (including horizontal/sky loops and horizontal arrays) use
+   plan/top, and non-planar models use a front view with a top inset. Users may override the view. A vertical Yagi or Moxon is a vertical
    planar array, so elevation is its default even though the boom is
    horizontal; its plan view is edge-on and the header must say so.
 7. **Polarization is geometry, not a label.**

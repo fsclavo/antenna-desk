@@ -67,8 +67,9 @@ The basic templates are:
   vertical dipole the height is the base height and the azimuth is disabled.
 - **Folded dipole**: two parallel elements and two end connectors; set the
   element length and spacing.
-- **Loop**: a vertical regular polygon; set the circumference, the number of
-  sides, and the bottom height above ground.
+- **Loop**: a regular polygon in a vertical or horizontal plane; set the
+  circumference, the number of sides, the orientation, and the height above
+  ground. A horizontal loop is the sky-loop configuration.
 
 Changing the template converts the current design only after the explicit
 confirmation. The center shows a dimensioned sketch with a ground line and
@@ -82,10 +83,10 @@ between:
   end-fed wire keeps its slope. It also shows height above ground, feed
   height, ground line, and scale. For a horizontal array whose elements
   overlap in front view, the header tells you to use Plan.
-- **Plan / top**: the true top view. For a vertical loop this is edge-on, which
-  is expected; use Elevation to see its polygon. For horizontal arrays such as
-  a Yagi or Moxon it shows the element layout, boom spacing, and element
-  lengths. A vertical Yagi or Moxon is also edge-on in plan; use Elevation for
+- **Plan / top**: the true top view. For a horizontal loop this shows the
+  polygon; for a vertical loop it is edge-on, which is expected, so use
+  Elevation to see the polygon. For horizontal arrays such as a Yagi or Moxon
+  it shows the element layout, boom spacing, and element lengths. A vertical Yagi or Moxon is also edge-on in plan; use Elevation for
   the vertical-element layout. For a ring or radial vertical, a top inset shows
   the horizontal structure while the main view keeps the installation height.
 - **3D**: isometric wireframe colored by gain (green low, yellow intermediate, red high), with a dBi legend, ground grid, feed marker, axes, and scale.
@@ -129,7 +130,8 @@ does this in one step when a solver is configured. For Yagi, the frequency
 estimator supports 2 to 32 elements from the DL6WU trimming reference; the
 NBS five-element preset remains available in the Yagi editor. For Yagi and
 Moxon, **Estimate Dimensions...** keeps the polarization selected in the
-dialog and uses the current boom height.
+dialog and uses the current boom height. For loops, it preserves the current
+vertical or horizontal orientation and applies the estimated circumference.
 
 ## Analyze multiple bands
 
@@ -185,8 +187,9 @@ antenna family: Dipole, Yagi, Loop, Vertical, and Custom. The Dipole family
 contains the straight dipole, folded dipole, trap dipole, T2FD, end-fed wire,
 sloper, random wire, doublet, inverted-V, inverted-L, off-center-fed dipole,
 and fan dipole. The Yagi family includes the parametric Yagi and the Moxon
-rectangle. The Loop family includes the generic loop plus delta-loop and
-quad-loop presets. The Vertical family includes the generic vertical radiator,
+rectangle. The Loop family includes the generic vertical/horizontal loop plus
+delta-loop and quad-loop presets; the loop editor switches the plane with the
+**Orientation** field. The Vertical family includes the generic vertical radiator,
 the inverted-L, and the loaded vertical / mobile whip preset. The catalog
 shows a short description and evidence level for each type. For specialized
 templates, choose the template first, complete
@@ -200,8 +203,9 @@ For a wire dipole, folded dipole, or loop, the guided wizard asks for:
 
 1. Project name, antenna type, band, and frequency.
 2. Geometry for the selected type: wire dipole length/orientation, folded
-   dipole element length/spacing, or loop circumference/side count. The
-   suggested length is a heuristic, not a universal final dimension.
+   dipole element length/spacing, or loop circumference, side count, and
+   orientation. The suggested length is a heuristic, not a universal final
+   dimension.
 3. Wire material and diameter.
 4. Ground model. Finite ground asks for relative permittivity and conductivity.
    A **Soil preset** list provides typical starting values for average soil /
@@ -223,8 +227,9 @@ to open the catalog and replace the current design with another template.
 A full-wave loop normally presents roughly 100-150 Ω at resonance, so a direct
 50 Ω target may be unreachable by changing only its circumference. Use a 2:1
 balun or the Matching Network dialog for a 50 Ω system. The loop optimizer
-keeps the selected loop shape and side count fixed and starts its target
-resistance at 100 Ω; change it to 50 Ω only if you are not using a balun. The
+keeps the selected loop shape, orientation, and side count fixed and starts its
+target resistance at 100 Ω; change it to 50 Ω only if you are not using a
+balun. The
 suggested circumference includes a polygon correction calibrated for the
 AntennaDesk loop model; it is still a starting point, so verify it with a
 simulation.
@@ -963,7 +968,8 @@ Use **Design → Construction Sheet...** for a printable sheet with target
 frequency, type-aware dimensions, feed position, height, wire, ground,
 simulated impedance/SWR, resonance, and construction notes. Dipoles show first
 and second leg lengths; folded dipoles show element and connector lengths;
-loops show side length, circumference, side count, and feed side.
+loops show orientation, side length, circumference, side count, height, and
+feed side.
 **Save HTML...** writes the sheet and **Save PDF...** writes a native PDF.
 
 ## Export results

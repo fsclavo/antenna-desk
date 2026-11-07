@@ -1,11 +1,12 @@
 # SPDX-FileCopyrightText: 2026 Fernando Sclavo
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Parametric vertical regular-polygon loop."""
+"""Parametric regular-polygon loop in a vertical or horizontal plane."""
 
 from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from enum import StrEnum
 
 from ..common import units
 from ..common.units import ensure_non_negative, ensure_positive
@@ -22,21 +23,29 @@ MIN_SIDES = 3
 MAX_SIDES = 128
 
 
+class LoopOrientation(StrEnum):
+    VERTICAL = "vertical"
+    HORIZONTAL = "horizontal"
+
+
 @dataclass(frozen=True, slots=True)
 class LoopParameters:
-    """Parameters for a vertical regular-polygon loop.
+    """Parameters for a regular-polygon loop.
 
-    ``circumference_m`` is the total conductor length, ``sides`` is the number
-    of straight sides (4 is a square, 16 approximates a circle), and
-    ``height_m`` is the bottom of the loop above ground.  The loop lies in a
-    vertical plane and is rotated by ``azimuth_deg`` around the vertical axis.
-    The feed is at the midpoint of the first side.
+    ``circumference_m`` is the total conductor length and ``sides`` is the
+    number of straight sides (4 is a square, 16 approximates a circle).  A
+    vertical loop uses ``height_m`` as the bottom of the loop above ground and
+    lies in a vertical plane rotated by ``azimuth_deg``.  A horizontal or sky
+    loop uses ``height_m`` as the plane height above ground and is rotated by
+    ``azimuth_deg`` in the horizontal plane.  The feed is at the midpoint of
+    the first side.
     """
 
     frequency_hz: float
     circumference_m: float
     height_m: float
     sides: int = 16
+    orientation: LoopOrientation = LoopOrientation.VERTICAL
     azimuth_deg: float = 0.0
     wire_radius_m: float = 0.001
     material: ConductorMaterial = COPPER
@@ -49,6 +58,7 @@ class LoopParameters:
         ensure_positive(self.wire_radius_m, name="wire_radius_m")
         if not MIN_SIDES <= self.sides <= MAX_SIDES:
             raise ValueError(f"sides must be between {MIN_SIDES} and {MAX_SIDES}")
+        object.__setattr__(self, "orientation", LoopOrientation(self.orientation))
         object.__setattr__(
             self,
             "azimuth_deg",
@@ -67,6 +77,8 @@ class LoopParameters:
     def top_height_m(self) -> float:
         """Highest point of the polygon, including odd side counts."""
 
+        if self.orientation is LoopOrientation.HORIZONTAL:
+            return self.height_m
         radius = self.diameter_m / 2.0
         step = 2.0 * math.pi / self.sides
         top = max(math.sin(index * step) for index in range(self.sides))
@@ -79,15 +91,27 @@ class LoopParameters:
         step = 2.0 * math.pi / self.sides
         direction_x = math.cos(base_angle)
         direction_y = math.sin(base_angle)
-        center_z = self.height_m + radius
 
-        def point(theta: float) -> Point3D:
-            horizontal = radius * math.cos(theta)
-            return Point3D(
-                x_m=horizontal * direction_x,
-                y_m=horizontal * direction_y,
-                z_m=center_z + radius * math.sin(theta),
-            )
+        if self.orientation is LoopOrientation.HORIZONTAL:
+
+            def point(theta: float) -> Point3D:
+                angle = theta + base_angle
+                return Point3D(
+                    x_m=radius * math.cos(angle),
+                    y_m=radius * math.sin(angle),
+                    z_m=self.height_m,
+                )
+
+        else:
+            center_z = self.height_m + radius
+
+            def point(theta: float) -> Point3D:
+                horizontal = radius * math.cos(theta)
+                return Point3D(
+                    x_m=horizontal * direction_x,
+                    y_m=horizontal * direction_y,
+                    z_m=center_z + radius * math.sin(theta),
+                )
 
         wires: list[Wire] = []
         for index in range(self.sides):

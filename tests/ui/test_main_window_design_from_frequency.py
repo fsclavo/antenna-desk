@@ -87,6 +87,63 @@ def test_design_from_frequency_applies_estimated_parameters(
     window._dirty = False
 
 
+def test_design_from_frequency_preserves_the_loop_orientation(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
+    from antennadesk.domain.design import Confidence, DimensionEstimate
+
+    estimated = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=41.0,
+        height_m=8.0,
+        sides=4,
+    )
+    assert window._project is not None
+    current = window._project.design_by_id(window._design_id)
+    initial = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=42.0,
+        height_m=10.0,
+        sides=4,
+        orientation=LoopOrientation.HORIZONTAL,
+    )
+    window._project = window._project.with_design(
+        current.with_parameters(initial),
+        updated_at=window._project.updated_at,
+    )
+    window._select_design(current.id)
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def estimated_estimate(self) -> DimensionEstimate:
+            return DimensionEstimate(
+                parameters=estimated,
+                method_id="test.loop",
+                confidence=Confidence.EMPIRICAL,
+                tolerance_m=0.1,
+                source_ids=("test.source",),
+            )
+
+    monkeypatch.setattr(main_window_module, "DesignFromFrequencyDialog", FakeDialog)
+    window._dirty = False
+
+    window._estimate_button.click()
+
+    assert window._project is not None
+    parameters = window._project.design_by_id(window._design_id).parameters
+    assert isinstance(parameters, LoopParameters)
+    assert parameters.orientation is LoopOrientation.HORIZONTAL
+    assert parameters.circumference_m == pytest.approx(41.0)
+    window._dirty = False
+
+
 def test_design_from_frequency_can_open_the_refiner_after_applying(
     window: MainWindow,
     monkeypatch: pytest.MonkeyPatch,
