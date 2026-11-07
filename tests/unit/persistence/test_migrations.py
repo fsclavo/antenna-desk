@@ -325,6 +325,27 @@ def test_v10_migration_keeps_existing_designs_unchanged() -> None:
     assert migrated["project"]["designs"][0] == document["project"]["designs"][0]
 
 
+def test_v11_migration_adds_straight_driven_yagi_defaults() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 11,
+        "project": {
+            "designs": [
+                {"antenna_type": "yagi", "parameters": {}},
+                {"antenna_type": "loop", "parameters": {}},
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    yagi = migrated["project"]["designs"][0]["parameters"]
+    assert yagi["driven_folded"] is False
+    assert yagi["driven_fold_spacing_m"] == pytest.approx(0.1)
+    assert "driven_folded" not in migrated["project"]["designs"][1]["parameters"]
+
+
 def test_v4_migration_adds_optional_transformer_ratios() -> None:
     document = {
         "format": "antennadesk-project",

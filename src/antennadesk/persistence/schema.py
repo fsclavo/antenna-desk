@@ -387,6 +387,8 @@ class YagiParametersPayload(StrictModel):
     elements: list[YagiElementPayload] = Field(min_length=2)
     height_m: float = Field(ge=0.0)
     driven_index: int = Field(default=1, ge=0)
+    driven_folded: bool = False
+    driven_fold_spacing_m: float = Field(default=0.1, ge=0.0)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     polarization: Polarization = Polarization.HORIZONTAL
     material: MaterialPayload
@@ -1165,6 +1167,8 @@ def _yagi_parameters_from_domain(value: YagiParameters) -> YagiParametersPayload
         ],
         height_m=value.height_m,
         driven_index=value.driven_index,
+        driven_folded=value.driven_folded,
+        driven_fold_spacing_m=value.driven_fold_spacing_m,
         azimuth_deg=value.azimuth_deg,
         polarization=value.polarization,
         material=_material_from_domain(value.material),
@@ -1891,6 +1895,8 @@ def _yagi_parameters_to_domain(value: YagiParametersPayload) -> YagiParameters:
         ),
         height_m=value.height_m,
         driven_index=value.driven_index,
+        driven_folded=value.driven_folded,
+        driven_fold_spacing_m=value.driven_fold_spacing_m,
         azimuth_deg=value.azimuth_deg,
         polarization=value.polarization,
         material=_material_to_domain(value.material),

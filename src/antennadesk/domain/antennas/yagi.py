@@ -50,6 +50,8 @@ class YagiParameters:
     elements: tuple[YagiElement, ...]
     height_m: float
     driven_index: int = 1
+    driven_folded: bool = False
+    driven_fold_spacing_m: float = 0.1
     azimuth_deg: float = 0.0
     polarization: Polarization = Polarization.HORIZONTAL
     material: ConductorMaterial = COPPER
@@ -72,6 +74,9 @@ class YagiParameters:
                 raise ValueError("Yagi element positions must be distinct")
         if not 0 <= self.driven_index < len(elements):
             raise ValueError("driven_index is outside the element list")
+        ensure_non_negative(self.driven_fold_spacing_m, name="driven_fold_spacing_m")
+        if self.driven_folded:
+            ensure_positive(self.driven_fold_spacing_m, name="driven_fold_spacing_m")
         object.__setattr__(
             self,
             "azimuth_deg",
@@ -101,6 +106,8 @@ class YagiParameters:
         cls,
         parameters: CustomAntennaParameters,
     ) -> YagiParameters:
+        if any(_folded_wire_number(wire.id) is not None for wire in parameters.wires):
+            return cls._from_custom_folded(parameters)
         if len(parameters.wires) < 2:
             raise ValueError("a Yagi requires at least two wires")
         wires = parameters.wires
@@ -194,6 +201,118 @@ class YagiParameters:
             ground=parameters.ground,
         )
 
+    @classmethod
+    def _from_custom_folded(
+        cls,
+        parameters: CustomAntennaParameters,
+    ) -> YagiParameters:
+        main_wires: dict[int, Wire] = {}
+        for wire in parameters.wires:
+            if not wire.id.startswith(f"{YAGI_ELEMENT_ID_PREFIX}-"):
+                continue
+            parts = wire.id.split("-")
+            if len(parts) == 2 or (len(parts) == 3 and parts[2] == "a"):
+                try:
+                    main_wires[int(parts[1])] = wire
+                except ValueError:
+                    continue
+        if len(main_wires) < 2:
+            raise ValueError("a folded Yagi requires at least two main elements")
+        main_indices = sorted(main_wires)
+        main = [main_wires[index] for index in main_indices]
+        horizontal = all(math.isclose(wire.start.z_m, wire.end.z_m, abs_tol=1e-6) for wire in main)
+        vertical = all(
+            math.isclose(wire.start.x_m, wire.end.x_m, abs_tol=1e-6)
+            and math.isclose(wire.start.y_m, wire.end.y_m, abs_tol=1e-6)
+            for wire in main
+        )
+        if not horizontal and not vertical:
+            raise ValueError("folded Yagi main elements must be all horizontal or vertical")
+        driven_number = _folded_wire_number(parameters.feed.wire_id)
+        if driven_number is None or driven_number not in main_wires:
+            raise ValueError("the folded Yagi feed must be on element-N-a")
+        driven_wire = main_wires[driven_number]
+        folded_partner = next(
+            (
+                wire
+                for wire in parameters.wires
+                if wire.id == f"{YAGI_ELEMENT_ID_PREFIX}-{driven_number}-b"
+            ),
+            None,
+        )
+        if folded_partner is None:
+            raise ValueError("the folded driven element is missing its second conductor")
+        spacing_m = _midpoint(driven_wire).distance_to(_midpoint(folded_partner))
+        midpoints: list[Point3D] = []
+        for index, wire in zip(main_indices, main, strict=True):
+            if index == driven_number:
+                first_midpoint = _midpoint(driven_wire)
+                second_midpoint = _midpoint(folded_partner)
+                midpoints.append(
+                    Point3D(
+                        x_m=(first_midpoint.x_m + second_midpoint.x_m) / 2.0,
+                        y_m=(first_midpoint.y_m + second_midpoint.y_m) / 2.0,
+                        z_m=(first_midpoint.z_m + second_midpoint.z_m) / 2.0,
+                    )
+                )
+            else:
+                midpoints.append(_midpoint(wire))
+        if horizontal:
+            height_m = main[0].start.z_m
+        else:
+            centers = [(wire.start.z_m + wire.end.z_m) / 2.0 for wire in main]
+            if max(centers) - min(centers) > 1e-6:
+                raise ValueError("vertical Yagi elements must share a boom height")
+            height_m = centers[0]
+        boom_x = midpoints[1].x_m - midpoints[0].x_m
+        boom_y = midpoints[1].y_m - midpoints[0].y_m
+        boom_length = math.hypot(boom_x, boom_y)
+        if boom_length <= 1e-9:
+            raise ValueError("Yagi elements must have distinct boom positions")
+        boom_x /= boom_length
+        boom_y /= boom_length
+        raw_positions = [
+            (midpoint.x_m - midpoints[0].x_m) * boom_x + (midpoint.y_m - midpoints[0].y_m) * boom_y
+            for midpoint in midpoints
+        ]
+        offset = min(raw_positions)
+        elements_with_number = sorted(
+            (
+                (
+                    index,
+                    YagiElement(
+                        position_m=position - offset,
+                        length_m=wire.length_m,
+                        radius_m=wire.radius_m,
+                    ),
+                )
+                for index, position, wire in zip(
+                    main_indices,
+                    raw_positions,
+                    main,
+                    strict=True,
+                )
+            ),
+            key=lambda item: item[1].position_m,
+        )
+        driven_index = next(
+            index
+            for index, (number, _element) in enumerate(elements_with_number)
+            if number == driven_number
+        )
+        return cls(
+            frequency_hz=parameters.frequency_hz,
+            elements=tuple(element for _number, element in elements_with_number),
+            height_m=height_m,
+            driven_index=driven_index,
+            driven_folded=True,
+            driven_fold_spacing_m=spacing_m,
+            azimuth_deg=math.degrees(math.atan2(boom_y, boom_x)),
+            polarization=Polarization.VERTICAL if vertical else Polarization.HORIZONTAL,
+            material=main[0].material,
+            ground=parameters.ground,
+        )
+
     def to_antenna(self, *, name: str = "Yagi") -> AntennaModel:
         return self.to_custom_parameters().to_antenna(name=name)
 
@@ -201,52 +320,94 @@ class YagiParameters:
         angle = units.degrees_to_radians(self.azimuth_deg)
         cos_angle = math.cos(angle)
         sin_angle = math.sin(angle)
-        wires: list[Wire] = []
-        for index, element in enumerate(self.elements):
-            half_length = element.length_m / 2.0
-            if self.polarization is Polarization.HORIZONTAL:
-                local_start = Point3D(
-                    x_m=element.position_m,
-                    y_m=-half_length,
-                    z_m=self.height_m,
-                )
-                local_end = Point3D(
-                    x_m=element.position_m,
-                    y_m=half_length,
-                    z_m=self.height_m,
-                )
-            else:
-                local_start = Point3D(
-                    x_m=element.position_m,
-                    y_m=0.0,
-                    z_m=self.height_m - half_length,
-                )
-                local_end = Point3D(
-                    x_m=element.position_m,
-                    y_m=0.0,
-                    z_m=self.height_m + half_length,
-                )
-            start = Point3D(
-                x_m=local_start.x_m * cos_angle - local_start.y_m * sin_angle,
-                y_m=local_start.x_m * sin_angle + local_start.y_m * cos_angle,
-                z_m=local_start.z_m,
-            )
-            end = Point3D(
-                x_m=local_end.x_m * cos_angle - local_end.y_m * sin_angle,
-                y_m=local_end.x_m * sin_angle + local_end.y_m * cos_angle,
-                z_m=local_end.z_m,
-            )
-            wires.append(
-                Wire(
-                    id=f"{YAGI_ELEMENT_ID_PREFIX}-{index + 1}",
-                    start=start,
-                    end=end,
-                    radius_m=element.radius_m,
-                    material=self.material,
-                )
+
+        def rotate(local: Point3D) -> Point3D:
+            return Point3D(
+                x_m=local.x_m * cos_angle - local.y_m * sin_angle,
+                y_m=local.x_m * sin_angle + local.y_m * cos_angle,
+                z_m=local.z_m,
             )
 
-        driven = wires[self.driven_index]
+        def wire(wire_id: str, local_start: Point3D, local_end: Point3D, radius: float) -> Wire:
+            return Wire(
+                id=wire_id,
+                start=rotate(local_start),
+                end=rotate(local_end),
+                radius_m=radius,
+                material=self.material,
+            )
+
+        wires: list[Wire] = []
+        driven_wire_id = ""
+        half_spacing = self.driven_fold_spacing_m / 2.0
+        for index, element in enumerate(self.elements):
+            half_length = element.length_m / 2.0
+            if index == self.driven_index and self.driven_folded:
+                if self.polarization is Polarization.HORIZONTAL:
+                    a_start = Point3D(
+                        element.position_m - half_spacing,
+                        -half_length,
+                        self.height_m,
+                    )
+                    a_end = Point3D(
+                        element.position_m - half_spacing,
+                        half_length,
+                        self.height_m,
+                    )
+                    b_start = Point3D(
+                        element.position_m + half_spacing,
+                        -half_length,
+                        self.height_m,
+                    )
+                    b_end = Point3D(
+                        element.position_m + half_spacing,
+                        half_length,
+                        self.height_m,
+                    )
+                else:
+                    a_start = Point3D(
+                        element.position_m - half_spacing,
+                        0.0,
+                        self.height_m - half_length,
+                    )
+                    a_end = Point3D(
+                        element.position_m - half_spacing,
+                        0.0,
+                        self.height_m + half_length,
+                    )
+                    b_start = Point3D(
+                        element.position_m + half_spacing,
+                        0.0,
+                        self.height_m - half_length,
+                    )
+                    b_end = Point3D(
+                        element.position_m + half_spacing,
+                        0.0,
+                        self.height_m + half_length,
+                    )
+                prefix = f"{YAGI_ELEMENT_ID_PREFIX}-{index + 1}"
+                wires.extend(
+                    [
+                        wire(f"{prefix}-a", a_start, a_end, element.radius_m),
+                        wire(f"{prefix}-b", b_start, b_end, element.radius_m),
+                        wire(f"{prefix}-end-1", a_start, b_start, element.radius_m),
+                        wire(f"{prefix}-end-2", a_end, b_end, element.radius_m),
+                    ]
+                )
+                driven_wire_id = f"{prefix}-a"
+                continue
+            if self.polarization is Polarization.HORIZONTAL:
+                local_start = Point3D(element.position_m, -half_length, self.height_m)
+                local_end = Point3D(element.position_m, half_length, self.height_m)
+            else:
+                local_start = Point3D(element.position_m, 0.0, self.height_m - half_length)
+                local_end = Point3D(element.position_m, 0.0, self.height_m + half_length)
+            wire_id = f"{YAGI_ELEMENT_ID_PREFIX}-{index + 1}"
+            wires.append(wire(wire_id, local_start, local_end, element.radius_m))
+            if index == self.driven_index:
+                driven_wire_id = wire_id
+
+        driven = next(wire for wire in wires if wire.id == driven_wire_id)
         return CustomAntennaParameters(
             frequency_hz=self.frequency_hz,
             wires=tuple(wires),
@@ -255,6 +416,24 @@ class YagiParameters:
             generator_id="yagi",
             generator_name="Yagi",
         )
+
+
+def _midpoint(wire: Wire) -> Point3D:
+    return Point3D(
+        x_m=(wire.start.x_m + wire.end.x_m) / 2.0,
+        y_m=(wire.start.y_m + wire.end.y_m) / 2.0,
+        z_m=(wire.start.z_m + wire.end.z_m) / 2.0,
+    )
+
+
+def _folded_wire_number(wire_id: str) -> int | None:
+    parts = wire_id.split("-")
+    if len(parts) != 3 or parts[0] != YAGI_ELEMENT_ID_PREFIX or parts[2] not in {"a", "b"}:
+        return None
+    try:
+        return int(parts[1])
+    except ValueError:
+        return None
 
 
 def yagi_element_length_mismatch(parameters: YagiParameters) -> bool:
@@ -275,14 +454,17 @@ def nbs_five_element(
     material: ConductorMaterial = COPPER,
     ground: GroundModel = FREE_SPACE,
     radius_m: float | None = None,
+    folded_driven: bool = False,
+    folded_spacing_m: float = 0.1,
 ) -> YagiParameters:
     """Return the NBS TN-688 5-element, 0.8 wavelength starting design.
 
     The dimensions are scaled from the published 50.1 MHz example.  The
-    reference measured gain is 9.2 dBd over a half-wave dipole.  A single
-    straight driven element is used here instead of the published folded
-    dipole, so the impedance is not the reference impedance; gain and pattern
-    remain the relevant comparison.
+    reference measured gain is 9.2 dBd over a half-wave dipole.  The published
+    design uses a folded driven element; the default here keeps a straight
+    driven element for backward compatibility.  Set ``folded_driven=True`` to
+    model the folded version.  Gain and pattern remain the relevant comparison;
+    the feed impedance is not the reference impedance in either case.
     """
 
     wavelength = units.wavelength_m(frequency_hz)
@@ -298,6 +480,8 @@ def nbs_five_element(
         ),
         height_m=height_m,
         driven_index=1,
+        driven_folded=folded_driven,
+        driven_fold_spacing_m=folded_spacing_m,
         azimuth_deg=azimuth_deg,
         polarization=polarization,
         material=material,

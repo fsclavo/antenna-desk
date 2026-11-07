@@ -60,6 +60,82 @@ def test_yagi_vertical_polarization_keeps_the_boom_horizontal() -> None:
     assert parameters.feed.offset_m == pytest.approx(driven.length_m / 2.0)
 
 
+def test_yagi_folded_driven_element_adds_two_conductors_and_connectors() -> None:
+    yagi = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        folded_driven=True,
+        folded_spacing_m=0.1,
+    )
+    parameters = yagi.to_custom_parameters()
+    by_id = {wire.id: wire for wire in parameters.wires}
+
+    assert len(parameters.wires) == 8
+    assert parameters.feed.wire_id == "element-2-a"
+    assert {"element-2-a", "element-2-b", "element-2-end-1", "element-2-end-2"} <= set(by_id)
+    assert by_id["element-2-end-1"].length_m == pytest.approx(0.1)
+    assert by_id["element-2-end-2"].length_m == pytest.approx(0.1)
+    assert by_id["element-2-a"].start.z_m == pytest.approx(8.0)
+    assert by_id["element-2-b"].start.z_m == pytest.approx(8.0)
+    assert by_id["element-2-b"].start.x_m - by_id["element-2-a"].start.x_m == pytest.approx(0.1)
+    assert yagi.elements[1].length_m == pytest.approx(by_id["element-2-a"].length_m)
+
+
+def test_yagi_folded_driven_element_round_trips() -> None:
+    original = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        azimuth_deg=35.0,
+        folded_driven=True,
+        folded_spacing_m=0.1,
+    )
+
+    restored = YagiParameters.from_custom_parameters(original.to_custom_parameters())
+
+    assert restored.driven_folded is True
+    assert restored.driven_fold_spacing_m == pytest.approx(0.1)
+    assert restored.driven_index == original.driven_index
+    assert restored.azimuth_deg == pytest.approx(original.azimuth_deg)
+    assert [element.position_m for element in restored.elements] == pytest.approx(
+        [element.position_m for element in original.elements]
+    )
+
+
+def test_yagi_vertical_folded_driven_element_round_trips() -> None:
+    original = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        azimuth_deg=35.0,
+        polarization=Polarization.VERTICAL,
+        folded_driven=True,
+        folded_spacing_m=0.12,
+    )
+    parameters = original.to_custom_parameters()
+    folded_ids = {
+        "element-2-a",
+        "element-2-b",
+        "element-2-end-1",
+        "element-2-end-2",
+    }
+    assert folded_ids <= {wire.id for wire in parameters.wires}
+
+    restored = YagiParameters.from_custom_parameters(parameters)
+
+    assert restored.polarization is Polarization.VERTICAL
+    assert restored.driven_folded is True
+    assert restored.driven_fold_spacing_m == pytest.approx(0.12)
+
+
+def test_yagi_folded_spacing_must_be_positive() -> None:
+    with pytest.raises(ValueError, match="driven_fold_spacing_m"):
+        nbs_five_element(
+            frequency_hz=50_100_000.0,
+            height_m=8.0,
+            folded_driven=True,
+            folded_spacing_m=0.0,
+        )
+
+
 def test_yagi_vertical_round_trip_restores_polarization_and_azimuth() -> None:
     original = nbs_five_element(
         frequency_hz=50_100_000.0,

@@ -247,6 +247,23 @@ def _cases() -> tuple[FamilyCase, ...]:
             ("Moxon", "gap"),
         ),
         FamilyCase(
+            "yagi_folded",
+            YagiParameters(
+                frequency_hz=14_100_000.0,
+                elements=(
+                    YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+                    YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+                ),
+                height_m=10.0,
+                driven_folded=True,
+                driven_fold_spacing_m=0.1,
+            ),
+            "yagi",
+            5,
+            GeometryViewMode.PLAN,
+            ("Yagi", "elements 2", "folded driven"),
+        ),
+        FamilyCase(
             "yagi_vertical",
             YagiParameters(
                 frequency_hz=14_100_000.0,

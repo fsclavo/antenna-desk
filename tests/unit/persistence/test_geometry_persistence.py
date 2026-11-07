@@ -327,6 +327,25 @@ def test_yagi_parameters_round_trip() -> None:
     assert restored.designs[0].antenna_type == "yagi"
 
 
+def test_folded_yagi_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+
+    parameters = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        folded_driven=True,
+        folded_spacing_m=0.1,
+    )
+    original = _project(parameters, "Folded Yagi")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].parameters.driven_folded is True
+    assert restored.designs[0].parameters.driven_fold_spacing_m == pytest.approx(0.1)
+
+
 def test_vertical_yagi_parameters_round_trip() -> None:
     from antennadesk.domain.antennas.polarization import Polarization
     from antennadesk.domain.antennas.yagi import nbs_five_element

@@ -375,6 +375,12 @@ def design_summary_rows(
             [
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Driven element", str(parameters.driven_index + 1)),
+                ("Folded driven", "yes" if parameters.driven_folded else "no"),
+                *(
+                    [("Fold spacing", f"{parameters.driven_fold_spacing_m:.4f} m")]
+                    if parameters.driven_folded
+                    else []
+                ),
                 (
                     "Material",
                     f"{parameters.material.name} "

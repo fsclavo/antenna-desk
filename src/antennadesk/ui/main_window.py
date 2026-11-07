@@ -4686,6 +4686,8 @@ class MainWindow(QMainWindow):
             updates["ring_sides"] = previous.ring_sides
         elif isinstance(previous, YagiParameters) and isinstance(estimated, YagiParameters):
             updates["driven_index"] = previous.driven_index
+            updates["driven_folded"] = previous.driven_folded
+            updates["driven_fold_spacing_m"] = previous.driven_fold_spacing_m
             if previous.elements and estimated.elements:
                 radius_m = previous.elements[0].radius_m
                 estimated = replace(

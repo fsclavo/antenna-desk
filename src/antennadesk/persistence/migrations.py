@@ -246,6 +246,26 @@ def _migrate_v10_to_v11(document: dict[str, Any]) -> dict[str, Any]:
     return copy.deepcopy(document)
 
 
+def _migrate_v11_to_v12(document: dict[str, Any]) -> dict[str, Any]:
+    """Add folded-driven Yagi fields with a straight-element default."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if isinstance(project, dict):
+        designs = project.get("designs")
+        if isinstance(designs, list):
+            for design in designs:
+                if not isinstance(design, dict):
+                    continue
+                if design.get("antenna_type") != "yagi":
+                    continue
+                parameters = design.get("parameters")
+                if isinstance(parameters, dict):
+                    parameters.setdefault("driven_folded", False)
+                    parameters.setdefault("driven_fold_spacing_m", 0.1)
+    return migrated
+
+
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
@@ -257,6 +277,7 @@ MIGRATIONS: dict[int, Migration] = {
     8: _migrate_v8_to_v9,
     9: _migrate_v9_to_v10,
     10: _migrate_v10_to_v11,
+    11: _migrate_v11_to_v12,
 }
 
 

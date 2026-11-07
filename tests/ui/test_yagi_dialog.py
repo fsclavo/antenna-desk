@@ -120,6 +120,39 @@ def test_yagi_dialog_restores_vertical_polarization(qtbot: QtBot) -> None:
     assert dialog._form._polarization.currentData() == "vertical"
 
 
+def test_yagi_dialog_supports_a_folded_driven_element(qtbot: QtBot) -> None:
+    dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+
+    dialog._driven_folded.setChecked(True)
+    dialog._driven_fold_spacing.setValue(0.08)
+    parameters = dialog.parameters()
+
+    assert parameters.driven_folded is True
+    assert parameters.driven_fold_spacing_m == pytest.approx(0.08, abs=1e-3)
+    assert len(parameters.to_antenna().wires) == 8
+
+
+def test_yagi_dialog_restores_folded_driven_settings(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+
+    original = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        folded_driven=True,
+        folded_spacing_m=0.12,
+    )
+    dialog = YagiDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=original,
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._driven_folded.isChecked() is True
+    assert dialog.parameters().driven_fold_spacing_m == pytest.approx(0.12)
+
+
 def test_yagi_dialog_warns_when_vertical_elements_reach_the_ground(qtbot: QtBot) -> None:
     dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(dialog)

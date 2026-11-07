@@ -972,6 +972,17 @@ def _array_wire(model: AntennaModel, wire_id: str, index: int) -> Wire | None:
     return wire
 
 
+def _yagi_element_wire(
+    model: AntennaModel,
+    parameters: YagiParameters,
+    index: int,
+) -> Wire | None:
+    wire_id = f"element-{index + 1}"
+    if parameters.driven_folded and index == parameters.driven_index:
+        wire_id = f"{wire_id}-a"
+    return _array_wire(model, wire_id, index)
+
+
 def _add_array_dimensions(
     model: AntennaModel,
     parameters: object | None,
@@ -987,15 +998,18 @@ def _add_array_dimensions(
             notes.append(translator.t("geometry.vertical_plane_edge_on"))
             if isinstance(parameters, YagiParameters) and len(parameters.elements) >= 2:
                 positions = [element.position_m for element in parameters.elements]
-                dimensions.append(
-                    factory.dimension(
-                        _wire_point(model.wires[0], 0.5),
-                        _wire_point(model.wires[-1], 0.5),
-                        max(positions) - min(positions),
-                        side="below",
-                        priority=60,
+                first = _yagi_element_wire(model, parameters, 0)
+                last = _yagi_element_wire(model, parameters, len(parameters.elements) - 1)
+                if first is not None and last is not None:
+                    dimensions.append(
+                        factory.dimension(
+                            _wire_point(first, 0.5),
+                            _wire_point(last, 0.5),
+                            max(positions) - min(positions),
+                            side="below",
+                            priority=60,
+                        )
                     )
-                )
             elif isinstance(parameters, MoxonParameters):
                 reflector = next(
                     (wire for wire in model.wires if wire.id == "reflector"),
@@ -1042,34 +1056,52 @@ def _add_array_dimensions(
                     )
             return
         if isinstance(parameters, YagiParameters):
-            for index, element in enumerate(model.wires):
-                wire = (
-                    model.wire_by_id(f"element-{index + 1}")
-                    if any(item.id == f"element-{index + 1}" for item in model.wires)
-                    else element
-                )
+            for index, element in enumerate(parameters.elements):
+                wire = _yagi_element_wire(model, parameters, index)
+                if wire is None:
+                    continue
                 dimensions.append(
                     factory.dimension(
                         wire.start,
                         wire.end,
-                        wire.length_m,
+                        element.length_m,
                         side="above" if index % 2 == 0 else "below",
                         priority=70
-                        if index in {0, parameters.driven_index, len(model.wires) - 1}
+                        if index in {0, parameters.driven_index, len(parameters.elements) - 1}
                         else 35,
                     )
                 )
-            if parameters is not None and len(parameters.elements) >= 2:
+            if len(parameters.elements) >= 2:
                 positions = [element.position_m for element in parameters.elements]
-                dimensions.append(
-                    factory.dimension(
-                        _wire_point(model.wires[0], 0.5),
-                        _wire_point(model.wires[-1], 0.5),
-                        max(positions) - min(positions),
-                        side="below",
-                        priority=60,
+                first = _yagi_element_wire(model, parameters, 0)
+                last = _yagi_element_wire(model, parameters, len(parameters.elements) - 1)
+                if first is not None and last is not None:
+                    dimensions.append(
+                        factory.dimension(
+                            _wire_point(first, 0.5),
+                            _wire_point(last, 0.5),
+                            max(positions) - min(positions),
+                            side="below",
+                            priority=60,
+                        )
                     )
+            if parameters.driven_folded:
+                driven_a = _yagi_element_wire(model, parameters, parameters.driven_index)
+                driven_b = _array_wire(
+                    model,
+                    f"element-{parameters.driven_index + 1}-b",
+                    parameters.driven_index,
                 )
+                if driven_a is not None and driven_b is not None:
+                    dimensions.append(
+                        factory.dimension(
+                            _wire_point(driven_a, 0.5),
+                            _wire_point(driven_b, 0.5),
+                            parameters.driven_fold_spacing_m,
+                            side="above",
+                            priority=55,
+                        )
+                    )
         elif isinstance(parameters, MoxonParameters):
             for wire in model.wires[:1]:
                 dimensions.append(
@@ -1145,7 +1177,7 @@ def _add_array_dimensions(
 
     if vertical_array and isinstance(parameters, YagiParameters):
         for index, yagi_element in enumerate(parameters.elements):
-            array_wire = _array_wire(model, f"element-{index + 1}", index)
+            array_wire = _yagi_element_wire(model, parameters, index)
             if array_wire is None:
                 continue
             dimensions.append(
@@ -1161,8 +1193,8 @@ def _add_array_dimensions(
             )
         if len(parameters.elements) >= 2:
             positions = [element.position_m for element in parameters.elements]
-            first = _array_wire(model, "element-1", 0)
-            last = _array_wire(model, f"element-{len(parameters.elements)}", len(model.wires) - 1)
+            first = _yagi_element_wire(model, parameters, 0)
+            last = _yagi_element_wire(model, parameters, len(parameters.elements) - 1)
             if first is not None and last is not None:
                 dimensions.append(
                     factory.dimension(
@@ -1171,6 +1203,23 @@ def _add_array_dimensions(
                         max(positions) - min(positions),
                         side="above",
                         priority=65,
+                    )
+                )
+        if parameters.driven_folded:
+            driven_a = _yagi_element_wire(model, parameters, parameters.driven_index)
+            driven_b = _array_wire(
+                model,
+                f"element-{parameters.driven_index + 1}-b",
+                parameters.driven_index,
+            )
+            if driven_a is not None and driven_b is not None:
+                dimensions.append(
+                    factory.dimension(
+                        _wire_point(driven_a, 0.5),
+                        _wire_point(driven_b, 0.5),
+                        parameters.driven_fold_spacing_m,
+                        side="above",
+                        priority=55,
                     )
                 )
     elif vertical_array and isinstance(parameters, MoxonParameters):
@@ -1688,13 +1737,17 @@ def _summary(
                 f"{_format_length(height_m, translator, unit_system)}",
             ]
         )
-        if isinstance(parameters, YagiParameters) and (
-            parameters.polarization is Polarization.VERTICAL
-        ):
-            parts.append(
-                f"{translator.t('field.polarization').lower()} "
-                f"{translator.t('orientation.vertical').lower()}"
-            )
+        if isinstance(parameters, YagiParameters):
+            if parameters.polarization is Polarization.VERTICAL:
+                parts.append(
+                    f"{translator.t('field.polarization').lower()} "
+                    f"{translator.t('orientation.vertical').lower()}"
+                )
+            if parameters.driven_folded:
+                parts.append(
+                    f"{translator.t('yagi.folded_driven').lower()} "
+                    f"{_format_length(parameters.driven_fold_spacing_m, translator, unit_system)}"
+                )
     elif isinstance(parameters, MoxonParameters):
         parts.extend(
             [

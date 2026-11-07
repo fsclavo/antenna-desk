@@ -140,6 +140,24 @@ def test_yagi_and_moxon_summaries_report_polarization_and_clearance() -> None:
     assert moxon["Lowest edge"] == "5.0000 m"
 
 
+def test_yagi_summary_reports_a_folded_driven_element() -> None:
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+
+    rows = dict(
+        design_summary_rows(
+            nbs_five_element(
+                frequency_hz=50_100_000.0,
+                height_m=8.0,
+                folded_driven=True,
+                folded_spacing_m=0.1,
+            )
+        )
+    )
+
+    assert rows["Folded driven"] == "yes"
+    assert rows["Fold spacing"] == "0.1000 m"
+
+
 def test_loop_summary_reports_orientation_and_the_correct_height() -> None:
     from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
 

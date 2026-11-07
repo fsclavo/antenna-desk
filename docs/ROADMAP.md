@@ -181,8 +181,9 @@ Scope:
   by version 5 with OCFD/custom transformer fields, version 6 with persisted
   analysis band plans, version 7 with Yagi/Moxon polarization, version 8 with
   vertical top-hat fields, version 9 with the inverted-L design type, and
-  version 10 with loop orientation, and version 11 with the magnetic-loop
-  design type), and band-aware CSV, HTML, PDF, and comparison summaries.
+  version 10 with loop orientation, version 11 with the magnetic-loop design
+  type, and version 12 with the folded Yagi driven element), and band-aware CSV,
+  HTML, PDF, and comparison summaries.
 - Deferred: a segmented frequency plan in one NEC deck, only if measurements
   show that per-band runs are too slow or too large.
 
@@ -233,7 +234,7 @@ point; `C` is structural/experimental only.
 | 2 | Horizontal loop / sky loop | Modification of `loop` | S–M | High | B/A | **Implemented on 2026-11-06:** the loop editor now selects vertical or horizontal orientation, with schema 10 persistence, plan/elevation scene handling, and dimension/report tests. |
 | 3 | Elevated radials / ground screen | Modification of `vertical` | S–M | High | B/A | **Implemented on 2026-11-06:** the vertical editor has no-radial, ground-radial, elevated-radial, and dense ground-screen starting presets over the existing radial fields. The screen is a dense radial approximation, not a bonded mesh. |
 | 4 | Magnetic loop | New family | L | High | B/C; A only with an exact published design | **Implemented on 2026-11-07:** first-class tuned small loop with a top gap, ideal series capacitor and ESR, conductor-loss simulation, efficiency reporting, SWR-bandwidth reporting, and a dedicated editor. A coupling loop and detailed capacitor loss model remain limitations. |
-| 5 | Yagi folded driven element | Modification of `yagi` | M | Medium | B/A | Two wires plus connectors; changes feed impedance and matching. |
+| 5 | Yagi folded driven element | Modification of `yagi` | M | Medium | B/A | **Implemented on 2026-11-07:** optional two-conductor folded driven element with end connectors and adjustable spacing. The published NBS preset can be loaded with the folded element; feed impedance remains a tuning result, not a reference value. |
 | 6 | Gamma / beta / hairpin match | Modification of `yagi` | M | Medium | B/A | Geometry and feed hardware; may coexist with the matching-network dialog. |
 | 7 | Balun/unun with losses | Cross-cutting model | M | High | B/C | Frequency-dependent loss model; improves EFHW, OCFD, G5RV, and T2FD. |
 | 8 | Capacity hat / top-loaded vertical | Modification of `vertical` | M | High | B/A | Short verticals on low bands; needs hat geometry and possibly loading. |

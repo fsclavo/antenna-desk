@@ -306,7 +306,8 @@ The frequency-only estimator supports **2 to 32 elements** using the first
 elements of the published DL6WU 32-element reference (Cebik, derived from the
 RSGB VHF/UHF DX Book). Shorter Yagis use the DL6WU trimming principle: keep the
 reflector, driven element, and the first directors. The driven element is
-always index 1.
+always index 1. The estimate itself is a straight driven element; applying it
+in the UI preserves the current folded-driven option and spacing.
 
 The DL6WU reference dimensions assume 4 mm elements at 432 MHz. Element
 diameter correction and boom-mounting correction are not applied; this is a

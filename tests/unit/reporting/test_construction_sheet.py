@@ -214,6 +214,26 @@ def test_horizontal_loop_construction_sheet(sample_project: Project) -> None:
     assert "in a horizontal plane" in sheet
 
 
+def test_folded_yagi_construction_sheet_lists_the_fold(sample_project: Project) -> None:
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+
+    design = sample_project.designs[0]
+    yagi = design.with_parameters(
+        nbs_five_element(
+            frequency_hz=50_100_000.0,
+            height_m=8.0,
+            folded_driven=True,
+            folded_spacing_m=0.1,
+        )
+    )
+    sheet = render_construction_sheet(sample_project, yagi, None)
+
+    assert "Folded driven element" in sheet
+    assert "Fold spacing" in sheet
+    assert "0.1000 m" in sheet
+    assert "second conductor remains passive" in sheet
+
+
 def test_magnetic_loop_construction_sheet_lists_gap_and_capacitor(
     sample_project: Project,
 ) -> None:

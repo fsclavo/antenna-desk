@@ -133,7 +133,11 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         level=EvidenceLevel.REFERENCE,
         source="NBS TN-688 5-element preset, 9.2 dBd (11.35 dBi)",
         tolerance="0.5 dB",
-        limitation="Only the published preset; edited element geometry is experimental.",
+        limitation=(
+            "Only the published preset; edited element geometry is experimental. "
+            "The optional folded driven element changes feed impedance and has no "
+            "independent impedance reference."
+        ),
     ),
     "moxon": EvidenceEntry(
         template="moxon",

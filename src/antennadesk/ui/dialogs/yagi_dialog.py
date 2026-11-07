@@ -38,6 +38,8 @@ class YagiDialog(QDialog):
             self._form.set_frequency_hz(frequency_hz)
         self._table = self._form._table
         self._driven = self._form._driven
+        self._driven_folded = self._form._driven_folded
+        self._driven_fold_spacing = self._form._driven_fold_spacing
         self._ground = self._form._ground
         self._material = self._form._material
         self._add_element = self._form._add_element

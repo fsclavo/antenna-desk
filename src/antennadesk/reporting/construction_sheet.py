@@ -237,16 +237,27 @@ transformer; the counterpoise is {counterpoise}.</p>"""
 {parameters.gap_m:.4f} m gap.</p>"""
     elif isinstance(parameters, YagiParameters):
         positions = [element.position_m for element in parameters.elements]
+        folded_row = ""
+        folded_note = ""
+        if parameters.driven_folded:
+            folded_row = f"""
+<tr><th>Folded driven element</th><td>yes</td></tr>
+<tr><th>Fold spacing</th><td>{parameters.driven_fold_spacing_m:.4f} m</td></tr>
+"""
+            folded_note = f""" The driven element is folded with
+{parameters.driven_fold_spacing_m:.4f} m spacing and two end connectors. Feed one
+conductor at its center; the second conductor remains passive."""
         feed_rows = f"""
 <tr><th>Elements</th><td>{len(parameters.elements)}</td></tr>
 <tr><th>Boom length</th><td>{max(positions) - min(positions):.4f} m</td></tr>
 <tr><th>Driven element</th><td>{parameters.driven_index + 1}</td></tr>
+{folded_row}
 <tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
 <tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
 """
         construction_note = f"""<p>Build {len(parameters.elements)} parallel elements on a
 {max(positions) - min(positions):.4f} m boom. Feed the center of element
-{parameters.driven_index + 1}.</p>"""
+{parameters.driven_index + 1}.{folded_note}</p>"""
     elif isinstance(parameters, InvertedLParameters):
         feed_rows = f"""
 <tr><th>Vertical section</th><td>{parameters.vertical_height_m:.4f} m</td></tr>

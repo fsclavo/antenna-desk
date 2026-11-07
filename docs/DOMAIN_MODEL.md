@@ -165,14 +165,18 @@ optimization is not available. Its wire, feed, and load rules are validated by
 ### YagiParameters
 
 A first-class parametric Yagi with an ordered tuple of `YagiElement` values,
-boom height and azimuth, polarization, driven-element index, material, and
-ground. Elements store boom position, total length, and radius. Horizontal
-polarization places the elements in a horizontal plane. Vertical polarization
-keeps the boom horizontal and places each element in a vertical plane. In both
-cases `to_antenna()` creates straight wires and a center feed on the selected
-driven element. Vertical geometry is rejected when the longest element would
-reach the ground. The NBS TN-688 5-element 0.8λ preset is a starting geometry;
-edited designs are experimental.
+boom height and azimuth, polarization, driven-element index, optional folded
+driven element, material, and ground. Elements store boom position, total
+length, and radius. Horizontal polarization places the elements in a horizontal
+plane. Vertical polarization keeps the boom horizontal and places each element
+in a vertical plane. In both cases `to_antenna()` creates straight wires and a
+center feed on the selected driven element. When `driven_folded` is true, the
+driven element becomes two parallel conductors separated by
+`driven_fold_spacing_m` along the boom, with two end connectors; the feed stays
+on the first conductor. Vertical geometry is rejected when the longest element
+would reach the ground. The NBS TN-688 5-element 0.8λ preset is a starting
+geometry; the published design uses a folded driven element, which can be
+enabled explicitly. Edited designs are experimental.
 
 ### RingoParameters
 
@@ -438,11 +442,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 11.
+the application writes version 12.
 
 ## Schema policy
 
-- Current version: `11`.
+- Current version: `12`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -466,6 +470,8 @@ the application writes version 11.
   `vertical`; horizontal or sky loops use `horizontal`.
 - Version 11 adds the magnetic-loop design type. Existing designs are
   unchanged.
+- Version 12 adds the optional folded Yagi driven element. Existing Yagis load
+  with a straight driven element.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -494,7 +500,7 @@ the application writes version 11.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 11.
+- Simulation results are persisted as immutable runs in schema version 12.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are

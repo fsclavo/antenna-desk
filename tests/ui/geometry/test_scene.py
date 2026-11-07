@@ -304,6 +304,28 @@ def test_horizontal_loop_plan_shows_the_polygon_and_elevation_is_edge_on() -> No
     )
 
 
+def test_folded_yagi_preserves_the_driven_element_wires() -> None:
+    parameters = YagiParameters(
+        frequency_hz=14_100_000.0,
+        elements=(
+            YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+            YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+        ),
+        height_m=10.0,
+        driven_folded=True,
+        driven_fold_spacing_m=0.1,
+    )
+    model = parameters.to_antenna()
+
+    scene = _scene(parameters, "yagi", GeometryViewMode.PLAN)
+
+    assert len(model.wires) == 5
+    assert model.feed.wire_id == "element-2-a"
+    assert len(scene.polylines) == 5
+    assert "folded driven" in scene.summary
+    assert all(dimension.start.distance_to(dimension.end) > 0.0 for dimension in scene.dimensions)
+
+
 def test_magnetic_loop_shows_the_gap_and_capacitor_in_elevation() -> None:
     parameters = MagneticLoopParameters(
         frequency_hz=7_100_000.0,

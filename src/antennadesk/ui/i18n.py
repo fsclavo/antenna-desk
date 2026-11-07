@@ -3580,6 +3580,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "{count} elements · boom {boom} {unit}",
         Language.SPANISH: "{count} elementos · boom {boom} {unit}",
     },
+    "yagi.folded_driven": {
+        Language.ENGLISH: "Folded driven element",
+        Language.SPANISH: "Elemento alimentado plegado",
+    },
+    "yagi.fold_spacing": {
+        Language.ENGLISH: "Fold spacing",
+        Language.SPANISH: "Separación del plegado",
+    },
+    "yagi.folded_geometry": {
+        Language.ENGLISH: "folded driven · spacing {spacing} {unit}",
+        Language.SPANISH: "alimentado plegado · separación {spacing} {unit}",
+    },
+    "yagi.folded_hint": {
+        Language.ENGLISH: (
+            "Adds a second driven conductor and two end connectors. The driven "
+            "element length stays the same; spacing changes the feed impedance "
+            "and matching."
+        ),
+        Language.SPANISH: (
+            "Agrega un segundo conductor alimentado y dos conectores de extremo. "
+            "La longitud del elemento alimentado no cambia; la separación cambia "
+            "la impedancia de alimentación y la adaptación."
+        ),
+    },
     "yagi.polarization_hint": {
         Language.ENGLISH: (
             "Vertical polarization keeps the boom horizontal and rotates the "
@@ -4003,12 +4027,15 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: (
             "NBS TN-688 preset: 5 elements, 0.8 wavelength, 9.2 dBd reference "
             "gain. Modified geometries are experimental and have no external "
-            "reference."
+            "reference. The folded driven element changes feed impedance and "
+            "has no independent impedance reference."
         ),
         Language.SPANISH: (
             "Preset NBS TN-688: 5 elementos, 0.8 longitud de onda, ganancia de "
             "referencia 9.2 dBd. Las geometrías modificadas son experimentales y "
-            "no tienen referencia externa."
+            "no tienen referencia externa. El elemento alimentado plegado cambia "
+            "la impedancia de alimentación y no tiene referencia independiente "
+            "de impedancia."
         ),
     },
     "custom.metric_hint": {

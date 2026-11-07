@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Yagi designs now support an optional **folded driven element**: two parallel
+  conductors with end connectors and adjustable spacing. The NBS 5-element
+  preset can be loaded with the published folded geometry. The feed impedance
+  changes with the fold spacing and remains a simulation/tuning result.
 - Added a first-class **Magnetic loop** generator: a vertical small loop with a
   top gap, ideal series tuning capacitor with ESR, conductor-loss simulation,
   efficiency and SWR-bandwidth reporting, schema-11 persistence, a dedicated

@@ -8,6 +8,7 @@ import math
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QDoubleSpinBox,
     QFormLayout,
@@ -140,6 +141,12 @@ class YagiForm(QWidget):
         self._remove.clicked.connect(self._remove_element)
         self._preset.clicked.connect(self._load_preset)
         self._driven = QComboBox(self)
+        self._driven_folded = QCheckBox(translator.t("yagi.folded_driven"), self)
+        self._driven_folded.setToolTip(translator.t("yagi.folded_hint"))
+        self._driven_fold_spacing = QDoubleSpinBox(self)
+        self._driven_fold_spacing.setDecimals(3)
+        self._driven_fold_spacing.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._driven_fold_spacing.setValue(length_from_m(0.1, unit_system))
 
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
@@ -163,6 +170,8 @@ class YagiForm(QWidget):
         form.addRow(self._labels.label("field.permittivity"), self._permittivity)
         form.addRow(self._labels.label("field.conductivity"), self._conductivity)
         form.addRow(self._labels.label("yagi.driven"), self._driven)
+        form.addRow(self._driven_folded)
+        form.addRow(self._labels.label("yagi.fold_spacing"), self._driven_fold_spacing)
 
         element_buttons = QHBoxLayout()
         element_buttons.addWidget(self._add)
@@ -184,6 +193,7 @@ class YagiForm(QWidget):
             self._height,
             self._azimuth,
             self._radius,
+            self._driven_fold_spacing,
             self._permittivity,
             self._conductivity,
         ):
@@ -192,11 +202,13 @@ class YagiForm(QWidget):
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._ground_changed)
         self._driven.currentIndexChanged.connect(self._emit_changed)
+        self._driven_folded.toggled.connect(self._folded_changed)
         if parameters is not None:
             self.set_parameters(parameters)
         else:
             self._load_preset()
         self._update_ground_controls()
+        self._update_folded_controls()
 
     def _emit_changed(self, *_args: object) -> None:
         if not self._updating:
@@ -236,6 +248,13 @@ class YagiForm(QWidget):
         self._update_ground_controls()
         self._emit_changed()
 
+    def _folded_changed(self, *_args: object) -> None:
+        self._update_folded_controls()
+        self._emit_changed()
+
+    def _update_folded_controls(self) -> None:
+        self._driven_fold_spacing.setEnabled(self._driven_folded.isChecked())
+
     def retranslate(self) -> None:
         self._ground_presets.retranslate()
         self._labels.retranslate()
@@ -250,6 +269,8 @@ class YagiForm(QWidget):
         self._add.setText(self._translator.t("yagi.add_element"))
         self._remove.setText(self._translator.t("yagi.remove_element"))
         self._preset.setText(self._translator.t("yagi.nbs_preset"))
+        self._driven_folded.setText(self._translator.t("yagi.folded_driven"))
+        self._driven_folded.setToolTip(self._translator.t("yagi.folded_hint"))
         retranslate_combo(
             self._polarization,
             self._translator,
@@ -352,6 +373,11 @@ class YagiForm(QWidget):
                 material=self._selected_material(),
                 ground=self._ground_model(),
                 radius_m=self._radius_m(),
+                folded_driven=self._driven_folded.isChecked(),
+                folded_spacing_m=length_to_m(
+                    self._driven_fold_spacing.value(),
+                    self._unit_system,
+                ),
             )
         except ValueError:
             self._update_clearance_warning()
@@ -429,6 +455,7 @@ class YagiForm(QWidget):
             self._translator,
             unit_system,
             self._height,
+            self._driven_fold_spacing,
         )
         if parameters is not None:
             self.set_parameters(parameters)
@@ -457,6 +484,10 @@ class YagiForm(QWidget):
                 self._permittivity.setValue(parameters.ground.relative_permittivity)
             if parameters.ground.conductivity_s_per_m is not None:
                 self._conductivity.setValue(parameters.ground.conductivity_s_per_m)
+            self._driven_folded.setChecked(parameters.driven_folded)
+            self._driven_fold_spacing.setValue(
+                length_from_m(parameters.driven_fold_spacing_m, self._unit_system)
+            )
             self._table.setRowCount(0)
             for element in parameters.elements:
                 self._append_element(element)
@@ -466,6 +497,7 @@ class YagiForm(QWidget):
         finally:
             self._updating = False
         self._update_ground_controls()
+        self._update_folded_controls()
         self._update_geometry()
 
     def set_frequency_hz(self, frequency_hz: float) -> None:
@@ -489,14 +521,19 @@ class YagiForm(QWidget):
             self._translator.t("yagi.frequency_mismatch") if mismatch else ""
         )
         self._frequency_warning.setVisible(mismatch)
-        self._geometry.setText(
-            self._translator.t(
-                "yagi.geometry",
-                count=len(parameters.elements),
-                boom=f"{length_from_m(max(positions) - min(positions), self._unit_system):.2f}",
+        geometry = self._translator.t(
+            "yagi.geometry",
+            count=len(parameters.elements),
+            boom=f"{length_from_m(max(positions) - min(positions), self._unit_system):.2f}",
+            unit=unit,
+        )
+        if parameters.driven_folded:
+            geometry += " · " + self._translator.t(
+                "yagi.folded_geometry",
+                spacing=f"{length_from_m(parameters.driven_fold_spacing_m, self._unit_system):.3f}",
                 unit=unit,
             )
-        )
+        self._geometry.setText(geometry)
 
     def parameters(self) -> YagiParameters:
         driven_row = self._driven.currentData()
@@ -512,6 +549,11 @@ class YagiForm(QWidget):
             elements=tuple(element for _row, element in rows),
             height_m=length_to_m(self._height.value(), self._unit_system),
             driven_index=driven_index,
+            driven_folded=self._driven_folded.isChecked(),
+            driven_fold_spacing_m=length_to_m(
+                self._driven_fold_spacing.value(),
+                self._unit_system,
+            ),
             azimuth_deg=self._azimuth.value(),
             polarization=self._selected_polarization(),
             material=self._selected_material(),
