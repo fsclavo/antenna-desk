@@ -12,6 +12,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..domain.antennas.antenna import AntennaModel
+from ..domain.antennas.balun import BalunLoss
 from ..domain.antennas.custom import ANTENNA_TYPE_CUSTOM, CustomAntennaParameters
 from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import (
@@ -65,7 +66,12 @@ from ..domain.antennas.trap_dipole import (
 )
 from ..domain.antennas.vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
 from ..domain.antennas.wire import Wire
-from ..domain.antennas.yagi import ANTENNA_TYPE_YAGI, YagiElement, YagiParameters
+from ..domain.antennas.yagi import (
+    ANTENNA_TYPE_YAGI,
+    YagiElement,
+    YagiMatchType,
+    YagiParameters,
+)
 from ..domain.common.validation import Diagnostic, Severity
 from ..domain.design.band_plan import BandPlan, BandSelection
 from ..domain.environment.environment import Environment
@@ -389,6 +395,9 @@ class YagiParametersPayload(StrictModel):
     driven_index: int = Field(default=1, ge=0)
     driven_folded: bool = False
     driven_fold_spacing_m: float = Field(default=0.1, ge=0.0)
+    match_type: YagiMatchType = YagiMatchType.NONE
+    match_length_m: float = Field(default=0.2, gt=0.0)
+    match_spacing_m: float = Field(default=0.1, gt=0.0)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     polarization: Polarization = Polarization.HORIZONTAL
     material: MaterialPayload
@@ -433,6 +442,13 @@ class FeedLinePayload(StrictModel):
     matched_loss_db_per_100m: float = Field(default=0.0, ge=0.0)
 
 
+class BalunLossPayload(StrictModel):
+    enabled: bool = True
+    reference_frequency_hz: float = Field(default=7_000_000.0, gt=0.0)
+    reference_loss_db: float = Field(default=0.5, ge=0.0)
+    exponent: float = Field(default=0.5, ge=0.0)
+
+
 class LNetworkPayload(StrictModel):
     topology: Literal["l", "pi", "t"] = "l"
     series_inductance_h: float = Field(default=0.0, ge=0.0)
@@ -471,6 +487,7 @@ class SimulationSpecPayload(StrictModel):
     pattern_frequencies_hz: list[float] = Field(default_factory=list)
     feed_line: FeedLinePayload | None = None
     matching_network: LNetworkPayload | None = None
+    balun_loss: BalunLossPayload | None = None
     feed_transformer_ratio: float = Field(default=1.0, gt=0.0)
     timeout_s: float = Field(default=60.0, gt=0.0)
 
@@ -540,6 +557,7 @@ class FrequencyResultPayload(StrictModel):
     mismatch_loss_db: float | None = None
     feed_line_loss_db: float | None = None
     network_loss_db: float | None = None
+    balun_loss_db: float | None = None
 
 
 class SimulationResultPayload(StrictModel):
@@ -747,6 +765,7 @@ class ProjectPayload(StrictModel):
     measurements: list[MeasurementPayload] = Field(default_factory=list)
     feed_line: FeedLinePayload | None = None
     matching_network: LNetworkPayload | None = None
+    balun_loss: BalunLossPayload | None = None
 
     @model_validator(mode="after")
     def _validate_timestamps(self) -> Self:
@@ -1169,6 +1188,9 @@ def _yagi_parameters_from_domain(value: YagiParameters) -> YagiParametersPayload
         driven_index=value.driven_index,
         driven_folded=value.driven_folded,
         driven_fold_spacing_m=value.driven_fold_spacing_m,
+        match_type=value.match_type,
+        match_length_m=value.match_length_m,
+        match_spacing_m=value.match_spacing_m,
         azimuth_deg=value.azimuth_deg,
         polarization=value.polarization,
         material=_material_from_domain(value.material),
@@ -1223,6 +1245,15 @@ def _feed_line_from_domain(value: FeedLine) -> FeedLinePayload:
         length_m=value.length_m,
         velocity_factor=value.velocity_factor,
         matched_loss_db_per_100m=value.matched_loss_db_per_100m,
+    )
+
+
+def _balun_loss_from_domain(value: BalunLoss) -> BalunLossPayload:
+    return BalunLossPayload(
+        enabled=value.enabled,
+        reference_frequency_hz=value.reference_frequency_hz,
+        reference_loss_db=value.reference_loss_db,
+        exponent=value.exponent,
     )
 
 
@@ -1287,6 +1318,7 @@ def _simulation_spec_from_domain(value: SimulationSpec) -> SimulationSpecPayload
             if value.matching_network
             else None
         ),
+        balun_loss=_balun_loss_from_domain(value.balun_loss) if value.balun_loss else None,
         feed_transformer_ratio=value.feed_transformer_ratio,
         timeout_s=value.timeout_s,
     )
@@ -1372,6 +1404,7 @@ def _frequency_result_from_domain(value: FrequencyResult) -> FrequencyResultPayl
         mismatch_loss_db=value.mismatch_loss_db,
         feed_line_loss_db=value.feed_line_loss_db,
         network_loss_db=value.network_loss_db,
+        balun_loss_db=value.balun_loss_db,
     )
 
 
@@ -1488,6 +1521,7 @@ def _project_from_domain(value: Project) -> ProjectPayload:
             if value.matching_network
             else None
         ),
+        balun_loss=_balun_loss_from_domain(value.balun_loss) if value.balun_loss else None,
     )
 
 
@@ -1897,6 +1931,9 @@ def _yagi_parameters_to_domain(value: YagiParametersPayload) -> YagiParameters:
         driven_index=value.driven_index,
         driven_folded=value.driven_folded,
         driven_fold_spacing_m=value.driven_fold_spacing_m,
+        match_type=value.match_type,
+        match_length_m=value.match_length_m,
+        match_spacing_m=value.match_spacing_m,
         azimuth_deg=value.azimuth_deg,
         polarization=value.polarization,
         material=_material_to_domain(value.material),
@@ -1946,6 +1983,15 @@ def _feed_line_to_domain(value: FeedLinePayload) -> FeedLine:
         length_m=value.length_m,
         velocity_factor=value.velocity_factor,
         matched_loss_db_per_100m=value.matched_loss_db_per_100m,
+    )
+
+
+def _balun_loss_to_domain(value: BalunLossPayload) -> BalunLoss:
+    return BalunLoss(
+        enabled=value.enabled,
+        reference_frequency_hz=value.reference_frequency_hz,
+        reference_loss_db=value.reference_loss_db,
+        exponent=value.exponent,
     )
 
 
@@ -2005,6 +2051,7 @@ def _simulation_spec_to_domain(value: SimulationSpecPayload) -> SimulationSpec:
         matching_network=(
             _matching_network_to_domain(value.matching_network) if value.matching_network else None
         ),
+        balun_loss=_balun_loss_to_domain(value.balun_loss) if value.balun_loss else None,
         feed_transformer_ratio=value.feed_transformer_ratio,
         timeout_s=value.timeout_s,
     )
@@ -2086,6 +2133,7 @@ def _frequency_result_to_domain(value: FrequencyResultPayload) -> FrequencyResul
         mismatch_loss_db=value.mismatch_loss_db,
         feed_line_loss_db=value.feed_line_loss_db,
         network_loss_db=value.network_loss_db,
+        balun_loss_db=value.balun_loss_db,
     )
 
 
@@ -2182,6 +2230,11 @@ def project_from_document(document: ProjectDocument) -> Project:
         matching_network=(
             _matching_network_to_domain(document.project.matching_network)
             if document.project.matching_network
+            else None
+        ),
+        balun_loss=(
+            _balun_loss_to_domain(document.project.balun_loss)
+            if document.project.balun_loss
             else None
         ),
     )

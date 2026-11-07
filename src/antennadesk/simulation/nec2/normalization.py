@@ -94,6 +94,18 @@ def normalize_nec2_result(
                 field="feed_transformer_ratio",
             )
         )
+    if spec.balun_loss is not None and spec.balun_loss.is_active:
+        problems.append(
+            Diagnostic(
+                code="balun_loss.applied",
+                severity=Severity.INFO,
+                message=(
+                    "impedance and SWR exclude the matched balun/unun loss; "
+                    "realized gain includes it"
+                ),
+                field="balun_loss",
+            )
+        )
     if feed_line is not None and feed_line.is_active:
         problems.append(
             Diagnostic(
@@ -234,6 +246,7 @@ def normalize_nec2_result(
                 network_loss_db=(
                     link.network_loss_db if math.isfinite(link.network_loss_db) else None
                 ),
+                balun_loss_db=(link.balun_loss_db if math.isfinite(link.balun_loss_db) else None),
             )
         )
 

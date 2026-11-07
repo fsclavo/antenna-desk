@@ -173,10 +173,16 @@ in a vertical plane. In both cases `to_antenna()` creates straight wires and a
 center feed on the selected driven element. When `driven_folded` is true, the
 driven element becomes two parallel conductors separated by
 `driven_fold_spacing_m` along the boom, with two end connectors; the feed stays
-on the first conductor. Vertical geometry is rejected when the longest element
-would reach the ground. The NBS TN-688 5-element 0.8λ preset is a starting
-geometry; the published design uses a folded driven element, which can be
-enabled explicitly. Edited designs are experimental.
+on the first conductor. When `match_type` is `beta_hairpin`, the straight
+driven element is split at its centre and a shorted two-conductor stub is added
+along the boom; `match_length_m` and `match_spacing_m` set the stub length and
+the driven-element gap. A folded driven element and a beta/hairpin match are
+mutually exclusive. Gamma matches are not modeled because NEC-2 close-spaced
+gamma assemblies are unreliable; use the matching-network dialog for an
+equivalent. Vertical geometry is rejected when the longest element would reach
+the ground. The NBS TN-688 5-element 0.8λ preset is a starting geometry; the
+published design uses a folded driven element, which can be enabled explicitly.
+Edited designs are experimental.
 
 ### RingoParameters
 
@@ -442,11 +448,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 12.
+the application writes version 14.
 
 ## Schema policy
 
-- Current version: `12`.
+- Current version: `14`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -472,6 +478,10 @@ the application writes version 12.
   unchanged.
 - Version 12 adds the optional folded Yagi driven element. Existing Yagis load
   with a straight driven element.
+- Version 13 adds the optional beta/hairpin Yagi match. Existing Yagis load
+  with no matching harness.
+- Version 14 adds the optional project-level balun/unun loss model and the
+  per-frequency `balun_loss_db` result field.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -500,7 +510,7 @@ the application writes version 12.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 12.
+- Simulation results are persisted as immutable runs in schema version 14.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are
@@ -525,7 +535,11 @@ Phase 2 adds solver-independent simulation types:
   segment center and gives short connector wires a sensible minimum.
 - `SimulationSpec`: frequency plan, segmentation, reference impedance,
   extended-kernel flag, conductor-loss flag, far-field request, optional
-  pattern snapshot frequencies, and timeout.
+  pattern snapshot frequencies, optional feed line, matching network,
+  `BalunLoss`, and timeout.
+- `BalunLoss`: a project-level matched balun/unun insertion loss fitted as
+  `Lref x (f/fref)^n`; it reduces realized gain but does not change geometry,
+  impedance, or SWR.
 - `SolverMetadata`: engine name, version, and executable.
 - `SolverCapabilities`: what the adapter can represent.
 - `TransmissionLine`: a lossless NEC TL two-port between two wire offsets,
@@ -533,8 +547,8 @@ Phase 2 adds solver-independent simulation types:
 - `SimulationResult`: status, spec, model fingerprint, solver metadata,
   per-frequency results, diagnostics, raw input/output, and timing.
 - `FrequencyResult`: impedance, SWR, input power, currents, far field, power
-  budget, directivity, realized gain, and link-loss components for one
-  frequency.
+  budget, directivity, realized gain, and mismatch, feed-line, network, and
+  balun/unun loss components for one frequency.
 - `TransmissionLine`: a mathematical two-port, not a radiating wire. The model
   stores physical length and velocity factor; the NEC adapter writes the
   free-space-equivalent length. Lines are drawn as dashed construction

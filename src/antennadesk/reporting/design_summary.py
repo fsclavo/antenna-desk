@@ -381,6 +381,15 @@ def design_summary_rows(
                     if parameters.driven_folded
                     else []
                 ),
+                ("Feed match", parameters.match_type.value),
+                *(
+                    [
+                        ("Hairpin length", f"{parameters.match_length_m:.4f} m"),
+                        ("Hairpin spacing", f"{parameters.match_spacing_m:.4f} m"),
+                    ]
+                    if parameters.match_type.value == "beta_hairpin"
+                    else []
+                ),
                 (
                     "Material",
                     f"{parameters.material.name} "

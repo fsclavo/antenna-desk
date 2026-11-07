@@ -40,6 +40,9 @@ class YagiDialog(QDialog):
         self._driven = self._form._driven
         self._driven_folded = self._form._driven_folded
         self._driven_fold_spacing = self._form._driven_fold_spacing
+        self._match_type = self._form._match_type
+        self._match_length = self._form._match_length
+        self._match_spacing = self._form._match_spacing
         self._ground = self._form._ground
         self._material = self._form._material
         self._add_element = self._form._add_element

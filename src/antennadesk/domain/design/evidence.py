@@ -135,8 +135,9 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         tolerance="0.5 dB",
         limitation=(
             "Only the published preset; edited element geometry is experimental. "
-            "The optional folded driven element changes feed impedance and has no "
-            "independent impedance reference."
+            "The optional folded driven element and beta/hairpin match change "
+            "feed impedance and have no independent impedance reference. Gamma "
+            "matches are not modeled by NEC-2 here."
         ),
     ),
     "moxon": EvidenceEntry(

@@ -479,6 +479,7 @@ def _rich_result() -> SimulationResult:
             mismatch_loss_db=0.20,
             feed_line_loss_db=0.45,
             network_loss_db=0.05,
+            balun_loss_db=0.03,
         ),
         FrequencyResult(
             frequency_hz=7_100_000.0,
@@ -546,6 +547,7 @@ def test_round_trip_with_a_simulation_run(
     assert run.result.frequencies[0].mismatch_loss_db == pytest.approx(0.20)
     assert run.result.frequencies[0].feed_line_loss_db == pytest.approx(0.45)
     assert run.result.frequencies[0].network_loss_db == pytest.approx(0.05)
+    assert run.result.frequencies[0].balun_loss_db == pytest.approx(0.03)
     assert math.isinf(run.result.frequencies[1].swr)
     assert run.result.spec.segmentation.wire_segments == (("radiator", 21),)
     assert run.result.spec.feed_line == FeedLine(

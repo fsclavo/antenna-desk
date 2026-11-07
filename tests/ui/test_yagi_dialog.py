@@ -133,6 +133,38 @@ def test_yagi_dialog_supports_a_folded_driven_element(qtbot: QtBot) -> None:
     assert len(parameters.to_antenna().wires) == 8
 
 
+def test_yagi_dialog_supports_a_beta_hairpin_match(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.yagi import YagiMatchType
+
+    dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+
+    index = dialog._match_type.findData(YagiMatchType.BETA_HAIRPIN.value)
+    dialog._match_type.setCurrentIndex(index)
+    dialog._match_length.setValue(0.2)
+    dialog._match_spacing.setValue(0.1)
+    parameters = dialog.parameters()
+
+    assert parameters.match_type is YagiMatchType.BETA_HAIRPIN
+    assert parameters.match_length_m == pytest.approx(0.2, abs=1e-3)
+    assert parameters.match_spacing_m == pytest.approx(0.1, abs=1e-3)
+    assert len(parameters.to_antenna().wires) == 10
+
+
+def test_yagi_dialog_disables_match_with_folded_driven(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.yagi import YagiMatchType
+
+    dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    index = dialog._match_type.findData(YagiMatchType.BETA_HAIRPIN.value)
+    dialog._match_type.setCurrentIndex(index)
+    dialog._driven_folded.setChecked(True)
+
+    assert dialog._match_type.currentData() == YagiMatchType.NONE.value
+    assert dialog._match_type.isEnabled() is False
+    assert dialog.parameters().match_type is YagiMatchType.NONE
+
+
 def test_yagi_dialog_restores_folded_driven_settings(qtbot: QtBot) -> None:
     from antennadesk.domain.antennas.yagi import nbs_five_element
 

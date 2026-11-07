@@ -244,7 +244,7 @@ gain, nulls, or impedance.
 | `magnetic_loop` | C | Small-loop geometry with an ideal series tuning capacitor; no independent numerical reference for the generated design | Not applicable (structural) | The capacitor is an ideal series RLC element with optional ESR; the coupling loop, capacitor voltage, and detailed loss mechanisms are not modeled. Tune the capacitance with the solver or a measurement. |
 | `vertical` | B | ARRL practical length rules 234/f for a quarter-wave vertical and 585/f for a 5/8-wave vertical | 0.5% on radiator length | Gain and feedpoint impedance depend on radial count and ground; those are not independently validated. |
 | `loaded_vertical` | B | K7MEM, 'Short Loaded Vertical', citing ARRL Antenna Book, 17th ed., pp. 16-5 to 16-11: a 102 in whip at 14.1 MHz needs a 4.511 µH base loading coil | 5% on the 102 in whip length and the 4.511 µH coil inductance | Only the published 14.1 MHz mobile example is reference-backed. The coil is an ideal series load; coil Q, ground, and the mobile installation are not modeled. Other loaded verticals remain experimental. |
-| `yagi` | A | NBS TN-688 5-element preset, 9.2 dBd (11.35 dBi) | 0.5 dB | Only the published preset; edited element geometry is experimental. The optional folded driven element changes feed impedance and has no independent impedance reference. |
+| `yagi` | A | NBS TN-688 5-element preset, 9.2 dBd (11.35 dBi) | 0.5 dB | Only the published preset; edited element geometry is experimental. The optional folded driven element and beta/hairpin match change feed impedance and have no independent impedance reference. Gamma matches are not modeled by NEC-2 here. |
 | `moxon` | A | L. B. Cebik, W4RNL, 'The Moxon Rectangle: A Review', Table 1 and text | 1.5 Ω real; 5 Ω reactance; 0.3 dB gain; better than 30 dB F/B | Published 20 m dimensions only. |
 | `ocfd` | B | R. Sanders, VK2WB, 'Analysis of the Off Centre Fed (OCF) dipole', Table 1 | Published 200-350 Ω range, not a strict numeric tolerance | The source does not fully specify its EZNEC ground model. |
 | `inverted_v` | B | ARRL, 'Wire Antennas for the Beginner': 120-degree inverted-V total length is 465.6/f MHz feet | 1% on total length for the 120-degree case | The 90-degree case and ground detuning use separate empirical starting rules; gain and feedpoint impedance are not independently validated. |
@@ -383,7 +383,9 @@ Phase 6 adds tests for:
   adds the inverted-L design type without changing existing designs; version 10
   adds loop orientation and migrates existing loops as vertical; version 11 adds
   the magnetic-loop design type without changing existing designs; version 12
-  adds the optional folded Yagi driven element as a straight-element default.
+  adds the optional folded Yagi driven element as a straight-element default;
+  version 13 adds the optional beta/hairpin Yagi match with no-match defaults;
+  version 14 adds the optional balun/unun loss model and result field.
 - Yagi and Moxon vertical polarization: geometry, azimuth, ground-clearance
   validation, scene contracts for both views, persistence round trips, and a
   free-space NEC equivalence check against the horizontal design rotated around

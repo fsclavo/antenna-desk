@@ -37,7 +37,7 @@ from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.wire import Wire
-from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+from antennadesk.domain.antennas.yagi import YagiElement, YagiMatchType, YagiParameters
 from antennadesk.domain.antennas.zepp import zepp_parameters
 from antennadesk.ui.geometry.builder import (
     SUPPORTED_PRESENTATION_TYPES,
@@ -262,6 +262,24 @@ def _cases() -> tuple[FamilyCase, ...]:
             5,
             GeometryViewMode.PLAN,
             ("Yagi", "elements 2", "folded driven"),
+        ),
+        FamilyCase(
+            "yagi_hairpin",
+            YagiParameters(
+                frequency_hz=14_100_000.0,
+                elements=(
+                    YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+                    YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+                ),
+                height_m=10.0,
+                match_type=YagiMatchType.BETA_HAIRPIN,
+                match_length_m=0.2,
+                match_spacing_m=0.1,
+            ),
+            "yagi",
+            7,
+            GeometryViewMode.PLAN,
+            ("Yagi", "elements 2", "beta / hairpin"),
         ),
         FamilyCase(
             "yagi_vertical",

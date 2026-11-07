@@ -45,6 +45,7 @@ def _result() -> SimulationResult:
         mismatch_loss_db=0.20,
         feed_line_loss_db=0.10,
         network_loss_db=0.05,
+        balun_loss_db=0.03,
     )
     return SimulationResult(
         status=SimulationStatus.COMPLETED,
@@ -64,6 +65,7 @@ def test_gain_metrics_report_power_directivity_and_realized_gain() -> None:
     assert rows["Mismatch loss"] == "0.200 dB"
     assert rows["Feed-line loss (matched)"] == "0.100 dB"
     assert rows["Network loss"] == "0.050 dB"
+    assert rows["Balun/unun loss"] == "0.030 dB"
     assert rows["Link metrics at"] == "7.100000 MHz"
 
 

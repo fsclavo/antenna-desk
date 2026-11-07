@@ -20,6 +20,7 @@ class LinkBudget:
     mismatch_loss_db: float
     feed_line_loss_db: float
     network_loss_db: float
+    balun_loss_db: float
 
 
 def link_budget(
@@ -50,6 +51,11 @@ def link_budget(
 
     input_impedance_ohm = cascade.input_impedance(load_impedance_ohm)
     mismatch_loss_db = reflection_loss_db(input_impedance_ohm, source_impedance_ohm)
+    balun_loss_db = (
+        spec.balun_loss.loss_db(frequency_hz)
+        if spec.balun_loss is not None and spec.balun_loss.is_active
+        else 0.0
+    )
     feed_line_loss_db = (
         line.matched_loss_db_per_100m * line.length_m / 100.0
         if line is not None and line.is_active
@@ -79,12 +85,16 @@ def link_budget(
 
     return LinkBudget(
         input_impedance_ohm=input_impedance_ohm,
-        transducer_gain_db=transducer_gain_db(
-            cascade,
-            source_impedance_ohm,
-            load_impedance_ohm,
+        transducer_gain_db=(
+            transducer_gain_db(
+                cascade,
+                source_impedance_ohm,
+                load_impedance_ohm,
+            )
+            - balun_loss_db
         ),
         mismatch_loss_db=mismatch_loss_db,
         feed_line_loss_db=feed_line_loss_db,
         network_loss_db=network_loss_db,
+        balun_loss_db=balun_loss_db,
     )

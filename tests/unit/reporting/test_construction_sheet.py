@@ -234,6 +234,30 @@ def test_folded_yagi_construction_sheet_lists_the_fold(sample_project: Project) 
     assert "second conductor remains passive" in sheet
 
 
+def test_beta_hairpin_yagi_construction_sheet_lists_the_stub(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.yagi import YagiMatchType, nbs_five_element
+
+    design = sample_project.designs[0]
+    yagi = design.with_parameters(
+        nbs_five_element(
+            frequency_hz=50_100_000.0,
+            height_m=8.0,
+            match_type=YagiMatchType.BETA_HAIRPIN,
+            match_length_m=0.2,
+            match_spacing_m=0.1,
+        )
+    )
+    sheet = render_construction_sheet(sample_project, yagi, None)
+
+    assert "Feed match" in sheet
+    assert "beta / hairpin" in sheet
+    assert "Hairpin length" in sheet
+    assert "0.2000 m" in sheet
+    assert "0.1000 m" in sheet
+
+
 def test_magnetic_loop_construction_sheet_lists_gap_and_capacitor(
     sample_project: Project,
 ) -> None:

@@ -14,7 +14,7 @@ CSV_HEADER = (
     "frequency_hz,frequency_mhz,resistance_ohm,reactance_ohm,"
     "impedance_magnitude_ohm,swr,input_power_w,max_gain_dbi,"
     "directivity_dbi,realized_gain_dbi,mismatch_loss_db,"
-    "feed_line_loss_db,network_loss_db"
+    "feed_line_loss_db,network_loss_db,balun_loss_db"
 )
 
 
@@ -34,6 +34,7 @@ def _result_rows(result: SimulationResult) -> list[str]:
             "" if frequency.feed_line_loss_db is None else f"{frequency.feed_line_loss_db:.6f}"
         )
         network = "" if frequency.network_loss_db is None else f"{frequency.network_loss_db:.6f}"
+        balun = "" if frequency.balun_loss_db is None else f"{frequency.balun_loss_db:.6f}"
         rows.append(
             ",".join(
                 [
@@ -50,6 +51,7 @@ def _result_rows(result: SimulationResult) -> list[str]:
                     mismatch,
                     line_loss,
                     network,
+                    balun,
                 ]
             )
         )

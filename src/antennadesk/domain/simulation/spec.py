@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from ..antennas.balun import BalunLoss
 from ..antennas.feed_line import FeedLine
 from ..antennas.matching_network import MatchingNetwork
 from ..common.units import ensure_positive
@@ -29,6 +30,7 @@ class SimulationSpec:
     pattern_frequencies_hz: tuple[float, ...] = ()
     feed_line: FeedLine | None = None
     matching_network: MatchingNetwork | None = None
+    balun_loss: BalunLoss | None = None
     feed_transformer_ratio: float = 1.0
     timeout_s: float = 60.0
 

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from enum import StrEnum
 
 from ..common import units
 from ..common.units import ensure_non_negative, ensure_positive
@@ -22,6 +23,11 @@ YAGI_ELEMENT_ID_PREFIX = "element"
 ANTENNA_TYPE_YAGI = "yagi"
 YAGI_ELEMENT_LENGTH_MIN_FACTOR = 0.35
 YAGI_ELEMENT_LENGTH_MAX_FACTOR = 0.65
+
+
+class YagiMatchType(StrEnum):
+    NONE = "none"
+    BETA_HAIRPIN = "beta_hairpin"
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,6 +58,9 @@ class YagiParameters:
     driven_index: int = 1
     driven_folded: bool = False
     driven_fold_spacing_m: float = 0.1
+    match_type: YagiMatchType = YagiMatchType.NONE
+    match_length_m: float = 0.2
+    match_spacing_m: float = 0.1
     azimuth_deg: float = 0.0
     polarization: Polarization = Polarization.HORIZONTAL
     material: ConductorMaterial = COPPER
@@ -77,6 +86,14 @@ class YagiParameters:
         ensure_non_negative(self.driven_fold_spacing_m, name="driven_fold_spacing_m")
         if self.driven_folded:
             ensure_positive(self.driven_fold_spacing_m, name="driven_fold_spacing_m")
+        object.__setattr__(self, "match_type", YagiMatchType(self.match_type))
+        if self.match_type is not YagiMatchType.NONE:
+            ensure_positive(self.match_length_m, name="match_length_m")
+            ensure_positive(self.match_spacing_m, name="match_spacing_m")
+            if self.driven_folded:
+                raise ValueError("a matching harness needs a straight driven element")
+            if self.match_spacing_m >= elements[self.driven_index].length_m:
+                raise ValueError("match_spacing_m must be shorter than the driven element")
         object.__setattr__(
             self,
             "azimuth_deg",
@@ -106,6 +123,8 @@ class YagiParameters:
         cls,
         parameters: CustomAntennaParameters,
     ) -> YagiParameters:
+        if any(wire.id.endswith("-hairpin-a") for wire in parameters.wires):
+            return cls._from_custom_hairpin(parameters)
         if any(_folded_wire_number(wire.id) is not None for wire in parameters.wires):
             return cls._from_custom_folded(parameters)
         if len(parameters.wires) < 2:
@@ -198,6 +217,125 @@ class YagiParameters:
             azimuth_deg=math.degrees(math.atan2(boom_y, boom_x)),
             polarization=polarization,
             material=first.material,
+            ground=parameters.ground,
+        )
+
+    @classmethod
+    def _from_custom_hairpin(
+        cls,
+        parameters: CustomAntennaParameters,
+    ) -> YagiParameters:
+        feed_wire = next((wire for wire in parameters.wires if wire.id.endswith("-feed")), None)
+        if feed_wire is None:
+            raise ValueError("the beta/hairpin feed wire is missing")
+        feed_parts = feed_wire.id.split("-")
+        try:
+            driven_number = int(feed_parts[1])
+        except (IndexError, ValueError) as exc:
+            raise ValueError("the beta/hairpin feed wire id is invalid") from exc
+        left = next(
+            (wire for wire in parameters.wires if wire.id == f"element-{driven_number}-left"),
+            None,
+        )
+        right = next(
+            (wire for wire in parameters.wires if wire.id == f"element-{driven_number}-right"),
+            None,
+        )
+        hairpin_a = next(
+            (wire for wire in parameters.wires if wire.id == f"element-{driven_number}-hairpin-a"),
+            None,
+        )
+        if left is None or right is None or hairpin_a is None:
+            raise ValueError("the beta/hairpin driven element is incomplete")
+        element_data: dict[int, tuple[float, float, Point3D, Wire]] = {}
+        for wire in parameters.wires:
+            parts = wire.id.split("-")
+            if len(parts) != 2 or parts[0] != YAGI_ELEMENT_ID_PREFIX:
+                continue
+            try:
+                number = int(parts[1])
+            except ValueError:
+                continue
+            element_data[number] = (
+                wire.length_m,
+                wire.radius_m,
+                _midpoint(wire),
+                wire,
+            )
+        element_data[driven_number] = (
+            left.length_m + feed_wire.length_m + right.length_m,
+            left.radius_m,
+            Point3D(
+                x_m=(left.start.x_m + right.end.x_m) / 2.0,
+                y_m=(left.start.y_m + right.end.y_m) / 2.0,
+                z_m=(left.start.z_m + right.end.z_m) / 2.0,
+            ),
+            left,
+        )
+        if len(element_data) < 2:
+            raise ValueError("a beta/hairpin Yagi requires at least two main elements")
+        main_indices = sorted(element_data)
+        orientation_wires = [element_data[index][3] for index in main_indices]
+        horizontal = all(
+            math.isclose(wire.start.z_m, wire.end.z_m, abs_tol=1e-6) for wire in orientation_wires
+        )
+        vertical = all(
+            math.isclose(wire.start.x_m, wire.end.x_m, abs_tol=1e-6)
+            and math.isclose(wire.start.y_m, wire.end.y_m, abs_tol=1e-6)
+            for wire in orientation_wires
+        )
+        if not horizontal and not vertical:
+            raise ValueError("beta/hairpin Yagi elements must be all horizontal or vertical")
+        if horizontal:
+            height_m = orientation_wires[0].start.z_m
+        else:
+            centers = [(wire.start.z_m + wire.end.z_m) / 2.0 for wire in orientation_wires]
+            if max(centers) - min(centers) > 1e-6:
+                raise ValueError("vertical Yagi elements must share a boom height")
+            height_m = centers[0]
+        midpoints = [element_data[index][2] for index in main_indices]
+        boom_x = midpoints[1].x_m - midpoints[0].x_m
+        boom_y = midpoints[1].y_m - midpoints[0].y_m
+        boom_length = math.hypot(boom_x, boom_y)
+        if boom_length <= 1e-9:
+            raise ValueError("Yagi elements must have distinct boom positions")
+        boom_x /= boom_length
+        boom_y /= boom_length
+        raw_positions = [
+            (midpoint.x_m - midpoints[0].x_m) * boom_x + (midpoint.y_m - midpoints[0].y_m) * boom_y
+            for midpoint in midpoints
+        ]
+        offset = min(raw_positions)
+        elements_with_number = sorted(
+            (
+                (
+                    number,
+                    YagiElement(
+                        position_m=position - offset,
+                        length_m=element_data[number][0],
+                        radius_m=element_data[number][1],
+                    ),
+                )
+                for number, position in zip(main_indices, raw_positions, strict=True)
+            ),
+            key=lambda item: item[1].position_m,
+        )
+        driven_index = next(
+            index
+            for index, (number, _element) in enumerate(elements_with_number)
+            if number == driven_number
+        )
+        return cls(
+            frequency_hz=parameters.frequency_hz,
+            elements=tuple(element for _number, element in elements_with_number),
+            height_m=height_m,
+            driven_index=driven_index,
+            match_type=YagiMatchType.BETA_HAIRPIN,
+            match_length_m=hairpin_a.length_m,
+            match_spacing_m=feed_wire.length_m,
+            azimuth_deg=math.degrees(math.atan2(boom_y, boom_x)),
+            polarization=Polarization.VERTICAL if vertical else Polarization.HORIZONTAL,
+            material=left.material,
             ground=parameters.ground,
         )
 
@@ -342,6 +480,56 @@ class YagiParameters:
         half_spacing = self.driven_fold_spacing_m / 2.0
         for index, element in enumerate(self.elements):
             half_length = element.length_m / 2.0
+            if index == self.driven_index and self.match_type is YagiMatchType.BETA_HAIRPIN:
+                half_gap = self.match_spacing_m / 2.0
+                prefix = f"{YAGI_ELEMENT_ID_PREFIX}-{index + 1}"
+                if self.polarization is Polarization.HORIZONTAL:
+                    left_start = Point3D(element.position_m, -half_length, self.height_m)
+                    left_end = Point3D(element.position_m, -half_gap, self.height_m)
+                    right_start = Point3D(element.position_m, half_gap, self.height_m)
+                    right_end = Point3D(element.position_m, half_length, self.height_m)
+                    hairpin_a_end = Point3D(
+                        element.position_m + self.match_length_m,
+                        -half_gap,
+                        self.height_m,
+                    )
+                    hairpin_b_end = Point3D(
+                        element.position_m + self.match_length_m,
+                        half_gap,
+                        self.height_m,
+                    )
+                else:
+                    left_start = Point3D(element.position_m, 0.0, self.height_m - half_length)
+                    left_end = Point3D(element.position_m, 0.0, self.height_m - half_gap)
+                    right_start = Point3D(element.position_m, 0.0, self.height_m + half_gap)
+                    right_end = Point3D(element.position_m, 0.0, self.height_m + half_length)
+                    hairpin_a_end = Point3D(
+                        element.position_m + self.match_length_m,
+                        0.0,
+                        self.height_m - half_gap,
+                    )
+                    hairpin_b_end = Point3D(
+                        element.position_m + self.match_length_m,
+                        0.0,
+                        self.height_m + half_gap,
+                    )
+                wires.extend(
+                    [
+                        wire(f"{prefix}-left", left_start, left_end, element.radius_m),
+                        wire(f"{prefix}-right", right_start, right_end, element.radius_m),
+                        wire(f"{prefix}-feed", left_end, right_start, element.radius_m),
+                        wire(f"{prefix}-hairpin-a", left_end, hairpin_a_end, element.radius_m),
+                        wire(f"{prefix}-hairpin-b", right_start, hairpin_b_end, element.radius_m),
+                        wire(
+                            f"{prefix}-hairpin-short",
+                            hairpin_a_end,
+                            hairpin_b_end,
+                            element.radius_m,
+                        ),
+                    ]
+                )
+                driven_wire_id = f"{prefix}-feed"
+                continue
             if index == self.driven_index and self.driven_folded:
                 if self.polarization is Polarization.HORIZONTAL:
                     a_start = Point3D(
@@ -456,6 +644,9 @@ def nbs_five_element(
     radius_m: float | None = None,
     folded_driven: bool = False,
     folded_spacing_m: float = 0.1,
+    match_type: YagiMatchType = YagiMatchType.NONE,
+    match_length_m: float = 0.2,
+    match_spacing_m: float = 0.1,
 ) -> YagiParameters:
     """Return the NBS TN-688 5-element, 0.8 wavelength starting design.
 
@@ -482,6 +673,9 @@ def nbs_five_element(
         driven_index=1,
         driven_folded=folded_driven,
         driven_fold_spacing_m=folded_spacing_m,
+        match_type=match_type,
+        match_length_m=match_length_m,
+        match_spacing_m=match_spacing_m,
         azimuth_deg=azimuth_deg,
         polarization=polarization,
         material=material,

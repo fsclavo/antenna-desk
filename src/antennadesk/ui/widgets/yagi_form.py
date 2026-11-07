@@ -24,7 +24,12 @@ from PySide6.QtWidgets import (
 
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.antennas.polarization import Polarization
-from ...domain.antennas.yagi import YagiElement, YagiParameters, nbs_five_element
+from ...domain.antennas.yagi import (
+    YagiElement,
+    YagiMatchType,
+    YagiParameters,
+    nbs_five_element,
+)
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..units import (
@@ -148,6 +153,24 @@ class YagiForm(QWidget):
         self._driven_fold_spacing.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._driven_fold_spacing.setValue(length_from_m(0.1, unit_system))
 
+        self._match_type = QComboBox(self)
+        self._match_type.addItem(translator.t("yagi.match_none"), YagiMatchType.NONE.value)
+        self._match_type.addItem(
+            translator.t("yagi.match_beta_hairpin"),
+            YagiMatchType.BETA_HAIRPIN.value,
+        )
+        self._match_type.setToolTip(translator.t("yagi.match_hint"))
+        self._match_length = QDoubleSpinBox(self)
+        self._match_length.setDecimals(3)
+        self._match_length.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._match_length.setValue(length_from_m(0.2, unit_system))
+        self._match_spacing = QDoubleSpinBox(self)
+        self._match_spacing.setDecimals(3)
+        self._match_spacing.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._match_spacing.setValue(length_from_m(0.1, unit_system))
+        self._match_note = QLabel(translator.t("yagi.gamma_note"), self)
+        self._match_note.setWordWrap(True)
+
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
         self._frequency_warning = QLabel(self)
@@ -172,6 +195,9 @@ class YagiForm(QWidget):
         form.addRow(self._labels.label("yagi.driven"), self._driven)
         form.addRow(self._driven_folded)
         form.addRow(self._labels.label("yagi.fold_spacing"), self._driven_fold_spacing)
+        form.addRow(self._labels.label("yagi.match_type"), self._match_type)
+        form.addRow(self._labels.label("yagi.match_length"), self._match_length)
+        form.addRow(self._labels.label("yagi.match_spacing"), self._match_spacing)
 
         element_buttons = QHBoxLayout()
         element_buttons.addWidget(self._add)
@@ -184,6 +210,7 @@ class YagiForm(QWidget):
         layout.addLayout(form)
         layout.addWidget(self._table, 1)
         layout.addLayout(element_buttons)
+        layout.addWidget(self._match_note)
         layout.addWidget(self._geometry)
         layout.addWidget(self._frequency_warning)
         layout.addWidget(self._clearance_warning)
@@ -194,6 +221,8 @@ class YagiForm(QWidget):
             self._azimuth,
             self._radius,
             self._driven_fold_spacing,
+            self._match_length,
+            self._match_spacing,
             self._permittivity,
             self._conductivity,
         ):
@@ -203,12 +232,14 @@ class YagiForm(QWidget):
         self._ground.currentIndexChanged.connect(self._ground_changed)
         self._driven.currentIndexChanged.connect(self._emit_changed)
         self._driven_folded.toggled.connect(self._folded_changed)
+        self._match_type.currentIndexChanged.connect(self._match_changed)
         if parameters is not None:
             self.set_parameters(parameters)
         else:
             self._load_preset()
         self._update_ground_controls()
         self._update_folded_controls()
+        self._update_match_controls()
 
     def _emit_changed(self, *_args: object) -> None:
         if not self._updating:
@@ -238,6 +269,9 @@ class YagiForm(QWidget):
                     except ValueError:
                         continue
                     cell.setText(f"{length_from_m(current_m * scale, self._unit_system):.3f}")
+            for widget in (self._match_length, self._match_spacing):
+                current_m = length_to_m(widget.value(), self._unit_system)
+                widget.setValue(length_from_m(current_m * scale, self._unit_system))
         finally:
             self._updating = False
         self._refresh_driven_values()
@@ -249,11 +283,29 @@ class YagiForm(QWidget):
         self._emit_changed()
 
     def _folded_changed(self, *_args: object) -> None:
+        if self._driven_folded.isChecked():
+            index = self._match_type.findData(YagiMatchType.NONE.value)
+            if index >= 0:
+                self._match_type.setCurrentIndex(index)
         self._update_folded_controls()
+        self._update_match_controls()
+        self._emit_changed()
+
+    def _match_changed(self, *_args: object) -> None:
+        self._update_match_controls()
         self._emit_changed()
 
     def _update_folded_controls(self) -> None:
         self._driven_fold_spacing.setEnabled(self._driven_folded.isChecked())
+        self._match_type.setEnabled(not self._driven_folded.isChecked())
+
+    def _update_match_controls(self) -> None:
+        active = self._selected_match_type() is YagiMatchType.BETA_HAIRPIN
+        self._match_length.setEnabled(active)
+        self._match_spacing.setEnabled(active)
+
+    def _selected_match_type(self) -> YagiMatchType:
+        return YagiMatchType(str(self._match_type.currentData()))
 
     def retranslate(self) -> None:
         self._ground_presets.retranslate()
@@ -271,6 +323,10 @@ class YagiForm(QWidget):
         self._preset.setText(self._translator.t("yagi.nbs_preset"))
         self._driven_folded.setText(self._translator.t("yagi.folded_driven"))
         self._driven_folded.setToolTip(self._translator.t("yagi.folded_hint"))
+        self._match_type.setItemText(0, self._translator.t("yagi.match_none"))
+        self._match_type.setItemText(1, self._translator.t("yagi.match_beta_hairpin"))
+        self._match_type.setToolTip(self._translator.t("yagi.match_hint"))
+        self._match_note.setText(self._translator.t("yagi.gamma_note"))
         retranslate_combo(
             self._polarization,
             self._translator,
@@ -456,6 +512,8 @@ class YagiForm(QWidget):
             unit_system,
             self._height,
             self._driven_fold_spacing,
+            self._match_length,
+            self._match_spacing,
         )
         if parameters is not None:
             self.set_parameters(parameters)
@@ -488,6 +546,13 @@ class YagiForm(QWidget):
             self._driven_fold_spacing.setValue(
                 length_from_m(parameters.driven_fold_spacing_m, self._unit_system)
             )
+            match_index = self._match_type.findData(parameters.match_type.value)
+            if match_index >= 0:
+                self._match_type.setCurrentIndex(match_index)
+            self._match_length.setValue(length_from_m(parameters.match_length_m, self._unit_system))
+            self._match_spacing.setValue(
+                length_from_m(parameters.match_spacing_m, self._unit_system)
+            )
             self._table.setRowCount(0)
             for element in parameters.elements:
                 self._append_element(element)
@@ -498,6 +563,7 @@ class YagiForm(QWidget):
             self._updating = False
         self._update_ground_controls()
         self._update_folded_controls()
+        self._update_match_controls()
         self._update_geometry()
 
     def set_frequency_hz(self, frequency_hz: float) -> None:
@@ -533,6 +599,13 @@ class YagiForm(QWidget):
                 spacing=f"{length_from_m(parameters.driven_fold_spacing_m, self._unit_system):.3f}",
                 unit=unit,
             )
+        if parameters.match_type is YagiMatchType.BETA_HAIRPIN:
+            geometry += " · " + self._translator.t(
+                "yagi.match_geometry",
+                length=f"{length_from_m(parameters.match_length_m, self._unit_system):.3f}",
+                spacing=f"{length_from_m(parameters.match_spacing_m, self._unit_system):.3f}",
+                unit=unit,
+            )
         self._geometry.setText(geometry)
 
     def parameters(self) -> YagiParameters:
@@ -554,6 +627,9 @@ class YagiForm(QWidget):
                 self._driven_fold_spacing.value(),
                 self._unit_system,
             ),
+            match_type=self._selected_match_type(),
+            match_length_m=length_to_m(self._match_length.value(), self._unit_system),
+            match_spacing_m=length_to_m(self._match_spacing.value(), self._unit_system),
             azimuth_deg=self._azimuth.value(),
             polarization=self._selected_polarization(),
             material=self._selected_material(),

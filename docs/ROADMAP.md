@@ -182,8 +182,9 @@ Scope:
   analysis band plans, version 7 with Yagi/Moxon polarization, version 8 with
   vertical top-hat fields, version 9 with the inverted-L design type, and
   version 10 with loop orientation, version 11 with the magnetic-loop design
-  type, and version 12 with the folded Yagi driven element), and band-aware CSV,
-  HTML, PDF, and comparison summaries.
+  type, version 12 with the folded Yagi driven element, version 13 with the
+  beta/hairpin Yagi match, and version 14 with the balun/unun loss model), and
+  band-aware CSV, HTML, PDF, and comparison summaries.
 - Deferred: a segmented frequency plan in one NEC deck, only if measurements
   show that per-band runs are too slow or too large.
 
@@ -235,8 +236,8 @@ point; `C` is structural/experimental only.
 | 3 | Elevated radials / ground screen | Modification of `vertical` | S–M | High | B/A | **Implemented on 2026-11-06:** the vertical editor has no-radial, ground-radial, elevated-radial, and dense ground-screen starting presets over the existing radial fields. The screen is a dense radial approximation, not a bonded mesh. |
 | 4 | Magnetic loop | New family | L | High | B/C; A only with an exact published design | **Implemented on 2026-11-07:** first-class tuned small loop with a top gap, ideal series capacitor and ESR, conductor-loss simulation, efficiency reporting, SWR-bandwidth reporting, and a dedicated editor. A coupling loop and detailed capacitor loss model remain limitations. |
 | 5 | Yagi folded driven element | Modification of `yagi` | M | Medium | B/A | **Implemented on 2026-11-07:** optional two-conductor folded driven element with end connectors and adjustable spacing. The published NBS preset can be loaded with the folded element; feed impedance remains a tuning result, not a reference value. |
-| 6 | Gamma / beta / hairpin match | Modification of `yagi` | M | Medium | B/A | Geometry and feed hardware; may coexist with the matching-network dialog. |
-| 7 | Balun/unun with losses | Cross-cutting model | M | High | B/C | Frequency-dependent loss model; improves EFHW, OCFD, G5RV, and T2FD. |
+| 6 | Gamma / beta / hairpin match | Modification of `yagi` | M | Medium | B/A | **Partially implemented on 2026-11-07:** beta/hairpin geometry with a split driven element, shorted stub, and adjustable length/spacing. Gamma is deliberately deferred because NEC-2 close-spaced gamma assemblies are unreliable; use the matching-network dialog for an equivalent. |
+| 7 | Balun/unun with losses | Cross-cutting model | M | High | B/C | **Implemented on 2026-11-07:** project-level matched insertion loss with a power-law frequency fit. It reduces realized gain and is reported per frequency; it does not alter geometry, impedance, or SWR. Apply it to EFHW, OCFD, G5RV, T2FD, or any other design. |
 | 8 | Capacity hat / top-loaded vertical | Modification of `vertical` | M | High | B/A | Short verticals on low bands; needs hat geometry and possibly loading. |
 | 9 | Explicit EFHW presets for the existing EndFed + OCFD/G5RV variants | Presets/UX, not a new family | S | Medium–high | A/B | `EndFedParameters` with `EndFedPreset.STANDARD` already models an EFHW using a half-wave wire and 49:1 transformer. The work is naming clarity plus published 40/20/10 m presets and an optional band plan; OCFD/G5RV variants remain presets. Quick win; can be advanced ahead of the sequence if needed. |
 | 10 | Half-square / bobtail curtain | New family | M | Medium | B/A | Multi-wire geometry and feed; published designs exist. |

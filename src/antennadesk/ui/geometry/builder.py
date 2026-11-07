@@ -49,7 +49,7 @@ from ...domain.antennas.trap_dipole import (
 )
 from ...domain.antennas.vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
 from ...domain.antennas.wire import Wire
-from ...domain.antennas.yagi import ANTENNA_TYPE_YAGI, YagiParameters
+from ...domain.antennas.yagi import ANTENNA_TYPE_YAGI, YagiMatchType, YagiParameters
 from ...domain.antennas.zepp import (
     ZEPP_MATCHING_FEED_ID,
     ZEPP_MATCHING_OPEN_ID,
@@ -983,6 +983,99 @@ def _yagi_element_wire(
     return _array_wire(model, wire_id, index)
 
 
+def _yagi_element_span(
+    model: AntennaModel,
+    parameters: YagiParameters,
+    index: int,
+) -> tuple[Point3D, Point3D] | None:
+    if index == parameters.driven_index and parameters.match_type is YagiMatchType.BETA_HAIRPIN:
+        left = next(
+            (wire for wire in model.wires if wire.id == f"element-{index + 1}-left"),
+            None,
+        )
+        right = next(
+            (wire for wire in model.wires if wire.id == f"element-{index + 1}-right"),
+            None,
+        )
+        if left is None or right is None:
+            return None
+        return left.start, right.end
+    wire = _yagi_element_wire(model, parameters, index)
+    if wire is None:
+        return None
+    return wire.start, wire.end
+
+
+def _yagi_element_center(
+    model: AntennaModel,
+    parameters: YagiParameters,
+    index: int,
+) -> Point3D | None:
+    if index == parameters.driven_index and parameters.match_type is YagiMatchType.BETA_HAIRPIN:
+        left = next(
+            (wire for wire in model.wires if wire.id == f"element-{index + 1}-left"),
+            None,
+        )
+        right = next(
+            (wire for wire in model.wires if wire.id == f"element-{index + 1}-right"),
+            None,
+        )
+        if left is None or right is None:
+            return None
+        left_midpoint = _wire_point(left, 0.5)
+        right_midpoint = _wire_point(right, 0.5)
+        return Point3D(
+            x_m=(left_midpoint.x_m + right_midpoint.x_m) / 2.0,
+            y_m=(left_midpoint.y_m + right_midpoint.y_m) / 2.0,
+            z_m=(left_midpoint.z_m + right_midpoint.z_m) / 2.0,
+        )
+    if index == parameters.driven_index and parameters.driven_folded:
+        first = _yagi_element_wire(model, parameters, index)
+        second = _array_wire(model, f"element-{index + 1}-b", index)
+        if first is None or second is None:
+            return None
+        first_midpoint = _wire_point(first, 0.5)
+        second_midpoint = _wire_point(second, 0.5)
+        return Point3D(
+            x_m=(first_midpoint.x_m + second_midpoint.x_m) / 2.0,
+            y_m=(first_midpoint.y_m + second_midpoint.y_m) / 2.0,
+            z_m=(first_midpoint.z_m + second_midpoint.z_m) / 2.0,
+        )
+    wire = _yagi_element_wire(model, parameters, index)
+    return _wire_point(wire, 0.5) if wire is not None else None
+
+
+def _add_hairpin_dimensions(
+    model: AntennaModel,
+    parameters: YagiParameters,
+    factory: _Factory,
+    dimensions: list[Dimension],
+) -> None:
+    prefix = f"element-{parameters.driven_index + 1}"
+    feed = next((wire for wire in model.wires if wire.id == f"{prefix}-feed"), None)
+    hairpin = next((wire for wire in model.wires if wire.id == f"{prefix}-hairpin-a"), None)
+    if feed is not None:
+        dimensions.append(
+            factory.dimension(
+                feed.start,
+                feed.end,
+                parameters.match_spacing_m,
+                side="above",
+                priority=55,
+            )
+        )
+    if hairpin is not None:
+        dimensions.append(
+            factory.dimension(
+                hairpin.start,
+                hairpin.end,
+                parameters.match_length_m,
+                side="below",
+                priority=50,
+            )
+        )
+
+
 def _add_array_dimensions(
     model: AntennaModel,
     parameters: object | None,
@@ -1057,13 +1150,13 @@ def _add_array_dimensions(
             return
         if isinstance(parameters, YagiParameters):
             for index, element in enumerate(parameters.elements):
-                wire = _yagi_element_wire(model, parameters, index)
-                if wire is None:
+                span = _yagi_element_span(model, parameters, index)
+                if span is None:
                     continue
                 dimensions.append(
                     factory.dimension(
-                        wire.start,
-                        wire.end,
+                        span[0],
+                        span[1],
                         element.length_m,
                         side="above" if index % 2 == 0 else "below",
                         priority=70
@@ -1073,13 +1166,17 @@ def _add_array_dimensions(
                 )
             if len(parameters.elements) >= 2:
                 positions = [element.position_m for element in parameters.elements]
-                first = _yagi_element_wire(model, parameters, 0)
-                last = _yagi_element_wire(model, parameters, len(parameters.elements) - 1)
-                if first is not None and last is not None:
+                first_center = _yagi_element_center(model, parameters, 0)
+                last_center = _yagi_element_center(
+                    model,
+                    parameters,
+                    len(parameters.elements) - 1,
+                )
+                if first_center is not None and last_center is not None:
                     dimensions.append(
                         factory.dimension(
-                            _wire_point(first, 0.5),
-                            _wire_point(last, 0.5),
+                            first_center,
+                            last_center,
                             max(positions) - min(positions),
                             side="below",
                             priority=60,
@@ -1102,6 +1199,8 @@ def _add_array_dimensions(
                             priority=55,
                         )
                     )
+            if parameters.match_type is YagiMatchType.BETA_HAIRPIN:
+                _add_hairpin_dimensions(model, parameters, factory, dimensions)
         elif isinstance(parameters, MoxonParameters):
             for wire in model.wires[:1]:
                 dimensions.append(
@@ -1177,13 +1276,13 @@ def _add_array_dimensions(
 
     if vertical_array and isinstance(parameters, YagiParameters):
         for index, yagi_element in enumerate(parameters.elements):
-            array_wire = _yagi_element_wire(model, parameters, index)
-            if array_wire is None:
+            span = _yagi_element_span(model, parameters, index)
+            if span is None:
                 continue
             dimensions.append(
                 factory.dimension(
-                    array_wire.start,
-                    array_wire.end,
+                    span[0],
+                    span[1],
                     yagi_element.length_m,
                     side="right" if index % 2 == 0 else "left",
                     priority=70
@@ -1193,13 +1292,17 @@ def _add_array_dimensions(
             )
         if len(parameters.elements) >= 2:
             positions = [element.position_m for element in parameters.elements]
-            first = _yagi_element_wire(model, parameters, 0)
-            last = _yagi_element_wire(model, parameters, len(parameters.elements) - 1)
-            if first is not None and last is not None:
+            first_center = _yagi_element_center(model, parameters, 0)
+            last_center = _yagi_element_center(
+                model,
+                parameters,
+                len(parameters.elements) - 1,
+            )
+            if first_center is not None and last_center is not None:
                 dimensions.append(
                     factory.dimension(
-                        _wire_point(first, 0.5),
-                        _wire_point(last, 0.5),
+                        first_center,
+                        last_center,
                         max(positions) - min(positions),
                         side="above",
                         priority=65,
@@ -1222,6 +1325,8 @@ def _add_array_dimensions(
                         priority=55,
                     )
                 )
+        if parameters.match_type is YagiMatchType.BETA_HAIRPIN:
+            _add_hairpin_dimensions(model, parameters, factory, dimensions)
     elif vertical_array and isinstance(parameters, MoxonParameters):
         reflector = next((wire for wire in model.wires if wire.id == "reflector"), None)
         driven = next((wire for wire in model.wires if wire.id == "driven"), None)
@@ -1747,6 +1852,12 @@ def _summary(
                 parts.append(
                     f"{translator.t('yagi.folded_driven').lower()} "
                     f"{_format_length(parameters.driven_fold_spacing_m, translator, unit_system)}"
+                )
+            if parameters.match_type is YagiMatchType.BETA_HAIRPIN:
+                parts.append(
+                    f"{translator.t('yagi.match_beta_hairpin').lower()} "
+                    f"{_format_length(parameters.match_length_m, translator, unit_system)} "
+                    f"· {_format_length(parameters.match_spacing_m, translator, unit_system)}"
                 )
     elif isinstance(parameters, MoxonParameters):
         parts.extend(

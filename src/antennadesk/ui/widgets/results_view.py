@@ -1512,6 +1512,7 @@ class ResultsView(QWidget):
                 frequency.mismatch_loss_db,
                 frequency.feed_line_loss_db,
                 frequency.network_loss_db,
+                frequency.balun_loss_db,
             )
         if all(metric is None for metric in metrics):
             return ""
@@ -1534,6 +1535,7 @@ class ResultsView(QWidget):
             mismatch=value(frequency.mismatch_loss_db, "dB"),
             line=value(frequency.feed_line_loss_db, "dB"),
             network=value(frequency.network_loss_db, "dB"),
+            balun=value(frequency.balun_loss_db, "dB"),
         )
         return f"{first} · {second}"
 

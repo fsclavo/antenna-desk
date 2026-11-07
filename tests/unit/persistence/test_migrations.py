@@ -346,6 +346,54 @@ def test_v11_migration_adds_straight_driven_yagi_defaults() -> None:
     assert "driven_folded" not in migrated["project"]["designs"][1]["parameters"]
 
 
+def test_v12_migration_adds_no_match_yagi_defaults() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 12,
+        "project": {
+            "designs": [
+                {"antenna_type": "yagi", "parameters": {}},
+                {"antenna_type": "magnetic_loop", "parameters": {}},
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    yagi = migrated["project"]["designs"][0]["parameters"]
+    assert yagi["match_type"] == "none"
+    assert yagi["match_length_m"] == pytest.approx(0.2)
+    assert yagi["match_spacing_m"] == pytest.approx(0.1)
+    assert "match_type" not in migrated["project"]["designs"][1]["parameters"]
+
+
+def test_v13_migration_adds_project_balun_loss_field() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 13,
+        "project": {
+            "designs": [],
+            "simulation_runs": [
+                {
+                    "result": {
+                        "status": "completed",
+                        "frequencies": [{"impedance_real_ohm": 50.0}],
+                        "diagnostics": [],
+                    }
+                }
+            ],
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert "balun_loss" in migrated["project"]
+    assert migrated["project"]["balun_loss"] is None
+    assert "balun_loss_db" in migrated["project"]["simulation_runs"][0]["result"]["frequencies"][0]
+
+
 def test_v4_migration_adds_optional_transformer_ratios() -> None:
     document = {
         "format": "antennadesk-project",

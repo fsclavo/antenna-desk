@@ -246,6 +246,50 @@ def _migrate_v10_to_v11(document: dict[str, Any]) -> dict[str, Any]:
     return copy.deepcopy(document)
 
 
+def _migrate_v13_to_v14(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the optional project balun/unun loss model."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if isinstance(project, dict):
+        project.setdefault("balun_loss", None)
+        runs = project.get("simulation_runs")
+        if isinstance(runs, list):
+            for run in runs:
+                if not isinstance(run, dict):
+                    continue
+                result = run.get("result")
+                if not isinstance(result, dict):
+                    continue
+                frequencies = result.get("frequencies")
+                if isinstance(frequencies, list):
+                    for frequency in frequencies:
+                        if isinstance(frequency, dict):
+                            frequency.setdefault("balun_loss_db", None)
+    return migrated
+
+
+def _migrate_v12_to_v13(document: dict[str, Any]) -> dict[str, Any]:
+    """Add Yagi matching-harness fields with no-match defaults."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if isinstance(project, dict):
+        designs = project.get("designs")
+        if isinstance(designs, list):
+            for design in designs:
+                if not isinstance(design, dict):
+                    continue
+                if design.get("antenna_type") != "yagi":
+                    continue
+                parameters = design.get("parameters")
+                if isinstance(parameters, dict):
+                    parameters.setdefault("match_type", "none")
+                    parameters.setdefault("match_length_m", 0.2)
+                    parameters.setdefault("match_spacing_m", 0.1)
+    return migrated
+
+
 def _migrate_v11_to_v12(document: dict[str, Any]) -> dict[str, Any]:
     """Add folded-driven Yagi fields with a straight-element default."""
 
@@ -278,6 +322,8 @@ MIGRATIONS: dict[int, Migration] = {
     9: _migrate_v9_to_v10,
     10: _migrate_v10_to_v11,
     11: _migrate_v11_to_v12,
+    12: _migrate_v12_to_v13,
+    13: _migrate_v13_to_v14,
 }
 
 

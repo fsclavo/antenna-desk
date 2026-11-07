@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added a project-level **Balun/Unun loss** model with a frequency-dependent
+  power-law fit. It reduces realized gain and is reported per frequency without
+  changing geometry, impedance, or SWR; the setting is saved with the project
+  and simulation runs.
+- Yagi designs now support an optional **beta/hairpin match**: the straight
+  driven element is split at the centre, a shorted two-conductor stub runs along
+  the boom, and the feed sits across the driven-element gap. A gamma match is
+  documented as deferred because NEC-2 close-spaced gamma assemblies are
+  unreliable; the matching-network dialog remains the equivalent.
 - Yagi designs now support an optional **folded driven element**: two parallel
   conductors with end connectors and adjustable spacing. The NBS 5-element
   preset can be loaded with the published folded geometry. The feed impedance

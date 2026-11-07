@@ -295,9 +295,13 @@ boom. Height is the boom centerline, so a vertical Yagi needs enough clearance
 for the longest element to stay above ground. The form rejects a geometry whose
 lowest tip would reach the ground. Enable **Folded driven element** to replace
 the driven element with two parallel conductors and two end connectors; set
-**Fold spacing** to control the feed impedance and matching. **Load NBS
-5-element preset** fills the NBS TN-688 0.8λ starting geometry
-scaled to the selected frequency. Changing the frequency in the form rescales
+**Fold spacing** to control the feed impedance and matching. Alternatively,
+select **Feed match → Beta / hairpin** to split the straight driven element and
+add a shorted stub along the boom; set its length and spacing. A folded driven
+element and a beta/hairpin match cannot be combined. A gamma match is not
+modeled because NEC-2 is unreliable for close-spaced gamma assemblies; use the
+Matching Network dialog for an equivalent. **Load NBS 5-element preset** fills
+the NBS TN-688 0.8λ starting geometry scaled to the selected frequency. Changing the frequency in the form rescales
 the current element positions and lengths by the wavelength ratio. If the
 element dimensions do not look consistent with the current frequency, the form
 shows a warning; use **Design → Estimate Dimensions...** to rebuild a
@@ -306,8 +310,8 @@ shows a warning; use **Design → Estimate Dimensions...** to rebuild a
 The NBS preset is reference-backed for gain: the published design has 9.2 dBd
 gain over a half-wave dipole. The published design uses a folded driven
 element; enable the folded option to model it. The feed impedance is not the
-reference impedance in either the straight or folded case, so tune the matching
-with the solver. Once you edit positions or lengths, the result is an
+reference impedance in the straight, folded, or beta/hairpin case, so tune the
+matching with the solver or the matching network. Once you edit positions or lengths, the result is an
 experimental geometry with no external reference; simulate it and judge it on
 its own modeled performance. The design panel keeps the element table editable;
 use **Edit Custom Wires...** only when you want raw coordinates.
@@ -811,6 +815,22 @@ and mismatch. A diagnostics row confirms that the line was applied.
 Disable the feed line to return to antenna-terminal impedance. The feed-line
 configuration is saved with the project and with each simulation run; it is
 not part of the antenna geometry.
+
+## Balun/unun loss
+
+Use **Simulation → Balun/Unun Loss...** to add a matched insertion loss for a
+balun or unun. The model uses a reference loss at a reference frequency and a
+power-law exponent:
+
+```text
+loss(f) = Lref x (f / fref)^n
+```
+
+The preview shows the resulting loss at 1.8, 7, 14, and 28 MHz. The loss
+reduces realized gain, but it does not change geometry, impedance, or SWR.
+This is an application fit, not a core-loss calculation; use measured
+insertion-loss data when available. The setting is project-level and saved
+with the project and simulation runs.
 
 ## Transmission lines as geometry
 

@@ -60,6 +60,31 @@ def test_ideal_transformer_matches_the_transformed_load() -> None:
     assert budget.mismatch_loss_db == pytest.approx(0.0)
 
 
+def test_balun_loss_is_frequency_dependent_and_reduces_realized_gain() -> None:
+    from antennadesk.domain.antennas.balun import BalunLoss
+
+    balun = BalunLoss(
+        reference_frequency_hz=14_100_000.0,
+        reference_loss_db=0.5,
+        exponent=0.5,
+    )
+    at_reference = link_budget(
+        antenna_impedance_ohm=complex(50.0, 0.0),
+        frequency_hz=14_100_000.0,
+        spec=_spec(balun_loss=balun),
+    )
+    at_double = link_budget(
+        antenna_impedance_ohm=complex(50.0, 0.0),
+        frequency_hz=28_200_000.0,
+        spec=_spec(balun_loss=balun),
+    )
+
+    assert at_reference.balun_loss_db == pytest.approx(0.5)
+    assert at_reference.transducer_gain_db == pytest.approx(-0.5)
+    assert at_double.balun_loss_db == pytest.approx(0.5 * 2**0.5)
+    assert at_double.transducer_gain_db == pytest.approx(-0.5 * 2**0.5)
+
+
 def test_matched_feed_line_reports_its_matched_loss() -> None:
     line = FeedLine(
         characteristic_impedance_ohm=50.0,

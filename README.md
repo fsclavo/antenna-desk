@@ -14,8 +14,8 @@ inverted-Ls, OCFDs,
 end-fed wires, slopers, random wires, doublets, J Poles, Slim Jims, Ringos,
 verticals, and loaded verticals are supported.
 Yagi and Moxon arrays support horizontal or vertical polarization with a
-horizontal boom, plus an optional folded Yagi driven element with adjustable
-spacing. Projects use versioned JSON persistence, lossless gzip
+horizontal boom, plus optional folded driven elements and beta/hairpin
+matching stubs. Projects use versioned JSON persistence, lossless gzip
 compression, and explicit migrations. VNA CSV import
 and measured/simulated comparison are available.
 
@@ -132,8 +132,8 @@ optional signing steps.
   points by default, and pattern resolution defaults to 5° and can be set to
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` projects with multiple design
-  variants; schema version 12 adds folded Yagi driven elements and migrates
-  older files explicitly.
+  variants; schema version 14 adds frequency-dependent balun/unun loss and
+  migrates older files explicitly.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - VNA CSV import with measured impedance/SWR records and a measured/simulated
   SWR, R, X, or |Z| comparison tab, including resonance differences.
@@ -167,6 +167,8 @@ optional signing steps.
   and a parallel-trap helper in the load editor.
 - Vertical radial-system presets for ground radials, elevated radials, and a
   dense ground-screen approximation, with editable numeric fields.
+- Project-level balun/unun insertion-loss model with a frequency-dependent
+  power-law fit and per-frequency reporting.
 - Magnetic-loop generator with a top gap, ideal series tuning capacitor and
   ESR, conductor-loss simulation, and efficiency/SWR-bandwidth reporting.
 - Printable/HTML construction sheet with type-aware dimensions, feed position,

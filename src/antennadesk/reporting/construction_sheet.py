@@ -247,17 +247,29 @@ transformer; the counterpoise is {counterpoise}.</p>"""
             folded_note = f""" The driven element is folded with
 {parameters.driven_fold_spacing_m:.4f} m spacing and two end connectors. Feed one
 conductor at its center; the second conductor remains passive."""
+        match_row = ""
+        match_note = ""
+        if parameters.match_type.value == "beta_hairpin":
+            match_row = f"""
+<tr><th>Feed match</th><td>beta / hairpin</td></tr>
+<tr><th>Hairpin length</th><td>{parameters.match_length_m:.4f} m</td></tr>
+<tr><th>Hairpin spacing</th><td>{parameters.match_spacing_m:.4f} m</td></tr>
+"""
+            match_note = f""" A beta/hairpin stub is connected across the
+{parameters.match_spacing_m:.4f} m driven-element gap and shorted
+{parameters.match_length_m:.4f} m along the boom."""
         feed_rows = f"""
 <tr><th>Elements</th><td>{len(parameters.elements)}</td></tr>
 <tr><th>Boom length</th><td>{max(positions) - min(positions):.4f} m</td></tr>
 <tr><th>Driven element</th><td>{parameters.driven_index + 1}</td></tr>
 {folded_row}
+{match_row}
 <tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
 <tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
 """
         construction_note = f"""<p>Build {len(parameters.elements)} parallel elements on a
 {max(positions) - min(positions):.4f} m boom. Feed the center of element
-{parameters.driven_index + 1}.{folded_note}</p>"""
+{parameters.driven_index + 1}.{folded_note}{match_note}</p>"""
     elif isinstance(parameters, InvertedLParameters):
         feed_rows = f"""
 <tr><th>Vertical section</th><td>{parameters.vertical_height_m:.4f} m</td></tr>

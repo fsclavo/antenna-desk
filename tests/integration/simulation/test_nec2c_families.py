@@ -188,6 +188,36 @@ def test_horizontal_loop_produces_a_usable_sweep(solver: Nec2cSolver) -> None:
     assert all(frequency.swr is not None for frequency in result.frequencies)
 
 
+def test_beta_hairpin_yagi_produces_a_solvable_model(solver: Nec2cSolver) -> None:
+    from antennadesk.domain.antennas.yagi import YagiMatchType, nbs_five_element
+
+    parameters = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        match_type=YagiMatchType.BETA_HAIRPIN,
+        match_length_m=0.2,
+        match_spacing_m=0.1,
+    )
+    model = parameters.to_antenna()
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(50_100_000.0),
+        segmentation=aligned_policy_for_model(
+            model,
+            50_100_000.0,
+            SegmentationPolicy(min_segments_per_wire=3),
+        ),
+        include_conductor_losses=True,
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+    result = solver.run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert result.frequencies
+    assert math.isfinite(result.frequencies[0].impedance_ohm.real)
+    assert math.isfinite(result.frequencies[0].impedance_ohm.imag)
+
+
 def test_folded_yagi_produces_a_solvable_model(solver: Nec2cSolver) -> None:
     from antennadesk.domain.antennas.yagi import nbs_five_element
 

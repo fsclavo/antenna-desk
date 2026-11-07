@@ -159,8 +159,11 @@ The ordered antenna backlog lives in
    efficiency and SWR-bandwidth reporting, and a dedicated editor.
 5. **Completed 2026-11-07:** optional folded Yagi driven element with two
    conductors, end connectors, adjustable spacing, and NBS-preset support.
-6. Gamma / beta / hairpin match (next).
-7. Balun/unun with a frequency-dependent loss model.
+6. **Partially completed 2026-11-07:** beta/hairpin match geometry with a
+   split driven element and shorted stub. Gamma remains deferred because NEC-2
+   is unreliable for close-spaced gamma assemblies; use the matching network.
+7. **Completed 2026-11-07:** project-level balun/unun insertion loss with a
+   frequency-dependent power-law fit, applied to realized gain and reports.
 
 The remaining medium and large candidates are ordered after those seven in the
 roadmap table. Items 15–19 require architectural work or a much larger test

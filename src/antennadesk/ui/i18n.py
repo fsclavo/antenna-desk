@@ -461,6 +461,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Matching Network...",
         Language.SPANISH: "Red de adaptación...",
     },
+    "action.balun_loss": {
+        Language.ENGLISH: "Balun/Unun Loss...",
+        Language.SPANISH: "Pérdida de balun/unun...",
+    },
     "action.exit": {Language.ENGLISH: "Exit", Language.SPANISH: "Salir"},
     "action.about": {
         Language.ENGLISH: "About AntennaDesk",
@@ -1425,6 +1429,47 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "No cambia el patrón ni la ganancia de potencia de la antena."
         ),
     },
+    "balun_loss.title": {
+        Language.ENGLISH: "Balun/Unun Loss",
+        Language.SPANISH: "Pérdida de balun/unun",
+    },
+    "balun_loss.enabled": {
+        Language.ENGLISH: "Enable balun/unun loss",
+        Language.SPANISH: "Habilitar pérdida de balun/unun",
+    },
+    "balun_loss.reference_frequency": {
+        Language.ENGLISH: "Reference frequency",
+        Language.SPANISH: "Frecuencia de referencia",
+    },
+    "balun_loss.reference_loss": {
+        Language.ENGLISH: "Loss at reference",
+        Language.SPANISH: "Pérdida en la referencia",
+    },
+    "balun_loss.exponent": {
+        Language.ENGLISH: "Frequency exponent",
+        Language.SPANISH: "Exponente de frecuencia",
+    },
+    "balun_loss.preview": {
+        Language.ENGLISH: "{values}",
+        Language.SPANISH: "{values}",
+    },
+    "balun_loss.disabled": {
+        Language.ENGLISH: "Disabled.",
+        Language.SPANISH: "Deshabilitado.",
+    },
+    "balun_loss.hint": {
+        Language.ENGLISH: (
+            "Matched insertion loss fitted as loss = Lref x (f/fref)^n. It "
+            "reduces realized gain but does not change geometry, impedance, or "
+            "SWR. This is an application model, not a core-loss calculation."
+        ),
+        Language.SPANISH: (
+            "Pérdida de inserción adaptada ajustada como pérdida = Lref x "
+            "(f/fref)^n. Reduce la ganancia realizada pero no cambia la "
+            "geometría, la impedancia ni la ROE. Es un modelo de aplicación, no "
+            "un cálculo de pérdidas del núcleo."
+        ),
+    },
     "matching_network.title": {
         Language.ENGLISH: "Matching Network",
         Language.SPANISH: "Red de adaptación",
@@ -2296,6 +2341,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "history.matching_network": {
         Language.ENGLISH: "Matching network",
         Language.SPANISH: "Red de adaptación",
+    },
+    "history.balun_loss": {
+        Language.ENGLISH: "Balun/unun loss",
+        Language.SPANISH: "Pérdida de balun/unun",
     },
     "history.loads": {
         Language.ENGLISH: "Series loads",
@@ -3583,6 +3632,52 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "yagi.folded_driven": {
         Language.ENGLISH: "Folded driven element",
         Language.SPANISH: "Elemento alimentado plegado",
+    },
+    "yagi.match_type": {
+        Language.ENGLISH: "Feed match",
+        Language.SPANISH: "Adaptación de alimentación",
+    },
+    "yagi.match_none": {
+        Language.ENGLISH: "None",
+        Language.SPANISH: "Ninguna",
+    },
+    "yagi.match_beta_hairpin": {
+        Language.ENGLISH: "Beta / hairpin",
+        Language.SPANISH: "Beta / horquilla",
+    },
+    "yagi.match_length": {
+        Language.ENGLISH: "Hairpin length",
+        Language.SPANISH: "Longitud de horquilla",
+    },
+    "yagi.match_spacing": {
+        Language.ENGLISH: "Hairpin spacing",
+        Language.SPANISH: "Separación de horquilla",
+    },
+    "yagi.match_geometry": {
+        Language.ENGLISH: "beta/hairpin · length {length} {unit} · spacing {spacing} {unit}",
+        Language.SPANISH: "beta/horquilla · longitud {length} {unit} · separación {spacing} {unit}",
+    },
+    "yagi.match_hint": {
+        Language.ENGLISH: (
+            "A beta/hairpin is a shorted stub across the driven-element gap. It "
+            "changes the feed impedance without adding a lumped matching network."
+        ),
+        Language.SPANISH: (
+            "Una beta/horquilla es un stub cortocircuitado sobre el gap del "
+            "elemento alimentado. Cambia la impedancia de alimentación sin agregar "
+            "una red de adaptación concentrada."
+        ),
+    },
+    "yagi.gamma_note": {
+        Language.ENGLISH: (
+            "Gamma match: not modeled because NEC-2 close-spaced gamma assemblies "
+            "are unreliable. Use the Matching Network dialog for an equivalent."
+        ),
+        Language.SPANISH: (
+            "Gamma match: no modelado porque los ensambles gamma de NEC-2 con "
+            "conductores muy cercanos no son confiables. Usá el diálogo de red de "
+            "adaptación para un equivalente."
+        ),
     },
     "yagi.fold_spacing": {
         Language.ENGLISH: "Fold spacing",
@@ -4879,10 +4974,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "results.link_summary": {
         Language.ENGLISH: (
-            "Mismatch {mismatch} · line {line} · network {network} at {frequency} MHz"
+            "Mismatch {mismatch} · line {line} · network {network} · balun {balun} "
+            "at {frequency} MHz"
         ),
         Language.SPANISH: (
-            "Desadaptación {mismatch} · línea {line} · red {network} a {frequency} MHz"
+            "Desadaptación {mismatch} · línea {line} · red {network} · balun {balun} "
+            "a {frequency} MHz"
         ),
     },
     "results.summary": {

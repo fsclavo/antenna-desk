@@ -33,6 +33,7 @@ class ProjectSnapshot:
             self.project.measurements,
             self.project.feed_line,
             self.project.matching_network,
+            self.project.balun_loss,
         )
 
 

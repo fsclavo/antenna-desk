@@ -346,6 +346,25 @@ def test_folded_yagi_parameters_round_trip() -> None:
     assert restored.designs[0].parameters.driven_fold_spacing_m == pytest.approx(0.1)
 
 
+def test_beta_hairpin_yagi_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.yagi import YagiMatchType, nbs_five_element
+
+    parameters = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        match_type=YagiMatchType.BETA_HAIRPIN,
+        match_length_m=0.2,
+        match_spacing_m=0.1,
+    )
+    original = _project(parameters, "Hairpin Yagi")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].parameters.match_type is YagiMatchType.BETA_HAIRPIN
+
+
 def test_vertical_yagi_parameters_round_trip() -> None:
     from antennadesk.domain.antennas.polarization import Polarization
     from antennadesk.domain.antennas.yagi import nbs_five_element
@@ -562,6 +581,25 @@ def test_matching_network_round_trips_through_the_project_schema() -> None:
     restored = project_from_document(document_from_project(project))
 
     assert restored.matching_network == network
+
+
+def test_balun_loss_round_trips_through_the_project_schema() -> None:
+    from antennadesk.domain.antennas.balun import BalunLoss
+
+    project = _project(
+        DipoleParameters(frequency_hz=7_100_000.0, total_length_m=20.0, height_m=8.0),
+        "Dipole",
+    )
+    balun = BalunLoss(
+        reference_frequency_hz=14_000_000.0,
+        reference_loss_db=0.8,
+        exponent=0.4,
+    )
+    project = project.with_balun_loss(balun, updated_at=project.updated_at)
+
+    restored = project_from_document(document_from_project(project))
+
+    assert restored.balun_loss == balun
 
 
 def test_pi_matching_network_round_trips_through_the_project_schema() -> None:

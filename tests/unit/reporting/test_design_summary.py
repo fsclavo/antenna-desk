@@ -158,6 +158,26 @@ def test_yagi_summary_reports_a_folded_driven_element() -> None:
     assert rows["Fold spacing"] == "0.1000 m"
 
 
+def test_yagi_summary_reports_a_beta_hairpin_match() -> None:
+    from antennadesk.domain.antennas.yagi import YagiMatchType, nbs_five_element
+
+    rows = dict(
+        design_summary_rows(
+            nbs_five_element(
+                frequency_hz=50_100_000.0,
+                height_m=8.0,
+                match_type=YagiMatchType.BETA_HAIRPIN,
+                match_length_m=0.2,
+                match_spacing_m=0.1,
+            )
+        )
+    )
+
+    assert rows["Feed match"] == "beta_hairpin"
+    assert rows["Hairpin length"] == "0.2000 m"
+    assert rows["Hairpin spacing"] == "0.1000 m"
+
+
 def test_loop_summary_reports_orientation_and_the_correct_height() -> None:
     from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
 

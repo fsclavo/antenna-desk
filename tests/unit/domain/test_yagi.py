@@ -7,7 +7,12 @@ import math
 import pytest
 
 from antennadesk.domain.antennas.polarization import Polarization
-from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters, nbs_five_element
+from antennadesk.domain.antennas.yagi import (
+    YagiElement,
+    YagiMatchType,
+    YagiParameters,
+    nbs_five_element,
+)
 from antennadesk.domain.environment.ground import GroundModel
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.spec import SimulationSpec
@@ -99,6 +104,68 @@ def test_yagi_folded_driven_element_round_trips() -> None:
     assert [element.position_m for element in restored.elements] == pytest.approx(
         [element.position_m for element in original.elements]
     )
+
+
+def test_yagi_beta_hairpin_adds_a_split_driven_element_and_stub() -> None:
+    yagi = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        match_type=YagiMatchType.BETA_HAIRPIN,
+        match_length_m=0.2,
+        match_spacing_m=0.1,
+    )
+    parameters = yagi.to_custom_parameters()
+    by_id = {wire.id: wire for wire in parameters.wires}
+
+    assert len(parameters.wires) == 10
+    assert parameters.feed.wire_id == "element-2-feed"
+    assert parameters.feed.offset_m == pytest.approx(0.05)
+    assert {"element-2-left", "element-2-right", "element-2-feed"} <= set(by_id)
+    assert {"element-2-hairpin-a", "element-2-hairpin-b", "element-2-hairpin-short"} <= set(by_id)
+    assert by_id["element-2-feed"].length_m == pytest.approx(0.1)
+    assert by_id["element-2-hairpin-a"].length_m == pytest.approx(0.2)
+    assert by_id["element-2-left"].length_m + by_id["element-2-feed"].length_m + (
+        by_id["element-2-right"].length_m
+    ) == pytest.approx(yagi.elements[1].length_m)
+
+
+def test_yagi_beta_hairpin_round_trips() -> None:
+    original = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        azimuth_deg=35.0,
+        match_type=YagiMatchType.BETA_HAIRPIN,
+        match_length_m=0.2,
+        match_spacing_m=0.1,
+    )
+
+    restored = YagiParameters.from_custom_parameters(original.to_custom_parameters())
+
+    assert restored.match_type is YagiMatchType.BETA_HAIRPIN
+    assert restored.match_length_m == pytest.approx(0.2)
+    assert restored.match_spacing_m == pytest.approx(0.1)
+    assert restored.driven_index == original.driven_index
+    assert restored.azimuth_deg == pytest.approx(original.azimuth_deg)
+    assert [element.length_m for element in restored.elements] == pytest.approx(
+        [element.length_m for element in original.elements]
+    )
+
+
+def test_yagi_beta_hairpin_rejects_folded_driven_and_bad_spacing() -> None:
+    with pytest.raises(ValueError, match="straight driven"):
+        nbs_five_element(
+            frequency_hz=50_100_000.0,
+            height_m=8.0,
+            folded_driven=True,
+            match_type=YagiMatchType.BETA_HAIRPIN,
+        )
+    with pytest.raises(ValueError, match="match_spacing_m"):
+        nbs_five_element(
+            frequency_hz=50_100_000.0,
+            height_m=8.0,
+            match_type=YagiMatchType.BETA_HAIRPIN,
+            match_spacing_m=100.0,
+        )
 
 
 def test_yagi_vertical_folded_driven_element_round_trips() -> None:

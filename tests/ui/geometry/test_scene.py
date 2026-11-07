@@ -19,7 +19,7 @@ from antennadesk.domain.antennas.magnetic_loop import (
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.polarization import Polarization
 from antennadesk.domain.antennas.ringo import RingoParameters
-from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+from antennadesk.domain.antennas.yagi import YagiElement, YagiMatchType, YagiParameters
 from antennadesk.ui.geometry.builder import build_scene, effective_antenna_type
 from antennadesk.ui.geometry.views import GeometryViewMode, recommended_view
 from antennadesk.ui.i18n import Language, Translator
@@ -323,6 +323,29 @@ def test_folded_yagi_preserves_the_driven_element_wires() -> None:
     assert model.feed.wire_id == "element-2-a"
     assert len(scene.polylines) == 5
     assert "folded driven" in scene.summary
+    assert all(dimension.start.distance_to(dimension.end) > 0.0 for dimension in scene.dimensions)
+
+
+def test_beta_hairpin_yagi_preserves_the_stub_wires() -> None:
+    parameters = YagiParameters(
+        frequency_hz=14_100_000.0,
+        elements=(
+            YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+            YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+        ),
+        height_m=10.0,
+        match_type=YagiMatchType.BETA_HAIRPIN,
+        match_length_m=0.2,
+        match_spacing_m=0.1,
+    )
+    model = parameters.to_antenna()
+
+    scene = _scene(parameters, "yagi", GeometryViewMode.PLAN)
+
+    assert len(model.wires) == 7
+    assert model.feed.wire_id == "element-2-feed"
+    assert len(scene.polylines) == 7
+    assert "beta / hairpin" in scene.summary
     assert all(dimension.start.distance_to(dimension.end) > 0.0 for dimension in scene.dimensions)
 
 

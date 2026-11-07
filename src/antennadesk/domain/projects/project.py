@@ -9,6 +9,7 @@ from datetime import datetime
 from uuid import UUID
 
 from ..antennas.antenna import AntennaModel
+from ..antennas.balun import BalunLoss
 from ..antennas.design import AntennaDesignParameters, antenna_type_for, template_load_ids
 from ..antennas.feed_line import FeedLine
 from ..antennas.load import LumpedLoad
@@ -135,6 +136,7 @@ class Project:
     measurements: tuple[Measurement, ...] = field(default_factory=tuple)
     feed_line: FeedLine | None = None
     matching_network: MatchingNetwork | None = None
+    balun_loss: BalunLoss | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "designs", tuple(self.designs))
@@ -357,6 +359,14 @@ class Project:
         updated_at: datetime,
     ) -> Project:
         return replace(self, matching_network=matching_network, updated_at=updated_at)
+
+    def with_balun_loss(
+        self,
+        balun_loss: BalunLoss | None,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        return replace(self, balun_loss=balun_loss, updated_at=updated_at)
 
     def _retained_simulation_runs(self) -> tuple[SimulationRun, ...]:
         retained_ids: set[UUID] = set()
