@@ -83,3 +83,42 @@ def test_two_sources_complete_a_pattern_run() -> None:
     assert point.source_results[1].wire_id == "second"
     assert point.source_results[1].phase_deg == pytest.approx(90.0)
     assert point.source_results[1].amplitude == pytest.approx(0.5)
+
+
+def test_absorbing_source_is_reported_as_a_warning() -> None:
+    frequency_hz = 14_100_000.0
+    first = Wire(
+        "first",
+        Point3D(0.0, 0.0, 10.0),
+        Point3D(10.0, 0.0, 10.0),
+        0.001,
+        COPPER,
+    )
+    second = Wire(
+        "second",
+        Point3D(0.0, 1.0, 10.0),
+        Point3D(10.0, 1.0, 10.0),
+        0.001,
+        COPPER,
+    )
+    model = AntennaModel(
+        name="close two-source pair",
+        design_frequency_hz=frequency_hz,
+        wires=(first, second),
+        feed=FeedPoint("first", 5.0),
+        sources=(Source("second", 5.0, amplitude=1.0, phase_deg=90.0),),
+        environment=Environment(ground=GroundModel.free_space()),
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(frequency_hz),
+        segmentation=SegmentationPolicy(segments_per_wire=9),
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+    result = Nec2cSolver(Path(os.environ["NEC2C"])).run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert min(source.power_w for source in result.frequencies[0].source_results) < 0.0
+    assert any(
+        diagnostic.code == "normalization.source_absorbs_power" for diagnostic in result.diagnostics
+    )

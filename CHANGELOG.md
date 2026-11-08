@@ -13,8 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   frequency stores the ideal source voltage, current, impedance, amplitude,
   phase, and power for every driven port, and the results view exposes them in
   a **Sources** tab. The HTML report lists the same source inputs, and a
-  separate CSV export contains one row per frequency and source. The primary
-  feed remains the impedance/SWR reference. This is persisted in schema 29.
+  separate CSV export contains one row per frequency and source. A warning is
+  recorded when an ideal source absorbs power. The primary feed remains the
+  impedance/SWR reference. This is persisted in schema 29.
 - Added a first-class **trapped Yagi** family: a two-band reflector/driven/
   optional-director array with one ideal parallel LC trap pair on every
   element, schema-28 persistence, catalog route, inline editor, scene

@@ -121,6 +121,7 @@ def normalize_nec2_result(
         )
     frequency_results: list[FrequencyResult] = []
     negative_resistance_hz: list[float] = []
+    absorbing_source_hz: list[float] = []
     main_count = spec.frequency_plan.count
     parsed_main = parsed.frequencies[:main_count]
     parsed_patterns = parsed.frequencies[main_count:] if spec.pattern_frequencies_hz else ()
@@ -216,6 +217,8 @@ def normalize_nec2_result(
                     power_w=parsed_source.power_w,
                 )
             )
+        if any(source.power_w < 0.0 for source in source_results):
+            absorbing_source_hz.append(parsed_frequency.frequency_hz)
         if pattern_by_main_index:
             pattern_points = pattern_by_main_index.get(parsed_index, ())
         else:
@@ -275,6 +278,26 @@ def normalize_nec2_result(
                     link.network_loss_db if math.isfinite(link.network_loss_db) else None
                 ),
                 balun_loss_db=(link.balun_loss_db if math.isfinite(link.balun_loss_db) else None),
+            )
+        )
+
+    if absorbing_source_hz:
+        first = absorbing_source_hz[0] / 1e6
+        last = absorbing_source_hz[-1] / 1e6
+        range_text = (
+            f"{first:g} MHz" if len(absorbing_source_hz) == 1 else f"{first:g}-{last:g} MHz"
+        )
+        problems.append(
+            Diagnostic(
+                code="normalization.source_absorbs_power",
+                severity=Severity.WARNING,
+                message=(
+                    f"one or more ideal sources absorb power at {range_text} "
+                    f"({len(absorbing_source_hz)} frequency/frequencies); the "
+                    "excitation is an ideal source model, not a physical feed "
+                    "network. Check the source amplitudes and phases."
+                ),
+                field="sources",
             )
         )
 

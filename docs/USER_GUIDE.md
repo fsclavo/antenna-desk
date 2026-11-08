@@ -873,7 +873,8 @@ with a large top load.
 - **Sources**: for multi-source designs, one row per frequency and driven
   source with the source number, wire, amplitude, phase, resistance,
   reactance, and ideal input power. Negative power marks a source that absorbs
-  power; the primary feed still sets the reported impedance and SWR.
+  power; the simulation also adds a diagnostic warning, and the primary feed
+  still sets the reported impedance and SWR.
 - **Pattern**: selectable **Azimuth** or **Elevation** cuts, with a **Metric**
   selector for **Power gain**, **Directivity**, or **Realized gain**, for each
   simulated frequency. The **Cuts** tab shows a line chart and a polar
