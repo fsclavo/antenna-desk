@@ -15,6 +15,7 @@ from .discone import DisconeParameters
 from .endfed import EndFedParameters
 from .fan_dipole import FanDipoleParameters
 from .folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE, FoldedDipoleParameters
+from .hexbeam import HexbeamParameters
 from .inverted_l import InvertedLParameters
 from .inverted_v import InvertedVParameters
 from .j_pole import JPoleParameters
@@ -67,6 +68,7 @@ _GENERATOR_FAMILIES: dict[str, AntennaFamily] = {
     "discone": AntennaFamily.VERTICAL,
     "phased_vertical": AntennaFamily.VERTICAL,
     "quad_beam": AntennaFamily.LOOP,
+    "hexbeam": AntennaFamily.YAGI,
     "trap_yagi": AntennaFamily.YAGI,
     "trap_dipole": AntennaFamily.DIPOLE,
     "t2fd": AntennaFamily.DIPOLE,
@@ -117,6 +119,8 @@ def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
         return AntennaFamily.VERTICAL
     if isinstance(parameters, QuadBeamParameters):
         return AntennaFamily.LOOP
+    if isinstance(parameters, HexbeamParameters):
+        return AntennaFamily.YAGI
     if isinstance(parameters, T2FDParameters):
         return AntennaFamily.DIPOLE
     if isinstance(parameters, TrapDipoleParameters):
@@ -177,6 +181,8 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return "phased_vertical"
     if isinstance(parameters, QuadBeamParameters):
         return "quad_beam"
+    if isinstance(parameters, HexbeamParameters):
+        return "hexbeam"
     if isinstance(parameters, TrapDipoleParameters):
         return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(parameters, TrapYagiParameters):

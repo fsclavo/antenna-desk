@@ -34,6 +34,7 @@ from ...domain.antennas.folded_dipole import (
     FoldedDipoleParameters,
 )
 from ...domain.antennas.geometry import Point3D
+from ...domain.antennas.hexbeam import ANTENNA_TYPE_HEXBEAM, HexbeamParameters
 from ...domain.antennas.inverted_l import (
     ANTENNA_TYPE_INVERTED_L,
     HORIZONTAL_ID,
@@ -117,6 +118,7 @@ ZEPP_PRESENTATION_TYPE = "zepp"
 _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_WIRE_DIPOLE: "antenna_type.wire_dipole",
     ANTENNA_TYPE_DISCONE: "catalog.discone",
+    ANTENNA_TYPE_HEXBEAM: "catalog.hexbeam",
     ANTENNA_TYPE_TRAP_YAGI: "catalog.trap_yagi",
     ANTENNA_TYPE_FOLDED_DIPOLE: "antenna_type.folded_dipole",
     ANTENNA_TYPE_LOOP: "antenna_type.loop",
@@ -1308,6 +1310,67 @@ def _add_phased_vertical_dimensions(
                 taper=f"{parameters.amplitude_taper * 100.0:.0f}",
             )
         )
+
+
+def _add_hexbeam_dimensions(
+    model: AntennaModel,
+    parameters: HexbeamParameters | None,
+    factory: _Factory,
+    dimensions: list[Dimension],
+    notes: list[str],
+    translator: Translator,
+) -> None:
+    if parameters is None:
+        return
+    driver_left = next(
+        (wire for wire in model.wires if wire.id == "hexbeam-driver-left-tip"),
+        None,
+    )
+    driver_right = next(
+        (wire for wire in model.wires if wire.id == "hexbeam-driver-right-tip"),
+        None,
+    )
+    reflector_left = next(
+        (wire for wire in model.wires if wire.id == "hexbeam-reflector-left-tip"),
+        None,
+    )
+    if driver_left is not None and driver_right is not None:
+        dimensions.append(
+            factory.between_scene(
+                factory.project(driver_left.end),
+                factory.project(driver_right.end),
+                parameters.overall_span_m,
+                side="above",
+                priority=90,
+            )
+        )
+    if driver_left is not None and reflector_left is not None and not factory.projection.vertical:
+        dimensions.append(
+            factory.dimension(
+                driver_left.end,
+                reflector_left.end,
+                parameters.tip_gap_m,
+                side="left",
+                priority=80,
+            )
+        )
+    if factory.projection.vertical:
+        dimensions.append(
+            factory.vertical_dimension(
+                factory.project(driver_left.start).x_m if driver_left else 0.0,
+                0.0,
+                parameters.height_m,
+                parameters.height_m,
+                side="left",
+                priority=60,
+            )
+        )
+    notes.append(
+        translator.t(
+            "hexbeam.geometry_note",
+            radius=_format_length(parameters.turning_radius_m, translator, factory.unit_system),
+        )
+    )
 
 
 def _add_trap_yagi_dimensions(
@@ -2668,6 +2731,37 @@ def _summary(
                 f"{translator.t('vertical.radial_count').lower()} {radial_count}",
             ]
         )
+    elif isinstance(parameters, HexbeamParameters) or antenna_type == ANTENNA_TYPE_HEXBEAM:
+        if isinstance(parameters, HexbeamParameters):
+            driver_half = parameters.driver_half_length_m
+            reflector_half = parameters.reflector_half_length_m
+            span = parameters.overall_span_m
+            radius = parameters.turning_radius_m
+            gap = parameters.tip_gap_m
+            height = parameters.height_m
+        else:
+            driver_half = max(wire.length_m for wire in model.wires)
+            reflector_half = driver_half
+            span = 0.0
+            radius = 0.0
+            gap = 0.0
+            height = min_z
+        parts.extend(
+            [
+                f"{translator.t('hexbeam.driver_half').lower()} "
+                f"{_format_length(driver_half, translator, unit_system)}",
+                f"{translator.t('hexbeam.reflector_half').lower()} "
+                f"{_format_length(reflector_half, translator, unit_system)}",
+                f"{translator.t('hexbeam.turning_radius').lower()} "
+                f"{_format_length(radius, translator, unit_system)}",
+                f"{translator.t('hexbeam.tip_gap').lower()} "
+                f"{_format_length(gap, translator, unit_system)}",
+                f"{translator.t('geometry.span').lower()} "
+                f"{_format_length(span, translator, unit_system)}",
+                f"{translator.t('field.height').lower()} "
+                f"{_format_length(height, translator, unit_system)}",
+            ]
+        )
     elif isinstance(parameters, TrapYagiParameters) or antenna_type == ANTENNA_TYPE_TRAP_YAGI:
         if isinstance(parameters, TrapYagiParameters):
             count = parameters.element_count
@@ -3272,6 +3366,15 @@ def build_scene(
         _add_trap_yagi_dimensions(
             model,
             parameters if isinstance(parameters, TrapYagiParameters) else None,
+            factory,
+            dimensions,
+            notes,
+            translator,
+        )
+    elif effective_type == ANTENNA_TYPE_HEXBEAM:
+        _add_hexbeam_dimensions(
+            model,
+            parameters if isinstance(parameters, HexbeamParameters) else None,
             factory,
             dimensions,
             notes,

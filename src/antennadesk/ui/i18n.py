@@ -358,6 +358,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "elemento; las trampas aíslan las puntas externas en la banda alta."
         ),
     },
+    "catalog.hexbeam": {
+        Language.ENGLISH: "Hexbeam",
+        Language.SPANISH: "Hexbeam",
+    },
+    "catalog.hexbeam.description": {
+        Language.ENGLISH: (
+            "Single-band broadband beam with a W-shaped driven element and a "
+            "U-shaped reflector on a six-spreader frame."
+        ),
+        Language.SPANISH: (
+            "Beam de banda ancha y una sola banda con elemento excitado en forma "
+            "de W y reflector en forma de U sobre un marco de seis separadores."
+        ),
+    },
     "catalog.family.wire": {
         Language.ENGLISH: "Wire antennas",
         Language.SPANISH: "Antenas de hilo",
@@ -782,6 +796,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "geometry.elements": {
         Language.ENGLISH: "elements",
         Language.SPANISH: "elementos",
+    },
+    "geometry.span": {
+        Language.ENGLISH: "span",
+        Language.SPANISH: "envergadura",
     },
     "geometry.boom_length": {
         Language.ENGLISH: "boom length",
@@ -2045,6 +2063,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Plan de partida de dos bandas a partir de las frecuencias de diseño "
             "de las trampas; no están validadas las pérdidas de las trampas ni el "
             "ancho de banda instalado."
+        ),
+    },
+    "band.note.hexbeam": {
+        Language.ENGLISH: ("Current band only; the hexbeam is a single-band starting design."),
+        Language.SPANISH: (
+            "Solo la banda actual; el hexbeam es un diseño de partida de una sola banda."
         ),
     },
     "status.analyzing_bands": {
@@ -3432,6 +3456,94 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "phased_vertical.constraint.amplitude_taper": {
         Language.ENGLISH: "The amplitude taper must stay between 0 and 0.9.",
         Language.SPANISH: "La atenuación de amplitud debe quedar entre 0 y 0,9.",
+    },
+    "hexbeam.title": {
+        Language.ENGLISH: "Hexbeam Generator",
+        Language.SPANISH: "Generador de hexbeam",
+    },
+    "hexbeam.driver_half": {
+        Language.ENGLISH: "Driver half-length",
+        Language.SPANISH: "Semilongitud del excitado",
+    },
+    "hexbeam.reflector_half": {
+        Language.ENGLISH: "Reflector half-length",
+        Language.SPANISH: "Semilongitud del reflector",
+    },
+    "hexbeam.turning_radius": {
+        Language.ENGLISH: "Turning radius",
+        Language.SPANISH: "Radio de giro",
+    },
+    "hexbeam.tip_gap": {
+        Language.ENGLISH: "Tip gap",
+        Language.SPANISH: "Separación de puntas",
+    },
+    "hexbeam.feed_gap": {
+        Language.ENGLISH: "Center feed gap",
+        Language.SPANISH: "Brecha de alimentación central",
+    },
+    "hexbeam.element_separation": {
+        Language.ENGLISH: "Driver/reflector center offset",
+        Language.SPANISH: "Desplazamiento entre centros",
+    },
+    "hexbeam.geometry": {
+        Language.ENGLISH: (
+            "driver {driver} {unit} half · reflector {reflector} {unit} half · "
+            "span {span} {unit} · turning radius {radius} {unit}"
+        ),
+        Language.SPANISH: (
+            "excitado {driver} {unit} semilongitud · reflector {reflector} {unit} "
+            "semilongitud · envergadura {span} {unit} · radio de giro {radius} {unit}"
+        ),
+    },
+    "hexbeam.hint": {
+        Language.ENGLISH: (
+            "The driver is a W-shaped wire with a small center feed gap; the "
+            "reflector is a U-shaped wire just behind it. The apexes lie on the "
+            "60° spreader rays at the turning radius. The published 20 m reference "
+            "is scaled linearly with frequency."
+        ),
+        Language.SPANISH: (
+            "El excitado es un hilo en forma de W con una pequeña brecha central de "
+            "alimentación; el reflector es un hilo en forma de U justo detrás. Los "
+            "vértices se apoyan en los rayos de 60° a la distancia del radio de giro. "
+            "La referencia publicada de 20 m se escala linealmente con la frecuencia."
+        ),
+    },
+    "hexbeam.evidence": {
+        Language.ENGLISH: (
+            "Published starting dimensions from G3TXQ (219 in driver half, 207 in "
+            "reflector half, 24 in tip gap, 130 in turning radius at 14.184 MHz), "
+            "reconstructed as a bent wire. The frame, spreader sag, feed balun, "
+            "and multi-band nesting are not modeled; gain, front-to-back ratio, "
+            "and impedance are not independently validated."
+        ),
+        Language.SPANISH: (
+            "Dimensiones iniciales publicadas por G3TXQ (219 in de semilongitud del "
+            "excitado, 207 in del reflector, 24 in de separación de puntas y 130 in "
+            "de radio de giro a 14,184 MHz), reconstruidas como hilo doblado. No se "
+            "modelan el marco, la flecha de los separadores, el balun ni el anidado "
+            "multibanda; la ganancia, la relación delante/atrás y la impedancia no "
+            "están validadas independientemente."
+        ),
+    },
+    "hexbeam.constraint.driver_length": {
+        Language.ENGLISH: "The driver half must exceed 1.5 times the turning radius.",
+        Language.SPANISH: "La semilongitud del excitado debe superar 1,5 veces el radio de giro.",
+    },
+    "hexbeam.constraint.reflector_length": {
+        Language.ENGLISH: "The reflector half is too short for the turning radius and tip gap.",
+        Language.SPANISH: "La semilongitud del reflector es demasiado corta para el radio de giro y la separación de puntas.",
+    },
+    "hexbeam.geometry_note": {
+        Language.ENGLISH: (
+            "W driver and U reflector on a six-spreader frame; turning radius "
+            "{radius}. Frame, spreader sag, and balun are not modeled."
+        ),
+        Language.SPANISH: (
+            "Excitado en W y reflector en U sobre un marco de seis separadores; "
+            "radio de giro {radius}. No se modelan el marco, la flecha de los "
+            "separadores ni el balun."
+        ),
     },
     "trap_yagi.title": {
         Language.ENGLISH: "Trapped Yagi Generator",

@@ -16,6 +16,7 @@ from antennadesk.ui.widgets.biquad_form import BiquadForm
 from antennadesk.ui.widgets.discone_form import DisconeForm
 from antennadesk.ui.widgets.endfed_form import EndFedForm
 from antennadesk.ui.widgets.fan_dipole_form import FanDipoleForm
+from antennadesk.ui.widgets.hexbeam_form import HexbeamForm
 from antennadesk.ui.widgets.inverted_v_form import InvertedVForm
 from antennadesk.ui.widgets.j_pole_form import JPoleForm
 from antennadesk.ui.widgets.loaded_dipole_form import LoadedDipoleForm
@@ -59,6 +60,18 @@ FORMS = (
             "_director_spacing",
             "_trap_inset",
             "_height",
+        ),
+    ),
+    (
+        HexbeamForm,
+        (
+            "_driver_half",
+            "_reflector_half",
+            "_turning_radius",
+            "_tip_gap",
+            "_height",
+            "_feed_gap",
+            "_element_separation",
         ),
     ),
     (T2FDForm, ("_length", "_spacing", "_height")),

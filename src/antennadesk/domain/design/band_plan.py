@@ -15,6 +15,7 @@ from ..antennas.dipole import DipoleParameters
 from ..antennas.discone import DisconeParameters
 from ..antennas.endfed import EndFedParameters, EndFedPreset
 from ..antennas.fan_dipole import FanDipoleParameters
+from ..antennas.hexbeam import HexbeamParameters
 from ..antennas.loaded_dipole import LoadedDipoleParameters
 from ..antennas.ocfd import OCFDParameters
 from ..antennas.phased_vertical import PhasedVerticalParameters
@@ -251,6 +252,12 @@ def default_band_plan(
             _two_band_plan(parameters.frequency_hz, parameters.high_band_frequency_hz),
             BandEvidence.HEURISTIC,
             "band.note.trap_yagi",
+        )
+    if isinstance(parameters, HexbeamParameters):
+        return BandDefault(
+            _current_band_plan(parameters.frequency_hz),
+            BandEvidence.CURRENT,
+            "band.note.hexbeam",
         )
     if isinstance(parameters, T2FDParameters):
         return BandDefault(

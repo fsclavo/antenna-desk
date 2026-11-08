@@ -351,6 +351,21 @@ def test_loaded_dipole_construction_sheet_lists_the_coils(
     assert "loading coils" in sheet.lower()
 
 
+def test_hexbeam_construction_sheet_lists_the_bent_elements(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.hexbeam import published_hexbeam_parameters
+
+    design = sample_project.designs[0]
+    hexbeam = design.with_parameters(published_hexbeam_parameters())
+    sheet = render_construction_sheet(sample_project, hexbeam, None)
+
+    assert "Hexbeam" in sheet
+    assert "Driver half-length" in sheet
+    assert "Build a W-shaped driver" in sheet
+    assert "six-spreader" in sheet
+
+
 def test_trap_yagi_construction_sheet_lists_the_traps(
     sample_project: Project,
 ) -> None:

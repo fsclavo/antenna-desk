@@ -377,6 +377,12 @@ def _migrate_v28_to_v29(document: dict[str, Any]) -> dict[str, Any]:
     return copy.deepcopy(document)
 
 
+def _migrate_v29_to_v30(document: dict[str, Any]) -> dict[str, Any]:
+    """Introduce the hexbeam design type."""
+
+    return copy.deepcopy(document)
+
+
 def _migrate_v13_to_v14(document: dict[str, Any]) -> dict[str, Any]:
     """Add the optional project balun/unun loss model."""
 
@@ -470,6 +476,7 @@ MIGRATIONS: dict[int, Migration] = {
     26: _migrate_v26_to_v27,
     27: _migrate_v27_to_v28,
     28: _migrate_v28_to_v29,
+    29: _migrate_v29_to_v30,
 }
 
 

@@ -13,6 +13,7 @@ from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import EndFedParameters, EndFedPreset
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
+from ..domain.antennas.hexbeam import HexbeamParameters
 from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
@@ -396,6 +397,23 @@ def design_summary_rows(
                 ),
                 ("Height", f"{parameters.height_m:.4f} m"),
                 ("Orientation", parameters.orientation.value),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        return tuple(rows)
+    if isinstance(parameters, HexbeamParameters):
+        rows.extend(
+            [
+                ("Type", parameters.template_name),
+                ("Driver half-length", f"{parameters.driver_half_length_m:.4f} m"),
+                ("Reflector half-length", f"{parameters.reflector_half_length_m:.4f} m"),
+                ("Turning radius", f"{parameters.turning_radius_m:.4f} m"),
+                ("Tip gap", f"{parameters.tip_gap_m:.4f} m"),
+                ("Overall span", f"{parameters.overall_span_m:.4f} m"),
+                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Feed", "center of the W driver"),
+                ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground)),
             ]

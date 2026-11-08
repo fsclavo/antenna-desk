@@ -402,6 +402,19 @@ heuristics; boom, spreaders, mast, feed line, and matching network are not
 modeled. The family is experimental and makes no validated gain, front-to-back,
 or impedance claim.
 
+### HexbeamParameters
+
+`HexbeamParameters` stores the design frequency, driver and reflector
+half-lengths, turning radius, tip gap, height, center feed gap, driver/
+reflector center offset, azimuth, radius, material, and ground. The default
+values are the published G3TXQ 20 m reference scaled linearly with frequency:
+219 in driver half, 207 in reflector half, 24 in tip gap, and 130 in turning
+radius at 14.184 MHz. `to_antenna()` builds a W-shaped driver split around a
+small center feed and a U-shaped reflector just behind it; the apex of each
+half lies on the 60° spreader ray. The frame, spreader sag, feed balun, and
+multi-band nesting are not modeled. Gain, front-to-back ratio, and impedance
+are not independently validated.
+
 ### TrapYagiParameters
 
 `TrapYagiParameters` stores the low- and high-band frequencies, element count
@@ -444,7 +457,7 @@ reconstructs OCFD parameters from legacy custom designs.
 `JPoleParameters`, `RingoParameters`, `ScvParameters`, `BiquadParameters`,
 `BeverageParameters`, `LoadedDipoleParameters`, `PhasedVerticalParameters`,
 `QuadBeamParameters`, `DisconeParameters`, `TrapYagiParameters`,
-`TransmissionLineDoubletParameters`, `TrapDipoleParameters`,
+`HexbeamParameters`, `TransmissionLineDoubletParameters`, `TrapDipoleParameters`,
 `T2FDParameters`, `ZeppParameters`, and `CustomAntennaParameters`. `antenna_type_for()` maps a
 parameter object to its native type; `custom` remains the arbitrary-wire escape
 hatch.
@@ -630,6 +643,8 @@ the application writes version 24.
   are unchanged.
 - Version 29 adds optional per-source input results to every stored frequency.
   Old runs load with an empty source list and keep the primary feed result.
+- Version 30 introduces the hexbeam parameter payload. Existing designs are
+  unchanged.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -653,7 +668,7 @@ the application writes version 24.
   points are modeled as geometry; arbitrary radial screens are not.
 - Optimization operates on typed generated parameters, including typed G5RV,
   ZS6BKW, Zepp, biquad, double biquad, Beverage, loaded/linked dipole,
-  phased vertical arrays, quad beams, discones, and trapped Yagis.
+  phased vertical arrays, quad beams, discones, trapped Yagis, and hexbeams.
   Magnetic loops, random wires, and arbitrary custom/imported
   geometry have explicit unavailable reasons. Band-aware and robust modes
   evaluate multiple operating points; the Pareto front is descriptive; and a
@@ -663,7 +678,7 @@ the application writes version 24.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 29. Each
+- Simulation results are persisted as immutable runs in schema version 30. Each
   frequency also stores the ideal input result of every driven source; the
   primary feed remains the impedance/SWR reference.
   Band analyses store one run per band with a shared `batch_id`; the selected

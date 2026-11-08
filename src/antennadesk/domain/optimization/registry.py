@@ -19,6 +19,7 @@ from ..antennas.discone import DisconeParameters
 from ..antennas.endfed import EndFedParameters, EndFedPreset
 from ..antennas.fan_dipole import FanDipoleParameters
 from ..antennas.folded_dipole import FoldedDipoleParameters
+from ..antennas.hexbeam import HexbeamParameters
 from ..antennas.inverted_l import InvertedLParameters
 from ..antennas.inverted_v import InvertedVParameters
 from ..antennas.j_pole import JPoleParameters
@@ -48,6 +49,7 @@ from .families.typed import (
     endfed_descriptor,
     fan_dipole_descriptor,
     folded_dipole_descriptor,
+    hexbeam_descriptor,
     inverted_l_descriptor,
     inverted_v_descriptor,
     j_pole_descriptor,
@@ -136,6 +138,8 @@ def optimizer_availability(
         return OptimizerAvailability(descriptor=trap_dipole_descriptor(parameters))
     if isinstance(parameters, TrapYagiParameters):
         return OptimizerAvailability(descriptor=trap_yagi_descriptor(parameters))
+    if isinstance(parameters, HexbeamParameters):
+        return OptimizerAvailability(descriptor=hexbeam_descriptor(parameters))
     if isinstance(parameters, T2FDParameters):
         return OptimizerAvailability(descriptor=t2fd_descriptor(parameters))
     if isinstance(parameters, MoxonParameters):
@@ -175,6 +179,7 @@ SUPPORTED_OPTIMIZER_TYPES = frozenset(
         FanDipoleParameters,
         TrapDipoleParameters,
         TrapYagiParameters,
+        HexbeamParameters,
         T2FDParameters,
         YagiParameters,
         MoxonParameters,

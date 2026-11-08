@@ -45,6 +45,7 @@ from ..domain.antennas.folded_dipole import (
     FoldedDipoleParameters,
 )
 from ..domain.antennas.geometry import Point3D
+from ..domain.antennas.hexbeam import ANTENNA_TYPE_HEXBEAM, HexbeamParameters
 from ..domain.antennas.inverted_l import ANTENNA_TYPE_INVERTED_L, InvertedLParameters
 from ..domain.antennas.inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
 from ..domain.antennas.j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
@@ -410,6 +411,21 @@ class ZeppParametersPayload(StrictModel):
     matching_section_length_m: float = Field(gt=0.0)
     spacing_m: float = Field(default=0.05, gt=0.0)
     base_height_m: float = Field(default=1.0, ge=0.0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class HexbeamParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    driver_half_length_m: float = Field(gt=0.0)
+    reflector_half_length_m: float = Field(gt=0.0)
+    turning_radius_m: float = Field(gt=0.0)
+    tip_gap_m: float = Field(gt=0.0)
+    height_m: float = Field(default=10.0, ge=0.0)
+    feed_gap_m: float = Field(default=0.03175, gt=0.0)
+    element_separation_m: float = Field(default=0.05, ge=0.0)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
@@ -831,6 +847,7 @@ ParameterPayload = (
     | MoxonParametersPayload
     | FanDipoleParametersPayload
     | DisconeParametersPayload
+    | HexbeamParametersPayload
     | EndFedParametersPayload
     | LoadedDipoleParametersPayload
     | PhasedVerticalParametersPayload
@@ -870,6 +887,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_FAN_DIPOLE
     if isinstance(value, DisconeParametersPayload):
         return ANTENNA_TYPE_DISCONE
+    if isinstance(value, HexbeamParametersPayload):
+        return ANTENNA_TYPE_HEXBEAM
     if isinstance(value, EndFedParametersPayload):
         return ANTENNA_TYPE_ENDFED
     if isinstance(value, LoadedDipoleParametersPayload):
@@ -936,6 +955,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return FanDipoleParametersPayload
     if antenna_type == ANTENNA_TYPE_DISCONE:
         return DisconeParametersPayload
+    if antenna_type == ANTENNA_TYPE_HEXBEAM:
+        return HexbeamParametersPayload
     if antenna_type == ANTENNA_TYPE_ENDFED:
         return EndFedParametersPayload
     if antenna_type == ANTENNA_TYPE_LOADED_DIPOLE:
@@ -1287,6 +1308,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _fan_dipole_parameters_from_domain(value)
     if isinstance(value, DisconeParameters):
         return _discone_parameters_from_domain(value)
+    if isinstance(value, HexbeamParameters):
+        return _hexbeam_parameters_from_domain(value)
     if isinstance(value, EndFedParameters):
         return _endfed_parameters_from_domain(value)
     if isinstance(value, LoadedDipoleParameters):
@@ -1572,6 +1595,25 @@ def _quad_beam_parameters_from_domain(
         director_spacing_m=value.director_spacing_m,
         reflector_scale=value.reflector_scale,
         director_scale=value.director_scale,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _hexbeam_parameters_from_domain(
+    value: HexbeamParameters,
+) -> HexbeamParametersPayload:
+    return HexbeamParametersPayload(
+        frequency_hz=value.frequency_hz,
+        driver_half_length_m=value.driver_half_length_m,
+        reflector_half_length_m=value.reflector_half_length_m,
+        turning_radius_m=value.turning_radius_m,
+        tip_gap_m=value.tip_gap_m,
+        height_m=value.height_m,
+        feed_gap_m=value.feed_gap_m,
+        element_separation_m=value.element_separation_m,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
@@ -2325,6 +2367,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, DisconeParametersPayload):
             raise ValueError("discone parameters have the wrong shape")
         return _discone_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_HEXBEAM:
+        if not isinstance(value.parameters, HexbeamParametersPayload):
+            raise ValueError("hexbeam parameters have the wrong shape")
+        return _hexbeam_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_PHASED_VERTICAL:
         if not isinstance(value.parameters, PhasedVerticalParametersPayload):
             raise ValueError("phased vertical parameters have the wrong shape")
@@ -2665,6 +2711,25 @@ def _quad_beam_parameters_to_domain(
         director_spacing_m=value.director_spacing_m,
         reflector_scale=value.reflector_scale,
         director_scale=value.director_scale,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _hexbeam_parameters_to_domain(
+    value: HexbeamParametersPayload,
+) -> HexbeamParameters:
+    return HexbeamParameters(
+        frequency_hz=value.frequency_hz,
+        driver_half_length_m=value.driver_half_length_m,
+        reflector_half_length_m=value.reflector_half_length_m,
+        turning_radius_m=value.turning_radius_m,
+        tip_gap_m=value.tip_gap_m,
+        height_m=value.height_m,
+        feed_gap_m=value.feed_gap_m,
+        element_separation_m=value.element_separation_m,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),

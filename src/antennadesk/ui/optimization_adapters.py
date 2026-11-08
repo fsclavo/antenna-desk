@@ -20,6 +20,7 @@ from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import EndFedParameters
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
+from ..domain.antennas.hexbeam import HexbeamParameters
 from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
@@ -129,6 +130,10 @@ ADAPTERS: dict[type[AntennaDesignParameters], OptimizationUiAdapter] = {
     TrapYagiParameters: OptimizationUiAdapter(
         lambda window, parameters: window._trap_yagi_simulation_spec(parameters),
         lambda window, parameters: window._trap_yagi_form.set_parameters(parameters),
+    ),
+    HexbeamParameters: OptimizationUiAdapter(
+        lambda window, parameters: window._hexbeam_simulation_spec(parameters),
+        lambda window, parameters: window._hexbeam_form.set_parameters(parameters),
     ),
     T2FDParameters: OptimizationUiAdapter(
         lambda window, parameters: window._t2fd_simulation_spec(parameters),

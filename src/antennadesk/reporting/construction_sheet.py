@@ -16,6 +16,7 @@ from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import EndFedParameters
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
+from ..domain.antennas.hexbeam import HexbeamParameters
 from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
@@ -257,6 +258,23 @@ junction at {feed_height_m:.4f} m above ground.</p>"""
 wire and mark the link positions at {parameters.link_offset_m:.4f} m either
 side of the center. Feed the center. {coil_note} The coil model is an ideal
 series R-L load; tune it for the installed height and ground.</p>"""
+    elif isinstance(parameters, HexbeamParameters):
+        feed_rows = f"""
+<tr><th>Type</th><td>{parameters.template_name}</td></tr>
+<tr><th>Driver half-length</th><td>{parameters.driver_half_length_m:.4f} m</td></tr>
+<tr><th>Reflector half-length</th><td>{parameters.reflector_half_length_m:.4f} m</td></tr>
+<tr><th>Turning radius</th><td>{parameters.turning_radius_m:.4f} m</td></tr>
+<tr><th>Tip gap</th><td>{parameters.tip_gap_m:.4f} m</td></tr>
+<tr><th>Overall span</th><td>{parameters.overall_span_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{parameters.height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Build a W-shaped driver with
+{parameters.driver_half_length_m:.4f} m half-lengths and a U-shaped reflector
+with {parameters.reflector_half_length_m:.4f} m half-lengths on a six-spreader
+frame with a {parameters.turning_radius_m:.4f} m turning radius. Set the tip
+gap to {parameters.tip_gap_m:.4f} m and feed the center of the W. The model
+reconstructs the bent wire path; the frame, spreader sag, feed balun, and
+multi-band nesting are not modeled.</p>"""
     elif isinstance(parameters, TrapYagiParameters):
         feed_rows = f"""
 <tr><th>Type</th><td>{parameters.template_name}</td></tr>

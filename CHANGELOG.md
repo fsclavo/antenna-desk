@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added a first-class **hexbeam** family: a W-shaped driven element and a
+  U-shaped reflector on a six-spreader frame, with published G3TXQ 20 m
+  starting dimensions, linear frequency scaling, schema-30 persistence,
+  catalog route, inline editor, scene dimensions, reports, construction notes,
+  and a family optimizer. The model reconstructs the bent wire path; the frame,
+  spreader sag, feed balun, and multi-band nesting are not modeled.
 - Added **per-source input results** to multi-source simulations: each
   frequency stores the ideal source voltage, current, impedance, amplitude,
   phase, and power for every driven port, and the results view exposes them in

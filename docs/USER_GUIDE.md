@@ -600,6 +600,23 @@ inductance and resistance when enabled, and conductor radius jointly. The
 family is classified **experimental**; tune the final geometry and coil with the
 solver or a measurement.
 
+## Create a hexbeam
+
+Choose **File → New Antenna... → Hexbeam** for a single-band broadband beam
+with a W-shaped driven element and a U-shaped reflector on a six-spreader
+frame. The editor sets the frequency, driver and reflector half-lengths,
+turning radius, tip gap, height, center feed gap, driver/reflector center
+offset, azimuth, conductor radius, material, and ground.
+
+The defaults are the published G3TXQ 20 m reference at 14.184 MHz: 219 in
+driver half, 207 in reflector half, 24 in tip gap, and 130 in turning radius.
+**Load starting dimensions** scales those values linearly with frequency.
+**Optimize...** searches the driver and reflector halves, turning radius, tip
+gap, height, and conductor radius jointly. The element model reconstructs the
+bent wire path; the frame, spreader sag, feed balun, and multi-band nesting are
+not modeled. Gain, front-to-back ratio, and impedance are not independently
+validated.
+
 ## Create a trapped Yagi
 
 Choose **File → New Antenna... → Trapped Yagi** for a two-band Yagi with one
@@ -1226,6 +1243,7 @@ The following typed families have a complete joint optimizer:
 - quad beam;
 - discone;
 - trapped Yagi;
+- hexbeam;
 - OCFD, EndFed/EFHW, and sloper;
 - typed G5RV, ZS6BKW, and Zepp;
 - the doublet radiator as a dipole, with its feed line in the matching stage;

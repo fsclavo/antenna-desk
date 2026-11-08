@@ -755,6 +755,24 @@ def test_phased_vertical_round_trips_through_the_schema() -> None:
     assert restored.designs[0].antenna.sources == original.designs[0].antenna.sources
 
 
+def test_hexbeam_round_trips_through_the_schema() -> None:
+    from antennadesk.domain.antennas.hexbeam import published_hexbeam_parameters
+
+    parameters = published_hexbeam_parameters(
+        frequency_hz=14_184_000.0,
+        height_m=12.0,
+        azimuth_deg=25.0,
+    )
+    original = _project(parameters, "Hexbeam")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna == original.designs[0].antenna
+    assert restored.designs[0].antenna_type == "hexbeam"
+
+
 def test_trap_yagi_round_trips_through_the_schema() -> None:
     from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
 

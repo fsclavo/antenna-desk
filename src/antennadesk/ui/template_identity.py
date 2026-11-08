@@ -13,6 +13,7 @@ from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import EndFedParameters, EndFedPreset
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
+from ..domain.antennas.hexbeam import HexbeamParameters
 from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
@@ -48,6 +49,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_FOLDED_DIPOLE,
     CATALOG_TYPE_G5RV,
     CATALOG_TYPE_HALF_SQUARE,
+    CATALOG_TYPE_HEXBEAM,
     CATALOG_TYPE_INVERTED_L,
     CATALOG_TYPE_INVERTED_V,
     CATALOG_TYPE_J_POLE,
@@ -87,6 +89,7 @@ _KNOWN_CUSTOM_GENERATORS = frozenset(
         CATALOG_TYPE_OCFD,
         CATALOG_TYPE_RINGO,
         CATALOG_TYPE_HALF_SQUARE,
+        CATALOG_TYPE_HEXBEAM,
         CATALOG_TYPE_BOBTAIL_CURTAIN,
         CATALOG_TYPE_BIQUAD,
         CATALOG_TYPE_DOUBLE_BIQUAD,
@@ -183,6 +186,8 @@ def catalog_key_for(parameters: AntennaDesignParameters) -> str:
         return CATALOG_TYPE_PHASED_VERTICAL
     if isinstance(parameters, QuadBeamParameters):
         return CATALOG_TYPE_QUAD_BEAM
+    if isinstance(parameters, HexbeamParameters):
+        return CATALOG_TYPE_HEXBEAM
     if isinstance(parameters, TransmissionLineDoubletParameters):
         return (
             CATALOG_TYPE_G5RV

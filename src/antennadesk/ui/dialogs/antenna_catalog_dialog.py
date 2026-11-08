@@ -45,6 +45,7 @@ CATALOG_TYPE_ZEPP = "zepp"
 CATALOG_TYPE_J_POLE = "j_pole"
 CATALOG_TYPE_RINGO = "ringo"
 CATALOG_TYPE_HALF_SQUARE = "half_square"
+CATALOG_TYPE_HEXBEAM = "hexbeam"
 CATALOG_TYPE_BOBTAIL_CURTAIN = "bobtail_curtain"
 CATALOG_TYPE_BIQUAD = "biquad"
 CATALOG_TYPE_DOUBLE_BIQUAD = "double_biquad"
@@ -173,6 +174,13 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         family_key="catalog.family.yagi",
         description_key="catalog.trap_yagi.description",
         evidence_key="catalog.evidence.experimental",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_HEXBEAM,
+        label_key="catalog.hexbeam",
+        family_key="catalog.family.yagi",
+        description_key="catalog.hexbeam.description",
+        evidence_key="catalog.evidence.published",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_ENDFED,

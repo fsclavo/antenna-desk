@@ -478,6 +478,24 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "band are not independently validated."
         ),
     ),
+    "hexbeam": EvidenceEntry(
+        template="hexbeam",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "Steve Hunt, G3TXQ, 'A Broadband Hexbeam', antenneX no. 128, "
+            "December 2007: 20 m reference at 14.184 MHz with a 219 in driver "
+            "half, 207 in reflector half, 24 in tip gap, and 130 in turning radius"
+        ),
+        tolerance=(
+            "1% on the published driver/reflector half-lengths, tip gap, and turning radius"
+        ),
+        limitation=(
+            "The model reconstructs the bent W/U wire path from the published "
+            "lengths; it does not reproduce the exact commercial frame, spreader "
+            "sag, feed balun, or multi-band nesting. Gain, front-to-back ratio, "
+            "and impedance are not independently validated."
+        ),
+    ),
     "doublet": EvidenceEntry(
         template="doublet",
         level=EvidenceLevel.PUBLISHED,

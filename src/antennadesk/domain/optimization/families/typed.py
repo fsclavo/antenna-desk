@@ -14,6 +14,7 @@ from ...antennas.discone import DisconeParameters
 from ...antennas.endfed import EndFedParameters
 from ...antennas.fan_dipole import FanDipoleParameters, FanElement
 from ...antennas.folded_dipole import FoldedDipoleParameters
+from ...antennas.hexbeam import HexbeamParameters
 from ...antennas.inverted_l import InvertedLParameters
 from ...antennas.inverted_v import InvertedVParameters
 from ...antennas.j_pole import JPoleParameters
@@ -1581,6 +1582,118 @@ def discone_descriptor(parameters: DisconeParameters) -> AntennaOptimizerDescrip
 
     return _descriptor(
         "discone",
+        tuple(variables),
+        initial,
+        build,
+        validate,
+        default_objective=FamilyOptimizationObjective.MAX_GAIN,
+    )
+
+
+def hexbeam_descriptor(parameters: HexbeamParameters) -> AntennaOptimizerDescriptor:
+    variables: list[OptimizationVariable] = [
+        _length(
+            "driver_half_length_m",
+            "hexbeam.driver_half",
+            "optimize.group.geometry",
+            parameters.driver_half_length_m,
+            0.12,
+            0.05,
+        ),
+        _length(
+            "reflector_half_length_m",
+            "hexbeam.reflector_half",
+            "optimize.group.geometry",
+            parameters.reflector_half_length_m,
+            0.12,
+            0.05,
+        ),
+        _length(
+            "turning_radius_m",
+            "hexbeam.turning_radius",
+            "optimize.group.geometry",
+            parameters.turning_radius_m,
+            0.2,
+            0.05,
+        ),
+        _length(
+            "tip_gap_m",
+            "hexbeam.tip_gap",
+            "optimize.group.geometry",
+            parameters.tip_gap_m,
+            0.3,
+            0.01,
+        ),
+        _length(
+            "height_m",
+            "field.height",
+            "optimize.group.geometry",
+            parameters.height_m,
+            0.5,
+            0.0,
+        ),
+        _radius(parameters.wire_radius_m),
+    ]
+    initial = {
+        "driver_half_length_m": parameters.driver_half_length_m,
+        "reflector_half_length_m": parameters.reflector_half_length_m,
+        "turning_radius_m": parameters.turning_radius_m,
+        "tip_gap_m": parameters.tip_gap_m,
+        "height_m": parameters.height_m,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+
+    def build(values: Mapping[str, float]) -> HexbeamParameters:
+        return replace(
+            parameters,
+            driver_half_length_m=values["driver_half_length_m"],
+            reflector_half_length_m=values["reflector_half_length_m"],
+            turning_radius_m=values["turning_radius_m"],
+            tip_gap_m=values["tip_gap_m"],
+            height_m=values["height_m"],
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        issues: list[ConstraintViolation | None] = [
+            positive_violation("driver_half_length_m", values["driver_half_length_m"]),
+            positive_violation("reflector_half_length_m", values["reflector_half_length_m"]),
+            positive_violation("turning_radius_m", values["turning_radius_m"]),
+            positive_violation("tip_gap_m", values["tip_gap_m"]),
+            non_negative_violation("height_m", values["height_m"]),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+        ]
+        if values["driver_half_length_m"] <= 1.5 * values["turning_radius_m"]:
+            issues.append(
+                violation(
+                    "driver_half_length_m",
+                    1.5 * values["turning_radius_m"] - values["driver_half_length_m"],
+                    "hexbeam.constraint.driver_length",
+                )
+            )
+        minimum_reflector = values["turning_radius_m"] + abs(
+            values["turning_radius_m"] / 2.0 - values["tip_gap_m"]
+        )
+        if values["reflector_half_length_m"] <= minimum_reflector:
+            issues.append(
+                violation(
+                    "reflector_half_length_m",
+                    minimum_reflector - values["reflector_half_length_m"],
+                    "hexbeam.constraint.reflector_length",
+                )
+            )
+        if values["tip_gap_m"] <= 2.0 * values["wire_radius_m"]:
+            issues.append(
+                violation(
+                    "tip_gap_m",
+                    2.0 * values["wire_radius_m"] - values["tip_gap_m"],
+                    "optimize.constraint.conductor_spacing",
+                )
+            )
+        return collect(*issues)
+
+    return _descriptor(
+        "hexbeam",
         tuple(variables),
         initial,
         build,

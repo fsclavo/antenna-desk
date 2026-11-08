@@ -16,6 +16,7 @@ from antennadesk.ui.widgets.biquad_form import BiquadForm
 from antennadesk.ui.widgets.discone_form import DisconeForm
 from antennadesk.ui.widgets.endfed_form import EndFedForm
 from antennadesk.ui.widgets.fan_dipole_form import FanDipoleForm
+from antennadesk.ui.widgets.hexbeam_form import HexbeamForm
 from antennadesk.ui.widgets.inverted_l_form import InvertedLForm
 from antennadesk.ui.widgets.inverted_v_form import InvertedVForm
 from antennadesk.ui.widgets.j_pole_form import JPoleForm
@@ -48,6 +49,7 @@ FORMS = (
     (FanDipoleForm, "field.frequency"),
     (TrapDipoleForm, "trap_dipole.low_band"),
     (TrapYagiForm, "trap_yagi.trap_inset"),
+    (HexbeamForm, "hexbeam.turning_radius"),
     (T2FDForm, "t2fd.lowest_frequency"),
     (EndFedForm, "field.design_frequency"),
     (JPoleForm, "j_pole.radiator_height"),

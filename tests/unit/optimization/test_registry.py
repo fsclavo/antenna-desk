@@ -21,6 +21,7 @@ from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanEleme
 from antennadesk.domain.antennas.feed import FeedPoint
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.geometry import Point3D
+from antennadesk.domain.antennas.hexbeam import published_hexbeam_parameters
 from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
@@ -261,6 +262,7 @@ def _typed_samples() -> list[AntennaDesignParameters]:
         loaded_dipole_parameters(),
         discone_parameters(),
         trap_yagi_parameters(),
+        published_hexbeam_parameters(),
         phased_vertical_parameters(),
         quad_beam_parameters(element_count=3),
         OCFDParameters(frequency_hz=7_100_000.0, total_length_m=40.0),
@@ -362,6 +364,8 @@ _CONTEXT_FIELDS = {
     "wire_count",
     "disc_gap_m",
     "trap_frequency_hz",
+    "feed_gap_m",
+    "element_separation_m",
 }
 
 
@@ -454,6 +458,22 @@ def test_discone_optimizes_the_wire_surfaces() -> None:
     }
     rebuilt = availability.descriptor.build_parameters(availability.descriptor.initial_values)
     assert rebuilt.wire_count == 10
+
+
+def test_hexbeam_optimizes_the_bent_wire_path() -> None:
+    availability = optimizer_availability(published_hexbeam_parameters())
+    assert availability.descriptor is not None
+
+    variables = {variable.name for variable in availability.descriptor.variables}
+
+    assert variables == {
+        "driver_half_length_m",
+        "reflector_half_length_m",
+        "turning_radius_m",
+        "tip_gap_m",
+        "height_m",
+        "wire_radius_m",
+    }
 
 
 def test_trap_yagi_optimizes_the_trap_positions() -> None:

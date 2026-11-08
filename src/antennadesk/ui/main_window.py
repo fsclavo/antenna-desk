@@ -98,6 +98,7 @@ from ..domain.antennas.family import antenna_family
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.feed_line import FeedLine
 from ..domain.antennas.g5rv import G5RV_DIPOLE_ID
+from ..domain.antennas.hexbeam import HexbeamParameters
 from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
@@ -186,6 +187,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_FOLDED_DIPOLE,
     CATALOG_TYPE_G5RV,
     CATALOG_TYPE_HALF_SQUARE,
+    CATALOG_TYPE_HEXBEAM,
     CATALOG_TYPE_INVERTED_L,
     CATALOG_TYPE_INVERTED_V,
     CATALOG_TYPE_J_POLE,
@@ -232,6 +234,7 @@ from .dialogs.family_optimization_dialog import FamilyOptimizationDialog
 from .dialogs.fan_dipole_dialog import FanDipoleDialog
 from .dialogs.feed_line_dialog import FeedLineDialog
 from .dialogs.g5rv_dialog import G5RVDialog
+from .dialogs.hexbeam_dialog import HexbeamDialog
 from .dialogs.inverted_l_dialog import InvertedLDialog
 from .dialogs.inverted_v_dialog import InvertedVDialog
 from .dialogs.j_pole_dialog import JPoleDialog
@@ -286,6 +289,7 @@ from .widgets.discone_form import DisconeForm
 from .widgets.endfed_form import EndFedForm
 from .widgets.fan_dipole_form import FanDipoleForm
 from .widgets.geometry_view import GeometryView, GeometryViewMode
+from .widgets.hexbeam_form import HexbeamForm
 from .widgets.inverted_l_form import InvertedLForm
 from .widgets.inverted_v_form import InvertedVForm
 from .widgets.j_pole_form import JPoleForm
@@ -716,6 +720,18 @@ class MainWindow(QMainWindow):
         self._trap_yagi_scroll.setMinimumWidth(340)
         self._trap_yagi_scroll.setMaximumWidth(520)
 
+        self._hexbeam_form = HexbeamForm(
+            self._translator,
+            self._unit_system,
+            parent=self,
+        )
+        self._hexbeam_form.changed.connect(self._on_form_changed)
+        self._hexbeam_scroll = QScrollArea(self)
+        self._hexbeam_scroll.setWidgetResizable(True)
+        self._hexbeam_scroll.setWidget(self._hexbeam_form)
+        self._hexbeam_scroll.setMinimumWidth(340)
+        self._hexbeam_scroll.setMaximumWidth(520)
+
         self._doublet_form = TransmissionLineDoubletForm(
             self._translator,
             self._unit_system,
@@ -760,6 +776,7 @@ class MainWindow(QMainWindow):
             (self._quad_beam_form, self._quad_beam_scroll, 480),
             (self._discone_form, self._discone_scroll, 480),
             (self._trap_yagi_form, self._trap_yagi_scroll, 520),
+            (self._hexbeam_form, self._hexbeam_scroll, 520),
             (self._doublet_form, self._doublet_scroll, 480),
             (self._zepp_form, self._zepp_scroll, 480),
         )
@@ -939,6 +956,7 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._quad_beam_scroll)
         self._design_stack.addWidget(self._discone_scroll)
         self._design_stack.addWidget(self._trap_yagi_scroll)
+        self._design_stack.addWidget(self._hexbeam_scroll)
         self._design_stack.addWidget(self._doublet_scroll)
         self._design_stack.addWidget(self._zepp_scroll)
         self._design_stack.addWidget(self._custom_panel)
@@ -1295,6 +1313,7 @@ class MainWindow(QMainWindow):
         self._quad_beam_form.retranslate()
         self._discone_form.retranslate()
         self._trap_yagi_form.retranslate()
+        self._hexbeam_form.retranslate()
         self._doublet_form.retranslate()
         self._zepp_form.retranslate()
         self._geometry.retranslate()
@@ -1855,6 +1874,9 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, TrapYagiParameters):
             self._design_stack.setCurrentWidget(self._trap_yagi_scroll)
             self._trap_yagi_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, HexbeamParameters):
+            self._design_stack.setCurrentWidget(self._hexbeam_scroll)
+            self._hexbeam_form.set_parameters(design.parameters)
         elif isinstance(design.parameters, TransmissionLineDoubletParameters):
             self._design_stack.setCurrentWidget(self._doublet_scroll)
             self._doublet_form.set_parameters(design.parameters)
@@ -2476,6 +2498,7 @@ class MainWindow(QMainWindow):
                 DisconeParameters,
                 PhasedVerticalParameters,
                 TrapYagiParameters,
+                HexbeamParameters,
                 QuadBeamParameters,
                 TransmissionLineDoubletParameters,
                 ZeppParameters,
@@ -2495,6 +2518,8 @@ class MainWindow(QMainWindow):
                 parameters = self._discone_form.parameters()
             elif isinstance(previous_design.parameters, TrapYagiParameters):
                 parameters = self._trap_yagi_form.parameters()
+            elif isinstance(previous_design.parameters, HexbeamParameters):
+                parameters = self._hexbeam_form.parameters()
             elif isinstance(
                 previous_design.parameters,
                 TransmissionLineDoubletParameters,
@@ -2699,6 +2724,8 @@ class MainWindow(QMainWindow):
             return self._discone_simulation_spec(parameters)
         if isinstance(parameters, TrapYagiParameters):
             return self._trap_yagi_simulation_spec(parameters)
+        if isinstance(parameters, HexbeamParameters):
+            return self._hexbeam_simulation_spec(parameters)
         if isinstance(parameters, TransmissionLineDoubletParameters):
             return self._doublet_simulation_spec(parameters)
         if isinstance(parameters, ZeppParameters):
@@ -3743,6 +3770,23 @@ class MainWindow(QMainWindow):
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
         )
 
+    def _hexbeam_simulation_spec(self, parameters: HexbeamParameters) -> SimulationSpec:
+        model = parameters.to_antenna()
+        frequency_hz = parameters.frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                frequency_hz * 0.95,
+                frequency_hz * 1.05,
+                DEFAULT_GENERATED_SWEEP_POINTS,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz * 1.05,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
     def _doublet_simulation_spec(
         self,
         parameters: TransmissionLineDoubletParameters,
@@ -4013,6 +4057,17 @@ class MainWindow(QMainWindow):
         if not self._maybe_save_changes():
             return
         dialog = TrapYagiDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name=dialog.result_parameters().template_name,
+        )
+
+    def new_hexbeam_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        dialog = HexbeamDialog(self._translator, self._unit_system, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         self._create_project_from_parameters(
@@ -4673,6 +4728,16 @@ class MainWindow(QMainWindow):
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
             return dialog.result_parameters()
+        if selected == CATALOG_TYPE_HEXBEAM:
+            dialog = HexbeamDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
         if selected == CATALOG_TYPE_BEVERAGE:
             dialog = BeverageDialog(
                 self._translator,
@@ -5026,6 +5091,8 @@ class MainWindow(QMainWindow):
             self.new_discone_antenna()
         elif selected == CATALOG_TYPE_TRAP_YAGI:
             self.new_trap_yagi_antenna()
+        elif selected == CATALOG_TYPE_HEXBEAM:
+            self.new_hexbeam_antenna()
         elif selected == CATALOG_TYPE_OCFD:
             self.new_ocfd_antenna()
         elif selected == CATALOG_TYPE_DELTA_LOOP:
@@ -5613,6 +5680,8 @@ class MainWindow(QMainWindow):
             base_spec = self._discone_simulation_spec(design.parameters)
         elif isinstance(design.parameters, TrapYagiParameters):
             base_spec = self._trap_yagi_simulation_spec(design.parameters)
+        elif isinstance(design.parameters, HexbeamParameters):
+            base_spec = self._hexbeam_simulation_spec(design.parameters)
         else:
             base_spec = self._form.simulation_spec()
 
@@ -5661,6 +5730,8 @@ class MainWindow(QMainWindow):
                 self._discone_form.set_parameters(parameters)
             elif isinstance(parameters, TrapYagiParameters):
                 self._trap_yagi_form.set_parameters(parameters)
+            elif isinstance(parameters, HexbeamParameters):
+                self._hexbeam_form.set_parameters(parameters)
             else:
                 self._form.set_parameters(parameters, reset_sweep=False)
             self._apply_fields()
@@ -6952,6 +7023,7 @@ class MainWindow(QMainWindow):
             self._quad_beam_form,
             self._discone_form,
             self._trap_yagi_form,
+            self._hexbeam_form,
             self._doublet_form,
             self._zepp_form,
         ):

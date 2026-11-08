@@ -26,6 +26,7 @@ from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanEleme
 from antennadesk.domain.antennas.feed import FeedPoint
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.geometry import Point3D
+from antennadesk.domain.antennas.hexbeam import published_hexbeam_parameters
 from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
@@ -473,6 +474,20 @@ def _cases() -> tuple[FamilyCase, ...]:
                 "element spacing",
                 "phase step",
                 "amplitude taper",
+            ),
+        ),
+        FamilyCase(
+            "hexbeam",
+            published_hexbeam_parameters(),
+            "hexbeam",
+            9,
+            GeometryViewMode.PLAN,
+            (
+                "Hexbeam",
+                "driver half-length",
+                "reflector half-length",
+                "turning radius",
+                "tip gap",
             ),
         ),
         FamilyCase(

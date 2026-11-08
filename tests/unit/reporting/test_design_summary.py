@@ -22,6 +22,20 @@ def test_biquad_summary_reports_the_loop_stack_and_reflector() -> None:
     assert rows["Loop side"] == f"{parameters.loop_side_m:.4f} m"
 
 
+def test_hexbeam_summary_reports_the_bent_elements() -> None:
+    from antennadesk.domain.antennas.hexbeam import published_hexbeam_parameters
+
+    parameters = published_hexbeam_parameters()
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Type"] == "Hexbeam"
+    assert rows["Driver half-length"] == "5.5626 m"
+    assert rows["Reflector half-length"] == "5.2578 m"
+    assert rows["Turning radius"] == "3.3020 m"
+    assert rows["Tip gap"] == "0.6096 m"
+    assert rows["Feed"] == "center of the W driver"
+
+
 def test_trap_yagi_summary_reports_the_traps() -> None:
     from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
 
