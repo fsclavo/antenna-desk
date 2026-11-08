@@ -1083,6 +1083,14 @@ automatically up to twice the initial budget. A larger budget can take
 considerably longer; the dialog estimates the run count. The random seed is
 exposed for reproducibility.
 
+**Maximum turning radius** rejects candidates whose horizontal footprint from
+the mast exceeds the limit. The mast is the boom midpoint for Yagi and Moxon
+arrays and the feed's horizontal projection for every other family. **Maximum
+boom length** is available for Yagi and Moxon arrays. A zero value means no
+limit. These are hard mechanical constraints: an out-of-limit candidate is
+reported and never offered as Apply Best, and the limit is stored with the
+optimization summary.
+
 The result table is ranked from best to worst and reports the score, R, X, SWR,
 gain, front-to-back, efficiency, and any error. The summary reports the status,
 evaluation count, and best score. The sensitivity line ranks the variables that

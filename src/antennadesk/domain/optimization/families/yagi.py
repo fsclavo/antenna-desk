@@ -290,4 +290,5 @@ def yagi_descriptor(parameters: YagiParameters) -> AntennaOptimizerDescriptor:
         validate=validate,
         objectives=_OBJECTIVES,
         default_objective=FamilyOptimizationObjective.MAX_GAIN,
+        supports_boom_constraint=True,
     )

@@ -50,7 +50,15 @@ from ...domain.optimization.variables import OptimizationVariable, VariableKind
 from ...domain.simulation.spec import SimulationSpec
 from ..fonts import scaled_dialog_size
 from ..i18n import Translator
-from ..units import UnitSystem, length_from_m, length_unit_key, radius_from_m, radius_unit_key
+from ..units import (
+    UnitSystem,
+    length_bounds,
+    length_from_m,
+    length_to_m,
+    length_unit_key,
+    radius_from_m,
+    radius_unit_key,
+)
 from ..workers.family_optimization_worker import FamilyOptimizationWorker
 
 _OBJECTIVE_KEYS = {
@@ -159,6 +167,19 @@ class FamilyOptimizationDialog(QDialog):
         self._seed.setRange(0, 2_147_483_647)
         self._seed.setValue(0)
 
+        _minimum_length, maximum_length = length_bounds(unit_system)
+        self._max_boom = QDoubleSpinBox(self)
+        self._max_boom.setRange(0.0, maximum_length)
+        self._max_boom.setDecimals(3)
+        self._max_boom.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._max_boom.setSpecialValueText(translator.t("optimize.no_limit"))
+        self._max_turning = QDoubleSpinBox(self)
+        self._max_turning.setRange(0.0, maximum_length)
+        self._max_turning.setDecimals(3)
+        self._max_turning.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._max_turning.setSpecialValueText(translator.t("optimize.no_limit"))
+        self._max_boom.setVisible(descriptor.supports_boom_constraint)
+
         self._max_swr = QDoubleSpinBox(self)
         self._max_swr.setRange(1.0, 20.0)
         self._max_swr.setDecimals(2)
@@ -237,6 +258,9 @@ class FamilyOptimizationDialog(QDialog):
         )
         self._budget_label = QLabel(translator.t("optimize.budget_profile"), self)
         self._seed_label = QLabel(translator.t("optimize.seed"), self)
+        self._max_boom_label = QLabel(translator.t("optimize.max_boom"), self)
+        self._max_turning_label = QLabel(translator.t("optimize.max_turning"), self)
+        self._max_boom_label.setVisible(descriptor.supports_boom_constraint)
         self._weight_gain_label = QLabel(translator.t("optimize.gain_weight"), self)
         self._weight_fb_label = QLabel(translator.t("element_optimize.weight_fb"), self)
         self._weight_swr_label = QLabel(translator.t("optimize.swr_weight"), self)
@@ -257,6 +281,8 @@ class FamilyOptimizationDialog(QDialog):
         form.addRow(self._weight_efficiency_label, self._weight_efficiency)
         form.addRow(self._budget_label, self._budget)
         form.addRow(self._seed_label, self._seed)
+        form.addRow(self._max_boom_label, self._max_boom)
+        form.addRow(self._max_turning_label, self._max_turning)
         form.addRow(self._budget_hint)
         form.addRow(self._max_swr_row)
 
@@ -596,6 +622,8 @@ class FamilyOptimizationDialog(QDialog):
             self._weight_efficiency,
             self._budget,
             self._seed,
+            self._max_boom,
+            self._max_turning,
             self._table,
             self._max_swr_enabled,
         ):
@@ -658,6 +686,16 @@ class FamilyOptimizationDialog(QDialog):
                     self._robust_tolerance.value() / 100.0
                     if mode is OptimizationMode.ROBUST
                     else 0.0
+                ),
+                max_boom_length_m=(
+                    length_to_m(self._max_boom.value(), self._unit_system)
+                    if self._descriptor.supports_boom_constraint and self._max_boom.value() > 0.0
+                    else None
+                ),
+                max_turning_radius_m=(
+                    length_to_m(self._max_turning.value(), self._unit_system)
+                    if self._max_turning.value() > 0.0
+                    else None
                 ),
                 budget_profile=self._budget_profile(),
                 cancel_token=self._cancel_token,

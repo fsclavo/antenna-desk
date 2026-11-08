@@ -5092,6 +5092,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Dimensional tolerance",
         Language.SPANISH: "Tolerancia dimensional",
     },
+    "optimize.max_boom": {
+        Language.ENGLISH: "Maximum boom length",
+        Language.SPANISH: "Longitud máxima del boom",
+    },
+    "optimize.max_turning": {
+        Language.ENGLISH: "Maximum turning radius",
+        Language.SPANISH: "Radio de giro máximo",
+    },
+    "optimize.no_limit": {
+        Language.ENGLISH: "no limit",
+        Language.SPANISH: "sin límite",
+    },
     "optimize.pareto": {
         Language.ENGLISH: "Pareto front (non-dominated trade-offs)",
         Language.SPANISH: "Frente de Pareto (compromisos no dominados)",
@@ -5318,6 +5330,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "loaded_dipole.constraint.offset": {
         Language.ENGLISH: "The link offset must not exceed half the total length.",
         Language.SPANISH: "El offset del enlace no debe superar la mitad de la longitud total.",
+    },
+    "optimize.constraint.boom_length": {
+        Language.ENGLISH: "The boom exceeds the maximum length.",
+        Language.SPANISH: "El boom supera la longitud máxima.",
+    },
+    "optimize.constraint.turning_radius": {
+        Language.ENGLISH: "The turning radius exceeds the maximum.",
+        Language.SPANISH: "El radio de giro supera el máximo.",
     },
     "optimize.constraint.match_length": {
         Language.ENGLISH: "The hairpin match is shorter than the minimum conductor spacing.",

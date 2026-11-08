@@ -587,11 +587,11 @@ and require `NEC2C`.
   ZS6BKW, Zepp, biquad, double biquad, Beverage, and loaded/linked dipole.
   Magnetic loops, random wires, and custom/imported geometry are explicitly
   unavailable. Band-aware and robust modes evaluate multiple operating points,
-  the Pareto front is descriptive, and summaries persist in schema 23. There
-  are no boom-length or turning-radius constraints. Horizontal wire dipoles
-  support an optional sampled sag; Yagi elements support optional tapered tips.
-  Boom-mounting correction remains pending because no universal published model
-  is available.
+  the Pareto front is descriptive, and summaries persist in schema 23. Optional
+  hard limits cover maximum turning radius for every family and maximum boom
+  length for Yagi/Moxon. Horizontal wire dipoles support an optional sampled
+  sag; Yagi elements support optional tapered tips. Boom-mounting correction
+  remains pending because no universal published model is available.
 - Pattern resolution changes angular sampling only; it does not change NEC
   segment density or solver accuracy.
 - Feed-line results are post-processed at the transmitter. The line does not

@@ -366,6 +366,28 @@ def test_every_field_is_optimized_or_explicitly_classified_as_context() -> None:
         )
 
 
+def test_only_array_descriptors_support_a_boom_constraint() -> None:
+    yagi = optimizer_availability(_yagi())
+    moxon = optimizer_availability(
+        MoxonParameters(
+            frequency_hz=14_100_000.0,
+            width_m=10.0,
+            depth_m=3.0,
+            reflector_tip_m=1.0,
+            driven_tip_m=1.0,
+            height_m=10.0,
+        )
+    )
+    dipole = optimizer_availability(_dipole())
+
+    assert yagi.descriptor is not None
+    assert moxon.descriptor is not None
+    assert dipole.descriptor is not None
+    assert yagi.descriptor.supports_boom_constraint is True
+    assert moxon.descriptor.supports_boom_constraint is True
+    assert dipole.descriptor.supports_boom_constraint is False
+
+
 def test_biquad_without_a_reflector_does_not_optimize_its_spacing() -> None:
     parameters = biquad_parameters(BiquadKind.SINGLE, reflector_enabled=False)
     availability = optimizer_availability(parameters)

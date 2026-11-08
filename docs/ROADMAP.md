@@ -231,7 +231,7 @@ Acceptance criteria:
 | P2 | ZS6BKW and Zepp multiband presets | B | done |
 | P2 | Convert G5RV, ZS6BKW, Zepp, and doublet to typed families and add optimizers | B | done 2026-11-07: G5RV/ZS6BKW/Zepp typed with schema 17; doublet was already a typed dipole plus feed line |
 | P2 | Band-aware, robust, Pareto, persisted summaries, and recommendations | B | done 2026-11-07 (Phase C, schema 18) |
-| P2 | Custom/imported geometry optimization and space constraints | n/a | pending |
+| P2 | Custom/imported geometry optimization and space constraints | n/a | space constraints done 2026-11-07 (turning radius for all families, boom length for Yagi/Moxon); custom/imported geometry optimization remains deliberately unavailable |
 | P2 | Live VNA/hardware control | n/a | deferred |
 | P2 | Additional full-wave engines | n/a | deferred |
 | P2 | Physical antenna validation | A | blocked: no measurements |

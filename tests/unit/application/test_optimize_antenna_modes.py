@@ -16,7 +16,11 @@ from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.common.validation import Diagnostic
 from antennadesk.domain.optimization.descriptor import FamilyOptimizationObjective
-from antennadesk.domain.optimization.engine import BudgetProfile, budget_for
+from antennadesk.domain.optimization.engine import (
+    BudgetProfile,
+    OptimizationStatus,
+    budget_for,
+)
 from antennadesk.domain.optimization.registry import optimizer_availability
 from antennadesk.domain.optimization.summary import OptimizationMode
 from antennadesk.domain.simulation.frequency import FrequencyPlan
@@ -180,6 +184,41 @@ def test_robust_mode_requires_a_tolerance() -> None:
 def test_single_mode_keeps_the_tolerance_out_of_the_command() -> None:
     with pytest.raises(ValueError, match="only used in robust mode"):
         _command(OptimizationMode.SINGLE, tolerance=0.01)
+
+
+def test_turning_radius_limit_can_make_all_candidates_infeasible() -> None:
+    command = replace(
+        _command(OptimizationMode.SINGLE),
+        max_turning_radius_m=1.0,
+    )
+
+    result = OptimizeAntenna(FrequencySolver()).execute(command)
+
+    assert result.status is OptimizationStatus.NO_FEASIBLE
+    assert result.best_parameters is None
+    assert result.summary is not None
+    assert "turning_radius_m<=1" in result.summary.constraints
+    assert any(
+        recommendation.key == "optimize.recommend.no_feasible"
+        for recommendation in result.summary.recommendations
+    )
+
+
+def test_turning_radius_limit_reports_the_metric_when_feasible() -> None:
+    command = replace(
+        _command(OptimizationMode.SINGLE),
+        max_turning_radius_m=20.0,
+    )
+
+    result = OptimizeAntenna(FrequencySolver()).execute(command)
+
+    assert result.best_parameters is not None
+    assert result.best_metrics["turning_radius_m"] == pytest.approx(10.0, abs=0.5)
+
+
+def test_space_limits_must_be_positive() -> None:
+    with pytest.raises(ValueError, match="max_turning_radius_m"):
+        replace(_command(OptimizationMode.SINGLE), max_turning_radius_m=0.0)
 
 
 def test_summary_records_the_constraint_and_recommendation() -> None:

@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added optimizer **space constraints**: an optional maximum turning radius for
+  every family and maximum boom length for Yagi/Moxon. Limits are hard
+  candidates filters, are reported when violated, and are stored in the
+  optimization summary. The turning radius uses the boom midpoint for arrays
+  and the feed's horizontal projection for other families.
 - Added optional **tapered Yagi element tips**: a shared tip length and smaller
   tip radius add two outer segments to every element, persisted in schema 23.
   The model does not include a boom-mounting correction; use published or

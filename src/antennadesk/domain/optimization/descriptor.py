@@ -66,6 +66,7 @@ class AntennaOptimizerDescriptor:
     start_points: tuple[Mapping[str, float], ...] = field(default_factory=tuple)
     supports_band_aware: bool = False
     supports_robust: bool = False
+    supports_boom_constraint: bool = False
 
     def __post_init__(self) -> None:
         if not self.key.strip():

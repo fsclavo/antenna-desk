@@ -90,6 +90,8 @@ def _descriptor(
     build_parameters: ParameterBuilder,
     validate: ParameterValidator,
     default_objective: FamilyOptimizationObjective = FamilyOptimizationObjective.TARGET_IMPEDANCE,
+    *,
+    supports_boom_constraint: bool = False,
 ) -> AntennaOptimizerDescriptor:
     return AntennaOptimizerDescriptor(
         key=key,
@@ -99,6 +101,7 @@ def _descriptor(
         validate=validate,
         objectives=COMMON_OBJECTIVES,
         default_objective=default_objective,
+        supports_boom_constraint=supports_boom_constraint,
     )
 
 
@@ -1427,4 +1430,5 @@ def moxon_descriptor(parameters: MoxonParameters) -> AntennaOptimizerDescriptor:
         build,
         validate,
         default_objective=FamilyOptimizationObjective.MAX_GAIN,
+        supports_boom_constraint=True,
     )

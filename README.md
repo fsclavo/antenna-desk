@@ -159,6 +159,10 @@ optional signing steps.
 - Balanced, thorough, and fast optimizer budgets with automatic extension,
   evaluation counting, deterministic seeds, ranked result tables, sensitivity
   reports, and Apply Best routed through an exhaustive editor adapter.
+- Optional **maximum turning radius** for every family and **maximum boom
+  length** for Yagi/Moxon arrays. Candidates outside the mechanical limits are
+  rejected and reported, and the limits are saved with the optimization
+  summary.
 - Band-aware and robust optimization modes, a descriptive Pareto front,
   deterministic post-run recommendations, and a compact run summary persisted
   with the design so the result can be audited without storing every

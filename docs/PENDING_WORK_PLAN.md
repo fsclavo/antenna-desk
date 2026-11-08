@@ -146,7 +146,9 @@ These are not part of the next implementation session unless priorities change:
 - Additional full-wave engines.
 - Physical antenna validation, blocked on measurements.
 - GPG/Authenticode signing for release artifacts.
-- Custom/imported geometry optimization and space constraints.
+- Custom/imported geometry optimization remains deliberately unavailable.
+  Mechanical **space constraints** are implemented: turning radius for every
+  optimizer family and boom length for Yagi/Moxon.
 - General radial-screen and transmission-line geometry beyond the current
   supported subset.
 

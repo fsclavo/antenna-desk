@@ -10,6 +10,7 @@ from dataclasses import dataclass, field, replace
 
 from ...domain.antennas.antenna import AntennaModel
 from ...domain.antennas.design import AntennaDesignParameters
+from ...domain.antennas.footprint import boom_length_m, turning_radius_m
 from ...domain.common.time import utc_now
 from ...domain.common.validation import Severity
 from ...domain.optimization.constraints import OptimizationMetric, SoftConstraint
@@ -66,6 +67,8 @@ class OptimizeAntennaCommand:
     mode: OptimizationMode = OptimizationMode.SINGLE
     band_edges_hz: tuple[float, ...] = ()
     robust_tolerance: float = 0.0
+    max_boom_length_m: float | None = None
+    max_turning_radius_m: float | None = None
     budget_profile: BudgetProfile = BudgetProfile.BALANCED
     cancel_token: CancelToken | None = None
     progress: Callable[[int, float | None], None] | None = None
@@ -104,6 +107,12 @@ class OptimizeAntennaCommand:
             )
         ):
             raise ValueError("bandwidth optimization requires single-frequency mode")
+        for name, value in (
+            ("max_boom_length_m", self.max_boom_length_m),
+            ("max_turning_radius_m", self.max_turning_radius_m),
+        ):
+            if value is not None and (not math.isfinite(value) or value <= 0.0):
+                raise ValueError(f"{name} must be positive and finite")
 
 
 @dataclass(frozen=True, slots=True)
@@ -216,6 +225,7 @@ class OptimizeAntenna:
                         band_edges,
                         needs_pattern=needs_pattern,
                     )
+                metrics.update(_space_metrics(parameters, command))
                 score = _multi_score(command, metrics)
             except _EvaluationCancelled:
                 return CandidateEvaluation(
@@ -287,6 +297,32 @@ class OptimizeAntenna:
             pareto=pareto_front(engine_result.evaluations),
             message=engine_result.message,
         )
+
+
+def _space_metrics(
+    parameters: AntennaDesignParameters,
+    command: OptimizeAntennaCommand,
+) -> dict[str, float]:
+    model = parameters.to_antenna(name="Space constraint")
+    radius = turning_radius_m(parameters, model)
+    boom = boom_length_m(parameters)
+    metrics = {"turning_radius_m": radius}
+    if boom is not None:
+        metrics["boom_length_m"] = boom
+    if (
+        command.max_boom_length_m is not None
+        and boom is not None
+        and boom > command.max_boom_length_m + 1e-9
+    ):
+        raise _EvaluationFailure(
+            f"optimize.constraint.boom_length ({boom:.3f} m > {command.max_boom_length_m:.3f} m)"
+        )
+    if command.max_turning_radius_m is not None and radius > command.max_turning_radius_m + 1e-9:
+        raise _EvaluationFailure(
+            "optimize.constraint.turning_radius "
+            f"({radius:.3f} m > {command.max_turning_radius_m:.3f} m)"
+        )
+    return metrics
 
 
 def _resolved_band_edges(command: OptimizeAntennaCommand) -> tuple[float, ...]:
@@ -582,9 +618,21 @@ def _summary_for(
             "swr": command.weights.swr,
             "efficiency": command.weights.efficiency,
         },
-        constraints=tuple(
-            f"{constraint.metric.value}<={constraint.maximum:g}"
-            for constraint in command.soft_constraints
+        constraints=(
+            *(
+                (f"boom_length_m<={command.max_boom_length_m:g}",)
+                if command.max_boom_length_m is not None
+                else ()
+            ),
+            *(
+                (f"turning_radius_m<={command.max_turning_radius_m:g}",)
+                if command.max_turning_radius_m is not None
+                else ()
+            ),
+            *(
+                f"{constraint.metric.value}<={constraint.maximum:g}"
+                for constraint in command.soft_constraints
+            ),
         ),
         recommendations=recommendations,
     )

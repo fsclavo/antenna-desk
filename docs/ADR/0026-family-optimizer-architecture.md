@@ -183,9 +183,12 @@ each frequency is a separate solver run.
 ### 7. Constraints and objectives
 
 Hard constraints include valid geometry, minimum conductor spacing, element
-ordering, feed inside the conductor, positive dimensions, and family-specific
-bounds such as feed offset shorter than the fed element. An infeasible design
-can never become the best result.
+ordering, feed inside the conductor, positive dimensions, family-specific
+bounds such as feed offset shorter than the fed element, an optional maximum
+turning radius, and an optional maximum boom length for Yagi/Moxon arrays. The
+turning radius is measured from the boom midpoint for arrays and from the feed's
+horizontal projection for other families. An infeasible design can never become
+the best result.
 
 Soft constraints include maximum SWR, minimum gain, minimum efficiency, minimum
 front-to-back ratio, and minimum bandwidth. They are normalized penalties.
