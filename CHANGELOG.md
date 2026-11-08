@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added a first-class **phased vertical array** family: two to four vertical
+  radiators spaced along one line with an ideal linear phase step and amplitude
+  taper, a radial screen per element, schema-25 persistence, catalog route,
+  inline editor, scene dimensions and additional-source markers, reports,
+  construction notes, and a family optimizer. The first vertical is the primary
+  feed; the combining network is ideal and the reported impedance/SWR refer only
+  to the primary feed. The family is experimental pending a traceable array
+  reference or measurement.
 - Added optional **additional antenna sources** with amplitude and phase to the
   canonical model. The NEC adapter emits one `EX` card per effective source;
   the primary feed remains the impedance/SWR reference. This is the

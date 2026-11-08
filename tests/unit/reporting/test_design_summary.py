@@ -22,6 +22,29 @@ def test_biquad_summary_reports_the_loop_stack_and_reflector() -> None:
     assert rows["Loop side"] == f"{parameters.loop_side_m:.4f} m"
 
 
+def test_phased_vertical_summary_reports_the_excitation_and_radials() -> None:
+    from antennadesk.domain.antennas.phased_vertical import phased_vertical_parameters
+
+    parameters = phased_vertical_parameters(
+        element_count=3,
+        spacing_m=5.5,
+        height_m=5.0,
+        phase_step_deg=120.0,
+        amplitude_taper=0.25,
+        radial_count=8,
+        radial_length_m=5.0,
+    )
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Type"] == "Phased vertical array"
+    assert rows["Verticals"] == "3"
+    assert rows["Element spacing"] == "5.5000 m"
+    assert rows["Phase step"] == "120.0°"
+    assert rows["Amplitude taper"] == "25%"
+    assert rows["Radials per element"] == "8"
+    assert rows["Feed"] == "first vertical (primary)"
+
+
 def test_beverage_summary_reports_length_and_termination() -> None:
     from antennadesk.domain.antennas.beverage import beverage_parameters
 

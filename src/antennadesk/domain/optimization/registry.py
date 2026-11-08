@@ -26,6 +26,7 @@ from ..antennas.loop import LoopParameters
 from ..antennas.magnetic_loop import MagneticLoopParameters
 from ..antennas.moxon import MoxonParameters
 from ..antennas.ocfd import OCFDParameters
+from ..antennas.phased_vertical import PhasedVerticalParameters
 from ..antennas.ringo import RingoParameters
 from ..antennas.scv import ScvParameters
 from ..antennas.t2fd import T2FDParameters
@@ -50,6 +51,7 @@ from .families.typed import (
     loop_descriptor,
     moxon_descriptor,
     ocfd_descriptor,
+    phased_vertical_descriptor,
     ringo_descriptor,
     t2fd_descriptor,
     transmission_line_doublet_descriptor,
@@ -98,6 +100,8 @@ def optimizer_availability(
         return OptimizerAvailability(descriptor=beverage_descriptor(parameters))
     if isinstance(parameters, LoadedDipoleParameters):
         return OptimizerAvailability(descriptor=loaded_dipole_descriptor(parameters))
+    if isinstance(parameters, PhasedVerticalParameters):
+        return OptimizerAvailability(descriptor=phased_vertical_descriptor(parameters))
     if isinstance(parameters, FoldedDipoleParameters):
         return OptimizerAvailability(descriptor=folded_dipole_descriptor(parameters))
     if isinstance(parameters, LoopParameters):
@@ -151,6 +155,7 @@ SUPPORTED_OPTIMIZER_TYPES = frozenset(
         BiquadParameters,
         BeverageParameters,
         LoadedDipoleParameters,
+        PhasedVerticalParameters,
         OCFDParameters,
         EndFedParameters,
         FanDipoleParameters,

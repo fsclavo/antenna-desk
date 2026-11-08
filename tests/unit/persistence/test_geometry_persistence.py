@@ -730,6 +730,31 @@ def test_loaded_dipole_round_trips_through_the_schema() -> None:
     assert restored.designs[0].antenna_type == "loaded_dipole"
 
 
+def test_phased_vertical_round_trips_through_the_schema() -> None:
+    from antennadesk.domain.antennas.phased_vertical import phased_vertical_parameters
+
+    parameters = phased_vertical_parameters(
+        frequency_hz=14_100_000.0,
+        element_count=3,
+        height_m=5.1,
+        spacing_m=5.4,
+        phase_step_deg=120.0,
+        amplitude_taper=0.25,
+        radial_count=8,
+        radial_length_m=5.0,
+        azimuth_deg=45.0,
+    )
+    original = _project(parameters, "Phased vertical array")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna == original.designs[0].antenna
+    assert restored.designs[0].antenna_type == "phased_vertical"
+    assert restored.designs[0].antenna.sources == original.designs[0].antenna.sources
+
+
 def test_tapered_yagi_round_trips_through_the_schema() -> None:
     from dataclasses import replace
 

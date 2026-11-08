@@ -34,6 +34,7 @@ from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
 from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
+from antennadesk.domain.antennas.phased_vertical import phased_vertical_parameters
 from antennadesk.domain.antennas.polarization import Polarization
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
@@ -447,6 +448,28 @@ def _cases() -> tuple[FamilyCase, ...]:
                 "full length",
                 "link / coil offset",
                 "state",
+            ),
+        ),
+        FamilyCase(
+            "phased_vertical",
+            phased_vertical_parameters(
+                frequency_hz=14_100_000.0,
+                element_count=2,
+                height_m=5.0,
+                spacing_m=5.2,
+                phase_step_deg=90.0,
+                radial_count=4,
+                radial_length_m=5.0,
+            ),
+            "phased_vertical",
+            10,
+            GeometryViewMode.ELEVATION,
+            (
+                "Phased vertical array",
+                "verticals 2",
+                "element spacing",
+                "phase step",
+                "amplitude taper",
             ),
         ),
         FamilyCase(

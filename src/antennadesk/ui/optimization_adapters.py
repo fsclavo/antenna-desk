@@ -26,6 +26,7 @@ from ..domain.antennas.loaded_dipole import LoadedDipoleParameters
 from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
+from ..domain.antennas.phased_vertical import PhasedVerticalParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvParameters
 from ..domain.antennas.t2fd import T2FDParameters
@@ -93,6 +94,10 @@ ADAPTERS: dict[type[AntennaDesignParameters], OptimizationUiAdapter] = {
     LoadedDipoleParameters: OptimizationUiAdapter(
         lambda window, parameters: window._loaded_dipole_simulation_spec(parameters),
         lambda window, parameters: window._loaded_dipole_form.set_parameters(parameters),
+    ),
+    PhasedVerticalParameters: OptimizationUiAdapter(
+        lambda window, parameters: window._phased_vertical_simulation_spec(parameters),
+        lambda window, parameters: window._phased_vertical_form.set_parameters(parameters),
     ),
     OCFDParameters: OptimizationUiAdapter(
         lambda window, parameters: window._ocfd_simulation_spec(parameters),

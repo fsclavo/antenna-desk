@@ -599,6 +599,27 @@ inductance and resistance when enabled, and conductor radius jointly. The
 family is classified **experimental**; tune the final geometry and coil with the
 solver or a measurement.
 
+## Create a phased vertical array
+
+Choose **File → New Antenna... → Phased vertical array** for two to four
+vertical radiators spaced along one line. The editor sets the frequency,
+element count, spacing, height, base height, phase step, amplitude taper,
+radial screen, array azimuth, radius, material, and ground.
+
+The first vertical is the primary feed with unit amplitude and zero phase.
+Later verticals use `index × phase step` and a linear amplitude taper from 1 to
+`1 - taper`. **Load quarter-wave starting dimensions** sets the radiator height,
+spacing, and radial length to a quarter wave at the current frequency.
+**Optimize...** searches height, spacing, base height, phase step, amplitude
+taper, radial length when radials are enabled, and conductor radius jointly.
+The element count, radial count, azimuth, ground, and material remain user
+context.
+
+The array is classified **experimental**. Mutual coupling is included by the
+wire solver, but the combining network is ideal, per-element matching and
+feed-line loss are not modeled, and the reported impedance and SWR refer only to
+the primary feed. Verify the pattern and match with the solver or a measurement.
+
 ## Create a Beverage
 
 Choose **File → New Antenna... → Beverage** for a long horizontal receiving
@@ -1131,6 +1152,7 @@ The following typed families have a complete joint optimizer:
 - biquad and double biquad;
 - Beverage receiving wire;
 - loaded / linked dipole;
+- phased vertical array;
 - OCFD, EndFed/EFHW, and sloper;
 - typed G5RV, ZS6BKW, and Zepp;
 - the doublet radiator as a dipole, with its feed line in the matching stage;

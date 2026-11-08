@@ -347,6 +347,12 @@ def _migrate_v23_to_v24(document: dict[str, Any]) -> dict[str, Any]:
     return copy.deepcopy(document)
 
 
+def _migrate_v24_to_v25(document: dict[str, Any]) -> dict[str, Any]:
+    """Introduce the phased vertical array design type."""
+
+    return copy.deepcopy(document)
+
+
 def _migrate_v13_to_v14(document: dict[str, Any]) -> dict[str, Any]:
     """Add the optional project balun/unun loss model."""
 
@@ -435,6 +441,7 @@ MIGRATIONS: dict[int, Migration] = {
     21: _migrate_v21_to_v22,
     22: _migrate_v22_to_v23,
     23: _migrate_v23_to_v24,
+    24: _migrate_v24_to_v25,
 }
 
 

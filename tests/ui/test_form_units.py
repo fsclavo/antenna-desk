@@ -20,6 +20,7 @@ from antennadesk.ui.widgets.j_pole_form import JPoleForm
 from antennadesk.ui.widgets.loaded_dipole_form import LoadedDipoleForm
 from antennadesk.ui.widgets.moxon_form import MoxonForm
 from antennadesk.ui.widgets.ocfd_form import OCFDForm
+from antennadesk.ui.widgets.phased_vertical_form import PhasedVerticalForm
 from antennadesk.ui.widgets.ringo_form import RingoForm
 from antennadesk.ui.widgets.scv_form import ScvForm
 from antennadesk.ui.widgets.t2fd_form import T2FDForm
@@ -85,6 +86,10 @@ FORMS = (
     (
         LoadedDipoleForm,
         ("_total_length", "_height", "_link_offset"),
+    ),
+    (
+        PhasedVerticalForm,
+        ("_spacing", "_height", "_base_height", "_radial_length"),
     ),
     (
         TransmissionLineDoubletForm,

@@ -413,6 +413,23 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "not model the physical link hardware."
         ),
     ),
+    "phased_vertical": EvidenceEntry(
+        template="phased_vertical",
+        level=EvidenceLevel.EXPERIMENTAL,
+        source=(
+            "Quarter-wave-spaced vertical radiators with an ideal linear phase "
+            "and amplitude progression; no independent numerical reference for "
+            "the generated array"
+        ),
+        tolerance="Not applicable (structural)",
+        limitation=(
+            "Mutual coupling is included by the wire solver, but the combining "
+            "network, per-element matching, feed-line loss, radial screen "
+            "efficiency, and the installation are not modeled. The reported "
+            "impedance and SWR refer only to the primary feed. Verify the pattern "
+            "and match with the solver or a measurement."
+        ),
+    ),
     "doublet": EvidenceEntry(
         template="doublet",
         level=EvidenceLevel.PUBLISHED,

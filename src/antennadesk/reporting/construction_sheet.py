@@ -23,6 +23,7 @@ from ..domain.antennas.loop import LoopOrientation, LoopParameters
 from ..domain.antennas.magnetic_loop import MagneticLoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
+from ..domain.antennas.phased_vertical import PhasedVerticalParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvKind, ScvParameters
 from ..domain.antennas.t2fd import T2FDParameters
@@ -253,6 +254,28 @@ junction at {feed_height_m:.4f} m above ground.</p>"""
 wire and mark the link positions at {parameters.link_offset_m:.4f} m either
 side of the center. Feed the center. {coil_note} The coil model is an ideal
 series R-L load; tune it for the installed height and ground.</p>"""
+    elif isinstance(parameters, PhasedVerticalParameters):
+        feed_rows = f"""
+<tr><th>Type</th><td>{parameters.template_name}</td></tr>
+<tr><th>Verticals</th><td>{parameters.element_count}</td></tr>
+<tr><th>Element spacing</th><td>{parameters.spacing_m:.4f} m</td></tr>
+<tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
+<tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
+<tr><th>Phase step</th><td>{parameters.phase_step_deg:.1f}°</td></tr>
+<tr><th>Amplitude taper</th><td>{parameters.amplitude_taper * 100.0:.0f}%</td></tr>
+<tr><th>Radials per element</th><td>{parameters.radial_count}</td></tr>
+<tr><th>Radial length</th><td>{parameters.radial_length_m:.4f} m</td></tr>
+<tr><th>Total conductor</th><td>{parameters.total_conductor_length_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Build {parameters.element_count} vertical
+radiators of {parameters.height_m:.4f} m, spaced {parameters.spacing_m:.4f} m
+along one line, with their bases at {parameters.base_height_m:.4f} m above
+ground. Fit {parameters.radial_count} radials of
+{parameters.radial_length_m:.4f} m to each base. Drive the first vertical as
+the primary feed and the remaining verticals with the listed phase and
+amplitude steps. The combining network is ideal and is not included; use an
+explicit feed network and verify the match.</p>"""
     elif isinstance(parameters, BeverageParameters):
         termination_note = (
             f"Fit a {parameters.termination_resistance_ohm:.1f} Ω resistor from "

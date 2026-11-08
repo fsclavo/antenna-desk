@@ -300,6 +300,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "portátil y SOTA."
         ),
     },
+    "catalog.phased_vertical": {
+        Language.ENGLISH: "Phased vertical array",
+        Language.SPANISH: "Arreglo vertical en fase",
+    },
+    "catalog.phased_vertical.description": {
+        Language.ENGLISH: (
+            "Two to four vertical radiators spaced along a line and driven with "
+            "an ideal phase step and amplitude taper; the first vertical is the "
+            "primary feed."
+        ),
+        Language.SPANISH: (
+            "De dos a cuatro verticales separadas sobre una línea y excitadas con "
+            "un escalón de fase y una atenuación de amplitud ideales; la primera "
+            "vertical es la alimentación principal."
+        ),
+    },
     "catalog.family.wire": {
         Language.ENGLISH: "Wire antennas",
         Language.SPANISH: "Antenas de hilo",
@@ -1948,6 +1964,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Current band only; the loaded/linked dipole is a monoband starting point.",
         Language.SPANISH: "Solo la banda actual; el dipolo cargado/enlazado es un punto de partida monobanda.",
     },
+    "band.note.phased_vertical": {
+        Language.ENGLISH: (
+            "Current band only; the phased vertical array is a narrowband "
+            "starting point and its combining network is ideal."
+        ),
+        Language.SPANISH: (
+            "Solo la banda actual; el arreglo vertical en fase es un punto de "
+            "partida de banda angosta y su red combinadora es ideal."
+        ),
+    },
     "status.analyzing_bands": {
         Language.ENGLISH: "Analyzing bands...",
         Language.SPANISH: "Analizando bandas...",
@@ -3230,6 +3256,84 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "contacto de los enlaces y la instalación no están validadas "
             "independientemente. Ajustá con el solver o una medición."
         ),
+    },
+    "phased_vertical.title": {
+        Language.ENGLISH: "Phased Vertical Array Generator",
+        Language.SPANISH: "Generador de arreglo vertical en fase",
+    },
+    "phased_vertical.element_count": {
+        Language.ENGLISH: "Verticals",
+        Language.SPANISH: "Verticales",
+    },
+    "phased_vertical.spacing": {
+        Language.ENGLISH: "Element spacing",
+        Language.SPANISH: "Separación entre elementos",
+    },
+    "phased_vertical.phase_step": {
+        Language.ENGLISH: "Phase step per element",
+        Language.SPANISH: "Escalón de fase por elemento",
+    },
+    "phased_vertical.amplitude_taper": {
+        Language.ENGLISH: "Amplitude taper",
+        Language.SPANISH: "Atenuación de amplitud",
+    },
+    "phased_vertical.geometry": {
+        Language.ENGLISH: (
+            "{count} verticals · spacing {spacing} {unit} · height {height} {unit} · "
+            "phase step {phase}° · taper {taper:.0f}% · {radials} radials each"
+        ),
+        Language.SPANISH: (
+            "{count} verticales · separación {spacing} {unit} · altura {height} {unit} · "
+            "escalón de fase {phase}° · atenuación {taper:.0f}% · {radials} radiales cada una"
+        ),
+    },
+    "phased_vertical.hint": {
+        Language.ENGLISH: (
+            "The first vertical is the primary feed with unit amplitude and zero "
+            "phase. Later verticals use index x phase step and a linear amplitude "
+            "taper. The array feed network is ideal; per-element matching and "
+            "feed-line loss are not modeled."
+        ),
+        Language.SPANISH: (
+            "La primera vertical es la alimentación principal con amplitud unitaria "
+            "y fase cero. Las siguientes usan índice x escalón de fase y una "
+            "atenuación lineal de amplitud. La red de alimentación del arreglo es "
+            "ideal; no se modelan el ajuste por elemento ni las pérdidas de línea."
+        ),
+    },
+    "phased_vertical.evidence": {
+        Language.ENGLISH: (
+            "Experimental array model. The elements are ideal thin wires over the "
+            "selected ground; mutual coupling is included by the solver, but the "
+            "combining network, per-element matching, feed lines, and installation "
+            "are not independently validated. Verify the pattern and match with "
+            "the solver or a measurement."
+        ),
+        Language.SPANISH: (
+            "Modelo experimental de arreglo. Los elementos son hilos delgados "
+            "ideales sobre el suelo elegido; el solver incluye el acoplamiento "
+            "mutuo, pero la red combinadora, el ajuste por elemento, las líneas de "
+            "alimentación y la instalación no están validadas independientemente. "
+            "Verificá el patrón y el ajuste con el solver o una medición."
+        ),
+    },
+    "phased_vertical.phase_note": {
+        Language.ENGLISH: (
+            "Phase step {phase}° · amplitude taper {taper}% · first vertical is "
+            "the primary feed · ideal combining network"
+        ),
+        Language.SPANISH: (
+            "Escalón de fase {phase}° · atenuación de amplitud {taper}% · la "
+            "primera vertical es la alimentación principal · red combinadora ideal"
+        ),
+    },
+    "phased_vertical.constraint.phase": {
+        Language.ENGLISH: "The phase step must stay within ±360°.",
+        Language.SPANISH: "El escalón de fase debe quedar dentro de ±360°.",
+    },
+    "phased_vertical.constraint.amplitude_taper": {
+        Language.ENGLISH: "The amplitude taper must stay between 0 and 0.9.",
+        Language.SPANISH: "La atenuación de amplitud debe quedar entre 0 y 0,9.",
     },
     "ringo.title": {
         Language.ENGLISH: "Ringo Generator",

@@ -22,6 +22,7 @@ from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.moxon import MoxonParameters
+from antennadesk.domain.antennas.phased_vertical import phased_vertical_parameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
 from antennadesk.domain.antennas.transmission_line_doublet import (
     DoubletPreset,
@@ -90,6 +91,15 @@ def _samples() -> list[object]:
             frequency_hz=7_100_000.0,
             total_length_m=18.0,
             link_offset_m=2.5,
+        ),
+        phased_vertical_parameters(
+            frequency_hz=14_100_000.0,
+            element_count=2,
+            height_m=5.0,
+            spacing_m=5.0,
+            phase_step_deg=90.0,
+            radial_count=4,
+            radial_length_m=5.0,
         ),
         YagiParameters(
             frequency_hz=14_100_000.0,

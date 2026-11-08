@@ -29,7 +29,7 @@ external service and must not be invented or simulated into existence.
 | B2 | Improve the Ringo matching-ring model | M | manufacturer data or measurement | Matching-ring geometry and impedance are traceable; evidence can move beyond C |
 | B3 | Add independent checks for biquad/double biquad/Beverage/loaded dipole | M–L | source or measurement | At least one numeric metric per family is validated or the limitation stays explicit |
 | B4 | Fan-dipole coupling calibration | M | measurement | A coupled-fan measurement is reproduced; no scalar correction is invented |
-| C1 | **Phased verticals / arrays** | XL | multi-source architecture | See the detailed breakdown below |
+| ~~C1~~ | ~~**Phased verticals / arrays**~~ | XL | multi-source architecture | **Done 2026-11-08:** multi-source model and schema 24, then the 2–4 element phased vertical family with ideal phase/amplitude progression, radial screens, schema 25, editor, scene markers, reports, construction notes, and family optimizer. Evidence remains C pending a traceable reference. |
 | C2 | Quad beam / hexbeam | L | C1 lessons optional | New family with full DoD, scene contract, persistence, optimizer, and evidence |
 | C3 | Log-periodic | L | none | Multi-element feed and geometry, full DoD, optimizer, and evidence |
 | C4 | Discone | L | none | Broadband multi-wire geometry, full DoD, scene, persistence, optimizer, and evidence |
@@ -39,15 +39,17 @@ external service and must not be invented or simulated into existence.
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
 | D4 | Segmented frequency plan in one NEC deck | M | solver benchmark | Deferred; current per-band batching is intentional |
 
-## C1 — Phased verticals / arrays (largest item)
+## C1 — Phased verticals / arrays (completed)
 
-**Why it is the largest:** the current canonical model has exactly one feed
-(`AntennaModel.feed`), and the NEC adapter emits exactly one `EX` source. A
-phased array needs multiple driven elements, per-source amplitude and phase,
-and a feed/combining model. That crosses the domain model, solver port, NEC
-deck, persistence, scene presentation, optimization, reports, and validation.
+**Status:** completed 2026-11-08. Evidence remains experimental pending a
+traceable published array or measurement.
 
-Proposed slices:
+The original blocker was the single-feed model (`AntennaModel.feed`) and the
+single `EX` source in the NEC adapter. The delivered work crosses the domain
+model, solver port, NEC deck, persistence, scene presentation, optimization,
+reports, and validation.
+
+Completed slices:
 
 1. **Model and solver — completed 2026-11-08**
    - `Source` value (wire, offset, amplitude, phase) and optional
@@ -58,41 +60,40 @@ Proposed slices:
      and currents include all sources;
    - schema 24 persists the additional sources;
    - unit and real NEC2C two-source tests pass.
-2. **Family**
+2. **Family — completed 2026-11-08**
    - `PhasedVerticalParameters`: count, spacing, height, base height, radial
      system, amplitude taper, phase progression, azimuth, radius, material,
      ground;
    - feed network is an explicit ideal combining model, not a hidden loss;
    - topology (count, radial system) remains a user choice.
-3. **Persistence**
-   - schema migration; validate source indices and phase range;
+3. **Persistence — completed 2026-11-08**
+   - schema-25 migration; phase and element-count ranges are validated;
    - round-trip and migration tests.
-4. **Presentation**
-   - scene dimensions for spacing, height, and phase direction;
+4. **Presentation — completed 2026-11-08**
+   - scene dimensions for spacing and height, and markers for additional
+     sources;
    - pattern/current views and reports.
-5. **Optimizer**
+5. **Optimizer — completed 2026-11-08**
    - family descriptor for geometry and phase/amplitude variables;
-   - constraints for spacing, turning radius, and feed feasibility;
-   - NEC2C integration and determinism tests.
-6. **Evidence**
-   - a traceable two-element published array or measurement; otherwise keep the
-     family experimental and state the limitations.
+   - constraints for spacing and phase/amplitude ranges;
+   - NEC2C integration and Apply Best adapter.
+6. **Evidence — open**
+   - a traceable two-element published array or measurement; otherwise the
+     family stays experimental with visible limitations.
 
 Do not start C1 by cloning a vertical N times inside a widget. The multi-source
 model and solver contract must land first.
 
 ## Recommended order
 
-1. ~~A1 and A2~~ (done 2026-11-08).
-2. C1 in the slices above (largest user-visible and architectural gain).
-3. C3 or C2 (next large families).
-4. B1–B3 whenever a source or measurement becomes available.
-5. C4, C5, and the deferred items.
+1. ~~A1, A2, and C1~~ (done 2026-11-08).
+2. C3 or C2 (next large families).
+3. B1–B3 whenever a source or measurement becomes available.
+4. C4, C5, and the deferred items.
 
 ## Current baseline
 
-- Schema: **23**.
-- Full gate: **1,809 passed, 0 skipped** with `NEC2C` and the optional
-  `cross-engine` group; **1,806 passed, 1 skipped** without PyNEC.
-- Last commits: loaded/linked dipole, wire sag, tapered Yagi tips, space
-  constraints, and the optional PyNEC validation cleanup.
+- Schema: **25**.
+- Full gate: **1,837 passed, 0 skipped** with `NEC2C` and the optional
+  `cross-engine` group; rerun without PyNEC if the environment lacks it.
+- Last commits: multi-source excitation, then the phased vertical array family.

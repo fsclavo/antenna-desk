@@ -67,6 +67,10 @@ from ..domain.antennas.matching_network import LNetwork, MatchingNetwork, PiNetw
 from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from ..domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
+from ..domain.antennas.phased_vertical import (
+    ANTENNA_TYPE_PHASED_VERTICAL,
+    PhasedVerticalParameters,
+)
 from ..domain.antennas.polarization import Polarization
 from ..domain.antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
 from ..domain.antennas.scv import (
@@ -380,6 +384,23 @@ class ZeppParametersPayload(StrictModel):
     matching_section_length_m: float = Field(gt=0.0)
     spacing_m: float = Field(default=0.05, gt=0.0)
     base_height_m: float = Field(default=1.0, ge=0.0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class PhasedVerticalParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    height_m: float = Field(gt=0.0)
+    spacing_m: float = Field(gt=0.0)
+    element_count: int = Field(default=2, ge=2, le=4)
+    base_height_m: float = Field(default=0.25, ge=0.0)
+    phase_step_deg: float = Field(default=0.0, ge=-360.0, le=360.0)
+    amplitude_taper: float = Field(default=0.0, ge=0.0, le=0.9)
+    radial_count: int = Field(default=4, ge=0, le=36)
+    radial_length_m: float = Field(default=0.0, ge=0.0)
+    radial_angle_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
@@ -739,6 +760,7 @@ ParameterPayload = (
     | FanDipoleParametersPayload
     | EndFedParametersPayload
     | LoadedDipoleParametersPayload
+    | PhasedVerticalParametersPayload
     | JPoleParametersPayload
     | RingoParametersPayload
     | ScvParametersPayload
@@ -775,6 +797,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_ENDFED
     if isinstance(value, LoadedDipoleParametersPayload):
         return ANTENNA_TYPE_LOADED_DIPOLE
+    if isinstance(value, PhasedVerticalParametersPayload):
+        return ANTENNA_TYPE_PHASED_VERTICAL
     if isinstance(value, JPoleParametersPayload):
         return ANTENNA_TYPE_J_POLE
     if isinstance(value, RingoParametersPayload):
@@ -833,6 +857,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return EndFedParametersPayload
     if antenna_type == ANTENNA_TYPE_LOADED_DIPOLE:
         return LoadedDipoleParametersPayload
+    if antenna_type == ANTENNA_TYPE_PHASED_VERTICAL:
+        return PhasedVerticalParametersPayload
     if antenna_type == ANTENNA_TYPE_J_POLE:
         return JPoleParametersPayload
     if antenna_type == ANTENNA_TYPE_RINGO:
@@ -1176,6 +1202,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _endfed_parameters_from_domain(value)
     if isinstance(value, LoadedDipoleParameters):
         return _loaded_dipole_parameters_from_domain(value)
+    if isinstance(value, PhasedVerticalParameters):
+        return _phased_vertical_parameters_from_domain(value)
     if isinstance(value, JPoleParameters):
         return _j_pole_parameters_from_domain(value)
     if isinstance(value, RingoParameters):
@@ -1409,6 +1437,27 @@ def _loaded_dipole_parameters_from_domain(
         loading_coil_inductance_h=value.loading_coil_inductance_h,
         loading_coil_resistance_ohm=value.loading_coil_resistance_ohm,
         orientation=value.orientation,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _phased_vertical_parameters_from_domain(
+    value: PhasedVerticalParameters,
+) -> PhasedVerticalParametersPayload:
+    return PhasedVerticalParametersPayload(
+        frequency_hz=value.frequency_hz,
+        height_m=value.height_m,
+        spacing_m=value.spacing_m,
+        element_count=value.element_count,
+        base_height_m=value.base_height_m,
+        phase_step_deg=value.phase_step_deg,
+        amplitude_taper=value.amplitude_taper,
+        radial_count=value.radial_count,
+        radial_length_m=value.radial_length_m,
+        radial_angle_deg=value.radial_angle_deg,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
@@ -2085,6 +2134,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, LoadedDipoleParametersPayload):
             raise ValueError("loaded dipole parameters have the wrong shape")
         return _loaded_dipole_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_PHASED_VERTICAL:
+        if not isinstance(value.parameters, PhasedVerticalParametersPayload):
+            raise ValueError("phased vertical parameters have the wrong shape")
+        return _phased_vertical_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_J_POLE:
         if not isinstance(value.parameters, JPoleParametersPayload):
             raise ValueError("J-pole parameters have the wrong shape")
@@ -2371,6 +2424,27 @@ def _loaded_dipole_parameters_to_domain(
         loading_coil_inductance_h=value.loading_coil_inductance_h,
         loading_coil_resistance_ohm=value.loading_coil_resistance_ohm,
         orientation=value.orientation,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _phased_vertical_parameters_to_domain(
+    value: PhasedVerticalParametersPayload,
+) -> PhasedVerticalParameters:
+    return PhasedVerticalParameters(
+        frequency_hz=value.frequency_hz,
+        height_m=value.height_m,
+        spacing_m=value.spacing_m,
+        element_count=value.element_count,
+        base_height_m=value.base_height_m,
+        phase_step_deg=value.phase_step_deg,
+        amplitude_taper=value.amplitude_taper,
+        radial_count=value.radial_count,
+        radial_length_m=value.radial_length_m,
+        radial_angle_deg=value.radial_angle_deg,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),

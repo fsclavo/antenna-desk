@@ -143,8 +143,8 @@ Deferred:
   modes, a descriptive Pareto front, deterministic recommendations, and
   schema-18 persisted run summaries.
 - Supported typed families: dipoles, loop, vertical/inverted-V/inverted-L,
-  J Pole/Slim Jim, Ringo, SCV, biquad, Beverage, loaded/linked dipole, OCFD,
-  EndFed, typed G5RV/ZS6BKW/Zepp,
+  J Pole/Slim Jim, Ringo, SCV, biquad, Beverage, loaded/linked dipole,
+  phased vertical array, OCFD, EndFed, typed G5RV/ZS6BKW/Zepp,
   fan/trap/T2FD, Yagi, and Moxon. The doublet radiator uses the dipole
   descriptor and its feed line remains in the matching stage.
 - Explicitly unavailable optimizers: magnetic loop, random wire, and arbitrary
@@ -261,7 +261,7 @@ point; `C` is structural/experimental only.
 | 12 | Beverage | New family | M | Medium | B/A | **Implemented on 2026-11-07:** long receiving wire with optional resistive termination, one-wavelength starting length, inline editor, schema 20, scene contract, reports, construction notes, and family optimizer. Evidence remains C pending a measurement. |
 | 13 | Loaded / linked dipole | New family or `dipole` variant | M | Medium | B/C | **Implemented on 2026-11-07:** center-fed loaded dipole with symmetric series R-L coils or open links, schema 21, inline editor, scene contract, reports, construction notes, and family optimizer. Coil core loss, self-capacitance, and link contact resistance remain limitations. |
 | 14 | Wire sag / tapered elements / boom correction | Geometry model | M | Medium | B/C | **Partially implemented 2026-11-07:** optional sampled parabolic sag on horizontal wire dipoles (schema 22) and optional tapered Yagi tips (schema 23), with scene/report/conductor-length support. Boom-mounting correction remains pending because no universal published model is available. |
-| 15 | Phased verticals / arrays | Architectural | XL | High | B/A | Requires multiple sources, phase, and feed networks; not a simple family. |
+| 15 | Phased verticals / arrays | Architectural | XL | High | B/A | **Implemented on 2026-11-08:** multi-source excitation, ideal linear phase and amplitude progression, 2–4 verticals with radial screens, schema 25, inline editor, scene/source markers, reports, construction notes, and family optimizer. The combining network is ideal and the family remains experimental pending a traceable array reference or measurement. |
 | 16 | Quad beam / hexbeam | New family | L | Medium–high | B/A | Multi-element loop geometry; feed and scene complexity. |
 | 17 | Log-periodic | New family | L | Medium | A/B | Many elements and a feed network; high test burden. |
 | 18 | Discone | New family | L | Medium | B/C | Many wires and broadband behavior; niche VHF/UHF value. |

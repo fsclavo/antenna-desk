@@ -22,6 +22,7 @@ from antennadesk.ui.widgets.loaded_dipole_form import LoadedDipoleForm
 from antennadesk.ui.widgets.magnetic_loop_form import MagneticLoopForm
 from antennadesk.ui.widgets.moxon_form import MoxonForm
 from antennadesk.ui.widgets.ocfd_form import OCFDForm
+from antennadesk.ui.widgets.phased_vertical_form import PhasedVerticalForm
 from antennadesk.ui.widgets.ringo_form import RingoForm
 from antennadesk.ui.widgets.scv_form import ScvForm
 from antennadesk.ui.widgets.t2fd_form import T2FDForm
@@ -51,6 +52,7 @@ FORMS = (
     (BiquadForm, "biquad.loop_side"),
     (BeverageForm, "beverage.termination_resistance"),
     (LoadedDipoleForm, "loaded_dipole.link_offset"),
+    (PhasedVerticalForm, "phased_vertical.phase_step"),
     (TransmissionLineDoubletForm, "g5rv.line_impedance"),
     (ZeppForm, "zepp.radiator_length"),
 )

@@ -378,6 +378,18 @@ section of length `2 × offset` is active. The managed coil loads are regenerate
 with the template. Coil Q is reported from the explicit series resistance; the
 model does not include core loss, self-capacitance, or link contact resistance.
 
+### PhasedVerticalParameters
+
+`PhasedVerticalParameters` stores the design frequency, element count (2–4),
+radiator height, element spacing, base height, phase step, amplitude taper,
+radial count and length, first-radial angle, array azimuth, radius, material,
+and ground. `to_antenna()` builds one vertical per element with its own radial
+screen. The first vertical is the primary feed; the rest become additional
+`Source` excitations with `index × phase_step_deg` and a linear amplitude taper.
+The combining network is ideal: per-element matching and feed-line loss are not
+modeled, and the reported impedance and SWR refer only to the primary feed.
+Mutual coupling is included by the wire solver. The family is experimental.
+
 ### OCFDParameters
 
 A first-class single-wire horizontal dipole with a feed point offset from the
@@ -396,7 +408,7 @@ reconstructs OCFD parameters from legacy custom designs.
 `InvertedLParameters`, `YagiParameters`, `MoxonParameters`,
 `FanDipoleParameters`, `EndFedParameters`,
 `JPoleParameters`, `RingoParameters`, `ScvParameters`, `BiquadParameters`,
-`BeverageParameters`, `LoadedDipoleParameters`,
+`BeverageParameters`, `LoadedDipoleParameters`, `PhasedVerticalParameters`,
 `TransmissionLineDoubletParameters`, `TrapDipoleParameters`,
 `T2FDParameters`, `ZeppParameters`, and `CustomAntennaParameters`. `antenna_type_for()` maps a
 parameter object to its native type; `custom` remains the arbitrary-wire escape
@@ -573,6 +585,8 @@ the application writes version 24.
   Yagi payload; old documents load with straight elements.
 - Version 24 adds optional additional antenna sources with amplitude and phase;
   old documents load with the single primary feed only.
+- Version 25 introduces the phased vertical array parameter payload. Existing
+  designs are unchanged.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -595,7 +609,8 @@ the application writes version 24.
   generator has a radial screen. Transmission-line two-ports between wire
   points are modeled as geometry; arbitrary radial screens are not.
 - Optimization operates on typed generated parameters, including typed G5RV,
-  ZS6BKW, Zepp, biquad, double biquad, Beverage, and loaded/linked dipole.
+  ZS6BKW, Zepp, biquad, double biquad, Beverage, loaded/linked dipole, and
+  phased vertical arrays.
   Magnetic loops, random wires, and arbitrary custom/imported
   geometry have explicit unavailable reasons. Band-aware and robust modes
   evaluate multiple operating points; the Pareto front is descriptive; and a
@@ -605,7 +620,7 @@ the application writes version 24.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 24.
+- Simulation results are persisted as immutable runs in schema version 25.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are

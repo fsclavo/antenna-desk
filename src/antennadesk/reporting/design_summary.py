@@ -21,6 +21,7 @@ from ..domain.antennas.loop import LoopOrientation, LoopParameters
 from ..domain.antennas.magnetic_loop import MagneticLoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
+from ..domain.antennas.phased_vertical import PhasedVerticalParameters
 from ..domain.antennas.polarization import Polarization
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvParameters
@@ -393,6 +394,25 @@ def design_summary_rows(
                 ("Height", f"{parameters.height_m:.4f} m"),
                 ("Orientation", parameters.orientation.value),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        return tuple(rows)
+    if isinstance(parameters, PhasedVerticalParameters):
+        rows.extend(
+            [
+                ("Type", parameters.template_name),
+                ("Verticals", str(parameters.element_count)),
+                ("Element spacing", f"{parameters.spacing_m:.4f} m"),
+                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Base height", f"{parameters.base_height_m:.4f} m"),
+                ("Phase step", f"{parameters.phase_step_deg:.1f}°"),
+                ("Amplitude taper", f"{parameters.amplitude_taper * 100.0:.0f}%"),
+                ("Radials per element", str(parameters.radial_count)),
+                ("Radial length", f"{parameters.radial_length_m:.4f} m"),
+                ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+                ("Feed", "first vertical (primary)"),
                 ("Ground", ground_text(parameters.ground)),
             ]
         )

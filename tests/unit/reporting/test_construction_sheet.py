@@ -351,6 +351,31 @@ def test_loaded_dipole_construction_sheet_lists_the_coils(
     assert "loading coils" in sheet.lower()
 
 
+def test_phased_vertical_construction_sheet_lists_the_array(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.phased_vertical import phased_vertical_parameters
+
+    design = sample_project.designs[0]
+    phased = design.with_parameters(
+        phased_vertical_parameters(
+            element_count=3,
+            height_m=5.0,
+            spacing_m=5.5,
+            phase_step_deg=120.0,
+            radial_count=8,
+            radial_length_m=5.0,
+        )
+    )
+    sheet = render_construction_sheet(sample_project, phased, None)
+
+    assert "Phased vertical array" in sheet
+    assert "Phase step" in sheet
+    assert "120.0°" in sheet
+    assert "Build 3 vertical" in sheet
+    assert "combining network is ideal" in sheet
+
+
 def test_beverage_construction_sheet_lists_the_termination(
     sample_project: Project,
 ) -> None:

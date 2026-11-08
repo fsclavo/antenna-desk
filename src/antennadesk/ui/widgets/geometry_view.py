@@ -656,6 +656,10 @@ class GeometryView(QWidget):
                 painter.setBrush(self._colors.feed)
                 painter.drawEllipse(point, 4.0, 4.0)
                 painter.setBrush(Qt.BrushStyle.NoBrush)
+            elif marker.kind == "source":
+                painter.setPen(QPen(self._colors.feed, 1.5))
+                painter.setBrush(Qt.BrushStyle.NoBrush)
+                painter.drawEllipse(point, 3.5, 3.5)
             elif marker.kind == "load":
                 self._draw_load_marker(painter, point, marker.label or "")
                 continue

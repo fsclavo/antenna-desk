@@ -20,6 +20,7 @@ from ...antennas.loaded_dipole import LoadedDipoleParameters
 from ...antennas.loop import LoopParameters
 from ...antennas.moxon import MoxonParameters
 from ...antennas.ocfd import OCFDParameters
+from ...antennas.phased_vertical import PhasedVerticalParameters
 from ...antennas.ringo import RingoParameters
 from ...antennas.t2fd import T2FDParameters
 from ...antennas.transmission_line_doublet import TransmissionLineDoubletParameters
@@ -1356,6 +1357,140 @@ def loaded_dipole_descriptor(
         initial,
         build,
         validate,
+    )
+
+
+def phased_vertical_descriptor(
+    parameters: PhasedVerticalParameters,
+) -> AntennaOptimizerDescriptor:
+    variables: list[OptimizationVariable] = [
+        _length(
+            "height_m",
+            "field.height",
+            "optimize.group.geometry",
+            parameters.height_m,
+            0.25,
+            0.5,
+        ),
+        _length(
+            "spacing_m",
+            "phased_vertical.spacing",
+            "optimize.group.geometry",
+            parameters.spacing_m,
+            0.5,
+            0.05,
+        ),
+        _length(
+            "base_height_m",
+            "field.base_height",
+            "optimize.group.geometry",
+            parameters.base_height_m,
+            0.5,
+            0.0,
+        ),
+        OptimizationVariable(
+            "phase_step_deg",
+            "phased_vertical.phase_step",
+            "optimize.group.feed",
+            -180.0,
+            180.0,
+            unit="deg",
+            step=0.5,
+        ),
+        OptimizationVariable(
+            "amplitude_taper",
+            "phased_vertical.amplitude_taper",
+            "optimize.group.feed",
+            0.0,
+            0.9,
+            unit="fraction",
+            step=0.01,
+        ),
+    ]
+    if parameters.radial_count > 0:
+        variables.append(
+            _length(
+                "radial_length_m",
+                "vertical.radial_length",
+                "optimize.group.geometry",
+                parameters.radial_length_m,
+                0.5,
+                0.1,
+            )
+        )
+    variables.append(_radius(parameters.wire_radius_m))
+    initial = {
+        "height_m": parameters.height_m,
+        "spacing_m": parameters.spacing_m,
+        "base_height_m": parameters.base_height_m,
+        "phase_step_deg": parameters.phase_step_deg,
+        "amplitude_taper": parameters.amplitude_taper,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+    if parameters.radial_count > 0:
+        initial["radial_length_m"] = parameters.radial_length_m
+
+    def build(values: Mapping[str, float]) -> PhasedVerticalParameters:
+        return replace(
+            parameters,
+            height_m=values["height_m"],
+            spacing_m=values["spacing_m"],
+            base_height_m=values["base_height_m"],
+            phase_step_deg=values["phase_step_deg"],
+            amplitude_taper=values["amplitude_taper"],
+            radial_length_m=values.get(
+                "radial_length_m",
+                parameters.radial_length_m,
+            ),
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        issues: list[ConstraintViolation | None] = [
+            positive_violation("height_m", values["height_m"]),
+            positive_violation("spacing_m", values["spacing_m"]),
+            non_negative_violation("base_height_m", values["base_height_m"]),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+            positive_violation(
+                "radial_length_m",
+                values.get("radial_length_m", parameters.radial_length_m),
+            )
+            if parameters.radial_count > 0
+            else None,
+        ]
+        if values["spacing_m"] <= 2.0 * values["wire_radius_m"]:
+            issues.append(
+                violation(
+                    "spacing_m",
+                    2.0 * values["wire_radius_m"] - values["spacing_m"],
+                    "optimize.constraint.conductor_spacing",
+                )
+            )
+        if abs(values["phase_step_deg"]) > 360.0:
+            issues.append(
+                violation(
+                    "phase_step_deg",
+                    abs(values["phase_step_deg"]) - 360.0,
+                    "phased_vertical.constraint.phase",
+                )
+            )
+        if not 0.0 <= values["amplitude_taper"] <= 0.9:
+            issues.append(
+                violation(
+                    "amplitude_taper",
+                    max(values["amplitude_taper"] - 0.9, -values["amplitude_taper"]),
+                    "phased_vertical.constraint.amplitude_taper",
+                )
+            )
+        return collect(*issues)
+
+    return _descriptor(
+        "phased_vertical",
+        tuple(variables),
+        initial,
+        build,
+        validate,
+        default_objective=FamilyOptimizationObjective.MAX_GAIN,
     )
 
 

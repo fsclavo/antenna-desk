@@ -22,6 +22,7 @@ from .loop import ANTENNA_TYPE_LOOP, LoopParameters
 from .magnetic_loop import MagneticLoopParameters
 from .moxon import MoxonParameters
 from .ocfd import OCFDParameters
+from .phased_vertical import PhasedVerticalParameters
 from .ringo import RingoParameters
 from .scv import ScvParameters
 from .t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
@@ -60,6 +61,7 @@ _GENERATOR_FAMILIES: dict[str, AntennaFamily] = {
     "double_biquad": AntennaFamily.LOOP,
     "beverage": AntennaFamily.WIRE,
     "loaded_dipole": AntennaFamily.DIPOLE,
+    "phased_vertical": AntennaFamily.VERTICAL,
     "trap_dipole": AntennaFamily.DIPOLE,
     "t2fd": AntennaFamily.DIPOLE,
     "g5rv": AntennaFamily.DIPOLE,
@@ -103,6 +105,8 @@ def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
         return AntennaFamily.WIRE
     if isinstance(parameters, LoadedDipoleParameters):
         return AntennaFamily.DIPOLE
+    if isinstance(parameters, PhasedVerticalParameters):
+        return AntennaFamily.VERTICAL
     if isinstance(parameters, (T2FDParameters, TrapDipoleParameters)):
         return AntennaFamily.DIPOLE
     if isinstance(parameters, TransmissionLineDoubletParameters):
@@ -153,6 +157,8 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return "beverage"
     if isinstance(parameters, LoadedDipoleParameters):
         return "loaded_dipole"
+    if isinstance(parameters, PhasedVerticalParameters):
+        return "phased_vertical"
     if isinstance(parameters, TrapDipoleParameters):
         return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(parameters, T2FDParameters):

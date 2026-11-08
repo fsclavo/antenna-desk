@@ -57,6 +57,10 @@ from ...domain.antennas.magnetic_loop import (
 )
 from ...domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from ...domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
+from ...domain.antennas.phased_vertical import (
+    ANTENNA_TYPE_PHASED_VERTICAL,
+    PhasedVerticalParameters,
+)
 from ...domain.antennas.polarization import Polarization
 from ...domain.antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
 from ...domain.antennas.scv import (
@@ -125,6 +129,7 @@ _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_DOUBLE_BIQUAD: "catalog.double_biquad",
     ANTENNA_TYPE_BEVERAGE: "catalog.beverage",
     ANTENNA_TYPE_LOADED_DIPOLE: "catalog.loaded_dipole",
+    ANTENNA_TYPE_PHASED_VERTICAL: "catalog.phased_vertical",
     ANTENNA_TYPE_TRAP_DIPOLE: "catalog.trap_dipole",
     ANTENNA_TYPE_T2FD: "catalog.t2fd",
     ANTENNA_TYPE_G5RV: "catalog.g5rv",
@@ -372,6 +377,22 @@ def _feed_marker(model: AntennaModel, factory: _Factory, translator: Translator)
         label=translator.t("geometry.feed"),
         priority=90,
     )
+
+
+def _source_markers(model: AntennaModel, factory: _Factory) -> tuple[SceneMarker, ...]:
+    markers: list[SceneMarker] = []
+    for index, source in enumerate(model.sources, start=2):
+        wire = model.wire_by_id(source.wire_id)
+        ratio = min(max(source.offset_m / wire.length_m, 0.0), 1.0)
+        markers.append(
+            SceneMarker(
+                point=factory.project(_wire_point(wire, ratio)),
+                kind="source",
+                label=f"S{index}",
+                priority=80,
+            )
+        )
+    return tuple(markers)
 
 
 def _add_single_wire_dimensions(
@@ -1192,6 +1213,90 @@ def _add_loaded_dipole_dimensions(
                     translator,
                     factory.unit_system,
                 ),
+            )
+        )
+
+
+def _add_phased_vertical_dimensions(
+    model: AntennaModel,
+    parameters: PhasedVerticalParameters | None,
+    factory: _Factory,
+    dimensions: list[Dimension],
+    notes: list[str],
+    translator: Translator,
+) -> None:
+    verticals = tuple(wire for wire in model.wires if wire.id.startswith("phased-vertical-"))
+    if not verticals:
+        verticals = tuple(wire for wire in model.wires if abs(wire.end.z_m - wire.start.z_m) > 1e-9)
+    if not verticals:
+        return
+    primary = verticals[0]
+    height = primary.length_m
+    base_height = min(primary.start.z_m, primary.end.z_m)
+    if factory.projection.vertical:
+        x_scene = factory.project(primary.start).x_m
+        dimensions.append(
+            factory.vertical_dimension(
+                x_scene,
+                min(primary.start.z_m, primary.end.z_m),
+                max(primary.start.z_m, primary.end.z_m),
+                height,
+                side="right",
+                priority=90,
+            )
+        )
+        if base_height > 1e-6:
+            dimensions.append(
+                factory.vertical_dimension(
+                    x_scene,
+                    0.0,
+                    base_height,
+                    base_height,
+                    side="left",
+                    priority=60,
+                )
+            )
+        if parameters is not None and len(verticals) > 1:
+            first_scene = factory.project(primary.start)
+            second_scene = factory.project(verticals[1].start)
+            dimensions.append(
+                factory.between_scene(
+                    first_scene,
+                    second_scene,
+                    parameters.spacing_m,
+                    side="below",
+                    priority=75,
+                )
+            )
+    else:
+        first_scene = factory.project(verticals[0].start)
+        last_scene = factory.project(verticals[-1].start)
+        if parameters is not None:
+            dimensions.append(
+                factory.between_scene(
+                    first_scene,
+                    last_scene,
+                    parameters.spacing_m * max(len(verticals) - 1, 1),
+                    side="below",
+                    priority=90,
+                )
+            )
+            if len(verticals) > 1:
+                dimensions.append(
+                    factory.between_scene(
+                        first_scene,
+                        factory.project(verticals[1].start),
+                        parameters.spacing_m,
+                        side="below",
+                        priority=80,
+                    )
+                )
+    if parameters is not None:
+        notes.append(
+            translator.t(
+                "phased_vertical.phase_note",
+                phase=f"{parameters.phase_step_deg:.1f}",
+                taper=f"{parameters.amplitude_taper * 100.0:.0f}",
             )
         )
 
@@ -2332,6 +2437,41 @@ def _summary(
                 f"{translator.t('loaded_dipole.state').lower()} {state}",
             ]
         )
+    elif (
+        isinstance(parameters, PhasedVerticalParameters)
+        or antenna_type == ANTENNA_TYPE_PHASED_VERTICAL
+    ):
+        verticals = tuple(wire for wire in model.wires if wire.id.startswith("phased-vertical-"))
+        if isinstance(parameters, PhasedVerticalParameters):
+            element_count = parameters.element_count
+            spacing = parameters.spacing_m
+            height = parameters.height_m
+            base_height = parameters.base_height_m
+            phase = f"{parameters.phase_step_deg:.1f}°"
+            taper = f"{parameters.amplitude_taper * 100.0:.0f}%"
+            radial_count = parameters.radial_count
+        else:
+            element_count = len(verticals)
+            spacing = 0.0
+            height = max_z - min_z
+            base_height = min_z
+            phase = "—"
+            taper = "—"
+            radial_count = 0
+        parts.extend(
+            [
+                f"{translator.t('phased_vertical.element_count').lower()} {element_count}",
+                f"{translator.t('phased_vertical.spacing').lower()} "
+                f"{_format_length(spacing, translator, unit_system)}",
+                f"{translator.t('field.height').lower()} "
+                f"{_format_length(height, translator, unit_system)}",
+                f"{translator.t('field.base_height').lower()} "
+                f"{_format_length(base_height, translator, unit_system)}",
+                f"{translator.t('phased_vertical.phase_step').lower()} {phase}",
+                f"{translator.t('phased_vertical.amplitude_taper').lower()} {taper}",
+                f"{translator.t('vertical.radial_count').lower()} {radial_count}",
+            ]
+        )
     elif isinstance(parameters, YagiParameters) or antenna_type == ANTENNA_TYPE_YAGI:
         if isinstance(parameters, YagiParameters):
             positions = [element.position_m for element in parameters.elements]
@@ -2705,6 +2845,7 @@ def build_scene(
         for wire in model.wires
     ) + _transmission_line_polylines(model, factory)
     markers: list[SceneMarker] = [_feed_marker(model, factory, translator)]
+    markers.extend(_source_markers(model, factory))
     markers.extend(_load_markers(model, factory))
     dimensions: list[Dimension] = []
     angular_dimensions: list[AngularDimension] = []
@@ -2788,6 +2929,15 @@ def build_scene(
         _add_loaded_dipole_dimensions(
             model,
             parameters if isinstance(parameters, LoadedDipoleParameters) else None,
+            factory,
+            dimensions,
+            notes,
+            translator,
+        )
+    elif effective_type == ANTENNA_TYPE_PHASED_VERTICAL:
+        _add_phased_vertical_dimensions(
+            model,
+            parameters if isinstance(parameters, PhasedVerticalParameters) else None,
             factory,
             dimensions,
             notes,

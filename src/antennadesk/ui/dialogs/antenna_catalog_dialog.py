@@ -48,6 +48,7 @@ CATALOG_TYPE_BIQUAD = "biquad"
 CATALOG_TYPE_DOUBLE_BIQUAD = "double_biquad"
 CATALOG_TYPE_BEVERAGE = "beverage"
 CATALOG_TYPE_LOADED_DIPOLE = "loaded_dipole"
+CATALOG_TYPE_PHASED_VERTICAL = "phased_vertical"
 CATALOG_TYPE_SLIM_JIM = "slim_jim"
 CATALOG_TYPE_INVERTED_V = "inverted_v"
 CATALOG_TYPE_INVERTED_L = "inverted_l"
@@ -140,6 +141,13 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         label_key="catalog.loaded_dipole",
         family_key="catalog.family.dipole",
         description_key="catalog.loaded_dipole.description",
+        evidence_key="catalog.evidence.experimental",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_PHASED_VERTICAL,
+        label_key="catalog.phased_vertical",
+        family_key="catalog.family.vertical",
+        description_key="catalog.phased_vertical.description",
         evidence_key="catalog.evidence.experimental",
     ),
     CatalogEntry(

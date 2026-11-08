@@ -26,6 +26,10 @@ from .loop import ANTENNA_TYPE_LOOP, LoopParameters
 from .magnetic_loop import ANTENNA_TYPE_MAGNETIC_LOOP, MagneticLoopParameters
 from .moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from .ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
+from .phased_vertical import (
+    ANTENNA_TYPE_PHASED_VERTICAL,
+    PhasedVerticalParameters,
+)
 from .ringo import ANTENNA_TYPE_RINGO, RingoParameters
 from .scv import (
     ANTENNA_TYPE_BOBTAIL_CURTAIN,
@@ -64,6 +68,7 @@ AntennaDesignParameters = (
     | BiquadParameters
     | BeverageParameters
     | LoadedDipoleParameters
+    | PhasedVerticalParameters
     | T2FDParameters
     | TransmissionLineDoubletParameters
     | TrapDipoleParameters
@@ -129,6 +134,8 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_BEVERAGE
     if isinstance(parameters, LoadedDipoleParameters):
         return ANTENNA_TYPE_LOADED_DIPOLE
+    if isinstance(parameters, PhasedVerticalParameters):
+        return ANTENNA_TYPE_PHASED_VERTICAL
     if isinstance(parameters, TrapDipoleParameters):
         return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(parameters, T2FDParameters):
@@ -163,6 +170,8 @@ def primary_dimension_m(parameters: AntennaDesignParameters) -> float:
         return parameters.length_m
     if isinstance(parameters, LoadedDipoleParameters):
         return parameters.active_length_m
+    if isinstance(parameters, PhasedVerticalParameters):
+        return parameters.height_m
     if isinstance(parameters, EndFedParameters):
         return parameters.length_m
     if isinstance(parameters, TrapDipoleParameters):
@@ -203,6 +212,8 @@ def with_primary_dimension(
         )
     if isinstance(parameters, BeverageParameters):
         return replace(parameters, length_m=dimension_m)
+    if isinstance(parameters, PhasedVerticalParameters):
+        return replace(parameters, height_m=dimension_m)
     if isinstance(parameters, LoadedDipoleParameters):
         if parameters.link_open:
             return replace(

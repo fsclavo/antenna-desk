@@ -181,14 +181,16 @@ The second slice adds two multi-wire templates:
 `AntennaDesignParameters` is the union of the supported parameter types.
 `DesignVariant` stores the union and validates that `antenna_type` matches the
 parameters. The canonical model remains the shared `AntennaModel`, so the
-solver adapter does not need geometry-specific branches. Schema version 24 is
+solver adapter does not need geometry-specific branches. Schema version 25 is
 current: parameter payloads are additive, and old `wire_dipole` documents are
 unchanged. A design may also store an optional analysis band plan; it is
 intent metadata and never changes the canonical geometry. Series RLC loads are
 optional antenna payloads and are emitted as `LD 0` cards by the solver
 adapter. The canonical model also carries optional additional sources with
 amplitude and phase; the NEC adapter emits one `EX` card per effective source
-while the primary feed remains the impedance/SWR reference port.
+while the primary feed remains the impedance/SWR reference port. The phased
+vertical array family uses that multi-source model with an ideal linear phase
+and amplitude progression.
 
 The form exposes an antenna-type selector with conditional spacing/sides
 fields. The geometry view is renderer-neutral: `ui/geometry/builder.py`
@@ -252,10 +254,10 @@ version 18 adds optional optimization summaries, version 19 adds biquad and
 double-biquad designs, version 20 adds the Beverage receiving wire, version 21
 adds the loaded/linked dipole, version 22 adds optional horizontal-dipole wire
 sag, version 23 adds optional tapered Yagi tips, version 24 adds optional
-additional antenna sources with amplitude and phase, and older documents are
-migrated explicitly.
+additional antenna sources with amplitude and phase, version 25 adds the phased
+vertical array design type, and older documents are migrated explicitly.
 
-Simulation runs are persisted in schema version 24. Raw solver text is stored
+Simulation runs are persisted in schema version 25. Raw solver text is stored
 with the normalized result. Project files are compact JSON compressed with
 gzip; plain JSON files from older versions still load. The UI warns at 32 MB
 compressed, blocks files above the 64 MB compressed limit, and offers

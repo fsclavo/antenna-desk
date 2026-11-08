@@ -780,6 +780,30 @@ def test_loaded_dipole_preset_uses_the_inline_editor(window: MainWindow) -> None
     window._dirty = False
 
 
+def test_phased_vertical_preset_uses_the_inline_editor(window: MainWindow) -> None:
+    from main_window_support import use_parameters
+
+    from antennadesk.domain.antennas.phased_vertical import phased_vertical_parameters
+
+    parameters = phased_vertical_parameters(
+        element_count=3,
+        spacing_m=5.5,
+        phase_step_deg=120.0,
+        radial_count=8,
+    )
+    use_parameters(window, parameters)
+    assert window._project is not None
+    assert window._project.designs[0].antenna_type == "phased_vertical"
+    assert window._design_stack.currentWidget() is window._phased_vertical_scroll
+    restored = window._phased_vertical_form.parameters()
+    assert restored.element_count == 3
+    assert restored.spacing_m == pytest.approx(5.5, abs=1e-3)
+    assert restored.phase_step_deg == pytest.approx(120.0, abs=1e-3)
+    assert len(window._project.designs[0].antenna.sources) == 2
+    assert window._optimize_action.isEnabled() is True
+    window._dirty = False
+
+
 def test_new_ringo_creates_a_first_class_design(
     window: MainWindow,
     qtbot: QtBot,

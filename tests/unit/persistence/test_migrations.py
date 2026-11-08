@@ -445,6 +445,26 @@ def test_v15_migration_introduces_the_self_contained_vertical_arrays() -> None:
     assert migrated["project"]["designs"][0] == document["project"]["designs"][0]
 
 
+def test_v24_migration_introduces_the_phased_vertical_design_type() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 24,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "wire_dipole",
+                    "parameters": {"total_length_m": 20.0},
+                }
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert migrated["project"]["designs"][0] == document["project"]["designs"][0]
+
+
 def test_v23_migration_introduces_additional_sources() -> None:
     document = {
         "format": "antennadesk-project",

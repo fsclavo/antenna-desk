@@ -29,6 +29,7 @@ from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
 from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
+from antennadesk.domain.antennas.phased_vertical import phased_vertical_parameters
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
@@ -255,6 +256,7 @@ def _typed_samples() -> list[AntennaDesignParameters]:
         biquad_parameters(BiquadKind.DOUBLE),
         beverage_parameters(),
         loaded_dipole_parameters(),
+        phased_vertical_parameters(),
         OCFDParameters(frequency_hz=7_100_000.0, total_length_m=40.0),
         EndFedParameters(
             frequency_hz=7_100_000.0,
@@ -348,6 +350,9 @@ _CONTEXT_FIELDS = {
     "highest_frequency_hz",
     "counterpoise_azimuth_deg",
     "transformer_ratio",
+    "element_count",
+    "radial_count",
+    "radial_angle_deg",
 }
 
 
@@ -423,6 +428,43 @@ def test_linked_dipole_optimizes_the_center_section_only() -> None:
     assert "total_length_m" not in names
     assert "loading_coil_inductance_h" not in names
     assert "loading_coil_resistance_ohm" not in names
+
+
+def test_phased_vertical_optimizes_geometry_and_excitation() -> None:
+    parameters = phased_vertical_parameters(
+        element_count=3,
+        phase_step_deg=120.0,
+        amplitude_taper=0.2,
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+
+    variables = {variable.name: variable for variable in availability.descriptor.variables}
+
+    assert set(variables) == {
+        "height_m",
+        "spacing_m",
+        "base_height_m",
+        "phase_step_deg",
+        "amplitude_taper",
+        "radial_length_m",
+        "wire_radius_m",
+    }
+    assert variables["phase_step_deg"].minimum == pytest.approx(-180.0)
+    assert variables["phase_step_deg"].maximum == pytest.approx(180.0)
+    assert variables["amplitude_taper"].minimum == pytest.approx(0.0)
+    assert variables["amplitude_taper"].maximum == pytest.approx(0.9)
+
+
+def test_phased_vertical_without_radials_does_not_optimize_radial_length() -> None:
+    parameters = phased_vertical_parameters(radial_count=0, radial_length_m=0.0)
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+
+    names = {variable.name for variable in availability.descriptor.variables}
+
+    assert "radial_length_m" not in names
+    assert "height_m" in names
 
 
 def test_descriptor_initial_values_rebuild_the_current_parameters() -> None:
