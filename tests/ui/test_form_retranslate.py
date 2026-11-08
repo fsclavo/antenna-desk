@@ -32,6 +32,7 @@ from antennadesk.ui.widgets.transmission_line_doublet_form import (
     TransmissionLineDoubletForm,
 )
 from antennadesk.ui.widgets.trap_dipole_form import TrapDipoleForm
+from antennadesk.ui.widgets.trap_yagi_form import TrapYagiForm
 from antennadesk.ui.widgets.vertical_form import VerticalForm
 from antennadesk.ui.widgets.yagi_form import YagiForm
 from antennadesk.ui.widgets.zepp_form import ZeppForm
@@ -46,6 +47,7 @@ FORMS = (
     (MoxonForm, "moxon.width"),
     (FanDipoleForm, "field.frequency"),
     (TrapDipoleForm, "trap_dipole.low_band"),
+    (TrapYagiForm, "trap_yagi.trap_inset"),
     (T2FDForm, "t2fd.lowest_frequency"),
     (EndFedForm, "field.design_frequency"),
     (JPoleForm, "j_pole.radiator_height"),

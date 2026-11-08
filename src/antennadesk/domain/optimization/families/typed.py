@@ -27,6 +27,7 @@ from ...antennas.ringo import RingoParameters
 from ...antennas.t2fd import T2FDParameters
 from ...antennas.transmission_line_doublet import TransmissionLineDoubletParameters
 from ...antennas.trap_dipole import TrapDipoleParameters
+from ...antennas.trap_yagi import TrapYagiParameters
 from ...antennas.zepp import ZeppParameters
 from ..constraints import ConstraintViolation
 from ..descriptor import (
@@ -1580,6 +1581,201 @@ def discone_descriptor(parameters: DisconeParameters) -> AntennaOptimizerDescrip
 
     return _descriptor(
         "discone",
+        tuple(variables),
+        initial,
+        build,
+        validate,
+        default_objective=FamilyOptimizationObjective.MAX_GAIN,
+    )
+
+
+def trap_yagi_descriptor(parameters: TrapYagiParameters) -> AntennaOptimizerDescriptor:
+    variables: list[OptimizationVariable] = [
+        _length(
+            "driven_length_m",
+            "field.length",
+            "optimize.group.geometry",
+            parameters.driven_length_m,
+            0.15,
+            0.1,
+        ),
+        OptimizationVariable(
+            "reflector_scale",
+            "trap_yagi.reflector_scale",
+            "optimize.group.geometry",
+            1.0,
+            1.2,
+            unit="fraction",
+            step=0.005,
+        ),
+        _length(
+            "reflector_spacing_m",
+            "trap_yagi.reflector_spacing",
+            "optimize.group.geometry",
+            parameters.reflector_spacing_m,
+            0.3,
+            0.05,
+        ),
+        _length(
+            "trap_inset_m",
+            "trap_yagi.trap_inset",
+            "optimize.group.loads",
+            parameters.trap_inset_m,
+            0.2,
+            0.05,
+        ),
+        OptimizationVariable(
+            "trap_inductance_h",
+            "trap_yagi.trap_inductance",
+            "optimize.group.loads",
+            parameters.trap_inductance_h * 0.5,
+            parameters.trap_inductance_h * 2.0,
+            unit="H",
+            step=1e-8,
+        ),
+        _length(
+            "height_m",
+            "field.height",
+            "optimize.group.geometry",
+            parameters.height_m,
+            0.5,
+            0.0,
+        ),
+        _radius(parameters.wire_radius_m),
+    ]
+    if parameters.element_count == 3:
+        variables.insert(
+            3,
+            OptimizationVariable(
+                "director_scale",
+                "trap_yagi.director_scale",
+                "optimize.group.geometry",
+                0.8,
+                1.0,
+                unit="fraction",
+                step=0.005,
+            ),
+        )
+        variables.insert(
+            4,
+            _length(
+                "director_spacing_m",
+                "trap_yagi.director_spacing",
+                "optimize.group.geometry",
+                parameters.director_spacing_m,
+                0.3,
+                0.05,
+            ),
+        )
+    initial = {
+        "driven_length_m": parameters.driven_length_m,
+        "reflector_scale": parameters.reflector_scale,
+        "reflector_spacing_m": parameters.reflector_spacing_m,
+        "trap_inset_m": parameters.trap_inset_m,
+        "trap_inductance_h": parameters.trap_inductance_h,
+        "height_m": parameters.height_m,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+    if parameters.element_count == 3:
+        initial["director_scale"] = parameters.director_scale
+        initial["director_spacing_m"] = parameters.director_spacing_m
+
+    def build(values: Mapping[str, float]) -> TrapYagiParameters:
+        return replace(
+            parameters,
+            driven_length_m=values["driven_length_m"],
+            reflector_scale=values["reflector_scale"],
+            reflector_spacing_m=values["reflector_spacing_m"],
+            trap_inset_m=values["trap_inset_m"],
+            trap_inductance_h=values["trap_inductance_h"],
+            height_m=values["height_m"],
+            wire_radius_m=values["wire_radius_m"],
+            director_scale=values.get("director_scale", parameters.director_scale),
+            director_spacing_m=values.get("director_spacing_m", parameters.director_spacing_m),
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        issues: list[ConstraintViolation | None] = [
+            positive_violation("driven_length_m", values["driven_length_m"]),
+            positive_violation("reflector_spacing_m", values["reflector_spacing_m"]),
+            positive_violation("trap_inset_m", values["trap_inset_m"]),
+            positive_violation("trap_inductance_h", values["trap_inductance_h"]),
+            non_negative_violation("height_m", values["height_m"]),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+            positive_violation(
+                "director_spacing_m",
+                values.get("director_spacing_m", parameters.director_spacing_m),
+            )
+            if parameters.element_count == 3
+            else None,
+        ]
+        shortest_half = (
+            values["driven_length_m"]
+            * min(1.0, values["reflector_scale"], values.get("director_scale", 1.0))
+            / 2.0
+        )
+        if values["trap_inset_m"] >= shortest_half:
+            issues.append(
+                violation(
+                    "trap_inset_m",
+                    values["trap_inset_m"] - shortest_half,
+                    "trap_yagi.constraint.trap_inset",
+                )
+            )
+        if values["trap_inset_m"] <= 2.0 * values["wire_radius_m"]:
+            issues.append(
+                violation(
+                    "trap_inset_m",
+                    2.0 * values["wire_radius_m"] - values["trap_inset_m"],
+                    "optimize.constraint.conductor_spacing",
+                )
+            )
+        if values["reflector_spacing_m"] <= 2.0 * values["wire_radius_m"]:
+            issues.append(
+                violation(
+                    "reflector_spacing_m",
+                    2.0 * values["wire_radius_m"] - values["reflector_spacing_m"],
+                    "optimize.constraint.conductor_spacing",
+                )
+            )
+        if (
+            parameters.element_count == 3
+            and values.get("director_spacing_m", parameters.director_spacing_m)
+            <= 2.0 * values["wire_radius_m"]
+        ):
+            issues.append(
+                violation(
+                    "director_spacing_m",
+                    2.0 * values["wire_radius_m"]
+                    - values.get("director_spacing_m", parameters.director_spacing_m),
+                    "optimize.constraint.conductor_spacing",
+                )
+            )
+        if not 1.0 <= values["reflector_scale"] <= 1.2:
+            issues.append(
+                violation(
+                    "reflector_scale",
+                    max(
+                        values["reflector_scale"] - 1.2,
+                        1.0 - values["reflector_scale"],
+                    ),
+                    "trap_yagi.constraint.reflector_scale",
+                )
+            )
+        if parameters.element_count == 3:
+            director_scale = values.get("director_scale", parameters.director_scale)
+            if not 0.8 <= director_scale <= 1.0:
+                issues.append(
+                    violation(
+                        "director_scale",
+                        max(director_scale - 1.0, 0.8 - director_scale),
+                        "trap_yagi.constraint.director_scale",
+                    )
+                )
+        return collect(*issues)
+
+    return _descriptor(
+        "trap_yagi",
         tuple(variables),
         initial,
         build,

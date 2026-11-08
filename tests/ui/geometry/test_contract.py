@@ -42,6 +42,7 @@ from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.antennas.yagi import YagiElement, YagiMatchType, YagiParameters
@@ -472,6 +473,29 @@ def _cases() -> tuple[FamilyCase, ...]:
                 "element spacing",
                 "phase step",
                 "amplitude taper",
+            ),
+        ),
+        FamilyCase(
+            "trap_yagi",
+            trap_yagi_parameters(
+                frequency_hz=7_100_000.0,
+                high_band_frequency_hz=14_100_000.0,
+                element_count=3,
+                driven_length_m=20.0,
+                reflector_spacing_m=4.0,
+                director_spacing_m=3.0,
+                trap_inset_m=3.0,
+                trap_frequency_hz=14_100_000.0,
+            ),
+            "trap_yagi",
+            3,
+            GeometryViewMode.PLAN,
+            (
+                "Trapped Yagi",
+                "elements 3",
+                "driven element length",
+                "trap inset",
+                "trap frequency",
             ),
         ),
         FamilyCase(

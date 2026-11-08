@@ -850,6 +850,28 @@ def test_discone_preset_uses_the_inline_editor(window: MainWindow) -> None:
     window._dirty = False
 
 
+def test_trap_yagi_preset_uses_the_inline_editor(window: MainWindow) -> None:
+    from main_window_support import use_parameters
+
+    from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
+
+    parameters = trap_yagi_parameters(
+        driven_length_m=20.0,
+        trap_inset_m=3.0,
+        trap_frequency_hz=14_100_000.0,
+    )
+    use_parameters(window, parameters)
+    assert window._project is not None
+    assert window._project.designs[0].antenna_type == "trap_yagi"
+    assert window._design_stack.currentWidget() is window._trap_yagi_scroll
+    restored = window._trap_yagi_form.parameters()
+    assert restored.driven_length_m == pytest.approx(20.0, abs=1e-3)
+    assert restored.trap_inset_m == pytest.approx(3.0, abs=1e-3)
+    assert len(window._project.designs[0].antenna.loads) == 6
+    assert window._optimize_action.isEnabled() is True
+    window._dirty = False
+
+
 def test_new_ringo_creates_a_first_class_design(
     window: MainWindow,
     qtbot: QtBot,

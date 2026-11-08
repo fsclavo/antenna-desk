@@ -402,6 +402,18 @@ heuristics; boom, spreaders, mast, feed line, and matching network are not
 modeled. The family is experimental and makes no validated gain, front-to-back,
 or impedance claim.
 
+### TrapYagiParameters
+
+`TrapYagiParameters` stores the low- and high-band frequencies, element count
+(2–3), driven length, reflector and director spacing, reflector and director
+length factors, trap inset, trap frequency and inductance, height, azimuth,
+radius, material, and ground. `to_antenna()` builds one straight wire per
+element with a parallel LC trap on each side of its center. The traps are
+resonant on the high band and isolate the outer tips there; on the low band they
+load the elements. The traps are ideal and have no core or dielectric loss;
+boom mounting, trap hardware, feed line, and matching network are not modeled.
+The family is experimental.
+
 ### DisconeParameters
 
 `DisconeParameters` stores the design frequency, cone height and base radius,
@@ -431,7 +443,8 @@ reconstructs OCFD parameters from legacy custom designs.
 `FanDipoleParameters`, `EndFedParameters`,
 `JPoleParameters`, `RingoParameters`, `ScvParameters`, `BiquadParameters`,
 `BeverageParameters`, `LoadedDipoleParameters`, `PhasedVerticalParameters`,
-`QuadBeamParameters`, `DisconeParameters`, `TransmissionLineDoubletParameters`, `TrapDipoleParameters`,
+`QuadBeamParameters`, `DisconeParameters`, `TrapYagiParameters`,
+`TransmissionLineDoubletParameters`, `TrapDipoleParameters`,
 `T2FDParameters`, `ZeppParameters`, and `CustomAntennaParameters`. `antenna_type_for()` maps a
 parameter object to its native type; `custom` remains the arbitrary-wire escape
 hatch.
@@ -613,6 +626,8 @@ the application writes version 24.
   unchanged.
 - Version 27 introduces the discone parameter payload. Existing designs are
   unchanged.
+- Version 28 introduces the trapped Yagi parameter payload. Existing designs
+  are unchanged.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -636,7 +651,7 @@ the application writes version 24.
   points are modeled as geometry; arbitrary radial screens are not.
 - Optimization operates on typed generated parameters, including typed G5RV,
   ZS6BKW, Zepp, biquad, double biquad, Beverage, loaded/linked dipole,
-  phased vertical arrays, quad beams, and discones.
+  phased vertical arrays, quad beams, discones, and trapped Yagis.
   Magnetic loops, random wires, and arbitrary custom/imported
   geometry have explicit unavailable reasons. Band-aware and robust modes
   evaluate multiple operating points; the Pareto front is descriptive; and a
@@ -646,7 +661,7 @@ the application writes version 24.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 27.
+- Simulation results are persisted as immutable runs in schema version 28.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are

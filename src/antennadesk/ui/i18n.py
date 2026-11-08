@@ -344,6 +344,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "disco superior más grande, alimentada en una pequeña brecha del vértice."
         ),
     },
+    "catalog.trap_yagi": {
+        Language.ENGLISH: "Trapped Yagi",
+        Language.SPANISH: "Yagi con trampas",
+    },
+    "catalog.trap_yagi.description": {
+        Language.ENGLISH: (
+            "Two-band Yagi with one parallel LC trap pair on every element; the "
+            "traps isolate the outer tips on the high band."
+        ),
+        Language.SPANISH: (
+            "Yagi de dos bandas con un par de trampas LC en paralelo en cada "
+            "elemento; las trampas aíslan las puntas externas en la banda alta."
+        ),
+    },
     "catalog.family.wire": {
         Language.ENGLISH: "Wire antennas",
         Language.SPANISH: "Antenas de hilo",
@@ -2022,6 +2036,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "ancha y sus superficies de hilos radiales son aproximadas."
         ),
     },
+    "band.note.trap_yagi": {
+        Language.ENGLISH: (
+            "Two-band starting plan from the trap design frequencies; trap loss "
+            "and the installed bandwidth are not validated."
+        ),
+        Language.SPANISH: (
+            "Plan de partida de dos bandas a partir de las frecuencias de diseño "
+            "de las trampas; no están validadas las pérdidas de las trampas ni el "
+            "ancho de banda instalado."
+        ),
+    },
     "status.analyzing_bands": {
         Language.ENGLISH: "Analyzing bands...",
         Language.SPANISH: "Analizando bandas...",
@@ -3382,6 +3407,112 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "phased_vertical.constraint.amplitude_taper": {
         Language.ENGLISH: "The amplitude taper must stay between 0 and 0.9.",
         Language.SPANISH: "La atenuación de amplitud debe quedar entre 0 y 0,9.",
+    },
+    "trap_yagi.title": {
+        Language.ENGLISH: "Trapped Yagi Generator",
+        Language.SPANISH: "Generador de Yagi con trampas",
+    },
+    "trap_yagi.high_band_frequency": {
+        Language.ENGLISH: "High-band frequency",
+        Language.SPANISH: "Frecuencia de banda alta",
+    },
+    "trap_yagi.element_count": {
+        Language.ENGLISH: "Elements",
+        Language.SPANISH: "Elementos",
+    },
+    "trap_yagi.driven_length": {
+        Language.ENGLISH: "Driven element length",
+        Language.SPANISH: "Longitud del elemento excitado",
+    },
+    "trap_yagi.reflector_spacing": {
+        Language.ENGLISH: "Reflector spacing",
+        Language.SPANISH: "Separación del reflector",
+    },
+    "trap_yagi.director_spacing": {
+        Language.ENGLISH: "Director spacing",
+        Language.SPANISH: "Separación del director",
+    },
+    "trap_yagi.reflector_scale": {
+        Language.ENGLISH: "Reflector length factor",
+        Language.SPANISH: "Factor de longitud del reflector",
+    },
+    "trap_yagi.director_scale": {
+        Language.ENGLISH: "Director length factor",
+        Language.SPANISH: "Factor de longitud del director",
+    },
+    "trap_yagi.trap_inset": {
+        Language.ENGLISH: "Trap inset from center",
+        Language.SPANISH: "Inserción de la trampa desde el centro",
+    },
+    "trap_yagi.trap_frequency": {
+        Language.ENGLISH: "Trap frequency",
+        Language.SPANISH: "Frecuencia de la trampa",
+    },
+    "trap_yagi.trap_inductance": {
+        Language.ENGLISH: "Trap inductance",
+        Language.SPANISH: "Inductancia de la trampa",
+    },
+    "trap_yagi.geometry": {
+        Language.ENGLISH: (
+            "{count} elements · driven {driven} {unit} · boom {boom} {unit} · "
+            "trap inset {inset} {unit} · traps {trap:.3f} MHz"
+        ),
+        Language.SPANISH: (
+            "{count} elementos · excitado {driven} {unit} · boom {boom} {unit} · "
+            "inserción de trampa {inset} {unit} · trampas {trap:.3f} MHz"
+        ),
+    },
+    "trap_yagi.hint": {
+        Language.ENGLISH: (
+            "Each element has one parallel LC trap on each side of its center. "
+            "The traps are resonant on the high band and isolate the outer tips "
+            "there; on the low band they load the elements. The trap model is "
+            "ideal and has no core or dielectric loss."
+        ),
+        Language.SPANISH: (
+            "Cada elemento tiene una trampa LC en paralelo a cada lado de su "
+            "centro. Las trampas resuenan en la banda alta y aíslan allí las "
+            "puntas externas; en la banda baja cargan los elementos. El modelo de "
+            "trampa es ideal y no tiene pérdidas de núcleo ni dieléctricas."
+        ),
+    },
+    "trap_yagi.evidence": {
+        Language.ENGLISH: (
+            "Experimental trapped-Yagi model. The parallel LC traps are ideal, "
+            "and boom mounting, trap hardware, feed line, and matching network "
+            "are not modeled. Gain, front-to-back ratio, and impedance on either "
+            "band are not independently validated."
+        ),
+        Language.SPANISH: (
+            "Modelo experimental de Yagi con trampas. Las trampas LC en paralelo "
+            "son ideales y no se modelan el montaje en boom, el hardware de las "
+            "trampas, la línea de alimentación ni la red de ajuste. La ganancia, "
+            "la relación delante/atrás y la impedancia en ambas bandas no están "
+            "validadas independientemente."
+        ),
+    },
+    "trap_yagi.constraint.trap_inset": {
+        Language.ENGLISH: "The trap inset must lie inside every element.",
+        Language.SPANISH: "La inserción de la trampa debe quedar dentro de cada elemento.",
+    },
+    "trap_yagi.constraint.reflector_scale": {
+        Language.ENGLISH: "The reflector length factor must stay between 1.0 and 1.2.",
+        Language.SPANISH: "El factor de longitud del reflector debe quedar entre 1,0 y 1,2.",
+    },
+    "trap_yagi.constraint.director_scale": {
+        Language.ENGLISH: "The director length factor must stay between 0.8 and 1.0.",
+        Language.SPANISH: "El factor de longitud del director debe quedar entre 0,8 y 1,0.",
+    },
+    "trap_yagi.geometry_note": {
+        Language.ENGLISH: (
+            "Traps at {inset} from each element center, resonant at {trap} MHz. "
+            "Boom mounting, trap loss, and the matching network are not modeled."
+        ),
+        Language.SPANISH: (
+            "Trampas a {inset} del centro de cada elemento, resonantes en {trap} "
+            "MHz. No se modelan el montaje en boom, las pérdidas de las trampas "
+            "ni la red de ajuste."
+        ),
     },
     "discone.title": {
         Language.ENGLISH: "Discone Generator",

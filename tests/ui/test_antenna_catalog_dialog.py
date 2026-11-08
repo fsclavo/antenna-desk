@@ -7,6 +7,7 @@ from pytestqt.qtbot import QtBot
 from antennadesk.ui.dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_LOOP,
     CATALOG_TYPE_T2FD,
+    CATALOG_TYPE_TRAP_YAGI,
     CATALOG_TYPE_YAGI,
     ENTRIES,
     AntennaCatalogDialog,
@@ -32,9 +33,13 @@ def test_catalog_selection_and_search(qtbot: QtBot) -> None:
         for row in range(dialog._list.count())
         if not dialog._list.item(row).isHidden()
     ]
-    assert visible == [CATALOG_TYPE_YAGI]
+    assert visible == [CATALOG_TYPE_TRAP_YAGI, CATALOG_TYPE_YAGI]
     dialog._list.setCurrentRow(
-        next(row for row in range(dialog._list.count()) if not dialog._list.item(row).isHidden())
+        next(
+            row
+            for row in range(dialog._list.count())
+            if dialog._list.item(row).data(1) == CATALOG_TYPE_YAGI
+        )
     )
     assert dialog.selected_key() == CATALOG_TYPE_YAGI
 

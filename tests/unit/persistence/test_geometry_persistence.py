@@ -755,6 +755,33 @@ def test_phased_vertical_round_trips_through_the_schema() -> None:
     assert restored.designs[0].antenna.sources == original.designs[0].antenna.sources
 
 
+def test_trap_yagi_round_trips_through_the_schema() -> None:
+    from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
+
+    parameters = trap_yagi_parameters(
+        frequency_hz=7_100_000.0,
+        high_band_frequency_hz=14_100_000.0,
+        element_count=3,
+        driven_length_m=20.1,
+        reflector_spacing_m=4.1,
+        director_spacing_m=3.9,
+        trap_inset_m=3.1,
+        trap_frequency_hz=14_100_000.0,
+        trap_inductance_h=5.2e-6,
+        height_m=10.0,
+        azimuth_deg=10.0,
+    )
+    original = _project(parameters, "Trapped Yagi")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna == original.designs[0].antenna
+    assert restored.designs[0].antenna_type == "trap_yagi"
+    assert restored.designs[0].antenna.loads == original.designs[0].antenna.loads
+
+
 def test_discone_round_trips_through_the_schema() -> None:
     from antennadesk.domain.antennas.discone import discone_parameters
 

@@ -351,6 +351,27 @@ def test_loaded_dipole_construction_sheet_lists_the_coils(
     assert "loading coils" in sheet.lower()
 
 
+def test_trap_yagi_construction_sheet_lists_the_traps(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
+
+    design = sample_project.designs[0]
+    trap_yagi = design.with_parameters(
+        trap_yagi_parameters(
+            driven_length_m=20.0,
+            trap_inset_m=3.0,
+            trap_frequency_hz=14_100_000.0,
+        )
+    )
+    sheet = render_construction_sheet(sample_project, trap_yagi, None)
+
+    assert "Trapped Yagi" in sheet
+    assert "Trap inset" in sheet
+    assert "Build 3 Yagi" in sheet
+    assert "parallel LC trap" in sheet
+
+
 def test_discone_construction_sheet_lists_the_cone_and_disc(
     sample_project: Project,
 ) -> None:

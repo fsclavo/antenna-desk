@@ -599,6 +599,28 @@ inductance and resistance when enabled, and conductor radius jointly. The
 family is classified **experimental**; tune the final geometry and coil with the
 solver or a measurement.
 
+## Create a trapped Yagi
+
+Choose **File → New Antenna... → Trapped Yagi** for a two-band Yagi with one
+parallel LC trap pair on every element. The editor sets the low- and high-band
+frequencies, element count, driven element length, reflector and director
+spacing, length factors, trap inset, trap frequency and inductance, height,
+azimuth, conductor radius, material, and ground.
+
+The traps are resonant on the high band, so the outer tips are effectively
+isolated there; on the low band they load and shorten the elements.
+**Load starting dimensions** sets the driven element to a half wave at the low
+band, the trap inset to a quarter wave at the high band, and the spacing to a
+fifth wave. **Optimize...** searches the driven length, reflector and director
+factors and spacing, trap inset, trap inductance, height, and conductor radius
+jointly. The element count, band frequencies, azimuth, ground, and material
+remain user context.
+
+The trapped Yagi is classified **experimental**. The traps are ideal parallel
+LC loads with no core or dielectric loss; boom mounting, trap hardware, feed
+line, and matching network are not modeled. Gain, front-to-back ratio, and
+impedance on either band are not independently validated.
+
 ## Create a discone
 
 Choose **File → New Antenna... → Discone** for a broadband vertical antenna
@@ -1195,6 +1217,7 @@ The following typed families have a complete joint optimizer:
 - phased vertical array;
 - quad beam;
 - discone;
+- trapped Yagi;
 - OCFD, EndFed/EFHW, and sloper;
 - typed G5RV, ZS6BKW, and Zepp;
 - the doublet radiator as a dipole, with its feed line in the matching stage;

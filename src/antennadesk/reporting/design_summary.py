@@ -31,6 +31,7 @@ from ..domain.antennas.t2fd import T2FDParameters
 from ..domain.antennas.transmission_line import TransmissionLine
 from ..domain.antennas.transmission_line_doublet import TransmissionLineDoubletParameters
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
+from ..domain.antennas.trap_yagi import TrapYagiParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
 from ..domain.antennas.zepp import ZeppParameters, parallel_wire_impedance_ohm
@@ -399,6 +400,30 @@ def design_summary_rows(
                 ("Ground", ground_text(parameters.ground)),
             ]
         )
+        return tuple(rows)
+    if isinstance(parameters, TrapYagiParameters):
+        rows.extend(
+            [
+                ("Type", parameters.template_name),
+                ("Elements", str(parameters.element_count)),
+                ("Driven element", f"{parameters.driven_length_m:.4f} m"),
+                ("Reflector element", f"{parameters.reflector_length_m:.4f} m"),
+                ("Reflector spacing", f"{parameters.reflector_spacing_m:.4f} m"),
+                ("Boom length", f"{parameters.boom_length_m:.4f} m"),
+                ("Trap inset", f"{parameters.trap_inset_m:.4f} m"),
+                ("Trap frequency", f"{parameters.trap_frequency_hz / 1e6:.3f} MHz"),
+                (
+                    "Trap inductance",
+                    f"{parameters.trap_inductance_h * 1e6:.3f} µH",
+                ),
+                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Feed", "driven element center"),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        if parameters.element_count == 3:
+            rows.insert(4, ("Director element", f"{parameters.director_length_m:.4f} m"))
+            rows.insert(6, ("Director spacing", f"{parameters.director_spacing_m:.4f} m"))
         return tuple(rows)
     if isinstance(parameters, DisconeParameters):
         rows.extend(

@@ -36,6 +36,7 @@ from ..domain.antennas.transmission_line_doublet import (
     TransmissionLineDoubletParameters,
 )
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
+from ..domain.antennas.trap_yagi import TrapYagiParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
 from ..domain.antennas.zepp import ZeppParameters
@@ -124,6 +125,10 @@ ADAPTERS: dict[type[AntennaDesignParameters], OptimizationUiAdapter] = {
     TrapDipoleParameters: OptimizationUiAdapter(
         lambda window, parameters: window._trap_dipole_simulation_spec(parameters),
         lambda window, parameters: window._trap_dipole_form.set_parameters(parameters),
+    ),
+    TrapYagiParameters: OptimizationUiAdapter(
+        lambda window, parameters: window._trap_yagi_simulation_spec(parameters),
+        lambda window, parameters: window._trap_yagi_form.set_parameters(parameters),
     ),
     T2FDParameters: OptimizationUiAdapter(
         lambda window, parameters: window._t2fd_simulation_spec(parameters),

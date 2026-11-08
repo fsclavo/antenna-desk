@@ -30,6 +30,7 @@ from ..domain.antennas.transmission_line_doublet import (
     TransmissionLineDoubletParameters,
 )
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
+from ..domain.antennas.trap_yagi import TrapYagiParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
 from ..domain.antennas.zepp import ZeppParameters
@@ -65,6 +66,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_SLOPER,
     CATALOG_TYPE_T2FD,
     CATALOG_TYPE_TRAP_DIPOLE,
+    CATALOG_TYPE_TRAP_YAGI,
     CATALOG_TYPE_VERTICAL,
     CATALOG_TYPE_WIRE_DIPOLE,
     CATALOG_TYPE_YAGI,
@@ -96,6 +98,7 @@ _KNOWN_CUSTOM_GENERATORS = frozenset(
         CATALOG_TYPE_SLIM_JIM,
         CATALOG_TYPE_T2FD,
         CATALOG_TYPE_TRAP_DIPOLE,
+        CATALOG_TYPE_TRAP_YAGI,
         CATALOG_TYPE_VERTICAL,
         CATALOG_TYPE_YAGI,
         CATALOG_TYPE_ZEPP,
@@ -144,6 +147,8 @@ def catalog_key_for(parameters: AntennaDesignParameters) -> str:
         return CATALOG_TYPE_FAN_DIPOLE
     if isinstance(parameters, TrapDipoleParameters):
         return CATALOG_TYPE_TRAP_DIPOLE
+    if isinstance(parameters, TrapYagiParameters):
+        return CATALOG_TYPE_TRAP_YAGI
     if isinstance(parameters, T2FDParameters):
         return CATALOG_TYPE_T2FD
     if isinstance(parameters, EndFedParameters):

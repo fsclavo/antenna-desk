@@ -25,6 +25,7 @@ from ..antennas.transmission_line_doublet import (
     TransmissionLineDoubletParameters,
 )
 from ..antennas.trap_dipole import TrapDipoleParameters
+from ..antennas.trap_yagi import TrapYagiParameters
 from ..antennas.zepp import ZeppParameters
 from ..simulation.bands import (
     AMATEUR_BANDS,
@@ -240,6 +241,12 @@ def default_band_plan(
             _two_band_plan(parameters.frequency_hz, parameters.high_band_frequency_hz),
             BandEvidence.HEURISTIC,
             "band.note.trap",
+        )
+    if isinstance(parameters, TrapYagiParameters):
+        return BandDefault(
+            _two_band_plan(parameters.frequency_hz, parameters.high_band_frequency_hz),
+            BandEvidence.HEURISTIC,
+            "band.note.trap_yagi",
         )
     if isinstance(parameters, T2FDParameters):
         return BandDefault(

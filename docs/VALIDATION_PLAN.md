@@ -273,6 +273,7 @@ gain, nulls, or impedance.
 | `phased_vertical` | C | Quarter-wave-spaced vertical radiators with an ideal linear phase and amplitude progression; no independent numerical reference for the generated array | Not applicable (structural) | Mutual coupling is included by the wire solver, but the combining network, per-element matching, feed-line loss, radial screen efficiency, and the installation are not modeled. The reported impedance and SWR refer only to the primary feed. Verify the pattern and match with the solver or a measurement. |
 | `quad_beam` | C | Quarter-wave-side square loops with a scaled reflector and optional director, fifth-wave spacing, and a center-side feed; no independent numerical reference for the generated beam | Not applicable (structural) | The square loops are ideal thin-wire polygons. Spreaders, boom and mast effects, feed-line routing, and the matching network are not modeled. The quarter-wave side and fifth-wave spacing are starting heuristics; gain, front-to-back ratio, and feedpoint impedance are not independently validated. |
 | `discone` | C | Quarter-wave-slant radial-wire cone with a 0.7x top disc and a small feed gap; no independent numerical reference for the generated discone | Not applicable (structural) | The cone and disc are radial wire approximations, not solid surfaces. The coax, mast, and feed transition are not modeled. Impedance, bandwidth, and radiation pattern are not independently validated; the shape is a starting point for simulation. |
+| `trap_yagi` | C | Two-band Yagi with one ideal parallel LC trap pair per element; no independent numerical reference for the generated trapped array | Not applicable (structural) | The traps are ideal parallel LC loads with no core or dielectric loss. Boom mounting, trap hardware, feed line, and matching network are not modeled. Gain, front-to-back ratio, and impedance on either band are not independently validated. |
 | `doublet` | B | VU3DXR, '94-Foot Multi Band Doublet Antenna': 94 ft total, 41 ft of 450 Ω ladder line, 1:1 current balun, and a tuner | 5% on the radiator and feed-line lengths; 450 Ω line | The tuner and balun are not modeled; feed-line length, impedance, and installation dominate the match. The editor default is a half-wave dipole, so the 94 ft design is a starting point. |
 | `custom` | C | User-defined wire geometry | Not applicable | No accuracy claim; imports and diagnostics only. |
 <!-- evidence-table:end -->
@@ -590,7 +591,7 @@ and require `NEC2C`.
   ZS6BKW, Zepp, biquad, double biquad, Beverage, and loaded/linked dipole.
   Magnetic loops, random wires, and custom/imported geometry are explicitly
   unavailable. Band-aware and robust modes evaluate multiple operating points,
-  the Pareto front is descriptive, and summaries persist in schema 27. Optional
+  the Pareto front is descriptive, and summaries persist in schema 28. Optional
   hard limits cover maximum turning radius for every family and maximum boom
   length for Yagi/Moxon. Horizontal wire dipoles support an optional sampled
   sag; Yagi elements support optional tapered tips. Boom-mounting correction

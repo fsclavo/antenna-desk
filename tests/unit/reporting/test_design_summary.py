@@ -22,6 +22,28 @@ def test_biquad_summary_reports_the_loop_stack_and_reflector() -> None:
     assert rows["Loop side"] == f"{parameters.loop_side_m:.4f} m"
 
 
+def test_trap_yagi_summary_reports_the_traps() -> None:
+    from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
+
+    parameters = trap_yagi_parameters(
+        driven_length_m=20.0,
+        reflector_spacing_m=4.0,
+        director_spacing_m=3.0,
+        trap_inset_m=3.0,
+        trap_frequency_hz=14_100_000.0,
+        trap_inductance_h=5e-6,
+    )
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Type"] == "Trapped Yagi"
+    assert rows["Elements"] == "3"
+    assert rows["Driven element"] == "20.0000 m"
+    assert rows["Reflector element"] == "21.0000 m"
+    assert rows["Director element"] == "19.0000 m"
+    assert rows["Trap inset"] == "3.0000 m"
+    assert rows["Trap frequency"] == "14.100 MHz"
+
+
 def test_discone_summary_reports_the_cone_and_disc() -> None:
     from antennadesk.domain.antennas.discone import discone_parameters
 

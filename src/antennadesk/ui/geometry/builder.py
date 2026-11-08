@@ -83,6 +83,7 @@ from ...domain.antennas.trap_dipole import (
     ANTENNA_TYPE_TRAP_DIPOLE,
     TrapDipoleParameters,
 )
+from ...domain.antennas.trap_yagi import ANTENNA_TYPE_TRAP_YAGI, TrapYagiParameters
 from ...domain.antennas.vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
 from ...domain.antennas.wire import Wire
 from ...domain.antennas.yagi import ANTENNA_TYPE_YAGI, YagiMatchType, YagiParameters
@@ -116,6 +117,7 @@ ZEPP_PRESENTATION_TYPE = "zepp"
 _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_WIRE_DIPOLE: "antenna_type.wire_dipole",
     ANTENNA_TYPE_DISCONE: "catalog.discone",
+    ANTENNA_TYPE_TRAP_YAGI: "catalog.trap_yagi",
     ANTENNA_TYPE_FOLDED_DIPOLE: "antenna_type.folded_dipole",
     ANTENNA_TYPE_LOOP: "antenna_type.loop",
     ANTENNA_TYPE_OCFD: "catalog.ocfd",
@@ -1306,6 +1308,62 @@ def _add_phased_vertical_dimensions(
                 taper=f"{parameters.amplitude_taper * 100.0:.0f}",
             )
         )
+
+
+def _add_trap_yagi_dimensions(
+    model: AntennaModel,
+    parameters: TrapYagiParameters | None,
+    factory: _Factory,
+    dimensions: list[Dimension],
+    notes: list[str],
+    translator: Translator,
+) -> None:
+    if parameters is None:
+        return
+    elements = tuple(wire for wire in model.wires if wire.id.startswith("trap-yagi-element-"))
+    if len(elements) < 2:
+        return
+    driven = elements[1]
+    dimensions.append(
+        factory.dimension(
+            driven.start,
+            driven.end,
+            parameters.driven_length_m,
+            side="above",
+            priority=90,
+        )
+    )
+    if factory.projection.vertical:
+        dimensions.append(
+            factory.vertical_dimension(
+                factory.project(driven.start).x_m,
+                0.0,
+                parameters.height_m,
+                parameters.height_m,
+                side="left",
+                priority=60,
+            )
+        )
+    else:
+        shapes = [factory.project(point) for wire in elements for point in (wire.start, wire.end)]
+        boom_y = min(point.y_m for point in shapes) - 0.1
+        dimensions.append(
+            factory.horizontal_dimension(
+                boom_y,
+                factory.project(elements[0].start).x_m,
+                factory.project(elements[-1].start).x_m,
+                parameters.boom_length_m,
+                side="below",
+                priority=85,
+            )
+        )
+    notes.append(
+        translator.t(
+            "trap_yagi.geometry_note",
+            inset=_format_length(parameters.trap_inset_m, translator, factory.unit_system),
+            trap=f"{parameters.trap_frequency_hz / 1_000_000.0:.3f}",
+        )
+    )
 
 
 def _add_discone_dimensions(
@@ -2610,6 +2668,36 @@ def _summary(
                 f"{translator.t('vertical.radial_count').lower()} {radial_count}",
             ]
         )
+    elif isinstance(parameters, TrapYagiParameters) or antenna_type == ANTENNA_TYPE_TRAP_YAGI:
+        if isinstance(parameters, TrapYagiParameters):
+            count = parameters.element_count
+            driven = parameters.driven_length_m
+            boom = parameters.boom_length_m
+            inset = parameters.trap_inset_m
+            trap = f"{parameters.trap_frequency_hz / 1_000_000.0:.3f} MHz"
+            height = parameters.height_m
+        else:
+            count = len(model.wires)
+            driven = max(wire.length_m for wire in model.wires)
+            xs = [point.x_m for wire in model.wires for point in (wire.start, wire.end)]
+            boom = max(xs) - min(xs)
+            inset = 0.0
+            trap = "—"
+            height = min_z
+        parts.extend(
+            [
+                f"{translator.t('geometry.elements').lower()} {count}",
+                f"{translator.t('trap_yagi.driven_length').lower()} "
+                f"{_format_length(driven, translator, unit_system)}",
+                f"{translator.t('geometry.boom_length').lower()} "
+                f"{_format_length(boom, translator, unit_system)}",
+                f"{translator.t('trap_yagi.trap_inset').lower()} "
+                f"{_format_length(inset, translator, unit_system)}",
+                f"{translator.t('trap_yagi.trap_frequency').lower()} {trap}",
+                f"{translator.t('field.height').lower()} "
+                f"{_format_length(height, translator, unit_system)}",
+            ]
+        )
     elif isinstance(parameters, DisconeParameters) or antenna_type == ANTENNA_TYPE_DISCONE:
         if isinstance(parameters, DisconeParameters):
             count = parameters.wire_count
@@ -3175,6 +3263,15 @@ def build_scene(
         _add_discone_dimensions(
             model,
             parameters if isinstance(parameters, DisconeParameters) else None,
+            factory,
+            dimensions,
+            notes,
+            translator,
+        )
+    elif effective_type == ANTENNA_TYPE_TRAP_YAGI:
+        _add_trap_yagi_dimensions(
+            model,
+            parameters if isinstance(parameters, TrapYagiParameters) else None,
             factory,
             dimensions,
             notes,

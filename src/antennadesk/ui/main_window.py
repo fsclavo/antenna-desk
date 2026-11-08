@@ -123,6 +123,7 @@ from ..domain.antennas.transmission_line_doublet import (
     TransmissionLineDoubletParameters,
 )
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
+from ..domain.antennas.trap_yagi import TrapYagiParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters, yagi_element_length_mismatch
 from ..domain.antennas.zepp import ZEPP_BASE_ID, ZeppParameters
@@ -201,6 +202,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_SLOPER,
     CATALOG_TYPE_T2FD,
     CATALOG_TYPE_TRAP_DIPOLE,
+    CATALOG_TYPE_TRAP_YAGI,
     CATALOG_TYPE_VERTICAL,
     CATALOG_TYPE_WIRE_DIPOLE,
     CATALOG_TYPE_YAGI,
@@ -248,6 +250,7 @@ from .dialogs.synthesis_dialog import SynthesisDialog
 from .dialogs.t2fd_dialog import T2FDDialog
 from .dialogs.transmission_lines_dialog import TransmissionLinesDialog
 from .dialogs.trap_dipole_dialog import TrapDipoleDialog
+from .dialogs.trap_yagi_dialog import TrapYagiDialog
 from .dialogs.vertical_dialog import VerticalDialog
 from .dialogs.yagi_dialog import YagiDialog
 from .dialogs.zepp_dialog import ZeppDialog
@@ -297,6 +300,7 @@ from .widgets.start_page import StartPage
 from .widgets.t2fd_form import T2FDForm
 from .widgets.transmission_line_doublet_form import TransmissionLineDoubletForm
 from .widgets.trap_dipole_form import TrapDipoleForm
+from .widgets.trap_yagi_form import TrapYagiForm
 from .widgets.vertical_form import VerticalForm
 from .widgets.yagi_form import YagiForm
 from .widgets.zepp_form import ZeppForm
@@ -696,6 +700,18 @@ class MainWindow(QMainWindow):
         self._discone_scroll.setMinimumWidth(340)
         self._discone_scroll.setMaximumWidth(480)
 
+        self._trap_yagi_form = TrapYagiForm(
+            self._translator,
+            self._unit_system,
+            parent=self,
+        )
+        self._trap_yagi_form.changed.connect(self._on_form_changed)
+        self._trap_yagi_scroll = QScrollArea(self)
+        self._trap_yagi_scroll.setWidgetResizable(True)
+        self._trap_yagi_scroll.setWidget(self._trap_yagi_form)
+        self._trap_yagi_scroll.setMinimumWidth(340)
+        self._trap_yagi_scroll.setMaximumWidth(520)
+
         self._doublet_form = TransmissionLineDoubletForm(
             self._translator,
             self._unit_system,
@@ -739,6 +755,7 @@ class MainWindow(QMainWindow):
             (self._phased_vertical_form, self._phased_vertical_scroll, 480),
             (self._quad_beam_form, self._quad_beam_scroll, 480),
             (self._discone_form, self._discone_scroll, 480),
+            (self._trap_yagi_form, self._trap_yagi_scroll, 520),
             (self._doublet_form, self._doublet_scroll, 480),
             (self._zepp_form, self._zepp_scroll, 480),
         )
@@ -917,6 +934,7 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._phased_vertical_scroll)
         self._design_stack.addWidget(self._quad_beam_scroll)
         self._design_stack.addWidget(self._discone_scroll)
+        self._design_stack.addWidget(self._trap_yagi_scroll)
         self._design_stack.addWidget(self._doublet_scroll)
         self._design_stack.addWidget(self._zepp_scroll)
         self._design_stack.addWidget(self._custom_panel)
@@ -1270,6 +1288,7 @@ class MainWindow(QMainWindow):
         self._phased_vertical_form.retranslate()
         self._quad_beam_form.retranslate()
         self._discone_form.retranslate()
+        self._trap_yagi_form.retranslate()
         self._doublet_form.retranslate()
         self._zepp_form.retranslate()
         self._geometry.retranslate()
@@ -1820,6 +1839,9 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, DisconeParameters):
             self._design_stack.setCurrentWidget(self._discone_scroll)
             self._discone_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, TrapYagiParameters):
+            self._design_stack.setCurrentWidget(self._trap_yagi_scroll)
+            self._trap_yagi_form.set_parameters(design.parameters)
         elif isinstance(design.parameters, TransmissionLineDoubletParameters):
             self._design_stack.setCurrentWidget(self._doublet_scroll)
             self._doublet_form.set_parameters(design.parameters)
@@ -2440,6 +2462,7 @@ class MainWindow(QMainWindow):
                 LoadedDipoleParameters,
                 DisconeParameters,
                 PhasedVerticalParameters,
+                TrapYagiParameters,
                 QuadBeamParameters,
                 TransmissionLineDoubletParameters,
                 ZeppParameters,
@@ -2457,6 +2480,8 @@ class MainWindow(QMainWindow):
                 parameters = self._quad_beam_form.parameters()
             elif isinstance(previous_design.parameters, DisconeParameters):
                 parameters = self._discone_form.parameters()
+            elif isinstance(previous_design.parameters, TrapYagiParameters):
+                parameters = self._trap_yagi_form.parameters()
             elif isinstance(
                 previous_design.parameters,
                 TransmissionLineDoubletParameters,
@@ -2659,6 +2684,8 @@ class MainWindow(QMainWindow):
             return self._quad_beam_simulation_spec(parameters)
         if isinstance(parameters, DisconeParameters):
             return self._discone_simulation_spec(parameters)
+        if isinstance(parameters, TrapYagiParameters):
+            return self._trap_yagi_simulation_spec(parameters)
         if isinstance(parameters, TransmissionLineDoubletParameters):
             return self._doublet_simulation_spec(parameters)
         if isinstance(parameters, ZeppParameters):
@@ -3683,6 +3710,26 @@ class MainWindow(QMainWindow):
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
         )
 
+    def _trap_yagi_simulation_spec(
+        self,
+        parameters: TrapYagiParameters,
+    ) -> SimulationSpec:
+        model = parameters.to_antenna()
+        frequency_hz = parameters.frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                frequency_hz * 0.9,
+                frequency_hz * 1.1,
+                DEFAULT_GENERATED_SWEEP_POINTS,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz * 1.1,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
     def _doublet_simulation_spec(
         self,
         parameters: TransmissionLineDoubletParameters,
@@ -3942,6 +3989,17 @@ class MainWindow(QMainWindow):
         if not self._maybe_save_changes():
             return
         dialog = DisconeDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name=dialog.result_parameters().template_name,
+        )
+
+    def new_trap_yagi_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        dialog = TrapYagiDialog(self._translator, self._unit_system, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         self._create_project_from_parameters(
@@ -4592,6 +4650,16 @@ class MainWindow(QMainWindow):
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
             return dialog.result_parameters()
+        if selected == CATALOG_TYPE_TRAP_YAGI:
+            dialog = TrapYagiDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
         if selected == CATALOG_TYPE_BEVERAGE:
             dialog = BeverageDialog(
                 self._translator,
@@ -4943,6 +5011,8 @@ class MainWindow(QMainWindow):
             self.new_quad_beam_antenna()
         elif selected == CATALOG_TYPE_DISCONE:
             self.new_discone_antenna()
+        elif selected == CATALOG_TYPE_TRAP_YAGI:
+            self.new_trap_yagi_antenna()
         elif selected == CATALOG_TYPE_OCFD:
             self.new_ocfd_antenna()
         elif selected == CATALOG_TYPE_DELTA_LOOP:
@@ -5528,6 +5598,8 @@ class MainWindow(QMainWindow):
             base_spec = self._quad_beam_simulation_spec(design.parameters)
         elif isinstance(design.parameters, DisconeParameters):
             base_spec = self._discone_simulation_spec(design.parameters)
+        elif isinstance(design.parameters, TrapYagiParameters):
+            base_spec = self._trap_yagi_simulation_spec(design.parameters)
         else:
             base_spec = self._form.simulation_spec()
 
@@ -5574,6 +5646,8 @@ class MainWindow(QMainWindow):
                 self._quad_beam_form.set_parameters(parameters)
             elif isinstance(parameters, DisconeParameters):
                 self._discone_form.set_parameters(parameters)
+            elif isinstance(parameters, TrapYagiParameters):
+                self._trap_yagi_form.set_parameters(parameters)
             else:
                 self._form.set_parameters(parameters, reset_sweep=False)
             self._apply_fields()
@@ -6829,6 +6903,7 @@ class MainWindow(QMainWindow):
             self._phased_vertical_form,
             self._quad_beam_form,
             self._discone_form,
+            self._trap_yagi_form,
             self._doublet_form,
             self._zepp_form,
         ):

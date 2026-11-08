@@ -31,6 +31,7 @@ from ..domain.antennas.scv import ScvKind, ScvParameters
 from ..domain.antennas.t2fd import T2FDParameters
 from ..domain.antennas.transmission_line_doublet import TransmissionLineDoubletParameters
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
+from ..domain.antennas.trap_yagi import TrapYagiParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
 from ..domain.antennas.zepp import (
@@ -256,6 +257,25 @@ junction at {feed_height_m:.4f} m above ground.</p>"""
 wire and mark the link positions at {parameters.link_offset_m:.4f} m either
 side of the center. Feed the center. {coil_note} The coil model is an ideal
 series R-L load; tune it for the installed height and ground.</p>"""
+    elif isinstance(parameters, TrapYagiParameters):
+        feed_rows = f"""
+<tr><th>Type</th><td>{parameters.template_name}</td></tr>
+<tr><th>Elements</th><td>{parameters.element_count}</td></tr>
+<tr><th>Driven element</th><td>{parameters.driven_length_m:.4f} m</td></tr>
+<tr><th>Reflector element</th><td>{parameters.reflector_length_m:.4f} m</td></tr>
+<tr><th>Boom length</th><td>{parameters.boom_length_m:.4f} m</td></tr>
+<tr><th>Trap inset</th><td>{parameters.trap_inset_m:.4f} m</td></tr>
+<tr><th>Trap frequency</th><td>{parameters.trap_frequency_hz / 1e6:.3f} MHz</td></tr>
+<tr><th>Trap inductance</th><td>{parameters.trap_inductance_h * 1e6:.3f} µH</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Build {parameters.element_count} Yagi
+elements with the driven element at {parameters.driven_length_m:.4f} m and the
+reflector at {parameters.reflector_length_m:.4f} m. Fit a parallel LC trap on
+each side of every element at {parameters.trap_inset_m:.4f} m from its center,
+using {parameters.trap_inductance_h * 1e6:.3f} µH and the capacitance for
+{parameters.trap_frequency_hz / 1e6:.3f} MHz. The trap model is ideal; boom
+mounting, trap loss, feed line, and matching network are not modeled.</p>"""
     elif isinstance(parameters, DisconeParameters):
         feed_rows = f"""
 <tr><th>Type</th><td>{parameters.template_name}</td></tr>

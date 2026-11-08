@@ -37,6 +37,7 @@ from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
@@ -230,6 +231,7 @@ def _parameters_for(key: str) -> object:
         "beverage": beverage_parameters(),
         "loaded_dipole": loaded_dipole_parameters(),
         "discone": discone_parameters(),
+        "trap_yagi": trap_yagi_parameters(),
         "phased_vertical": phased_vertical_parameters(),
         "quad_beam": quad_beam_parameters(),
         "custom": CustomAntennaParameters(
@@ -303,6 +305,7 @@ def test_every_catalog_entry_has_a_change_template_route(
             "BeverageDialog",
             "LoadedDipoleDialog",
             "DisconeDialog",
+            "TrapYagiDialog",
             "PhasedVerticalDialog",
             "QuadBeamDialog",
         ):
@@ -354,6 +357,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "beverage": ("beverage",),
         "loaded_dipole": ("loaded_dipole",),
         "discone": ("discone",),
+        "trap_yagi": ("trap_yagi",),
         "phased_vertical": ("phased_vertical",),
         "quad_beam": ("quad_beam",),
         "custom": ("custom",),
@@ -417,6 +421,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         new_beverage_antenna=record("beverage"),
         new_loaded_dipole_antenna=record("loaded_dipole"),
         new_discone_antenna=record("discone"),
+        new_trap_yagi_antenna=record("trap_yagi"),
         new_phased_vertical_antenna=record("phased_vertical"),
         new_quad_beam_antenna=record("quad_beam"),
         new_ocfd_antenna=record("ocfd"),
@@ -481,6 +486,7 @@ ESTIMATORLESS_CATALOG_KEYS = frozenset(
         "beverage",
         "loaded_dipole",
         "discone",
+        "trap_yagi",
         "phased_vertical",
         "quad_beam",
         "trap_dipole",

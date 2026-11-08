@@ -68,6 +68,7 @@ registry.
 | `phased_vertical` | The ideal linear phase and amplitude progression, combining network, per-element matching, and radial screen efficiency are not independently validated; impedance and SWR refer only to the primary feed. | A published phased-array design or measurement with element spacing, phase, amplitude, feed network, and measured pattern or impedance. |
 | `quad_beam` | Quarter-wave loop sides and fifth-wave spacing are starting heuristics; boom, spreaders, mast, feed line, and matching network are not modeled, and gain and front-to-back ratio are not independently validated. | A published quad-beam design or measurement with loop dimensions, spacing, feed, and measured gain, front-to-back ratio, or impedance. |
 | `discone` | The cone and disc are radial wire approximations, not solid surfaces; the coax, mast, and feed transition are not modeled, and impedance, bandwidth, and pattern are not independently validated. | A published discone design or measurement with cone/disc dimensions, feed transition, and measured impedance or pattern. |
+| `trap_yagi` | The traps are ideal parallel LC loads with no core or dielectric loss; boom mounting, trap hardware, feed line, and matching network are not modeled, and gain and impedance are not independently validated. | A published trapped-Yagi design or measurement with trap values, dimensions, boom mounting, and measured impedance or gain on both bands. |
 
 ## Follow-up review of the remaining level C templates (2026-11-06)
 
@@ -118,7 +119,7 @@ published reference supplies a traceable numeric metric or measured impedance.
 
 - **A, reference-backed:** 5 templates.
 - **B, published/heuristic:** 18 templates.
-- **C, experimental:** 13 templates, all with a documented limitation.
+- **C, experimental:** 14 templates, all with a documented limitation.
 
 The `half_square` and `bobtail_curtain` templates entered the catalog at level B
 on 2026-11-07 from Cebik's published 7.15 MHz dimensions. They are new

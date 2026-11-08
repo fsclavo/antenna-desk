@@ -40,6 +40,7 @@ from antennadesk.domain.antennas.transmission_line_doublet import (
     doublet_starting_parameters,
 )
 from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.antennas.yagi import YagiElement, YagiMatchType, YagiParameters
@@ -259,6 +260,7 @@ def _typed_samples() -> list[AntennaDesignParameters]:
         beverage_parameters(),
         loaded_dipole_parameters(),
         discone_parameters(),
+        trap_yagi_parameters(),
         phased_vertical_parameters(),
         quad_beam_parameters(element_count=3),
         OCFDParameters(frequency_hz=7_100_000.0, total_length_m=40.0),
@@ -359,6 +361,7 @@ _CONTEXT_FIELDS = {
     "radial_angle_deg",
     "wire_count",
     "disc_gap_m",
+    "trap_frequency_hz",
 }
 
 
@@ -451,6 +454,19 @@ def test_discone_optimizes_the_wire_surfaces() -> None:
     }
     rebuilt = availability.descriptor.build_parameters(availability.descriptor.initial_values)
     assert rebuilt.wire_count == 10
+
+
+def test_trap_yagi_optimizes_the_trap_positions() -> None:
+    availability = optimizer_availability(trap_yagi_parameters(element_count=3))
+    assert availability.descriptor is not None
+
+    variables = {variable.name: variable for variable in availability.descriptor.variables}
+
+    assert "trap_inset_m" in variables
+    assert "trap_inductance_h" in variables
+    assert "director_scale" in variables
+    assert "director_spacing_m" in variables
+    assert "driven_length_m" in variables
 
 
 def test_quad_beam_optimizes_geometry_and_optional_director() -> None:

@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added a first-class **trapped Yagi** family: a two-band reflector/driven/
+  optional-director array with one ideal parallel LC trap pair on every
+  element, schema-28 persistence, catalog route, inline editor, scene
+  dimensions, reports, construction notes, and a family optimizer. Trap loss,
+  boom mounting, feed line, and matching network are not modeled; the family is
+  experimental.
 - Added a first-class **discone** family: a radial-wire cone and top disc with
   a source across a small apex gap, quarter-wave starting dimensions, schema-27
   persistence, catalog route, inline editor, scene dimensions and summary,

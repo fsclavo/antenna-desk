@@ -47,6 +47,7 @@ from .transmission_line_doublet import (
     TransmissionLineDoubletParameters,
 )
 from .trap_dipole import ANTENNA_TYPE_TRAP_DIPOLE, TrapDipoleParameters
+from .trap_yagi import ANTENNA_TYPE_TRAP_YAGI, TrapYagiParameters
 from .vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
 from .yagi import ANTENNA_TYPE_YAGI, YagiParameters
 from .zepp import ANTENNA_TYPE_ZEPP, ZeppParameters
@@ -76,6 +77,7 @@ AntennaDesignParameters = (
     | T2FDParameters
     | TransmissionLineDoubletParameters
     | TrapDipoleParameters
+    | TrapYagiParameters
     | ZeppParameters
     | CustomAntennaParameters
 )
@@ -146,6 +148,8 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_QUAD_BEAM
     if isinstance(parameters, TrapDipoleParameters):
         return ANTENNA_TYPE_TRAP_DIPOLE
+    if isinstance(parameters, TrapYagiParameters):
+        return ANTENNA_TYPE_TRAP_YAGI
     if isinstance(parameters, T2FDParameters):
         return ANTENNA_TYPE_T2FD
     if isinstance(parameters, TransmissionLineDoubletParameters):
@@ -188,6 +192,8 @@ def primary_dimension_m(parameters: AntennaDesignParameters) -> float:
         return parameters.length_m
     if isinstance(parameters, TrapDipoleParameters):
         return parameters.total_length_m
+    if isinstance(parameters, TrapYagiParameters):
+        return parameters.driven_length_m
     if isinstance(parameters, T2FDParameters):
         return parameters.length_m
     if isinstance(parameters, TransmissionLineDoubletParameters):
@@ -254,6 +260,16 @@ def with_primary_dimension(
         return replace(parameters, length_m=dimension_m)
     if isinstance(parameters, TrapDipoleParameters):
         return parameters.with_total_length(dimension_m)
+    if isinstance(parameters, TrapYagiParameters):
+        ratio = dimension_m / parameters.driven_length_m
+        return replace(
+            parameters,
+            driven_length_m=dimension_m,
+            reflector_spacing_m=parameters.reflector_spacing_m * ratio,
+            director_spacing_m=parameters.director_spacing_m * ratio,
+            trap_inset_m=parameters.trap_inset_m * ratio,
+            height_m=parameters.height_m * ratio,
+        )
     if isinstance(parameters, T2FDParameters):
         return parameters.with_length(dimension_m)
     if isinstance(parameters, TransmissionLineDoubletParameters):

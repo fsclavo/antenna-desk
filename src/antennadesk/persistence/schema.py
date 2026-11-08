@@ -93,6 +93,10 @@ from ..domain.antennas.trap_dipole import (
     ANTENNA_TYPE_TRAP_DIPOLE,
     TrapDipoleParameters,
 )
+from ..domain.antennas.trap_yagi import (
+    ANTENNA_TYPE_TRAP_YAGI,
+    TrapYagiParameters,
+)
 from ..domain.antennas.vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
 from ..domain.antennas.wire import Wire
 from ..domain.antennas.yagi import (
@@ -344,6 +348,25 @@ class TrapDipoleParametersPayload(StrictModel):
     trap_inductance_h: float = Field(gt=0.0)
     height_m: float = Field(default=10.0, ge=0.0)
     orientation: DipoleOrientation = DipoleOrientation.HORIZONTAL
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class TrapYagiParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    high_band_frequency_hz: float = Field(gt=0.0)
+    driven_length_m: float = Field(gt=0.0)
+    reflector_spacing_m: float = Field(gt=0.0)
+    trap_inset_m: float = Field(gt=0.0)
+    trap_frequency_hz: float = Field(gt=0.0)
+    trap_inductance_h: float = Field(gt=0.0)
+    element_count: int = Field(default=3, ge=2, le=3)
+    director_spacing_m: float = Field(default=0.0, ge=0.0)
+    reflector_scale: float = Field(default=1.05, ge=1.0, le=1.2)
+    director_scale: float = Field(default=0.95, ge=0.8, le=1.0)
+    height_m: float = Field(default=10.0, ge=0.0)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
@@ -802,6 +825,7 @@ ParameterPayload = (
     | T2FDParametersPayload
     | TransmissionLineDoubletParametersPayload
     | TrapDipoleParametersPayload
+    | TrapYagiParametersPayload
     | ZeppParametersPayload
     | CustomParametersPayload
 )
@@ -854,6 +878,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_BEVERAGE
     if isinstance(value, TrapDipoleParametersPayload):
         return ANTENNA_TYPE_TRAP_DIPOLE
+    if isinstance(value, TrapYagiParametersPayload):
+        return ANTENNA_TYPE_TRAP_YAGI
     if isinstance(value, T2FDParametersPayload):
         return ANTENNA_TYPE_T2FD
     if isinstance(value, TransmissionLineDoubletParametersPayload):
@@ -912,6 +938,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return BeverageParametersPayload
     if antenna_type == ANTENNA_TYPE_TRAP_DIPOLE:
         return TrapDipoleParametersPayload
+    if antenna_type == ANTENNA_TYPE_TRAP_YAGI:
+        return TrapYagiParametersPayload
     if antenna_type == ANTENNA_TYPE_T2FD:
         return T2FDParametersPayload
     if antenna_type in {ANTENNA_TYPE_G5RV, ANTENNA_TYPE_ZS6BKW}:
@@ -1261,6 +1289,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _beverage_parameters_from_domain(value)
     if isinstance(value, TrapDipoleParameters):
         return _trap_dipole_parameters_from_domain(value)
+    if isinstance(value, TrapYagiParameters):
+        return _trap_yagi_parameters_from_domain(value)
     if isinstance(value, T2FDParameters):
         return _t2fd_parameters_from_domain(value)
     if isinstance(value, TransmissionLineDoubletParameters):
@@ -1394,6 +1424,29 @@ def _beverage_parameters_from_domain(
         azimuth_deg=value.azimuth_deg,
         termination_enabled=value.termination_enabled,
         termination_resistance_ohm=value.termination_resistance_ohm,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _trap_yagi_parameters_from_domain(
+    value: TrapYagiParameters,
+) -> TrapYagiParametersPayload:
+    return TrapYagiParametersPayload(
+        frequency_hz=value.frequency_hz,
+        high_band_frequency_hz=value.high_band_frequency_hz,
+        driven_length_m=value.driven_length_m,
+        reflector_spacing_m=value.reflector_spacing_m,
+        trap_inset_m=value.trap_inset_m,
+        trap_frequency_hz=value.trap_frequency_hz,
+        trap_inductance_h=value.trap_inductance_h,
+        element_count=value.element_count,
+        director_spacing_m=value.director_spacing_m,
+        reflector_scale=value.reflector_scale,
+        director_scale=value.director_scale,
+        height_m=value.height_m,
+        azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
@@ -2264,6 +2317,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, TrapDipoleParametersPayload):
             raise ValueError("trap dipole parameters have the wrong shape")
         return _trap_dipole_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_TRAP_YAGI:
+        if not isinstance(value.parameters, TrapYagiParametersPayload):
+            raise ValueError("trap Yagi parameters have the wrong shape")
+        return _trap_yagi_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_T2FD:
         if not isinstance(value.parameters, T2FDParametersPayload):
             raise ValueError("T2FD parameters have the wrong shape")
@@ -2426,6 +2483,29 @@ def _beverage_parameters_to_domain(
         azimuth_deg=value.azimuth_deg,
         termination_enabled=value.termination_enabled,
         termination_resistance_ohm=value.termination_resistance_ohm,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _trap_yagi_parameters_to_domain(
+    value: TrapYagiParametersPayload,
+) -> TrapYagiParameters:
+    return TrapYagiParameters(
+        frequency_hz=value.frequency_hz,
+        high_band_frequency_hz=value.high_band_frequency_hz,
+        driven_length_m=value.driven_length_m,
+        reflector_spacing_m=value.reflector_spacing_m,
+        trap_inset_m=value.trap_inset_m,
+        trap_frequency_hz=value.trap_frequency_hz,
+        trap_inductance_h=value.trap_inductance_h,
+        element_count=value.element_count,
+        director_spacing_m=value.director_spacing_m,
+        reflector_scale=value.reflector_scale,
+        director_scale=value.director_scale,
+        height_m=value.height_m,
+        azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),

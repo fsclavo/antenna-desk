@@ -463,6 +463,21 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "validated; the shape is a starting point for simulation."
         ),
     ),
+    "trap_yagi": EvidenceEntry(
+        template="trap_yagi",
+        level=EvidenceLevel.EXPERIMENTAL,
+        source=(
+            "Two-band Yagi with one ideal parallel LC trap pair per element; no "
+            "independent numerical reference for the generated trapped array"
+        ),
+        tolerance="Not applicable (structural)",
+        limitation=(
+            "The traps are ideal parallel LC loads with no core or dielectric "
+            "loss. Boom mounting, trap hardware, feed line, and matching network "
+            "are not modeled. Gain, front-to-back ratio, and impedance on either "
+            "band are not independently validated."
+        ),
+    ),
     "doublet": EvidenceEntry(
         template="doublet",
         level=EvidenceLevel.PUBLISHED,

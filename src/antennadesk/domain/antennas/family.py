@@ -30,6 +30,7 @@ from .scv import ScvParameters
 from .t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
 from .transmission_line_doublet import TransmissionLineDoubletParameters
 from .trap_dipole import ANTENNA_TYPE_TRAP_DIPOLE, TrapDipoleParameters
+from .trap_yagi import TrapYagiParameters
 from .vertical import VerticalParameters
 from .yagi import YagiParameters
 from .zepp import ZeppParameters
@@ -66,6 +67,7 @@ _GENERATOR_FAMILIES: dict[str, AntennaFamily] = {
     "discone": AntennaFamily.VERTICAL,
     "phased_vertical": AntennaFamily.VERTICAL,
     "quad_beam": AntennaFamily.LOOP,
+    "trap_yagi": AntennaFamily.YAGI,
     "trap_dipole": AntennaFamily.DIPOLE,
     "t2fd": AntennaFamily.DIPOLE,
     "g5rv": AntennaFamily.DIPOLE,
@@ -115,8 +117,12 @@ def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
         return AntennaFamily.VERTICAL
     if isinstance(parameters, QuadBeamParameters):
         return AntennaFamily.LOOP
-    if isinstance(parameters, (T2FDParameters, TrapDipoleParameters)):
+    if isinstance(parameters, T2FDParameters):
         return AntennaFamily.DIPOLE
+    if isinstance(parameters, TrapDipoleParameters):
+        return AntennaFamily.DIPOLE
+    if isinstance(parameters, TrapYagiParameters):
+        return AntennaFamily.YAGI
     if isinstance(parameters, TransmissionLineDoubletParameters):
         return AntennaFamily.DIPOLE
     if isinstance(parameters, ZeppParameters):
@@ -173,6 +179,8 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return "quad_beam"
     if isinstance(parameters, TrapDipoleParameters):
         return ANTENNA_TYPE_TRAP_DIPOLE
+    if isinstance(parameters, TrapYagiParameters):
+        return "trap_yagi"
     if isinstance(parameters, T2FDParameters):
         return ANTENNA_TYPE_T2FD
     if isinstance(parameters, TransmissionLineDoubletParameters):

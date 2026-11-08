@@ -33,6 +33,7 @@ CATALOG_TYPE_YAGI = "yagi"
 CATALOG_TYPE_MOXON = "moxon"
 CATALOG_TYPE_FAN_DIPOLE = "fan_dipole"
 CATALOG_TYPE_TRAP_DIPOLE = "trap_dipole"
+CATALOG_TYPE_TRAP_YAGI = "trap_yagi"
 CATALOG_TYPE_T2FD = "t2fd"
 CATALOG_TYPE_ENDFED = "endfed"
 CATALOG_TYPE_SLOPER = "sloper"
@@ -164,6 +165,13 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         label_key="catalog.discone",
         family_key="catalog.family.vertical",
         description_key="catalog.discone.description",
+        evidence_key="catalog.evidence.experimental",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_TRAP_YAGI,
+        label_key="catalog.trap_yagi",
+        family_key="catalog.family.yagi",
+        description_key="catalog.trap_yagi.description",
         evidence_key="catalog.evidence.experimental",
     ),
     CatalogEntry(

@@ -34,6 +34,7 @@ from ..antennas.scv import ScvParameters
 from ..antennas.t2fd import T2FDParameters
 from ..antennas.transmission_line_doublet import TransmissionLineDoubletParameters
 from ..antennas.trap_dipole import TrapDipoleParameters
+from ..antennas.trap_yagi import TrapYagiParameters
 from ..antennas.vertical import VerticalParameters
 from ..antennas.yagi import YagiParameters
 from ..antennas.zepp import ZeppParameters
@@ -60,6 +61,7 @@ from .families.typed import (
     t2fd_descriptor,
     transmission_line_doublet_descriptor,
     trap_dipole_descriptor,
+    trap_yagi_descriptor,
     zepp_descriptor,
 )
 from .families.vertical import vertical_descriptor
@@ -132,6 +134,8 @@ def optimizer_availability(
         return OptimizerAvailability(descriptor=fan_dipole_descriptor(parameters))
     if isinstance(parameters, TrapDipoleParameters):
         return OptimizerAvailability(descriptor=trap_dipole_descriptor(parameters))
+    if isinstance(parameters, TrapYagiParameters):
+        return OptimizerAvailability(descriptor=trap_yagi_descriptor(parameters))
     if isinstance(parameters, T2FDParameters):
         return OptimizerAvailability(descriptor=t2fd_descriptor(parameters))
     if isinstance(parameters, MoxonParameters):
@@ -170,6 +174,7 @@ SUPPORTED_OPTIMIZER_TYPES = frozenset(
         EndFedParameters,
         FanDipoleParameters,
         TrapDipoleParameters,
+        TrapYagiParameters,
         T2FDParameters,
         YagiParameters,
         MoxonParameters,

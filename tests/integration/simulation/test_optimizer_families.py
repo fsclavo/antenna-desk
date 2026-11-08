@@ -30,6 +30,7 @@ from antennadesk.domain.antennas.transmission_line_doublet import (
     DoubletPreset,
     doublet_starting_parameters,
 )
+from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 from antennadesk.domain.antennas.zepp import zepp_starting_parameters
@@ -100,6 +101,15 @@ def _samples() -> list[object]:
             cone_radius_m=0.3,
             disc_radius_m=0.5,
             wire_count=8,
+        ),
+        trap_yagi_parameters(
+            frequency_hz=7_100_000.0,
+            high_band_frequency_hz=14_100_000.0,
+            element_count=3,
+            driven_length_m=20.0,
+            reflector_spacing_m=4.0,
+            director_spacing_m=3.0,
+            trap_inset_m=3.0,
         ),
         phased_vertical_parameters(
             frequency_hz=14_100_000.0,
