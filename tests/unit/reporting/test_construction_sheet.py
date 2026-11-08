@@ -316,6 +316,21 @@ def test_typed_transmission_line_doublet_construction_sheet(
     assert "band_aware" in sheet
 
 
+def test_beverage_construction_sheet_lists_the_termination(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.beverage import beverage_parameters
+
+    design = sample_project.designs[0]
+    beverage = design.with_parameters(beverage_parameters(frequency_hz=3_500_000.0, length_m=80.0))
+    sheet = render_construction_sheet(sample_project, beverage, None)
+
+    assert "Beverage" in sheet
+    assert "Termination" in sheet
+    assert "ground rod" in sheet
+    assert "80.0000 m" in sheet
+
+
 def test_biquad_construction_sheet_lists_the_loop_stack(
     sample_project: Project,
 ) -> None:

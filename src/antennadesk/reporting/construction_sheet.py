@@ -8,6 +8,7 @@ import html
 import math
 from pathlib import Path
 
+from ..domain.antennas.beverage import BeverageParameters
 from ..domain.antennas.biquad import BiquadParameters
 from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.dipole import DipoleParameters
@@ -211,6 +212,31 @@ ends and feed the center of one element. The total conductor length is
 {wire_note} Keep the bottom ends insulated from ground and feed
 {feed_point}. The feed is {parameters.feed_offset_m:.4f} m below the top
 junction at {feed_height_m:.4f} m above ground.</p>"""
+    elif isinstance(parameters, BeverageParameters):
+        termination_note = (
+            f"Fit a {parameters.termination_resistance_ohm:.1f} Ω resistor from "
+            "the far end to a ground rod."
+            if parameters.termination_enabled
+            else "Leave the far end open for a bidirectional receiving pattern."
+        )
+        termination_row = (
+            f"{parameters.termination_resistance_ohm:.1f} Ω to ground"
+            if parameters.termination_enabled
+            else "disabled"
+        )
+        feed_rows = f"""
+<tr><th>Type</th><td>Beverage</td></tr>
+<tr><th>Length</th><td>{parameters.length_m:.4f} m</td></tr>
+<tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
+<tr><th>Termination</th><td>{termination_row}</td></tr>
+<tr><th>Total conductor</th><td>{parameters.total_conductor_length_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Run one horizontal wire of
+{parameters.length_m:.4f} m at {parameters.height_m:.4f} m above ground.
+Feed the near end directly and keep the wire straight. {termination_note}
+The one-wavelength starting length and termination value are heuristics; the
+pattern and receiving performance are not independently validated.</p>"""
     elif isinstance(parameters, BiquadParameters):
         reflector_note = (
             f"A wire reflector sits {parameters.reflector_spacing_m:.4f} m behind the driven plane."

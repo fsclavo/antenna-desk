@@ -22,6 +22,22 @@ def test_biquad_summary_reports_the_loop_stack_and_reflector() -> None:
     assert rows["Loop side"] == f"{parameters.loop_side_m:.4f} m"
 
 
+def test_beverage_summary_reports_length_and_termination() -> None:
+    from antennadesk.domain.antennas.beverage import beverage_parameters
+
+    parameters = beverage_parameters(
+        frequency_hz=3_500_000.0,
+        length_m=80.0,
+        termination_resistance_ohm=470.0,
+    )
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Type"] == "Beverage"
+    assert rows["Length"] == "80.0000 m"
+    assert rows["Termination"] == "470.0 Ω to ground"
+    assert rows["Feed"] == "near end"
+
+
 def test_optimization_summary_rows_describe_the_last_run() -> None:
     from datetime import UTC, datetime
 

@@ -8,6 +8,7 @@ import math
 from collections.abc import Mapping
 from dataclasses import replace
 
+from ...antennas.beverage import BeverageParameters
 from ...antennas.biquad import BiquadParameters
 from ...antennas.endfed import EndFedParameters
 from ...antennas.fan_dipole import FanDipoleParameters, FanElement
@@ -1127,6 +1128,84 @@ def biquad_descriptor(parameters: BiquadParameters) -> AntennaOptimizerDescripto
 
     return _descriptor(
         parameters.kind.antenna_type,
+        tuple(variables),
+        initial,
+        build,
+        validate,
+    )
+
+
+def beverage_descriptor(parameters: BeverageParameters) -> AntennaOptimizerDescriptor:
+    variables: list[OptimizationVariable] = [
+        _length(
+            "length_m",
+            "field.length",
+            "optimize.group.geometry",
+            parameters.length_m,
+            0.2,
+            0.1,
+        ),
+        _length(
+            "height_m",
+            "field.height",
+            "optimize.group.geometry",
+            parameters.height_m,
+            0.5,
+            0.1,
+        ),
+    ]
+    if parameters.termination_enabled:
+        low, high = around(
+            parameters.termination_resistance_ohm,
+            0.5,
+            minimum=1.0,
+        )
+        variables.append(
+            OptimizationVariable(
+                "termination_resistance_ohm",
+                "beverage.termination_resistance",
+                "optimize.group.loads",
+                low,
+                high,
+                unit="ohm",
+                step=1.0,
+            )
+        )
+    variables.append(_radius(parameters.wire_radius_m))
+    initial = {
+        "length_m": parameters.length_m,
+        "height_m": parameters.height_m,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+    if parameters.termination_enabled:
+        initial["termination_resistance_ohm"] = parameters.termination_resistance_ohm
+
+    def build(values: Mapping[str, float]) -> BeverageParameters:
+        return replace(
+            parameters,
+            length_m=values["length_m"],
+            height_m=values["height_m"],
+            termination_resistance_ohm=values.get(
+                "termination_resistance_ohm",
+                parameters.termination_resistance_ohm,
+            ),
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        resistance = values.get(
+            "termination_resistance_ohm",
+            parameters.termination_resistance_ohm,
+        )
+        return collect(
+            positive_violation("length_m", values["length_m"]),
+            positive_violation("height_m", values["height_m"]),
+            positive_violation("termination_resistance_ohm", resistance),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+        )
+
+    return _descriptor(
+        "beverage",
         tuple(variables),
         initial,
         build,

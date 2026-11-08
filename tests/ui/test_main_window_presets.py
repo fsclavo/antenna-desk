@@ -746,6 +746,23 @@ def test_biquad_presets_use_the_inline_editor(window: MainWindow) -> None:
     window._dirty = False
 
 
+def test_beverage_preset_uses_the_inline_editor(window: MainWindow) -> None:
+    from main_window_support import use_parameters
+
+    from antennadesk.domain.antennas.beverage import beverage_parameters
+
+    parameters = beverage_parameters(frequency_hz=7_100_000.0, length_m=42.0)
+    use_parameters(window, parameters)
+    assert window._project is not None
+    assert window._project.designs[0].antenna_type == "beverage"
+    assert window._design_stack.currentWidget() is window._beverage_scroll
+    restored = window._beverage_form.parameters()
+    assert restored.length_m == pytest.approx(42.0, abs=1e-3)
+    assert restored.termination_enabled is True
+    assert window._optimize_action.isEnabled() is True
+    window._dirty = False
+
+
 def test_new_ringo_creates_a_first_class_design(
     window: MainWindow,
     qtbot: QtBot,

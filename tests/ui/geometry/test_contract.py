@@ -16,6 +16,7 @@ from PySide6.QtCore import QRectF
 from PySide6.QtGui import QFont, QFontMetricsF
 from pytestqt.qtbot import QtBot
 
+from antennadesk.domain.antennas.beverage import beverage_parameters
 from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
 from antennadesk.domain.antennas.custom import CustomAntennaParameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
@@ -402,6 +403,14 @@ def _cases() -> tuple[FamilyCase, ...]:
                 "vertical height",
                 "vertical elements 2",
             ),
+        ),
+        FamilyCase(
+            "beverage",
+            beverage_parameters(frequency_hz=7_100_000.0, length_m=42.0),
+            "beverage",
+            2,
+            GeometryViewMode.ELEVATION,
+            ("Beverage", "length", "height", "termination"),
         ),
         FamilyCase(
             "biquad",

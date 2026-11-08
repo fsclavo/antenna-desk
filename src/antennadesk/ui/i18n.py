@@ -270,6 +270,25 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "de partida biquad."
         ),
     },
+    "catalog.beverage": {
+        Language.ENGLISH: "Beverage",
+        Language.SPANISH: "Beverage",
+    },
+    "catalog.beverage.description": {
+        Language.ENGLISH: (
+            "Long horizontal traveling-wave receiving wire with an optional "
+            "resistor termination to ground; broadside end-fire toward the "
+            "termination."
+        ),
+        Language.SPANISH: (
+            "Hilo receptor horizontal largo de onda viajera con terminación "
+            "resistiva opcional a tierra; patrón directivo hacia la terminación."
+        ),
+    },
+    "catalog.family.wire": {
+        Language.ENGLISH: "Wire antennas",
+        Language.SPANISH: "Antenas de hilo",
+    },
     "catalog.slim_jim": {
         Language.ENGLISH: "Slim Jim",
         Language.SPANISH: "Slim Jim",
@@ -1898,6 +1917,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Current band only; the biquad is a broadband starting point, not a validated multiband design.",
         Language.SPANISH: "Solo la banda actual; el biquad es un punto de partida de banda ancha, no un diseño multibanda validado.",
     },
+    "band.note.beverage": {
+        Language.ENGLISH: "Current band only; the Beverage is a receiving starting point with low gain.",
+        Language.SPANISH: "Solo la banda actual; la Beverage es un punto de partida de recepción con ganancia baja.",
+    },
     "status.analyzing_bands": {
         Language.ENGLISH: "Analyzing bands...",
         Language.SPANISH: "Analizando bandas...",
@@ -3017,6 +3040,78 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "biquad; no afirma una ganancia, impedancia de alimentación ni ancho de "
             "banda publicados. Medí o simulá la antena instalada antes de confiar "
             "en el resultado."
+        ),
+    },
+    "beverage.title": {
+        Language.ENGLISH: "Beverage Generator",
+        Language.SPANISH: "Generador Beverage",
+    },
+    "beverage.termination_enabled": {
+        Language.ENGLISH: "Resistive termination to ground",
+        Language.SPANISH: "Terminación resistiva a tierra",
+    },
+    "beverage.termination_resistance": {
+        Language.ENGLISH: "Termination resistance",
+        Language.SPANISH: "Resistencia de terminación",
+    },
+    "beverage.termination": {
+        Language.ENGLISH: "Termination",
+        Language.SPANISH: "Terminación",
+    },
+    "beverage.termination_note": {
+        Language.ENGLISH: "Resistive termination to ground: {resistance}.",
+        Language.SPANISH: "Terminación resistiva a tierra: {resistance}.",
+    },
+    "beverage.termination_off": {
+        Language.ENGLISH: "off",
+        Language.SPANISH: "desactivada",
+    },
+    "beverage.geometry": {
+        Language.ENGLISH: (
+            "length {length} {unit} · height {height} {unit} · termination {termination}"
+        ),
+        Language.SPANISH: (
+            "longitud {length} {unit} · altura {height} {unit} · terminación {termination}"
+        ),
+    },
+    "beverage.load_starting": {
+        Language.ENGLISH: "Load one-wavelength starting length",
+        Language.SPANISH: "Cargar longitud inicial de una onda",
+    },
+    "beverage.load_starting_hint": {
+        Language.ENGLISH: "Set the wire length to one wavelength at the current frequency.",
+        Language.SPANISH: "Ajusta la longitud del hilo a una onda en la frecuencia actual.",
+    },
+    "beverage.hint": {
+        Language.ENGLISH: (
+            "A Beverage is a long horizontal receiving wire fed at the near end "
+            "and terminated by a resistor to ground at the far end. The model "
+            "uses a short vertical termination wire and a series resistor; the "
+            "one-wavelength length and 500 ohm termination are starting "
+            "heuristics, not validated low-band receiving performance."
+        ),
+        Language.SPANISH: (
+            "Una Beverage es un hilo receptor horizontal largo alimentado en el "
+            "extremo cercano y terminado con una resistencia a tierra en el "
+            "extremo lejano. El modelo usa un tramo vertical corto de terminación "
+            "y una resistencia serie; la longitud de una onda y la terminación de "
+            "500 ohm son heurísticas iniciales, no un rendimiento de recepción "
+            "validado en bandas bajas."
+        ),
+    },
+    "beverage.evidence": {
+        Language.ENGLISH: (
+            "Experimental receiving model. The termination is a wire stub with a "
+            "series resistor, not a full ground system. Gain is low and is not "
+            "independently validated; use the model for relative pattern and "
+            "termination studies, then verify with a measurement."
+        ),
+        Language.SPANISH: (
+            "Modelo de recepción experimental. La terminación es un tramo de hilo "
+            "con una resistencia serie, no un sistema de tierra completo. La "
+            "ganancia es baja y no está validada independientemente; usá el modelo "
+            "para estudios relativos de patrón y terminación, y verificá con una "
+            "medición."
         ),
     },
     "ringo.title": {

@@ -692,6 +692,25 @@ def test_biquad_round_trips_through_the_schema() -> None:
         assert restored.designs[0].antenna_type == parameters.kind.antenna_type
 
 
+def test_beverage_round_trips_through_the_schema() -> None:
+    from antennadesk.domain.antennas.beverage import beverage_parameters
+
+    parameters = beverage_parameters(
+        frequency_hz=3_500_000.0,
+        length_m=80.0,
+        height_m=3.5,
+        termination_resistance_ohm=470.0,
+    )
+    original = _project(parameters, "Beverage")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna == original.designs[0].antenna
+    assert restored.designs[0].antenna_type == "beverage"
+
+
 def test_optimization_summary_round_trips_through_the_schema() -> None:
     from datetime import UTC, datetime
 

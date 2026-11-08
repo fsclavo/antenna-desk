@@ -187,8 +187,12 @@ The ordered antenna backlog lives in
     inline editor, schema-19 persistence, scene contract, reports, construction
     notes, and a family optimizer. Evidence stays C pending an independent
     design or measurement.
+12. **Completed 2026-11-07:** Beverage long receiving wire with optional
+    resistive termination, one-wavelength starting length, inline editor,
+    schema-20 persistence, scene contract, reports, construction notes, and a
+    family optimizer. Evidence stays C pending a measurement.
 
-The remaining medium and large candidates are ordered after those eleven in the
+The remaining medium and large candidates are ordered after those twelve in the
 roadmap table. Items 15–19 require architectural work or a much larger test
 surface and should wait until the single-feed families are stable.
 

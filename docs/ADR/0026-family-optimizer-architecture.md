@@ -278,6 +278,7 @@ Optimizable families:
 - Ringo;
 - half square and bobtail curtain;
 - biquad and double biquad;
+- Beverage receiving wire;
 - OCFD, EndFed/EFHW/sloper;
 - fan dipole, trap dipole, T2FD;
 - Yagi, Moxon;
@@ -374,6 +375,7 @@ migrated every typed family with a first-class parameter model:
 - Ringo;
 - half square and bobtail curtain;
 - biquad and double biquad;
+- Beverage receiving wire;
 - OCFD, EndFed/EFHW/sloper;
 - fan dipole, trap dipole, T2FD;
 - Yagi and Moxon.

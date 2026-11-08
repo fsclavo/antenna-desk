@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from ..antennas.beverage import BeverageParameters
 from ..antennas.biquad import BiquadParameters
 from ..antennas.custom import CustomAntennaParameters
 from ..antennas.design import AntennaDesignParameters
@@ -154,6 +155,12 @@ def default_band_plan(
             _current_band_plan(parameters.frequency_hz),
             BandEvidence.CURRENT,
             "band.note.biquad",
+        )
+    if isinstance(parameters, BeverageParameters):
+        return BandDefault(
+            _current_band_plan(parameters.frequency_hz),
+            BandEvidence.CURRENT,
+            "band.note.beverage",
         )
     if isinstance(parameters, CustomAntennaParameters) and parameters.generator_id == "g5rv":
         return BandDefault(

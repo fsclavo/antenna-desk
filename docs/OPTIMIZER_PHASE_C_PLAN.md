@@ -137,7 +137,8 @@ The family optimizer dialog adds:
 - `tests/ui/test_main_window_optimization.py` covers attaching the summary to
   the project design.
 - Full gate at Phase C close: **1666 passed, 1 skipped**; **1700 passed** after
-  the subsequent biquad family. The skip is the PyNEC cross-engine comparison
+  the biquad family and **1725 passed** after the Beverage family. The skip is
+  the PyNEC cross-engine comparison
   because PyNEC is not installed. Repeated UI stress runs also cover the
   worker-thread lifetime fix in the optimizer dialogs.
 

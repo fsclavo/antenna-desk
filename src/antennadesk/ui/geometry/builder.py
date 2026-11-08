@@ -8,6 +8,10 @@ import math
 from dataclasses import dataclass
 
 from ...domain.antennas.antenna import AntennaModel
+from ...domain.antennas.beverage import (
+    ANTENNA_TYPE_BEVERAGE,
+    BeverageParameters,
+)
 from ...domain.antennas.biquad import (
     ANTENNA_TYPE_BIQUAD,
     ANTENNA_TYPE_DOUBLE_BIQUAD,
@@ -111,6 +115,7 @@ _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_BOBTAIL_CURTAIN: "catalog.bobtail_curtain",
     ANTENNA_TYPE_BIQUAD: "catalog.biquad",
     ANTENNA_TYPE_DOUBLE_BIQUAD: "catalog.double_biquad",
+    ANTENNA_TYPE_BEVERAGE: "catalog.beverage",
     ANTENNA_TYPE_TRAP_DIPOLE: "catalog.trap_dipole",
     ANTENNA_TYPE_T2FD: "catalog.t2fd",
     ANTENNA_TYPE_G5RV: "catalog.g5rv",
@@ -142,6 +147,7 @@ def effective_antenna_type(
             "bobtail_curtain",
             "biquad",
             "double_biquad",
+            "beverage",
             "yagi",
             "moxon",
             "fan_dipole",
@@ -1072,6 +1078,45 @@ def _add_biquad_dimensions(
             )
         )
     notes.append(translator.t("geometry.vertical_plane_edge_on"))
+
+
+def _add_beverage_dimensions(
+    model: AntennaModel,
+    parameters: BeverageParameters | None,
+    factory: _Factory,
+    dimensions: list[Dimension],
+    notes: list[str],
+    translator: Translator,
+) -> None:
+    wire = model.feed_wire
+    if wire is None:
+        return
+    near = wire.point_at(model.feed.offset_m)
+    far = wire.end if near.distance_to(wire.start) >= near.distance_to(wire.end) else wire.start
+    length = wire.length_m
+    height = near.z_m
+    dimensions.append(factory.dimension(near, far, length, side="above", priority=90))
+    if factory.projection.vertical:
+        x_scene = factory.project(far).x_m
+        dimensions.append(
+            factory.vertical_dimension(
+                x_scene,
+                0.0,
+                height,
+                height,
+                side="right",
+                priority=80,
+            )
+        )
+    else:
+        notes.append(translator.t("geometry.vertical_plane_edge_on"))
+    if parameters is not None and parameters.termination_enabled:
+        notes.append(
+            translator.t(
+                "beverage.termination_note",
+                resistance=f"{parameters.termination_resistance_ohm:.1f} Ω",
+            )
+        )
 
 
 def _add_ringo_dimensions(
@@ -2127,6 +2172,34 @@ def _summary(
                 ),
             ]
         )
+    elif isinstance(parameters, BeverageParameters) or antenna_type == ANTENNA_TYPE_BEVERAGE:
+        if isinstance(parameters, BeverageParameters):
+            length = parameters.length_m
+            height = parameters.height_m
+            termination = (
+                f"{parameters.termination_resistance_ohm:.1f} Ω"
+                if parameters.termination_enabled
+                else translator.t("beverage.termination_off")
+            )
+        else:
+            length = max(
+                math.hypot(
+                    wire.end.x_m - wire.start.x_m,
+                    wire.end.y_m - wire.start.y_m,
+                )
+                for wire in model.wires
+            )
+            height = max_z
+            termination = translator.t("beverage.termination_off")
+        parts.extend(
+            [
+                f"{translator.t('field.length').lower()} "
+                f"{_format_length(length, translator, unit_system)}",
+                f"{translator.t('field.height').lower()} "
+                f"{_format_length(height, translator, unit_system)}",
+                f"{translator.t('beverage.termination').lower()} {termination}",
+            ]
+        )
     elif isinstance(parameters, YagiParameters) or antenna_type == ANTENNA_TYPE_YAGI:
         if isinstance(parameters, YagiParameters):
             positions = [element.position_m for element in parameters.elements]
@@ -2546,6 +2619,15 @@ def build_scene(
         _add_biquad_dimensions(
             model,
             parameters if isinstance(parameters, BiquadParameters) else None,
+            factory,
+            dimensions,
+            notes,
+            translator,
+        )
+    elif effective_type == ANTENNA_TYPE_BEVERAGE:
+        _add_beverage_dimensions(
+            model,
+            parameters if isinstance(parameters, BeverageParameters) else None,
             factory,
             dimensions,
             notes,

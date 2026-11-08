@@ -7,6 +7,7 @@ from typing import get_args
 
 import pytest
 
+from antennadesk.domain.antennas.beverage import beverage_parameters
 from antennadesk.domain.antennas.biquad import (
     BiquadKind,
     biquad_parameters,
@@ -251,6 +252,7 @@ def _typed_samples() -> list[AntennaDesignParameters]:
         scv_parameters(ScvKind.HALF_SQUARE, 7_150_000.0),
         biquad_parameters(BiquadKind.SINGLE),
         biquad_parameters(BiquadKind.DOUBLE),
+        beverage_parameters(),
         OCFDParameters(frequency_hz=7_100_000.0, total_length_m=40.0),
         EndFedParameters(
             frequency_hz=7_100_000.0,
@@ -326,6 +328,7 @@ _CONTEXT_FIELDS = {
     "elements",
     "kind",
     "reflector_enabled",
+    "termination_enabled",
     "loading_coil_enabled",
     "loading_coil_resistance_ohm",
     "top_hat_enabled",
@@ -361,6 +364,18 @@ def test_biquad_without_a_reflector_does_not_optimize_its_spacing() -> None:
     assert "loop_side_m" in names
     assert "base_height_m" in names
     assert "reflector_spacing_m" not in names
+
+
+def test_beverage_without_termination_does_not_optimize_its_resistance() -> None:
+    parameters = beverage_parameters(termination_enabled=False)
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+
+    names = {variable.name for variable in availability.descriptor.variables}
+
+    assert "length_m" in names
+    assert "height_m" in names
+    assert "termination_resistance_ohm" not in names
 
 
 def test_descriptor_initial_values_rebuild_the_current_parameters() -> None:

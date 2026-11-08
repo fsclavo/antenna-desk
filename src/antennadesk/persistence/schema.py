@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..domain.antennas.antenna import AntennaModel
 from ..domain.antennas.balun import BalunLoss
+from ..domain.antennas.beverage import ANTENNA_TYPE_BEVERAGE, BeverageParameters
 from ..domain.antennas.biquad import (
     ANTENNA_TYPE_BIQUAD,
     ANTENNA_TYPE_DOUBLE_BIQUAD,
@@ -285,6 +286,18 @@ class BiquadParametersPayload(StrictModel):
     base_height_m: float = Field(default=1.0, ge=0.0)
     reflector_enabled: bool = True
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class BeverageParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    length_m: float = Field(gt=0.0)
+    height_m: float = Field(default=3.0, gt=0.0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    termination_enabled: bool = True
+    termination_resistance_ohm: float = Field(default=500.0, gt=0.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
@@ -698,6 +711,7 @@ ParameterPayload = (
     | RingoParametersPayload
     | ScvParametersPayload
     | BiquadParametersPayload
+    | BeverageParametersPayload
     | T2FDParametersPayload
     | TransmissionLineDoubletParametersPayload
     | TrapDipoleParametersPayload
@@ -741,6 +755,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return (
             ANTENNA_TYPE_BIQUAD if value.kind is BiquadKind.SINGLE else ANTENNA_TYPE_DOUBLE_BIQUAD
         )
+    if isinstance(value, BeverageParametersPayload):
+        return ANTENNA_TYPE_BEVERAGE
     if isinstance(value, TrapDipoleParametersPayload):
         return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(value, T2FDParametersPayload):
@@ -789,6 +805,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return ScvParametersPayload
     if antenna_type in {ANTENNA_TYPE_BIQUAD, ANTENNA_TYPE_DOUBLE_BIQUAD}:
         return BiquadParametersPayload
+    if antenna_type == ANTENNA_TYPE_BEVERAGE:
+        return BeverageParametersPayload
     if antenna_type == ANTENNA_TYPE_TRAP_DIPOLE:
         return TrapDipoleParametersPayload
     if antenna_type == ANTENNA_TYPE_T2FD:
@@ -1118,6 +1136,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _scv_parameters_from_domain(value)
     if isinstance(value, BiquadParameters):
         return _biquad_parameters_from_domain(value)
+    if isinstance(value, BeverageParameters):
+        return _beverage_parameters_from_domain(value)
     if isinstance(value, TrapDipoleParameters):
         return _trap_dipole_parameters_from_domain(value)
     if isinstance(value, T2FDParameters):
@@ -1237,6 +1257,22 @@ def _biquad_parameters_from_domain(
         base_height_m=value.base_height_m,
         reflector_enabled=value.reflector_enabled,
         azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _beverage_parameters_from_domain(
+    value: BeverageParameters,
+) -> BeverageParametersPayload:
+    return BeverageParametersPayload(
+        frequency_hz=value.frequency_hz,
+        length_m=value.length_m,
+        height_m=value.height_m,
+        azimuth_deg=value.azimuth_deg,
+        termination_enabled=value.termination_enabled,
+        termination_resistance_ohm=value.termination_resistance_ohm,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
@@ -1993,6 +2029,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if value.parameters.kind is not expected_biquad_kind:
             raise ValueError("antenna_type does not match the biquad variant")
         return _biquad_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_BEVERAGE:
+        if not isinstance(value.parameters, BeverageParametersPayload):
+            raise ValueError("Beverage parameters have the wrong shape")
+        return _beverage_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_TRAP_DIPOLE:
         if not isinstance(value.parameters, TrapDipoleParametersPayload):
             raise ValueError("trap dipole parameters have the wrong shape")
@@ -2143,6 +2183,22 @@ def _biquad_parameters_to_domain(
         base_height_m=value.base_height_m,
         reflector_enabled=value.reflector_enabled,
         azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _beverage_parameters_to_domain(
+    value: BeverageParametersPayload,
+) -> BeverageParameters:
+    return BeverageParameters(
+        frequency_hz=value.frequency_hz,
+        length_m=value.length_m,
+        height_m=value.height_m,
+        azimuth_deg=value.azimuth_deg,
+        termination_enabled=value.termination_enabled,
+        termination_resistance_ohm=value.termination_resistance_ohm,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),

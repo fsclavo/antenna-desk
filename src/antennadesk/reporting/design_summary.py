@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from ..domain.antennas.beverage import BeverageParameters
 from ..domain.antennas.biquad import BiquadParameters
 from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.design import AntennaDesignParameters
@@ -351,6 +352,27 @@ def design_summary_rows(
                     "Feed offset below top",
                     f"{parameters.feed_offset_m:.4f} m",
                 ),
+                ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        return tuple(rows)
+    if isinstance(parameters, BeverageParameters):
+        rows.extend(
+            [
+                ("Type", "Beverage"),
+                ("Length", f"{parameters.length_m:.4f} m"),
+                ("Height", f"{parameters.height_m:.4f} m"),
+                (
+                    "Termination",
+                    (
+                        f"{parameters.termination_resistance_ohm:.1f} Ω to ground"
+                        if parameters.termination_enabled
+                        else "disabled"
+                    ),
+                ),
+                ("Feed", "near end"),
                 ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground)),

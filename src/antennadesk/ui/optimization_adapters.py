@@ -12,6 +12,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from ..domain.antennas.beverage import BeverageParameters
 from ..domain.antennas.biquad import BiquadParameters
 from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import DipoleParameters
@@ -83,6 +84,10 @@ ADAPTERS: dict[type[AntennaDesignParameters], OptimizationUiAdapter] = {
     BiquadParameters: OptimizationUiAdapter(
         lambda window, parameters: window._biquad_simulation_spec(parameters),
         lambda window, parameters: window._biquad_form.set_parameters(parameters),
+    ),
+    BeverageParameters: OptimizationUiAdapter(
+        lambda window, parameters: window._beverage_simulation_spec(parameters),
+        lambda window, parameters: window._beverage_form.set_parameters(parameters),
     ),
     OCFDParameters: OptimizationUiAdapter(
         lambda window, parameters: window._ocfd_simulation_spec(parameters),

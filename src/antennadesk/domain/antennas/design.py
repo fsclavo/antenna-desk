@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from .beverage import ANTENNA_TYPE_BEVERAGE, BeverageParameters
 from .biquad import (
     ANTENNA_TYPE_BIQUAD,
     ANTENNA_TYPE_DOUBLE_BIQUAD,
@@ -60,6 +61,7 @@ AntennaDesignParameters = (
     | RingoParameters
     | ScvParameters
     | BiquadParameters
+    | BeverageParameters
     | T2FDParameters
     | TransmissionLineDoubletParameters
     | TrapDipoleParameters
@@ -74,6 +76,8 @@ def template_load_ids(parameters: AntennaDesignParameters) -> frozenset[str]:
     if isinstance(parameters, VerticalParameters):
         return parameters.managed_load_ids
     if isinstance(parameters, (T2FDParameters, TrapDipoleParameters)):
+        return parameters.managed_load_ids
+    if isinstance(parameters, BeverageParameters):
         return parameters.managed_load_ids
     return frozenset()
 
@@ -119,6 +123,8 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
             if parameters.kind is BiquadKind.SINGLE
             else ANTENNA_TYPE_DOUBLE_BIQUAD
         )
+    if isinstance(parameters, BeverageParameters):
+        return ANTENNA_TYPE_BEVERAGE
     if isinstance(parameters, TrapDipoleParameters):
         return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(parameters, T2FDParameters):
@@ -149,6 +155,8 @@ def primary_dimension_m(parameters: AntennaDesignParameters) -> float:
         return parameters.horizontal_length_m
     if isinstance(parameters, BiquadParameters):
         return parameters.loop_side_m
+    if isinstance(parameters, BeverageParameters):
+        return parameters.length_m
     if isinstance(parameters, EndFedParameters):
         return parameters.length_m
     if isinstance(parameters, TrapDipoleParameters):
@@ -187,6 +195,8 @@ def with_primary_dimension(
             loop_side_m=dimension_m,
             reflector_spacing_m=parameters.reflector_spacing_m * ratio,
         )
+    if isinstance(parameters, BeverageParameters):
+        return replace(parameters, length_m=dimension_m)
     if isinstance(parameters, EndFedParameters):
         return replace(parameters, length_m=dimension_m)
     if isinstance(parameters, TrapDipoleParameters):

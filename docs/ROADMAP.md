@@ -143,7 +143,8 @@ Deferred:
   modes, a descriptive Pareto front, deterministic recommendations, and
   schema-18 persisted run summaries.
 - Supported typed families: dipoles, loop, vertical/inverted-V/inverted-L,
-  J Pole/Slim Jim, Ringo, SCV, biquad, OCFD, EndFed, typed G5RV/ZS6BKW/Zepp,
+  J Pole/Slim Jim, Ringo, SCV, biquad, Beverage, OCFD, EndFed,
+  typed G5RV/ZS6BKW/Zepp,
   fan/trap/T2FD, Yagi, and Moxon. The doublet radiator uses the dipole
   descriptor and its feed line remains in the matching stage.
 - Explicitly unavailable optimizers: magnetic loop, random wire, and arbitrary
@@ -257,7 +258,7 @@ point; `C` is structural/experimental only.
 | 9 | Explicit EFHW presets for the existing EndFed + OCFD/G5RV variants | Presets/UX, not a new family | S | Medium–high | A/B | **Implemented on 2026-11-07:** the EndFed editor is labeled EFHW, exposes 40/20/10 m preset buttons using the published 66/33/16 ft lengths and 49:1 transformer, and keeps the existing harmonic band plan. OCFD/G5RV variants remain presets. |
 | 10 | Half-square / bobtail curtain | New family | M | Medium | B/A | **Implemented on 2026-11-07:** one self-contained vertical-array family with half-square and bobtail-curtain variants, top-junction feed with adjustable offset, schema-16 persistence, catalog routes, editor, geometry dimensions, reports, and construction sheet. The Cebik 7.15 MHz dimensions are the published starting point; pattern, ground, and matching remain unvalidated and there is no frequency-first estimator. |
 | 11 | Biquad / double biquad | New family | M | Medium | B/A | **Implemented on 2026-11-07:** two- or four-loop stack with shared rails, optional wire reflector, quarter-wave starting dimensions, inline editor, schema 19, scene contract, reports, and family optimizer. Evidence remains C until an independent design is available. |
-| 12 | Beverage | New family | M | Medium | B/A | Receiving antenna; termination, ground, and long-wire geometry. |
+| 12 | Beverage | New family | M | Medium | B/A | **Implemented on 2026-11-07:** long receiving wire with optional resistive termination, one-wavelength starting length, inline editor, schema 20, scene contract, reports, construction notes, and family optimizer. Evidence remains C pending a measurement. |
 | 13 | Loaded / linked dipole | New family or `dipole` variant | M | Medium | B/C | Portable/SOTA use; existing load model helps, but coil Q and links need care. |
 | 14 | Wire sag / tapered elements / boom correction | Geometry model | M | Medium | B/C | Realism for Yagi and wire antennas; touches geometry and solver inputs. |
 | 15 | Phased verticals / arrays | Architectural | XL | High | B/A | Requires multiple sources, phase, and feed networks; not a simple family. |
@@ -267,7 +268,7 @@ point; `C` is structural/experimental only.
 | 19 | Trapped / multiband Yagi | New family | L | High | B/C | Traps and multiple elements; difficult independent validation. |
 
 Items 1–7 were the immediate recommended sequence; items 8–14 are the next
-medium-sized candidates, with 8–11 now done. Items 15–19 are large or
+medium-sized candidates, with 8–12 now done. Items 15–19 are large or
 architectural and should not start until the single-feed families and the shared
 geometry/load model are stable.
 

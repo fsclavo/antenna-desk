@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added a first-class **Beverage** receiving antenna: a long horizontal wire
+  fed at the near end with an optional resistive termination to ground, a
+  one-wavelength starting length, schema-20 persistence, catalog route, inline
+  editor, scene contract, reports, construction notes, and a family optimizer.
+  The model is experimental; its low gain, pattern, and termination efficiency
+  are not independently validated.
 - Added first-class **Biquad** and **Double biquad** designs: two or four
   stacked square loops with shared rails, an optional rectangular wire
   reflector, quarter-wave starting dimensions, schema-19 persistence, catalog

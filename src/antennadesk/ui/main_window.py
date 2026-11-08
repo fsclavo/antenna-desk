@@ -79,6 +79,7 @@ from ..application.use_cases.update_dipole_design import (
     UpdateDipoleDesignCommand,
 )
 from ..domain.antennas.balun import BalunLoss
+from ..domain.antennas.beverage import BeverageParameters
 from ..domain.antennas.biquad import (
     BiquadKind,
     BiquadParameters,
@@ -165,6 +166,7 @@ from ..reporting.csv_export import (
 from ..reporting.html_report import write_html_report
 from ..simulation.nec2.solver import Nec2cSolver
 from .dialogs.antenna_catalog_dialog import (
+    CATALOG_TYPE_BEVERAGE,
     CATALOG_TYPE_BIQUAD,
     CATALOG_TYPE_BOBTAIL_CURTAIN,
     CATALOG_TYPE_CUSTOM,
@@ -200,6 +202,7 @@ from .dialogs.antenna_catalog_dialog import (
 )
 from .dialogs.balun_loss_dialog import BalunLossDialog
 from .dialogs.band_analysis_dialog import BandAnalysisDialog
+from .dialogs.beverage_dialog import BeverageDialog
 from .dialogs.biquad_dialog import BiquadDialog
 from .dialogs.comparison_dialog import ComparisonDialog
 from .dialogs.construction_dialog import ConstructionDialog
@@ -259,6 +262,7 @@ from .preferences import (
 from .report_pdf import write_report_pdf
 from .template_identity import catalog_key_for, label_key_for
 from .units import UnitSystem, length_from_m, length_unit_key
+from .widgets.beverage_form import BeverageForm
 from .widgets.biquad_form import BiquadForm
 from .widgets.dipole_form import DipoleForm
 from .widgets.endfed_form import EndFedForm
@@ -616,6 +620,18 @@ class MainWindow(QMainWindow):
         self._biquad_scroll.setMinimumWidth(340)
         self._biquad_scroll.setMaximumWidth(480)
 
+        self._beverage_form = BeverageForm(
+            self._translator,
+            self._unit_system,
+            parent=self,
+        )
+        self._beverage_form.changed.connect(self._on_form_changed)
+        self._beverage_scroll = QScrollArea(self)
+        self._beverage_scroll.setWidgetResizable(True)
+        self._beverage_scroll.setWidget(self._beverage_form)
+        self._beverage_scroll.setMinimumWidth(340)
+        self._beverage_scroll.setMaximumWidth(480)
+
         self._doublet_form = TransmissionLineDoubletForm(
             self._translator,
             self._unit_system,
@@ -654,6 +670,7 @@ class MainWindow(QMainWindow):
             (self._ringo_form, self._ringo_scroll, 480),
             (self._scv_form, self._scv_scroll, 480),
             (self._biquad_form, self._biquad_scroll, 480),
+            (self._beverage_form, self._beverage_scroll, 480),
             (self._doublet_form, self._doublet_scroll, 480),
             (self._zepp_form, self._zepp_scroll, 480),
         )
@@ -827,6 +844,7 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._ringo_scroll)
         self._design_stack.addWidget(self._scv_scroll)
         self._design_stack.addWidget(self._biquad_scroll)
+        self._design_stack.addWidget(self._beverage_scroll)
         self._design_stack.addWidget(self._doublet_scroll)
         self._design_stack.addWidget(self._zepp_scroll)
         self._design_stack.addWidget(self._custom_panel)
@@ -1175,6 +1193,7 @@ class MainWindow(QMainWindow):
         self._ringo_form.retranslate()
         self._scv_form.retranslate()
         self._biquad_form.retranslate()
+        self._beverage_form.retranslate()
         self._doublet_form.retranslate()
         self._zepp_form.retranslate()
         self._geometry.retranslate()
@@ -1710,6 +1729,9 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, BiquadParameters):
             self._design_stack.setCurrentWidget(self._biquad_scroll)
             self._biquad_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, BeverageParameters):
+            self._design_stack.setCurrentWidget(self._beverage_scroll)
+            self._beverage_form.set_parameters(design.parameters)
         elif isinstance(design.parameters, TransmissionLineDoubletParameters):
             self._design_stack.setCurrentWidget(self._doublet_scroll)
             self._doublet_form.set_parameters(design.parameters)
@@ -2324,9 +2346,16 @@ class MainWindow(QMainWindow):
             return self._project
         if isinstance(
             previous_design.parameters,
-            (BiquadParameters, TransmissionLineDoubletParameters, ZeppParameters),
+            (
+                BeverageParameters,
+                BiquadParameters,
+                TransmissionLineDoubletParameters,
+                ZeppParameters,
+            ),
         ):
-            if isinstance(previous_design.parameters, BiquadParameters):
+            if isinstance(previous_design.parameters, BeverageParameters):
+                parameters = self._beverage_form.parameters()
+            elif isinstance(previous_design.parameters, BiquadParameters):
                 parameters = self._biquad_form.parameters()
             elif isinstance(
                 previous_design.parameters,
@@ -2520,6 +2549,8 @@ class MainWindow(QMainWindow):
             return self._scv_simulation_spec(parameters)
         if isinstance(parameters, BiquadParameters):
             return self._biquad_simulation_spec(parameters)
+        if isinstance(parameters, BeverageParameters):
+            return self._beverage_simulation_spec(parameters)
         if isinstance(parameters, TransmissionLineDoubletParameters):
             return self._doublet_simulation_spec(parameters)
         if isinstance(parameters, ZeppParameters):
@@ -3444,6 +3475,26 @@ class MainWindow(QMainWindow):
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
         )
 
+    def _beverage_simulation_spec(
+        self,
+        parameters: BeverageParameters,
+    ) -> SimulationSpec:
+        model = parameters.to_antenna()
+        frequency_hz = parameters.frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                frequency_hz * 0.9,
+                frequency_hz * 1.1,
+                DEFAULT_GENERATED_SWEEP_POINTS,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz * 1.1,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
     def _doublet_simulation_spec(
         self,
         parameters: TransmissionLineDoubletParameters,
@@ -3654,6 +3705,17 @@ class MainWindow(QMainWindow):
 
     def new_double_biquad_antenna(self) -> None:
         self.new_biquad_antenna(kind=BiquadKind.DOUBLE)
+
+    def new_beverage_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        dialog = BeverageDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name="Beverage",
+        )
 
     def new_j_pole_antenna(self, *, folded: bool) -> None:
         if not self._maybe_save_changes():
@@ -4258,6 +4320,16 @@ class MainWindow(QMainWindow):
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
             return dialog.result_parameters()
+        if selected == CATALOG_TYPE_BEVERAGE:
+            dialog = BeverageDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
         if selected in {CATALOG_TYPE_BIQUAD, CATALOG_TYPE_DOUBLE_BIQUAD}:
             biquad_kind = (
                 BiquadKind.SINGLE if selected == CATALOG_TYPE_BIQUAD else BiquadKind.DOUBLE
@@ -4589,6 +4661,8 @@ class MainWindow(QMainWindow):
             self.new_single_biquad_antenna()
         elif selected == CATALOG_TYPE_DOUBLE_BIQUAD:
             self.new_double_biquad_antenna()
+        elif selected == CATALOG_TYPE_BEVERAGE:
+            self.new_beverage_antenna()
         elif selected == CATALOG_TYPE_OCFD:
             self.new_ocfd_antenna()
         elif selected == CATALOG_TYPE_DELTA_LOOP:
@@ -5164,6 +5238,8 @@ class MainWindow(QMainWindow):
             base_spec = self._scv_simulation_spec(design.parameters)
         elif isinstance(design.parameters, BiquadParameters):
             base_spec = self._biquad_simulation_spec(design.parameters)
+        elif isinstance(design.parameters, BeverageParameters):
+            base_spec = self._beverage_simulation_spec(design.parameters)
         else:
             base_spec = self._form.simulation_spec()
 
@@ -5200,6 +5276,8 @@ class MainWindow(QMainWindow):
                 self._scv_form.set_parameters(parameters)
             elif isinstance(parameters, BiquadParameters):
                 self._biquad_form.set_parameters(parameters)
+            elif isinstance(parameters, BeverageParameters):
+                self._beverage_form.set_parameters(parameters)
             else:
                 self._form.set_parameters(parameters, reset_sweep=False)
             self._apply_fields()
@@ -6450,6 +6528,7 @@ class MainWindow(QMainWindow):
             self._ringo_form,
             self._scv_form,
             self._biquad_form,
+            self._beverage_form,
             self._doublet_form,
             self._zepp_form,
         ):

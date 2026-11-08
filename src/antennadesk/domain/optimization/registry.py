@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from ..antennas.beverage import BeverageParameters
 from ..antennas.biquad import BiquadParameters
 from ..antennas.custom import CustomAntennaParameters
 from ..antennas.design import AntennaDesignParameters
@@ -36,6 +37,7 @@ from .descriptor import AntennaOptimizerDescriptor
 from .families.dipole import dipole_descriptor
 from .families.scv import scv_descriptor
 from .families.typed import (
+    beverage_descriptor,
     biquad_descriptor,
     endfed_descriptor,
     fan_dipole_descriptor,
@@ -90,6 +92,8 @@ def optimizer_availability(
         return OptimizerAvailability(descriptor=scv_descriptor(parameters))
     if isinstance(parameters, BiquadParameters):
         return OptimizerAvailability(descriptor=biquad_descriptor(parameters))
+    if isinstance(parameters, BeverageParameters):
+        return OptimizerAvailability(descriptor=beverage_descriptor(parameters))
     if isinstance(parameters, FoldedDipoleParameters):
         return OptimizerAvailability(descriptor=folded_dipole_descriptor(parameters))
     if isinstance(parameters, LoopParameters):
@@ -141,6 +145,7 @@ SUPPORTED_OPTIMIZER_TYPES = frozenset(
         RingoParameters,
         ScvParameters,
         BiquadParameters,
+        BeverageParameters,
         OCFDParameters,
         EndFedParameters,
         FanDipoleParameters,

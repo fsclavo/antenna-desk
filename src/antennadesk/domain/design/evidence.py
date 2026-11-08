@@ -376,6 +376,22 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "starting point and verify with simulation or measurement."
         ),
     ),
+    "beverage": EvidenceEntry(
+        template="beverage",
+        level=EvidenceLevel.EXPERIMENTAL,
+        source=(
+            "One-wavelength horizontal wire with a resistive termination to "
+            "ground; the starting length and 500 ohm termination are heuristics, "
+            "not an independent receiving-performance reference"
+        ),
+        tolerance="Not applicable (structural)",
+        limitation=(
+            "The termination is a short vertical wire with a series resistor, not "
+            "a complete ground system. Gain is low and the pattern, termination "
+            "efficiency, ground, and feed line are not independently validated. "
+            "Use relative simulations and a measurement."
+        ),
+    ),
     "doublet": EvidenceEntry(
         template="doublet",
         level=EvidenceLevel.PUBLISHED,

@@ -70,6 +70,7 @@ warnings, and a dimension tolerance.
 | Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; optimize for the target; horizontal or vertical polarization |
 | Moxon | Cebik 20 m wire reference scaled by frequency | reference scaled | Gap and tips are sensitive; horizontal or vertical polarization |
 | Biquad / double biquad | loop side `0.25λ × 0.95`; reflector `0.5 × side` | heuristic | No independent numerical reference; the wire reflector and shared-rail current distribution are experimental |
+| Beverage | length `1.0λ`; height and termination from the editor | heuristic | Receiving antenna; the termination and low gain are not independently validated |
 | T2FD | span `300/F(MHz)` ft, spacing `10/F(MHz)` ft | heuristic | Broadband starting geometry; highest design frequency is required; not a resonance calculation |
 
 Ground-mounted radials are placed 1 cm above the ground plane in the NEC deck.
@@ -158,6 +159,18 @@ no frequency-first estimator. They are generated from explicit geometry, and
 the UI disables **Estimate Dimensions...** for them. The magnetic loop also
 requires a user-supplied tuning capacitance; its default is a starting point,
 not a calculated resonance value.
+
+## Beverage starting dimensions
+
+The Beverage editor's **Load one-wavelength starting length** action sets the
+horizontal wire to `λ = c / f` at the current frequency. The height, azimuth,
+radius, and termination resistance are preserved from the current editor
+values; the default termination is 500 Ω.
+
+Confidence is **heuristic**. A Beverage is a receiving antenna; its gain is low
+and its pattern, termination efficiency, ground, and feed line are not
+independently validated. The starting action is a convenience, not a design
+claim.
 
 ## Biquad starting dimensions
 

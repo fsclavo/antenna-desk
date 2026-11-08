@@ -156,6 +156,16 @@ def test_biquad_default_is_the_current_band() -> None:
     assert default.plan.band_ids == ("20m",)
 
 
+def test_beverage_default_is_the_current_band() -> None:
+    from antennadesk.domain.antennas.beverage import beverage_parameters
+
+    default = default_band_plan(beverage_parameters(frequency_hz=3_500_000.0))
+
+    assert default.evidence is BandEvidence.CURRENT
+    assert default.note_key == "band.note.beverage"
+    assert default.plan.band_ids == ("80m",)
+
+
 def test_narrowband_default_is_the_current_band() -> None:
     result = default_band_plan(
         DipoleParameters(frequency_hz=7_100_000.0, total_length_m=20.0, height_m=8.0)

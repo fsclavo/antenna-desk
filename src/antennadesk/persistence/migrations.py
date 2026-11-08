@@ -317,6 +317,12 @@ def _migrate_v18_to_v19(document: dict[str, Any]) -> dict[str, Any]:
     return copy.deepcopy(document)
 
 
+def _migrate_v19_to_v20(document: dict[str, Any]) -> dict[str, Any]:
+    """Introduce the Beverage receiving-antenna design type."""
+
+    return copy.deepcopy(document)
+
+
 def _migrate_v13_to_v14(document: dict[str, Any]) -> dict[str, Any]:
     """Add the optional project balun/unun loss model."""
 
@@ -400,6 +406,7 @@ MIGRATIONS: dict[int, Migration] = {
     16: _migrate_v16_to_v17,
     17: _migrate_v17_to_v18,
     18: _migrate_v18_to_v19,
+    19: _migrate_v19_to_v20,
 }
 
 

@@ -9,6 +9,7 @@ from types import SimpleNamespace
 import pytest
 from PySide6.QtWidgets import QDialog, QWizard
 
+from antennadesk.domain.antennas.beverage import beverage_parameters
 from antennadesk.domain.antennas.biquad import (
     BiquadKind,
     biquad_parameters,
@@ -222,6 +223,7 @@ def _parameters_for(key: str) -> object:
         "bobtail_curtain": scv_parameters(ScvKind.BOBTAIL_CURTAIN, 7_150_000.0),
         "biquad": biquad_parameters(BiquadKind.SINGLE),
         "double_biquad": biquad_parameters(BiquadKind.DOUBLE),
+        "beverage": beverage_parameters(),
         "custom": CustomAntennaParameters(
             frequency_hz=7_100_000.0,
             wires=(
@@ -290,6 +292,7 @@ def test_every_catalog_entry_has_a_change_template_route(
             "ZS6BKWDialog",
             "ZeppDialog",
             "BiquadDialog",
+            "BeverageDialog",
         ):
             monkeypatch.setattr(main_window_module, class_name, fake_factory)
         fake_self = SimpleNamespace(
@@ -336,6 +339,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "bobtail_curtain": ("bobtail_curtain",),
         "biquad": ("single_biquad",),
         "double_biquad": ("double_biquad",),
+        "beverage": ("beverage",),
         "custom": ("custom",),
     }
 
@@ -394,6 +398,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         new_bobtail_curtain_antenna=record("bobtail_curtain"),
         new_single_biquad_antenna=record("single_biquad"),
         new_double_biquad_antenna=record("double_biquad"),
+        new_beverage_antenna=record("beverage"),
         new_ocfd_antenna=record("ocfd"),
         new_vertical_antenna=record("vertical"),
         new_loaded_vertical_antenna=record("loaded_vertical"),
@@ -453,6 +458,7 @@ ESTIMATORLESS_CATALOG_KEYS = frozenset(
         "bobtail_curtain",
         "biquad",
         "double_biquad",
+        "beverage",
         "trap_dipole",
         "zepp",
         "zs6bkw",

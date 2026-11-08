@@ -46,6 +46,7 @@ CATALOG_TYPE_HALF_SQUARE = "half_square"
 CATALOG_TYPE_BOBTAIL_CURTAIN = "bobtail_curtain"
 CATALOG_TYPE_BIQUAD = "biquad"
 CATALOG_TYPE_DOUBLE_BIQUAD = "double_biquad"
+CATALOG_TYPE_BEVERAGE = "beverage"
 CATALOG_TYPE_SLIM_JIM = "slim_jim"
 CATALOG_TYPE_INVERTED_V = "inverted_v"
 CATALOG_TYPE_INVERTED_L = "inverted_l"
@@ -124,6 +125,13 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         label_key="catalog.double_biquad",
         family_key="catalog.family.loop",
         description_key="catalog.double_biquad.description",
+        evidence_key="catalog.evidence.experimental",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_BEVERAGE,
+        label_key="catalog.beverage",
+        family_key="catalog.family.wire",
+        description_key="catalog.beverage.description",
         evidence_key="catalog.evidence.experimental",
     ),
     CatalogEntry(

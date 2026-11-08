@@ -14,6 +14,7 @@ from antennadesk.application.use_cases.optimize_antenna import (
     OptimizeAntenna,
     OptimizeAntennaCommand,
 )
+from antennadesk.domain.antennas.beverage import beverage_parameters
 from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.endfed import EndFedParameters
@@ -28,6 +29,7 @@ from antennadesk.domain.antennas.transmission_line_doublet import (
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 from antennadesk.domain.antennas.zepp import zepp_starting_parameters
+from antennadesk.domain.environment.ground import GroundModel
 from antennadesk.domain.optimization.descriptor import FamilyOptimizationObjective
 from antennadesk.domain.optimization.engine import OptimizationBudget
 from antennadesk.domain.optimization.registry import optimizer_availability
@@ -75,6 +77,14 @@ def _samples() -> list[object]:
         EndFedParameters(frequency_hz=7_100_000.0, length_m=20.0),
         scv_parameters(ScvKind.BOBTAIL_CURTAIN, 7_150_000.0),
         biquad_parameters(BiquadKind.SINGLE),
+        beverage_parameters(
+            frequency_hz=7_100_000.0,
+            length_m=42.0,
+            ground=GroundModel.finite(
+                relative_permittivity=13.0,
+                conductivity_s_per_m=0.005,
+            ),
+        ),
         YagiParameters(
             frequency_hz=14_100_000.0,
             elements=(

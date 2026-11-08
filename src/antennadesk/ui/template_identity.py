@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from ..domain.antennas.beverage import BeverageParameters
 from ..domain.antennas.biquad import BiquadKind, BiquadParameters
 from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.design import AntennaDesignParameters
@@ -29,6 +30,7 @@ from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
 from ..domain.antennas.zepp import ZeppParameters
 from .dialogs.antenna_catalog_dialog import (
+    CATALOG_TYPE_BEVERAGE,
     CATALOG_TYPE_BIQUAD,
     CATALOG_TYPE_BOBTAIL_CURTAIN,
     CATALOG_TYPE_CUSTOM,
@@ -78,6 +80,7 @@ _KNOWN_CUSTOM_GENERATORS = frozenset(
         CATALOG_TYPE_BOBTAIL_CURTAIN,
         CATALOG_TYPE_BIQUAD,
         CATALOG_TYPE_DOUBLE_BIQUAD,
+        CATALOG_TYPE_BEVERAGE,
         CATALOG_TYPE_SLIM_JIM,
         CATALOG_TYPE_T2FD,
         CATALOG_TYPE_TRAP_DIPOLE,
@@ -153,6 +156,8 @@ def catalog_key_for(parameters: AntennaDesignParameters) -> str:
             if parameters.kind is BiquadKind.SINGLE
             else CATALOG_TYPE_DOUBLE_BIQUAD
         )
+    if isinstance(parameters, BeverageParameters):
+        return CATALOG_TYPE_BEVERAGE
     if isinstance(parameters, TransmissionLineDoubletParameters):
         return (
             CATALOG_TYPE_G5RV

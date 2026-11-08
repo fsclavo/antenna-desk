@@ -566,6 +566,26 @@ current distribution are approximations, and gain, feedpoint impedance, and
 bandwidth are not independently validated. Simulate or measure the installed
 antenna before relying on the result.
 
+## Create a Beverage
+
+Choose **File → New Antenna... → Beverage** for a long horizontal receiving
+wire fed at the near end. The editor sets the design frequency, length, height,
+azimuth, radius, material, and ground, plus an optional resistive termination
+to ground at the far end.
+
+The model adds a short vertical wire at the far end and a series resistor.
+**Load one-wavelength starting length** sets the wire length to one wavelength
+at the current frequency; the default termination is 500 Ω. Both are starting
+heuristics. **Optimize...** searches length, height, termination resistance when
+enabled, and conductor radius jointly. Disabling the termination removes the
+resistor and produces a bidirectional receiving pattern.
+
+The Beverage is classified **experimental**. It is a low-gain receiving
+antenna; the termination is not a complete ground system, and the pattern,
+received signal, and termination efficiency are not independently validated.
+Use relative simulations for direction and termination studies, then verify
+with a measurement.
+
 ## Create a doublet
 
 Choose **File → New Antenna... → Doublet** for a center-fed dipole intended for
@@ -1064,6 +1084,7 @@ The following typed families have a complete joint optimizer:
 - Ringo;
 - half square and bobtail curtain;
 - biquad and double biquad;
+- Beverage receiving wire;
 - OCFD, EndFed/EFHW, and sloper;
 - typed G5RV, ZS6BKW, and Zepp;
 - the doublet radiator as a dipole, with its feed line in the matching stage;
