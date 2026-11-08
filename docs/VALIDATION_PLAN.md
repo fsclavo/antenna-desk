@@ -94,8 +94,11 @@ The `nec2c` adapter is cross-checked against `nec2++` through PyNEC 2.3.4 for a
 free-space dipole, folded dipole, and quad loop. Impedance agrees within `0.1 Ω`
 and maximum gain within `0.05 dB`. Both engines use the same thin-wire EFIE
 formulation, so this detects implementation and adapter errors, not formulation
-errors. Run it with `uv sync --group cross-engine`; the dedicated CI job
-installs that optional group.
+errors. Run it with `uv run --group cross-engine pytest
+tests/integration/simulation/test_necpp_cross_engine.py -q`; the dedicated CI
+job installs the optional group with `uv sync`. The group has Linux manylinux
+wheels but no Windows/macOS wheels, so the cross-engine job intentionally runs
+on Linux only.
 
 ### Physical invariants
 

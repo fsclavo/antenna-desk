@@ -29,7 +29,10 @@ from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.simulation.discretization import build_segment_layout
 from antennadesk.simulation.nec2.solver import Nec2cSolver
 
-PyNEC = pytest.importorskip("PyNEC")
+PyNEC = pytest.importorskip(
+    "PyNEC",
+    reason="optional cross-engine check; run with `uv run --group cross-engine`",
+)
 
 NEC2C = os.environ.get("NEC2C")
 pytestmark = [

@@ -139,9 +139,9 @@ The family optimizer dialog adds:
 - Full gate at Phase C close: **1666 passed, 1 skipped**; **1700 passed** after
   the biquad family, **1725 passed** after the Beverage family, **1751 passed**
   after the loaded/linked dipole, **1765 passed** after the optional dipole sag,
-  and **1776 passed** after tapered Yagi tips. The skip is the PyNEC cross-engine
-  comparison
-  because PyNEC is not installed. Repeated UI stress runs also cover the
+  and **1776 passed** after tapered Yagi tips. With the optional `cross-engine`
+  group installed the full suite is **1,779 passed, 0 skipped**; without that
+  group, PyNEC is the only skip. Repeated UI stress runs also cover the
   worker-thread lifetime fix in the optimizer dialogs.
 
 ## Limitations

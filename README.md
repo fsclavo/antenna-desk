@@ -236,6 +236,7 @@ Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 uv sync
 uv run pytest -m "fast and not slow"   # quick unit-test lane, about 8 s
 uv run pytest                          # full suite
+uv run --group cross-engine pytest tests/integration/simulation/test_necpp_cross_engine.py -q  # optional PyNEC check (Linux)
 uv run pytest benchmarks --benchmark-only -p no:pytest-qt   # report-only performance benchmarks
 uv run ruff check .
 uv run ruff format --check .
