@@ -804,6 +804,29 @@ def test_phased_vertical_preset_uses_the_inline_editor(window: MainWindow) -> No
     window._dirty = False
 
 
+def test_quad_beam_preset_uses_the_inline_editor(window: MainWindow) -> None:
+    from main_window_support import use_parameters
+
+    from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
+
+    parameters = quad_beam_parameters(
+        element_count=3,
+        loop_side_m=5.0,
+        reflector_spacing_m=4.0,
+        director_spacing_m=3.0,
+    )
+    use_parameters(window, parameters)
+    assert window._project is not None
+    assert window._project.designs[0].antenna_type == "quad_beam"
+    assert window._design_stack.currentWidget() is window._quad_beam_scroll
+    restored = window._quad_beam_form.parameters()
+    assert restored.element_count == 3
+    assert restored.loop_side_m == pytest.approx(5.0, abs=1e-3)
+    assert restored.director_spacing_m == pytest.approx(3.0, abs=1e-3)
+    assert window._optimize_action.isEnabled() is True
+    window._dirty = False
+
+
 def test_new_ringo_creates_a_first_class_design(
     window: MainWindow,
     qtbot: QtBot,

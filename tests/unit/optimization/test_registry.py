@@ -30,6 +30,7 @@ from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
 from antennadesk.domain.antennas.phased_vertical import phased_vertical_parameters
+from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
@@ -257,6 +258,7 @@ def _typed_samples() -> list[AntennaDesignParameters]:
         beverage_parameters(),
         loaded_dipole_parameters(),
         phased_vertical_parameters(),
+        quad_beam_parameters(element_count=3),
         OCFDParameters(frequency_hz=7_100_000.0, total_length_m=40.0),
         EndFedParameters(
             frequency_hz=7_100_000.0,
@@ -428,6 +430,25 @@ def test_linked_dipole_optimizes_the_center_section_only() -> None:
     assert "total_length_m" not in names
     assert "loading_coil_inductance_h" not in names
     assert "loading_coil_resistance_ohm" not in names
+
+
+def test_quad_beam_optimizes_geometry_and_optional_director() -> None:
+    two = quad_beam_parameters(element_count=2)
+    three = quad_beam_parameters(element_count=3)
+    two_availability = optimizer_availability(two)
+    three_availability = optimizer_availability(three)
+    assert two_availability.descriptor is not None
+    assert three_availability.descriptor is not None
+
+    two_names = {variable.name for variable in two_availability.descriptor.variables}
+    three_names = {variable.name for variable in three_availability.descriptor.variables}
+
+    assert "director_spacing_m" not in two_names
+    assert "director_scale" not in two_names
+    assert "director_spacing_m" in three_names
+    assert "director_scale" in three_names
+    assert "loop_side_m" in two_names
+    assert "reflector_scale" in two_names
 
 
 def test_phased_vertical_optimizes_geometry_and_excitation() -> None:

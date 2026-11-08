@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added a first-class **quad beam** family: two or three square loops with a
+  reflector, driven loop, and optional director, quarter-wave loop and
+  fifth-wave spacing starting dimensions, schema-26 persistence, catalog route,
+  inline editor, scene dimensions and summary, reports, construction notes, and
+  a family optimizer. The boom, spreaders, mast, feed line, and matching network
+  are not modeled; the family is experimental pending a traceable design or
+  measurement.
 - Added a first-class **phased vertical array** family: two to four vertical
   radiators spaced along one line with an ideal linear phase step and amplitude
   taper, a radial screen per element, schema-25 persistence, catalog route,

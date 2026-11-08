@@ -755,6 +755,30 @@ def test_phased_vertical_round_trips_through_the_schema() -> None:
     assert restored.designs[0].antenna.sources == original.designs[0].antenna.sources
 
 
+def test_quad_beam_round_trips_through_the_schema() -> None:
+    from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
+
+    parameters = quad_beam_parameters(
+        frequency_hz=14_100_000.0,
+        element_count=3,
+        loop_side_m=5.1,
+        reflector_spacing_m=4.0,
+        director_spacing_m=3.2,
+        height_m=2.5,
+        reflector_scale=1.06,
+        director_scale=0.94,
+        azimuth_deg=30.0,
+    )
+    original = _project(parameters, "Quad beam")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna == original.designs[0].antenna
+    assert restored.designs[0].antenna_type == "quad_beam"
+
+
 def test_tapered_yagi_round_trips_through_the_schema() -> None:
     from dataclasses import replace
 

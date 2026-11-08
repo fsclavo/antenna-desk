@@ -599,6 +599,28 @@ inductance and resistance when enabled, and conductor radius jointly. The
 family is classified **experimental**; tune the final geometry and coil with the
 solver or a measurement.
 
+## Create a quad beam
+
+Choose **File → New Antenna... → Quad beam** for a two- or three-element beam
+built from square loops. The reflector sits behind the driven loop and the
+optional director in front. The feed is the midpoint of the left vertical side
+of the driven loop.
+
+The editor sets the frequency, loop count, driven loop side, reflector and
+director spacing, bottom height, reflector and director length factors, boom
+azimuth, radius, material, and ground. **Load quarter-wave starting dimensions**
+sets the driven loop side to a quarter wave, the spacing to a fifth wave, and
+the bottom height to a quarter wave. **Optimize...** searches the loop side,
+spacings, height, reflector factor, director factor when enabled, and conductor
+radius jointly. The loop count, azimuth, ground, and material remain user
+context.
+
+The quad beam is classified **experimental**. The loops are ideal thin-wire
+squares; the boom, spreaders, mast, feed line, and matching network are not
+modeled. Gain, front-to-back ratio, and feedpoint impedance are not
+independently validated. Verify the pattern and match with the solver or a
+measurement.
+
 ## Create a phased vertical array
 
 Choose **File → New Antenna... → Phased vertical array** for two to four
@@ -1153,6 +1175,7 @@ The following typed families have a complete joint optimizer:
 - Beverage receiving wire;
 - loaded / linked dipole;
 - phased vertical array;
+- quad beam;
 - OCFD, EndFed/EFHW, and sloper;
 - typed G5RV, ZS6BKW, and Zepp;
 - the doublet radiator as a dipole, with its feed line in the matching stage;

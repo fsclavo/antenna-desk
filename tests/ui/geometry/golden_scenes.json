@@ -43,6 +43,8 @@
   "phased_vertical:plan": "eed11bd14cf6e5cd31e2d6a3529e04ba85a17e87cf97bd5e1fc3e08a73fbffce",
   "quad:elevation": "a959c8f35607f8ca6ce120cc62d86f19a86689f1320d1a0f350c3bd28510dd84",
   "quad:plan": "9f39edd4e90a96352c46ea1eb58e71c6a944ee68a0831bdb1da1605ac3e292a0",
+  "quad_beam:elevation": "9d1d642eb5806bc031245d10dae7cac5ff48448903a3c4b8e522f64f274cead2",
+  "quad_beam:plan": "bc765a154f16a635c66d6ac28a30befc95cc95cd23e0b20e318e3b599fb80c82",
   "ringo:elevation": "d0430a7babc43a352d266035d2f749fb07f2a31b7dc7f07ad20a769864dc894c",
   "ringo:plan": "c5c68f4e593433fd49371fcfcbdbd90fb47cc3f0db9f33f5ed64fee8cc011cad",
   "sky_loop:elevation": "3e687a4526bb642727fc60eee360bcfa6a2340db683e23310515e84d64f82e7d",

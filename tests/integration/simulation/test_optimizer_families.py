@@ -23,6 +23,7 @@ from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.phased_vertical import phased_vertical_parameters
+from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
 from antennadesk.domain.antennas.transmission_line_doublet import (
     DoubletPreset,
@@ -100,6 +101,13 @@ def _samples() -> list[object]:
             phase_step_deg=90.0,
             radial_count=4,
             radial_length_m=5.0,
+        ),
+        quad_beam_parameters(
+            frequency_hz=14_100_000.0,
+            element_count=3,
+            loop_side_m=5.0,
+            reflector_spacing_m=4.0,
+            director_spacing_m=3.0,
         ),
         YagiParameters(
             frequency_hz=14_100_000.0,

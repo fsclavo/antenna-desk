@@ -22,6 +22,27 @@ def test_biquad_summary_reports_the_loop_stack_and_reflector() -> None:
     assert rows["Loop side"] == f"{parameters.loop_side_m:.4f} m"
 
 
+def test_quad_beam_summary_reports_loops_and_spacing() -> None:
+    from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
+
+    parameters = quad_beam_parameters(
+        element_count=3,
+        loop_side_m=5.0,
+        reflector_spacing_m=4.0,
+        director_spacing_m=3.0,
+        height_m=2.5,
+    )
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Type"] == "Quad beam"
+    assert rows["Loops"] == "3"
+    assert rows["Driven loop side"] == "5.0000 m"
+    assert rows["Reflector side"] == "5.2500 m"
+    assert rows["Director side"] == "4.7500 m"
+    assert rows["Boom length"] == "7.0000 m"
+    assert rows["Feed"] == "driven loop side midpoint"
+
+
 def test_phased_vertical_summary_reports_the_excitation_and_radials() -> None:
     from antennadesk.domain.antennas.phased_vertical import phased_vertical_parameters
 

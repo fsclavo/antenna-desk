@@ -62,6 +62,10 @@ from ...domain.antennas.phased_vertical import (
     PhasedVerticalParameters,
 )
 from ...domain.antennas.polarization import Polarization
+from ...domain.antennas.quad_beam import (
+    ANTENNA_TYPE_QUAD_BEAM,
+    QuadBeamParameters,
+)
 from ...domain.antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
 from ...domain.antennas.scv import (
     ANTENNA_TYPE_BOBTAIL_CURTAIN,
@@ -130,6 +134,7 @@ _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_BEVERAGE: "catalog.beverage",
     ANTENNA_TYPE_LOADED_DIPOLE: "catalog.loaded_dipole",
     ANTENNA_TYPE_PHASED_VERTICAL: "catalog.phased_vertical",
+    ANTENNA_TYPE_QUAD_BEAM: "catalog.quad_beam",
     ANTENNA_TYPE_TRAP_DIPOLE: "catalog.trap_dipole",
     ANTENNA_TYPE_T2FD: "catalog.t2fd",
     ANTENNA_TYPE_G5RV: "catalog.g5rv",
@@ -1299,6 +1304,74 @@ def _add_phased_vertical_dimensions(
                 taper=f"{parameters.amplitude_taper * 100.0:.0f}",
             )
         )
+
+
+def _add_quad_beam_dimensions(
+    model: AntennaModel,
+    parameters: QuadBeamParameters | None,
+    factory: _Factory,
+    dimensions: list[Dimension],
+    notes: list[str],
+    translator: Translator,
+) -> None:
+    if parameters is None:
+        return
+    driven_wire = next(
+        (wire for wire in model.wires if wire.id == parameters.driven_wire_id),
+        None,
+    )
+    if driven_wire is None:
+        return
+    driven_x = factory.project(driven_wire.start).x_m
+    if factory.projection.vertical:
+        dimensions.append(
+            factory.vertical_dimension(
+                driven_x,
+                parameters.height_m,
+                parameters.height_m + parameters.loop_side_m,
+                parameters.loop_side_m,
+                side="right",
+                priority=90,
+            )
+        )
+        if parameters.height_m > 1e-6:
+            dimensions.append(
+                factory.vertical_dimension(
+                    driven_x,
+                    0.0,
+                    parameters.height_m,
+                    parameters.height_m,
+                    side="left",
+                    priority=60,
+                )
+            )
+    reflector_wire = next(
+        (wire for wire in model.wires if wire.id.startswith("quad-beam-element-0-")),
+        None,
+    )
+    if reflector_wire is not None:
+        reflector_x = factory.project(reflector_wire.start).x_m
+        dimensions.append(
+            factory.horizontal_dimension(
+                factory.y_for_z(0.0) + 0.1,
+                reflector_x,
+                driven_x,
+                parameters.reflector_spacing_m,
+                side="below",
+                priority=85,
+            )
+        )
+        dimensions.append(
+            factory.horizontal_dimension(
+                factory.y_for_z(0.0) + 0.2,
+                reflector_x,
+                driven_x + parameters.boom_length_m - parameters.reflector_spacing_m,
+                parameters.boom_length_m,
+                side="below",
+                priority=70,
+            )
+        )
+    notes.append(translator.t("quad_beam.geometry_note"))
 
 
 def _add_ringo_dimensions(
@@ -2472,6 +2545,57 @@ def _summary(
                 f"{translator.t('vertical.radial_count').lower()} {radial_count}",
             ]
         )
+    elif isinstance(parameters, QuadBeamParameters) or antenna_type == ANTENNA_TYPE_QUAD_BEAM:
+        if isinstance(parameters, QuadBeamParameters):
+            element_count = parameters.element_count
+            driven_side = parameters.loop_side_m
+            reflector_side = parameters.reflector_side_m
+            director_side = parameters.director_side_m
+            spacing = parameters.reflector_spacing_m
+            director_spacing = parameters.director_spacing_m
+            height = parameters.height_m
+            boom = parameters.boom_length_m
+        else:
+            element_count = 2
+            driven_side = max(
+                math.hypot(
+                    wire.end.x_m - wire.start.x_m,
+                    wire.end.y_m - wire.start.y_m,
+                )
+                for wire in model.wires
+            )
+            reflector_side = driven_side
+            director_side = driven_side
+            spacing = 0.0
+            director_spacing = 0.0
+            height = min_z
+            boom = 0.0
+        parts.extend(
+            [
+                f"{translator.t('quad_beam.element_count').lower()} {element_count}",
+                f"{translator.t('quad_beam.loop_side').lower()} "
+                f"{_format_length(driven_side, translator, unit_system)}",
+                f"{translator.t('quad_beam.reflector_spacing').lower()} "
+                f"{_format_length(spacing, translator, unit_system)}",
+                f"{translator.t('field.height').lower()} "
+                f"{_format_length(height, translator, unit_system)}",
+                f"{translator.t('geometry.boom_length').lower()} "
+                f"{_format_length(boom, translator, unit_system)}",
+            ]
+        )
+        if element_count == 3:
+            parts.append(
+                f"{translator.t('quad_beam.director_spacing').lower()} "
+                f"{_format_length(director_spacing, translator, unit_system)}"
+            )
+            parts.append(
+                f"{translator.t('quad_beam.director_scale').lower()} "
+                f"{director_side / driven_side:.3f}"
+            )
+        parts.append(
+            f"{translator.t('quad_beam.reflector_scale').lower()} "
+            f"{reflector_side / driven_side:.3f}"
+        )
     elif isinstance(parameters, YagiParameters) or antenna_type == ANTENNA_TYPE_YAGI:
         if isinstance(parameters, YagiParameters):
             positions = [element.position_m for element in parameters.elements]
@@ -2938,6 +3062,15 @@ def build_scene(
         _add_phased_vertical_dimensions(
             model,
             parameters if isinstance(parameters, PhasedVerticalParameters) else None,
+            factory,
+            dimensions,
+            notes,
+            translator,
+        )
+    elif effective_type == ANTENNA_TYPE_QUAD_BEAM:
+        _add_quad_beam_dimensions(
+            model,
+            parameters if isinstance(parameters, QuadBeamParameters) else None,
             factory,
             dimensions,
             notes,

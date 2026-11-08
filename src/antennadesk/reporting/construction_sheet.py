@@ -24,6 +24,7 @@ from ..domain.antennas.magnetic_loop import MagneticLoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.phased_vertical import PhasedVerticalParameters
+from ..domain.antennas.quad_beam import QuadBeamParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvKind, ScvParameters
 from ..domain.antennas.t2fd import T2FDParameters
@@ -254,6 +255,30 @@ junction at {feed_height_m:.4f} m above ground.</p>"""
 wire and mark the link positions at {parameters.link_offset_m:.4f} m either
 side of the center. Feed the center. {coil_note} The coil model is an ideal
 series R-L load; tune it for the installed height and ground.</p>"""
+    elif isinstance(parameters, QuadBeamParameters):
+        director_note = (
+            f" The director loop is {parameters.director_side_m:.4f} m per side "
+            f"at {parameters.director_spacing_m:.4f} m in front of the driven loop."
+            if parameters.element_count == 3
+            else ""
+        )
+        feed_rows = f"""
+<tr><th>Type</th><td>{parameters.template_name}</td></tr>
+<tr><th>Loops</th><td>{parameters.element_count}</td></tr>
+<tr><th>Driven loop side</th><td>{parameters.loop_side_m:.4f} m</td></tr>
+<tr><th>Reflector side</th><td>{parameters.reflector_side_m:.4f} m</td></tr>
+<tr><th>Reflector spacing</th><td>{parameters.reflector_spacing_m:.4f} m</td></tr>
+<tr><th>Boom length</th><td>{parameters.boom_length_m:.4f} m</td></tr>
+<tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{parameters.feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Build {parameters.element_count} square loops
+with the driven loop at {parameters.loop_side_m:.4f} m per side and the
+reflector at {parameters.reflector_side_m:.4f} m per side.
+Set the reflector {parameters.reflector_spacing_m:.4f} m behind the driven
+loop.{director_note} Feed the midpoint of the driven loop's left vertical
+side and keep the loops square. The boom, spreaders, mast, and matching
+network are not modeled; tune the match for the installed antenna.</p>"""
     elif isinstance(parameters, PhasedVerticalParameters):
         feed_rows = f"""
 <tr><th>Type</th><td>{parameters.template_name}</td></tr>

@@ -36,6 +36,7 @@ from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
 from antennadesk.domain.antennas.phased_vertical import phased_vertical_parameters
 from antennadesk.domain.antennas.polarization import Polarization
+from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
@@ -470,6 +471,28 @@ def _cases() -> tuple[FamilyCase, ...]:
                 "element spacing",
                 "phase step",
                 "amplitude taper",
+            ),
+        ),
+        FamilyCase(
+            "quad_beam",
+            quad_beam_parameters(
+                frequency_hz=14_100_000.0,
+                element_count=3,
+                loop_side_m=5.0,
+                reflector_spacing_m=4.0,
+                director_spacing_m=3.0,
+                height_m=2.5,
+            ),
+            "quad_beam",
+            12,
+            GeometryViewMode.ELEVATION,
+            (
+                "Quad beam",
+                "loops 3",
+                "driven loop side",
+                "reflector spacing",
+                "director spacing",
+                "boom length",
             ),
         ),
         FamilyCase(

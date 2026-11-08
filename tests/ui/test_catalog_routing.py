@@ -31,6 +31,7 @@ from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
 from antennadesk.domain.antennas.phased_vertical import phased_vertical_parameters
+from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
@@ -228,6 +229,7 @@ def _parameters_for(key: str) -> object:
         "beverage": beverage_parameters(),
         "loaded_dipole": loaded_dipole_parameters(),
         "phased_vertical": phased_vertical_parameters(),
+        "quad_beam": quad_beam_parameters(),
         "custom": CustomAntennaParameters(
             frequency_hz=7_100_000.0,
             wires=(
@@ -299,6 +301,7 @@ def test_every_catalog_entry_has_a_change_template_route(
             "BeverageDialog",
             "LoadedDipoleDialog",
             "PhasedVerticalDialog",
+            "QuadBeamDialog",
         ):
             monkeypatch.setattr(main_window_module, class_name, fake_factory)
         fake_self = SimpleNamespace(
@@ -348,6 +351,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "beverage": ("beverage",),
         "loaded_dipole": ("loaded_dipole",),
         "phased_vertical": ("phased_vertical",),
+        "quad_beam": ("quad_beam",),
         "custom": ("custom",),
     }
 
@@ -409,6 +413,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         new_beverage_antenna=record("beverage"),
         new_loaded_dipole_antenna=record("loaded_dipole"),
         new_phased_vertical_antenna=record("phased_vertical"),
+        new_quad_beam_antenna=record("quad_beam"),
         new_ocfd_antenna=record("ocfd"),
         new_vertical_antenna=record("vertical"),
         new_loaded_vertical_antenna=record("loaded_vertical"),
@@ -471,6 +476,7 @@ ESTIMATORLESS_CATALOG_KEYS = frozenset(
         "beverage",
         "loaded_dipole",
         "phased_vertical",
+        "quad_beam",
         "trap_dipole",
         "zepp",
         "zs6bkw",

@@ -390,6 +390,18 @@ The combining network is ideal: per-element matching and feed-line loss are not
 modeled, and the reported impedance and SWR refer only to the primary feed.
 Mutual coupling is included by the wire solver. The family is experimental.
 
+### QuadBeamParameters
+
+`QuadBeamParameters` stores the design frequency, element count (2–3), driven
+loop side, reflector and director spacing, bottom height, reflector and
+director length factors, boom azimuth, radius, material, and ground.
+`to_antenna()` builds square loops across the boom: a reflector, a driven loop,
+and an optional director. The feed is the midpoint of the left vertical side of
+the driven loop. The quarter-wave side and fifth-wave spacing are starting
+heuristics; boom, spreaders, mast, feed line, and matching network are not
+modeled. The family is experimental and makes no validated gain, front-to-back,
+or impedance claim.
+
 ### OCFDParameters
 
 A first-class single-wire horizontal dipole with a feed point offset from the
@@ -409,7 +421,7 @@ reconstructs OCFD parameters from legacy custom designs.
 `FanDipoleParameters`, `EndFedParameters`,
 `JPoleParameters`, `RingoParameters`, `ScvParameters`, `BiquadParameters`,
 `BeverageParameters`, `LoadedDipoleParameters`, `PhasedVerticalParameters`,
-`TransmissionLineDoubletParameters`, `TrapDipoleParameters`,
+`QuadBeamParameters`, `TransmissionLineDoubletParameters`, `TrapDipoleParameters`,
 `T2FDParameters`, `ZeppParameters`, and `CustomAntennaParameters`. `antenna_type_for()` maps a
 parameter object to its native type; `custom` remains the arbitrary-wire escape
 hatch.
@@ -587,6 +599,8 @@ the application writes version 24.
   old documents load with the single primary feed only.
 - Version 25 introduces the phased vertical array parameter payload. Existing
   designs are unchanged.
+- Version 26 introduces the quad beam parameter payload. Existing designs are
+  unchanged.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -609,8 +623,8 @@ the application writes version 24.
   generator has a radial screen. Transmission-line two-ports between wire
   points are modeled as geometry; arbitrary radial screens are not.
 - Optimization operates on typed generated parameters, including typed G5RV,
-  ZS6BKW, Zepp, biquad, double biquad, Beverage, loaded/linked dipole, and
-  phased vertical arrays.
+  ZS6BKW, Zepp, biquad, double biquad, Beverage, loaded/linked dipole,
+  phased vertical arrays, and quad beams.
   Magnetic loops, random wires, and arbitrary custom/imported
   geometry have explicit unavailable reasons. Band-aware and robust modes
   evaluate multiple operating points; the Pareto front is descriptive; and a
@@ -620,7 +634,7 @@ the application writes version 24.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 25.
+- Simulation results are persisted as immutable runs in schema version 26.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are

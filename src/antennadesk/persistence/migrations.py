@@ -353,6 +353,12 @@ def _migrate_v24_to_v25(document: dict[str, Any]) -> dict[str, Any]:
     return copy.deepcopy(document)
 
 
+def _migrate_v25_to_v26(document: dict[str, Any]) -> dict[str, Any]:
+    """Introduce the quad beam design type."""
+
+    return copy.deepcopy(document)
+
+
 def _migrate_v13_to_v14(document: dict[str, Any]) -> dict[str, Any]:
     """Add the optional project balun/unun loss model."""
 
@@ -442,6 +448,7 @@ MIGRATIONS: dict[int, Migration] = {
     22: _migrate_v22_to_v23,
     23: _migrate_v23_to_v24,
     24: _migrate_v24_to_v25,
+    25: _migrate_v25_to_v26,
 }
 
 

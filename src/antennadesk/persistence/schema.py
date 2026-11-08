@@ -72,6 +72,7 @@ from ..domain.antennas.phased_vertical import (
     PhasedVerticalParameters,
 )
 from ..domain.antennas.polarization import Polarization
+from ..domain.antennas.quad_beam import ANTENNA_TYPE_QUAD_BEAM, QuadBeamParameters
 from ..domain.antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
 from ..domain.antennas.scv import (
     ANTENNA_TYPE_BOBTAIL_CURTAIN,
@@ -401,6 +402,21 @@ class PhasedVerticalParametersPayload(StrictModel):
     radial_count: int = Field(default=4, ge=0, le=36)
     radial_length_m: float = Field(default=0.0, ge=0.0)
     radial_angle_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class QuadBeamParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    loop_side_m: float = Field(gt=0.0)
+    reflector_spacing_m: float = Field(gt=0.0)
+    height_m: float = Field(ge=0.0)
+    element_count: int = Field(default=2, ge=2, le=3)
+    director_spacing_m: float = Field(default=0.0, ge=0.0)
+    reflector_scale: float = Field(default=1.05, ge=1.0, le=1.2)
+    director_scale: float = Field(default=0.95, ge=0.8, le=1.0)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
@@ -761,6 +777,7 @@ ParameterPayload = (
     | EndFedParametersPayload
     | LoadedDipoleParametersPayload
     | PhasedVerticalParametersPayload
+    | QuadBeamParametersPayload
     | JPoleParametersPayload
     | RingoParametersPayload
     | ScvParametersPayload
@@ -799,6 +816,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_LOADED_DIPOLE
     if isinstance(value, PhasedVerticalParametersPayload):
         return ANTENNA_TYPE_PHASED_VERTICAL
+    if isinstance(value, QuadBeamParametersPayload):
+        return ANTENNA_TYPE_QUAD_BEAM
     if isinstance(value, JPoleParametersPayload):
         return ANTENNA_TYPE_J_POLE
     if isinstance(value, RingoParametersPayload):
@@ -859,6 +878,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return LoadedDipoleParametersPayload
     if antenna_type == ANTENNA_TYPE_PHASED_VERTICAL:
         return PhasedVerticalParametersPayload
+    if antenna_type == ANTENNA_TYPE_QUAD_BEAM:
+        return QuadBeamParametersPayload
     if antenna_type == ANTENNA_TYPE_J_POLE:
         return JPoleParametersPayload
     if antenna_type == ANTENNA_TYPE_RINGO:
@@ -1204,6 +1225,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _loaded_dipole_parameters_from_domain(value)
     if isinstance(value, PhasedVerticalParameters):
         return _phased_vertical_parameters_from_domain(value)
+    if isinstance(value, QuadBeamParameters):
+        return _quad_beam_parameters_from_domain(value)
     if isinstance(value, JPoleParameters):
         return _j_pole_parameters_from_domain(value)
     if isinstance(value, RingoParameters):
@@ -1437,6 +1460,25 @@ def _loaded_dipole_parameters_from_domain(
         loading_coil_inductance_h=value.loading_coil_inductance_h,
         loading_coil_resistance_ohm=value.loading_coil_resistance_ohm,
         orientation=value.orientation,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _quad_beam_parameters_from_domain(
+    value: QuadBeamParameters,
+) -> QuadBeamParametersPayload:
+    return QuadBeamParametersPayload(
+        frequency_hz=value.frequency_hz,
+        loop_side_m=value.loop_side_m,
+        reflector_spacing_m=value.reflector_spacing_m,
+        height_m=value.height_m,
+        element_count=value.element_count,
+        director_spacing_m=value.director_spacing_m,
+        reflector_scale=value.reflector_scale,
+        director_scale=value.director_scale,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
@@ -2138,6 +2180,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, PhasedVerticalParametersPayload):
             raise ValueError("phased vertical parameters have the wrong shape")
         return _phased_vertical_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_QUAD_BEAM:
+        if not isinstance(value.parameters, QuadBeamParametersPayload):
+            raise ValueError("quad beam parameters have the wrong shape")
+        return _quad_beam_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_J_POLE:
         if not isinstance(value.parameters, JPoleParametersPayload):
             raise ValueError("J-pole parameters have the wrong shape")
@@ -2424,6 +2470,25 @@ def _loaded_dipole_parameters_to_domain(
         loading_coil_inductance_h=value.loading_coil_inductance_h,
         loading_coil_resistance_ohm=value.loading_coil_resistance_ohm,
         orientation=value.orientation,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _quad_beam_parameters_to_domain(
+    value: QuadBeamParametersPayload,
+) -> QuadBeamParameters:
+    return QuadBeamParameters(
+        frequency_hz=value.frequency_hz,
+        loop_side_m=value.loop_side_m,
+        reflector_spacing_m=value.reflector_spacing_m,
+        height_m=value.height_m,
+        element_count=value.element_count,
+        director_spacing_m=value.director_spacing_m,
+        reflector_scale=value.reflector_scale,
+        director_scale=value.director_scale,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),

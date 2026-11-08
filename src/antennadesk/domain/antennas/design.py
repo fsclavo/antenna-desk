@@ -30,6 +30,7 @@ from .phased_vertical import (
     ANTENNA_TYPE_PHASED_VERTICAL,
     PhasedVerticalParameters,
 )
+from .quad_beam import ANTENNA_TYPE_QUAD_BEAM, QuadBeamParameters
 from .ringo import ANTENNA_TYPE_RINGO, RingoParameters
 from .scv import (
     ANTENNA_TYPE_BOBTAIL_CURTAIN,
@@ -69,6 +70,7 @@ AntennaDesignParameters = (
     | BeverageParameters
     | LoadedDipoleParameters
     | PhasedVerticalParameters
+    | QuadBeamParameters
     | T2FDParameters
     | TransmissionLineDoubletParameters
     | TrapDipoleParameters
@@ -136,6 +138,8 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_LOADED_DIPOLE
     if isinstance(parameters, PhasedVerticalParameters):
         return ANTENNA_TYPE_PHASED_VERTICAL
+    if isinstance(parameters, QuadBeamParameters):
+        return ANTENNA_TYPE_QUAD_BEAM
     if isinstance(parameters, TrapDipoleParameters):
         return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(parameters, T2FDParameters):
@@ -172,6 +176,8 @@ def primary_dimension_m(parameters: AntennaDesignParameters) -> float:
         return parameters.active_length_m
     if isinstance(parameters, PhasedVerticalParameters):
         return parameters.height_m
+    if isinstance(parameters, QuadBeamParameters):
+        return parameters.loop_side_m
     if isinstance(parameters, EndFedParameters):
         return parameters.length_m
     if isinstance(parameters, TrapDipoleParameters):
@@ -214,6 +220,14 @@ def with_primary_dimension(
         return replace(parameters, length_m=dimension_m)
     if isinstance(parameters, PhasedVerticalParameters):
         return replace(parameters, height_m=dimension_m)
+    if isinstance(parameters, QuadBeamParameters):
+        ratio = dimension_m / parameters.loop_side_m
+        return replace(
+            parameters,
+            loop_side_m=dimension_m,
+            reflector_spacing_m=parameters.reflector_spacing_m * ratio,
+            director_spacing_m=parameters.director_spacing_m * ratio,
+        )
     if isinstance(parameters, LoadedDipoleParameters):
         if parameters.link_open:
             return replace(

@@ -316,6 +316,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "vertical es la alimentación principal."
         ),
     },
+    "catalog.quad_beam": {
+        Language.ENGLISH: "Quad beam",
+        Language.SPANISH: "Beam cuádruple",
+    },
+    "catalog.quad_beam.description": {
+        Language.ENGLISH: (
+            "Two or three square loops on a boom: a reflector, a driven loop, "
+            "and an optional director, with a horizontal pattern."
+        ),
+        Language.SPANISH: (
+            "Dos o tres lazos cuadrados sobre un boom: reflector, lazo excitado "
+            "y director opcional, con patrón horizontal."
+        ),
+    },
     "catalog.family.wire": {
         Language.ENGLISH: "Wire antennas",
         Language.SPANISH: "Antenas de hilo",
@@ -1974,6 +1988,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "partida de banda angosta y su red combinadora es ideal."
         ),
     },
+    "band.note.quad_beam": {
+        Language.ENGLISH: (
+            "Current band only; the quad beam is a narrowband starting point "
+            "with heuristic loop and spacing dimensions."
+        ),
+        Language.SPANISH: (
+            "Solo la banda actual; el beam cuádruple es un punto de partida de "
+            "banda angosta con dimensiones heurísticas de lazo y separación."
+        ),
+    },
     "status.analyzing_bands": {
         Language.ENGLISH: "Analyzing bands...",
         Language.SPANISH: "Analizando bandas...",
@@ -3334,6 +3358,93 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "phased_vertical.constraint.amplitude_taper": {
         Language.ENGLISH: "The amplitude taper must stay between 0 and 0.9.",
         Language.SPANISH: "La atenuación de amplitud debe quedar entre 0 y 0,9.",
+    },
+    "quad_beam.title": {
+        Language.ENGLISH: "Quad Beam Generator",
+        Language.SPANISH: "Generador de beam cuádruple",
+    },
+    "quad_beam.element_count": {
+        Language.ENGLISH: "Loops",
+        Language.SPANISH: "Lazos",
+    },
+    "quad_beam.loop_side": {
+        Language.ENGLISH: "Driven loop side",
+        Language.SPANISH: "Lado del lazo excitado",
+    },
+    "quad_beam.reflector_spacing": {
+        Language.ENGLISH: "Reflector spacing",
+        Language.SPANISH: "Separación del reflector",
+    },
+    "quad_beam.director_spacing": {
+        Language.ENGLISH: "Director spacing",
+        Language.SPANISH: "Separación del director",
+    },
+    "quad_beam.reflector_scale": {
+        Language.ENGLISH: "Reflector length factor",
+        Language.SPANISH: "Factor de longitud del reflector",
+    },
+    "quad_beam.director_scale": {
+        Language.ENGLISH: "Director length factor",
+        Language.SPANISH: "Factor de longitud del director",
+    },
+    "quad_beam.geometry": {
+        Language.ENGLISH: (
+            "{count} loops · driven side {side} {unit} · spacing {spacing} {unit} · "
+            "boom {boom} {unit} · height {height} {unit}"
+        ),
+        Language.SPANISH: (
+            "{count} lazos · lado excitado {side} {unit} · separación {spacing} {unit} · "
+            "boom {boom} {unit} · altura {height} {unit}"
+        ),
+    },
+    "quad_beam.hint": {
+        Language.ENGLISH: (
+            "The reflector sits behind the driven loop and the optional director "
+            "in front. The feed is the midpoint of the left vertical side of the "
+            "driven loop. Loop sides and spacing are starting heuristics; the "
+            "boom, spreaders, and matching network are not modeled."
+        ),
+        Language.SPANISH: (
+            "El reflector está detrás del lazo excitado y el director opcional "
+            "delante. La alimentación es el punto medio del lado vertical "
+            "izquierdo del lazo excitado. Los lados y la separación son heurísticas "
+            "de partida; no se modelan el boom, los separadores ni la red de ajuste."
+        ),
+    },
+    "quad_beam.evidence": {
+        Language.ENGLISH: (
+            "Experimental quad-beam model. The loops are ideal thin-wire squares "
+            "over the selected ground. Gain, front-to-back ratio, feedpoint "
+            "impedance, boom and mast effects, and the matching network are not "
+            "independently validated. Verify the pattern and match with the solver "
+            "or a measurement."
+        ),
+        Language.SPANISH: (
+            "Modelo experimental de beam cuádruple. Los lazos son cuadrados de "
+            "hilo delgado ideales sobre el suelo elegido. La ganancia, la relación "
+            "delante/atrás, la impedancia de alimentación, los efectos del boom y "
+            "del mástil y la red de ajuste no están validadas independientemente. "
+            "Verificá el patrón y el ajuste con el solver o una medición."
+        ),
+    },
+    "quad_beam.geometry_note": {
+        Language.ENGLISH: (
+            "Square loops across the boom; feed at the driven loop's left side "
+            "midpoint. Boom, spreaders, and matching network are not modeled."
+        ),
+        Language.SPANISH: (
+            "Lazos cuadrados perpendiculares al boom; alimentación en el punto "
+            "medio del lado izquierdo del lazo excitado. No se modelan el boom, "
+            "los separadores ni la red de ajuste."
+        ),
+    },
+    "quad_beam.constraint.reflector_scale": {
+        Language.ENGLISH: "The reflector length factor must stay between 1.0 and 1.2.",
+        Language.SPANISH: "El factor de longitud del reflector debe quedar entre 1,0 y 1,2.",
+    },
+    "quad_beam.constraint.director_scale": {
+        Language.ENGLISH: "The director length factor must stay between 0.8 and 1.0.",
+        Language.SPANISH: "El factor de longitud del director debe quedar entre 0,8 y 1,0.",
     },
     "ringo.title": {
         Language.ENGLISH: "Ringo Generator",

@@ -23,6 +23,7 @@ from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.phased_vertical import PhasedVerticalParameters
 from ..domain.antennas.polarization import Polarization
+from ..domain.antennas.quad_beam import QuadBeamParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvParameters
 from ..domain.antennas.t2fd import T2FDParameters
@@ -397,6 +398,33 @@ def design_summary_rows(
                 ("Ground", ground_text(parameters.ground)),
             ]
         )
+        return tuple(rows)
+    if isinstance(parameters, QuadBeamParameters):
+        rows.extend(
+            [
+                ("Type", parameters.template_name),
+                ("Loops", str(parameters.element_count)),
+                ("Driven loop side", f"{parameters.loop_side_m:.4f} m"),
+                ("Reflector side", f"{parameters.reflector_side_m:.4f} m"),
+                ("Reflector spacing", f"{parameters.reflector_spacing_m:.4f} m"),
+                ("Boom length", f"{parameters.boom_length_m:.4f} m"),
+                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Feed", "driven loop side midpoint"),
+                ("Polarization", "horizontal"),
+                ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        if parameters.element_count == 3:
+            rows.insert(
+                4,
+                ("Director side", f"{parameters.director_side_m:.4f} m"),
+            )
+            rows.insert(
+                5,
+                ("Director spacing", f"{parameters.director_spacing_m:.4f} m"),
+            )
         return tuple(rows)
     if isinstance(parameters, PhasedVerticalParameters):
         rows.extend(

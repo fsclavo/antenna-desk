@@ -351,6 +351,28 @@ def test_loaded_dipole_construction_sheet_lists_the_coils(
     assert "loading coils" in sheet.lower()
 
 
+def test_quad_beam_construction_sheet_lists_the_loops(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
+
+    design = sample_project.designs[0]
+    quad = design.with_parameters(
+        quad_beam_parameters(
+            element_count=3,
+            loop_side_m=5.0,
+            reflector_spacing_m=4.0,
+            director_spacing_m=3.0,
+        )
+    )
+    sheet = render_construction_sheet(sample_project, quad, None)
+
+    assert "Quad beam" in sheet
+    assert "Reflector spacing" in sheet
+    assert "Build 3 square loops" in sheet
+    assert "driven loop's left vertical" in sheet
+
+
 def test_phased_vertical_construction_sheet_lists_the_array(
     sample_project: Project,
 ) -> None:

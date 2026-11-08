@@ -30,7 +30,7 @@ external service and must not be invented or simulated into existence.
 | B3 | Add independent checks for biquad/double biquad/Beverage/loaded dipole | M–L | source or measurement | At least one numeric metric per family is validated or the limitation stays explicit |
 | B4 | Fan-dipole coupling calibration | M | measurement | A coupled-fan measurement is reproduced; no scalar correction is invented |
 | ~~C1~~ | ~~**Phased verticals / arrays**~~ | XL | multi-source architecture | **Done 2026-11-08:** multi-source model and schema 24, then the 2–4 element phased vertical family with ideal phase/amplitude progression, radial screens, schema 25, editor, scene markers, reports, construction notes, and family optimizer. Evidence remains C pending a traceable reference. |
-| C2 | Quad beam / hexbeam | L | C1 lessons optional | New family with full DoD, scene contract, persistence, optimizer, and evidence |
+| ~~C2~~ | ~~Quad beam / hexbeam~~ | L | C1 lessons optional | **Partially done 2026-11-08:** quad beam with 2–3 loops, reflector/driven/optional director, ideal single feed, schema 26, editor, scene, reports, construction notes, and optimizer. Hexbeam remains open; evidence stays C. |
 | C3 | Log-periodic | L | none | Multi-element feed and geometry, full DoD, optimizer, and evidence |
 | C4 | Discone | L | none | Broadband multi-wire geometry, full DoD, scene, persistence, optimizer, and evidence |
 | C5 | Trapped / multiband Yagi | L | trap model reuse | Trap-loaded elements, feed/matching, full DoD, and evidence |
@@ -87,13 +87,14 @@ model and solver contract must land first.
 ## Recommended order
 
 1. ~~A1, A2, and C1~~ (done 2026-11-08).
-2. C3 or C2 (next large families).
-3. B1–B3 whenever a source or measurement becomes available.
-4. C4, C5, and the deferred items.
+2. C2 quad beam (done 2026-11-08); hexbeam remains open.
+3. C3 (log-periodic) as the next large family.
+4. B1–B3 whenever a source or measurement becomes available.
+5. C4, C5, and the deferred items.
 
 ## Current baseline
 
-- Schema: **25**.
-- Full gate: **1,837 passed, 0 skipped** with `NEC2C` and the optional
+- Schema: **26**.
+- Full gate: **1,862 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
-- Last commits: multi-source excitation, then the phased vertical array family.
+- Last commits: multi-source excitation, phased vertical array, and quad beam.

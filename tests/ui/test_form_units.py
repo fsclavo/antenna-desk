@@ -21,6 +21,7 @@ from antennadesk.ui.widgets.loaded_dipole_form import LoadedDipoleForm
 from antennadesk.ui.widgets.moxon_form import MoxonForm
 from antennadesk.ui.widgets.ocfd_form import OCFDForm
 from antennadesk.ui.widgets.phased_vertical_form import PhasedVerticalForm
+from antennadesk.ui.widgets.quad_beam_form import QuadBeamForm
 from antennadesk.ui.widgets.ringo_form import RingoForm
 from antennadesk.ui.widgets.scv_form import ScvForm
 from antennadesk.ui.widgets.t2fd_form import T2FDForm
@@ -90,6 +91,10 @@ FORMS = (
     (
         PhasedVerticalForm,
         ("_spacing", "_height", "_base_height", "_radial_length"),
+    ),
+    (
+        QuadBeamForm,
+        ("_loop_side", "_reflector_spacing", "_director_spacing", "_height"),
     ),
     (
         TransmissionLineDoubletForm,

@@ -27,6 +27,7 @@ from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.phased_vertical import PhasedVerticalParameters
+from ..domain.antennas.quad_beam import QuadBeamParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvParameters
 from ..domain.antennas.t2fd import T2FDParameters
@@ -98,6 +99,10 @@ ADAPTERS: dict[type[AntennaDesignParameters], OptimizationUiAdapter] = {
     PhasedVerticalParameters: OptimizationUiAdapter(
         lambda window, parameters: window._phased_vertical_simulation_spec(parameters),
         lambda window, parameters: window._phased_vertical_form.set_parameters(parameters),
+    ),
+    QuadBeamParameters: OptimizationUiAdapter(
+        lambda window, parameters: window._quad_beam_simulation_spec(parameters),
+        lambda window, parameters: window._quad_beam_form.set_parameters(parameters),
     ),
     OCFDParameters: OptimizationUiAdapter(
         lambda window, parameters: window._ocfd_simulation_spec(parameters),

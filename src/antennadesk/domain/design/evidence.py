@@ -430,6 +430,23 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "and match with the solver or a measurement."
         ),
     ),
+    "quad_beam": EvidenceEntry(
+        template="quad_beam",
+        level=EvidenceLevel.EXPERIMENTAL,
+        source=(
+            "Quarter-wave-side square loops with a scaled reflector and optional "
+            "director, fifth-wave spacing, and a center-side feed; no independent "
+            "numerical reference for the generated beam"
+        ),
+        tolerance="Not applicable (structural)",
+        limitation=(
+            "The square loops are ideal thin-wire polygons. Spreaders, boom and "
+            "mast effects, feed-line routing, and the matching network are not "
+            "modeled. The quarter-wave side and fifth-wave spacing are starting "
+            "heuristics; gain, front-to-back ratio, and feedpoint impedance are "
+            "not independently validated."
+        ),
+    ),
     "doublet": EvidenceEntry(
         template="doublet",
         level=EvidenceLevel.PUBLISHED,
