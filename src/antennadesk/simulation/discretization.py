@@ -25,12 +25,24 @@ class WireSegmentation:
 
 
 @dataclass(frozen=True, slots=True)
+class FeedSegment:
+    wire_id: str
+    offset_m: float
+    tag: int
+    segment: int
+    local_segment: int
+    amplitude: float = 1.0
+    phase_deg: float = 0.0
+
+
+@dataclass(frozen=True, slots=True)
 class SegmentLayout:
     wires: tuple[WireSegmentation, ...]
     feed_tag: int
     feed_segment: int
     feed_wire_id: str
     feed_offset_m: float
+    feeds: tuple[FeedSegment, ...] = ()
 
     @property
     def feed_local_segment(self) -> int:
@@ -69,33 +81,54 @@ def build_segment_layout(model: AntennaModel, spec: SimulationSpec) -> SegmentLa
         )
         first_segment += segments
 
-    feed_segmentation = next(
-        (
-            segmentation
-            for segmentation in segmentations
-            if segmentation.wire.id == model.feed.wire_id
-        ),
-        None,
-    )
-    if feed_segmentation is None:
-        raise ValueError(f"feed references an unknown wire: {model.feed.wire_id}")
+    by_wire_id = {segmentation.wire.id: segmentation for segmentation in segmentations}
 
-    index = math.floor(model.feed.offset_m / feed_segmentation.segment_length_m)
-    if index >= feed_segmentation.segments or math.isclose(
-        model.feed.offset_m,
-        feed_segmentation.wire.length_m,
-        rel_tol=1e-9,
-        abs_tol=1e-9,
-    ):
-        index = feed_segmentation.segments - 1
-    index = max(0, min(index, feed_segmentation.segments - 1))
+    def feed_segment_for(
+        wire_id: str,
+        offset_m: float,
+        amplitude: float,
+        phase_deg: float,
+    ) -> FeedSegment:
+        segmentation = by_wire_id.get(wire_id)
+        if segmentation is None:
+            raise ValueError(f"feed references an unknown wire: {wire_id}")
+        index = math.floor(offset_m / segmentation.segment_length_m)
+        if index >= segmentation.segments or math.isclose(
+            offset_m,
+            segmentation.wire.length_m,
+            rel_tol=1e-9,
+            abs_tol=1e-9,
+        ):
+            index = segmentation.segments - 1
+        index = max(0, min(index, segmentation.segments - 1))
+        return FeedSegment(
+            wire_id=segmentation.wire.id,
+            offset_m=offset_m,
+            tag=segmentation.tag,
+            segment=segmentation.first_segment + index,
+            local_segment=index + 1,
+            amplitude=amplitude,
+            phase_deg=phase_deg,
+        )
+
+    feeds = tuple(
+        feed_segment_for(
+            source.wire_id,
+            source.offset_m,
+            source.amplitude,
+            source.phase_deg,
+        )
+        for source in model.effective_sources
+    )
+    primary = feeds[0]
 
     return SegmentLayout(
         wires=tuple(segmentations),
-        feed_tag=feed_segmentation.tag,
-        feed_segment=feed_segmentation.first_segment + index,
-        feed_wire_id=feed_segmentation.wire.id,
-        feed_offset_m=model.feed.offset_m,
+        feed_tag=primary.tag,
+        feed_segment=primary.segment,
+        feed_wire_id=primary.wire_id,
+        feed_offset_m=primary.offset_m,
+        feeds=feeds,
     )
 
 

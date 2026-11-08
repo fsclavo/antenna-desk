@@ -37,7 +37,7 @@ from ..domain.antennas.fan_dipole import (
     FanDipoleParameters,
     FanElement,
 )
-from ..domain.antennas.feed import FeedPoint
+from ..domain.antennas.feed import FeedPoint, Source
 from ..domain.antennas.feed_line import FeedLine
 from ..domain.antennas.folded_dipole import (
     ANTENNA_TYPE_FOLDED_DIPOLE,
@@ -159,6 +159,13 @@ class FeedPayload(StrictModel):
     offset_m: float = Field(ge=0.0)
 
 
+class SourcePayload(StrictModel):
+    wire_id: str = Field(min_length=1)
+    offset_m: float = Field(ge=0.0)
+    amplitude: float = Field(default=1.0, gt=0.0)
+    phase_deg: float = Field(default=0.0)
+
+
 class GroundPayload(StrictModel):
     kind: GroundKind
     relative_permittivity: float | None = Field(default=None, ge=1.0)
@@ -209,6 +216,7 @@ class AntennaPayload(StrictModel):
     environment: EnvironmentPayload
     loads: list[LoadPayload] = Field(default_factory=list)
     transmission_lines: list[TransmissionLinePayload] = Field(default_factory=list)
+    sources: list[SourcePayload] = Field(default_factory=list)
 
 
 class DipoleParametersPayload(StrictModel):
@@ -1067,6 +1075,15 @@ def _antenna_from_domain(value: AntennaModel) -> AntennaPayload:
         loads=[_load_from_domain(load) for load in value.loads],
         transmission_lines=[
             _transmission_line_from_domain(line) for line in value.transmission_lines
+        ],
+        sources=[
+            SourcePayload(
+                wire_id=source.wire_id,
+                offset_m=source.offset_m,
+                amplitude=source.amplitude,
+                phase_deg=source.phase_deg,
+            )
+            for source in value.sources
         ],
     )
 
@@ -1959,6 +1976,15 @@ def _antenna_to_domain(value: AntennaPayload) -> AntennaModel:
         loads=tuple(_load_to_domain(load) for load in value.loads),
         transmission_lines=tuple(
             _transmission_line_to_domain(line) for line in value.transmission_lines
+        ),
+        sources=tuple(
+            Source(
+                wire_id=source.wire_id,
+                offset_m=source.offset_m,
+                amplitude=source.amplitude,
+                phase_deg=source.phase_deg,
+            )
+            for source in value.sources
         ),
     )
 

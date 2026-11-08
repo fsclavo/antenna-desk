@@ -75,12 +75,18 @@ Currently contains only the ground model.
 ### AntennaModel
 
 The canonical, immutable antenna representation. It contains a name, design
-frequency, one or more wires, one feed point, and an environment. Invariants:
+frequency, one or more wires, one primary feed point, optional additional
+sources, and an environment. `effective_sources` returns the primary feed first
+with unit amplitude and zero phase, followed by the additional `Source` values.
+The primary feed remains the reference port for reported impedance and SWR.
+Invariants:
 
 - At least one wire.
 - Unique wire identifiers.
 - The feed references an existing wire.
 - The feed offset is inside the wire.
+- Every source references an existing wire and is inside that wire.
+- Source points are unique.
 - Every load references an existing wire and is inside that wire.
 - All numeric values are finite.
 
@@ -509,11 +515,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 23.
+the application writes version 24.
 
 ## Schema policy
 
-- Current version: `23`.
+- Current version: `24`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -565,6 +571,8 @@ the application writes version 23.
   documents load with zero sag.
 - Version 23 adds optional `taper_tip_length_m` and `taper_tip_radius_m` to the
   Yagi payload; old documents load with straight elements.
+- Version 24 adds optional additional antenna sources with amplitude and phase;
+  old documents load with the single primary feed only.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -597,7 +605,7 @@ the application writes version 23.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 23.
+- Simulation results are persisted as immutable runs in schema version 24.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are

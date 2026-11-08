@@ -10,7 +10,7 @@ from dataclasses import dataclass, field, replace
 from ..common.units import ensure_positive
 from ..common.validation import Diagnostic, Severity, raise_if_errors
 from ..environment.environment import Environment
-from .feed import FeedPoint
+from .feed import FeedPoint, Source
 from .load import LumpedLoad
 from .transmission_line import TransmissionLine
 from .wire import Wire
@@ -18,7 +18,7 @@ from .wire import Wire
 
 @dataclass(frozen=True, slots=True)
 class AntennaModel:
-    """An immutable antenna model made of straight wires and one feed point."""
+    """An immutable antenna model with one primary feed and optional sources."""
 
     name: str
     design_frequency_hz: float
@@ -27,12 +27,23 @@ class AntennaModel:
     environment: Environment = field(default_factory=Environment)
     loads: tuple[LumpedLoad, ...] = field(default_factory=tuple)
     transmission_lines: tuple[TransmissionLine, ...] = field(default_factory=tuple)
+    sources: tuple[Source, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "wires", tuple(self.wires))
         object.__setattr__(self, "loads", tuple(self.loads))
         object.__setattr__(self, "transmission_lines", tuple(self.transmission_lines))
+        object.__setattr__(self, "sources", tuple(self.sources))
         raise_if_errors(self._invariants())
+
+    @property
+    def effective_sources(self) -> tuple[Source, ...]:
+        """Return the primary feed first, followed by additional sources."""
+
+        return (
+            Source(self.feed.wire_id, self.feed.offset_m),
+            *self.sources,
+        )
 
     def _invariants(self) -> tuple[Diagnostic, ...]:
         diagnostics: list[Diagnostic] = []
@@ -201,6 +212,53 @@ class AntennaModel:
                 )
             )
 
+        seen_source_points = {
+            (self.feed.wire_id, round(self.feed.offset_m, 9)),
+        }
+        for source in self.sources:
+            source_wire = next(
+                (wire for wire in self.wires if wire.id == source.wire_id),
+                None,
+            )
+            if source_wire is None:
+                diagnostics.append(
+                    Diagnostic(
+                        code="antenna.source.unknown_wire",
+                        severity=Severity.ERROR,
+                        message=f"source references an unknown wire: {source.wire_id}",
+                        field="sources.wire_id",
+                    )
+                )
+                continue
+            if source.offset_m > source_wire.length_m and not math.isclose(
+                source.offset_m,
+                source_wire.length_m,
+                rel_tol=1e-9,
+                abs_tol=1e-9,
+            ):
+                diagnostics.append(
+                    Diagnostic(
+                        code="antenna.source.out_of_range",
+                        severity=Severity.ERROR,
+                        message=(
+                            f"source offset {source.offset_m} m is outside wire "
+                            f"{source.wire_id} of length {source_wire.length_m} m"
+                        ),
+                        field="sources.offset_m",
+                    )
+                )
+            key = (source.wire_id, round(source.offset_m, 9))
+            if key in seen_source_points:
+                diagnostics.append(
+                    Diagnostic(
+                        code="antenna.source.duplicate",
+                        severity=Severity.ERROR,
+                        message=f"duplicate source point: {source.wire_id}",
+                        field="sources",
+                    )
+                )
+            seen_source_points.add(key)
+
         return tuple(diagnostics)
 
     def _warnings(self) -> tuple[Diagnostic, ...]:
@@ -243,6 +301,9 @@ class AntennaModel:
 
     def with_loads(self, loads: tuple[LumpedLoad, ...]) -> AntennaModel:
         return replace(self, loads=loads)
+
+    def with_sources(self, sources: tuple[Source, ...]) -> AntennaModel:
+        return replace(self, sources=sources)
 
     def with_transmission_lines(
         self,

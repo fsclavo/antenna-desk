@@ -17,7 +17,7 @@ Measured on 2026-11-04:
 |---|---|
 | Collected tests | 1,316 |
 | Passing locally with `NEC2C` set | 1,316 passed, 1 skipped (PyNEC) in about 71 s |
-| Passing locally with `NEC2C` and `--group cross-engine` (2026-11-08) | 1,801 passed, 0 skipped in about 2 min |
+| Passing locally with `NEC2C` and `--group cross-engine` (2026-11-08) | 1,809 passed, 0 skipped in about 2 min |
 | Fast unit-test lane | 735 passed, 1 skipped in about 6 s (`pytest -m "fast and not slow"`) |
 | Slowest test | 7.4 s (`test_g5rv_default_budgeted_pattern_completes`) |
 | UI test isolation | fixed 2026-11-04: deferred deletes were not dispatched, so widgets from one test stayed alive and a later test spent ~66 s in a nested event loop. The teardown in `tests/conftest.py` now closes windows and dispatches `DeferredDelete`; the full suite went from 142 s to 56 s |
@@ -309,7 +309,7 @@ errors. It does not replace the published references.
 
 **Local update, 2026-11-07.** On Linux/Python 3.11 the optional manylinux
 wheel installed in seconds with `uv run --group cross-engine`. The three
-cross-engine cases passed, and the full suite reported **1,801 passed,
+cross-engine cases passed, and the full suite reported **1,809 passed,
 0 skipped** with the group active. Without the group, the module reports a
 clear skip reason and instructs the user to run with `--group cross-engine`.
 Use `uv run --group cross-engine` for a one-off local run; `uv sync --group

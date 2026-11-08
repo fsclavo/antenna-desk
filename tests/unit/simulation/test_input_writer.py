@@ -59,6 +59,39 @@ def test_free_space_single_frequency_deck() -> None:
     assert deck.feed_segment == 4
 
 
+def test_multiple_sources_emit_one_ex_card_each() -> None:
+    from antennadesk.domain.antennas.feed import Source
+
+    first = Wire(
+        "first",
+        Point3D(-0.25, 0.0, 0.0),
+        Point3D(0.0, 0.0, 0.0),
+        0.001,
+        COPPER,
+    )
+    second = Wire(
+        "second",
+        Point3D(0.0, 0.0, 0.0),
+        Point3D(0.25, 0.0, 0.0),
+        0.001,
+        COPPER,
+    )
+    model = AntennaModel(
+        name="two sources",
+        design_frequency_hz=299_800_000.0,
+        wires=(first, second),
+        feed=FeedPoint("first", 0.125),
+        sources=(Source("second", 0.125, amplitude=0.5, phase_deg=90.0),),
+    )
+
+    deck = write_nec2_input(model, _spec(segments=4))
+
+    assert len(deck.feeds) == 2
+    assert "EX 0 1 3 0 1.0" in deck.text
+    assert "EX 0 2 3 0 0.000000000 0.500000000" in deck.text
+    assert deck.text.count("EX 0 ") == 2
+
+
 def test_perfect_ground_deck() -> None:
     model = DipoleParameters(
         frequency_hz=299_800_000.0,

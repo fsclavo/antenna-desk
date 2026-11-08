@@ -75,6 +75,7 @@ class DesignVariant:
             self.parameters.to_antenna(name=self.antenna.name)
             .with_loads(self.antenna.loads)
             .with_transmission_lines(self.antenna.transmission_lines)
+            .with_sources(self.antenna.sources)
         )
         if expected != self.antenna:
             raise ValueError("antenna geometry is inconsistent with its design parameters")

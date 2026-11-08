@@ -4,13 +4,19 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 from ...domain.antennas.antenna import AntennaModel
 from ...domain.antennas.load import ParallelLoad
 from ...domain.environment.ground import GroundKind
 from ...domain.simulation.spec import SimulationSpec
-from ..discretization import SegmentLayout, WireSegmentation, build_segment_layout
+from ..discretization import (
+    FeedSegment,
+    SegmentLayout,
+    WireSegmentation,
+    build_segment_layout,
+)
 
 # NEC-2 requires wires to be separated from a ground plane. Ground-mounted
 # radials and dipoles are raised by this small physical clearance when the
@@ -36,11 +42,37 @@ class Nec2Deck:
     def feed_local_segment(self) -> int:
         return self.layout.feed_local_segment
 
+    @property
+    def feeds(self) -> tuple[FeedSegment, ...]:
+        return self.layout.feeds
+
 
 def _format(value: float, precision: int = 9) -> str:
     if abs(value) < 1e-15:
         value = 0.0
     return f"{value:.{precision}f}"
+
+
+def _source_lines(layout: SegmentLayout) -> list[str]:
+    lines: list[str] = []
+    for feed in layout.feeds or (
+        FeedSegment(
+            wire_id=layout.feed_wire_id,
+            offset_m=layout.feed_offset_m,
+            tag=layout.feed_tag,
+            segment=layout.feed_segment,
+            local_segment=layout.feed_local_segment,
+        ),
+    ):
+        if math.isclose(feed.amplitude, 1.0) and math.isclose(feed.phase_deg, 0.0):
+            lines.append(f"EX 0 {feed.tag} {feed.local_segment} 0 1.0")
+        else:
+            real = feed.amplitude * math.cos(math.radians(feed.phase_deg))
+            imaginary = feed.amplitude * math.sin(math.radians(feed.phase_deg))
+            lines.append(
+                f"EX 0 {feed.tag} {feed.local_segment} 0 {_format(real)} {_format(imaginary)}"
+            )
+    return lines
 
 
 def _comment(text: str, limit: int = 70) -> str:
@@ -134,7 +166,7 @@ def write_nec2_input(model: AntennaModel, spec: SimulationSpec) -> Nec2Deck:
         f"{_format(frequency_plan.start_hz / 1_000_000.0)} "
         f"{_format(frequency_plan.step_hz / 1_000_000.0)}"
     )
-    lines.append(f"EX 0 {layout.feed_tag} {layout.feed_local_segment} 0 1.0")
+    lines.extend(_source_lines(layout))
 
     def append_pattern_card() -> None:
         far_field = spec.far_field
@@ -157,7 +189,7 @@ def write_nec2_input(model: AntennaModel, spec: SimulationSpec) -> Nec2Deck:
         lines.append("XQ")
         for frequency_hz in spec.pattern_frequencies_hz:
             lines.append(f"FR 0 1 0 0 {_format(frequency_hz / 1_000_000.0)} 0.000000000")
-            lines.append(f"EX 0 {layout.feed_tag} {layout.feed_local_segment} 0 1.0")
+            lines.extend(_source_lines(layout))
             append_pattern_card()
     else:
         append_pattern_card()

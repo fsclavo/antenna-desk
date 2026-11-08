@@ -137,7 +137,8 @@ optional signing steps.
   points by default, and pattern resolution defaults to 5° and can be set to
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` projects with multiple design
-  variants; schema version 23 adds optional tapered Yagi tips, schema 22 adds
+  variants; schema version 24 adds the optional multi-source antenna model,
+  schema 23 adds optional tapered Yagi tips, schema 22 adds
   optional wire sag on horizontal dipoles, schema 21 adds loaded/linked
   dipoles, schema 20 adds Beverage receiving wires, schema 19 adds biquad and
   double-biquad designs, schema 18 adds persisted optimization summaries,

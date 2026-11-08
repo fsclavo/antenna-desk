@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added optional **additional antenna sources** with amplitude and phase to the
+  canonical model. The NEC adapter emits one `EX` card per effective source;
+  the primary feed remains the impedance/SWR reference. This is the
+  architecture groundwork for phased arrays and is persisted in schema 24.
 - Added optimizer **CSV export** with the ranked evaluation log, metrics,
   errors, Pareto flags, and every design variable. The export is independent of
   the project file.

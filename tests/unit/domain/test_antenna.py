@@ -7,7 +7,7 @@ import math
 import pytest
 
 from antennadesk.domain.antennas.antenna import AntennaModel
-from antennadesk.domain.antennas.feed import FeedPoint
+from antennadesk.domain.antennas.feed import FeedPoint, Source
 from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.transmission_line import TransmissionLine
@@ -51,6 +51,36 @@ def test_valid_antenna_has_no_diagnostics() -> None:
     assert antenna.validate() == ()
     assert antenna.feed_wire.id == "radiator"
     assert antenna.wire_by_id("radiator") == antenna.wires[0]
+
+
+def test_effective_sources_start_with_the_primary_feed() -> None:
+    antenna = _antenna()
+    extra = Source("radiator", 2.0, amplitude=0.5, phase_deg=90.0)
+    antenna = antenna.with_sources((extra,))
+
+    sources = antenna.effective_sources
+
+    assert len(sources) == 2
+    assert sources[0].wire_id == "radiator"
+    assert sources[0].offset_m == pytest.approx(10.0)
+    assert sources[0].amplitude == pytest.approx(1.0)
+    assert sources[1] == extra
+    assert extra.real == pytest.approx(0.0, abs=1e-12)
+    assert extra.imaginary == pytest.approx(0.5)
+
+
+def test_duplicate_source_points_are_rejected() -> None:
+    with pytest.raises(DomainValidationError) as error:
+        _antenna().with_sources((Source("radiator", 10.0),))
+
+    assert any(d.code == "antenna.source.duplicate" for d in error.value.diagnostics)
+
+
+def test_source_must_reference_a_known_wire() -> None:
+    with pytest.raises(DomainValidationError) as error:
+        _antenna().with_sources((Source("missing", 1.0),))
+
+    assert any(d.code == "antenna.source.unknown_wire" for d in error.value.diagnostics)
 
 
 def test_empty_name_is_rejected() -> None:

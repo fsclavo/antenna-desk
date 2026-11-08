@@ -49,14 +49,15 @@ deck, persistence, scene presentation, optimization, reports, and validation.
 
 Proposed slices:
 
-1. **Model and solver**
-   - introduce a `Source` value (wire, offset, amplitude, phase) and allow an
-     antenna model to carry multiple sources while preserving the single-source
-     API for every existing family;
-   - update segmentation and the NEC input writer to emit one `EX` card per
-     source;
-   - normalize per-source currents/patterns in the result;
-   - test with two equal in-phase sources and a known two-element spacing.
+1. **Model and solver — completed 2026-11-08**
+   - `Source` value (wire, offset, amplitude, phase) and optional
+     `AntennaModel.sources` with the primary feed as source 1;
+   - segmentation locates each source independently;
+   - the NEC input writer emits one `EX` card per effective source;
+   - the primary feed remains the impedance/SWR reference; the total pattern
+     and currents include all sources;
+   - schema 24 persists the additional sources;
+   - unit and real NEC2C two-source tests pass.
 2. **Family**
    - `PhasedVerticalParameters`: count, spacing, height, base height, radial
      system, amplitude taper, phase progression, azimuth, radius, material,
@@ -91,7 +92,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **23**.
-- Full gate: **1,801 passed, 0 skipped** with `NEC2C` and the optional
-  `cross-engine` group; **1,798 passed, 1 skipped** without PyNEC.
+- Full gate: **1,809 passed, 0 skipped** with `NEC2C` and the optional
+  `cross-engine` group; **1,806 passed, 1 skipped** without PyNEC.
 - Last commits: loaded/linked dipole, wire sag, tapered Yagi tips, space
   constraints, and the optional PyNEC validation cleanup.

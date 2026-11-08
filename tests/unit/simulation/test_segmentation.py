@@ -144,6 +144,42 @@ def test_multi_wire_layout_and_feed_mapping() -> None:
     assert layout.wire_segmentation("second") == layout.wires[1]
 
 
+def test_multiple_sources_are_located_independently() -> None:
+    from antennadesk.domain.antennas.feed import Source
+
+    first = Wire(
+        id="first",
+        start=Point3D(-1.0, 0.0, 0.0),
+        end=Point3D(0.0, 0.0, 0.0),
+        radius_m=0.001,
+        material=COPPER,
+    )
+    second = Wire(
+        id="second",
+        start=Point3D(0.0, 0.0, 0.0),
+        end=Point3D(1.0, 0.0, 0.0),
+        radius_m=0.001,
+        material=COPPER,
+    )
+    model = AntennaModel(
+        name="two sources",
+        design_frequency_hz=7_100_000.0,
+        wires=(first, second),
+        feed=FeedPoint("first", 0.5),
+        sources=(Source("second", 0.2, amplitude=0.5, phase_deg=90.0),),
+    )
+
+    layout = build_segment_layout(model, _spec(segments_per_wire=10))
+
+    assert len(layout.feeds) == 2
+    assert layout.feeds[0].wire_id == "first"
+    assert layout.feeds[0].tag == 1
+    assert layout.feeds[1].wire_id == "second"
+    assert layout.feeds[1].tag == 2
+    assert layout.feeds[1].amplitude == pytest.approx(0.5)
+    assert layout.feeds[1].phase_deg == pytest.approx(90.0)
+
+
 def test_unknown_wire_lookup_raises() -> None:
     layout = build_segment_layout(_model(), _spec(segments_per_wire=7))
     with pytest.raises(KeyError):

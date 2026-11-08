@@ -341,6 +341,12 @@ def _migrate_v22_to_v23(document: dict[str, Any]) -> dict[str, Any]:
     return copy.deepcopy(document)
 
 
+def _migrate_v23_to_v24(document: dict[str, Any]) -> dict[str, Any]:
+    """Introduce optional additional antenna sources."""
+
+    return copy.deepcopy(document)
+
+
 def _migrate_v13_to_v14(document: dict[str, Any]) -> dict[str, Any]:
     """Add the optional project balun/unun loss model."""
 
@@ -428,6 +434,7 @@ MIGRATIONS: dict[int, Migration] = {
     20: _migrate_v20_to_v21,
     21: _migrate_v21_to_v22,
     22: _migrate_v22_to_v23,
+    23: _migrate_v23_to_v24,
 }
 
 

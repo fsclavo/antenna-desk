@@ -749,6 +749,29 @@ def test_tapered_yagi_round_trips_through_the_schema() -> None:
     assert restored.designs[0].antenna == original.designs[0].antenna
 
 
+def test_additional_sources_round_trip_through_the_schema() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.feed import Source
+
+    project = _project(
+        DipoleParameters(frequency_hz=7_100_000.0, total_length_m=20.0, height_m=8.0),
+        "Two sources",
+    )
+    design = project.designs[0]
+    design = replace(
+        design,
+        antenna=design.antenna.with_sources(
+            (Source("radiator", 2.0, amplitude=0.5, phase_deg=90.0),)
+        ),
+    )
+    project = project.with_design(design, updated_at=project.updated_at)
+
+    restored = project_from_document(document_from_project(project))
+
+    assert restored.designs[0].antenna.sources == design.antenna.sources
+
+
 def test_sagged_dipole_round_trips_through_the_schema() -> None:
     parameters = DipoleParameters(
         frequency_hz=7_100_000.0,

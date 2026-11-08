@@ -140,9 +140,10 @@ The family optimizer dialog adds:
   the biquad family, **1725 passed** after the Beverage family, **1751 passed**
   after the loaded/linked dipole, **1765 passed** after the optional dipole sag,
   **1776 passed** after tapered Yagi tips, **1,797 passed** after the optimizer
-  space constraints, and **1,801 passed** after the CSV export and boom-note
-  cleanup. With the optional `cross-engine` group installed the full suite is
-  **1,801 passed, 0 skipped**; without that group, PyNEC is the only skip. Repeated UI stress runs also cover the worker-thread lifetime
+  space constraints, **1,801 passed** after the CSV export and boom-note
+  cleanup, and **1,809 passed** after the multi-source architecture slice. With
+  the optional `cross-engine` group installed the full suite is **1,809 passed,
+  0 skipped**; without that group, PyNEC is the only skip. Repeated UI stress runs also cover the worker-thread lifetime
   fix in the optimizer dialogs.
 
 ## Limitations
