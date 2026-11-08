@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
-from dataclasses import fields
+from dataclasses import fields, replace
 from typing import get_args
 
 import pytest
@@ -285,6 +285,12 @@ def _typed_samples() -> list[AntennaDesignParameters]:
         ),
         _yagi(),
         _yagi_folded(),
+        replace(
+            _yagi(),
+            match_type=YagiMatchType.NONE,
+            taper_tip_length_m=0.3,
+            taper_tip_radius_m=0.0005,
+        ),
         MoxonParameters(
             frequency_hz=14_100_000.0,
             width_m=10.0,
@@ -332,6 +338,8 @@ _CONTEXT_FIELDS = {
     "reflector_enabled",
     "termination_enabled",
     "sag_m",
+    "taper_tip_length_m",
+    "taper_tip_radius_m",
     "loading_coil_enabled",
     "loading_coil_resistance_ohm",
     "link_open",

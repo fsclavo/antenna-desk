@@ -4099,6 +4099,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Element radius",
         Language.SPANISH: "Radio del elemento",
     },
+    "yagi.taper_length": {
+        Language.ENGLISH: "Tapered tip length (0 = straight)",
+        Language.SPANISH: "Longitud de punta cónica (0 = recto)",
+    },
+    "yagi.taper_radius": {
+        Language.ENGLISH: "Tapered tip radius",
+        Language.SPANISH: "Radio de punta cónica",
+    },
+    "yagi.taper_geometry": {
+        Language.ENGLISH: "tips {length} {unit} at {radius} {radius_unit}",
+        Language.SPANISH: "puntas {length} {unit} a {radius} {radius_unit}",
+    },
+    "yagi.taper_summary": {
+        Language.ENGLISH: "Tapered tips",
+        Language.SPANISH: "Puntas cónicas",
+    },
     "yagi.add_element": {
         Language.ENGLISH: "Add element",
         Language.SPANISH: "Agregar elemento",

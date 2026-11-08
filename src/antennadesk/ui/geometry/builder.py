@@ -1313,7 +1313,9 @@ def _yagi_element_wire(
     index: int,
 ) -> Wire | None:
     wire_id = f"element-{index + 1}"
-    if parameters.driven_folded and index == parameters.driven_index:
+    if parameters.is_tapered:
+        wire_id = f"{wire_id}-center"
+    elif parameters.driven_folded and index == parameters.driven_index:
         wire_id = f"{wire_id}-a"
     return _array_wire(model, wire_id, index)
 
@@ -1330,6 +1332,18 @@ def _yagi_element_span(
         )
         right = next(
             (wire for wire in model.wires if wire.id == f"element-{index + 1}-right"),
+            None,
+        )
+        if left is None or right is None:
+            return None
+        return left.start, right.end
+    if parameters.is_tapered:
+        left = next(
+            (wire for wire in model.wires if wire.id == f"element-{index + 1}-tip-left"),
+            None,
+        )
+        right = next(
+            (wire for wire in model.wires if wire.id == f"element-{index + 1}-tip-right"),
             None,
         )
         if left is None or right is None:
@@ -2341,6 +2355,11 @@ def _summary(
                 f"{_format_length(height_m, translator, unit_system)}",
             ]
         )
+        if isinstance(parameters, YagiParameters) and parameters.is_tapered:
+            parts.append(
+                f"{translator.t('yagi.taper_summary').lower()} "
+                f"{_format_length(parameters.taper_tip_length_m, translator, unit_system)}"
+            )
         if isinstance(parameters, YagiParameters):
             if parameters.polarization is Polarization.VERTICAL:
                 parts.append(

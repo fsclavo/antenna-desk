@@ -244,7 +244,7 @@ gain, nulls, or impedance.
 | `magnetic_loop` | C | Small-loop geometry with an ideal series tuning capacitor; no independent numerical reference for the generated design | Not applicable (structural) | The capacitor is an ideal series RLC element with optional ESR; the coupling loop, capacitor voltage, and detailed loss mechanisms are not modeled. Tune the capacitance with the solver or a measurement. |
 | `vertical` | B | ARRL practical length rules 234/f for a quarter-wave vertical and 585/f for a 5/8-wave vertical | 0.5% on radiator length | Gain and feedpoint impedance depend on radial count, ground, and any capacitive top hat; those are not independently validated. |
 | `loaded_vertical` | B | K7MEM, 'Short Loaded Vertical', citing ARRL Antenna Book, 17th ed., pp. 16-5 to 16-11: a 102 in whip at 14.1 MHz needs a 4.511 µH base loading coil | 5% on the 102 in whip length and the 4.511 µH coil inductance | Only the published 14.1 MHz mobile example is reference-backed. The coil is an ideal series load; coil Q, ground, and the mobile installation are not modeled. Other loaded verticals remain experimental. |
-| `yagi` | A | NBS TN-688 5-element preset, 9.2 dBd (11.35 dBi) | 0.5 dB | Only the published preset; edited element geometry is experimental. The optional folded driven element and beta/hairpin match change feed impedance and have no independent impedance reference. Gamma matches are not modeled by NEC-2 here. |
+| `yagi` | A | NBS TN-688 5-element preset, 9.2 dBd (11.35 dBi) | 0.5 dB | Only the published preset; edited element geometry is experimental. The optional folded driven element and beta/hairpin match change feed impedance and have no independent impedance reference. Tapered tips are geometric only; boom-mounting correction is not modeled. Gamma matches are not modeled by NEC-2 here. |
 | `moxon` | A | L. B. Cebik, W4RNL, 'The Moxon Rectangle: A Review', Table 1 and text | 1.5 Ω real; 5 Ω reactance; 0.3 dB gain; better than 30 dB F/B | Published 20 m dimensions only. |
 | `ocfd` | B | R. Sanders, VK2WB, 'Analysis of the Off Centre Fed (OCF) dipole', Table 1 | Published 200-350 Ω range, not a strict numeric tolerance | The source does not fully specify its EZNEC ground model. |
 | `inverted_v` | B | ARRL, 'Wire Antennas for the Beginner': 120-degree inverted-V total length is 465.6/f MHz feet | 1% on total length for the 120-degree case | The 90-degree case and ground detuning use separate empirical starting rules; gain and feedpoint impedance are not independently validated. |
@@ -584,10 +584,11 @@ and require `NEC2C`.
   ZS6BKW, Zepp, biquad, double biquad, Beverage, and loaded/linked dipole.
   Magnetic loops, random wires, and custom/imported geometry are explicitly
   unavailable. Band-aware and robust modes evaluate multiple operating points,
-  the Pareto front is descriptive, and summaries persist in schema 22. There
+  the Pareto front is descriptive, and summaries persist in schema 23. There
   are no boom-length or turning-radius constraints. Horizontal wire dipoles
-  support an optional sampled sag; tapered Yagi elements and boom correction
-  remain pending.
+  support an optional sampled sag; Yagi elements support optional tapered tips.
+  Boom-mounting correction remains pending because no universal published model
+  is available.
 - Pattern resolution changes angular sampling only; it does not change NEC
   segment density or solver accuracy.
 - Feed-line results are post-processed at the transmitter. The line does not

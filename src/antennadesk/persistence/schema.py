@@ -504,6 +504,8 @@ class YagiParametersPayload(StrictModel):
     frequency_hz: float = Field(gt=0.0)
     elements: list[YagiElementPayload] = Field(min_length=2)
     height_m: float = Field(ge=0.0)
+    taper_tip_length_m: float = Field(default=0.0, ge=0.0)
+    taper_tip_radius_m: float = Field(default=0.0, ge=0.0)
     driven_index: int = Field(default=1, ge=0)
     driven_folded: bool = False
     driven_fold_spacing_m: float = Field(default=0.1, ge=0.0)
@@ -1479,6 +1481,8 @@ def _yagi_parameters_from_domain(value: YagiParameters) -> YagiParametersPayload
             for element in value.elements
         ],
         height_m=value.height_m,
+        taper_tip_length_m=value.taper_tip_length_m,
+        taper_tip_radius_m=value.taper_tip_radius_m,
         driven_index=value.driven_index,
         driven_folded=value.driven_folded,
         driven_fold_spacing_m=value.driven_fold_spacing_m,
@@ -2430,6 +2434,8 @@ def _yagi_parameters_to_domain(value: YagiParametersPayload) -> YagiParameters:
             for element in value.elements
         ),
         height_m=value.height_m,
+        taper_tip_length_m=value.taper_tip_length_m,
+        taper_tip_radius_m=value.taper_tip_radius_m,
         driven_index=value.driven_index,
         driven_folded=value.driven_folded,
         driven_fold_spacing_m=value.driven_fold_spacing_m,

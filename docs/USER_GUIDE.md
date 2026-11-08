@@ -320,6 +320,14 @@ element dimensions do not look consistent with the current frequency, the form
 shows a warning; use **Design → Estimate Dimensions...** to rebuild a
 2–32 element DL6WU starting design.
 
+Set **Tapered tip length** and **Tapered tip radius** to add a smaller-radius
+tip section to both ends of every element. A zero tip length keeps straight
+elements. Tapering is not supported together with a folded driven element or a
+beta/hairpin match, because those driven-element wires already have a separate
+matching topology. The model uses physical tip-to-tip element lengths and does
+not apply a boom-mounting correction; use published or measured lengths when
+the boom diameter and clamps matter.
+
 The NBS preset is reference-backed for gain: the published design has 9.2 dBd
 gain over a half-wave dipole. The published design uses a folded driven
 element; enable the folded option to model it. The feed impedance is not the

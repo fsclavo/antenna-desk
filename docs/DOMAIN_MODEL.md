@@ -189,7 +189,11 @@ gamma assemblies are unreliable; use the matching-network dialog for an
 equivalent. Vertical geometry is rejected when the longest element would reach
 the ground. The NBS TN-688 5-element 0.8λ preset is a starting geometry; the
 published design uses a folded driven element, which can be enabled explicitly.
-Edited designs are experimental.
+Optional `taper_tip_length_m` and `taper_tip_radius_m` add a smaller-radius tip
+section to both ends of every element; a tapered element is three collinear
+wires (center plus two tips). Tapering is rejected with a folded or
+beta/hairpin driven element. Boom-mounting correction is not modeled. Edited
+designs are experimental.
 
 ### RingoParameters
 
@@ -505,11 +509,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 22.
+the application writes version 23.
 
 ## Schema policy
 
-- Current version: `22`.
+- Current version: `23`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -559,6 +563,8 @@ the application writes version 22.
   designs are unchanged.
 - Version 22 adds the optional `sag_m` field to the dipole payload; old
   documents load with zero sag.
+- Version 23 adds optional `taper_tip_length_m` and `taper_tip_radius_m` to the
+  Yagi payload; old documents load with straight elements.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -591,7 +597,7 @@ the application writes version 22.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 22.
+- Simulation results are persisted as immutable runs in schema version 23.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are

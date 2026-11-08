@@ -196,9 +196,10 @@ The ordered antenna backlog lives in
     reports, construction notes, and a family optimizer. Coil core loss,
     self-capacitance, and link contact resistance remain limitations.
 14. **Partially completed 2026-11-07:** optional sampled parabolic sag on
-    horizontal wire dipoles, with schema-22 persistence, scene/report support,
-    conductor-length reporting, and NEC coverage. Tapered Yagi elements and
-    boom correction remain pending.
+    horizontal wire dipoles (schema 22) and optional tapered Yagi tips
+    (schema 23), with scene/report support and NEC coverage. Boom-mounting
+    correction remains pending because no universal published model is
+    available.
 
 The remaining medium and large candidates are ordered after those fourteen in
 the roadmap table. Items 15–19 require architectural work or a much larger test

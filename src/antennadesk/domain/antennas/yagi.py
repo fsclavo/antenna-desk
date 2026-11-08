@@ -55,6 +55,8 @@ class YagiParameters:
     frequency_hz: float
     elements: tuple[YagiElement, ...]
     height_m: float
+    taper_tip_length_m: float = 0.0
+    taper_tip_radius_m: float = 0.0
     driven_index: int = 1
     driven_folded: bool = False
     driven_fold_spacing_m: float = 0.1
@@ -69,10 +71,21 @@ class YagiParameters:
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
         ensure_non_negative(self.height_m, name="height_m")
+        ensure_non_negative(self.taper_tip_length_m, name="taper_tip_length_m")
+        ensure_non_negative(self.taper_tip_radius_m, name="taper_tip_radius_m")
+        if (self.taper_tip_length_m > 0.0) != (self.taper_tip_radius_m > 0.0):
+            raise ValueError(
+                "taper_tip_length_m and taper_tip_radius_m must both be zero or positive"
+            )
         elements = tuple(sorted(self.elements, key=lambda element: element.position_m))
         object.__setattr__(self, "elements", elements)
         if len(elements) < 2:
             raise ValueError("a Yagi requires at least a reflector and a driven element")
+        if self.taper_tip_length_m > 0.0:
+            if self.taper_tip_radius_m >= min(element.radius_m for element in elements):
+                raise ValueError("taper_tip_radius_m must be smaller than every element radius")
+            if any(2.0 * self.taper_tip_length_m >= element.length_m for element in elements):
+                raise ValueError("taper_tip_length_m must leave a positive center section")
         for index, element in enumerate(elements):
             if index > 0 and math.isclose(
                 element.position_m,
@@ -90,6 +103,12 @@ class YagiParameters:
         driven_radius = elements[self.driven_index].radius_m
         if self.driven_folded and self.driven_fold_spacing_m <= 2.0 * driven_radius:
             raise ValueError("driven_fold_spacing_m must exceed twice the driven-element radius")
+        if self.taper_tip_length_m > 0.0 and (
+            self.driven_folded or self.match_type is not YagiMatchType.NONE
+        ):
+            raise ValueError(
+                "tapered elements are not supported with a folded or matched driven element"
+            )
         if self.match_type is not YagiMatchType.NONE:
             ensure_positive(self.match_length_m, name="match_length_m")
             ensure_positive(self.match_spacing_m, name="match_spacing_m")
@@ -125,11 +144,20 @@ class YagiParameters:
     def wavelength_m(self) -> float:
         return units.wavelength_m(self.frequency_hz)
 
+    @property
+    def is_tapered(self) -> bool:
+        return self.taper_tip_length_m > 0.0
+
     @classmethod
     def from_custom_parameters(
         cls,
         parameters: CustomAntennaParameters,
     ) -> YagiParameters:
+        if any(wire.id.endswith("-center") for wire in parameters.wires):
+            raise ValueError(
+                "tapered Yagi geometry is stored as typed parameters; "
+                "it cannot be reconstructed from arbitrary custom wires"
+            )
         if any(wire.id.endswith("-hairpin-a") for wire in parameters.wires):
             return cls._from_custom_hairpin(parameters)
         if any(_folded_wire_number(wire.id) is not None for wire in parameters.wires):
@@ -487,6 +515,80 @@ class YagiParameters:
         half_spacing = self.driven_fold_spacing_m / 2.0
         for index, element in enumerate(self.elements):
             half_length = element.length_m / 2.0
+            if self.is_tapered:
+                center_half = half_length - self.taper_tip_length_m
+                prefix = f"{YAGI_ELEMENT_ID_PREFIX}-{index + 1}"
+                if self.polarization is Polarization.HORIZONTAL:
+                    left_tip_start = Point3D(
+                        element.position_m,
+                        -half_length,
+                        self.height_m,
+                    )
+                    left_tip_end = Point3D(
+                        element.position_m,
+                        -center_half,
+                        self.height_m,
+                    )
+                    center_start = left_tip_end
+                    center_end = Point3D(
+                        element.position_m,
+                        center_half,
+                        self.height_m,
+                    )
+                    right_tip_start = center_end
+                    right_tip_end = Point3D(
+                        element.position_m,
+                        half_length,
+                        self.height_m,
+                    )
+                else:
+                    left_tip_start = Point3D(
+                        element.position_m,
+                        0.0,
+                        self.height_m - half_length,
+                    )
+                    left_tip_end = Point3D(
+                        element.position_m,
+                        0.0,
+                        self.height_m - center_half,
+                    )
+                    center_start = left_tip_end
+                    center_end = Point3D(
+                        element.position_m,
+                        0.0,
+                        self.height_m + center_half,
+                    )
+                    right_tip_start = center_end
+                    right_tip_end = Point3D(
+                        element.position_m,
+                        0.0,
+                        self.height_m + half_length,
+                    )
+                wires.extend(
+                    [
+                        wire(
+                            f"{prefix}-tip-left",
+                            left_tip_start,
+                            left_tip_end,
+                            self.taper_tip_radius_m,
+                        ),
+                        wire(
+                            f"{prefix}-center",
+                            center_start,
+                            center_end,
+                            element.radius_m,
+                        ),
+                        wire(
+                            f"{prefix}-tip-right",
+                            right_tip_start,
+                            right_tip_end,
+                            self.taper_tip_radius_m,
+                        ),
+                    ]
+                )
+                if index == self.driven_index:
+                    driven_wire_id = f"{prefix}-center"
+                continue
             if index == self.driven_index and self.match_type is YagiMatchType.BETA_HAIRPIN:
                 half_gap = self.match_spacing_m / 2.0
                 prefix = f"{YAGI_ELEMENT_ID_PREFIX}-{index + 1}"

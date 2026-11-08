@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from dataclasses import replace
 
 import pytest
 
@@ -63,6 +64,60 @@ def test_yagi_vertical_polarization_keeps_the_boom_horizontal() -> None:
         assert midpoint_z == pytest.approx(8.0)
     driven = parameters.wires[1]
     assert parameters.feed.offset_m == pytest.approx(driven.length_m / 2.0)
+
+
+def test_yagi_tapered_elements_add_three_wires_each() -> None:
+    parameters = replace(
+        nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0),
+        taper_tip_length_m=0.3,
+        taper_tip_radius_m=0.002,
+    )
+    model = parameters.to_antenna()
+
+    assert parameters.is_tapered is True
+    assert len(model.wires) == 3 * len(parameters.elements)
+    tips = [wire for wire in model.wires if wire.id.endswith("-tip-left")]
+    centers = [wire for wire in model.wires if wire.id.endswith("-center")]
+    assert len(tips) == len(parameters.elements)
+    assert all(wire.radius_m == pytest.approx(0.002) for wire in tips)
+    assert all(wire.radius_m == pytest.approx(parameters.elements[0].radius_m) for wire in centers)
+    feed_wire = model.feed_wire
+    assert feed_wire.id == f"element-{parameters.driven_index + 1}-center"
+    assert model.feed.offset_m == pytest.approx(feed_wire.length_m / 2.0)
+
+
+def test_yagi_taper_rejects_folded_or_matched_driven_elements() -> None:
+    base = nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0)
+    with pytest.raises(ValueError, match="tapered elements"):
+        replace(
+            base,
+            driven_folded=True,
+            taper_tip_length_m=0.3,
+            taper_tip_radius_m=0.002,
+        )
+    with pytest.raises(ValueError, match="tapered elements"):
+        replace(
+            base,
+            match_type=YagiMatchType.BETA_HAIRPIN,
+            taper_tip_length_m=0.3,
+            taper_tip_radius_m=0.002,
+        )
+
+
+def test_yagi_taper_rejects_an_overlong_tip_or_large_tip_radius() -> None:
+    base = nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0)
+    with pytest.raises(ValueError, match="center section"):
+        replace(
+            base,
+            taper_tip_length_m=5.0,
+            taper_tip_radius_m=0.002,
+        )
+    with pytest.raises(ValueError, match="smaller than every element radius"):
+        replace(
+            base,
+            taper_tip_length_m=0.3,
+            taper_tip_radius_m=0.02,
+        )
 
 
 def test_yagi_folded_driven_element_adds_two_conductors_and_connectors() -> None:

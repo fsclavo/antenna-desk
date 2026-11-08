@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added optional **tapered Yagi element tips**: a shared tip length and smaller
+  tip radius add two outer segments to every element, persisted in schema 23.
+  The model does not include a boom-mounting correction; use published or
+  measured element lengths where the boom and clamps matter.
 - Added optional **wire sag** to horizontal wire dipoles: a sampled parabolic
   path replaces the straight span, the feed stays at the center segment, and
   the scene, reports, and construction sheet show the sag and the longer

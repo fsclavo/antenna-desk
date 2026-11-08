@@ -550,6 +550,14 @@ def design_summary_rows(
         )
         if parameters.polarization is Polarization.VERTICAL:
             rows.append(("Lowest tip", f"{parameters.lowest_tip_m:.4f} m"))
+        if parameters.is_tapered:
+            rows.append(
+                (
+                    "Tapered tips",
+                    f"{parameters.taper_tip_length_m:.4f} m at "
+                    f"{parameters.taper_tip_radius_m * 1000.0:.3f} mm radius",
+                )
+            )
         rows.extend(
             [
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),

@@ -730,6 +730,25 @@ def test_loaded_dipole_round_trips_through_the_schema() -> None:
     assert restored.designs[0].antenna_type == "loaded_dipole"
 
 
+def test_tapered_yagi_round_trips_through_the_schema() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+
+    parameters = replace(
+        nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0),
+        taper_tip_length_m=0.3,
+        taper_tip_radius_m=0.002,
+    )
+    original = _project(parameters, "Tapered Yagi")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna == original.designs[0].antenna
+
+
 def test_sagged_dipole_round_trips_through_the_schema() -> None:
     parameters = DipoleParameters(
         frequency_hz=7_100_000.0,

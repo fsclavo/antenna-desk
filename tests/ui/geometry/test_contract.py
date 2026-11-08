@@ -269,6 +269,23 @@ def _cases() -> tuple[FamilyCase, ...]:
             ("Yagi", "elements 2"),
         ),
         FamilyCase(
+            "yagi_tapered",
+            YagiParameters(
+                frequency_hz=14_100_000.0,
+                elements=(
+                    YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+                    YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+                ),
+                height_m=10.0,
+                taper_tip_length_m=0.3,
+                taper_tip_radius_m=0.0005,
+            ),
+            "yagi",
+            6,
+            GeometryViewMode.PLAN,
+            ("Yagi", "elements 2", "tips"),
+        ),
+        FamilyCase(
             "moxon",
             MoxonParameters(
                 frequency_hz=14_100_000.0,

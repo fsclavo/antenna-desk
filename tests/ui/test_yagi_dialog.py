@@ -8,7 +8,7 @@ from pytestqt.qtbot import QtBot
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 from antennadesk.ui.dialogs.yagi_dialog import YagiDialog
 from antennadesk.ui.i18n import Language, Translator
-from antennadesk.ui.units import UnitSystem
+from antennadesk.ui.units import UnitSystem, radius_from_m
 
 
 def test_yagi_dialog_loads_the_nbs_preset(qtbot: QtBot) -> None:
@@ -118,6 +118,35 @@ def test_yagi_dialog_restores_vertical_polarization(qtbot: QtBot) -> None:
     assert restored.azimuth_deg == pytest.approx(original.azimuth_deg)
     assert restored.driven_index == original.driven_index
     assert dialog._form._polarization.currentData() == "vertical"
+
+
+def test_yagi_dialog_supports_tapered_element_tips(qtbot: QtBot) -> None:
+    dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    form = dialog._form
+    form._taper_length.setValue(0.3)
+    form._taper_radius.setValue(radius_from_m(0.002, UnitSystem.METRIC))
+
+    parameters = dialog.parameters()
+
+    assert parameters.is_tapered is True
+    assert parameters.taper_tip_length_m == pytest.approx(0.3, abs=1e-3)
+    assert parameters.taper_tip_radius_m == pytest.approx(0.002, abs=1e-4)
+    assert len(parameters.to_antenna().wires) == 3 * len(parameters.elements)
+
+
+def test_yagi_dialog_rejects_taper_with_a_folded_driven_element(
+    qtbot: QtBot,
+) -> None:
+    dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    form = dialog._form
+    form._driven_folded.setChecked(True)
+    form._taper_length.setValue(0.3)
+    form._taper_radius.setValue(radius_from_m(0.002, UnitSystem.METRIC))
+
+    with pytest.raises(ValueError, match="tapered elements"):
+        form.parameters()
 
 
 def test_yagi_dialog_supports_a_folded_driven_element(qtbot: QtBot) -> None:

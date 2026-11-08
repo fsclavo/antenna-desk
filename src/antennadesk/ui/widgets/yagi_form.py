@@ -39,6 +39,7 @@ from ..units import (
     length_unit_key,
     radius_from_m,
     radius_to_m,
+    radius_unit_key,
 )
 from .form_i18n import FormLabels, retranslate_combo
 from .form_units import apply_length_suffixes, apply_radius_units
@@ -90,6 +91,13 @@ class YagiForm(QWidget):
         self._radius = QDoubleSpinBox(self)
         apply_radius_units(translator, unit_system, self._radius)
         self._radius.setValue(radius_from_m(0.00635, unit_system))
+
+        self._taper_length = QDoubleSpinBox(self)
+        self._taper_length.setDecimals(3)
+        self._taper_length.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._taper_radius = QDoubleSpinBox(self)
+        apply_radius_units(translator, unit_system, self._taper_radius)
+        self._taper_radius.setValue(0.0)
 
         self._material = QComboBox(self)
         for material in MATERIALS:
@@ -191,6 +199,8 @@ class YagiForm(QWidget):
         form.addRow(self._labels.label("field.azimuth"), self._azimuth)
         form.addRow(self._labels.label("field.polarization"), self._polarization)
         form.addRow(self._labels.label("yagi.radius"), self._radius)
+        form.addRow(self._labels.label("yagi.taper_length"), self._taper_length)
+        form.addRow(self._labels.label("yagi.taper_radius"), self._taper_radius)
         form.addRow(self._labels.label("field.material"), self._material)
         form.addRow(self._labels.label("field.ground"), self._ground)
         form.addRow(self._labels.label("field.soil_preset"), self._soil)
@@ -225,6 +235,8 @@ class YagiForm(QWidget):
             self._height,
             self._azimuth,
             self._radius,
+            self._taper_length,
+            self._taper_radius,
             self._driven_fold_spacing,
             self._match_length,
             self._match_spacing,
@@ -509,10 +521,12 @@ class YagiForm(QWidget):
             parameters = None
         self._unit_system = unit_system
         apply_radius_units(self._translator, unit_system, self._radius)
+        apply_radius_units(self._translator, unit_system, self._taper_radius)
         apply_length_suffixes(
             self._translator,
             unit_system,
             self._height,
+            self._taper_length,
             self._driven_fold_spacing,
             self._match_length,
             self._match_spacing,
@@ -534,6 +548,12 @@ class YagiForm(QWidget):
                 self._radius.setValue(
                     radius_from_m(parameters.elements[0].radius_m, self._unit_system)
                 )
+            self._taper_length.setValue(
+                length_from_m(parameters.taper_tip_length_m, self._unit_system)
+            )
+            self._taper_radius.setValue(
+                radius_from_m(parameters.taper_tip_radius_m, self._unit_system)
+            )
             material_index = self._material.findData(parameters.material)
             if material_index >= 0:
                 self._material.setCurrentIndex(material_index)
@@ -645,6 +665,14 @@ class YagiForm(QWidget):
                 spacing=f"{length_from_m(parameters.match_spacing_m, self._unit_system):.3f}",
                 unit=unit,
             )
+        if parameters.is_tapered:
+            geometry += " · " + self._translator.t(
+                "yagi.taper_geometry",
+                length=f"{length_from_m(parameters.taper_tip_length_m, self._unit_system):.3f}",
+                radius=f"{radius_from_m(parameters.taper_tip_radius_m, self._unit_system):.4f}",
+                unit=unit,
+                radius_unit=self._translator.t(radius_unit_key(self._unit_system)),
+            )
         self._geometry.setText(geometry)
 
     def parameters(self) -> YagiParameters:
@@ -656,10 +684,20 @@ class YagiForm(QWidget):
         driven_index = next(
             index for index, (row, _element) in enumerate(rows) if row == driven_row
         )
+        taper_length_m = length_to_m(
+            self._taper_length.value(),
+            self._unit_system,
+        )
         return YagiParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
             elements=tuple(element for _row, element in rows),
             height_m=length_to_m(self._height.value(), self._unit_system),
+            taper_tip_length_m=taper_length_m,
+            taper_tip_radius_m=(
+                radius_to_m(self._taper_radius.value(), self._unit_system)
+                if taper_length_m > 0.0
+                else 0.0
+            ),
             driven_index=driven_index,
             driven_folded=self._driven_folded.isChecked(),
             driven_fold_spacing_m=length_to_m(
