@@ -64,6 +64,7 @@ def test_export_csv_and_html_from_the_current_result(
         timeout_ms=15_000,
     )
     assert window._export_csv_action.isEnabled() is True
+    assert window._export_sources_csv_action.isEnabled() is False
     assert window._export_html_action.isEnabled() is True
 
     csv_path = tmp_path / "result.csv"

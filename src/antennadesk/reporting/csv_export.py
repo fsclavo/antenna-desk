@@ -62,6 +62,50 @@ def result_to_csv(result: SimulationResult) -> str:
     return "\n".join([CSV_HEADER, *_result_rows(result)]) + "\n"
 
 
+SOURCES_HEADER = (
+    "frequency_hz,frequency_mhz,source,wire_id,offset_m,tag,segment,"
+    "amplitude,phase_deg,voltage_real_v,voltage_imag_v,current_real_a,"
+    "current_imag_a,impedance_real_ohm,impedance_imag_ohm,power_w"
+)
+
+
+def _source_rows(result: SimulationResult) -> list[str]:
+    rows: list[str] = []
+    for frequency in result.frequencies:
+        for source_index, source in enumerate(frequency.source_results, start=1):
+            rows.append(
+                ",".join(
+                    [
+                        f"{frequency.frequency_hz:.6f}",
+                        f"{frequency.frequency_hz / 1e6:.9f}",
+                        f"S{source_index}",
+                        source.wire_id,
+                        f"{source.offset_m:.6f}",
+                        str(source.tag),
+                        str(source.segment),
+                        f"{source.amplitude:.6f}",
+                        f"{source.phase_deg:.6f}",
+                        f"{source.voltage_v.real:.9g}",
+                        f"{source.voltage_v.imag:.9g}",
+                        f"{source.current_a.real:.9g}",
+                        f"{source.current_a.imag:.9g}",
+                        f"{source.impedance_ohm.real:.6f}",
+                        f"{source.impedance_ohm.imag:.6f}",
+                        f"{source.power_w:.9g}",
+                    ]
+                )
+            )
+    return rows
+
+
+def sources_to_csv(result: SimulationResult) -> str:
+    return "\n".join([SOURCES_HEADER, *_source_rows(result)]) + "\n"
+
+
+def write_sources_csv(result: SimulationResult, path: Path) -> None:
+    path.write_text(sources_to_csv(result), encoding="utf-8", newline="\n")
+
+
 def band_analysis_to_csv(analysis: BandAnalysisResult) -> str:
     lines = [f"band,{CSV_HEADER}"]
     for band in analysis.bands:

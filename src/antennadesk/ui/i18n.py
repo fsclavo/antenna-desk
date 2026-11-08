@@ -2357,6 +2357,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Eliminar diseño",
     },
     "action.export_csv": {Language.ENGLISH: "Export CSV...", Language.SPANISH: "Exportar CSV..."},
+    "action.export_sources_csv": {
+        Language.ENGLISH: "Export source results CSV...",
+        Language.SPANISH: "Exportar resultados de fuentes CSV...",
+    },
     "action.export_pattern_csv": {
         Language.ENGLISH: "Export Pattern CSV...",
         Language.SPANISH: "Exportar CSV de patrón...",
@@ -2498,6 +2502,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "dialog.csv_title": {
         Language.ENGLISH: "Export simulation CSV",
         Language.SPANISH: "Exportar CSV de simulación",
+    },
+    "dialog.sources_csv_title": {
+        Language.ENGLISH: "Export source results CSV",
+        Language.SPANISH: "Exportar CSV de resultados de fuentes",
     },
     "dialog.html_title": {
         Language.ENGLISH: "Export HTML report",

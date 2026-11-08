@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 
 from antennadesk.domain.simulation.far_field import FarFieldRequest
@@ -11,6 +12,7 @@ from antennadesk.domain.simulation.result import (
     FrequencyResult,
     SimulationResult,
     SimulationStatus,
+    SourceResult,
 )
 from antennadesk.domain.simulation.segmentation import SegmentationPolicy
 from antennadesk.domain.simulation.solver import SolverMetadata
@@ -18,8 +20,10 @@ from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.reporting.csv_export import (
     CSV_HEADER,
     PATTERN_HEADER,
+    SOURCES_HEADER,
     pattern_to_csv,
     result_to_csv,
+    sources_to_csv,
 )
 
 
@@ -90,6 +94,47 @@ def test_pattern_csv_has_one_row_per_far_field_point() -> None:
     assert len(lines) == 3
     assert lines[1].startswith("6900000.000000,6.900000000,0.000000,0.000000,2.000000")
     assert lines[2].startswith("7100000.000000,7.100000000,0.000000,0.000000,2.100000")
+
+
+def test_sources_csv_has_one_row_per_source() -> None:
+    result = make_result()
+    sources = (
+        SourceResult(
+            wire_id="first",
+            offset_m=0.0,
+            tag=1,
+            segment=11,
+            amplitude=1.0,
+            phase_deg=0.0,
+            voltage_v=complex(1.0, 0.0),
+            current_a=complex(0.01, -0.02),
+            impedance_ohm=complex(60.0, -10.0),
+            power_w=0.001,
+        ),
+        SourceResult(
+            wire_id="second",
+            offset_m=0.0,
+            tag=2,
+            segment=22,
+            amplitude=0.5,
+            phase_deg=90.0,
+            voltage_v=complex(0.0, 0.5),
+            current_a=complex(0.005, 0.001),
+            impedance_ohm=complex(40.0, 20.0),
+            power_w=-0.0002,
+        ),
+    )
+    frequencies = tuple(
+        replace(frequency, source_results=sources) for frequency in result.frequencies
+    )
+    text = sources_to_csv(replace(result, frequencies=frequencies))
+    lines = text.strip().splitlines()
+
+    assert lines[0] == SOURCES_HEADER
+    assert len(lines) == 5
+    assert lines[1].startswith("6900000.000000,6.900000000,S1,first,0.000000,1,11")
+    assert ",90.000000," in lines[2]
+    assert lines[2].endswith("40.000000,20.000000,-0.0002")
 
 
 def test_band_csv_adds_a_band_column() -> None:

@@ -1272,6 +1272,8 @@ feed side.
 ## Export results
 
 Use **File → Export → CSV...** for the frequency sweep table, **File → Export
+→ Source results CSV...** for one row per frequency and driven source when the
+design has multiple sources, **File → Export
 → Pattern CSV...** for the far-field grid (frequency, θ, φ, gains,
 polarization, and E-field components), **File → Export → Pattern PNG...** for
 the current cut/3D pattern image using the selected metric, or one image per

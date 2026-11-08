@@ -167,6 +167,7 @@ from ..reporting.csv_export import (
     write_band_analysis_pattern_csv,
     write_csv,
     write_pattern_csv,
+    write_sources_csv,
 )
 from ..reporting.html_report import write_html_report
 from ..simulation.nec2.solver import Nec2cSolver
@@ -465,6 +466,8 @@ class MainWindow(QMainWindow):
         self._convert_custom_action.triggered.connect(lambda: self.convert_to_custom_wires())
         self._export_csv_action = QAction(self)
         self._export_csv_action.triggered.connect(lambda: self.export_csv())
+        self._export_sources_csv_action = QAction(self)
+        self._export_sources_csv_action.triggered.connect(lambda: self.export_sources_csv())
         self._export_pattern_csv_action = QAction(self)
         self._export_pattern_csv_action.triggered.connect(lambda: self.export_pattern_csv())
         self._export_pattern_png_action = QAction(self)
@@ -1067,6 +1070,7 @@ class MainWindow(QMainWindow):
         self._import_menu.addAction(self._import_vna_action)
         self._export_menu = self._file_menu.addMenu("")
         self._export_menu.addAction(self._export_csv_action)
+        self._export_menu.addAction(self._export_sources_csv_action)
         self._export_menu.addAction(self._export_pattern_csv_action)
         self._export_menu.addSeparator()
         self._export_menu.addAction(self._export_pattern_png_action)
@@ -1234,6 +1238,7 @@ class MainWindow(QMainWindow):
             )
         self._update_custom_pattern_status()
         self._export_csv_action.setText(self._translator.t("action.export_csv"))
+        self._export_sources_csv_action.setText(self._translator.t("action.export_sources_csv"))
         self._export_pattern_csv_action.setText(self._translator.t("action.export_pattern_csv"))
         self._export_pattern_png_action.setText(self._translator.t("action.export_pattern_png"))
         self._export_geometry_png_action.setText(self._translator.t("action.export_geometry_png"))
@@ -1431,6 +1436,12 @@ class MainWindow(QMainWindow):
         has_designs = self._project is not None and len(self._project.designs) > 0
         has_multiple = self._project is not None and len(self._project.designs) > 1
         has_result = self._design_id is not None and self._design_id in self._simulation_results
+        current_result = (
+            self._simulation_results.get(self._design_id) if self._design_id is not None else None
+        )
+        has_sources = current_result is not None and any(
+            len(frequency.source_results) > 1 for frequency in current_result.frequencies
+        )
         self._new_action.setEnabled(idle)
         self._apply_button.setEnabled(idle and has_project)
         self._open_action.setEnabled(idle)
@@ -1482,6 +1493,7 @@ class MainWindow(QMainWindow):
         self._import_mmana_action.setEnabled(idle)
         self._import_vna_action.setEnabled(idle and has_project)
         self._export_csv_action.setEnabled(idle and has_result)
+        self._export_sources_csv_action.setEnabled(idle and has_sources)
         self._export_pattern_csv_action.setEnabled(idle and has_result)
         self._export_pattern_png_action.setEnabled(idle and has_result)
         self._export_geometry_png_action.setEnabled(idle and has_project)
@@ -6482,6 +6494,33 @@ class MainWindow(QMainWindow):
                 write_band_analysis_csv(analysis, path)
             else:
                 write_csv(result, path)
+        except Exception as exc:
+            self._show_error(self._translator.t("error.export", message=str(exc)))
+            return
+        self._last_status_key = "status.exported"
+        self._update_status_text()
+
+    def export_sources_csv(self) -> None:
+        data = self._current_export_data()
+        if data is None:
+            return
+        project, design, result = data
+        suggested = (
+            f"{self._safe_file_name(project.name)}-{self._safe_file_name(design.name)}-sources.csv"
+        )
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            self._translator.t("dialog.sources_csv_title"),
+            str(Path.home() / suggested),
+            self._translator.t("dialog.csv_filter"),
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.lower() != ".csv":
+            path = path.with_suffix(".csv")
+        try:
+            write_sources_csv(result, path)
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))
             return
