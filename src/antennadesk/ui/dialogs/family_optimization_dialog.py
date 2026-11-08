@@ -743,10 +743,21 @@ class FamilyOptimizationDialog(QDialog):
                 self._number(metrics.get("max_gain_db")),
                 self._number(metrics.get("front_to_back_db")),
                 self._number(metrics.get("efficiency_percent")),
-                evaluation.error or "",
+                self._localized_error(evaluation.error),
             ]
             for column, value in enumerate(values):
                 self._evaluations.setItem(row, column, QTableWidgetItem(value))
+
+    def _localized_error(self, error: str | None) -> str:
+        if not error:
+            return ""
+        parts = [part.strip() for part in error.split(";") if part.strip()]
+        return "; ".join(
+            self._translator.t(part)
+            if part.startswith(("optimize.constraint.", "loaded_dipole.constraint."))
+            else part
+            for part in parts
+        )
 
     @staticmethod
     def _number(value: float | None) -> str:

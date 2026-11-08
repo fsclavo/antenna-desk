@@ -49,6 +49,15 @@ def test_family_dialog_lists_the_family_variables(qtbot: QtBot) -> None:
     assert dialog._budget.count() == 3
 
 
+def test_family_dialog_localizes_optimizer_constraints(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    key = "optimize.constraint.director_length_taper"
+
+    assert dialog._localized_error(key) == Translator(Language.ENGLISH).t(key)
+    assert dialog._localized_error("solver failed") == "solver failed"
+
+
 def test_family_dialog_runs_and_applies_best(qtbot: QtBot) -> None:
     dialog = _dialog()
     qtbot.addWidget(dialog)

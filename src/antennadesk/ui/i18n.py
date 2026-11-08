@@ -5347,6 +5347,27 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "A vertically polarized array must clear the ground.",
         Language.SPANISH: "Un conjunto con polarización vertical debe quedar por encima del suelo.",
     },
+    "optimize.constraint.director_length_taper": {
+        Language.ENGLISH: (
+            "Director lengths must preserve the starting taper; a director cannot "
+            "become longer than the previous one beyond the initial shape tolerance."
+        ),
+        Language.SPANISH: (
+            "Las longitudes de los directores deben preservar el taper inicial; un "
+            "director no puede volverse más largo que el anterior más allá de la "
+            "tolerancia de forma inicial."
+        ),
+    },
+    "optimize.constraint.director_gap_taper": {
+        Language.ENGLISH: (
+            "Director gaps must preserve the starting spacing trend; adjacent gaps "
+            "cannot reverse the initial taper."
+        ),
+        Language.SPANISH: (
+            "Las separaciones entre directores deben preservar la tendencia inicial; "
+            "gaps adyacentes no pueden invertir el taper inicial."
+        ),
+    },
     "optimize.unavailable.pending_family": {
         Language.ENGLISH: "This family is waiting for its descriptor in the family-optimizer migration.",
         Language.SPANISH: "Esta familia espera su descriptor en la migración al optimizador de familias.",

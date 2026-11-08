@@ -26,6 +26,12 @@ _OBJECTIVES = frozenset(
     }
 )
 
+# The optimizer may adjust the starting taper, but it must not invert it.
+# A small tolerance preserves published designs that are not strictly
+# monotonic, such as the NBS five-element reference.
+_DIRECTOR_LENGTH_RATIO_TOLERANCE = 0.01
+_DIRECTOR_GAP_RATIO_TOLERANCE = 0.05
+
 
 def yagi_descriptor(parameters: YagiParameters) -> AntennaOptimizerDescriptor:
     elements = parameters.elements
@@ -132,6 +138,9 @@ def yagi_descriptor(parameters: YagiParameters) -> AntennaOptimizerDescriptor:
         )
         initial["match_spacing_m"] = parameters.match_spacing_m
 
+    initial_lengths = {index: initial[f"length_{index}"] for index in range(len(elements))}
+    initial_gaps = {index: initial[f"gap_{index}"] for index in range(1, len(elements))}
+
     def build(values: Mapping[str, float]) -> YagiParameters:
         updated_elements = list(elements)
         for index, element in enumerate(updated_elements):
@@ -205,6 +214,60 @@ def yagi_descriptor(parameters: YagiParameters) -> AntennaOptimizerDescriptor:
                         "match_spacing_m",
                         4.0 * max_radius - values["match_spacing_m"],
                         "optimize.constraint.conductor_spacing",
+                    )
+                )
+        for index in range(parameters.driven_index + 1, len(elements)):
+            previous = values[f"length_{index - 1}"]
+            current = values[f"length_{index}"]
+            if previous <= 0.0 or current <= 0.0:
+                continue
+            initial_ratio = initial_lengths[index] / initial_lengths[index - 1]
+            ratio = current / previous
+            minimum_ratio = initial_ratio * (1.0 - _DIRECTOR_LENGTH_RATIO_TOLERANCE)
+            maximum_ratio = (
+                1.0
+                if initial_ratio <= 1.0
+                else initial_ratio * (1.0 + _DIRECTOR_LENGTH_RATIO_TOLERANCE)
+            )
+            if ratio < minimum_ratio:
+                issues.append(
+                    violation(
+                        f"length_{index}",
+                        minimum_ratio - ratio,
+                        "optimize.constraint.director_length_taper",
+                    )
+                )
+            elif ratio > maximum_ratio:
+                issues.append(
+                    violation(
+                        f"length_{index}",
+                        ratio - maximum_ratio,
+                        "optimize.constraint.director_length_taper",
+                    )
+                )
+        for index in range(max(2, parameters.driven_index + 1), len(elements)):
+            previous = values[f"gap_{index - 1}"]
+            current = values[f"gap_{index}"]
+            if previous <= 0.0 or current <= 0.0:
+                continue
+            initial_ratio = initial_gaps[index] / initial_gaps[index - 1]
+            ratio = current / previous
+            minimum_ratio = initial_ratio * (1.0 - _DIRECTOR_GAP_RATIO_TOLERANCE)
+            maximum_ratio = initial_ratio * (1.0 + _DIRECTOR_GAP_RATIO_TOLERANCE)
+            if ratio < minimum_ratio:
+                issues.append(
+                    violation(
+                        f"gap_{index}",
+                        minimum_ratio - ratio,
+                        "optimize.constraint.director_gap_taper",
+                    )
+                )
+            elif ratio > maximum_ratio:
+                issues.append(
+                    violation(
+                        f"gap_{index}",
+                        ratio - maximum_ratio,
+                        "optimize.constraint.director_gap_taper",
                     )
                 )
         if parameters.polarization is Polarization.VERTICAL:

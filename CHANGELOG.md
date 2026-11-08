@@ -425,6 +425,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Yagi optimization now keeps the element count fixed. It only adjusts the
   selected element lengths and boom gaps; it no longer adds or removes
   directors.
+- Yagi optimization now preserves the starting director-length taper and
+  inter-director gap trend. Adjacent directors and gaps cannot invert the
+  initial shape, so a DL6WU start stays DL6WU-like and the NBS preset keeps its
+  published small non-monotonicity.
 - The Bands page no longer appears as a floating table over the results tabs
   before the first multiband analysis. It stays hidden until the analysis
   inserts it.

@@ -1127,10 +1127,15 @@ The following typed families have a complete joint optimizer:
 
 For a Yagi, the element count is fixed; the optimizer varies every element
 length, every inter-element gap, height, folded-driven spacing when enabled, and
-beta/hairpin length and spacing when selected. Polarization and match type
-remain editor choices. For a fan dipole, both lengths and included angles are
-optimized together, with a constraint that keeps the wires distinct. For a
-Moxon, width, depth, both tip lengths, height, and radius are searched jointly.
+beta/hairpin length and spacing when selected. The optimizer preserves the
+starting director-length taper and inter-director gap trend: adjacent directors
+or gaps cannot invert the initial shape. A DL6WU start stays DL6WU-like, while
+the NBS preset keeps its published small non-monotonicity. To change the shape,
+edit the Yagi or start from a different reference before optimizing.
+Polarization and match type remain editor choices. For a fan dipole, both
+lengths and included angles are optimized together, with a constraint that keeps
+the wires distinct. For a Moxon, width, depth, both tip lengths, height, and
+radius are searched jointly.
 
 ### Families without an optimizer
 
