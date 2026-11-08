@@ -12,8 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added **per-source input results** to multi-source simulations: each
   frequency stores the ideal source voltage, current, impedance, amplitude,
   phase, and power for every driven port, and the results view exposes them in
-  a **Sources** tab. The primary feed remains the impedance/SWR reference. This
-  is persisted in schema 29.
+  a **Sources** tab. The HTML report lists the same source inputs. The primary
+  feed remains the impedance/SWR reference. This is persisted in schema 29.
 - Added a first-class **trapped Yagi** family: a two-band reflector/driven/
   optional-director array with one ideal parallel LC trap pair on every
   element, schema-28 persistence, catalog route, inline editor, scene

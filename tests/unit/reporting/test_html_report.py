@@ -13,6 +13,7 @@ from antennadesk.domain.simulation.result import (
     FrequencyResult,
     SimulationResult,
     SimulationStatus,
+    SourceResult,
 )
 from antennadesk.domain.simulation.segmentation import SegmentationPolicy
 from antennadesk.domain.simulation.solver import SolverMetadata
@@ -80,6 +81,50 @@ def test_html_report_contains_design_results_and_charts(sample_project: Project)
     assert "Gain and efficiency" in report
     assert "Max realized gain" in report
     assert "1.85 dBi" in report
+
+
+def test_html_report_lists_driven_sources(sample_project: Project) -> None:
+    result = make_result(sample_project)
+    sources = (
+        SourceResult(
+            wire_id="first",
+            offset_m=0.0,
+            tag=1,
+            segment=11,
+            amplitude=1.0,
+            phase_deg=0.0,
+            voltage_v=complex(1.0, 0.0),
+            current_a=complex(0.01, -0.02),
+            impedance_ohm=complex(60.0, -10.0),
+            power_w=0.001,
+        ),
+        SourceResult(
+            wire_id="second",
+            offset_m=0.0,
+            tag=2,
+            segment=22,
+            amplitude=0.5,
+            phase_deg=90.0,
+            voltage_v=complex(0.0, 0.5),
+            current_a=complex(0.005, 0.001),
+            impedance_ohm=complex(40.0, 20.0),
+            power_w=-0.0002,
+        ),
+    )
+    frequencies = tuple(
+        replace(frequency, source_results=sources) for frequency in result.frequencies
+    )
+    report = render_html_report(
+        sample_project,
+        sample_project.designs[0],
+        replace(result, frequencies=frequencies),
+    )
+
+    assert "Driven sources" in report
+    assert "S2" in report
+    assert "second" in report
+    assert "-0.000200" in report
+    assert "absorbs power" in report
 
 
 def test_html_report_escapes_user_text(sample_project: Project) -> None:

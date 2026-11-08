@@ -234,6 +234,33 @@ def render_html_report(
         else '<p class="muted">No resonance in the sweep.</p>'
     )
 
+    source_rows = "".join(
+        "<tr>"
+        f'<td class="num">{frequency.frequency_hz / 1e6:.6f}</td>'
+        f'<td class="num">S{source_index}</td>'
+        f"<td>{_escape(source.wire_id)}</td>"
+        f'<td class="num">{source.amplitude:.3f}</td>'
+        f'<td class="num">{source.phase_deg:.1f}°</td>'
+        f'<td class="num">{source.impedance_ohm.real:.3f}</td>'
+        f'<td class="num">{source.impedance_ohm.imag:+.3f}</td>'
+        f'<td class="num">{source.power_w:+.6f}</td>'
+        "</tr>"
+        for frequency in result.frequencies
+        for source_index, source in enumerate(frequency.source_results, start=1)
+    )
+    multi_source = any(len(frequency.source_results) > 1 for frequency in result.frequencies)
+    source_section = (
+        "<h2>Driven sources</h2>"
+        '<p class="muted">Ideal source inputs; negative power means that source '
+        "absorbs power. The primary feed remains the impedance/SWR reference.</p>"
+        "<table><thead><tr><th>Frequency (MHz)</th><th>Source</th><th>Wire</th>"
+        "<th>Amplitude</th><th>Phase</th><th>R (Ω)</th><th>X (Ω)</th>"
+        "<th>Power (W)</th></tr></thead>"
+        f"<tbody>{source_rows}</tbody></table>"
+        if multi_source
+        else ""
+    )
+
     impedance_chart = line_chart_svg(
         title="Impedance",
         x_label="Frequency (MHz)",
@@ -321,6 +348,8 @@ status <strong>{_escape(result.status.value)}</strong>.
 
 <h2>Resonance</h2>
 {resonance_section}
+
+{source_section}
 
 <h2>SWR</h2>
 <div class="chart">{swr_chart}</div>
