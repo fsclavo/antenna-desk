@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added a first-class **Loaded / linked dipole**: a center-fed dipole with
+  symmetric series R-L loading coils or open links that leave only the center
+  section active. It includes schema-21 persistence, catalog route, inline
+  editor, scene contract, reports, construction notes, and a family optimizer.
+  Coil Q is reported from the explicit series resistance; core loss,
+  self-capacitance, and link contact resistance are not modeled.
 - Added a first-class **Beverage** receiving antenna: a long horizontal wire
   fed at the near end with an optional resistive termination to ground, a
   one-wavelength starting length, schema-20 persistence, catalog route, inline

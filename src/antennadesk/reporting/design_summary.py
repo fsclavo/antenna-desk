@@ -16,6 +16,7 @@ from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.load import LumpedLoad, ParallelLoad
+from ..domain.antennas.loaded_dipole import LoadedDipoleParameters
 from ..domain.antennas.loop import LoopOrientation, LoopParameters
 from ..domain.antennas.magnetic_loop import MagneticLoopParameters
 from ..domain.antennas.moxon import MoxonParameters
@@ -353,6 +354,34 @@ def design_summary_rows(
                     f"{parameters.feed_offset_m:.4f} m",
                 ),
                 ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        return tuple(rows)
+    if isinstance(parameters, LoadedDipoleParameters):
+        rows.extend(
+            [
+                ("Type", parameters.template_name),
+                ("Active length", f"{parameters.active_length_m:.4f} m"),
+                ("Full length", f"{parameters.total_length_m:.4f} m"),
+                ("Link offset", f"{parameters.link_offset_m:.4f} m"),
+                (
+                    "State",
+                    "links open"
+                    if parameters.link_open
+                    else (
+                        f"loaded, {parameters.loading_coil_inductance_h * 1e6:.3f} µH"
+                        if parameters.coil_active
+                        else "no loading coils"
+                    ),
+                ),
+                (
+                    "Coil Q",
+                    "—" if parameters.coil_q is None else f"{parameters.coil_q:.1f}",
+                ),
+                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Orientation", parameters.orientation.value),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground)),
             ]

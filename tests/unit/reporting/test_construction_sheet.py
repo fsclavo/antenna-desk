@@ -316,6 +316,20 @@ def test_typed_transmission_line_doublet_construction_sheet(
     assert "band_aware" in sheet
 
 
+def test_loaded_dipole_construction_sheet_lists_the_coils(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
+
+    design = sample_project.designs[0]
+    dipole = design.with_parameters(loaded_dipole_parameters(total_length_m=18.0))
+    sheet = render_construction_sheet(sample_project, dipole, None)
+
+    assert "Loaded dipole" in sheet
+    assert "Link offset" in sheet
+    assert "loading coils" in sheet.lower()
+
+
 def test_beverage_construction_sheet_lists_the_termination(
     sample_project: Project,
 ) -> None:

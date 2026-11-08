@@ -38,6 +38,25 @@ def test_beverage_summary_reports_length_and_termination() -> None:
     assert rows["Feed"] == "near end"
 
 
+def test_loaded_dipole_summary_reports_links_and_coils() -> None:
+    from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
+
+    rows = dict(
+        design_summary_rows(
+            loaded_dipole_parameters(
+                total_length_m=18.0,
+                link_offset_m=2.5,
+                loading_coil_inductance_h=12e-6,
+            )
+        )
+    )
+
+    assert rows["Type"] == "Loaded dipole"
+    assert rows["Full length"] == "18.0000 m"
+    assert "12.000 µH" in rows["State"]
+    assert rows["Coil Q"] != "—"
+
+
 def test_optimization_summary_rows_describe_the_last_run() -> None:
     from datetime import UTC, datetime
 

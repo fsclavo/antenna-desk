@@ -566,6 +566,27 @@ current distribution are approximations, and gain, feedpoint impedance, and
 bandwidth are not independently validated. Simulate or measure the installed
 antenna before relying on the result.
 
+## Create a loaded / linked dipole
+
+Choose **File → New Antenna... → Loaded / linked dipole** for a portable
+center-fed dipole. Set the frequency, orientation, full wire length, height,
+link/coil offset from the feed, and either symmetric loading coils or open
+links.
+
+- **Loaded**: the full wire is active and a series R-L coil sits at each link
+  position. The editor exposes inductance in µH and series resistance in Ω;
+  the reported Q is `2πfL / R`. The model is an ideal series R-L load, not a
+  core-loss calculation.
+- **Linked**: the outer sections are disconnected and only the center section
+  of length `2 × offset` remains active. Link contact resistance and physical
+  link hardware are not modeled.
+- **No coils**: with coils disabled, the closed-link state is a plain dipole.
+
+**Optimize...** searches the active/full length, link offset, height, coil
+inductance and resistance when enabled, and conductor radius jointly. The
+family is classified **experimental**; tune the final geometry and coil with the
+solver or a measurement.
+
 ## Create a Beverage
 
 Choose **File → New Antenna... → Beverage** for a long horizontal receiving
@@ -1085,6 +1106,7 @@ The following typed families have a complete joint optimizer:
 - half square and bobtail curtain;
 - biquad and double biquad;
 - Beverage receiving wire;
+- loaded / linked dipole;
 - OCFD, EndFed/EFHW, and sloper;
 - typed G5RV, ZS6BKW, and Zepp;
 - the doublet radiator as a dipole, with its feed line in the matching stage;

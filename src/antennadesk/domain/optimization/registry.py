@@ -21,6 +21,7 @@ from ..antennas.folded_dipole import FoldedDipoleParameters
 from ..antennas.inverted_l import InvertedLParameters
 from ..antennas.inverted_v import InvertedVParameters
 from ..antennas.j_pole import JPoleParameters
+from ..antennas.loaded_dipole import LoadedDipoleParameters
 from ..antennas.loop import LoopParameters
 from ..antennas.magnetic_loop import MagneticLoopParameters
 from ..antennas.moxon import MoxonParameters
@@ -45,6 +46,7 @@ from .families.typed import (
     inverted_l_descriptor,
     inverted_v_descriptor,
     j_pole_descriptor,
+    loaded_dipole_descriptor,
     loop_descriptor,
     moxon_descriptor,
     ocfd_descriptor,
@@ -94,6 +96,8 @@ def optimizer_availability(
         return OptimizerAvailability(descriptor=biquad_descriptor(parameters))
     if isinstance(parameters, BeverageParameters):
         return OptimizerAvailability(descriptor=beverage_descriptor(parameters))
+    if isinstance(parameters, LoadedDipoleParameters):
+        return OptimizerAvailability(descriptor=loaded_dipole_descriptor(parameters))
     if isinstance(parameters, FoldedDipoleParameters):
         return OptimizerAvailability(descriptor=folded_dipole_descriptor(parameters))
     if isinstance(parameters, LoopParameters):
@@ -146,6 +150,7 @@ SUPPORTED_OPTIMIZER_TYPES = frozenset(
         ScvParameters,
         BiquadParameters,
         BeverageParameters,
+        LoadedDipoleParameters,
         OCFDParameters,
         EndFedParameters,
         FanDipoleParameters,

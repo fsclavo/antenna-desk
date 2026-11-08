@@ -14,6 +14,7 @@ from ..antennas.design import AntennaDesignParameters
 from ..antennas.dipole import DipoleParameters
 from ..antennas.endfed import EndFedParameters, EndFedPreset
 from ..antennas.fan_dipole import FanDipoleParameters
+from ..antennas.loaded_dipole import LoadedDipoleParameters
 from ..antennas.ocfd import OCFDParameters
 from ..antennas.t2fd import T2FDParameters
 from ..antennas.transmission_line_doublet import (
@@ -161,6 +162,12 @@ def default_band_plan(
             _current_band_plan(parameters.frequency_hz),
             BandEvidence.CURRENT,
             "band.note.beverage",
+        )
+    if isinstance(parameters, LoadedDipoleParameters):
+        return BandDefault(
+            _current_band_plan(parameters.frequency_hz),
+            BandEvidence.CURRENT,
+            "band.note.loaded_dipole",
         )
     if isinstance(parameters, CustomAntennaParameters) and parameters.generator_id == "g5rv":
         return BandDefault(

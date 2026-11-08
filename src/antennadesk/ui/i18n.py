@@ -285,6 +285,21 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "resistiva opcional a tierra; patrón directivo hacia la terminación."
         ),
     },
+    "catalog.loaded_dipole": {
+        Language.ENGLISH: "Loaded / linked dipole",
+        Language.SPANISH: "Dipolo cargado / enlazado",
+    },
+    "catalog.loaded_dipole.description": {
+        Language.ENGLISH: (
+            "Center-fed dipole with symmetric loading coils, or with open links "
+            "that leave only the center section active; portable and SOTA use."
+        ),
+        Language.SPANISH: (
+            "Dipolo alimentado en el centro con bobinas de carga simétricas, o con "
+            "enlaces abiertos que dejan activa solo la sección central; uso "
+            "portátil y SOTA."
+        ),
+    },
     "catalog.family.wire": {
         Language.ENGLISH: "Wire antennas",
         Language.SPANISH: "Antenas de hilo",
@@ -1921,6 +1936,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Current band only; the Beverage is a receiving starting point with low gain.",
         Language.SPANISH: "Solo la banda actual; la Beverage es un punto de partida de recepción con ganancia baja.",
     },
+    "band.note.loaded_dipole": {
+        Language.ENGLISH: "Current band only; the loaded/linked dipole is a monoband starting point.",
+        Language.SPANISH: "Solo la banda actual; el dipolo cargado/enlazado es un punto de partida monobanda.",
+    },
     "status.analyzing_bands": {
         Language.ENGLISH: "Analyzing bands...",
         Language.SPANISH: "Analizando bandas...",
@@ -3112,6 +3131,96 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "ganancia es baja y no está validada independientemente; usá el modelo "
             "para estudios relativos de patrón y terminación, y verificá con una "
             "medición."
+        ),
+    },
+    "loaded_dipole.title": {
+        Language.ENGLISH: "Loaded / Linked Dipole Generator",
+        Language.SPANISH: "Generador de dipolo cargado / enlazado",
+    },
+    "loaded_dipole.link_open": {
+        Language.ENGLISH: "Links open (center section only)",
+        Language.SPANISH: "Enlaces abiertos (solo sección central)",
+    },
+    "loaded_dipole.link_offset": {
+        Language.ENGLISH: "Link / coil offset from feed",
+        Language.SPANISH: "Offset de enlace / bobina desde la alimentación",
+    },
+    "loaded_dipole.active_length": {
+        Language.ENGLISH: "Active length",
+        Language.SPANISH: "Longitud activa",
+    },
+    "loaded_dipole.full_length": {
+        Language.ENGLISH: "Full length",
+        Language.SPANISH: "Longitud total",
+    },
+    "loaded_dipole.state": {
+        Language.ENGLISH: "State",
+        Language.SPANISH: "Estado",
+    },
+    "loaded_dipole.coil_enabled": {
+        Language.ENGLISH: "Loading coils",
+        Language.SPANISH: "Bobinas de carga",
+    },
+    "loaded_dipole.coil_inductance": {
+        Language.ENGLISH: "Coil inductance",
+        Language.SPANISH: "Inductancia de la bobina",
+    },
+    "loaded_dipole.coil_resistance": {
+        Language.ENGLISH: "Coil series resistance",
+        Language.SPANISH: "Resistencia serie de la bobina",
+    },
+    "loaded_dipole.state_loaded": {
+        Language.ENGLISH: "{inductance:.3f} µH coils, Q {q}",
+        Language.SPANISH: "bobinas de {inductance:.3f} µH, Q {q}",
+    },
+    "loaded_dipole.state_linked": {
+        Language.ENGLISH: "links open",
+        Language.SPANISH: "enlaces abiertos",
+    },
+    "loaded_dipole.state_plain": {
+        Language.ENGLISH: "no loading coils",
+        Language.SPANISH: "sin bobinas de carga",
+    },
+    "loaded_dipole.coil_note": {
+        Language.ENGLISH: "Two {inductance:.3f} µH loading coils, {offset} from the feed.",
+        Language.SPANISH: "Dos bobinas de carga de {inductance:.3f} µH, a {offset} de la alimentación.",
+    },
+    "loaded_dipole.geometry": {
+        Language.ENGLISH: (
+            "active {active} {unit} · full {total} {unit} · link offset {offset} {unit} · {state}"
+        ),
+        Language.SPANISH: (
+            "activo {active} {unit} · total {total} {unit} · "
+            "offset de enlace {offset} {unit} · {state}"
+        ),
+    },
+    "loaded_dipole.hint": {
+        Language.ENGLISH: (
+            "The loaded state keeps the full wire and places a series coil at each "
+            "link position. The linked state disconnects the outer sections and "
+            "leaves only the center wire active. Coil Q is reported from the "
+            "explicit series resistance; it is not a hidden correction."
+        ),
+        Language.SPANISH: (
+            "El estado cargado conserva el hilo completo y coloca una bobina serie "
+            "en cada posición de enlace. El estado enlazado desconecta las "
+            "secciones externas y deja activo solo el hilo central. La Q de la "
+            "bobina se informa a partir de la resistencia serie explícita; no es "
+            "una corrección oculta."
+        ),
+    },
+    "loaded_dipole.evidence": {
+        Language.ENGLISH: (
+            "Experimental portable model. The coil is an ideal series R-L load; "
+            "core loss, self-capacitance, link contact resistance, and the "
+            "installation are not independently validated. Tune with the solver "
+            "or a measurement."
+        ),
+        Language.SPANISH: (
+            "Modelo portátil experimental. La bobina es una carga R-L serie ideal; "
+            "las pérdidas del núcleo, la capacidad parásita, la resistencia de "
+            "contacto de los enlaces y la instalación no están validadas "
+            "independientemente. Ajustá con el solver o una medición."
         ),
     },
     "ringo.title": {
@@ -5181,6 +5290,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize.constraint.reflector_spacing": {
         Language.ENGLISH: "The reflector spacing is too small for the wire diameter.",
         Language.SPANISH: "La separación del reflector es demasiado pequeña para el diámetro del hilo.",
+    },
+    "loaded_dipole.constraint.offset": {
+        Language.ENGLISH: "The link offset must not exceed half the total length.",
+        Language.SPANISH: "El offset del enlace no debe superar la mitad de la longitud total.",
     },
     "optimize.constraint.match_length": {
         Language.ENGLISH: "The hairpin match is shorter than the minimum conductor spacing.",

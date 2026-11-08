@@ -23,6 +23,7 @@ from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
+from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
 from antennadesk.domain.antennas.materials import COPPER
@@ -253,6 +254,7 @@ def _typed_samples() -> list[AntennaDesignParameters]:
         biquad_parameters(BiquadKind.SINGLE),
         biquad_parameters(BiquadKind.DOUBLE),
         beverage_parameters(),
+        loaded_dipole_parameters(),
         OCFDParameters(frequency_hz=7_100_000.0, total_length_m=40.0),
         EndFedParameters(
             frequency_hz=7_100_000.0,
@@ -331,6 +333,7 @@ _CONTEXT_FIELDS = {
     "termination_enabled",
     "loading_coil_enabled",
     "loading_coil_resistance_ohm",
+    "link_open",
     "top_hat_enabled",
     "high_band_frequency_hz",
     "highest_frequency_hz",
@@ -376,6 +379,19 @@ def test_beverage_without_termination_does_not_optimize_its_resistance() -> None
     assert "length_m" in names
     assert "height_m" in names
     assert "termination_resistance_ohm" not in names
+
+
+def test_linked_dipole_optimizes_the_center_section_only() -> None:
+    parameters = loaded_dipole_parameters(link_open=True)
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+
+    names = {variable.name for variable in availability.descriptor.variables}
+
+    assert "link_offset_m" in names
+    assert "total_length_m" not in names
+    assert "loading_coil_inductance_h" not in names
+    assert "loading_coil_resistance_ohm" not in names
 
 
 def test_descriptor_initial_values_rebuild_the_current_parameters() -> None:

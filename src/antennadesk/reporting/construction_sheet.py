@@ -18,6 +18,7 @@ from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
+from ..domain.antennas.loaded_dipole import LoadedDipoleParameters
 from ..domain.antennas.loop import LoopOrientation, LoopParameters
 from ..domain.antennas.magnetic_loop import MagneticLoopParameters
 from ..domain.antennas.moxon import MoxonParameters
@@ -212,6 +213,31 @@ ends and feed the center of one element. The total conductor length is
 {wire_note} Keep the bottom ends insulated from ground and feed
 {feed_point}. The feed is {parameters.feed_offset_m:.4f} m below the top
 junction at {feed_height_m:.4f} m above ground.</p>"""
+    elif isinstance(parameters, LoadedDipoleParameters):
+        coil_note = (
+            f"Fit two {parameters.loading_coil_inductance_h * 1e6:.3f} µH loading "
+            f"coils at {parameters.link_offset_m:.4f} m either side of the feed; each "
+            f"coil has {parameters.loading_coil_resistance_ohm:.3f} Ω series "
+            "resistance."
+            if parameters.coil_active
+            else (
+                "Leave the links open and use only the center section."
+                if parameters.link_open
+                else "No loading coils are fitted."
+            )
+        )
+        feed_rows = f"""
+<tr><th>Type</th><td>{parameters.template_name}</td></tr>
+<tr><th>Active length</th><td>{parameters.active_length_m:.4f} m</td></tr>
+<tr><th>Full length</th><td>{parameters.total_length_m:.4f} m</td></tr>
+<tr><th>Link offset</th><td>{parameters.link_offset_m:.4f} m</td></tr>
+<tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Cut the full {parameters.total_length_m:.4f} m
+wire and mark the link positions at {parameters.link_offset_m:.4f} m either
+side of the center. Feed the center. {coil_note} The coil model is an ideal
+series R-L load; tune it for the installed height and ground.</p>"""
     elif isinstance(parameters, BeverageParameters):
         termination_note = (
             f"Fit a {parameters.termination_resistance_ohm:.1f} Ω resistor from "

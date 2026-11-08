@@ -22,6 +22,7 @@ from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
+from ..domain.antennas.loaded_dipole import LoadedDipoleParameters
 from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
@@ -88,6 +89,10 @@ ADAPTERS: dict[type[AntennaDesignParameters], OptimizationUiAdapter] = {
     BeverageParameters: OptimizationUiAdapter(
         lambda window, parameters: window._beverage_simulation_spec(parameters),
         lambda window, parameters: window._beverage_form.set_parameters(parameters),
+    ),
+    LoadedDipoleParameters: OptimizationUiAdapter(
+        lambda window, parameters: window._loaded_dipole_simulation_spec(parameters),
+        lambda window, parameters: window._loaded_dipole_form.set_parameters(parameters),
     ),
     OCFDParameters: OptimizationUiAdapter(
         lambda window, parameters: window._ocfd_simulation_spec(parameters),

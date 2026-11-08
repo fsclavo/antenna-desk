@@ -711,6 +711,25 @@ def test_beverage_round_trips_through_the_schema() -> None:
     assert restored.designs[0].antenna_type == "beverage"
 
 
+def test_loaded_dipole_round_trips_through_the_schema() -> None:
+    from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
+
+    parameters = loaded_dipole_parameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=18.0,
+        link_offset_m=2.5,
+        loading_coil_inductance_h=12e-6,
+    )
+    original = _project(parameters, "Loaded dipole")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna == original.designs[0].antenna
+    assert restored.designs[0].antenna_type == "loaded_dipole"
+
+
 def test_optimization_summary_round_trips_through_the_schema() -> None:
     from datetime import UTC, datetime
 

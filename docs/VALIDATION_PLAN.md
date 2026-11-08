@@ -266,6 +266,7 @@ gain, nulls, or impedance.
 | `biquad` | C | Quarter-wave loop side and eighth-wave reflector spacing are starting heuristics; no independent numerical reference for the generated geometry | Not applicable (structural) | The model is a wire approximation with shared horizontal rails and a rectangular wire reflector. Gain, feedpoint impedance, bandwidth, reflector construction, and ground effects are not independently validated. Tune or measure the installed antenna. |
 | `double_biquad` | C | Four-loop extension of the same quarter-wave starting heuristic; no independent numerical reference | Not applicable (structural) | The extra loop pair changes the current distribution and feed impedance; neither is independently validated. Use it as a starting point and verify with simulation or measurement. |
 | `beverage` | C | One-wavelength horizontal wire with a resistive termination to ground; the starting length and 500 ohm termination are heuristics, not an independent receiving-performance reference | Not applicable (structural) | The termination is a short vertical wire with a series resistor, not a complete ground system. Gain is low and the pattern, termination efficiency, ground, and feed line are not independently validated. Use relative simulations and a measurement. |
+| `loaded_dipole` | C | Symmetric series R-L loading coils or open links on a center-fed dipole; no independent numerical reference for the generated portable geometry | Not applicable (structural) | The coil is an ideal series R-L load. Core loss, self-capacitance, link contact resistance, and the portable installation are not modeled. The linked state only removes the outer sections; it does not model the physical link hardware. |
 | `doublet` | B | VU3DXR, '94-Foot Multi Band Doublet Antenna': 94 ft total, 41 ft of 450 Ω ladder line, 1:1 current balun, and a tuner | 5% on the radiator and feed-line lengths; 450 Ω line | The tuner and balun are not modeled; feed-line length, impedance, and installation dominate the match. The editor default is a half-wave dipole, so the 94 ft design is a starting point. |
 | `custom` | C | User-defined wire geometry | Not applicable | No accuracy claim; imports and diagnostics only. |
 <!-- evidence-table:end -->
@@ -580,11 +581,11 @@ and require `NEC2C`.
   control is not.
 - Optimization covers all first-class typed families through explicit
   descriptors and joint geometry/feed/load searches, including typed G5RV,
-  ZS6BKW, Zepp, biquad, double biquad, and Beverage. Magnetic loops, random
-  wires, and custom/imported geometry are explicitly unavailable. Band-aware
-  and robust modes evaluate multiple operating points, the Pareto front is
-  descriptive, and summaries persist in schema 20. There are no boom-length or
-  turning-radius constraints.
+  ZS6BKW, Zepp, biquad, double biquad, Beverage, and loaded/linked dipole.
+  Magnetic loops, random wires, and custom/imported geometry are explicitly
+  unavailable. Band-aware and robust modes evaluate multiple operating points,
+  the Pareto front is descriptive, and summaries persist in schema 21. There
+  are no boom-length or turning-radius constraints.
 - Pattern resolution changes angular sampling only; it does not change NEC
   segment density or solver accuracy.
 - Feed-line results are post-processed at the transmitter. The line does not

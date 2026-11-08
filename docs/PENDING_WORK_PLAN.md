@@ -191,9 +191,13 @@ The ordered antenna backlog lives in
     resistive termination, one-wavelength starting length, inline editor,
     schema-20 persistence, scene contract, reports, construction notes, and a
     family optimizer. Evidence stays C pending a measurement.
+13. **Completed 2026-11-07:** loaded/linked dipole with symmetric series R-L
+    coils or open links, schema-21 persistence, inline editor, scene contract,
+    reports, construction notes, and a family optimizer. Coil core loss,
+    self-capacitance, and link contact resistance remain limitations.
 
-The remaining medium and large candidates are ordered after those twelve in the
-roadmap table. Items 15–19 require architectural work or a much larger test
+The remaining medium and large candidates are ordered after those thirteen in
+the roadmap table. Items 15–19 require architectural work or a much larger test
 surface and should wait until the single-feed families are stable.
 
 ## Recommended execution order

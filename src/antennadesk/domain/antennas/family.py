@@ -17,6 +17,7 @@ from .folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE, FoldedDipoleParameters
 from .inverted_l import InvertedLParameters
 from .inverted_v import InvertedVParameters
 from .j_pole import JPoleParameters
+from .loaded_dipole import LoadedDipoleParameters
 from .loop import ANTENNA_TYPE_LOOP, LoopParameters
 from .magnetic_loop import MagneticLoopParameters
 from .moxon import MoxonParameters
@@ -58,6 +59,7 @@ _GENERATOR_FAMILIES: dict[str, AntennaFamily] = {
     "biquad": AntennaFamily.LOOP,
     "double_biquad": AntennaFamily.LOOP,
     "beverage": AntennaFamily.WIRE,
+    "loaded_dipole": AntennaFamily.DIPOLE,
     "trap_dipole": AntennaFamily.DIPOLE,
     "t2fd": AntennaFamily.DIPOLE,
     "g5rv": AntennaFamily.DIPOLE,
@@ -99,6 +101,8 @@ def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
         return AntennaFamily.LOOP
     if isinstance(parameters, BeverageParameters):
         return AntennaFamily.WIRE
+    if isinstance(parameters, LoadedDipoleParameters):
+        return AntennaFamily.DIPOLE
     if isinstance(parameters, (T2FDParameters, TrapDipoleParameters)):
         return AntennaFamily.DIPOLE
     if isinstance(parameters, TransmissionLineDoubletParameters):
@@ -147,6 +151,8 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return parameters.kind.antenna_type
     if isinstance(parameters, BeverageParameters):
         return "beverage"
+    if isinstance(parameters, LoadedDipoleParameters):
+        return "loaded_dipole"
     if isinstance(parameters, TrapDipoleParameters):
         return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(parameters, T2FDParameters):

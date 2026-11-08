@@ -350,6 +350,17 @@ one-wavelength length and 500 Ω termination are starting heuristics; the
 receiving pattern, gain, and termination efficiency are not independently
 validated. The managed termination load is regenerated with the template.
 
+### LoadedDipoleParameters
+
+`LoadedDipoleParameters` stores the design frequency, full wire length, height,
+link offset from the feed, link-open state, loading-coil enabled state and
+series R-L values, orientation, azimuth, radius, material, and ground.
+`to_antenna()` builds one straight wire. In the loaded state two series coils
+sit symmetrically around the center feed; in the linked state only the center
+section of length `2 × offset` is active. The managed coil loads are regenerated
+with the template. Coil Q is reported from the explicit series resistance; the
+model does not include core loss, self-capacitance, or link contact resistance.
+
 ### OCFDParameters
 
 A first-class single-wire horizontal dipole with a feed point offset from the
@@ -368,7 +379,7 @@ reconstructs OCFD parameters from legacy custom designs.
 `InvertedLParameters`, `YagiParameters`, `MoxonParameters`,
 `FanDipoleParameters`, `EndFedParameters`,
 `JPoleParameters`, `RingoParameters`, `ScvParameters`, `BiquadParameters`,
-`BeverageParameters`,
+`BeverageParameters`, `LoadedDipoleParameters`,
 `TransmissionLineDoubletParameters`, `TrapDipoleParameters`,
 `T2FDParameters`, `ZeppParameters`, and `CustomAntennaParameters`. `antenna_type_for()` maps a
 parameter object to its native type; `custom` remains the arbitrary-wire escape
@@ -487,11 +498,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 20.
+the application writes version 21.
 
 ## Schema policy
 
-- Current version: `20`.
+- Current version: `21`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -537,6 +548,8 @@ the application writes version 20.
   Existing designs are unchanged.
 - Version 20 introduces the Beverage parameter payload. Existing designs are
   unchanged.
+- Version 21 introduces the loaded/linked dipole parameter payload. Existing
+  designs are unchanged.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -559,8 +572,8 @@ the application writes version 20.
   generator has a radial screen. Transmission-line two-ports between wire
   points are modeled as geometry; arbitrary radial screens are not.
 - Optimization operates on typed generated parameters, including typed G5RV,
-  ZS6BKW, Zepp, biquad, double biquad, and Beverage. Magnetic loops, random
-  wires, and arbitrary custom/imported
+  ZS6BKW, Zepp, biquad, double biquad, Beverage, and loaded/linked dipole.
+  Magnetic loops, random wires, and arbitrary custom/imported
   geometry have explicit unavailable reasons. Band-aware and robust modes
   evaluate multiple operating points; the Pareto front is descriptive; and a
   compact `OptimizationSummary` is persisted with the design.
@@ -569,7 +582,7 @@ the application writes version 20.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 20.
+- Simulation results are persisted as immutable runs in schema version 21.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are

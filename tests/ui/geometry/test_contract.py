@@ -28,6 +28,7 @@ from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
+from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
 from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
 from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
 from antennadesk.domain.antennas.materials import COPPER
@@ -402,6 +403,20 @@ def _cases() -> tuple[FamilyCase, ...]:
                 "overall horizontal length",
                 "vertical height",
                 "vertical elements 2",
+            ),
+        ),
+        FamilyCase(
+            "loaded_dipole",
+            loaded_dipole_parameters(),
+            "loaded_dipole",
+            1,
+            GeometryViewMode.ELEVATION,
+            (
+                "Loaded / linked dipole",
+                "active length",
+                "full length",
+                "link / coil offset",
+                "state",
             ),
         ),
         FamilyCase(

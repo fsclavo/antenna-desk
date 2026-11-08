@@ -48,6 +48,10 @@ from ..domain.antennas.inverted_l import ANTENNA_TYPE_INVERTED_L, InvertedLParam
 from ..domain.antennas.inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
 from ..domain.antennas.j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
 from ..domain.antennas.load import LoadKind, LumpedLoad, ParallelLoad, SeriesLoad
+from ..domain.antennas.loaded_dipole import (
+    ANTENNA_TYPE_LOADED_DIPOLE,
+    LoadedDipoleParameters,
+)
 from ..domain.antennas.loop import (
     ANTENNA_TYPE_LOOP,
     MAX_SIDES,
@@ -367,6 +371,22 @@ class ZeppParametersPayload(StrictModel):
     matching_section_length_m: float = Field(gt=0.0)
     spacing_m: float = Field(default=0.05, gt=0.0)
     base_height_m: float = Field(default=1.0, ge=0.0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class LoadedDipoleParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    total_length_m: float = Field(gt=0.0)
+    height_m: float = Field(default=10.0, ge=0.0)
+    link_offset_m: float = Field(default=2.0, gt=0.0)
+    link_open: bool = False
+    loading_coil_enabled: bool = True
+    loading_coil_inductance_h: float = Field(default=10e-6, ge=0.0)
+    loading_coil_resistance_ohm: float = Field(default=0.5, ge=0.0)
+    orientation: DipoleOrientation = DipoleOrientation.HORIZONTAL
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
@@ -707,6 +727,7 @@ ParameterPayload = (
     | MoxonParametersPayload
     | FanDipoleParametersPayload
     | EndFedParametersPayload
+    | LoadedDipoleParametersPayload
     | JPoleParametersPayload
     | RingoParametersPayload
     | ScvParametersPayload
@@ -741,6 +762,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_FAN_DIPOLE
     if isinstance(value, EndFedParametersPayload):
         return ANTENNA_TYPE_ENDFED
+    if isinstance(value, LoadedDipoleParametersPayload):
+        return ANTENNA_TYPE_LOADED_DIPOLE
     if isinstance(value, JPoleParametersPayload):
         return ANTENNA_TYPE_J_POLE
     if isinstance(value, RingoParametersPayload):
@@ -797,6 +820,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return FanDipoleParametersPayload
     if antenna_type == ANTENNA_TYPE_ENDFED:
         return EndFedParametersPayload
+    if antenna_type == ANTENNA_TYPE_LOADED_DIPOLE:
+        return LoadedDipoleParametersPayload
     if antenna_type == ANTENNA_TYPE_J_POLE:
         return JPoleParametersPayload
     if antenna_type == ANTENNA_TYPE_RINGO:
@@ -1128,6 +1153,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _fan_dipole_parameters_from_domain(value)
     if isinstance(value, EndFedParameters):
         return _endfed_parameters_from_domain(value)
+    if isinstance(value, LoadedDipoleParameters):
+        return _loaded_dipole_parameters_from_domain(value)
     if isinstance(value, JPoleParameters):
         return _j_pole_parameters_from_domain(value)
     if isinstance(value, RingoParameters):
@@ -1341,6 +1368,26 @@ def _zepp_parameters_from_domain(value: ZeppParameters) -> ZeppParametersPayload
         matching_section_length_m=value.matching_section_length_m,
         spacing_m=value.spacing_m,
         base_height_m=value.base_height_m,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _loaded_dipole_parameters_from_domain(
+    value: LoadedDipoleParameters,
+) -> LoadedDipoleParametersPayload:
+    return LoadedDipoleParametersPayload(
+        frequency_hz=value.frequency_hz,
+        total_length_m=value.total_length_m,
+        height_m=value.height_m,
+        link_offset_m=value.link_offset_m,
+        link_open=value.link_open,
+        loading_coil_enabled=value.loading_coil_enabled,
+        loading_coil_inductance_h=value.loading_coil_inductance_h,
+        loading_coil_resistance_ohm=value.loading_coil_resistance_ohm,
+        orientation=value.orientation,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
@@ -2001,6 +2048,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, EndFedParametersPayload):
             raise ValueError("end-fed parameters have the wrong shape")
         return _endfed_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_LOADED_DIPOLE:
+        if not isinstance(value.parameters, LoadedDipoleParametersPayload):
+            raise ValueError("loaded dipole parameters have the wrong shape")
+        return _loaded_dipole_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_J_POLE:
         if not isinstance(value.parameters, JPoleParametersPayload):
             raise ValueError("J-pole parameters have the wrong shape")
@@ -2267,6 +2318,26 @@ def _zepp_parameters_to_domain(value: ZeppParametersPayload) -> ZeppParameters:
         matching_section_length_m=value.matching_section_length_m,
         spacing_m=value.spacing_m,
         base_height_m=value.base_height_m,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _loaded_dipole_parameters_to_domain(
+    value: LoadedDipoleParametersPayload,
+) -> LoadedDipoleParameters:
+    return LoadedDipoleParameters(
+        frequency_hz=value.frequency_hz,
+        total_length_m=value.total_length_m,
+        height_m=value.height_m,
+        link_offset_m=value.link_offset_m,
+        link_open=value.link_open,
+        loading_coil_enabled=value.loading_coil_enabled,
+        loading_coil_inductance_h=value.loading_coil_inductance_h,
+        loading_coil_resistance_ohm=value.loading_coil_resistance_ohm,
+        orientation=value.orientation,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),

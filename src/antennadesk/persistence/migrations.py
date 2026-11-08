@@ -323,6 +323,12 @@ def _migrate_v19_to_v20(document: dict[str, Any]) -> dict[str, Any]:
     return copy.deepcopy(document)
 
 
+def _migrate_v20_to_v21(document: dict[str, Any]) -> dict[str, Any]:
+    """Introduce the loaded/linked dipole design type."""
+
+    return copy.deepcopy(document)
+
+
 def _migrate_v13_to_v14(document: dict[str, Any]) -> dict[str, Any]:
     """Add the optional project balun/unun loss model."""
 
@@ -407,6 +413,7 @@ MIGRATIONS: dict[int, Migration] = {
     17: _migrate_v17_to_v18,
     18: _migrate_v18_to_v19,
     19: _migrate_v19_to_v20,
+    20: _migrate_v20_to_v21,
 }
 
 

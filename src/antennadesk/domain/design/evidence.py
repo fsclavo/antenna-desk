@@ -392,6 +392,22 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "Use relative simulations and a measurement."
         ),
     ),
+    "loaded_dipole": EvidenceEntry(
+        template="loaded_dipole",
+        level=EvidenceLevel.EXPERIMENTAL,
+        source=(
+            "Symmetric series R-L loading coils or open links on a center-fed "
+            "dipole; no independent numerical reference for the generated "
+            "portable geometry"
+        ),
+        tolerance="Not applicable (structural)",
+        limitation=(
+            "The coil is an ideal series R-L load. Core loss, self-capacitance, "
+            "link contact resistance, and the portable installation are not "
+            "modeled. The linked state only removes the outer sections; it does "
+            "not model the physical link hardware."
+        ),
+    ),
     "doublet": EvidenceEntry(
         template="doublet",
         level=EvidenceLevel.PUBLISHED,

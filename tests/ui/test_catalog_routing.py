@@ -24,6 +24,7 @@ from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
+from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
 from antennadesk.domain.antennas.materials import COPPER
@@ -224,6 +225,7 @@ def _parameters_for(key: str) -> object:
         "biquad": biquad_parameters(BiquadKind.SINGLE),
         "double_biquad": biquad_parameters(BiquadKind.DOUBLE),
         "beverage": beverage_parameters(),
+        "loaded_dipole": loaded_dipole_parameters(),
         "custom": CustomAntennaParameters(
             frequency_hz=7_100_000.0,
             wires=(
@@ -293,6 +295,7 @@ def test_every_catalog_entry_has_a_change_template_route(
             "ZeppDialog",
             "BiquadDialog",
             "BeverageDialog",
+            "LoadedDipoleDialog",
         ):
             monkeypatch.setattr(main_window_module, class_name, fake_factory)
         fake_self = SimpleNamespace(
@@ -340,6 +343,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "biquad": ("single_biquad",),
         "double_biquad": ("double_biquad",),
         "beverage": ("beverage",),
+        "loaded_dipole": ("loaded_dipole",),
         "custom": ("custom",),
     }
 
@@ -399,6 +403,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         new_single_biquad_antenna=record("single_biquad"),
         new_double_biquad_antenna=record("double_biquad"),
         new_beverage_antenna=record("beverage"),
+        new_loaded_dipole_antenna=record("loaded_dipole"),
         new_ocfd_antenna=record("ocfd"),
         new_vertical_antenna=record("vertical"),
         new_loaded_vertical_antenna=record("loaded_vertical"),
@@ -459,6 +464,7 @@ ESTIMATORLESS_CATALOG_KEYS = frozenset(
         "biquad",
         "double_biquad",
         "beverage",
+        "loaded_dipole",
         "trap_dipole",
         "zepp",
         "zs6bkw",

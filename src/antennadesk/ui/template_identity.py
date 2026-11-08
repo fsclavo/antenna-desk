@@ -15,6 +15,7 @@ from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
+from ..domain.antennas.loaded_dipole import LoadedDipoleParameters
 from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.magnetic_loop import MagneticLoopParameters
 from ..domain.antennas.moxon import MoxonParameters
@@ -45,6 +46,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_INVERTED_L,
     CATALOG_TYPE_INVERTED_V,
     CATALOG_TYPE_J_POLE,
+    CATALOG_TYPE_LOADED_DIPOLE,
     CATALOG_TYPE_LOADED_VERTICAL,
     CATALOG_TYPE_LOOP,
     CATALOG_TYPE_MAGNETIC_LOOP,
@@ -81,6 +83,7 @@ _KNOWN_CUSTOM_GENERATORS = frozenset(
         CATALOG_TYPE_BIQUAD,
         CATALOG_TYPE_DOUBLE_BIQUAD,
         CATALOG_TYPE_BEVERAGE,
+        CATALOG_TYPE_LOADED_DIPOLE,
         CATALOG_TYPE_SLIM_JIM,
         CATALOG_TYPE_T2FD,
         CATALOG_TYPE_TRAP_DIPOLE,
@@ -158,6 +161,8 @@ def catalog_key_for(parameters: AntennaDesignParameters) -> str:
         )
     if isinstance(parameters, BeverageParameters):
         return CATALOG_TYPE_BEVERAGE
+    if isinstance(parameters, LoadedDipoleParameters):
+        return CATALOG_TYPE_LOADED_DIPOLE
     if isinstance(parameters, TransmissionLineDoubletParameters):
         return (
             CATALOG_TYPE_G5RV

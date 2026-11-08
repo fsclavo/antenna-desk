@@ -101,6 +101,7 @@ from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.load import LumpedLoad
+from ..domain.antennas.loaded_dipole import LoadedDipoleParameters
 from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.magnetic_loop import MagneticLoopParameters
 from ..domain.antennas.matching_network import MatchingNetwork
@@ -181,6 +182,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_INVERTED_L,
     CATALOG_TYPE_INVERTED_V,
     CATALOG_TYPE_J_POLE,
+    CATALOG_TYPE_LOADED_DIPOLE,
     CATALOG_TYPE_LOADED_VERTICAL,
     CATALOG_TYPE_LOOP,
     CATALOG_TYPE_MAGNETIC_LOOP,
@@ -222,6 +224,7 @@ from .dialogs.g5rv_dialog import G5RVDialog
 from .dialogs.inverted_l_dialog import InvertedLDialog
 from .dialogs.inverted_v_dialog import InvertedVDialog
 from .dialogs.j_pole_dialog import JPoleDialog
+from .dialogs.loaded_dipole_dialog import LoadedDipoleDialog
 from .dialogs.loads_dialog import LoadsDialog
 from .dialogs.magnetic_loop_dialog import MagneticLoopDialog
 from .dialogs.matching_network_dialog import MatchingNetworkDialog
@@ -271,6 +274,7 @@ from .widgets.geometry_view import GeometryView, GeometryViewMode
 from .widgets.inverted_l_form import InvertedLForm
 from .widgets.inverted_v_form import InvertedVForm
 from .widgets.j_pole_form import JPoleForm
+from .widgets.loaded_dipole_form import LoadedDipoleForm
 from .widgets.magnetic_loop_form import MagneticLoopForm
 from .widgets.moxon_form import MoxonForm
 from .widgets.ocfd_form import OCFDForm
@@ -632,6 +636,18 @@ class MainWindow(QMainWindow):
         self._beverage_scroll.setMinimumWidth(340)
         self._beverage_scroll.setMaximumWidth(480)
 
+        self._loaded_dipole_form = LoadedDipoleForm(
+            self._translator,
+            self._unit_system,
+            parent=self,
+        )
+        self._loaded_dipole_form.changed.connect(self._on_form_changed)
+        self._loaded_dipole_scroll = QScrollArea(self)
+        self._loaded_dipole_scroll.setWidgetResizable(True)
+        self._loaded_dipole_scroll.setWidget(self._loaded_dipole_form)
+        self._loaded_dipole_scroll.setMinimumWidth(340)
+        self._loaded_dipole_scroll.setMaximumWidth(480)
+
         self._doublet_form = TransmissionLineDoubletForm(
             self._translator,
             self._unit_system,
@@ -671,6 +687,7 @@ class MainWindow(QMainWindow):
             (self._scv_form, self._scv_scroll, 480),
             (self._biquad_form, self._biquad_scroll, 480),
             (self._beverage_form, self._beverage_scroll, 480),
+            (self._loaded_dipole_form, self._loaded_dipole_scroll, 480),
             (self._doublet_form, self._doublet_scroll, 480),
             (self._zepp_form, self._zepp_scroll, 480),
         )
@@ -845,6 +862,7 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._scv_scroll)
         self._design_stack.addWidget(self._biquad_scroll)
         self._design_stack.addWidget(self._beverage_scroll)
+        self._design_stack.addWidget(self._loaded_dipole_scroll)
         self._design_stack.addWidget(self._doublet_scroll)
         self._design_stack.addWidget(self._zepp_scroll)
         self._design_stack.addWidget(self._custom_panel)
@@ -1194,6 +1212,7 @@ class MainWindow(QMainWindow):
         self._scv_form.retranslate()
         self._biquad_form.retranslate()
         self._beverage_form.retranslate()
+        self._loaded_dipole_form.retranslate()
         self._doublet_form.retranslate()
         self._zepp_form.retranslate()
         self._geometry.retranslate()
@@ -1732,6 +1751,9 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, BeverageParameters):
             self._design_stack.setCurrentWidget(self._beverage_scroll)
             self._beverage_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, LoadedDipoleParameters):
+            self._design_stack.setCurrentWidget(self._loaded_dipole_scroll)
+            self._loaded_dipole_form.set_parameters(design.parameters)
         elif isinstance(design.parameters, TransmissionLineDoubletParameters):
             self._design_stack.setCurrentWidget(self._doublet_scroll)
             self._doublet_form.set_parameters(design.parameters)
@@ -2349,6 +2371,7 @@ class MainWindow(QMainWindow):
             (
                 BeverageParameters,
                 BiquadParameters,
+                LoadedDipoleParameters,
                 TransmissionLineDoubletParameters,
                 ZeppParameters,
             ),
@@ -2357,6 +2380,8 @@ class MainWindow(QMainWindow):
                 parameters = self._beverage_form.parameters()
             elif isinstance(previous_design.parameters, BiquadParameters):
                 parameters = self._biquad_form.parameters()
+            elif isinstance(previous_design.parameters, LoadedDipoleParameters):
+                parameters = self._loaded_dipole_form.parameters()
             elif isinstance(
                 previous_design.parameters,
                 TransmissionLineDoubletParameters,
@@ -2551,6 +2576,8 @@ class MainWindow(QMainWindow):
             return self._biquad_simulation_spec(parameters)
         if isinstance(parameters, BeverageParameters):
             return self._beverage_simulation_spec(parameters)
+        if isinstance(parameters, LoadedDipoleParameters):
+            return self._loaded_dipole_simulation_spec(parameters)
         if isinstance(parameters, TransmissionLineDoubletParameters):
             return self._doublet_simulation_spec(parameters)
         if isinstance(parameters, ZeppParameters):
@@ -3495,6 +3522,26 @@ class MainWindow(QMainWindow):
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
         )
 
+    def _loaded_dipole_simulation_spec(
+        self,
+        parameters: LoadedDipoleParameters,
+    ) -> SimulationSpec:
+        model = parameters.to_antenna()
+        frequency_hz = parameters.frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                frequency_hz * 0.85,
+                frequency_hz * 1.15,
+                DEFAULT_GENERATED_SWEEP_POINTS,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz * 1.15,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
     def _doublet_simulation_spec(
         self,
         parameters: TransmissionLineDoubletParameters,
@@ -3715,6 +3762,17 @@ class MainWindow(QMainWindow):
         self._create_project_from_parameters(
             dialog.result_parameters(),
             default_name="Beverage",
+        )
+
+    def new_loaded_dipole_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        dialog = LoadedDipoleDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name=dialog.result_parameters().template_name,
         )
 
     def new_j_pole_antenna(self, *, folded: bool) -> None:
@@ -4320,6 +4378,16 @@ class MainWindow(QMainWindow):
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
             return dialog.result_parameters()
+        if selected == CATALOG_TYPE_LOADED_DIPOLE:
+            dialog = LoadedDipoleDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
         if selected == CATALOG_TYPE_BEVERAGE:
             dialog = BeverageDialog(
                 self._translator,
@@ -4663,6 +4731,8 @@ class MainWindow(QMainWindow):
             self.new_double_biquad_antenna()
         elif selected == CATALOG_TYPE_BEVERAGE:
             self.new_beverage_antenna()
+        elif selected == CATALOG_TYPE_LOADED_DIPOLE:
+            self.new_loaded_dipole_antenna()
         elif selected == CATALOG_TYPE_OCFD:
             self.new_ocfd_antenna()
         elif selected == CATALOG_TYPE_DELTA_LOOP:
@@ -5240,6 +5310,8 @@ class MainWindow(QMainWindow):
             base_spec = self._biquad_simulation_spec(design.parameters)
         elif isinstance(design.parameters, BeverageParameters):
             base_spec = self._beverage_simulation_spec(design.parameters)
+        elif isinstance(design.parameters, LoadedDipoleParameters):
+            base_spec = self._loaded_dipole_simulation_spec(design.parameters)
         else:
             base_spec = self._form.simulation_spec()
 
@@ -5278,6 +5350,8 @@ class MainWindow(QMainWindow):
                 self._biquad_form.set_parameters(parameters)
             elif isinstance(parameters, BeverageParameters):
                 self._beverage_form.set_parameters(parameters)
+            elif isinstance(parameters, LoadedDipoleParameters):
+                self._loaded_dipole_form.set_parameters(parameters)
             else:
                 self._form.set_parameters(parameters, reset_sweep=False)
             self._apply_fields()
@@ -6529,6 +6603,7 @@ class MainWindow(QMainWindow):
             self._scv_form,
             self._biquad_form,
             self._beverage_form,
+            self._loaded_dipole_form,
             self._doublet_form,
             self._zepp_form,
         ):

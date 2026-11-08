@@ -16,6 +16,7 @@ from ...antennas.folded_dipole import FoldedDipoleParameters
 from ...antennas.inverted_l import InvertedLParameters
 from ...antennas.inverted_v import InvertedVParameters
 from ...antennas.j_pole import JPoleParameters
+from ...antennas.loaded_dipole import LoadedDipoleParameters
 from ...antennas.loop import LoopParameters
 from ...antennas.moxon import MoxonParameters
 from ...antennas.ocfd import OCFDParameters
@@ -1206,6 +1207,148 @@ def beverage_descriptor(parameters: BeverageParameters) -> AntennaOptimizerDescr
 
     return _descriptor(
         "beverage",
+        tuple(variables),
+        initial,
+        build,
+        validate,
+    )
+
+
+def loaded_dipole_descriptor(
+    parameters: LoadedDipoleParameters,
+) -> AntennaOptimizerDescriptor:
+    variables: list[OptimizationVariable] = []
+    if not parameters.link_open:
+        variables.append(
+            _length(
+                "total_length_m",
+                "field.length",
+                "optimize.group.geometry",
+                parameters.total_length_m,
+                0.15,
+                0.1,
+            )
+        )
+    variables.extend(
+        [
+            _length(
+                "link_offset_m",
+                "loaded_dipole.link_offset",
+                "optimize.group.geometry",
+                parameters.link_offset_m,
+                0.5,
+                0.01,
+            ),
+            _length(
+                "height_m",
+                "field.height",
+                "optimize.group.geometry",
+                parameters.height_m,
+                0.5,
+                0.1,
+            ),
+        ]
+    )
+    if parameters.loading_coil_enabled and not parameters.link_open:
+        low, high = around(
+            parameters.loading_coil_inductance_h,
+            0.75,
+            minimum=1e-9,
+        )
+        variables.append(
+            OptimizationVariable(
+                "loading_coil_inductance_h",
+                "loaded_dipole.coil_inductance",
+                "optimize.group.loads",
+                low,
+                high,
+                unit="H",
+                step=1e-7,
+            )
+        )
+        low_r, high_r = around(
+            parameters.loading_coil_resistance_ohm,
+            0.9,
+            minimum=0.0,
+        )
+        variables.append(
+            OptimizationVariable(
+                "loading_coil_resistance_ohm",
+                "loaded_dipole.coil_resistance",
+                "optimize.group.loads",
+                low_r,
+                high_r,
+                unit="ohm",
+                step=0.01,
+            )
+        )
+    variables.append(_radius(parameters.wire_radius_m))
+    initial = {
+        "link_offset_m": parameters.link_offset_m,
+        "height_m": parameters.height_m,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+    if not parameters.link_open:
+        initial["total_length_m"] = parameters.total_length_m
+    if parameters.loading_coil_enabled and not parameters.link_open:
+        initial["loading_coil_inductance_h"] = parameters.loading_coil_inductance_h
+        initial["loading_coil_resistance_ohm"] = parameters.loading_coil_resistance_ohm
+
+    def build(values: Mapping[str, float]) -> LoadedDipoleParameters:
+        return replace(
+            parameters,
+            total_length_m=values.get(
+                "total_length_m",
+                parameters.total_length_m,
+            ),
+            link_offset_m=values["link_offset_m"],
+            height_m=values["height_m"],
+            loading_coil_inductance_h=values.get(
+                "loading_coil_inductance_h",
+                parameters.loading_coil_inductance_h,
+            ),
+            loading_coil_resistance_ohm=values.get(
+                "loading_coil_resistance_ohm",
+                parameters.loading_coil_resistance_ohm,
+            ),
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        total_length = values.get("total_length_m", parameters.total_length_m)
+        offset = values["link_offset_m"]
+        issues: list[ConstraintViolation | None] = [
+            positive_violation("total_length_m", total_length),
+            positive_violation("link_offset_m", offset),
+            non_negative_violation("height_m", values["height_m"]),
+            non_negative_violation(
+                "loading_coil_inductance_h",
+                values.get(
+                    "loading_coil_inductance_h",
+                    parameters.loading_coil_inductance_h,
+                ),
+            ),
+            non_negative_violation(
+                "loading_coil_resistance_ohm",
+                values.get(
+                    "loading_coil_resistance_ohm",
+                    parameters.loading_coil_resistance_ohm,
+                ),
+            ),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+        ]
+        if offset > 0.0 and 2.0 * offset > total_length:
+            issues.append(
+                violation(
+                    "link_offset_m",
+                    2.0 * offset - total_length,
+                    "loaded_dipole.constraint.offset",
+                )
+            )
+        return collect(*issues)
+
+    return _descriptor(
+        "loaded_dipole",
         tuple(variables),
         initial,
         build,

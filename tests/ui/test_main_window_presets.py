@@ -763,6 +763,23 @@ def test_beverage_preset_uses_the_inline_editor(window: MainWindow) -> None:
     window._dirty = False
 
 
+def test_loaded_dipole_preset_uses_the_inline_editor(window: MainWindow) -> None:
+    from main_window_support import use_parameters
+
+    from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
+
+    parameters = loaded_dipole_parameters(total_length_m=18.0, link_offset_m=2.5)
+    use_parameters(window, parameters)
+    assert window._project is not None
+    assert window._project.designs[0].antenna_type == "loaded_dipole"
+    assert window._design_stack.currentWidget() is window._loaded_dipole_scroll
+    restored = window._loaded_dipole_form.parameters()
+    assert restored.total_length_m == pytest.approx(18.0, abs=1e-3)
+    assert restored.loading_coil_inductance_h == pytest.approx(10e-6)
+    assert window._optimize_action.isEnabled() is True
+    window._dirty = False
+
+
 def test_new_ringo_creates_a_first_class_design(
     window: MainWindow,
     qtbot: QtBot,

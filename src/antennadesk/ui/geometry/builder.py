@@ -37,6 +37,10 @@ from ...domain.antennas.inverted_l import (
 )
 from ...domain.antennas.inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
 from ...domain.antennas.j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
+from ...domain.antennas.loaded_dipole import (
+    ANTENNA_TYPE_LOADED_DIPOLE,
+    LoadedDipoleParameters,
+)
 from ...domain.antennas.loop import (
     ANTENNA_TYPE_LOOP,
     LoopOrientation,
@@ -116,6 +120,7 @@ _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_BIQUAD: "catalog.biquad",
     ANTENNA_TYPE_DOUBLE_BIQUAD: "catalog.double_biquad",
     ANTENNA_TYPE_BEVERAGE: "catalog.beverage",
+    ANTENNA_TYPE_LOADED_DIPOLE: "catalog.loaded_dipole",
     ANTENNA_TYPE_TRAP_DIPOLE: "catalog.trap_dipole",
     ANTENNA_TYPE_T2FD: "catalog.t2fd",
     ANTENNA_TYPE_G5RV: "catalog.g5rv",
@@ -148,6 +153,7 @@ def effective_antenna_type(
             "biquad",
             "double_biquad",
             "beverage",
+            "loaded_dipole",
             "yagi",
             "moxon",
             "fan_dipole",
@@ -1115,6 +1121,73 @@ def _add_beverage_dimensions(
             translator.t(
                 "beverage.termination_note",
                 resistance=f"{parameters.termination_resistance_ohm:.1f} Ω",
+            )
+        )
+
+
+def _add_loaded_dipole_dimensions(
+    model: AntennaModel,
+    parameters: LoadedDipoleParameters | None,
+    factory: _Factory,
+    dimensions: list[Dimension],
+    notes: list[str],
+    translator: Translator,
+) -> None:
+    wire = model.feed_wire
+    if wire is None:
+        return
+    if factory.projection.vertical:
+        dimensions.append(
+            factory.vertical_dimension(
+                factory.project(wire.end).x_m,
+                wire.start.z_m,
+                wire.end.z_m,
+                wire.length_m,
+                side="right",
+                priority=85,
+            )
+        )
+        if wire.start.z_m > 1e-6:
+            dimensions.append(
+                factory.vertical_dimension(
+                    factory.project(wire.start).x_m,
+                    0.0,
+                    wire.start.z_m,
+                    wire.start.z_m,
+                    side="left",
+                    priority=60,
+                )
+            )
+    else:
+        dimensions.append(
+            factory.dimension(
+                wire.start,
+                wire.end,
+                wire.length_m,
+                side="above",
+                priority=85,
+            )
+        )
+        dimensions.append(
+            factory.vertical_dimension(
+                factory.project(wire.end).x_m,
+                0.0,
+                wire.start.z_m,
+                wire.start.z_m,
+                side="right",
+                priority=60,
+            )
+        )
+    if parameters is not None and parameters.coil_active:
+        notes.append(
+            translator.t(
+                "loaded_dipole.coil_note",
+                inductance=parameters.loading_coil_inductance_h * 1e6,
+                offset=_format_length(
+                    parameters.link_offset_m,
+                    translator,
+                    factory.unit_system,
+                ),
             )
         )
 
@@ -2200,6 +2273,47 @@ def _summary(
                 f"{translator.t('beverage.termination').lower()} {termination}",
             ]
         )
+    elif (
+        isinstance(parameters, LoadedDipoleParameters) or antenna_type == ANTENNA_TYPE_LOADED_DIPOLE
+    ):
+        if isinstance(parameters, LoadedDipoleParameters):
+            active_length = parameters.active_length_m
+            total_length = parameters.total_length_m
+            offset = parameters.link_offset_m
+            if parameters.link_open:
+                state = translator.t("loaded_dipole.state_linked")
+            elif parameters.coil_active:
+                q_value = parameters.coil_q
+                state = translator.t(
+                    "loaded_dipole.state_loaded",
+                    inductance=parameters.loading_coil_inductance_h * 1e6,
+                    q="—" if q_value is None else f"{q_value:.1f}",
+                )
+            else:
+                state = translator.t("loaded_dipole.state_plain")
+        else:
+            active_length = max(
+                math.hypot(
+                    wire.end.x_m - wire.start.x_m,
+                    wire.end.y_m - wire.start.y_m,
+                    wire.end.z_m - wire.start.z_m,
+                )
+                for wire in model.wires
+            )
+            total_length = active_length
+            offset = 0.0
+            state = translator.t("loaded_dipole.state_plain")
+        parts.extend(
+            [
+                f"{translator.t('loaded_dipole.active_length').lower()} "
+                f"{_format_length(active_length, translator, unit_system)}",
+                f"{translator.t('loaded_dipole.full_length').lower()} "
+                f"{_format_length(total_length, translator, unit_system)}",
+                f"{translator.t('loaded_dipole.link_offset').lower()} "
+                f"{_format_length(offset, translator, unit_system)}",
+                f"{translator.t('loaded_dipole.state').lower()} {state}",
+            ]
+        )
     elif isinstance(parameters, YagiParameters) or antenna_type == ANTENNA_TYPE_YAGI:
         if isinstance(parameters, YagiParameters):
             positions = [element.position_m for element in parameters.elements]
@@ -2628,6 +2742,15 @@ def build_scene(
         _add_beverage_dimensions(
             model,
             parameters if isinstance(parameters, BeverageParameters) else None,
+            factory,
+            dimensions,
+            notes,
+            translator,
+        )
+    elif effective_type == ANTENNA_TYPE_LOADED_DIPOLE:
+        _add_loaded_dipole_dimensions(
+            model,
+            parameters if isinstance(parameters, LoadedDipoleParameters) else None,
             factory,
             dimensions,
             notes,

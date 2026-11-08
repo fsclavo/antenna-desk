@@ -19,6 +19,7 @@ from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.endfed import EndFedParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
+from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
@@ -84,6 +85,11 @@ def _samples() -> list[object]:
                 relative_permittivity=13.0,
                 conductivity_s_per_m=0.005,
             ),
+        ),
+        loaded_dipole_parameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=18.0,
+            link_offset_m=2.5,
         ),
         YagiParameters(
             frequency_hz=14_100_000.0,

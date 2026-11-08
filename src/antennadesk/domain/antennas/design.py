@@ -21,6 +21,7 @@ from .folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE, FoldedDipoleParameters
 from .inverted_l import ANTENNA_TYPE_INVERTED_L, InvertedLParameters
 from .inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
 from .j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
+from .loaded_dipole import ANTENNA_TYPE_LOADED_DIPOLE, LoadedDipoleParameters
 from .loop import ANTENNA_TYPE_LOOP, LoopParameters
 from .magnetic_loop import ANTENNA_TYPE_MAGNETIC_LOOP, MagneticLoopParameters
 from .moxon import ANTENNA_TYPE_MOXON, MoxonParameters
@@ -62,6 +63,7 @@ AntennaDesignParameters = (
     | ScvParameters
     | BiquadParameters
     | BeverageParameters
+    | LoadedDipoleParameters
     | T2FDParameters
     | TransmissionLineDoubletParameters
     | TrapDipoleParameters
@@ -77,7 +79,7 @@ def template_load_ids(parameters: AntennaDesignParameters) -> frozenset[str]:
         return parameters.managed_load_ids
     if isinstance(parameters, (T2FDParameters, TrapDipoleParameters)):
         return parameters.managed_load_ids
-    if isinstance(parameters, BeverageParameters):
+    if isinstance(parameters, (BeverageParameters, LoadedDipoleParameters)):
         return parameters.managed_load_ids
     return frozenset()
 
@@ -125,6 +127,8 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
         )
     if isinstance(parameters, BeverageParameters):
         return ANTENNA_TYPE_BEVERAGE
+    if isinstance(parameters, LoadedDipoleParameters):
+        return ANTENNA_TYPE_LOADED_DIPOLE
     if isinstance(parameters, TrapDipoleParameters):
         return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(parameters, T2FDParameters):
@@ -157,6 +161,8 @@ def primary_dimension_m(parameters: AntennaDesignParameters) -> float:
         return parameters.loop_side_m
     if isinstance(parameters, BeverageParameters):
         return parameters.length_m
+    if isinstance(parameters, LoadedDipoleParameters):
+        return parameters.active_length_m
     if isinstance(parameters, EndFedParameters):
         return parameters.length_m
     if isinstance(parameters, TrapDipoleParameters):
@@ -197,6 +203,14 @@ def with_primary_dimension(
         )
     if isinstance(parameters, BeverageParameters):
         return replace(parameters, length_m=dimension_m)
+    if isinstance(parameters, LoadedDipoleParameters):
+        if parameters.link_open:
+            return replace(
+                parameters,
+                link_offset_m=dimension_m / 2.0,
+                total_length_m=max(parameters.total_length_m, dimension_m),
+            )
+        return replace(parameters, total_length_m=dimension_m)
     if isinstance(parameters, EndFedParameters):
         return replace(parameters, length_m=dimension_m)
     if isinstance(parameters, TrapDipoleParameters):
