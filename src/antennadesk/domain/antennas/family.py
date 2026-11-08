@@ -11,6 +11,7 @@ from .biquad import BiquadParameters
 from .custom import CustomAntennaParameters
 from .design import AntennaDesignParameters
 from .dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
+from .discone import DisconeParameters
 from .endfed import EndFedParameters
 from .fan_dipole import FanDipoleParameters
 from .folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE, FoldedDipoleParameters
@@ -62,6 +63,7 @@ _GENERATOR_FAMILIES: dict[str, AntennaFamily] = {
     "double_biquad": AntennaFamily.LOOP,
     "beverage": AntennaFamily.WIRE,
     "loaded_dipole": AntennaFamily.DIPOLE,
+    "discone": AntennaFamily.VERTICAL,
     "phased_vertical": AntennaFamily.VERTICAL,
     "quad_beam": AntennaFamily.LOOP,
     "trap_dipole": AntennaFamily.DIPOLE,
@@ -107,6 +109,8 @@ def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
         return AntennaFamily.WIRE
     if isinstance(parameters, LoadedDipoleParameters):
         return AntennaFamily.DIPOLE
+    if isinstance(parameters, DisconeParameters):
+        return AntennaFamily.VERTICAL
     if isinstance(parameters, PhasedVerticalParameters):
         return AntennaFamily.VERTICAL
     if isinstance(parameters, QuadBeamParameters):
@@ -161,6 +165,8 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return "beverage"
     if isinstance(parameters, LoadedDipoleParameters):
         return "loaded_dipole"
+    if isinstance(parameters, DisconeParameters):
+        return "discone"
     if isinstance(parameters, PhasedVerticalParameters):
         return "phased_vertical"
     if isinstance(parameters, QuadBeamParameters):

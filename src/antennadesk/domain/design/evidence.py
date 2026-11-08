@@ -447,6 +447,22 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "not independently validated."
         ),
     ),
+    "discone": EvidenceEntry(
+        template="discone",
+        level=EvidenceLevel.EXPERIMENTAL,
+        source=(
+            "Quarter-wave-slant radial-wire cone with a 0.7x top disc and a small "
+            "feed gap; no independent numerical reference for the generated "
+            "discone"
+        ),
+        tolerance="Not applicable (structural)",
+        limitation=(
+            "The cone and disc are radial wire approximations, not solid "
+            "surfaces. The coax, mast, and feed transition are not modeled. "
+            "Impedance, bandwidth, and radiation pattern are not independently "
+            "validated; the shape is a starting point for simulation."
+        ),
+    ),
     "doublet": EvidenceEntry(
         template="doublet",
         level=EvidenceLevel.PUBLISHED,

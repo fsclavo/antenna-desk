@@ -27,6 +27,7 @@ from ..domain.antennas.dipole import (
     DipoleOrientation,
     DipoleParameters,
 )
+from ..domain.antennas.discone import ANTENNA_TYPE_DISCONE, DisconeParameters
 from ..domain.antennas.endfed import (
     ANTENNA_TYPE_ENDFED,
     EndFedParameters,
@@ -385,6 +386,20 @@ class ZeppParametersPayload(StrictModel):
     matching_section_length_m: float = Field(gt=0.0)
     spacing_m: float = Field(default=0.05, gt=0.0)
     base_height_m: float = Field(default=1.0, ge=0.0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class DisconeParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    cone_height_m: float = Field(gt=0.0)
+    cone_radius_m: float = Field(gt=0.0)
+    disc_radius_m: float = Field(gt=0.0)
+    base_height_m: float = Field(default=0.5, ge=0.0)
+    disc_gap_m: float = Field(default=0.01, gt=0.0)
+    wire_count: int = Field(default=12, ge=4, le=32)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
@@ -774,6 +789,7 @@ ParameterPayload = (
     | YagiParametersPayload
     | MoxonParametersPayload
     | FanDipoleParametersPayload
+    | DisconeParametersPayload
     | EndFedParametersPayload
     | LoadedDipoleParametersPayload
     | PhasedVerticalParametersPayload
@@ -810,6 +826,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_MOXON
     if isinstance(value, FanDipoleParametersPayload):
         return ANTENNA_TYPE_FAN_DIPOLE
+    if isinstance(value, DisconeParametersPayload):
+        return ANTENNA_TYPE_DISCONE
     if isinstance(value, EndFedParametersPayload):
         return ANTENNA_TYPE_ENDFED
     if isinstance(value, LoadedDipoleParametersPayload):
@@ -872,6 +890,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return MoxonParametersPayload
     if antenna_type == ANTENNA_TYPE_FAN_DIPOLE:
         return FanDipoleParametersPayload
+    if antenna_type == ANTENNA_TYPE_DISCONE:
+        return DisconeParametersPayload
     if antenna_type == ANTENNA_TYPE_ENDFED:
         return EndFedParametersPayload
     if antenna_type == ANTENNA_TYPE_LOADED_DIPOLE:
@@ -1219,6 +1239,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _moxon_parameters_from_domain(value)
     if isinstance(value, FanDipoleParameters):
         return _fan_dipole_parameters_from_domain(value)
+    if isinstance(value, DisconeParameters):
+        return _discone_parameters_from_domain(value)
     if isinstance(value, EndFedParameters):
         return _endfed_parameters_from_domain(value)
     if isinstance(value, LoadedDipoleParameters):
@@ -1479,6 +1501,24 @@ def _quad_beam_parameters_from_domain(
         director_spacing_m=value.director_spacing_m,
         reflector_scale=value.reflector_scale,
         director_scale=value.director_scale,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _discone_parameters_from_domain(
+    value: DisconeParameters,
+) -> DisconeParametersPayload:
+    return DisconeParametersPayload(
+        frequency_hz=value.frequency_hz,
+        cone_height_m=value.cone_height_m,
+        cone_radius_m=value.cone_radius_m,
+        disc_radius_m=value.disc_radius_m,
+        base_height_m=value.base_height_m,
+        disc_gap_m=value.disc_gap_m,
+        wire_count=value.wire_count,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
@@ -2176,6 +2216,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, LoadedDipoleParametersPayload):
             raise ValueError("loaded dipole parameters have the wrong shape")
         return _loaded_dipole_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_DISCONE:
+        if not isinstance(value.parameters, DisconeParametersPayload):
+            raise ValueError("discone parameters have the wrong shape")
+        return _discone_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_PHASED_VERTICAL:
         if not isinstance(value.parameters, PhasedVerticalParametersPayload):
             raise ValueError("phased vertical parameters have the wrong shape")
@@ -2489,6 +2533,24 @@ def _quad_beam_parameters_to_domain(
         director_spacing_m=value.director_spacing_m,
         reflector_scale=value.reflector_scale,
         director_scale=value.director_scale,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _discone_parameters_to_domain(
+    value: DisconeParametersPayload,
+) -> DisconeParameters:
+    return DisconeParameters(
+        frequency_hz=value.frequency_hz,
+        cone_height_m=value.cone_height_m,
+        cone_radius_m=value.cone_radius_m,
+        disc_radius_m=value.disc_radius_m,
+        base_height_m=value.base_height_m,
+        disc_gap_m=value.disc_gap_m,
+        wire_count=value.wire_count,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),

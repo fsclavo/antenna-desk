@@ -9,6 +9,7 @@ from ..domain.antennas.biquad import BiquadKind, BiquadParameters
 from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import DipoleParameters
+from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import EndFedParameters, EndFedPreset
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
@@ -38,6 +39,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_BOBTAIL_CURTAIN,
     CATALOG_TYPE_CUSTOM,
     CATALOG_TYPE_DELTA_LOOP,
+    CATALOG_TYPE_DISCONE,
     CATALOG_TYPE_DOUBLE_BIQUAD,
     CATALOG_TYPE_DOUBLET,
     CATALOG_TYPE_ENDFED,
@@ -86,6 +88,7 @@ _KNOWN_CUSTOM_GENERATORS = frozenset(
         CATALOG_TYPE_BOBTAIL_CURTAIN,
         CATALOG_TYPE_BIQUAD,
         CATALOG_TYPE_DOUBLE_BIQUAD,
+        CATALOG_TYPE_DISCONE,
         CATALOG_TYPE_BEVERAGE,
         CATALOG_TYPE_LOADED_DIPOLE,
         CATALOG_TYPE_PHASED_VERTICAL,
@@ -169,6 +172,8 @@ def catalog_key_for(parameters: AntennaDesignParameters) -> str:
         return CATALOG_TYPE_BEVERAGE
     if isinstance(parameters, LoadedDipoleParameters):
         return CATALOG_TYPE_LOADED_DIPOLE
+    if isinstance(parameters, DisconeParameters):
+        return CATALOG_TYPE_DISCONE
     if isinstance(parameters, PhasedVerticalParameters):
         return CATALOG_TYPE_PHASED_VERTICAL
     if isinstance(parameters, QuadBeamParameters):

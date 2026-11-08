@@ -67,6 +67,7 @@ registry.
 | `loaded_dipole` | The coil is an ideal series R-L load; core loss, self-capacitance, link contact resistance, and the portable installation are not modeled. | A published loaded/linked dipole design with coil Q, dimensions, and measured impedance. |
 | `phased_vertical` | The ideal linear phase and amplitude progression, combining network, per-element matching, and radial screen efficiency are not independently validated; impedance and SWR refer only to the primary feed. | A published phased-array design or measurement with element spacing, phase, amplitude, feed network, and measured pattern or impedance. |
 | `quad_beam` | Quarter-wave loop sides and fifth-wave spacing are starting heuristics; boom, spreaders, mast, feed line, and matching network are not modeled, and gain and front-to-back ratio are not independently validated. | A published quad-beam design or measurement with loop dimensions, spacing, feed, and measured gain, front-to-back ratio, or impedance. |
+| `discone` | The cone and disc are radial wire approximations, not solid surfaces; the coax, mast, and feed transition are not modeled, and impedance, bandwidth, and pattern are not independently validated. | A published discone design or measurement with cone/disc dimensions, feed transition, and measured impedance or pattern. |
 
 ## Follow-up review of the remaining level C templates (2026-11-06)
 
@@ -117,7 +118,7 @@ published reference supplies a traceable numeric metric or measured impedance.
 
 - **A, reference-backed:** 5 templates.
 - **B, published/heuristic:** 18 templates.
-- **C, experimental:** 12 templates, all with a documented limitation.
+- **C, experimental:** 13 templates, all with a documented limitation.
 
 The `half_square` and `bobtail_curtain` templates entered the catalog at level B
 on 2026-11-07 from Cebik's published 7.15 MHz dimensions. They are new

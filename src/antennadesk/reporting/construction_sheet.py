@@ -12,6 +12,7 @@ from ..domain.antennas.beverage import BeverageParameters
 from ..domain.antennas.biquad import BiquadParameters
 from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.dipole import DipoleParameters
+from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import EndFedParameters
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
@@ -255,6 +256,23 @@ junction at {feed_height_m:.4f} m above ground.</p>"""
 wire and mark the link positions at {parameters.link_offset_m:.4f} m either
 side of the center. Feed the center. {coil_note} The coil model is an ideal
 series R-L load; tune it for the installed height and ground.</p>"""
+    elif isinstance(parameters, DisconeParameters):
+        feed_rows = f"""
+<tr><th>Type</th><td>{parameters.template_name}</td></tr>
+<tr><th>Radial wires</th><td>{parameters.wire_count}</td></tr>
+<tr><th>Cone height</th><td>{parameters.cone_height_m:.4f} m</td></tr>
+<tr><th>Cone base radius</th><td>{parameters.cone_radius_m:.4f} m</td></tr>
+<tr><th>Disc radius</th><td>{parameters.disc_radius_m:.4f} m</td></tr>
+<tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{parameters.feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Build {parameters.wire_count} cone wires
+from the apex at {parameters.apex_height_m:.4f} m down to a base ring of
+{parameters.cone_radius_m:.4f} m radius at {parameters.base_height_m:.4f} m.
+Add {parameters.wire_count} disc wires of {parameters.disc_radius_m:.4f} m
+above the apex with a {parameters.disc_gap_m:.4f} m feed gap. Feed across that
+gap. The cone and disc are wire approximations; the coax, mast, and solid
+surfaces are not modeled.</p>"""
     elif isinstance(parameters, QuadBeamParameters):
         director_note = (
             f" The director loop is {parameters.director_side_m:.4f} m per side "

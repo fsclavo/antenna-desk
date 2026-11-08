@@ -330,6 +330,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "y director opcional, con patrón horizontal."
         ),
     },
+    "catalog.discone": {
+        Language.ENGLISH: "Discone",
+        Language.SPANISH: "Discono",
+    },
+    "catalog.discone.description": {
+        Language.ENGLISH: (
+            "Broadband vertical antenna with a radial-wire cone and a larger top "
+            "disc, fed across a small gap at the apex."
+        ),
+        Language.SPANISH: (
+            "Antena vertical de banda ancha con un cono de hilos radiales y un "
+            "disco superior más grande, alimentada en una pequeña brecha del vértice."
+        ),
+    },
     "catalog.family.wire": {
         Language.ENGLISH: "Wire antennas",
         Language.SPANISH: "Antenas de hilo",
@@ -1998,6 +2012,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "banda angosta con dimensiones heurísticas de lazo y separación."
         ),
     },
+    "band.note.discone": {
+        Language.ENGLISH: (
+            "Current band only; the discone is a broadband starting point and its "
+            "radial-wire surfaces are approximate."
+        ),
+        Language.SPANISH: (
+            "Solo la banda actual; el discono es un punto de partida de banda "
+            "ancha y sus superficies de hilos radiales son aproximadas."
+        ),
+    },
     "status.analyzing_bands": {
         Language.ENGLISH: "Analyzing bands...",
         Language.SPANISH: "Analizando bandas...",
@@ -3358,6 +3382,82 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "phased_vertical.constraint.amplitude_taper": {
         Language.ENGLISH: "The amplitude taper must stay between 0 and 0.9.",
         Language.SPANISH: "La atenuación de amplitud debe quedar entre 0 y 0,9.",
+    },
+    "discone.title": {
+        Language.ENGLISH: "Discone Generator",
+        Language.SPANISH: "Generador de discono",
+    },
+    "discone.cone_height": {
+        Language.ENGLISH: "Cone height",
+        Language.SPANISH: "Altura del cono",
+    },
+    "discone.cone_radius": {
+        Language.ENGLISH: "Cone base radius",
+        Language.SPANISH: "Radio de la base del cono",
+    },
+    "discone.disc_radius": {
+        Language.ENGLISH: "Disc radius",
+        Language.SPANISH: "Radio del disco",
+    },
+    "discone.disc_gap": {
+        Language.ENGLISH: "Feed gap",
+        Language.SPANISH: "Brecha de alimentación",
+    },
+    "discone.wire_count": {
+        Language.ENGLISH: "Radial wires",
+        Language.SPANISH: "Hilos radiales",
+    },
+    "discone.geometry": {
+        Language.ENGLISH: (
+            "cone {height} {unit} high · base radius {radius} {unit} · disc {disc} {unit} · "
+            "{count} radial wires"
+        ),
+        Language.SPANISH: (
+            "cono de {height} {unit} de alto · radio de base {radius} {unit} · "
+            "disco {disc} {unit} · {count} hilos radiales"
+        ),
+    },
+    "discone.hint": {
+        Language.ENGLISH: (
+            "The cone opens downward and the disc sits above the apex with a "
+            "small feed gap. The source is on the vertical wire across that gap. "
+            "The cone and disc are radial wire approximations, not solid surfaces."
+        ),
+        Language.SPANISH: (
+            "El cono se abre hacia abajo y el disco está sobre el vértice con una "
+            "pequeña brecha de alimentación. La fuente está en el hilo vertical "
+            "que cruza esa brecha. El cono y el disco son aproximaciones de hilos "
+            "radiales, no superficies sólidas."
+        ),
+    },
+    "discone.evidence": {
+        Language.ENGLISH: (
+            "Experimental discone model. The radial wires approximate the solid "
+            "cone and disc; the coax, mast, and feed transition are not modeled. "
+            "Impedance, bandwidth, and pattern are not independently validated. "
+            "Use it as a starting point and verify with the solver or a measurement."
+        ),
+        Language.SPANISH: (
+            "Modelo experimental de discono. Los hilos radiales aproximan el cono "
+            "y el disco sólidos; no se modelan el coaxil, el mástil ni la "
+            "transición de alimentación. La impedancia, el ancho de banda y el "
+            "patrón no están validados independientemente. Usalo como punto de "
+            "partida y verificá con el solver o una medición."
+        ),
+    },
+    "discone.constraint.disc_radius": {
+        Language.ENGLISH: "The disc radius must be at least the cone radius.",
+        Language.SPANISH: "El radio del disco debe ser al menos el radio del cono.",
+    },
+    "discone.geometry_note": {
+        Language.ENGLISH: (
+            "Radial-wire cone and disc. The source is across the small apex gap; "
+            "coax, mast, and solid surfaces are not modeled."
+        ),
+        Language.SPANISH: (
+            "Cono y disco de hilos radiales. La fuente está en la pequeña brecha "
+            "del vértice; no se modelan coaxil, mástil ni superficies sólidas."
+        ),
     },
     "quad_beam.title": {
         Language.ENGLISH: "Quad Beam Generator",

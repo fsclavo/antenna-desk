@@ -92,6 +92,7 @@ from ..domain.antennas.design import (
     with_primary_dimension,
 )
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
+from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import EndFedParameters, EndFedPreset
 from ..domain.antennas.family import antenna_family
 from ..domain.antennas.fan_dipole import FanDipoleParameters
@@ -174,6 +175,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_BOBTAIL_CURTAIN,
     CATALOG_TYPE_CUSTOM,
     CATALOG_TYPE_DELTA_LOOP,
+    CATALOG_TYPE_DISCONE,
     CATALOG_TYPE_DOUBLE_BIQUAD,
     CATALOG_TYPE_DOUBLET,
     CATALOG_TYPE_ENDFED,
@@ -214,6 +216,7 @@ from .dialogs.comparison_dialog import ComparisonDialog
 from .dialogs.construction_dialog import ConstructionDialog
 from .dialogs.custom_antenna_dialog import CustomAntennaDialog
 from .dialogs.design_from_frequency_dialog import DesignFromFrequencyDialog
+from .dialogs.discone_dialog import DisconeDialog
 from .dialogs.doublet_dialog import DoubletDialog
 from .dialogs.element_optimization_dialog import (
     ElementOptimizationBand,
@@ -274,6 +277,7 @@ from .units import UnitSystem, length_from_m, length_unit_key
 from .widgets.beverage_form import BeverageForm
 from .widgets.biquad_form import BiquadForm
 from .widgets.dipole_form import DipoleForm
+from .widgets.discone_form import DisconeForm
 from .widgets.endfed_form import EndFedForm
 from .widgets.fan_dipole_form import FanDipoleForm
 from .widgets.geometry_view import GeometryView, GeometryViewMode
@@ -680,6 +684,18 @@ class MainWindow(QMainWindow):
         self._quad_beam_scroll.setMinimumWidth(340)
         self._quad_beam_scroll.setMaximumWidth(480)
 
+        self._discone_form = DisconeForm(
+            self._translator,
+            self._unit_system,
+            parent=self,
+        )
+        self._discone_form.changed.connect(self._on_form_changed)
+        self._discone_scroll = QScrollArea(self)
+        self._discone_scroll.setWidgetResizable(True)
+        self._discone_scroll.setWidget(self._discone_form)
+        self._discone_scroll.setMinimumWidth(340)
+        self._discone_scroll.setMaximumWidth(480)
+
         self._doublet_form = TransmissionLineDoubletForm(
             self._translator,
             self._unit_system,
@@ -722,6 +738,7 @@ class MainWindow(QMainWindow):
             (self._loaded_dipole_form, self._loaded_dipole_scroll, 480),
             (self._phased_vertical_form, self._phased_vertical_scroll, 480),
             (self._quad_beam_form, self._quad_beam_scroll, 480),
+            (self._discone_form, self._discone_scroll, 480),
             (self._doublet_form, self._doublet_scroll, 480),
             (self._zepp_form, self._zepp_scroll, 480),
         )
@@ -899,6 +916,7 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._loaded_dipole_scroll)
         self._design_stack.addWidget(self._phased_vertical_scroll)
         self._design_stack.addWidget(self._quad_beam_scroll)
+        self._design_stack.addWidget(self._discone_scroll)
         self._design_stack.addWidget(self._doublet_scroll)
         self._design_stack.addWidget(self._zepp_scroll)
         self._design_stack.addWidget(self._custom_panel)
@@ -1251,6 +1269,7 @@ class MainWindow(QMainWindow):
         self._loaded_dipole_form.retranslate()
         self._phased_vertical_form.retranslate()
         self._quad_beam_form.retranslate()
+        self._discone_form.retranslate()
         self._doublet_form.retranslate()
         self._zepp_form.retranslate()
         self._geometry.retranslate()
@@ -1798,6 +1817,9 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, QuadBeamParameters):
             self._design_stack.setCurrentWidget(self._quad_beam_scroll)
             self._quad_beam_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, DisconeParameters):
+            self._design_stack.setCurrentWidget(self._discone_scroll)
+            self._discone_form.set_parameters(design.parameters)
         elif isinstance(design.parameters, TransmissionLineDoubletParameters):
             self._design_stack.setCurrentWidget(self._doublet_scroll)
             self._doublet_form.set_parameters(design.parameters)
@@ -2416,6 +2438,7 @@ class MainWindow(QMainWindow):
                 BeverageParameters,
                 BiquadParameters,
                 LoadedDipoleParameters,
+                DisconeParameters,
                 PhasedVerticalParameters,
                 QuadBeamParameters,
                 TransmissionLineDoubletParameters,
@@ -2432,6 +2455,8 @@ class MainWindow(QMainWindow):
                 parameters = self._phased_vertical_form.parameters()
             elif isinstance(previous_design.parameters, QuadBeamParameters):
                 parameters = self._quad_beam_form.parameters()
+            elif isinstance(previous_design.parameters, DisconeParameters):
+                parameters = self._discone_form.parameters()
             elif isinstance(
                 previous_design.parameters,
                 TransmissionLineDoubletParameters,
@@ -2632,6 +2657,8 @@ class MainWindow(QMainWindow):
             return self._phased_vertical_simulation_spec(parameters)
         if isinstance(parameters, QuadBeamParameters):
             return self._quad_beam_simulation_spec(parameters)
+        if isinstance(parameters, DisconeParameters):
+            return self._discone_simulation_spec(parameters)
         if isinstance(parameters, TransmissionLineDoubletParameters):
             return self._doublet_simulation_spec(parameters)
         if isinstance(parameters, ZeppParameters):
@@ -3636,6 +3663,26 @@ class MainWindow(QMainWindow):
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
         )
 
+    def _discone_simulation_spec(
+        self,
+        parameters: DisconeParameters,
+    ) -> SimulationSpec:
+        model = parameters.to_antenna()
+        frequency_hz = parameters.frequency_hz
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                frequency_hz * 0.5,
+                frequency_hz * 1.5,
+                DEFAULT_GENERATED_SWEEP_POINTS,
+            ),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz * 1.5,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
     def _doublet_simulation_spec(
         self,
         parameters: TransmissionLineDoubletParameters,
@@ -3884,6 +3931,17 @@ class MainWindow(QMainWindow):
         if not self._maybe_save_changes():
             return
         dialog = QuadBeamDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name=dialog.result_parameters().template_name,
+        )
+
+    def new_discone_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        dialog = DisconeDialog(self._translator, self._unit_system, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         self._create_project_from_parameters(
@@ -4524,6 +4582,16 @@ class MainWindow(QMainWindow):
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
             return dialog.result_parameters()
+        if selected == CATALOG_TYPE_DISCONE:
+            dialog = DisconeDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
         if selected == CATALOG_TYPE_BEVERAGE:
             dialog = BeverageDialog(
                 self._translator,
@@ -4873,6 +4941,8 @@ class MainWindow(QMainWindow):
             self.new_phased_vertical_antenna()
         elif selected == CATALOG_TYPE_QUAD_BEAM:
             self.new_quad_beam_antenna()
+        elif selected == CATALOG_TYPE_DISCONE:
+            self.new_discone_antenna()
         elif selected == CATALOG_TYPE_OCFD:
             self.new_ocfd_antenna()
         elif selected == CATALOG_TYPE_DELTA_LOOP:
@@ -5456,6 +5526,8 @@ class MainWindow(QMainWindow):
             base_spec = self._phased_vertical_simulation_spec(design.parameters)
         elif isinstance(design.parameters, QuadBeamParameters):
             base_spec = self._quad_beam_simulation_spec(design.parameters)
+        elif isinstance(design.parameters, DisconeParameters):
+            base_spec = self._discone_simulation_spec(design.parameters)
         else:
             base_spec = self._form.simulation_spec()
 
@@ -5500,6 +5572,8 @@ class MainWindow(QMainWindow):
                 self._phased_vertical_form.set_parameters(parameters)
             elif isinstance(parameters, QuadBeamParameters):
                 self._quad_beam_form.set_parameters(parameters)
+            elif isinstance(parameters, DisconeParameters):
+                self._discone_form.set_parameters(parameters)
             else:
                 self._form.set_parameters(parameters, reset_sweep=False)
             self._apply_fields()
@@ -6754,6 +6828,7 @@ class MainWindow(QMainWindow):
             self._loaded_dipole_form,
             self._phased_vertical_form,
             self._quad_beam_form,
+            self._discone_form,
             self._doublet_form,
             self._zepp_form,
         ):

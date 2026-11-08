@@ -32,7 +32,7 @@ external service and must not be invented or simulated into existence.
 | ~~C1~~ | ~~**Phased verticals / arrays**~~ | XL | multi-source architecture | **Done 2026-11-08:** multi-source model and schema 24, then the 2–4 element phased vertical family with ideal phase/amplitude progression, radial screens, schema 25, editor, scene markers, reports, construction notes, and family optimizer. Evidence remains C pending a traceable reference. |
 | ~~C2~~ | ~~Quad beam / hexbeam~~ | L | C1 lessons optional | **Partially done 2026-11-08:** quad beam with 2–3 loops, reflector/driven/optional director, ideal single feed, schema 26, editor, scene, reports, construction notes, and optimizer. Hexbeam remains open; evidence stays C. |
 | C3 | Log-periodic | L | transposed feed-line model | **Blocked 2026-11-08:** independent ideal voltage sources with alternating polarity produced a negative primary-feed resistance in NEC2C. A real transposed boom feed line must be modeled before this family can ship; do not approximate it with independent sources. |
-| C4 | Discone | L | none | Broadband multi-wire geometry, full DoD, scene, persistence, optimizer, and evidence |
+| ~~C4~~ | ~~Discone~~ | L | none | **Done 2026-11-08:** radial-wire cone and disc with apex feed gap, schema 27, editor, scene, reports, construction notes, and optimizer. Evidence stays C because the wire approximation and feed transition are not validated. |
 | C5 | Trapped / multiband Yagi | L | trap model reuse | Trap-loaded elements, feed/matching, full DoD, and evidence |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
@@ -92,11 +92,12 @@ model and solver contract must land first.
    independent ideal sources: NEC2C reported negative primary-feed resistance
    in the prototype.
 4. B1–B3 whenever a source or measurement becomes available.
-5. C4, C5, and the deferred items.
+5. C5 (trapped Yagi) and the deferred items.
 
 ## Current baseline
 
-- Schema: **26**.
-- Full gate: **1,862 passed, 0 skipped** with `NEC2C` and the optional
+- Schema: **27**.
+- Full gate: **1,886 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
-- Last commits: multi-source excitation, phased vertical array, and quad beam.
+- Last commits: multi-source excitation, phased vertical array, quad beam, and
+  discone.

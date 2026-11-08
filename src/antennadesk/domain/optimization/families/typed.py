@@ -10,6 +10,7 @@ from dataclasses import replace
 
 from ...antennas.beverage import BeverageParameters
 from ...antennas.biquad import BiquadParameters
+from ...antennas.discone import DisconeParameters
 from ...antennas.endfed import EndFedParameters
 from ...antennas.fan_dipole import FanDipoleParameters, FanElement
 from ...antennas.folded_dipole import FoldedDipoleParameters
@@ -1487,6 +1488,98 @@ def phased_vertical_descriptor(
 
     return _descriptor(
         "phased_vertical",
+        tuple(variables),
+        initial,
+        build,
+        validate,
+        default_objective=FamilyOptimizationObjective.MAX_GAIN,
+    )
+
+
+def discone_descriptor(parameters: DisconeParameters) -> AntennaOptimizerDescriptor:
+    variables: list[OptimizationVariable] = [
+        _length(
+            "cone_height_m",
+            "discone.cone_height",
+            "optimize.group.geometry",
+            parameters.cone_height_m,
+            0.3,
+            0.05,
+        ),
+        _length(
+            "cone_radius_m",
+            "discone.cone_radius",
+            "optimize.group.geometry",
+            parameters.cone_radius_m,
+            0.3,
+            0.05,
+        ),
+        _length(
+            "disc_radius_m",
+            "discone.disc_radius",
+            "optimize.group.geometry",
+            parameters.disc_radius_m,
+            0.3,
+            0.05,
+        ),
+        _length(
+            "base_height_m",
+            "field.base_height",
+            "optimize.group.geometry",
+            parameters.base_height_m,
+            0.5,
+            0.0,
+        ),
+        _radius(parameters.wire_radius_m),
+    ]
+    initial = {
+        "cone_height_m": parameters.cone_height_m,
+        "cone_radius_m": parameters.cone_radius_m,
+        "disc_radius_m": parameters.disc_radius_m,
+        "base_height_m": parameters.base_height_m,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+
+    def build(values: Mapping[str, float]) -> DisconeParameters:
+        return replace(
+            parameters,
+            cone_height_m=values["cone_height_m"],
+            cone_radius_m=values["cone_radius_m"],
+            disc_radius_m=values["disc_radius_m"],
+            base_height_m=values["base_height_m"],
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        issues: list[ConstraintViolation | None] = [
+            positive_violation("cone_height_m", values["cone_height_m"]),
+            positive_violation("cone_radius_m", values["cone_radius_m"]),
+            positive_violation("disc_radius_m", values["disc_radius_m"]),
+            non_negative_violation("base_height_m", values["base_height_m"]),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+        ]
+        for name in ("cone_height_m", "cone_radius_m", "disc_radius_m"):
+            amount = values[name]
+            if amount <= 2.0 * values["wire_radius_m"]:
+                issues.append(
+                    violation(
+                        name,
+                        2.0 * values["wire_radius_m"] - amount,
+                        "optimize.constraint.conductor_spacing",
+                    )
+                )
+        if values["disc_radius_m"] < values["cone_radius_m"]:
+            issues.append(
+                violation(
+                    "disc_radius_m",
+                    values["cone_radius_m"] - values["disc_radius_m"],
+                    "discone.constraint.disc_radius",
+                )
+            )
+        return collect(*issues)
+
+    return _descriptor(
+        "discone",
         tuple(variables),
         initial,
         build,

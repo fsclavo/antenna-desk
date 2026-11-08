@@ -599,6 +599,24 @@ inductance and resistance when enabled, and conductor radius jointly. The
 family is classified **experimental**; tune the final geometry and coil with the
 solver or a measurement.
 
+## Create a discone
+
+Choose **File → New Antenna... → Discone** for a broadband vertical antenna
+with a radial-wire cone and a larger top disc. The editor sets the frequency,
+cone height and base radius, disc radius, base height, feed gap, radial wire
+count, azimuth, conductor radius, material, and ground.
+
+**Load quarter-wave starting dimensions** sets the cone to a quarter-wave slant
+with a 30° half-angle and a disc radius of 0.7 times that slant. **Optimize...**
+searches cone height, cone radius, disc radius, base height, and conductor
+radius jointly. The wire count, feed gap, azimuth, ground, and material remain
+user context.
+
+The discone is classified **experimental**. The cone and disc are radial wire
+approximations, not solid surfaces; the coax, mast, and feed transition are not
+modeled. Impedance, bandwidth, and pattern are not independently validated.
+Use it as a starting point and verify with the solver or a measurement.
+
 ## Create a quad beam
 
 Choose **File → New Antenna... → Quad beam** for a two- or three-element beam
@@ -1176,6 +1194,7 @@ The following typed families have a complete joint optimizer:
 - loaded / linked dipole;
 - phased vertical array;
 - quad beam;
+- discone;
 - OCFD, EndFed/EFHW, and sloper;
 - typed G5RV, ZS6BKW, and Zepp;
 - the doublet radiator as a dipole, with its feed line in the matching stage;

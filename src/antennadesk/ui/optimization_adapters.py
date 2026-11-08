@@ -16,6 +16,7 @@ from ..domain.antennas.beverage import BeverageParameters
 from ..domain.antennas.biquad import BiquadParameters
 from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import DipoleParameters
+from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import EndFedParameters
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
@@ -95,6 +96,10 @@ ADAPTERS: dict[type[AntennaDesignParameters], OptimizationUiAdapter] = {
     LoadedDipoleParameters: OptimizationUiAdapter(
         lambda window, parameters: window._loaded_dipole_simulation_spec(parameters),
         lambda window, parameters: window._loaded_dipole_form.set_parameters(parameters),
+    ),
+    DisconeParameters: OptimizationUiAdapter(
+        lambda window, parameters: window._discone_simulation_spec(parameters),
+        lambda window, parameters: window._discone_form.set_parameters(parameters),
     ),
     PhasedVerticalParameters: OptimizationUiAdapter(
         lambda window, parameters: window._phased_vertical_simulation_spec(parameters),

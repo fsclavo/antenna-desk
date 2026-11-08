@@ -13,6 +13,7 @@ from antennadesk.ui.main_window import MainWindow
 from antennadesk.ui.units import UnitSystem, length_to_m, radius_to_m
 from antennadesk.ui.widgets.beverage_form import BeverageForm
 from antennadesk.ui.widgets.biquad_form import BiquadForm
+from antennadesk.ui.widgets.discone_form import DisconeForm
 from antennadesk.ui.widgets.endfed_form import EndFedForm
 from antennadesk.ui.widgets.fan_dipole_form import FanDipoleForm
 from antennadesk.ui.widgets.inverted_v_form import InvertedVForm
@@ -87,6 +88,10 @@ FORMS = (
     (
         LoadedDipoleForm,
         ("_total_length", "_height", "_link_offset"),
+    ),
+    (
+        DisconeForm,
+        ("_cone_height", "_cone_radius", "_disc_radius", "_base_height", "_disc_gap"),
     ),
     (
         PhasedVerticalForm,

@@ -20,6 +20,7 @@ from antennadesk.domain.antennas.beverage import beverage_parameters
 from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
 from antennadesk.domain.antennas.custom import CustomAntennaParameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
+from antennadesk.domain.antennas.discone import discone_parameters
 from antennadesk.domain.antennas.endfed import EndFedParameters
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
 from antennadesk.domain.antennas.feed import FeedPoint
@@ -471,6 +472,27 @@ def _cases() -> tuple[FamilyCase, ...]:
                 "element spacing",
                 "phase step",
                 "amplitude taper",
+            ),
+        ),
+        FamilyCase(
+            "discone",
+            discone_parameters(
+                frequency_hz=145_000_000.0,
+                cone_height_m=0.5,
+                cone_radius_m=0.3,
+                disc_radius_m=0.5,
+                base_height_m=0.5,
+                wire_count=6,
+            ),
+            "discone",
+            13,
+            GeometryViewMode.ELEVATION,
+            (
+                "Discone",
+                "radial wires 6",
+                "cone height",
+                "cone base radius",
+                "disc radius",
             ),
         ),
         FamilyCase(

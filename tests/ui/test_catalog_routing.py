@@ -16,6 +16,7 @@ from antennadesk.domain.antennas.biquad import (
 )
 from antennadesk.domain.antennas.custom import CustomAntennaParameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
+from antennadesk.domain.antennas.discone import discone_parameters
 from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
 from antennadesk.domain.antennas.feed import FeedPoint
@@ -228,6 +229,7 @@ def _parameters_for(key: str) -> object:
         "double_biquad": biquad_parameters(BiquadKind.DOUBLE),
         "beverage": beverage_parameters(),
         "loaded_dipole": loaded_dipole_parameters(),
+        "discone": discone_parameters(),
         "phased_vertical": phased_vertical_parameters(),
         "quad_beam": quad_beam_parameters(),
         "custom": CustomAntennaParameters(
@@ -300,6 +302,7 @@ def test_every_catalog_entry_has_a_change_template_route(
             "BiquadDialog",
             "BeverageDialog",
             "LoadedDipoleDialog",
+            "DisconeDialog",
             "PhasedVerticalDialog",
             "QuadBeamDialog",
         ):
@@ -350,6 +353,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "double_biquad": ("double_biquad",),
         "beverage": ("beverage",),
         "loaded_dipole": ("loaded_dipole",),
+        "discone": ("discone",),
         "phased_vertical": ("phased_vertical",),
         "quad_beam": ("quad_beam",),
         "custom": ("custom",),
@@ -412,6 +416,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         new_double_biquad_antenna=record("double_biquad"),
         new_beverage_antenna=record("beverage"),
         new_loaded_dipole_antenna=record("loaded_dipole"),
+        new_discone_antenna=record("discone"),
         new_phased_vertical_antenna=record("phased_vertical"),
         new_quad_beam_antenna=record("quad_beam"),
         new_ocfd_antenna=record("ocfd"),
@@ -475,6 +480,7 @@ ESTIMATORLESS_CATALOG_KEYS = frozenset(
         "double_biquad",
         "beverage",
         "loaded_dipole",
+        "discone",
         "phased_vertical",
         "quad_beam",
         "trap_dipole",

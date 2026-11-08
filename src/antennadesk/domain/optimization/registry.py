@@ -15,6 +15,7 @@ from ..antennas.biquad import BiquadParameters
 from ..antennas.custom import CustomAntennaParameters
 from ..antennas.design import AntennaDesignParameters
 from ..antennas.dipole import DipoleParameters
+from ..antennas.discone import DisconeParameters
 from ..antennas.endfed import EndFedParameters, EndFedPreset
 from ..antennas.fan_dipole import FanDipoleParameters
 from ..antennas.folded_dipole import FoldedDipoleParameters
@@ -42,6 +43,7 @@ from .families.scv import scv_descriptor
 from .families.typed import (
     beverage_descriptor,
     biquad_descriptor,
+    discone_descriptor,
     endfed_descriptor,
     fan_dipole_descriptor,
     folded_dipole_descriptor,
@@ -102,6 +104,8 @@ def optimizer_availability(
         return OptimizerAvailability(descriptor=beverage_descriptor(parameters))
     if isinstance(parameters, LoadedDipoleParameters):
         return OptimizerAvailability(descriptor=loaded_dipole_descriptor(parameters))
+    if isinstance(parameters, DisconeParameters):
+        return OptimizerAvailability(descriptor=discone_descriptor(parameters))
     if isinstance(parameters, PhasedVerticalParameters):
         return OptimizerAvailability(descriptor=phased_vertical_descriptor(parameters))
     if isinstance(parameters, QuadBeamParameters):
@@ -159,6 +163,7 @@ SUPPORTED_OPTIMIZER_TYPES = frozenset(
         BiquadParameters,
         BeverageParameters,
         LoadedDipoleParameters,
+        DisconeParameters,
         PhasedVerticalParameters,
         QuadBeamParameters,
         OCFDParameters,

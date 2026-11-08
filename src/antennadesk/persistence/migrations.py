@@ -359,6 +359,12 @@ def _migrate_v25_to_v26(document: dict[str, Any]) -> dict[str, Any]:
     return copy.deepcopy(document)
 
 
+def _migrate_v26_to_v27(document: dict[str, Any]) -> dict[str, Any]:
+    """Introduce the discone design type."""
+
+    return copy.deepcopy(document)
+
+
 def _migrate_v13_to_v14(document: dict[str, Any]) -> dict[str, Any]:
     """Add the optional project balun/unun loss model."""
 
@@ -449,6 +455,7 @@ MIGRATIONS: dict[int, Migration] = {
     23: _migrate_v23_to_v24,
     24: _migrate_v24_to_v25,
     25: _migrate_v25_to_v26,
+    26: _migrate_v26_to_v27,
 }
 
 

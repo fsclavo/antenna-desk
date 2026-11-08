@@ -15,6 +15,7 @@ from .biquad import (
 )
 from .custom import ANTENNA_TYPE_CUSTOM, CustomAntennaParameters
 from .dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
+from .discone import ANTENNA_TYPE_DISCONE, DisconeParameters
 from .endfed import ANTENNA_TYPE_ENDFED, EndFedParameters
 from .fan_dipole import ANTENNA_TYPE_FAN_DIPOLE, FanDipoleParameters
 from .folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE, FoldedDipoleParameters
@@ -63,6 +64,7 @@ AntennaDesignParameters = (
     | MoxonParameters
     | FanDipoleParameters
     | EndFedParameters
+    | DisconeParameters
     | JPoleParameters
     | RingoParameters
     | ScvParameters
@@ -94,6 +96,8 @@ def template_load_ids(parameters: AntennaDesignParameters) -> frozenset[str]:
 def antenna_type_for(parameters: AntennaDesignParameters) -> str:
     if isinstance(parameters, DipoleParameters):
         return ANTENNA_TYPE_WIRE_DIPOLE
+    if isinstance(parameters, DisconeParameters):
+        return ANTENNA_TYPE_DISCONE
     if isinstance(parameters, FoldedDipoleParameters):
         return ANTENNA_TYPE_FOLDED_DIPOLE
     if isinstance(parameters, LoopParameters):
@@ -156,6 +160,8 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
 def primary_dimension_m(parameters: AntennaDesignParameters) -> float:
     if isinstance(parameters, DipoleParameters):
         return parameters.total_length_m
+    if isinstance(parameters, DisconeParameters):
+        return parameters.cone_height_m
     if isinstance(parameters, FoldedDipoleParameters):
         return parameters.total_length_m
     if isinstance(parameters, LoopParameters):
@@ -197,6 +203,14 @@ def with_primary_dimension(
 ) -> AntennaDesignParameters:
     if isinstance(parameters, DipoleParameters):
         return parameters.with_length(dimension_m)
+    if isinstance(parameters, DisconeParameters):
+        ratio = dimension_m / parameters.cone_height_m
+        return replace(
+            parameters,
+            cone_height_m=dimension_m,
+            cone_radius_m=parameters.cone_radius_m * ratio,
+            disc_radius_m=parameters.disc_radius_m * ratio,
+        )
     if isinstance(parameters, FoldedDipoleParameters):
         return replace(parameters, total_length_m=dimension_m)
     if isinstance(parameters, LoopParameters):

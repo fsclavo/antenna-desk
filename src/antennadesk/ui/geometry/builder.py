@@ -23,6 +23,7 @@ from ...domain.antennas.dipole import (
     SAG_SEGMENTS,
     DipoleParameters,
 )
+from ...domain.antennas.discone import ANTENNA_TYPE_DISCONE, DisconeParameters
 from ...domain.antennas.endfed import ANTENNA_TYPE_ENDFED, EndFedParameters
 from ...domain.antennas.fan_dipole import (
     ANTENNA_TYPE_FAN_DIPOLE,
@@ -114,6 +115,7 @@ ZEPP_PRESENTATION_TYPE = "zepp"
 
 _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_WIRE_DIPOLE: "antenna_type.wire_dipole",
+    ANTENNA_TYPE_DISCONE: "catalog.discone",
     ANTENNA_TYPE_FOLDED_DIPOLE: "antenna_type.folded_dipole",
     ANTENNA_TYPE_LOOP: "antenna_type.loop",
     ANTENNA_TYPE_OCFD: "catalog.ocfd",
@@ -1304,6 +1306,69 @@ def _add_phased_vertical_dimensions(
                 taper=f"{parameters.amplitude_taper * 100.0:.0f}",
             )
         )
+
+
+def _add_discone_dimensions(
+    model: AntennaModel,
+    parameters: DisconeParameters | None,
+    factory: _Factory,
+    dimensions: list[Dimension],
+    notes: list[str],
+    translator: Translator,
+) -> None:
+    if parameters is None:
+        return
+    cone = next(
+        (wire for wire in model.wires if wire.id.startswith("discone-cone-")),
+        None,
+    )
+    disc = next(
+        (wire for wire in model.wires if wire.id.startswith("discone-disc-")),
+        None,
+    )
+    if cone is not None:
+        cone_x = factory.project(cone.start).x_m
+        dimensions.append(
+            factory.vertical_dimension(
+                cone_x,
+                parameters.base_height_m,
+                parameters.apex_height_m,
+                parameters.cone_height_m,
+                side="right",
+                priority=90,
+            )
+        )
+        dimensions.append(
+            factory.vertical_dimension(
+                cone_x,
+                0.0,
+                parameters.base_height_m,
+                parameters.base_height_m,
+                side="left",
+                priority=60,
+            )
+        )
+        if not factory.projection.vertical:
+            dimensions.append(
+                factory.dimension(
+                    cone.start,
+                    cone.end,
+                    parameters.cone_radius_m,
+                    side="below",
+                    priority=85,
+                )
+            )
+    if disc is not None and not factory.projection.vertical:
+        dimensions.append(
+            factory.dimension(
+                disc.start,
+                disc.end,
+                parameters.disc_radius_m,
+                side="above",
+                priority=80,
+            )
+        )
+    notes.append(translator.t("discone.geometry_note"))
 
 
 def _add_quad_beam_dimensions(
@@ -2545,6 +2610,36 @@ def _summary(
                 f"{translator.t('vertical.radial_count').lower()} {radial_count}",
             ]
         )
+    elif isinstance(parameters, DisconeParameters) or antenna_type == ANTENNA_TYPE_DISCONE:
+        if isinstance(parameters, DisconeParameters):
+            count = parameters.wire_count
+            cone_height = parameters.cone_height_m
+            cone_radius = parameters.cone_radius_m
+            disc_radius = parameters.disc_radius_m
+            base_height = parameters.base_height_m
+            top_height = parameters.top_height_m
+        else:
+            count = 0
+            cone_height = max_z - min_z
+            cone_radius = max(math.hypot(wire.end.x_m, wire.end.y_m) for wire in model.wires)
+            disc_radius = cone_radius
+            base_height = min_z
+            top_height = max_z
+        parts.extend(
+            [
+                f"{translator.t('discone.wire_count').lower()} {count}",
+                f"{translator.t('discone.cone_height').lower()} "
+                f"{_format_length(cone_height, translator, unit_system)}",
+                f"{translator.t('discone.cone_radius').lower()} "
+                f"{_format_length(cone_radius, translator, unit_system)}",
+                f"{translator.t('discone.disc_radius').lower()} "
+                f"{_format_length(disc_radius, translator, unit_system)}",
+                f"{translator.t('field.base_height').lower()} "
+                f"{_format_length(base_height, translator, unit_system)}",
+                f"{translator.t('geometry.top_height').lower()} "
+                f"{_format_length(top_height, translator, unit_system)}",
+            ]
+        )
     elif isinstance(parameters, QuadBeamParameters) or antenna_type == ANTENNA_TYPE_QUAD_BEAM:
         if isinstance(parameters, QuadBeamParameters):
             element_count = parameters.element_count
@@ -3071,6 +3166,15 @@ def build_scene(
         _add_quad_beam_dimensions(
             model,
             parameters if isinstance(parameters, QuadBeamParameters) else None,
+            factory,
+            dimensions,
+            notes,
+            translator,
+        )
+    elif effective_type == ANTENNA_TYPE_DISCONE:
+        _add_discone_dimensions(
+            model,
+            parameters if isinstance(parameters, DisconeParameters) else None,
             factory,
             dimensions,
             notes,

@@ -15,6 +15,7 @@ from antennadesk.domain.antennas.biquad import (
 from antennadesk.domain.antennas.custom import CustomAntennaParameters
 from antennadesk.domain.antennas.design import AntennaDesignParameters, antenna_type_for
 from antennadesk.domain.antennas.dipole import DipoleParameters
+from antennadesk.domain.antennas.discone import discone_parameters
 from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
 from antennadesk.domain.antennas.feed import FeedPoint
@@ -257,6 +258,7 @@ def _typed_samples() -> list[AntennaDesignParameters]:
         biquad_parameters(BiquadKind.DOUBLE),
         beverage_parameters(),
         loaded_dipole_parameters(),
+        discone_parameters(),
         phased_vertical_parameters(),
         quad_beam_parameters(element_count=3),
         OCFDParameters(frequency_hz=7_100_000.0, total_length_m=40.0),
@@ -355,6 +357,8 @@ _CONTEXT_FIELDS = {
     "element_count",
     "radial_count",
     "radial_angle_deg",
+    "wire_count",
+    "disc_gap_m",
 }
 
 
@@ -430,6 +434,23 @@ def test_linked_dipole_optimizes_the_center_section_only() -> None:
     assert "total_length_m" not in names
     assert "loading_coil_inductance_h" not in names
     assert "loading_coil_resistance_ohm" not in names
+
+
+def test_discone_optimizes_the_wire_surfaces() -> None:
+    availability = optimizer_availability(discone_parameters(wire_count=10))
+    assert availability.descriptor is not None
+
+    variables = {variable.name: variable for variable in availability.descriptor.variables}
+
+    assert set(variables) == {
+        "cone_height_m",
+        "cone_radius_m",
+        "disc_radius_m",
+        "base_height_m",
+        "wire_radius_m",
+    }
+    rebuilt = availability.descriptor.build_parameters(availability.descriptor.initial_values)
+    assert rebuilt.wire_count == 10
 
 
 def test_quad_beam_optimizes_geometry_and_optional_director() -> None:

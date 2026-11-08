@@ -12,6 +12,7 @@ from ..antennas.biquad import BiquadParameters
 from ..antennas.custom import CustomAntennaParameters
 from ..antennas.design import AntennaDesignParameters
 from ..antennas.dipole import DipoleParameters
+from ..antennas.discone import DisconeParameters
 from ..antennas.endfed import EndFedParameters, EndFedPreset
 from ..antennas.fan_dipole import FanDipoleParameters
 from ..antennas.loaded_dipole import LoadedDipoleParameters
@@ -170,6 +171,12 @@ def default_band_plan(
             _current_band_plan(parameters.frequency_hz),
             BandEvidence.CURRENT,
             "band.note.loaded_dipole",
+        )
+    if isinstance(parameters, DisconeParameters):
+        return BandDefault(
+            _current_band_plan(parameters.frequency_hz),
+            BandEvidence.CURRENT,
+            "band.note.discone",
         )
     if isinstance(parameters, PhasedVerticalParameters):
         return BandDefault(

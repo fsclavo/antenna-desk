@@ -351,6 +351,28 @@ def test_loaded_dipole_construction_sheet_lists_the_coils(
     assert "loading coils" in sheet.lower()
 
 
+def test_discone_construction_sheet_lists_the_cone_and_disc(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.discone import discone_parameters
+
+    design = sample_project.designs[0]
+    discone = design.with_parameters(
+        discone_parameters(
+            cone_height_m=0.5,
+            cone_radius_m=0.3,
+            disc_radius_m=0.6,
+            wire_count=8,
+        )
+    )
+    sheet = render_construction_sheet(sample_project, discone, None)
+
+    assert "Discone" in sheet
+    assert "Cone base radius" in sheet
+    assert "Build 8 cone wires" in sheet
+    assert "wire approximations" in sheet
+
+
 def test_quad_beam_construction_sheet_lists_the_loops(
     sample_project: Project,
 ) -> None:

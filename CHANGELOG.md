@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added a first-class **discone** family: a radial-wire cone and top disc with
+  a source across a small apex gap, quarter-wave starting dimensions, schema-27
+  persistence, catalog route, inline editor, scene dimensions and summary,
+  reports, construction notes, and a family optimizer. The cone and disc are
+  wire approximations; the coax, mast, and solid surfaces are not modeled, and
+  the family is experimental.
 - Added a first-class **quad beam** family: two or three square loops with a
   reflector, driven loop, and optional director, quarter-wave loop and
   fifth-wave spacing starting dimensions, schema-26 persistence, catalog route,

@@ -17,6 +17,7 @@ from antennadesk.application.use_cases.optimize_antenna import (
 from antennadesk.domain.antennas.beverage import beverage_parameters
 from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
+from antennadesk.domain.antennas.discone import discone_parameters
 from antennadesk.domain.antennas.endfed import EndFedParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
@@ -92,6 +93,13 @@ def _samples() -> list[object]:
             frequency_hz=7_100_000.0,
             total_length_m=18.0,
             link_offset_m=2.5,
+        ),
+        discone_parameters(
+            frequency_hz=145_000_000.0,
+            cone_height_m=0.5,
+            cone_radius_m=0.3,
+            disc_radius_m=0.5,
+            wire_count=8,
         ),
         phased_vertical_parameters(
             frequency_hz=14_100_000.0,

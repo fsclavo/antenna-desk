@@ -755,6 +755,29 @@ def test_phased_vertical_round_trips_through_the_schema() -> None:
     assert restored.designs[0].antenna.sources == original.designs[0].antenna.sources
 
 
+def test_discone_round_trips_through_the_schema() -> None:
+    from antennadesk.domain.antennas.discone import discone_parameters
+
+    parameters = discone_parameters(
+        frequency_hz=145_000_000.0,
+        cone_height_m=0.52,
+        cone_radius_m=0.31,
+        disc_radius_m=0.61,
+        base_height_m=0.5,
+        disc_gap_m=0.015,
+        wire_count=10,
+        azimuth_deg=15.0,
+    )
+    original = _project(parameters, "Discone")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna == original.designs[0].antenna
+    assert restored.designs[0].antenna_type == "discone"
+
+
 def test_quad_beam_round_trips_through_the_schema() -> None:
     from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
 

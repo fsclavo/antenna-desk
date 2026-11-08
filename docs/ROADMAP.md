@@ -144,7 +144,8 @@ Deferred:
   schema-18 persisted run summaries.
 - Supported typed families: dipoles, loop, vertical/inverted-V/inverted-L,
   J Pole/Slim Jim, Ringo, SCV, biquad, Beverage, loaded/linked dipole,
-  phased vertical array, quad beam, OCFD, EndFed, typed G5RV/ZS6BKW/Zepp,
+  phased vertical array, quad beam, discone, OCFD, EndFed, typed
+  G5RV/ZS6BKW/Zepp,
   fan/trap/T2FD, Yagi, and Moxon. The doublet radiator uses the dipole
   descriptor and its feed line remains in the matching stage.
 - Explicitly unavailable optimizers: magnetic loop, random wire, and arbitrary
@@ -264,7 +265,7 @@ point; `C` is structural/experimental only.
 | 15 | Phased verticals / arrays | Architectural | XL | High | B/A | **Implemented on 2026-11-08:** multi-source excitation, ideal linear phase and amplitude progression, 2–4 verticals with radial screens, schema 25, inline editor, scene/source markers, reports, construction notes, and family optimizer. The combining network is ideal and the family remains experimental pending a traceable array reference or measurement. |
 | 16 | Quad beam / hexbeam | New family | L | Medium–high | B/A | **Partially implemented on 2026-11-08:** two- or three-element square-loop quad beam with reflector, driven loop, optional director, schema 26, inline editor, scene contract, reports, construction notes, and family optimizer. Hexbeam geometry and published evidence remain pending; the quad beam is experimental. |
 | 17 | Log-periodic | New family | L | Medium | A/B | Many elements and a feed network; high test burden. |
-| 18 | Discone | New family | L | Medium | B/C | Many wires and broadband behavior; niche VHF/UHF value. |
+| 18 | Discone | New family | L | Medium | B/C | **Implemented on 2026-11-08:** radial-wire cone and top disc with an apex feed gap, schema 27, inline editor, scene contract, reports, construction notes, and family optimizer. The wire approximation and missing coax/mast model keep it experimental. |
 | 19 | Trapped / multiband Yagi | New family | L | High | B/C | Traps and multiple elements; difficult independent validation. |
 
 Items 1–7 were the immediate recommended sequence; items 8–14 are the next

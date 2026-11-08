@@ -13,6 +13,7 @@ from antennadesk.ui.main_window import MainWindow
 from antennadesk.ui.units import UnitSystem
 from antennadesk.ui.widgets.beverage_form import BeverageForm
 from antennadesk.ui.widgets.biquad_form import BiquadForm
+from antennadesk.ui.widgets.discone_form import DisconeForm
 from antennadesk.ui.widgets.endfed_form import EndFedForm
 from antennadesk.ui.widgets.fan_dipole_form import FanDipoleForm
 from antennadesk.ui.widgets.inverted_l_form import InvertedLForm
@@ -53,6 +54,7 @@ FORMS = (
     (BiquadForm, "biquad.loop_side"),
     (BeverageForm, "beverage.termination_resistance"),
     (LoadedDipoleForm, "loaded_dipole.link_offset"),
+    (DisconeForm, "discone.cone_radius"),
     (PhasedVerticalForm, "phased_vertical.phase_step"),
     (QuadBeamForm, "quad_beam.reflector_spacing"),
     (TransmissionLineDoubletForm, "g5rv.line_impedance"),

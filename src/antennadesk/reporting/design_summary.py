@@ -9,6 +9,7 @@ from ..domain.antennas.biquad import BiquadParameters
 from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
+from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import EndFedParameters, EndFedPreset
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
@@ -394,6 +395,24 @@ def design_summary_rows(
                 ),
                 ("Height", f"{parameters.height_m:.4f} m"),
                 ("Orientation", parameters.orientation.value),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        return tuple(rows)
+    if isinstance(parameters, DisconeParameters):
+        rows.extend(
+            [
+                ("Type", parameters.template_name),
+                ("Radial wires", str(parameters.wire_count)),
+                ("Cone height", f"{parameters.cone_height_m:.4f} m"),
+                ("Cone base radius", f"{parameters.cone_radius_m:.4f} m"),
+                ("Disc radius", f"{parameters.disc_radius_m:.4f} m"),
+                ("Base height", f"{parameters.base_height_m:.4f} m"),
+                ("Feed gap", f"{parameters.disc_gap_m:.4f} m"),
+                ("Top height", f"{parameters.top_height_m:.4f} m"),
+                ("Feed", "across the apex gap"),
+                ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground)),
             ]

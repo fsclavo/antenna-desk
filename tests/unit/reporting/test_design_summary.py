@@ -22,6 +22,27 @@ def test_biquad_summary_reports_the_loop_stack_and_reflector() -> None:
     assert rows["Loop side"] == f"{parameters.loop_side_m:.4f} m"
 
 
+def test_discone_summary_reports_the_cone_and_disc() -> None:
+    from antennadesk.domain.antennas.discone import discone_parameters
+
+    parameters = discone_parameters(
+        cone_height_m=0.5,
+        cone_radius_m=0.3,
+        disc_radius_m=0.6,
+        base_height_m=0.5,
+        disc_gap_m=0.02,
+        wire_count=8,
+    )
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Type"] == "Discone"
+    assert rows["Radial wires"] == "8"
+    assert rows["Cone height"] == "0.5000 m"
+    assert rows["Cone base radius"] == "0.3000 m"
+    assert rows["Disc radius"] == "0.6000 m"
+    assert rows["Feed"] == "across the apex gap"
+
+
 def test_quad_beam_summary_reports_loops_and_spacing() -> None:
     from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
 
