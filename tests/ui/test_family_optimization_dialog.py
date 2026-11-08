@@ -183,6 +183,54 @@ def test_family_dialog_shows_space_limits(qtbot: QtBot) -> None:
     assert yagi_dialog._descriptor.supports_boom_constraint is True
 
 
+def test_family_dialog_exports_the_evaluation_csv(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    from antennadesk.application.use_cases.optimize_antenna import (
+        OptimizeAntennaResult,
+    )
+    from antennadesk.domain.optimization.engine import (
+        CandidateEvaluation,
+        OptimizationStatus,
+        budget_for,
+    )
+
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    evaluation = CandidateEvaluation(
+        index=1,
+        values={"total_length_m": 20.0},
+        score=1.2,
+        feasible=True,
+        metrics={"swr": 1.2},
+    )
+    dialog._result = OptimizeAntennaResult(
+        status=OptimizationStatus.CONVERGED,
+        best_parameters=None,
+        best_values={"total_length_m": 20.0},
+        best_score=1.2,
+        best_metrics={"swr": 1.2},
+        evaluations=(evaluation,),
+        sensitivity=(),
+        budget=budget_for(BudgetProfile.FAST, 3),
+        seed=0,
+    )
+    path = tmp_path / "run.csv"
+    monkeypatch.setattr(
+        "antennadesk.ui.dialogs.family_optimization_dialog.QFileDialog.getSaveFileName",
+        lambda *args, **kwargs: (str(path), ""),
+    )
+
+    dialog._export_csv()
+
+    assert path.exists()
+    text = path.read_text(encoding="utf-8")
+    assert "rank,index,score" in text
+    assert "value_total_length_m" in text
+
+
 def test_family_dialog_marks_locked_variables_as_partial(qtbot: QtBot) -> None:
     dialog = _dialog()
     qtbot.addWidget(dialog)

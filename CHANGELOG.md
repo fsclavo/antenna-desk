@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added optimizer **CSV export** with the ranked evaluation log, metrics,
+  errors, Pareto flags, and every design variable. The export is independent of
+  the project file.
 - Added optimizer **space constraints**: an optional maximum turning radius for
   every family and maximum boom length for Yagi/Moxon. Limits are hard
   candidates filters, are reported when violated, and are stored in the

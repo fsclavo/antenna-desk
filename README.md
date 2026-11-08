@@ -160,6 +160,8 @@ optional signing steps.
 - Balanced, thorough, and fast optimizer budgets with automatic extension,
   evaluation counting, deterministic seeds, ranked result tables, sensitivity
   reports, and Apply Best routed through an exhaustive editor adapter.
+- **CSV export** of the ranked optimizer evaluation log, including metrics,
+  errors, Pareto flags, and design variables.
 - Optional **maximum turning radius** for every family and **maximum boom
   length** for Yagi/Moxon arrays. Candidates outside the mechanical limits are
   rejected and reported, and the limits are saved with the optimization

@@ -11,6 +11,16 @@ from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem, radius_from_m
 
 
+def test_yagi_dialog_states_that_boom_correction_is_not_modeled(
+    qtbot: QtBot,
+) -> None:
+    dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+
+    assert "boom" in dialog._boom_note.text().lower()
+    assert "not modeled" in dialog._boom_note.text().lower()
+
+
 def test_yagi_dialog_loads_the_nbs_preset(qtbot: QtBot) -> None:
     dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(dialog)

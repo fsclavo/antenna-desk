@@ -56,6 +56,8 @@ class YagiDialog(QDialog):
         self._hint.setWordWrap(True)
         self._evidence = QLabel(translator.t("yagi.evidence"), self)
         self._evidence.setWordWrap(True)
+        self._boom_note = QLabel(translator.t("yagi.boom_note"), self)
+        self._boom_note.setWordWrap(True)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
@@ -68,7 +70,7 @@ class YagiDialog(QDialog):
         layout.addWidget(self._form, 1)
         layout.addWidget(self._hint)
         layout.addWidget(self._evidence)
-        layout.addWidget(buttons)
+        layout.addWidget(self._boom_note)
         layout.addWidget(buttons)
 
     def parameters(self) -> YagiParameters:

@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QDoubleSpinBox,
+    QFileDialog,
     QFormLayout,
     QHBoxLayout,
     QLabel,
@@ -48,6 +49,7 @@ from ...domain.optimization.summary import (
 )
 from ...domain.optimization.variables import OptimizationVariable, VariableKind
 from ...domain.simulation.spec import SimulationSpec
+from ...reporting.optimizer_csv import write_optimization_csv
 from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import (
@@ -238,12 +240,15 @@ class FamilyOptimizationDialog(QDialog):
 
         self._run = QPushButton(translator.t("optimize.run_family"), self)
         self._cancel = QPushButton(translator.t("optimize.cancel_run"), self)
+        self._export = QPushButton(translator.t("optimize.export_csv"), self)
         self._apply = QPushButton(translator.t("optimize.apply_best"), self)
         self._close = QPushButton(translator.t("action.close"), self)
         self._cancel.setEnabled(False)
+        self._export.setEnabled(False)
         self._apply.setEnabled(False)
         self._run.clicked.connect(self._start)
         self._cancel.clicked.connect(self._cancel_run)
+        self._export.clicked.connect(self._export_csv)
         self._apply.clicked.connect(self._apply_result)
         self._close.clicked.connect(self.reject)
 
@@ -326,6 +331,7 @@ class FamilyOptimizationDialog(QDialog):
         buttons = QHBoxLayout()
         buttons.addWidget(self._run)
         buttons.addWidget(self._cancel)
+        buttons.addWidget(self._export)
         buttons.addStretch(1)
         buttons.addWidget(self._apply)
         buttons.addWidget(self._close)
@@ -610,6 +616,7 @@ class FamilyOptimizationDialog(QDialog):
         selected = len(self._selected_indices())
         self._run.setEnabled(not running and selected > 0)
         self._cancel.setEnabled(running)
+        self._export.setEnabled(not running and self._result is not None)
         self._apply.setEnabled(not running and self._selected_parameters is not None)
         for widget in (
             self._objective,
@@ -712,6 +719,7 @@ class FamilyOptimizationDialog(QDialog):
         self._summary.setText(self._translator.t("optimize.running"))
         self._sensitivity.setText("")
         self._recommendations.setText("")
+        self._export.setEnabled(False)
         self._apply.setEnabled(False)
         thread = QThread(self)
         worker = FamilyOptimizationWorker(self._solver, command)
@@ -833,6 +841,31 @@ class FamilyOptimizationDialog(QDialog):
             label = self._translator.t(variable.label_key)
             parts.append(f"{label}: {point.delta:.6g}")
         return self._translator.t("optimize.sensitivity") + ": " + " · ".join(parts)
+
+    def _export_csv(self) -> None:
+        if self._result is None:
+            return
+        path, _selected_filter = QFileDialog.getSaveFileName(
+            self,
+            self._translator.t("dialog.csv_title"),
+            "optimization.csv",
+            self._translator.t("dialog.csv_filter"),
+        )
+        if not path:
+            return
+        try:
+            write_optimization_csv(
+                path,
+                self._result.evaluations,
+                pareto_indices=(candidate.index for candidate in self._result.pareto),
+                variable_names=tuple(variable.name for variable in self._descriptor.variables),
+            )
+        except OSError as exc:
+            QMessageBox.critical(
+                self,
+                self.windowTitle(),
+                self._translator.t("error.optimize", message=str(exc)),
+            )
 
     def _apply_result(self) -> None:
         if self._selected_parameters is None:

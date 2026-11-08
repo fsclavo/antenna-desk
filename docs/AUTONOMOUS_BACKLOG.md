@@ -23,8 +23,8 @@ external service and must not be invented or simulated into existence.
 
 | ID | Task | Size | Depends on | Acceptance |
 |---|---|---|---|---|
-| A1 | Decide the boom-correction policy | S | traceable source | Either a sourced correction model with tolerance tests, or a documented "not modeled" limitation in the Yagi UI, evidence registry, and user guide |
-| A2 | Export optimization evaluation/Pareto data | S–M | none | CSV export from the family dialog with a deterministic column schema and a test |
+| ~~A1~~ | ~~Decide the boom-correction policy~~ | S | traceable source | **Done 2026-11-08:** the Yagi dialog, evidence registry, and user guide state that boom mounting is not modeled |
+| ~~A2~~ | ~~Export optimization evaluation/Pareto data~~ | S–M | none | **Done 2026-11-08:** UTF-8 CSV export with a stable schema, Pareto flags, and tests |
 | B1 | Promote `inverted_l` evidence if a source exists | M | independent source | Published dimensions and a numeric metric are tested; otherwise the audit keeps it C |
 | B2 | Improve the Ringo matching-ring model | M | manufacturer data or measurement | Matching-ring geometry and impedance are traceable; evidence can move beyond C |
 | B3 | Add independent checks for biquad/double biquad/Beverage/loaded dipole | M–L | source or measurement | At least one numeric metric per family is validated or the limitation stays explicit |
@@ -82,7 +82,7 @@ model and solver contract must land first.
 
 ## Recommended order
 
-1. A1 and A2 (small, closes the remaining geometry/optimizer loose ends).
+1. ~~A1 and A2~~ (done 2026-11-08).
 2. C1 in the slices above (largest user-visible and architectural gain).
 3. C3 or C2 (next large families).
 4. B1–B3 whenever a source or measurement becomes available.
@@ -91,7 +91,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **23**.
-- Full gate: **1,797 passed, 0 skipped** with `NEC2C` and the optional
-  `cross-engine` group; **1,794 passed, 1 skipped** without PyNEC.
+- Full gate: **1,801 passed, 0 skipped** with `NEC2C` and the optional
+  `cross-engine` group; **1,798 passed, 1 skipped** without PyNEC.
 - Last commits: loaded/linked dipole, wire sag, tapered Yagi tips, space
   constraints, and the optional PyNEC validation cleanup.

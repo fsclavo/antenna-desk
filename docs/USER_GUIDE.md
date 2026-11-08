@@ -1106,6 +1106,10 @@ budget, locked variables, high SWR, strong band-edge variation, tolerance
 sensitivity, or the single dimension that most affects the score. They describe
 the modeled search, not a guaranteed physical outcome.
 
+**Export CSV...** writes the ranked evaluation log, metrics, errors, Pareto
+flags, and every design variable to a UTF-8 CSV file. The export is independent
+of the project file and is useful for external analysis.
+
 **Apply Best...** writes the result to the correct family editor and starts the
 normal full sweep/pattern simulation. The run summary (mode, objective, status,
 seed, evaluation count, band edges, tolerance, winning vector, metrics, and

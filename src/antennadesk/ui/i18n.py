@@ -4115,6 +4115,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Tapered tips",
         Language.SPANISH: "Puntas cónicas",
     },
+    "yagi.boom_note": {
+        Language.ENGLISH: (
+            "Element lengths are physical tip-to-tip dimensions. A boom-mounting "
+            "correction is not modeled; use published or measured lengths when "
+            "the boom diameter and clamps matter."
+        ),
+        Language.SPANISH: (
+            "Las longitudes son de punta a punta. No se modela una corrección de "
+            "montaje sobre el boom; usá longitudes publicadas o medidas cuando el "
+            "diámetro del boom y las abrazaderas importen."
+        ),
+    },
     "yagi.add_element": {
         Language.ENGLISH: "Add element",
         Language.SPANISH: "Agregar elemento",
@@ -5103,6 +5115,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize.no_limit": {
         Language.ENGLISH: "no limit",
         Language.SPANISH: "sin límite",
+    },
+    "optimize.export_csv": {
+        Language.ENGLISH: "Export CSV...",
+        Language.SPANISH: "Exportar CSV...",
     },
     "optimize.pareto": {
         Language.ENGLISH: "Pareto front (non-dominated trade-offs)",
