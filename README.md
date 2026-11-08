@@ -136,12 +136,13 @@ optional signing steps.
   points by default, and pattern resolution defaults to 5° and can be set to
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` projects with multiple design
-  variants; schema version 21 adds loaded/linked dipoles, schema 20 adds
-  Beverage receiving wires, schema 19 adds biquad and double-biquad designs,
-  schema 18 adds persisted optimization summaries, schema 17 adds typed G5RV,
-  ZS6BKW, and Zepp designs, schema 16 adds half-square and bobtail-curtain
-  designs, schema 15 adds frequency-dependent balun/unun loss and repairs
-  undersized Yagi matching hardware, and older files migrate explicitly.
+  variants; schema version 22 adds optional wire sag on horizontal dipoles,
+  schema 21 adds loaded/linked dipoles, schema 20 adds Beverage receiving
+  wires, schema 19 adds biquad and double-biquad designs, schema 18 adds
+  persisted optimization summaries, schema 17 adds typed G5RV, ZS6BKW, and Zepp
+  designs, schema 16 adds half-square and bobtail-curtain designs, schema 15
+  adds frequency-dependent balun/unun loss and repairs undersized Yagi matching
+  hardware, and older files migrate explicitly.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - VNA CSV import with measured impedance/SWR records and a measured/simulated
   SWR, R, X, or |Z| comparison tab, including resonance differences.
@@ -161,6 +162,10 @@ optional signing steps.
   deterministic post-run recommendations, and a compact run summary persisted
   with the design so the result can be audited without storing every
   evaluation.
+- Optional **wire sag** on horizontal wire dipoles: the straight span is
+  replaced by a sampled parabolic path with the feed at the center segment, a
+  sag dimension in the scene, and a conductor-length report. Other families
+  remain straight until their sag model is added.
 - First-class **Loaded / linked dipole** with symmetric series loading coils
   or open links that leave only the center section active. It includes a
   portable starting geometry, inline editing, reports, and a family optimizer;

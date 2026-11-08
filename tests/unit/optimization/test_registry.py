@@ -331,6 +331,7 @@ _CONTEXT_FIELDS = {
     "kind",
     "reflector_enabled",
     "termination_enabled",
+    "sag_m",
     "loading_coil_enabled",
     "loading_coil_resistance_ohm",
     "link_open",

@@ -116,6 +116,16 @@ def design_summary_rows(
                 ),
             ]
         )
+        if parameters.sag_m > 0.0:
+            rows.extend(
+                [
+                    ("Sag", f"{parameters.sag_m:.4f} m"),
+                    (
+                        "Conductor length",
+                        f"{parameters.conductor_length_m:.4f} m",
+                    ),
+                ]
+            )
     elif isinstance(parameters, TrapDipoleParameters):
         height_label = (
             "Base height" if parameters.orientation is DipoleOrientation.VERTICAL else "Wire height"

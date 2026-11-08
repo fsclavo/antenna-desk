@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added optional **wire sag** to horizontal wire dipoles: a sampled parabolic
+  path replaces the straight span, the feed stays at the center segment, and
+  the scene, reports, and construction sheet show the sag and the longer
+  conductor path. The option persists in schema 22. Other families remain
+  straight; tapered Yagi elements and boom correction are still pending.
 - Added a first-class **Loaded / linked dipole**: a center-fed dipole with
   symmetric series R-L loading coils or open links that leave only the center
   section active. It includes schema-21 persistence, catalog route, inline

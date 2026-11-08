@@ -218,6 +218,7 @@ class DipoleParametersPayload(StrictModel):
     orientation: DipoleOrientation = DipoleOrientation.HORIZONTAL
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
+    sag_m: float = Field(default=0.0, ge=0.0)
     material: MaterialPayload
     ground: GroundPayload
 
@@ -1076,6 +1077,7 @@ def _dipole_parameters_from_domain(value: DipoleParameters) -> DipoleParametersP
         orientation=value.orientation,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
+        sag_m=value.sag_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
     )
@@ -1965,6 +1967,7 @@ def _dipole_parameters_to_domain(value: DipoleParametersPayload) -> DipoleParame
         orientation=value.orientation,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
+        sag_m=value.sag_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),
     )

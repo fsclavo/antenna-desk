@@ -29,6 +29,50 @@ def test_dipole_generates_centered_wire(dipole_parameters: DipoleParameters) -> 
     assert antenna.feed.offset_m == pytest.approx(10.0)
 
 
+def test_sagged_dipole_samples_a_parabolic_path() -> None:
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        sag_m=1.5,
+    )
+    antenna = parameters.to_antenna()
+
+    assert len(antenna.wires) == 9
+    assert antenna.wires[0].start.z_m == pytest.approx(8.0)
+    assert antenna.wires[-1].end.z_m == pytest.approx(8.0)
+    assert min(
+        point.z_m for wire in antenna.wires for point in (wire.start, wire.end)
+    ) == pytest.approx(6.5185, abs=1e-3)
+    assert antenna.feed.wire_id == "dipole-sag-4"
+    assert antenna.feed.offset_m == pytest.approx(antenna.wires[4].length_m / 2.0)
+    feed_wire = antenna.feed_wire
+    assert feed_wire is not None
+    assert feed_wire.start.z_m == pytest.approx(6.5185, abs=1e-3)
+    assert parameters.conductor_length_m > parameters.total_length_m
+
+
+def test_sag_is_rejected_for_a_vertical_dipole() -> None:
+    with pytest.raises(ValueError, match="horizontal"):
+        DipoleParameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=20.0,
+            height_m=2.0,
+            orientation=DipoleOrientation.VERTICAL,
+            sag_m=0.5,
+        )
+
+
+def test_sag_must_be_smaller_than_the_wire_height() -> None:
+    with pytest.raises(ValueError, match="smaller than"):
+        DipoleParameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=20.0,
+            height_m=1.0,
+            sag_m=1.0,
+        )
+
+
 @pytest.mark.parametrize(
     "orientation",
     [DipoleOrientation.HORIZONTAL, DipoleOrientation.VERTICAL],

@@ -236,7 +236,7 @@ gain, nulls, or impedance.
 <!-- evidence-table:start -->
 | Template | Level | Source | Tolerance | Limitation |
 |---|---|---|---|---|
-| `wire_dipole` | A | NEC-2 User's Guide examples 1 and 3; ARRL Antenna Book, 24th ed., Ch. 2, p. 2.12 | 0.05 Ω impedance; 0.15 dB gain | Free-space and the published ground cases only. |
+| `wire_dipole` | A | NEC-2 User's Guide examples 1 and 3; ARRL Antenna Book, 24th ed., Ch. 2, p. 2.12 | 0.05 Ω impedance; 0.15 dB gain | Free-space and the published ground cases only. Optional wire sag uses a nine-segment parabolic approximation and is not part of the published reference comparison. |
 | `folded_dipole` | B | ARRL Antenna Book, 24th ed., Ch. 2, pp. 2.12-2.13: an equal-conductor folded dipole has the same gain and four times the resistance | 0.2 dB gain; 0.5 on the resistance ratio | No independent absolute impedance reference. |
 | `loop` | B | ARRL Antenna Book, 24th ed., Ch. 5, p. 5.4, for the quad case; the polygon correction is a calibrated starting rule | 15 Ω for the quad preset only | Delta and arbitrary polygon side counts are structural. |
 | `quad_loop` | A | ARRL Antenna Book, 24th ed., Ch. 5, p. 5.4: about 120 Ω at resonance | 15 Ω | Published quad geometry only. |
@@ -584,8 +584,10 @@ and require `NEC2C`.
   ZS6BKW, Zepp, biquad, double biquad, Beverage, and loaded/linked dipole.
   Magnetic loops, random wires, and custom/imported geometry are explicitly
   unavailable. Band-aware and robust modes evaluate multiple operating points,
-  the Pareto front is descriptive, and summaries persist in schema 21. There
-  are no boom-length or turning-radius constraints.
+  the Pareto front is descriptive, and summaries persist in schema 22. There
+  are no boom-length or turning-radius constraints. Horizontal wire dipoles
+  support an optional sampled sag; tapered Yagi elements and boom correction
+  remain pending.
 - Pattern resolution changes angular sampling only; it does not change NEC
   segment density or solver accuracy.
 - Feed-line results are post-processed at the transmitter. The line does not

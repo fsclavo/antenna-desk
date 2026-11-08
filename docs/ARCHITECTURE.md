@@ -181,7 +181,7 @@ The second slice adds two multi-wire templates:
 `AntennaDesignParameters` is the union of the supported parameter types.
 `DesignVariant` stores the union and validates that `antenna_type` matches the
 parameters. The canonical model remains the shared `AntennaModel`, so the
-solver adapter does not need geometry-specific branches. Schema version 21 is
+solver adapter does not need geometry-specific branches. Schema version 22 is
 current: parameter payloads are additive, and old `wire_dipole` documents are
 unchanged. A design may also store an optional analysis band plan; it is
 intent metadata and never changes the canonical geometry. Series RLC loads are
@@ -248,9 +248,10 @@ narrower than the conductor diameter, version 16 adds half-square and
 bobtail-curtain designs, version 17 adds typed G5RV/ZS6BKW/Zepp designs,
 version 18 adds optional optimization summaries, version 19 adds biquad and
 double-biquad designs, version 20 adds the Beverage receiving wire, version 21
-adds the loaded/linked dipole, and older documents are migrated explicitly.
+adds the loaded/linked dipole, version 22 adds optional horizontal-dipole wire
+sag, and older documents are migrated explicitly.
 
-Simulation runs are persisted in schema version 21. Raw solver text is stored
+Simulation runs are persisted in schema version 22. Raw solver text is stored
 with the normalized result. Project files are compact JSON compressed with
 gzip; plain JSON files from older versions still load. The UI warns at 32 MB
 compressed, blocks files above the 64 MB compressed limit, and offers
@@ -276,9 +277,10 @@ prerequisite for the user workflow.
 - Measurement import is CSV-based. There is no live VNA or instrument-control
   adapter.
 - Series and parallel RLC loads are supported on one wire segment. L/Pi/T
-  matching networks are post-processed at the feedpoint. General
-  transmission-line geometry is modeled as NEC `TL` two-ports between wire
-  points; physical parallel-line coupling is not modeled.
+  matching networks are post-processed at the feedpoint. Horizontal wire
+  dipoles support an optional sampled parabolic sag; other wire families remain
+  straight. General transmission-line geometry is modeled as NEC `TL` two-ports
+  between wire points; physical parallel-line coupling is not modeled.
 - Far-field results are NEC power gains. Directivity and realized gain are
   derived per frequency; the pattern charts still show power gain. See
   [ADR-0015](ADR/0015-realized-gain-and-directivity.md).

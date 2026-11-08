@@ -43,7 +43,11 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         level=EvidenceLevel.REFERENCE,
         source=("NEC-2 User's Guide examples 1 and 3; ARRL Antenna Book, 24th ed., Ch. 2, p. 2.12"),
         tolerance="0.05 Ω impedance; 0.15 dB gain",
-        limitation="Free-space and the published ground cases only.",
+        limitation=(
+            "Free-space and the published ground cases only. Optional wire sag "
+            "uses a nine-segment parabolic approximation and is not part of the "
+            "published reference comparison."
+        ),
     ),
     "folded_dipole": EvidenceEntry(
         template="folded_dipole",

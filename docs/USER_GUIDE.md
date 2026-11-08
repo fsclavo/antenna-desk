@@ -65,6 +65,10 @@ The basic templates are:
 
 - **Wire dipole**: one straight wire; choose horizontal or vertical. For a
   vertical dipole the height is the base height and the azimuth is disabled.
+  A horizontal dipole can also set a **Wire sag**: the span is replaced by a
+  sampled parabolic path, the feed moves to the center segment, and the report
+  adds the sag and conductor length. Sag is a geometry setting and is not
+  optimized.
 - **Folded dipole**: two parallel elements and two end connectors; set the
   element length and spacing.
 - **Loop**: a regular polygon in a vertical or horizontal plane; set the

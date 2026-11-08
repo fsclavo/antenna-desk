@@ -78,6 +78,19 @@ def _cases() -> tuple[FamilyCase, ...]:
             ("Wire dipole", "length 20.00 m"),
         ),
         FamilyCase(
+            "dipole_sag",
+            DipoleParameters(
+                frequency_hz=7_100_000.0,
+                total_length_m=20.0,
+                height_m=8.0,
+                sag_m=1.5,
+            ),
+            "wire_dipole",
+            9,
+            GeometryViewMode.ELEVATION,
+            ("Wire dipole", "sag", "Sagged wire"),
+        ),
+        FamilyCase(
             "trap_dipole",
             TrapDipoleParameters(
                 frequency_hz=7_100_000.0,

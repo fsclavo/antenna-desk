@@ -316,6 +316,27 @@ def test_typed_transmission_line_doublet_construction_sheet(
     assert "band_aware" in sheet
 
 
+def test_sagged_dipole_construction_sheet_reports_the_sag(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.dipole import DipoleParameters
+
+    design = sample_project.designs[0]
+    sagged = design.with_parameters(
+        DipoleParameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=20.0,
+            height_m=8.0,
+            sag_m=1.2,
+        )
+    )
+    sheet = render_construction_sheet(sample_project, sagged, None)
+
+    assert "Center sag" in sheet
+    assert "1.2000 m" in sheet
+    assert "let the center sag" in sheet
+
+
 def test_loaded_dipole_construction_sheet_lists_the_coils(
     sample_project: Project,
 ) -> None:

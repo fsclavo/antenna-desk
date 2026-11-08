@@ -260,7 +260,7 @@ point; `C` is structural/experimental only.
 | 11 | Biquad / double biquad | New family | M | Medium | B/A | **Implemented on 2026-11-07:** two- or four-loop stack with shared rails, optional wire reflector, quarter-wave starting dimensions, inline editor, schema 19, scene contract, reports, and family optimizer. Evidence remains C until an independent design is available. |
 | 12 | Beverage | New family | M | Medium | B/A | **Implemented on 2026-11-07:** long receiving wire with optional resistive termination, one-wavelength starting length, inline editor, schema 20, scene contract, reports, construction notes, and family optimizer. Evidence remains C pending a measurement. |
 | 13 | Loaded / linked dipole | New family or `dipole` variant | M | Medium | B/C | **Implemented on 2026-11-07:** center-fed loaded dipole with symmetric series R-L coils or open links, schema 21, inline editor, scene contract, reports, construction notes, and family optimizer. Coil core loss, self-capacitance, and link contact resistance remain limitations. |
-| 14 | Wire sag / tapered elements / boom correction | Geometry model | M | Medium | B/C | Realism for Yagi and wire antennas; touches geometry and solver inputs. |
+| 14 | Wire sag / tapered elements / boom correction | Geometry model | M | Medium | B/C | **Partially implemented 2026-11-07:** optional sampled parabolic sag on horizontal wire dipoles, with scene/report/conductor-length support and schema 22. Tapered Yagi elements and boom correction remain pending. |
 | 15 | Phased verticals / arrays | Architectural | XL | High | B/A | Requires multiple sources, phase, and feed networks; not a simple family. |
 | 16 | Quad beam / hexbeam | New family | L | Medium–high | B/A | Multi-element loop geometry; feed and scene complexity. |
 | 17 | Log-periodic | New family | L | Medium | A/B | Many elements and a feed network; high test burden. |
@@ -268,7 +268,7 @@ point; `C` is structural/experimental only.
 | 19 | Trapped / multiband Yagi | New family | L | High | B/C | Traps and multiple elements; difficult independent validation. |
 
 Items 1–7 were the immediate recommended sequence; items 8–14 are the next
-medium-sized candidates, with 8–13 now done. Items 15–19 are large or
+medium-sized candidates, with 8–13 done and 14 partially done. Items 15–19 are large or
 architectural and should not start until the single-feed families and the shared
 geometry/load model are stable.
 

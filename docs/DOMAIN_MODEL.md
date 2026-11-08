@@ -95,12 +95,19 @@ User-facing parameters for a center-fed wire dipole:
 - `wire_radius_m`
 - `material`
 - `ground`
+- `sag_m` (optional, horizontal only)
 
 `to_antenna()` generates the canonical model. For a horizontal dipole the wire
 runs from `(-L/2 cos A, -L/2 sin A, H)` to `(L/2 cos A, L/2 sin A, H)`, where
 `L` is the total length, `A` the azimuth, and `H` the wire height. For a
 vertical dipole the wire runs from `(0, 0, H)` to `(0, 0, H + L)`, where `H` is
 the base height; the azimuth is ignored. The feed is always at the center.
+
+When `sag_m > 0`, the horizontal span is replaced by nine straight segments
+following a parabola from the supports to the center; the middle segment
+contains the feed. `conductor_length_m` reports the longer physical path. Sag
+is an installation/geometry setting, not an optimizer variable, and is rejected
+for vertical dipoles.
 
 ### FoldedDipoleParameters
 
@@ -498,11 +505,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 21.
+the application writes version 22.
 
 ## Schema policy
 
-- Current version: `21`.
+- Current version: `22`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -550,6 +557,8 @@ the application writes version 21.
   unchanged.
 - Version 21 introduces the loaded/linked dipole parameter payload. Existing
   designs are unchanged.
+- Version 22 adds the optional `sag_m` field to the dipole payload; old
+  documents load with zero sag.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -582,7 +591,7 @@ the application writes version 21.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 21.
+- Simulation results are persisted as immutable runs in schema version 22.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are

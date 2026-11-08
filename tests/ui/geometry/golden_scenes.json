@@ -11,6 +11,8 @@
   "delta:plan": "3ec1d9ad0966b7486bccf420d314db2f8bfa8dee2bae5a14bc961ea60c2e3d82",
   "dipole:elevation": "2242f5744b0a603002763beb8f2202ab8cd319bba502673536885109365c844a",
   "dipole:plan": "5d1de829b6c78c6857790e6598fa08d7fc61609f05e089bca00ca35e7072c935",
+  "dipole_sag:elevation": "2b42457fd64fae6992c3b22a4497ebcb42fb1150b318d0da845e14bdac27b4e4",
+  "dipole_sag:plan": "144f19157c5b09a588c00864bc86da092350e55d9ad9a1ea62bc17dfe2be615a",
   "double_biquad:elevation": "ceb8a5b8756277cae8c2d75ac1439a2d69709eb386399f3e49b51d001aef676d",
   "double_biquad:plan": "f22ab97c35ab169140946f3743b3ccb57c62dc523da01d187575e45b9af3c6f0",
   "endfed:elevation": "26a55dc1c64049992894a6a352e73cfc59fa2bf5dd4b53161d6c7651fbdce6e1",

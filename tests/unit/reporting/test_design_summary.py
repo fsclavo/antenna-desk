@@ -38,6 +38,21 @@ def test_beverage_summary_reports_length_and_termination() -> None:
     assert rows["Feed"] == "near end"
 
 
+def test_sagged_dipole_summary_reports_sag_and_conductor_length() -> None:
+    from antennadesk.domain.antennas.dipole import DipoleParameters
+
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        sag_m=1.2,
+    )
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Sag"] == "1.2000 m"
+    assert float(rows["Conductor length"].removesuffix(" m")) > 20.0
+
+
 def test_loaded_dipole_summary_reports_links_and_coils() -> None:
     from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
 

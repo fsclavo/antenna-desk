@@ -18,7 +18,11 @@ from ...domain.antennas.biquad import (
     BiquadParameters,
 )
 from ...domain.antennas.custom import ANTENNA_TYPE_CUSTOM, CustomAntennaParameters
-from ...domain.antennas.dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
+from ...domain.antennas.dipole import (
+    ANTENNA_TYPE_WIRE_DIPOLE,
+    SAG_SEGMENTS,
+    DipoleParameters,
+)
 from ...domain.antennas.endfed import ANTENNA_TYPE_ENDFED, EndFedParameters
 from ...domain.antennas.fan_dipole import (
     ANTENNA_TYPE_FAN_DIPOLE,
@@ -2559,14 +2563,28 @@ def _summary(
             ]
         )
     elif isinstance(parameters, DipoleParameters):
+        height_value = (
+            parameters.height_m if parameters.orientation.value == "horizontal" else max_z
+        )
         parts.extend(
             [
                 f"{translator.t('field.length').lower()} "
                 f"{_format_length(parameters.total_length_m, translator, unit_system)}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(max_z, translator, unit_system)}",
+                f"{_format_length(height_value, translator, unit_system)}",
             ]
         )
+        if parameters.sag_m > 0.0:
+            parts.append(
+                f"{translator.t('field.sag').lower()} "
+                f"{_format_length(parameters.sag_m, translator, unit_system)}"
+            )
+            notes.append(
+                translator.t(
+                    "geometry.sag_note",
+                    segments=SAG_SEGMENTS,
+                )
+            )
     else:
         parts.extend(
             [

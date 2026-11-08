@@ -195,8 +195,12 @@ The ordered antenna backlog lives in
     coils or open links, schema-21 persistence, inline editor, scene contract,
     reports, construction notes, and a family optimizer. Coil core loss,
     self-capacitance, and link contact resistance remain limitations.
+14. **Partially completed 2026-11-07:** optional sampled parabolic sag on
+    horizontal wire dipoles, with schema-22 persistence, scene/report support,
+    conductor-length reporting, and NEC coverage. Tapered Yagi elements and
+    boom correction remain pending.
 
-The remaining medium and large candidates are ordered after those thirteen in
+The remaining medium and large candidates are ordered after those fourteen in
 the roadmap table. Items 15–19 require architectural work or a much larger test
 surface and should wait until the single-feed families are stable.
 

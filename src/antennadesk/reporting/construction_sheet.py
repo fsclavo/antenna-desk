@@ -128,14 +128,29 @@ def render_construction_sheet(
         )
     )
     if isinstance(parameters, DipoleParameters):
-        other_leg_m = max(feed_wire.length_m - feed_offset_m, 0.0)
-        feed_rows = f"""
+        if parameters.sag_m > 0.0:
+            feed_rows = f"""
+<tr><th>Span</th><td>{parameters.total_length_m:.4f} m</td></tr>
+<tr><th>Conductor length</th><td>{parameters.conductor_length_m:.4f} m</td></tr>
+<tr><th>Wire height at supports</th><td>{parameters.height_m:.4f} m</td></tr>
+<tr><th>Center sag</th><td>{parameters.sag_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+            construction_note = f"""<p>Cut one conductor to
+{parameters.conductor_length_m:.4f} m. Support the ends at
+{parameters.height_m:.4f} m and let the center sag by
+{parameters.sag_m:.4f} m; the feed is at the lowest point,
+{feed_height_m:.4f} m above ground. The sagged shape is approximated by
+straight NEC segments between the sampled points.</p>"""
+        else:
+            other_leg_m = max(feed_wire.length_m - feed_offset_m, 0.0)
+            feed_rows = f"""
 <tr><th>First leg (from wire start)</th><td>{feed_offset_m:.4f} m</td></tr>
 <tr><th>Second leg (from feed)</th><td>{other_leg_m:.4f} m</td></tr>
 <tr><th>Wire height at start</th><td>{feed_wire.start.z_m:.4f} m</td></tr>
 <tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
 """
-        construction_note = f"""<p>Cut the two legs to the dimensions above, leaving a small feed gap at the
+            construction_note = f"""<p>Cut the two legs to the dimensions above, leaving a small feed gap at the
 center. The feed point is {feed_offset_m:.4f} m from the start of the wire
 and {other_leg_m:.4f} m from the end.</p>"""
     elif isinstance(parameters, TrapDipoleParameters):

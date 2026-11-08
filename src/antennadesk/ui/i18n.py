@@ -1182,6 +1182,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "wizard.name_loop": {Language.ENGLISH: "loop", Language.SPANISH: "lazo"},
     "field.height": {Language.ENGLISH: "Height", Language.SPANISH: "Altura"},
+    "field.sag": {
+        Language.ENGLISH: "Wire sag",
+        Language.SPANISH: "Flecha del hilo",
+    },
+    "geometry.sag_note": {
+        Language.ENGLISH: "Sagged wire: {segments} straight segments.",
+        Language.SPANISH: "Hilo con flecha: {segments} tramos rectos.",
+    },
     "field.base_height": {Language.ENGLISH: "Base height", Language.SPANISH: "Altura de base"},
     "field.orientation": {Language.ENGLISH: "Orientation", Language.SPANISH: "Orientación"},
     "field.polarization": {

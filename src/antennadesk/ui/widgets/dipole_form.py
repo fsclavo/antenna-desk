@@ -101,6 +101,7 @@ class DipoleForm(QWidget):
         self._sides.setRange(3, 128)
         self._sides.setValue(16)
         self._height = QDoubleSpinBox(self)
+        self._sag = QDoubleSpinBox(self)
         self._azimuth = QDoubleSpinBox(self)
         self._azimuth.setRange(0.0, 360.0)
         self._azimuth.setDecimals(1)
@@ -167,6 +168,7 @@ class DipoleForm(QWidget):
         form.addRow(self._label("field.spacing"), self._spacing)
         form.addRow(self._label("field.sides"), self._sides)
         form.addRow(self._label("field.height"), self._height)
+        form.addRow(self._label("field.sag"), self._sag)
         form.addRow(self._label("field.azimuth"), self._azimuth)
         form.addRow(self._label("field.diameter"), self._diameter)
         form.addRow(self._label("field.material"), self._material)
@@ -203,6 +205,7 @@ class DipoleForm(QWidget):
             self._length,
             self._spacing,
             self._height,
+            self._sag,
             self._azimuth,
             self._diameter,
             self._permittivity,
@@ -279,11 +282,18 @@ class DipoleForm(QWidget):
         height_m: float | None = None,
         diameter_m: float | None = None,
         spacing_m: float | None = None,
+        sag_m: float | None = None,
     ) -> None:
         previous_updating = self._updating
         self._updating = True
         try:
-            self._apply_unit_system_values(length_m, height_m, diameter_m, spacing_m)
+            self._apply_unit_system_values(
+                length_m,
+                height_m,
+                diameter_m,
+                spacing_m,
+                sag_m,
+            )
         finally:
             self._updating = previous_updating
 
@@ -293,6 +303,7 @@ class DipoleForm(QWidget):
         height_m: float | None = None,
         diameter_m: float | None = None,
         spacing_m: float | None = None,
+        sag_m: float | None = None,
     ) -> None:
         length_min, length_max = length_bounds(self._unit_system)
         height_min, height_max = height_bounds(self._unit_system)
@@ -302,23 +313,28 @@ class DipoleForm(QWidget):
         current_height_m = height_m if height_m is not None else self._height_to_m_current()
         current_diameter_m = diameter_m if diameter_m is not None else self._diameter_to_m_current()
         current_spacing_m = spacing_m if spacing_m is not None else self._spacing_to_m_current()
+        current_sag_m = sag_m if sag_m is not None else self._sag_to_m_current()
 
         self._length.setRange(length_min, length_max)
         self._spacing.setRange(length_min, length_max)
         self._height.setRange(height_min, height_max)
+        self._sag.setRange(0.0, height_max)
         self._diameter.setRange(diameter_min, diameter_max)
         self._length.setDecimals(3)
         self._spacing.setDecimals(3)
         self._height.setDecimals(3)
+        self._sag.setDecimals(3)
         self._diameter.setDecimals(3 if self._unit_system is UnitSystem.METRIC else 4)
         self._length.setSuffix(f" {self._translator.t(length_unit_key(self._unit_system))}")
         self._spacing.setSuffix(f" {self._translator.t(length_unit_key(self._unit_system))}")
         self._height.setSuffix(f" {self._translator.t(length_unit_key(self._unit_system))}")
+        self._sag.setSuffix(f" {self._translator.t(length_unit_key(self._unit_system))}")
         self._diameter.setSuffix(f" {self._translator.t(diameter_unit_key(self._unit_system))}")
 
         self._length.setValue(length_from_m(current_length_m, self._unit_system))
         self._spacing.setValue(length_from_m(current_spacing_m, self._unit_system))
         self._height.setValue(length_from_m(current_height_m, self._unit_system))
+        self._sag.setValue(length_from_m(current_sag_m, self._unit_system))
         self._diameter.setValue(diameter_from_m(current_diameter_m, self._unit_system))
 
     def _length_to_m_current(self) -> float:
@@ -330,6 +346,9 @@ class DipoleForm(QWidget):
     def _height_to_m_current(self) -> float:
         return length_to_m(self._height.value(), self._unit_system)
 
+    def _sag_to_m_current(self) -> float:
+        return length_to_m(self._sag.value(), self._unit_system)
+
     def _diameter_to_m_current(self) -> float:
         return diameter_to_m(self._diameter.value(), self._unit_system)
 
@@ -340,8 +359,9 @@ class DipoleForm(QWidget):
         height_m = self._height_to_m_current()
         diameter_m = self._diameter_to_m_current()
         spacing_m = self._spacing_to_m_current()
+        sag_m = self._sag_to_m_current()
         self._unit_system = unit_system
-        self._apply_unit_system(length_m, height_m, diameter_m, spacing_m)
+        self._apply_unit_system(length_m, height_m, diameter_m, spacing_m, sag_m)
 
     def set_parameters(
         self,
@@ -386,6 +406,12 @@ class DipoleForm(QWidget):
         self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
         self._length.setValue(length_from_m(length_m, self._unit_system))
         self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
+        self._sag.setValue(
+            length_from_m(
+                parameters.sag_m if isinstance(parameters, DipoleParameters) else 0.0,
+                self._unit_system,
+            )
+        )
         self._azimuth.setValue(parameters.azimuth_deg)
         self._diameter.setValue(diameter_from_m(parameters.wire_radius_m * 2.0, self._unit_system))
 
@@ -461,6 +487,12 @@ class DipoleForm(QWidget):
                 circumference_m=length_m,
                 sides=self._sides.value(),
             )
+        orientation = DipoleOrientation(self._orientation.currentData())
+        sag_m = (
+            0.0
+            if orientation is DipoleOrientation.VERTICAL
+            else length_to_m(self._sag.value(), self._unit_system)
+        )
         return DipoleParameters(
             frequency_hz=frequency_hz,
             height_m=height_m,
@@ -469,7 +501,8 @@ class DipoleForm(QWidget):
             material=material,
             ground=ground,
             total_length_m=length_m,
-            orientation=DipoleOrientation(self._orientation.currentData()),
+            orientation=orientation,
+            sag_m=sag_m,
         )
 
     def antenna_type(self) -> str:
@@ -540,6 +573,7 @@ class DipoleForm(QWidget):
         self._set_row_visible(self._orientation, is_dipole or is_loop)
         self._set_row_visible(self._spacing, is_folded)
         self._set_row_visible(self._sides, is_loop)
+        self._set_row_visible(self._sag, is_dipole)
         self._family_value.setText(
             self._translator.t("family.loop" if is_loop else "family.dipole")
         )
@@ -568,6 +602,7 @@ class DipoleForm(QWidget):
             LoopOrientation.VERTICAL.value,
         } and (is_dipole or is_loop)
         self._azimuth.setEnabled(not (is_dipole and vertical))
+        self._sag.setEnabled(is_dipole and not vertical)
         labels = self._labels()
         height_label = labels.get("field.height")
         if height_label is not None:
