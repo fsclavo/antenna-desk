@@ -256,7 +256,7 @@ def test_import_vna_csv_adds_a_measurement(
     assert window._project.measurements[0].calibration == "SOL"
     assert window._project.measurements[0].reference_plane == "antenna terminals"
     assert window._tabs_select_measurements() is None
-    assert window._results._tabs.currentIndex() == 3
+    assert window._results._tabs.currentWidget() is window._results._measurements_tab
     assert window._dirty is True
     window._undo_stack.undo()
     assert len(window._project.measurements) == 0

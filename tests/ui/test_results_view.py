@@ -18,6 +18,7 @@ from antennadesk.domain.simulation.result import (
     FrequencyResult,
     SimulationResult,
     SimulationStatus,
+    SourceResult,
 )
 from antennadesk.domain.simulation.solver import SolverMetadata
 from antennadesk.domain.simulation.spec import SimulationSpec
@@ -55,7 +56,7 @@ def test_results_view_shows_currents_and_resonance(qtbot: QtBot) -> None:
 
     view.set_result(_make_result())
 
-    assert view._tabs.count() == 6
+    assert view._tabs.count() == 7
     assert view._table.rowCount() == 3
     assert view._currents_frequency.count() == 3
     assert len(view._currents_plot.listDataItems()) >= 1
@@ -69,6 +70,50 @@ def test_results_view_shows_currents_and_resonance(qtbot: QtBot) -> None:
     view._currents_cursor.show_at_x(2.0)
     assert "segment 2" in view._currents_cursor._label.text()
     assert "0.2000 A" in view._currents_cursor._label.text()
+
+
+def test_results_view_shows_per_source_results(qtbot: QtBot) -> None:
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    result = _make_result()
+    sources = (
+        SourceResult(
+            wire_id="first",
+            offset_m=0.0,
+            tag=1,
+            segment=2,
+            amplitude=1.0,
+            phase_deg=0.0,
+            voltage_v=complex(1.0, 0.0),
+            current_a=complex(0.01, -0.02),
+            impedance_ohm=complex(70.0, -10.0),
+            power_w=0.001,
+        ),
+        SourceResult(
+            wire_id="second",
+            offset_m=0.0,
+            tag=2,
+            segment=4,
+            amplitude=0.5,
+            phase_deg=90.0,
+            voltage_v=complex(0.0, 0.5),
+            current_a=complex(0.005, 0.001),
+            impedance_ohm=complex(40.0, 20.0),
+            power_w=-0.0002,
+        ),
+    )
+    frequencies = tuple(
+        replace(frequency, source_results=sources) for frequency in result.frequencies
+    )
+    view.set_result(replace(result, frequencies=frequencies))
+
+    index = view._tabs.indexOf(view._sources_tab)
+    assert index >= 0
+    assert view._tabs.isTabVisible(index) is True
+    assert view._sources_table.rowCount() == 6
+    assert view._sources_table.item(0, 1).text() == "S1"
+    assert view._sources_table.item(1, 1).text() == "S2"
+    assert view._sources_table.item(1, 7).text() == "-0.000200"
 
 
 def test_results_view_reports_negative_resistance_instead_of_an_empty_pattern(
@@ -503,7 +548,7 @@ def test_results_view_shows_imported_measurements(qtbot: QtBot) -> None:
 
     view.set_measurements((measurement,))
 
-    assert view._tabs.count() == 6
+    assert view._tabs.count() == 7
     assert view._measurement_selector.count() == 1
     assert view._measurement_table.rowCount() == 2
     assert view._measurement_plot.listDataItems()
@@ -581,7 +626,7 @@ def test_results_view_adds_a_band_summary_tab(qtbot: QtBot) -> None:
 
     view.set_band_analysis(analysis)
 
-    assert view._tabs.count() == 7
+    assert view._tabs.count() == 8
     assert view._tabs.indexOf(view._bands_tab) == 0
     assert view._bands_tab_index == 0
     assert view._bands_table.rowCount() == 2
@@ -617,7 +662,7 @@ def test_results_view_adds_a_band_summary_tab(qtbot: QtBot) -> None:
     assert view._tabs.currentWidget() is view._bands_tab
 
     view.set_band_analysis(None)
-    assert view._tabs.count() == 6
+    assert view._tabs.count() == 7
     assert view._bands_tab_index == -1
     assert view._tabs.currentWidget() is view._impedance_tab
     assert view._band_bar.isHidden()

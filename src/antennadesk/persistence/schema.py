@@ -128,6 +128,7 @@ from ..domain.simulation.result import (
     PowerBudget,
     SimulationResult,
     SimulationStatus,
+    SourceResult,
 )
 from ..domain.simulation.run import SimulationRun
 from ..domain.simulation.segmentation import SegmentationPolicy
@@ -738,6 +739,22 @@ class FarFieldPointPayload(StrictModel):
     e_phi_phase_deg: float | None = None
 
 
+class SourceResultPayload(StrictModel):
+    wire_id: str = Field(min_length=1)
+    offset_m: float = Field(ge=0.0)
+    tag: int = Field(ge=1)
+    segment: int = Field(ge=1)
+    amplitude: float = Field(gt=0.0)
+    phase_deg: float
+    voltage_real_v: float
+    voltage_imag_v: float
+    current_real_a: float
+    current_imag_a: float
+    impedance_real_ohm: float
+    impedance_imag_ohm: float
+    power_w: float
+
+
 class FrequencyResultPayload(StrictModel):
     frequency_hz: float = Field(gt=0.0)
     feed_tag: int
@@ -748,6 +765,7 @@ class FrequencyResultPayload(StrictModel):
     input_power_w: float
     currents: list[CurrentSamplePayload] = Field(default_factory=list)
     far_field: list[FarFieldPointPayload] = Field(default_factory=list)
+    source_results: list[SourceResultPayload] = Field(default_factory=list)
     power_budget: PowerBudgetPayload | None = None
     directivity_db: float | None = None
     realized_gain_db: float | None = None
@@ -1882,6 +1900,39 @@ def _far_field_point_from_domain(value: FarFieldPoint) -> FarFieldPointPayload:
     )
 
 
+def _source_result_from_domain(value: SourceResult) -> SourceResultPayload:
+    return SourceResultPayload(
+        wire_id=value.wire_id,
+        offset_m=value.offset_m,
+        tag=value.tag,
+        segment=value.segment,
+        amplitude=value.amplitude,
+        phase_deg=value.phase_deg,
+        voltage_real_v=value.voltage_v.real,
+        voltage_imag_v=value.voltage_v.imag,
+        current_real_a=value.current_a.real,
+        current_imag_a=value.current_a.imag,
+        impedance_real_ohm=value.impedance_ohm.real,
+        impedance_imag_ohm=value.impedance_ohm.imag,
+        power_w=value.power_w,
+    )
+
+
+def _source_result_to_domain(value: SourceResultPayload) -> SourceResult:
+    return SourceResult(
+        wire_id=value.wire_id,
+        offset_m=value.offset_m,
+        tag=value.tag,
+        segment=value.segment,
+        amplitude=value.amplitude,
+        phase_deg=value.phase_deg,
+        voltage_v=complex(value.voltage_real_v, value.voltage_imag_v),
+        current_a=complex(value.current_real_a, value.current_imag_a),
+        impedance_ohm=complex(value.impedance_real_ohm, value.impedance_imag_ohm),
+        power_w=value.power_w,
+    )
+
+
 def _frequency_result_from_domain(value: FrequencyResult) -> FrequencyResultPayload:
     return FrequencyResultPayload(
         frequency_hz=value.frequency_hz,
@@ -1893,6 +1944,7 @@ def _frequency_result_from_domain(value: FrequencyResult) -> FrequencyResultPayl
         input_power_w=value.input_power_w,
         currents=[_current_from_domain(current) for current in value.currents],
         far_field=[_far_field_point_from_domain(point) for point in value.far_field],
+        source_results=[_source_result_from_domain(source) for source in value.source_results],
         power_budget=(
             _power_budget_from_domain(value.power_budget)
             if value.power_budget is not None
@@ -2940,6 +2992,7 @@ def _frequency_result_to_domain(value: FrequencyResultPayload) -> FrequencyResul
         input_power_w=value.input_power_w,
         currents=tuple(_current_to_domain(current) for current in value.currents),
         far_field=tuple(_far_field_point_to_domain(point) for point in value.far_field),
+        source_results=tuple(_source_result_to_domain(source) for source in value.source_results),
         power_budget=(
             _power_budget_to_domain(value.power_budget) if value.power_budget is not None else None
         ),

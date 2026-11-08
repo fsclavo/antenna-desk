@@ -18,6 +18,7 @@ from ...domain.simulation.result import (
     PowerBudget,
     SimulationResult,
     SimulationStatus,
+    SourceResult,
 )
 from ...domain.simulation.solver import SolverMetadata
 from ...domain.simulation.spec import SimulationSpec
@@ -189,6 +190,32 @@ def normalize_nec2_result(
             )
             for current in parsed_frequency.currents
         )
+        source_results: list[SourceResult] = []
+        for feed in deck.layout.feeds:
+            parsed_source = next(
+                (
+                    candidate
+                    for candidate in parsed_frequency.input_parameters
+                    if candidate.tag == feed.tag and candidate.segment == feed.segment
+                ),
+                None,
+            )
+            if parsed_source is None:
+                continue
+            source_results.append(
+                SourceResult(
+                    wire_id=feed.wire_id,
+                    offset_m=feed.offset_m,
+                    tag=feed.tag,
+                    segment=feed.segment,
+                    amplitude=feed.amplitude,
+                    phase_deg=feed.phase_deg,
+                    voltage_v=parsed_source.voltage_v,
+                    current_a=parsed_source.current_a,
+                    impedance_ohm=parsed_source.impedance_ohm,
+                    power_w=parsed_source.power_w,
+                )
+            )
         if pattern_by_main_index:
             pattern_points = pattern_by_main_index.get(parsed_index, ())
         else:
@@ -234,6 +261,7 @@ def normalize_nec2_result(
                 input_power_w=input_parameters.power_w,
                 currents=currents,
                 far_field=far_field,
+                source_results=tuple(source_results),
                 power_budget=power_budget,
                 directivity_db=directivity_db,
                 realized_gain_db=realized_gain_db,

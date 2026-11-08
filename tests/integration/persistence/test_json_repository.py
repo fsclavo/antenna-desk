@@ -418,6 +418,7 @@ def _rich_result() -> SimulationResult:
         FrequencyResult,
         PowerBudget,
         SimulationStatus,
+        SourceResult,
     )
     from antennadesk.domain.simulation.segmentation import SegmentationPolicy
     from antennadesk.domain.simulation.solver import SolverMetadata
@@ -473,6 +474,20 @@ def _rich_result() -> SimulationResult:
             input_power_w=0.001,
             currents=(current,),
             far_field=(far_field,),
+            source_results=(
+                SourceResult(
+                    wire_id="radiator",
+                    offset_m=10.0,
+                    tag=1,
+                    segment=11,
+                    amplitude=1.0,
+                    phase_deg=0.0,
+                    voltage_v=complex(1.0, 0.0),
+                    current_a=complex(0.1, -0.05),
+                    impedance_ohm=complex(60.0, -10.0),
+                    power_w=0.001,
+                ),
+            ),
             power_budget=PowerBudget(0.001, 0.0009, 0.0001, 0.0, 90.0),
             directivity_db=2.20,
             realized_gain_db=1.85,
@@ -548,6 +563,9 @@ def test_round_trip_with_a_simulation_run(
     assert run.result.frequencies[0].feed_line_loss_db == pytest.approx(0.45)
     assert run.result.frequencies[0].network_loss_db == pytest.approx(0.05)
     assert run.result.frequencies[0].balun_loss_db == pytest.approx(0.03)
+    assert run.result.frequencies[0].source_results[0].wire_id == "radiator"
+    assert run.result.frequencies[0].source_results[0].impedance_ohm == complex(60.0, -10.0)
+    assert run.result.frequencies[0].source_results[0].power_w == pytest.approx(0.001)
     assert math.isinf(run.result.frequencies[1].swr)
     assert run.result.spec.segmentation.wire_segments == (("radiator", 21),)
     assert run.result.spec.feed_line == FeedLine(

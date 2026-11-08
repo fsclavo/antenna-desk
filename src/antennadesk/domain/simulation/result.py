@@ -60,6 +60,27 @@ class FarFieldPoint:
 
 
 @dataclass(frozen=True, slots=True)
+class SourceResult:
+    """Normalized input result for one driven source.
+
+    ``wire_id`` and ``offset_m`` identify the canonical source location. The
+    primary feed is source 1. ``power_w`` is the complex input power reported
+    by the solver and may be negative for an ideal source that absorbs power.
+    """
+
+    wire_id: str
+    offset_m: float
+    tag: int
+    segment: int
+    amplitude: float
+    phase_deg: float
+    voltage_v: complex
+    current_a: complex
+    impedance_ohm: complex
+    power_w: float
+
+
+@dataclass(frozen=True, slots=True)
 class FrequencyResult:
     frequency_hz: float
     feed_tag: int
@@ -69,6 +90,7 @@ class FrequencyResult:
     input_power_w: float
     currents: tuple[CurrentSample, ...] = ()
     far_field: tuple[FarFieldPoint, ...] = ()
+    source_results: tuple[SourceResult, ...] = ()
     power_budget: PowerBudget | None = None
     directivity_db: float | None = None
     realized_gain_db: float | None = None

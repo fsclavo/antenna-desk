@@ -628,6 +628,8 @@ the application writes version 24.
   unchanged.
 - Version 28 introduces the trapped Yagi parameter payload. Existing designs
   are unchanged.
+- Version 29 adds optional per-source input results to every stored frequency.
+  Old runs load with an empty source list and keep the primary feed result.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -661,7 +663,9 @@ the application writes version 24.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 28.
+- Simulation results are persisted as immutable runs in schema version 29. Each
+  frequency also stores the ideal input result of every driven source; the
+  primary feed remains the impedance/SWR reference.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are

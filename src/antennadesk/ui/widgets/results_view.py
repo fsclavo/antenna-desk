@@ -124,6 +124,18 @@ class ResultsView(QWidget):
         impedance_layout.addWidget(self._resonance_label)
         impedance_layout.addWidget(impedance_splitter)
 
+        self._impedance_layout = impedance_layout
+
+        self._sources_tab = QWidget(self)
+        self._sources_table = QTableWidget(0, 8, self._sources_tab)
+        self._configure_table(self._sources_table)
+        self._sources_note = QLabel(self._sources_tab)
+        self._sources_note.setWordWrap(True)
+        sources_layout = QVBoxLayout(self._sources_tab)
+        sources_layout.setContentsMargins(0, 0, 0, 0)
+        sources_layout.addWidget(self._sources_note)
+        sources_layout.addWidget(self._sources_table)
+
         self._pattern_frequency = QComboBox(self._pattern_tab)
         self._pattern_frequency_label = QLabel(self._pattern_tab)
         self._pattern_mode = QComboBox(self._pattern_tab)
@@ -258,11 +270,13 @@ class ResultsView(QWidget):
         raw_layout.addWidget(self._raw_tabs)
 
         self._tabs.addTab(self._impedance_tab, "")
+        self._tabs.addTab(self._sources_tab, "")
         self._tabs.addTab(self._pattern_tab, "")
         self._tabs.addTab(self._currents_tab, "")
         self._tabs.addTab(self._measurements_tab, "")
         self._tabs.addTab(self._diagnostics_tab, "")
         self._tabs.addTab(self._raw_tab, "")
+        self._tabs.setTabVisible(self._tabs.indexOf(self._sources_tab), False)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -603,6 +617,7 @@ class ResultsView(QWidget):
     def retranslate(self) -> None:
         for widget, key in (
             (self._impedance_tab, "tab.impedance"),
+            (self._sources_tab, "tab.sources"),
             (self._pattern_tab, "tab.pattern"),
             (self._currents_tab, "tab.currents"),
             (self._measurements_tab, "tab.measurements"),
@@ -641,6 +656,19 @@ class ResultsView(QWidget):
                 self._translator.t("table.swr"),
             ]
         )
+        self._sources_table.setHorizontalHeaderLabels(
+            [
+                self._translator.t("table.frequency"),
+                self._translator.t("table.source"),
+                self._translator.t("table.wire"),
+                self._translator.t("table.amplitude"),
+                self._translator.t("table.phase"),
+                self._translator.t("table.resistance"),
+                self._translator.t("table.reactance"),
+                self._translator.t("table.power"),
+            ]
+        )
+        self._sources_note.setText(self._translator.t("sources.note"))
         self._diagnostics.setHorizontalHeaderLabels(
             [
                 self._translator.t("diagnostic.severity"),
@@ -724,7 +752,7 @@ class ResultsView(QWidget):
                 item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
                 self._table.setItem(row, column, item)
         self._table.resizeColumnsToContents()
-
+        self._render_sources(frequencies)
         x = [frequency.frequency_hz / 1e6 for frequency in frequencies]
         resistance = [frequency.impedance_ohm.real for frequency in frequencies]
         reactance = [frequency.impedance_ohm.imag for frequency in frequencies]
@@ -842,6 +870,33 @@ class ResultsView(QWidget):
             ),
             readout_builder=lambda cursor_x, _values: self._swr_readout(cursor_x, frequencies),
         )
+
+    def _render_sources(self, frequencies: tuple[FrequencyResult, ...]) -> None:
+        rows = [
+            (frequency, source_index, source)
+            for frequency in frequencies
+            for source_index, source in enumerate(frequency.source_results, start=1)
+        ]
+        index = self._tabs.indexOf(self._sources_tab)
+        if index >= 0:
+            self._tabs.setTabVisible(index, bool(rows))
+        self._sources_table.setRowCount(len(rows))
+        for row, (frequency, source_index, source) in enumerate(rows):
+            values = [
+                f"{frequency.frequency_hz / 1e6:.6f}",
+                f"S{source_index}",
+                source.wire_id,
+                f"{source.amplitude:.3f}",
+                f"{source.phase_deg:.1f}°",
+                f"{source.impedance_ohm.real:.3f}",
+                f"{source.impedance_ohm.imag:+.3f}",
+                f"{source.power_w:+.6f}",
+            ]
+            for column, value in enumerate(values):
+                item = QTableWidgetItem(value)
+                item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+                self._sources_table.setItem(row, column, item)
+        self._sources_table.resizeColumnsToContents()
 
     def _impedance_readout(self, x_mhz: float, frequencies: tuple[FrequencyResult, ...]) -> str:
         frequency = min(

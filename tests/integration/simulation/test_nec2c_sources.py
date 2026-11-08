@@ -78,3 +78,8 @@ def test_two_sources_complete_a_pattern_run() -> None:
     assert point.currents
     assert point.far_field
     assert result.raw_input.count("EX 0 ") == 2
+    assert len(point.source_results) == 2
+    assert point.source_results[0].wire_id == "first"
+    assert point.source_results[1].wire_id == "second"
+    assert point.source_results[1].phase_deg == pytest.approx(90.0)
+    assert point.source_results[1].amplitude == pytest.approx(0.5)

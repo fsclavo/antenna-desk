@@ -371,6 +371,12 @@ def _migrate_v27_to_v28(document: dict[str, Any]) -> dict[str, Any]:
     return copy.deepcopy(document)
 
 
+def _migrate_v28_to_v29(document: dict[str, Any]) -> dict[str, Any]:
+    """Introduce optional per-source input results."""
+
+    return copy.deepcopy(document)
+
+
 def _migrate_v13_to_v14(document: dict[str, Any]) -> dict[str, Any]:
     """Add the optional project balun/unun loss model."""
 
@@ -463,6 +469,7 @@ MIGRATIONS: dict[int, Migration] = {
     25: _migrate_v25_to_v26,
     26: _migrate_v26_to_v27,
     27: _migrate_v27_to_v28,
+    28: _migrate_v28_to_v29,
 }
 
 

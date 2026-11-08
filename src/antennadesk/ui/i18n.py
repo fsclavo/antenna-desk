@@ -2060,6 +2060,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Banda {index}/{total}: {band}",
     },
     "tab.impedance": {Language.ENGLISH: "Impedance / SWR", Language.SPANISH: "Impedancia / ROE"},
+    "tab.sources": {Language.ENGLISH: "Sources", Language.SPANISH: "Fuentes"},
     "tab.pattern": {Language.ENGLISH: "Pattern", Language.SPANISH: "Patrón"},
     "tab.currents": {Language.ENGLISH: "Currents", Language.SPANISH: "Corrientes"},
     "tab.measurements": {
@@ -2181,6 +2182,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "table.reactance": {Language.ENGLISH: "X (Ω)", Language.SPANISH: "X (Ω)"},
     "table.impedance": {Language.ENGLISH: "|Z| (Ω)", Language.SPANISH: "|Z| (Ω)"},
     "table.swr": {Language.ENGLISH: "SWR", Language.SPANISH: "ROE"},
+    "table.source": {Language.ENGLISH: "Source", Language.SPANISH: "Fuente"},
+    "table.wire": {Language.ENGLISH: "Wire", Language.SPANISH: "Hilo"},
+    "table.amplitude": {Language.ENGLISH: "Amplitude", Language.SPANISH: "Amplitud"},
+    "table.phase": {Language.ENGLISH: "Phase", Language.SPANISH: "Fase"},
+    "table.power": {Language.ENGLISH: "Power (W)", Language.SPANISH: "Potencia (W)"},
+    "sources.note": {
+        Language.ENGLISH: (
+            "Ideal source inputs. Negative power means that source absorbs power; "
+            "the primary feed still sets the reported impedance and SWR."
+        ),
+        Language.SPANISH: (
+            "Entradas ideales de las fuentes. Potencia negativa significa que esa "
+            "fuente absorbe potencia; la alimentación primaria sigue definiendo la "
+            "impedancia y la ROE informadas."
+        ),
+    },
     "table.swr_target": {
         Language.ENGLISH: "SWR (target)",
         Language.SPANISH: "ROE (objetivo)",
