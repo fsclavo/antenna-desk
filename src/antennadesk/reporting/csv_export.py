@@ -102,8 +102,19 @@ def sources_to_csv(result: SimulationResult) -> str:
     return "\n".join([SOURCES_HEADER, *_source_rows(result)]) + "\n"
 
 
+def band_analysis_sources_to_csv(analysis: BandAnalysisResult) -> str:
+    lines = [f"band,{SOURCES_HEADER}"]
+    for band in analysis.bands:
+        lines.extend(f"{band.band.name},{row}" for row in _source_rows(band.result))
+    return "\n".join(lines) + "\n"
+
+
 def write_sources_csv(result: SimulationResult, path: Path) -> None:
     path.write_text(sources_to_csv(result), encoding="utf-8", newline="\n")
+
+
+def write_band_analysis_sources_csv(analysis: BandAnalysisResult, path: Path) -> None:
+    path.write_text(band_analysis_sources_to_csv(analysis), encoding="utf-8", newline="\n")
 
 
 def band_analysis_to_csv(analysis: BandAnalysisResult) -> str:

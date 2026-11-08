@@ -180,7 +180,8 @@ and a fixed count uses that many snapshots per band. The **Pattern** frequency
 selector lists the snapshots from every analyzed band; selecting one switches
 the impedance, currents, and pattern views to that band. Selecting a row in the
 **Bands** tab does the same. CSV, HTML, and PDF exports include a band column or
-summary when a band analysis is active.
+summary when a band analysis is active; the source results CSV adds a band
+column as well.
 
 Defaults are evidence-labelled in the dialog. Transformer, tuner, counterpoise,
 ground, and installation effects are not modeled as ideal guarantees; verify

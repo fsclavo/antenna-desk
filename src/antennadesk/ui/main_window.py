@@ -165,6 +165,7 @@ from ..persistence.constants import MAX_PROJECT_SIZE_BYTES, PROJECT_SIZE_WARNING
 from ..reporting.csv_export import (
     write_band_analysis_csv,
     write_band_analysis_pattern_csv,
+    write_band_analysis_sources_csv,
     write_csv,
     write_pattern_csv,
     write_sources_csv,
@@ -6519,8 +6520,16 @@ class MainWindow(QMainWindow):
         path = Path(filename)
         if path.suffix.lower() != ".csv":
             path = path.with_suffix(".csv")
+        analysis = (
+            self._band_analysis_results.get(self._design_id)
+            if self._design_id is not None
+            else None
+        )
         try:
-            write_sources_csv(result, path)
+            if analysis is not None:
+                write_band_analysis_sources_csv(analysis, path)
+            else:
+                write_sources_csv(result, path)
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))
             return

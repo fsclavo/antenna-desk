@@ -144,22 +144,46 @@ def test_band_csv_adds_a_band_column() -> None:
     from antennadesk.domain.simulation.bands import amateur_band_by_id
     from antennadesk.reporting.csv_export import (
         band_analysis_pattern_to_csv,
+        band_analysis_sources_to_csv,
         band_analysis_to_csv,
     )
 
     band = amateur_band_by_id("40m")
     assert band is not None
+    sources = (
+        SourceResult(
+            wire_id="first",
+            offset_m=0.0,
+            tag=1,
+            segment=11,
+            amplitude=1.0,
+            phase_deg=0.0,
+            voltage_v=complex(1.0, 0.0),
+            current_a=complex(0.01, -0.02),
+            impedance_ohm=complex(60.0, -10.0),
+            power_w=0.001,
+        ),
+    )
+    band_result = replace(
+        make_result(),
+        frequencies=tuple(
+            replace(frequency, source_results=sources) for frequency in make_result().frequencies
+        ),
+    )
     analysis = BandAnalysisResult(
         design_id=uuid4(),
         batch_id=uuid4(),
         created_at=datetime(2026, 11, 3, tzinfo=UTC),
-        bands=(BandResult(band=band, result=make_result()),),
+        bands=(BandResult(band=band, result=band_result),),
     )
 
     lines = band_analysis_to_csv(analysis).strip().splitlines()
     pattern_lines = band_analysis_pattern_to_csv(analysis).strip().splitlines()
+    source_lines = band_analysis_sources_to_csv(analysis).strip().splitlines()
 
     assert lines[0] == f"band,{CSV_HEADER}"
     assert lines[1].startswith("40m,6900000.000000")
     assert pattern_lines[0] == f"band,{PATTERN_HEADER}"
     assert pattern_lines[1].startswith("40m,6900000.000000")
+    assert source_lines[0] == f"band,{SOURCES_HEADER}"
+    assert source_lines[1].startswith("40m,6900000.000000,6.900000000,S1,first")
