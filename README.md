@@ -109,6 +109,7 @@ optional signing steps.
 - [ADR-0026 — Family optimizer architecture](docs/ADR/0026-family-optimizer-architecture.md)
 - [Optimizer Phase A plan](docs/OPTIMIZER_PHASE_A_PLAN.md)
 - [Optimizer Phase C plan](docs/OPTIMIZER_PHASE_C_PLAN.md)
+- [Autonomous execution backlog](docs/AUTONOMOUS_BACKLOG.md)
 - [Antenna dimension estimators](docs/ANTENNA_DESIGN_ESTIMATORS.md)
 - [Geometry presentation contract](docs/GEOMETRY_PRESENTATION.md)
 - [NEC engine evaluation](docs/spikes/phase0-solver-evaluation.md)
