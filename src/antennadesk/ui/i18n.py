@@ -2028,12 +2028,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "band.note.discone": {
         Language.ENGLISH: (
-            "Current band only; the discone is a broadband starting point and its "
-            "radial-wire surfaces are approximate."
+            "Heuristic broadband plan from 0.5x to 1.5x the design frequency; "
+            "the radial-wire surfaces are approximate."
         ),
         Language.SPANISH: (
-            "Solo la banda actual; el discono es un punto de partida de banda "
-            "ancha y sus superficies de hilos radiales son aproximadas."
+            "Plan de banda ancha heurístico de 0,5x a 1,5x la frecuencia de "
+            "diseño; las superficies de hilos radiales son aproximadas."
         ),
     },
     "band.note.trap_yagi": {

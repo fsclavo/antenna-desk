@@ -140,6 +140,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   height, radial count, and radial length; the numeric fields remain editable
   and the preset itself is not persisted.
 
+### Changed
+
+- The discone now defaults to a heuristic broadband band plan from 0.5x to 1.5x
+  its design frequency instead of the current amateur band only. The model and
+  its limitations are unchanged.
+
 ### Fixed
 
 - The trapped-Yagi trap loads are now registered as template-managed loads, so

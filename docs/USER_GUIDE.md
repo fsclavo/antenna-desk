@@ -638,7 +638,9 @@ user context.
 The discone is classified **experimental**. The cone and disc are radial wire
 approximations, not solid surfaces; the coax, mast, and feed transition are not
 modeled. Impedance, bandwidth, and pattern are not independently validated.
-Use it as a starting point and verify with the solver or a measurement.
+The default band analysis is a heuristic broadband range from 0.5x to 1.5x the
+design frequency. Use it as a starting point and verify with the solver or a
+measurement.
 
 ## Create a quad beam
 

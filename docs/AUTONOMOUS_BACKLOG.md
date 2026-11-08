@@ -98,7 +98,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **29**.
-- Full gate: **1,915 passed, 0 skipped** with `NEC2C` and the optional
+- Full gate: **1,916 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
 - Last commits: multi-source excitation, phased vertical array, quad beam,
   discone, trapped Yagi, and per-source results.

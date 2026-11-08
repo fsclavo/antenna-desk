@@ -175,8 +175,12 @@ def default_band_plan(
         )
     if isinstance(parameters, DisconeParameters):
         return BandDefault(
-            _current_band_plan(parameters.frequency_hz),
-            BandEvidence.CURRENT,
+            _bands_between(
+                parameters.frequency_hz * 0.5,
+                parameters.frequency_hz * 1.5,
+                points=BROADBAND_BAND_POINTS,
+            ),
+            BandEvidence.BROADBAND,
             "band.note.discone",
         )
     if isinstance(parameters, PhasedVerticalParameters):

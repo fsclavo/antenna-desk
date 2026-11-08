@@ -14,6 +14,7 @@ from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 from antennadesk.domain.antennas.zepp import zepp_parameters
 from antennadesk.domain.antennas.zs6bkw import zs6bkw_parameters
 from antennadesk.domain.design.band_plan import (
+    BROADBAND_BAND_POINTS,
     BandEvidence,
     BandPlan,
     BandSelection,
@@ -164,6 +165,17 @@ def test_beverage_default_is_the_current_band() -> None:
     assert default.evidence is BandEvidence.CURRENT
     assert default.note_key == "band.note.beverage"
     assert default.plan.band_ids == ("80m",)
+
+
+def test_discone_default_covers_the_broadband_range() -> None:
+    from antennadesk.domain.antennas.discone import discone_parameters
+
+    default = default_band_plan(discone_parameters(frequency_hz=50_000_000.0))
+
+    assert default.evidence is BandEvidence.BROADBAND
+    assert default.note_key == "band.note.discone"
+    assert len(default.plan) >= 2
+    assert all(selection.points == BROADBAND_BAND_POINTS for selection in default.plan.selections)
 
 
 def test_loaded_dipole_default_is_the_current_band() -> None:
