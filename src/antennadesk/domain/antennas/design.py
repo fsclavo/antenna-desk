@@ -90,6 +90,8 @@ def template_load_ids(parameters: AntennaDesignParameters) -> frozenset[str]:
         return parameters.managed_load_ids
     if isinstance(parameters, (T2FDParameters, TrapDipoleParameters)):
         return parameters.managed_load_ids
+    if isinstance(parameters, TrapYagiParameters):
+        return parameters.managed_load_ids
     if isinstance(parameters, (BeverageParameters, LoadedDipoleParameters)):
         return parameters.managed_load_ids
     return frozenset()

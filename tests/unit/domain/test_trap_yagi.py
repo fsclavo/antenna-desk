@@ -9,6 +9,7 @@ import pytest
 from antennadesk.domain.antennas.design import (
     antenna_type_for,
     primary_dimension_m,
+    template_load_ids,
     with_primary_dimension,
 )
 from antennadesk.domain.antennas.family import (
@@ -58,6 +59,7 @@ def test_trap_yagi_builds_elements_and_trap_pairs() -> None:
             "trap-yagi-load-2-right",
         }
     )
+    assert template_load_ids(parameters) == parameters.managed_load_ids
 
 
 def test_trap_yagi_places_parallel_traps_symmetrically() -> None:

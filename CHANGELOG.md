@@ -142,6 +142,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The trapped-Yagi trap loads are now registered as template-managed loads, so
+  editing the design or converting templates preserves them instead of treating
+  them as user-added loads.
 - **Apply Best** now uses the family-specific editor adapter. A half-square or
   bobtail-curtain result updates the shared array editor instead of passing
   `ScvParameters` to the basic dipole form; the same exhaustive adapter covers
