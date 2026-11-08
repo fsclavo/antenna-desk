@@ -35,10 +35,45 @@ external service and must not be invented or simulated into existence.
 | C3 | Log-periodic | L | transposed feed-line model | **Blocked 2026-11-08:** independent ideal voltage sources with alternating polarity produced a negative primary-feed resistance in NEC2C. A real transposed boom feed line must be modeled before this family can ship; do not approximate it with independent sources. |
 | ~~C4~~ | ~~Discone~~ | L | none | **Done 2026-11-08:** radial-wire cone and disc with apex feed gap, schema 27, editor, scene, reports, construction notes, and optimizer. Evidence stays C because the wire approximation and feed transition are not validated. |
 | ~~C5~~ | ~~Trapped / multiband Yagi~~ | L | trap model reuse | **Done 2026-11-08:** two-band trapped Yagi with ideal parallel LC trap pairs on each element, schema 28, editor, scene, reports, construction notes, and optimizer. Evidence stays C because trap loss and boom mounting are not modeled. |
+| E1 | Raise the simulation timeout default to 180 s and expose an override | S | none | `SimulationSpec.timeout_s` defaults to 180 s, an Advanced/Preferences control can override it, timeout diagnostics report the configured value, and tests cover both paths. |
+| E2 | Parallelize independent optimizer evaluations with a bounded worker pool | M–L | E1 | Results remain deterministic and ordered; cancellation stops all workers; per-worker timeout; worker count is capped by CPU and memory; single-solve behavior is unchanged. |
+| E3 | Parallelize band analysis with the same bounded pool | M | E2 | Per-band results, progress, cancellation, and partial results remain unchanged; the benchmark records the measured speedup and memory cost. |
+| E4 | Diagnose high-radial phased-array runtime and numerical validity | S–M | C1 | Record segment count and wall time for 4×36-radial arrays; determine whether negative input resistance or absorbing sources are geometry/ground artifacts; add guardrails or guidance rather than hiding the issue behind a timeout. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
 | D4 | Segmented frequency plan in one NEC deck | M | solver benchmark | Deferred; current per-band batching is intentional |
+
+## Solver runtime notes (2026-11-08)
+
+The 60 s default was measured against a four-element phased vertical array,
+31-point sweep, five pattern snapshots, finite ground:
+
+| Case | Wires | Segments | Wall time |
+|---|---:|---:|---:|
+| 4 verticals × 4 radials | 20 | 122 | 0.46 s |
+| 4 verticals × 36 radials | 148 | 890 | 25.3 s |
+
+The 36-radial case also returned `partial` with negative input resistance and
+an absorbing-source warning. Raising the timeout is not a fix for that
+numerical result; E4 must diagnose it separately.
+
+Engineering conclusions:
+
+- **Timeout:** 60 s leaves only about 2.4× headroom over the 890-segment case;
+  180 s is a more reasonable default (~7×). Expose an override rather than
+  making every simulation wait three minutes when a geometry is actually stuck.
+- **Single solve:** do not split a phased array by element. The elements are
+  mutually coupled and NEC2C solves one joint matrix. Frequency and pattern
+  points inside one deck should not be split initially either; that duplicates
+  geometry, matrix setup, and memory.
+- **Parallelism:** only independent jobs are candidates: optimizer candidate
+  evaluations first, band analysis second. A bounded pool of threads launching
+  separate `nec2c` subprocesses is simpler than process-level model
+  serialization.
+- **Limits:** every worker has its own NEC matrix. Cap workers by both CPU and
+  memory, terminate all processes on cancellation, keep result ordering
+  deterministic, and use a per-worker timeout.
 
 ## C1 — Phased verticals / arrays (completed)
 
@@ -87,13 +122,19 @@ model and solver contract must land first.
 
 ## Recommended order
 
-1. ~~A1, A2, and C1~~ (done 2026-11-08).
+1. ~~A1, A2, A3, and C1~~ (done 2026-11-08).
 2. C2 quad beam and hexbeam (done 2026-11-08).
-3. C3 is blocked on a transposed boom feed-line model. Do not substitute
+3. **E1 first:** raise the timeout and expose an override; it is small and
+   removes false failures on larger arrays.
+4. **E4 next:** diagnose the 4×36-radial phased-array result before tuning
+   performance around it.
+5. B1–B4 whenever a source or measurement becomes available.
+6. **E2 then E3** only if measurements show a real wall-time bottleneck.
+   Parallelize optimizer evaluations before band batches.
+7. C3 is blocked on a transposed boom feed-line model. Do not substitute
    independent ideal sources: NEC2C reported negative primary-feed resistance
    in the prototype.
-4. B1–B4 whenever a source or measurement becomes available.
-5. D1–D4 only when the required hardware, engine, or release decision exists.
+8. D1–D4 only when the required hardware, engine, or release decision exists.
 
 ## Current baseline
 
