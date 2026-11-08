@@ -8,6 +8,11 @@ import math
 from dataclasses import dataclass
 
 from ...domain.antennas.antenna import AntennaModel
+from ...domain.antennas.biquad import (
+    ANTENNA_TYPE_BIQUAD,
+    ANTENNA_TYPE_DOUBLE_BIQUAD,
+    BiquadParameters,
+)
 from ...domain.antennas.custom import ANTENNA_TYPE_CUSTOM, CustomAntennaParameters
 from ...domain.antennas.dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
 from ...domain.antennas.endfed import ANTENNA_TYPE_ENDFED, EndFedParameters
@@ -104,6 +109,8 @@ _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_RINGO: "catalog.ringo",
     ANTENNA_TYPE_HALF_SQUARE: "catalog.half_square",
     ANTENNA_TYPE_BOBTAIL_CURTAIN: "catalog.bobtail_curtain",
+    ANTENNA_TYPE_BIQUAD: "catalog.biquad",
+    ANTENNA_TYPE_DOUBLE_BIQUAD: "catalog.double_biquad",
     ANTENNA_TYPE_TRAP_DIPOLE: "catalog.trap_dipole",
     ANTENNA_TYPE_T2FD: "catalog.t2fd",
     ANTENNA_TYPE_G5RV: "catalog.g5rv",
@@ -133,6 +140,8 @@ def effective_antenna_type(
             "ringo",
             "half_square",
             "bobtail_curtain",
+            "biquad",
+            "double_biquad",
             "yagi",
             "moxon",
             "fan_dipole",
@@ -966,6 +975,103 @@ def _add_scv_dimensions(
             )
         )
         notes.append(translator.t("geometry.vertical_plane_edge_on"))
+
+
+def _add_biquad_dimensions(
+    model: AntennaModel,
+    parameters: BiquadParameters | None,
+    factory: _Factory,
+    dimensions: list[Dimension],
+    notes: list[str],
+    translator: Translator,
+) -> None:
+    min_z, max_z = _model_z_extents(model)
+    rails = tuple(
+        wire
+        for wire in model.wires
+        if math.isclose(wire.start.z_m, wire.end.z_m, abs_tol=1e-9)
+        and math.hypot(
+            wire.end.x_m - wire.start.x_m,
+            wire.end.y_m - wire.start.y_m,
+        )
+        > 1e-9
+    )
+    if not rails:
+        return
+    top = max(
+        (wire for wire in rails if math.isclose(wire.start.z_m, max_z, abs_tol=1e-9)),
+        key=lambda wire: math.hypot(
+            wire.end.x_m - wire.start.x_m,
+            wire.end.y_m - wire.start.y_m,
+        ),
+    )
+    left = top.start if top.start.x_m <= top.end.x_m else top.end
+    right = top.end if top.start.x_m <= top.end.x_m else top.start
+    width = math.hypot(
+        top.end.x_m - top.start.x_m,
+        top.end.y_m - top.start.y_m,
+    )
+    if factory.projection.vertical:
+        dimensions.append(factory.dimension(left, right, width, side="above", priority=90))
+        dimensions.append(
+            factory.vertical_dimension(
+                factory.project(right).x_m,
+                min_z,
+                max_z,
+                max_z - min_z,
+                side="right",
+                priority=85,
+            )
+        )
+        if min_z > 1e-6:
+            dimensions.append(
+                factory.vertical_dimension(
+                    factory.project(left).x_m,
+                    0.0,
+                    min_z,
+                    min_z,
+                    side="left",
+                    priority=60,
+                )
+            )
+        if parameters is not None:
+            notes.append(
+                translator.t(
+                    "biquad.reflector_spacing_note",
+                    spacing=_format_length(
+                        parameters.reflector_spacing_m,
+                        translator,
+                        factory.unit_system,
+                    ),
+                )
+            )
+        return
+    xs = [point.x_m for wire in model.wires for point in (wire.start, wire.end)]
+    ys = [point.y_m for wire in model.wires for point in (wire.start, wire.end)]
+    dimensions.append(
+        Dimension(
+            start=ScenePoint(min(xs), min(ys)),
+            end=ScenePoint(max(xs), min(ys)),
+            text=_format_length(max(xs) - min(xs), translator, factory.unit_system),
+            side="below",
+            priority=85,
+        )
+    )
+    if parameters is not None and parameters.reflector_enabled:
+        dimensions.append(
+            Dimension(
+                start=ScenePoint(max(xs), min(ys)),
+                end=ScenePoint(max(xs), max(ys)),
+                text=_format_length(
+                    parameters.reflector_spacing_m,
+                    translator,
+                    factory.unit_system,
+                ),
+                side="right",
+                priority=80,
+            )
+        )
+    notes.append(translator.t("geometry.vertical_plane_edge_on"))
 
 
 def _add_ringo_dimensions(
@@ -1970,6 +2076,57 @@ def _summary(
                 translator.t("scv.feed_top"),
             ]
         )
+    elif isinstance(parameters, BiquadParameters) or antenna_type in {
+        ANTENNA_TYPE_BIQUAD,
+        ANTENNA_TYPE_DOUBLE_BIQUAD,
+    }:
+        if isinstance(parameters, BiquadParameters):
+            loop_count = parameters.loop_count
+            side = parameters.loop_side_m
+            total_height = parameters.total_height_m
+            base_height = parameters.base_height_m
+            reflector_spacing = parameters.reflector_spacing_m
+            reflector_enabled = parameters.reflector_enabled
+        else:
+            horizontal_heights = {
+                round(wire.start.z_m, 6)
+                for wire in model.wires
+                if math.isclose(wire.start.z_m, wire.end.z_m, abs_tol=1e-9)
+                and math.hypot(
+                    wire.end.x_m - wire.start.x_m,
+                    wire.end.y_m - wire.start.y_m,
+                )
+                > 1e-9
+            }
+            loop_count = max(0, len(horizontal_heights) - 1)
+            side = max(
+                math.hypot(
+                    wire.end.x_m - wire.start.x_m,
+                    wire.end.y_m - wire.start.y_m,
+                )
+                for wire in model.wires
+            )
+            total_height = max_z - min_z
+            base_height = min_z
+            reflector_spacing = 0.0
+            reflector_enabled = False
+        parts.extend(
+            [
+                f"{translator.t('biquad.loops').lower()} {loop_count}",
+                f"{translator.t('biquad.loop_side').lower()} "
+                f"{_format_length(side, translator, unit_system)}",
+                f"{translator.t('biquad.height').lower()} "
+                f"{_format_length(total_height, translator, unit_system)}",
+                f"{translator.t('field.base_height').lower()} "
+                f"{_format_length(base_height, translator, unit_system)}",
+                f"{translator.t('biquad.reflector').lower()} "
+                + (
+                    _format_length(reflector_spacing, translator, unit_system)
+                    if reflector_enabled
+                    else translator.t("biquad.reflector_off")
+                ),
+            ]
+        )
     elif isinstance(parameters, YagiParameters) or antenna_type == ANTENNA_TYPE_YAGI:
         if isinstance(parameters, YagiParameters):
             positions = [element.position_m for element in parameters.elements]
@@ -2380,6 +2537,15 @@ def build_scene(
         _add_scv_dimensions(
             model,
             parameters if isinstance(parameters, ScvParameters) else None,
+            factory,
+            dimensions,
+            notes,
+            translator,
+        )
+    elif effective_type in {ANTENNA_TYPE_BIQUAD, ANTENNA_TYPE_DOUBLE_BIQUAD}:
+        _add_biquad_dimensions(
+            model,
+            parameters if isinstance(parameters, BiquadParameters) else None,
             factory,
             dimensions,
             notes,

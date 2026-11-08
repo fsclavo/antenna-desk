@@ -672,6 +672,26 @@ def test_design_provenance_round_trips_through_the_schema() -> None:
     assert restored.designs[0].provenance == provenance
 
 
+def test_biquad_round_trips_through_the_schema() -> None:
+    from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
+
+    for kind in BiquadKind:
+        parameters = biquad_parameters(
+            kind,
+            frequency_hz=14_100_000.0,
+            base_height_m=2.0,
+            reflector_enabled=kind is BiquadKind.SINGLE,
+        )
+        original = _project(parameters, parameters.template_name)
+
+        document = document_from_project(original)
+        restored = project_from_document(document)
+
+        assert restored.designs[0].parameters == parameters
+        assert restored.designs[0].antenna == original.designs[0].antenna
+        assert restored.designs[0].antenna_type == parameters.kind.antenna_type
+
+
 def test_optimization_summary_round_trips_through_the_schema() -> None:
     from datetime import UTC, datetime
 

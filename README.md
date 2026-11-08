@@ -12,7 +12,8 @@ dipoles, folded dipoles, trap dipoles, T2FDs, vertical and horizontal loops,
 magnetic loops, custom wires, Yagis, Moxon, fan dipoles, inverted-Vs,
 inverted-Ls, OCFDs,
 end-fed wires, slopers, random wires, doublets, J Poles, Slim Jims, Ringos,
-half squares, bobtail curtains, verticals, and loaded verticals are supported.
+half squares, bobtail curtains, biquads, double biquads, verticals, and loaded
+verticals are supported.
 Yagi and Moxon arrays support horizontal or vertical polarization with a
 horizontal boom, plus optional folded driven elements and beta/hairpin
 matching stubs. Projects use versioned JSON persistence, lossless gzip
@@ -135,11 +136,11 @@ optional signing steps.
   points by default, and pattern resolution defaults to 5° and can be set to
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` projects with multiple design
-  variants; schema version 18 adds persisted optimization summaries, schema 17
-  adds typed G5RV, ZS6BKW, and Zepp designs, schema 16 adds half-square and
-  bobtail-curtain designs, schema 15 adds frequency-dependent balun/unun loss
-  and repairs undersized Yagi matching hardware, and older files migrate
-  explicitly.
+  variants; schema version 19 adds biquad and double-biquad designs, schema 18
+  adds persisted optimization summaries, schema 17 adds typed G5RV, ZS6BKW, and
+  Zepp designs, schema 16 adds half-square and bobtail-curtain designs, schema
+  15 adds frequency-dependent balun/unun loss and repairs undersized Yagi
+  matching hardware, and older files migrate explicitly.
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - VNA CSV import with measured impedance/SWR records and a measured/simulated
   SWR, R, X, or |Z| comparison tab, including resonance differences.
@@ -148,10 +149,10 @@ optional signing steps.
   family, no generic fallback, and a joint deterministic differential-evolution
   plus local-search engine. Every geometry, feed, and family-load variable is
   searched together; topology remains a user choice. Supported families include
-  dipoles, loops, verticals, inverted-V/L, J Pole, Ringo, SCV, OCFD, EndFed,
-  fan/trap/T2FD, Yagi, and Moxon, with target impedance, minimum SWR, maximum
-  gain, maximum front-to-back, maximum efficiency, maximum bandwidth, and
-  weighted multi-objective scores.
+  dipoles, loops, verticals, inverted-V/L, J Pole, Ringo, SCV, biquad,
+  OCFD, EndFed, fan/trap/T2FD, Yagi, and Moxon, with target impedance, minimum
+  SWR, maximum gain, maximum front-to-back, maximum efficiency, maximum
+  bandwidth, and weighted multi-objective scores.
 - Balanced, thorough, and fast optimizer budgets with automatic extension,
   evaluation counting, deterministic seeds, ranked result tables, sensitivity
   reports, and Apply Best routed through an exhaustive editor adapter.
@@ -159,6 +160,10 @@ optional signing steps.
   deterministic post-run recommendations, and a compact run summary persisted
   with the design so the result can be audited without storing every
   evaluation.
+- First-class **Biquad** and **Double biquad** presets with two or four stacked
+  square loops, an optional wire reflector, quarter-wave starting dimensions,
+  inline editing, reports, and a family optimizer. The geometry is an
+  experimental starting point, not a validated gain or impedance claim.
 - First-class typed **G5RV**, **ZS6BKW**, and **Zepp** presets with their own
   editors, matching-line geometry, reports, and family optimizers. The doublet
   remains a dipole plus a project-level feed line.
@@ -253,8 +258,9 @@ uv run python scripts/run_reference_simulation.py \
   post-processing model; it does not change the antenna pattern or power gain.
 - Optimization covers every first-class typed family through explicit
   descriptors and a joint hybrid search over geometry, feed, and family-load
-  variables, including typed G5RV, ZS6BKW, and Zepp presets. Magnetic loops,
-  random wires, and custom/imported geometry are explicitly unavailable; the
+  variables, including typed G5RV, ZS6BKW, Zepp, and biquad presets. Magnetic
+  loops, random wires, and custom/imported geometry are explicitly unavailable;
+  the
   doublet is a dipole plus a project-level feed line. Band-aware and robust
   modes evaluate several operating points, the Pareto front is descriptive, and
   run summaries persist with the design. Synthesis remains a bounded starting

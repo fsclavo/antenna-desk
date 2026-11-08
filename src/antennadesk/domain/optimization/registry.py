@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from ..antennas.biquad import BiquadParameters
 from ..antennas.custom import CustomAntennaParameters
 from ..antennas.design import AntennaDesignParameters
 from ..antennas.dipole import DipoleParameters
@@ -35,6 +36,7 @@ from .descriptor import AntennaOptimizerDescriptor
 from .families.dipole import dipole_descriptor
 from .families.scv import scv_descriptor
 from .families.typed import (
+    biquad_descriptor,
     endfed_descriptor,
     fan_dipole_descriptor,
     folded_dipole_descriptor,
@@ -86,6 +88,8 @@ def optimizer_availability(
         return OptimizerAvailability(descriptor=yagi_descriptor(parameters))
     if isinstance(parameters, ScvParameters):
         return OptimizerAvailability(descriptor=scv_descriptor(parameters))
+    if isinstance(parameters, BiquadParameters):
+        return OptimizerAvailability(descriptor=biquad_descriptor(parameters))
     if isinstance(parameters, FoldedDipoleParameters):
         return OptimizerAvailability(descriptor=folded_dipole_descriptor(parameters))
     if isinstance(parameters, LoopParameters):
@@ -136,6 +140,7 @@ SUPPORTED_OPTIMIZER_TYPES = frozenset(
         JPoleParameters,
         RingoParameters,
         ScvParameters,
+        BiquadParameters,
         OCFDParameters,
         EndFedParameters,
         FanDipoleParameters,

@@ -9,6 +9,10 @@ from types import SimpleNamespace
 import pytest
 from PySide6.QtWidgets import QDialog, QWizard
 
+from antennadesk.domain.antennas.biquad import (
+    BiquadKind,
+    biquad_parameters,
+)
 from antennadesk.domain.antennas.custom import CustomAntennaParameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
@@ -216,6 +220,8 @@ def _parameters_for(key: str) -> object:
         ),
         "half_square": scv_parameters(ScvKind.HALF_SQUARE, 7_150_000.0),
         "bobtail_curtain": scv_parameters(ScvKind.BOBTAIL_CURTAIN, 7_150_000.0),
+        "biquad": biquad_parameters(BiquadKind.SINGLE),
+        "double_biquad": biquad_parameters(BiquadKind.DOUBLE),
         "custom": CustomAntennaParameters(
             frequency_hz=7_100_000.0,
             wires=(
@@ -283,6 +289,7 @@ def test_every_catalog_entry_has_a_change_template_route(
             "G5RVDialog",
             "ZS6BKWDialog",
             "ZeppDialog",
+            "BiquadDialog",
         ):
             monkeypatch.setattr(main_window_module, class_name, fake_factory)
         fake_self = SimpleNamespace(
@@ -327,6 +334,8 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "ringo": ("ringo",),
         "half_square": ("half_square",),
         "bobtail_curtain": ("bobtail_curtain",),
+        "biquad": ("single_biquad",),
+        "double_biquad": ("double_biquad",),
         "custom": ("custom",),
     }
 
@@ -383,6 +392,8 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         new_ringo_antenna=record("ringo"),
         new_half_square_antenna=record("half_square"),
         new_bobtail_curtain_antenna=record("bobtail_curtain"),
+        new_single_biquad_antenna=record("single_biquad"),
+        new_double_biquad_antenna=record("double_biquad"),
         new_ocfd_antenna=record("ocfd"),
         new_vertical_antenna=record("vertical"),
         new_loaded_vertical_antenna=record("loaded_vertical"),
@@ -440,6 +451,8 @@ ESTIMATORLESS_CATALOG_KEYS = frozenset(
         "random_wire",
         "half_square",
         "bobtail_curtain",
+        "biquad",
+        "double_biquad",
         "trap_dipole",
         "zepp",
         "zs6bkw",

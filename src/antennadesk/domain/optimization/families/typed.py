@@ -8,6 +8,7 @@ import math
 from collections.abc import Mapping
 from dataclasses import replace
 
+from ...antennas.biquad import BiquadParameters
 from ...antennas.endfed import EndFedParameters
 from ...antennas.fan_dipole import FanDipoleParameters, FanElement
 from ...antennas.folded_dipole import FoldedDipoleParameters
@@ -1050,6 +1051,87 @@ def zepp_descriptor(parameters: ZeppParameters) -> AntennaOptimizerDescriptor:
         )
 
     return _descriptor("zepp", variables, initial, build, validate)
+
+
+def biquad_descriptor(parameters: BiquadParameters) -> AntennaOptimizerDescriptor:
+    variables: list[OptimizationVariable] = [
+        _length(
+            "loop_side_m",
+            "biquad.loop_side",
+            "optimize.group.geometry",
+            parameters.loop_side_m,
+            0.15,
+            0.01,
+        ),
+        _length(
+            "base_height_m",
+            "field.base_height",
+            "optimize.group.geometry",
+            parameters.base_height_m,
+            0.5,
+            0.0,
+        ),
+    ]
+    if parameters.reflector_enabled:
+        variables.append(
+            _length(
+                "reflector_spacing_m",
+                "biquad.reflector_spacing",
+                "optimize.group.geometry",
+                parameters.reflector_spacing_m,
+                0.3,
+                0.001,
+            )
+        )
+    variables.append(_radius(parameters.wire_radius_m))
+    initial = {
+        "loop_side_m": parameters.loop_side_m,
+        "base_height_m": parameters.base_height_m,
+        "wire_radius_m": parameters.wire_radius_m,
+    }
+    if parameters.reflector_enabled:
+        initial["reflector_spacing_m"] = parameters.reflector_spacing_m
+
+    def build(values: Mapping[str, float]) -> BiquadParameters:
+        return replace(
+            parameters,
+            loop_side_m=values["loop_side_m"],
+            base_height_m=values["base_height_m"],
+            reflector_spacing_m=values.get(
+                "reflector_spacing_m",
+                parameters.reflector_spacing_m,
+            ),
+            wire_radius_m=values["wire_radius_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        spacing = values.get(
+            "reflector_spacing_m",
+            parameters.reflector_spacing_m,
+        )
+        issues: list[ConstraintViolation | None] = [
+            positive_violation("loop_side_m", values["loop_side_m"]),
+            non_negative_violation("base_height_m", values["base_height_m"]),
+            positive_violation("reflector_spacing_m", spacing),
+            positive_violation("wire_radius_m", values["wire_radius_m"]),
+        ]
+        if values["wire_radius_m"] > 0.0 and spacing <= 2.0 * values["wire_radius_m"]:
+            issues.append(
+                violation(
+                    "reflector_spacing_m",
+                    2.0 * values["wire_radius_m"] - spacing,
+                    "optimize.constraint.reflector_spacing",
+                )
+            )
+        return collect(*issues)
+
+    return _descriptor(
+        parameters.kind.antenna_type,
+        tuple(variables),
+        initial,
+        build,
+        validate,
+    )
 
 
 def moxon_descriptor(parameters: MoxonParameters) -> AntennaOptimizerDescriptor:

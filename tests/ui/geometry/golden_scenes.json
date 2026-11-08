@@ -1,4 +1,6 @@
 {
+  "biquad:elevation": "613ae80e0a202d9b675f3de0dc4920f14ec89fe6198adb5951c081657def4dbe",
+  "biquad:plan": "d7dd4b0eab8254a263ff4cc25245c40dabd0625e6dceb0c9d66fafa24f45eaef",
   "bobtail_curtain:elevation": "e2df8d2365a9996d8c21fb2ec198959f10c19069f40c54ddd72c547c38a657dc",
   "bobtail_curtain:plan": "6eda56a51d17c4fa9feee1ad92c460fbb48c24074d4062a5cb8b00549e45ad6c",
   "custom:elevation": "85a6134f2b2c87fa7b23e90e96b73b06baa1227fe31060de275b929eced3e26e",
@@ -7,6 +9,8 @@
   "delta:plan": "3ec1d9ad0966b7486bccf420d314db2f8bfa8dee2bae5a14bc961ea60c2e3d82",
   "dipole:elevation": "2242f5744b0a603002763beb8f2202ab8cd319bba502673536885109365c844a",
   "dipole:plan": "5d1de829b6c78c6857790e6598fa08d7fc61609f05e089bca00ca35e7072c935",
+  "double_biquad:elevation": "ceb8a5b8756277cae8c2d75ac1439a2d69709eb386399f3e49b51d001aef676d",
+  "double_biquad:plan": "f22ab97c35ab169140946f3743b3ccb57c62dc523da01d187575e45b9af3c6f0",
   "endfed:elevation": "26a55dc1c64049992894a6a352e73cfc59fa2bf5dd4b53161d6c7651fbdce6e1",
   "endfed:plan": "50aa40f827731bd863c5c837329d275326485570aed302671b45210f1d918f3b",
   "fan:elevation": "2e334fe9d170b69ca2b8332a92844d8f680e62a87e05dcbc5250daef3f710962",

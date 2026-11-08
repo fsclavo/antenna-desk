@@ -14,6 +14,7 @@ from antennadesk.application.use_cases.optimize_antenna import (
     OptimizeAntenna,
     OptimizeAntennaCommand,
 )
+from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.endfed import EndFedParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
@@ -73,6 +74,7 @@ def _samples() -> list[object]:
         ),
         EndFedParameters(frequency_hz=7_100_000.0, length_m=20.0),
         scv_parameters(ScvKind.BOBTAIL_CURTAIN, 7_150_000.0),
+        biquad_parameters(BiquadKind.SINGLE),
         YagiParameters(
             frequency_hz=14_100_000.0,
             elements=(

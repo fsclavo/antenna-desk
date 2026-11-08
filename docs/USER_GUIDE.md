@@ -544,6 +544,28 @@ radiator length, stub length, conductor spacing, base height, and conductor
 radius jointly. Tune the radiator and stub for the installed height, ground,
 and hardware.
 
+## Create a biquad or double biquad
+
+Choose **File → New Antenna... → Biquad** for two stacked square loops, or
+**Double biquad** for four. Both variants share horizontal rails. The feed is
+at the midpoint of the central rail and an optional rectangular wire reflector
+sits behind the driven plane.
+
+The editor sets the design frequency, loop side, base height, reflector
+enabled state and spacing, azimuth, radius, material, and ground. **Load
+quarter-wave starting dimensions** sets the loop side to a quarter wave and the
+reflector to half that side (an eighth wave). The feed height is derived from
+the base, loop side, and loop count. The biquad is a broadband starting point,
+not a validated multiband design. **Optimize...** searches loop side, base
+height, reflector spacing when enabled, and conductor radius jointly. The
+reflector can be disabled in the editor; the spacing is then excluded from the
+optimizer.
+
+The biquad is classified **experimental**: the wire reflector and shared-rail
+current distribution are approximations, and gain, feedpoint impedance, and
+bandwidth are not independently validated. Simulate or measure the installed
+antenna before relying on the result.
+
 ## Create a doublet
 
 Choose **File → New Antenna... → Doublet** for a center-fed dipole intended for
@@ -1041,6 +1063,7 @@ The following typed families have a complete joint optimizer:
 - J Pole and Slim Jim;
 - Ringo;
 - half square and bobtail curtain;
+- biquad and double biquad;
 - OCFD, EndFed/EFHW, and sloper;
 - typed G5RV, ZS6BKW, and Zepp;
 - the doublet radiator as a dipole, with its feed line in the matching stage;

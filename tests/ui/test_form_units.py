@@ -11,6 +11,7 @@ from pytestqt.qtbot import QtBot
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
 from antennadesk.ui.units import UnitSystem, length_to_m, radius_to_m
+from antennadesk.ui.widgets.biquad_form import BiquadForm
 from antennadesk.ui.widgets.endfed_form import EndFedForm
 from antennadesk.ui.widgets.fan_dipole_form import FanDipoleForm
 from antennadesk.ui.widgets.inverted_v_form import InvertedVForm
@@ -70,6 +71,10 @@ FORMS = (
     (
         ScvForm,
         ("_horizontal_length", "_vertical_height", "_base_height", "_feed_offset"),
+    ),
+    (
+        BiquadForm,
+        ("_loop_side", "_base_height", "_reflector_spacing"),
     ),
     (
         TransmissionLineDoubletForm,

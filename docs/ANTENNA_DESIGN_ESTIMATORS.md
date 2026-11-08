@@ -69,6 +69,7 @@ warnings, and a dimension tolerance.
 | Ringo | 0.725-wave vertical with a small horizontal matching ring, calibrated for the simplified AntennaDesk geometry | heuristic | Not a universal commercial Ringo formula |
 | Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; optimize for the target; horizontal or vertical polarization |
 | Moxon | Cebik 20 m wire reference scaled by frequency | reference scaled | Gap and tips are sensitive; horizontal or vertical polarization |
+| Biquad / double biquad | loop side `0.25λ × 0.95`; reflector `0.5 × side` | heuristic | No independent numerical reference; the wire reflector and shared-rail current distribution are experimental |
 | T2FD | span `300/F(MHz)` ft, spacing `10/F(MHz)` ft | heuristic | Broadband starting geometry; highest design frequency is required; not a resonance calculation |
 
 Ground-mounted radials are placed 1 cm above the ground plane in the NEC deck.
@@ -157,6 +158,20 @@ no frequency-first estimator. They are generated from explicit geometry, and
 the UI disables **Estimate Dimensions...** for them. The magnetic loop also
 requires a user-supplied tuning capacitance; its default is a starting point,
 not a calculated resonance value.
+
+## Biquad starting dimensions
+
+The biquad editor's **Load quarter-wave starting dimensions** action uses:
+
+- loop side = `0.25λ × 0.95` (the same practical quarter-wave factor as the
+  other families);
+- reflector spacing = half the loop side, i.e. `0.125λ × 0.95`;
+- base height from the current editor value.
+
+Confidence is **heuristic**. There is no independent numerical reference for
+this generated geometry, so no gain, feedpoint-impedance, or bandwidth
+tolerance is claimed. The biquad is classified experimental in
+`evidence.py`; the starting action is a convenience, not a validated design.
 
 ## Half-square and bobtail-curtain starting dimensions
 

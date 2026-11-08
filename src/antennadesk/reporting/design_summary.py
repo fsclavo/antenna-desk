@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from ..domain.antennas.biquad import BiquadParameters
 from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
@@ -349,6 +350,30 @@ def design_summary_rows(
                 (
                     "Feed offset below top",
                     f"{parameters.feed_offset_m:.4f} m",
+                ),
+                ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+                ("Ground", ground_text(parameters.ground)),
+            ]
+        )
+        return tuple(rows)
+    if isinstance(parameters, BiquadParameters):
+        rows.extend(
+            [
+                ("Type", parameters.template_name),
+                ("Loops", str(parameters.loop_count)),
+                ("Loop side", f"{parameters.loop_side_m:.4f} m"),
+                ("Stack height", f"{parameters.total_height_m:.4f} m"),
+                ("Base height", f"{parameters.base_height_m:.4f} m"),
+                ("Top height", f"{parameters.top_height_m:.4f} m"),
+                ("Feed height", f"{parameters.feed_height_m:.4f} m"),
+                (
+                    "Reflector",
+                    (
+                        f"{parameters.reflector_spacing_m:.4f} m behind"
+                        if parameters.reflector_enabled
+                        else "disabled"
+                    ),
                 ),
                 ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),

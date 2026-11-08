@@ -146,6 +146,16 @@ def test_t2fd_defaults_cover_the_broadband_range() -> None:
     assert "10m" in result.plan.band_ids
 
 
+def test_biquad_default_is_the_current_band() -> None:
+    from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
+
+    default = default_band_plan(biquad_parameters(BiquadKind.SINGLE, frequency_hz=14_100_000.0))
+
+    assert default.evidence is BandEvidence.CURRENT
+    assert default.note_key == "band.note.biquad"
+    assert default.plan.band_ids == ("20m",)
+
+
 def test_narrowband_default_is_the_current_band() -> None:
     result = default_band_plan(
         DipoleParameters(frequency_hz=7_100_000.0, total_length_m=20.0, height_m=8.0)

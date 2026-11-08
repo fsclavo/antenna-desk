@@ -6,6 +6,12 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from .biquad import (
+    ANTENNA_TYPE_BIQUAD,
+    ANTENNA_TYPE_DOUBLE_BIQUAD,
+    BiquadKind,
+    BiquadParameters,
+)
 from .custom import ANTENNA_TYPE_CUSTOM, CustomAntennaParameters
 from .dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
 from .endfed import ANTENNA_TYPE_ENDFED, EndFedParameters
@@ -53,6 +59,7 @@ AntennaDesignParameters = (
     | JPoleParameters
     | RingoParameters
     | ScvParameters
+    | BiquadParameters
     | T2FDParameters
     | TransmissionLineDoubletParameters
     | TrapDipoleParameters
@@ -106,6 +113,12 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
             if parameters.kind is ScvKind.HALF_SQUARE
             else ANTENNA_TYPE_BOBTAIL_CURTAIN
         )
+    if isinstance(parameters, BiquadParameters):
+        return (
+            ANTENNA_TYPE_BIQUAD
+            if parameters.kind is BiquadKind.SINGLE
+            else ANTENNA_TYPE_DOUBLE_BIQUAD
+        )
     if isinstance(parameters, TrapDipoleParameters):
         return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(parameters, T2FDParameters):
@@ -134,6 +147,8 @@ def primary_dimension_m(parameters: AntennaDesignParameters) -> float:
         return parameters.leg_length_m
     if isinstance(parameters, ScvParameters):
         return parameters.horizontal_length_m
+    if isinstance(parameters, BiquadParameters):
+        return parameters.loop_side_m
     if isinstance(parameters, EndFedParameters):
         return parameters.length_m
     if isinstance(parameters, TrapDipoleParameters):
@@ -165,6 +180,13 @@ def with_primary_dimension(
         return replace(parameters, leg_length_m=dimension_m)
     if isinstance(parameters, ScvParameters):
         return replace(parameters, horizontal_length_m=dimension_m)
+    if isinstance(parameters, BiquadParameters):
+        ratio = dimension_m / parameters.loop_side_m
+        return replace(
+            parameters,
+            loop_side_m=dimension_m,
+            reflector_spacing_m=parameters.reflector_spacing_m * ratio,
+        )
     if isinstance(parameters, EndFedParameters):
         return replace(parameters, length_m=dimension_m)
     if isinstance(parameters, TrapDipoleParameters):

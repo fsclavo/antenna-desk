@@ -330,6 +330,16 @@ The **doublet** catalog preset remains `DipoleParameters` plus a project-level
 `FeedLine`; its radiator uses the dipole optimizer and its feed line belongs to
 the separate matching stage.
 
+### BiquadParameters
+
+`BiquadParameters` stores the design frequency, loop side, base height,
+reflector spacing and enabled state, azimuth, radius, material, and ground. The
+`kind` chooses the two-loop biquad or the four-loop double biquad. `to_antenna()`
+builds the driven ladder (shared horizontal rails and vertical sides) and an
+optional rectangular wire reflector. The feed is the midpoint of the central
+rail. The quarter-wave side and eighth-wave spacing are starting heuristics;
+the family is experimental and makes no validated gain or impedance claim.
+
 ### OCFDParameters
 
 A first-class single-wire horizontal dipole with a feed point offset from the
@@ -347,7 +357,7 @@ reconstructs OCFD parameters from legacy custom designs.
 `OCFDParameters`, `VerticalParameters`, `InvertedVParameters`,
 `InvertedLParameters`, `YagiParameters`, `MoxonParameters`,
 `FanDipoleParameters`, `EndFedParameters`,
-`JPoleParameters`, `RingoParameters`, `ScvParameters`,
+`JPoleParameters`, `RingoParameters`, `ScvParameters`, `BiquadParameters`,
 `TransmissionLineDoubletParameters`, `TrapDipoleParameters`,
 `T2FDParameters`, `ZeppParameters`, and `CustomAntennaParameters`. `antenna_type_for()` maps a
 parameter object to its native type; `custom` remains the arbitrary-wire escape
@@ -466,11 +476,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 18.
+the application writes version 19.
 
 ## Schema policy
 
-- Current version: `18`.
+- Current version: `19`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -512,6 +522,8 @@ the application writes version 18.
   new designs use the typed families and their optimizers.
 - Version 18 adds the optional `optimization_summary` field to each design.
   Old documents migrate with no summary.
+- Version 19 introduces the biquad and double-biquad parameter payloads.
+  Existing designs are unchanged.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -534,7 +546,8 @@ the application writes version 18.
   generator has a radial screen. Transmission-line two-ports between wire
   points are modeled as geometry; arbitrary radial screens are not.
 - Optimization operates on typed generated parameters, including typed G5RV,
-  ZS6BKW, and Zepp. Magnetic loops, random wires, and arbitrary custom/imported
+  ZS6BKW, Zepp, biquad, and double biquad. Magnetic loops, random wires, and
+  arbitrary custom/imported
   geometry have explicit unavailable reasons. Band-aware and robust modes
   evaluate multiple operating points; the Pareto front is descriptive; and a
   compact `OptimizationSummary` is persisted with the design.
@@ -543,7 +556,7 @@ the application writes version 18.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 18.
+- Simulation results are persisted as immutable runs in schema version 19.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
 - Far-field values are NEC power gains. Directivity and realized gain are

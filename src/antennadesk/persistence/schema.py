@@ -13,6 +13,12 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..domain.antennas.antenna import AntennaModel
 from ..domain.antennas.balun import BalunLoss
+from ..domain.antennas.biquad import (
+    ANTENNA_TYPE_BIQUAD,
+    ANTENNA_TYPE_DOUBLE_BIQUAD,
+    BiquadKind,
+    BiquadParameters,
+)
 from ..domain.antennas.custom import ANTENNA_TYPE_CUSTOM, CustomAntennaParameters
 from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import (
@@ -266,6 +272,19 @@ class RingoParametersPayload(StrictModel):
     ring_diameter_m: float = Field(gt=0.0)
     ring_height_m: float = Field(default=0.0, ge=0.0)
     ring_sides: int = Field(default=16, ge=3, le=128)
+    wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class BiquadParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    loop_side_m: float = Field(gt=0.0)
+    reflector_spacing_m: float = Field(gt=0.0)
+    kind: BiquadKind = BiquadKind.SINGLE
+    base_height_m: float = Field(default=1.0, ge=0.0)
+    reflector_enabled: bool = True
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
@@ -678,6 +697,7 @@ ParameterPayload = (
     | JPoleParametersPayload
     | RingoParametersPayload
     | ScvParametersPayload
+    | BiquadParametersPayload
     | T2FDParametersPayload
     | TransmissionLineDoubletParametersPayload
     | TrapDipoleParametersPayload
@@ -716,6 +736,10 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
             ANTENNA_TYPE_HALF_SQUARE
             if value.kind is ScvKind.HALF_SQUARE
             else ANTENNA_TYPE_BOBTAIL_CURTAIN
+        )
+    if isinstance(value, BiquadParametersPayload):
+        return (
+            ANTENNA_TYPE_BIQUAD if value.kind is BiquadKind.SINGLE else ANTENNA_TYPE_DOUBLE_BIQUAD
         )
     if isinstance(value, TrapDipoleParametersPayload):
         return ANTENNA_TYPE_TRAP_DIPOLE
@@ -763,6 +787,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return RingoParametersPayload
     if antenna_type in {ANTENNA_TYPE_HALF_SQUARE, ANTENNA_TYPE_BOBTAIL_CURTAIN}:
         return ScvParametersPayload
+    if antenna_type in {ANTENNA_TYPE_BIQUAD, ANTENNA_TYPE_DOUBLE_BIQUAD}:
+        return BiquadParametersPayload
     if antenna_type == ANTENNA_TYPE_TRAP_DIPOLE:
         return TrapDipoleParametersPayload
     if antenna_type == ANTENNA_TYPE_T2FD:
@@ -1090,6 +1116,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _ringo_parameters_from_domain(value)
     if isinstance(value, ScvParameters):
         return _scv_parameters_from_domain(value)
+    if isinstance(value, BiquadParameters):
+        return _biquad_parameters_from_domain(value)
     if isinstance(value, TrapDipoleParameters):
         return _trap_dipole_parameters_from_domain(value)
     if isinstance(value, T2FDParameters):
@@ -1191,6 +1219,23 @@ def _scv_parameters_from_domain(value: ScvParameters) -> ScvParametersPayload:
         vertical_height_m=value.vertical_height_m,
         base_height_m=value.base_height_m,
         feed_offset_m=value.feed_offset_m,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _biquad_parameters_from_domain(
+    value: BiquadParameters,
+) -> BiquadParametersPayload:
+    return BiquadParametersPayload(
+        frequency_hz=value.frequency_hz,
+        loop_side_m=value.loop_side_m,
+        reflector_spacing_m=value.reflector_spacing_m,
+        kind=value.kind,
+        base_height_m=value.base_height_m,
+        reflector_enabled=value.reflector_enabled,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
@@ -1939,6 +1984,15 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if value.parameters.kind is not expected_kind:
             raise ValueError("antenna_type does not match the array variant")
         return _scv_parameters_to_domain(value.parameters)
+    if value.antenna_type in {ANTENNA_TYPE_BIQUAD, ANTENNA_TYPE_DOUBLE_BIQUAD}:
+        if not isinstance(value.parameters, BiquadParametersPayload):
+            raise ValueError("biquad parameters have the wrong shape")
+        expected_biquad_kind = (
+            BiquadKind.SINGLE if value.antenna_type == ANTENNA_TYPE_BIQUAD else BiquadKind.DOUBLE
+        )
+        if value.parameters.kind is not expected_biquad_kind:
+            raise ValueError("antenna_type does not match the biquad variant")
+        return _biquad_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_TRAP_DIPOLE:
         if not isinstance(value.parameters, TrapDipoleParametersPayload):
             raise ValueError("trap dipole parameters have the wrong shape")
@@ -2071,6 +2125,23 @@ def _scv_parameters_to_domain(value: ScvParametersPayload) -> ScvParameters:
         vertical_height_m=value.vertical_height_m,
         base_height_m=value.base_height_m,
         feed_offset_m=value.feed_offset_m,
+        azimuth_deg=value.azimuth_deg,
+        wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _biquad_parameters_to_domain(
+    value: BiquadParametersPayload,
+) -> BiquadParameters:
+    return BiquadParameters(
+        frequency_hz=value.frequency_hz,
+        loop_side_m=value.loop_side_m,
+        reflector_spacing_m=value.reflector_spacing_m,
+        kind=value.kind,
+        base_height_m=value.base_height_m,
+        reflector_enabled=value.reflector_enabled,
         azimuth_deg=value.azimuth_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),

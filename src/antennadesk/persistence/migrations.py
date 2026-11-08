@@ -311,6 +311,12 @@ def _migrate_v17_to_v18(document: dict[str, Any]) -> dict[str, Any]:
     return copy.deepcopy(document)
 
 
+def _migrate_v18_to_v19(document: dict[str, Any]) -> dict[str, Any]:
+    """Introduce the biquad and double-biquad design types."""
+
+    return copy.deepcopy(document)
+
+
 def _migrate_v13_to_v14(document: dict[str, Any]) -> dict[str, Any]:
     """Add the optional project balun/unun loss model."""
 
@@ -393,6 +399,7 @@ MIGRATIONS: dict[int, Migration] = {
     15: _migrate_v15_to_v16,
     16: _migrate_v16_to_v17,
     17: _migrate_v17_to_v18,
+    18: _migrate_v18_to_v19,
 }
 
 

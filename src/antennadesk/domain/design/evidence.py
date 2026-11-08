@@ -346,6 +346,36 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "the feed line are not independently validated."
         ),
     ),
+    "biquad": EvidenceEntry(
+        template="biquad",
+        level=EvidenceLevel.EXPERIMENTAL,
+        source=(
+            "Quarter-wave loop side and eighth-wave reflector spacing are "
+            "starting heuristics; no independent numerical reference for the "
+            "generated geometry"
+        ),
+        tolerance="Not applicable (structural)",
+        limitation=(
+            "The model is a wire approximation with shared horizontal rails and "
+            "a rectangular wire reflector. Gain, feedpoint impedance, bandwidth, "
+            "reflector construction, and ground effects are not independently "
+            "validated. Tune or measure the installed antenna."
+        ),
+    ),
+    "double_biquad": EvidenceEntry(
+        template="double_biquad",
+        level=EvidenceLevel.EXPERIMENTAL,
+        source=(
+            "Four-loop extension of the same quarter-wave starting heuristic; no "
+            "independent numerical reference"
+        ),
+        tolerance="Not applicable (structural)",
+        limitation=(
+            "The extra loop pair changes the current distribution and feed "
+            "impedance; neither is independently validated. Use it as a "
+            "starting point and verify with simulation or measurement."
+        ),
+    ),
     "doublet": EvidenceEntry(
         template="doublet",
         level=EvidenceLevel.PUBLISHED,

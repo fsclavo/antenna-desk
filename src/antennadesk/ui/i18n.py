@@ -240,6 +240,36 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "bidireccional y polarización vertical."
         ),
     },
+    "catalog.biquad": {
+        Language.ENGLISH: "Biquad",
+        Language.SPANISH: "Biquad",
+    },
+    "catalog.biquad.description": {
+        Language.ENGLISH: (
+            "Two stacked square loops with an optional wire reflector, fed at the "
+            "central rail; a broadband broadside starting point."
+        ),
+        Language.SPANISH: (
+            "Dos lazos cuadrados apilados con reflector de hilo opcional, "
+            "alimentados en el travesaño central; un punto de partida bidireccional "
+            "y de banda ancha."
+        ),
+    },
+    "catalog.double_biquad": {
+        Language.ENGLISH: "Double biquad",
+        Language.SPANISH: "Biquad doble",
+    },
+    "catalog.double_biquad.description": {
+        Language.ENGLISH: (
+            "Four stacked loops sharing horizontal rails, with an optional wire "
+            "reflector; a higher-gain extension of the biquad starting point."
+        ),
+        Language.SPANISH: (
+            "Cuatro lazos apilados que comparten travesaños horizontales, con "
+            "reflector de hilo opcional; una extensión de mayor ganancia del punto "
+            "de partida biquad."
+        ),
+    },
     "catalog.slim_jim": {
         Language.ENGLISH: "Slim Jim",
         Language.SPANISH: "Slim Jim",
@@ -1864,6 +1894,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Current band only; select more bands manually if needed.",
         Language.SPANISH: "Solo la banda actual; seleccioná más bandas manualmente si hace falta.",
     },
+    "band.note.biquad": {
+        Language.ENGLISH: "Current band only; the biquad is a broadband starting point, not a validated multiband design.",
+        Language.SPANISH: "Solo la banda actual; el biquad es un punto de partida de banda ancha, no un diseño multibanda validado.",
+    },
     "status.analyzing_bands": {
         Language.ENGLISH: "Analyzing bands...",
         Language.SPANISH: "Analizando bandas...",
@@ -2884,6 +2918,105 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "vertical central con el hilo superior. AntennaDesk no valida "
             "independientemente el patrón, la impedancia de alimentación, el suelo "
             "ni la adaptación."
+        ),
+    },
+    "biquad.title": {
+        Language.ENGLISH: "Biquad Generator",
+        Language.SPANISH: "Generador biquad",
+    },
+    "biquad.kind": {
+        Language.ENGLISH: "Biquad type",
+        Language.SPANISH: "Tipo de biquad",
+    },
+    "biquad.kind.single": {
+        Language.ENGLISH: "Biquad (two loops)",
+        Language.SPANISH: "Biquad (dos lazos)",
+    },
+    "biquad.kind.double": {
+        Language.ENGLISH: "Double biquad (four loops)",
+        Language.SPANISH: "Biquad doble (cuatro lazos)",
+    },
+    "biquad.loop_side": {
+        Language.ENGLISH: "Loop side",
+        Language.SPANISH: "Lado del lazo",
+    },
+    "biquad.loops": {
+        Language.ENGLISH: "Loops",
+        Language.SPANISH: "Lazos",
+    },
+    "biquad.height": {
+        Language.ENGLISH: "Stack height",
+        Language.SPANISH: "Altura de la pila",
+    },
+    "biquad.reflector_enabled": {
+        Language.ENGLISH: "Wire reflector",
+        Language.SPANISH: "Reflector de hilo",
+    },
+    "biquad.reflector_spacing": {
+        Language.ENGLISH: "Reflector spacing",
+        Language.SPANISH: "Separación del reflector",
+    },
+    "biquad.reflector": {
+        Language.ENGLISH: "Reflector",
+        Language.SPANISH: "Reflector",
+    },
+    "biquad.reflector_off": {
+        Language.ENGLISH: "off",
+        Language.SPANISH: "desactivado",
+    },
+    "biquad.reflector_spacing_note": {
+        Language.ENGLISH: "Reflector wire {spacing} behind the driven plane.",
+        Language.SPANISH: "Hilo reflector {spacing} detrás del plano activo.",
+    },
+    "biquad.geometry": {
+        Language.ENGLISH: (
+            "{loops} loops · side {side} {unit} · stack {height} {unit} · "
+            "base {base} {unit} · reflector {reflector}"
+        ),
+        Language.SPANISH: (
+            "{loops} lazos · lado {side} {unit} · pila {height} {unit} · "
+            "base {base} {unit} · reflector {reflector}"
+        ),
+    },
+    "biquad.load_starting": {
+        Language.ENGLISH: "Load quarter-wave starting dimensions",
+        Language.SPANISH: "Cargar dimensiones iniciales de cuarto de onda",
+    },
+    "biquad.load_starting_hint": {
+        Language.ENGLISH: "Set the loop side to a quarter wave and the reflector to half that side.",
+        Language.SPANISH: "Ajusta el lado del lazo a un cuarto de onda y el reflector a la mitad de ese lado.",
+    },
+    "biquad.hint": {
+        Language.ENGLISH: (
+            "A biquad is a vertical stack of square loops with a wire reflector. "
+            "The single variant has two loops; the double variant has four. The "
+            "loops share their horizontal rails and the feed sits at the midpoint "
+            "of the central rail. The quarter-wave side and eighth-wave reflector "
+            "spacing are starting heuristics; gain, impedance, and the reflector "
+            "model are not independently validated."
+        ),
+        Language.SPANISH: (
+            "Un biquad es una pila vertical de lazos cuadrados con un reflector de "
+            "hilo. La variante simple tiene dos lazos; la doble tiene cuatro. Los "
+            "lazos comparten sus travesaños horizontales y la alimentación está en "
+            "el punto medio del travesaño central. El lado de cuarto de onda y la "
+            "separación de octavo de onda son heurísticas iniciales; la ganancia, "
+            "la impedancia y el modelo del reflector no están validados "
+            "independientemente."
+        ),
+    },
+    "biquad.evidence": {
+        Language.ENGLISH: (
+            "Starting geometry only. The model is a wire approximation of a "
+            "biquad; it does not claim a published gain, feedpoint impedance, or "
+            "bandwidth. Measure or simulate the installed antenna before relying "
+            "on the result."
+        ),
+        Language.SPANISH: (
+            "Solo geometría inicial. El modelo es una aproximación de hilo de un "
+            "biquad; no afirma una ganancia, impedancia de alimentación ni ancho de "
+            "banda publicados. Medí o simulá la antena instalada antes de confiar "
+            "en el resultado."
         ),
     },
     "ringo.title": {
@@ -4949,6 +5082,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize.constraint.conductor_spacing": {
         Language.ENGLISH: "The conductor spacing is too small for the wire diameter.",
         Language.SPANISH: "La separación entre conductores es demasiado pequeña para el diámetro del hilo.",
+    },
+    "optimize.constraint.reflector_spacing": {
+        Language.ENGLISH: "The reflector spacing is too small for the wire diameter.",
+        Language.SPANISH: "La separación del reflector es demasiado pequeña para el diámetro del hilo.",
     },
     "optimize.constraint.match_length": {
         Language.ENGLISH: "The hairpin match is shorter than the minimum conductor spacing.",

@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from ..domain.antennas.biquad import BiquadKind, BiquadParameters
 from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import DipoleParameters
@@ -28,9 +29,11 @@ from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
 from ..domain.antennas.zepp import ZeppParameters
 from .dialogs.antenna_catalog_dialog import (
+    CATALOG_TYPE_BIQUAD,
     CATALOG_TYPE_BOBTAIL_CURTAIN,
     CATALOG_TYPE_CUSTOM,
     CATALOG_TYPE_DELTA_LOOP,
+    CATALOG_TYPE_DOUBLE_BIQUAD,
     CATALOG_TYPE_DOUBLET,
     CATALOG_TYPE_ENDFED,
     CATALOG_TYPE_FAN_DIPOLE,
@@ -73,6 +76,8 @@ _KNOWN_CUSTOM_GENERATORS = frozenset(
         CATALOG_TYPE_RINGO,
         CATALOG_TYPE_HALF_SQUARE,
         CATALOG_TYPE_BOBTAIL_CURTAIN,
+        CATALOG_TYPE_BIQUAD,
+        CATALOG_TYPE_DOUBLE_BIQUAD,
         CATALOG_TYPE_SLIM_JIM,
         CATALOG_TYPE_T2FD,
         CATALOG_TYPE_TRAP_DIPOLE,
@@ -141,6 +146,12 @@ def catalog_key_for(parameters: AntennaDesignParameters) -> str:
             CATALOG_TYPE_HALF_SQUARE
             if parameters.kind is ScvKind.HALF_SQUARE
             else CATALOG_TYPE_BOBTAIL_CURTAIN
+        )
+    if isinstance(parameters, BiquadParameters):
+        return (
+            CATALOG_TYPE_BIQUAD
+            if parameters.kind is BiquadKind.SINGLE
+            else CATALOG_TYPE_DOUBLE_BIQUAD
         )
     if isinstance(parameters, TransmissionLineDoubletParameters):
         return (

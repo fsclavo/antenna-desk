@@ -316,6 +316,21 @@ def test_typed_transmission_line_doublet_construction_sheet(
     assert "band_aware" in sheet
 
 
+def test_biquad_construction_sheet_lists_the_loop_stack(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
+
+    design = sample_project.designs[0]
+    biquad = design.with_parameters(biquad_parameters(BiquadKind.DOUBLE))
+    sheet = render_construction_sheet(sample_project, biquad, None)
+
+    assert "Double biquad" in sheet
+    assert "Loops" in sheet
+    assert "Reflector" in sheet
+    assert "square loops" in sheet
+
+
 def test_typed_zepp_construction_sheet_lists_the_stub(
     sample_project: Project,
 ) -> None:

@@ -7,6 +7,10 @@ from typing import get_args
 
 import pytest
 
+from antennadesk.domain.antennas.biquad import (
+    BiquadKind,
+    biquad_parameters,
+)
 from antennadesk.domain.antennas.custom import CustomAntennaParameters
 from antennadesk.domain.antennas.design import AntennaDesignParameters, antenna_type_for
 from antennadesk.domain.antennas.dipole import DipoleParameters
@@ -245,6 +249,8 @@ def _typed_samples() -> list[AntennaDesignParameters]:
             ring_height_m=0.25,
         ),
         scv_parameters(ScvKind.HALF_SQUARE, 7_150_000.0),
+        biquad_parameters(BiquadKind.SINGLE),
+        biquad_parameters(BiquadKind.DOUBLE),
         OCFDParameters(frequency_hz=7_100_000.0, total_length_m=40.0),
         EndFedParameters(
             frequency_hz=7_100_000.0,
@@ -319,6 +325,7 @@ _CONTEXT_FIELDS = {
     "match_spacing_m",
     "elements",
     "kind",
+    "reflector_enabled",
     "loading_coil_enabled",
     "loading_coil_resistance_ohm",
     "top_hat_enabled",
@@ -342,6 +349,18 @@ def test_every_field_is_optimized_or_explicitly_classified_as_context() -> None:
         assert not unclassified, (
             f"{type(parameters).__name__} has unclassified fields: {unclassified}"
         )
+
+
+def test_biquad_without_a_reflector_does_not_optimize_its_spacing() -> None:
+    parameters = biquad_parameters(BiquadKind.SINGLE, reflector_enabled=False)
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+
+    names = {variable.name for variable in availability.descriptor.variables}
+
+    assert "loop_side_m" in names
+    assert "base_height_m" in names
+    assert "reflector_spacing_m" not in names
 
 
 def test_descriptor_initial_values_rebuild_the_current_parameters() -> None:

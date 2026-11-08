@@ -16,6 +16,7 @@ from PySide6.QtCore import QRectF
 from PySide6.QtGui import QFont, QFontMetricsF
 from pytestqt.qtbot import QtBot
 
+from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
 from antennadesk.domain.antennas.custom import CustomAntennaParameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.endfed import EndFedParameters
@@ -401,6 +402,28 @@ def _cases() -> tuple[FamilyCase, ...]:
                 "vertical height",
                 "vertical elements 2",
             ),
+        ),
+        FamilyCase(
+            "biquad",
+            biquad_parameters(BiquadKind.SINGLE),
+            "biquad",
+            11,
+            GeometryViewMode.ELEVATION,
+            (
+                "Biquad",
+                "loops 2",
+                "loop side",
+                "stack height",
+                "reflector",
+            ),
+        ),
+        FamilyCase(
+            "double_biquad",
+            biquad_parameters(BiquadKind.DOUBLE),
+            "double_biquad",
+            17,
+            GeometryViewMode.ELEVATION,
+            ("Double biquad", "loops 4", "loop side", "stack height"),
         ),
         FamilyCase(
             "bobtail_curtain",

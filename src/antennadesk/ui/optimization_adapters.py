@@ -12,6 +12,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from ..domain.antennas.biquad import BiquadParameters
 from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import DipoleParameters
 from ..domain.antennas.endfed import EndFedParameters
@@ -78,6 +79,10 @@ ADAPTERS: dict[type[AntennaDesignParameters], OptimizationUiAdapter] = {
     ScvParameters: OptimizationUiAdapter(
         lambda window, parameters: window._scv_simulation_spec(parameters),
         lambda window, parameters: window._scv_form.set_parameters(parameters),
+    ),
+    BiquadParameters: OptimizationUiAdapter(
+        lambda window, parameters: window._biquad_simulation_spec(parameters),
+        lambda window, parameters: window._biquad_form.set_parameters(parameters),
     ),
     OCFDParameters: OptimizationUiAdapter(
         lambda window, parameters: window._ocfd_simulation_spec(parameters),

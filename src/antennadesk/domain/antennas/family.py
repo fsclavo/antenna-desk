@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from .biquad import BiquadParameters
 from .custom import CustomAntennaParameters
 from .design import AntennaDesignParameters
 from .dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
@@ -52,6 +53,8 @@ _GENERATOR_FAMILIES: dict[str, AntennaFamily] = {
     "ringo": AntennaFamily.VERTICAL,
     "half_square": AntennaFamily.VERTICAL,
     "bobtail_curtain": AntennaFamily.VERTICAL,
+    "biquad": AntennaFamily.LOOP,
+    "double_biquad": AntennaFamily.LOOP,
     "trap_dipole": AntennaFamily.DIPOLE,
     "t2fd": AntennaFamily.DIPOLE,
     "g5rv": AntennaFamily.DIPOLE,
@@ -89,6 +92,8 @@ def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
         return AntennaFamily.VERTICAL
     if isinstance(parameters, ScvParameters):
         return AntennaFamily.VERTICAL
+    if isinstance(parameters, BiquadParameters):
+        return AntennaFamily.LOOP
     if isinstance(parameters, (T2FDParameters, TrapDipoleParameters)):
         return AntennaFamily.DIPOLE
     if isinstance(parameters, TransmissionLineDoubletParameters):
@@ -133,6 +138,8 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return "ringo"
     if isinstance(parameters, ScvParameters):
         return parameters.kind.value
+    if isinstance(parameters, BiquadParameters):
+        return parameters.kind.antenna_type
     if isinstance(parameters, TrapDipoleParameters):
         return ANTENNA_TYPE_TRAP_DIPOLE
     if isinstance(parameters, T2FDParameters):

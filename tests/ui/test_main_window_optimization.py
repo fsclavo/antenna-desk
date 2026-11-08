@@ -112,6 +112,54 @@ def test_optimize_endfed_applies_to_the_endfed_form(
     window._dirty = False
 
 
+def test_optimize_biquad_applies_to_the_biquad_form(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
+
+    parameters = biquad_parameters(BiquadKind.SINGLE)
+    use_parameters(window, parameters)
+    optimized = replace(
+        parameters,
+        loop_side_m=parameters.loop_side_m * 1.03,
+    )
+
+    class FakeFamilyOptimizationDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def selected_parameters(self) -> object:
+            return optimized
+
+    monkeypatch.setattr(
+        main_window_module,
+        "FamilyOptimizationDialog",
+        FakeFamilyOptimizationDialog,
+    )
+    monkeypatch.setattr(window, "simulate", lambda: None)
+
+    window.optimize_current_design()
+    window._dirty = False
+
+    assert window._project is not None
+    assert window._project.designs[0].antenna_type == "biquad"
+    assert window._project.designs[0].parameters.loop_side_m == pytest.approx(
+        optimized.loop_side_m,
+        abs=1e-3,
+    )
+    assert window._biquad_form.parameters().loop_side_m == pytest.approx(
+        optimized.loop_side_m,
+        abs=1e-3,
+    )
+    window._dirty = False
+
+
 def test_optimize_current_design_persists_the_run_summary(
     window: MainWindow,
     monkeypatch: pytest.MonkeyPatch,

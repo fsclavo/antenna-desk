@@ -61,6 +61,8 @@ registry.
 | `random_wire` | Performance depends on the tuner and the installation; the length is deliberately non-resonant. | No universal numeric reference; keep experimental. |
 | `ringo` | The simplified radiator and matching ring are an application preset, not a published commercial model. | Manufacturer data or an independent measurement. |
 | `custom` | User-defined geometry has no fixed reference. | Imports and diagnostics only; no accuracy claim. |
+| `biquad` | Quarter-wave loop side and eighth-wave reflector spacing are starting heuristics; the wire reflector and shared-rail current distribution are not independently validated. | A published biquad design with dimensions, feedpoint impedance, gain, and reflector construction. |
+| `double_biquad` | Four-loop extension of the same heuristic; the extra loop pair changes the current distribution and feed impedance. | A published double-biquad design or measurement with dimensions and feedpoint impedance. |
 
 ## Follow-up review of the remaining level C templates (2026-11-06)
 
@@ -111,7 +113,7 @@ published reference supplies a traceable numeric metric or measured impedance.
 
 - **A, reference-backed:** 5 templates.
 - **B, published/heuristic:** 18 templates.
-- **C, experimental:** 6 templates, all with a documented limitation.
+- **C, experimental:** 8 templates, all with a documented limitation.
 
 The `half_square` and `bobtail_curtain` templates entered the catalog at level B
 on 2026-11-07 from Cebik's published 7.15 MHz dimensions. They are new

@@ -723,6 +723,29 @@ def test_typed_zepp_preset_uses_the_inline_editor(
     window._dirty = False
 
 
+def test_biquad_presets_use_the_inline_editor(window: MainWindow) -> None:
+    from main_window_support import use_parameters
+
+    from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
+
+    parameters = biquad_parameters(BiquadKind.SINGLE)
+    use_parameters(window, parameters)
+    assert window._project is not None
+    assert window._project.designs[0].antenna_type == "biquad"
+    assert window._design_stack.currentWidget() is window._biquad_scroll
+    restored = window._biquad_form.parameters()
+    assert restored.kind is BiquadKind.SINGLE
+    assert restored.loop_side_m == pytest.approx(parameters.loop_side_m, abs=1e-3)
+    assert restored.reflector_spacing_m == pytest.approx(parameters.reflector_spacing_m, abs=1e-3)
+    assert window._optimize_action.isEnabled() is True
+
+    double = biquad_parameters(BiquadKind.DOUBLE)
+    use_parameters(window, double)
+    assert window._project.designs[0].antenna_type == "double_biquad"
+    assert window._biquad_form.parameters().kind is BiquadKind.DOUBLE
+    window._dirty = False
+
+
 def test_new_ringo_creates_a_first_class_design(
     window: MainWindow,
     qtbot: QtBot,

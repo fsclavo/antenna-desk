@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
 from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
 from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.loop import LoopParameters
@@ -54,6 +55,8 @@ def test_catalog_key_for_current_templates() -> None:
     assert catalog_key_for(magnetic_loop) == "magnetic_loop"
     assert catalog_key_for(zs6bkw_parameters()) == "zs6bkw"
     assert catalog_key_for(zepp_parameters()) == "zepp"
+    assert catalog_key_for(biquad_parameters(BiquadKind.SINGLE)) == "biquad"
+    assert catalog_key_for(biquad_parameters(BiquadKind.DOUBLE)) == "double_biquad"
 
 
 def test_label_key_follows_the_catalog_entry() -> None:

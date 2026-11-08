@@ -44,6 +44,8 @@ CATALOG_TYPE_J_POLE = "j_pole"
 CATALOG_TYPE_RINGO = "ringo"
 CATALOG_TYPE_HALF_SQUARE = "half_square"
 CATALOG_TYPE_BOBTAIL_CURTAIN = "bobtail_curtain"
+CATALOG_TYPE_BIQUAD = "biquad"
+CATALOG_TYPE_DOUBLE_BIQUAD = "double_biquad"
 CATALOG_TYPE_SLIM_JIM = "slim_jim"
 CATALOG_TYPE_INVERTED_V = "inverted_v"
 CATALOG_TYPE_INVERTED_L = "inverted_l"
@@ -109,6 +111,20 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         family_key="catalog.family.vertical",
         description_key="catalog.slim_jim.description",
         evidence_key="catalog.evidence.published",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_BIQUAD,
+        label_key="catalog.biquad",
+        family_key="catalog.family.loop",
+        description_key="catalog.biquad.description",
+        evidence_key="catalog.evidence.experimental",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_DOUBLE_BIQUAD,
+        label_key="catalog.double_biquad",
+        family_key="catalog.family.loop",
+        description_key="catalog.double_biquad.description",
+        evidence_key="catalog.evidence.experimental",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_ENDFED,

@@ -10,6 +10,18 @@ from antennadesk.reporting.design_summary import (
 )
 
 
+def test_biquad_summary_reports_the_loop_stack_and_reflector() -> None:
+    from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
+
+    parameters = biquad_parameters(BiquadKind.DOUBLE)
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Type"] == "Double biquad"
+    assert rows["Loops"] == "4"
+    assert "behind" in rows["Reflector"]
+    assert rows["Loop side"] == f"{parameters.loop_side_m:.4f} m"
+
+
 def test_optimization_summary_rows_describe_the_last_run() -> None:
     from datetime import UTC, datetime
 

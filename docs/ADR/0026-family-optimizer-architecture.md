@@ -277,6 +277,7 @@ Optimizable families:
 - J Pole and Slim Jim;
 - Ringo;
 - half square and bobtail curtain;
+- biquad and double biquad;
 - OCFD, EndFed/EFHW/sloper;
 - fan dipole, trap dipole, T2FD;
 - Yagi, Moxon;
@@ -372,6 +373,7 @@ migrated every typed family with a first-class parameter model:
 - J Pole and Slim Jim;
 - Ringo;
 - half square and bobtail curtain;
+- biquad and double biquad;
 - OCFD, EndFed/EFHW/sloper;
 - fan dipole, trap dipole, T2FD;
 - Yagi and Moxon.

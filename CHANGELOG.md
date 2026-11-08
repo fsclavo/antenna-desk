@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added first-class **Biquad** and **Double biquad** designs: two or four
+  stacked square loops with shared rails, an optional rectangular wire
+  reflector, quarter-wave starting dimensions, schema-19 persistence, catalog
+  routes, inline editing, scene contracts, reports, construction notes, and a
+  family optimizer. The family is classified experimental; gain, feedpoint
+  impedance, and bandwidth are not independently validated.
 - Added first-class typed **G5RV**, **ZS6BKW**, and **Zepp** designs with inline
   editors, schema-17 persistence, reports, construction rows, scene summaries,
   and family optimizers. Existing custom-generator projects remain loadable;

@@ -8,6 +8,7 @@ import html
 import math
 from pathlib import Path
 
+from ..domain.antennas.biquad import BiquadParameters
 from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.dipole import DipoleParameters
 from ..domain.antennas.endfed import EndFedParameters
@@ -210,6 +211,29 @@ ends and feed the center of one element. The total conductor length is
 {wire_note} Keep the bottom ends insulated from ground and feed
 {feed_point}. The feed is {parameters.feed_offset_m:.4f} m below the top
 junction at {feed_height_m:.4f} m above ground.</p>"""
+    elif isinstance(parameters, BiquadParameters):
+        reflector_note = (
+            f"A wire reflector sits {parameters.reflector_spacing_m:.4f} m behind the driven plane."
+            if parameters.reflector_enabled
+            else "This variant has no reflector."
+        )
+        feed_rows = f"""
+<tr><th>Type</th><td>{parameters.template_name}</td></tr>
+<tr><th>Loops</th><td>{parameters.loop_count}</td></tr>
+<tr><th>Loop side</th><td>{parameters.loop_side_m:.4f} m</td></tr>
+<tr><th>Stack height</th><td>{parameters.total_height_m:.4f} m</td></tr>
+<tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
+<tr><th>Feed height</th><td>{parameters.feed_height_m:.4f} m</td></tr>
+<tr><th>Reflector</th><td>{parameters.reflector_spacing_m:.4f} m behind</td></tr>
+<tr><th>Total conductor</th><td>{parameters.total_conductor_length_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+"""
+        construction_note = f"""<p>Build {parameters.loop_count} square loops with
+{parameters.loop_side_m:.4f} m sides. Join them at the shared horizontal
+rails, starting at {parameters.base_height_m:.4f} m above ground, and feed
+the midpoint of the central rail at {feed_height_m:.4f} m. {reflector_note}
+The quarter-wave side and eighth-wave reflector spacing are starting
+dimensions; tune them for the installation.</p>"""
     elif isinstance(parameters, RingoParameters):
         feed_rows = f"""
 <tr><th>Radiator height</th><td>{parameters.radiator_height_m:.4f} m</td></tr>

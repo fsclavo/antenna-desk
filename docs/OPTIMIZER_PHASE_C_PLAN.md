@@ -136,9 +136,10 @@ The family optimizer dialog adds:
   last-summary line, and a band-aware run.
 - `tests/ui/test_main_window_optimization.py` covers attaching the summary to
   the project design.
-- Full gate: **1666 passed, 1 skipped**. The skip is the PyNEC cross-engine
-  comparison because PyNEC is not installed. Repeated UI stress runs also cover
-  the worker-thread lifetime fix in the optimizer dialogs.
+- Full gate at Phase C close: **1666 passed, 1 skipped**; **1700 passed** after
+  the subsequent biquad family. The skip is the PyNEC cross-engine comparison
+  because PyNEC is not installed. Repeated UI stress runs also cover the
+  worker-thread lifetime fix in the optimizer dialogs.
 
 ## Limitations
 

@@ -182,8 +182,13 @@ The ordered antenna backlog lives in
     vertical arrays with a shared editor, top-junction feed, schema-16
     persistence, published Cebik dimensions, and a frequency-first estimator
     deliberately deferred until a dedicated estimator is justified.
+11. **Completed 2026-11-07:** biquad and double-biquad two-/four-loop stack with
+    shared rails, optional wire reflector, quarter-wave starting dimensions,
+    inline editor, schema-19 persistence, scene contract, reports, construction
+    notes, and a family optimizer. Evidence stays C pending an independent
+    design or measurement.
 
-The remaining medium and large candidates are ordered after those seven in the
+The remaining medium and large candidates are ordered after those eleven in the
 roadmap table. Items 15–19 require architectural work or a much larger test
 surface and should wait until the single-feed families are stable.
 

@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from ..antennas.biquad import BiquadParameters
 from ..antennas.custom import CustomAntennaParameters
 from ..antennas.design import AntennaDesignParameters
 from ..antennas.dipole import DipoleParameters
@@ -147,6 +148,12 @@ def default_band_plan(
             _harmonic_plan(parameters.frequency_hz, harmonics=(1, 3, 5)),
             BandEvidence.HEURISTIC,
             "band.note.zepp",
+        )
+    if isinstance(parameters, BiquadParameters):
+        return BandDefault(
+            _current_band_plan(parameters.frequency_hz),
+            BandEvidence.CURRENT,
+            "band.note.biquad",
         )
     if isinstance(parameters, CustomAntennaParameters) and parameters.generator_id == "g5rv":
         return BandDefault(
