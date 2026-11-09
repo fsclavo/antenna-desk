@@ -9,6 +9,7 @@ a descriptor or an explicit unavailable reason.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import assert_never
 
 from ..antennas.beverage import BeverageParameters
 from ..antennas.biquad import BiquadParameters
@@ -154,7 +155,7 @@ def optimizer_availability(
         if parameters.generator_id is not None:
             return OptimizerAvailability(reason_key=_REASON_CUSTOM_GENERATOR)
         return OptimizerAvailability(reason_key=_REASON_CUSTOM_GEOMETRY)
-    return OptimizerAvailability(reason_key=_REASON_UNSUPPORTED)  # type: ignore[unreachable]
+    assert_never(parameters)
 
 
 SUPPORTED_OPTIMIZER_TYPES = frozenset(

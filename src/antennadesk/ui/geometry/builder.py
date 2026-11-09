@@ -1131,8 +1131,6 @@ def _add_beverage_dimensions(
     translator: Translator,
 ) -> None:
     wire = model.feed_wire
-    if wire is None:
-        return
     near = wire.point_at(model.feed.offset_m)
     far = wire.end if near.distance_to(wire.start) >= near.distance_to(wire.end) else wire.start
     length = wire.length_m
@@ -1170,8 +1168,6 @@ def _add_loaded_dipole_dimensions(
     translator: Translator,
 ) -> None:
     wire = model.feed_wire
-    if wire is None:
-        return
     if factory.projection.vertical:
         dimensions.append(
             factory.vertical_dimension(

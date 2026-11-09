@@ -8,7 +8,7 @@ import math
 from collections.abc import Sequence
 from pathlib import Path
 
-import pyqtgraph as pg  # type: ignore  # pyqtgraph ships no type stubs
+import pyqtgraph as pg
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import (

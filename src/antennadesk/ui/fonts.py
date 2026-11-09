@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-import pyqtgraph as pg  # type: ignore  # pyqtgraph ships no type stubs
+import pyqtgraph as pg
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
 

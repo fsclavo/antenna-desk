@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import cast
 
 from PySide6.QtWidgets import (
     QDialog,
@@ -431,7 +432,7 @@ class AntennaCatalogDialog(QDialog):
         )
 
     def selected_key(self) -> str | None:
-        item = self._list.currentItem()
+        item = cast("QListWidgetItem | None", self._list.currentItem())
         if item is None:
             return None
         value = item.data(1)

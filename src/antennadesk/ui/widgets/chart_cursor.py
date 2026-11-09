@@ -8,7 +8,7 @@ import math
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
-import pyqtgraph as pg  # type: ignore  # pyqtgraph ships no type stubs
+import pyqtgraph as pg
 from PySide6.QtCore import QEvent, QObject, QPointF, Qt
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QLabel
