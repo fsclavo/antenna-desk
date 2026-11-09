@@ -26,7 +26,7 @@ external service and must not be invented or simulated into existence.
 | ~~A1~~ | ~~Decide the boom-correction policy~~ | S | traceable source | **Done 2026-11-08:** the Yagi dialog, evidence registry, and user guide state that boom mounting is not modeled |
 | ~~A2~~ | ~~Export optimization evaluation/Pareto data~~ | S–M | none | **Done 2026-11-08:** UTF-8 CSV export with a stable schema, Pareto flags, and tests |
 | ~~A3~~ | ~~Per-source input results for multi-source antennas~~ | M | multi-source model | **Done 2026-11-08:** every frequency stores ideal voltage, current, impedance, amplitude, phase, and power per driven source; the **Sources** tab exposes them; schema 29. |
-| B1 | Promote `inverted_l` evidence if a source exists | M | independent source | Published dimensions and a numeric metric are tested; otherwise the audit keeps it C |
+| ~~B1~~ | ~~Promote `inverted_l` evidence if a source exists~~ | M | independent source | **Done 2026-11-08:** no source matches the current no-radial bent-wire template; Cebik uses 32 radials, K9LA uses a slanted top plus one radial, and K2AV uses a folded counterpoise. The audit keeps it C and records the sources considered. |
 | B2 | Improve the Ringo matching-ring model | M | manufacturer data or measurement | Matching-ring geometry and impedance are traceable; evidence can move beyond C |
 | B3 | Add independent checks for biquad/double biquad/Beverage/loaded dipole | M–L | source or measurement | At least one numeric metric per family is validated or the limitation stays explicit |
 | B4 | Fan-dipole coupling calibration | M | measurement | A coupled-fan measurement is reproduced; no scalar correction is invented |
@@ -137,7 +137,8 @@ model and solver contract must land first.
    **Advanced simulation → Solver**.
 4. ~~E4~~ **done 2026-11-08:** overlapping radial screens diagnosed; the
    editor warns and the ideal-source behavior is documented.
-5. B1–B4 whenever a source or measurement becomes available.
+5. ~~B1~~ **done 2026-11-08:** no matching independent source; the template
+   stays C. B2–B4 whenever a source or measurement becomes available.
 6. **E2 then E3** only if measurements show a real wall-time bottleneck.
    Parallelize optimizer evaluations before band batches.
 7. C3 is blocked on a transposed boom feed-line model. Do not substitute

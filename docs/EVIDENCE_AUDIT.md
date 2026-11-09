@@ -70,6 +70,32 @@ registry.
 | `discone` | The cone and disc are radial wire approximations, not solid surfaces; the coax, mast, and feed transition are not modeled, and impedance, bandwidth, and pattern are not independently validated. | A published discone design or measurement with cone/disc dimensions, feed transition, and measured impedance or pattern. |
 | `trap_yagi` | The traps are ideal parallel LC loads with no core or dielectric loss; boom mounting, trap hardware, feed line, and matching network are not modeled, and gain and impedance are not independently validated. | A published trapped-Yagi design or measurement with trap values, dimensions, boom mounting, and measured impedance or gain on both bands. |
 
+### Inverted-L evidence review (2026-11-08, B1)
+
+No source was found that matches the current template closely enough to promote
+it. The template is a straight vertical section plus a horizontal top, fed at
+the base, with no radial screen.
+
+Sources considered:
+
+- Cebik/W4RNL, “Modeling 160-Meter Vertical Arrays, Part 4”: the 40 m inverted-L
+  cases use 32-radial ground systems, and the no-radial comparison is a MININEC
+  perfect-ground result that the article itself calls unrealistic. The current
+  template cannot represent those radials.
+- K9LA, “Another Simple 160-Meter Antenna”: 60 ft vertical with a slanted top
+  down to 15 ft plus a single 129 ft radial; the template has a horizontal top
+  and no radial.
+- K2AV “Design Inverted L”: uses a folded counterpoise and a specific matching
+  system; neither is represented by the template.
+- Construction articles with measured SWR: dimensions vary by installation and
+  do not provide an exact geometry plus a numeric impedance/gain result for the
+  template.
+
+The template therefore remains **level C**. Promotion would require either a
+measured, no-radial simple inverted-L with exact dimensions and a numeric
+metric, or extending the template to model a documented radial screen. That
+extension is a separate feature, not an evidence promotion.
+
 ## Follow-up review of the remaining level C templates (2026-11-06)
 
 The remaining level C templates were reviewed for a possible promotion.
