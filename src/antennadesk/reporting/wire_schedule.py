@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import html
 from dataclasses import dataclass
+from pathlib import Path
 
 from ..domain.antennas.antenna import AntennaModel
 from ..domain.antennas.geometry import Point3D
@@ -161,6 +162,10 @@ def wire_schedule_to_csv(design: DesignVariant) -> str:
     for row in schedule_rows_for_design(design):
         lines.append(",".join(row.csv_row()))
     return "\n".join(lines) + "\n"
+
+
+def write_wire_schedule_csv(design: DesignVariant, path: Path) -> None:
+    path.write_text(wire_schedule_to_csv(design), encoding="utf-8", newline="\n")
 
 
 def wire_schedule_html_rows(design: DesignVariant) -> tuple[str, ...]:

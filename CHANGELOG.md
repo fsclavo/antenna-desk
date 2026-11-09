@@ -191,7 +191,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   sheet adds an **Installation view (front)** with height, ground line, and
   feed height. The sheet also has a title block (project, design, antenna,
   frequency, units, date) and a bill of materials with conductor totals grouped
-  by material and diameter, plus load, line, and source counts.
+  by material and diameter, plus load, line, and source counts. The wire
+  schedule can also be exported as CSV from **File → Export → Export wire
+  schedule CSV...**.
 - The **biquad** and **Beverage** starting dimensions are now classified as
   published evidence (B) instead of experimental (C). The biquad claim covers
   the quarter-wave loop side and eighth-wave reflector spacing; the Beverage

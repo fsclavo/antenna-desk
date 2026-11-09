@@ -16,6 +16,7 @@ from antennadesk.ui.main_window import MainWindow
 DATA_EXPORTS = (
     ("export_csv", ".csv"),
     ("export_sources_csv", ".csv"),
+    ("export_wire_schedule_csv", ".csv"),
     ("export_pattern_csv", ".csv"),
     ("export_html_report", ".html"),
     ("export_pdf_report", ".pdf"),
