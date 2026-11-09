@@ -123,6 +123,7 @@ def render_construction_sheet(
     *,
     figure_png_data_uri: str | None = None,
     auxiliary_png_data_uri: str | None = None,
+    auxiliary_kind: str | None = None,
 ) -> str:
     parameters = design.parameters
     antenna = design.antenna
@@ -210,10 +211,11 @@ def render_construction_sheet(
             "<figcaption>Construction view</figcaption></figure>"
         )
     if auxiliary_png_data_uri:
+        auxiliary_caption = "Top layout" if auxiliary_kind == "top" else "Installation view (front)"
         figures.append(
-            f'<figure><img class="installation-figure" alt="Installation view" '
+            f'<figure><img class="installation-figure" alt="{_escape(auxiliary_caption)}" '
             f'src="{_escape(auxiliary_png_data_uri)}">'
-            "<figcaption>Installation view (front)</figcaption></figure>"
+            f"<figcaption>{_escape(auxiliary_caption)}</figcaption></figure>"
         )
     figure_section = "".join(figures)
     schedule_section = f"""
@@ -870,6 +872,7 @@ def write_construction_sheet(
     *,
     figure_png_data_uri: str | None = None,
     auxiliary_png_data_uri: str | None = None,
+    auxiliary_kind: str | None = None,
 ) -> None:
     path.write_text(
         render_construction_sheet(
@@ -878,6 +881,7 @@ def write_construction_sheet(
             result,
             figure_png_data_uri=figure_png_data_uri,
             auxiliary_png_data_uri=auxiliary_png_data_uri,
+            auxiliary_kind=auxiliary_kind,
         ),
         encoding="utf-8",
         newline="\n",

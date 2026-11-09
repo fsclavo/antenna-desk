@@ -61,6 +61,15 @@ class GeometryView(QWidget):
     """A dimensioned construction sketch driven by the canonical model."""
 
     ZOOM_STEPS = (0.5, 1.0, 2.0, 4.0, 8.0)
+    TOP_AUXILIARY_TYPES = frozenset(
+        {
+            "fan_dipole",
+            "inverted_v",
+            "inverted_l",
+            "endfed",
+            "beverage",
+        }
+    )
     INSET_WIDTH = 200.0
     INSET_HEIGHT = 160.0
     INSET_GAP = 6.0
@@ -178,18 +187,27 @@ class GeometryView(QWidget):
 
         return self._image_for_mode(GeometryViewMode.CONSTRUCTION, width, height)
 
-    def auxiliary_image(self, width: int = 1200, height: int = 400) -> QImage | None:
-        """Render an installation elevation for a top-view construction drawing."""
+    def auxiliary_view_kind(self) -> str | None:
+        """Return ``installation``, ``top``, or ``None`` for the sheet."""
 
         if self._model is None:
             return None
-        principal = construction_view(
-            self._model,
-            antenna_type=effective_antenna_type(self._antenna_type, self._parameters),
-        )
-        if principal is not GeometryViewMode.PLAN:
+        antenna_type = effective_antenna_type(self._antenna_type, self._parameters)
+        principal = construction_view(self._model, antenna_type=antenna_type)
+        if principal is GeometryViewMode.PLAN:
+            return "installation"
+        if antenna_type in self.TOP_AUXILIARY_TYPES:
+            return "top"
+        return None
+
+    def auxiliary_image(self, width: int = 1200, height: int = 400) -> QImage | None:
+        """Render the auxiliary view used by the construction sheet."""
+
+        kind = self.auxiliary_view_kind()
+        if kind is None:
             return None
-        return self._image_for_mode(GeometryViewMode.ELEVATION, width, height)
+        mode = GeometryViewMode.ELEVATION if kind == "installation" else GeometryViewMode.PLAN
+        return self._image_for_mode(mode, width, height)
 
     def save_svg(self, path: Path) -> None:
         generator = QSvgGenerator()

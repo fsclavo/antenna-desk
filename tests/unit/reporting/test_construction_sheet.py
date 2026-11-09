@@ -87,6 +87,22 @@ def test_construction_sheet_embeds_an_installation_view(sample_project: Project)
     assert "Installation view (front)" in sheet
 
 
+def test_construction_sheet_can_label_the_auxiliary_view_as_top_layout(
+    sample_project: Project,
+) -> None:
+    sheet = render_construction_sheet(
+        sample_project,
+        sample_project.designs[0],
+        None,
+        figure_png_data_uri="data:image/png;base64,AAAA",
+        auxiliary_png_data_uri="data:image/png;base64,BBBB",
+        auxiliary_kind="top",
+    )
+
+    assert "Top layout" in sheet
+    assert "Installation view (front)" not in sheet
+
+
 def test_construction_sheet_works_without_a_result(sample_project: Project) -> None:
     sheet = render_construction_sheet(
         sample_project,

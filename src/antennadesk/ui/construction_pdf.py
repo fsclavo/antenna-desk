@@ -46,6 +46,7 @@ def write_construction_pdf(
     *,
     figure_image: QImage | None = None,
     auxiliary_image: QImage | None = None,
+    auxiliary_kind: str | None = None,
 ) -> None:
     writer = QPdfWriter(str(path))
     writer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
@@ -146,7 +147,12 @@ def write_construction_pdf(
         y += draw_height + 12.0
 
     if auxiliary_image is not None and not auxiliary_image.isNull():
-        section(translator.t("construction.installation_view"))
+        auxiliary_key = (
+            "construction.top_layout"
+            if auxiliary_kind == "top"
+            else "construction.installation_view"
+        )
+        section(translator.t(auxiliary_key))
         available_width = right - left
         max_height = writer.height() * 0.40
         scale = min(

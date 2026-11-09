@@ -448,6 +448,7 @@ def test_auxiliary_image_is_an_installation_elevation_for_top_views(
     )
     view.set_model(yagi.to_antenna(), antenna_type="yagi")
     assert view.resolved_mode() is GeometryViewMode.PLAN
+    assert view.auxiliary_view_kind() == "installation"
     auxiliary = view.auxiliary_image(400, 200)
     assert auxiliary is not None
     assert not auxiliary.isNull()
@@ -462,7 +463,22 @@ def test_auxiliary_image_is_an_installation_elevation_for_top_views(
     )
     view.set_model(jpole.to_antenna(), antenna_type="j_pole")
     assert view.resolved_mode() is GeometryViewMode.ELEVATION
+    assert view.auxiliary_view_kind() is None
     assert view.auxiliary_image(400, 200) is None
+
+    from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
+
+    fan = FanDipoleParameters(
+        frequency_hz=7_100_000.0,
+        elements=(FanElement(20.0, 120.0), FanElement(10.0, 90.0)),
+        apex_height_m=12.0,
+    )
+    view.set_model(fan.to_antenna(), antenna_type="fan_dipole")
+    assert view.resolved_mode() is GeometryViewMode.ELEVATION
+    assert view.auxiliary_view_kind() == "top"
+    top = view.auxiliary_image(400, 200)
+    assert top is not None
+    assert not top.isNull()
 
 
 def test_geometry_view_exports_vector_svg_pdf_and_dxf(

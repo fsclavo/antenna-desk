@@ -6548,9 +6548,11 @@ class MainWindow(QMainWindow):
         try:
             figure_image = self._geometry.construction_image()
             auxiliary_image = self._geometry.auxiliary_image()
+            auxiliary_kind = self._geometry.auxiliary_view_kind()
         except OSError:
             figure_image = None
             auxiliary_image = None
+            auxiliary_kind = None
         dialog = ConstructionDialog(
             self._translator,
             self._project,
@@ -6559,6 +6561,7 @@ class MainWindow(QMainWindow):
             self,
             figure_image=figure_image,
             auxiliary_image=auxiliary_image,
+            auxiliary_kind=auxiliary_kind,
         )
         dialog.exec()
 

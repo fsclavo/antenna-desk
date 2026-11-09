@@ -189,7 +189,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   They also embed the rendered construction view; the dialog preview loads the
   same image through a document resource. When Construction is a top view, the
   sheet adds an **Installation view (front)** with height, ground line, and
-  feed height. The sheet also has a title block (project, design, antenna,
+  feed height. For front-view families whose top layout adds information
+  (fan dipole, inverted V/L, end-fed wire, Beverage), the sheet adds a **Top
+  layout** view instead. The sheet also has a title block (project, design, antenna,
   frequency, units, date) and a bill of materials with conductor totals grouped
   by material and diameter, plus load, line, and source counts. The wire
   schedule can also be exported as CSV from **File → Export → Export wire
