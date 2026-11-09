@@ -96,6 +96,21 @@ measured, no-radial simple inverted-L with exact dimensions and a numeric
 metric, or extending the template to model a documented radial screen. That
 extension is a separate feature, not an evidence promotion.
 
+### Ringo evidence review (2026-11-08, B2)
+
+The Cushcraft AR-6 manual (7/93) was reviewed. It confirms the 50–54 MHz
+coverage, 3.1 m height, 33 cm ring diameter, 3.75 dB gain, and 16° radiation
+angle. It also gives a tuning chart for the radiator length and tuning-rod
+position, and specifies a 75 Ω coaxial tuning stub.
+
+The current Ringo template still models a simplified closed ring connected to
+the radiator base. It does not model the split tuning ring, the adjustable
+tuning rod, or the 75 Ω coaxial stub, and the manual does not publish a
+feedpoint resistance/reactance table that could be compared directly. The
+manufacturer data therefore improves the documented starting geometry but does
+not validate the electrical model. The template remains **level C** until the
+matching hardware is modeled or a measured impedance is available.
+
 ## Follow-up review of the remaining level C templates (2026-11-06)
 
 The remaining level C templates were reviewed for a possible promotion.
