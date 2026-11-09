@@ -172,7 +172,7 @@ from ..reporting.csv_export import (
     write_sources_csv,
 )
 from ..reporting.html_report import write_html_report
-from ..reporting.wire_schedule import write_wire_schedule_csv
+from ..reporting.wire_schedule import write_bom_csv, write_wire_schedule_csv
 from ..simulation.nec2.solver import Nec2cSolver
 from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_BEVERAGE,
@@ -478,6 +478,8 @@ class MainWindow(QMainWindow):
         self._export_wire_schedule_csv_action.triggered.connect(
             lambda: self.export_wire_schedule_csv()
         )
+        self._export_bom_csv_action = QAction(self)
+        self._export_bom_csv_action.triggered.connect(lambda: self.export_bom_csv())
         self._export_pattern_csv_action = QAction(self)
         self._export_pattern_csv_action.triggered.connect(lambda: self.export_pattern_csv())
         self._export_pattern_png_action = QAction(self)
@@ -1108,6 +1110,7 @@ class MainWindow(QMainWindow):
         self._export_menu.addAction(self._export_csv_action)
         self._export_menu.addAction(self._export_sources_csv_action)
         self._export_menu.addAction(self._export_wire_schedule_csv_action)
+        self._export_menu.addAction(self._export_bom_csv_action)
         self._export_menu.addAction(self._export_pattern_csv_action)
         self._export_menu.addSeparator()
         self._export_menu.addAction(self._export_pattern_png_action)
@@ -1282,6 +1285,7 @@ class MainWindow(QMainWindow):
         self._export_wire_schedule_csv_action.setText(
             self._translator.t("action.export_wire_schedule_csv")
         )
+        self._export_bom_csv_action.setText(self._translator.t("action.export_bom_csv"))
         self._export_pattern_csv_action.setText(self._translator.t("action.export_pattern_csv"))
         self._export_pattern_png_action.setText(self._translator.t("action.export_pattern_png"))
         self._export_geometry_png_action.setText(self._translator.t("action.export_geometry_png"))
@@ -1538,6 +1542,7 @@ class MainWindow(QMainWindow):
         self._export_csv_action.setEnabled(idle and has_result)
         self._export_sources_csv_action.setEnabled(idle and has_sources)
         self._export_wire_schedule_csv_action.setEnabled(idle and has_project)
+        self._export_bom_csv_action.setEnabled(idle and has_project)
         self._export_pattern_csv_action.setEnabled(idle and has_result)
         self._export_pattern_png_action.setEnabled(idle and has_result)
         self._export_geometry_png_action.setEnabled(idle and has_project)
@@ -6680,6 +6685,34 @@ class MainWindow(QMainWindow):
             path = path.with_suffix(".csv")
         try:
             write_wire_schedule_csv(design, path)
+        except Exception as exc:
+            self._show_error(self._translator.t("error.export", message=str(exc)))
+            return
+        self._last_status_key = "status.exported"
+        self._update_status_text()
+
+    def export_bom_csv(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        design = self._project.design_by_id(self._design_id)
+        suggested = (
+            f"{self._safe_file_name(self._project.name)}-"
+            f"{self._safe_file_name(design.name)}-bom.csv"
+        )
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            self._translator.t("dialog.bom_csv_title"),
+            str(Path.home() / suggested),
+            self._translator.t("dialog.csv_filter"),
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.lower() != ".csv":
+            path = path.with_suffix(".csv")
+        try:
+            write_bom_csv(design, path)
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))
             return

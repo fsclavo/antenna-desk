@@ -9,8 +9,10 @@ import pytest
 from antennadesk.domain.antennas.hexbeam import published_hexbeam_parameters
 from antennadesk.domain.projects.project import Project
 from antennadesk.reporting.wire_schedule import (
+    BOM_HEADER,
     WIRE_SCHEDULE_HEADER,
     bom_summary_rows,
+    bom_to_csv,
     conductor_bom_rows,
     feed_schedule_row,
     wire_schedule_html_rows,
@@ -105,6 +107,14 @@ def test_conductor_bom_separates_materials() -> None:
         ("copper", 2.0),
         ("aluminum", 4.0),
     }
+
+
+def test_bom_csv_has_a_header_and_the_grouped_totals(sample_project: Project) -> None:
+    lines = bom_to_csv(sample_project.designs[0]).splitlines()
+
+    assert lines[0] == ",".join(BOM_HEADER)
+    assert len(lines) == 2
+    assert lines[1].startswith("copper,2.000000,1,20.000000")
 
 
 def test_wire_schedule_csv_has_a_header_and_one_row_per_wire(

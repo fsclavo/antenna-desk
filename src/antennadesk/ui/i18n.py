@@ -2521,6 +2521,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Export wire schedule CSV...",
         Language.SPANISH: "Exportar lista de hilos CSV...",
     },
+    "action.export_bom_csv": {
+        Language.ENGLISH: "Export bill of materials CSV...",
+        Language.SPANISH: "Exportar lista de materiales CSV...",
+    },
     "action.export_pattern_csv": {
         Language.ENGLISH: "Export Pattern CSV...",
         Language.SPANISH: "Exportar CSV de patrón...",
@@ -2670,6 +2674,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "dialog.wire_schedule_csv_title": {
         Language.ENGLISH: "Export wire schedule CSV",
         Language.SPANISH: "Exportar CSV de lista de hilos",
+    },
+    "dialog.bom_csv_title": {
+        Language.ENGLISH: "Export bill of materials CSV",
+        Language.SPANISH: "Exportar CSV de lista de materiales",
     },
     "dialog.html_title": {
         Language.ENGLISH: "Export HTML report",

@@ -132,7 +132,8 @@ height, ground line, and feed height; for front-view families whose horizontal
 layout adds information, it includes a **Top layout** view instead. The sheet also includes a title block and
 a bill of materials that totals conductor length by material and diameter,
 plus load, transmission-line, and source counts. Use **File → Export → Export
-wire schedule CSV...** to save the per-wire schedule as a spreadsheet file.
+wire schedule CSV...** to save the per-wire schedule as a spreadsheet file, or
+**Export bill of materials CSV...** for the grouped conductor totals.
 The sheet also carries an **Evidence and limitations** section with the
 template's evidence level, source, tolerance, and unmodeled items. Use the schedule when a
 dimension is too small to read or is hidden by the layout; it is the

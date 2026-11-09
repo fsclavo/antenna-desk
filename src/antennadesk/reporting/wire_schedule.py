@@ -168,6 +168,24 @@ def write_wire_schedule_csv(design: DesignVariant, path: Path) -> None:
     path.write_text(wire_schedule_to_csv(design), encoding="utf-8", newline="\n")
 
 
+BOM_HEADER = ("material", "diameter_mm", "wire_count", "total_length_m")
+
+
+def bom_to_csv(design: DesignVariant) -> str:
+    """Return the conductor bill of materials as CSV."""
+
+    lines = [",".join(BOM_HEADER)]
+    for row in conductor_bom_rows(design.antenna):
+        lines.append(
+            f"{row.material},{row.diameter_mm:.6f},{row.wire_count},{row.total_length_m:.6f}"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def write_bom_csv(design: DesignVariant, path: Path) -> None:
+    path.write_text(bom_to_csv(design), encoding="utf-8", newline="\n")
+
+
 def wire_schedule_html_rows(design: DesignVariant) -> tuple[str, ...]:
     """Return pre-escaped HTML table rows for the construction sheet."""
 
