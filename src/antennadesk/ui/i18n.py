@@ -2844,6 +2844,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Construction view",
         Language.SPANISH: "Vista de construcción",
     },
+    "construction.installation_view": {
+        Language.ENGLISH: "Installation view (front)",
+        Language.SPANISH: "Vista de instalación (frontal)",
+    },
     "construction.wire_schedule": {
         Language.ENGLISH: "Wire schedule",
         Language.SPANISH: "Lista de hilos",

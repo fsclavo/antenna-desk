@@ -68,7 +68,9 @@ table.schedule th { width: auto; }
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .muted { color: #666; font-size: 12px; }
 .notes { background: #f7f7f7; border-left: 4px solid #888; padding: 10px 14px; }
-.construction-figure { display: block; width: 100%; max-width: 100%; height: auto; border: 1px solid #ddd; background: #fff; margin: 12px 0 4px; }
+.construction-figure, .installation-figure { display: block; width: 100%; max-width: 100%; height: auto; border: 1px solid #ddd; background: #fff; margin: 12px 0 2px; }
+figure { margin: 0 0 12px; }
+figcaption { color: #555; font-size: 12px; margin-top: 4px; }
 footer { margin-top: 28px; color: #777; font-size: 11px; }
 """
 
@@ -113,6 +115,7 @@ def render_construction_sheet(
     result: SimulationResult | None,
     *,
     figure_png_data_uri: str | None = None,
+    auxiliary_png_data_uri: str | None = None,
 ) -> str:
     parameters = design.parameters
     antenna = design.antenna
@@ -139,12 +142,20 @@ def render_construction_sheet(
     )
     schedule_rows = "".join(wire_schedule_html_rows(design))
     feed = feed_schedule_row(antenna)
-    figure_section = (
-        f'<img class="construction-figure" alt="Construction view" '
-        f'src="{_escape(figure_png_data_uri)}">'
-        if figure_png_data_uri
-        else ""
-    )
+    figures: list[str] = []
+    if figure_png_data_uri:
+        figures.append(
+            f'<figure><img class="construction-figure" alt="Construction view" '
+            f'src="{_escape(figure_png_data_uri)}">'
+            "<figcaption>Construction view</figcaption></figure>"
+        )
+    if auxiliary_png_data_uri:
+        figures.append(
+            f'<figure><img class="installation-figure" alt="Installation view" '
+            f'src="{_escape(auxiliary_png_data_uri)}">'
+            "<figcaption>Installation view (front)</figcaption></figure>"
+        )
+    figure_section = "".join(figures)
     schedule_section = f"""
 <h2>Wire schedule</h2>
 <table class="schedule">
@@ -795,6 +806,7 @@ def write_construction_sheet(
     path: Path,
     *,
     figure_png_data_uri: str | None = None,
+    auxiliary_png_data_uri: str | None = None,
 ) -> None:
     path.write_text(
         render_construction_sheet(
@@ -802,6 +814,7 @@ def write_construction_sheet(
             design,
             result,
             figure_png_data_uri=figure_png_data_uri,
+            auxiliary_png_data_uri=auxiliary_png_data_uri,
         ),
         encoding="utf-8",
         newline="\n",

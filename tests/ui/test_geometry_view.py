@@ -430,6 +430,41 @@ def test_construction_image_renders_without_changing_the_view(qtbot: QtBot) -> N
     assert (view._mode, view._zoom, view._pan, view._height_exaggeration) == before
 
 
+def test_auxiliary_image_is_an_installation_elevation_for_top_views(
+    qtbot: QtBot,
+) -> None:
+    from antennadesk.domain.antennas.j_pole import JPoleParameters
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+
+    view = GeometryView(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(view)
+    yagi = YagiParameters(
+        frequency_hz=14_100_000.0,
+        elements=(
+            YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+            YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+        ),
+        height_m=10.0,
+    )
+    view.set_model(yagi.to_antenna(), antenna_type="yagi")
+    assert view.resolved_mode() is GeometryViewMode.PLAN
+    auxiliary = view.auxiliary_image(400, 200)
+    assert auxiliary is not None
+    assert not auxiliary.isNull()
+    assert _non_white_pixels(QPixmap.fromImage(auxiliary)) > 50
+
+    jpole = JPoleParameters(
+        frequency_hz=220_000_000.0,
+        radiator_height_m=1.0,
+        stub_length_m=0.5,
+        spacing_m=0.05,
+        feed_offset_m=0.1,
+    )
+    view.set_model(jpole.to_antenna(), antenna_type="j_pole")
+    assert view.resolved_mode() is GeometryViewMode.ELEVATION
+    assert view.auxiliary_image(400, 200) is None
+
+
 def test_geometry_view_exports_vector_svg_pdf_and_dxf(
     qtbot: QtBot,
     tmp_path: Path,

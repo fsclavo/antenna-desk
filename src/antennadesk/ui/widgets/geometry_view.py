@@ -130,9 +130,12 @@ class GeometryView(QWidget):
         if pixmap.isNull() or not pixmap.save(str(path), "PNG"):
             raise OSError(f"could not write geometry image: {path}")
 
-    def construction_image(self, width: int = 1200, height: int = 650) -> QImage:
-        """Render the construction view to an image for a construction sheet."""
-
+    def _image_for_mode(
+        self,
+        mode: GeometryViewMode,
+        width: int,
+        height: int,
+    ) -> QImage:
         if self._model is None:
             raise OSError("no geometry model to export")
         previous = (
@@ -143,7 +146,7 @@ class GeometryView(QWidget):
             self._height_exaggeration,
         )
         try:
-            self._mode = GeometryViewMode.CONSTRUCTION
+            self._mode = mode
             self._scene = None
             self._zoom = 1.0
             self._pan = QPointF(0.0, 0.0)
@@ -168,6 +171,24 @@ class GeometryView(QWidget):
                 self._pan,
                 self._height_exaggeration,
             ) = previous
+
+    def construction_image(self, width: int = 1200, height: int = 650) -> QImage:
+        """Render the construction view to an image for a construction sheet."""
+
+        return self._image_for_mode(GeometryViewMode.CONSTRUCTION, width, height)
+
+    def auxiliary_image(self, width: int = 1200, height: int = 400) -> QImage | None:
+        """Render an installation elevation for a top-view construction drawing."""
+
+        if self._model is None:
+            return None
+        principal = construction_view(
+            self._model,
+            antenna_type=effective_antenna_type(self._antenna_type, self._parameters),
+        )
+        if principal is not GeometryViewMode.PLAN:
+            return None
+        return self._image_for_mode(GeometryViewMode.ELEVATION, width, height)
 
     def save_svg(self, path: Path) -> None:
         generator = QSvgGenerator()

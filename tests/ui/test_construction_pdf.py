@@ -39,6 +39,8 @@ def test_construction_sheet_pdf_embeds_the_figure(
 ) -> None:
     image = QImage(400, 200, QImage.Format.Format_RGB32)
     image.fill(QColor("white"))
+    auxiliary = QImage(400, 120, QImage.Format.Format_RGB32)
+    auxiliary.fill(QColor("white"))
     path = tmp_path / "sheet-figure.pdf"
 
     write_construction_pdf(
@@ -48,6 +50,7 @@ def test_construction_sheet_pdf_embeds_the_figure(
         None,
         path,
         figure_image=image,
+        auxiliary_image=auxiliary,
     )
 
     data = path.read_bytes()

@@ -121,7 +121,9 @@ antennas.
 
 The construction sheet includes the rendered construction view and a **wire
 schedule**: every canonical wire with its start and end coordinates, length,
-diameter, and material, plus the primary feed point. Use the schedule when a
+diameter, and material, plus the primary feed point. When the construction view
+is a top view, the sheet also includes an **Installation view (front)** with
+height, ground line, and feed height. Use the schedule when a
 dimension is too small to read or is hidden by the layout; it is the
 authoritative construction data.
 

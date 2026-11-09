@@ -187,7 +187,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   construction sheet and native PDF now include a wire schedule with every
   wire's endpoints, length, diameter, material, and the primary feed point.
   They also embed the rendered construction view; the dialog preview loads the
-  same image through a document resource.
+  same image through a document resource. When Construction is a top view, the
+  sheet adds an **Installation view (front)** with height, ground line, and
+  feed height.
 - The **biquad** and **Beverage** starting dimensions are now classified as
   published evidence (B) instead of experimental (C). The biquad claim covers
   the quarter-wave loop side and eighth-wave reflector spacing; the Beverage

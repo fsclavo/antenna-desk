@@ -6537,8 +6537,10 @@ class MainWindow(QMainWindow):
         result = self._simulation_results.get(self._design_id)
         try:
             figure_image = self._geometry.construction_image()
+            auxiliary_image = self._geometry.auxiliary_image()
         except OSError:
             figure_image = None
+            auxiliary_image = None
         dialog = ConstructionDialog(
             self._translator,
             self._project,
@@ -6546,6 +6548,7 @@ class MainWindow(QMainWindow):
             result,
             self,
             figure_image=figure_image,
+            auxiliary_image=auxiliary_image,
         )
         dialog.exec()
 

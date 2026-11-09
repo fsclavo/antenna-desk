@@ -47,3 +47,26 @@ def test_construction_dialog_embeds_a_construction_figure(
     assert dialog._figure_data_uri is not None
     assert dialog._figure_data_uri.startswith("data:image/png;base64,")
     assert "construction-figure" in dialog._browser.toHtml()
+
+
+def test_construction_dialog_embeds_an_installation_view(
+    qtbot: QtBot,
+    sample_project: Project,
+) -> None:
+    figure = QImage(200, 100, QImage.Format.Format_RGB32)
+    figure.fill(QColor("white"))
+    auxiliary = QImage(200, 60, QImage.Format.Format_RGB32)
+    auxiliary.fill(QColor("white"))
+    dialog = ConstructionDialog(
+        Translator(Language.ENGLISH),
+        sample_project,
+        sample_project.designs[0],
+        None,
+        figure_image=figure,
+        auxiliary_image=auxiliary,
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._auxiliary_data_uri is not None
+    assert dialog._auxiliary_data_uri.startswith("data:image/png;base64,")
+    assert "installation-view" in dialog._browser.toHtml()
