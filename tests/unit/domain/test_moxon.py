@@ -7,6 +7,7 @@ import pytest
 from antennadesk.domain.antennas.family import AntennaFamily, antenna_family
 from antennadesk.domain.antennas.moxon import MoxonParameters, moxon_20m_wire
 from antennadesk.domain.antennas.polarization import Polarization
+from antennadesk.domain.environment.ground import GroundModel
 
 
 def test_moxon_generates_six_connected_wires() -> None:
@@ -78,6 +79,24 @@ def test_moxon_20m_wire_reference_dimensions() -> None:
     assert parameters.reflector_tip_m == pytest.approx(4.85 * 0.3048)
     assert parameters.driven_tip_m == pytest.approx(4.00 * 0.3048)
     assert parameters.gap_m == pytest.approx(0.72 * 0.3048)
+
+
+def test_moxon_20m_wire_scales_from_the_reference() -> None:
+    reference = moxon_20m_wire()
+    scaled = moxon_20m_wire(
+        frequency_hz=28_400_000.0,
+        wire_radius_m=0.002,
+        ground=GroundModel.perfect(),
+    )
+    scale = 14_170_000.0 / 28_400_000.0
+
+    assert scaled.frequency_hz == pytest.approx(28_400_000.0)
+    assert scaled.width_m == pytest.approx(reference.width_m * scale)
+    assert scaled.depth_m == pytest.approx(reference.depth_m * scale)
+    assert scaled.reflector_tip_m == pytest.approx(reference.reflector_tip_m * scale)
+    assert scaled.driven_tip_m == pytest.approx(reference.driven_tip_m * scale)
+    assert scaled.wire_radius_m == pytest.approx(0.002)
+    assert scaled.ground.kind is GroundModel.perfect().kind
 
 
 def test_moxon_rejects_overlapping_tips() -> None:

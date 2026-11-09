@@ -26,7 +26,7 @@ from ..antennas.folded_dipole import (
 from ..antennas.inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
 from ..antennas.j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
 from ..antennas.loop import ANTENNA_TYPE_LOOP, LoopParameters
-from ..antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters, moxon_20m_wire
+from ..antennas.moxon import ANTENNA_TYPE_MOXON, moxon_20m_wire
 from ..antennas.ocfd import (
     ANTENNA_TYPE_OCFD,
     OCFD_REFERENCE_TRANSFORMER_RATIO,
@@ -40,7 +40,6 @@ from ..antennas.yagi import ANTENNA_TYPE_YAGI, YagiElement, YagiParameters
 from .estimate import Confidence, DimensionEstimate, DimensionRow, DimensionUnit
 from .formulas import (
     FOLDED_SPACING_FACTOR,
-    MOXON_REFERENCE_FREQUENCY_HZ,
     RINGO_REFERENCE_FREQUENCY_HZ,
     SOURCE_APPLICATION_PRESET,
     SOURCE_ARRL_DIPOLE,
@@ -595,10 +594,12 @@ def estimate_t2fd(intent: DesignIntent) -> DimensionEstimate:
 def estimate_moxon(intent: DesignIntent) -> DimensionEstimate:
     height_m = max(intent.height_m, 0.01)
     try:
-        reference = moxon_20m_wire(
+        parameters = moxon_20m_wire(
+            frequency_hz=intent.frequency_hz,
             height_m=height_m,
             azimuth_deg=intent.azimuth_deg,
             polarization=intent.polarization,
+            wire_radius_m=intent.wire_radius_m,
             material=intent.material,
             ground=intent.ground,
         )
@@ -607,20 +608,6 @@ def estimate_moxon(intent: DesignIntent) -> DimensionEstimate:
             f"a vertical Moxon at {intent.frequency_hz / 1e6:.3f} MHz needs "
             "a higher height_m; increase height_m or use horizontal polarization"
         ) from exc
-    scale = MOXON_REFERENCE_FREQUENCY_HZ / intent.frequency_hz
-    parameters = MoxonParameters(
-        frequency_hz=intent.frequency_hz,
-        width_m=reference.width_m * scale,
-        depth_m=reference.depth_m * scale,
-        reflector_tip_m=reference.reflector_tip_m * scale,
-        driven_tip_m=reference.driven_tip_m * scale,
-        height_m=height_m,
-        azimuth_deg=intent.azimuth_deg,
-        polarization=intent.polarization,
-        wire_radius_m=intent.wire_radius_m,
-        material=intent.material,
-        ground=intent.ground,
-    )
     return DimensionEstimate(
         parameters=parameters,
         method_id="moxon.cebik_20m_scaled",

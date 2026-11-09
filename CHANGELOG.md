@@ -161,6 +161,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The **Moxon** reference preset now scales the published Cebik 20 m wire
+  dimensions to the current frequency and preserves the current height,
+  ground, wire radius, polarization, and material. The **half-square/bobtail**
+  reference preset does the same from its 7.15 MHz Cebik dimensions and also
+  preserves the feed offset. Scaled geometry is a heuristic starting point;
+  only the exact published frequency case is reference-backed. The Ringo and
+  vertical-mobile example buttons now show their fixed frequency in the label.
 - Beam construction views now carry their build dimensions: the Yagi plan
   labels every element (E1, E2, …) and each inter-element spacing; the Moxon
   adds a tip-detail inset with both tip lengths and the gap; the hexbeam adds

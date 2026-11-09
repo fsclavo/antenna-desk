@@ -157,33 +157,40 @@ class MoxonParameters:
 
 
 FOOT_M = 0.3048
+MOXON_REFERENCE_FREQUENCY_HZ = 14_170_000.0
 
 
 def moxon_20m_wire(
     *,
+    frequency_hz: float = MOXON_REFERENCE_FREQUENCY_HZ,
     height_m: float = 10.0,
     azimuth_deg: float = 0.0,
     polarization: Polarization = Polarization.HORIZONTAL,
+    wire_radius_m: float = 0.000912,
     material: ConductorMaterial = COPPER,
     ground: GroundModel = FREE_SPACE,
 ) -> MoxonParameters:
     """Return the published 20 m wire Moxon from L. B. Cebik, W4RNL.
 
-    Source: "The Moxon Rectangle: A Review", Table 1 (20 m wire), using
-    #14 copper wire. The source reports 56-58 ohm feedpoint impedance,
+    The 14.17 MHz case is the exact published reference: Table 1 (20 m wire),
+    using #14 copper wire. The source reports 56-58 ohm feedpoint impedance,
     5.8 dBi free-space gain, and greater than 32 dB front-to-back ratio.
+    Other frequencies are scaled linearly from that reference and are a
+    heuristic starting point, not an independent reference.
     """
 
+    ensure_positive(frequency_hz, name="frequency_hz")
+    scale = MOXON_REFERENCE_FREQUENCY_HZ / frequency_hz
     return MoxonParameters(
-        frequency_hz=14_170_000.0,
-        width_m=25.00 * FOOT_M,
-        depth_m=9.57 * FOOT_M,
-        reflector_tip_m=4.85 * FOOT_M,
-        driven_tip_m=4.00 * FOOT_M,
+        frequency_hz=frequency_hz,
+        width_m=25.00 * FOOT_M * scale,
+        depth_m=9.57 * FOOT_M * scale,
+        reflector_tip_m=4.85 * FOOT_M * scale,
+        driven_tip_m=4.00 * FOOT_M * scale,
         height_m=height_m,
         azimuth_deg=azimuth_deg,
         polarization=polarization,
-        wire_radius_m=0.000912,
+        wire_radius_m=wire_radius_m,
         material=material,
         ground=ground,
     )

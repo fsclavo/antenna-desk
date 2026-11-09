@@ -24,17 +24,25 @@ def test_moxon_dialog_builds_parameters(qtbot: QtBot) -> None:
     assert dialog._form._polarization.itemText(1) == "Vertical"
 
 
-def test_moxon_dialog_loads_the_reference_preset(qtbot: QtBot) -> None:
+def test_moxon_dialog_scales_the_reference_to_the_current_frequency(
+    qtbot: QtBot,
+) -> None:
     dialog = MoxonDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(dialog)
+    dialog._form._frequency.setValue(28.4)
+    dialog._form._ground.setCurrentIndex(dialog._form._ground.findData("perfect"))
+    dialog._form._radius.setValue(2.0)
 
     dialog._form._reference.click()
 
     parameters = dialog.parameters()
-    assert parameters.frequency_hz == 14_170_000.0
-    assert parameters.width_m == pytest.approx(25.00 * 0.3048)
-    assert parameters.gap_m == pytest.approx(0.72 * 0.3048, abs=0.001)
-    assert dialog._form._ground.currentText() == "Free space"
+    scale = 14_170_000.0 / 28_400_000.0
+    assert parameters.frequency_hz == pytest.approx(28_400_000.0)
+    assert parameters.width_m == pytest.approx(25.00 * 0.3048 * scale, abs=0.001)
+    assert parameters.gap_m == pytest.approx(0.72 * 0.3048 * scale, abs=0.001)
+    assert parameters.wire_radius_m == pytest.approx(0.002)
+    assert parameters.ground.kind.value == "perfect"
+    assert dialog._form._ground.currentText() == "Perfect ground"
 
 
 def test_moxon_dialog_restores_vertical_polarization(qtbot: QtBot) -> None:

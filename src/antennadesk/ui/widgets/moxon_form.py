@@ -320,10 +320,13 @@ class MoxonForm(QWidget):
     def _load_reference_preset(self) -> None:
         try:
             parameters = moxon_20m_wire(
+                frequency_hz=self._frequency.value() * 1_000_000.0,
                 height_m=length_to_m(self._height.value(), self._unit_system),
                 azimuth_deg=self._azimuth.value(),
                 polarization=self._selected_polarization(),
+                wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
                 material=self._selected_material(),
+                ground=self._ground_model(),
             )
         except ValueError:
             self._update_clearance_warning()

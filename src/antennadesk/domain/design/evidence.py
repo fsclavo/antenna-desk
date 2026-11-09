@@ -150,7 +150,10 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         level=EvidenceLevel.REFERENCE,
         source="L. B. Cebik, W4RNL, 'The Moxon Rectangle: A Review', Table 1 and text",
         tolerance="1.5 Ω real; 5 Ω reactance; 0.3 dB gain; better than 30 dB F/B",
-        limitation="Published 20 m dimensions only.",
+        limitation=(
+            "Reference-backed at 14.17 MHz only; dimensions scaled to another "
+            "frequency or edited are a heuristic starting point."
+        ),
     ),
     "ocfd": EvidenceEntry(
         template="ocfd",

@@ -62,6 +62,7 @@ class ScvForm(QWidget):
         self._frequency.setRange(0.1, 100_000.0)
         self._frequency.setDecimals(6)
         self._frequency.setSuffix(" MHz")
+        self._frequency.setValue(SCV_REFERENCE_FREQUENCY_HZ / 1_000_000.0)
 
         minimum_length, maximum_length = length_bounds(unit_system)
         self._horizontal_length = QDoubleSpinBox(self)
@@ -172,7 +173,7 @@ class ScvForm(QWidget):
         self._ground.currentIndexChanged.connect(self._ground_changed)
         initial = parameters or scv_parameters(
             kind,
-            7_100_000.0,
+            SCV_REFERENCE_FREQUENCY_HZ,
             ground=GroundModel.finite(
                 relative_permittivity=13.0,
                 conductivity_s_per_m=0.005,
@@ -246,8 +247,9 @@ class ScvForm(QWidget):
             current = scv_parameters(self._selected_kind(), SCV_REFERENCE_FREQUENCY_HZ)
         reference = scv_parameters(
             current.kind,
-            SCV_REFERENCE_FREQUENCY_HZ,
+            current.frequency_hz,
             base_height_m=current.base_height_m,
+            feed_offset_m=current.feed_offset_m,
             azimuth_deg=current.azimuth_deg,
             wire_radius_m=current.wire_radius_m,
             material=current.material,

@@ -390,10 +390,12 @@ and ground. Horizontal polarization places the rectangle in a horizontal
 plane. Vertical polarization places the complete rectangle in a vertical plane
 while the boom stays horizontal. Height is the boom centerline, so a vertical
 Moxon needs `height > width / 2` to keep the rectangle above ground. The dialog
-reports the remaining tip gap. Use **Load 20 m wire reference preset**
-to load the published Cebik 20 m dimensions; that preset is reference-backed
-for impedance, gain, and front-to-back ratio. Any edited geometry is
-experimental and has no external reference.
+reports the remaining tip gap. Use **Load 20 m reference scaled to current
+frequency** to scale the published Cebik 20 m dimensions to the frequency in
+the editor; it preserves the current height, ground, wire radius, polarization,
+and material. The exact 14.17 MHz dimensions are reference-backed for
+impedance, gain, and front-to-back ratio; scaled or edited geometry is a
+heuristic starting point and has no independent reference.
 
 ## Create an inverted-V
 
@@ -454,10 +456,12 @@ vertical height, base height, feed offset, azimuth, wire radius, material, and
 ground. The **feed offset below top junction** moves the feed down the fed
 vertical as a matching adjustment; zero is the published current-feed point.
 Do not feed either array at a bottom corner: that is a high-voltage point and
-produces a very high impedance. The **Load Cebik 7.15 MHz reference** button
-loads the published 62.4 x 39 ft half-square or 125 x 38 ft bobtail dimensions.
-Those are free-space, maximum-gain starting dimensions scaled by frequency;
-they are not independently validated for gain, impedance, or a specific site.
+produces a very high impedance. The **Load Cebik reference scaled to current
+frequency** button scales the published 62.4 x 39 ft half-square or 125 x 38 ft
+bobtail dimensions from 7.15 MHz to the current frequency, preserving the base
+height, feed offset, radius, material, and ground. Those are free-space,
+maximum-gain starting dimensions; scaled geometry is not independently
+validated for gain, impedance, or a specific site.
 The construction sheet lists the individual vertical and top-wire cuts. The
 construction view is the front elevation. Neither template has a
 frequency-first estimator; **Optimize...**

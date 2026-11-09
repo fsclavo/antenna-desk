@@ -3277,12 +3277,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: ("{type} · horizontal {horizontal} {unit} · vertical {vertical} {unit}"),
     },
     "scv.load_reference": {
-        Language.ENGLISH: "Load Cebik 7.15 MHz reference",
-        Language.SPANISH: "Cargar referencia Cebik de 7,15 MHz",
+        Language.ENGLISH: "Load Cebik reference scaled to current frequency",
+        Language.SPANISH: "Cargar referencia Cebik escalada a la frecuencia actual",
     },
     "scv.load_reference_hint": {
-        Language.ENGLISH: "Load the published 62.4 x 39 ft or 125 x 38 ft dimensions.",
-        Language.SPANISH: "Carga las dimensiones publicadas de 62,4 x 39 ft o 125 x 38 ft.",
+        Language.ENGLISH: (
+            "Scale the published 62.4 x 39 ft or 125 x 38 ft dimensions from "
+            "7.15 MHz to the current frequency."
+        ),
+        Language.SPANISH: (
+            "Escala las dimensiones publicadas de 62,4 x 39 ft o 125 x 38 ft "
+            "desde 7,15 MHz a la frecuencia actual."
+        ),
     },
     "scv.hint": {
         Language.ENGLISH: (
@@ -3314,16 +3320,19 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Published Cebik 7.15 MHz free-space starting geometry: half square "
             "62.4 ft by 39 ft, about 4.6 dBi and 65 ohm; bobtail curtain 125 ft by "
             "38 ft, about 6.3 dBi and 40 ohm at the center-wire/top junction. "
-            "AntennaDesk does not independently validate the pattern, feedpoint "
-            "impedance, ground, or matching."
+            "Dimensions scaled to another frequency are a heuristic starting "
+            "point, not an independent reference. AntennaDesk does not "
+            "independently validate the pattern, feedpoint impedance, ground, or "
+            "matching."
         ),
         Language.SPANISH: (
             "Geometría inicial publicada por Cebik para 7,15 MHz en espacio libre: "
             "medio cuadrado de 62,4 ft por 39 ft, unos 4,6 dBi y 65 ohm; cortina "
             "bobtail de 125 ft por 38 ft, unos 6,3 dBi y 40 ohm en la unión de la "
-            "vertical central con el hilo superior. AntennaDesk no valida "
-            "independientemente el patrón, la impedancia de alimentación, el suelo "
-            "ni la adaptación."
+            "vertical central con el hilo superior. Las dimensiones escaladas a "
+            "otra frecuencia son un punto de partida heurístico, no una referencia "
+            "independiente. AntennaDesk no valida independientemente el patrón, la "
+            "impedancia de alimentación, el suelo ni la adaptación."
         ),
     },
     "biquad.title": {
@@ -4111,8 +4120,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         ),
     },
     "ringo.ar6_example": {
-        Language.ENGLISH: "Load Cushcraft AR-6 dimensions",
-        Language.SPANISH: "Cargar dimensiones Cushcraft AR-6",
+        Language.ENGLISH: "Load Cushcraft AR-6 dimensions (52 MHz)",
+        Language.SPANISH: "Cargar dimensiones Cushcraft AR-6 (52 MHz)",
     },
     "ringo.ar6_example_hint": {
         Language.ENGLISH: (
@@ -4585,8 +4594,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Separación de puntas {gap} {unit}",
     },
     "moxon.reference_preset": {
-        Language.ENGLISH: "Load 20 m wire reference preset",
-        Language.SPANISH: "Cargar preset de referencia de 20 m",
+        Language.ENGLISH: "Load 20 m reference scaled to current frequency",
+        Language.SPANISH: "Cargar referencia de 20 m escalada a la frecuencia actual",
     },
     "moxon.polarization_hint": {
         Language.ENGLISH: (
@@ -4613,24 +4622,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: (
             "The generator creates a reflector and driven element with bent tips. "
             "Vertical polarization puts the whole rectangle in a vertical plane "
-            "with a horizontal boom. The generated antenna is an editable "
-            "first-class design."
+            "with a horizontal boom. The reference preset scales the published "
+            "20 m wire dimensions to the current frequency and keeps the current "
+            "height, ground, wire radius, and polarization."
         ),
         Language.SPANISH: (
             "El generador crea un reflector y un elemento alimentado con puntas "
             "dobladas. La polarización vertical ubica todo el rectángulo en un "
-            "plano vertical con el boom horizontal. La antena generada es un "
-            "diseño editable de primera clase."
+            "plano vertical con el boom horizontal. El preset de referencia escala "
+            "las dimensiones publicadas de alambre de 20 m a la frecuencia actual y "
+            "conserva la altura, el ground, el radio de hilo y la polarización "
+            "actuales."
         ),
     },
     "moxon.evidence": {
         Language.ENGLISH: (
-            "The 20 m wire preset is reference-backed by a published model; "
-            "edited geometry is experimental."
+            "The exact 14.17 MHz Cebik 20 m wire dimensions are reference-backed. "
+            "Dimensions scaled to another frequency or edited are a heuristic "
+            "starting point, not an independent reference."
         ),
         Language.SPANISH: (
-            "El preset de alambre de 20 m tiene referencia de un modelo publicado; "
-            "la geometría editada es experimental."
+            "Las dimensiones exactas de Cebik para alambre de 20 m a 14,17 MHz "
+            "tienen referencia publicada. Las dimensiones escaladas a otra "
+            "frecuencia o editadas son un punto de partida heurístico, no una "
+            "referencia independiente."
         ),
     },
     "ocfd.title": {
@@ -4858,8 +4873,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         ),
     },
     "vertical.mobile_example": {
-        Language.ENGLISH: "Load 102 in example",
-        Language.SPANISH: "Cargar ejemplo de 102 in",
+        Language.ENGLISH: "Load 102 in example (14.1 MHz)",
+        Language.SPANISH: "Cargar ejemplo de 102 in (14,1 MHz)",
     },
     "vertical.mobile_example_hint": {
         Language.ENGLISH: (
