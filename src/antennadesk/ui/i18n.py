@@ -823,6 +823,64 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "geometry.diameter": {Language.ENGLISH: "Diameter", Language.SPANISH: "Diámetro"},
     "geometry.width": {Language.ENGLISH: "Width", Language.SPANISH: "Ancho"},
     "geometry.depth": {Language.ENGLISH: "Depth", Language.SPANISH: "Profundidad"},
+    "geometry.inner": {Language.ENGLISH: "inner", Language.SPANISH: "interior"},
+    "geometry.outer": {Language.ENGLISH: "outer", Language.SPANISH: "exterior"},
+    "geometry.reflector_tip": {
+        Language.ENGLISH: "reflector tip",
+        Language.SPANISH: "punta del reflector",
+    },
+    "geometry.driven_tip": {
+        Language.ENGLISH: "driven tip",
+        Language.SPANISH: "punta del excitado",
+    },
+    "geometry.reflector_element": {
+        Language.ENGLISH: "reflector",
+        Language.SPANISH: "reflector",
+    },
+    "geometry.driven_element": {
+        Language.ENGLISH: "driven",
+        Language.SPANISH: "excitado",
+    },
+    "geometry.director_element": {
+        Language.ENGLISH: "director",
+        Language.SPANISH: "director",
+    },
+    "geometry.reflector_loop": {
+        Language.ENGLISH: "reflector loop",
+        Language.SPANISH: "lazo reflector",
+    },
+    "geometry.driven_loop": {
+        Language.ENGLISH: "driven loop",
+        Language.SPANISH: "lazo excitado",
+    },
+    "geometry.director_loop": {
+        Language.ENGLISH: "director loop",
+        Language.SPANISH: "lazo director",
+    },
+    "geometry.reflector_spacing": {
+        Language.ENGLISH: "reflector spacing",
+        Language.SPANISH: "separación del reflector",
+    },
+    "geometry.director_spacing": {
+        Language.ENGLISH: "director spacing",
+        Language.SPANISH: "separación del director",
+    },
+    "geometry.trap_inset_label": {
+        Language.ENGLISH: "trap inset",
+        Language.SPANISH: "inserción de trampa",
+    },
+    "geometry.detail_tip": {
+        Language.ENGLISH: "tip detail (not to scale)",
+        Language.SPANISH: "detalle de puntas (sin escala)",
+    },
+    "geometry.detail_half": {
+        Language.ENGLISH: "left half; symmetric (not to scale)",
+        Language.SPANISH: "mitad izquierda; simétrica (sin escala)",
+    },
+    "geometry.detail_trap": {
+        Language.ENGLISH: "trap detail; symmetric (not to scale)",
+        Language.SPANISH: "detalle de trampas; simétrico (sin escala)",
+    },
     "geometry.top_view": {
         Language.ENGLISH: "top view",
         Language.SPANISH: "vista superior",
@@ -3643,6 +3701,15 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "separadores ni el balun."
         ),
     },
+    "hexbeam.spreader_angle_note": {
+        Language.ENGLISH: (
+            "spreader angle {spreader}° from the boom axis; wire bend at the apex {bend}°"
+        ),
+        Language.SPANISH: (
+            "ángulo del separador {spreader}° desde el eje del boom; quiebre del "
+            "hilo en el vértice {bend}°"
+        ),
+    },
     "hexbeam.tip_gap_note": {
         Language.ENGLISH: (
             "published tip-gap parameter {published}; drawn clear tip-to-tip gap {clear}"
@@ -4800,6 +4867,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "yagi.taper_geometry": {
         Language.ENGLISH: "tips {length} {unit} at {radius} {radius_unit}",
         Language.SPANISH: "puntas {length} {unit} a {radius} {radius_unit}",
+    },
+    "yagi.taper_note": {
+        Language.ENGLISH: "tapered tips: {length}; tip radius {radius}",
+        Language.SPANISH: "puntas cónicas: {length}; radio de punta {radius}",
     },
     "yagi.taper_summary": {
         Language.ENGLISH: "Tapered tips",

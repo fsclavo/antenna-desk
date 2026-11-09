@@ -21,7 +21,9 @@ from antennadesk.domain.antennas.magnetic_loop import (
 )
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.polarization import Polarization
+from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
 from antennadesk.domain.antennas.ringo import RingoParameters
+from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
 from antennadesk.domain.antennas.yagi import YagiElement, YagiMatchType, YagiParameters
 from antennadesk.ui.geometry.builder import build_scene, effective_antenna_type
 from antennadesk.ui.geometry.views import GeometryViewMode, recommended_view
@@ -844,6 +846,107 @@ def test_discone_plan_does_not_draw_vertical_heights() -> None:
 
     assert len(scene.dimensions) == 2
     assert {dimension.text for dimension in scene.dimensions} == {"0.30 m", "0.50 m"}
+
+
+def test_yagi_plan_labels_elements_and_spacings() -> None:
+    parameters = YagiParameters(
+        frequency_hz=14_100_000.0,
+        elements=(
+            YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+            YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+            YagiElement(position_m=4.0, length_m=9.0, radius_m=0.001),
+        ),
+        height_m=10.0,
+    )
+
+    scene = _scene(parameters, "yagi", GeometryViewMode.PLAN)
+
+    dimensions = {(dimension.label, dimension.text) for dimension in scene.dimensions}
+    assert ("E1", "10.00 m") in dimensions
+    assert ("E2", "9.50 m") in dimensions
+    assert ("E3", "9.00 m") in dimensions
+    assert ("1-2", "2.00 m") in dimensions
+    assert ("2-3", "2.00 m") in dimensions
+
+
+def test_moxon_plan_has_a_tip_detail_inset() -> None:
+    parameters = MoxonParameters(
+        frequency_hz=14_100_000.0,
+        width_m=10.0,
+        depth_m=3.0,
+        reflector_tip_m=1.0,
+        driven_tip_m=1.0,
+        height_m=10.0,
+    )
+
+    scene = _scene(parameters, "moxon", GeometryViewMode.PLAN)
+
+    inset = next(inset for inset in scene.insets if inset.label.startswith("tip detail"))
+    dimensions = {(dimension.label, dimension.text) for dimension in inset.dimensions}
+    assert ("R tip", "1.00 m") in dimensions
+    assert ("D tip", "1.00 m") in dimensions
+    assert ("gap", "1.00 m") in dimensions
+
+
+def test_hexbeam_plan_dimensions_the_half_and_spreader_angle() -> None:
+    parameters = published_hexbeam_parameters()
+
+    scene = _scene(parameters, "hexbeam", GeometryViewMode.PLAN)
+
+    assert any(angle.text == "60.0°" for angle in scene.angular_dimensions)
+    assert any(
+        dimension.label == "Turning radius" and dimension.text == "3.30 m"
+        for dimension in scene.dimensions
+    )
+    inset = next(inset for inset in scene.insets if inset.label.startswith("left half"))
+    labels = {dimension.label for dimension in inset.dimensions}
+    assert {"Di", "Do", "Ri", "Ro"} <= labels
+
+
+def test_trap_yagi_plan_labels_elements_and_spacings() -> None:
+    parameters = trap_yagi_parameters(
+        frequency_hz=7_100_000.0,
+        high_band_frequency_hz=14_100_000.0,
+        element_count=3,
+        driven_length_m=20.0,
+        reflector_spacing_m=4.0,
+        director_spacing_m=3.0,
+        trap_inset_m=3.0,
+        trap_frequency_hz=14_100_000.0,
+    )
+
+    scene = _scene(parameters, "trap_yagi", GeometryViewMode.PLAN)
+
+    dimensions = {(dimension.label, dimension.text) for dimension in scene.dimensions}
+    assert ("reflector", "21.00 m") in dimensions
+    assert ("driven", "20.00 m") in dimensions
+    assert ("director", "19.00 m") in dimensions
+    assert ("reflector spacing", "4.00 m") in dimensions
+    assert ("director spacing", "3.00 m") in dimensions
+    inset = next(inset for inset in scene.insets if inset.label.startswith("trap detail"))
+    assert any(
+        dimension.label == "trap inset" and dimension.text == "3.00 m"
+        for dimension in inset.dimensions
+    )
+
+
+def test_quad_beam_plan_labels_loops_and_spacings() -> None:
+    parameters = quad_beam_parameters(
+        frequency_hz=14_100_000.0,
+        element_count=3,
+        loop_side_m=5.0,
+        reflector_spacing_m=4.0,
+        director_spacing_m=3.0,
+        height_m=2.5,
+    )
+
+    scene = _scene(parameters, "quad_beam", GeometryViewMode.PLAN)
+
+    dimensions = {(dimension.label, dimension.text) for dimension in scene.dimensions}
+    assert ("reflector", "5.25 m") in dimensions
+    assert ("driven", "5.00 m") in dimensions
+    assert ("director", "4.75 m") in dimensions
+    assert ("director spacing", "3.00 m") in dimensions
 
 
 def test_j_pole_construction_view_labels_the_feed_and_repeated_values() -> None:

@@ -95,6 +95,11 @@ between:
   Slim Jim therefore shows its folded front elevation, stub spacing, gap
   detail, and feed offset; a Yagi shows its element layout, boom, and element
   lengths.
+  Beam families use detail insets for crowded values: the Yagi labels every
+  element and inter-element spacing, the Moxon shows a tip detail with both tip
+  lengths and the gap, the hexbeam shows the spreader angle and a half-detail
+  with the four segment lengths, the trapped Yagi shows a symmetric trap inset,
+  and the quad beam labels each loop and the director spacing.
 - **3D**: isometric wireframe colored by gain (green low, yellow intermediate, red high), with a dBi legend, ground grid, feed marker, axes, and scale.
 
 The construction view is selected automatically. Press **Apply design** or

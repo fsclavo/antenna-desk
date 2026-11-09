@@ -1354,17 +1354,27 @@ def _add_hexbeam_dimensions(
     parameters: HexbeamParameters | None,
     factory: _Factory,
     dimensions: list[Dimension],
+    angular_dimensions: list[AngularDimension],
+    insets: list[SceneInset],
     notes: list[str],
     translator: Translator,
 ) -> None:
     if parameters is None:
         return
+    driver_left_inner = next(
+        (wire for wire in model.wires if wire.id == "hexbeam-driver-left-inner"),
+        None,
+    )
     driver_left = next(
         (wire for wire in model.wires if wire.id == "hexbeam-driver-left-tip"),
         None,
     )
     driver_right = next(
         (wire for wire in model.wires if wire.id == "hexbeam-driver-right-tip"),
+        None,
+    )
+    reflector_left_inner = next(
+        (wire for wire in model.wires if wire.id == "hexbeam-reflector-left-inner"),
         None,
     )
     reflector_left = next(
@@ -1390,8 +1400,9 @@ def _add_hexbeam_dimensions(
                 factory.project(span_left.end),
                 factory.project(span_right.end),
                 parameters.overall_span_m,
-                side="above",
-                priority=90,
+                side="left",
+                priority=95,
+                label=translator.t("geometry.span"),
             )
         )
     if driver_left is not None and reflector_left is not None and not factory.projection.vertical:
@@ -1409,8 +1420,9 @@ def _add_hexbeam_dimensions(
                 factory.project(gap_start),
                 factory.project(gap_end),
                 clear_gap,
-                side="left",
-                priority=80,
+                side="right",
+                priority=95,
+                label=translator.t("geometry.gap"),
             )
         )
         notes.append(
@@ -1424,6 +1436,95 @@ def _add_hexbeam_dimensions(
                 clear=_format_length(clear_gap, translator, factory.unit_system),
             )
         )
+    if not factory.projection.vertical:
+        if reflector_left_inner is not None:
+            radius_m = reflector_left_inner.start.distance_to(reflector_left_inner.end)
+            dimensions.append(
+                factory.dimension(
+                    reflector_left_inner.start,
+                    reflector_left_inner.end,
+                    radius_m,
+                    side="left",
+                    priority=85,
+                    label=translator.t("hexbeam.turning_radius"),
+                )
+            )
+        if driver_left_inner is not None and driver_left is not None:
+            feed_wire = next(
+                (wire for wire in model.wires if wire.id == "hexbeam-feed"),
+                None,
+            )
+            if feed_wire is not None:
+                center = _wire_point(feed_wire, 0.5)
+                forward = (
+                    feed_wire.end if feed_wire.end.x_m >= feed_wire.start.x_m else feed_wire.start
+                )
+                apex = driver_left_inner.end
+                spreader_angle = _included_angle(center, forward, apex)
+                bend_angle = _included_angle(apex, driver_left_inner.start, driver_left.end)
+                angular_dimensions.append(
+                    AngularDimension(
+                        center=factory.project(center),
+                        first=factory.project(forward),
+                        second=factory.project(apex),
+                        text=f"{spreader_angle:.1f}°",
+                        priority=90,
+                    )
+                )
+                notes.append(
+                    translator.t(
+                        "hexbeam.spreader_angle_note",
+                        spreader=f"{spreader_angle:.1f}",
+                        bend=f"{bend_angle:.1f}",
+                    )
+                )
+            half_specs = (
+                (driver_left_inner, "Di", "left"),
+                (driver_left, "Do", "right"),
+                (reflector_left_inner, "Ri", "left"),
+                (reflector_left, "Ro", "right"),
+            )
+            half_wires = tuple(wire for wire, _label, _side in half_specs if wire is not None)
+            half_dimensions: list[Dimension] = []
+            for wire, label, side in half_specs:
+                if wire is None:
+                    continue
+                half_dimensions.append(
+                    factory.dimension(
+                        wire.start,
+                        wire.end,
+                        wire.length_m,
+                        side=side,
+                        priority=90,
+                        label=label,
+                    )
+                )
+            if driver_left is not None and reflector_left is not None:
+                inset_gap = driver_left.end.distance_to(reflector_left.end)
+                half_dimensions.append(
+                    factory.between_scene(
+                        factory.project(driver_left.end),
+                        factory.project(reflector_left.end),
+                        inset_gap,
+                        side="above",
+                        priority=100,
+                        label=translator.t("geometry.gap"),
+                    )
+                )
+            if len(half_wires) >= 2:
+                insets.append(
+                    SceneInset(
+                        label=translator.t("geometry.detail_half"),
+                        polylines=tuple(
+                            ScenePolyline(
+                                (factory.project(wire.start), factory.project(wire.end)),
+                                role="wire",
+                            )
+                            for wire in half_wires
+                        ),
+                        dimensions=tuple(half_dimensions),
+                    )
+                )
     if factory.projection.vertical:
         dimensions.append(
             factory.vertical_dimension(
@@ -1433,6 +1534,7 @@ def _add_hexbeam_dimensions(
                 parameters.height_m,
                 side="left",
                 priority=60,
+                label=translator.t("field.height"),
             )
         )
     notes.append(
@@ -1448,6 +1550,7 @@ def _add_trap_yagi_dimensions(
     parameters: TrapYagiParameters | None,
     factory: _Factory,
     dimensions: list[Dimension],
+    insets: list[SceneInset],
     notes: list[str],
     translator: Translator,
 ) -> None:
@@ -1457,15 +1560,50 @@ def _add_trap_yagi_dimensions(
     if len(elements) < 2:
         return
     driven = elements[1]
-    dimensions.append(
-        factory.dimension(
-            driven.start,
-            driven.end,
-            parameters.driven_length_m,
-            side="above",
-            priority=90,
-        )
+    roles = (
+        translator.t("geometry.reflector_element"),
+        translator.t("geometry.driven_element"),
+        translator.t("geometry.director_element"),
     )
+    for index, (element_wire, length_m) in enumerate(
+        zip(elements, parameters.element_lengths_m, strict=True)
+    ):
+        if index == 0:
+            side = "left"
+        elif index == len(elements) - 1:
+            side = "right"
+        else:
+            side = "above"
+        dimensions.append(
+            factory.dimension(
+                element_wire.start,
+                element_wire.end,
+                length_m,
+                side=side,
+                priority=90,
+                label=roles[index] if index < len(roles) else None,
+            )
+        )
+    for index, spacing_m in enumerate(parameters.element_spacings_m):
+        if index + 1 >= len(elements):
+            break
+        first_center = _wire_point(elements[index], 0.5)
+        second_center = _wire_point(elements[index + 1], 0.5)
+        label = (
+            translator.t("geometry.reflector_spacing")
+            if index == 0
+            else translator.t("geometry.director_spacing")
+        )
+        dimensions.append(
+            factory.dimension(
+                first_center,
+                second_center,
+                spacing_m,
+                side="below",
+                priority=80,
+                label=label,
+            )
+        )
     if factory.projection.vertical:
         dimensions.append(
             factory.vertical_dimension(
@@ -1475,6 +1613,7 @@ def _add_trap_yagi_dimensions(
                 parameters.height_m,
                 side="left",
                 priority=60,
+                label=translator.t("field.height"),
             )
         )
     else:
@@ -1487,9 +1626,55 @@ def _add_trap_yagi_dimensions(
                 factory.project(elements[-1].start).x_m,
                 parameters.boom_length_m,
                 side="below",
-                priority=85,
+                priority=55,
+                label=translator.t("geometry.boom_length"),
             )
         )
+        trap_loads = tuple(load for load in model.loads if load.wire_id == driven.id)
+        if trap_loads:
+            center = _wire_point(driven, 0.5)
+            markers: list[SceneMarker] = []
+            trap_dimensions: list[Dimension] = []
+            for load in trap_loads:
+                ratio = min(max(load.offset_m / driven.length_m, 0.0), 1.0)
+                point = _wire_point(driven, ratio)
+                markers.append(
+                    SceneMarker(
+                        point=factory.project(point),
+                        kind="load",
+                        label="T",
+                        priority=80,
+                    )
+                )
+            nearest_load = min(
+                trap_loads,
+                key=lambda load: abs(load.offset_m - driven.length_m / 2.0),
+            )
+            ratio = min(max(nearest_load.offset_m / driven.length_m, 0.0), 1.0)
+            trap_point = _wire_point(driven, ratio)
+            trap_dimensions.append(
+                factory.dimension(
+                    center,
+                    trap_point,
+                    abs(nearest_load.offset_m - driven.length_m / 2.0),
+                    side="below",
+                    priority=90,
+                    label=translator.t("geometry.trap_inset_label"),
+                )
+            )
+            insets.append(
+                SceneInset(
+                    label=translator.t("geometry.detail_trap"),
+                    polylines=(
+                        ScenePolyline(
+                            (factory.project(driven.start), factory.project(driven.end)),
+                            role="wire",
+                        ),
+                    ),
+                    markers=tuple(markers),
+                    dimensions=tuple(trap_dimensions),
+                )
+            )
     notes.append(
         translator.t(
             "trap_yagi.geometry_note",
@@ -1616,6 +1801,7 @@ def _add_quad_beam_dimensions(
                 parameters.reflector_spacing_m,
                 side="below",
                 priority=85,
+                label=translator.t("geometry.reflector_spacing"),
             )
         )
         dimensions.append(
@@ -1625,19 +1811,49 @@ def _add_quad_beam_dimensions(
                 driven_x + parameters.boom_length_m - parameters.reflector_spacing_m,
                 parameters.boom_length_m,
                 side="below",
-                priority=70,
+                priority=55,
+                label=translator.t("geometry.boom_length"),
             )
         )
+        if parameters.element_count == 3:
+            driven_center = _wire_point(
+                model.wire_by_id(f"quad-beam-element-{DRIVEN_ELEMENT_INDEX}-side-0"),
+                0.5,
+            )
+            director_center = _wire_point(
+                model.wire_by_id(f"quad-beam-element-{DRIVEN_ELEMENT_INDEX + 1}-side-0"),
+                0.5,
+            )
+            dimensions.append(
+                factory.dimension(
+                    driven_center,
+                    director_center,
+                    parameters.director_spacing_m,
+                    side="below",
+                    priority=80,
+                    label=translator.t("geometry.director_spacing"),
+                )
+            )
     if not factory.projection.vertical:
+        loop_labels = (
+            translator.t("geometry.reflector_element"),
+            translator.t("geometry.driven_element"),
+            translator.t("geometry.director_element"),
+        )
         for index, side_m in enumerate(parameters.element_sides_m):
             side_wire = model.wire_by_id(f"quad-beam-element-{index}-side-0")
+            if index == 0 or index == len(parameters.element_sides_m) - 1:
+                side = "right"
+            else:
+                side = "below"
             dimensions.append(
                 factory.dimension(
                     side_wire.start,
                     side_wire.end,
                     side_m,
-                    side="above",
-                    priority=90 if index == DRIVEN_ELEMENT_INDEX else 55,
+                    side=side,
+                    priority=95 if index == DRIVEN_ELEMENT_INDEX else 90,
+                    label=loop_labels[index] if index < len(loop_labels) else None,
                 )
             )
     notes.append(translator.t("quad_beam.geometry_note"))
@@ -1872,11 +2088,68 @@ def _add_hairpin_dimensions(
         )
 
 
+def _moxon_tip_inset(
+    model: AntennaModel,
+    parameters: MoxonParameters,
+    factory: _Factory,
+    translator: Translator,
+) -> SceneInset | None:
+    reflector_tip = next(
+        (wire for wire in model.wires if wire.id == "reflector-tip-1"),
+        None,
+    )
+    driven_tip = next(
+        (wire for wire in model.wires if wire.id == "driven-tip-1"),
+        None,
+    )
+    if reflector_tip is None or driven_tip is None:
+        return None
+    dimensions = [
+        factory.dimension(
+            reflector_tip.start,
+            reflector_tip.end,
+            parameters.reflector_tip_m,
+            side="above",
+            priority=100,
+            label="R tip",
+        ),
+        factory.dimension(
+            driven_tip.start,
+            driven_tip.end,
+            parameters.driven_tip_m,
+            side="above",
+            priority=95,
+            label="D tip",
+        ),
+        factory.between_scene(
+            factory.project(reflector_tip.end),
+            factory.project(driven_tip.end),
+            parameters.gap_m,
+            side="below",
+            priority=95,
+            label=translator.t("geometry.gap"),
+        ),
+    ]
+    polylines = tuple(
+        ScenePolyline(
+            (factory.project(wire.start), factory.project(wire.end)),
+            role="wire",
+        )
+        for wire in (reflector_tip, driven_tip)
+    )
+    return SceneInset(
+        label=translator.t("geometry.detail_tip"),
+        polylines=polylines,
+        dimensions=tuple(dimensions),
+    )
+
+
 def _add_array_dimensions(
     model: AntennaModel,
     parameters: object | None,
     factory: _Factory,
     dimensions: list[Dimension],
+    insets: list[SceneInset],
     notes: list[str],
     translator: Translator,
 ) -> None:
@@ -1949,19 +2222,39 @@ def _add_array_dimensions(
                 span = _yagi_element_span(model, parameters, index)
                 if span is None:
                     continue
+                if index == 0:
+                    side = "left"
+                elif index == len(parameters.elements) - 1:
+                    side = "right"
+                else:
+                    side = "above" if index % 2 else "below"
                 dimensions.append(
                     factory.dimension(
                         span[0],
                         span[1],
                         element.length_m,
-                        side="above" if index % 2 == 0 else "below",
-                        priority=70
-                        if index in {0, parameters.driven_index, len(parameters.elements) - 1}
-                        else 35,
+                        side=side,
+                        priority=90,
+                        label=f"E{index + 1}",
                     )
                 )
             if len(parameters.elements) >= 2:
                 positions = [element.position_m for element in parameters.elements]
+                for index in range(len(parameters.elements) - 1):
+                    first_center = _yagi_element_center(model, parameters, index)
+                    second_center = _yagi_element_center(model, parameters, index + 1)
+                    if first_center is None or second_center is None:
+                        continue
+                    dimensions.append(
+                        factory.dimension(
+                            first_center,
+                            second_center,
+                            abs(positions[index + 1] - positions[index]),
+                            side="below",
+                            priority=80,
+                            label=f"{index + 1}-{index + 2}",
+                        )
+                    )
                 first_center = _yagi_element_center(model, parameters, 0)
                 last_center = _yagi_element_center(
                     model,
@@ -1975,9 +2268,26 @@ def _add_array_dimensions(
                             last_center,
                             max(positions) - min(positions),
                             side="below",
-                            priority=60,
+                            priority=55,
+                            label=translator.t("geometry.boom_length"),
                         )
                     )
+            if parameters.is_tapered:
+                notes.append(
+                    translator.t(
+                        "yagi.taper_note",
+                        length=_format_length(
+                            parameters.taper_tip_length_m,
+                            translator,
+                            factory.unit_system,
+                        ),
+                        radius=_format_length(
+                            parameters.taper_tip_radius_m,
+                            translator,
+                            factory.unit_system,
+                        ),
+                    )
+                )
             if parameters.driven_folded:
                 driven_a = _yagi_element_wire(model, parameters, parameters.driven_index)
                 driven_b = _array_wire(
@@ -1998,50 +2308,36 @@ def _add_array_dimensions(
             if parameters.match_type is YagiMatchType.BETA_HAIRPIN:
                 _add_hairpin_dimensions(model, parameters, factory, dimensions)
         elif isinstance(parameters, MoxonParameters):
-            for wire in model.wires[:1]:
-                dimensions.append(
-                    factory.dimension(wire.start, wire.end, wire.length_m, side="auto", priority=80)
-                )
-            for wire_id in ("reflector-tip-1", "driven-tip-1"):
-                tip = next((wire for wire in model.wires if wire.id == wire_id), None)
-                if tip is not None:
-                    dimensions.append(
-                        factory.dimension(
-                            tip.start,
-                            tip.end,
-                            tip.length_m,
-                            side="above",
-                            priority=45,
-                        )
-                    )
-            if len(model.wires) >= 4:
+            reflector = next(
+                (wire for wire in model.wires if wire.id == "reflector"),
+                None,
+            )
+            driven = next((wire for wire in model.wires if wire.id == "driven"), None)
+            if reflector is not None:
                 dimensions.append(
                     factory.dimension(
-                        _wire_point(model.wires[0], 0.5),
-                        _wire_point(model.wires[3], 0.5),
+                        reflector.start,
+                        reflector.end,
+                        parameters.width_m,
+                        side="left",
+                        priority=90,
+                        label=translator.t("geometry.width"),
+                    )
+                )
+            if reflector is not None and driven is not None:
+                dimensions.append(
+                    factory.dimension(
+                        _wire_point(reflector, 0.5),
+                        _wire_point(driven, 0.5),
                         parameters.depth_m,
                         side="below",
-                        priority=55,
+                        priority=85,
+                        label=translator.t("geometry.depth"),
                     )
                 )
-                reflector_tip = next(
-                    (wire for wire in model.wires if wire.id == "reflector-tip-1"),
-                    None,
-                )
-                driven_tip = next(
-                    (wire for wire in model.wires if wire.id == "driven-tip-1"),
-                    None,
-                )
-                if reflector_tip is not None and driven_tip is not None:
-                    dimensions.append(
-                        factory.between_scene(
-                            factory.project(reflector_tip.end),
-                            factory.project(driven_tip.end),
-                            parameters.gap_m,
-                            side="below",
-                            priority=60,
-                        )
-                    )
+            inset = _moxon_tip_inset(model, parameters, factory, translator)
+            if inset is not None:
+                insets.append(inset)
         else:
             projected = tuple(
                 factory.project(point) for wire in model.wires for point in (wire.start, wire.end)
@@ -2133,7 +2429,8 @@ def _add_array_dimensions(
                     reflector.end,
                     parameters.width_m,
                     side="left",
-                    priority=85,
+                    priority=90,
+                    label=translator.t("geometry.width"),
                 )
             )
         if reflector is not None and driven is not None:
@@ -2143,37 +2440,13 @@ def _add_array_dimensions(
                     _wire_point(driven, 0.5),
                     parameters.depth_m,
                     side="below",
-                    priority=75,
+                    priority=80,
+                    label=translator.t("geometry.depth"),
                 )
             )
-        reflector_tip = next(
-            (wire for wire in model.wires if wire.id == "reflector-tip-1"),
-            None,
-        )
-        driven_tip = next(
-            (wire for wire in model.wires if wire.id == "driven-tip-1"),
-            None,
-        )
-        if reflector_tip is not None:
-            dimensions.append(
-                factory.dimension(
-                    reflector_tip.start,
-                    reflector_tip.end,
-                    parameters.reflector_tip_m,
-                    side="above",
-                    priority=45,
-                )
-            )
-        if reflector_tip is not None and driven_tip is not None:
-            dimensions.append(
-                factory.between_scene(
-                    factory.project(reflector_tip.end),
-                    factory.project(driven_tip.end),
-                    parameters.gap_m,
-                    side="above",
-                    priority=55,
-                )
-            )
+        inset = _moxon_tip_inset(model, parameters, factory, translator)
+        if inset is not None:
+            insets.append(inset)
 
     if vertical_array and isinstance(parameters, (YagiParameters, MoxonParameters)):
         height_m = parameters.height_m
@@ -3462,6 +3735,7 @@ def build_scene(
             parameters if isinstance(parameters, TrapYagiParameters) else None,
             factory,
             dimensions,
+            insets,
             notes,
             translator,
         )
@@ -3471,6 +3745,8 @@ def build_scene(
             parameters if isinstance(parameters, HexbeamParameters) else None,
             factory,
             dimensions,
+            angular_dimensions,
+            insets,
             notes,
             translator,
         )
@@ -3480,6 +3756,7 @@ def build_scene(
             parameters,
             factory,
             dimensions,
+            insets,
             notes,
             translator,
         )

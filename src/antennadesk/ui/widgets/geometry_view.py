@@ -60,6 +60,9 @@ class GeometryView(QWidget):
     """A dimensioned construction sketch driven by the canonical model."""
 
     ZOOM_STEPS = (0.5, 1.0, 2.0, 4.0, 8.0)
+    INSET_WIDTH = 200.0
+    INSET_HEIGHT = 160.0
+    INSET_GAP = 6.0
     zoom_changed = Signal(float)
 
     def __init__(
@@ -549,10 +552,13 @@ class GeometryView(QWidget):
         for index, _inset in enumerate(reversed(scene.insets)):
             rects.append(
                 QRectF(
-                    safe_rect.right() - 172.0,
-                    safe_rect.bottom() - 142.0 - index * 138.0,
-                    168.0,
-                    134.0,
+                    safe_rect.right() - self.INSET_WIDTH - self.INSET_GAP,
+                    safe_rect.bottom()
+                    - self.INSET_HEIGHT
+                    - self.INSET_GAP
+                    - index * (self.INSET_HEIGHT + self.INSET_GAP),
+                    self.INSET_WIDTH,
+                    self.INSET_HEIGHT,
                 )
             )
         return tuple(rects)
@@ -738,10 +744,13 @@ class GeometryView(QWidget):
     ) -> None:
         for index, inset in enumerate(reversed(scene.insets)):
             outer = QRectF(
-                safe_rect.right() - 172.0,
-                safe_rect.bottom() - 142.0 - index * 138.0,
-                168.0,
-                134.0,
+                safe_rect.right() - self.INSET_WIDTH - self.INSET_GAP,
+                safe_rect.bottom()
+                - self.INSET_HEIGHT
+                - self.INSET_GAP
+                - index * (self.INSET_HEIGHT + self.INSET_GAP),
+                self.INSET_WIDTH,
+                self.INSET_HEIGHT,
             )
             painter.setPen(QPen(self._colors.light_line, 1.0, Qt.PenStyle.DashLine))
             painter.setBrush(Qt.BrushStyle.NoBrush)

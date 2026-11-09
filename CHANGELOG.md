@@ -161,6 +161,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Beam construction views now carry their build dimensions: the Yagi plan
+  labels every element (E1, E2, …) and each inter-element spacing; the Moxon
+  adds a tip-detail inset with both tip lengths and the gap; the hexbeam adds
+  the spreader angle, turning radius, and a half-detail inset with the four
+  segment lengths; the trapped Yagi labels all element lengths and spacings and
+  adds a symmetric trap-detail inset; the quad beam labels each loop and the
+  director spacing. Detail insets are larger so the labels remain legible.
 - The geometry panel now exposes a single **Construction** view plus **3D**.
   Construction resolves to the projection that shows the family's principal
   plane: front for vertical antennas, top for horizontal beams and loops, top

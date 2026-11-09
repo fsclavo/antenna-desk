@@ -77,8 +77,8 @@ Negative and limitations:
 ## Follow-ups
 
 - Add a boom-axis front inset for the quad beam.
-- Add segment and apex-angle dimensions to the hexbeam construction view.
-- Add per-family dimension manifests to the scene contract tests.
+- Add per-family dimension manifests to the scene contract tests for the
+  remaining vertical and wire families.
 - Embed the construction scene in the HTML/PDF construction sheet; today the
   sheet includes the schedule but not the sketch.
 - Revisit an advanced view selector only if users need the secondary
