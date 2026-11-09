@@ -36,6 +36,7 @@ from ..domain.antennas.trap_yagi import TrapYagiParameters
 from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
 from ..domain.antennas.zepp import ZeppParameters, parallel_wire_impedance_ohm
+from ..domain.design.evidence import EVIDENCE
 from ..domain.environment.ground import GroundModel
 from ..domain.projects.project import DesignVariant
 
@@ -58,6 +59,20 @@ def design_provenance_rows(design: DesignVariant) -> tuple[tuple[str, str], ...]
         ("Estimate confidence", provenance.confidence),
         ("Estimate tolerance", f"{provenance.tolerance_m:.4f} m"),
         ("Reference sources", ", ".join(provenance.source_ids) or "—"),
+    )
+
+
+def design_evidence_rows(design: DesignVariant) -> tuple[tuple[str, str], ...]:
+    """Return the evidence level, source, tolerance, and limitation."""
+
+    entry = EVIDENCE.get(design.antenna_type)
+    if entry is None:
+        return ()
+    return (
+        ("Evidence level", f"{entry.level.value} ({entry.level.name.lower()})"),
+        ("Evidence source", entry.source),
+        ("Evidence tolerance", entry.tolerance),
+        ("Limitation", entry.limitation),
     )
 
 

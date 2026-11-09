@@ -193,7 +193,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   frequency, units, date) and a bill of materials with conductor totals grouped
   by material and diameter, plus load, line, and source counts. The wire
   schedule can also be exported as CSV from **File → Export → Export wire
-  schedule CSV...**.
+  schedule CSV... The sheet also carries an **Evidence and limitations**
+  section with the template's evidence level, source, tolerance, and the
+  unmodeled items (frame, boom, balun, trap loss, and so on).**.
 - The **biquad** and **Beverage** starting dimensions are now classified as
   published evidence (B) instead of experimental (C). The biquad claim covers
   the quarter-wave loop side and eighth-wave reflector spacing; the Beverage

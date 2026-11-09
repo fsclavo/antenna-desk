@@ -47,6 +47,7 @@ from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import FrequencyResult, SimulationResult
 from .design_summary import (
+    design_evidence_rows,
     design_provenance_rows,
     design_summary_rows,
     load_summary_rows,
@@ -187,6 +188,20 @@ def render_construction_sheet(
 {bom_summary}
 </table>
 """
+    evidence_rows = "".join(
+        f"<tr><th>{_escape(label)}</th><td>{_escape(value)}</td></tr>"
+        for label, value in design_evidence_rows(design)
+    )
+    evidence_section = (
+        f"""
+<h2>Evidence and limitations</h2>
+<table>
+{evidence_rows}
+</table>
+"""
+        if evidence_rows
+        else ""
+    )
     figures: list[str] = []
     if figure_png_data_uri:
         figures.append(
@@ -826,6 +841,7 @@ point above. Verify every connection and the feed gap before construction.</p>""
 </table>
 {schedule_section}
 {bom_section}
+{evidence_section}
 <h2>Simulation</h2>
 <table>
 {simulation_rows}

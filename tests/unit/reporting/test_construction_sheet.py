@@ -395,6 +395,9 @@ def test_hexbeam_construction_sheet_lists_the_bent_elements(
     assert "Driver half-length" in sheet
     assert "Build a W-shaped driver" in sheet
     assert "six-spreader" in sheet
+    assert "Evidence and limitations" in sheet
+    assert "B (published)" in sheet
+    assert "frame" in sheet
 
 
 def test_trap_yagi_construction_sheet_lists_the_traps(

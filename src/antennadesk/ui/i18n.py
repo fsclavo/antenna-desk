@@ -2860,6 +2860,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Bill of materials",
         Language.SPANISH: "Lista de materiales",
     },
+    "construction.evidence": {
+        Language.ENGLISH: "Evidence and limitations",
+        Language.SPANISH: "Evidencia y limitaciones",
+    },
     "construction.title": {
         Language.ENGLISH: "Construction Sheet",
         Language.SPANISH: "Hoja de construcción",

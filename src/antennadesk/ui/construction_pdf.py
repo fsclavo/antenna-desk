@@ -14,6 +14,7 @@ from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import SimulationResult
 from ..reporting.design_summary import (
+    design_evidence_rows,
     design_provenance_rows,
     design_summary_rows,
     load_summary_rows,
@@ -193,6 +194,13 @@ def write_construction_pdf(
     for label, value in bom_summary_rows(design.antenna):
         row(label, value)
     y += 12.0
+
+    evidence_rows = design_evidence_rows(design)
+    if evidence_rows:
+        section(translator.t("construction.evidence"))
+        for label, value in evidence_rows:
+            row(label, value)
+        y += 12.0
 
     section(translator.t("construction.wire_schedule"))
     for line in wire_schedule_lines(design):

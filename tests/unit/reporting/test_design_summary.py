@@ -5,6 +5,7 @@ from __future__ import annotations
 from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.reporting.design_summary import (
+    design_evidence_rows,
     design_summary_rows,
     optimization_summary_rows,
 )
@@ -502,6 +503,17 @@ def test_magnetic_loop_summary_reports_tuning_and_loss_fields() -> None:
     assert rows["Tuning capacitance"] == "180.000 pF"
     assert rows["Capacitor ESR"] == "0.200 Ω"
     assert "Capacitor reactance" in rows
+
+
+def test_hexbeam_evidence_rows_report_the_limitations(sample_project) -> None:
+    from antennadesk.domain.antennas.hexbeam import published_hexbeam_parameters
+
+    design = sample_project.designs[0].with_parameters(published_hexbeam_parameters())
+    rows = dict(design_evidence_rows(design))
+
+    assert rows["Evidence level"] == "B (published)"
+    assert "G3TXQ" in rows["Evidence source"]
+    assert "frame" in rows["Limitation"]
 
 
 def test_fan_dipole_summary_reports_angles_and_end_heights() -> None:
