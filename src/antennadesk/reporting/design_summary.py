@@ -21,6 +21,7 @@ from ..domain.antennas.load import LumpedLoad, ParallelLoad
 from ..domain.antennas.loaded_dipole import LoadedDipoleParameters
 from ..domain.antennas.loop import LoopOrientation, LoopParameters
 from ..domain.antennas.magnetic_loop import MagneticLoopParameters
+from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.phased_vertical import PhasedVerticalParameters
@@ -39,15 +40,29 @@ from ..domain.antennas.zepp import ZeppParameters, parallel_wire_impedance_ohm
 from ..domain.design.evidence import EVIDENCE
 from ..domain.environment.ground import GroundModel
 from ..domain.projects.project import DesignVariant
+from .localization import Labeler, identity_labeler
 
 
-def ground_text(ground: GroundModel) -> str:
+def ground_text(ground: GroundModel, labeler: Labeler | None = None) -> str:
+    tr = labeler or identity_labeler
+    kind = tr(ground.kind.value)
     if ground.relative_permittivity is not None and ground.conductivity_s_per_m is not None:
-        return (
-            f"{ground.kind.value} (eps_r={ground.relative_permittivity:g}, "
-            f"sigma={ground.conductivity_s_per_m:g} S/m)"
+        return tr(
+            "{kind} (eps_r={permittivity:g}, sigma={conductivity:g} S/m)",
+            kind=kind,
+            permittivity=ground.relative_permittivity,
+            conductivity=ground.conductivity_s_per_m,
         )
-    return ground.kind.value
+    return kind
+
+
+def material_text(material: ConductorMaterial, labeler: Labeler | None = None) -> str:
+    tr = labeler or identity_labeler
+    return tr(
+        "{material} ({conductivity:.3g} S/m)",
+        material=tr(material.name),
+        conductivity=material.conductivity_s_per_m,
+    )
 
 
 def design_provenance_rows(design: DesignVariant) -> tuple[tuple[str, str], ...]:
@@ -98,7 +113,9 @@ def optimization_summary_rows(design: DesignVariant) -> tuple[tuple[str, str], .
 
 def design_summary_rows(
     parameters: AntennaDesignParameters,
+    labeler: Labeler | None = None,
 ) -> tuple[tuple[str, str], ...]:
+    tr = labeler or identity_labeler
     rows: list[tuple[str, str]] = [
         ("Frequency", f"{parameters.frequency_hz / 1e6:.6f} MHz"),
     ]
@@ -114,7 +131,7 @@ def design_summary_rows(
                 ("Min height", f"{min(heights):.4f} m"),
                 ("Max height", f"{max(heights):.4f} m"),
                 ("Materials", materials),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         return tuple(rows)
@@ -159,10 +176,14 @@ def design_summary_rows(
                 ("High band", f"{parameters.high_band_frequency_hz / 1e6:.6f} MHz"),
                 ("Total wire length", f"{parameters.total_length_m:.4f} m"),
                 ("Center section", f"{parameters.inner_length_m:.4f} m"),
-                ("Outer section", f"{parameters.outer_length_m:.4f} m each"),
+                ("Outer section", tr("{length:.4f} m each", length=parameters.outer_length_m)),
                 (
                     "Trap positions",
-                    f"{left_position:.4f} m, {right_position:.4f} m from wire start",
+                    tr(
+                        "{left:.4f} m, {right:.4f} m from wire start",
+                        left=left_position,
+                        right=right_position,
+                    ),
                 ),
                 ("Trap frequency", f"{parameters.trap_frequency_hz / 1e6:.6f} MHz"),
                 ("Trap inductance", f"{parameters.trap_inductance_h * 1e6:.4f} µH"),
@@ -340,7 +361,7 @@ def design_summary_rows(
                     f"vf={parameters.line_velocity_factor:.3f}",
                 ),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         return tuple(rows)
@@ -362,7 +383,7 @@ def design_summary_rows(
                 ),
                 ("Estimated stub impedance", f"{impedance:.1f} Ω"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         return tuple(rows)
@@ -375,7 +396,10 @@ def design_summary_rows(
                 ("Vertical elements", str(parameters.vertical_count)),
                 (
                     "Horizontal segment",
-                    f"{parameters.horizontal_segment_m:.4f} m each",
+                    tr(
+                        "{length:.4f} m each",
+                        length=parameters.horizontal_segment_m,
+                    ),
                 ),
                 ("Base height", f"{parameters.base_height_m:.4f} m"),
                 ("Top height", f"{parameters.top_height_m:.4f} m"),
@@ -385,7 +409,7 @@ def design_summary_rows(
                 ),
                 ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         return tuple(rows)
@@ -413,7 +437,7 @@ def design_summary_rows(
                 ("Height", f"{parameters.height_m:.4f} m"),
                 ("Orientation", parameters.orientation.value),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         return tuple(rows)
@@ -430,7 +454,7 @@ def design_summary_rows(
                 ("Feed", "center of the W driver"),
                 ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         return tuple(rows)
@@ -451,7 +475,7 @@ def design_summary_rows(
                 ),
                 ("Height", f"{parameters.height_m:.4f} m"),
                 ("Feed", "driven element center"),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         if parameters.element_count == 3:
@@ -472,7 +496,7 @@ def design_summary_rows(
                 ("Feed", "across the apex gap"),
                 ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         return tuple(rows)
@@ -490,7 +514,7 @@ def design_summary_rows(
                 ("Polarization", "horizontal"),
                 ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         if parameters.element_count == 3:
@@ -518,7 +542,7 @@ def design_summary_rows(
                 ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Feed", "first vertical (primary)"),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         return tuple(rows)
@@ -531,7 +555,10 @@ def design_summary_rows(
                 (
                     "Termination",
                     (
-                        f"{parameters.termination_resistance_ohm:.1f} Ω to ground"
+                        tr(
+                            "{resistance:.1f} Ω to ground",
+                            resistance=parameters.termination_resistance_ohm,
+                        )
                         if parameters.termination_enabled
                         else "disabled"
                     ),
@@ -539,7 +566,7 @@ def design_summary_rows(
                 ("Feed", "near end"),
                 ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         return tuple(rows)
@@ -556,14 +583,17 @@ def design_summary_rows(
                 (
                     "Reflector",
                     (
-                        f"{parameters.reflector_spacing_m:.4f} m behind"
+                        tr(
+                            "{spacing:.4f} m behind",
+                            spacing=parameters.reflector_spacing_m,
+                        )
                         if parameters.reflector_enabled
                         else "disabled"
                     ),
                 ),
                 ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         return tuple(rows)
@@ -575,7 +605,7 @@ def design_summary_rows(
                 ("Ring diameter", f"{parameters.ring_diameter_m:.4f} m"),
                 ("Ring height", f"{parameters.ring_height_m:.4f} m"),
                 ("Ring sides", str(parameters.ring_sides)),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         return tuple(rows)
@@ -589,7 +619,7 @@ def design_summary_rows(
                 ("Feed offset", f"{parameters.feed_offset_m:.4f} m"),
                 ("Base height", f"{parameters.base_height_m:.4f} m"),
                 ("Folded", "yes" if parameters.folded else "no"),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         return tuple(rows)
@@ -621,7 +651,7 @@ def design_summary_rows(
                     f"{parameters.effective_counterpoise_azimuth_deg:.1f}°",
                 ),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         return tuple(rows)
@@ -649,7 +679,7 @@ def design_summary_rows(
                 ),
                 ("Apex height", f"{parameters.apex_height_m:.4f} m"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         return tuple(rows)
@@ -671,7 +701,7 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         return tuple(rows)
@@ -717,10 +747,9 @@ def design_summary_rows(
                 ),
                 (
                     "Material",
-                    f"{parameters.material.name} "
-                    f"({parameters.material.conductivity_s_per_m:.3g} S/m)",
+                    material_text(parameters.material, labeler),
                 ),
-                ("Ground", ground_text(parameters.ground)),
+                ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         return tuple(rows)
@@ -729,21 +758,25 @@ def design_summary_rows(
             ("Wire diameter", f"{parameters.wire_radius_m * 2000.0:.3f} mm"),
             (
                 "Material",
-                f"{parameters.material.name} ({parameters.material.conductivity_s_per_m:.3g} S/m)",
+                material_text(parameters.material, labeler),
             ),
-            ("Ground", ground_text(parameters.ground)),
+            ("Ground", ground_text(parameters.ground, labeler)),
         ]
     )
     return tuple(rows)
 
 
-def load_summary_rows(loads: tuple[LumpedLoad, ...]) -> tuple[tuple[str, str], ...]:
+def load_summary_rows(
+    loads: tuple[LumpedLoad, ...],
+    labeler: Labeler | None = None,
+) -> tuple[tuple[str, str], ...]:
+    tr = labeler or identity_labeler
     rows: list[tuple[str, str]] = []
     for index, load in enumerate(loads, start=1):
-        kind = "parallel" if isinstance(load, ParallelLoad) else "series"
+        kind = tr("parallel" if isinstance(load, ParallelLoad) else "series")
         rows.append(
             (
-                f"Load {index} ({kind})",
+                tr("Load {index} ({kind})", index=index, kind=kind),
                 (
                     f"{load.wire_id} @ {load.offset_m:.3f} m · "
                     f"R={load.resistance_ohm:g} Ω · "
@@ -757,12 +790,14 @@ def load_summary_rows(loads: tuple[LumpedLoad, ...]) -> tuple[tuple[str, str], .
 
 def transmission_line_summary_rows(
     lines: tuple[TransmissionLine, ...],
+    labeler: Labeler | None = None,
 ) -> tuple[tuple[str, str], ...]:
+    tr = labeler or identity_labeler
     rows: list[tuple[str, str]] = []
     for index, line in enumerate(lines, start=1):
         rows.append(
             (
-                f"Transmission line {index}",
+                tr("Transmission line {index}", index=index),
                 (
                     f"{line.start_wire_id} @ {line.start_offset_m:.3f} m → "
                     f"{line.end_wire_id} @ {line.end_offset_m:.3f} m · "

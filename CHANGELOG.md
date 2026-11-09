@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The **construction sheet**, **HTML simulation report**, and native **PDF**
+  exports now follow the UI language. Reporting stays Qt-free and accepts an
+  optional labeler; the UI passes `Translator.report`. Table headers, title
+  blocks, section headings, evidence rows, design-summary labels, construction
+  notes, and chart titles are translated. Technical values, wire identifiers,
+  units, and user project names remain canonical.
 - Band analysis can now run independent bands in parallel with **1–4 bounded
   workers** in the dialog (command 1–8; the sequential path remains the
   default). Results and progress stay in the selected band order, cancellation

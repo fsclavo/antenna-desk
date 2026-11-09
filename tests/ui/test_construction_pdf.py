@@ -32,6 +32,26 @@ def test_construction_sheet_pdf_is_written(
     assert len(data) > 1_000
 
 
+def test_construction_sheet_pdf_is_written_in_spanish(
+    qtbot: QtBot,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "hoja.pdf"
+
+    write_construction_pdf(
+        Translator(Language.SPANISH),
+        sample_project,
+        sample_project.designs[0],
+        None,
+        path,
+    )
+
+    data = path.read_bytes()
+    assert data.startswith(b"%PDF")
+    assert len(data) > 1_000
+
+
 def test_construction_sheet_pdf_embeds_the_figure(
     qtbot: QtBot,
     sample_project: Project,

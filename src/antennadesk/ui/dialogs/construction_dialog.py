@@ -97,6 +97,8 @@ class ConstructionDialog(QDialog):
                 figure_png_data_uri=preview_uri,
                 auxiliary_png_data_uri=auxiliary_preview,
                 auxiliary_kind=self._auxiliary_kind,
+                labeler=translator.report,
+                language=translator.language.value,
             )
         )
         self._browser.setDocument(document)

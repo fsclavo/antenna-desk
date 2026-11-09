@@ -30,6 +30,7 @@ from ..reporting.design_summary import (
     optimization_summary_rows,
     transmission_line_summary_rows,
 )
+from ..reporting.localization import localize_rows
 from ..reporting.result_summary import gain_metric_rows
 from ..reporting.svg_chart import SvgSeries, line_chart_svg
 from .i18n import Translator
@@ -49,14 +50,17 @@ def _svg_image(svg: str, width: int = 760, height: int = 260) -> QImage:
     return image
 
 
-def _chart_series(result: SimulationResult) -> tuple[QImage, QImage]:
+def _chart_series(
+    result: SimulationResult,
+    translator: Translator,
+) -> tuple[QImage, QImage]:
     x = [frequency.frequency_hz / 1e6 for frequency in result.frequencies]
     resistance = [frequency.impedance_ohm.real for frequency in result.frequencies]
     reactance = [frequency.impedance_ohm.imag for frequency in result.frequencies]
     impedance = line_chart_svg(
-        title="Impedance",
-        x_label="Frequency (MHz)",
-        y_label="Impedance (Ω)",
+        title=translator.t("tab.impedance"),
+        x_label=translator.report("Frequency (MHz)"),
+        y_label=translator.report("Impedance (Ω)"),
         series=(
             SvgSeries("R", COLOR_A, tuple(zip(x, resistance, strict=True))),
             SvgSeries("X", COLOR_B, tuple(zip(x, reactance, strict=True))),
@@ -68,10 +72,10 @@ def _chart_series(result: SimulationResult) -> tuple[QImage, QImage]:
         if math.isfinite(frequency.swr)
     )
     swr = line_chart_svg(
-        title="SWR",
-        x_label="Frequency (MHz)",
-        y_label="SWR",
-        series=(SvgSeries("SWR", COLOR_C, swr_points),),
+        title=translator.t("table.swr"),
+        x_label=translator.report("Frequency (MHz)"),
+        y_label=translator.report("SWR"),
+        series=(SvgSeries(translator.report("SWR"), COLOR_C, swr_points),),
     )
     return _svg_image(impedance), _svg_image(swr)
 
@@ -237,12 +241,18 @@ def write_report_pdf(
     row(translator.t("results.status"), translator.t(f"status_value.{result.status.value}"))
 
     section(translator.t("panel.design"))
-    for label, value in (
-        *design_summary_rows(design.parameters),
-        *optimization_summary_rows(design),
-        *design_provenance_rows(design),
-        *load_summary_rows(design.antenna.loads),
-        *transmission_line_summary_rows(design.antenna.transmission_lines),
+    for label, value in localize_rows(
+        (
+            *design_summary_rows(design.parameters, labeler=translator.report),
+            *optimization_summary_rows(design),
+            *design_provenance_rows(design),
+            *load_summary_rows(design.antenna.loads, labeler=translator.report),
+            *transmission_line_summary_rows(
+                design.antenna.transmission_lines,
+                labeler=translator.report,
+            ),
+        ),
+        translator.report,
     ):
         row(label, value)
 
@@ -288,7 +298,7 @@ def write_report_pdf(
     )
 
     section(translator.t("report.gain"))
-    for label, value in gain_metric_rows(result):
+    for label, value in localize_rows(gain_metric_rows(result), translator.report):
         row(label, value)
 
     section(translator.t("tab.impedance"))
@@ -329,7 +339,7 @@ def write_report_pdf(
         paragraph(translator.t("construction.no_resonance"))
 
     section(translator.t("report.charts"))
-    impedance_image, swr_image = _chart_series(result)
+    impedance_image, swr_image = _chart_series(result, translator)
     chart(impedance_image)
     chart(swr_image)
 

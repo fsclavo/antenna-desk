@@ -6952,7 +6952,15 @@ class MainWindow(QMainWindow):
             else None
         )
         try:
-            write_html_report(project, design, result, path, band_analysis=analysis)
+            write_html_report(
+                project,
+                design,
+                result,
+                path,
+                band_analysis=analysis,
+                labeler=self._translator.report,
+                language=self._translator.language.value,
+            )
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))
             return

@@ -29,6 +29,27 @@ def test_construction_dialog_shows_dimensions(
     assert "No result yet." in text
 
 
+def test_construction_dialog_follows_the_spanish_language(
+    qtbot: QtBot,
+    sample_project: Project,
+) -> None:
+    dialog = ConstructionDialog(
+        Translator(Language.SPANISH),
+        sample_project,
+        sample_project.designs[0],
+        None,
+    )
+    qtbot.addWidget(dialog)
+    dialog.show()
+
+    text = dialog._browser.toPlainText()
+    assert "Dimensiones" in text
+    assert "Lista de hilos" in text
+    assert "Notas de construcción" in text
+    assert "Wire schedule" not in text
+    assert "Construction notes" not in text
+
+
 def test_construction_dialog_embeds_a_construction_figure(
     qtbot: QtBot,
     sample_project: Project,

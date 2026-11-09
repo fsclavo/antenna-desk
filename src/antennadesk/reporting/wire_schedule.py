@@ -16,6 +16,7 @@ from pathlib import Path
 from ..domain.antennas.antenna import AntennaModel
 from ..domain.antennas.geometry import Point3D
 from ..domain.projects.project import DesignVariant
+from .localization import Labeler, identity_labeler
 
 WIRE_SCHEDULE_HEADER = (
     "index",
@@ -205,21 +206,43 @@ def wire_schedule_html_rows(design: DesignVariant) -> tuple[str, ...]:
     return tuple(rows)
 
 
-def wire_schedule_lines(design: DesignVariant) -> tuple[str, ...]:
+def wire_schedule_lines(
+    design: DesignVariant,
+    labeler: Labeler | None = None,
+) -> tuple[str, ...]:
     """Return compact lines for the native PDF construction sheet."""
 
+    tr = labeler or identity_labeler
     lines: list[str] = []
     for row in schedule_rows_for_design(design):
         lines.append(
-            f"W{row.index} {row.wire_id}: "
-            f"({row.start.x_m:.3f}, {row.start.y_m:.3f}, {row.start.z_m:.3f}) -> "
-            f"({row.end.x_m:.3f}, {row.end.y_m:.3f}, {row.end.z_m:.3f}) · "
-            f"{row.length_m:.4f} m · Ø{row.diameter_mm:.3f} mm · {row.material}"
+            tr(
+                "W{index} {wire}: ({start_x}, {start_y}, {start_z}) -> "
+                "({end_x}, {end_y}, {end_z}) · {length} m · Ø{diameter} mm · "
+                "{material}",
+                index=row.index,
+                wire=row.wire_id,
+                start_x=f"{row.start.x_m:.3f}",
+                start_y=f"{row.start.y_m:.3f}",
+                start_z=f"{row.start.z_m:.3f}",
+                end_x=f"{row.end.x_m:.3f}",
+                end_y=f"{row.end.y_m:.3f}",
+                end_z=f"{row.end.z_m:.3f}",
+                length=f"{row.length_m:.4f}",
+                diameter=f"{row.diameter_mm:.3f}",
+                material=tr(row.material),
+            )
         )
     feed = feed_schedule_row(design.antenna)
     lines.append(
-        f"Feed: {feed.wire_id} @ {feed.offset_m:.4f} m · "
-        f"({feed.point.x_m:.3f}, {feed.point.y_m:.3f}, {feed.point.z_m:.3f}) · "
-        f"height {feed.height_m:.4f} m"
+        tr(
+            "Feed: {wire} @ {offset} m · ({x}, {y}, {z}) · height {height} m",
+            wire=feed.wire_id,
+            offset=f"{feed.offset_m:.4f}",
+            x=f"{feed.point.x_m:.3f}",
+            y=f"{feed.point.y_m:.3f}",
+            z=f"{feed.point.z_m:.3f}",
+            height=f"{feed.height_m:.4f}",
+        )
     )
     return tuple(lines)

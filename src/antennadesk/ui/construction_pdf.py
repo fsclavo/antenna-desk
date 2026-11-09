@@ -20,6 +20,7 @@ from ..reporting.design_summary import (
     load_summary_rows,
     optimization_summary_rows,
 )
+from ..reporting.localization import localize_rows
 from ..reporting.wire_schedule import (
     bom_summary_rows,
     conductor_bom_rows,
@@ -174,11 +175,14 @@ def write_construction_pdf(
         y += draw_height + 12.0
 
     section(translator.t("construction.dimensions"))
-    for label, value in (
-        *design_summary_rows(design.parameters),
-        *optimization_summary_rows(design),
-        *design_provenance_rows(design),
-        *load_summary_rows(design.antenna.loads),
+    for label, value in localize_rows(
+        (
+            *design_summary_rows(design.parameters, labeler=translator.report),
+            *optimization_summary_rows(design),
+            *design_provenance_rows(design),
+            *load_summary_rows(design.antenna.loads, labeler=translator.report),
+        ),
+        translator.report,
     ):
         row(label, value)
     if design.antenna.feed_wire is not None:
@@ -194,14 +198,25 @@ def write_construction_pdf(
     section(translator.t("construction.bom"))
     for row_item in conductor_bom_rows(design.antenna):
         row(
-            f"{row_item.material} Ø{row_item.diameter_mm:.3f} mm",
-            f"{row_item.wire_count} wires · {row_item.total_length_m:.4f} m",
+            translator.report(
+                "{material} Ø{diameter:.3f} mm",
+                material=translator.report(row_item.material),
+                diameter=row_item.diameter_mm,
+            ),
+            translator.report(
+                "{count} wires · {length:.4f} m",
+                count=row_item.wire_count,
+                length=row_item.total_length_m,
+            ),
         )
-    for label, value in bom_summary_rows(design.antenna):
+    for label, value in localize_rows(
+        bom_summary_rows(design.antenna),
+        translator.report,
+    ):
         row(label, value)
     y += 12.0
 
-    evidence_rows = design_evidence_rows(design)
+    evidence_rows = localize_rows(design_evidence_rows(design), translator.report)
     if evidence_rows:
         section(translator.t("construction.evidence"))
         for label, value in evidence_rows:
@@ -209,7 +224,7 @@ def write_construction_pdf(
         y += 12.0
 
     section(translator.t("construction.wire_schedule"))
-    for line in wire_schedule_lines(design):
+    for line in wire_schedule_lines(design, labeler=translator.report):
         row("", line)
     y += 12.0
 

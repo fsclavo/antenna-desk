@@ -20,6 +20,12 @@ from .design_summary import (
     optimization_summary_rows,
     transmission_line_summary_rows,
 )
+from .localization import (
+    Labeler,
+    identity_labeler,
+    localize_html_labels,
+    localize_rows,
+)
 from .result_summary import gain_metric_rows
 from .svg_chart import SvgSeries, line_chart_svg
 
@@ -65,18 +71,19 @@ def _frequency_series(result: SimulationResult) -> tuple[SvgSeries, ...]:
     )
 
 
-def _swr_series(result: SimulationResult) -> tuple[SvgSeries, ...]:
+def _swr_series(result: SimulationResult, tr: Labeler) -> tuple[SvgSeries, ...]:
     points = tuple(
         (frequency.frequency_hz / 1e6, frequency.swr)
         for frequency in result.frequencies
         if math.isfinite(frequency.swr)
     )
-    return (SvgSeries("SWR", "#2e8b57", points),) if points else ()
+    return (SvgSeries(tr("SWR"), "#2e8b57", points),) if points else ()
 
 
 def _pattern_series(
     result: SimulationResult,
     design: DesignVariant,
+    tr: Labeler,
 ) -> tuple[tuple[SvgSeries, ...], float | None]:
     if not result.frequencies:
         return (), None
@@ -95,15 +102,15 @@ def _pattern_series(
     )
     if not points:
         return (), frequency.frequency_hz
-    return (SvgSeries("Total gain", "#7b4ea3", points),), frequency.frequency_hz
+    return (SvgSeries(tr("Total gain"), "#7b4ea3", points),), frequency.frequency_hz
 
 
-def _diagnostics_table(result: SimulationResult) -> str:
+def _diagnostics_table(result: SimulationResult, tr: Labeler) -> str:
     if not result.diagnostics:
-        return '<p class="muted">No diagnostics.</p>'
+        return f'<p class="muted">{_escape(tr("No diagnostics."))}</p>'
     rows = "".join(
         "<tr>"
-        f"<td>{_escape(diagnostic.severity.value)}</td>"
+        f"<td>{_escape(tr(diagnostic.severity.value))}</td>"
         f"<td>{_escape(diagnostic.code)}</td>"
         f"<td>{_escape(diagnostic.message)}</td>"
         "</tr>"
@@ -115,7 +122,7 @@ def _diagnostics_table(result: SimulationResult) -> str:
     )
 
 
-def _band_summary_table(analysis: BandAnalysisResult) -> str:
+def _band_summary_table(analysis: BandAnalysisResult, tr: Labeler) -> str:
     rows = []
     for band_result in analysis.bands:
         summary = summarize_band(band_result.band, band_result.result)
@@ -134,7 +141,7 @@ def _band_summary_table(analysis: BandAnalysisResult) -> str:
             f'<td class="num">{gain}</td>'
             f'<td class="num">{takeoff}</td>'
             f'<td class="num">{efficiency}</td>'
-            f"<td>{_escape(summary.status.value)}</td>"
+            f"<td>{_escape(tr(summary.status.value))}</td>"
             "</tr>"
         )
     return (
@@ -145,23 +152,35 @@ def _band_summary_table(analysis: BandAnalysisResult) -> str:
     )
 
 
-def _band_patterns(analysis: BandAnalysisResult, design: DesignVariant) -> str:
+def _band_patterns(
+    analysis: BandAnalysisResult,
+    design: DesignVariant,
+    tr: Labeler,
+) -> str:
     charts = []
     for band_result in analysis.bands:
-        series, frequency = _pattern_series(band_result.result, design)
+        series, frequency = _pattern_series(band_result.result, design, tr)
         if not series or frequency is None:
             continue
         charts.append(
             '<div class="chart">'
             + line_chart_svg(
-                title=f"{band_result.band.name} power gain at {frequency / 1e6:g} MHz",
-                x_label="Elevation θ (°)",
-                y_label="Power gain (dBi)",
+                title=tr(
+                    "{band} power gain at {frequency:g} MHz",
+                    band=band_result.band.name,
+                    frequency=frequency / 1e6,
+                ),
+                x_label=tr("Elevation θ (°)"),
+                y_label=tr("Power gain (dBi)"),
                 series=series,
             )
             + "</div>"
         )
-    return "".join(charts) if charts else '<p class="muted">No band patterns available.</p>'
+    return (
+        "".join(charts)
+        if charts
+        else f'<p class="muted">{_escape(tr("No band patterns available."))}</p>'
+    )
 
 
 def render_html_report(
@@ -170,38 +189,53 @@ def render_html_report(
     result: SimulationResult,
     *,
     band_analysis: BandAnalysisResult | None = None,
+    labeler: Labeler | None = None,
+    language: str = "en",
 ) -> str:
+    tr = labeler or identity_labeler
     parameters = design.parameters
     design_rows = "".join(
         f"<tr><th>{_escape(label)}</th><td>{_escape(value)}</td></tr>"
-        for label, value in (
-            *design_summary_rows(parameters),
-            *optimization_summary_rows(design),
-            *design_provenance_rows(design),
-            *load_summary_rows(design.antenna.loads),
-            *transmission_line_summary_rows(design.antenna.transmission_lines),
+        for label, value in localize_rows(
+            (
+                *design_summary_rows(parameters, labeler=tr),
+                *optimization_summary_rows(design),
+                *design_provenance_rows(design),
+                *load_summary_rows(design.antenna.loads, labeler=tr),
+                *transmission_line_summary_rows(
+                    design.antenna.transmission_lines,
+                    labeler=tr,
+                ),
+            ),
+            tr,
         )
     )
     gain_rows = "".join(
         f"<tr><th>{_escape(label)}</th><td>{_escape(value)}</td></tr>"
-        for label, value in gain_metric_rows(result)
+        for label, value in localize_rows(gain_metric_rows(result), tr)
     )
     spec = result.spec
     segmentation = spec.segmentation
     if segmentation.segments_per_wire is not None:
-        segmentation_text = f"{segmentation.segments_per_wire} segments per wire"
+        segmentation_text = tr(
+            "{count} segments per wire",
+            count=segmentation.segments_per_wire,
+        )
     else:
-        segmentation_text = (
-            f"target λ/{1.0 / segmentation.target_segment_length_wavelengths:.0f} per segment"
+        segmentation_text = tr(
+            "target λ/{ratio:.0f} per segment",
+            ratio=1.0 / segmentation.target_segment_length_wavelengths,
         )
 
     frequency_plan = spec.frequency_plan
     if frequency_plan.is_single:
         frequency_text = f"{frequency_plan.start_hz / 1e6:g} MHz"
     else:
-        frequency_text = (
-            f"{frequency_plan.start_hz / 1e6:g}-{frequency_plan.stop_hz / 1e6:g} MHz, "
-            f"{frequency_plan.count} points"
+        frequency_text = tr(
+            "{start:g}-{stop:g} MHz, {count} points",
+            start=frequency_plan.start_hz / 1e6,
+            stop=frequency_plan.stop_hz / 1e6,
+            count=frequency_plan.count,
         )
 
     impedance_rows = "".join(
@@ -231,7 +265,7 @@ def render_html_report(
         "<table><thead><tr><th>Frequency (MHz)</th><th>R (Ω)</th></tr></thead>"
         f"<tbody>{resonance_rows}</tbody></table>"
         if resonance_rows
-        else '<p class="muted">No resonance in the sweep.</p>'
+        else f'<p class="muted">{_escape(tr("No resonance in the sweep."))}</p>'
     )
 
     source_rows = "".join(
@@ -251,8 +285,7 @@ def render_html_report(
     multi_source = any(len(frequency.source_results) > 1 for frequency in result.frequencies)
     source_section = (
         "<h2>Driven sources</h2>"
-        '<p class="muted">Ideal source inputs; negative power means that source '
-        "absorbs power. The primary feed remains the impedance/SWR reference.</p>"
+        f'<p class="muted">{_escape(tr("Ideal source inputs; negative power means that source absorbs power. The primary feed remains the impedance/SWR reference."))}</p>'
         "<table><thead><tr><th>Frequency (MHz)</th><th>Source</th><th>Wire</th>"
         "<th>Amplitude</th><th>Phase</th><th>R (Ω)</th><th>X (Ω)</th>"
         "<th>Power (W)</th></tr></thead>"
@@ -262,64 +295,74 @@ def render_html_report(
     )
 
     impedance_chart = line_chart_svg(
-        title="Impedance",
-        x_label="Frequency (MHz)",
-        y_label="Impedance (Ω)",
+        title=tr("Impedance"),
+        x_label=tr("Frequency (MHz)"),
+        y_label=tr("Impedance (Ω)"),
         series=_frequency_series(result),
     )
     swr_chart = line_chart_svg(
-        title="SWR",
-        x_label="Frequency (MHz)",
-        y_label="SWR",
-        series=_swr_series(result),
+        title=tr("SWR"),
+        x_label=tr("Frequency (MHz)"),
+        y_label=tr("SWR"),
+        series=_swr_series(result, tr),
     )
-    pattern_series, pattern_frequency = _pattern_series(result, design)
+    pattern_series, pattern_frequency = _pattern_series(result, design, tr)
     pattern_chart = ""
     if pattern_series and pattern_frequency is not None:
         pattern_chart = line_chart_svg(
-            title=f"Power gain pattern at {pattern_frequency / 1e6:g} MHz",
-            x_label="Elevation θ (°)",
-            y_label="Power gain (dBi)",
+            title=tr(
+                "Power gain pattern at {frequency:g} MHz",
+                frequency=pattern_frequency / 1e6,
+            ),
+            x_label=tr("Elevation θ (°)"),
+            y_label=tr("Power gain (dBi)"),
             series=pattern_series,
         )
 
     finished = (
         result.finished_at.isoformat(timespec="seconds")
         if result.finished_at is not None
-        else "not recorded"
+        else tr("not recorded")
     )
-    diagnostics = _diagnostics_table(result)
+    diagnostics = _diagnostics_table(result, tr)
     pattern_section = (
         f'<div class="chart">{pattern_chart}</div>'
         if pattern_chart
-        else '<p class="muted">No far-field pattern available.</p>'
+        else f'<p class="muted">{_escape(tr("No far-field pattern available."))}</p>'
     )
     band_section = ""
     if band_analysis is not None:
         band_section = (
             "<h2>Band summary</h2>"
-            f"{_band_summary_table(band_analysis)}"
+            f"{_band_summary_table(band_analysis, tr)}"
             "<h2>Band patterns</h2>"
-            f"{_band_patterns(band_analysis, design)}"
+            f"{_band_patterns(band_analysis, design, tr)}"
         )
 
-    return f"""<!DOCTYPE html>
-<html lang="en">
+    status = tr(result.status.value)
+    reproducibility = tr(
+        "<strong>Reproducibility.</strong> Model/spec fingerprint "
+        "<code>{fingerprint}</code> · solver <strong>{solver} {version}</strong> · "
+        "status <strong>{status}</strong>.",
+        fingerprint=_escape(result.model_fingerprint),
+        solver=_escape(result.solver.name),
+        version=_escape(result.solver.version),
+        status=_escape(status),
+    )
+    document = f"""<!DOCTYPE html>
+<html lang="{_escape(language)}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{_escape(project.name)} — {_escape(design.name)} — AntennaDesk report</title>
+<title>{_escape(project.name)} — {_escape(design.name)} — {_escape(tr("AntennaDesk report"))}</title>
 <style>{CSS}</style>
 </head>
 <body>
 <h1>{_escape(project.name)} — {_escape(design.name)}</h1>
-<p class="muted">AntennaDesk simulation report · generated from an immutable result snapshot · {_escape(finished)}</p>
+<p class="muted">{_escape(tr("AntennaDesk simulation report · generated from an immutable result snapshot · {finished}", finished=finished))}</p>
 
 <div class="notice">
-<strong>Reproducibility.</strong> Model/spec fingerprint
-<code>{_escape(result.model_fingerprint)}</code> · solver
-<strong>{_escape(result.solver.name)} {_escape(result.solver.version)}</strong> ·
-status <strong>{_escape(result.status.value)}</strong>.
+{reproducibility}
 </div>
 
 <h2>Design</h2>
@@ -334,9 +377,9 @@ status <strong>{_escape(result.status.value)}</strong>.
 <tr><th>Frequency plan</th><td>{_escape(frequency_text)}</td></tr>
 <tr><th>Segmentation</th><td>{_escape(segmentation_text)}</td></tr>
 <tr><th>Reference impedance</th><td>{spec.reference_impedance_ohm:g} Ω</td></tr>
-<tr><th>Conductor losses</th><td>{"enabled" if spec.include_conductor_losses else "disabled"}</td></tr>
-<tr><th>Far field</th><td>{"enabled" if spec.far_field.enabled else "disabled"}</td></tr>
-<tr><th>Solver executable</th><td>{_escape(result.solver.executable or "unknown")}</td></tr>
+<tr><th>Conductor losses</th><td>{_escape(tr("enabled" if spec.include_conductor_losses else "disabled"))}</td></tr>
+<tr><th>Far field</th><td>{_escape(tr("enabled" if spec.far_field.enabled else "disabled"))}</td></tr>
+<tr><th>Solver executable</th><td>{_escape(result.solver.executable or tr("unknown"))}</td></tr>
 </table>
 
 <h2>Impedance</h2>
@@ -366,12 +409,12 @@ status <strong>{_escape(result.status.value)}</strong>.
 {diagnostics}
 
 <footer>
-AntennaDesk · GPL-3.0-or-later · This report reflects the model and conditions above.
-Use the browser print dialog to save it as PDF.
+{_escape(tr("AntennaDesk · GPL-3.0-or-later · This report reflects the model and conditions above. Use the browser print dialog to save it as PDF."))}
 </footer>
 </body>
 </html>
 """
+    return localize_html_labels(document, tr)
 
 
 def write_html_report(
@@ -381,6 +424,8 @@ def write_html_report(
     path: Path,
     *,
     band_analysis: BandAnalysisResult | None = None,
+    labeler: Labeler | None = None,
+    language: str = "en",
 ) -> None:
     path.write_text(
         render_html_report(
@@ -388,6 +433,8 @@ def write_html_report(
             design,
             result,
             band_analysis=band_analysis,
+            labeler=labeler,
+            language=language,
         ),
         encoding="utf-8",
         newline="\n",

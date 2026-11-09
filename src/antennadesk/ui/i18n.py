@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from .report_i18n import REPORT_SPANISH
+
 
 class Language(StrEnum):
     ENGLISH = "en"
@@ -6880,3 +6882,15 @@ class Translator:
         if template is None:
             return key
         return template.format(**values)
+
+    def report(self, text: str, /, **values: object) -> str:
+        """Translate an English report label, template, or value.
+
+        Reporting modules stay Qt-free and English-first.  They call this
+        callback only when the UI asks for another language.  Unknown strings
+        fall back to the English source, and named placeholders are formatted
+        after translation so each language can reorder them.
+        """
+
+        template = text if self._language is Language.ENGLISH else REPORT_SPANISH.get(text, text)
+        return template.format(**values) if values else template

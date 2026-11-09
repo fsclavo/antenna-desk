@@ -132,7 +132,9 @@ is a top view, the sheet also includes an **Installation view (front)** with
 height, ground line, and feed height; for front-view families whose horizontal
 layout adds information, it includes a **Top layout** view instead. The sheet also includes a title block and
 a bill of materials that totals conductor length by material and diameter,
-plus load, transmission-line, and source counts. Use **File → Export → Export
+plus load, transmission-line, and source counts. The construction sheet, HTML
+report, and native PDF exports follow the UI language; technical identifiers,
+wire IDs, units, and project names remain canonical. Use **File → Export → Export
 wire schedule CSV...** to save the per-wire schedule as a spreadsheet file, or
 **Export bill of materials CSV...** for the grouped conductor totals.
 The sheet also carries an **Evidence and limitations** section with the

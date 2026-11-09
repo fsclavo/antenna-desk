@@ -54,6 +54,26 @@ def test_report_pdf_is_written(
     assert len(data) > 2_000
 
 
+def test_report_pdf_is_written_in_spanish(
+    qtbot: QtBot,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "informe.pdf"
+
+    write_report_pdf(
+        Translator(Language.SPANISH),
+        sample_project,
+        sample_project.designs[0],
+        _result(),
+        path,
+    )
+
+    data = path.read_bytes()
+    assert data.startswith(b"%PDF")
+    assert len(data) > 2_000
+
+
 def test_report_pdf_includes_a_band_summary(
     qtbot: QtBot,
     sample_project: Project,
