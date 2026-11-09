@@ -11,6 +11,7 @@ from antennadesk.domain.optimization.engine import (
     CandidateEvaluation,
     OptimizationBudget,
     OptimizationStatus,
+    OptimizerRunResult,
     budget_for,
     optimize_design,
 )
@@ -70,6 +71,35 @@ def test_engine_is_deterministic_for_a_fixed_seed() -> None:
     assert [item.values for item in first.evaluations] == [
         item.values for item in second.evaluations
     ]
+
+
+def test_batch_engine_is_deterministic_and_preserves_order() -> None:
+    variables = (
+        OptimizationVariable("x", "field.length", "g", -5.0, 5.0, step=0.01),
+        OptimizationVariable("y", "field.height", "g", -5.0, 5.0, step=0.01),
+    )
+    batch_sizes: list[int] = []
+
+    def batch_evaluate(values: list[dict[str, float]]) -> list[CandidateEvaluation]:
+        batch_sizes.append(len(values))
+        return [_quadratic(dict(item)) for item in values]
+
+    def run() -> OptimizerRunResult:
+        return optimize_design(
+            variables,
+            {"x": 2.0, "y": -2.0},
+            _quadratic,
+            budget=OptimizationBudget(80, 40, 8),
+            seed=17,
+            batch_evaluate=batch_evaluate,
+        )
+
+    first = run()
+    second = run()
+
+    assert first == second
+    assert any(size > 1 for size in batch_sizes)
+    assert [item.index for item in first.evaluations] == list(range(1, len(first.evaluations) + 1))
 
 
 def test_engine_prefers_a_feasible_candidate() -> None:

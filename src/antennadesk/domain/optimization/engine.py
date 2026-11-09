@@ -13,6 +13,10 @@ from enum import StrEnum
 from .variables import OptimizationVariable, VariableKind
 
 OptimizerEvaluator = Callable[[Mapping[str, float]], "CandidateEvaluation"]
+OptimizerBatchEvaluator = Callable[
+    [Sequence[Mapping[str, float]]],
+    Sequence["CandidateEvaluation"],
+]
 OptimizerCancelCheck = Callable[[], bool]
 OptimizerProgress = Callable[[int, float | None], None]
 
@@ -155,12 +159,19 @@ def optimize_design(
     start_points: Sequence[Mapping[str, float]] = (),
     cancel_check: OptimizerCancelCheck | None = None,
     progress: OptimizerProgress | None = None,
+    batch_evaluate: OptimizerBatchEvaluator | None = None,
 ) -> OptimizerRunResult:
     """Optimize all active variables jointly.
 
     The caller is responsible for filtering locked variables and for including
     every active variable in ``initial_values``. Inactive variables must be
     preserved by the family parameter builder.
+
+    ``batch_evaluate`` is an optional optimization for independent candidate
+    vectors. Results are collected and recorded in submission order, so a
+    deterministic batch evaluator yields the same search order regardless of
+    worker scheduling. When it is absent, every evaluation runs through
+    ``evaluate`` sequentially.
     """
 
     if not variables:
@@ -212,6 +223,73 @@ def optimize_design(
             progress(len(evaluations), evaluation.score if evaluation.feasible else None)
         return evaluation
 
+    def evaluate_batch(
+        vectors: Sequence[Mapping[str, float]],
+    ) -> list[CandidateEvaluation | None]:
+        nonlocal cancelled
+        results: list[CandidateEvaluation | None] = [None] * len(vectors)
+        if not vectors:
+            return results
+        if is_cancelled():
+            cancelled = True
+            return results
+
+        keys = [tuple(round(float(vector[name]), 9) for name in names) for vector in vectors]
+        unique_vectors: list[Mapping[str, float]] = []
+        unique_positions: list[int] = []
+        seen: set[tuple[float, ...]] = set()
+        for position, key in enumerate(keys):
+            if key in cache:
+                results[position] = cache[key]
+                continue
+            if key in seen:
+                continue
+            seen.add(key)
+            unique_positions.append(position)
+            unique_vectors.append(vectors[position])
+
+        if not unique_vectors:
+            return results
+
+        if batch_evaluate is not None and len(unique_vectors) > 1:
+            try:
+                raw_results = list(batch_evaluate([dict(vector) for vector in unique_vectors]))
+            except Exception:
+                raw_results = [evaluate(dict(vector)) for vector in unique_vectors]
+            if len(raw_results) != len(unique_vectors):
+                raw_results = [evaluate(dict(vector)) for vector in unique_vectors]
+        else:
+            raw_results = [evaluate(dict(vector)) for vector in unique_vectors]
+
+        for position, vector, raw in zip(
+            unique_positions,
+            unique_vectors,
+            raw_results,
+            strict=True,
+        ):
+            evaluation = CandidateEvaluation(
+                index=len(evaluations) + 1,
+                values=dict(vector),
+                score=raw.score,
+                feasible=raw.feasible,
+                violation=raw.violation,
+                metrics=dict(raw.metrics),
+                error=raw.error,
+                cancelled=raw.cancelled,
+            )
+            evaluations.append(evaluation)
+            cache[keys[position]] = evaluation
+            results[position] = evaluation
+            if evaluation.cancelled:
+                cancelled = True
+            if progress is not None and not cancelled:
+                progress(len(evaluations), evaluation.score if evaluation.feasible else None)
+
+        for position, key in enumerate(keys):
+            if results[position] is None and key in cache:
+                results[position] = cache[key]
+        return results
+
     def update_best(evaluation: CandidateEvaluation) -> None:
         nonlocal best, last_improvement
         if best is None or _better(evaluation, best):
@@ -244,21 +322,35 @@ def optimize_design(
         max(4, budget.global_evaluations),
     )
     start_vectors = [initial_vector(point) for point in start_points]
-    for vector in start_vectors:
-        if len(population) >= population_size:
-            break
-        evaluation = evaluate_values(_values(vector, variables))
-        if evaluation is None:
-            break
-        update_best(evaluation)
-        population.append((vector, evaluation))
-    while len(population) < population_size and len(evaluations) < budget.global_evaluations:
-        vector = tuple(rng.random() for _ in variables)
-        evaluation = evaluate_values(_values(vector, variables))
-        if evaluation is None:
-            break
-        update_best(evaluation)
-        population.append((vector, evaluation))
+    if batch_evaluate is not None:
+        initial_vectors = start_vectors[: population_size - 1]
+        while (
+            len(initial_vectors) < population_size - 1
+            and len(evaluations) + len(initial_vectors) < budget.global_evaluations
+        ):
+            initial_vectors.append(tuple(rng.random() for _ in variables))
+        batch_results = evaluate_batch([_values(vector, variables) for vector in initial_vectors])
+        for vector, evaluation in zip(initial_vectors, batch_results, strict=True):
+            if evaluation is None:
+                break
+            update_best(evaluation)
+            population.append((vector, evaluation))
+    else:
+        for vector in start_vectors:
+            if len(population) >= population_size:
+                break
+            evaluation = evaluate_values(_values(vector, variables))
+            if evaluation is None:
+                break
+            update_best(evaluation)
+            population.append((vector, evaluation))
+        while len(population) < population_size and len(evaluations) < budget.global_evaluations:
+            vector = tuple(rng.random() for _ in variables)
+            evaluation = evaluate_values(_values(vector, variables))
+            if evaluation is None:
+                break
+            update_best(evaluation)
+            population.append((vector, evaluation))
 
     if cancelled:
         return _result(
@@ -276,35 +368,64 @@ def optimize_design(
     global_limit = budget.global_evaluations
     stagnation = 0
     generation = 0
+
+    def trial_vector(index: int) -> tuple[float, ...]:
+        choices = list(range(len(population)))
+        choices.remove(index)
+        r1, r2, r3 = rng.sample(choices, 3)
+        first = population[r1][0]
+        second = population[r2][0]
+        third = population[r3][0]
+        mutant = tuple(
+            _clip_fraction(first[position] + 0.7 * (second[position] - third[position]))
+            for position in range(len(variables))
+        )
+        return tuple(
+            mutant[position] if rng.random() < 0.9 else population[index][0][position]
+            for position in range(len(variables))
+        )
+
     while len(evaluations) < global_limit and not cancelled:
         generation += 1
         improved_generation = False
-        for index in range(len(population)):
-            if len(evaluations) >= global_limit or cancelled:
-                break
-            choices = list(range(len(population)))
-            choices.remove(index)
-            r1, r2, r3 = rng.sample(choices, 3)
-            first = population[r1][0]
-            second = population[r2][0]
-            third = population[r3][0]
-            mutant = tuple(
-                _clip_fraction(first[position] + 0.7 * (second[position] - third[position]))
-                for position in range(len(variables))
-            )
-            trial = tuple(
-                mutant[position] if rng.random() < 0.9 else population[index][0][position]
-                for position in range(len(variables))
-            )
-            if trial == population[index][0]:
-                continue
-            evaluation = evaluate_values(_values(trial, variables))
-            if evaluation is None:
-                break
-            if _better(evaluation, population[index][1]):
-                population[index] = (trial, evaluation)
-                improved_generation = True
-                update_best(evaluation)
+        if batch_evaluate is not None:
+            trial_vectors: list[tuple[float, ...]] = []
+            trial_indices: list[int] = []
+            for index in range(len(population)):
+                if len(evaluations) + len(trial_vectors) >= global_limit or cancelled:
+                    break
+                trial = trial_vector(index)
+                if trial == population[index][0]:
+                    continue
+                trial_indices.append(index)
+                trial_vectors.append(trial)
+            batch_results = evaluate_batch([_values(vector, variables) for vector in trial_vectors])
+            for index, trial, evaluation in zip(
+                trial_indices,
+                trial_vectors,
+                batch_results,
+                strict=True,
+            ):
+                if evaluation is None:
+                    break
+                if _better(evaluation, population[index][1]):
+                    population[index] = (trial, evaluation)
+                    improved_generation = True
+                    update_best(evaluation)
+        else:
+            for index in range(len(population)):
+                if len(evaluations) >= global_limit or cancelled:
+                    break
+                trial = trial_vector(index)
+                if trial == population[index][0]:
+                    continue
+                evaluation = evaluate_values(_values(trial, variables))
+                if evaluation is None:
+                    break
+                if _better(evaluation, population[index][1]):
+                    population[index] = (trial, evaluation)
+                    improved_generation = True
+                    update_best(evaluation)
         if improved_generation:
             stagnation = 0
         else:

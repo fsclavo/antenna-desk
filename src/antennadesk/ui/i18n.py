@@ -5878,6 +5878,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Random seed",
         Language.SPANISH: "Semilla aleatoria",
     },
+    "optimize.workers": {
+        Language.ENGLISH: "Parallel workers",
+        Language.SPANISH: "Workers paralelos",
+    },
+    "optimize.workers_hint": {
+        Language.ENGLISH: (
+            "Each worker launches a separate solver process. More workers reduce "
+            "wall time on independent candidates but use more CPU and memory; "
+            "use 1 for large models or limited memory."
+        ),
+        Language.SPANISH: (
+            "Cada worker lanza un proceso del solver separado. Más workers "
+            "reducen el tiempo en candidatos independientes pero usan más CPU y "
+            "memoria; usá 1 para modelos grandes o memoria limitada."
+        ),
+    },
     "optimize.run_family": {
         Language.ENGLISH: "Run optimization",
         Language.SPANISH: "Ejecutar optimización",

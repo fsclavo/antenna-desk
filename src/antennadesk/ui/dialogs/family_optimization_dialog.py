@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import math
+import os
 
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QCloseEvent
@@ -169,6 +170,11 @@ class FamilyOptimizationDialog(QDialog):
         self._seed.setRange(0, 2_147_483_647)
         self._seed.setValue(0)
 
+        self._workers = QSpinBox(self)
+        self._workers.setRange(1, 4)
+        self._workers.setValue(min(4, max(1, (os.cpu_count() or 1) - 1)))
+        self._workers.setToolTip(translator.t("optimize.workers_hint"))
+
         _minimum_length, maximum_length = length_bounds(unit_system)
         self._max_boom = QDoubleSpinBox(self)
         self._max_boom.setRange(0.0, maximum_length)
@@ -263,6 +269,7 @@ class FamilyOptimizationDialog(QDialog):
         )
         self._budget_label = QLabel(translator.t("optimize.budget_profile"), self)
         self._seed_label = QLabel(translator.t("optimize.seed"), self)
+        self._workers_label = QLabel(translator.t("optimize.workers"), self)
         self._max_boom_label = QLabel(translator.t("optimize.max_boom"), self)
         self._max_turning_label = QLabel(translator.t("optimize.max_turning"), self)
         self._max_boom_label.setVisible(descriptor.supports_boom_constraint)
@@ -286,6 +293,7 @@ class FamilyOptimizationDialog(QDialog):
         form.addRow(self._weight_efficiency_label, self._weight_efficiency)
         form.addRow(self._budget_label, self._budget)
         form.addRow(self._seed_label, self._seed)
+        form.addRow(self._workers_label, self._workers)
         form.addRow(self._max_boom_label, self._max_boom)
         form.addRow(self._max_turning_label, self._max_turning)
         form.addRow(self._budget_hint)
@@ -629,6 +637,7 @@ class FamilyOptimizationDialog(QDialog):
             self._weight_efficiency,
             self._budget,
             self._seed,
+            self._workers,
             self._max_boom,
             self._max_turning,
             self._table,
@@ -687,6 +696,7 @@ class FamilyOptimizationDialog(QDialog):
                 soft_constraints=constraints,
                 locked_variables=locked,
                 seed=self._seed.value(),
+                parallel_workers=self._workers.value(),
                 mode=mode,
                 band_edges_hz=band_edges,
                 robust_tolerance=(

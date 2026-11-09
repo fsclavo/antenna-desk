@@ -59,6 +59,14 @@ def test_family_dialog_localizes_optimizer_constraints(qtbot: QtBot) -> None:
     assert dialog._localized_error("solver failed") == "solver failed"
 
 
+def test_family_dialog_exposes_bounded_parallel_workers(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+
+    assert 1 <= dialog._workers.value() <= 4
+    assert "worker" in dialog._workers.toolTip().lower()
+
+
 def test_family_dialog_runs_and_applies_best(qtbot: QtBot) -> None:
     dialog = _dialog()
     qtbot.addWidget(dialog)

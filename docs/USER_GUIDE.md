@@ -1208,6 +1208,19 @@ automatically up to twice the initial budget. A larger budget can take
 considerably longer; the dialog estimates the run count. The random seed is
 exposed for reproducibility.
 
+**Parallel workers** controls how many independent candidate evaluations run at
+once. The value is capped at four in the dialog and defaults to
+`min(4, max(1, CPU count - 1))`; set it to 1 to keep the sequential path. Only
+whole candidates are parallelized: the band edges or pattern points inside one
+candidate are still evaluated in order. Each worker launches its own solver
+process, so more workers reduce wall time but increase CPU and memory use; the
+analysis timeout applies independently to each worker's solver run. For a fixed
+search configuration the candidate order and the reported results are
+deterministic. The one-worker and multi-worker paths use different deterministic
+search trajectories, so compare runs at the same worker setting. Cancellation is
+propagated to every in-flight solver process and queued evaluations are
+discarded.
+
 **Maximum turning radius** rejects candidates whose horizontal footprint from
 the mast exceeds the limit. The mast is the boom midpoint for Yagi and Moxon
 arrays and the feed's horizontal projection for every other family. **Maximum

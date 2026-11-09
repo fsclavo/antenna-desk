@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The family optimizer can now evaluate independent candidates in parallel
+  with **1–4 bounded workers** in the dialog (default
+  `min(4, max(1, CPU count - 1))`); the command accepts 1–8 and defaults to the
+  sequential one-worker path. Candidate results remain deterministic and
+  ordered, and cancellation is propagated to every in-flight solver process.
+  Each worker launches its own solver process, so CPU and memory use grow with
+  the worker count.
 - Added a first-class **hexbeam** family: a W-shaped driven element and a
   U-shaped reflector on a six-spreader frame, with published G3TXQ 20 m
   starting dimensions, linear frequency scaling, schema-30 persistence,

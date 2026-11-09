@@ -5,7 +5,8 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 
 from ...domain.antennas.antenna import AntennaModel
@@ -24,6 +25,7 @@ from ...domain.optimization.engine import (
     CandidateEvaluation,
     OptimizationBudget,
     OptimizationStatus,
+    OptimizerBatchEvaluator,
     OptimizerRunResult,
     SensitivityPoint,
     optimize_design,
@@ -64,6 +66,7 @@ class OptimizeAntennaCommand:
     soft_constraints: tuple[SoftConstraint, ...] = ()
     locked_variables: frozenset[str] = frozenset()
     seed: int = 0
+    parallel_workers: int = 1
     mode: OptimizationMode = OptimizationMode.SINGLE
     band_edges_hz: tuple[float, ...] = ()
     robust_tolerance: float = 0.0
@@ -78,6 +81,8 @@ class OptimizeAntennaCommand:
             raise ValueError("target_resistance_ohm must be positive")
         if not math.isfinite(self.target_reactance_ohm):
             raise ValueError("target_reactance_ohm must be finite")
+        if not 1 <= self.parallel_workers <= 8:
+            raise ValueError("parallel_workers must be between 1 and 8")
         if self.objective not in self.descriptor.objectives:
             raise ValueError(f"objective {self.objective.value!r} is not supported")
         object.__setattr__(self, "mode", OptimizationMode(self.mode))
@@ -262,18 +267,37 @@ class OptimizeAntenna:
                 metrics=metrics,
             )
 
-        engine_result = optimize_design(
-            active_variables,
-            initial_values,
-            evaluate,
-            budget=command.budget,
-            seed=command.seed,
-            start_points=start_points,
-            cancel_check=(
-                command.cancel_token.is_cancelled if command.cancel_token is not None else None
-            ),
-            progress=command.progress,
-        )
+        executor: ThreadPoolExecutor | None = None
+        batch_evaluator: OptimizerBatchEvaluator | None = None
+        if command.parallel_workers > 1:
+            worker_executor = ThreadPoolExecutor(max_workers=command.parallel_workers)
+            executor = worker_executor
+
+            def batch_evaluator_fn(
+                values: Sequence[Mapping[str, float]],
+            ) -> list[CandidateEvaluation]:
+                futures = [worker_executor.submit(evaluate, dict(item)) for item in values]
+                return [future.result() for future in futures]
+
+            batch_evaluator = batch_evaluator_fn
+
+        try:
+            engine_result = optimize_design(
+                active_variables,
+                initial_values,
+                evaluate,
+                budget=command.budget,
+                seed=command.seed,
+                start_points=start_points,
+                cancel_check=(
+                    command.cancel_token.is_cancelled if command.cancel_token is not None else None
+                ),
+                progress=command.progress,
+                batch_evaluate=batch_evaluator,
+            )
+        finally:
+            if executor is not None:
+                executor.shutdown(wait=True, cancel_futures=True)
         best_parameters: AntennaDesignParameters | None = None
         if engine_result.best_values is not None:
             full_values = dict(descriptor.initial_values)

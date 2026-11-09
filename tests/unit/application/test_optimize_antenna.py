@@ -2,21 +2,28 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import threading
 from dataclasses import replace
 
 import pytest
 
+from antennadesk.application.cancellation import EventCancelToken
 from antennadesk.application.ports.antenna_solver import ProgressCallback
 from antennadesk.application.ports.cancellation import CancelToken
 from antennadesk.application.use_cases.optimize_antenna import (
     OptimizeAntenna,
     OptimizeAntennaCommand,
+    OptimizeAntennaResult,
 )
 from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.common.validation import Diagnostic
 from antennadesk.domain.optimization.descriptor import FamilyOptimizationObjective
-from antennadesk.domain.optimization.engine import BudgetProfile, budget_for
+from antennadesk.domain.optimization.engine import (
+    BudgetProfile,
+    OptimizationStatus,
+    budget_for,
+)
 from antennadesk.domain.optimization.registry import optimizer_availability
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.result import (
@@ -83,6 +90,45 @@ class LengthSolver:
         )
 
 
+class CancellingSolver(LengthSolver):
+    """Cancel the run after a few completed evaluations."""
+
+    def __init__(self, token: EventCancelToken, cancel_after: int = 2) -> None:
+        self._token = token
+        self._cancel_after = cancel_after
+        self._calls = 0
+        self._lock = threading.Lock()
+
+    def run(
+        self,
+        model: AntennaModel,
+        spec: SimulationSpec,
+        *,
+        progress_callback: ProgressCallback | None = None,
+        cancel_token: CancelToken | None = None,
+    ) -> SimulationResult:
+        if self._token.is_cancelled():
+            return SimulationResult(
+                status=SimulationStatus.CANCELLED,
+                spec=spec,
+                model_fingerprint="a" * 64,
+                solver=self.version(),
+                frequencies=(),
+                duration_s=0.0,
+            )
+        result = super().run(
+            model,
+            spec,
+            progress_callback=progress_callback,
+            cancel_token=cancel_token,
+        )
+        with self._lock:
+            self._calls += 1
+            if self._calls >= self._cancel_after:
+                self._token.cancel()
+        return result
+
+
 def _spec(parameters: DipoleParameters) -> SimulationSpec:
     return SimulationSpec(
         frequency_plan=FrequencyPlan.sweep(6.7e6, 7.5e6, 11),
@@ -118,6 +164,68 @@ def test_optimize_antenna_returns_the_best_parameters() -> None:
     assert result.evaluations
 
 
+def test_optimize_antenna_parallel_workers_are_deterministic() -> None:
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=18.0,
+        height_m=8.0,
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    descriptor = availability.descriptor
+
+    def run() -> OptimizeAntennaResult:
+        return OptimizeAntenna(LengthSolver()).execute(
+            OptimizeAntennaCommand(
+                descriptor=descriptor,
+                base_spec=_spec(parameters),
+                objective=FamilyOptimizationObjective.TARGET_IMPEDANCE,
+                budget=budget_for(BudgetProfile.FAST, len(descriptor.variables)),
+                seed=5,
+                parallel_workers=3,
+            )
+        )
+
+    first = run()
+    second = run()
+
+    assert first.best_values == second.best_values
+    assert first.best_score == second.best_score
+    assert [item.values for item in first.evaluations] == [
+        item.values for item in second.evaluations
+    ]
+    assert [item.index for item in first.evaluations] == list(range(1, len(first.evaluations) + 1))
+
+
+def test_optimize_antenna_parallel_cancellation_stops_the_pool() -> None:
+    token = EventCancelToken()
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=18.0,
+        height_m=8.0,
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    descriptor = availability.descriptor
+    budget = budget_for(BudgetProfile.FAST, len(descriptor.variables))
+
+    result = OptimizeAntenna(CancellingSolver(token)).execute(
+        OptimizeAntennaCommand(
+            descriptor=descriptor,
+            base_spec=_spec(parameters),
+            objective=FamilyOptimizationObjective.TARGET_IMPEDANCE,
+            budget=budget,
+            seed=5,
+            parallel_workers=3,
+            cancel_token=token,
+        )
+    )
+
+    assert result.status is OptimizationStatus.CANCELLED
+    assert result.evaluations
+    assert len(result.evaluations) < budget.total
+
+
 def test_optimize_antenna_rejects_an_unsupported_objective() -> None:
     parameters = DipoleParameters(
         frequency_hz=7_100_000.0,
@@ -138,6 +246,26 @@ def test_optimize_antenna_rejects_an_unsupported_objective() -> None:
             base_spec=_spec(parameters),
             objective=FamilyOptimizationObjective.MAX_BANDWIDTH,
             budget=budget_for(BudgetProfile.FAST, 3),
+        )
+
+
+@pytest.mark.parametrize("workers", [0, 9])
+def test_optimize_antenna_rejects_invalid_worker_counts(workers: int) -> None:
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+
+    with pytest.raises(ValueError, match="parallel_workers"):
+        OptimizeAntennaCommand(
+            descriptor=availability.descriptor,
+            base_spec=_spec(parameters),
+            objective=FamilyOptimizationObjective.TARGET_IMPEDANCE,
+            budget=budget_for(BudgetProfile.FAST, 3),
+            parallel_workers=workers,
         )
 
 

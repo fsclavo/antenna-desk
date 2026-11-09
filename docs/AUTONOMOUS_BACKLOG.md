@@ -36,7 +36,7 @@ external service and must not be invented or simulated into existence.
 | ~~C4~~ | ~~Discone~~ | L | none | **Done 2026-11-08:** radial-wire cone and disc with apex feed gap, schema 27, editor, scene, reports, construction notes, and optimizer. Evidence stays C because the wire approximation and feed transition are not validated. |
 | ~~C5~~ | ~~Trapped / multiband Yagi~~ | L | trap model reuse | **Done 2026-11-08:** two-band trapped Yagi with ideal parallel LC trap pairs on each element, schema 28, editor, scene, reports, construction notes, and optimizer. Evidence stays C because trap loss and boom mounting are not modeled. |
 | ~~E1~~ | ~~Raise the simulation timeout default to 180 s and expose an override~~ | S | none | **Done 2026-11-08:** `SimulationSpec.timeout_s` defaults to 180 s; **Advanced simulation → Solver** exposes a 10–3600 s override applied to single runs, band analysis, and family optimizations; tests cover the default and override. |
-| E2 | Parallelize independent optimizer evaluations with a bounded worker pool | M–L | E1 | Results remain deterministic and ordered; cancellation stops all workers; per-worker timeout; worker count is capped by CPU and memory; single-solve behavior is unchanged. |
+| ~~E2~~ | ~~Parallelize independent optimizer evaluations with a bounded worker pool~~ | M–L | E1 | **Done 2026-11-08:** the engine accepts an optional batch evaluator and the command runs 1–8 bounded workers (dialog default `min(4, max(1, CPU − 1))`, sequential when 1). Candidate order and results are deterministic for a fixed configuration, cancellation reaches every in-flight solver process, and single-solve behavior is unchanged. |
 | E3 | Parallelize band analysis with the same bounded pool | M | E2 | Per-band results, progress, cancellation, and partial results remain unchanged; the benchmark records the measured speedup and memory cost. |
 | ~~E4~~ | ~~Diagnose high-radial phased-array runtime and numerical validity~~ | S–M | C1 | **Done 2026-11-08:** 4×36 quarter-wave radial screens produced 267 wire crossings, 890 segments, 25.3 s, and negative primary resistance. Halving the radial length or using 2 m radials removed the crossings and completed. The editor now warns when `2 × radial length > element spacing`; ideal-source power absorption remains documented separately. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
@@ -140,8 +140,10 @@ model and solver contract must land first.
 5. ~~B1/B2~~ **reviewed 2026-11-08:** no matching independent source or
    electrical model; both templates stay C. B3–B4 whenever a source or
    measurement becomes available.
-6. **E2 then E3** only if measurements show a real wall-time bottleneck.
-   Parallelize optimizer evaluations before band batches.
+6. ~~E2~~ **done 2026-11-08:** optimizer candidates run on a bounded worker
+   pool while preserving order, determinism, and cancellation. **E3** is next:
+   parallelize band analysis with the same pool only after measuring a real
+   wall-time bottleneck.
 7. C3 is blocked on a transposed boom feed-line model. Do not substitute
    independent ideal sources: NEC2C reported negative primary-feed resistance
    in the prototype.
@@ -150,7 +152,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **30**.
-- Full gate: **1,945 passed, 0 skipped** with `NEC2C` and the optional
+- Full gate: **1,951 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
 - Last commits: multi-source excitation, phased vertical array, quad beam,
   discone, trapped Yagi, per-source results, hexbeam, solver timeout, and the
