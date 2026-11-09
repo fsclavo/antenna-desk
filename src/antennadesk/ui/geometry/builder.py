@@ -416,6 +416,52 @@ def _source_markers(model: AntennaModel, factory: _Factory) -> tuple[SceneMarker
     return tuple(markers)
 
 
+def _add_feed_and_load_dimensions(
+    model: AntennaModel,
+    wire: Wire,
+    factory: _Factory,
+    dimensions: list[Dimension],
+    translator: Translator | None,
+    side: str,
+    *,
+    load_datum: str = "start",
+) -> None:
+    feed_wire = model.feed_wire
+    feed_point = _wire_point(feed_wire, 0.0)
+    if feed_wire.length_m > 1e-9:
+        feed_ratio = min(max(model.feed.offset_m / feed_wire.length_m, 0.0), 1.0)
+        feed_point = _wire_point(feed_wire, feed_ratio)
+        if 1e-6 < feed_ratio < 1.0 - 1e-6:
+            dimensions.append(
+                factory.dimension(
+                    feed_wire.start,
+                    feed_point,
+                    feed_wire.length_m * feed_ratio,
+                    side=side,
+                    priority=80,
+                    label=translator.t("geometry.feed_offset") if translator else None,
+                )
+            )
+    datum = feed_point if load_datum == "feed" else wire.start
+    for load_index, load in enumerate(model.loads, start=1):
+        if load.wire_id != wire.id:
+            continue
+        load_point = _wire_point(wire, load.offset_m / wire.length_m)
+        value_m = (
+            abs(load.offset_m - model.feed.offset_m) if load_datum == "feed" else load.offset_m
+        )
+        dimensions.append(
+            factory.dimension(
+                datum,
+                load_point,
+                value_m,
+                side=side,
+                priority=70,
+                label=f"L{load_index}",
+            )
+        )
+
+
 def _add_single_wire_dimensions(
     model: AntennaModel,
     factory: _Factory,
@@ -483,6 +529,15 @@ def _add_single_wire_dimensions(
                     priority=60,
                 )
             )
+        offset_side = "below" if abs(wire.end.z_m - wire.start.z_m) < 1e-9 else "left"
+        _add_feed_and_load_dimensions(
+            model,
+            wire,
+            factory,
+            dimensions,
+            translator,
+            offset_side,
+        )
     else:
         feed_point = factory.project(_wire_point(feed_wire, feed_ratio))
         if feed_ratio > 1e-6 and feed_ratio < 1.0 - 1e-6:
@@ -1030,8 +1085,9 @@ def _add_scv_dimensions(
                 left_top,
                 right_top,
                 horizontal_length,
-                side="above",
-                priority=85,
+                side="below",
+                priority=90,
+                label=translator.t("geometry.span"),
             )
         )
         dimensions.append(
@@ -1055,6 +1111,23 @@ def _add_scv_dimensions(
                     priority=60,
                 )
             )
+        feed_wire = model.feed_wire
+        if feed_wire.length_m > 1e-9:
+            feed_ratio = min(max(model.feed.offset_m / feed_wire.length_m, 0.0), 1.0)
+            feed_point = _wire_point(feed_wire, feed_ratio)
+            feed_offset = max_z - feed_point.z_m
+            if feed_offset > 1e-6:
+                dimensions.append(
+                    factory.vertical_dimension(
+                        factory.project(feed_wire.start).x_m,
+                        feed_point.z_m,
+                        max_z,
+                        feed_offset,
+                        side="right",
+                        priority=70,
+                        label=translator.t("scv.feed_offset"),
+                    )
+                )
     else:
         dimensions.append(
             factory.dimension(
@@ -1209,15 +1282,16 @@ def _add_loaded_dipole_dimensions(
     translator: Translator,
 ) -> None:
     wire = model.feed_wire
+    horizontal = abs(wire.end.z_m - wire.start.z_m) < 1e-9
     if factory.projection.vertical:
         dimensions.append(
-            factory.vertical_dimension(
-                factory.project(wire.end).x_m,
-                wire.start.z_m,
-                wire.end.z_m,
+            factory.dimension(
+                wire.start,
+                wire.end,
                 wire.length_m,
-                side="right",
-                priority=85,
+                side="below" if horizontal else "right",
+                priority=90,
+                label=translator.t("field.length"),
             )
         )
         if wire.start.z_m > 1e-6:
@@ -1239,6 +1313,7 @@ def _add_loaded_dipole_dimensions(
                 wire.length_m,
                 side="above",
                 priority=85,
+                label=translator.t("field.length"),
             )
         )
         dimensions.append(
@@ -1251,6 +1326,16 @@ def _add_loaded_dipole_dimensions(
                 priority=60,
             )
         )
+    offset_side = "below" if abs(wire.end.z_m - wire.start.z_m) < 1e-9 else "left"
+    _add_feed_and_load_dimensions(
+        model,
+        wire,
+        factory,
+        dimensions,
+        translator,
+        offset_side,
+        load_datum="feed",
+    )
     if parameters is not None and parameters.coil_active:
         notes.append(
             translator.t(
@@ -2548,13 +2633,28 @@ def _add_sloping_array_dimensions(
     parameters: object | None,
     factory: _Factory,
     dimensions: list[Dimension],
+    translator: Translator,
 ) -> None:
     min_z, max_z = _model_z_extents(model)
     if factory.projection.vertical:
-        first = model.wires[0]
-        dimensions.append(
-            factory.dimension(first.start, first.end, first.length_m, side="auto", priority=75)
-        )
+        if isinstance(parameters, FanDipoleParameters):
+            for leg_index in range(0, len(model.wires) - 1, 2):
+                leg = model.wires[leg_index]
+                dimensions.append(
+                    factory.dimension(
+                        leg.start,
+                        leg.end,
+                        leg.length_m,
+                        side="left" if leg_index % 4 == 0 else "right",
+                        priority=85,
+                        label=f"E{leg_index // 2 + 1} leg",
+                    )
+                )
+        else:
+            first = model.wires[0]
+            dimensions.append(
+                factory.dimension(first.start, first.end, first.length_m, side="auto", priority=75)
+            )
         dimensions.append(
             factory.vertical_dimension(
                 min(factory.project(wire.start).x_m for wire in model.wires),
@@ -2576,6 +2676,49 @@ def _add_sloping_array_dimensions(
                     priority=60,
                 )
             )
+        if isinstance(parameters, VerticalParameters):
+            radiator = next(
+                (wire for wire in model.wires if wire.id == "radiator"),
+                model.wires[0],
+            )
+            if parameters.loading_coil_enabled:
+                coil = next(
+                    (load for load in model.loads if load.wire_id == radiator.id),
+                    None,
+                )
+                if coil is not None and coil.offset_m > 1e-6:
+                    coil_point = _wire_point(
+                        radiator,
+                        min(coil.offset_m / radiator.length_m, 1.0),
+                    )
+                    base_z = min(radiator.start.z_m, radiator.end.z_m)
+                    dimensions.append(
+                        factory.vertical_dimension(
+                            factory.project(radiator.start).x_m,
+                            base_z,
+                            coil_point.z_m,
+                            abs(coil_point.z_m - base_z),
+                            side="left",
+                            priority=85,
+                            label=translator.t("vertical.loading_coil_offset"),
+                        )
+                    )
+            if parameters.top_hat_enabled:
+                top_hat = next(
+                    (wire for wire in model.wires if wire.id.startswith("top-hat-")),
+                    None,
+                )
+                if top_hat is not None:
+                    dimensions.append(
+                        factory.dimension(
+                            top_hat.start,
+                            top_hat.end,
+                            parameters.top_hat_radius_m,
+                            side="right",
+                            priority=85,
+                            label=translator.t("vertical.top_hat_radius"),
+                        )
+                    )
         if isinstance(parameters, (InvertedVParameters, FanDipoleParameters)):
             projected = tuple(
                 factory.project(point) for wire in model.wires for point in (wire.start, wire.end)
@@ -3328,9 +3471,11 @@ def _summary(
             ]
         )
     elif isinstance(parameters, FanDipoleParameters):
+        angles = ", ".join(f"{element.included_angle_deg:.1f}°" for element in parameters.elements)
         parts.extend(
             [
                 f"{translator.t('geometry.elements').lower()} {len(parameters.elements)}",
+                f"{translator.t('inverted_v.included_angle').lower()} {angles}",
                 f"{translator.t('field.height').lower()} "
                 f"{_format_length(parameters.apex_height_m, translator, unit_system)}",
             ]
@@ -3771,13 +3916,13 @@ def build_scene(
                 translator,
             )
         else:
-            _add_sloping_array_dimensions(model, parameters, factory, dimensions)
+            _add_sloping_array_dimensions(model, parameters, factory, dimensions, translator)
     elif effective_type in {
         ANTENNA_TYPE_INVERTED_V,
         ANTENNA_TYPE_FAN_DIPOLE,
         ANTENNA_TYPE_VERTICAL,
     }:
-        _add_sloping_array_dimensions(model, parameters, factory, dimensions)
+        _add_sloping_array_dimensions(model, parameters, factory, dimensions, translator)
     elif len(model.wires) == 1:
         _add_single_wire_dimensions(model, factory, dimensions, notes, translator)
     else:

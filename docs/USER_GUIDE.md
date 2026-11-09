@@ -99,7 +99,10 @@ between:
   element and inter-element spacing, the Moxon shows a tip detail with both tip
   lengths and the gap, the hexbeam shows the spreader angle and a half-detail
   with the four segment lengths, the trapped Yagi shows a symmetric trap inset,
-  and the quad beam labels each loop and the director spacing.
+  and the quad beam labels each loop and the director spacing. Single-wire
+  families dimension the feed offset and every load position; verticals add the
+  loading-coil height and top-hat radius; fan dipoles label each leg and the
+  construction sheet lists the included angles and end heights.
 - **3D**: isometric wireframe colored by gain (green low, yellow intermediate, red high), with a dBi legend, ground grid, feed marker, axes, and scale.
 
 The construction view is selected automatically. Press **Apply design** or

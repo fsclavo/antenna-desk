@@ -168,6 +168,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   segment lengths; the trapped Yagi labels all element lengths and spacings and
   adds a symmetric trap-detail inset; the quad beam labels each loop and the
   director spacing. Detail insets are larger so the labels remain legible.
+- Single-wire and vertical construction views now dimension the feed offset
+  and every load position. The loaded dipole measures link/coil offsets from
+  the feed, the trap dipole measures trap positions from the wire start,
+  verticals dimension the loading-coil height and top-hat radius,
+  half-square/bobtail dimension a nonzero feed offset below the top, and fan
+  dipoles label each leg and report included angles and end heights in the
+  construction sheet.
 - The geometry panel now exposes a single **Construction** view plus **3D**.
   Construction resolves to the projection that shows the family's principal
   plane: front for vertical antennas, top for horizontal beams and loops, top

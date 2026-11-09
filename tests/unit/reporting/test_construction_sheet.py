@@ -622,6 +622,25 @@ def test_construction_sheet_includes_estimator_provenance(sample_project: Projec
     assert "arrl.antenna_book.dipole.end_effect" in sheet
 
 
+def test_fan_dipole_construction_sheet_lists_angles_and_end_heights(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
+
+    parameters = FanDipoleParameters(
+        frequency_hz=7_100_000.0,
+        elements=(FanElement(20.0, 120.0), FanElement(10.0, 90.0)),
+        apex_height_m=12.0,
+    )
+    design = sample_project.designs[0].with_parameters(parameters)
+    sheet = render_construction_sheet(sample_project, design, None)
+
+    assert "Included angles" in sheet
+    assert "120.0°, 90.0°" in sheet
+    assert "End heights" in sheet
+    assert "7.0000 m, 8.4645 m" in sheet
+
+
 def test_loaded_vertical_construction_sheet_lists_the_loading_coil() -> None:
     from antennadesk.application.use_cases.create_dipole_project import (
         CreateDipoleProject,

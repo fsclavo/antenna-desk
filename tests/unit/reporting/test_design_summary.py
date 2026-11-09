@@ -504,6 +504,20 @@ def test_magnetic_loop_summary_reports_tuning_and_loss_fields() -> None:
     assert "Capacitor reactance" in rows
 
 
+def test_fan_dipole_summary_reports_angles_and_end_heights() -> None:
+    from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
+
+    parameters = FanDipoleParameters(
+        frequency_hz=7_100_000.0,
+        elements=(FanElement(20.0, 120.0), FanElement(10.0, 90.0)),
+        apex_height_m=12.0,
+    )
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Included angles"] == "120.0°, 90.0°"
+    assert rows["End heights"] == "7.0000 m, 8.4645 m"
+
+
 def test_g5rv_custom_generator_is_labeled_in_the_summary() -> None:
     from antennadesk.domain.antennas.g5rv import g5rv_parameters
 

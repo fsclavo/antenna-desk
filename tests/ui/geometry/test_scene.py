@@ -490,6 +490,100 @@ def test_loaded_vertical_marks_the_loading_coil() -> None:
         assert "radials 4" in scene.summary
         assert "loading coil 12.000 µH" in scene.summary
 
+    elevation = _scene(parameters, "vertical", GeometryViewMode.ELEVATION)
+    assert any(
+        dimension.label == "Coil height above base" and dimension.text == "1.00 m"
+        for dimension in elevation.dimensions
+    )
+
+
+def test_vertical_top_hat_dimensions_the_hat_radius() -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=5.0,
+        base_height_m=0.25,
+        radial_count=4,
+        radial_length_m=2.5,
+        top_hat_enabled=True,
+        top_hat_radius_m=0.75,
+        top_hat_wire_count=4,
+    )
+
+    scene = _scene(parameters, "vertical", GeometryViewMode.ELEVATION)
+
+    assert any(
+        dimension.label == "Hat radius" and dimension.text == "0.75 m"
+        for dimension in scene.dimensions
+    )
+    assert "capacitive top hat 4 x 0.75 m" in scene.summary
+
+
+def test_ocfd_construction_view_dimensions_the_feed_offset() -> None:
+    from antennadesk.domain.antennas.ocfd import OCFDParameters
+
+    parameters = OCFDParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=40.0,
+        height_m=10.0,
+    )
+
+    scene = _scene(parameters, "ocfd", GeometryViewMode.ELEVATION)
+
+    assert any(
+        dimension.label == "feed offset" and dimension.text == "13.33 m"
+        for dimension in scene.dimensions
+    )
+
+
+def test_trap_dipole_dimensions_the_trap_positions() -> None:
+    from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+
+    parameters = TrapDipoleParameters(
+        frequency_hz=7_100_000.0,
+        high_band_frequency_hz=14_100_000.0,
+        inner_length_m=10.0,
+        outer_length_m=5.0,
+        trap_frequency_hz=14_100_000.0,
+        trap_inductance_h=10e-6,
+        height_m=12.0,
+    )
+
+    scene = _scene(parameters, "trap_dipole", GeometryViewMode.ELEVATION)
+
+    dimensions = {(dimension.label, dimension.text) for dimension in scene.dimensions}
+    assert ("L1", "5.00 m") in dimensions
+    assert ("L2", "15.00 m") in dimensions
+
+
+def test_loaded_dipole_dimensions_links_from_the_feed() -> None:
+    from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
+
+    scene = _scene(loaded_dipole_parameters(), "loaded_dipole", GeometryViewMode.ELEVATION)
+
+    dimensions = {(dimension.label, dimension.text) for dimension in scene.dimensions}
+    assert ("Total length", "20.00 m") in dimensions
+    assert ("L1", "2.00 m") in dimensions
+    assert ("L2", "2.00 m") in dimensions
+
+
+def test_scv_construction_view_dimensions_a_nonzero_feed_offset() -> None:
+    from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
+
+    parameters = scv_parameters(
+        ScvKind.HALF_SQUARE,
+        7_150_000.0,
+        feed_offset_m=2.0,
+    )
+
+    scene = _scene(parameters, "half_square", GeometryViewMode.ELEVATION)
+
+    assert any(
+        dimension.label == "Feed offset below top junction" and dimension.text == "2.00 m"
+        for dimension in scene.dimensions
+    )
+
 
 def test_trap_dipole_marks_both_traps_and_reports_the_center_section() -> None:
     from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
@@ -672,6 +766,9 @@ def test_fan_dipole_has_one_angle_annotation_per_element() -> None:
         "120.0°",
         "90.0°",
     }
+    labels = {dimension.label for dimension in scene.dimensions}
+    assert {"E1 leg", "E2 leg"} <= labels
+    assert "included angle 120.0°, 90.0°" in scene.summary
 
 
 def test_g5rv_custom_generator_uses_the_dipole_summary_and_dashed_line() -> None:

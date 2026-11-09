@@ -466,14 +466,22 @@ The feed is at {parameters.feed_height_m:.4f} m and the far end at
 transformer; the counterpoise is {counterpoise}.</p>"""
     elif isinstance(parameters, FanDipoleParameters):
         lengths = ", ".join(f"{element.length_m:.4f} m" for element in parameters.elements)
+        angles = ", ".join(f"{element.included_angle_deg:.1f}°" for element in parameters.elements)
+        end_heights = ", ".join(
+            f"{parameters.element_end_height_m(element):.4f} m" for element in parameters.elements
+        )
         feed_rows = f"""
 <tr><th>Pairs</th><td>{len(parameters.elements)}</td></tr>
 <tr><th>Element lengths</th><td>{_escape(lengths)}</td></tr>
+<tr><th>Included angles</th><td>{_escape(angles)}</td></tr>
+<tr><th>End heights</th><td>{_escape(end_heights)}</td></tr>
 <tr><th>Apex height</th><td>{parameters.apex_height_m:.4f} m</td></tr>
 <tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
 """
         construction_note = f"""<p>Cut {len(parameters.elements)} dipole pairs with lengths
-{_escape(lengths)}. Join all pairs at the common apex and feed there.</p>"""
+{_escape(lengths)} at included angles {_escape(angles)}. Join all pairs at the
+common apex and feed there. The ends sit at {_escape(end_heights)} above
+ground.</p>"""
     elif isinstance(parameters, MoxonParameters):
         feed_rows = f"""
 <tr><th>Element width</th><td>{parameters.width_m:.4f} m</td></tr>

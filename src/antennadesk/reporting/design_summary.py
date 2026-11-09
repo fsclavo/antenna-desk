@@ -619,6 +619,19 @@ def design_summary_rows(
                     "Element lengths",
                     ", ".join(f"{element.length_m:.4f} m" for element in parameters.elements),
                 ),
+                (
+                    "Included angles",
+                    ", ".join(
+                        f"{element.included_angle_deg:.1f}°" for element in parameters.elements
+                    ),
+                ),
+                (
+                    "End heights",
+                    ", ".join(
+                        f"{parameters.element_end_height_m(element):.4f} m"
+                        for element in parameters.elements
+                    ),
+                ),
                 ("Apex height", f"{parameters.apex_height_m:.4f} m"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground)),
