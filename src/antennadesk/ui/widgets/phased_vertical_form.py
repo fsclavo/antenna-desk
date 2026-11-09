@@ -151,6 +151,10 @@ class PhasedVerticalForm(QWidget):
 
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
+        self._overlap_warning = QLabel(self)
+        self._overlap_warning.setWordWrap(True)
+        self._overlap_warning.setStyleSheet("color: #9a6700;")
+        self._overlap_warning.setVisible(False)
 
         form = QFormLayout()
         form.addRow(self._labels.label("field.frequency"), self._frequency)
@@ -178,6 +182,7 @@ class PhasedVerticalForm(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addLayout(form)
         layout.addWidget(self._geometry)
+        layout.addWidget(self._overlap_warning)
 
         for widget in (
             self._frequency,
@@ -351,6 +356,7 @@ class PhasedVerticalForm(QWidget):
             parameters = self.parameters()
         except (ValueError, TypeError):
             self._geometry.setText("")
+            self._overlap_warning.setVisible(False)
             return
         unit = self._translator.t(length_unit_key(self._unit_system))
         self._geometry.setText(
@@ -365,6 +371,8 @@ class PhasedVerticalForm(QWidget):
                 unit=unit,
             )
         )
+        self._overlap_warning.setText(self._translator.t("phased_vertical.radial_overlap_warning"))
+        self._overlap_warning.setVisible(parameters.radial_screen_overlap)
 
     def parameters(self) -> PhasedVerticalParameters:
         return PhasedVerticalParameters(

@@ -157,6 +157,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The phased vertical editor now warns when adjacent radial screens overlap
+  because twice the radial length exceeds the element spacing. Intersecting
+  screens can produce unstable NEC impedance or negative primary resistance;
+  shorten the radials, increase spacing, or model the bonded screen explicitly.
 - The trapped-Yagi trap loads are now registered as template-managed loads, so
   editing the design or converting templates preserves them instead of treating
   them as user-added loads.

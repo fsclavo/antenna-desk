@@ -49,6 +49,30 @@ def test_phased_vertical_builds_spaced_verticals_and_radials() -> None:
     assert parameters.total_conductor_length_m == pytest.approx(3 * 5.0 + 3 * 4 * 5.0)
 
 
+def test_phased_vertical_detects_overlapping_radial_screens() -> None:
+    overlapping = phased_vertical_parameters(
+        element_count=4,
+        spacing_m=5.0,
+        radial_count=36,
+        radial_length_m=5.0,
+    )
+    separated = phased_vertical_parameters(
+        element_count=4,
+        spacing_m=5.0,
+        radial_count=36,
+        radial_length_m=2.0,
+    )
+    no_radials = phased_vertical_parameters(
+        element_count=4,
+        spacing_m=5.0,
+        radial_count=0,
+    )
+
+    assert overlapping.radial_screen_overlap is True
+    assert separated.radial_screen_overlap is False
+    assert no_radials.radial_screen_overlap is False
+
+
 def test_phased_vertical_assigns_ideal_phase_and_amplitude_steps() -> None:
     parameters = phased_vertical_parameters(
         element_count=4,

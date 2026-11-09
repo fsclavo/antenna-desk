@@ -26,6 +26,20 @@ def test_phased_vertical_dialog_builds_the_default_array(qtbot: QtBot) -> None:
     assert "2 verticals" in dialog._form._geometry.text()
 
 
+def test_phased_vertical_dialog_warns_about_overlapping_radial_screens(
+    qtbot: QtBot,
+) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+
+    assert dialog._form._overlap_warning.isHidden() is False
+    assert "overlap" in dialog._form._overlap_warning.text().lower()
+
+    dialog._form._radial_length.setValue(2.0)
+
+    assert dialog._form._overlap_warning.isHidden() is True
+
+
 def test_phased_vertical_dialog_updates_the_pattern_of_sources(qtbot: QtBot) -> None:
     dialog = _dialog()
     qtbot.addWidget(dialog)

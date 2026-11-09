@@ -3427,6 +3427,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "escalón de fase {phase}° · atenuación {taper:.0f}% · {radials} radiales cada una"
         ),
     },
+    "phased_vertical.radial_overlap_warning": {
+        Language.ENGLISH: (
+            "The radial screens overlap: twice the radial length exceeds the "
+            "element spacing. Adjacent radials may cross or touch, which can "
+            "produce unreliable NEC impedance or negative resistance. Shorten "
+            "the radials, increase the spacing, or model the bonded screen "
+            "explicitly."
+        ),
+        Language.SPANISH: (
+            "Las pantallas de radiales se superponen: el doble del largo del "
+            "radial supera la separación entre elementos. Los radiales vecinos "
+            "pueden cruzarse o tocarse, lo que puede producir impedancia poco "
+            "confiable o resistencia negativa en NEC. Acortá los radiales, "
+            "aumentá la separación o modelá la pantalla unida explícitamente."
+        ),
+    },
     "phased_vertical.hint": {
         Language.ENGLISH: (
             "The first vertical is the primary feed with unit amplitude and zero "

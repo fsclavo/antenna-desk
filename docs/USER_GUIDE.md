@@ -702,6 +702,15 @@ wire solver, but the combining network is ideal, per-element matching and
 feed-line loss are not modeled, and the reported impedance and SWR refer only to
 the primary feed. Verify the pattern and match with the solver or a measurement.
 
+Keep the radial screens from overlapping. If twice the radial length exceeds the
+element spacing, adjacent radials can cross or touch. The editor shows a warning
+in that case because intersecting screens can produce unstable impedance or a
+negative primary resistance in NEC. Shorten the radials, increase the spacing,
+or model a bonded screen explicitly. With ideal phase and amplitude sources, an
+individual port can also absorb power even without overlapping screens; check
+the **Sources** results and the feed-network assumptions before tuning the
+geometry.
+
 ## Create a Beverage
 
 Choose **File → New Antenna... → Beverage** for a long horizontal receiving

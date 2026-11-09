@@ -143,6 +143,12 @@ class PhasedVerticalParameters:
         radials = self.element_count * self.radial_count * self.radial_length_m
         return verticals + radials
 
+    @property
+    def radial_screen_overlap(self) -> bool:
+        """Return True when adjacent radial screens overlap geometrically."""
+
+        return self.radial_count > 0 and 2.0 * self.radial_length_m > self.spacing_m
+
     def to_antenna(self, *, name: str | None = None) -> AntennaModel:
         angle = units.degrees_to_radians(self.azimuth_deg)
         cos_angle = math.cos(angle)
