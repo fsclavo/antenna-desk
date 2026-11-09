@@ -68,6 +68,7 @@ table.schedule th { width: auto; }
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .muted { color: #666; font-size: 12px; }
 .notes { background: #f7f7f7; border-left: 4px solid #888; padding: 10px 14px; }
+.construction-figure { display: block; width: 100%; max-width: 100%; height: auto; border: 1px solid #ddd; background: #fff; margin: 12px 0 4px; }
 footer { margin-top: 28px; color: #777; font-size: 11px; }
 """
 
@@ -110,6 +111,8 @@ def render_construction_sheet(
     project: Project,
     design: DesignVariant,
     result: SimulationResult | None,
+    *,
+    figure_png_data_uri: str | None = None,
 ) -> str:
     parameters = design.parameters
     antenna = design.antenna
@@ -136,6 +139,12 @@ def render_construction_sheet(
     )
     schedule_rows = "".join(wire_schedule_html_rows(design))
     feed = feed_schedule_row(antenna)
+    figure_section = (
+        f'<img class="construction-figure" alt="Construction view" '
+        f'src="{_escape(figure_png_data_uri)}">'
+        if figure_png_data_uri
+        else ""
+    )
     schedule_section = f"""
 <h2>Wire schedule</h2>
 <table class="schedule">
@@ -752,7 +761,7 @@ point above. Verify every connection and the feed gap before construction.</p>""
 <body>
 <h1>{_escape(project.name)} — {_escape(design.name)}</h1>
 <p class="muted">AntennaDesk construction sheet · SI units (m, MHz, Ω)</p>
-
+{figure_section}
 <h2>Dimensions</h2>
 <table>
 {dimension_rows}
@@ -784,9 +793,16 @@ def write_construction_sheet(
     design: DesignVariant,
     result: SimulationResult | None,
     path: Path,
+    *,
+    figure_png_data_uri: str | None = None,
 ) -> None:
     path.write_text(
-        render_construction_sheet(project, design, result),
+        render_construction_sheet(
+            project,
+            design,
+            result,
+            figure_png_data_uri=figure_png_data_uri,
+        ),
         encoding="utf-8",
         newline="\n",
     )

@@ -116,10 +116,11 @@ dragging pans, and double-click resets zoom and pan. The **Vertical scale**
 selector can exaggerate the height (1x, 1.5x, 2x, 3x) for low horizontal
 antennas.
 
-The construction sheet includes a **wire schedule**: every canonical wire with
-its start and end coordinates, length, diameter, and material, plus the primary
-feed point. Use it when a dimension is too small to read or is hidden by the
-layout; it is the authoritative construction data.
+The construction sheet includes the rendered construction view and a **wire
+schedule**: every canonical wire with its start and end coordinates, length,
+diameter, and material, plus the primary feed point. Use the schedule when a
+dimension is too small to read or is hidden by the layout; it is the
+authoritative construction data.
 
 ## Undo and redo
 

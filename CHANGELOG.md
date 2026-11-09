@@ -182,6 +182,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Edge-on projections are no longer offered as construction views. The
   construction sheet and native PDF now include a wire schedule with every
   wire's endpoints, length, diameter, material, and the primary feed point.
+  They also embed the rendered construction view; the dialog preview loads the
+  same image through a document resource.
 - The **biquad** and **Beverage** starting dimensions are now classified as
   published evidence (B) instead of experimental (C). The biquad claim covers
   the quarter-wave loop side and eighth-wave reflector spacing; the Beverage

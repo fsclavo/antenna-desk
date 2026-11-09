@@ -416,6 +416,20 @@ def test_three_d_view_can_be_rotated_and_reset(qtbot: QtBot) -> None:
     assert view._three_d_pitch_deg == pytest.approx(24.0)
 
 
+def test_construction_image_renders_without_changing_the_view(qtbot: QtBot) -> None:
+    view = _make_view(qtbot)
+    view.set_zoom(2.0)
+    before = (view._mode, view._zoom, view._pan, view._height_exaggeration)
+
+    image = view.construction_image(400, 240)
+
+    assert not image.isNull()
+    assert image.width() == 400
+    assert image.height() == 240
+    assert _non_white_pixels(QPixmap.fromImage(image)) > 50
+    assert (view._mode, view._zoom, view._pan, view._height_exaggeration) == before
+
+
 def test_geometry_view_exports_vector_svg_pdf_and_dxf(
     qtbot: QtBot,
     tmp_path: Path,

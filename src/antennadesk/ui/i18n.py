@@ -2836,6 +2836,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "AntennaDesk construction sheet · SI units",
         Language.SPANISH: "Hoja de construcción de AntennaDesk · unidades SI",
     },
+    "construction.view": {
+        Language.ENGLISH: "Construction view",
+        Language.SPANISH: "Vista de construcción",
+    },
     "construction.wire_schedule": {
         Language.ENGLISH: "Wire schedule",
         Language.SPANISH: "Lista de hilos",

@@ -59,6 +59,18 @@ def test_construction_sheet_contains_dimensions_and_result(sample_project: Proje
     assert "Construction notes" in sheet
 
 
+def test_construction_sheet_embeds_a_figure(sample_project: Project) -> None:
+    sheet = render_construction_sheet(
+        sample_project,
+        sample_project.designs[0],
+        None,
+        figure_png_data_uri="data:image/png;base64,AAAA",
+    )
+
+    assert 'src="data:image/png;base64,AAAA"' in sheet
+    assert "construction-figure" in sheet
+
+
 def test_construction_sheet_works_without_a_result(sample_project: Project) -> None:
     sheet = render_construction_sheet(
         sample_project,

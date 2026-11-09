@@ -4,8 +4,12 @@
 
 from __future__ import annotations
 
+import base64
+import tempfile
 from pathlib import Path
 
+from PySide6.QtCore import QUrl
+from PySide6.QtGui import QImage, QTextDocument
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -28,6 +32,20 @@ from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 
 
+def _png_data_uri(image: QImage) -> str | None:
+    if image.isNull():
+        return None
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as handle:
+        path = Path(handle.name)
+    try:
+        if not image.save(str(path)):
+            return None
+        encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+        return f"data:image/png;base64,{encoded}"
+    finally:
+        path.unlink(missing_ok=True)
+
+
 class ConstructionDialog(QDialog):
     def __init__(
         self,
@@ -36,18 +54,38 @@ class ConstructionDialog(QDialog):
         design: DesignVariant,
         result: SimulationResult | None,
         parent: QWidget | None = None,
+        *,
+        figure_image: QImage | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._project = project
         self._design = design
         self._result = result
+        self._figure_image = figure_image
+        self._figure_data_uri = _png_data_uri(figure_image) if figure_image else None
         self.setWindowTitle(translator.t("construction.title"))
         self.resize(*scaled_dialog_size(820, 720))
 
         self._browser = QTextBrowser(self)
         self._browser.setOpenExternalLinks(False)
-        self._browser.setHtml(render_construction_sheet(project, design, result))
+        preview_uri = "construction-figure" if figure_image is not None else None
+        document = QTextDocument(self._browser)
+        if figure_image is not None:
+            document.addResource(
+                QTextDocument.ResourceType.ImageResource,
+                QUrl("construction-figure"),
+                figure_image,
+            )
+        document.setHtml(
+            render_construction_sheet(
+                project,
+                design,
+                result,
+                figure_png_data_uri=preview_uri,
+            )
+        )
+        self._browser.setDocument(document)
 
         self._save = QPushButton(translator.t("construction.save"), self)
         self._save_pdf = QPushButton(translator.t("construction.save_pdf"), self)
@@ -81,7 +119,13 @@ class ConstructionDialog(QDialog):
         if path.suffix.lower() not in {".html", ".htm"}:
             path = path.with_suffix(".html")
         try:
-            write_construction_sheet(self._project, self._design, self._result, path)
+            write_construction_sheet(
+                self._project,
+                self._design,
+                self._result,
+                path,
+                figure_png_data_uri=self._figure_data_uri,
+            )
         except Exception as exc:
             QMessageBox.critical(
                 self,
@@ -117,6 +161,7 @@ class ConstructionDialog(QDialog):
                 self._design,
                 self._result,
                 path,
+                figure_image=self._figure_image,
             )
         except Exception as exc:
             QMessageBox.critical(

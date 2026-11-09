@@ -18,6 +18,7 @@ from PySide6.QtGui import (
     QColor,
     QFont,
     QFontMetricsF,
+    QImage,
     QMouseEvent,
     QPageSize,
     QPainter,
@@ -128,6 +129,45 @@ class GeometryView(QWidget):
         pixmap = self.grab()
         if pixmap.isNull() or not pixmap.save(str(path), "PNG"):
             raise OSError(f"could not write geometry image: {path}")
+
+    def construction_image(self, width: int = 1200, height: int = 650) -> QImage:
+        """Render the construction view to an image for a construction sheet."""
+
+        if self._model is None:
+            raise OSError("no geometry model to export")
+        previous = (
+            self._mode,
+            self._scene,
+            self._zoom,
+            self._pan,
+            self._height_exaggeration,
+        )
+        try:
+            self._mode = GeometryViewMode.CONSTRUCTION
+            self._scene = None
+            self._zoom = 1.0
+            self._pan = QPointF(0.0, 0.0)
+            self._height_exaggeration = 1.0
+            image = QImage(
+                width,
+                height,
+                QImage.Format.Format_ARGB32_Premultiplied,
+            )
+            image.fill(self._colors.background)
+            painter = QPainter(image)
+            try:
+                self._render(painter, QRectF(0.0, 0.0, float(width), float(height)))
+            finally:
+                painter.end()
+            return image
+        finally:
+            (
+                self._mode,
+                self._scene,
+                self._zoom,
+                self._pan,
+                self._height_exaggeration,
+            ) = previous
 
     def save_svg(self, path: Path) -> None:
         generator = QSvgGenerator()

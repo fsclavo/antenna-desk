@@ -8,7 +8,7 @@ import math
 from pathlib import Path
 
 from PySide6.QtCore import QMarginsF, QRectF, Qt
-from PySide6.QtGui import QFont, QPageLayout, QPageSize, QPainter, QPdfWriter
+from PySide6.QtGui import QFont, QImage, QPageLayout, QPageSize, QPainter, QPdfWriter
 
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
@@ -38,6 +38,8 @@ def write_construction_pdf(
     design: DesignVariant,
     result: SimulationResult | None,
     path: Path,
+    *,
+    figure_image: QImage | None = None,
 ) -> None:
     writer = QPdfWriter(str(path))
     writer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
@@ -98,6 +100,28 @@ def write_construction_pdf(
     painter.drawText(QRectF(left, y, right - left, 18.0), translator.t("construction.pdf_subtitle"))
     painter.setPen(Qt.GlobalColor.black)
     y += 30.0
+
+    if figure_image is not None and not figure_image.isNull():
+        section(translator.t("construction.view"))
+        available_width = right - left
+        max_height = writer.height() * 0.55
+        scale = min(
+            available_width / max(figure_image.width(), 1),
+            max_height / max(figure_image.height(), 1),
+        )
+        draw_width = figure_image.width() * scale
+        draw_height = figure_image.height() * scale
+        ensure_space(draw_height + 12.0)
+        painter.drawImage(
+            QRectF(
+                left + (available_width - draw_width) / 2.0,
+                y,
+                draw_width,
+                draw_height,
+            ),
+            figure_image,
+        )
+        y += draw_height + 12.0
 
     section(translator.t("construction.dimensions"))
     for label, value in (

@@ -6535,12 +6535,17 @@ class MainWindow(QMainWindow):
                 return
         design = self._project.design_by_id(self._design_id)
         result = self._simulation_results.get(self._design_id)
+        try:
+            figure_image = self._geometry.construction_image()
+        except OSError:
+            figure_image = None
         dialog = ConstructionDialog(
             self._translator,
             self._project,
             design,
             result,
             self,
+            figure_image=figure_image,
         )
         dialog.exec()
 
