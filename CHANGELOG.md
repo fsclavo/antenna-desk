@@ -168,6 +168,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   segment lengths; the trapped Yagi labels all element lengths and spacings and
   adds a symmetric trap-detail inset; the quad beam labels each loop and the
   director spacing. Detail insets are larger so the labels remain legible.
+- The discone construction view now shows the full cone angle and reports the
+  half-angle and radial step; phased verticals label each additional source
+  with its phase and amplitude; the biquad dimensions the loop-side stack; and
+  the quad beam adds a driven-loop front detail inset with the square side.
 - Single-wire and vertical construction views now dimension the feed offset
   and every load position. The loaded dipole measures link/coil offsets from
   the feed, the trap dipole measures trap positions from the wire start,

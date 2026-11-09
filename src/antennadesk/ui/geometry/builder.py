@@ -409,7 +409,7 @@ def _source_markers(model: AntennaModel, factory: _Factory) -> tuple[SceneMarker
             SceneMarker(
                 point=factory.project(_wire_point(wire, ratio)),
                 kind="source",
-                label=f"S{index}",
+                label=f"S{index} {source.amplitude * 100.0:.0f}% {source.phase_deg:.0f}°",
                 priority=80,
             )
         )
@@ -1199,6 +1199,25 @@ def _add_biquad_dimensions(
                 )
             )
         if parameters is not None:
+            right_side = next(
+                (
+                    wire
+                    for wire in model.wires
+                    if wire.id == f"biquad-right-{parameters.loop_count - 1}"
+                ),
+                None,
+            )
+            if right_side is not None:
+                dimensions.append(
+                    factory.dimension(
+                        right_side.start,
+                        right_side.end,
+                        parameters.loop_side_m,
+                        side="left",
+                        priority=75,
+                        label=translator.t("biquad.loop_side"),
+                    )
+                )
             notes.append(
                 translator.t(
                     "biquad.reflector_spacing_note",
@@ -1774,15 +1793,14 @@ def _add_discone_dimensions(
     parameters: DisconeParameters | None,
     factory: _Factory,
     dimensions: list[Dimension],
+    angular_dimensions: list[AngularDimension],
     notes: list[str],
     translator: Translator,
 ) -> None:
     if parameters is None:
         return
-    cone = next(
-        (wire for wire in model.wires if wire.id.startswith("discone-cone-")),
-        None,
-    )
+    cone_wires = tuple(wire for wire in model.wires if wire.id.startswith("discone-cone-"))
+    cone = cone_wires[0] if cone_wires else None
     disc = next(
         (wire for wire in model.wires if wire.id.startswith("discone-disc-")),
         None,
@@ -1830,6 +1848,31 @@ def _add_discone_dimensions(
                 priority=80,
             )
         )
+    if factory.projection.vertical and len(cone_wires) >= 2 and parameters.wire_count % 2 == 0:
+        apex = cone_wires[0].start
+        first = cone_wires[0].end
+        opposite = cone_wires[parameters.wire_count // 2]
+        second = opposite.end
+        angle = _included_angle(apex, first, second)
+        angular_dimensions.append(
+            AngularDimension(
+                center=factory.project(apex),
+                first=factory.project(first),
+                second=factory.project(second),
+                text=f"{angle:.1f}°",
+                priority=90,
+            )
+        )
+    half_angle = math.degrees(math.atan2(parameters.cone_radius_m, parameters.cone_height_m))
+    step = 360.0 / parameters.wire_count
+    notes.append(
+        translator.t(
+            "discone.angle_note",
+            half=f"{half_angle:.1f}",
+            count=parameters.wire_count,
+            step=f"{step:.1f}",
+        )
+    )
     notes.append(translator.t("discone.geometry_note"))
 
 
@@ -1838,6 +1881,7 @@ def _add_quad_beam_dimensions(
     parameters: QuadBeamParameters | None,
     factory: _Factory,
     dimensions: list[Dimension],
+    insets: list[SceneInset],
     notes: list[str],
     translator: Translator,
 ) -> None:
@@ -1941,6 +1985,63 @@ def _add_quad_beam_dimensions(
                     label=loop_labels[index] if index < len(loop_labels) else None,
                 )
             )
+        driven_sides = tuple(
+            model.wire_by_id(f"quad-beam-element-{DRIVEN_ELEMENT_INDEX}-side-{side_index}")
+            for side_index in range(4)
+        )
+        center_y = sum(point.y_m for wire in driven_sides for point in (wire.start, wire.end)) / 8.0
+        center_z = sum(point.z_m for wire in driven_sides for point in (wire.start, wire.end)) / 8.0
+
+        def inset_point(point: Point3D) -> ScenePoint:
+            return ScenePoint(point.y_m - center_y, point.z_m - center_z)
+
+        bottom = driven_sides[0]
+        right_side = driven_sides[1]
+        insets.append(
+            SceneInset(
+                label=translator.t(
+                    "geometry.detail_loop",
+                    side=_format_length(
+                        parameters.loop_side_m,
+                        translator,
+                        factory.unit_system,
+                    ),
+                ),
+                polylines=tuple(
+                    ScenePolyline(
+                        (inset_point(wire.start), inset_point(wire.end)),
+                        role="wire",
+                    )
+                    for wire in driven_sides
+                ),
+                dimensions=(
+                    Dimension(
+                        start=inset_point(bottom.start),
+                        end=inset_point(bottom.end),
+                        text=_format_length(
+                            parameters.loop_side_m,
+                            translator,
+                            factory.unit_system,
+                        ),
+                        side="below",
+                        priority=95,
+                        label=translator.t("geometry.driven_loop"),
+                    ),
+                    Dimension(
+                        start=inset_point(right_side.start),
+                        end=inset_point(right_side.end),
+                        text=_format_length(
+                            parameters.loop_side_m,
+                            translator,
+                            factory.unit_system,
+                        ),
+                        side="right",
+                        priority=95,
+                        label=translator.t("biquad.loop_side"),
+                    ),
+                ),
+            )
+        )
     notes.append(translator.t("quad_beam.geometry_note"))
 
 
@@ -3862,6 +3963,7 @@ def build_scene(
             parameters if isinstance(parameters, QuadBeamParameters) else None,
             factory,
             dimensions,
+            insets,
             notes,
             translator,
         )
@@ -3871,6 +3973,7 @@ def build_scene(
             parameters if isinstance(parameters, DisconeParameters) else None,
             factory,
             dimensions,
+            angular_dimensions,
             notes,
             translator,
         )

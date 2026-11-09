@@ -102,7 +102,10 @@ between:
   and the quad beam labels each loop and the director spacing. Single-wire
   families dimension the feed offset and every load position; verticals add the
   loading-coil height and top-hat radius; fan dipoles label each leg and the
-  construction sheet lists the included angles and end heights.
+  construction sheet lists the included angles and end heights. The discone
+  shows the cone angle and radial step, phased verticals label each source's
+  phase and amplitude, the biquad shows the loop-side stack, and the quad beam
+  has a driven-loop front detail inset.
 - **3D**: isometric wireframe colored by gain (green low, yellow intermediate, red high), with a dBi legend, ground grid, feed marker, axes, and scale.
 
 The construction view is selected automatically. Press **Apply design** or

@@ -877,6 +877,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "left half; symmetric (not to scale)",
         Language.SPANISH: "mitad izquierda; simétrica (sin escala)",
     },
+    "geometry.detail_loop": {
+        Language.ENGLISH: "driven loop front detail · side {side} (not to scale)",
+        Language.SPANISH: "detalle frontal del lazo excitado · lado {side} (sin escala)",
+    },
     "geometry.detail_trap": {
         Language.ENGLISH: "trap detail; symmetric (not to scale)",
         Language.SPANISH: "detalle de trampas; simétrico (sin escala)",
@@ -3894,6 +3898,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "discone.constraint.disc_radius": {
         Language.ENGLISH: "The disc radius must be at least the cone radius.",
         Language.SPANISH: "El radio del disco debe ser al menos el radio del cono.",
+    },
+    "discone.angle_note": {
+        Language.ENGLISH: ("cone half-angle {half}°; {count} radial wires every {step}°"),
+        Language.SPANISH: ("semángulo del cono {half}°; {count} hilos radiales cada {step}°"),
     },
     "discone.geometry_note": {
         Language.ENGLISH: (

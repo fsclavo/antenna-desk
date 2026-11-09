@@ -1027,6 +1027,81 @@ def test_trap_yagi_plan_labels_elements_and_spacings() -> None:
     )
 
 
+def test_discone_dimensions_the_cone_angle_and_radial_step() -> None:
+    parameters = discone_parameters(
+        frequency_hz=145_000_000.0,
+        cone_height_m=0.5,
+        cone_radius_m=0.3,
+        disc_radius_m=0.5,
+        base_height_m=0.5,
+        wire_count=6,
+    )
+
+    scene = _scene(parameters, "discone", GeometryViewMode.ELEVATION)
+
+    assert any(angle.text == "61.9°" for angle in scene.angular_dimensions)
+    assert any(
+        "cone half-angle 31.0°" in note and "6 radial wires every 60.0°" in note
+        for note in scene.notes
+    )
+
+
+def test_phased_vertical_labels_each_source_with_phase_and_amplitude() -> None:
+    from antennadesk.domain.antennas.phased_vertical import phased_vertical_parameters
+
+    parameters = phased_vertical_parameters(
+        frequency_hz=14_100_000.0,
+        element_count=2,
+        height_m=5.0,
+        spacing_m=5.2,
+        phase_step_deg=90.0,
+        amplitude_taper=0.0,
+        radial_count=4,
+        radial_length_m=5.0,
+    )
+
+    scene = _scene(parameters, "phased_vertical", GeometryViewMode.ELEVATION)
+
+    source_labels = {
+        marker.label
+        for marker in scene.markers
+        if marker.kind == "source" and marker.label is not None
+    }
+    assert any("90°" in label and "100%" in label for label in source_labels)
+
+
+def test_biquad_dimensions_the_loop_side_stack() -> None:
+    from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
+
+    parameters = biquad_parameters(BiquadKind.DOUBLE)
+
+    scene = _scene(parameters, "double_biquad", GeometryViewMode.ELEVATION)
+
+    assert any(
+        dimension.label == "Loop side" and dimension.text == f"{parameters.loop_side_m:.2f} m"
+        for dimension in scene.dimensions
+    )
+
+
+def test_quad_beam_plan_has_a_driven_loop_front_inset() -> None:
+    parameters = quad_beam_parameters(
+        frequency_hz=14_100_000.0,
+        element_count=2,
+        loop_side_m=5.0,
+        reflector_spacing_m=4.0,
+        height_m=2.5,
+    )
+
+    scene = _scene(parameters, "quad_beam", GeometryViewMode.PLAN)
+
+    inset = next(
+        inset for inset in scene.insets if inset.label.startswith("driven loop front detail")
+    )
+    labels = {dimension.label for dimension in inset.dimensions}
+    assert "driven loop" in labels
+    assert "Loop side" in labels
+
+
 def test_quad_beam_plan_labels_loops_and_spacings() -> None:
     parameters = quad_beam_parameters(
         frequency_hz=14_100_000.0,
