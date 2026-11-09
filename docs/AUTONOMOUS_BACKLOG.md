@@ -162,13 +162,16 @@ model and solver contract must land first.
   reported as partial rather than completed.
 - Added batch-engine fallback and cancellation tests, plus cancellation
   coverage for sequential and parallel band analysis.
-- The last full coverage run was **86% total**; the CI thresholds were not
+- Added direct tests for the Qt worker adapters (100% coverage), the polar
+  pattern paint paths (45% to 98%), and the solver locator fallbacks (69% to
+  98%).
+- The full coverage run is now **87% total**; the CI thresholds were not
   lowered.
 
 ## Current baseline
 
 - Schema: **30**.
-- Full gate: **1,966 passed, 0 skipped** with `NEC2C` and the optional
+- Full gate: **1,988 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
 - Last commits: multi-source excitation, phased vertical array, quad beam,
   discone, trapped Yagi, per-source results, hexbeam, solver timeout, the
