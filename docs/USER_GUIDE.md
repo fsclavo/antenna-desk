@@ -119,8 +119,9 @@ dragging pans, and double-click resets zoom and pan. The **Vertical scale**
 selector can exaggerate the height (1x, 1.5x, 2x, 3x) for low horizontal
 antennas. In a small pane the sketch switches to a compact layout with smaller
 labels and margins; detail insets are hidden when there is not enough room, and
-the header reports how many dimensions were hidden. The wire schedule and
-construction sheet carry those values. Every linear dimension is anchored to
+the header reports how many dimensions were hidden, and a compact strip below
+the sketch lists their values. The wire schedule and construction sheet carry
+the same data. Every linear dimension is anchored to
 the model: its value matches the distance between its endpoints within 1% or
 5 mm.
 

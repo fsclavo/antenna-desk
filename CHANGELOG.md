@@ -205,7 +205,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   plan anchor.
 - The geometry sketch now has a **compact layout** for small panes: smaller
   header, margins, offsets, and label font; detail insets are hidden when the
-  pane is too small, and the hidden-dimension notice points to the schedule.**.
+  pane is too small, and the hidden-dimension notice points to the schedule.
+  A compact strip below the sketch now lists the hidden dimension values, so
+  they remain visible without enlarging the drawing.**.
 - The **biquad** and **Beverage** starting dimensions are now classified as
   published evidence (B) instead of experimental (C). The biquad claim covers
   the quarter-wave loop side and eighth-wave reflector spacing; the Beverage

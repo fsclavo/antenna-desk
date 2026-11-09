@@ -430,6 +430,29 @@ def test_construction_image_renders_without_changing_the_view(qtbot: QtBot) -> N
     assert (view._mode, view._zoom, view._pan, view._height_exaggeration) == before
 
 
+def test_compact_view_exposes_hidden_dimension_values(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+
+    parameters = YagiParameters(
+        frequency_hz=14_100_000.0,
+        elements=(
+            YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+            YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+            YagiElement(position_m=4.0, length_m=9.0, radius_m=0.001),
+        ),
+        height_m=10.0,
+    )
+    view = GeometryView(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(view)
+    view.resize(360, 240)
+    view.set_model(parameters.to_antenna(), antenna_type="yagi", parameters=parameters)
+    view.show()
+    view.grab()
+
+    assert view.hidden_dimensions
+    assert any("m" in value for value in view.hidden_dimensions)
+
+
 def test_auxiliary_image_is_an_installation_elevation_for_top_views(
     qtbot: QtBot,
 ) -> None:

@@ -1006,6 +1006,12 @@ class MainWindow(QMainWindow):
 
         self._geometry = GeometryView(self._translator, self._unit_system)
         self._geometry.setMinimumHeight(300)
+        self._hidden_dimension_texts: tuple[str, ...] = ()
+        self._geometry_hidden_label = QLabel(self)
+        self._geometry_hidden_label.setWordWrap(True)
+        self._geometry_hidden_label.setTextFormat(Qt.TextFormat.PlainText)
+        self._geometry_hidden_label.hide()
+        self._geometry.hidden_dimensions_changed.connect(self._on_hidden_dimensions_changed)
         self._results = ResultsView(self._translator)
         self._results.measurement_edit_requested.connect(self.edit_measurement)
         self._results.measurement_delete_requested.connect(self.delete_measurement)
@@ -1038,6 +1044,7 @@ class MainWindow(QMainWindow):
         geometry_controls.addWidget(self._zoom_combo)
         geometry_layout.addLayout(geometry_controls)
         geometry_layout.addWidget(self._geometry, 1)
+        geometry_layout.addWidget(self._geometry_hidden_label)
         geometry_container.setMinimumHeight(330)
         self._view_combo.currentIndexChanged.connect(self._on_view_mode_changed)
         self._height_combo.currentIndexChanged.connect(self._on_height_scale_changed)
@@ -1344,6 +1351,7 @@ class MainWindow(QMainWindow):
         self._doublet_form.retranslate()
         self._zepp_form.retranslate()
         self._geometry.retranslate()
+        self._update_hidden_label()
         self._results.retranslate()
         if self._project is not None and self._design_id is not None:
             design = self._project.design_by_id(self._design_id)
@@ -7155,6 +7163,26 @@ class MainWindow(QMainWindow):
         mode = GeometryViewMode(value)
         self._geometry.set_view_mode(mode)
         self._update_height_control()
+
+    def _on_hidden_dimensions_changed(self, values: object) -> None:
+        if isinstance(values, (tuple, list)):
+            self._hidden_dimension_texts = tuple(str(value) for value in values)
+        else:
+            self._hidden_dimension_texts = ()
+        self._update_hidden_label()
+
+    def _update_hidden_label(self) -> None:
+        if not self._hidden_dimension_texts:
+            self._geometry_hidden_label.clear()
+            self._geometry_hidden_label.hide()
+            return
+        self._geometry_hidden_label.setText(
+            self._translator.t(
+                "geometry.hidden_values",
+                values=", ".join(self._hidden_dimension_texts),
+            )
+        )
+        self._geometry_hidden_label.show()
 
     def _auto_select_view(self, design: DesignVariant) -> None:
         del design

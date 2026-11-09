@@ -74,6 +74,7 @@ class GeometryView(QWidget):
     INSET_HEIGHT = 160.0
     INSET_GAP = 6.0
     zoom_changed = Signal(float)
+    hidden_dimensions_changed = Signal(object)
 
     def __init__(
         self,
@@ -101,6 +102,7 @@ class GeometryView(QWidget):
         self._last_summary: str | None = None
         self._scene: GeometryScene | None = None
         self._label_font_size = 8
+        self._hidden_dimensions: tuple[str, ...] = ()
         self._colors = theme_colors(self.palette())
         self.setMinimumHeight(280)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -126,6 +128,18 @@ class GeometryView(QWidget):
     def scene(self) -> GeometryScene | None:
         return self._scene
 
+    @property
+    def hidden_dimensions(self) -> tuple[str, ...]:
+        """Values that did not fit in the last sketch layout."""
+
+        return self._hidden_dimensions
+
+    def _set_hidden_dimensions(self, values: tuple[str, ...]) -> None:
+        if values == self._hidden_dimensions:
+            return
+        self._hidden_dimensions = values
+        self.hidden_dimensions_changed.emit(values)
+
     def clear_model(self) -> None:
         self._model = None
         self._parameters = None
@@ -133,6 +147,7 @@ class GeometryView(QWidget):
         self._display_name = None
         self._scene = None
         self._last_summary = None
+        self._set_hidden_dimensions(())
         self.update()
 
     def save_image(self, path: Path) -> None:
@@ -291,6 +306,7 @@ class GeometryView(QWidget):
         self._three_d_pitch_deg = 24.0
         self._scene = None
         self._mode = GeometryViewMode.CONSTRUCTION
+        self._set_hidden_dimensions(())
         self.zoom_changed.emit(1.0)
         self.update()
 
@@ -468,6 +484,7 @@ class GeometryView(QWidget):
         if self._mode is GeometryViewMode.THREE_D:
             self._suppress_header = True
             self._last_summary = None
+            self._set_hidden_dimensions(())
             painter.save()
             painter.translate(self._pan)
             self._paint_three_d(painter, rect)
@@ -513,10 +530,12 @@ class GeometryView(QWidget):
             rect.height() - header_height - bottom_margin,
         )
         if safe_rect.width() < 80.0 or safe_rect.height() < 60.0:
+            self._set_hidden_dimensions(())
             self._draw_header(painter, rect, scene.summary, compact=compact)
             return
         bounds = scene.bounds()
         if bounds is None:
+            self._set_hidden_dimensions(())
             self._draw_header(painter, rect, scene.summary, compact=compact)
             return
         min_point, max_point = bounds
@@ -533,6 +552,7 @@ class GeometryView(QWidget):
             safe_rect.height() - (30.0 if compact else 54.0),
         )
         if available.width() < 30.0 or available.height() < 30.0:
+            self._set_hidden_dimensions(())
             self._draw_header(painter, rect, scene.summary, compact=compact)
             return
         scale = min(available.width() / span_x, available.height() / span_y) * self._zoom
@@ -580,12 +600,19 @@ class GeometryView(QWidget):
             font_metrics,
             radius_scale=offset_scale,
         )
-        hidden = (
-            len(scene.dimensions)
-            - len(placed)
-            + len(scene.angular_dimensions)
-            - len(placed_angular)
+        placed_linear_ids = {id(item.dimension) for item in placed}
+        placed_angular_ids = {id(item.dimension) for item in placed_angular}
+        hidden_values = tuple(
+            dimension_text(dimension)
+            for dimension in scene.dimensions
+            if id(dimension) not in placed_linear_ids
+        ) + tuple(
+            dimension.text
+            for dimension in scene.angular_dimensions
+            if id(dimension) not in placed_angular_ids
         )
+        self._set_hidden_dimensions(hidden_values)
+        hidden = len(hidden_values)
         hidden_text = ""
         if hidden > 0:
             key = "geometry.dimension_hidden" if hidden == 1 else "geometry.dimensions_hidden"

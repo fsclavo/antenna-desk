@@ -977,6 +977,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "spacing detail (not to scale)",
         Language.SPANISH: "detalle de separación (fuera de escala)",
     },
+    "geometry.hidden_values": {
+        Language.ENGLISH: "Hidden for space: {values}",
+        Language.SPANISH: "Ocultas por espacio: {values}",
+    },
     "geometry.dimension_hidden": {
         Language.ENGLISH: "1 dimension hidden for space",
         Language.SPANISH: "1 cota oculta por espacio",

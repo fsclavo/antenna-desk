@@ -575,6 +575,20 @@ def test_zoom_control_scales_the_geometry_view(window: MainWindow) -> None:
     assert window._geometry._zoom == pytest.approx(1.0)
 
 
+def test_hidden_dimension_label_lists_values_and_hides_when_empty(
+    window: MainWindow,
+) -> None:
+    window._on_hidden_dimensions_changed(("E2 9.50 m", "boom length 4.00 m"))
+
+    assert "E2 9.50 m" in window._geometry_hidden_label.text()
+    assert window._geometry_hidden_label.isHidden() is False
+
+    window._on_hidden_dimensions_changed(())
+
+    assert window._geometry_hidden_label.text() == ""
+    assert window._geometry_hidden_label.isHidden() is True
+
+
 def test_geometry_view_has_a_3d_option(window: MainWindow) -> None:
     assert window._view_combo.count() == 2
     assert window._view_combo.itemData(0) == "construction"
