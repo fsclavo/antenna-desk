@@ -54,7 +54,12 @@ from .design_summary import (
     transmission_line_summary_rows,
 )
 from .result_summary import gain_metric_rows
-from .wire_schedule import feed_schedule_row, wire_schedule_html_rows
+from .wire_schedule import (
+    bom_summary_rows,
+    conductor_bom_rows,
+    feed_schedule_row,
+    wire_schedule_html_rows,
+)
 
 CSS = """
 body { font-family: system-ui, sans-serif; margin: 28px; color: #222; background: #fff; }
@@ -65,6 +70,7 @@ table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13px;
 th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
 th { background: #f3f3f3; width: 34%; }
 table.schedule th { width: auto; }
+table.title-block th { width: auto; background: #f7f7f7; }
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .muted { color: #666; font-size: 12px; }
 .notes { background: #f7f7f7; border-left: 4px solid #888; padding: 10px 14px; }
@@ -140,8 +146,47 @@ def render_construction_sheet(
             *transmission_line_summary_rows(design.antenna.transmission_lines),
         )
     )
+    antenna_label = getattr(
+        parameters,
+        "template_name",
+        design.antenna_type.replace("_", " ").title(),
+    )
+    title_block = f"""
+<table class="title-block">
+<tr><th>Project</th><td>{_escape(project.name)}</td><th>Design</th><td>{_escape(design.name)}</td></tr>
+<tr><th>Antenna</th><td>{_escape(antenna_label)}</td><th>Frequency</th><td>{parameters.frequency_hz / 1e6:.6f} MHz</td></tr>
+<tr><th>Units</th><td>SI (m, MHz, Ω)</td><th>Updated</th><td>{project.updated_at:%Y-%m-%d}</td></tr>
+</table>
+"""
     schedule_rows = "".join(wire_schedule_html_rows(design))
     feed = feed_schedule_row(antenna)
+    bom_conductor_rows = "".join(
+        "<tr>"
+        f"<td>{_escape(row.material)}</td>"
+        f'<td class="num">Ø{row.diameter_mm:.3f} mm</td>'
+        f'<td class="num">{row.wire_count}</td>'
+        f'<td class="num">{row.total_length_m:.4f} m</td>'
+        "</tr>"
+        for row in conductor_bom_rows(antenna)
+    )
+    bom_summary = "".join(
+        f"<tr><th>{_escape(label)}</th><td>{_escape(value)}</td></tr>"
+        for label, value in bom_summary_rows(antenna)
+    )
+    bom_section = f"""
+<h2>Bill of materials</h2>
+<table class="schedule">
+<thead>
+<tr><th>Material</th><th>Diameter</th><th>Wires</th><th>Total length</th></tr>
+</thead>
+<tbody>
+{bom_conductor_rows}
+</tbody>
+</table>
+<table>
+{bom_summary}
+</table>
+"""
     figures: list[str] = []
     if figure_png_data_uri:
         figures.append(
@@ -771,6 +816,7 @@ point above. Verify every connection and the feed gap before construction.</p>""
 </head>
 <body>
 <h1>{_escape(project.name)} — {_escape(design.name)}</h1>
+{title_block}
 <p class="muted">AntennaDesk construction sheet · SI units (m, MHz, Ω)</p>
 {figure_section}
 <h2>Dimensions</h2>
@@ -779,6 +825,7 @@ point above. Verify every connection and the feed gap before construction.</p>""
 {feed_rows}
 </table>
 {schedule_section}
+{bom_section}
 <h2>Simulation</h2>
 <table>
 {simulation_rows}

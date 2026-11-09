@@ -64,6 +64,16 @@ class WireScheduleRow:
 
 
 @dataclass(frozen=True, slots=True)
+class ConductorBomRow:
+    """Conductor total grouped by material and diameter."""
+
+    material: str
+    diameter_mm: float
+    wire_count: int
+    total_length_m: float
+
+
+@dataclass(frozen=True, slots=True)
 class FeedScheduleRow:
     """The primary feed point in model coordinates."""
 
@@ -112,6 +122,36 @@ def feed_schedule_row(model: AntennaModel) -> FeedScheduleRow:
 
 def schedule_rows_for_design(design: DesignVariant) -> tuple[WireScheduleRow, ...]:
     return wire_schedule_rows(design.antenna)
+
+
+def conductor_bom_rows(model: AntennaModel) -> tuple[ConductorBomRow, ...]:
+    """Group the canonical wires by material and diameter."""
+
+    groups: dict[tuple[str, float], list[float]] = {}
+    for wire in model.wires:
+        key = (wire.material.name, round(wire.radius_m * 2000.0, 3))
+        groups.setdefault(key, []).append(wire.length_m)
+    return tuple(
+        ConductorBomRow(
+            material=material,
+            diameter_mm=diameter_mm,
+            wire_count=len(lengths),
+            total_length_m=sum(lengths),
+        )
+        for (material, diameter_mm), lengths in sorted(groups.items())
+    )
+
+
+def bom_summary_rows(model: AntennaModel) -> tuple[tuple[str, str], ...]:
+    """Return the non-conductor totals shown in the bill of materials."""
+
+    return (
+        ("Wires", str(len(model.wires))),
+        ("Total conductor", f"{sum(wire.length_m for wire in model.wires):.4f} m"),
+        ("Loads", str(len(model.loads))),
+        ("Transmission lines", str(len(model.transmission_lines))),
+        ("Driven sources", str(1 + len(model.sources))),
+    )
 
 
 def wire_schedule_to_csv(design: DesignVariant) -> str:

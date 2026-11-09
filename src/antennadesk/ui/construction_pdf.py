@@ -19,7 +19,11 @@ from ..reporting.design_summary import (
     load_summary_rows,
     optimization_summary_rows,
 )
-from ..reporting.wire_schedule import wire_schedule_lines
+from ..reporting.wire_schedule import (
+    bom_summary_rows,
+    conductor_bom_rows,
+    wire_schedule_lines,
+)
 from .i18n import Translator
 
 
@@ -102,6 +106,22 @@ def write_construction_pdf(
     painter.setPen(Qt.GlobalColor.black)
     y += 30.0
 
+    antenna_label = getattr(
+        design.parameters,
+        "template_name",
+        design.antenna_type.replace("_", " ").title(),
+    )
+    row(translator.t("construction.project"), project.name)
+    row(translator.t("construction.design"), design.name)
+    row(translator.t("construction.antenna"), str(antenna_label))
+    row(
+        translator.t("construction.frequency"),
+        f"{design.parameters.frequency_hz / 1e6:.6f} MHz",
+    )
+    row(translator.t("construction.units"), "SI (m, MHz, Ω)")
+    row(translator.t("construction.updated"), project.updated_at.strftime("%Y-%m-%d"))
+    y += 8.0
+
     if figure_image is not None and not figure_image.isNull():
         section(translator.t("construction.view"))
         available_width = right - left
@@ -162,6 +182,16 @@ def write_construction_pdf(
             translator.t("construction.feed_height"),
             f"{feed_z:.4f} m",
         )
+    y += 12.0
+
+    section(translator.t("construction.bom"))
+    for row_item in conductor_bom_rows(design.antenna):
+        row(
+            f"{row_item.material} Ø{row_item.diameter_mm:.3f} mm",
+            f"{row_item.wire_count} wires · {row_item.total_length_m:.4f} m",
+        )
+    for label, value in bom_summary_rows(design.antenna):
+        row(label, value)
     y += 12.0
 
     section(translator.t("construction.wire_schedule"))

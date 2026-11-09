@@ -2824,6 +2824,34 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Construction Sheet...",
         Language.SPANISH: "Hoja de construcción...",
     },
+    "construction.project": {
+        Language.ENGLISH: "Project",
+        Language.SPANISH: "Proyecto",
+    },
+    "construction.design": {
+        Language.ENGLISH: "Design",
+        Language.SPANISH: "Diseño",
+    },
+    "construction.antenna": {
+        Language.ENGLISH: "Antenna",
+        Language.SPANISH: "Antena",
+    },
+    "construction.frequency": {
+        Language.ENGLISH: "Frequency",
+        Language.SPANISH: "Frecuencia",
+    },
+    "construction.units": {
+        Language.ENGLISH: "Units",
+        Language.SPANISH: "Unidades",
+    },
+    "construction.updated": {
+        Language.ENGLISH: "Updated",
+        Language.SPANISH: "Actualizado",
+    },
+    "construction.bom": {
+        Language.ENGLISH: "Bill of materials",
+        Language.SPANISH: "Lista de materiales",
+    },
     "construction.title": {
         Language.ENGLISH: "Construction Sheet",
         Language.SPANISH: "Hoja de construcción",

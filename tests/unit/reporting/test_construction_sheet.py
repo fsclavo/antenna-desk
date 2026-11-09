@@ -51,6 +51,8 @@ def test_construction_sheet_contains_dimensions_and_result(sample_project: Proje
     assert "Feed height above ground" in sheet
     assert "Wire schedule" in sheet
     assert design.antenna.wires[0].id in sheet
+    assert "Bill of materials" in sheet
+    assert "Total conductor" in sheet
     assert "Feed wire" in sheet
     assert "SWR" in sheet
     assert "1.000" in sheet
