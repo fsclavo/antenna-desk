@@ -161,6 +161,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The geometry panel now exposes a single **Construction** view plus **3D**.
+  Construction resolves to the projection that shows the family's principal
+  plane: front for vertical antennas, top for horizontal beams and loops, top
+  for the cubical quad, and front with a top inset for non-planar models.
+  Edge-on projections are no longer offered as construction views. The
+  construction sheet and native PDF now include a wire schedule with every
+  wire's endpoints, length, diameter, material, and the primary feed point.
 - The **biquad** and **Beverage** starting dimensions are now classified as
   published evidence (B) instead of experimental (C). The biquad claim covers
   the quarter-wave loop side and eighth-wave reflector spacing; the Beverage
@@ -177,6 +184,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The Beverage construction view no longer discards its length dimension: the
+  far-end selection now chooses the endpoint farther from the feed.
+- The hexbeam span dimension now anchors to the widest tips, and the drawn
+  tip-to-tip gap is the actual clear distance between the tips rather than the
+  published construction parameter.
+- The magnetic-loop drawing no longer labels a polygon chord as the loop
+  diameter; the circumscribed diameter stays in the summary and schedule.
+- The discone plan view no longer draws vertical heights on the plan's Y axis.
+- J-Pole and Slim Jim construction views now dimension the feed offset, base
+  height, stub or upper/lower sections, gap, and spacing, with distinct labels
+  for repeated values.
+- Hidden-dimension notices are now drawn separately from the elided summary, so
+  they remain visible when the summary is truncated.
 - Band analysis now records the next unprocessed band as cancelled when a
   cancellation arrives during a solver run, so a truncated sequential or
   parallel batch is reported as partial instead of completed.

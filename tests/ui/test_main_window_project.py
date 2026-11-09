@@ -544,15 +544,16 @@ def test_variant_switch_restores_the_cached_result(
 
 
 def test_geometry_view_mode_controls(window: MainWindow) -> None:
-    assert window._view_combo.currentData() == "elevation"
+    assert window._view_combo.currentData() == "construction"
+    assert window._geometry._mode.value == "construction"
     assert window._height_combo.isEnabled() is True
 
     window._view_combo.setCurrentIndex(1)
-    assert window._geometry._mode.value == "plan"
+    assert window._geometry._mode.value == "3d"
     assert window._height_combo.isEnabled() is False
 
     window._view_combo.setCurrentIndex(0)
-    assert window._geometry._mode.value == "elevation"
+    assert window._geometry._mode.value == "construction"
     assert window._height_combo.isEnabled() is True
 
 
@@ -575,8 +576,9 @@ def test_zoom_control_scales_the_geometry_view(window: MainWindow) -> None:
 
 
 def test_geometry_view_has_a_3d_option(window: MainWindow) -> None:
-    assert window._view_combo.count() == 3
-    assert window._view_combo.itemData(2) == "3d"
+    assert window._view_combo.count() == 2
+    assert window._view_combo.itemData(0) == "construction"
+    assert window._view_combo.itemData(1) == "3d"
 
 
 def test_main_menu_is_grouped_by_task(window: MainWindow) -> None:

@@ -81,30 +81,37 @@ scale bar. The sketch draws the actual wire model, so loops keep their polygon
 shape and arrays keep every element. Use the **View** selector to switch
 between:
 
-- **Elevation / front**: the view that shows the construction shape for a
-  vertical-plane antenna. A quad or delta loop appears as its real square or
-  triangle, a Slim Jim shows its folded rectangle and gap detail, and an
-  end-fed wire keeps its slope. It also shows height above ground, feed
-  height, ground line, and scale. For a horizontal array whose elements
-  overlap in front view, the header tells you to use Plan.
-- **Plan / top**: the true top view. For a horizontal loop this shows the
-  polygon; for a vertical loop it is edge-on, which is expected, so use
-  Elevation to see the polygon. For horizontal arrays such as a Yagi or Moxon
-  it shows the element layout, boom spacing, and element lengths. A vertical Yagi or Moxon is also edge-on in plan; use Elevation for
-  the vertical-element layout. For a ring or radial vertical, a top inset shows
-  the horizontal structure while the main view keeps the installation height.
+- **Construction**: the single dimensioned construction view. The application
+  chooses the projection that shows the principal plane instead of asking you
+  to pick an arbitrary projection:
+  - vertical-plane antennas (J-Pole, Slim Jim, vertical loops, vertical
+    Yagi/Moxon, half-square, bobtail, biquad, Ringo) use the front elevation;
+  - horizontal planar antennas and beams (Yagi, Moxon, hexbeam, trapped Yagi,
+    T2FD, folded dipole, horizontal loop) use the top view;
+  - a cubical quad uses the top boom layout;
+  - non-planar antennas (vertical with radials, discone, phased vertical) use
+    the front elevation with a top inset.
+  A projection that would collapse the antenna to a line is not offered. A
+  Slim Jim therefore shows its folded front elevation, stub spacing, gap
+  detail, and feed offset; a Yagi shows its element layout, boom, and element
+  lengths.
 - **3D**: isometric wireframe colored by gain (green low, yellow intermediate, red high), with a dBi legend, ground grid, feed marker, axes, and scale.
 
-The default view is selected from the geometry: vertical-plane antennas use
-elevation, horizontal planar arrays use plan, and non-planar antennas show a
-front view with a top inset. Press **Apply design** or **Simulate** and the
-view resets to fit the new model; changing antennas also resets zoom, pan, and
-vertical exaggeration. Dimensions are placed around the geometry with
-collision avoidance. Very small features such as the Slim Jim gap use a detail
-inset marked *not to scale*. The **Zoom** selector scales the sketch (0.5x, 1x,
-2x, 4x, 8x); the mouse wheel steps through those values, dragging pans, and
-double-click resets zoom and pan. The **Vertical scale** selector can
-exaggerate the height (1x, 1.5x, 2x, 3x) for low horizontal antennas.
+The construction view is selected automatically. Press **Apply design** or
+**Simulate** and the view resets to fit the new model; changing antennas also
+resets zoom, pan, and vertical exaggeration. Dimensions are placed around the
+geometry with collision avoidance; the header reports how many low-priority
+dimensions were hidden for space. Very small features such as the Slim Jim gap
+use a detail inset marked *not to scale*. The **Zoom** selector scales the
+sketch (0.5x, 1x, 2x, 4x, 8x); the mouse wheel steps through those values,
+dragging pans, and double-click resets zoom and pan. The **Vertical scale**
+selector can exaggerate the height (1x, 1.5x, 2x, 3x) for low horizontal
+antennas.
+
+The construction sheet includes a **wire schedule**: every canonical wire with
+its start and end coordinates, length, diameter, and material, plus the primary
+feed point. Use it when a dimension is too small to read or is hidden by the
+layout; it is the authoritative construction data.
 
 ## Undo and redo
 
@@ -378,8 +385,7 @@ experimental generator: its geometry and frequency scaling are tested, but it
 has no independent numerical reference for gain or impedance.
 Simulate it and judge the modeled performance; the design panel keeps the
 generator fields editable. Use **Edit Custom Wires...** for raw coordinates. The
-elevation view is selected automatically so the included angle is visible; Plan
-remains available.
+construction view is the front elevation, so the included angle is visible.
 
 ## Create an inverted-L
 
@@ -394,8 +400,8 @@ The generator is experimental: the bent-wire geometry is tested, but there is
 no independent numerical reference for gain, impedance, or the matching
 network. **Estimate Dimensions...** is disabled until a source-backed estimator
 exists; **Optimize...** searches the vertical height, horizontal run, base
-height, and conductor radius jointly. The elevation view is selected
-automatically; Plan shows the vertical section edge-on.
+height, and conductor radius jointly. The construction view is the front
+elevation, which shows the vertical section and the horizontal top run.
 
 ## Create a Ringo
 
@@ -426,8 +432,8 @@ loads the published 62.4 x 39 ft half-square or 125 x 38 ft bobtail dimensions.
 Those are free-space, maximum-gain starting dimensions scaled by frequency;
 they are not independently validated for gain, impedance, or a specific site.
 The construction sheet lists the individual vertical and top-wire cuts. The
-elevation view is selected automatically; Plan shows the vertical plane
-edge-on. Neither template has a frequency-first estimator; **Optimize...**
+construction view is the front elevation. Neither template has a
+frequency-first estimator; **Optimize...**
 searches the horizontal span, vertical height, base height, feed offset, and
 conductor radius jointly.
 
@@ -439,7 +445,10 @@ spacing, feed offset, base height, radius, material, and ground. The base
 height must be positive when using a ground model; the default is 0.25 m to keep
 the base connector out of the NEC ground plane. Slim Jim adds the top connector
 and is also available by enabling **Folded** in the J Pole editor. Both are
-first-class experimental templates.
+first-class experimental templates. The construction view is the front
+elevation; it dimensions the radiator or upper section, the stub or lower
+section, the left leg, the gap, the stub spacing, the feed offset, and the base
+height.
 
 ## Create an end-fed half-wave (EFHW)
 

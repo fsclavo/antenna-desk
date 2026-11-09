@@ -197,11 +197,14 @@ The form exposes an antenna-type selector with conditional spacing/sides
 fields. The geometry view is renderer-neutral: `ui/geometry/builder.py`
 projects the canonical wires with an orthographic basis, attaches semantic
 dimensions and detail insets, and `ui/geometry/layout.py` places the dimensions
-in screen space using font metrics and collision avoidance. The default view is
-derived from the geometry (front for vertical planes, plan for horizontal
-arrays, front plus a top inset for non-planar models), and changing the model
-resets zoom, pan, and vertical exaggeration. Reports, construction sheets, and
-comparison use type-aware dimensions.
+in screen space using font metrics and collision avoidance. The geometry panel
+exposes a single **Construction** view plus **3D**. Construction resolves to the
+principal projection (front for vertical planes, top for horizontal arrays and
+beams, top for the cubical quad, front plus a top inset for non-planar models),
+and changing the model resets zoom, pan, and vertical exaggeration. Reports,
+construction sheets, and comparison use type-aware dimensions and a wire
+schedule with each wire's endpoints, length, diameter, material, and the feed
+point.
 
 The main window uses a `QUndoStack` with immutable project snapshots for
 Undo/Redo. Simulation runs are kept outside the undoable editable snapshot and

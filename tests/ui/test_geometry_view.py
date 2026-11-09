@@ -240,6 +240,36 @@ def test_three_d_projection_places_positive_height_upward() -> None:
     assert raised_y > ground_y
 
 
+def test_construction_view_resolves_to_the_principal_plane(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.j_pole import JPoleParameters
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+
+    view = GeometryView(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(view)
+    jpole = JPoleParameters(
+        frequency_hz=220_000_000.0,
+        radiator_height_m=1.0,
+        stub_length_m=0.5,
+        spacing_m=0.05,
+        feed_offset_m=0.1,
+    )
+    view.set_model(jpole.to_antenna(), antenna_type="j_pole")
+    assert view._mode is GeometryViewMode.CONSTRUCTION
+    assert view.resolved_mode() is GeometryViewMode.ELEVATION
+
+    yagi = YagiParameters(
+        frequency_hz=14_100_000.0,
+        elements=(
+            YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+            YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+        ),
+        height_m=10.0,
+    )
+    view.set_model(yagi.to_antenna(), antenna_type="yagi")
+    assert view._mode is GeometryViewMode.CONSTRUCTION
+    assert view.resolved_mode() is GeometryViewMode.PLAN
+
+
 def test_j_pole_geometry_has_dedicated_plan_and_elevation(qtbot: QtBot) -> None:
     from antennadesk.domain.antennas.j_pole import JPoleParameters
     from antennadesk.ui.widgets.geometry_view import GeometryViewMode
@@ -314,7 +344,7 @@ def test_set_model_resets_zoom_pan_and_exaggeration(qtbot: QtBot) -> None:
     assert view._pan.x() == pytest.approx(0.0)
     assert view._pan.y() == pytest.approx(0.0)
     assert view._height_exaggeration == pytest.approx(1.0)
-    assert view._mode is GeometryViewMode.ELEVATION
+    assert view._mode is GeometryViewMode.CONSTRUCTION
 
 
 def test_loop_view_uses_the_actual_polygon(qtbot: QtBot) -> None:

@@ -44,8 +44,8 @@ def test_switching_to_a_folded_dipole_updates_the_design_and_view(
     assert isinstance(parameters, FoldedDipoleParameters)
     assert parameters.spacing_m == pytest.approx(0.2, abs=1e-6)
     assert len(window._project.designs[0].antenna.wires) == 4
-    assert window._view_combo.currentData() == "plan"
-    assert window._geometry._mode.value == "plan"
+    assert window._view_combo.currentData() == "construction"
+    assert window._geometry.resolved_mode().value == "plan"
     assert window._optimize_action.isEnabled() is True
     window._dirty = False
 
@@ -63,7 +63,8 @@ def test_switching_to_a_loop_updates_the_design(window: MainWindow) -> None:
     assert isinstance(parameters, LoopParameters)
     assert parameters.sides == 8
     assert len(window._project.designs[0].antenna.wires) == 8
-    assert window._view_combo.currentData() == "elevation"
+    assert window._view_combo.currentData() == "construction"
+    assert window._geometry.resolved_mode().value == "elevation"
     assert window._form._sides.isHidden() is False
     assert window._form._spacing.isHidden() is True
     window._dirty = False
@@ -92,7 +93,8 @@ def test_loop_orientation_switches_between_vertical_and_horizontal(
     assert all(
         wire.start.z_m == pytest.approx(10.0) for wire in window._project.designs[0].antenna.wires
     )
-    assert window._view_combo.currentData() == "plan"
+    assert window._view_combo.currentData() == "construction"
+    assert window._geometry.resolved_mode().value == "plan"
     window._dirty = False
 
 
@@ -248,7 +250,8 @@ def test_new_inverted_v_creates_a_first_class_design(
     assert window._project.name == "Inv V"
     assert window._project.designs[0].antenna_type == "inverted_v"
     assert window._design_stack.currentWidget() is window._inverted_v_scroll
-    assert window._view_combo.currentData() == "elevation"
+    assert window._view_combo.currentData() == "construction"
+    assert window._geometry.resolved_mode().value == "elevation"
     assert window._inverted_v_form.parameters() == parameters
     window._dirty = False
 
@@ -285,7 +288,8 @@ def test_new_inverted_l_creates_a_first_class_design(
     assert window._project.name == "Inv L"
     assert window._project.designs[0].antenna_type == "inverted_l"
     assert window._design_stack.currentWidget() is window._inverted_l_scroll
-    assert window._view_combo.currentData() == "elevation"
+    assert window._view_combo.currentData() == "construction"
+    assert window._geometry.resolved_mode().value == "elevation"
     assert window._inverted_l_form.parameters() == parameters
     assert window._optimize_action.isEnabled() is True
     window._dirty = False
@@ -325,7 +329,8 @@ def test_new_magnetic_loop_creates_a_first_class_design(
     assert window._project.name == "Mag loop"
     assert window._project.designs[0].antenna_type == "magnetic_loop"
     assert window._design_stack.currentWidget() is window._magnetic_loop_scroll
-    assert window._view_combo.currentData() == "elevation"
+    assert window._view_combo.currentData() == "construction"
+    assert window._geometry.resolved_mode().value == "elevation"
     assert window._magnetic_loop_form.parameters() == parameters
     assert window._estimate_button.isEnabled() is False
     assert window._optimize_action.isEnabled() is False

@@ -66,6 +66,7 @@ from ...domain.antennas.phased_vertical import (
 from ...domain.antennas.polarization import Polarization
 from ...domain.antennas.quad_beam import (
     ANTENNA_TYPE_QUAD_BEAM,
+    DRIVEN_ELEMENT_INDEX,
     QuadBeamParameters,
 )
 from ...domain.antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
@@ -108,6 +109,7 @@ from .scene import (
 from .views import (
     GeometryViewMode,
     Projection,
+    construction_view,
     front_projection,
     is_planar,
     plan_projection,
@@ -272,6 +274,7 @@ class _Factory:
         *,
         side: str = "auto",
         priority: int = 50,
+        label: str | None = None,
     ) -> Dimension:
         return Dimension(
             start=self.project(first),
@@ -279,6 +282,7 @@ class _Factory:
             text=_format_length(value_m, self.translator, self.unit_system),
             side=side,
             priority=priority,
+            label=label,
         )
 
     def vertical_dimension(
@@ -290,6 +294,7 @@ class _Factory:
         *,
         side: str = "auto",
         priority: int = 50,
+        label: str | None = None,
     ) -> Dimension:
         return Dimension(
             start=ScenePoint(x_scene, self.y_for_z(z_start_m)),
@@ -297,6 +302,7 @@ class _Factory:
             text=_format_length(value_m, self.translator, self.unit_system),
             side=side,
             priority=priority,
+            label=label,
         )
 
     def horizontal_dimension(
@@ -308,6 +314,7 @@ class _Factory:
         *,
         side: str = "auto",
         priority: int = 50,
+        label: str | None = None,
     ) -> Dimension:
         return Dimension(
             start=ScenePoint(x_start_scene, y_scene),
@@ -315,6 +322,7 @@ class _Factory:
             text=_format_length(value_m, self.translator, self.unit_system),
             side=side,
             priority=priority,
+            label=label,
         )
 
     def between_scene(
@@ -325,6 +333,7 @@ class _Factory:
         *,
         side: str = "auto",
         priority: int = 50,
+        label: str | None = None,
     ) -> Dimension:
         return Dimension(
             start=first,
@@ -332,6 +341,7 @@ class _Factory:
             text=_format_length(value_m, self.translator, self.unit_system),
             side=side,
             priority=priority,
+            label=label,
         )
 
 
@@ -410,6 +420,8 @@ def _add_single_wire_dimensions(
     model: AntennaModel,
     factory: _Factory,
     dimensions: list[Dimension],
+    notes: list[str] | None = None,
+    translator: Translator | None = None,
 ) -> None:
     wire = model.wires[0]
     min_z, max_z = _model_z_extents(model)
@@ -418,9 +430,25 @@ def _add_single_wire_dimensions(
     feed_z = feed_wire.start.z_m + (feed_wire.end.z_m - feed_wire.start.z_m) * feed_ratio
     start = factory.project(wire.start)
     end = factory.project(wire.end)
+    projected_length = start.distance_to(end)
     if wire.length_m > 1e-9:
+        value_m = wire.length_m
+        if projected_length > 1e-9 and abs(projected_length - wire.length_m) > 1e-6:
+            value_m = projected_length
+            if notes is not None and translator is not None:
+                notes.append(
+                    translator.t(
+                        "geometry.projected_length_note",
+                        length=_format_length(wire.length_m, translator, factory.unit_system),
+                        projected=_format_length(
+                            projected_length,
+                            translator,
+                            factory.unit_system,
+                        ),
+                    )
+                )
         dimensions.append(
-            factory.dimension(wire.start, wire.end, wire.length_m, side="auto", priority=85)
+            factory.dimension(wire.start, wire.end, value_m, side="auto", priority=85)
         )
     if factory.projection.vertical:
         dimensions.append(
@@ -677,16 +705,6 @@ def _add_magnetic_loop_dimensions(
     min_z, max_z = _model_z_extents(model)
     if factory.projection.vertical:
         dimensions.append(
-            factory.horizontal_dimension(
-                min_y,
-                min_x,
-                max_x,
-                parameters.diameter_m,
-                side="below",
-                priority=70,
-            )
-        )
-        dimensions.append(
             factory.vertical_dimension(
                 max_x,
                 0.0,
@@ -717,20 +735,11 @@ def _add_magnetic_loop_dimensions(
                     capacitor.end,
                     parameters.gap_length_m,
                     side="above",
-                    priority=50,
+                    priority=85,
+                    label=factory.translator.t("geometry.gap"),
                 )
             )
     else:
-        dimensions.append(
-            factory.horizontal_dimension(
-                min_y,
-                min_x,
-                max_x,
-                parameters.diameter_m,
-                side="below",
-                priority=70,
-            )
-        )
         dimensions.append(
             factory.between_scene(
                 ScenePoint(min_x, min_y),
@@ -741,6 +750,16 @@ def _add_magnetic_loop_dimensions(
             )
         )
         notes.append(factory.translator.t("geometry.vertical_plane_edge_on"))
+    notes.append(
+        factory.translator.t(
+            "magnetic_loop.diameter_note",
+            diameter=_format_length(
+                parameters.diameter_m,
+                factory.translator,
+                factory.unit_system,
+            ),
+        )
+    )
 
 
 def _add_j_pole_dimensions(
@@ -797,6 +816,7 @@ def _add_j_pole_dimensions(
             radiator.length_m,
             side="right",
             priority=85,
+            label=translator.t("geometry.upper_section" if folded else "geometry.radiator"),
         )
     )
     dimensions.append(
@@ -807,6 +827,7 @@ def _add_j_pole_dimensions(
             stub.length_m,
             side="left",
             priority=80,
+            label=translator.t("geometry.lower_section" if folded else "geometry.stub"),
         )
     )
     dimensions.append(
@@ -817,6 +838,7 @@ def _add_j_pole_dimensions(
             min_z,
             side="left",
             priority=75,
+            label=translator.t("field.base_height"),
         )
     )
     vertical_xs = [factory.project(wire.start).x_m for wire in verticals]
@@ -832,6 +854,7 @@ def _add_j_pole_dimensions(
             spacing,
             side="below",
             priority=70,
+            label=translator.t("field.spacing"),
         )
     )
     if folded:
@@ -852,6 +875,7 @@ def _add_j_pole_dimensions(
                     gap,
                     side="right",
                     priority=90,
+                    label=translator.t("geometry.gap"),
                 )
             )
             insets.append(
@@ -865,16 +889,35 @@ def _add_j_pole_dimensions(
                     spacing,
                 )
             )
-    dimensions.append(
-        factory.vertical_dimension(
-            min(radiator_x, stub_x),
-            min_z,
-            max_z,
-            max_z - min_z,
-            side="left",
-            priority=55,
+    feed_wire = model.feed_wire
+    feed_ratio = min(max(model.feed.offset_m / feed_wire.length_m, 0.0), 1.0)
+    feed_point = _wire_point(feed_wire, feed_ratio)
+    feed_base_z = min(feed_wire.start.z_m, feed_wire.end.z_m)
+    feed_offset = abs(feed_point.z_m - feed_base_z)
+    if feed_offset > 1e-6:
+        dimensions.append(
+            factory.vertical_dimension(
+                max(radiator_x, stub_x),
+                feed_base_z,
+                feed_point.z_m,
+                feed_offset,
+                side="right",
+                priority=90,
+                label=translator.t("geometry.feed_offset"),
+            )
         )
-    )
+    if folded:
+        dimensions.append(
+            factory.vertical_dimension(
+                min(radiator_x, stub_x),
+                min_z,
+                max_z,
+                max_z - min_z,
+                side="left",
+                priority=55,
+                label=translator.t("geometry.left_leg"),
+            )
+        )
 
 
 def _j_pole_gap_inset(
@@ -1132,7 +1175,7 @@ def _add_beverage_dimensions(
 ) -> None:
     wire = model.feed_wire
     near = wire.point_at(model.feed.offset_m)
-    far = wire.end if near.distance_to(wire.start) >= near.distance_to(wire.end) else wire.start
+    far = wire.end if near.distance_to(wire.end) >= near.distance_to(wire.start) else wire.start
     length = wire.length_m
     height = near.z_m
     dimensions.append(factory.dimension(near, far, length, side="above", priority=90))
@@ -1148,8 +1191,6 @@ def _add_beverage_dimensions(
                 priority=80,
             )
         )
-    else:
-        notes.append(translator.t("geometry.vertical_plane_edge_on"))
     if parameters is not None and parameters.termination_enabled:
         notes.append(
             translator.t(
@@ -1330,24 +1371,57 @@ def _add_hexbeam_dimensions(
         (wire for wire in model.wires if wire.id == "hexbeam-reflector-left-tip"),
         None,
     )
-    if driver_left is not None and driver_right is not None:
+    reflector_right = next(
+        (wire for wire in model.wires if wire.id == "hexbeam-reflector-right-tip"),
+        None,
+    )
+    span_left = driver_left
+    span_right = driver_right
+    if (
+        reflector_left is not None
+        and reflector_right is not None
+        and parameters.reflector_tip_half_span_m > parameters.driver_tip_half_span_m
+    ):
+        span_left = reflector_left
+        span_right = reflector_right
+    if span_left is not None and span_right is not None:
         dimensions.append(
             factory.between_scene(
-                factory.project(driver_left.end),
-                factory.project(driver_right.end),
+                factory.project(span_left.end),
+                factory.project(span_right.end),
                 parameters.overall_span_m,
                 side="above",
                 priority=90,
             )
         )
     if driver_left is not None and reflector_left is not None and not factory.projection.vertical:
+        clear_gap = driver_left.end.distance_to(reflector_left.end)
+        gap_start = driver_left.end
+        gap_end = reflector_left.end
+        if driver_right is not None and reflector_right is not None:
+            right_gap = driver_right.end.distance_to(reflector_right.end)
+            if right_gap < clear_gap:
+                clear_gap = right_gap
+                gap_start = driver_right.end
+                gap_end = reflector_right.end
         dimensions.append(
-            factory.dimension(
-                driver_left.end,
-                reflector_left.end,
-                parameters.tip_gap_m,
+            factory.between_scene(
+                factory.project(gap_start),
+                factory.project(gap_end),
+                clear_gap,
                 side="left",
                 priority=80,
+            )
+        )
+        notes.append(
+            translator.t(
+                "hexbeam.tip_gap_note",
+                published=_format_length(
+                    parameters.tip_gap_m,
+                    translator,
+                    factory.unit_system,
+                ),
+                clear=_format_length(clear_gap, translator, factory.unit_system),
             )
         )
     if factory.projection.vertical:
@@ -1444,28 +1518,29 @@ def _add_discone_dimensions(
         None,
     )
     if cone is not None:
-        cone_x = factory.project(cone.start).x_m
-        dimensions.append(
-            factory.vertical_dimension(
-                cone_x,
-                parameters.base_height_m,
-                parameters.apex_height_m,
-                parameters.cone_height_m,
-                side="right",
-                priority=90,
+        if factory.projection.vertical:
+            cone_x = factory.project(cone.start).x_m
+            dimensions.append(
+                factory.vertical_dimension(
+                    cone_x,
+                    parameters.base_height_m,
+                    parameters.apex_height_m,
+                    parameters.cone_height_m,
+                    side="right",
+                    priority=90,
+                )
             )
-        )
-        dimensions.append(
-            factory.vertical_dimension(
-                cone_x,
-                0.0,
-                parameters.base_height_m,
-                parameters.base_height_m,
-                side="left",
-                priority=60,
+            dimensions.append(
+                factory.vertical_dimension(
+                    cone_x,
+                    0.0,
+                    parameters.base_height_m,
+                    parameters.base_height_m,
+                    side="left",
+                    priority=60,
+                )
             )
-        )
-        if not factory.projection.vertical:
+        else:
             dimensions.append(
                 factory.dimension(
                     cone.start,
@@ -1553,6 +1628,18 @@ def _add_quad_beam_dimensions(
                 priority=70,
             )
         )
+    if not factory.projection.vertical:
+        for index, side_m in enumerate(parameters.element_sides_m):
+            side_wire = model.wire_by_id(f"quad-beam-element-{index}-side-0")
+            dimensions.append(
+                factory.dimension(
+                    side_wire.start,
+                    side_wire.end,
+                    side_m,
+                    side="above",
+                    priority=90 if index == DRIVEN_ELEMENT_INDEX else 55,
+                )
+            )
     notes.append(translator.t("quad_beam.geometry_note"))
 
 
@@ -2434,6 +2521,8 @@ def _summary(
             stub_length = parameters.stub_length_m
             spacing_m = parameters.spacing_m
             folded_gap = parameters.gap_m if folded else 0.0
+            base_height_m = parameters.base_height_m
+            feed_offset_m = parameters.feed_offset_m
         else:
             radiator_wire = (
                 next((wire for wire in verticals if wire.id == "right-upper"), None)
@@ -2458,6 +2547,11 @@ def _summary(
                         min(upper.start.z_m, upper.end.z_m) - max(lower.start.z_m, lower.end.z_m),
                         0.0,
                     )
+            base_height_m = min_z
+            feed_wire = model.feed_wire
+            feed_ratio = min(max(model.feed.offset_m / feed_wire.length_m, 0.0), 1.0)
+            feed_point = _wire_point(feed_wire, feed_ratio)
+            feed_offset_m = abs(feed_point.z_m - min(feed_wire.start.z_m, feed_wire.end.z_m))
         if mode is GeometryViewMode.PLAN:
             return translator.t(
                 "geometry.j_pole_plan",
@@ -2472,6 +2566,8 @@ def _summary(
             stub=_format_length(stub_length, translator, unit_system),
             gap=_format_length(folded_gap, translator, unit_system),
             spacing=_format_length(spacing_m, translator, unit_system),
+            feed=_format_length(feed_offset_m, translator, unit_system),
+            base=_format_length(base_height_m, translator, unit_system),
         )
     elif antenna_type == ZEPP_PRESENTATION_TYPE:
         radiator = next((wire for wire in model.wires if wire.id == ZEPP_RADIATOR_ID), None)
@@ -3223,6 +3319,8 @@ def build_scene(
     """Project ``model`` and attach semantic dimensions for the selected view."""
 
     effective_type = effective_antenna_type(antenna_type, parameters)
+    if mode is GeometryViewMode.CONSTRUCTION:
+        mode = construction_view(model, antenna_type=effective_type)
     points = tuple(point for wire in model.wires for point in (wire.start, wire.end))
     projection = (
         plan_projection(points) if mode is GeometryViewMode.PLAN else front_projection(points)
@@ -3404,7 +3502,7 @@ def build_scene(
     }:
         _add_sloping_array_dimensions(model, parameters, factory, dimensions)
     elif len(model.wires) == 1:
-        _add_single_wire_dimensions(model, factory, dimensions)
+        _add_single_wire_dimensions(model, factory, dimensions, notes, translator)
     else:
         projected = tuple(
             factory.project(point) for wire in model.wires for point in (wire.start, wire.end)

@@ -43,11 +43,12 @@ from ..geometry.layout import (
     PlacedAngularDimension,
     PlacedDimension,
     SceneTransform,
+    dimension_text,
     layout_angular_dimensions,
     layout_dimensions,
 )
 from ..geometry.scene import GeometryScene, SceneInset, ScenePoint
-from ..geometry.views import GeometryViewMode, recommended_view
+from ..geometry.views import GeometryViewMode, construction_view
 from ..i18n import Translator
 from ..theme import theme_colors
 from ..units import UnitSystem, length_from_m, length_unit_key
@@ -74,7 +75,7 @@ class GeometryView(QWidget):
         self._parameters: object | None = None
         self._antenna_type: str | None = None
         self._display_name: str | None = None
-        self._mode = GeometryViewMode.ELEVATION
+        self._mode = GeometryViewMode.CONSTRUCTION
         self._height_exaggeration = 1.0
         self._zoom = 1.0
         self._pan = QPointF(0.0, 0.0)
@@ -166,9 +167,22 @@ class GeometryView(QWidget):
             raise OSError(f"could not write geometry PDF: {path}")
 
     def save_dxf(self, path: Path) -> None:
-        scene = self._ensure_scene()
-        if scene is None:
+        if self._model is None:
             raise OSError("no geometry model to export")
+        mode = construction_view(
+            self._model,
+            antenna_type=effective_antenna_type(self._antenna_type, self._parameters),
+        )
+        scene = build_scene(
+            self._model,
+            antenna_type=self._antenna_type,
+            parameters=self._parameters,
+            display_name=self._display_name,
+            mode=mode,
+            translator=self._translator,
+            unit_system=self._unit_system,
+            height_exaggeration=self._height_exaggeration,
+        )
         write_dxf(
             scene,
             path,
@@ -193,14 +207,26 @@ class GeometryView(QWidget):
         self._three_d_yaw_deg = 42.0
         self._three_d_pitch_deg = 24.0
         self._scene = None
-        self._mode = recommended_view(model) if model is not None else GeometryViewMode.ELEVATION
+        self._mode = GeometryViewMode.CONSTRUCTION
         self.zoom_changed.emit(1.0)
         self.update()
 
-    def recommended_mode(self) -> GeometryViewMode:
+    def resolved_mode(self) -> GeometryViewMode:
+        """Return the projection that ``CONSTRUCTION`` resolves to."""
+
         if self._model is None:
             return GeometryViewMode.ELEVATION
-        return recommended_view(self._model)
+        if self._mode is not GeometryViewMode.CONSTRUCTION:
+            return self._mode
+        return construction_view(
+            self._model,
+            antenna_type=effective_antenna_type(self._antenna_type, self._parameters),
+        )
+
+    def recommended_mode(self) -> GeometryViewMode:
+        """Return the geometry-derived construction projection."""
+
+        return self.resolved_mode()
 
     @staticmethod
     def _infer_type(model: AntennaModel | None) -> str | None:
@@ -383,7 +409,7 @@ class GeometryView(QWidget):
             antenna_type=self._antenna_type,
             parameters=self._parameters,
             display_name=self._display_name,
-            mode=self._mode,
+            mode=self.resolved_mode(),
             translator=self._translator,
             unit_system=self._unit_system,
             height_exaggeration=self._height_exaggeration,
@@ -467,11 +493,11 @@ class GeometryView(QWidget):
             + len(scene.angular_dimensions)
             - len(placed_angular)
         )
-        display_summary = scene.summary
+        hidden_text = ""
         if hidden > 0:
             key = "geometry.dimension_hidden" if hidden == 1 else "geometry.dimensions_hidden"
-            display_summary = f"{display_summary} · {self._translator.t(key, count=hidden)}"
-        self._last_summary = display_summary
+            hidden_text = self._translator.t(key, count=hidden)
+        self._last_summary = f"{scene.summary} · {hidden_text}" if hidden_text else scene.summary
         painter.save()
         painter.setClipRect(safe_rect)
         if scene.show_ground and scene.ground_y_m is not None:
@@ -496,7 +522,7 @@ class GeometryView(QWidget):
                 QRectF(safe_rect.right() - 58.0, safe_rect.top() + 4.0, 54.0, 54.0),
                 scene.azimuth_deg or 0.0,
             )
-        self._draw_header(painter, rect, display_summary)
+        self._draw_header(painter, rect, scene.summary, hidden_text=hidden_text)
 
     def _scene_bounds(self, scene: GeometryScene, transform: SceneTransform) -> QRectF:
         points = [transform.to_screen(point) for point in scene.points()]
@@ -613,7 +639,7 @@ class GeometryView(QWidget):
             painter.drawText(
                 item.text_rect,
                 Qt.AlignmentFlag.AlignCenter,
-                item.dimension.text,
+                dimension_text(item.dimension),
             )
 
     def _draw_angular_dimensions(
@@ -814,7 +840,7 @@ class GeometryView(QWidget):
             painter.drawText(
                 item.text_rect,
                 Qt.AlignmentFlag.AlignCenter,
-                item.dimension.text,
+                dimension_text(item.dimension),
             )
         painter.restore()
 
@@ -823,8 +849,10 @@ class GeometryView(QWidget):
         painter: QPainter,
         rect: QRectF,
         summary: str | None,
+        *,
+        hidden_text: str = "",
     ) -> None:
-        self._last_summary = summary
+        self._last_summary = f"{summary} · {hidden_text}" if summary and hidden_text else summary
         if self._suppress_header:
             return
         painter.setPen(self._colors.text)
@@ -838,14 +866,29 @@ class GeometryView(QWidget):
             font = scaled_font(8)
             painter.setFont(font)
             metrics = QFontMetricsF(font)
+            available = rect.width() - 32.0
+            if hidden_text:
+                hidden_width = metrics.horizontalAdvance(hidden_text) + 8.0
+                painter.setPen(self._colors.reactance)
+                painter.drawText(
+                    QRectF(
+                        rect.right() - 16.0 - hidden_width,
+                        rect.top() + 29.0,
+                        hidden_width,
+                        18.0,
+                    ),
+                    Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+                    hidden_text,
+                )
+                available -= hidden_width + 12.0
             text = metrics.elidedText(
                 summary,
                 Qt.TextElideMode.ElideRight,
-                int(rect.width() - 32.0),
+                max(int(available), 0),
             )
             painter.setPen(self._colors.secondary_text)
             painter.drawText(
-                QRectF(rect.left() + 16.0, rect.top() + 29.0, rect.width() - 32.0, 18.0),
+                QRectF(rect.left() + 16.0, rect.top() + 29.0, available, 18.0),
                 Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                 text,
             )

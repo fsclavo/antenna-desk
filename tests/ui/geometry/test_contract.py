@@ -55,7 +55,11 @@ from antennadesk.ui.geometry.builder import (
 )
 from antennadesk.ui.geometry.layout import SceneTransform, layout_dimensions
 from antennadesk.ui.geometry.scene import GeometryScene, ScenePoint
-from antennadesk.ui.geometry.views import GeometryViewMode, recommended_view
+from antennadesk.ui.geometry.views import (
+    GeometryViewMode,
+    construction_view,
+    recommended_view,
+)
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem
 
@@ -682,6 +686,37 @@ def test_family_scene_preserves_wires_and_positive_dimensions(
 @pytest.mark.parametrize("case", list(CASES), ids=lambda case: case.name)
 def test_family_default_view_matches_geometry_policy(case: FamilyCase) -> None:
     assert recommended_view(case.parameters.to_antenna()) is case.default_view
+
+
+def test_construction_view_uses_the_family_principal_plane() -> None:
+    jpole = JPoleParameters(
+        frequency_hz=220_000_000.0,
+        radiator_height_m=1.0,
+        stub_length_m=0.5,
+        spacing_m=0.05,
+        feed_offset_m=0.1,
+    )
+    yagi = YagiParameters(
+        frequency_hz=14_100_000.0,
+        elements=(
+            YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+            YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+        ),
+        height_m=10.0,
+    )
+    quad = quad_beam_parameters(
+        frequency_hz=14_100_000.0,
+        element_count=2,
+        loop_side_m=5.0,
+        reflector_spacing_m=4.0,
+        height_m=2.5,
+    )
+
+    assert (
+        construction_view(jpole.to_antenna(), antenna_type="j_pole") is GeometryViewMode.ELEVATION
+    )
+    assert construction_view(yagi.to_antenna(), antenna_type="yagi") is GeometryViewMode.PLAN
+    assert construction_view(quad.to_antenna(), antenna_type="quad_beam") is GeometryViewMode.PLAN
 
 
 @pytest.mark.parametrize("case", list(CASES), ids=lambda case: case.name)

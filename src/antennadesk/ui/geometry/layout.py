@@ -75,7 +75,9 @@ def _text_rect(center: QPointF, text: str, metrics: QFontMetricsF) -> QRectF:
     return QRectF(center.x() - width / 2.0, center.y() - height / 2.0, width, height)
 
 
-def _display_text(dimension: Dimension) -> str:
+def dimension_text(dimension: Dimension) -> str:
+    """Return the label and value shown for a dimension."""
+
     if dimension.label:
         return f"{dimension.label} {dimension.text}"
     return dimension.text
@@ -123,7 +125,7 @@ def layout_dimensions(
     geometry_obstacle = _inflate(geometry_rect, 2.0)
 
     for dimension in sorted(scene.dimensions, key=lambda item: item.priority, reverse=True):
-        text = _display_text(dimension)
+        text = dimension_text(dimension)
         if not text:
             continue
         start = transform.to_screen(dimension.start)

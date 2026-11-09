@@ -1010,8 +1010,7 @@ class MainWindow(QMainWindow):
         geometry_controls = QHBoxLayout()
         self._view_label = QLabel(self)
         self._view_combo = QComboBox(self)
-        self._view_combo.addItem("", GeometryViewMode.ELEVATION.value)
-        self._view_combo.addItem("", GeometryViewMode.PLAN.value)
+        self._view_combo.addItem("", GeometryViewMode.CONSTRUCTION.value)
         self._view_combo.addItem("", GeometryViewMode.THREE_D.value)
         self._height_label = QLabel(self)
         self._height_combo = QComboBox(self)
@@ -1300,9 +1299,8 @@ class MainWindow(QMainWindow):
         self._project_name_label.setText(self._translator.t("field.project_name"))
         self._variant_label.setText(self._translator.t("variant.label"))
         self._view_label.setText(self._translator.t("geometry.view"))
-        self._view_combo.setItemText(0, self._translator.t("geometry.view_elevation"))
-        self._view_combo.setItemText(1, self._translator.t("geometry.view_plan"))
-        self._view_combo.setItemText(2, self._translator.t("geometry.view_3d"))
+        self._view_combo.setItemText(0, self._translator.t("geometry.view_construction"))
+        self._view_combo.setItemText(1, self._translator.t("geometry.view_3d"))
         self._height_label.setText(self._translator.t("geometry.vertical_scale"))
         self._zoom_label.setText(self._translator.t("geometry.zoom"))
         self._zoom_combo.setToolTip(self._translator.t("geometry.zoom_hint"))
@@ -7078,9 +7076,8 @@ class MainWindow(QMainWindow):
 
     def _auto_select_view(self, design: DesignVariant) -> None:
         del design
-        mode = self._geometry.recommended_mode()
-        self._geometry.set_view_mode(mode)
-        index = self._view_combo.findData(mode.value)
+        self._geometry.set_view_mode(GeometryViewMode.CONSTRUCTION)
+        index = self._view_combo.findData(GeometryViewMode.CONSTRUCTION.value)
         if index >= 0 and self._view_combo.currentIndex() != index:
             self._view_combo.blockSignals(True)
             self._view_combo.setCurrentIndex(index)
@@ -7088,7 +7085,6 @@ class MainWindow(QMainWindow):
         self._update_height_control()
 
     def _update_height_control(self) -> None:
-        mode = self._view_combo.currentData()
         vertical = False
         multi_wire = False
         if self._project is not None and self._design_id is not None:
@@ -7101,7 +7097,9 @@ class MainWindow(QMainWindow):
             ):
                 vertical = parameters.orientation is DipoleOrientation.VERTICAL
         self._height_combo.setEnabled(
-            mode == GeometryViewMode.ELEVATION.value and not vertical and not multi_wire
+            self._geometry.resolved_mode() is GeometryViewMode.ELEVATION
+            and not vertical
+            and not multi_wire
         )
 
     def _on_height_scale_changed(self) -> None:

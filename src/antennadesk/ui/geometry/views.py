@@ -13,6 +13,15 @@ from ...domain.antennas.geometry import Point3D
 
 
 class GeometryViewMode(StrEnum):
+    """A projected view or the user-facing construction view.
+
+    ``CONSTRUCTION`` is the only 2D mode exposed by the main window.  It
+    resolves to the projection that best shows the antenna's construction
+    shape.  ``ELEVATION`` and ``PLAN`` remain available for the scene builder,
+    exports, and tests.
+    """
+
+    CONSTRUCTION = "construction"
     ELEVATION = "elevation"
     PLAN = "plan"
     THREE_D = "3d"
@@ -193,7 +202,7 @@ def is_planar(model: AntennaModel) -> bool:
 
 
 def recommended_view(model: AntennaModel) -> GeometryViewMode:
-    """Choose the view that shows the most useful shape by default."""
+    """Choose the projection that shows the most useful shape by default."""
 
     if len(model.wires) <= 1:
         return GeometryViewMode.ELEVATION
@@ -205,3 +214,21 @@ def recommended_view(model: AntennaModel) -> GeometryViewMode:
     if abs(normal[2]) > 0.85:
         return GeometryViewMode.PLAN
     return GeometryViewMode.ELEVATION
+
+
+# Families whose construction layout is the boom plan even though the model is
+# not a single horizontal plane.  A cubical quad is the first case: its loops
+# lie in parallel vertical planes, so a generic front view is edge-on.
+_CONSTRUCTION_PLAN_TYPES = frozenset({"quad_beam"})
+
+
+def construction_view(
+    model: AntennaModel,
+    *,
+    antenna_type: str | None = None,
+) -> GeometryViewMode:
+    """Return the projection used by the single user-facing construction view."""
+
+    if antenna_type in _CONSTRUCTION_PLAN_TYPES:
+        return GeometryViewMode.PLAN
+    return recommended_view(model)

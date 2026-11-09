@@ -730,12 +730,24 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "{count} hilos · ancho {span} · altura {height}",
     },
     "geometry.j_pole_elevation": {
-        Language.ENGLISH: "{template} · radiator {radiator} · stub {stub} · spacing {spacing}",
-        Language.SPANISH: "{template} · radiador {radiator} · stub {stub} · separación {spacing}",
+        Language.ENGLISH: (
+            "{template} · radiator {radiator} · stub {stub} · spacing {spacing} · "
+            "feed offset {feed} · base {base}"
+        ),
+        Language.SPANISH: (
+            "{template} · radiador {radiator} · stub {stub} · separación {spacing} · "
+            "desplazamiento de alimentación {feed} · base {base}"
+        ),
     },
     "geometry.slim_jim_elevation": {
-        Language.ENGLISH: "{template} · radiator {radiator} · stub {stub} · gap {gap} · spacing {spacing}",
-        Language.SPANISH: "{template} · radiador {radiator} · stub {stub} · brecha {gap} · separación {spacing}",
+        Language.ENGLISH: (
+            "{template} · radiator {radiator} · stub {stub} · gap {gap} · "
+            "spacing {spacing} · feed offset {feed} · base {base}"
+        ),
+        Language.SPANISH: (
+            "{template} · radiador {radiator} · stub {stub} · brecha {gap} · "
+            "separación {spacing} · desplazamiento de alimentación {feed} · base {base}"
+        ),
     },
     "geometry.j_pole_plan": {
         Language.ENGLISH: "{template} top view · spacing {spacing}",
@@ -774,6 +786,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "geometry.stub": {
         Language.ENGLISH: "Stub",
         Language.SPANISH: "Stub",
+    },
+    "geometry.upper_section": {
+        Language.ENGLISH: "upper section",
+        Language.SPANISH: "tramo superior",
+    },
+    "geometry.lower_section": {
+        Language.ENGLISH: "lower section",
+        Language.SPANISH: "tramo inferior",
+    },
+    "geometry.left_leg": {
+        Language.ENGLISH: "left leg",
+        Language.SPANISH: "pierna izquierda",
     },
     "geometry.elevation_summary": {
         Language.ENGLISH: "Height {height} · feed height {feed}",
@@ -855,6 +879,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "front view: elements overlap; use Plan to see the layout",
         Language.SPANISH: "alzado: los elementos se superponen; use Planta para ver la disposición",
     },
+    "geometry.projected_length_note": {
+        Language.ENGLISH: (
+            "true wire length {length}; the dimension shows the projected {projected}"
+        ),
+        Language.SPANISH: (
+            "longitud real del hilo {length}; la cota muestra la proyección {projected}"
+        ),
+    },
     "geometry.edge_on": {
         Language.ENGLISH: "top view is edge-on",
         Language.SPANISH: "la vista superior es de canto",
@@ -892,6 +924,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "{count} cotas ocultas por espacio",
     },
     "geometry.view": {Language.ENGLISH: "View", Language.SPANISH: "Vista"},
+    "geometry.view_construction": {
+        Language.ENGLISH: "Construction",
+        Language.SPANISH: "Construcción",
+    },
     "geometry.view_elevation": {Language.ENGLISH: "Elevation", Language.SPANISH: "Alzado"},
     "geometry.view_plan": {Language.ENGLISH: "Plan", Language.SPANISH: "Planta"},
     "geometry.view_3d": {Language.ENGLISH: "3D", Language.SPANISH: "3D"},
@@ -2742,6 +2778,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "AntennaDesk construction sheet · SI units",
         Language.SPANISH: "Hoja de construcción de AntennaDesk · unidades SI",
     },
+    "construction.wire_schedule": {
+        Language.ENGLISH: "Wire schedule",
+        Language.SPANISH: "Lista de hilos",
+    },
     "construction.dimensions": {
         Language.ENGLISH: "Dimensions",
         Language.SPANISH: "Dimensiones",
@@ -2984,6 +3024,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "magnetic_loop.diameter": {
         Language.ENGLISH: "Loop diameter",
         Language.SPANISH: "Diámetro del lazo",
+    },
+    "magnetic_loop.diameter_note": {
+        Language.ENGLISH: (
+            "circumscribed loop diameter {diameter}; the polygon is not drawn as a circle"
+        ),
+        Language.SPANISH: (
+            "diámetro circunscripto del lazo {diameter}; el polígono no se dibuja como círculo"
+        ),
     },
     "magnetic_loop.height": {
         Language.ENGLISH: "Bottom height",
@@ -3593,6 +3641,15 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Excitado en W y reflector en U sobre un marco de seis separadores; "
             "radio de giro {radius}. No se modelan el marco, la flecha de los "
             "separadores ni el balun."
+        ),
+    },
+    "hexbeam.tip_gap_note": {
+        Language.ENGLISH: (
+            "published tip-gap parameter {published}; drawn clear tip-to-tip gap {clear}"
+        ),
+        Language.SPANISH: (
+            "parámetro publicado de separación de puntas {published}; separación "
+            "libre dibujada entre puntas {clear}"
         ),
     },
     "trap_yagi.title": {

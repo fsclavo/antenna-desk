@@ -6,9 +6,12 @@ import math
 
 import pytest
 
+from antennadesk.domain.antennas.beverage import beverage_parameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
+from antennadesk.domain.antennas.discone import discone_parameters
 from antennadesk.domain.antennas.endfed import EndFedParameters
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
+from antennadesk.domain.antennas.hexbeam import published_hexbeam_parameters
 from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
 from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
@@ -794,3 +797,70 @@ def test_zs6bkw_custom_generator_uses_the_dipole_summary_and_dashed_line() -> No
     assert "Wire dipole" in scene.summary
     assert "transmission lines: 1" in scene.summary
     assert any(polyline.role == "transmission-line" for polyline in scene.polylines)
+
+
+def test_beverage_construction_view_keeps_the_length_dimension() -> None:
+    parameters = beverage_parameters()
+
+    scene = _scene(parameters, "beverage", GeometryViewMode.ELEVATION)
+
+    assert any(dimension.text.startswith("42.") for dimension in scene.dimensions)
+    assert not any("vertical plane is edge-on" in note for note in scene.notes)
+
+
+def test_hexbeam_dimensions_anchor_to_the_named_geometry() -> None:
+    parameters = published_hexbeam_parameters()
+    scene = _scene(parameters, "hexbeam", GeometryViewMode.PLAN)
+
+    span = next(dimension for dimension in scene.dimensions if dimension.text == "9.03 m")
+    assert span.start.distance_to(span.end) == pytest.approx(9.03, abs=1e-2)
+    assert any("published tip-gap parameter" in note for note in scene.notes)
+
+
+def test_magnetic_loop_does_not_label_a_chord_as_the_diameter() -> None:
+    parameters = MagneticLoopParameters(
+        frequency_hz=7_100_000.0,
+        diameter_m=1.0,
+        height_m=1.5,
+        sides=8,
+        gap_length_m=0.05,
+    )
+    scene = _scene(parameters, "magnetic_loop", GeometryViewMode.ELEVATION)
+
+    assert not any(dimension.text == "1.00 m" for dimension in scene.dimensions)
+    assert any("circumscribed loop diameter" in note for note in scene.notes)
+
+
+def test_discone_plan_does_not_draw_vertical_heights() -> None:
+    parameters = discone_parameters(
+        frequency_hz=145_000_000.0,
+        cone_height_m=0.5,
+        cone_radius_m=0.3,
+        disc_radius_m=0.5,
+        base_height_m=0.5,
+        wire_count=6,
+    )
+    scene = _scene(parameters, "discone", GeometryViewMode.PLAN)
+
+    assert len(scene.dimensions) == 2
+    assert {dimension.text for dimension in scene.dimensions} == {"0.30 m", "0.50 m"}
+
+
+def test_j_pole_construction_view_labels_the_feed_and_repeated_values() -> None:
+    parameters = JPoleParameters(
+        frequency_hz=220_000_000.0,
+        radiator_height_m=1.0,
+        stub_length_m=0.5,
+        spacing_m=0.05,
+        feed_offset_m=0.1,
+        base_height_m=0.25,
+    )
+    scene = _scene(parameters, "j_pole", GeometryViewMode.ELEVATION)
+
+    labels = {dimension.label for dimension in scene.dimensions}
+    assert "feed offset" in labels
+    assert "Base height" in labels
+    assert "Radiator" in labels
+    assert "Stub" in labels
+    assert "feed offset 0.10 m" in scene.summary
+    assert "base 0.25 m" in scene.summary

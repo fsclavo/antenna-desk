@@ -54,6 +54,7 @@ from .design_summary import (
     transmission_line_summary_rows,
 )
 from .result_summary import gain_metric_rows
+from .wire_schedule import feed_schedule_row, wire_schedule_html_rows
 
 CSS = """
 body { font-family: system-ui, sans-serif; margin: 28px; color: #222; background: #fff; }
@@ -63,6 +64,7 @@ p { line-height: 1.45; }
 table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13px; }
 th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
 th { background: #f3f3f3; width: 34%; }
+table.schedule th { width: auto; }
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .muted { color: #666; font-size: 12px; }
 .notes { background: #f7f7f7; border-left: 4px solid #888; padding: 10px 14px; }
@@ -132,6 +134,25 @@ def render_construction_sheet(
             *transmission_line_summary_rows(design.antenna.transmission_lines),
         )
     )
+    schedule_rows = "".join(wire_schedule_html_rows(design))
+    feed = feed_schedule_row(antenna)
+    schedule_section = f"""
+<h2>Wire schedule</h2>
+<table class="schedule">
+<thead>
+<tr><th>#</th><th>Wire</th><th>Start (m)</th><th>End (m)</th><th>Length (m)</th><th>Ø (mm)</th><th>Material</th></tr>
+</thead>
+<tbody>
+{schedule_rows}
+</tbody>
+</table>
+<table>
+<tr><th>Feed wire</th><td><code>{_escape(feed.wire_id)}</code></td></tr>
+<tr><th>Feed offset</th><td>{feed.offset_m:.4f} m from the wire start</td></tr>
+<tr><th>Feed coordinates</th><td>{feed.point.x_m:.4f}, {feed.point.y_m:.4f}, {feed.point.z_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{feed.height_m:.4f} m</td></tr>
+</table>
+"""
     if isinstance(parameters, DipoleParameters):
         if parameters.sag_m > 0.0:
             feed_rows = f"""
@@ -729,7 +750,7 @@ point above. Verify every connection and the feed gap before construction.</p>""
 {dimension_rows}
 {feed_rows}
 </table>
-
+{schedule_section}
 <h2>Simulation</h2>
 <table>
 {simulation_rows}

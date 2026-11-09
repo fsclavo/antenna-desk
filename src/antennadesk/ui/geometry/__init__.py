@@ -12,7 +12,7 @@ from .scene import (
     ScenePoint,
     ScenePolyline,
 )
-from .views import GeometryViewMode, recommended_view
+from .views import GeometryViewMode, construction_view, recommended_view
 
 __all__ = [
     "SUPPORTED_PRESENTATION_TYPES",
@@ -24,5 +24,6 @@ __all__ = [
     "SceneMarker",
     "ScenePoint",
     "ScenePolyline",
+    "construction_view",
     "recommended_view",
 ]

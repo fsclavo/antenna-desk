@@ -1,6 +1,6 @@
 # ADR-0012 — Geometry presentation scene and dimension layout
 
-- **Status:** Accepted
+- **Status:** Accepted; view selector superseded by ADR-0027
 - **Date:** 2026-10-30
 - **Supersedes:** the Plan/Elevation construction-view rule in ADR-0005
 
@@ -31,7 +31,9 @@ presentation layer, not the domain model or the solver.
    - single wire and vertical-plane geometry: front/elevation;
    - horizontal planar arrays: plan/top;
    - non-planar geometry: front/elevation with a top-view inset.
-   Users can still switch views manually.
+   ADR-0027 replaces the manual Elevation/Plan selector with a single
+   Construction view that resolves to this default; the internal projections
+   remain for tests, exports, and insets.
 5. Reset zoom, pan, and vertical exaggeration when the model changes. Reset the
    view to the geometry-derived default at the same time.
 6. Place dimensions in screen space using font metrics, reserved regions, and

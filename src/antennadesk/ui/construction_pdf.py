@@ -19,6 +19,7 @@ from ..reporting.design_summary import (
     load_summary_rows,
     optimization_summary_rows,
 )
+from ..reporting.wire_schedule import wire_schedule_lines
 from .i18n import Translator
 
 
@@ -114,6 +115,11 @@ def write_construction_pdf(
             translator.t("construction.feed_height"),
             f"{feed_z:.4f} m",
         )
+    y += 12.0
+
+    section(translator.t("construction.wire_schedule"))
+    for line in wire_schedule_lines(design):
+        row("", line)
     y += 12.0
 
     section(translator.t("construction.simulation"))
