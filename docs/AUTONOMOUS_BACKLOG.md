@@ -165,13 +165,17 @@ model and solver contract must land first.
 - Added direct tests for the Qt worker adapters (100% coverage), the polar
   pattern paint paths (45% to 98%), and the solver locator fallbacks (69% to
   98%).
-- The full coverage run is now **87% total**; the CI thresholds were not
-  lowered.
+- Covered the six remaining element-optimizer entry points (`moxon`, `loop`,
+  `vertical`, `inverted_v`, `ringo`, and `zs6bkw`) and the public save/open
+  lifecycle: current-path save, Save As suffix/cancel, no-project errors,
+  open/cancel/error, and the three unsaved-changes answers.
+- `main_window.py` coverage is now **73%** (from 69%); the full suite stays at
+  **87% total** with 227 fewer missed statements.
 
 ## Current baseline
 
 - Schema: **30**.
-- Full gate: **1,988 passed, 0 skipped** with `NEC2C` and the optional
+- Full gate: **2,004 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
 - Last commits: multi-source excitation, phased vertical array, quad beam,
   discone, trapped Yagi, per-source results, hexbeam, solver timeout, the

@@ -11,7 +11,7 @@ import pytest
 from helpers import wait_for_condition
 from main_window_support import FakeSolver
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QDialog, QInputDialog, QMessageBox, QWizard
+from PySide6.QtWidgets import QDialog, QFileDialog, QInputDialog, QMessageBox, QWizard
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.projects.project import Project
@@ -221,6 +221,152 @@ def test_save_processes_events_while_preparing_the_payload(
     assert window._save_to(path) is True
     assert events == ["event"]
     assert path.is_file()
+
+
+def test_save_project_uses_the_current_path(
+    window: MainWindow,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "current.antennadesk"
+    assert window._save_to(path) is True
+    window._form._length.setValue(window._form._length.value() + 1.0)
+
+    assert window.save_project() is True
+    assert path.is_file()
+    window._dirty = False
+
+
+def test_save_project_as_appends_the_native_suffix(
+    window: MainWindow,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    target = tmp_path / "named"
+    monkeypatch.setattr(
+        QFileDialog,
+        "getSaveFileName",
+        lambda *args, **kwargs: (str(target), ""),
+    )
+
+    assert window.save_project_as() is True
+    assert (tmp_path / "named.antennadesk").is_file()
+    window._dirty = False
+
+
+def test_save_project_as_cancel_returns_false(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *args, **kwargs: ("", ""))
+
+    assert window.save_project_as() is False
+
+
+def test_save_without_a_project_reports_an_error(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = MainWindow(
+        JsonProjectRepository(),
+        FakeSolver(),
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+    )
+    qtbot.addWidget(window)
+    errors: list[str] = []
+    monkeypatch.setattr(window, "_show_error", errors.append)
+
+    assert window.save_project() is False
+    assert window.save_project_as() is False
+    assert errors == [Translator(Language.ENGLISH).t("error.no_project")] * 2
+    window.close()
+
+
+def test_open_project_loads_a_saved_file(
+    window: MainWindow,
+    qtbot: QtBot,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = tmp_path / "source.antennadesk"
+    assert window._save_to(source) is True
+    loaded = MainWindow(
+        JsonProjectRepository(),
+        FakeSolver(),
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+    )
+    qtbot.addWidget(loaded)
+    monkeypatch.setattr(
+        QFileDialog,
+        "getOpenFileName",
+        lambda *args, **kwargs: (str(source), ""),
+    )
+
+    loaded.open_project()
+
+    assert loaded._project is not None
+    assert loaded._project.name == window._project.name
+    assert loaded._current_path == source
+    loaded.close()
+
+
+def test_open_project_cancel_keeps_the_current_project(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    before = window._project
+    monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *args, **kwargs: ("", ""))
+
+    window.open_project()
+
+    assert window._project is before
+
+
+def test_open_project_reports_an_error(
+    window: MainWindow,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    before = window._project
+    errors: list[str] = []
+    monkeypatch.setattr(window, "_show_error", errors.append)
+    monkeypatch.setattr(
+        QFileDialog,
+        "getOpenFileName",
+        lambda *args, **kwargs: (str(tmp_path / "missing.antennadesk"), ""),
+    )
+
+    window.open_project()
+
+    assert window._project is before
+    assert len(errors) == 1
+    assert "missing.antennadesk" in errors[0]
+
+
+@pytest.mark.parametrize(
+    ("answer", "expected", "save_calls"),
+    [
+        (QMessageBox.StandardButton.Save, True, 1),
+        (QMessageBox.StandardButton.Discard, True, 0),
+        (QMessageBox.StandardButton.Cancel, False, 0),
+    ],
+)
+def test_maybe_save_changes_handles_the_three_answers(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+    answer: QMessageBox.StandardButton,
+    expected: bool,
+    save_calls: int,
+) -> None:
+    assert window._maybe_save_changes() is True
+    window._dirty = True
+    monkeypatch.setattr(QMessageBox, "question", lambda *args, **kwargs: answer)
+    calls: list[bool] = []
+    monkeypatch.setattr(window, "save_project", lambda: calls.append(True) or True)
+
+    assert window._maybe_save_changes() is expected
+    assert len(calls) == save_calls
 
 
 def test_editing_form_marks_project_dirty(window: MainWindow) -> None:
