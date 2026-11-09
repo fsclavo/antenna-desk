@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import threading
+from dataclasses import replace
 from uuid import uuid4
 
 import pytest
@@ -84,6 +85,40 @@ class BarrierBandSolver(FakeBandSolver):
 
     def run(self, model: object, spec: SimulationSpec, **kwargs: object) -> SimulationResult:
         self._barrier.wait()
+        return super().run(model, spec, **kwargs)
+
+
+class CancellingBandSolver(FakeBandSolver):
+    """Cancel the analysis after one completed band."""
+
+    def __init__(self, token: EventCancelToken, cancel_hz: float) -> None:
+        super().__init__()
+        self._token = token
+        self._cancel_hz = cancel_hz
+
+    def run(self, model: object, spec: SimulationSpec, **kwargs: object) -> SimulationResult:
+        result = super().run(model, spec, **kwargs)
+        if abs(spec.frequency_plan.start_hz - self._cancel_hz) < 1.0:
+            self._token.cancel()
+        return result
+
+
+class CancelledResultBandSolver(FakeBandSolver):
+    """Return a cancelled result for one band."""
+
+    def __init__(self, cancel_hz: float) -> None:
+        super().__init__()
+        self._cancel_hz = cancel_hz
+
+    def run(self, model: object, spec: SimulationSpec, **kwargs: object) -> SimulationResult:
+        if abs(spec.frequency_plan.start_hz - self._cancel_hz) < 1.0:
+            return SimulationResult(
+                status=SimulationStatus.CANCELLED,
+                spec=spec,
+                model_fingerprint="a" * 64,
+                solver=self.version(),
+                frequencies=(),
+            )
         return super().run(model, spec, **kwargs)
 
 
@@ -243,6 +278,89 @@ def test_analyze_bands_parallel_runs_independent_bands_concurrently() -> None:
     assert len(solver.specs) == 2
 
 
+def test_analyze_bands_sequential_marks_the_next_band_cancelled() -> None:
+    token = EventCancelToken()
+    solver = CancellingBandSolver(token, cancel_hz=14_000_000.0)
+    analysis = AnalyzeBands(solver).execute(
+        AnalyzeBandsCommand(
+            design_id=uuid4(),
+            model=_model(),
+            requests=(_request("40m"), _request("20m"), _request("10m")),
+            cancel_token=token,
+        )
+    )
+
+    assert [band.band.name for band in analysis.bands] == ["40m", "20m", "10m"]
+    assert [band.result.status for band in analysis.bands] == [
+        SimulationStatus.COMPLETED,
+        SimulationStatus.COMPLETED,
+        SimulationStatus.CANCELLED,
+    ]
+    assert analysis.status is SimulationStatus.PARTIAL
+    assert len(solver.specs) == 2
+
+
+def test_analyze_bands_sequential_stops_on_a_cancelled_result() -> None:
+    solver = CancelledResultBandSolver(cancel_hz=14_000_000.0)
+    analysis = AnalyzeBands(solver).execute(
+        AnalyzeBandsCommand(
+            design_id=uuid4(),
+            model=_model(),
+            requests=(_request("40m"), _request("20m"), _request("10m")),
+        )
+    )
+
+    assert [band.band.name for band in analysis.bands] == ["40m", "20m"]
+    assert [band.result.status for band in analysis.bands] == [
+        SimulationStatus.COMPLETED,
+        SimulationStatus.CANCELLED,
+    ]
+    assert analysis.status is SimulationStatus.PARTIAL
+
+
+def test_analyze_bands_parallel_marks_the_next_band_cancelled() -> None:
+    token = EventCancelToken()
+    solver = CancellingBandSolver(token, cancel_hz=14_000_000.0)
+    analysis = AnalyzeBands(solver).execute(
+        AnalyzeBandsCommand(
+            design_id=uuid4(),
+            model=_model(),
+            requests=(_request("40m"), _request("20m"), _request("10m")),
+            cancel_token=token,
+            parallel_workers=2,
+        )
+    )
+
+    assert [band.band.name for band in analysis.bands] == ["40m", "20m", "10m"]
+    assert [band.result.status for band in analysis.bands] == [
+        SimulationStatus.COMPLETED,
+        SimulationStatus.COMPLETED,
+        SimulationStatus.CANCELLED,
+    ]
+    assert analysis.status is SimulationStatus.PARTIAL
+    assert len(solver.specs) == 2
+
+
+def test_analyze_bands_parallel_keeps_a_cancelled_solver_result() -> None:
+    solver = CancelledResultBandSolver(cancel_hz=14_000_000.0)
+    analysis = AnalyzeBands(solver).execute(
+        AnalyzeBandsCommand(
+            design_id=uuid4(),
+            model=_model(),
+            requests=(_request("40m"), _request("20m"), _request("10m")),
+            parallel_workers=2,
+        )
+    )
+
+    assert [band.band.name for band in analysis.bands] == ["40m", "20m"]
+    assert [band.result.status for band in analysis.bands] == [
+        SimulationStatus.COMPLETED,
+        SimulationStatus.CANCELLED,
+    ]
+    assert analysis.status is SimulationStatus.PARTIAL
+    assert len(solver.specs) == 1
+
+
 @pytest.mark.parametrize("workers", [0, 9])
 def test_analyze_bands_rejects_invalid_worker_counts(workers: int) -> None:
     with pytest.raises(ValueError, match="parallel_workers"):
@@ -252,6 +370,13 @@ def test_analyze_bands_rejects_invalid_worker_counts(workers: int) -> None:
             requests=(_request("40m"),),
             parallel_workers=workers,
         )
+
+
+def test_analyze_bands_rejects_an_empty_band_name() -> None:
+    request = _request("40m")
+
+    with pytest.raises(ValueError, match="band name"):
+        BandSimulationRequest(band=replace(request.band, name=""), spec=request.spec)
 
 
 def test_analyze_bands_requires_a_band() -> None:

@@ -149,10 +149,26 @@ model and solver contract must land first.
    in the prototype.
 8. D1–D4 only when the required hardware, engine, or release decision exists.
 
+## Technical debt pass (2026-11-08)
+
+- The UI mypy pass now rejects unused ignores, redundant casts, and
+  unreachable code. Four obsolete pyqtgraph suppressions were removed, two
+  dead feed-wire checks were deleted, and one incorrect PySide6 stub was
+  handled with an explicit cast.
+- `optimizer_availability` uses `assert_never`, so a new parameter type fails
+  type checking instead of silently falling through to an unsupported result.
+- Fixed band-analysis cancellation during a solver run: the next unprocessed
+  band is recorded as cancelled, so a truncated sequential or parallel batch is
+  reported as partial rather than completed.
+- Added batch-engine fallback and cancellation tests, plus cancellation
+  coverage for sequential and parallel band analysis.
+- The last full coverage run was **86% total**; the CI thresholds were not
+  lowered.
+
 ## Current baseline
 
 - Schema: **30**.
-- Full gate: **1,958 passed, 0 skipped** with `NEC2C` and the optional
+- Full gate: **1,966 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
 - Last commits: multi-source excitation, phased vertical array, quad beam,
   discone, trapped Yagi, per-source results, hexbeam, solver timeout, the

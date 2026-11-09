@@ -177,6 +177,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Band analysis now records the next unprocessed band as cancelled when a
+  cancellation arrives during a solver run, so a truncated sequential or
+  parallel batch is reported as partial instead of completed.
 - The phased vertical editor now warns when adjacent radial screens overlap
   because twice the radial length exceeds the element spacing. Intersecting
   screens can produce unstable NEC impedance or negative primary resistance;

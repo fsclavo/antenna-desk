@@ -84,7 +84,17 @@ class AnalyzeBands:
             result = self._run_request(command, request)
             results.append(BandResult(band=request.band, result=result))
             self._report_progress(command, index, total, request.band)
-            if result.status is SimulationStatus.CANCELLED or self._is_cancelled(command):
+            if result.status is SimulationStatus.CANCELLED:
+                break
+            if self._is_cancelled(command):
+                if index < total:
+                    next_request = command.requests[index]
+                    results.append(
+                        BandResult(
+                            band=next_request.band,
+                            result=self._cancelled_result(next_request.spec),
+                        )
+                    )
                 break
 
         return self._analysis(command, results)
@@ -112,15 +122,28 @@ class AnalyzeBands:
                 ]
                 chunk_results = [future.result() for future in futures]
                 stop = False
+                cancelled_result_seen = False
                 for offset, (request, result) in enumerate(
                     zip(chunk, chunk_results, strict=True),
                     start=start + 1,
                 ):
                     results.append(BandResult(band=request.band, result=result))
                     self._report_progress(command, offset, total, request.band)
-                    if result.status is SimulationStatus.CANCELLED or self._is_cancelled(command):
+                    if result.status is SimulationStatus.CANCELLED:
+                        cancelled_result_seen = True
+                        stop = True
+                    elif self._is_cancelled(command):
                         stop = True
                 if stop:
+                    next_index = start + len(chunk)
+                    if next_index < total and not cancelled_result_seen:
+                        request = command.requests[next_index]
+                        results.append(
+                            BandResult(
+                                band=request.band,
+                                result=self._cancelled_result(request.spec),
+                            )
+                        )
                     break
                 start += len(chunk)
         finally:

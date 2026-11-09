@@ -102,6 +102,87 @@ def test_batch_engine_is_deterministic_and_preserves_order() -> None:
     assert [item.index for item in first.evaluations] == list(range(1, len(first.evaluations) + 1))
 
 
+def test_batch_engine_falls_back_when_the_batch_evaluator_raises() -> None:
+    variables = (
+        OptimizationVariable("x", "field.length", "g", -5.0, 5.0, step=0.01),
+        OptimizationVariable("y", "field.height", "g", -5.0, 5.0, step=0.01),
+    )
+
+    def failing_batch(values: list[dict[str, float]]) -> list[CandidateEvaluation]:
+        raise RuntimeError("batch failed")
+
+    result = optimize_design(
+        variables,
+        {"x": 2.0, "y": -2.0},
+        _quadratic,
+        budget=OptimizationBudget(40, 20, 6),
+        seed=11,
+        batch_evaluate=failing_batch,
+    )
+
+    assert result.status in {
+        OptimizationStatus.CONVERGED,
+        OptimizationStatus.MAX_EVALUATIONS,
+    }
+    assert result.evaluations
+    assert result.best_score is not None
+
+
+def test_batch_engine_falls_back_on_a_wrong_batch_size() -> None:
+    variables = (
+        OptimizationVariable("x", "field.length", "g", -5.0, 5.0, step=0.01),
+        OptimizationVariable("y", "field.height", "g", -5.0, 5.0, step=0.01),
+    )
+
+    def short_batch(values: list[dict[str, float]]) -> list[CandidateEvaluation]:
+        return [_quadratic(dict(values[0]))] if values else []
+
+    result = optimize_design(
+        variables,
+        {"x": 2.0, "y": -2.0},
+        _quadratic,
+        budget=OptimizationBudget(40, 20, 6),
+        seed=11,
+        batch_evaluate=short_batch,
+    )
+
+    assert result.status in {
+        OptimizationStatus.CONVERGED,
+        OptimizationStatus.MAX_EVALUATIONS,
+    }
+    assert result.evaluations
+    assert result.best_score is not None
+
+
+def test_batch_engine_reports_cancellation_before_a_batch() -> None:
+    variables = (
+        OptimizationVariable("x", "field.length", "g", -5.0, 5.0, step=0.01),
+        OptimizationVariable("y", "field.height", "g", -5.0, 5.0, step=0.01),
+    )
+    cancel_calls = 0
+
+    def cancel_check() -> bool:
+        nonlocal cancel_calls
+        cancel_calls += 1
+        return cancel_calls > 1
+
+    def batch_evaluate(values: list[dict[str, float]]) -> list[CandidateEvaluation]:
+        return [_quadratic(dict(item)) for item in values]
+
+    result = optimize_design(
+        variables,
+        {"x": 2.0, "y": -2.0},
+        _quadratic,
+        budget=OptimizationBudget(40, 20, 6),
+        seed=11,
+        cancel_check=cancel_check,
+        batch_evaluate=batch_evaluate,
+    )
+
+    assert result.status is OptimizationStatus.CANCELLED
+    assert len(result.evaluations) == 1
+
+
 def test_engine_prefers_a_feasible_candidate() -> None:
     variables = (OptimizationVariable("x", "field.length", "g", 0.0, 1.0),)
 
