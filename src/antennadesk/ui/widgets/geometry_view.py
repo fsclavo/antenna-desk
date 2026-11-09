@@ -91,6 +91,7 @@ class GeometryView(QWidget):
         self._suppress_header = False
         self._last_summary: str | None = None
         self._scene: GeometryScene | None = None
+        self._label_font_size = 8
         self._colors = theme_colors(self.palette())
         self.setMinimumHeight(280)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -482,32 +483,39 @@ class GeometryView(QWidget):
 
     def _paint_scene(self, painter: QPainter, rect: QRectF, scene: GeometryScene) -> None:
         self._last_summary = scene.summary
-        header_height = 54.0
+        compact = rect.width() < 500.0 or rect.height() < 300.0
+        self._label_font_size = 7 if compact else 8
+        header_height = 38.0 if compact else 54.0
+        bottom_margin = 34.0 if compact else 54.0
+        side_margin = 8.0 if compact else 12.0
         safe_rect = QRectF(
-            rect.left() + 12.0,
+            rect.left() + side_margin,
             rect.top() + header_height,
-            rect.width() - 24.0,
-            rect.height() - header_height - 54.0,
+            rect.width() - 2.0 * side_margin,
+            rect.height() - header_height - bottom_margin,
         )
         if safe_rect.width() < 80.0 or safe_rect.height() < 60.0:
-            self._draw_header(painter, rect, scene.summary)
+            self._draw_header(painter, rect, scene.summary, compact=compact)
             return
         bounds = scene.bounds()
         if bounds is None:
-            self._draw_header(painter, rect, scene.summary)
+            self._draw_header(painter, rect, scene.summary, compact=compact)
             return
         min_point, max_point = bounds
         span_x = max(max_point.x_m - min_point.x_m, 1e-6)
         span_y = max(max_point.y_m - min_point.y_m, 1e-6)
-        margin_x = min(max(38.0, safe_rect.width() * 0.10), 90.0)
+        margin_x = min(
+            max(24.0 if compact else 38.0, safe_rect.width() * (0.08 if compact else 0.10)),
+            90.0,
+        )
         available = QRectF(
             safe_rect.left() + margin_x,
-            safe_rect.top() + 12.0,
+            safe_rect.top() + (8.0 if compact else 12.0),
             safe_rect.width() - 2.0 * margin_x,
-            safe_rect.height() - 54.0,
+            safe_rect.height() - (30.0 if compact else 54.0),
         )
         if available.width() < 30.0 or available.height() < 30.0:
-            self._draw_header(painter, rect, scene.summary)
+            self._draw_header(painter, rect, scene.summary, compact=compact)
             return
         scale = min(available.width() / span_x, available.height() / span_y) * self._zoom
         center_scene = ScenePoint(
@@ -521,7 +529,7 @@ class GeometryView(QWidget):
             pan=self._pan,
         )
         geometry_rect = self._scene_bounds(scene, transform)
-        reserved = list(self._reserved_rects(safe_rect, scene))
+        reserved = list(self._reserved_rects(safe_rect, scene, compact=compact))
         if scene.show_ground and scene.ground_y_m is not None:
             ground_y = transform.to_screen(ScenePoint(0.0, scene.ground_y_m)).y()
             if ground_y < safe_rect.bottom():
@@ -534,7 +542,8 @@ class GeometryView(QWidget):
                     )
                 )
         reserved_tuple = tuple(reserved)
-        font_metrics = QFontMetricsF(scaled_font(8))
+        font_metrics = QFontMetricsF(scaled_font(7 if compact else 8))
+        offset_scale = 0.7 if compact else 1.0
         placed = layout_dimensions(
             scene,
             transform,
@@ -542,6 +551,7 @@ class GeometryView(QWidget):
             geometry_rect,
             reserved_tuple,
             font_metrics,
+            offset_scale=offset_scale,
         )
         placed_angular = layout_angular_dimensions(
             scene,
@@ -550,6 +560,7 @@ class GeometryView(QWidget):
             reserved_tuple,
             tuple(item.text_rect for item in placed),
             font_metrics,
+            radius_scale=offset_scale,
         )
         hidden = (
             len(scene.dimensions)
@@ -572,7 +583,7 @@ class GeometryView(QWidget):
         self._draw_dimension_labels(painter, placed)
         self._draw_angular_dimensions(painter, placed_angular)
         painter.restore()
-        self._draw_insets(painter, scene, safe_rect)
+        self._draw_insets(painter, scene, safe_rect, compact=compact)
         self._draw_scale_bar(
             painter,
             x_left=safe_rect.left() + 8.0,
@@ -581,12 +592,24 @@ class GeometryView(QWidget):
             unit=self._translator.t(length_unit_key(self._unit_system)),
         )
         if scene.is_plan:
+            compass_size = 40.0 if compact else 54.0
             self._draw_compass(
                 painter,
-                QRectF(safe_rect.right() - 58.0, safe_rect.top() + 4.0, 54.0, 54.0),
+                QRectF(
+                    safe_rect.right() - compass_size - 6.0,
+                    safe_rect.top() + 4.0,
+                    compass_size,
+                    compass_size,
+                ),
                 scene.azimuth_deg or 0.0,
             )
-        self._draw_header(painter, rect, scene.summary, hidden_text=hidden_text)
+        self._draw_header(
+            painter,
+            rect,
+            scene.summary,
+            hidden_text=hidden_text,
+            compact=compact,
+        )
 
     def _scene_bounds(self, scene: GeometryScene, transform: SceneTransform) -> QRectF:
         points = [transform.to_screen(point) for point in scene.points()]
@@ -599,7 +622,16 @@ class GeometryView(QWidget):
             max(point.y() for point in points) - min(point.y() for point in points),
         )
 
-    def _reserved_rects(self, safe_rect: QRectF, scene: GeometryScene) -> tuple[QRectF, ...]:
+    def _reserved_rects(
+        self,
+        safe_rect: QRectF,
+        scene: GeometryScene,
+        *,
+        compact: bool = False,
+    ) -> tuple[QRectF, ...]:
+        inset_width = 140.0 if compact else self.INSET_WIDTH
+        inset_height = 112.0 if compact else self.INSET_HEIGHT
+        show_insets = not (compact and (safe_rect.width() < 480.0 or safe_rect.height() < 300.0))
         rects: list[QRectF] = [
             QRectF(
                 safe_rect.left(),
@@ -609,19 +641,28 @@ class GeometryView(QWidget):
             ),
         ]
         if scene.is_plan:
-            rects.append(QRectF(safe_rect.right() - 62.0, safe_rect.top(), 62.0, 60.0))
-        for index, _inset in enumerate(reversed(scene.insets)):
+            compass_width = 48.0 if compact else 62.0
             rects.append(
                 QRectF(
-                    safe_rect.right() - self.INSET_WIDTH - self.INSET_GAP,
-                    safe_rect.bottom()
-                    - self.INSET_HEIGHT
-                    - self.INSET_GAP
-                    - index * (self.INSET_HEIGHT + self.INSET_GAP),
-                    self.INSET_WIDTH,
-                    self.INSET_HEIGHT,
+                    safe_rect.right() - compass_width,
+                    safe_rect.top(),
+                    compass_width,
+                    46.0 if compact else 60.0,
                 )
             )
+        if show_insets:
+            for index, _inset in enumerate(reversed(scene.insets)):
+                rects.append(
+                    QRectF(
+                        safe_rect.right() - inset_width - self.INSET_GAP,
+                        safe_rect.bottom()
+                        - inset_height
+                        - self.INSET_GAP
+                        - index * (inset_height + self.INSET_GAP),
+                        inset_width,
+                        inset_height,
+                    )
+                )
         return tuple(rects)
 
     def _draw_scene_ground(
@@ -699,7 +740,7 @@ class GeometryView(QWidget):
         painter: QPainter,
         placed: tuple[PlacedDimension, ...],
     ) -> None:
-        painter.setFont(scaled_font(8))
+        painter.setFont(scaled_font(self._label_font_size))
         for item in placed:
             painter.fillRect(item.text_rect, self._colors.background)
             painter.setPen(self._colors.text)
@@ -714,7 +755,7 @@ class GeometryView(QWidget):
         painter: QPainter,
         placed: tuple[PlacedAngularDimension, ...],
     ) -> None:
-        painter.setFont(scaled_font(8))
+        painter.setFont(scaled_font(self._label_font_size))
         for item in placed:
             painter.setPen(QPen(self._colors.light_line, 1.0))
             for first, second in item.extension_lines:
@@ -775,7 +816,7 @@ class GeometryView(QWidget):
         *,
         color: QColor | None = None,
     ) -> None:
-        font = scaled_font(8)
+        font = scaled_font(self._label_font_size)
         painter.setFont(font)
         metrics = QFontMetricsF(font)
         text_rect = QRectF(
@@ -802,22 +843,28 @@ class GeometryView(QWidget):
         painter: QPainter,
         scene: GeometryScene,
         safe_rect: QRectF,
+        *,
+        compact: bool = False,
     ) -> None:
+        if compact and (safe_rect.width() < 480.0 or safe_rect.height() < 300.0):
+            return
+        inset_width = 140.0 if compact else self.INSET_WIDTH
+        inset_height = 112.0 if compact else self.INSET_HEIGHT
         for index, inset in enumerate(reversed(scene.insets)):
             outer = QRectF(
-                safe_rect.right() - self.INSET_WIDTH - self.INSET_GAP,
+                safe_rect.right() - inset_width - self.INSET_GAP,
                 safe_rect.bottom()
-                - self.INSET_HEIGHT
+                - inset_height
                 - self.INSET_GAP
-                - index * (self.INSET_HEIGHT + self.INSET_GAP),
-                self.INSET_WIDTH,
-                self.INSET_HEIGHT,
+                - index * (inset_height + self.INSET_GAP),
+                inset_width,
+                inset_height,
             )
             painter.setPen(QPen(self._colors.light_line, 1.0, Qt.PenStyle.DashLine))
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawRect(outer)
             painter.setPen(self._colors.secondary_text)
-            painter.setFont(scaled_font(7))
+            painter.setFont(scaled_font(6 if compact else 7))
             painter.drawText(
                 QRectF(outer.left() + 6.0, outer.top() + 3.0, outer.width() - 12.0, 14.0),
                 Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
@@ -921,31 +968,42 @@ class GeometryView(QWidget):
         summary: str | None,
         *,
         hidden_text: str = "",
+        compact: bool | None = None,
     ) -> None:
         self._last_summary = f"{summary} · {hidden_text}" if summary and hidden_text else summary
         if self._suppress_header:
             return
+        if compact is None:
+            compact = rect.width() < 500.0 or rect.height() < 300.0
+        side = 10.0 if compact else 16.0
+        summary_y = 22.0 if compact else 29.0
+        summary_height = 15.0 if compact else 18.0
         painter.setPen(self._colors.text)
-        painter.setFont(scaled_font(10, QFont.Weight.Bold))
+        painter.setFont(scaled_font(9 if compact else 10, QFont.Weight.Bold))
         painter.drawText(
-            QRectF(rect.left() + 16.0, rect.top() + 8.0, rect.width() - 32.0, 20.0),
+            QRectF(
+                rect.left() + side,
+                rect.top() + (5.0 if compact else 8.0),
+                rect.width() - 2.0 * side,
+                16.0 if compact else 20.0,
+            ),
             Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
             self._translator.t("panel.geometry"),
         )
         if summary:
-            font = scaled_font(8)
+            font = scaled_font(7 if compact else 8)
             painter.setFont(font)
             metrics = QFontMetricsF(font)
-            available = rect.width() - 32.0
+            available = rect.width() - 2.0 * side
             if hidden_text:
                 hidden_width = metrics.horizontalAdvance(hidden_text) + 8.0
                 painter.setPen(self._colors.reactance)
                 painter.drawText(
                     QRectF(
-                        rect.right() - 16.0 - hidden_width,
-                        rect.top() + 29.0,
+                        rect.right() - side - hidden_width,
+                        rect.top() + summary_y,
                         hidden_width,
-                        18.0,
+                        summary_height,
                     ),
                     Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
                     hidden_text,
@@ -958,7 +1016,12 @@ class GeometryView(QWidget):
             )
             painter.setPen(self._colors.secondary_text)
             painter.drawText(
-                QRectF(rect.left() + 16.0, rect.top() + 29.0, available, 18.0),
+                QRectF(
+                    rect.left() + side,
+                    rect.top() + summary_y,
+                    available,
+                    summary_height,
+                ),
                 Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                 text,
             )
@@ -1264,7 +1327,7 @@ class GeometryView(QWidget):
             QPointF(x_left + bar_length, bar_y - 5.0),
             QPointF(x_left + bar_length, bar_y + 5.0),
         )
-        painter.setFont(scaled_font(8))
+        painter.setFont(scaled_font(7 if self.height() < 300 else 8))
         painter.setPen(self._colors.secondary_text)
         painter.drawText(
             QRectF(x_left, bar_y - 22.0, 120.0, 16.0),

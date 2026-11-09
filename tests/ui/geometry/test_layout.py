@@ -15,7 +15,7 @@ from antennadesk.ui.geometry.layout import (
     layout_angular_dimensions,
     layout_dimensions,
 )
-from antennadesk.ui.geometry.scene import GeometryScene, ScenePoint
+from antennadesk.ui.geometry.scene import Dimension, GeometryScene, ScenePoint
 from antennadesk.ui.geometry.views import GeometryViewMode
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem
@@ -79,6 +79,46 @@ def _layout(scene: GeometryScene, width: int, height: int):
         QFontMetricsF(QFont("Sans Serif", 8)),
     )
     return safe, placed
+
+
+def test_dimension_offset_scale_moves_labels_closer() -> None:
+    scene = GeometryScene(
+        dimensions=(
+            Dimension(
+                start=ScenePoint(0.0, 0.0),
+                end=ScenePoint(10.0, 0.0),
+                text="10.00 m",
+                side="above",
+                priority=90,
+            ),
+        )
+    )
+    safe = QRectF(0.0, 0.0, 200.0, 100.0)
+    transform = SceneTransform(
+        center_scene=ScenePoint(5.0, 0.0),
+        center_screen=safe.center(),
+        scale=10.0,
+        pan=QRectF().topLeft(),
+    )
+    metrics = QFontMetricsF(QFont("Sans Serif", 8))
+
+    normal = layout_dimensions(scene, transform, safe, safe, (), metrics)
+    compact = layout_dimensions(
+        scene,
+        transform,
+        safe,
+        safe,
+        (),
+        metrics,
+        offset_scale=0.5,
+    )
+
+    assert normal
+    assert compact
+    start = transform.to_screen(ScenePoint(0.0, 0.0))
+    normal_offset = abs(normal[0].line_start.y() - start.y())
+    compact_offset = abs(compact[0].line_start.y() - start.y())
+    assert compact_offset < normal_offset
 
 
 def test_loop_dimensions_stay_inside_the_safe_area(qtbot: QtBot) -> None:

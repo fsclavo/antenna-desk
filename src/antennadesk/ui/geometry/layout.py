@@ -116,6 +116,8 @@ def layout_dimensions(
     geometry_rect: QRectF,
     reserved: tuple[QRectF, ...],
     metrics: QFontMetricsF,
+    *,
+    offset_scale: float = 1.0,
 ) -> tuple[PlacedDimension, ...]:
     """Place scene dimensions in screen space, avoiding overlaps when possible."""
 
@@ -123,6 +125,7 @@ def layout_dimensions(
     label_obstacles = [_inflate(rect, 1.0) for rect in reserved]
     line_obstacles = [_inflate(rect, 1.0) for rect in reserved]
     geometry_obstacle = _inflate(geometry_rect, 2.0)
+    offsets = tuple(value * offset_scale for value in _OFFSETS)
 
     for dimension in sorted(scene.dimensions, key=lambda item: item.priority, reverse=True):
         text = dimension_text(dimension)
@@ -133,7 +136,7 @@ def layout_dimensions(
         geometry_center = geometry_rect.center()
         best: tuple[int, PlacedDimension] | None = None
         for direction in _candidate_directions(dimension, start, end, geometry_center):
-            for offset in _OFFSETS:
+            for offset in offsets:
                 line_start = QPointF(
                     start.x() + direction.x() * offset,
                     start.y() + direction.y() * offset,
@@ -238,13 +241,15 @@ def layout_angular_dimensions(
     reserved: tuple[QRectF, ...],
     occupied_labels: tuple[QRectF, ...],
     metrics: QFontMetricsF,
+    *,
+    radius_scale: float = 1.0,
 ) -> tuple[PlacedAngularDimension, ...]:
     """Place angle arcs and labels in screen space."""
 
     placed: list[PlacedAngularDimension] = []
     label_obstacles = [_inflate(rect, 1.0) for rect in (*reserved, *occupied_labels)]
     line_obstacles = [_inflate(rect, 1.0) for rect in reserved]
-    radii = (32.0, 44.0, 58.0, 74.0, 92.0)
+    radii = tuple(value * radius_scale for value in (32.0, 44.0, 58.0, 74.0, 92.0))
 
     for dimension in sorted(
         scene.angular_dimensions,
@@ -266,7 +271,7 @@ def layout_angular_dimensions(
         height = text_size.height() + 4.0
         best: tuple[int, PlacedAngularDimension] | None = None
 
-        for radius in (dimension.radius_px, *radii):
+        for radius in (dimension.radius_px * radius_scale, *radii):
             arc_rect = QRectF(
                 center.x() - radius,
                 center.y() - radius,

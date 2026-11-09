@@ -117,7 +117,10 @@ use a detail inset marked *not to scale*. The **Zoom** selector scales the
 sketch (0.5x, 1x, 2x, 4x, 8x); the mouse wheel steps through those values,
 dragging pans, and double-click resets zoom and pan. The **Vertical scale**
 selector can exaggerate the height (1x, 1.5x, 2x, 3x) for low horizontal
-antennas.
+antennas. In a small pane the sketch switches to a compact layout with smaller
+labels and margins; detail insets are hidden when there is not enough room, and
+the header reports how many dimensions were hidden. The wire schedule and
+construction sheet carry those values.
 
 The construction sheet includes the rendered construction view and a **wire
 schedule**: every canonical wire with its start and end coordinates, length,

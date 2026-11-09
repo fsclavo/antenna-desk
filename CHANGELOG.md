@@ -195,7 +195,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   schedule can also be exported as CSV from **File → Export → Export wire
   schedule CSV... The sheet also carries an **Evidence and limitations**
   section with the template's evidence level, source, tolerance, and the
-  unmodeled items (frame, boom, balun, trap loss, and so on).**.
+  unmodeled items (frame, boom, balun, trap loss, and so on).
+- The geometry sketch now has a **compact layout** for small panes: smaller
+  header, margins, offsets, and label font; detail insets are hidden when the
+  pane is too small, and the hidden-dimension notice points to the schedule.**.
 - The **biquad** and **Beverage** starting dimensions are now classified as
   published evidence (B) instead of experimental (C). The biquad claim covers
   the quarter-wave loop side and eighth-wave reflector spacing; the Beverage
