@@ -169,15 +169,19 @@ model and solver contract must land first.
   `vertical`, `inverted_v`, `ringo`, and `zs6bkw`) and the public save/open
   lifecycle: current-path save, Save As suffix/cancel, no-project errors,
   open/cancel/error, and the three unsaved-changes answers.
-- `main_window.py` coverage is now **73%** (from 69%); the full suite stays at
-  **87% total** with 227 fewer missed statements.
+- Covered the data exports (CSV, sources CSV, pattern CSV, HTML, PDF, pattern
+  PNG), the four geometry formats (PNG, SVG, PDF, DXF), and solver discovery
+  success/error.
+- `main_window.py` coverage is now **76%** (from 69% at the start of the pass);
+  the full suite is **88% total** with 346 fewer missed statements.
 
 ## Current baseline
 
 - Schema: **30**.
-- Full gate: **2,004 passed, 0 skipped** with `NEC2C` and the optional
+- Full gate: **2,020 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
 - Last commits: multi-source excitation, phased vertical array, quad beam,
   discone, trapped Yagi, per-source results, hexbeam, solver timeout, the
-  phased-radial overlap guardrail, optimizer parallelization, and band-analysis
-  parallelization.
+  phased-radial overlap guardrail, optimizer parallelization, band-analysis
+  parallelization, the biquad/Beverage evidence review, and the UI type and
+  coverage debt pass.

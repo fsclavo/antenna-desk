@@ -15,6 +15,7 @@ from PySide6.QtWidgets import QDialog, QFileDialog, QInputDialog, QMessageBox, Q
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.projects.project import Project
+from antennadesk.domain.simulation.solver import SolverMetadata
 from antennadesk.persistence.json_repository import JsonProjectRepository
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.i18n import Language, Translator
@@ -367,6 +368,67 @@ def test_maybe_save_changes_handles_the_three_answers(
 
     assert window._maybe_save_changes() is expected
     assert len(calls) == save_calls
+
+
+def test_locate_solver_uses_the_selected_executable(
+    window: MainWindow,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    executable = tmp_path / "nec2c"
+    executable.write_text("", encoding="utf-8")
+
+    class FakeNec2cSolver:
+        def __init__(self, path: Path) -> None:
+            self.path = path
+
+        def version(self) -> SolverMetadata:
+            return SolverMetadata(name="fake", version="1.0", executable=str(self.path))
+
+    monkeypatch.setattr(main_window_module, "Nec2cSolver", FakeNec2cSolver)
+    monkeypatch.setattr(
+        QFileDialog,
+        "getOpenFileName",
+        lambda *args, **kwargs: (str(executable), ""),
+    )
+
+    window.locate_solver()
+
+    assert isinstance(window._solver, FakeNec2cSolver)
+    assert window._solver.path == executable
+    assert "fake" in window._solver_label.text()
+
+
+def test_locate_solver_reports_an_invalid_executable(
+    window: MainWindow,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    executable = tmp_path / "broken-nec2c"
+    executable.write_text("", encoding="utf-8")
+    original = window._solver
+
+    class FailingNec2cSolver:
+        def __init__(self, path: Path) -> None:
+            self.path = path
+
+        def version(self) -> SolverMetadata:
+            raise RuntimeError("not executable")
+
+    errors: list[str] = []
+    monkeypatch.setattr(main_window_module, "Nec2cSolver", FailingNec2cSolver)
+    monkeypatch.setattr(window, "_show_error", errors.append)
+    monkeypatch.setattr(
+        QFileDialog,
+        "getOpenFileName",
+        lambda *args, **kwargs: (str(executable), ""),
+    )
+
+    window.locate_solver()
+
+    assert window._solver is original
+    assert len(errors) == 1
+    assert "not executable" in errors[0]
 
 
 def test_editing_form_marks_project_dirty(window: MainWindow) -> None:
