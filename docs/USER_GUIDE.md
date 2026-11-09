@@ -120,7 +120,9 @@ selector can exaggerate the height (1x, 1.5x, 2x, 3x) for low horizontal
 antennas. In a small pane the sketch switches to a compact layout with smaller
 labels and margins; detail insets are hidden when there is not enough room, and
 the header reports how many dimensions were hidden. The wire schedule and
-construction sheet carry those values.
+construction sheet carry those values. Every linear dimension is anchored to
+the model: its value matches the distance between its endpoints within 1% or
+5 mm.
 
 The construction sheet includes the rendered construction view and a **wire
 schedule**: every canonical wire with its start and end coordinates, length,

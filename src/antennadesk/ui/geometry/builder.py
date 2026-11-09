@@ -538,7 +538,7 @@ def _add_single_wire_dimensions(
             translator,
             offset_side,
         )
-    else:
+    elif abs(wire.end.z_m - wire.start.z_m) < 1e-9:
         feed_point = factory.project(_wire_point(feed_wire, feed_ratio))
         if feed_ratio > 1e-6 and feed_ratio < 1.0 - 1e-6:
             feed_offset = feed_wire.length_m * feed_ratio

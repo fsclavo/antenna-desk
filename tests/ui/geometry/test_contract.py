@@ -8,6 +8,7 @@ import hashlib
 import json
 import math
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -681,6 +682,44 @@ def test_family_scene_preserves_wires_and_positive_dimensions(
         assert angular.center.distance_to(angular.second) > 0.0
     for expected in case.summary_parts:
         assert expected in scene.summary
+
+
+_DIMENSION_VALUE = re.compile(r"(-?\d+(?:\.\d+)?)\s*(m|mm|cm|ft|in)?")
+_UNIT_TO_METERS = {
+    None: 1.0,
+    "m": 1.0,
+    "mm": 0.001,
+    "cm": 0.01,
+    "ft": 0.3048,
+    "in": 0.0254,
+}
+
+
+def _dimension_value_m(text: str) -> float | None:
+    match = _DIMENSION_VALUE.search(text)
+    if match is None:
+        return None
+    return float(match.group(1)) * _UNIT_TO_METERS[match.group(2)]
+
+
+@pytest.mark.parametrize("case", list(CASES), ids=lambda case: case.name)
+@pytest.mark.parametrize("mode", [GeometryViewMode.ELEVATION, GeometryViewMode.PLAN])
+def test_dimension_text_matches_its_anchor_distance(
+    case: FamilyCase,
+    mode: GeometryViewMode,
+) -> None:
+    scene = _scene(case, mode)
+
+    for dimension in scene.dimensions:
+        value_m = _dimension_value_m(dimension.text)
+        if value_m is None:
+            continue
+        anchor_m = dimension.start.distance_to(dimension.end)
+        tolerance = max(0.005, abs(value_m) * 0.01)
+        assert abs(value_m - anchor_m) <= tolerance, (
+            f"{case.name}:{mode.value} dimension {dimension.text!r} "
+            f"does not match its {anchor_m:.4f} m anchor"
+        )
 
 
 @pytest.mark.parametrize("case", list(CASES), ids=lambda case: case.name)

@@ -196,6 +196,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   schedule CSV... The sheet also carries an **Evidence and limitations**
   section with the template's evidence level, source, tolerance, and the
   unmodeled items (frame, boom, balun, trap loss, and so on).
+- Every linear construction dimension now matches the distance between its
+  anchors within 1% or 5 mm; a contract test covers every family in elevation
+  and plan. Sloped custom wires no longer show a 3D feed offset on a projected
+  plan anchor.
 - The geometry sketch now has a **compact layout** for small panes: smaller
   header, margins, offsets, and label font; detail insets are hidden when the
   pane is too small, and the hidden-dimension notice points to the schedule.**.
