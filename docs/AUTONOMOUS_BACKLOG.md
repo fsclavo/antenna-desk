@@ -28,7 +28,7 @@ external service and must not be invented or simulated into existence.
 | ~~A3~~ | ~~Per-source input results for multi-source antennas~~ | M | multi-source model | **Done 2026-11-08:** every frequency stores ideal voltage, current, impedance, amplitude, phase, and power per driven source; the **Sources** tab exposes them; schema 29. |
 | ~~B1~~ | ~~Promote `inverted_l` evidence if a source exists~~ | M | independent source | **Done 2026-11-08:** no source matches the current no-radial bent-wire template; Cebik uses 32 radials, K9LA uses a slanted top plus one radial, and K2AV uses a folded counterpoise. The audit keeps it C and records the sources considered. |
 | ~~B2~~ | ~~Improve the Ringo matching-ring model~~ | M | manufacturer data or measurement | **Reviewed 2026-11-08:** the AR-6 manual confirms the 3.1 m height and 33 cm ring but the real antenna uses a split tuning ring, adjustable tuning rod, and 75 Ω coaxial stub that the template does not model. No published feedpoint R/X table was found; remains C. |
-| B3 | Add independent checks for biquad/double biquad/Beverage/loaded dipole | M–L | source or measurement | At least one numeric metric per family is validated or the limitation stays explicit |
+| ~~B3~~ | ~~Add independent checks for biquad/double biquad/Beverage/loaded dipole~~ | M–L | source or measurement | **Reviewed 2026-11-08:** `biquad` and `beverage` were promoted to B for published starting dimensions only; `double_biquad` and `loaded_dipole` remain C because their published topology or ground model differs. See `docs/EVIDENCE_AUDIT.md`. |
 | B4 | Fan-dipole coupling calibration | M | measurement | A coupled-fan measurement is reproduced; no scalar correction is invented |
 | ~~C1~~ | ~~**Phased verticals / arrays**~~ | XL | multi-source architecture | **Done 2026-11-08:** multi-source model and schema 24, then the 2–4 element phased vertical family with ideal phase/amplitude progression, radial screens, schema 25, editor, scene markers, reports, construction notes, and family optimizer. Evidence remains C pending a traceable reference. |
 | ~~C2~~ | ~~Quad beam / hexbeam~~ | L | C1 lessons optional | **Done 2026-11-08:** quad beam with 2–3 loops plus a single-band hexbeam with published G3TXQ dimensions, schema 26/30, editors, scene contracts, reports, construction notes, and family optimizers. Evidence: quad beam C; hexbeam B on published starting dimensions, with the bent-wire reconstruction and frame limits visible. |
@@ -137,9 +137,9 @@ model and solver contract must land first.
    **Advanced simulation → Solver**.
 4. ~~E4~~ **done 2026-11-08:** overlapping radial screens diagnosed; the
    editor warns and the ideal-source behavior is documented.
-5. ~~B1/B2~~ **reviewed 2026-11-08:** no matching independent source or
-   electrical model; both templates stay C. B3–B4 whenever a source or
-   measurement becomes available.
+5. ~~B1/B2/B3~~ **reviewed 2026-11-08:** Inverted L and Ringo stay C; biquad
+   and Beverage were promoted to B for starting dimensions only. Double biquad
+   and loaded dipole stay C. B4 waits for a coupled-fan measurement.
 6. ~~E2/E3~~ **done 2026-11-08:** optimizer candidates and independent band
    analyses run on bounded worker pools while preserving order, determinism,
    and cancellation. The band benchmark measured 1.3–1.8× speedup with four
@@ -156,4 +156,5 @@ model and solver contract must land first.
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
 - Last commits: multi-source excitation, phased vertical array, quad beam,
   discone, trapped Yagi, per-source results, hexbeam, solver timeout, the
-  phased-radial overlap guardrail, and optimizer parallelization.
+  phased-radial overlap guardrail, optimizer parallelization, and band-analysis
+  parallelization.

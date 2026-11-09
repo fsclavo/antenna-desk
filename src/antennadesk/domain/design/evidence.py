@@ -353,64 +353,72 @@ EVIDENCE: dict[str, EvidenceEntry] = {
     ),
     "biquad": EvidenceEntry(
         template="biquad",
-        level=EvidenceLevel.EXPERIMENTAL,
+        level=EvidenceLevel.PUBLISHED,
         source=(
-            "Quarter-wave loop side and eighth-wave reflector spacing are "
-            "starting heuristics; no independent numerical reference for the "
-            "generated geometry"
+            "Martybugs, 'Biquad Antenna Construction' (after Trevor Marshall), "
+            "2.44 GHz: two square loops with quarter-wave sides (about 31 mm), "
+            "15 mm reflector spacing, and a 123 mm square solid reflector; "
+            "measured 11-12 dBi"
         ),
-        tolerance="Not applicable (structural)",
+        tolerance="2% on loop side; 10% on reflector spacing",
         limitation=(
-            "The model is a wire approximation with shared horizontal rails and "
-            "a rectangular wire reflector. Gain, feedpoint impedance, bandwidth, "
-            "reflector construction, and ground effects are not independently "
-            "validated. Tune or measure the installed antenna."
+            "Only the starting loop side and spacing are reference-backed. The "
+            "model uses a wire-rectangle reflector and shared rails, not the "
+            "published solid reflector, so gain, feedpoint impedance, bandwidth, "
+            "and ground effects are not reproduced. Tune or measure the "
+            "installed antenna."
         ),
     ),
     "double_biquad": EvidenceEntry(
         template="double_biquad",
         level=EvidenceLevel.EXPERIMENTAL,
         source=(
-            "Four-loop extension of the same quarter-wave starting heuristic; no "
-            "independent numerical reference"
+            "Martybugs, 'Double Biquad Antenna', 2.4 GHz: two biquads side by "
+            "side on a 110 x 220 mm solid reflector, about 13-14 dBi; the "
+            "template is a four-loop vertical stack with a wire reflector"
         ),
-        tolerance="Not applicable (structural)",
+        tolerance="Not applicable (structural mismatch)",
         limitation=(
-            "The extra loop pair changes the current distribution and feed "
-            "impedance; neither is independently validated. Use it as a "
-            "starting point and verify with simulation or measurement."
+            "The published double biquad is a side-by-side pair on a solid "
+            "reflector, while the template stacks four loops vertically around "
+            "shared rails with a wire reflector. The different topology changes "
+            "the current distribution and feed impedance, so the published gain "
+            "and dimensions are not a direct reference. Keep experimental."
         ),
     ),
     "beverage": EvidenceEntry(
         template="beverage",
-        level=EvidenceLevel.EXPERIMENTAL,
+        level=EvidenceLevel.PUBLISHED,
         source=(
-            "One-wavelength horizontal wire with a resistive termination to "
-            "ground; the starting length and 500 ohm termination are heuristics, "
-            "not an independent receiving-performance reference"
+            "W. Silver, N0AX, and F. Donovan, W3LPL, 'The Beverage Antenna, 100 "
+            "Years Later', QST, November 2021, pp. 55-57: a one-wavelength "
+            "starting length, 500 ohm termination, and 6-10 ft typical height"
         ),
-        tolerance="Not applicable (structural)",
+        tolerance="1% on the one-wavelength starting length; 500 ohm nominal termination",
         limitation=(
-            "The termination is a short vertical wire with a series resistor, not "
-            "a complete ground system. Gain is low and the pattern, termination "
-            "efficiency, ground, and feed line are not independently validated. "
-            "Use relative simulations and a measurement."
+            "Only the starting length, termination, and height rule are "
+            "reference-backed. The termination is a short vertical wire with a "
+            "series resistor, not a complete ground system. Gain, pattern, "
+            "termination efficiency, ground conductivity, and feed line are not "
+            "independently validated."
         ),
     ),
     "loaded_dipole": EvidenceEntry(
         template="loaded_dipole",
         level=EvidenceLevel.EXPERIMENTAL,
         source=(
-            "Symmetric series R-L loading coils or open links on a center-fed "
-            "dipole; no independent numerical reference for the generated "
-            "portable geometry"
+            "R. Hiller, W5RH, 'Designing a Coil-Loaded (short) Dipole', BVARC, "
+            "3.91 MHz: 62 ft total, coils about 50% out each side, 38.6 uH "
+            "each; EZNEC feed resistance 8/21/25 ohm at 25/35/50 ft"
         ),
-        tolerance="Not applicable (structural)",
+        tolerance="Not applicable (ground model unspecified)",
         limitation=(
-            "The coil is an ideal series R-L load. Core loss, self-capacitance, "
-            "link contact resistance, and the portable installation are not "
-            "modeled. The linked state only removes the outer sections; it does "
-            "not model the physical link hardware."
+            "The published example is a specific 3.91 MHz, 62 ft portable "
+            "dipole; its EZNEC ground model is not stated, so the feed "
+            "resistance could not be reproduced reliably. The template's "
+            "generic defaults use a different coil position. Coil Q, core loss, "
+            "self-capacitance, link contact resistance, and the portable "
+            "installation are not modeled. Keep experimental."
         ),
     ),
     "phased_vertical": EvidenceEntry(

@@ -161,6 +161,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The **biquad** and **Beverage** starting dimensions are now classified as
+  published evidence (B) instead of experimental (C). The biquad claim covers
+  the quarter-wave loop side and eighth-wave reflector spacing; the Beverage
+  claim covers the one-wavelength length and 500 Ω nominal termination. The
+  wire-reflector construction, termination ground system, gain, and feedpoint
+  impedance remain explicit limitations. Double biquad and loaded dipole remain
+  experimental after the same review.
 - The default solver timeout is now **180 s** instead of 60 s and can be
   adjusted from 10–3600 s in **Advanced simulation → Solver**. It applies to
   single simulations, band analysis, and family optimizations.

@@ -583,10 +583,13 @@ height, reflector spacing when enabled, and conductor radius jointly. The
 reflector can be disabled in the editor; the spacing is then excluded from the
 optimizer.
 
-The biquad is classified **experimental**: the wire reflector and shared-rail
-current distribution are approximations, and gain, feedpoint impedance, and
-bandwidth are not independently validated. Simulate or measure the installed
-antenna before relying on the result.
+The biquad's quarter-wave loop side and eighth-wave reflector spacing are
+**published starting dimensions** (level B). The model uses a wire-rectangle
+reflector and shared rails rather than the published solid reflector, so gain,
+feedpoint impedance, and bandwidth are not independently validated. Simulate or
+measure the installed antenna before relying on the result. The **double
+biquad** remains experimental because its four-loop vertical stack differs from
+the published side-by-side double-biquad topology.
 
 ## Create a loaded / linked dipole
 
@@ -734,11 +737,12 @@ heuristics. **Optimize...** searches length, height, termination resistance when
 enabled, and conductor radius jointly. Disabling the termination removes the
 resistor and produces a bidirectional receiving pattern.
 
-The Beverage is classified **experimental**. It is a low-gain receiving
-antenna; the termination is not a complete ground system, and the pattern,
-received signal, and termination efficiency are not independently validated.
-Use relative simulations for direction and termination studies, then verify
-with a measurement.
+The one-wavelength starting length, 500 Ω nominal termination, and 6–10 ft
+height guidance are **published starting dimensions** (level B). The Beverage
+is a low-gain receiving antenna; the termination is not a complete ground
+system, and the gain, pattern, received signal, and termination efficiency are
+not independently validated. Use relative simulations for direction and
+termination studies, then verify with a measurement.
 
 ## Create a doublet
 

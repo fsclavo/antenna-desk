@@ -26,6 +26,8 @@ visible limitation.
 | `sloper` | C | B | Chameleon Antenna CHA LEFS Feather manual: 66.5 ft EFHW radiator, 49:1 transformer, far end about 25 ft, feed transformer about 3 ft | 5 % on the radiator length and deployment heights |
 | `doublet` | C | B | VU3DXR, “94-Foot Multi Band Doublet Antenna”: 94 ft total, 41 ft of 450 Ω ladder line, 1:1 current balun, tuner | 5 % on the radiator and feed-line lengths; 450 Ω line |
 | `zepp` | C | B | ARRL Antenna Book, 24th ed., Ch. 20: a true Zepp is an end-fed half-wave radiator matched by a quarter-wave open-wire line; W8JI, “End-fed vertical J-pole and horizontal Zepp”: a 1/4 λ stub feeding a 1/2 λ element with a 1:1 current balun at the tuner | 5 % on the half-wave and quarter-wave starting lengths; spacing and radius set the stub impedance |
+| `biquad` | C | B | Martybugs, “Biquad Antenna Construction” (after Trevor Marshall), 2.44 GHz: quarter-wave sides (about 31 mm), 15 mm reflector spacing, and a 123 mm square solid reflector; measured 11–12 dBi | 2 % on loop side; 10 % on reflector spacing |
+| `beverage` | C | B | W. Silver, N0AX, and F. Donovan, W3LPL, “The Beverage Antenna, 100 Years Later”, *QST*, November 2021, pp. 55–57: one-wavelength starting length, 500 Ω termination, 6–10 ft typical height | 1 % on the one-wavelength starting length; 500 Ω nominal termination |
 
 The corresponding tests are:
 
@@ -43,13 +45,16 @@ The corresponding tests are:
 - `tests/ui/test_doublet_dialog.py::test_doublet_dialog_accepts_the_published_94_foot_design`
 - `tests/unit/domain/test_zepp.py::test_zepp_uses_a_half_wave_radiator_and_quarter_wave_stub`
 - `tests/unit/domain/test_zepp.py::test_zepp_has_an_open_second_stub_conductor`
+- `tests/unit/domain/test_biquad.py::test_biquad_starting_side_is_a_quarter_wave_and_spacing_is_half_the_side`
+- `tests/unit/domain/test_beverage.py::test_beverage_starting_length_is_one_wavelength`
 
 The first three rows were added on 2026-11-04; the J Pole, Slim Jim, end-fed,
 trap-dipole, sloper, doublet, and Zepp rows were added on 2026-11-05. The loaded
 vertical row was added on 2026-11-06 for the published mobile-whip example
-preset. These promotions validate a **starting dimension**, not gain, feedpoint
-impedance, or pattern accuracy. The limitations remain explicit in the evidence
-registry.
+preset. The biquad and Beverage rows were added on 2026-11-08 for starting
+dimensions only. These promotions validate a **starting dimension**, not gain,
+feedpoint impedance, or pattern accuracy. The limitations remain explicit in
+the evidence registry.
 
 ## Remaining level C templates
 
@@ -61,10 +66,8 @@ registry.
 | `random_wire` | Performance depends on the tuner and the installation; the length is deliberately non-resonant. | No universal numeric reference; keep experimental. |
 | `ringo` | The simplified radiator and matching ring are an application preset, not a published commercial model. | Manufacturer data or an independent measurement. |
 | `custom` | User-defined geometry has no fixed reference. | Imports and diagnostics only; no accuracy claim. |
-| `biquad` | Quarter-wave loop side and eighth-wave reflector spacing are starting heuristics; the wire reflector and shared-rail current distribution are not independently validated. | A published biquad design with dimensions, feedpoint impedance, gain, and reflector construction. |
-| `double_biquad` | Four-loop extension of the same heuristic; the extra loop pair changes the current distribution and feed impedance. | A published double-biquad design or measurement with dimensions and feedpoint impedance. |
-| `beverage` | One-wavelength length and 500 Ω termination are heuristics; the termination is a wire stub with a series resistor, not a complete ground system, and receiving gain is not independently validated. | A published Beverage design or measurement with length, height, termination, ground, and received-signal data. |
-| `loaded_dipole` | The coil is an ideal series R-L load; core loss, self-capacitance, link contact resistance, and the portable installation are not modeled. | A published loaded/linked dipole design with coil Q, dimensions, and measured impedance. |
+| `double_biquad` | The published double biquad is a side-by-side pair on a solid reflector; the template is a four-loop vertical stack with a wire reflector, so the topology and feed impedance differ. | A published side-by-side double-biquad measurement that matches the current vertical-stack topology, or a topology change with its own reference. |
+| `loaded_dipole` | The published 3.91 MHz BVARC example gives dimensions and EZNEC feed resistance, but the source does not state its ground model and the template's generic defaults use a different coil position. | A measured loaded/linked dipole with coil Q, ground, and feedpoint impedance for the template's geometry. |
 | `phased_vertical` | The ideal linear phase and amplitude progression, combining network, per-element matching, and radial screen efficiency are not independently validated; impedance and SWR refer only to the primary feed. | A published phased-array design or measurement with element spacing, phase, amplitude, feed network, and measured pattern or impedance. |
 | `quad_beam` | Quarter-wave loop sides and fifth-wave spacing are starting heuristics; boom, spreaders, mast, feed line, and matching network are not modeled, and gain and front-to-back ratio are not independently validated. | A published quad-beam design or measurement with loop dimensions, spacing, feed, and measured gain, front-to-back ratio, or impedance. |
 | `discone` | The cone and disc are radial wire approximations, not solid surfaces; the coax, mast, and feed transition are not modeled, and impedance, bandwidth, and pattern are not independently validated. | A published discone design or measurement with cone/disc dimensions, feed transition, and measured impedance or pattern. |
@@ -110,6 +113,41 @@ feedpoint resistance/reactance table that could be compared directly. The
 manufacturer data therefore improves the documented starting geometry but does
 not validate the electrical model. The template remains **level C** until the
 matching hardware is modeled or a measured impedance is available.
+
+### B3 evidence review: biquad, double biquad, Beverage, loaded dipole (2026-11-08)
+
+Four level C templates were reviewed. Two starting-dimension promotions and two
+keeps:
+
+- **biquad → B (starting dimensions only).** The Martybugs construction article
+  gives quarter-wave sides (about 31 mm at 2.44 GHz), 15 mm reflector spacing,
+  and a measured 11–12 dBi with a 123 mm solid reflector. The template's
+  quarter-wave side and half-side spacing match the published starting
+  dimensions within the stated tolerance. The template's wire-rectangle
+  reflector and shared rails do not reproduce the measured gain or feed
+  impedance; those remain experimental.
+- **Beverage → B (starting dimensions only).** The QST article gives a 1 λ
+  starting length, 500 Ω termination, and 6–10 ft typical height; the template
+  defaults to exactly 1 λ and 500 Ω. Gain and pattern are not promoted because
+  the termination is a wire stub and the article's gain figure depends on a
+  ground model the template does not reproduce.
+- **double_biquad remains C.** The published double biquad is a side-by-side
+  pair on a 110 × 220 mm solid reflector; the template is a four-loop vertical
+  stack on a wire reflector. The topology, current distribution, and feed
+  impedance differ, so the published dimensions and gain are not a direct
+  reference.
+- **loaded_dipole remains C.** The BVARC/W5RH 3.91 MHz design gives 62 ft total,
+  coils about 50% out each side, and 38.6 µH each. The article's EZNEC feed
+  resistance is 8/21/25 Ω at 25/35/50 ft, but it does not state the EZNEC
+  ground model. A NEC2 comparison over free, perfect, and average finite ground
+  did not match all three values unambiguously (perfect ground gave about
+  7.7/13.2/22.0 Ω and average ground about 14.6/18.4/24.5 Ω), so no numeric
+  tolerance was claimed. The template's generic defaults also use a different
+  coil position.
+
+The biquad and Beverage entries validate only the published starting
+dimensions. Their gain, feedpoint impedance, pattern, ground, and construction
+details remain explicit limitations.
 
 ## Follow-up review of the remaining level C templates (2026-11-06)
 
@@ -159,8 +197,8 @@ published reference supplies a traceable numeric metric or measured impedance.
 ## Current summary
 
 - **A, reference-backed:** 5 templates.
-- **B, published/heuristic:** 19 templates.
-- **C, experimental:** 14 templates, all with a documented limitation.
+- **B, published/heuristic:** 21 templates.
+- **C, experimental:** 12 templates, all with a documented limitation.
 
 The `half_square` and `bobtail_curtain` templates entered the catalog at level B
 on 2026-11-07 from Cebik's published 7.15 MHz dimensions. They are new

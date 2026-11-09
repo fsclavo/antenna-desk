@@ -124,7 +124,7 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         label_key="catalog.biquad",
         family_key="catalog.family.loop",
         description_key="catalog.biquad.description",
-        evidence_key="catalog.evidence.experimental",
+        evidence_key="catalog.evidence.published",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_DOUBLE_BIQUAD,
@@ -138,7 +138,7 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         label_key="catalog.beverage",
         family_key="catalog.family.wire",
         description_key="catalog.beverage.description",
-        evidence_key="catalog.evidence.experimental",
+        evidence_key="catalog.evidence.published",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_LOADED_DIPOLE,
