@@ -270,7 +270,9 @@ simulation-history compaction.
 Multiband analysis is an application-level batch over the existing single-band
 solver boundary. `AnalyzeBands` runs one `SimulationSpec` per selected band,
 keeps completed results when another band fails or is cancelled, and groups
-them in an immutable `BandAnalysisResult`. The adapter still receives one
+them in an immutable `BandAnalysisResult`. Independent bands may run in a
+bounded worker pool while results and progress stay in selection order; the
+command defaults to the sequential path. The adapter still receives one
 contiguous `FrequencyPlan` at a time, so no NEC deck or parser change is
 required. OCFD and custom designs can carry an optional ideal feed-transformer
 ratio in the same `SimulationSpec` cascade used by end-fed and T2FD designs. Each band run carries a stable `band_id` and shared `batch_id`; the

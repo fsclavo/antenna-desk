@@ -23,6 +23,7 @@ from ...domain.design.band_plan import BandDefault, BandPlan, BandSelection
 from ...domain.simulation.bands import AMATEUR_BANDS, amateur_band_by_id, amateur_band_for
 from ..fonts import scaled_dialog_size
 from ..i18n import Translator
+from ..parallelism import MAX_UI_PARALLEL_WORKERS, default_parallel_workers
 
 PRESET_DEFAULT = "default"
 PRESET_CURRENT = "current"
@@ -68,6 +69,11 @@ class BandAnalysisDialog(QDialog):
             self._preset.addItem(translator.t(f"band.preset.{key}"), key)
         self._preset.currentIndexChanged.connect(self._apply_preset)
 
+        self._workers = QSpinBox(self)
+        self._workers.setRange(1, MAX_UI_PARALLEL_WORKERS)
+        self._workers.setValue(default_parallel_workers())
+        self._workers.setToolTip(translator.t("band.workers_hint"))
+
         self._table = QTableWidget(0, 3, self)
         self._table.setHorizontalHeaderLabels(
             [
@@ -111,6 +117,7 @@ class BandAnalysisDialog(QDialog):
 
         form = QFormLayout()
         form.addRow(translator.t("band.preset"), self._preset)
+        form.addRow(translator.t("band.workers"), self._workers)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
@@ -198,6 +205,9 @@ class BandAnalysisDialog(QDialog):
             if band is not None:
                 selections.append(BandSelection(band, spin.value()))
         return BandPlan(tuple(selections))
+
+    def workers(self) -> int:
+        return self._workers.value()
 
     def _accept(self) -> None:
         if not self.plan():

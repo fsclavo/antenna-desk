@@ -2931,9 +2931,14 @@ class MainWindow(QMainWindow):
         plan = dialog.plan()
         if not plan:
             return
-        self._start_band_analysis(design, plan)
+        self._start_band_analysis(design, plan, dialog.workers())
 
-    def _start_band_analysis(self, design: DesignVariant, plan: BandPlan) -> None:
+    def _start_band_analysis(
+        self,
+        design: DesignVariant,
+        plan: BandPlan,
+        parallel_workers: int = 1,
+    ) -> None:
         if not plan or self._solver is None:
             return
         self._band_plans[design.id] = plan
@@ -3001,6 +3006,7 @@ class MainWindow(QMainWindow):
             design.antenna,
             tuple(requests),
             self._cancel_token,
+            parallel_workers=parallel_workers,
         )
         worker.moveToThread(thread)
         thread.started.connect(worker.run)

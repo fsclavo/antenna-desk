@@ -336,6 +336,9 @@ def test_analyze_bands_runs_the_selected_band_set(
         def plan(self) -> BandPlan:
             return plan
 
+        def workers(self) -> int:
+            return 2
+
     monkeypatch.setattr(main_window_module, "BandAnalysisDialog", FakeBandDialog)
 
     window.analyze_bands()
@@ -386,6 +389,9 @@ def test_band_analysis_respects_the_pattern_frequency_count(
         def plan(self) -> BandPlan:
             return plan
 
+        def workers(self) -> int:
+            return 1
+
     monkeypatch.setattr(main_window_module, "BandAnalysisDialog", FakeBandDialog)
     window._custom_pattern_frequency_mode.setCurrentIndex(
         window._custom_pattern_frequency_mode.findData(9)
@@ -429,6 +435,9 @@ def test_band_analysis_reopens_from_a_saved_project(
 
         def plan(self) -> BandPlan:
             return plan
+
+        def workers(self) -> int:
+            return 1
 
     monkeypatch.setattr(main_window_module, "BandAnalysisDialog", FakeBandDialog)
     window.analyze_bands()

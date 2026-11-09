@@ -1888,6 +1888,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Análisis por bandas",
     },
     "band.preset": {Language.ENGLISH: "Preset", Language.SPANISH: "Preajuste"},
+    "band.workers": {
+        Language.ENGLISH: "Parallel workers",
+        Language.SPANISH: "Workers paralelos",
+    },
+    "band.workers_hint": {
+        Language.ENGLISH: (
+            "Analyze independent bands in parallel. Each worker launches a "
+            "separate solver process; more workers reduce wall time but use more "
+            "CPU and memory. Use 1 for large models or limited memory."
+        ),
+        Language.SPANISH: (
+            "Analizá bandas independientes en paralelo. Cada worker lanza un "
+            "proceso del solver separado; más workers reducen el tiempo pero usan "
+            "más CPU y memoria. Usá 1 para modelos grandes o memoria limitada."
+        ),
+    },
     "band.preset.default": {
         Language.ENGLISH: "Family default",
         Language.SPANISH: "Predeterminado de la familia",

@@ -173,6 +173,15 @@ selector above the result tabs switches bands from any view, and the active band
 name appears in the impedance and SWR chart titles. Completed bands are kept if
 another band fails or the analysis is cancelled.
 
+The dialog also sets **Parallel workers** (1–4, default
+`min(4, max(1, CPU count - 1))`). Only independent bands are parallelized; the
+frequency points and pattern snapshots inside one band still run in order. Each
+worker launches its own solver process, so more workers reduce wall time but use
+more CPU and transient memory. The band order and the **Bands** table remain in
+the selected order. Cancellation is propagated to every running band and keeps
+the results that completed. Set the value to 1 for large models or a
+memory-limited machine.
+
 The global **Simulation pattern** group in **Advanced simulation** controls the
 angular resolution and the pattern-frequency policy. Band analysis applies that
 policy inside every selected band, so **Auto (bands)** uses the band snapshots

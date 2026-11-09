@@ -85,3 +85,17 @@ stays synchronized. Band analysis no longer forces a single snapshot per band:
 it applies the global pattern-frequency policy inside each band, and the batch
 budget uses the resulting counts per band. The global pattern and sweep controls
 were moved into **Advanced simulation**.
+
+## Amendment 2026-11-08 — bounded parallel band batches
+
+`AnalyzeBandsCommand` accepts `parallel_workers` (1–8). The default remains 1
+and preserves the sequential decision above. With more workers, independent
+bands run in bounded batches through a thread pool; results and progress are
+recorded in selection order, and cancellation is propagated to every running
+solver process. Completed bands from a running batch are retained, so a
+cancelled parallel batch may contain more completed bands than the sequential
+path would have reached. The per-band `SimulationSpec`/`RunSimulation`
+boundary, persistence metadata, and partial-result rules are unchanged.
+The benchmark measured 1.3–1.8× wall-time speedup with four workers and about
+14 MiB of additional parent peak RSS; see
+[`MULTIBAND_PERFORMANCE.md`](../MULTIBAND_PERFORMANCE.md).

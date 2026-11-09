@@ -6,7 +6,8 @@
 The benchmark is intentionally representative rather than exhaustive. It uses
 15 sweep points and five pattern frequencies per band at a 5-degree pattern
 step, records the produced runs in a project, and reports wall time, compressed
-project size, and process peak RSS.
+project size, and process peak RSS. Run it once per worker setting to compare
+the sequential and parallel paths in separate processes.
 """
 
 from __future__ import annotations
@@ -59,6 +60,7 @@ DEFAULT_PATTERN_STEP_DEG = 5.0
 
 @dataclass(frozen=True, slots=True)
 class BenchmarkCase:
+    key: str
     name: str
     parameters: AntennaDesignParameters
     band_ids: tuple[str, ...]
@@ -94,12 +96,12 @@ def _cases() -> tuple[BenchmarkCase, ...]:
         apex_height_m=12.0,
     )
     return (
-        BenchmarkCase("OCFD 40 m", oc, bands_3),
-        BenchmarkCase("G5RV", g5rv, bands_3),
-        BenchmarkCase("G5RV", g5rv, bands_5),
-        BenchmarkCase("G5RV", g5rv, bands_8),
-        BenchmarkCase("Fan dipole 40/20/10 m", fan, bands_3),
-        BenchmarkCase("Fan dipole wide", fan, bands_8),
+        BenchmarkCase("ocfd-3", "OCFD 40 m", oc, bands_3),
+        BenchmarkCase("g5rv-3", "G5RV", g5rv, bands_3),
+        BenchmarkCase("g5rv-5", "G5RV", g5rv, bands_5),
+        BenchmarkCase("g5rv-8", "G5RV", g5rv, bands_8),
+        BenchmarkCase("fan-3", "Fan dipole 40/20/10 m", fan, bands_3),
+        BenchmarkCase("fan-8", "Fan dipole wide", fan, bands_8),
     )
 
 
@@ -153,6 +155,7 @@ def _run_case(
     solver: Nec2cSolver,
     repository: JsonProjectRepository,
     case: BenchmarkCase,
+    workers: int,
 ) -> BenchmarkResult:
     plan = _band_plan(case)
     project = CreateDipoleProject().execute(
@@ -172,6 +175,7 @@ def _run_case(
             design_id=design.id,
             model=design.antenna,
             requests=requests,
+            parallel_workers=workers,
         )
     )
     elapsed = time.perf_counter() - started
@@ -225,14 +229,31 @@ def main() -> int:
         default=Path(os.environ["NEC2C"]) if "NEC2C" in os.environ else None,
         help="path to the nec2c executable (or set NEC2C)",
     )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="parallel band workers (1 keeps the sequential path)",
+    )
+    parser.add_argument(
+        "--case",
+        choices=tuple(case.key for case in _cases()),
+        help="run only one benchmark case",
+    )
     args = parser.parse_args()
     if args.nec2c is None:
         parser.error("--nec2c is required (or set the NEC2C environment variable)")
+    if not 1 <= args.workers <= 8:
+        parser.error("--workers must be between 1 and 8")
 
     solver = Nec2cSolver(args.nec2c)
     repository = JsonProjectRepository()
-    results = tuple(_run_case(solver, repository, case) for case in _cases())
+    cases = tuple(case for case in _cases() if args.case is None or case.key == args.case)
+    print(f"Workers: {args.workers}")
+    results = tuple(_run_case(solver, repository, case, args.workers) for case in cases)
     _print_markdown(results)
+    parent_peak = max(result.peak_rss_kib for result in results)
+    print(f"Parent process peak RSS: {parent_peak / 1024:.0f} MiB")
     return 0 if all(set(result.statuses) == {"completed"} for result in results) else 1
 
 

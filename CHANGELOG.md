@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Band analysis can now run independent bands in parallel with **1–4 bounded
+  workers** in the dialog (command 1–8; the sequential path remains the
+  default). Results and progress stay in the selected band order, cancellation
+  is propagated to every running band, and completed bands are kept. A
+  four-worker benchmark measured **1.3–1.8×** speedup with about 14 MiB of
+  additional parent peak RSS; see `docs/MULTIBAND_PERFORMANCE.md`.
 - The family optimizer can now evaluate independent candidates in parallel
   with **1–4 bounded workers** in the dialog (default
   `min(4, max(1, CPU count - 1))`); the command accepts 1–8 and defaults to the

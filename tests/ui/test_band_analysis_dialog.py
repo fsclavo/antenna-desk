@@ -27,6 +27,19 @@ def test_band_dialog_preselects_the_family_default(qtbot: QtBot) -> None:
     assert all(selection.points == 15 for selection in plan.selections)
 
 
+def test_band_dialog_exposes_bounded_parallel_workers(qtbot: QtBot) -> None:
+    default = default_band_plan(OCFDParameters(frequency_hz=7_100_000.0, total_length_m=20.4))
+    dialog = BandAnalysisDialog(
+        Translator(Language.ENGLISH),
+        default,
+        current_frequency_hz=7_100_000.0,
+    )
+    qtbot.addWidget(dialog)
+
+    assert 1 <= dialog.workers() <= 4
+    assert "worker" in dialog._workers.toolTip().lower()
+
+
 def test_band_dialog_current_preset_selects_one_band(qtbot: QtBot) -> None:
     default = default_band_plan(OCFDParameters(frequency_hz=7_100_000.0, total_length_m=20.4))
     dialog = BandAnalysisDialog(

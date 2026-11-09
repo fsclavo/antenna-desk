@@ -31,6 +31,7 @@ class BandAnalysisWorker(QObject):
         model: AntennaModel,
         requests: tuple[BandSimulationRequest, ...],
         cancel_token: CancelToken,
+        parallel_workers: int = 1,
         parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
@@ -39,6 +40,7 @@ class BandAnalysisWorker(QObject):
         self._model = model
         self._requests = requests
         self._cancel_token = cancel_token
+        self._parallel_workers = parallel_workers
 
     @Slot()
     def run(self) -> None:
@@ -49,6 +51,7 @@ class BandAnalysisWorker(QObject):
                     model=self._model,
                     requests=self._requests,
                     cancel_token=self._cancel_token,
+                    parallel_workers=self._parallel_workers,
                     progress_callback=lambda index, total, band: self.progress.emit(
                         index, total, band.name
                     ),

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import threading
 from uuid import uuid4
 
 import pytest
@@ -74,6 +75,18 @@ def _request(band_id: str) -> BandSimulationRequest:
     )
 
 
+class BarrierBandSolver(FakeBandSolver):
+    """Require two solver calls to overlap before returning."""
+
+    def __init__(self, parties: int = 2) -> None:
+        super().__init__()
+        self._barrier = threading.Barrier(parties, timeout=5)
+
+    def run(self, model: object, spec: SimulationSpec, **kwargs: object) -> SimulationResult:
+        self._barrier.wait()
+        return super().run(model, spec, **kwargs)
+
+
 def test_analyze_bands_runs_one_result_per_band() -> None:
     solver = FakeBandSolver()
     progress: list[tuple[int, int, str]] = []
@@ -129,6 +142,116 @@ def test_analyze_bands_stops_after_cancellation() -> None:
     assert len(analysis.bands) == 1
     assert analysis.bands[0].result.status is SimulationStatus.CANCELLED
     assert solver.specs == []
+
+
+def test_analyze_bands_parallel_matches_sequential_results_and_progress() -> None:
+    requests = (_request("40m"), _request("20m"), _request("10m"))
+
+    sequential_progress: list[tuple[int, int, str]] = []
+    sequential = AnalyzeBands(FakeBandSolver()).execute(
+        AnalyzeBandsCommand(
+            design_id=uuid4(),
+            model=_model(),
+            requests=requests,
+            progress_callback=lambda index, total, band: sequential_progress.append(
+                (index, total, band.name)
+            ),
+        )
+    )
+
+    parallel_progress: list[tuple[int, int, str]] = []
+    parallel = AnalyzeBands(FakeBandSolver()).execute(
+        AnalyzeBandsCommand(
+            design_id=uuid4(),
+            model=_model(),
+            requests=requests,
+            parallel_workers=3,
+            progress_callback=lambda index, total, band: parallel_progress.append(
+                (index, total, band.name)
+            ),
+        )
+    )
+
+    assert [(band.band.name, band.result.status) for band in parallel.bands] == [
+        (band.band.name, band.result.status) for band in sequential.bands
+    ]
+    assert parallel.status is SimulationStatus.COMPLETED
+    assert (
+        parallel_progress
+        == sequential_progress
+        == [
+            (1, 3, "40m"),
+            (2, 3, "20m"),
+            (3, 3, "10m"),
+        ]
+    )
+
+
+def test_analyze_bands_parallel_keeps_partial_results_after_an_error() -> None:
+    solver = FakeBandSolver(fail_hz=14_000_000.0)
+    analysis = AnalyzeBands(solver).execute(
+        AnalyzeBandsCommand(
+            design_id=uuid4(),
+            model=_model(),
+            requests=(_request("40m"), _request("20m"), _request("10m")),
+            parallel_workers=2,
+        )
+    )
+
+    assert analysis.status is SimulationStatus.PARTIAL
+    assert [band.band.name for band in analysis.bands] == ["40m", "20m", "10m"]
+    assert analysis.bands[0].result.status is SimulationStatus.COMPLETED
+    assert analysis.bands[1].result.status is SimulationStatus.ERROR
+    assert analysis.bands[2].result.status is SimulationStatus.COMPLETED
+    assert analysis.bands[1].result.diagnostics[0].code == "band.error"
+
+
+def test_analyze_bands_parallel_stops_before_running_after_cancellation() -> None:
+    token = EventCancelToken()
+    token.cancel()
+    solver = FakeBandSolver()
+
+    analysis = AnalyzeBands(solver).execute(
+        AnalyzeBandsCommand(
+            design_id=uuid4(),
+            model=_model(),
+            requests=(_request("40m"), _request("20m")),
+            cancel_token=token,
+            parallel_workers=2,
+        )
+    )
+
+    assert analysis.status is SimulationStatus.CANCELLED
+    assert len(analysis.bands) == 1
+    assert analysis.bands[0].result.status is SimulationStatus.CANCELLED
+    assert solver.specs == []
+
+
+def test_analyze_bands_parallel_runs_independent_bands_concurrently() -> None:
+    solver = BarrierBandSolver(parties=2)
+    analysis = AnalyzeBands(solver).execute(
+        AnalyzeBandsCommand(
+            design_id=uuid4(),
+            model=_model(),
+            requests=(_request("40m"), _request("20m")),
+            parallel_workers=2,
+        )
+    )
+
+    assert analysis.status is SimulationStatus.COMPLETED
+    assert [band.band.name for band in analysis.bands] == ["40m", "20m"]
+    assert len(solver.specs) == 2
+
+
+@pytest.mark.parametrize("workers", [0, 9])
+def test_analyze_bands_rejects_invalid_worker_counts(workers: int) -> None:
+    with pytest.raises(ValueError, match="parallel_workers"):
+        AnalyzeBandsCommand(
+            design_id=uuid4(),
+            model=_model(),
+            requests=(_request("40m"),),
+            parallel_workers=workers,
+        )
 
 
 def test_analyze_bands_requires_a_band() -> None:

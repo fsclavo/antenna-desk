@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 import math
-import os
 
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QCloseEvent
@@ -53,6 +52,7 @@ from ...domain.simulation.spec import SimulationSpec
 from ...reporting.optimizer_csv import write_optimization_csv
 from ..fonts import scaled_dialog_size
 from ..i18n import Translator
+from ..parallelism import MAX_UI_PARALLEL_WORKERS, default_parallel_workers
 from ..units import (
     UnitSystem,
     length_bounds,
@@ -171,8 +171,8 @@ class FamilyOptimizationDialog(QDialog):
         self._seed.setValue(0)
 
         self._workers = QSpinBox(self)
-        self._workers.setRange(1, 4)
-        self._workers.setValue(min(4, max(1, (os.cpu_count() or 1) - 1)))
+        self._workers.setRange(1, MAX_UI_PARALLEL_WORKERS)
+        self._workers.setValue(default_parallel_workers())
         self._workers.setToolTip(translator.t("optimize.workers_hint"))
 
         _minimum_length, maximum_length = length_bounds(unit_system)
