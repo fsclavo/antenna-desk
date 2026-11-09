@@ -42,8 +42,8 @@ frequency sweep. A single action bar above the panel has **Apply design**,
 **Estimate Dimensions...**, and **Optimize...**. **Apply design** saves the
 current form values without simulating; **Simulate** saves them and runs the
 solver. The collapsible **Advanced simulation** section at the bottom of the
-panel contains **Simulation sweep**, **Simulation pattern**, and **Band
-analysis**. The sweep field shows the template's effective range and is read-only
+panel contains **Solver**, **Simulation sweep**, **Simulation pattern**, and
+**Band analysis**. The sweep field shows the template's effective range and is read-only
 until **Custom** is selected.
 
 For a frequency-first start, select a template first and then press **Estimate
@@ -971,6 +971,14 @@ the palette changes.
 
 SWR is computed with the reference impedance in the design panel (default
 50 Ω). A low SWR does not prove high efficiency or a useful pattern.
+
+The **Solver** group sets the **analysis timeout** for one solver run, in
+seconds. The default is 180 s and the accepted range is 10–3600 s. The value
+applies to single simulations, band analysis, and family optimizations. Raise it
+for large arrays or dense sweeps; lower it when you want a faster failure on a
+stuck solver. A timeout does not fix invalid geometry or a negative-resistance
+result, so check the diagnostics after a large run. The cancel action remains
+available while the solver is running.
 
 The **Simulation sweep** group controls the impedance/SWR frequency plan. In
 **Auto (template)** mode the fields show the effective template range and use

@@ -35,7 +35,7 @@ external service and must not be invented or simulated into existence.
 | C3 | Log-periodic | L | transposed feed-line model | **Blocked 2026-11-08:** independent ideal voltage sources with alternating polarity produced a negative primary-feed resistance in NEC2C. A real transposed boom feed line must be modeled before this family can ship; do not approximate it with independent sources. |
 | ~~C4~~ | ~~Discone~~ | L | none | **Done 2026-11-08:** radial-wire cone and disc with apex feed gap, schema 27, editor, scene, reports, construction notes, and optimizer. Evidence stays C because the wire approximation and feed transition are not validated. |
 | ~~C5~~ | ~~Trapped / multiband Yagi~~ | L | trap model reuse | **Done 2026-11-08:** two-band trapped Yagi with ideal parallel LC trap pairs on each element, schema 28, editor, scene, reports, construction notes, and optimizer. Evidence stays C because trap loss and boom mounting are not modeled. |
-| E1 | Raise the simulation timeout default to 180 s and expose an override | S | none | `SimulationSpec.timeout_s` defaults to 180 s, an Advanced/Preferences control can override it, timeout diagnostics report the configured value, and tests cover both paths. |
+| ~~E1~~ | ~~Raise the simulation timeout default to 180 s and expose an override~~ | S | none | **Done 2026-11-08:** `SimulationSpec.timeout_s` defaults to 180 s; **Advanced simulation → Solver** exposes a 10–3600 s override applied to single runs, band analysis, and family optimizations; tests cover the default and override. |
 | E2 | Parallelize independent optimizer evaluations with a bounded worker pool | M–L | E1 | Results remain deterministic and ordered; cancellation stops all workers; per-worker timeout; worker count is capped by CPU and memory; single-solve behavior is unchanged. |
 | E3 | Parallelize band analysis with the same bounded pool | M | E2 | Per-band results, progress, cancellation, and partial results remain unchanged; the benchmark records the measured speedup and memory cost. |
 | E4 | Diagnose high-radial phased-array runtime and numerical validity | S–M | C1 | Record segment count and wall time for 4×36-radial arrays; determine whether negative input resistance or absorbing sources are geometry/ground artifacts; add guardrails or guidance rather than hiding the issue behind a timeout. |
@@ -124,8 +124,8 @@ model and solver contract must land first.
 
 1. ~~A1, A2, A3, and C1~~ (done 2026-11-08).
 2. C2 quad beam and hexbeam (done 2026-11-08).
-3. **E1 first:** raise the timeout and expose an override; it is small and
-   removes false failures on larger arrays.
+3. ~~E1~~ **done 2026-11-08:** timeout raised to 180 s and exposed in
+   **Advanced simulation → Solver**.
 4. **E4 next:** diagnose the 4×36-radial phased-array result before tuning
    performance around it.
 5. B1–B4 whenever a source or measurement becomes available.

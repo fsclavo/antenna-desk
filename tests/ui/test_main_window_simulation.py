@@ -33,6 +33,19 @@ def test_simulate_updates_results(window: MainWindow, qtbot: QtBot) -> None:
     window._dirty = False
 
 
+def test_solver_timeout_defaults_to_180_and_accepts_an_override(
+    window: MainWindow,
+) -> None:
+    assert window._solver_timeout.value() == 180
+    assert window._project is not None
+
+    design = window._project.designs[0]
+    assert window._base_simulation_spec(design).timeout_s == 180.0
+
+    window._solver_timeout.setValue(240)
+    assert window._base_simulation_spec(design).timeout_s == 240.0
+
+
 def test_simulate_saves_the_form_before_running(
     window: MainWindow,
     qtbot: QtBot,
@@ -338,6 +351,7 @@ def test_analyze_bands_runs_the_selected_band_set(
     assert window._results._bands_tab_index >= 0
     assert window._results._bands_table.rowCount() == 3
     assert all(len(band.result.spec.pattern_frequencies_hz) == 5 for band in analysis.bands)
+    assert all(band.result.spec.timeout_s == 180.0 for band in analysis.bands)
     band_runs = [run for run in window._project.simulation_runs if run.band_id is not None]
     assert {run.band_id for run in band_runs} == {"40m", "20m", "10m"}
     assert len({run.batch_id for run in band_runs}) == 1

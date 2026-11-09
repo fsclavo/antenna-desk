@@ -10,6 +10,7 @@ from main_window_support import use_parameters
 from PySide6.QtWidgets import QDialog, QInputDialog
 from pytestqt.qtbot import QtBot
 
+from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.main_window import MainWindow
 
@@ -207,9 +208,11 @@ def test_optimize_current_design_persists_the_run_summary(
         summary=summary,
     )
 
+    captured: dict[str, object] = {}
+
     class FakeFamilyOptimizationDialog:
         def __init__(self, *args: object, **kwargs: object) -> None:
-            pass
+            captured["base_spec"] = args[4]
 
         def exec(self) -> QDialog.DialogCode:
             return QDialog.DialogCode.Accepted
@@ -227,8 +230,12 @@ def test_optimize_current_design_persists_the_run_summary(
     )
     monkeypatch.setattr(window, "simulate", lambda: None)
 
+    window._solver_timeout.setValue(240)
     window.optimize_current_design()
 
+    base_spec = captured["base_spec"]
+    assert isinstance(base_spec, SimulationSpec)
+    assert base_spec.timeout_s == 240.0
     stored = window._project.designs[0].optimization_summary
     assert stored == summary
     assert window._project.designs[0].parameters.total_length_m == pytest.approx(19.5)

@@ -47,6 +47,24 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Advanced simulation",
         Language.SPANISH: "Simulación avanzada",
     },
+    "solver.group_title": {
+        Language.ENGLISH: "Solver",
+        Language.SPANISH: "Solver",
+    },
+    "solver.timeout": {
+        Language.ENGLISH: "Analysis timeout",
+        Language.SPANISH: "Tiempo máximo de análisis",
+    },
+    "solver.timeout_hint": {
+        Language.ENGLISH: (
+            "Maximum wall-clock time for one solver run. Raise it for large "
+            "arrays; the default is 180 s."
+        ),
+        Language.SPANISH: (
+            "Tiempo máximo de una corrida del solver. Aumentalo para arrays "
+            "grandes; el valor por defecto es 180 s."
+        ),
+    },
     "sweep.group_title": {
         Language.ENGLISH: "Simulation sweep",
         Language.SPANISH: "Barrido de simulación",

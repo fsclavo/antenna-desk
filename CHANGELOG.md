@@ -148,6 +148,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The default solver timeout is now **180 s** instead of 60 s and can be
+  adjusted from 10–3600 s in **Advanced simulation → Solver**. It applies to
+  single simulations, band analysis, and family optimizations.
 - The discone now defaults to a heuristic broadband band plan from 0.5x to 1.5x
   its design frequency instead of the current amateur band only. The model and
   its limitations are unchanged.

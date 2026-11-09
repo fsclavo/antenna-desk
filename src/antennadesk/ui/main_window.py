@@ -158,7 +158,7 @@ from ..domain.simulation.segmentation import (
     SegmentationPolicy,
     aligned_policy_for_model,
 )
-from ..domain.simulation.spec import SimulationSpec
+from ..domain.simulation.spec import DEFAULT_TIMEOUT_S, MAX_TIMEOUT_S, SimulationSpec
 from ..importers.mmana import parse_mmana_file
 from ..importers.nec2_deck import parse_nec2_deck
 from ..importers.vna_csv import parse_vna_csv
@@ -873,6 +873,18 @@ class MainWindow(QMainWindow):
         band_layout.addWidget(self._band_plan_label, 1)
         band_layout.addWidget(self._analyze_bands_button)
 
+        self._solver_group = QGroupBox(self)
+        self._solver_timeout_label = QLabel(self._solver_group)
+        self._solver_timeout = QSpinBox(self._solver_group)
+        self._solver_timeout.setRange(10, int(MAX_TIMEOUT_S))
+        self._solver_timeout.setSuffix(" s")
+        self._solver_timeout.setValue(int(DEFAULT_TIMEOUT_S))
+        self._solver_timeout_hint = QLabel(self._solver_group)
+        self._solver_timeout_hint.setWordWrap(True)
+        solver_layout = QFormLayout(self._solver_group)
+        solver_layout.addRow(self._solver_timeout_label, self._solver_timeout)
+        solver_layout.addRow(self._solver_timeout_hint)
+
         self._advanced_toggle = QToolButton(self)
         self._advanced_toggle.setCheckable(True)
         self._advanced_toggle.setChecked(False)
@@ -882,6 +894,7 @@ class MainWindow(QMainWindow):
         self._advanced_body = QWidget(self)
         advanced_layout = QVBoxLayout(self._advanced_body)
         advanced_layout.setContentsMargins(0, 0, 0, 0)
+        advanced_layout.addWidget(self._solver_group)
         advanced_layout.addWidget(self._sweep_group)
         advanced_layout.addWidget(self._pattern_group)
         advanced_layout.addWidget(self._band_group)
@@ -1224,6 +1237,9 @@ class MainWindow(QMainWindow):
         self._custom_generator_edit.setText(self._translator.t("action.edit_generator"))
         self._custom_sweep_group.setTitle(self._translator.t("field.sweep"))
         self._custom_sweep.setText(self._translator.t("field.sweep_enabled"))
+        self._solver_group.setTitle(self._translator.t("solver.group_title"))
+        self._solver_timeout_label.setText(self._translator.t("solver.timeout"))
+        self._solver_timeout_hint.setText(self._translator.t("solver.timeout_hint"))
         self._sweep_group.setTitle(self._translator.t("sweep.group_title"))
         self._sweep_mode_label.setText(self._translator.t("sweep.mode"))
         self._sweep_mode.setItemText(0, self._translator.t("sweep.auto"))
@@ -1534,6 +1550,7 @@ class MainWindow(QMainWindow):
         self._project_name.setEnabled(idle and has_project)
         self._variant_combo.setEnabled(idle and has_designs)
         self._advanced_toggle.setEnabled(idle and has_project)
+        self._solver_group.setEnabled(idle and has_project)
         self._sweep_group.setEnabled(idle and has_project)
         self._toolbar.setVisible(has_project)
 
@@ -2679,6 +2696,12 @@ class MainWindow(QMainWindow):
             self._update_title()
 
     def _base_simulation_spec(self, design: DesignVariant) -> SimulationSpec:
+        return replace(
+            self._family_simulation_spec(design),
+            timeout_s=float(self._solver_timeout.value()),
+        )
+
+    def _family_simulation_spec(self, design: DesignVariant) -> SimulationSpec:
         parameters = design.parameters
         if isinstance(parameters, CustomAntennaParameters):
             return self._custom_simulation_spec(parameters)
@@ -5592,6 +5615,7 @@ class MainWindow(QMainWindow):
             return
         base_spec = replace(
             adapter.simulation_spec(self, design.parameters),
+            timeout_s=float(self._solver_timeout.value()),
             feed_line=self._feed_line,
             matching_network=self._matching_network,
             balun_loss=self._balun_loss,
@@ -5687,6 +5711,7 @@ class MainWindow(QMainWindow):
 
         base_spec = replace(
             base_spec,
+            timeout_s=float(self._solver_timeout.value()),
             feed_line=self._feed_line,
             matching_network=self._matching_network,
             balun_loss=self._balun_loss,
@@ -5768,6 +5793,7 @@ class MainWindow(QMainWindow):
             design.parameters,
             replace(
                 base_spec,
+                timeout_s=float(self._solver_timeout.value()),
                 feed_line=self._feed_line,
                 matching_network=self._matching_network,
                 balun_loss=self._balun_loss,

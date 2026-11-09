@@ -14,6 +14,7 @@ from .far_field import FarFieldRequest
 from .frequency import FrequencyPlan
 from .segmentation import SegmentationPolicy
 
+DEFAULT_TIMEOUT_S = 180.0
 MAX_TIMEOUT_S = 3_600.0
 
 
@@ -32,7 +33,7 @@ class SimulationSpec:
     matching_network: MatchingNetwork | None = None
     balun_loss: BalunLoss | None = None
     feed_transformer_ratio: float = 1.0
-    timeout_s: float = 60.0
+    timeout_s: float = DEFAULT_TIMEOUT_S
 
     def __post_init__(self) -> None:
         ensure_positive(self.reference_impedance_ohm, name="reference_impedance_ohm")
