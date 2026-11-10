@@ -221,12 +221,12 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **31**.
-- Full gate: **2,201 passed, 0 skipped** with `NEC2C` and the optional
+- Full gate: **2,259 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
-- Last commits: the v0.3.1 cross-platform dimension-label release, the
-  nec2c wait fix (E5), shortened loaded EFHW presets (G22), multi-view
-  construction sheet, localized report diagnostics and evidence, translated
-  catalog names, construction-view pass (G1–G18), direct basic-antenna editor,
-  report localization, vector native PDF figures, solver timeout and parallel
-  analysis, the biquad/Beverage evidence review, and the UI type/coverage debt
-  pass.
+- Last commits: the v0.3.1 cross-platform dimension-label release and its
+  coverage restoration, the nec2c wait fix (E5), shortened loaded EFHW presets
+  (G22), multi-view construction sheet, localized report diagnostics and
+  evidence, translated catalog names, construction-view pass (G1–G18), direct
+  basic-antenna editor, report localization, vector native PDF figures, solver
+  timeout and parallel analysis, the biquad/Beverage evidence review, and the
+  UI type/coverage debt pass.

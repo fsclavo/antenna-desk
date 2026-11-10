@@ -694,6 +694,51 @@ def test_v30_migration_adds_endfed_loading_coil_defaults() -> None:
     assert "loading_coil_enabled" not in migrated["project"]["designs"][1]["parameters"]
 
 
+def test_v30_migration_tolerates_a_missing_project() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 30,
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert "project" not in migrated
+
+
+def test_v30_migration_tolerates_non_list_designs() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 30,
+        "project": {"designs": {"not": "a list"}},
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert migrated["project"]["designs"] == {"not": "a list"}
+
+
+def test_v30_migration_tolerates_an_endfed_design_without_parameters() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 30,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "endfed",
+                    "parameters": None,
+                }
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert migrated["project"]["designs"][0]["parameters"] is None
+
+
 def test_v18_migration_introduces_biquad_design_types() -> None:
     document = {
         "format": "antennadesk-project",
