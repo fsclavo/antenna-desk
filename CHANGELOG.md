@@ -176,9 +176,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - The **wire dipole**, **folded dipole**, and **loop** catalog entries now open
   the same full variable editor used after creation instead of a multi-page
   wizard. The editor starts from frequency-aware estimator dimensions, keeps
-  the frequency/height/ground/material defaults, hides the template-change
-  button in the modal flow, and asks for the project name after the template is
-  accepted. Delta and quad loop entries still preselect three or four sides.
+  the frequency/height/ground/material defaults, hides the Family and Template
+  rows (the template is already selected in the catalog), and asks for the
+  project name after the template is accepted. Delta and quad loop entries
+  still preselect three or four sides.
 - Consolidated the planning documents: [`docs/ROADMAP.md`](docs/ROADMAP.md) is
   the product scope and antenna backlog, `docs/AUTONOMOUS_BACKLOG.md` is the
   only active execution queue, and the 2026-11-04 phase plan moved to

@@ -96,7 +96,7 @@ class BasicAntennaDialog(QDialog):
         self._translator = translator
         self._parameters: AntennaDesignParameters | None = None
         self._form = DipoleForm(translator, unit_system, parent=self)
-        self._form.set_change_template_visible(False)
+        self._form.set_template_header_visible(False)
         if parameters is not None:
             self._form.set_parameters(parameters, reset_sweep=True)
         else:
@@ -116,7 +116,7 @@ class BasicAntennaDialog(QDialog):
         else:
             title_key = _TITLE_KEYS[antenna_type]
         self.setWindowTitle(translator.t(title_key))
-        self.resize(*scaled_dialog_size(560, 720))
+        self.resize(*scaled_dialog_size(560, 740))
 
         self._hint = QLabel(translator.t(_DESCRIPTION_KEYS[antenna_type]), self)
         self._hint.setWordWrap(True)

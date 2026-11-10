@@ -271,8 +271,10 @@ frequency-aware starting dimensions:
    preset to **Custom / measured**.
 4. Optional frequency sweep start/stop/points and reference impedance.
 
-Confirm the editor with **OK**, then confirm the project name. The full design
-panel remains available after creation for later changes.
+Confirm the editor with **OK**, then confirm the project name. The modal hides
+the Family and Template rows because the template was already selected in the
+catalog, and it fits the full editor without a scrollbar at the default size.
+The full design panel remains available after creation for later changes.
 
 The soil presets are broad HF starting points adapted from the ARRL/Terman
 ground table. Moisture, frequency, and local geology change the real values, so

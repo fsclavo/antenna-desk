@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from PySide6.QtWidgets import QScrollArea
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.antennas.dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
@@ -42,6 +43,27 @@ def test_wire_dipole_dialog_opens_the_full_editor(qtbot: QtBot) -> None:
     assert parameters.height_m == pytest.approx(8.0)
     assert parameters.ground.kind.value == "finite"
     assert dialog._form._change_template.isHidden()
+
+
+def test_dialog_hides_the_family_and_template_rows_and_fits(
+    qtbot: QtBot,
+) -> None:
+    dialog = BasicAntennaDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        antenna_type=ANTENNA_TYPE_WIRE_DIPOLE,
+        frequency_hz=14_100_000.0,
+    )
+    qtbot.addWidget(dialog)
+    dialog.show()
+    qtbot.wait(10)
+
+    assert dialog._form._family_value.isHidden()
+    assert dialog._form._template_control.isHidden()
+    assert dialog._form._change_template.isHidden()
+    scroll = dialog.findChild(QScrollArea)
+    assert scroll is not None
+    assert scroll.verticalScrollBar().maximum() == 0
 
 
 def test_folded_dipole_dialog_opens_the_full_editor(qtbot: QtBot) -> None:

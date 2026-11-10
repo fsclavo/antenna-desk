@@ -84,8 +84,8 @@ class DipoleForm(QWidget):
         self._template_value = QLabel(self)
         self._change_template = QPushButton(self)
         self._change_template.clicked.connect(self.change_template_requested.emit)
-        template_control = QWidget(self)
-        template_layout = QHBoxLayout(template_control)
+        self._template_control = QWidget(self)
+        template_layout = QHBoxLayout(self._template_control)
         template_layout.setContentsMargins(0, 0, 0, 0)
         template_layout.addWidget(self._template_value, 1)
         template_layout.addWidget(self._change_template)
@@ -162,7 +162,7 @@ class DipoleForm(QWidget):
         form = self._form_layout
         form.addRow(self._label("field.frequency"), self._frequency)
         form.addRow(self._label("field.family"), self._family_value)
-        form.addRow(self._label("field.template"), template_control)
+        form.addRow(self._label("field.template"), self._template_control)
         form.addRow(self._label("field.orientation"), self._orientation)
         form.addRow(self._label("field.length"), self._length)
         form.addRow(self._label("field.spacing"), self._spacing)
@@ -528,9 +528,11 @@ class DipoleForm(QWidget):
         self._update_type_controls()
         self._emit_changed()
 
-    def set_change_template_visible(self, visible: bool) -> None:
-        """Show or hide the template-change button for a modal editor."""
+    def set_template_header_visible(self, visible: bool) -> None:
+        """Show or hide the family and template rows in the form."""
 
+        self._set_row_visible(self._family_value, visible)
+        self._set_row_visible(self._template_control, visible)
         self._change_template.setVisible(visible)
 
     def set_frequency_hz(self, frequency_hz: float) -> None:
