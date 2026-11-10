@@ -7,8 +7,9 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from PySide6.QtCore import QMarginsF, QRectF, Qt
+from PySide6.QtCore import QByteArray, QMarginsF, QRectF, QSize, Qt
 from PySide6.QtGui import QFont, QImage, QPageLayout, QPageSize, QPainter, QPdfWriter
+from PySide6.QtSvg import QSvgRenderer
 
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
@@ -38,6 +39,41 @@ def _wrap(painter: QPainter, text: str, width: float) -> float:
     return rect.height()
 
 
+def _svg_renderer(svg: bytes | None) -> QSvgRenderer | None:
+    if not svg:
+        return None
+    renderer = QSvgRenderer(QByteArray(svg))
+    return renderer if renderer.isValid() else None
+
+
+def _figure_size(image: QImage | None, svg: bytes | None) -> QSize | None:
+    renderer = _svg_renderer(svg)
+    if renderer is not None:
+        size = renderer.defaultSize()
+        if not size.isEmpty():
+            return size
+        box = renderer.viewBoxF()
+        if not box.isEmpty():
+            return QSize(round(box.width()), round(box.height()))
+    if image is not None and not image.isNull():
+        return image.size()
+    return None
+
+
+def _draw_figure(
+    painter: QPainter,
+    rect: QRectF,
+    image: QImage | None,
+    svg: bytes | None,
+) -> None:
+    renderer = _svg_renderer(svg)
+    if renderer is not None:
+        renderer.render(painter, rect)
+        return
+    if image is not None and not image.isNull():
+        painter.drawImage(rect, image)
+
+
 def write_construction_pdf(
     translator: Translator,
     project: Project,
@@ -47,6 +83,8 @@ def write_construction_pdf(
     *,
     figure_image: QImage | None = None,
     auxiliary_image: QImage | None = None,
+    figure_svg: bytes | None = None,
+    auxiliary_svg: bytes | None = None,
     auxiliary_kind: str | None = None,
 ) -> None:
     writer = QPdfWriter(str(path))
@@ -125,54 +163,49 @@ def write_construction_pdf(
     row(translator.t("construction.updated"), project.updated_at.strftime("%Y-%m-%d"))
     y += 8.0
 
-    if figure_image is not None and not figure_image.isNull():
-        section(translator.t("construction.view"))
+    def draw_figure(
+        source_size: QSize,
+        image: QImage | None,
+        svg: bytes | None,
+        max_fraction: float,
+    ) -> None:
+        nonlocal y
         available_width = right - left
-        max_height = writer.height() * 0.55
+        max_height = writer.height() * max_fraction
         scale = min(
-            available_width / max(figure_image.width(), 1),
-            max_height / max(figure_image.height(), 1),
+            available_width / max(source_size.width(), 1),
+            max_height / max(source_size.height(), 1),
         )
-        draw_width = figure_image.width() * scale
-        draw_height = figure_image.height() * scale
+        draw_width = source_size.width() * scale
+        draw_height = source_size.height() * scale
         ensure_space(draw_height + 12.0)
-        painter.drawImage(
+        _draw_figure(
+            painter,
             QRectF(
                 left + (available_width - draw_width) / 2.0,
                 y,
                 draw_width,
                 draw_height,
             ),
-            figure_image,
+            image,
+            svg,
         )
         y += draw_height + 12.0
 
-    if auxiliary_image is not None and not auxiliary_image.isNull():
+    figure_size = _figure_size(figure_image, figure_svg)
+    if figure_size is not None:
+        section(translator.t("construction.view"))
+        draw_figure(figure_size, figure_image, figure_svg, 0.55)
+
+    auxiliary_size = _figure_size(auxiliary_image, auxiliary_svg)
+    if auxiliary_size is not None:
         auxiliary_key = (
             "construction.top_layout"
             if auxiliary_kind == "top"
             else "construction.installation_view"
         )
         section(translator.t(auxiliary_key))
-        available_width = right - left
-        max_height = writer.height() * 0.40
-        scale = min(
-            available_width / max(auxiliary_image.width(), 1),
-            max_height / max(auxiliary_image.height(), 1),
-        )
-        draw_width = auxiliary_image.width() * scale
-        draw_height = auxiliary_image.height() * scale
-        ensure_space(draw_height + 12.0)
-        painter.drawImage(
-            QRectF(
-                left + (available_width - draw_width) / 2.0,
-                y,
-                draw_width,
-                draw_height,
-            ),
-            auxiliary_image,
-        )
-        y += draw_height + 12.0
+        draw_figure(auxiliary_size, auxiliary_image, auxiliary_svg, 0.40)
 
     section(translator.t("construction.dimensions"))
     for label, value in localize_rows(

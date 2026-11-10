@@ -69,7 +69,7 @@ Completed:
 - Construction view and wire schedule: family-aware front/top/auxiliary views,
   dimension-anchor checks, an embedded sheet figure, title block and BOM, wire
   and BOM CSV exports, evidence/limitation rows, and localized HTML/PDF
-  reports.
+  reports with vector construction figures and report charts.
 - Wheel/sdist packaging, packaging CI, application icon, and Linux desktop
   entry.
 - Native Linux AppImage, Debian package, and Windows bundle recipes with

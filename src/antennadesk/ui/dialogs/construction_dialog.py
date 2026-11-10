@@ -57,6 +57,8 @@ class ConstructionDialog(QDialog):
         *,
         figure_image: QImage | None = None,
         auxiliary_image: QImage | None = None,
+        figure_svg: bytes | None = None,
+        auxiliary_svg: bytes | None = None,
         auxiliary_kind: str | None = None,
     ) -> None:
         super().__init__(parent)
@@ -66,6 +68,8 @@ class ConstructionDialog(QDialog):
         self._result = result
         self._figure_image = figure_image
         self._auxiliary_image = auxiliary_image
+        self._figure_svg = figure_svg
+        self._auxiliary_svg = auxiliary_svg
         self._auxiliary_kind = auxiliary_kind
         self._figure_data_uri = _png_data_uri(figure_image) if figure_image else None
         self._auxiliary_data_uri = _png_data_uri(auxiliary_image) if auxiliary_image else None
@@ -181,6 +185,8 @@ class ConstructionDialog(QDialog):
                 path,
                 figure_image=self._figure_image,
                 auxiliary_image=self._auxiliary_image,
+                figure_svg=self._figure_svg,
+                auxiliary_svg=self._auxiliary_svg,
                 auxiliary_kind=self._auxiliary_kind,
             )
         except Exception as exc:

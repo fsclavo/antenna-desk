@@ -7,10 +7,9 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from PySide6.QtCore import QByteArray, QMarginsF, QRectF, Qt
+from PySide6.QtCore import QByteArray, QMarginsF, QRectF, QSize, Qt
 from PySide6.QtGui import (
     QFont,
-    QImage,
     QPageLayout,
     QPageSize,
     QPainter,
@@ -40,20 +39,10 @@ COLOR_B = "#d07b1f"
 COLOR_C = "#2e8b57"
 
 
-def _svg_image(svg: str, width: int = 760, height: int = 260) -> QImage:
-    renderer = QSvgRenderer(QByteArray(svg.encode("utf-8")))
-    image = QImage(width, height, QImage.Format.Format_ARGB32)
-    image.fill("white")
-    painter = QPainter(image)
-    renderer.render(painter)
-    painter.end()
-    return image
-
-
 def _chart_series(
     result: SimulationResult,
     translator: Translator,
-) -> tuple[QImage, QImage]:
+) -> tuple[str, str]:
     x = [frequency.frequency_hz / 1e6 for frequency in result.frequencies]
     resistance = [frequency.impedance_ohm.real for frequency in result.frequencies]
     reactance = [frequency.impedance_ohm.imag for frequency in result.frequencies]
@@ -77,7 +66,7 @@ def _chart_series(
         y_label=translator.report("SWR"),
         series=(SvgSeries(translator.report("SWR"), COLOR_C, swr_points),),
     )
-    return _svg_image(impedance), _svg_image(swr)
+    return impedance, swr
 
 
 def _band_summary_rows(
@@ -212,11 +201,15 @@ def write_report_pdf(
         painter.drawText(QRectF(left, y, content_width, height), Qt.TextFlag.TextWordWrap, text)
         y += height + 6.0
 
-    def chart(image: QImage) -> None:
+    def chart(svg: str) -> None:
         nonlocal y
-        height = content_width * image.height() / image.width()
+        renderer = QSvgRenderer(QByteArray(svg.encode("utf-8")))
+        size = renderer.defaultSize()
+        if size.isEmpty():
+            size = QSize(760, 260)
+        height = content_width * size.height() / size.width()
         ensure(height + 12.0)
-        painter.drawImage(QRectF(left, y, content_width, height), image)
+        renderer.render(painter, QRectF(left, y, content_width, height))
         y += height + 12.0
 
     painter.setFont(title_font)
@@ -339,9 +332,9 @@ def write_report_pdf(
         paragraph(translator.t("construction.no_resonance"))
 
     section(translator.t("report.charts"))
-    impedance_image, swr_image = _chart_series(result, translator)
-    chart(impedance_image)
-    chart(swr_image)
+    impedance_svg, swr_svg = _chart_series(result, translator)
+    chart(impedance_svg)
+    chart(swr_svg)
 
     section(translator.t("tab.diagnostics"))
     if result.diagnostics:

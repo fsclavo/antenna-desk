@@ -430,6 +430,19 @@ def test_construction_image_renders_without_changing_the_view(qtbot: QtBot) -> N
     assert (view._mode, view._zoom, view._pan, view._height_exaggeration) == before
 
 
+def test_construction_svg_is_vector_and_preserves_the_view(qtbot: QtBot) -> None:
+    view = _make_view(qtbot)
+    view.set_zoom(2.0)
+    before = (view._mode, view._zoom, view._pan, view._height_exaggeration)
+
+    svg = view.construction_svg(400, 240)
+
+    assert svg.startswith(b"<?xml")
+    assert b"<svg" in svg
+    assert b"polyline" in svg
+    assert (view._mode, view._zoom, view._pan, view._height_exaggeration) == before
+
+
 def test_compact_view_exposes_hidden_dimension_values(qtbot: QtBot) -> None:
     from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 
@@ -476,6 +489,9 @@ def test_auxiliary_image_is_an_installation_elevation_for_top_views(
     assert auxiliary is not None
     assert not auxiliary.isNull()
     assert _non_white_pixels(QPixmap.fromImage(auxiliary)) > 50
+    auxiliary_svg = view.auxiliary_svg(400, 200)
+    assert auxiliary_svg is not None
+    assert b"<svg" in auxiliary_svg
 
     jpole = JPoleParameters(
         frequency_hz=220_000_000.0,

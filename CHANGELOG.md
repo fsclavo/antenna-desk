@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Native PDF construction sheets and simulation reports now keep the
+  construction view, auxiliary view, and simulation charts as **vector
+  graphics** when an SVG source is available. The construction sheet falls
+  back to the raster preview if SVG rendering fails, and the HTML preview still
+  uses PNG. The report charts and construction figures no longer become image
+  XObjects in the PDF.
 - The **construction sheet**, **HTML simulation report**, and native **PDF**
   exports now follow the UI language. Reporting stays Qt-free and accepts an
   optional labeler; the UI passes `Translator.report`. Table headers, title

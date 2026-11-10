@@ -11,6 +11,13 @@ from antennadesk.domain.projects.project import Project
 from antennadesk.ui.construction_pdf import write_construction_pdf
 from antennadesk.ui.i18n import Language, Translator
 
+_SVG = (
+    b'<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200">'
+    b'<rect width="400" height="200" fill="#ffffff"/>'
+    b'<line x1="10" y1="10" x2="390" y2="190" stroke="#000000" stroke-width="2"/>'
+    b"</svg>"
+)
+
 
 def test_construction_sheet_pdf_is_written(
     qtbot: QtBot,
@@ -52,6 +59,30 @@ def test_construction_sheet_pdf_is_written_in_spanish(
     assert len(data) > 1_000
 
 
+def test_construction_sheet_pdf_uses_vector_figures(
+    qtbot: QtBot,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "sheet-vector.pdf"
+
+    write_construction_pdf(
+        Translator(Language.ENGLISH),
+        sample_project,
+        sample_project.designs[0],
+        None,
+        path,
+        figure_svg=_SVG,
+        auxiliary_svg=_SVG,
+        auxiliary_kind="top",
+    )
+
+    data = path.read_bytes()
+    assert data.startswith(b"%PDF")
+    assert len(data) > 1_000
+    assert b"/Subtype /Image" not in data
+
+
 def test_construction_sheet_pdf_embeds_the_figure(
     qtbot: QtBot,
     sample_project: Project,
@@ -76,3 +107,4 @@ def test_construction_sheet_pdf_embeds_the_figure(
     data = path.read_bytes()
     assert data.startswith(b"%PDF")
     assert len(data) > 1_000
+    assert b"/Subtype /Image" in data

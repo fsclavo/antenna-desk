@@ -54,6 +54,26 @@ def test_report_pdf_is_written(
     assert len(data) > 2_000
 
 
+def test_report_pdf_charts_are_vector(
+    qtbot: QtBot,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "vector-report.pdf"
+
+    write_report_pdf(
+        Translator(Language.ENGLISH),
+        sample_project,
+        sample_project.designs[0],
+        _result(),
+        path,
+    )
+
+    data = path.read_bytes()
+    assert data.startswith(b"%PDF")
+    assert b"/Subtype /Image" not in data
+
+
 def test_report_pdf_is_written_in_spanish(
     qtbot: QtBot,
     sample_project: Project,

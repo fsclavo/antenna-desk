@@ -134,7 +134,10 @@ layout adds information, it includes a **Top layout** view instead. The sheet al
 a bill of materials that totals conductor length by material and diameter,
 plus load, transmission-line, and source counts. The construction sheet, HTML
 report, and native PDF exports follow the UI language; technical identifiers,
-wire IDs, units, and project names remain canonical. Use **File → Export → Export
+wire IDs, units, and project names remain canonical. The native PDF keeps the
+construction and auxiliary views as vector figures when the SVG source is
+available and falls back to the raster preview otherwise; the simulation
+report charts are also drawn as vectors. Use **File → Export → Export
 wire schedule CSV...** to save the per-wire schedule as a spreadsheet file, or
 **Export bill of materials CSV...** for the grouped conductor totals.
 The sheet also carries an **Evidence and limitations** section with the

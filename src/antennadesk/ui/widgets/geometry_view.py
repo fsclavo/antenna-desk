@@ -11,9 +11,22 @@ be exported or tested without a GUI.
 from __future__ import annotations
 
 import math
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
-from PySide6.QtCore import QEvent, QPointF, QRect, QRectF, QSize, Qt, Signal
+from PySide6.QtCore import (
+    QBuffer,
+    QByteArray,
+    QEvent,
+    QIODevice,
+    QPointF,
+    QRect,
+    QRectF,
+    QSize,
+    Qt,
+    Signal,
+)
 from PySide6.QtGui import (
     QColor,
     QFont,
@@ -155,14 +168,10 @@ class GeometryView(QWidget):
         if pixmap.isNull() or not pixmap.save(str(path), "PNG"):
             raise OSError(f"could not write geometry image: {path}")
 
-    def _image_for_mode(
-        self,
-        mode: GeometryViewMode,
-        width: int,
-        height: int,
-    ) -> QImage:
-        if self._model is None:
-            raise OSError("no geometry model to export")
+    @contextmanager
+    def _rendered_mode(self, mode: GeometryViewMode) -> Iterator[None]:
+        """Temporarily render another mode without changing the live view."""
+
         previous = (
             self._mode,
             self._scene,
@@ -176,18 +185,7 @@ class GeometryView(QWidget):
             self._zoom = 1.0
             self._pan = QPointF(0.0, 0.0)
             self._height_exaggeration = 1.0
-            image = QImage(
-                width,
-                height,
-                QImage.Format.Format_ARGB32_Premultiplied,
-            )
-            image.fill(self._colors.background)
-            painter = QPainter(image)
-            try:
-                self._render(painter, QRectF(0.0, 0.0, float(width), float(height)))
-            finally:
-                painter.end()
-            return image
+            yield
         finally:
             (
                 self._mode,
@@ -197,10 +195,70 @@ class GeometryView(QWidget):
                 self._height_exaggeration,
             ) = previous
 
+    def _image_for_mode(
+        self,
+        mode: GeometryViewMode,
+        width: int,
+        height: int,
+    ) -> QImage:
+        if self._model is None:
+            raise OSError("no geometry model to export")
+        image = QImage(
+            width,
+            height,
+            QImage.Format.Format_ARGB32_Premultiplied,
+        )
+        image.fill(self._colors.background)
+        with self._rendered_mode(mode):
+            painter = QPainter(image)
+            try:
+                self._render(painter, QRectF(0.0, 0.0, float(width), float(height)))
+            finally:
+                painter.end()
+        return image
+
+    def _svg_for_mode(
+        self,
+        mode: GeometryViewMode,
+        width: int,
+        height: int,
+    ) -> bytes:
+        if self._model is None:
+            raise OSError("no geometry model to export")
+        data = QByteArray()
+        buffer = QBuffer(data)
+        if not buffer.open(QIODevice.OpenModeFlag.WriteOnly):
+            raise OSError("could not open the geometry SVG buffer")
+        generator = QSvgGenerator()
+        generator.setOutputDevice(buffer)
+        generator.setSize(QSize(width, height))
+        generator.setViewBox(QRect(0, 0, width, height))
+        generator.setTitle(self._display_name or "")
+        generator.setDescription(self._translator.t("panel.geometry"))
+        try:
+            with self._rendered_mode(mode):
+                painter = QPainter(generator)
+                try:
+                    painter.fillRect(
+                        QRectF(0.0, 0.0, float(width), float(height)),
+                        self._colors.background,
+                    )
+                    self._render(painter, QRectF(0.0, 0.0, float(width), float(height)))
+                finally:
+                    painter.end()
+        finally:
+            buffer.close()
+        return bytes(data.data())
+
     def construction_image(self, width: int = 1200, height: int = 650) -> QImage:
         """Render the construction view to an image for a construction sheet."""
 
         return self._image_for_mode(GeometryViewMode.CONSTRUCTION, width, height)
+
+    def construction_svg(self, width: int = 1200, height: int = 650) -> bytes:
+        """Render the construction view as a vector SVG document."""
+
+        return self._svg_for_mode(GeometryViewMode.CONSTRUCTION, width, height)
 
     def auxiliary_view_kind(self) -> str | None:
         """Return ``installation``, ``top``, or ``None`` for the sheet."""
@@ -223,6 +281,15 @@ class GeometryView(QWidget):
             return None
         mode = GeometryViewMode.ELEVATION if kind == "installation" else GeometryViewMode.PLAN
         return self._image_for_mode(mode, width, height)
+
+    def auxiliary_svg(self, width: int = 1200, height: int = 400) -> bytes | None:
+        """Render the auxiliary view as a vector SVG document."""
+
+        kind = self.auxiliary_view_kind()
+        if kind is None:
+            return None
+        mode = GeometryViewMode.ELEVATION if kind == "installation" else GeometryViewMode.PLAN
+        return self._svg_for_mode(mode, width, height)
 
     def save_svg(self, path: Path) -> None:
         generator = QSvgGenerator()

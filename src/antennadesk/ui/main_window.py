@@ -6566,6 +6566,12 @@ class MainWindow(QMainWindow):
             figure_image = None
             auxiliary_image = None
             auxiliary_kind = None
+        try:
+            figure_svg = self._geometry.construction_svg()
+            auxiliary_svg = self._geometry.auxiliary_svg()
+        except OSError:
+            figure_svg = None
+            auxiliary_svg = None
         dialog = ConstructionDialog(
             self._translator,
             self._project,
@@ -6574,6 +6580,8 @@ class MainWindow(QMainWindow):
             self,
             figure_image=figure_image,
             auxiliary_image=auxiliary_image,
+            figure_svg=figure_svg,
+            auxiliary_svg=auxiliary_svg,
             auxiliary_kind=auxiliary_kind,
         )
         dialog.exec()
