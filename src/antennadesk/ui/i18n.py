@@ -4539,17 +4539,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: (
             "Published shortened EFHW: 20.35 m lower section, 110 µH loading "
             "coil, 2.39 m top section, 49:1 transformer, and a 100 pF matching "
-            "capacitor. The default is vertical; change the feed/end heights "
-            "for a sloper or horizontal run. The published inverted-L bend, "
-            "matching unit, choke, and ground are not modeled."
+            "capacitor. The default is horizontal at 10 m; change the feed/end "
+            "heights for a sloper or vertical run. The published inverted-L "
+            "bend, matching unit, choke, and ground are not modeled."
         ),
         Language.SPANISH: (
             "EFHW acortada publicada: tramo inferior de 20,35 m, bobina de carga "
             "de 110 µH, tramo superior de 2,39 m, transformador 49:1 y capacitor "
-            "de adaptación de 100 pF. El valor por defecto es vertical; cambiá "
-            "las alturas de alimentación/extremo para un sloper o instalación "
-            "horizontal. El codo de la L invertida, la unidad de adaptación, el "
-            "choke y el suelo no están modelados."
+            "de adaptación de 100 pF. El valor por defecto es horizontal a 10 m; "
+            "cambiá las alturas de alimentación/extremo para un sloper o "
+            "instalación vertical. El codo de la L invertida, la unidad de "
+            "adaptación, el choke y el suelo no están modelados."
         ),
     },
     "endfed.shortened_40_10_hint": {
@@ -4565,12 +4565,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "EFHW acortada publicada: tramo inferior de 10,01 m, bobina de carga "
             "de 23 µH, tramo superior de 1,85 m, transformador 49:1 y capacitor "
-            "de adaptación de 100 pF. El valor por defecto es vertical; cambiá "
-            "las alturas de alimentación/extremo para un sloper o instalación "
-            "horizontal. La unidad de adaptación, el choke, el suelo y la "
-            "geometría de soporte no están modelados. CA4EMT documenta otra "
-            "variante de 40-20-10 (34 µH, tramo superior de 1,6 m, 1:8); este "
-            "preset sigue el esquema de 23 µH/100 pF."
+            "de adaptación de 100 pF. El valor por defecto es horizontal a 10 m; "
+            "cambiá las alturas de alimentación/extremo para un sloper o "
+            "instalación vertical. La unidad de adaptación, el choke, el suelo "
+            "y la geometría de soporte no están modelados. CA4EMT documenta "
+            "otra variante de 40-20-10 (34 µH, tramo superior de 1,6 m, 1:8); "
+            "este preset sigue el esquema de 23 µH/100 pF."
         ),
     },
     "endfed.sloper_evidence": {

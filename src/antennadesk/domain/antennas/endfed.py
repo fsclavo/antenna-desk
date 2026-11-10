@@ -413,7 +413,7 @@ def sloper_parameters(
 
 def shortened_efhw_80_10_parameters(
     *,
-    feed_height_m: float = 0.0,
+    feed_height_m: float = 10.0,
     end_height_m: float | None = None,
     azimuth_deg: float = 0.0,
     wire_radius_m: float = 0.001,
@@ -423,9 +423,10 @@ def shortened_efhw_80_10_parameters(
     """Return the published 80-10 m shortened EFHW with a 110 uH coil.
 
     The source dimensions are 20.35 m from the feed to the coil and 2.39 m
-    after it. The default installation is vertical; set ``feed_height_m`` and
-    ``end_height_m`` for a sloper or horizontal run. The published inverted-L
-    bend and the matching unit are construction notes, not modeled geometry.
+    after it. The default installation is horizontal at 10 m; pass both
+    ``feed_height_m`` and ``end_height_m`` for a sloper or vertical run. The
+    published inverted-L bend and the matching unit are construction notes, not
+    modeled geometry.
     """
 
     length_m = SHORTENED_80_10_LOWER_LENGTH_M + SHORTENED_80_10_TOP_LENGTH_M
@@ -435,7 +436,7 @@ def shortened_efhw_80_10_parameters(
         feed_section_length_m=DEFAULT_FEED_SECTION_LENGTH_M,
         installation_return_length_m=DEFAULT_INSTALLATION_RETURN_LENGTH_M,
         feed_height_m=feed_height_m,
-        end_height_m=length_m if end_height_m is None else end_height_m,
+        end_height_m=feed_height_m if end_height_m is None else end_height_m,
         azimuth_deg=azimuth_deg,
         wire_radius_m=wire_radius_m,
         material=material,
@@ -458,7 +459,7 @@ def shortened_efhw_80_10_parameters(
 
 def shortened_efhw_40_10_parameters(
     *,
-    feed_height_m: float = 0.0,
+    feed_height_m: float = 10.0,
     end_height_m: float | None = None,
     azimuth_deg: float = 0.0,
     wire_radius_m: float = 0.001,
@@ -468,8 +469,9 @@ def shortened_efhw_40_10_parameters(
     """Return the published 40-20-10 m shortened EFHW with a 23 uH coil.
 
     The source schematic is 10.01 m from the feed to the coil and 1.85 m after
-    it. The default installation is vertical; the matching unit and straight
-    wire approximation are documented limitations.
+    it. The default installation is horizontal at 10 m; pass both
+    ``feed_height_m`` and ``end_height_m`` for a sloper or vertical run. The
+    matching unit and straight-wire approximation are documented limitations.
     """
 
     length_m = SHORTENED_40_10_LOWER_LENGTH_M + SHORTENED_40_10_TOP_LENGTH_M
@@ -479,7 +481,7 @@ def shortened_efhw_40_10_parameters(
         feed_section_length_m=DEFAULT_FEED_SECTION_LENGTH_M,
         installation_return_length_m=DEFAULT_INSTALLATION_RETURN_LENGTH_M,
         feed_height_m=feed_height_m,
-        end_height_m=length_m if end_height_m is None else end_height_m,
+        end_height_m=feed_height_m if end_height_m is None else end_height_m,
         azimuth_deg=azimuth_deg,
         wire_radius_m=wire_radius_m,
         material=material,

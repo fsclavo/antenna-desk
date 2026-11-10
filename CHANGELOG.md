@@ -42,6 +42,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   presets. When a segment count fails, the dialog reports the actual error
   diagnostic instead of the first warning.
 
+### Changed
+
+- The shortened EFHW presets now open **horizontally at 10 m** by default,
+  matching the standard End-fed template. Set different feed and end heights
+  for a sloper or vertical installation.
+
 ## [0.3.1] - 2026-11-10
 
 ### Fixed

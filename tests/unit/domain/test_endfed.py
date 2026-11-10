@@ -265,12 +265,14 @@ def test_shortened_efhw_80_10_matches_the_published_geometry() -> None:
 
     assert parameters.preset is EndFedPreset.SHORTENED_80_10
     assert parameters.length_m == pytest.approx(22.74)
+    assert parameters.feed_height_m == pytest.approx(10.0)
+    assert parameters.end_height_m == pytest.approx(10.0)
     assert parameters.loading_coil_offset_m == pytest.approx(20.35)
     assert parameters.loading_coil_inductance_h == pytest.approx(110e-6)
     assert parameters.loading_coil_top_length_m == pytest.approx(2.39)
     assert parameters.transformer_ratio == pytest.approx(49.0)
     assert parameters.managed_load_ids == frozenset({ENDFED_LOADING_COIL_ID})
-    assert len(custom.wires) == 3
+    assert len(custom.wires) == 4
     assert "endfed-installation-return" in {wire.id for wire in custom.wires}
     assert [load.id for load in custom.loads] == [ENDFED_LOADING_COIL_ID]
     assert custom.loads[0].wire_id == "radiator"
@@ -285,6 +287,8 @@ def test_shortened_efhw_40_10_matches_the_published_geometry() -> None:
 
     assert parameters.preset is EndFedPreset.SHORTENED_40_10
     assert parameters.length_m == pytest.approx(11.86)
+    assert parameters.feed_height_m == pytest.approx(10.0)
+    assert parameters.end_height_m == pytest.approx(10.0)
     assert parameters.loading_coil_offset_m == pytest.approx(10.01)
     assert parameters.loading_coil_inductance_h == pytest.approx(23e-6)
     assert parameters.loading_coil_top_length_m == pytest.approx(1.85)

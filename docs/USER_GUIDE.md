@@ -541,9 +541,10 @@ coil:
   wire; 49:1 transformer and a 100 pF matching capacitor. The reference is
   the radioaficion.com / PA0EJH schematic.
 
-Both presets open vertically by default. Change the feed and end heights for a
-sloper or horizontal installation. The coil position, inductance, and optional
-series resistance are editable; the Q is reported when a resistance is entered.
+Both presets open horizontally at 10 m by default. Change the feed and end
+heights for a sloper or vertical installation. The coil position, inductance,
+and optional series resistance are editable; the Q is reported when a resistance
+is entered.
 The shortened presets also use the fixed feed section and the installation-
 return proxy when no real counterpoise is enabled.
 The matching unit, capacitor, common-mode choke, ground, and support geometry
