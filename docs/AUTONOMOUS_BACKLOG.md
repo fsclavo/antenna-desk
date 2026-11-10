@@ -85,9 +85,9 @@ external service and must not be invented or simulated into existence.
 | M3 | Persist the matching-network design target and preload the dialog | S–M | M1 | Add a project-level `MatchingNetworkDesign` record (frequency, load R/X, source impedance, optional origin) and persist it with schema 34 (or the next available migration); clear it when the project network is removed. Preload the dialog with stored values, add **Use current simulation point**, split Design target from Components, fix the L-only label and irrelevant Pi/T fields, and update the hint. Tests cover apply → optimize → reopen, schema round trip, and undo/redo. |
 | M4 | Create a project matching network from an impedance point | S–M | M3 | Add a context menu to the Impedance/SWR table: **Create Project Matching Network...**. Use the raw feed impedance from `source_results` (divide by the transformer ratio) rather than the post-chain `FrequencyResult.impedance_ohm`; pass frequency, load R/X, and the real reference impedance. Warn or disable when raw impedance is unavailable. Confirm replacement of an existing network and warn when the design is an EFHW with internal matching (override). Tests cover raw versus post-chain, active transformer/line/network, cancellation, and preload. |
 | M5 | Matching-network precedence ADR and user documentation | S | M1 | Record the Override policy, scope (all `EndFedParameters` with active internal matching), no-cascade limitation, project-global behavior, and how to restore the internal network. Update `docs/USER_GUIDE.md` and `CHANGELOG.md`; reference the new ADR from the matching-network documentation. |
-| P1 | Shared task-progress widget and state model | S | none | Add a Qt-only `TaskProgressBar` widget with an explicit idle/running/cancelling/completed/cancelled/error state model. It exposes indeterminate and determinate modes, a label, and reset/finish helpers; all text comes from `ui/i18n.py` in English and Spanish. Tests cover state transitions, retranslation, and idle visibility. No domain, solver, or persistence changes. |
-| P2 | Simulation progress feedback | S | P1 | Drive the shared progress bar from `MainWindow.simulate()`: indeterminate while the solver runs, elapsed-time text, and coarse phase labels (preparing model, running NEC-2, processing results). Reset on finish, failure, and cancellation; keep the existing Cancel action. Do not derive a percentage from `timeout_s` or elapsed time. Tests cover start, finish, error, cancel, and status-bar visibility. |
-| P3 | Band-analysis progress bar | S | P1 | Use the existing `BandAnalysisWorker.progress(index, total, band)` signal for a determinate bar (`maximum=total`, `value=index`) and an "Analyzing bands i/n: band" label. Cover both the automatic multi-band Simulate path for fan dipoles and the explicit Analyze Bands action. Tests cover sequential and parallel progress ordering and completion. |
+| ~~P1~~ | ~~Shared task-progress widget and state model~~ | S | none | **Done 2026-11-10:** added `ui/widgets/task_progress.py` with explicit idle/running/cancelling/completed/cancelled/error states, indeterminate and determinate modes, an elapsed-time suffix, translated text keys, and reset/finish helpers. Tests cover state transitions, translation, and idle visibility. No domain, solver, or persistence changes. |
+| ~~P2~~ | ~~Simulation progress feedback~~ | S | P1 | **Done 2026-11-10:** `MainWindow` shows an indeterminate status-bar bar with elapsed time and preparing/running/processing phases from `SimulationWorker.phase`; finish, failure, and cancellation reset it. Tests cover the lifecycle and elapsed text. |
+| ~~P3~~ | ~~Band-analysis progress bar~~ | S | P1 | **Done 2026-11-10:** the existing `BandAnalysisWorker.progress(index, total, band)` signal drives a determinate bar and the `Band i/n: band` label; the status text now stays on "Analyzing bands..." while the analysis runs. Tests cover the shared start path, progress updates, and reset. |
 | P4 | Family optimizer progress bar | S–M | P1 | Forward the existing `OptimizeAntennaCommand.progress(completed, best_score)` callback through `FamilyOptimizationWorker` as a Qt signal and show an estimated determinate bar in `FamilyOptimizationDialog`. The denominator is the evaluation upper bound `(budget.total + 2 * active_variables) * seed_runs`, not the solver-run estimate; label it "estimated", throttle updates to about 10 Hz or 1%, and set 100% on finish even when the optimizer converges early. Show the completed count and best score. Tests cover signal forwarding, monotonic progress, early convergence, cancellation, and no widget access from the worker thread. |
 | P5 | Length optimizer progress bar | S–M | P1 | Add a progress callback to `OptimizeDipoleLengthCommand`/`OptimizeDipoleLength.execute` from the `evaluate` wrapper, forward it through `OptimizationWorker`, and show the bar in `OptimizationDialog`. The estimated denominator is `max_evaluations + 2 * len(sensitivity_offsets_m)`; complete on finish for early convergence and label the estimate. Tests cover count semantics, sensitivity evaluations, cancellation, and dialog state. |
 | P6 | Element and synthesis optimizer progress bars | M | P1, P4, P5 | Extend the pattern to `OptimizeElementsCommand` and `SynthesizeAntennaCommand`, their workers, and their dialogs. Use each command's maximum evaluation budget as the estimated denominator, throttle updates, and complete on finish. Tests cover each dialog's bar and cancellation. |
@@ -266,11 +266,10 @@ model and solver contract must land first.
    meantime.
 2. **H1** is the next non-optional foundation for the tooltip/help queue;
    **H2–H4** follow.
-3. **P1** is the foundation for progress feedback. **P2–P3** deliver the first
-   visible Simulate and band-analysis progress; **P4–P5** add family and
-   length optimizer progress. **P6** extends the pattern to element and
-   synthesis optimization. **P7** is deferred until an ADR and benchmark show
-   a practical need.
+3. **P1–P3 are complete.** **P4–P5** are the next progress-feedback items:
+   family and length optimizer bars. **P6** extends the pattern to element and
+   synthesis optimization. **P7** remains deferred until an ADR and benchmark
+   show a practical need.
 4. **M1** is the matching-network correctness foundation; **M2** makes the
    override visible, **M3** adds the design-target persistence, **M4** adds
    the impedance-point context menu, and **M5** records the decision. Do M1
@@ -314,9 +313,10 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **33**.
-- Full gate: **2,347 passed, 0 skipped** with `NEC2C` and the optional
+- Full gate: **2,358 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
-- Last commits: the v0.3.1 cross-platform dimension-label release and its
+- Last commits: the shared task-progress widget and Simulate/band progress
+  (P1–P3), the v0.3.1 cross-platform dimension-label release and its
   coverage restoration, the nec2c wait fix (E5), shortened loaded EFHW presets
   (G22), the EFHW feed-section/convergence model (G23), the shortened
   horizontal default and convergence-check fix, the fixed loading-coil node

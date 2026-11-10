@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -18,6 +20,162 @@ from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
 from antennadesk.ui.units import UnitSystem
+from antennadesk.ui.widgets.task_progress import TaskProgressState
+
+
+class _BlockingSolver(FakeSolver):
+    """Keep a worker busy until the test releases it."""
+
+    def __init__(self) -> None:
+        self.entered = threading.Event()
+        self.release = threading.Event()
+
+    def run(
+        self,
+        model: object,
+        spec: object,
+        *,
+        progress_callback: object = None,
+        cancel_token: object = None,
+    ) -> object:
+        self.entered.set()
+        self.release.wait(timeout=10.0)
+        return super().run(
+            model,  # type: ignore[arg-type]
+            spec,  # type: ignore[arg-type]
+            progress_callback=progress_callback,  # type: ignore[arg-type]
+            cancel_token=cancel_token,  # type: ignore[arg-type]
+        )
+
+
+class _FailingSolver(FakeSolver):
+    def run(
+        self,
+        model: object,
+        spec: object,
+        *,
+        progress_callback: object = None,
+        cancel_token: object = None,
+    ) -> object:
+        del model, spec, progress_callback, cancel_token
+        raise RuntimeError("boom")
+
+
+def test_simulate_shows_indeterminate_progress_then_resets(window: MainWindow) -> None:
+    solver = _BlockingSolver()
+    window._solver = solver
+    try:
+        window.simulate()
+        assert solver.entered.wait(2.0)
+        wait_for_condition(
+            lambda: window._task_progress.state is TaskProgressState.RUNNING,
+            timeout_ms=2_000,
+        )
+        assert window._task_progress.isHidden() is False
+        assert window._task_progress.is_indeterminate is True
+        wait_for_condition(
+            lambda: "Running NEC-2" in window._task_progress.text,
+            timeout_ms=2_000,
+        )
+        window._progress_started_at = time.monotonic() - 5
+        window._update_progress_elapsed()
+        assert "5 s" in window._task_progress.text
+    finally:
+        solver.release.set()
+    wait_for_condition(
+        lambda: not window._simulating and window._thread is None,
+        timeout_ms=5_000,
+    )
+    assert window._task_progress.isHidden() is True
+    window._dirty = False
+
+
+def test_cancel_simulation_marks_progress_cancelling(window: MainWindow) -> None:
+    solver = _BlockingSolver()
+    window._solver = solver
+    try:
+        window.simulate()
+        assert solver.entered.wait(2.0)
+        wait_for_condition(
+            lambda: window._task_progress.state is TaskProgressState.RUNNING,
+            timeout_ms=2_000,
+        )
+        window.cancel_simulation()
+        assert window._task_progress.state is TaskProgressState.CANCELLING
+        assert window._task_progress.text == "Cancelling..."
+        assert window._progress_timer.isActive() is False
+    finally:
+        solver.release.set()
+    wait_for_condition(
+        lambda: not window._simulating and window._thread is None,
+        timeout_ms=5_000,
+    )
+    assert window._task_progress.isHidden() is True
+    window._dirty = False
+
+
+def test_simulation_failure_resets_progress(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    errors: list[str] = []
+    monkeypatch.setattr(window, "_show_error", errors.append)
+    window._solver = _FailingSolver()
+
+    window.simulate()
+    wait_for_condition(
+        lambda: not window._simulating and window._thread is None,
+        timeout_ms=5_000,
+    )
+
+    assert window._task_progress.isHidden() is True
+    assert errors
+    assert "boom" in errors[-1]
+    window._dirty = False
+
+
+def test_band_analysis_shows_a_determinate_progress_bar(window: MainWindow) -> None:
+    from antennadesk.domain.design.band_plan import BandPlan, BandSelection
+    from antennadesk.domain.simulation.bands import amateur_band_by_id
+
+    bands = [
+        amateur_band_by_id("40m"),
+        amateur_band_by_id("20m"),
+    ]
+    assert all(band is not None for band in bands)
+    plan = BandPlan(tuple(BandSelection(band, points=3) for band in bands if band is not None))
+    assert window._project is not None
+    design = window._project.designs[0]
+    solver = _BlockingSolver()
+    window._solver = solver
+    try:
+        window._start_band_analysis(design, plan)
+        assert window._task_progress.isHidden() is False
+        assert window._task_progress.progress_maximum == 2
+        assert window._task_progress.progress_value == 0
+        assert window._task_progress.state is TaskProgressState.RUNNING
+        assert window._status_label.text() == "Analyzing bands..."
+        assert solver.entered.wait(2.0)
+    finally:
+        solver.release.set()
+    wait_for_condition(
+        lambda: not window._simulating and window._thread is None,
+        timeout_ms=5_000,
+    )
+    assert window._task_progress.isHidden() is True
+    window._dirty = False
+
+
+def test_band_progress_updates_the_bar_text(window: MainWindow) -> None:
+    window._task_progress.begin_determinate(4, "progress.analyzing_bands")
+
+    window._on_band_analysis_progress(2, 4, "20m")
+
+    assert window._task_progress.progress_maximum == 4
+    assert window._task_progress.progress_value == 2
+    assert window._task_progress.text.startswith("Band 2/4: 20m")
+    assert window._task_progress.state is TaskProgressState.RUNNING
+    window._task_progress.reset()
 
 
 def test_simulate_updates_results(window: MainWindow, qtbot: QtBot) -> None:

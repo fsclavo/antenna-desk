@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Simulate and band analysis now show a shared progress bar in the status bar.
+  A single solver run uses an indeterminate bar with elapsed time and phase
+  labels (preparing model, running NEC-2, processing results); a multi-band
+  analysis uses a determinate counter for the selected bands. Cancelling or
+  failing a run resets the bar, and the widget exposes explicit lifecycle
+  states for the optimizer dialogs that will reuse it.
 - End-fed/EFHW designs now include a fixed **feed section** (0.5 m modeling
   partition of the same wire, three segments) and, when no real counterpoise
   is enabled, a short **installation return** (0.10 m proxy for the coax,

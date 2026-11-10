@@ -2005,6 +2005,46 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Dimensiones estimadas aplicadas. Abrí el optimizador de familia para refinarlas cuando esté disponible.",
     },
     "status.cancelling": {Language.ENGLISH: "Cancelling...", Language.SPANISH: "Cancelando..."},
+    "progress.accessible_name": {
+        Language.ENGLISH: "Task progress",
+        Language.SPANISH: "Progreso de la tarea",
+    },
+    "progress.working": {
+        Language.ENGLISH: "Working...",
+        Language.SPANISH: "Trabajando...",
+    },
+    "progress.preparing": {
+        Language.ENGLISH: "Preparing model...",
+        Language.SPANISH: "Preparando modelo...",
+    },
+    "progress.running_solver": {
+        Language.ENGLISH: "Running NEC-2...",
+        Language.SPANISH: "Ejecutando NEC-2...",
+    },
+    "progress.processing": {
+        Language.ENGLISH: "Processing results...",
+        Language.SPANISH: "Procesando resultados...",
+    },
+    "progress.analyzing_bands": {
+        Language.ENGLISH: "Analyzing bands...",
+        Language.SPANISH: "Analizando bandas...",
+    },
+    "progress.with_elapsed": {
+        Language.ENGLISH: "{text} · {seconds} s",
+        Language.SPANISH: "{text} · {seconds} s",
+    },
+    "progress.completed": {
+        Language.ENGLISH: "Completed",
+        Language.SPANISH: "Completado",
+    },
+    "progress.cancelled": {
+        Language.ENGLISH: "Cancelled",
+        Language.SPANISH: "Cancelado",
+    },
+    "progress.failed": {
+        Language.ENGLISH: "Failed",
+        Language.SPANISH: "Fallido",
+    },
     "status.preparing_save": {
         Language.ENGLISH: "Preparing project...",
         Language.SPANISH: "Preparando proyecto...",

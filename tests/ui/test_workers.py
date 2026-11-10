@@ -136,6 +136,26 @@ def test_worker_emits_failure(
     assert failed == ["boom"]
 
 
+def test_simulation_worker_reports_phases(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    del qtbot
+    monkeypatch.setattr(simulation_worker, "RunSimulation", _fake_use_case(result=SENTINEL))
+    worker = simulation_worker.SimulationWorker(
+        object(),
+        object(),
+        object(),
+        object(),
+    )
+    phases: list[str] = []
+    worker.phase.connect(phases.append)
+
+    worker.run()
+
+    assert phases == ["running", "processing"]
+
+
 def test_band_analysis_worker_reports_progress(
     qtbot: QtBot,
     monkeypatch: pytest.MonkeyPatch,

@@ -41,10 +41,16 @@ geometry, height, wire diameter, material, ground, reference impedance, and the
 frequency sweep. A single action bar above the panel has **Apply design**,
 **Estimate Dimensions...**, and **Optimize...**. **Apply design** saves the
 current form values without simulating; **Simulate** saves them and runs the
-solver. The collapsible **Advanced simulation** section at the bottom of the
-panel contains **Solver**, **Simulation sweep**, **Simulation pattern**, and
-**Band analysis**. The sweep field shows the template's effective range and is read-only
-until **Custom** is selected.
+solver. While a simulation runs, the status bar shows an indeterminate progress
+bar with elapsed time and the current phase (preparing model, running NEC-2,
+processing results). A multi-band analysis, including the automatic fan-dipole
+path, uses a determinate counter for the selected bands. **Simulation →
+Cancel** or the toolbar cancel action stops the run; the bar reports the
+cancelling state until the worker stops. The collapsible **Advanced
+simulation** section at the bottom of the panel contains **Solver**,
+**Simulation sweep**, **Simulation pattern**, and **Band analysis**. The sweep
+field shows the template's effective range and is read-only until **Custom** is
+selected.
 
 For a frequency-first start, select a template first and then press **Estimate
 Dimensions...** above the design panel. The dialog refines only the template

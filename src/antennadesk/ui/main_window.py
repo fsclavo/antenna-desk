@@ -4,12 +4,13 @@
 
 from __future__ import annotations
 
+import time
 from dataclasses import replace
 from pathlib import Path
 from typing import Any, cast
 from uuid import UUID, uuid4
 
-from PySide6.QtCore import QEventLoop, Qt, QThread
+from PySide6.QtCore import QEventLoop, Qt, QThread, QTimer
 from PySide6.QtGui import (
     QAction,
     QCloseEvent,
@@ -319,6 +320,7 @@ from .widgets.ringo_form import RingoForm
 from .widgets.scv_form import ScvForm
 from .widgets.start_page import StartPage
 from .widgets.t2fd_form import T2FDForm
+from .widgets.task_progress import TaskProgressBar, TaskProgressState
 from .widgets.transmission_line_doublet_form import TransmissionLineDoubletForm
 from .widgets.trap_dipole_form import TrapDipoleForm
 from .widgets.trap_yagi_form import TrapYagiForm
@@ -393,6 +395,10 @@ class MainWindow(QMainWindow):
         self._thread: QThread | None = None
         self._worker: SimulationWorker | BandAnalysisWorker | None = None
         self._cancel_token: EventCancelToken | None = None
+        self._progress_started_at: float | None = None
+        self._progress_timer = QTimer(self)
+        self._progress_timer.setInterval(1000)
+        self._progress_timer.timeout.connect(self._update_progress_elapsed)
         self._undo_stack = QUndoStack(self)
         self._undo_stack.setUndoLimit(50)
         self._history_restoring = False
@@ -1188,7 +1194,9 @@ class MainWindow(QMainWindow):
 
         self._status_label = QLabel(self)
         self._solver_label = QLabel(self)
+        self._task_progress = TaskProgressBar(self._translator, self)
         self.statusBar().addWidget(self._status_label, 1)
+        self.statusBar().addPermanentWidget(self._task_progress)
         self.statusBar().addPermanentWidget(self._solver_label)
 
     def _on_advanced_toggled(self, expanded: bool) -> None:
@@ -1367,6 +1375,7 @@ class MainWindow(QMainWindow):
         self._geometry.retranslate()
         self._update_hidden_label()
         self._results.retranslate()
+        self._task_progress.retranslate()
         if self._project is not None and self._design_id is not None:
             design = self._project.design_by_id(self._design_id)
             if isinstance(design.parameters, CustomAntennaParameters):
@@ -1468,8 +1477,41 @@ class MainWindow(QMainWindow):
             self._results.set_band_analysis(None)
 
     def _update_status_text(self) -> None:
-        key = "status.simulating" if self._simulating else self._last_status_key
+        running_keys = {"status.simulating", "status.analyzing_bands", "status.cancelling"}
+        key = self._last_status_key
+        if self._simulating and key not in running_keys:
+            key = "status.simulating"
         self._status_label.setText(self._translator.t(key))
+
+    def _start_indeterminate_progress(self, text_key: str) -> None:
+        self._progress_started_at = time.monotonic()
+        self._task_progress.begin_indeterminate(text_key)
+        self._progress_timer.start()
+
+    def _start_determinate_progress(self, maximum: int, text_key: str) -> None:
+        self._progress_started_at = time.monotonic()
+        self._task_progress.begin_determinate(maximum, text_key)
+        self._progress_timer.start()
+
+    def _update_progress_elapsed(self) -> None:
+        if self._progress_started_at is None:
+            return
+        self._task_progress.set_elapsed(int(time.monotonic() - self._progress_started_at))
+
+    def _finish_progress(self) -> None:
+        self._progress_timer.stop()
+        self._progress_started_at = None
+        self._task_progress.reset()
+
+    def _on_simulation_phase(self, phase: str) -> None:
+        if self._task_progress.state is not TaskProgressState.RUNNING:
+            return
+        key = {
+            "running": "progress.running_solver",
+            "processing": "progress.processing",
+        }.get(phase)
+        if key is not None:
+            self._task_progress.set_text_key(key)
 
     def _result_status_key(self, status: SimulationStatus) -> str:
         return {
@@ -2921,6 +2963,7 @@ class MainWindow(QMainWindow):
         self._last_status_key = "status.simulating"
         self._update_actions()
         self._update_status_text()
+        self._start_indeterminate_progress("progress.preparing")
 
         thread = QThread(self)
         worker = SimulationWorker(
@@ -2931,6 +2974,7 @@ class MainWindow(QMainWindow):
         )
         worker.moveToThread(thread)
         thread.started.connect(worker.run)
+        worker.phase.connect(self._on_simulation_phase)
         worker.finished.connect(self._on_simulation_finished)
         worker.failed.connect(self._on_simulation_failed)
         worker.finished.connect(thread.quit)
@@ -3038,6 +3082,7 @@ class MainWindow(QMainWindow):
         self._last_status_key = "status.analyzing_bands"
         self._update_actions()
         self._update_status_text()
+        self._start_determinate_progress(len(requests), "progress.analyzing_bands")
 
         thread = QThread(self)
         worker = BandAnalysisWorker(
@@ -3063,6 +3108,13 @@ class MainWindow(QMainWindow):
         thread.start()
 
     def _on_band_analysis_progress(self, index: int, total: int, band: str) -> None:
+        self._task_progress.set_progress(
+            index,
+            "status.bands_progress",
+            index=index,
+            total=total,
+            band=band,
+        )
         self._status_label.setText(
             self._translator.t(
                 "status.bands_progress",
@@ -3075,6 +3127,7 @@ class MainWindow(QMainWindow):
     def _on_band_analysis_finished(self, analysis: BandAnalysisResult) -> None:
         self._simulating = False
         self._cancel_token = None
+        self._finish_progress()
         self._pending_pattern_diagnostic = None
         design_id = self._band_analysis_design_id or analysis.design_id
         self._band_analysis_design_id = None
@@ -3134,6 +3187,7 @@ class MainWindow(QMainWindow):
     def _on_simulation_finished(self, result: SimulationResult) -> None:
         self._simulating = False
         self._cancel_token = None
+        self._finish_progress()
         if self._pending_pattern_diagnostic is not None:
             result = replace(
                 result,
@@ -3182,6 +3236,7 @@ class MainWindow(QMainWindow):
     def _on_simulation_failed(self, message: str) -> None:
         self._simulating = False
         self._cancel_token = None
+        self._finish_progress()
         self._simulation_design_id = None
         self._band_analysis_design_id = None
         self._pending_pattern_diagnostic = None
@@ -3200,6 +3255,9 @@ class MainWindow(QMainWindow):
         self._cancel_token.cancel()
         self._last_status_key = "status.cancelling"
         self._status_label.setText(self._translator.t("status.cancelling"))
+        self._task_progress.mark_cancelling("status.cancelling")
+        self._progress_timer.stop()
+        self._progress_started_at = None
         self._cancel_action.setEnabled(False)
 
     def _fit_spec_to_budget(self, model: object, spec: SimulationSpec) -> SimulationSpec:

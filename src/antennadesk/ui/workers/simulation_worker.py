@@ -15,6 +15,7 @@ from ...domain.simulation.spec import SimulationSpec
 
 
 class SimulationWorker(QObject):
+    phase = Signal(str)
     finished = Signal(object)
     failed = Signal(str)
 
@@ -34,6 +35,7 @@ class SimulationWorker(QObject):
 
     @Slot()
     def run(self) -> None:
+        self.phase.emit("running")
         try:
             result: SimulationResult = RunSimulation(self._solver).execute(
                 RunSimulationCommand(
@@ -45,4 +47,5 @@ class SimulationWorker(QObject):
         except Exception as exc:
             self.failed.emit(str(exc))
             return
+        self.phase.emit("processing")
         self.finished.emit(result)
