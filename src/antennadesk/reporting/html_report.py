@@ -23,6 +23,7 @@ from .design_summary import (
 from .localization import (
     Labeler,
     identity_labeler,
+    localize_diagnostic,
     localize_html_labels,
     localize_rows,
 )
@@ -112,7 +113,7 @@ def _diagnostics_table(result: SimulationResult, tr: Labeler) -> str:
         "<tr>"
         f"<td>{_escape(tr(diagnostic.severity.value))}</td>"
         f"<td>{_escape(diagnostic.code)}</td>"
-        f"<td>{_escape(diagnostic.message)}</td>"
+        f"<td>{_escape(localize_diagnostic(diagnostic, tr))}</td>"
         "</tr>"
         for diagnostic in result.diagnostics
     )

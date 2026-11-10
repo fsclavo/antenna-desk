@@ -16,6 +16,8 @@ import re
 from collections.abc import Iterable
 from typing import Protocol
 
+from ..domain.common.validation import Diagnostic
+
 
 class Labeler(Protocol):
     """Translate one English report label or template."""
@@ -43,6 +45,21 @@ def localize_rows(
     if labeler is None:
         return tuple(rows)
     return tuple((labeler(label), labeler(value)) for label, value in rows)
+
+
+def localize_diagnostic(diagnostic: Diagnostic, labeler: Labeler | None) -> str:
+    """Return a translated generic diagnostic message when one exists.
+
+    The domain message is the fallback.  Diagnostic translations intentionally
+    describe the class of problem because the domain message may contain values
+    that are not part of the structured diagnostic contract.
+    """
+
+    if labeler is None:
+        return diagnostic.message
+    key = f"diagnostic.{diagnostic.code}"
+    translated = labeler(key)
+    return diagnostic.message if translated == key else translated
 
 
 _LABEL_TAG = re.compile(

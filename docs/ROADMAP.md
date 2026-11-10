@@ -69,7 +69,8 @@ Completed:
 - Construction view and wire schedule: family-aware front/top/auxiliary views,
   dimension-anchor checks, an embedded sheet figure, title block and BOM, wire
   and BOM CSV exports, evidence/limitation rows, and localized HTML/PDF
-  reports with vector construction figures and report charts.
+  reports with vector construction figures and report charts, plus localized
+  diagnostic messages and evidence text.
 - Basic dipole, folded dipole, and loop templates open their full variable
   editor directly; the old multi-page wizard is gone.
 - Wheel/sdist packaging, packaging CI, application icon, and Linux desktop

@@ -77,17 +77,27 @@ def design_provenance_rows(design: DesignVariant) -> tuple[tuple[str, str], ...]
     )
 
 
-def design_evidence_rows(design: DesignVariant) -> tuple[tuple[str, str], ...]:
+def design_evidence_rows(
+    design: DesignVariant,
+    labeler: Labeler | None = None,
+) -> tuple[tuple[str, str], ...]:
     """Return the evidence level, source, tolerance, and limitation."""
 
     entry = EVIDENCE.get(design.antenna_type)
     if entry is None:
         return ()
+    tr = labeler or identity_labeler
+
+    def evidence_text(field: str, text: str) -> str:
+        key = f"evidence.{entry.template}.{field}"
+        translated = tr(key)
+        return text if translated == key else translated
+
     return (
         ("Evidence level", f"{entry.level.value} ({entry.level.name.lower()})"),
-        ("Evidence source", entry.source),
-        ("Evidence tolerance", entry.tolerance),
-        ("Limitation", entry.limitation),
+        ("Evidence source", evidence_text("source", entry.source)),
+        ("Evidence tolerance", evidence_text("tolerance", entry.tolerance)),
+        ("Limitation", evidence_text("limitation", entry.limitation)),
     )
 
 

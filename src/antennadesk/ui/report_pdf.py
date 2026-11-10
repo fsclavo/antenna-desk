@@ -29,7 +29,7 @@ from ..reporting.design_summary import (
     optimization_summary_rows,
     transmission_line_summary_rows,
 )
-from ..reporting.localization import localize_rows
+from ..reporting.localization import localize_diagnostic, localize_rows
 from ..reporting.result_summary import gain_metric_rows
 from ..reporting.svg_chart import SvgSeries, line_chart_svg
 from .i18n import Translator
@@ -348,7 +348,7 @@ def write_report_pdf(
                 [
                     translator.t(f"severity.{diagnostic.severity.value}"),
                     diagnostic.code,
-                    diagnostic.message,
+                    localize_diagnostic(diagnostic, translator.report),
                 ]
                 for diagnostic in result.diagnostics
             ],

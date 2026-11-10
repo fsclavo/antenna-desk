@@ -173,6 +173,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Reports now localize diagnostic messages and the evidence registry's source,
+  tolerance, and limitation text. Diagnostics use the existing
+  `diagnostic.<code>` catalog with an English fallback for unknown codes;
+  evidence text is translated per template and field. Tests enforce coverage of
+  every diagnostic code and every evidence entry.
 - The **wire dipole**, **folded dipole**, and **loop** catalog entries now open
   the same full variable editor used after creation instead of a multi-page
   wizard. The editor starts from frequency-aware estimator dimensions, keeps

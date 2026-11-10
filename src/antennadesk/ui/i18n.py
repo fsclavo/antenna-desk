@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from .evidence_i18n import EVIDENCE_SPANISH
 from .report_i18n import REPORT_SPANISH
 
 
@@ -6532,6 +6533,42 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "The antenna has no wires.",
         Language.SPANISH: "La antena no tiene hilos.",
     },
+    "diagnostic.antenna.load.duplicate_id": {
+        Language.ENGLISH: "Two loads use the same identifier.",
+        Language.SPANISH: "Dos cargas usan el mismo identificador.",
+    },
+    "diagnostic.antenna.load.out_of_range": {
+        Language.ENGLISH: "A load position is outside its wire.",
+        Language.SPANISH: "La posición de una carga está fuera de su hilo.",
+    },
+    "diagnostic.antenna.load.unknown_wire": {
+        Language.ENGLISH: "A load references an unknown wire.",
+        Language.SPANISH: "Una carga referencia un hilo inexistente.",
+    },
+    "diagnostic.antenna.source.duplicate": {
+        Language.ENGLISH: "Two sources use the same wire point.",
+        Language.SPANISH: "Dos fuentes usan el mismo punto del hilo.",
+    },
+    "diagnostic.antenna.source.out_of_range": {
+        Language.ENGLISH: "A source position is outside its wire.",
+        Language.SPANISH: "La posición de una fuente está fuera de su hilo.",
+    },
+    "diagnostic.antenna.source.unknown_wire": {
+        Language.ENGLISH: "A source references an unknown wire.",
+        Language.SPANISH: "Una fuente referencia un hilo inexistente.",
+    },
+    "diagnostic.antenna.transmission_line.duplicate_id": {
+        Language.ENGLISH: "Two transmission lines use the same identifier.",
+        Language.SPANISH: "Dos líneas de transmisión usan el mismo identificador.",
+    },
+    "diagnostic.antenna.transmission_line.out_of_range": {
+        Language.ENGLISH: "A transmission-line endpoint is outside its wire.",
+        Language.SPANISH: "Un extremo de la línea de transmisión está fuera de su hilo.",
+    },
+    "diagnostic.antenna.transmission_line.unknown_wire": {
+        Language.ENGLISH: "A transmission line references an unknown wire.",
+        Language.SPANISH: "Una línea de transmisión referencia un hilo inexistente.",
+    },
     "diagnostic.far_field.below_ground": {
         Language.ENGLISH: "The far-field request goes below ground.",
         Language.SPANISH: "La solicitud de campo lejano llega debajo del suelo.",
@@ -6543,6 +6580,72 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "diagnostic.normalization.impedance_missing": {
         Language.ENGLISH: "The solver output has no impedance data.",
         Language.SPANISH: "La salida del solver no tiene datos de impedancia.",
+    },
+    "diagnostic.normalization.pattern_missing": {
+        Language.ENGLISH: (
+            "One or more far-field snapshots were missing and were interpolated or omitted."
+        ),
+        Language.SPANISH: (
+            "Faltaban una o más instantáneas de campo lejano y se interpolaron u omitieron."
+        ),
+    },
+    "diagnostic.normalization.source_absorbs_power": {
+        Language.ENGLISH: (
+            "One or more ideal sources absorb power; the primary feed remains "
+            "the impedance/SWR reference."
+        ),
+        Language.SPANISH: (
+            "Una o más fuentes ideales absorben potencia; la alimentación "
+            "principal sigue siendo la referencia de impedancia/ROE."
+        ),
+    },
+    "diagnostic.matching_network.applied": {
+        Language.ENGLISH: ("Impedance, SWR, and realized gain include the matching network."),
+        Language.SPANISH: (
+            "La impedancia, la ROE y la ganancia realizada incluyen la red de adaptación."
+        ),
+    },
+    "diagnostic.transformer.applied": {
+        Language.ENGLISH: ("Impedance, SWR, and realized gain include the ideal feed transformer."),
+        Language.SPANISH: (
+            "La impedancia, la ROE y la ganancia realizada incluyen el "
+            "transformador de alimentación ideal."
+        ),
+    },
+    "diagnostic.balun_loss.applied": {
+        Language.ENGLISH: (
+            "Impedance and SWR exclude the matched balun/unun loss; realized gain includes it."
+        ),
+        Language.SPANISH: (
+            "La impedancia y la ROE excluyen la pérdida adaptada del balun/unun; "
+            "la ganancia realizada la incluye."
+        ),
+    },
+    "diagnostic.feed_line.applied": {
+        Language.ENGLISH: ("Impedance, SWR, and realized gain include the feed line."),
+        Language.SPANISH: (
+            "La impedancia, la ROE y la ganancia realizada incluyen la línea de alimentación."
+        ),
+    },
+    "diagnostic.band.cancelled": {
+        Language.ENGLISH: "Band analysis cancelled before this band ran.",
+        Language.SPANISH: "El análisis por banda se canceló antes de ejecutar esta banda.",
+    },
+    "diagnostic.band.error": {
+        Language.ENGLISH: "A band analysis failed.",
+        Language.SPANISH: "Falló un análisis por banda.",
+    },
+    "diagnostic.custom.wire.short": {
+        Language.ENGLISH: "A wire is shorter than 1 cm.",
+        Language.SPANISH: "Un hilo mide menos de 1 cm.",
+    },
+    "diagnostic.custom.wires.cross": {
+        Language.ENGLISH: "Two wires cross.",
+        Language.SPANISH: "Dos hilos se cruzan.",
+    },
+    "diagnostic.custom.wires.overlap": {
+        Language.ENGLISH: "Two wires overlap.",
+        Language.SPANISH: "Dos hilos se superponen.",
     },
     "diagnostic.normalization.negative_resistance": {
         Language.ENGLISH: (
@@ -6846,5 +6949,15 @@ class Translator:
         after translation so each language can reorder them.
         """
 
+        if self._language is Language.SPANISH and text.startswith("diagnostic."):
+            diagnostic = _TRANSLATIONS.get(text, {}).get(self._language)
+            if diagnostic is not None:
+                return diagnostic.format(**values) if values else diagnostic
+        if self._language is Language.SPANISH and text.startswith("evidence."):
+            parts = text.split(".", 2)
+            if len(parts) == 3:
+                translated = EVIDENCE_SPANISH.get(parts[1], {}).get(parts[2])
+                if translated is not None:
+                    return translated.format(**values) if values else translated
         template = text if self._language is Language.ENGLISH else REPORT_SPANISH.get(text, text)
         return template.format(**values) if values else template

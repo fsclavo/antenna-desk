@@ -5,10 +5,14 @@
 from __future__ import annotations
 
 import ast
+import re
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 from string import Formatter
 
+from antennadesk.domain.common.validation import Diagnostic, Severity
+from antennadesk.domain.design.evidence import EVIDENCE
 from antennadesk.domain.projects.project import Project
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.result import (
@@ -25,7 +29,8 @@ from antennadesk.reporting.localization import (
     localize_html_labels,
     localize_rows,
 )
-from antennadesk.ui.i18n import Language, Translator
+from antennadesk.ui.evidence_i18n import EVIDENCE_SPANISH
+from antennadesk.ui.i18n import _TRANSLATIONS, Language, Translator
 from antennadesk.ui.report_i18n import REPORT_SPANISH
 
 REPORTING_ROOT = Path(__file__).resolve().parents[3] / "src" / "antennadesk" / "reporting"
@@ -101,6 +106,40 @@ def test_every_static_report_label_has_a_spanish_translation() -> None:
     assert not missing, missing
 
 
+def test_every_diagnostic_code_has_a_translation() -> None:
+    codes: set[str] = set()
+    for path in REPORTING_ROOT.parent.rglob("*.py"):
+        codes.update(
+            match.group(1)
+            for match in re.finditer(r'code="([^"]+)"', path.read_text(encoding="utf-8"))
+        )
+    missing = sorted(code for code in codes if f"diagnostic.{code}" not in _TRANSLATIONS)
+    assert not missing, missing
+
+
+def test_every_evidence_field_has_a_spanish_translation() -> None:
+    missing: list[str] = []
+    for template in EVIDENCE:
+        translation = EVIDENCE_SPANISH.get(template)
+        if translation is None:
+            missing.append(template)
+            continue
+        for field in ("source", "tolerance", "limitation"):
+            if not translation.get(field, "").strip():
+                missing.append(f"{template}.{field}")
+    assert not missing, missing
+
+
+def test_translator_report_translates_diagnostic_and_evidence_keys() -> None:
+    spanish = Translator(Language.SPANISH)
+    english = Translator(Language.ENGLISH)
+
+    assert spanish.report("diagnostic.solver.timeout") == "El solver agotó el tiempo de espera."
+    assert english.report("diagnostic.solver.timeout") == "diagnostic.solver.timeout"
+    assert "Solo espacio libre" in spanish.report("evidence.wire_dipole.limitation")
+    assert english.report("evidence.wire_dipole.limitation") == "evidence.wire_dipole.limitation"
+
+
 def test_translator_report_translates_and_falls_back() -> None:
     spanish = Translator(Language.SPANISH)
     english = Translator(Language.ENGLISH)
@@ -156,6 +195,8 @@ def test_spanish_construction_sheet_translates_structure_and_notes(
     assert "<th>Longitud total del hilo</th>" in sheet
     assert "Cortá los dos tramos" in sheet
     assert "Recortá y volvé a medir" in sheet
+    assert "Solo espacio libre y los casos de suelo publicados." in sheet
+    assert "Free-space and the published ground cases only." not in sheet
     assert "Wire schedule" not in sheet
     assert "Construction notes" not in sheet
     # User data and canonical identifiers are not translated.
@@ -175,6 +216,55 @@ def test_english_construction_sheet_stays_english(sample_project: Project) -> No
     assert '<html lang="en">' in sheet
     assert "<h2>Wire schedule</h2>" in sheet
     assert "Cut the two legs" in sheet
+
+
+def test_spanish_html_report_translates_diagnostics(
+    sample_project: Project,
+) -> None:
+    result = replace(
+        _result(),
+        diagnostics=(
+            Diagnostic(
+                code="solver.timeout",
+                severity=Severity.ERROR,
+                message="NEC2C timed out after 180 s",
+            ),
+        ),
+    )
+    report = render_html_report(
+        sample_project,
+        sample_project.designs[0],
+        result,
+        labeler=Translator(Language.SPANISH).report,
+        language="es",
+    )
+
+    assert "El solver agotó el tiempo de espera." in report
+    assert "NEC2C timed out after 180 s" not in report
+
+
+def test_unknown_diagnostic_falls_back_to_the_domain_message(
+    sample_project: Project,
+) -> None:
+    result = replace(
+        _result(),
+        diagnostics=(
+            Diagnostic(
+                code="custom.unknown",
+                severity=Severity.WARNING,
+                message="preserve this technical detail",
+            ),
+        ),
+    )
+    report = render_html_report(
+        sample_project,
+        sample_project.designs[0],
+        result,
+        labeler=Translator(Language.SPANISH).report,
+        language="es",
+    )
+
+    assert "preserve this technical detail" in report
 
 
 def test_spanish_html_report_translates_headings_and_headers(

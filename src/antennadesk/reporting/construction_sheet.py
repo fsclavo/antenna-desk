@@ -212,7 +212,7 @@ def render_construction_sheet(
 """
     evidence_rows = "".join(
         f"<tr><th>{_escape(label)}</th><td>{_escape(value)}</td></tr>"
-        for label, value in localize_rows(design_evidence_rows(design), tr)
+        for label, value in localize_rows(design_evidence_rows(design, labeler=tr), tr)
     )
     evidence_section = (
         f"""

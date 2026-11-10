@@ -249,7 +249,10 @@ def write_construction_pdf(
         row(label, value)
     y += 12.0
 
-    evidence_rows = localize_rows(design_evidence_rows(design), translator.report)
+    evidence_rows = localize_rows(
+        design_evidence_rows(design, labeler=translator.report),
+        translator.report,
+    )
     if evidence_rows:
         section(translator.t("construction.evidence"))
         for label, value in evidence_rows:
