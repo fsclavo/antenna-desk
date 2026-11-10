@@ -247,8 +247,8 @@ rectangle. The Loop family includes the generic vertical/horizontal loop plus
 delta-loop, quad-loop, and magnetic-loop presets; the loop editor switches the
 plane with the **Orientation** field. The Vertical family includes the generic vertical radiator,
 the inverted-L, the half square, the bobtail curtain, and the loaded
-vertical / mobile whip preset. The catalog
-shows a short description and evidence level for each type. For every
+vertical / mobile whip preset. The catalog lists each type by name and shows
+its family, description, and evidence level in the detail pane. For every
 template, choose the type first, complete its single editor dialog, and then
 confirm the project name with a suggested name such as “40m Ringo”. The basic
 dipole, folded dipole, and loop templates open the same variable editor used

@@ -255,6 +255,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The antenna catalog now shows each template's translated name instead of the
+  raw `catalog.<type>.description` key. Custom item data uses Qt user roles, so
+  the description no longer overwrites the visible text; the detail pane shows
+  the family, description, and evidence level.
 - The Beverage construction view no longer discards its length dimension: the
   far-end selection now chooses the endpoint farther from the feed.
 - The hexbeam span dimension now anchors to the widest tips, and the drawn

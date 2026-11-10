@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import cast
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -20,6 +21,11 @@ from PySide6.QtWidgets import (
 
 from ..fonts import scaled_dialog_size
 from ..i18n import Translator
+
+KEY_ROLE = int(Qt.ItemDataRole.UserRole)
+DESCRIPTION_ROLE = KEY_ROLE + 1
+EVIDENCE_ROLE = KEY_ROLE + 2
+FAMILY_ROLE = KEY_ROLE + 3
 
 CATALOG_TYPE_WIRE_DIPOLE = "wire_dipole"
 CATALOG_TYPE_FOLDED_DIPOLE = "folded_dipole"
@@ -380,18 +386,17 @@ class AntennaCatalogDialog(QDialog):
         layout.addWidget(self._buttons)
 
         for entry in ENTRIES:
-            item = QListWidgetItem(
-                f"{translator.t(entry.family_key)} · {translator.t(entry.label_key)}"
-            )
-            item.setData(1, entry.key)
-            item.setData(2, entry.description_key)
-            item.setData(3, entry.evidence_key)
+            item = QListWidgetItem(translator.t(entry.label_key))
+            item.setData(KEY_ROLE, entry.key)
+            item.setData(DESCRIPTION_ROLE, entry.description_key)
+            item.setData(EVIDENCE_ROLE, entry.evidence_key)
+            item.setData(FAMILY_ROLE, entry.family_key)
             self._list.addItem(item)
         if self._list.count():
             initial_row = 0
             if initial_key is not None:
                 for row in range(self._list.count()):
-                    if self._list.item(row).data(1) == initial_key:
+                    if self._list.item(row).data(KEY_ROLE) == initial_key:
                         initial_row = row
                         break
             self._list.setCurrentRow(initial_row)
@@ -403,8 +408,9 @@ class AntennaCatalogDialog(QDialog):
             searchable = " ".join(
                 [
                     item.text(),
-                    self._translator.t(str(item.data(2))),
-                    self._translator.t(str(item.data(3))),
+                    self._translator.t(str(item.data(DESCRIPTION_ROLE))),
+                    self._translator.t(str(item.data(EVIDENCE_ROLE))),
+                    self._translator.t(str(item.data(FAMILY_ROLE))),
                 ]
             ).casefold()
             item.setHidden(bool(needle) and needle not in searchable)
@@ -426,14 +432,16 @@ class AntennaCatalogDialog(QDialog):
             self._detail.clear()
             return
         self._detail.setText(
-            f"{self._translator.t(str(current.data(2)))}\n\n"
+            f"{self._translator.t(str(current.data(DESCRIPTION_ROLE)))}\n\n"
+            f"{self._translator.t('field.family')}: "
+            f"{self._translator.t(str(current.data(FAMILY_ROLE)))}\n"
             f"{self._translator.t('catalog.evidence')}: "
-            f"{self._translator.t(str(current.data(3)))}"
+            f"{self._translator.t(str(current.data(EVIDENCE_ROLE)))}"
         )
 
     def selected_key(self) -> str | None:
         item = cast("QListWidgetItem | None", self._list.currentItem())
         if item is None:
             return None
-        value = item.data(1)
+        value = item.data(KEY_ROLE)
         return value if isinstance(value, str) else None
