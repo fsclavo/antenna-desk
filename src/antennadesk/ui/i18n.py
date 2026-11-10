@@ -1342,6 +1342,36 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Nombre del proyecto",
     },
     "field.frequency": {Language.ENGLISH: "Frequency (MHz)", Language.SPANISH: "Frecuencia (MHz)"},
+    "help.field.frequency": {
+        Language.ENGLISH: (
+            "Design frequency in MHz. Changing it reloads the template's suggested "
+            "starting dimensions."
+        ),
+        Language.SPANISH: (
+            "Frecuencia de diseño en MHz. Al cambiarla se recargan las dimensiones "
+            "iniciales sugeridas por la plantilla."
+        ),
+    },
+    "help.field.height": {
+        Language.ENGLISH: (
+            "Wire height above the selected ground model. It is installation context, "
+            "not optimized by default."
+        ),
+        Language.SPANISH: (
+            "Altura del hilo sobre el modelo de suelo elegido. Es contexto de "
+            "instalación y no se optimiza por defecto."
+        ),
+    },
+    "help.wire_dipole.field.height": {
+        Language.ENGLISH: (
+            "Height of the horizontal wire above ground; the feed and ends share this "
+            "default height."
+        ),
+        Language.SPANISH: (
+            "Altura del hilo horizontal sobre el suelo; la alimentación y los extremos "
+            "usan esta altura por defecto."
+        ),
+    },
     "field.fundamental_frequency": {
         Language.ENGLISH: "Fundamental design frequency (MHz)",
         Language.SPANISH: "Frecuencia fundamental de diseño (MHz)",
@@ -7496,6 +7526,16 @@ class Translator:
         if template is None:
             return key
         return template.format(**values)
+
+    def optional(self, key: str) -> str | None:
+        """Return the translated text for ``key``, or ``None`` when absent.
+
+        Unlike :meth:`t`, this never returns the raw key. It is used by
+        optional UI help, where a missing translation must leave the widget
+        without a tooltip instead of showing an internal identifier.
+        """
+
+        return _TRANSLATIONS.get(key, {}).get(self._language)
 
     def report(self, text: str, /, **values: object) -> str:
         """Translate an English report label, template, or value.

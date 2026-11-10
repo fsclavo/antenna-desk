@@ -65,6 +65,13 @@ def test_unknown_key_falls_back_to_the_key() -> None:
     assert Translator(Language.SPANISH).t("missing.key") == "missing.key"
 
 
+def test_optional_returns_none_instead_of_a_raw_key() -> None:
+    translator = Translator(Language.SPANISH)
+
+    assert translator.optional("missing.key") is None
+    assert translator.optional("help.field.frequency") is not None
+
+
 def test_translator_formats_placeholders() -> None:
     text = Translator(Language.ENGLISH).t("app.about", version="1.2.3")
     assert "AntennaDesk 1.2.3" in text

@@ -76,7 +76,7 @@ external service and must not be invented or simulated into existence.
 | ~~E4~~ | ~~Diagnose high-radial phased-array runtime and numerical validity~~ | S–M | C1 | **Done 2026-11-08:** 4×36 quarter-wave radial screens produced 267 wire crossings, 890 segments, 25.3 s, and negative primary resistance. Halving the radial length or using 2 m radials removed the crossings and completed. The editor now warns when `2 × radial length > element spacing`; ideal-source power absorption remains documented separately. |
 | ~~E5~~ | ~~Diagnose low CPU during family optimization~~ | S | none | **Done 2026-11-10:** the nec2c adapter slept 50 ms per solver run even when `nec2c` finished in about 1 ms. It now uses `Popen.wait(timeout=...)`, which returns as soon as the child exits and keeps the interval only for cancellation checks. A 226-evaluation dipole optimization went from 11.8 s to 0.47 s on one worker and from 5.2 s to 0.30 s on four. Local-search batching was measured and reverted: it did not reduce wall time and changed evaluation counts. |
 | ~~E6~~ | ~~Multi-seed verification for Thorough~~ | M | E2 | **Done 2026-11-10:** the optimizer runs 1–4 consecutive seeds (Thorough defaults to 3), selects the best-scoring result, and stores the winning seed and verification metrics. The dialog shows the score/parameter spread and warns when the designs diverge; integer and choice variables must match exactly. A real 40/20/10 m OCFD run with three seeds converged to 20.90311 m with score spread 0.0 and parameter spread 4.7e-8. |
-| H1 | Tooltip/help infrastructure and UI help style guide | S | none | Add the `help.<key>` translation convention and `Translator.optional()`; add a Qt-only `ui/help.py` helper that resolves an explicit help key, a family-specific override, then an existing `<key>_hint` fallback. Extend `FormLabels` to set tooltips on labels and paired controls and refresh them in `retranslate()`; give `DipoleForm._label` the same behavior. Document a short style guide (1–2 sentences, 80–180 characters, plain text with manual line breaks where needed, no formulas, no full documentation, prioritize fields users cannot infer from the label). Tests cover key resolution, fallback, retranslation, and raw-key avoidance. No domain, solver, persistence, or dependency changes. |
+| ~~H1~~ | ~~Tooltip/help infrastructure and UI help style guide~~ | S | none | **Done 2026-11-10:** added `Translator.optional()`; `ui/help.py` resolves explicit, family-specific, shared `help.<key>`, and `<key>_hint` fallbacks without returning raw keys. `FormLabels` sets and refreshes label plus paired-control tooltips, and `DipoleForm` applies help to its labels and form rows. The style guide is `docs/UI_HELP_STYLE.md`. Tests cover resolution order, missing-key clearing, form application, retranslation, and the dipole form. |
 | H2 | Common field, section, tab, and action tooltips | S–M | H1 | Cover the 33 shared `field.*` labels (frequency, length, height, azimuth, wire diameter/radius, material, ground, soil preset, permittivity, conductivity, reference impedance, sweep, template, etc.) plus the main sections: design panel, advanced simulation, sweep, pattern, band plan, solver, results tabs, geometry controls, and primary actions. Set help on both labels and controls, keep label help available for disabled widgets, and keep English and Spanish in sync. Tests assert label/control/tab/action tooltips and the disabled-label fallback. |
 | H3 | Family-specific and dialog tooltips | M–L | H1, H2 | Add help for the remaining family-specific labels (OCFD feed/transformer, Yagi/Moxon elements/match/polarization, vertical radials/loading coil/top hat, trap dipole/Yagi, magnetic loop, phased vertical, quad/hexbeam, discone, Beverage, loaded dipole, etc.) and the parameter rows in the 19 dialog layouts (feed line, loads, matching network, balun loss, transmission lines, optimizer, synthesis, custom, measurement). Add per-family overrides for ambiguous shared keys such as `field.height` and `field.spacing`, reuse existing `*_hint` text where appropriate, and do not duplicate the user guide. Describe model semantics only; do not add numerical references or performance promises. |
 | H4 | Results, tables, accessibility, and help coverage audit | S–M | H3 | Add tooltips to result tab headers, technical table headers, chart controls, status indicators, and remaining secondary actions. Add `accessibleDescription` and an optional **What's This?** mode for longer explanations so tooltips are not the only keyboard path. Add a coverage manifest/test that every new field or section has English and Spanish help, enforce the length limit, and reject raw keys. Document the maintenance rule in `AGENTS.md` or the UI documentation. Manual QA covers light/dark themes, 100–200% scaling, Spanish text, and disabled controls. |
@@ -264,8 +264,7 @@ model and solver contract must land first.
    optional. **G27** stays blocked/deferred as a whole until measurements or
    traceable datasets exist; do not implement only one loss category in the
    meantime.
-2. **H1** is the next non-optional foundation for the tooltip/help queue;
-   **H2–H4** follow.
+2. **H1 is complete.** **H2–H4** are the next tooltip/help content pass.
 3. **P1–P6 are complete.** **P7** remains deferred until an ADR and benchmark
    show a practical need.
 4. **M1** is the matching-network correctness foundation; **M2** makes the
@@ -311,13 +310,13 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **33**.
-- Full gate: **2,371 passed, 0 skipped** with `NEC2C` and the optional
+- Full gate: **2,377 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
-- Last commits: the element/synthesis optimizer progress bars (P6), the
-  optimizer progress bars (P4–P5), the shared task-progress widget and
-  Simulate/band progress (P1–P3), the v0.3.1 cross-platform dimension-label
-  release and its coverage restoration, the nec2c wait fix (E5), shortened
-  loaded EFHW presets
+- Last commits: the help/tooltip foundation (H1), the element/synthesis
+  optimizer progress bars (P6), the optimizer progress bars (P4–P5), the shared
+  task-progress widget and Simulate/band progress (P1–P3), the v0.3.1
+  cross-platform dimension-label release and its coverage restoration, the
+  nec2c wait fix (E5), shortened loaded EFHW presets
   (G22), the EFHW feed-section/convergence model (G23), the shortened
   horizontal default and convergence-check fix, the fixed loading-coil node
   (G24), the primary matching-unit model (G25), the shortened impedance-only

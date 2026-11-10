@@ -39,6 +39,7 @@ from ...domain.simulation.segmentation import (
     aligned_policy_for_model,
 )
 from ...domain.simulation.spec import SimulationSpec
+from ..help import apply_form_help, apply_help
 from ..i18n import Translator
 from ..pattern_resolution import DEFAULT_PATTERN_STEP_DEG, far_field_request
 from ..units import (
@@ -247,6 +248,7 @@ class DipoleForm(QWidget):
     def _label(self, key: str) -> QLabel:
         label = QLabel(self)
         label.setObjectName(key)
+        apply_help(label, self._translator, key)
         return label
 
     def _labels(self) -> dict[str, QLabel]:
@@ -264,6 +266,7 @@ class DipoleForm(QWidget):
         labels = self._labels()
         for key, label in labels.items():
             label.setText(self._translator.t(key))
+        apply_form_help(self._form_layout, self._translator)
         self._material.setItemText(0, self._translator.t("material.copper"))
         self._material.setItemText(1, self._translator.t("material.aluminum"))
         self._ground.setItemText(0, self._translator.t("ground.free_space"))
