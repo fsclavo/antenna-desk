@@ -773,3 +773,38 @@ def test_endfed_convergence_check_flags_a_legacy_end_fed_model(
 
     assert result.completed
     assert not result.converged
+
+
+def test_endfed_convergence_check_handles_shortened_presets(
+    solver: Nec2cSolver,
+) -> None:
+    from antennadesk.application.use_cases.check_endfed_convergence import (
+        CheckEndFedConvergence,
+        CheckEndFedConvergenceCommand,
+    )
+    from antennadesk.domain.antennas.endfed import (
+        shortened_efhw_40_10_parameters,
+        shortened_efhw_80_10_parameters,
+    )
+
+    for factory in (
+        shortened_efhw_80_10_parameters,
+        shortened_efhw_40_10_parameters,
+    ):
+        parameters = factory()
+        spec = SimulationSpec(
+            frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
+            segmentation=SegmentationPolicy(min_segments_per_wire=1),
+            include_conductor_losses=True,
+            far_field=FarFieldRequest(enabled=False),
+            feed_transformer_ratio=parameters.transformer_ratio,
+        )
+
+        result = CheckEndFedConvergence(solver).execute(
+            CheckEndFedConvergenceCommand(parameters=parameters, base_spec=spec)
+        )
+
+        assert result.completed, result.error
+        assert result.error is None
+        assert len(result.points) == 3
+        assert all(point.impedance_ohm.real > 0.0 for point in result.points), result.points

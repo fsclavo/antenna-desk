@@ -266,12 +266,13 @@ class EndFedParameters:
 
         if self.effective_return_length_m > 0.0:
             counterpoise_angle = units.degrees_to_radians(self.effective_counterpoise_azimuth_deg)
+            return_height_m = 0.0 if self.installation_return_active else self.counterpoise_height_m
             counterpoise_start = Point3D(
                 x_m=0.0,
                 y_m=0.0,
-                z_m=self.counterpoise_height_m,
+                z_m=return_height_m,
             )
-            if not math.isclose(self.feed_height_m, self.counterpoise_height_m):
+            if not math.isclose(self.feed_height_m, return_height_m):
                 wires.append(
                     Wire(
                         id=(
@@ -296,7 +297,7 @@ class EndFedParameters:
                     end=Point3D(
                         x_m=self.effective_return_length_m * math.cos(counterpoise_angle),
                         y_m=self.effective_return_length_m * math.sin(counterpoise_angle),
-                        z_m=self.counterpoise_height_m,
+                        z_m=return_height_m,
                     ),
                     radius_m=self.wire_radius_m,
                     material=self.material,

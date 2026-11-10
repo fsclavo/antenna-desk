@@ -225,6 +225,15 @@ class EndFedDialog(QDialog):
                 reactance_spread=convergence.reactance_spread_ohm or 0.0,
             )
         )
+        if parameters.preset in {
+            EndFedPreset.SHORTENED_80_10,
+            EndFedPreset.SHORTENED_40_10,
+        }:
+            self._check_result.setText(
+                self._check_result.text()
+                + "\n"
+                + self._translator.t("endfed.convergence_matching_note")
+            )
 
     def parameters(self) -> EndFedParameters:
         return self._form.parameters()

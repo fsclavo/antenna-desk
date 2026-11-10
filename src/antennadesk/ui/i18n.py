@@ -4755,6 +4755,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "{resistance_spread:.1%} · X {reactance_spread:.2f} Ω"
         ),
     },
+    "endfed.convergence_matching_note": {
+        Language.ENGLISH: (
+            "The shortened preset's matching capacitor is not modeled; use the "
+            "R/X stability and verify the absolute SWR with a VNA."
+        ),
+        Language.SPANISH: (
+            "El capacitor de adaptación del preset acortado no está modelado; "
+            "usá la estabilidad de R/X y verificá el SWR absoluto con un VNA."
+        ),
+    },
     "endfed.counterpoise_length": {
         Language.ENGLISH: "Counterpoise length (0 = none)",
         Language.SPANISH: "Longitud del contrapeso (0 = ninguno)",

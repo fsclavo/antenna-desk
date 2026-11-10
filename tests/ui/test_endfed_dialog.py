@@ -63,6 +63,22 @@ def test_endfed_dialog_checks_segment_convergence(qtbot: QtBot) -> None:
     assert "Converged" in dialog._check_result.text()
 
 
+def test_endfed_dialog_shortened_convergence_reports_the_matching_limitation(
+    qtbot: QtBot,
+) -> None:
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        preset=EndFedPreset.SHORTENED_80_10,
+        solver=FakeSolver(),
+    )
+    qtbot.addWidget(dialog)
+
+    dialog._check_button.click()
+
+    assert "matching capacitor" in dialog._check_result.text()
+
+
 def test_endfed_dialog_warns_about_a_legacy_feed_model(qtbot: QtBot) -> None:
     parameters = EndFedParameters(
         frequency_hz=7_100_000.0,

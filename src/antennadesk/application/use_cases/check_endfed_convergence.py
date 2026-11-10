@@ -12,6 +12,7 @@ from ...domain.antennas.endfed import (
     RADIATOR_ID,
     EndFedParameters,
 )
+from ...domain.common.validation import Severity
 from ...domain.simulation.far_field import FarFieldRequest
 from ...domain.simulation.frequency import FrequencyPlan
 from ...domain.simulation.result import SimulationStatus
@@ -21,6 +22,7 @@ from ..ports.antenna_solver import AntennaSolver
 from .run_simulation import RunSimulation, RunSimulationCommand
 
 DEFAULT_SEGMENT_COUNTS = (10, 21, 51)
+MIN_SEGMENTS_PER_WIRE = 3
 MAX_SWR_SPREAD = 0.1
 MAX_RESISTANCE_SPREAD_FRACTION = 0.05
 MAX_REACTANCE_SPREAD_OHM = 10.0
@@ -105,6 +107,7 @@ class CheckEndFedConvergence:
         frequency_hz = command.frequency_hz or parameters.frequency_hz
         model = parameters.to_antenna(name="End-fed convergence")
         points: list[EndFedConvergencePoint] = []
+        base_segmentation = command.base_spec.segmentation
         for count in command.segment_counts:
             wire_segments: list[tuple[str, int]] = []
             if parameters.feed_section_active:
@@ -114,7 +117,17 @@ class CheckEndFedConvergence:
                 command.base_spec,
                 frequency_plan=FrequencyPlan.single(frequency_hz),
                 segmentation=SegmentationPolicy(
-                    min_segments_per_wire=1,
+                    target_segment_length_wavelengths=(
+                        base_segmentation.target_segment_length_wavelengths
+                    ),
+                    min_segments_per_wire=max(
+                        MIN_SEGMENTS_PER_WIRE,
+                        base_segmentation.min_segments_per_wire,
+                    ),
+                    max_segments_per_wire=max(
+                        MIN_SEGMENTS_PER_WIRE,
+                        base_segmentation.max_segments_per_wire,
+                    ),
                     wire_segments=tuple(wire_segments),
                 ),
                 far_field=FarFieldRequest(enabled=False),
@@ -123,7 +136,15 @@ class CheckEndFedConvergence:
                 RunSimulationCommand(model=model, spec=spec)
             )
             if result.status is not SimulationStatus.COMPLETED or not result.frequencies:
-                message = next(
+                error = next(
+                    (
+                        diagnostic.message
+                        for diagnostic in result.diagnostics
+                        if diagnostic.severity is Severity.ERROR
+                    ),
+                    None,
+                )
+                message = error or next(
                     (diagnostic.message for diagnostic in result.diagnostics),
                     result.status.value,
                 )

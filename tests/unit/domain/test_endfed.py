@@ -111,7 +111,31 @@ def test_endfed_installation_return_is_used_when_there_is_no_counterpoise() -> N
         "endfed-installation-return",
     ]
     drop, return_wire = custom.wires[2], custom.wires[3]
-    assert drop.length_m == pytest.approx(9.9)
+    assert drop.length_m == pytest.approx(10.0)
+    assert return_wire.length_m == pytest.approx(0.1)
+    assert return_wire.start.z_m == pytest.approx(0.0)
+    assert return_wire.end.z_m == pytest.approx(0.0)
+
+
+def test_endfed_installation_return_is_flush_with_ground_when_fed_at_ground() -> None:
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_section_length_m=0.5,
+        installation_return_length_m=0.1,
+        feed_height_m=0.0,
+        counterpoise_height_m=0.1,
+    )
+    custom = parameters.to_custom_parameters()
+
+    assert [wire.id for wire in custom.wires] == [
+        "endfed-feed-section",
+        "radiator",
+        "endfed-installation-return",
+    ]
+    return_wire = custom.wires[-1]
+    assert return_wire.start.z_m == pytest.approx(0.0)
+    assert return_wire.end.z_m == pytest.approx(0.0)
     assert return_wire.length_m == pytest.approx(0.1)
 
 
@@ -131,6 +155,9 @@ def test_endfed_real_counterpoise_takes_precedence_over_the_installation_return(
         "counterpoise",
     ]
     assert not any(wire.id.startswith("endfed-installation") for wire in custom.wires)
+    drop = custom.wires[1]
+    assert drop.length_m == pytest.approx(10.0 - 0.2)
+    assert custom.wires[2].start.z_m == pytest.approx(0.2)
 
 
 def test_endfed_model_warning_keys_flag_legacy_and_missing_return() -> None:
@@ -243,7 +270,7 @@ def test_shortened_efhw_80_10_matches_the_published_geometry() -> None:
     assert parameters.loading_coil_top_length_m == pytest.approx(2.39)
     assert parameters.transformer_ratio == pytest.approx(49.0)
     assert parameters.managed_load_ids == frozenset({ENDFED_LOADING_COIL_ID})
-    assert len(custom.wires) == 4
+    assert len(custom.wires) == 3
     assert "endfed-installation-return" in {wire.id for wire in custom.wires}
     assert [load.id for load in custom.loads] == [ENDFED_LOADING_COIL_ID]
     assert custom.loads[0].wire_id == "radiator"

@@ -518,11 +518,15 @@ wire, not an extra conductor; it stabilizes the NEC end-fed source. When the
 real counterpoise is disabled, a short **installation return** (0.10 m by
 default) models the unavoidable coax/mast/earth path. It is a model proxy, not
 a physical radial, and is modeled for the solver but not drawn or included in
-the wire schedule/BOM. The real coax routing dominates the SWR. The editor
-warns when either the fixed feed section or the return/counterpoise is missing.
-**Check convergence** runs the same design with 10, 21, and 51 radiator
-segments and reports the R, X, and SWR spread; an unresolved result means the
-absolute SWR is segmentation-sensitive and should be verified with a VNA.
+the wire schedule/BOM. The return terminates at the ground plane; when the feed
+is at ground level it is a 0.10 m wire on the ground plane. The real coax
+routing dominates the SWR. The editor warns when either the fixed feed section
+or the return/counterpoise is missing. **Check convergence** runs the same
+design with 10, 21, and 51 radiator segments and reports the R, X, and SWR
+spread; an unresolved result means the absolute SWR is segmentation-sensitive
+and should be verified with a VNA. The shortened presets show an additional
+note because their matching capacitor is not modeled, so their absolute SWR is
+not a construction target.
 
 ### Shortened EFHW with a loading coil
 

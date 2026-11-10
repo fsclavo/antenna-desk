@@ -32,6 +32,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `seed_scored_count`, `seed_evaluations_total`, `seed_score_spread`,
   `seed_parameter_spread`, and `seed_converged`.
 
+### Fixed
+
+- The End-fed **Check convergence** action now keeps at least three segments
+  on the auxiliary and return wires, matching the normal simulation, so the
+  shortened EFHW presets no longer fail with a negative-resistance error. The
+  installation-return proxy now terminates at the ground plane instead of
+  floating 0.1 m above it, avoiding a near-short for ground-mounted shortened
+  presets. When a segment count fails, the dialog reports the actual error
+  diagnostic instead of the first warning.
+
 ## [0.3.1] - 2026-11-10
 
 ### Fixed
