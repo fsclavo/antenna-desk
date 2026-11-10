@@ -115,6 +115,8 @@ Completed:
   sheets/reports with vector PDF figures and multi-view grids, direct basic
   antenna editors, the expanded family catalog through schema 31, and shortened
   loaded EFHW presets.
+- `v0.3.1` fixes cross-platform construction-label overlap and large-font form
+  widths on Windows.
 
 Deferred:
 
@@ -182,8 +184,8 @@ Deferred:
   Windows zip, and checksums (completed).
 - Optional GPG detached signatures and Windows Authenticode signing hooks
   (completed, deferred for the initial release).
-- Published `v0.1.0`, `v0.2.0`, and `v0.3.0` with unsigned, SHA-256-verified
-  artifacts (completed).
+- Published `v0.1.0`, `v0.2.0`, `v0.3.0`, and `v0.3.1` with unsigned,
+  SHA-256-verified artifacts (completed).
 - Keep the wheel/sdist smoke test as the fallback distribution path
   (completed).
 
@@ -315,7 +317,7 @@ Modeling track:
 
 Release track:
 
-1. `v0.3.0` is published with checksum-verified unsigned artifacts.
+1. `v0.3.1` is published with checksum-verified unsigned artifacts.
 2. Add GPG/Authenticode signing in a later release if required.
 
 Validation track:

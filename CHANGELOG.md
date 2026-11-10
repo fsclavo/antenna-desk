@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-10
+
 ### Fixed
 
 - Construction-view dimension labels no longer overlap when the system font is

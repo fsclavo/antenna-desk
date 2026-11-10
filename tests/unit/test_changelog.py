@@ -3,9 +3,10 @@
 """Structural checks for the hand-maintained changelog.
 
 This cannot prove that every user-visible change was described, but it prevents
-the common failure modes: an empty Unreleased section, malformed version
-headings, invalid dates, unknown subsection names, and releases that are out of
-chronological order.
+the common failure modes: an empty release section, malformed version headings,
+invalid dates, unknown subsection names, and releases that are out of
+chronological order. The Unreleased section may be empty immediately after a
+release; entries are added as development continues.
 """
 
 from __future__ import annotations
@@ -36,18 +37,25 @@ def _sections() -> list[tuple[str, int, int]]:
     ]
 
 
-def test_unreleased_section_exists_and_has_an_entry() -> None:
+def test_unreleased_section_exists() -> None:
     lines = _lines()
     assert lines[0] == "# Changelog"
     sections = _sections()
 
     assert sections
-    heading, start, end = sections[0]
+    heading, _start, _end = sections[0]
     assert heading == "## [Unreleased]"
 
-    body = lines[start + 1 : end]
-    assert any(line.startswith("### ") for line in body)
-    assert any(line.startswith("- ") for line in body)
+
+def test_every_release_section_has_an_entry() -> None:
+    lines = _lines()
+    sections = _sections()
+
+    assert len(sections) > 1
+    for heading, start, end in sections[1:]:
+        body = lines[start + 1 : end]
+        assert any(line.startswith("### ") for line in body), heading
+        assert any(line.startswith("- ") for line in body), heading
 
 
 def test_release_headings_have_valid_dates_and_are_ordered() -> None:
