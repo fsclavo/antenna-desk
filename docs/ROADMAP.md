@@ -1,8 +1,12 @@
 # AntennaDesk roadmap and backlog
 
-**Updated:** 2026-11-07
-**Status:** active roadmap after catalog, measurement, optimization, and
+**Updated:** 2026-11-09
+**Status:** active product roadmap after catalog, measurement, optimization, and
 packaging work.
+**Scope:** product direction, milestones, and the ordered antenna expansion
+backlog. The active execution queue is
+[`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md); evidence status is in
+[`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md).
 
 ## Product direction
 
@@ -62,6 +66,10 @@ Completed:
   comparison, resonance differences, and project measurement records.
 - Construction sheets, CSV/HTML/PDF reports, PNG/SVG/DXF exports, and
   project-level Undo/Redo with chart cursors.
+- Construction view and wire schedule: family-aware front/top/auxiliary views,
+  dimension-anchor checks, an embedded sheet figure, title block and BOM, wire
+  and BOM CSV exports, evidence/limitation rows, and localized HTML/PDF
+  reports.
 - Wheel/sdist packaging, packaging CI, application icon, and Linux desktop
   entry.
 - Native Linux AppImage, Debian package, and Windows bundle recipes with
@@ -214,11 +222,15 @@ Acceptance criteria:
 - Save/open, reports, and undo/redo preserve the band analysis.
 - No default claims resonance without documented evidence.
 
-## Backlog
+## Product backlog
+
+This table keeps product priority and evidence. Execution status, blockers, and
+acceptance criteria live in
+[`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md).
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
-| P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, `loaded_vertical` (published preset), `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, and `zepp` promoted to B. The inverted-L was added as C on 2026-11-06. The other four C templates were reviewed the same day; the Ringo now has a Cushcraft AR-6 starting-dimensions preset, but promotion needs a matching-ring model; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
+| P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, `loaded_vertical` (published preset), `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, `zepp`, `biquad`, and `beverage` promoted to B for starting dimensions. Inverted L, Ringo, double biquad, and loaded dipole remain C; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
 | P1 | Fan dipole V-angle calibration and angle optimization | B | investigated; lengths and angles are now searched jointly by the family optimizer, but the calibration warning remains |
 | P1 | Optional ideal transformer/4:1 balun for OCFD | B | done |
 | P1 | Multiband batch engine and per-family band defaults (M6) | B | done |
@@ -258,9 +270,9 @@ point; `C` is structural/experimental only.
 | 8 | Capacity hat / top-loaded vertical | Modification of `vertical` | M | High | B/A | **Implemented:** the vertical template already has a capacitive top hat and loading coil. Reports, construction sheet, and scene summary now expose the hat geometry, with a dedicated scene contract case. The hat remains an application starting point, not an independently validated loading design. |
 | 9 | Explicit EFHW presets for the existing EndFed + OCFD/G5RV variants | Presets/UX, not a new family | S | Medium–high | A/B | **Implemented on 2026-11-07:** the EndFed editor is labeled EFHW, exposes 40/20/10 m preset buttons using the published 66/33/16 ft lengths and 49:1 transformer, and keeps the existing harmonic band plan. OCFD/G5RV variants remain presets. |
 | 10 | Half-square / bobtail curtain | New family | M | Medium | B/A | **Implemented on 2026-11-07:** one self-contained vertical-array family with half-square and bobtail-curtain variants, top-junction feed with adjustable offset, schema-16 persistence, catalog routes, editor, geometry dimensions, reports, and construction sheet. The Cebik 7.15 MHz dimensions are the published starting point; pattern, ground, and matching remain unvalidated and there is no frequency-first estimator. |
-| 11 | Biquad / double biquad | New family | M | Medium | B/A | **Implemented on 2026-11-07:** two- or four-loop stack with shared rails, optional wire reflector, quarter-wave starting dimensions, inline editor, schema 19, scene contract, reports, and family optimizer. Evidence remains C until an independent design is available. |
-| 12 | Beverage | New family | M | Medium | B/A | **Implemented on 2026-11-07:** long receiving wire with optional resistive termination, one-wavelength starting length, inline editor, schema 20, scene contract, reports, construction notes, and family optimizer. Evidence remains C pending a measurement. |
-| 13 | Loaded / linked dipole | New family or `dipole` variant | M | Medium | B/C | **Implemented on 2026-11-07:** center-fed loaded dipole with symmetric series R-L coils or open links, schema 21, inline editor, scene contract, reports, construction notes, and family optimizer. Coil core loss, self-capacitance, and link contact resistance remain limitations. |
+| 11 | Biquad / double biquad | New family | M | Medium | B/C | **Implemented on 2026-11-07:** two- or four-loop stack with shared rails, optional wire reflector, quarter-wave starting dimensions, inline editor, schema 19, scene contract, reports, and family optimizer. The biquad starting dimensions are published (B); the double biquad remains C because the published side-by-side topology differs from the vertical stack. |
+| 12 | Beverage | New family | M | Medium | B/C | **Implemented on 2026-11-07:** long receiving wire with optional resistive termination, one-wavelength starting length, inline editor, schema 20, scene contract, reports, construction notes, and family optimizer. The one-wavelength length and 500 Ω termination are published (B); gain, pattern, and termination efficiency remain unvalidated. |
+| 13 | Loaded / linked dipole | New family or `dipole` variant | M | Medium | B/C | **Implemented on 2026-11-07:** center-fed loaded dipole with symmetric series R-L coils or open links, schema 21, inline editor, scene contract, reports, construction notes, and family optimizer. B3 reviewed the published 3.91 MHz BVARC example; the template remains C because the source ground model is unspecified. Coil core loss, self-capacitance, and link contact resistance remain limitations. |
 | 14 | Wire sag / tapered elements / boom correction | Geometry model | M | Medium | B/C | **Partially implemented 2026-11-07:** optional sampled parabolic sag on horizontal wire dipoles (schema 22) and optional tapered Yagi tips (schema 23), with scene/report/conductor-length support. Boom-mounting correction remains pending because no universal published model is available. |
 | 15 | Phased verticals / arrays | Architectural | XL | High | B/A | **Implemented on 2026-11-08:** multi-source excitation, ideal linear phase and amplitude progression, 2–4 verticals with radial screens, schema 25, inline editor, scene/source markers, reports, construction notes, and family optimizer. The combining network is ideal and the family remains experimental pending a traceable array reference or measurement. |
 | 16 | Quad beam / hexbeam | New family | L | Medium–high | B/A | **Implemented on 2026-11-08:** quad beam with 2–3 square loops and a separate single-band hexbeam with published G3TXQ dimensions, schema 26 and 30, editors, scene contracts, reports, construction notes, and family optimizers. The hexbeam reconstructs the bent wire path and is classified published/heuristic; frame and multi-band nesting are not modeled. |
@@ -279,8 +291,11 @@ band planning for that existing family.
 
 ## Next
 
-Detailed pending-work plan:
-[`docs/PENDING_WORK_PLAN.md`](PENDING_WORK_PLAN.md).
+The active execution queue is
+[`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md). Evidence status is in
+[`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md). The archived 2026-11-04 phase plan is
+kept at
+[`archive/PENDING_WORK_PLAN_2026-11-04.md`](archive/PENDING_WORK_PLAN_2026-11-04.md).
 
 Modeling track:
 
@@ -297,9 +312,10 @@ Validation track:
 
 1. Independent references for remaining experimental templates. The reference
    passes promoted `delta_loop`, `vertical`, `inverted_v`, `j_pole`,
-   `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, and `zepp` to
-   level B; the remaining level C templates and their next evidence needs are
-   listed in [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md).
+   `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, `zepp`, `biquad`,
+   and `beverage` to level B for starting dimensions; the remaining level C
+   templates and their next evidence needs are listed in
+   [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md).
 2. Physical measurements when the project owner has data.
 
 ## Definition of done for a generator

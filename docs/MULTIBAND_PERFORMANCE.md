@@ -1,15 +1,14 @@
 # Multiband performance measurement
 
-**Date:** 2026-11-04 (updated 2026-11-08)
+**Date:** 2026-11-04 (updated 2026-11-09)
 
 **Status:** measured; per-band architecture retained, with bounded parallel
 batches
 **Script:** [`scripts/benchmark_multiband.py`](../scripts/benchmark_multiband.py)
 
-This note records the Phase 2 decision from
-[`PENDING_WORK_PLAN.md`](PENDING_WORK_PLAN.md). It measures the existing
-per-band `AnalyzeBands` path against the real `nec2c` adapter; it is not a
-synthetic unit benchmark.
+This note records the multiband performance decision and its 2026-11-08
+parallel amendment. It measures the existing per-band `AnalyzeBands` path
+against the real `nec2c` adapter; it is not a synthetic unit benchmark.
 
 ## Environment and method
 

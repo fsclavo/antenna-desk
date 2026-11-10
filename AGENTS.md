@@ -8,6 +8,8 @@ amateur radio. The project is GPL-3.0-or-later.
 - `docs/antennadesk-development-blueprint.md`
 - `docs/PROJECT_DECISIONS.md`
 - Relevant files in `docs/ADR/`
+- `docs/ROADMAP.md` for product scope and priorities
+- `docs/AUTONOMOUS_BACKLOG.md` for the active execution queue
 
 ## Architecture
 

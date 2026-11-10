@@ -1,8 +1,16 @@
-# Pending work plan
+# Pending work plan (archived)
 
-**Status:** in progress; completed items are marked below
-**Date:** 2026-11-04
+**Status:** archived 2026-11-09; kept for decision history
+**Original date:** 2026-11-04
 **Scope:** remaining work after the multiband, OCFD, and fan-dipole milestones
+
+> **Superseded.** Product scope is in [`../ROADMAP.md`](../ROADMAP.md), the
+> active execution queue is in
+> [`../AUTONOMOUS_BACKLOG.md`](../AUTONOMOUS_BACKLOG.md), and evidence status is
+> in [`../EVIDENCE_AUDIT.md`](../EVIDENCE_AUDIT.md). Open items were reviewed
+> during the 2026-11-09 documentation consolidation; active and blocked work
+> lives in the autonomous backlog. This file remains as a record of the phase
+> decisions and completed work.
 
 This plan orders the open work so each phase is independently shippable and
 testable. It is not a commitment to implement every item in one session.
@@ -26,7 +34,7 @@ NEC2C=... uv run pytest -q
 ## Phase 1 — Fan dipole accuracy and tuning (investigation complete; angle work deferred)
 
 **Finding:** a universal V-angle/coupling correction is not justified. See
-[`FAN_DIPOLE_CALIBRATION.md`](FAN_DIPOLE_CALIBRATION.md). The isolated V
+[`../FAN_DIPOLE_CALIBRATION.md`](../FAN_DIPOLE_CALIBRATION.md). The isolated V
 element has a smooth angle-dependent shift, but the coupled 20/10 fan is
 dominated by mutual coupling. Keep the estimator as a starting point, keep the
 warning and optimizer guidance, and defer an angle-variable optimizer until a
@@ -54,7 +62,7 @@ different antenna model is justified.
 
 ## Phase 2 — Multiband performance decision (measured)
 
-Benchmark and decision: [`MULTIBAND_PERFORMANCE.md`](MULTIBAND_PERFORMANCE.md).
+Benchmark and decision: [`../MULTIBAND_PERFORMANCE.md`](../MULTIBAND_PERFORMANCE.md).
 
 1. Timed and sized 3, 5, and 8 bands for OCFD, G5RV, and fan dipole.
 2. Recorded wall time, compressed project size, and process peak RSS.
@@ -118,7 +126,7 @@ Completed follow-ups:
 
 ## Phase 5 — Validation and references
 
-1. **Inventory complete:** [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) records every
+1. **Inventory complete:** [`../EVIDENCE_AUDIT.md`](../EVIDENCE_AUDIT.md) records every
    level C template and why it remains experimental.
 2. **Reference passes complete so far:** promoted `delta_loop`, `vertical`,
    `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, and
@@ -134,7 +142,7 @@ Completed follow-ups:
    example promoted `loaded_vertical` to B for that preset. The four previously
    reviewed templates (`ringo`, `fan_dipole`, `random_wire`, and `custom`)
    remain C, and the newly added `inverted_l` starts at C pending a published
-   reference; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md). The Ringo generator
+   reference; see [`../EVIDENCE_AUDIT.md`](../EVIDENCE_AUDIT.md). The Ringo generator
    now has a Cushcraft AR-6 starting-dimensions preset, but promotion still
    needs a model of the commercial matching ring.
 
@@ -155,7 +163,7 @@ These are not part of the next implementation session unless priorities change:
 ## Phase 7 — Antenna expansion backlog
 
 The ordered antenna backlog lives in
-[`ROADMAP.md`](ROADMAP.md#antenna-backlog). The immediate sequence is:
+[`../ROADMAP.md`](../ROADMAP.md#antenna-backlog). The immediate sequence is:
 
 1. **Completed 2026-11-06:** Inverted L as a first-class family with an editor,
    catalog route, persistence, geometry, reports, and tests. Evidence stays C

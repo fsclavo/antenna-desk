@@ -167,6 +167,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Consolidated the planning documents: [`docs/ROADMAP.md`](docs/ROADMAP.md) is
+  the product scope and antenna backlog, `docs/AUTONOMOUS_BACKLOG.md` is the
+  only active execution queue, and the 2026-11-04 phase plan moved to
+  [`docs/archive/`](docs/archive/PENDING_WORK_PLAN_2026-11-04.md). Added
+  [`docs/README.md`](docs/README.md) as the documentation index.
 - The **Moxon** reference preset now scales the published Cebik 20 m wire
   dimensions to the current frequency and preserves the current height,
   ground, wire radius, polarization, and material. The **half-square/bobtail**

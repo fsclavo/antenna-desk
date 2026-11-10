@@ -1,8 +1,15 @@
 # Autonomous execution backlog
 
-**Date:** 2026-11-08
-**Status:** active queue after the loaded/linked dipole, wire sag, tapered Yagi
-tips, space constraints, and PyNEC validation work.
+**Date:** 2026-11-09
+**Status:** active execution queue.
+
+This is the only active execution queue. It contains shippable items,
+dependencies, blockers, acceptance criteria, and the current test baseline.
+Product scope and the antenna expansion order live in
+[`ROADMAP.md`](ROADMAP.md); evidence status lives in
+[`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md); architecture decisions live in
+[`ADR/`](ADR/). Do not create a second backlog: add product scope to the
+roadmap and active work here.
 
 This is the ordered queue for continuing without waiting for new product
 decisions. Each item is independently shippable and must leave the full gate
@@ -59,6 +66,26 @@ external service and must not be invented or simulated into existence.
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
 | D4 | Segmented frequency plan in one NEC deck | M | solver benchmark | Deferred; current per-band batching is intentional |
+
+## Deferred product work
+
+The 2026-11-04 phase plan is archived. Its open items were reviewed during the
+2026-11-09 consolidation. The following are intentionally not in the active
+queue because they need a different model, a traceable source, or a product
+decision:
+
+| Item | Why it is not active | Tracked in |
+|---|---|---|
+| Fan-dipole angle optimization and an explicit per-element feed model | Needs a different antenna model, not another scalar correction | [`ROADMAP.md`](ROADMAP.md), [`FAN_DIPOLE_CALIBRATION.md`](FAN_DIPOLE_CALIBRATION.md) |
+| Measured or optimized 20/10 m fan-dipole preset | Needs a traceable source or measurement | [`ROADMAP.md`](ROADMAP.md) |
+| Gamma match for the Yagi | NEC-2 is unreliable for close-spaced gamma assemblies; the beta/hairpin match is implemented | [`ROADMAP.md`](ROADMAP.md) item 6 |
+| Boom-mounting correction | No universal published model; boom mounting is explicitly not modeled | [`ROADMAP.md`](ROADMAP.md) item 14, [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
+| Report-specific metric selection for power, directivity, and realized gain | The UI selector exists; export-specific selection is optional | [`ROADMAP.md`](ROADMAP.md) |
+| General radial-screen and transmission-line geometry beyond the current subset | Architectural change with a larger test surface | [`ROADMAP.md`](ROADMAP.md), [`PROJECT_DECISIONS.md`](PROJECT_DECISIONS.md) |
+| Custom/imported geometry optimization | Deliberately unavailable because arbitrary geometry has no parameterized topology | [`ADR/0026-family-optimizer-architecture.md`](ADR/0026-family-optimizer-architecture.md) |
+| Physical antenna validation | Blocked on measurements; tracked as B4 above | [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
+| Segmented frequency plan in one NEC deck | Deferred until a benchmark shows a practical need | [`MULTIBAND_PERFORMANCE.md`](MULTIBAND_PERFORMANCE.md), D4 above |
+| Live VNA control, additional full-wave engines, and release signing | Need hardware, an engine decision, or release credentials | D1–D3 above, [`ROADMAP.md`](ROADMAP.md) |
 
 ## Solver runtime notes (2026-11-08)
 
@@ -147,23 +174,15 @@ model and solver contract must land first.
 
 ## Recommended order
 
-1. ~~A1, A2, A3, and C1~~ (done 2026-11-08).
-2. C2 quad beam and hexbeam (done 2026-11-08).
-3. ~~E1~~ **done 2026-11-08:** timeout raised to 180 s and exposed in
-   **Advanced simulation → Solver**.
-4. ~~E4~~ **done 2026-11-08:** overlapping radial screens diagnosed; the
-   editor warns and the ideal-source behavior is documented.
-5. ~~B1/B2/B3~~ **reviewed 2026-11-08:** Inverted L and Ringo stay C; biquad
-   and Beverage were promoted to B for starting dimensions only. Double biquad
-   and loaded dipole stay C. B4 waits for a coupled-fan measurement.
-6. ~~E2/E3~~ **done 2026-11-08:** optimizer candidates and independent band
-   analyses run on bounded worker pools while preserving order, determinism,
-   and cancellation. The band benchmark measured 1.3–1.8× speedup with four
-   workers.
-7. C3 is blocked on a transposed boom feed-line model. Do not substitute
-   independent ideal sources: NEC2C reported negative primary-feed resistance
-   in the prototype.
-8. D1–D4 only when the required hardware, engine, or release decision exists.
+1. ~~A1–C5, E1–E4, B1–B3, and G1–G16~~ completed; see the queue table above.
+2. **B4** waits for a coupled-fan measurement. **C3** is blocked on a
+   transposed boom feed-line model; do not substitute independent ideal
+   sources, because NEC2C reported negative primary-feed resistance in the
+   prototype.
+3. **D1–D4** remain deferred until the required hardware, engine, or release
+   decision exists.
+4. Product priorities and new antenna candidates live in
+   [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
 ## Technical debt pass (2026-11-08)
 
@@ -188,16 +207,14 @@ model and solver contract must land first.
 - Covered the data exports (CSV, sources CSV, pattern CSV, HTML, PDF, pattern
   PNG), the four geometry formats (PNG, SVG, PDF, DXF), and solver discovery
   success/error.
-- `main_window.py` coverage is now **76%** (from 69% at the start of the pass);
-  the full suite is **88% total** with 346 fewer missed statements.
+- At the end of that pass, `main_window.py` coverage was **76%** (from 69%)
+  and the full suite was **88% total** with 346 fewer missed statements.
 
 ## Current baseline
 
 - Schema: **30**.
 - Full gate: **2,158 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
-- Last commits: construction view and wire schedule, beam and vertical
-  dimensions, embedded construction figure, BOM and title block, evidence and
-  limitations, compact layout and hidden-value strip, dimension-anchor
-  contract, wire/BOM CSV exports, reference-preset frequency policy, and report
-  localization.
+- Last commits: construction-view pass (G1–G16), solver timeout and parallel
+  analysis, the biquad/Beverage evidence review, and the UI type/coverage debt
+  pass.

@@ -1,15 +1,16 @@
 # Evidence audit
 
-**Date:** 2026-11-05; updated 2026-11-08
+**Date:** 2026-11-05; updated 2026-11-09
 **Scope:** catalog templates classified as experimental in
 `src/antennadesk/domain/design/evidence.py`.
 
-This audit follows Phase 5 of [`PENDING_WORK_PLAN.md`](PENDING_WORK_PLAN.md).
-It does not promote a template merely because its geometry looks reasonable.
-Level B requires a published design rule or starting point with a traceable
-source and a stated tolerance; level A requires a numerical comparison with an
-independent source. A missing reference keeps the template at level C with a
-visible limitation.
+This audit is the evidence-status source of truth for the catalog. Product
+scope lives in [`ROADMAP.md`](ROADMAP.md) and the active execution queue in
+[`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md). The audit does not promote a
+template merely because its geometry looks reasonable. Level B requires a
+published design rule or starting point with a traceable source and a stated
+tolerance; level A requires a numerical comparison with an independent source.
+A missing reference keeps the template at level C with a visible limitation.
 
 ## Promoted so far
 
