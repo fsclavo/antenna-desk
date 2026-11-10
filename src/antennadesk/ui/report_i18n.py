@@ -125,6 +125,8 @@ REPORT_SPANISH: dict[str, str] = {
     "Limitation": "Limitación",
     "Link offset": "Desplazamiento del enlace",
     "Loading coil": "Bobina de carga",
+    "Coil position": "Posición de la bobina",
+    "Top section": "Tramo superior",
     "Loads": "Cargas",
     "Loop circumference": "Circunferencia del lazo",
     "Loop conductor": "Conductor del lazo",
@@ -438,6 +440,12 @@ REPORT_SPANISH: dict[str, str] = {
         "está a {feed_height} m y el extremo lejano a {end_height} m. Usá un "
         "transformador {ratio}:1; el contrapeso es {counterpoise}."
     ),
+    "Cut one wire to {length} m. Fit the {inductance} µH loading coil at {offset} m from the feed; the remaining {top} m is the top section. Use a {ratio}:1 transformer and the published matching unit; the counterpoise is {counterpoise}.": (  # noqa: E501
+        "Cortá un hilo de {length} m. Colocá la bobina de carga de {inductance} µH "
+        "a {offset} m de la alimentación; los {top} m restantes son el tramo "
+        "superior. Usá un transformador {ratio}:1 y la unidad de adaptación "
+        "publicada; el contrapeso es {counterpoise}."
+    ),
     "Cut the full {total} m wire and mark the link positions at {offset} m either side of the center. Feed the center. {coil_note} The coil model is an ideal series R-L load; tune it for the installed height and ground.": (  # noqa: E501
         "Cortá el hilo completo de {total} m y marcá las posiciones de enlace a "
         "{offset} m a cada lado del centro. Alimentá el centro. {coil_note} El "
@@ -553,6 +561,7 @@ REPORT_SPANISH: dict[str, str] = {
         "la unión superior de la vertical central y los hilos superiores"
     ),
     "{length:.4f} m each": "{length:.4f} m cada uno",
+    "{offset:.4f} m from feed": "{offset:.4f} m desde la alimentación",
     "{left:.4f} m, {right:.4f} m from wire start": (
         "{left:.4f} m, {right:.4f} m desde el inicio del hilo"
     ),
@@ -633,6 +642,8 @@ REPORT_SPANISH: dict[str, str] = {
     "aluminum": "aluminio",
     "custom": "personalizado",
     "end-fed wire": "hilo alimentado en un extremo",
+    "shortened EFHW 80-10 m": "EFHW acortada 80-10 m",
+    "shortened EFHW 40-20-10 m": "EFHW acortada 40-20-10 m",
     "loaded vertical": "vertical cargada",
     "random wire": "hilo aleatorio",
     "sloper": "sloper",

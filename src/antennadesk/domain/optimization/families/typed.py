@@ -553,6 +553,58 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
         "wire_radius_m": parameters.wire_radius_m,
         "transformer_ratio": parameters.transformer_ratio,
     }
+    if parameters.coil_active:
+        low, high = around(
+            parameters.loading_coil_offset_m,
+            0.15,
+            minimum=0.1,
+        )
+        variables.append(
+            OptimizationVariable(
+                "loading_coil_offset_m",
+                "endfed.loading_coil_offset",
+                "optimize.group.loads",
+                low,
+                high,
+                step=0.01,
+            )
+        )
+        initial["loading_coil_offset_m"] = parameters.loading_coil_offset_m
+        low, high = around(
+            parameters.loading_coil_inductance_h,
+            0.5,
+            minimum=1e-9,
+        )
+        variables.append(
+            OptimizationVariable(
+                "loading_coil_inductance_h",
+                "endfed.loading_coil_inductance",
+                "optimize.group.loads",
+                low,
+                high,
+                unit="H",
+                step=1e-7,
+            )
+        )
+        initial["loading_coil_inductance_h"] = parameters.loading_coil_inductance_h
+        if parameters.loading_coil_resistance_ohm > 0.0:
+            low_r, high_r = around(
+                parameters.loading_coil_resistance_ohm,
+                0.9,
+                minimum=0.0,
+            )
+            variables.append(
+                OptimizationVariable(
+                    "loading_coil_resistance_ohm",
+                    "endfed.loading_coil_resistance",
+                    "optimize.group.loads",
+                    low_r,
+                    high_r,
+                    unit="ohm",
+                    step=0.01,
+                )
+            )
+            initial["loading_coil_resistance_ohm"] = parameters.loading_coil_resistance_ohm
     if parameters.counterpoise_length_m > 0.0:
         low, high = around(parameters.counterpoise_length_m, 0.3, minimum=0.1)
         variables.append(
@@ -609,6 +661,15 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
             counterpoise_azimuth_deg=values.get(
                 "counterpoise_azimuth_deg", parameters.counterpoise_azimuth_deg
             ),
+            loading_coil_offset_m=values.get(
+                "loading_coil_offset_m", parameters.loading_coil_offset_m
+            ),
+            loading_coil_inductance_h=values.get(
+                "loading_coil_inductance_h", parameters.loading_coil_inductance_h
+            ),
+            loading_coil_resistance_ohm=values.get(
+                "loading_coil_resistance_ohm", parameters.loading_coil_resistance_ohm
+            ),
         )
 
     def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
@@ -634,6 +695,34 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
             issues.append(
                 non_negative_violation("counterpoise_height_m", values["counterpoise_height_m"])
             )
+        if "loading_coil_offset_m" in values:
+            issues.append(
+                positive_violation(
+                    "loading_coil_offset_m",
+                    values["loading_coil_offset_m"],
+                )
+            )
+            if values["loading_coil_offset_m"] >= values["length_m"]:
+                issues.append(
+                    violation(
+                        "loading_coil_offset_m",
+                        values["loading_coil_offset_m"] - values["length_m"],
+                        "optimize.constraint.endfed_coil_offset",
+                    )
+                )
+            issues.append(
+                positive_violation(
+                    "loading_coil_inductance_h",
+                    values["loading_coil_inductance_h"],
+                )
+            )
+            if "loading_coil_resistance_ohm" in values:
+                issues.append(
+                    non_negative_violation(
+                        "loading_coil_resistance_ohm",
+                        values["loading_coil_resistance_ohm"],
+                    )
+                )
         return collect(*issues)
 
     return _descriptor("endfed", tuple(variables), initial, build, validate)

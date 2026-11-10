@@ -3635,6 +3635,12 @@ def _summary(
                 f"{_format_length(end_height, translator, unit_system)}",
             ]
         )
+        if isinstance(parameters, EndFedParameters) and parameters.coil_active:
+            parts.append(
+                f"{translator.t('endfed.loading_coil').lower()} "
+                f"{parameters.loading_coil_inductance_h * 1e6:.1f} µH @ "
+                f"{_format_length(parameters.loading_coil_offset_m, translator, unit_system)}"
+            )
     elif isinstance(parameters, OCFDParameters) or antenna_type == ANTENNA_TYPE_OCFD:
         if isinstance(parameters, OCFDParameters):
             length_m = parameters.total_length_m

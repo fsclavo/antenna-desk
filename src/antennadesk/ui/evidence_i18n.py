@@ -209,6 +209,45 @@ EVIDENCE_SPANISH: dict[str, dict[str, str]] = {
             "publicada es un punto de partida, no el valor por defecto."
         ),
     },
+    "shortened_endfed_80_10": {
+        "source": (
+            "Steve Nichols G0KYA, «A shortened multi-band End-Fed Half Wave "
+            "(EFHW) antenna for 80-10m»; EA7EER, «Antena End Fed para "
+            "10-15-20-40 y 80 m»; G4WIF, «End Fed Half Wave Antenna» "
+            "(20,35 m + 110 µH + 2,39 m, 49:1, 100 pF)"
+        ),
+        "tolerance": (
+            "Dimensiones iniciales: tramo inferior de 20,35 m, bobina de 110 µH "
+            "y tramo superior de 2,39 m; ROE publicada 1,2-3,0 en 80 m y "
+            "1,0-1,2 en 40 m"
+        ),
+        "limitation": (
+            "Solo dimensiones iniciales; la instalación publicada en L invertida "
+            "se modela como un hilo recto. El transformador, el capacitor de "
+            "adaptación de 100 pF, el choke de modo común, el suelo y las "
+            "pérdidas de adaptación no están modelados. La comparación citada "
+            "está 8-12 dB por debajo de un dipolo en 80 m. La geometría escalada "
+            "o editada es experimental."
+        ),
+    },
+    "shortened_endfed_40_10": {
+        "source": (
+            "radioaficion.com, diseño PA0EJH, esquema kx4o: EFHW acortada de "
+            "40-20-10 m con tramo inferior de 10,01 m, bobina de 23 µH, tramo "
+            "superior de 1,85 m, transformador 49:1 y capacitor de adaptación "
+            "de 100 pF"
+        ),
+        "tolerance": (
+            "Solo dimensiones iniciales; no hay tolerancia independiente publicada de R/X o patrón"
+        ),
+        "limitation": (
+            "La unidad de adaptación, el capacitor de 100 pF, el choke, el suelo "
+            "y la instalación no están modelados, y el modelo usa un hilo "
+            "recto. CA4EMT documenta otra variante de 40-20-10 (34 µH, tramo "
+            "superior de 1,6 m, 1:8, 150 pF); este preset sigue el esquema de "
+            "23 µH/100 pF. La geometría escalada o editada es experimental."
+        ),
+    },
     "random_wire": {
         "source": "Geometría de hilo aleatorio con plan de bandas asistido por sintonizador",
         "tolerance": "No aplicable (estructural)",

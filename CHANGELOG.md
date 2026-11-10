@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added two **shortened EFHW** catalog presets with an optional series loading
+  coil: **80-10 m** (20.35 m + 110 µH + 2.39 m) and **40-20-10 m** (10.01 m +
+  23 µH + 1.85 m), both with a 49:1 transformer. The coil position,
+  inductance, and series resistance are editable and persisted in schema 31;
+  the matching unit, capacitor, choke, and ground remain documented
+  limitations. The 80-10 m reference is G0KYA/EA7EER/G4WIF; the 40-20-10 m
+  reference is the radioaficion.com/PA0EJH schematic. Automatic frequency-first
+  estimation is disabled for these loaded presets.
 - The construction sheet now builds a **multi-view grid**: the dimensioned
   construction view, the complementary front/top view when the family has one,
   and an **isometric 3D view**. The HTML sheet uses a responsive two-column

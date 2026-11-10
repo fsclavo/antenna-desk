@@ -256,6 +256,8 @@ gain, nulls, or impedance.
 | `trap_dipole` | B | RSARS, 'W3DZZ Multi-band Antenna 80-40-20-15-10m': 33 ft inner and 22 ft outer sections, 7.1 MHz traps, 5.024 µH and 100 pF | 1% on the 33/22 ft sections; 2% on the trap resonance | The feed line and tuner are not modeled; the trap is an ideal parallel LC, and the default starting dimensions are a full-size 80/20 m trap dipole rather than W3DZZ. |
 | `t2fd` | B | Cebik wide-long broadband starting rule | Not a strict numeric tolerance | Termination resistor and transformer are ideal. |
 | `endfed` | B | ARRL End-Fed Half-Wave Antenna Kit: 66 ft on 40 m, 33 ft on 20 m, 16 ft on 10 m, 49:1 transformer, about 2500 Ω; PA9X: counterpoise 0.05λ of the longest wavelength | 5% on the half-wave wire length; 0.05λ counterpoise; 49:1 ratio | The 49:1 transformer is an ideal ratio; the counterpoise is a straight wire; height, ground, and the common-mode choke are not modeled. |
+| `shortened_endfed_80_10` | B | Steve Nichols G0KYA, 'A shortened multi-band End-Fed Half Wave (EFHW) antenna for 80-10m'; EA7EER, 'Antena End Fed para 10-15-20-40 y 80 m'; G4WIF, 'End Fed Half Wave Antenna' (20.35 m + 110 µH + 2.39 m, 49:1, 100 pF) | Starting dimensions: 20.35 m lower section, 110 µH coil, 2.39 m top section; published SWR 1.2-3.0 on 80 m and 1.0-1.2 on 40 m | Starting dimensions only; the published inverted-L installation is modeled as a straight wire. The transformer, 100 pF matching capacitor, common-mode choke, ground, and matching losses are not modeled. The cited comparison is 8-12 dB below a dipole on 80 m. Scaled or edited geometry is experimental. |
+| `shortened_endfed_40_10` | B | radioaficion.com, PA0EJH design, kx4o schematic: 40-20-10 m shortened EFHW with 10.01 m lower section, 23 µH coil, 1.85 m top section, 49:1 transformer, and 100 pF matching capacitor | Starting dimensions only; no independent R/X or pattern tolerance is published | The matching unit, 100 pF capacitor, choke, ground, and installation are not modeled, and the model uses a straight wire. CA4EMT documents a different 40-20-10 variant (34 µH, 1.6 m top, 1:8, 150 pF); this preset follows the 23 µH/100 pF schematic. Scaled or edited geometry is experimental. |
 | `sloper` | B | Chameleon Antenna CHA LEFS Feather operator's manual: 66.5 ft EFHW radiator, 49:1 transformer, far end about 25 ft, feed transformer about 3 ft; tested 40/20/15/10 m sloper patterns | 5% on the radiator length and deployment heights | The transformer, feed line, choke, and site coupling are not modeled; the editor's default sloper is 10 m to 0.5 m, so the published geometry is a starting point, not the default. |
 | `random_wire` | C | Random-wire geometry with a tuner-assisted band plan | Not applicable (structural) | No accuracy claim. |
 | `g5rv` | B | Published G5RV dimensions; lossless transmission-line model | Not a strict numeric tolerance | Line loss is not modeled; matching depends on the installation. |
@@ -589,10 +591,11 @@ and require `NEC2C`.
   control is not.
 - Optimization covers all first-class typed families through explicit
   descriptors and joint geometry/feed/load searches, including typed G5RV,
-  ZS6BKW, Zepp, biquad, double biquad, Beverage, and loaded/linked dipole.
-  Magnetic loops, random wires, and custom/imported geometry are explicitly
-  unavailable. Band-aware and robust modes evaluate multiple operating points,
-  the Pareto front is descriptive, and summaries persist in schema 30. Optional
+  ZS6BKW, Zepp, biquad, double biquad, Beverage, loaded/linked dipole, and the
+  shortened loaded EFHW presets. Magnetic loops, random wires, and
+  custom/imported geometry are explicitly unavailable. Band-aware and robust
+  modes evaluate multiple operating points, the Pareto front is descriptive,
+  and summaries persist in schema 31. Optional
   hard limits cover maximum turning radius for every family and maximum boom
   length for Yagi/Moxon. Horizontal wire dipoles support an optional sampled
   sag; Yagi elements support optional tapered tips. Boom-mounting correction

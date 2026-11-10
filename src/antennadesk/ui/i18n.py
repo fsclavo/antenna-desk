@@ -517,6 +517,36 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "longitudes publicadas de 40/20/10 m y un transformador 49:1."
         ),
     },
+    "catalog.shortened_endfed_80_10": {
+        Language.ENGLISH: "Shortened EFHW 80-10 m",
+        Language.SPANISH: "EFHW acortada 80-10 m",
+    },
+    "catalog.shortened_endfed_80_10.description": {
+        Language.ENGLISH: (
+            "End-fed half-wave with a 110 µH loading coil: 20.35 m lower "
+            "section, 2.39 m top section, and a 49:1 transformer."
+        ),
+        Language.SPANISH: (
+            "Media onda alimentada en el extremo con bobina de carga de 110 µH: "
+            "tramo inferior de 20,35 m, tramo superior de 2,39 m y "
+            "transformador 49:1."
+        ),
+    },
+    "catalog.shortened_endfed_40_10": {
+        Language.ENGLISH: "Shortened EFHW 40-20-10 m",
+        Language.SPANISH: "EFHW acortada 40-20-10 m",
+    },
+    "catalog.shortened_endfed_40_10.description": {
+        Language.ENGLISH: (
+            "End-fed half-wave with a 23 µH loading coil: 10.01 m lower "
+            "section, 1.85 m top section, and a 49:1 transformer."
+        ),
+        Language.SPANISH: (
+            "Media onda alimentada en el extremo con bobina de carga de 23 µH: "
+            "tramo inferior de 10,01 m, tramo superior de 1,85 m y "
+            "transformador 49:1."
+        ),
+    },
     "catalog.fan_dipole": {
         Language.ENGLISH: "Fan dipole",
         Language.SPANISH: "Dipolo ventilador",
@@ -1056,6 +1086,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "Una vertical cargada depende de su bobina de carga, por lo que no "
             "hay estimación automática desde frecuencia."
+        ),
+    },
+    "design_from_frequency.unsupported_loaded_endfed": {
+        Language.ENGLISH: (
+            "A shortened EFHW depends on its loading coil and matching unit, so "
+            "automatic frequency-first estimation is not available."
+        ),
+        Language.SPANISH: (
+            "Una EFHW acortada depende de su bobina de carga y su unidad de "
+            "adaptación, por lo que no hay estimación automática desde frecuencia."
         ),
     },
     "design_from_frequency.unsupported_random_wire": {
@@ -2116,6 +2156,26 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "band.note.endfed": {
         Language.ENGLISH: "Starting point; the transformer and counterpoise determine coverage.",
         Language.SPANISH: "Punto de partida; el transformador y el contrapeso determinan la cobertura.",
+    },
+    "band.note.endfed_loaded_80_10": {
+        Language.ENGLISH: (
+            "Published 80-10 m starting point; the loading coil, matching unit, "
+            "and installation determine the actual coverage."
+        ),
+        Language.SPANISH: (
+            "Punto de partida publicado para 80-10 m; la bobina de carga, la "
+            "unidad de adaptación y la instalación determinan la cobertura real."
+        ),
+    },
+    "band.note.endfed_loaded_40_10": {
+        Language.ENGLISH: (
+            "Published 40-20-10 m starting point; the loading coil, matching "
+            "unit, and installation determine the actual coverage."
+        ),
+        Language.SPANISH: (
+            "Punto de partida publicado para 40-20-10 m; la bobina de carga, la "
+            "unidad de adaptación y la instalación determinan la cobertura real."
+        ),
     },
     "band.note.random_wire": {
         Language.ENGLISH: "Non-resonant wire; an external tuner is required.",
@@ -4376,6 +4436,42 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "EFHW band preset",
         Language.SPANISH: "Preset EFHW por banda",
     },
+    "endfed.shortened_presets": {
+        Language.ENGLISH: "Shortened EFHW reference",
+        Language.SPANISH: "Referencia EFHW acortada",
+    },
+    "endfed.preset.shortened_80_10": {
+        Language.ENGLISH: "80-10 m",
+        Language.SPANISH: "80-10 m",
+    },
+    "endfed.preset.shortened_40_10": {
+        Language.ENGLISH: "40-20-10 m",
+        Language.SPANISH: "40-20-10 m",
+    },
+    "endfed.loading_coil": {
+        Language.ENGLISH: "Loading coil",
+        Language.SPANISH: "Bobina de carga",
+    },
+    "endfed.loading_coil_offset": {
+        Language.ENGLISH: "Coil position from feed",
+        Language.SPANISH: "Posición de la bobina desde la alimentación",
+    },
+    "endfed.loading_coil_inductance": {
+        Language.ENGLISH: "Coil inductance",
+        Language.SPANISH: "Inductancia de la bobina",
+    },
+    "endfed.loading_coil_resistance": {
+        Language.ENGLISH: "Coil series resistance",
+        Language.SPANISH: "Resistencia serie de la bobina",
+    },
+    "endfed.loading_coil_q": {
+        Language.ENGLISH: "Coil Q at design frequency",
+        Language.SPANISH: "Q de la bobina en la frecuencia de diseño",
+    },
+    "endfed.ideal_coil": {
+        Language.ENGLISH: "ideal",
+        Language.SPANISH: "ideal",
+    },
     "endfed.preset.sloper": {
         Language.ENGLISH: "Sloper",
         Language.SPANISH: "Sloper",
@@ -4391,6 +4487,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "endfed.random_wire_title": {
         Language.ENGLISH: "Random Wire Generator",
         Language.SPANISH: "Generador de hilo aleatorio",
+    },
+    "endfed.shortened_80_10_title": {
+        Language.ENGLISH: "Shortened EFHW 80-10 m",
+        Language.SPANISH: "EFHW acortada 80-10 m",
+    },
+    "endfed.shortened_40_10_title": {
+        Language.ENGLISH: "Shortened EFHW 40-20-10 m",
+        Language.SPANISH: "EFHW acortada 40-20-10 m",
     },
     "endfed.sloper_hint": {
         Language.ENGLISH: (
@@ -4417,6 +4521,44 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "son puntos de partida; sintonizalos para tu banda e instalación."
         ),
     },
+    "endfed.shortened_80_10_hint": {
+        Language.ENGLISH: (
+            "Published shortened EFHW: 20.35 m lower section, 110 µH loading "
+            "coil, 2.39 m top section, 49:1 transformer, and a 100 pF matching "
+            "capacitor. The default is vertical; change the feed/end heights "
+            "for a sloper or horizontal run. The published inverted-L bend, "
+            "matching unit, choke, and ground are not modeled."
+        ),
+        Language.SPANISH: (
+            "EFHW acortada publicada: tramo inferior de 20,35 m, bobina de carga "
+            "de 110 µH, tramo superior de 2,39 m, transformador 49:1 y capacitor "
+            "de adaptación de 100 pF. El valor por defecto es vertical; cambiá "
+            "las alturas de alimentación/extremo para un sloper o instalación "
+            "horizontal. El codo de la L invertida, la unidad de adaptación, el "
+            "choke y el suelo no están modelados."
+        ),
+    },
+    "endfed.shortened_40_10_hint": {
+        Language.ENGLISH: (
+            "Published shortened EFHW: 10.01 m lower section, 23 µH loading "
+            "coil, 1.85 m top section, 49:1 transformer, and a 100 pF matching "
+            "capacitor. The default is vertical; change the feed/end heights "
+            "for a sloper or horizontal run. The matching unit, choke, ground, "
+            "and support geometry are not modeled. CA4EMT documents a different "
+            "40-20-10 variant (34 µH, 1.6 m top, 1:8); this preset follows the "
+            "23 µH/100 pF schematic."
+        ),
+        Language.SPANISH: (
+            "EFHW acortada publicada: tramo inferior de 10,01 m, bobina de carga "
+            "de 23 µH, tramo superior de 1,85 m, transformador 49:1 y capacitor "
+            "de adaptación de 100 pF. El valor por defecto es vertical; cambiá "
+            "las alturas de alimentación/extremo para un sloper o instalación "
+            "horizontal. La unidad de adaptación, el choke, el suelo y la "
+            "geometría de soporte no están modelados. CA4EMT documenta otra "
+            "variante de 40-20-10 (34 µH, tramo superior de 1,6 m, 1:8); este "
+            "preset sigue el esquema de 23 µH/100 pF."
+        ),
+    },
     "endfed.sloper_evidence": {
         Language.ENGLISH: (
             "Experimental preset: the geometry and matching are application "
@@ -4438,6 +4580,35 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Preset experimental: la geometría y la adaptación son puntos de "
             "partida, sin una referencia numérica independiente para este hilo "
             "aleatorio."
+        ),
+    },
+    "endfed.shortened_80_10_evidence": {
+        Language.ENGLISH: (
+            "Published starting dimensions from G0KYA, EA7EER, and G4WIF. "
+            "The exact 110 µH / 20.35 m / 2.39 m geometry is reference-backed "
+            "for construction only; the matching unit, 100 pF capacitor, "
+            "common-mode choke, ground, and installation are not modeled."
+        ),
+        Language.SPANISH: (
+            "Dimensiones iniciales publicadas por G0KYA, EA7EER y G4WIF. La "
+            "geometría exacta de 110 µH / 20,35 m / 2,39 m tiene referencia "
+            "solo para la construcción; la unidad de adaptación, el capacitor "
+            "de 100 pF, el choke de modo común, el suelo y la instalación no "
+            "están modelados."
+        ),
+    },
+    "endfed.shortened_40_10_evidence": {
+        Language.ENGLISH: (
+            "Published starting dimensions from the radioaficion / PA0EJH "
+            "schematic: 23 µH / 10.01 m / 1.85 m. The matching unit, 100 pF "
+            "capacitor, choke, ground, and installation are not modeled. "
+            "CA4EMT documents a different 34 µH variant."
+        ),
+        Language.SPANISH: (
+            "Dimensiones iniciales publicadas en el esquema de radioaficion / "
+            "PA0EJH: 23 µH / 10,01 m / 1,85 m. La unidad de adaptación, el "
+            "capacitor de 100 pF, el choke, el suelo y la instalación no están "
+            "modelados. CA4EMT documenta otra variante de 34 µH."
         ),
     },
     "endfed.title": {
@@ -4463,6 +4634,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "Alimentación {feed} {unit} · extremo {end} {unit} · contrapeso "
             "{counterpoise} · {ratio}:1"
+        ),
+    },
+    "endfed.loaded_geometry": {
+        Language.ENGLISH: (
+            "Feed {feed} {unit} · end {end} {unit} · coil at {coil} {unit} · "
+            "{inductance} µH · top {top} {unit} · counterpoise {counterpoise} · "
+            "{ratio}:1"
+        ),
+        Language.SPANISH: (
+            "Alimentación {feed} {unit} · extremo {end} {unit} · bobina a "
+            "{coil} {unit} · {inductance} µH · tramo superior {top} {unit} · "
+            "contrapeso {counterpoise} · {ratio}:1"
         ),
     },
     "endfed.transformer_ratio": {
@@ -6235,6 +6418,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize.constraint.endfed_height": {
         Language.ENGLISH: "The height difference must not exceed the end-fed wire length.",
         Language.SPANISH: "La diferencia de altura no puede superar la longitud del hilo alimentado en el extremo.",
+    },
+    "optimize.constraint.endfed_coil_offset": {
+        Language.ENGLISH: "The loading-coil position must be shorter than the wire.",
+        Language.SPANISH: "La posición de la bobina de carga debe ser menor que el hilo.",
     },
     "optimize.constraint.fan_angles": {
         Language.ENGLISH: "Fan-dipole elements must use distinct included angles.",

@@ -229,6 +229,44 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "modeled."
         ),
     ),
+    "shortened_endfed_80_10": EvidenceEntry(
+        template="shortened_endfed_80_10",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "Steve Nichols G0KYA, 'A shortened multi-band End-Fed Half Wave "
+            "(EFHW) antenna for 80-10m'; EA7EER, 'Antena End Fed para 10-15-20-40 "
+            "y 80 m'; G4WIF, 'End Fed Half Wave Antenna' (20.35 m + 110 µH + "
+            "2.39 m, 49:1, 100 pF)"
+        ),
+        tolerance=(
+            "Starting dimensions: 20.35 m lower section, 110 µH coil, 2.39 m "
+            "top section; published SWR 1.2-3.0 on 80 m and 1.0-1.2 on 40 m"
+        ),
+        limitation=(
+            "Starting dimensions only; the published inverted-L installation is "
+            "modeled as a straight wire. The transformer, 100 pF matching "
+            "capacitor, common-mode choke, ground, and matching losses are not "
+            "modeled. The cited comparison is 8-12 dB below a dipole on 80 m. "
+            "Scaled or edited geometry is experimental."
+        ),
+    ),
+    "shortened_endfed_40_10": EvidenceEntry(
+        template="shortened_endfed_40_10",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "radioaficion.com, PA0EJH design, kx4o schematic: 40-20-10 m "
+            "shortened EFHW with 10.01 m lower section, 23 µH coil, 1.85 m top "
+            "section, 49:1 transformer, and 100 pF matching capacitor"
+        ),
+        tolerance="Starting dimensions only; no independent R/X or pattern tolerance is published",
+        limitation=(
+            "The matching unit, 100 pF capacitor, choke, ground, and installation "
+            "are not modeled, and the model uses a straight wire. CA4EMT "
+            "documents a different 40-20-10 variant (34 µH, 1.6 m top, 1:8, "
+            "150 pF); this preset follows the 23 µH/100 pF schematic. Scaled or "
+            "edited geometry is experimental."
+        ),
+    ),
     "sloper": EvidenceEntry(
         template="sloper",
         level=EvidenceLevel.PUBLISHED,

@@ -513,6 +513,29 @@ the requested end height is outside the wire's vertical reach, the frequency-
 first estimator clamps it to the nearest reachable height and reports a warning.
 EFHW is a first-class experimental template with an inline editor.
 
+### Shortened EFHW with a loading coil
+
+The catalog also has **Shortened EFHW 80-10 m** and **Shortened EFHW
+40-20-10 m** entries. They extend the End-fed family with a series loading
+coil:
+
+- **80-10 m:** 20.35 m from the feed to a 110 µH coil, then 2.39 m of top
+  wire; 49:1 transformer and a 100 pF matching capacitor. The reference is
+  G0KYA, also documented by EA7EER and G4WIF.
+- **40-20-10 m:** 10.01 m from the feed to a 23 µH coil, then 1.85 m of top
+  wire; 49:1 transformer and a 100 pF matching capacitor. The reference is
+  the radioaficion.com / PA0EJH schematic.
+
+Both presets open vertically by default. Change the feed and end heights for a
+sloper or horizontal installation. The coil position, inductance, and optional
+series resistance are editable; the Q is reported when a resistance is entered.
+The matching unit, capacitor, common-mode choke, ground, and support geometry
+are not modeled, and the published inverted-L bend is represented by a
+straight wire. The 40-20-10 preset follows the 23 µH/100 pF schematic; CA4EMT
+documents a different 34 µH/150 pF variant. Edited or frequency-scaled geometry
+is experimental. Automatic frequency-first estimation is disabled for these
+loaded presets.
+
 The frequency is the **design frequency** for the half-wave radiator; the
 matching transformer and counterpoise remain installation-specific. Use
 **Choose analysis bands...** to select the harmonic plan. The default for a

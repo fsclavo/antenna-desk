@@ -383,6 +383,29 @@ def _migrate_v29_to_v30(document: dict[str, Any]) -> dict[str, Any]:
     return copy.deepcopy(document)
 
 
+def _migrate_v30_to_v31(document: dict[str, Any]) -> dict[str, Any]:
+    """Add optional loading-coil fields to end-fed designs."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if not isinstance(project, dict):
+        return migrated
+    designs = project.get("designs")
+    if not isinstance(designs, list):
+        return migrated
+    for design in designs:
+        if not isinstance(design, dict) or design.get("antenna_type") != "endfed":
+            continue
+        parameters = design.get("parameters")
+        if not isinstance(parameters, dict):
+            continue
+        parameters.setdefault("loading_coil_enabled", False)
+        parameters.setdefault("loading_coil_offset_m", 0.0)
+        parameters.setdefault("loading_coil_inductance_h", 0.0)
+        parameters.setdefault("loading_coil_resistance_ohm", 0.0)
+    return migrated
+
+
 def _migrate_v13_to_v14(document: dict[str, Any]) -> dict[str, Any]:
     """Add the optional project balun/unun loss model."""
 
@@ -477,6 +500,7 @@ MIGRATIONS: dict[int, Migration] = {
     27: _migrate_v27_to_v28,
     28: _migrate_v28_to_v29,
     29: _migrate_v29_to_v30,
+    30: _migrate_v30_to_v31,
 }
 
 

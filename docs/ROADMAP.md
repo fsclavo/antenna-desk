@@ -283,11 +283,13 @@ point; `C` is structural/experimental only.
 | 17 | Log-periodic | New family | L | Medium | A/B | Many elements and a feed network; high test burden. |
 | 18 | Discone | New family | L | Medium | B/C | **Implemented on 2026-11-08:** radial-wire cone and top disc with an apex feed gap, schema 27, inline editor, scene contract, reports, construction notes, and family optimizer. The wire approximation and missing coax/mast model keep it experimental. |
 | 19 | Trapped / multiband Yagi | New family | L | High | B/C | **Implemented on 2026-11-08:** two-band Yagi with one ideal parallel LC trap pair per element, schema 28, inline editor, scene contract, reports, construction notes, and family optimizer. Trap loss, boom mounting, feed line, and matching remain unvalidated. |
+| 20 | Shortened loaded EFHW | EndFed variant | M | Medium | B/C | **Implemented on 2026-11-09:** 80-10 m (20.35 m + 110 µH + 2.39 m) and 40-20-10 m (10.01 m + 23 µH + 1.85 m) presets with a 49:1 transformer, editable series coil, schema 31, catalog entries, band plans, reports, construction notes, and optimizer variables. The matching unit, capacitor, choke, ground, and inverted-L bend are not modeled; edited or scaled geometry is experimental. |
 
 Items 1–7 were the immediate recommended sequence; items 8–14 are the next
-medium-sized candidates, with 8–13 done and 14 partially done. Items 15–19 are large or
-architectural and should not start until the single-feed families and the shared
-geometry/load model are stable.
+medium-sized candidates, with 8–13 done and 14 partially done. Items 15–19 are
+large or architectural and should not start until the single-feed families and
+the shared geometry/load model are stable. Item 20 is an implemented EndFed
+variant and does not change that rule.
 
 EFHW is deliberately **not** listed as a new family: the standard `EndFed`
 template already models it. Item 9 covers explicit EFHW presets, labels, and

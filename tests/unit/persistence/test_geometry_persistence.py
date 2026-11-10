@@ -1131,6 +1131,25 @@ def test_endfed_preset_round_trips() -> None:
     assert restored.designs[0].antenna_type == "endfed"
 
 
+def test_loaded_endfed_round_trips_with_the_coil_load() -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+
+    parameters = shortened_efhw_80_10_parameters()
+    original = _project(parameters, "Shortened EFHW")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].parameters.preset.value == "shortened_80_10"
+    assert restored.designs[0].antenna_type == "endfed"
+    assert [load.id for load in restored.designs[0].antenna.loads] == [
+        "endfed-loading-coil",
+    ]
+    assert restored.designs[0].antenna.loads[0].inductance_h == pytest.approx(110e-6)
+    assert restored.designs[0].antenna.loads[0].offset_m == pytest.approx(20.35)
+
+
 def test_transmission_lines_round_trip_through_the_schema() -> None:
     from antennadesk.domain.antennas.transmission_line import TransmissionLine
 

@@ -83,7 +83,13 @@ def design_evidence_rows(
 ) -> tuple[tuple[str, str], ...]:
     """Return the evidence level, source, tolerance, and limitation."""
 
-    entry = EVIDENCE.get(design.antenna_type)
+    entry_key = design.antenna_type
+    if isinstance(design.parameters, EndFedParameters):
+        entry_key = {
+            EndFedPreset.SHORTENED_80_10: "shortened_endfed_80_10",
+            EndFedPreset.SHORTENED_40_10: "shortened_endfed_40_10",
+        }.get(design.parameters.preset, "endfed")
+    entry = EVIDENCE.get(entry_key)
     if entry is None:
         return ()
     tr = labeler or identity_labeler
@@ -643,6 +649,8 @@ def design_summary_rows(
             EndFedPreset.STANDARD: "end-fed wire",
             EndFedPreset.SLOPER: "sloper",
             EndFedPreset.RANDOM_WIRE: "random wire",
+            EndFedPreset.SHORTENED_80_10: "shortened EFHW 80-10 m",
+            EndFedPreset.SHORTENED_40_10: "shortened EFHW 40-20-10 m",
         }[parameters.preset]
         rows.extend(
             [
@@ -664,6 +672,28 @@ def design_summary_rows(
                 ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
+        if parameters.coil_active:
+            rows.extend(
+                [
+                    (
+                        "Loading coil",
+                        f"{parameters.loading_coil_inductance_h * 1e6:.4f} µH",
+                    ),
+                    (
+                        "Coil position",
+                        tr(
+                            "{offset:.4f} m from feed",
+                            offset=parameters.loading_coil_offset_m,
+                        ),
+                    ),
+                    (
+                        "Top section",
+                        f"{parameters.loading_coil_top_length_m:.4f} m",
+                    ),
+                ]
+            )
+            if parameters.loading_coil_q is not None:
+                rows.append(("Coil Q", f"{parameters.loading_coil_q:.1f}"))
         return tuple(rows)
     if isinstance(parameters, FanDipoleParameters):
         rows.extend(

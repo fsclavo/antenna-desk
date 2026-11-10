@@ -562,6 +562,10 @@ class EndFedParametersPayload(StrictModel):
     counterpoise_length_m: float = Field(default=0.0, ge=0.0)
     counterpoise_height_m: float = Field(default=0.1, ge=0.0)
     counterpoise_azimuth_deg: float | None = Field(default=None, ge=0.0, lt=360.0)
+    loading_coil_enabled: bool = False
+    loading_coil_offset_m: float = Field(default=0.0, ge=0.0)
+    loading_coil_inductance_h: float = Field(default=0.0, ge=0.0)
+    loading_coil_resistance_ohm: float = Field(default=0.0, ge=0.0)
     preset: EndFedPreset = EndFedPreset.STANDARD
 
 
@@ -1690,6 +1694,10 @@ def _endfed_parameters_from_domain(value: EndFedParameters) -> EndFedParametersP
         counterpoise_length_m=value.counterpoise_length_m,
         counterpoise_height_m=value.counterpoise_height_m,
         counterpoise_azimuth_deg=value.counterpoise_azimuth_deg,
+        loading_coil_enabled=value.loading_coil_enabled,
+        loading_coil_offset_m=value.loading_coil_offset_m,
+        loading_coil_inductance_h=value.loading_coil_inductance_h,
+        loading_coil_resistance_ohm=value.loading_coil_resistance_ohm,
         preset=value.preset,
     )
 
@@ -2806,6 +2814,10 @@ def _endfed_parameters_to_domain(value: EndFedParametersPayload) -> EndFedParame
         counterpoise_length_m=value.counterpoise_length_m,
         counterpoise_height_m=value.counterpoise_height_m,
         counterpoise_azimuth_deg=value.counterpoise_azimuth_deg,
+        loading_coil_enabled=value.loading_coil_enabled,
+        loading_coil_offset_m=value.loading_coil_offset_m,
+        loading_coil_inductance_h=value.loading_coil_inductance_h,
+        loading_coil_resistance_ohm=value.loading_coil_resistance_ohm,
         preset=value.preset,
     )
 

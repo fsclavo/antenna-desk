@@ -595,6 +595,16 @@ def test_random_wire_has_no_resonant_estimator() -> None:
         estimator_type_for(parameters)
 
 
+def test_shortened_loaded_endfed_has_no_resonant_estimator() -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+
+    parameters = shortened_efhw_80_10_parameters()
+
+    assert supports_estimation(parameters) is False
+    with pytest.raises(UnsupportedEstimateError):
+        estimator_type_for(parameters)
+
+
 def test_template_without_an_estimator_is_unsupported() -> None:
     from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 

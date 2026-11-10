@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from antennadesk.domain.antennas.beverage import beverage_parameters
 from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
-from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
+from antennadesk.domain.antennas.endfed import (
+    EndFedParameters,
+    EndFedPreset,
+    shortened_efhw_40_10_parameters,
+    shortened_efhw_80_10_parameters,
+)
 from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
 from antennadesk.domain.antennas.loop import LoopParameters
@@ -61,6 +66,8 @@ def test_catalog_key_for_current_templates() -> None:
     assert catalog_key_for(biquad_parameters(BiquadKind.DOUBLE)) == "double_biquad"
     assert catalog_key_for(beverage_parameters()) == "beverage"
     assert catalog_key_for(loaded_dipole_parameters()) == "loaded_dipole"
+    assert catalog_key_for(shortened_efhw_80_10_parameters()) == "shortened_endfed_80_10"
+    assert catalog_key_for(shortened_efhw_40_10_parameters()) == "shortened_endfed_40_10"
 
 
 def test_label_key_follows_the_catalog_entry() -> None:
@@ -99,3 +106,5 @@ def test_label_key_follows_the_catalog_entry() -> None:
     )
     assert label_key_for(zs6bkw_parameters()) == "catalog.zs6bkw"
     assert label_key_for(zepp_parameters()) == "catalog.zepp"
+    assert label_key_for(shortened_efhw_80_10_parameters()) == "catalog.shortened_endfed_80_10"
+    assert label_key_for(shortened_efhw_40_10_parameters()) == "catalog.shortened_endfed_40_10"

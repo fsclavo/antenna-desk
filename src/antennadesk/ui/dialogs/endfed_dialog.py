@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMessageBox,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -55,19 +56,25 @@ class EndFedDialog(QDialog):
             EndFedPreset.STANDARD: "endfed.title",
             EndFedPreset.SLOPER: "endfed.sloper_title",
             EndFedPreset.RANDOM_WIRE: "endfed.random_wire_title",
+            EndFedPreset.SHORTENED_80_10: "endfed.shortened_80_10_title",
+            EndFedPreset.SHORTENED_40_10: "endfed.shortened_40_10_title",
         }[preset]
         self.setWindowTitle(translator.t(title_key))
-        self.resize(*scaled_dialog_size(620, 720))
+        self.resize(*scaled_dialog_size(620, 780))
 
         hint_key = {
             EndFedPreset.STANDARD: "endfed.hint",
             EndFedPreset.SLOPER: "endfed.sloper_hint",
             EndFedPreset.RANDOM_WIRE: "endfed.random_wire_hint",
+            EndFedPreset.SHORTENED_80_10: "endfed.shortened_80_10_hint",
+            EndFedPreset.SHORTENED_40_10: "endfed.shortened_40_10_hint",
         }[preset]
         evidence_key = {
             EndFedPreset.STANDARD: "endfed.evidence",
             EndFedPreset.SLOPER: "endfed.sloper_evidence",
             EndFedPreset.RANDOM_WIRE: "endfed.random_wire_evidence",
+            EndFedPreset.SHORTENED_80_10: "endfed.shortened_80_10_evidence",
+            EndFedPreset.SHORTENED_40_10: "endfed.shortened_40_10_evidence",
         }[preset]
         self._hint = QLabel(translator.t(hint_key), self)
         self._hint.setWordWrap(True)
@@ -89,11 +96,13 @@ class EndFedDialog(QDialog):
         buttons.rejected.connect(self.reject)
 
         layout = QVBoxLayout(self)
-        layout.addWidget(self._form)
+        form_scroll = QScrollArea(self)
+        form_scroll.setWidgetResizable(True)
+        form_scroll.setWidget(self._form)
+        layout.addWidget(form_scroll, 1)
         layout.addLayout(band_layout)
         layout.addWidget(self._hint)
         layout.addWidget(self._evidence)
-        layout.addStretch(1)
         layout.addWidget(buttons)
         self._form.changed.connect(self._update_band_plan_label)
         self._update_band_plan_label()

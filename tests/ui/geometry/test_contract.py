@@ -22,7 +22,11 @@ from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
 from antennadesk.domain.antennas.custom import CustomAntennaParameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.discone import discone_parameters
-from antennadesk.domain.antennas.endfed import EndFedParameters
+from antennadesk.domain.antennas.endfed import (
+    EndFedParameters,
+    shortened_efhw_40_10_parameters,
+    shortened_efhw_80_10_parameters,
+)
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
 from antennadesk.domain.antennas.feed import FeedPoint
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
@@ -401,6 +405,22 @@ def _cases() -> tuple[FamilyCase, ...]:
             1,
             GeometryViewMode.ELEVATION,
             ("End-fed wire", "wire length 20.00 m"),
+        ),
+        FamilyCase(
+            "shortened_endfed_80_10",
+            shortened_efhw_80_10_parameters(),
+            "endfed",
+            1,
+            GeometryViewMode.ELEVATION,
+            ("End-fed wire", "wire length 22.74 m", "loading coil 110.0 µH"),
+        ),
+        FamilyCase(
+            "shortened_endfed_40_10",
+            shortened_efhw_40_10_parameters(),
+            "endfed",
+            1,
+            GeometryViewMode.ELEVATION,
+            ("End-fed wire", "wire length 11.86 m", "loading coil 23.0 µH"),
         ),
         FamilyCase(
             "jpole",

@@ -4,12 +4,15 @@
 
 from __future__ import annotations
 
+import math
+
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
     QFormLayout,
+    QGroupBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -22,6 +25,8 @@ from ...domain.antennas.endfed import (
     EndFedParameters,
     EndFedPreset,
     efhw_parameters,
+    shortened_efhw_40_10_parameters,
+    shortened_efhw_80_10_parameters,
 )
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.design.formulas import half_wave_length_m
@@ -87,6 +92,40 @@ class EndFedForm(QWidget):
         self._transformer.setDecimals(1)
         self._transformer.setValue(49.0)
         self._transformer.setSuffix(":1")
+
+        self._loading_coil_group = QGroupBox(translator.t("endfed.loading_coil"), self)
+        self._loading_coil_group.setCheckable(True)
+        self._loading_coil_group.setChecked(False)
+        coil_form = QFormLayout(self._loading_coil_group)
+        self._loading_coil_offset = QDoubleSpinBox(self._loading_coil_group)
+        self._loading_coil_offset.setDecimals(3)
+        self._loading_coil_offset.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._loading_coil_offset.setRange(0.0, 100_000.0)
+        self._loading_coil_inductance = QDoubleSpinBox(self._loading_coil_group)
+        self._loading_coil_inductance.setRange(0.0, 1_000_000.0)
+        self._loading_coil_inductance.setDecimals(3)
+        self._loading_coil_inductance.setSuffix(" µH")
+        self._loading_coil_resistance = QDoubleSpinBox(self._loading_coil_group)
+        self._loading_coil_resistance.setRange(0.0, 10_000.0)
+        self._loading_coil_resistance.setDecimals(3)
+        self._loading_coil_resistance.setSuffix(" Ω")
+        self._loading_coil_q = QLabel(self._loading_coil_group)
+        coil_form.addRow(
+            self._labels.label("endfed.loading_coil_offset"),
+            self._loading_coil_offset,
+        )
+        coil_form.addRow(
+            self._labels.label("endfed.loading_coil_inductance"),
+            self._loading_coil_inductance,
+        )
+        coil_form.addRow(
+            self._labels.label("endfed.loading_coil_resistance"),
+            self._loading_coil_resistance,
+        )
+        coil_form.addRow(
+            self._labels.label("endfed.loading_coil_q"),
+            self._loading_coil_q,
+        )
 
         self._counterpoise_enabled = QCheckBox(translator.t("endfed.counterpoise_enabled"), self)
         self._counterpoise_enabled.setChecked(False)
@@ -167,6 +206,22 @@ class EndFedForm(QWidget):
             )
             efhw_layout.addWidget(button)
             self._efhw_buttons[band_id] = button
+        self._shortened_label = QLabel(translator.t("endfed.shortened_presets"), self)
+        self._shortened_widget = QWidget(self)
+        shortened_layout = QHBoxLayout(self._shortened_widget)
+        shortened_layout.setContentsMargins(0, 0, 0, 0)
+        shortened_layout.addWidget(self._shortened_label, 1)
+        self._shortened_buttons: dict[EndFedPreset, QPushButton] = {}
+        for preset, label_key in (
+            (EndFedPreset.SHORTENED_80_10, "endfed.preset.shortened_80_10"),
+            (EndFedPreset.SHORTENED_40_10, "endfed.preset.shortened_40_10"),
+        ):
+            button = QPushButton(translator.t(label_key), self._shortened_widget)
+            button.clicked.connect(
+                lambda _checked=False, value=preset: self._load_shortened_preset(value)
+            )
+            shortened_layout.addWidget(button)
+            self._shortened_buttons[preset] = button
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
 
@@ -180,6 +235,7 @@ class EndFedForm(QWidget):
         form.addRow(self._labels.label("endfed.feed_height"), self._feed_height)
         form.addRow(self._labels.label("endfed.end_height"), self._end_height)
         form.addRow(self._labels.label("endfed.transformer_ratio"), self._transformer)
+        form.addRow(self._loading_coil_group)
         form.addRow(self._counterpoise_enabled)
         form.addRow(self._labels.label("endfed.counterpoise_length"), self._counterpoise_length)
         form.addRow(self._labels.label("endfed.counterpoise_height"), self._counterpoise_height)
@@ -199,6 +255,7 @@ class EndFedForm(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addLayout(form)
         layout.addWidget(self._efhw_widget)
+        layout.addWidget(self._shortened_widget)
         layout.addWidget(self._geometry)
 
         for widget in (
@@ -207,6 +264,9 @@ class EndFedForm(QWidget):
             self._feed_height,
             self._end_height,
             self._transformer,
+            self._loading_coil_offset,
+            self._loading_coil_inductance,
+            self._loading_coil_resistance,
             self._counterpoise_length,
             self._counterpoise_height,
             self._counterpoise_azimuth,
@@ -216,6 +276,7 @@ class EndFedForm(QWidget):
             self._conductivity,
         ):
             widget.valueChanged.connect(self._emit_changed)
+        self._loading_coil_group.toggled.connect(self._loading_coil_toggled)
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._ground_changed)
         self._counterpoise_length.valueChanged.connect(self._counterpoise_changed)
@@ -226,6 +287,7 @@ class EndFedForm(QWidget):
             self._update_preset_label()
         self._update_ground_controls()
         self._update_counterpoise_controls()
+        self._update_loading_coil_controls()
         self._update_efhw_visibility()
         self._update_geometry()
 
@@ -234,6 +296,14 @@ class EndFedForm(QWidget):
         self._labels.retranslate()
         self._counterpoise_enabled.setText(self._translator.t("endfed.counterpoise_enabled"))
         self._efhw_label.setText(self._translator.t("endfed.efhw_presets"))
+        self._shortened_label.setText(self._translator.t("endfed.shortened_presets"))
+        self._loading_coil_group.setTitle(self._translator.t("endfed.loading_coil"))
+        self._shortened_buttons[EndFedPreset.SHORTENED_80_10].setText(
+            self._translator.t("endfed.preset.shortened_80_10")
+        )
+        self._shortened_buttons[EndFedPreset.SHORTENED_40_10].setText(
+            self._translator.t("endfed.preset.shortened_40_10")
+        )
         retranslate_combo(
             self._material,
             self._translator,
@@ -255,6 +325,12 @@ class EndFedForm(QWidget):
         if self._preset is EndFedPreset.STANDARD:
             self._update_preset_label()
             return
+        if self._preset in {
+            EndFedPreset.SHORTENED_80_10,
+            EndFedPreset.SHORTENED_40_10,
+        }:
+            self.set_parameters(self._shortened_parameters(self._preset))
+            return
         frequency_hz = self._frequency.value() * 1_000_000.0
         wavelength_m = 299_792_458.0 / frequency_hz
         if self._preset is EndFedPreset.SLOPER:
@@ -274,8 +350,63 @@ class EndFedForm(QWidget):
         self._counterpoise_length.setValue(length_from_m(0.05 * wavelength_m, self._unit_system))
         self._update_preset_label()
 
+    def _shortened_parameters(
+        self,
+        preset: EndFedPreset,
+        *,
+        preserve_installation: bool = False,
+    ) -> EndFedParameters:
+        builder = (
+            shortened_efhw_80_10_parameters
+            if preset is EndFedPreset.SHORTENED_80_10
+            else shortened_efhw_40_10_parameters
+        )
+        azimuth_deg = self._azimuth.value()
+        wire_radius_m = radius_to_m(self._radius.value(), self._unit_system)
+        material = self._selected_material()
+        ground = self._ground_model()
+        if preserve_installation:
+            try:
+                return builder(
+                    feed_height_m=length_to_m(
+                        self._feed_height.value(),
+                        self._unit_system,
+                    ),
+                    end_height_m=length_to_m(
+                        self._end_height.value(),
+                        self._unit_system,
+                    ),
+                    azimuth_deg=azimuth_deg,
+                    wire_radius_m=wire_radius_m,
+                    material=material,
+                    ground=ground,
+                )
+            except ValueError:
+                pass
+        return builder(
+            azimuth_deg=azimuth_deg,
+            wire_radius_m=wire_radius_m,
+            material=material,
+            ground=ground,
+        )
+
+    def _load_shortened_preset(self, preset: EndFedPreset) -> None:
+        self._updating = True
+        try:
+            self.set_parameters(self._shortened_parameters(preset, preserve_installation=True))
+        finally:
+            self._updating = False
+        self.changed.emit()
+
     def _update_efhw_visibility(self) -> None:
         self._efhw_widget.setVisible(self._preset is EndFedPreset.STANDARD)
+        self._shortened_widget.setVisible(
+            self._preset
+            in {
+                EndFedPreset.SHORTENED_80_10,
+                EndFedPreset.SHORTENED_40_10,
+            }
+        )
 
     def _load_efhw_preset(self, band_id: str) -> None:
         if self._preset is not EndFedPreset.STANDARD:
@@ -325,6 +456,33 @@ class EndFedForm(QWidget):
             self._update_geometry()
             self.changed.emit()
 
+    def _loading_coil_toggled(self, _checked: bool) -> None:
+        self._update_loading_coil_controls()
+        if not self._updating:
+            self._update_geometry()
+            self.changed.emit()
+
+    def _update_loading_coil_controls(self) -> None:
+        enabled = self._loading_coil_group.isChecked()
+        self._loading_coil_offset.setEnabled(enabled)
+        self._loading_coil_inductance.setEnabled(enabled)
+        self._loading_coil_resistance.setEnabled(enabled)
+        if enabled and self._loading_coil_inductance.value() > 0.0:
+            if self._loading_coil_resistance.value() > 0.0:
+                reactance = (
+                    2.0
+                    * math.pi
+                    * self._frequency.value()
+                    * self._loading_coil_inductance.value()
+                    * 1e-6
+                )
+                q_value = reactance / self._loading_coil_resistance.value()
+                self._loading_coil_q.setText(f"{q_value:.1f}")
+            else:
+                self._loading_coil_q.setText(self._translator.t("endfed.ideal_coil"))
+        else:
+            self._loading_coil_q.setText("—")
+
     def _update_counterpoise_controls(self) -> None:
         enabled = self._counterpoise_enabled.isChecked()
         self._counterpoise_length.setEnabled(enabled)
@@ -370,6 +528,7 @@ class EndFedForm(QWidget):
             self._end_height,
             self._counterpoise_length,
             self._counterpoise_height,
+            self._loading_coil_offset,
         )
         if parameters is not None:
             self.set_parameters(parameters)
@@ -383,6 +542,12 @@ class EndFedForm(QWidget):
             self._feed_height.setValue(length_from_m(parameters.feed_height_m, self._unit_system))
             self._end_height.setValue(length_from_m(parameters.end_height_m, self._unit_system))
             self._transformer.setValue(parameters.transformer_ratio)
+            self._loading_coil_group.setChecked(parameters.loading_coil_enabled)
+            self._loading_coil_offset.setValue(
+                length_from_m(parameters.loading_coil_offset_m, self._unit_system)
+            )
+            self._loading_coil_inductance.setValue(parameters.loading_coil_inductance_h * 1e6)
+            self._loading_coil_resistance.setValue(parameters.loading_coil_resistance_ohm)
             self._counterpoise_enabled.setChecked(parameters.counterpoise_length_m > 0.0)
             self._counterpoise_length.setValue(
                 length_from_m(parameters.counterpoise_length_m, self._unit_system)
@@ -411,14 +576,22 @@ class EndFedForm(QWidget):
         self._update_preset_label()
         self._update_ground_controls()
         self._update_counterpoise_controls()
+        self._update_loading_coil_controls()
+        self._update_efhw_visibility()
         self._update_geometry()
 
     def set_frequency_hz(self, frequency_hz: float) -> None:
         self._frequency.setValue(frequency_hz / 1_000_000.0)
+        if self._preset in {
+            EndFedPreset.SHORTENED_80_10,
+            EndFedPreset.SHORTENED_40_10,
+        }:
+            return
         if self._preset is not EndFedPreset.STANDARD:
             self._apply_preset_defaults()
 
     def _update_geometry(self) -> None:
+        self._update_loading_coil_controls()
         try:
             parameters = self.parameters()
         except (ValueError, TypeError):
@@ -430,6 +603,29 @@ class EndFedForm(QWidget):
             if parameters.counterpoise_length_m > 0.0
             else "none"
         )
+        if parameters.coil_active:
+            coil_position = length_from_m(
+                parameters.loading_coil_offset_m,
+                self._unit_system,
+            )
+            top_length = length_from_m(
+                parameters.loading_coil_top_length_m,
+                self._unit_system,
+            )
+            self._geometry.setText(
+                self._translator.t(
+                    "endfed.loaded_geometry",
+                    feed=f"{length_from_m(parameters.feed_height_m, self._unit_system):.2f}",
+                    end=f"{length_from_m(parameters.end_height_m, self._unit_system):.2f}",
+                    coil=f"{coil_position:.2f}",
+                    inductance=f"{parameters.loading_coil_inductance_h * 1e6:.1f}",
+                    top=f"{top_length:.2f}",
+                    counterpoise=counterpoise,
+                    ratio=f"{parameters.transformer_ratio:g}",
+                    unit=unit,
+                )
+            )
+            return
         self._geometry.setText(
             self._translator.t(
                 "endfed.geometry",
@@ -459,5 +655,21 @@ class EndFedForm(QWidget):
             ),
             counterpoise_height_m=length_to_m(self._counterpoise_height.value(), self._unit_system),
             counterpoise_azimuth_deg=self._counterpoise_azimuth.value(),
+            loading_coil_enabled=self._loading_coil_group.isChecked(),
+            loading_coil_offset_m=(
+                length_to_m(self._loading_coil_offset.value(), self._unit_system)
+                if self._loading_coil_group.isChecked()
+                else 0.0
+            ),
+            loading_coil_inductance_h=(
+                self._loading_coil_inductance.value() * 1e-6
+                if self._loading_coil_group.isChecked()
+                else 0.0
+            ),
+            loading_coil_resistance_ohm=(
+                self._loading_coil_resistance.value()
+                if self._loading_coil_group.isChecked()
+                else 0.0
+            ),
             preset=self._preset,
         )

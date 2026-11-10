@@ -665,6 +665,35 @@ def test_v19_migration_introduces_the_beverage_design_type() -> None:
     assert migrated["project"]["designs"][0] == document["project"]["designs"][0]
 
 
+def test_v30_migration_adds_endfed_loading_coil_defaults() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 30,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "endfed",
+                    "parameters": {"length_m": 20.0},
+                },
+                {
+                    "antenna_type": "wire_dipole",
+                    "parameters": {"total_length_m": 20.0},
+                },
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    endfed = migrated["project"]["designs"][0]["parameters"]
+    assert endfed["loading_coil_enabled"] is False
+    assert endfed["loading_coil_offset_m"] == 0.0
+    assert endfed["loading_coil_inductance_h"] == 0.0
+    assert endfed["loading_coil_resistance_ohm"] == 0.0
+    assert "loading_coil_enabled" not in migrated["project"]["designs"][1]["parameters"]
+
+
 def test_v18_migration_introduces_biquad_design_types() -> None:
     document = {
         "format": "antennadesk-project",

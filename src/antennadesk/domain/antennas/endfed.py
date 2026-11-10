@@ -15,11 +15,13 @@ from .antenna import AntennaModel
 from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
+from .load import SeriesLoad
 from .materials import COPPER, ConductorMaterial
 from .wire import Wire
 
 ANTENNA_TYPE_ENDFED = "endfed"
 RADIATOR_ID = "radiator"
+ENDFED_LOADING_COIL_ID = "endfed-loading-coil"
 
 # Chameleon Antenna CHA LEFS Feather manual: 66.5 ft EFHW radiator, 49:1
 # transformer near 3 ft, far end at about 25 ft.
@@ -44,11 +46,27 @@ EFHW_PRESET_FREQUENCIES_HZ = {
 EFHW_TRANSFORMER_RATIO = 49.0
 EFHW_COUNTERPOISE_FRACTION = 0.05
 
+# Published shortened EFHW references. The first design is the G0KYA
+# 80-10 m antenna, also documented by EA7EER and G4WIF as 20.35 m + 110 uH +
+# 2.39 m. The second is the 40-20-10 m schematic supplied with the radioaficion
+# / PA0EJH reference: 10.01 m + 23 uH + 1.85 m.
+SHORTENED_80_10_REFERENCE_FREQUENCY_HZ = 3_650_000.0
+SHORTENED_80_10_LOWER_LENGTH_M = 20.35
+SHORTENED_80_10_TOP_LENGTH_M = 2.39
+SHORTENED_80_10_INDUCTANCE_H = 110e-6
+SHORTENED_40_10_REFERENCE_FREQUENCY_HZ = 7_100_000.0
+SHORTENED_40_10_LOWER_LENGTH_M = 10.01
+SHORTENED_40_10_TOP_LENGTH_M = 1.85
+SHORTENED_40_10_INDUCTANCE_H = 23e-6
+SHORTENED_EFHW_TRANSFORMER_RATIO = 49.0
+
 
 class EndFedPreset(StrEnum):
     STANDARD = "endfed"
     SLOPER = "sloper"
     RANDOM_WIRE = "random_wire"
+    SHORTENED_80_10 = "shortened_80_10"
+    SHORTENED_40_10 = "shortened_40_10"
 
 
 COUNTERPOISE_ID = "counterpoise"
@@ -71,6 +89,10 @@ class EndFedParameters:
     counterpoise_length_m: float = 0.0
     counterpoise_height_m: float = 0.1
     counterpoise_azimuth_deg: float | None = None
+    loading_coil_enabled: bool = False
+    loading_coil_offset_m: float = 0.0
+    loading_coil_inductance_h: float = 0.0
+    loading_coil_resistance_ohm: float = 0.0
     preset: EndFedPreset = EndFedPreset.STANDARD
 
     def __post_init__(self) -> None:
@@ -83,6 +105,24 @@ class EndFedParameters:
         object.__setattr__(self, "preset", EndFedPreset(self.preset))
         ensure_non_negative(self.counterpoise_length_m, name="counterpoise_length_m")
         ensure_non_negative(self.counterpoise_height_m, name="counterpoise_height_m")
+        ensure_non_negative(self.loading_coil_offset_m, name="loading_coil_offset_m")
+        ensure_non_negative(
+            self.loading_coil_inductance_h,
+            name="loading_coil_inductance_h",
+        )
+        ensure_non_negative(
+            self.loading_coil_resistance_ohm,
+            name="loading_coil_resistance_ohm",
+        )
+        if self.loading_coil_offset_m > self.length_m:
+            raise ValueError("loading_coil_offset_m must not exceed length_m")
+        if self.loading_coil_enabled:
+            ensure_positive(
+                self.loading_coil_inductance_h,
+                name="loading_coil_inductance_h",
+            )
+            if self.loading_coil_offset_m <= 0.0:
+                raise ValueError("loading_coil_offset_m must be positive when the coil is enabled")
         if abs(self.end_height_m - self.feed_height_m) > self.length_m + 1e-12:
             raise ValueError(
                 "the height difference between the feed and the end must not exceed the wire length"
@@ -98,6 +138,39 @@ class EndFedParameters:
                 "counterpoise_azimuth_deg",
                 units.normalize_azimuth_degrees(self.counterpoise_azimuth_deg),
             )
+
+    @property
+    def coil_active(self) -> bool:
+        return self.loading_coil_enabled and self.loading_coil_inductance_h > 0.0
+
+    @property
+    def managed_load_ids(self) -> frozenset[str]:
+        if not self.coil_active:
+            return frozenset()
+        return frozenset({ENDFED_LOADING_COIL_ID})
+
+    @property
+    def loading_coil_q(self) -> float | None:
+        if not self.coil_active or self.loading_coil_resistance_ohm <= 0.0:
+            return None
+        reactance = 2.0 * math.pi * self.frequency_hz * self.loading_coil_inductance_h
+        return reactance / self.loading_coil_resistance_ohm
+
+    @property
+    def loading_coil_top_length_m(self) -> float:
+        if not self.coil_active:
+            return 0.0
+        return max(self.length_m - self.loading_coil_offset_m, 0.0)
+
+    @property
+    def template_name(self) -> str:
+        return {
+            EndFedPreset.STANDARD: "End-fed",
+            EndFedPreset.SLOPER: "Sloper",
+            EndFedPreset.RANDOM_WIRE: "Random wire",
+            EndFedPreset.SHORTENED_80_10: "Shortened EFHW 80-10 m",
+            EndFedPreset.SHORTENED_40_10: "Shortened EFHW 40-20-10 m",
+        }[self.preset]
 
     @property
     def effective_counterpoise_azimuth_deg(self) -> float:
@@ -161,12 +234,21 @@ class EndFedParameters:
             wires=tuple(wires),
             feed=FeedPoint(RADIATOR_ID, 0.0),
             ground=self.ground,
+            loads=(
+                (
+                    SeriesLoad(
+                        id=ENDFED_LOADING_COIL_ID,
+                        wire_id=RADIATOR_ID,
+                        offset_m=self.loading_coil_offset_m,
+                        inductance_h=self.loading_coil_inductance_h,
+                        resistance_ohm=self.loading_coil_resistance_ohm,
+                    ),
+                )
+                if self.coil_active
+                else ()
+            ),
             generator_id="endfed",
-            generator_name={
-                EndFedPreset.STANDARD: "End-fed",
-                EndFedPreset.SLOPER: "Sloper",
-                EndFedPreset.RANDOM_WIRE: "Random wire",
-            }[self.preset],
+            generator_name=self.template_name,
         )
 
 
@@ -220,4 +302,89 @@ def sloper_parameters(
         ground=ground,
         transformer_ratio=SLOPER_REFERENCE_TRANSFORMER_RATIO,
         preset=EndFedPreset.SLOPER,
+    )
+
+
+def shortened_efhw_80_10_parameters(
+    *,
+    feed_height_m: float = 0.0,
+    end_height_m: float | None = None,
+    azimuth_deg: float = 0.0,
+    wire_radius_m: float = 0.001,
+    material: ConductorMaterial = COPPER,
+    ground: GroundModel | None = None,
+) -> EndFedParameters:
+    """Return the published 80-10 m shortened EFHW with a 110 uH coil.
+
+    The source dimensions are 20.35 m from the feed to the coil and 2.39 m
+    after it. The default installation is vertical; set ``feed_height_m`` and
+    ``end_height_m`` for a sloper or horizontal run. The published inverted-L
+    bend and the matching unit are construction notes, not modeled geometry.
+    """
+
+    length_m = SHORTENED_80_10_LOWER_LENGTH_M + SHORTENED_80_10_TOP_LENGTH_M
+    return EndFedParameters(
+        frequency_hz=SHORTENED_80_10_REFERENCE_FREQUENCY_HZ,
+        length_m=length_m,
+        feed_height_m=feed_height_m,
+        end_height_m=length_m if end_height_m is None else end_height_m,
+        azimuth_deg=azimuth_deg,
+        wire_radius_m=wire_radius_m,
+        material=material,
+        ground=(
+            GroundModel.finite(
+                relative_permittivity=13.0,
+                conductivity_s_per_m=0.005,
+            )
+            if ground is None
+            else ground
+        ),
+        transformer_ratio=SHORTENED_EFHW_TRANSFORMER_RATIO,
+        loading_coil_enabled=True,
+        loading_coil_offset_m=SHORTENED_80_10_LOWER_LENGTH_M,
+        loading_coil_inductance_h=SHORTENED_80_10_INDUCTANCE_H,
+        loading_coil_resistance_ohm=0.0,
+        preset=EndFedPreset.SHORTENED_80_10,
+    )
+
+
+def shortened_efhw_40_10_parameters(
+    *,
+    feed_height_m: float = 0.0,
+    end_height_m: float | None = None,
+    azimuth_deg: float = 0.0,
+    wire_radius_m: float = 0.001,
+    material: ConductorMaterial = COPPER,
+    ground: GroundModel | None = None,
+) -> EndFedParameters:
+    """Return the published 40-20-10 m shortened EFHW with a 23 uH coil.
+
+    The source schematic is 10.01 m from the feed to the coil and 1.85 m after
+    it. The default installation is vertical; the matching unit and straight
+    wire approximation are documented limitations.
+    """
+
+    length_m = SHORTENED_40_10_LOWER_LENGTH_M + SHORTENED_40_10_TOP_LENGTH_M
+    return EndFedParameters(
+        frequency_hz=SHORTENED_40_10_REFERENCE_FREQUENCY_HZ,
+        length_m=length_m,
+        feed_height_m=feed_height_m,
+        end_height_m=length_m if end_height_m is None else end_height_m,
+        azimuth_deg=azimuth_deg,
+        wire_radius_m=wire_radius_m,
+        material=material,
+        ground=(
+            GroundModel.finite(
+                relative_permittivity=13.0,
+                conductivity_s_per_m=0.005,
+            )
+            if ground is None
+            else ground
+        ),
+        transformer_ratio=SHORTENED_EFHW_TRANSFORMER_RATIO,
+        loading_coil_enabled=True,
+        loading_coil_offset_m=SHORTENED_40_10_LOWER_LENGTH_M,
+        loading_coil_inductance_h=SHORTENED_40_10_INDUCTANCE_H,
+        loading_coil_resistance_ohm=0.0,
+        preset=EndFedPreset.SHORTENED_40_10,
     )

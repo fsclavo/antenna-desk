@@ -142,6 +142,96 @@ def test_efhw_presets_reject_an_unknown_band() -> None:
         efhw_parameters("30m")
 
 
+def test_shortened_efhw_80_10_matches_the_published_geometry() -> None:
+    from antennadesk.domain.antennas.endfed import (
+        ENDFED_LOADING_COIL_ID,
+        shortened_efhw_80_10_parameters,
+    )
+
+    parameters = shortened_efhw_80_10_parameters()
+    custom = parameters.to_custom_parameters()
+
+    assert parameters.preset is EndFedPreset.SHORTENED_80_10
+    assert parameters.length_m == pytest.approx(22.74)
+    assert parameters.loading_coil_offset_m == pytest.approx(20.35)
+    assert parameters.loading_coil_inductance_h == pytest.approx(110e-6)
+    assert parameters.loading_coil_top_length_m == pytest.approx(2.39)
+    assert parameters.transformer_ratio == pytest.approx(49.0)
+    assert parameters.managed_load_ids == frozenset({ENDFED_LOADING_COIL_ID})
+    assert len(custom.wires) == 1
+    assert [load.id for load in custom.loads] == [ENDFED_LOADING_COIL_ID]
+    assert custom.loads[0].offset_m == pytest.approx(20.35)
+    assert custom.loads[0].inductance_h == pytest.approx(110e-6)
+
+
+def test_shortened_efhw_40_10_matches_the_published_geometry() -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+
+    parameters = shortened_efhw_40_10_parameters()
+
+    assert parameters.preset is EndFedPreset.SHORTENED_40_10
+    assert parameters.length_m == pytest.approx(11.86)
+    assert parameters.loading_coil_offset_m == pytest.approx(10.01)
+    assert parameters.loading_coil_inductance_h == pytest.approx(23e-6)
+    assert parameters.loading_coil_top_length_m == pytest.approx(1.85)
+    assert len(parameters.to_custom_parameters().loads) == 1
+
+
+def test_endfed_loaded_coil_requires_a_position_and_inductance() -> None:
+    with pytest.raises(ValueError, match="loading_coil_offset_m"):
+        EndFedParameters(
+            frequency_hz=7_100_000.0,
+            length_m=20.0,
+            loading_coil_enabled=True,
+            loading_coil_offset_m=0.0,
+            loading_coil_inductance_h=100e-6,
+        )
+    with pytest.raises(ValueError, match="loading_coil_inductance_h"):
+        EndFedParameters(
+            frequency_hz=7_100_000.0,
+            length_m=20.0,
+            loading_coil_enabled=True,
+            loading_coil_offset_m=10.0,
+            loading_coil_inductance_h=0.0,
+        )
+
+
+def test_shortened_endfed_optimizer_exposes_the_coil_variables() -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+    from antennadesk.domain.optimization.registry import optimizer_availability
+
+    availability = optimizer_availability(shortened_efhw_80_10_parameters())
+
+    assert availability.descriptor is not None
+    names = {variable.name for variable in availability.descriptor.variables}
+    assert {
+        "loading_coil_offset_m",
+        "loading_coil_inductance_h",
+    } <= names
+
+
+def test_endfed_loaded_coil_q_is_reported_only_with_resistance() -> None:
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        loading_coil_enabled=True,
+        loading_coil_offset_m=10.0,
+        loading_coil_inductance_h=100e-6,
+    )
+    assert parameters.loading_coil_q is None
+
+    lossy = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        loading_coil_enabled=True,
+        loading_coil_offset_m=10.0,
+        loading_coil_inductance_h=100e-6,
+        loading_coil_resistance_ohm=0.5,
+    )
+    assert lossy.loading_coil_q is not None
+    assert lossy.loading_coil_q > 0.0
+
+
 def test_endfed_presets_keep_their_generator_name_and_template_id() -> None:
     sloper = EndFedParameters(
         frequency_hz=7_100_000.0,

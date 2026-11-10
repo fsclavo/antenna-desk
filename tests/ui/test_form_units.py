@@ -81,6 +81,7 @@ FORMS = (
             "_length",
             "_feed_height",
             "_end_height",
+            "_loading_coil_offset",
             "_counterpoise_length",
             "_counterpoise_height",
         ),

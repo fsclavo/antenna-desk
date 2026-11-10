@@ -707,6 +707,15 @@ def render_construction_sheet(
 <tr><th>Transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
 <tr><th>Counterpoise</th><td>{counterpoise}</td></tr>
 """
+        if parameters.coil_active:
+            coil_rows = f"""
+<tr><th>Loading coil</th><td>{parameters.loading_coil_inductance_h * 1e6:.4f} µH</td></tr>
+<tr><th>Coil position</th><td>{_escape(tr("{offset:.4f} m from feed", offset=parameters.loading_coil_offset_m))}</td></tr>
+<tr><th>Top section</th><td>{parameters.loading_coil_top_length_m:.4f} m</td></tr>
+"""
+            if parameters.loading_coil_q is not None:
+                coil_rows += f"<tr><th>Coil Q</th><td>{parameters.loading_coil_q:.1f}</td></tr>\n"
+            feed_rows += coil_rows
         construction_note = _note(
             tr,
             "Cut one wire to {length} m and feed it at one end. The feed is at "
@@ -718,6 +727,20 @@ def render_construction_sheet(
             ratio=f"{parameters.transformer_ratio:g}",
             counterpoise=counterpoise,
         )
+        if parameters.coil_active:
+            construction_note = _note(
+                tr,
+                "Cut one wire to {length} m. Fit the {inductance} µH loading coil "
+                "at {offset} m from the feed; the remaining {top} m is the top "
+                "section. Use a {ratio}:1 transformer and the published matching "
+                "unit; the counterpoise is {counterpoise}.",
+                length=f"{parameters.length_m:.4f}",
+                inductance=f"{parameters.loading_coil_inductance_h * 1e6:.4f}",
+                offset=f"{parameters.loading_coil_offset_m:.4f}",
+                top=f"{parameters.loading_coil_top_length_m:.4f}",
+                ratio=f"{parameters.transformer_ratio:g}",
+                counterpoise=counterpoise,
+            )
     elif isinstance(parameters, FanDipoleParameters):
         lengths = ", ".join(f"{element.length_m:.4f} m" for element in parameters.elements)
         angles = ", ".join(f"{element.included_angle_deg:.1f}°" for element in parameters.elements)

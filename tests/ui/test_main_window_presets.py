@@ -642,6 +642,57 @@ def test_new_endfed_creates_a_first_class_design(
     window._dirty = False
 
 
+def test_new_shortened_endfed_creates_a_loaded_endfed_design(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+
+    parameters = shortened_efhw_80_10_parameters()
+
+    class FakeEndFedDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self):
+            return parameters
+
+        def result_band_plan(self):
+            from antennadesk.domain.design.band_plan import default_band_plan
+
+            return default_band_plan(parameters).plan
+
+    monkeypatch.setattr(main_window_module, "EndFedDialog", FakeEndFedDialog)
+    monkeypatch.setattr(
+        QInputDialog,
+        "getText",
+        lambda *args, **kwargs: ("Shortened EFHW", True),
+    )
+
+    window.new_shortened_efhw_80_10_antenna()
+    window._dirty = False
+
+    assert window._project is not None
+    design = window._project.designs[0]
+    assert design.antenna_type == "endfed"
+    assert design.parameters == parameters
+    assert [load.id for load in design.antenna.loads] == ["endfed-loading-coil"]
+    assert design.band_plan is not None
+    assert design.band_plan.band_ids == ("80m", "40m", "20m", "15m", "10m")
+    assert window._design_stack.currentWidget() is window._endfed_scroll
+    form_parameters = window._endfed_form.parameters()
+    assert form_parameters.preset is parameters.preset
+    assert form_parameters.frequency_hz == pytest.approx(parameters.frequency_hz)
+    assert form_parameters.length_m == pytest.approx(parameters.length_m)
+    assert form_parameters.loading_coil_inductance_h == pytest.approx(
+        parameters.loading_coil_inductance_h
+    )
+
+
 def test_new_j_pole_creates_a_first_class_design(
     window: MainWindow,
     qtbot: QtBot,

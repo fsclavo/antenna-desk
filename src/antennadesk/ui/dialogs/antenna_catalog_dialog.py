@@ -45,6 +45,8 @@ CATALOG_TYPE_T2FD = "t2fd"
 CATALOG_TYPE_ENDFED = "endfed"
 CATALOG_TYPE_SLOPER = "sloper"
 CATALOG_TYPE_RANDOM_WIRE = "random_wire"
+CATALOG_TYPE_SHORTENED_ENDFED_80_10 = "shortened_endfed_80_10"
+CATALOG_TYPE_SHORTENED_ENDFED_40_10 = "shortened_endfed_40_10"
 CATALOG_TYPE_DOUBLET = "doublet"
 CATALOG_TYPE_G5RV = "g5rv"
 CATALOG_TYPE_ZS6BKW = "zs6bkw"
@@ -209,6 +211,20 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         family_key="catalog.family.dipole",
         description_key="catalog.random_wire.description",
         evidence_key="catalog.evidence.experimental",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_SHORTENED_ENDFED_80_10,
+        label_key="catalog.shortened_endfed_80_10",
+        family_key="catalog.family.dipole",
+        description_key="catalog.shortened_endfed_80_10.description",
+        evidence_key="catalog.evidence.published",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_SHORTENED_ENDFED_40_10,
+        label_key="catalog.shortened_endfed_40_10",
+        family_key="catalog.family.dipole",
+        description_key="catalog.shortened_endfed_40_10.description",
+        evidence_key="catalog.evidence.published",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_G5RV,

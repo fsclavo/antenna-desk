@@ -202,6 +202,8 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_QUAD_LOOP,
     CATALOG_TYPE_RANDOM_WIRE,
     CATALOG_TYPE_RINGO,
+    CATALOG_TYPE_SHORTENED_ENDFED_40_10,
+    CATALOG_TYPE_SHORTENED_ENDFED_80_10,
     CATALOG_TYPE_SLIM_JIM,
     CATALOG_TYPE_SLOPER,
     CATALOG_TYPE_T2FD,
@@ -1582,6 +1584,11 @@ class MainWindow(QMainWindow):
             and parameters.preset is EndFedPreset.RANDOM_WIRE
         ):
             return self._translator.t("design_from_frequency.unsupported_random_wire")
+        if isinstance(parameters, EndFedParameters) and parameters.preset in {
+            EndFedPreset.SHORTENED_80_10,
+            EndFedPreset.SHORTENED_40_10,
+        }:
+            return self._translator.t("design_from_frequency.unsupported_loaded_endfed")
         return self._translator.t("design_from_frequency.unsupported")
 
     def _discard_form_changes_for_history(self, *, redo: bool) -> bool:
@@ -4150,6 +4157,8 @@ class MainWindow(QMainWindow):
             EndFedPreset.STANDARD: "End-fed",
             EndFedPreset.SLOPER: "Sloper",
             EndFedPreset.RANDOM_WIRE: "Random wire",
+            EndFedPreset.SHORTENED_80_10: "Shortened EFHW 80-10 m",
+            EndFedPreset.SHORTENED_40_10: "Shortened EFHW 40-20-10 m",
         }[preset]
         dialog = EndFedDialog(
             self._translator,
@@ -4170,6 +4179,12 @@ class MainWindow(QMainWindow):
 
     def new_random_wire_antenna(self) -> None:
         self.new_endfed_antenna(preset=EndFedPreset.RANDOM_WIRE)
+
+    def new_shortened_efhw_80_10_antenna(self) -> None:
+        self.new_endfed_antenna(preset=EndFedPreset.SHORTENED_80_10)
+
+    def new_shortened_efhw_40_10_antenna(self) -> None:
+        self.new_endfed_antenna(preset=EndFedPreset.SHORTENED_40_10)
 
     def new_g5rv_antenna(self) -> None:
         if not self._maybe_save_changes():
@@ -4864,6 +4879,24 @@ class MainWindow(QMainWindow):
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
             return dialog.result_parameters()
+        if selected in {
+            CATALOG_TYPE_SHORTENED_ENDFED_80_10,
+            CATALOG_TYPE_SHORTENED_ENDFED_40_10,
+        }:
+            preset = (
+                EndFedPreset.SHORTENED_80_10
+                if selected == CATALOG_TYPE_SHORTENED_ENDFED_80_10
+                else EndFedPreset.SHORTENED_40_10
+            )
+            dialog = EndFedDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                preset=preset,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
         if selected == CATALOG_TYPE_G5RV:
             dialog = G5RVDialog(
                 self._translator,
@@ -5106,6 +5139,10 @@ class MainWindow(QMainWindow):
             self.new_sloper_antenna()
         elif selected == CATALOG_TYPE_RANDOM_WIRE:
             self.new_random_wire_antenna()
+        elif selected == CATALOG_TYPE_SHORTENED_ENDFED_80_10:
+            self.new_shortened_efhw_80_10_antenna()
+        elif selected == CATALOG_TYPE_SHORTENED_ENDFED_40_10:
+            self.new_shortened_efhw_40_10_antenna()
         elif selected == CATALOG_TYPE_DOUBLET:
             self.new_doublet_antenna()
         elif selected == CATALOG_TYPE_G5RV:

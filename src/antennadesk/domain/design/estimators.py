@@ -666,6 +666,14 @@ def estimator_type_for(parameters: AntennaDesignParameters) -> str:
             "a random-wire length is deliberately non-resonant and has no "
             "frequency-first refinement estimator"
         )
+    if isinstance(parameters, EndFedParameters) and parameters.preset in {
+        EndFedPreset.SHORTENED_80_10,
+        EndFedPreset.SHORTENED_40_10,
+    }:
+        raise UnsupportedEstimateError(
+            "a shortened EFHW depends on its loading coil and matching unit and "
+            "has no frequency-first refinement estimator"
+        )
     antenna_type = antenna_type_for(parameters)
     if antenna_type not in ESTIMATORS:
         raise UnsupportedEstimateError(

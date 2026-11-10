@@ -17,7 +17,12 @@ from antennadesk.domain.antennas.biquad import (
 from antennadesk.domain.antennas.custom import CustomAntennaParameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.discone import discone_parameters
-from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
+from antennadesk.domain.antennas.endfed import (
+    EndFedParameters,
+    EndFedPreset,
+    shortened_efhw_40_10_parameters,
+    shortened_efhw_80_10_parameters,
+)
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
 from antennadesk.domain.antennas.feed import FeedPoint
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
@@ -174,6 +179,8 @@ def _parameters_for(key: str) -> object:
             counterpoise_length_m=1.0,
             preset=EndFedPreset.RANDOM_WIRE,
         ),
+        "shortened_endfed_80_10": shortened_efhw_80_10_parameters(),
+        "shortened_endfed_40_10": shortened_efhw_40_10_parameters(),
         "doublet": DipoleParameters(
             frequency_hz=7_100_000.0,
             total_length_m=20.0,
@@ -346,6 +353,8 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "endfed": ("endfed",),
         "sloper": ("sloper",),
         "random_wire": ("random_wire",),
+        "shortened_endfed_80_10": ("shortened_endfed_80_10",),
+        "shortened_endfed_40_10": ("shortened_endfed_40_10",),
         "doublet": ("doublet",),
         "g5rv": ("g5rv",),
         "zs6bkw": ("zs6bkw",),
@@ -412,6 +421,8 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         new_endfed_antenna=record("endfed"),
         new_sloper_antenna=record("sloper"),
         new_random_wire_antenna=record("random_wire"),
+        new_shortened_efhw_80_10_antenna=record("shortened_endfed_80_10"),
+        new_shortened_efhw_40_10_antenna=record("shortened_endfed_40_10"),
         new_doublet_antenna=record("doublet"),
         new_g5rv_antenna=record("g5rv"),
         new_zs6bkw_antenna=record("zs6bkw"),
@@ -484,6 +495,8 @@ ESTIMATORLESS_CATALOG_KEYS = frozenset(
         "loaded_vertical",
         "magnetic_loop",
         "random_wire",
+        "shortened_endfed_80_10",
+        "shortened_endfed_40_10",
         "half_square",
         "bobtail_curtain",
         "biquad",

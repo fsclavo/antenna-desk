@@ -16,7 +16,11 @@ from antennadesk.domain.antennas.custom import CustomAntennaParameters
 from antennadesk.domain.antennas.design import AntennaDesignParameters, antenna_type_for
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.discone import discone_parameters
-from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
+from antennadesk.domain.antennas.endfed import (
+    EndFedParameters,
+    EndFedPreset,
+    shortened_efhw_80_10_parameters,
+)
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
 from antennadesk.domain.antennas.feed import FeedPoint
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
@@ -271,6 +275,7 @@ def _typed_samples() -> list[AntennaDesignParameters]:
             length_m=20.0,
             counterpoise_length_m=5.0,
         ),
+        shortened_efhw_80_10_parameters(),
         FanDipoleParameters(
             frequency_hz=7_100_000.0,
             elements=(
@@ -351,12 +356,16 @@ _CONTEXT_FIELDS = {
     "taper_tip_length_m",
     "taper_tip_radius_m",
     "loading_coil_enabled",
+    "loading_coil_offset_m",
+    "loading_coil_inductance_h",
     "loading_coil_resistance_ohm",
     "link_open",
     "top_hat_enabled",
     "high_band_frequency_hz",
     "highest_frequency_hz",
     "counterpoise_azimuth_deg",
+    "counterpoise_length_m",
+    "counterpoise_height_m",
     "transformer_ratio",
     "element_count",
     "radial_count",

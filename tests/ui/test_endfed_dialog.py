@@ -72,6 +72,74 @@ def test_endfed_dialog_defaults_to_harmonic_analysis_bands(qtbot: QtBot) -> None
     ]
 
 
+def test_shortened_efhw_80_10_preset_loads_the_coil(qtbot: QtBot) -> None:
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        preset=EndFedPreset.SHORTENED_80_10,
+    )
+    qtbot.addWidget(dialog)
+
+    parameters = dialog.parameters()
+
+    assert dialog.windowTitle() == "Shortened EFHW 80-10 m"
+    assert parameters.preset is EndFedPreset.SHORTENED_80_10
+    assert parameters.length_m == pytest.approx(22.74, abs=1e-3)
+    assert parameters.loading_coil_enabled is True
+    assert parameters.loading_coil_offset_m == pytest.approx(20.35, abs=1e-3)
+    assert parameters.loading_coil_inductance_h == pytest.approx(110e-6)
+    assert parameters.transformer_ratio == pytest.approx(49.0)
+    assert dialog._form._loading_coil_group.isChecked() is True
+    assert dialog._form._loading_coil_offset.isEnabled() is True
+    assert "110.0 µH" in dialog._form._geometry.text()
+    assert [selection.band.name for selection in dialog._default_band_plan().selections] == [
+        "80m",
+        "40m",
+        "20m",
+        "15m",
+        "10m",
+    ]
+
+
+def test_shortened_efhw_40_10_preset_loads_the_coil(qtbot: QtBot) -> None:
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        preset=EndFedPreset.SHORTENED_40_10,
+    )
+    qtbot.addWidget(dialog)
+
+    parameters = dialog.parameters()
+
+    assert dialog.windowTitle() == "Shortened EFHW 40-20-10 m"
+    assert parameters.preset is EndFedPreset.SHORTENED_40_10
+    assert parameters.length_m == pytest.approx(11.86, abs=1e-3)
+    assert parameters.loading_coil_offset_m == pytest.approx(10.01, abs=1e-3)
+    assert parameters.loading_coil_inductance_h == pytest.approx(23e-6)
+    assert dialog._form._loading_coil_group.isChecked() is True
+    assert [selection.band.name for selection in dialog._default_band_plan().selections] == [
+        "40m",
+        "20m",
+        "10m",
+    ]
+
+
+def test_shortened_efhw_reference_buttons_switch_geometry(qtbot: QtBot) -> None:
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        preset=EndFedPreset.SHORTENED_80_10,
+    )
+    qtbot.addWidget(dialog)
+
+    dialog._form._shortened_buttons[EndFedPreset.SHORTENED_40_10].click()
+    parameters = dialog.parameters()
+
+    assert parameters.preset is EndFedPreset.SHORTENED_40_10
+    assert parameters.length_m == pytest.approx(11.86, abs=1e-3)
+    assert parameters.loading_coil_offset_m == pytest.approx(10.01, abs=1e-3)
+
+
 def test_endfed_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
     original = EndFedParameters(
         frequency_hz=7_100_000.0,

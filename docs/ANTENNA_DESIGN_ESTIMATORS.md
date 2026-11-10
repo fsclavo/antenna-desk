@@ -128,6 +128,13 @@ counterpoise is geometry, not an ideal ground. Height, ground, feed-line
 routing, and the common-mode choke are not modeled, so verify the final
 installation with simulation or measurement.
 
+The shortened loaded EFHW presets (80-10 m and 40-20-10 m) have no
+frequency-first estimator. A loading coil changes the electrical length
+nonlinearly: the 80-10 m reference uses 20.35 m + 110 µH + 2.39 m, and the
+40-20-10 m reference uses 10.01 m + 23 µH + 1.85 m. Start from the published
+preset and edit the coil and wire values; scaling those dimensions to another
+frequency is a heuristic, not a published rule.
+
 ## Loop polygon correction
 
 A closed thin-wire polygon resonates at a slightly longer conductor than the

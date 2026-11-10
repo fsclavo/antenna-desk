@@ -73,6 +73,19 @@ def test_ocfd_default_plan_follows_harmonics() -> None:
     assert eighty.plan.band_ids == ("80m", "40m", "20m", "10m")
 
 
+def test_loaded_endfed_defaults_use_the_published_bands() -> None:
+    from antennadesk.domain.antennas.endfed import (
+        shortened_efhw_40_10_parameters,
+        shortened_efhw_80_10_parameters,
+    )
+
+    eighty = default_band_plan(shortened_efhw_80_10_parameters())
+    forty = default_band_plan(shortened_efhw_40_10_parameters())
+
+    assert eighty.plan.band_ids == ("80m", "40m", "20m", "15m", "10m")
+    assert forty.plan.band_ids == ("40m", "20m", "10m")
+
+
 def test_endfed_defaults_distinguish_random_wire_and_sloper() -> None:
     standard = default_band_plan(EndFedParameters(frequency_hz=7_100_000.0, length_m=20.0))
     random_wire = default_band_plan(

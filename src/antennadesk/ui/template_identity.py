@@ -64,6 +64,8 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_QUAD_LOOP,
     CATALOG_TYPE_RANDOM_WIRE,
     CATALOG_TYPE_RINGO,
+    CATALOG_TYPE_SHORTENED_ENDFED_40_10,
+    CATALOG_TYPE_SHORTENED_ENDFED_80_10,
     CATALOG_TYPE_SLIM_JIM,
     CATALOG_TYPE_SLOPER,
     CATALOG_TYPE_T2FD,
@@ -159,6 +161,8 @@ def catalog_key_for(parameters: AntennaDesignParameters) -> str:
             EndFedPreset.STANDARD: CATALOG_TYPE_ENDFED,
             EndFedPreset.SLOPER: CATALOG_TYPE_SLOPER,
             EndFedPreset.RANDOM_WIRE: CATALOG_TYPE_RANDOM_WIRE,
+            EndFedPreset.SHORTENED_80_10: CATALOG_TYPE_SHORTENED_ENDFED_80_10,
+            EndFedPreset.SHORTENED_40_10: CATALOG_TYPE_SHORTENED_ENDFED_40_10,
         }[parameters.preset]
     if isinstance(parameters, JPoleParameters):
         return CATALOG_TYPE_SLIM_JIM if parameters.folded else CATALOG_TYPE_J_POLE

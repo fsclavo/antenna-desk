@@ -227,6 +227,18 @@ def default_band_plan(
                 BandEvidence.TUNABLE,
                 "band.note.random_wire",
             )
+        if parameters.preset is EndFedPreset.SHORTENED_80_10:
+            return BandDefault(
+                _plan_from_ids(("80m", "40m", "20m", "15m", "10m")),
+                BandEvidence.PUBLISHED,
+                "band.note.endfed_loaded_80_10",
+            )
+        if parameters.preset is EndFedPreset.SHORTENED_40_10:
+            return BandDefault(
+                _plan_from_ids(("40m", "20m", "10m")),
+                BandEvidence.PUBLISHED,
+                "band.note.endfed_loaded_40_10",
+            )
         return BandDefault(
             _harmonic_plan(
                 parameters.frequency_hz,

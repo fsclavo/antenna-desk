@@ -270,6 +270,20 @@ def test_endfed_simulation_spec_carries_transformer_and_counterpoise(
     assert len(parameters.to_antenna().wires) == 3
 
 
+def test_shortened_endfed_simulation_spec_carries_the_coil(
+    window: MainWindow,
+) -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+
+    parameters = shortened_efhw_80_10_parameters()
+    spec = window._endfed_simulation_spec(parameters)
+    model = parameters.to_antenna()
+
+    assert spec.feed_transformer_ratio == pytest.approx(49.0)
+    assert [load.id for load in model.loads] == ["endfed-loading-coil"]
+    assert model.loads[0].offset_m == pytest.approx(20.35)
+
+
 def test_fit_spec_to_budget_uses_the_finest_pattern_that_fits(window: MainWindow) -> None:
     from antennadesk.domain.antennas.dipole import DipoleParameters
     from antennadesk.domain.environment.ground import GroundModel
