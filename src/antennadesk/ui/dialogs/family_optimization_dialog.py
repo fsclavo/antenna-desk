@@ -66,7 +66,8 @@ from ..workers.family_optimization_worker import FamilyOptimizationWorker
 
 _OBJECTIVE_KEYS = {
     FamilyOptimizationObjective.TARGET_IMPEDANCE: "optimize.target_impedance_objective",
-    FamilyOptimizationObjective.MIN_SWR: "optimize.min_swr_objective",
+    FamilyOptimizationObjective.MIN_SWR: "optimize.min_swr_edges_objective",
+    FamilyOptimizationObjective.MIN_SWR_OPERATING: "optimize.min_swr_operating_objective",
     FamilyOptimizationObjective.MAX_GAIN: "optimize.max_gain_objective",
     FamilyOptimizationObjective.MAX_FRONT_TO_BACK: "element_optimize.objective.max_front_to_back",
     FamilyOptimizationObjective.MAX_EFFICIENCY: "optimize.max_efficiency_objective",
@@ -89,6 +90,7 @@ class FamilyOptimizationDialog(QDialog):
         *,
         topology_label: str | None = None,
         band_edges_hz: tuple[float, ...] = (),
+        operating_frequencies_hz: tuple[float, ...] = (),
         last_summary: OptimizationSummary | None = None,
     ) -> None:
         super().__init__(parent)
@@ -98,6 +100,7 @@ class FamilyOptimizationDialog(QDialog):
         self._descriptor = descriptor
         self._base_spec = base_spec
         self._band_edges_hz = tuple(band_edges_hz)
+        self._operating_frequencies_hz = tuple(operating_frequencies_hz)
         self._last_summary = last_summary
         self._thread: QThread | None = None
         self._worker: FamilyOptimizationWorker | None = None
@@ -263,6 +266,9 @@ class FamilyOptimizationDialog(QDialog):
         self._objective_label = QLabel(translator.t("optimize.objective"), self)
         self._mode_label = QLabel(translator.t("optimize.mode"), self)
         self._band_edges_label = QLabel(translator.t("optimize.band_edges"), self)
+        self._operating_frequencies_label = QLabel(self)
+        self._operating_frequencies_label.setWordWrap(True)
+        self._operating_frequencies_label.setVisible(False)
         self._robust_tolerance_label = QLabel(
             translator.t("optimize.robust_tolerance"),
             self,
@@ -284,6 +290,7 @@ class FamilyOptimizationDialog(QDialog):
         form.addRow(self._objective_label, self._objective)
         form.addRow(self._mode_label, self._mode)
         form.addRow(self._band_edges_label, self._band_edges)
+        form.addRow(self._operating_frequencies_label)
         form.addRow(self._robust_tolerance_label, self._robust_tolerance)
         form.addRow(self._target_r_label, self._target_r)
         form.addRow(self._target_x_label, self._target_x)
@@ -401,7 +408,24 @@ class FamilyOptimizationDialog(QDialog):
             band_widget.setEnabled(band_aware)
         for tolerance_widget in (self._robust_tolerance, self._robust_tolerance_label):
             tolerance_widget.setEnabled(robust)
+        self._update_operating_frequencies_hint()
         self._budget_changed()
+
+    def _update_operating_frequencies_hint(self) -> None:
+        visible = (
+            self._objective_value() is FamilyOptimizationObjective.MIN_SWR_OPERATING
+            and self._mode_value() is not OptimizationMode.SINGLE
+            and bool(self._operating_frequencies_hz)
+        )
+        self._operating_frequencies_label.setVisible(visible)
+        if not visible:
+            return
+        frequencies = ", ".join(
+            f"{frequency_hz / 1e6:.4f} MHz" for frequency_hz in self._operating_frequencies_hz
+        )
+        self._operating_frequencies_label.setText(
+            self._translator.t("optimize.operating_frequencies", frequencies=frequencies)
+        )
 
     def _parse_band_edges(self) -> tuple[float, ...]:
         text = self._band_edges.text().replace(";", ",")
@@ -419,12 +443,20 @@ class FamilyOptimizationDialog(QDialog):
         return 3 if self._mode_value() is OptimizationMode.ROBUST else 1
 
     def _summary_line(self, summary: OptimizationSummary) -> str:
+        objective: FamilyOptimizationObjective | None
         try:
             objective = FamilyOptimizationObjective(summary.objective)
         except ValueError:
+            objective = None
+        if objective is None:
             objective_key = "optimize.objective"
         else:
             objective_key = _OBJECTIVE_KEYS.get(objective, "optimize.objective")
+        swr_metric = (
+            "operating_swr_rms"
+            if objective is FamilyOptimizationObjective.MIN_SWR_OPERATING
+            else "swr"
+        )
         return self._translator.t(
             "optimize.last_summary",
             date=summary.completed_at.strftime("%Y-%m-%d %H:%M"),
@@ -432,7 +464,7 @@ class FamilyOptimizationDialog(QDialog):
             objective=self._translator.t(objective_key),
             status=self._translator.t(f"optimize_status.{summary.status}"),
             count=summary.evaluations,
-            swr=self._number(summary.best_metrics.get("swr")),
+            swr=self._number(summary.best_metrics.get(swr_metric)),
         )
 
     def _recommendations_text(
@@ -585,6 +617,7 @@ class FamilyOptimizationDialog(QDialog):
             self._weight_efficiency_label,
         ):
             label.setVisible(multi)
+        self._update_operating_frequencies_hint()
         self._budget_changed()
 
     def _budget_profile(self) -> BudgetProfile:
@@ -601,10 +634,16 @@ class FamilyOptimizationDialog(QDialog):
             multiplier = max(1, points)
             key = "optimize.budget_hint_sweep"
         elif self._mode_value() is not OptimizationMode.SINGLE:
-            try:
-                points = len(self._parse_band_edges())
-            except ValueError:
-                points = 3
+            if (
+                self._objective_value() is FamilyOptimizationObjective.MIN_SWR_OPERATING
+                and self._operating_frequencies_hz
+            ):
+                points = len(self._operating_frequencies_hz)
+            else:
+                try:
+                    points = len(self._parse_band_edges())
+                except ValueError:
+                    points = 3
             multiplier = points * self._scenario_count()
             key = "optimize.budget_hint_quality"
         else:
@@ -700,6 +739,7 @@ class FamilyOptimizationDialog(QDialog):
                 parallel_workers=self._workers.value(),
                 mode=mode,
                 band_edges_hz=band_edges,
+                operating_frequencies_hz=self._operating_frequencies_hz,
                 robust_tolerance=(
                     self._robust_tolerance.value() / 100.0
                     if mode is OptimizationMode.ROBUST

@@ -872,8 +872,11 @@ experimental.
 The frequency is the **fundamental design frequency**; the geometry is not
 optimized across a continuous Low–High range. Use **Choose analysis bands...**
 in the generator to select the harmonic band plan. The default for a 40 m
-design is 40/20/10 m. The selected plan is stored with the design and restored
-when the project is reopened.
+design is 40/20/10 m, which are the 1x, 2x, and 4x harmonics. The selected plan
+is stored with the design and restored when the project is reopened. Bands
+outside that harmonic set, such as 15 m (3x), can be selected, but they will
+usually dominate a worst-case or RMS score unless the feed ratio and
+transformer are included in the optimization.
 
 ## Create a magnetic loop
 
@@ -1254,7 +1257,11 @@ pointing azimuth remain design context; they are not silently optimized.
 Choose the objective supported by the current descriptor:
 
 - **Target impedance** with selectable `R + jX`;
-- **Minimum SWR**;
+- **Minimum SWR** at the band edges (worst case);
+- **Minimum SWR at operating frequencies**: balances the RMS SWR at the
+  family operating frequencies. For an OCFD it uses the harmonics that fall
+  inside each selected band (for example 7.1, 14.2, and 28.4 MHz); other
+  families use the band centers;
 - **Maximum power gain**;
 - **Maximum front-to-back ratio**;
 - **Maximum efficiency**;
@@ -1274,20 +1281,26 @@ The **Operating mode** selector controls how many operating points each
 candidate is evaluated at:
 
 - **Single frequency** is the default and uses the design frequency once.
-- **Band-aware** evaluates every listed band edge and reports the worst SWR,
-  impedance error, gain, front-to-back ratio, and efficiency. The list defaults
-  to the current band plan (start, center, and stop of each selected band) and
-  can be edited as comma-separated MHz values.
-- **Robust (tolerance)** evaluates the band edges at the nominal geometry and at
-  two deterministic dimensional-tolerance corners (± the selected percentage of
-  every length and radius). The score adds a variance penalty, so a design that
-  only performs well at the nominal dimensions ranks lower.
+- **Band-aware** evaluates the scoring frequencies and reports the worst SWR,
+  impedance error, gain, front-to-back ratio, and efficiency. With the
+  **Minimum SWR at operating frequencies** objective, the scoring points are
+  the family operating frequencies (OCFD harmonics or band centers); otherwise
+  they are the listed band edges. The band-edge list defaults to the current
+  band plan (start, center, and stop of each selected band) and can be edited as
+  comma-separated MHz values.
+- **Robust (tolerance)** evaluates the scoring frequencies at the nominal
+  geometry and at two deterministic dimensional-tolerance corners (± the
+  selected percentage of every active length and radius). Variables left
+  unchecked are not perturbed. The score adds a variance penalty, so a design
+  that only performs well at the nominal dimensions ranks lower.
 
-Band-aware and robust modes multiply the solver runs by the number of
+Band-aware and robust modes multiply the solver runs by the number of scoring
 frequencies and tolerance scenarios. The budget hint shows the resulting
 estimate. Bandwidth optimization is only available in single-frequency mode
 because it already requires a frequency sweep. The maximum-SWR soft constraint
-uses the worst evaluated point in these modes.
+uses the worst evaluated scoring point in these modes. The band analysis after
+Apply Best still shows every band edge, including the ones that were not part
+of the score.
 
 ### Budget and results
 
@@ -1295,12 +1308,14 @@ Choose a search budget:
 
 - **Fast** for a quick exploratory run;
 - **Balanced** as the recommended default;
-- **Thorough** for a final design.
+- **Thorough** for a final design; it runs at least 1,500 global and 1,000
+  local candidate evaluations before the frequency/scenario multiplier.
 
-The budget is counted in solver runs and shown before starting. If the best
-score is still improving near the end of the budget, the run extends
-automatically up to twice the initial budget. A larger budget can take
-considerably longer; the dialog estimates the run count. The random seed is
+The budget hint is counted in **solver runs**, not candidate designs: each
+candidate can use several frequencies and tolerance scenarios. The result
+summary reports the number of candidate evaluations actually performed. If the
+best score is still improving near the end of the budget, the run extends
+automatically up to twice the initial candidate budget. The random seed is
 exposed for reproducibility.
 
 **Apply Best** applies the best nominal parameters and keeps the optimization
@@ -1310,13 +1325,14 @@ analysis with the current band plan, so the **Bands** tab, impedance/SWR charts,
 and patterns show every analyzed band for the applied geometry. Robust mode
 analyzes the nominal geometry; the ± tolerance corners are used only for
 scoring. The optimizer result table remains an aggregate summary (for example,
-the worst SWR across the bands); per-band values are in the band analysis.
+the worst SWR across the scoring frequencies); per-band values are in the band
+analysis.
 
 **Parallel workers** controls how many independent candidate evaluations run at
 once. The value is capped at four in the dialog and defaults to
 `min(4, max(1, CPU count - 1))`; set it to 1 to keep the sequential path. Only
-whole candidates are parallelized: the band edges or pattern points inside one
-candidate are still evaluated in order. Each worker launches its own solver
+whole candidates are parallelized: the scoring frequencies and pattern points
+inside one candidate are still evaluated in order. Each worker launches its own solver
 process, so more workers reduce wall time but increase CPU and memory use; the
 analysis timeout applies independently to each worker's solver run. For a fixed
 search configuration the candidate order and the reported results are

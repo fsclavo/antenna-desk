@@ -133,7 +133,13 @@ from ..domain.antennas.zs6bkw import (
 )
 from ..domain.common.time import utc_now
 from ..domain.common.validation import Diagnostic, Severity
-from ..domain.design.band_plan import BandDefault, BandPlan, BandSelection, default_band_plan
+from ..domain.design.band_plan import (
+    BandDefault,
+    BandPlan,
+    BandSelection,
+    default_band_plan,
+    operating_frequencies_for,
+)
 from ..domain.design.estimators import supports_estimation
 from ..domain.design.formulas import frequency_for_half_wave_length
 from ..domain.measurement import Measurement
@@ -5664,6 +5670,7 @@ class MainWindow(QMainWindow):
                 return
         design = self._project.design_by_id(self._design_id)
         band_plan = self._current_band_plan(design)
+        operating_frequencies = operating_frequencies_for(design.parameters, band_plan)
         availability = optimizer_availability(design.parameters)
         if availability.descriptor is None:
             self._show_error(
@@ -5690,6 +5697,7 @@ class MainWindow(QMainWindow):
             self,
             topology_label=self._translator.t(label_key_for(design.parameters)),
             band_edges_hz=self._optimizer_band_edges(design),
+            operating_frequencies_hz=operating_frequencies,
             last_summary=design.optimization_summary,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:

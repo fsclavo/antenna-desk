@@ -288,6 +288,36 @@ def default_band_plan(
     )
 
 
+def operating_frequencies_for(
+    parameters: AntennaDesignParameters,
+    plan: BandPlan,
+) -> tuple[float, ...]:
+    """Return one operating frequency per selected band.
+
+    OCFD uses the harmonic of its design frequency that falls inside the band
+    and is closest to the band center; other families use the band center. The
+    result is aligned with ``plan.selections`` and is used by the
+    ``MIN_SWR_OPERATING`` optimizer objective.
+    """
+
+    targets: list[float] = []
+    for selection in plan.selections:
+        center = selection.center_hz
+        if isinstance(parameters, OCFDParameters):
+            harmonics = [
+                multiplier * parameters.frequency_hz
+                for multiplier in range(1, 9)
+                if selection.band.start_hz - 1e-6
+                <= multiplier * parameters.frequency_hz
+                <= selection.band.stop_hz + 1e-6
+            ]
+            target = min(harmonics, key=lambda value: abs(value - center)) if harmonics else center
+            targets.append(target)
+        else:
+            targets.append(center)
+    return tuple(targets)
+
+
 def _plan_from_ids(band_ids: tuple[str, ...], *, points: int = DEFAULT_BAND_POINTS) -> BandPlan:
     selections = []
     for band_id in band_ids:

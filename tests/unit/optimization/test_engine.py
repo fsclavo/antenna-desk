@@ -338,8 +338,8 @@ def test_budget_profiles_follow_the_agreed_formulas() -> None:
     assert fast.local_evaluations == max(40, 8 * 3)
     assert balanced.global_evaluations == max(120, 30 * 3)
     assert balanced.local_evaluations == max(80, 20 * 3)
-    assert thorough.global_evaluations == max(300, 80 * 3)
-    assert thorough.local_evaluations == max(200, 40 * 3)
+    assert thorough.global_evaluations == max(1_500, 200 * 3)
+    assert thorough.local_evaluations == max(1_000, 100 * 3)
 
 
 def test_variable_validation_and_fraction_round_trip() -> None:

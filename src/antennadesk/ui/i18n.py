@@ -5976,6 +5976,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Minimum SWR",
         Language.SPANISH: "SWR mínimo",
     },
+    "optimize.min_swr_edges_objective": {
+        Language.ENGLISH: "Minimum SWR at band edges",
+        Language.SPANISH: "SWR mínimo en bordes de banda",
+    },
+    "optimize.min_swr_operating_objective": {
+        Language.ENGLISH: "Minimum SWR at operating frequencies",
+        Language.SPANISH: "SWR mínimo en frecuencias de operación",
+    },
     "optimize.max_bandwidth_objective": {
         Language.ENGLISH: "Maximum SWR bandwidth",
         Language.SPANISH: "Máximo ancho de banda de SWR",
@@ -6135,6 +6143,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize.band_edges_invalid": {
         Language.ENGLISH: "Enter at least two positive frequencies in MHz.",
         Language.SPANISH: "Introduce al menos dos frecuencias positivas en MHz.",
+    },
+    "optimize.operating_frequencies": {
+        Language.ENGLISH: "Operating frequencies from the current band plan: {frequencies}",
+        Language.SPANISH: "Frecuencias de operación del plan de bandas actual: {frequencies}",
     },
     "optimize.robust_tolerance": {
         Language.ENGLISH: "Dimensional tolerance",

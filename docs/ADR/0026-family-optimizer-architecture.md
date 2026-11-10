@@ -422,6 +422,20 @@ unchecked but selectable. `height_m` remains enabled for vertical and
 phased-vertical families because it is radiator length, not installation
 height. A run that excludes any variable is reported as partial.
 
+## Amendment 2026-11-10 — Operating-frequency scoring and robust scope
+
+- **Minimum SWR at operating frequencies** balances the RMS SWR at the OCFD
+  harmonics that fall inside each selected band (for example 7.1, 14.2, and
+  28.4 MHz) and at band centers for other families. Band edges remain visible
+  in the post-apply band analysis. The original **Minimum SWR** objective keeps
+  its worst-edge behavior.
+- Optimizer solver inputs now recalculate segmentation from each candidate
+  geometry; the starting design's explicit segment counts are not reused.
+- Robust scenarios perturb only active variables. Locked installation height,
+  feed placement, conductor radius, and transformer ratios stay fixed.
+- **Thorough** now uses at least 1,500 global and 1,000 local candidate
+  evaluations before the frequency/scenario multiplier.
+
 ## Follow-up
 
 - See [OPTIMIZER_PHASE_A_PLAN.md](../OPTIMIZER_PHASE_A_PLAN.md) and

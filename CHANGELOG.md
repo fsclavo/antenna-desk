@@ -199,6 +199,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The optimizer adds **Minimum SWR at operating frequencies**, which balances
+  the RMS SWR at the OCFD harmonics inside each selected band (for example 7.1,
+  14.2, and 28.4 MHz) and at band centers for other families. The **Thorough**
+  profile now runs at least 1,500 global and 1,000 local candidate evaluations
+  before the frequency/scenario multiplier, instead of a few hundred
+  candidates.
 - The family optimizer now starts with installation context unchecked:
   installation height, feed-point placement, conductor radius/diameter, and
   transformer/balun ratios. They remain selectable; excluding them marks the
@@ -291,6 +297,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Optimizer evaluations now derive the segmentation from each candidate
+  geometry instead of freezing the starting design's segment counts. An
+  identical candidate therefore produces the same solver input regardless of
+  the geometry used to start the optimization. Robust tolerance now perturbs
+  only active variables, so locked installation context is not silently varied.
 - **Apply Best** no longer discards the optimization summary during the
   post-apply form write-back. The summary is preserved when the form rewrites
   identical parameters, loads, and transmission lines, and invalidated when the

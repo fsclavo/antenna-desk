@@ -29,6 +29,7 @@ _OBJECTIVES = frozenset(
     {
         FamilyOptimizationObjective.TARGET_IMPEDANCE,
         FamilyOptimizationObjective.MIN_SWR,
+        FamilyOptimizationObjective.MIN_SWR_OPERATING,
         FamilyOptimizationObjective.MAX_GAIN,
         FamilyOptimizationObjective.MAX_EFFICIENCY,
         FamilyOptimizationObjective.MAX_BANDWIDTH,

@@ -43,7 +43,7 @@ from ...domain.simulation.far_field import FarFieldRequest
 from ...domain.simulation.frequency import FrequencyPlan
 from ...domain.simulation.pattern import front_to_back_db, max_power_gain_db
 from ...domain.simulation.result import SimulationResult, SimulationStatus
-from ...domain.simulation.segmentation import aligned_policy_for_model
+from ...domain.simulation.segmentation import SegmentationPolicy, aligned_policy_for_model
 from ...domain.simulation.spec import SimulationSpec
 from ..ports.antenna_solver import AntennaSolver
 from ..ports.cancellation import CancelToken
@@ -69,6 +69,7 @@ class OptimizeAntennaCommand:
     parallel_workers: int = 1
     mode: OptimizationMode = OptimizationMode.SINGLE
     band_edges_hz: tuple[float, ...] = ()
+    operating_frequencies_hz: tuple[float, ...] = ()
     robust_tolerance: float = 0.0
     max_boom_length_m: float | None = None
     max_turning_radius_m: float | None = None
@@ -90,6 +91,14 @@ class OptimizeAntennaCommand:
         for frequency in self.band_edges_hz:
             if not math.isfinite(frequency) or frequency <= 0.0:
                 raise ValueError("band edges must be positive and finite")
+        object.__setattr__(
+            self,
+            "operating_frequencies_hz",
+            tuple(self.operating_frequencies_hz),
+        )
+        for frequency in self.operating_frequencies_hz:
+            if not math.isfinite(frequency) or frequency <= 0.0:
+                raise ValueError("operating frequencies must be positive and finite")
         if (
             self.mode is not OptimizationMode.SINGLE
             and self.band_edges_hz
@@ -228,6 +237,7 @@ class OptimizeAntenna:
                         full_values,
                         parameters,
                         band_edges,
+                        active_variables,
                         needs_pattern=needs_pattern,
                     )
                 metrics.update(_space_metrics(parameters, command))
@@ -368,6 +378,22 @@ def _resolved_band_edges(command: OptimizeAntennaCommand) -> tuple[float, ...]:
     )
 
 
+def _candidate_segmentation_policy(base: SegmentationPolicy) -> SegmentationPolicy:
+    """Return a policy that recalculates segment counts from each candidate.
+
+    The UI builds a fully aligned policy for the starting design, which freezes
+    explicit per-wire counts. Reusing those counts makes the objective depend on
+    the starting geometry and can change the numerical result for an identical
+    candidate. Preserve only the target and bounds here.
+    """
+
+    return SegmentationPolicy(
+        target_segment_length_wavelengths=base.target_segment_length_wavelengths,
+        min_segments_per_wire=base.min_segments_per_wire,
+        max_segments_per_wire=base.max_segments_per_wire,
+    )
+
+
 def _spec_for_point(
     command: OptimizeAntennaCommand,
     model: AntennaModel,
@@ -389,7 +415,7 @@ def _spec_for_point(
         segmentation=aligned_policy_for_model(
             model,
             frequency_hz,
-            command.base_spec.segmentation,
+            _candidate_segmentation_policy(command.base_spec.segmentation),
         ),
         far_field=(
             command.base_spec.far_field if needs_pattern else FarFieldRequest(enabled=False)
@@ -469,6 +495,18 @@ def _single_metrics(
     )
 
 
+def _scoring_frequencies(
+    command: OptimizeAntennaCommand,
+    band_edges: tuple[float, ...],
+) -> tuple[float, ...]:
+    if (
+        command.objective is FamilyOptimizationObjective.MIN_SWR_OPERATING
+        and command.operating_frequencies_hz
+    ):
+        return tuple(sorted(set(command.operating_frequencies_hz)))
+    return band_edges
+
+
 def _multi_metrics(
     command: OptimizeAntennaCommand,
     solver: AntennaSolver,
@@ -476,6 +514,7 @@ def _multi_metrics(
     full_values: Mapping[str, float],
     parameters: AntennaDesignParameters,
     band_edges: tuple[float, ...],
+    active_variables: tuple[OptimizationVariable, ...],
     *,
     needs_pattern: bool,
 ) -> dict[str, float]:
@@ -484,6 +523,7 @@ def _multi_metrics(
         if command.mode is OptimizationMode.ROBUST
         else (0.0,)
     )
+    scoring_frequencies = _scoring_frequencies(command, band_edges)
     scenario_metrics: list[dict[str, float]] = []
     nominal_metrics: dict[str, float] | None = None
     all_points: list[tuple[float, dict[str, float]]] = []
@@ -492,11 +532,11 @@ def _multi_metrics(
             scenario_parameters = parameters
         else:
             scenario_parameters = descriptor.build_parameters(
-                _perturbed_values(full_values, descriptor.variables, factor)
+                _perturbed_values(full_values, active_variables, factor)
             )
         model = scenario_parameters.to_antenna(name="Optimization")
         points: list[tuple[float, dict[str, float]]] = []
-        for frequency_hz in band_edges:
+        for frequency_hz in scoring_frequencies:
             outcome = _run_point(
                 command,
                 solver,
@@ -522,7 +562,11 @@ def _multi_metrics(
                     ),
                 )
             )
-        aggregated = _aggregate_metrics(points, parameters.frequency_hz)
+        aggregated = _aggregate_metrics(
+            points,
+            parameters.frequency_hz,
+            rms_swr=command.objective is FamilyOptimizationObjective.MIN_SWR_OPERATING,
+        )
         all_points.extend(points)
         if factor == 0.0:
             nominal_metrics = aggregated
@@ -532,6 +576,7 @@ def _multi_metrics(
     combined = dict(nominal_metrics)
     for name, reducer in (
         ("swr", max),
+        ("operating_swr_rms", max),
         ("target_error_ohm", max),
         ("target_swr", max),
         ("max_gain_db", min),
@@ -546,7 +591,7 @@ def _multi_metrics(
         combined["optimization_score_spread"] = max(scenario_scores) - min(scenario_scores)
     swr_values = [metrics["swr"] for _, metrics in all_points]
     combined["swr_spread"] = max(swr_values) - min(swr_values)
-    combined["multi_point_count"] = float(len(band_edges))
+    combined["multi_point_count"] = float(len(scoring_frequencies))
     combined["worst_frequency_hz"] = max(all_points, key=lambda item: item[1]["swr"])[0]
     return combined
 
@@ -554,10 +599,17 @@ def _multi_metrics(
 def _aggregate_metrics(
     points: list[tuple[float, dict[str, float]]],
     nominal_frequency_hz: float,
+    *,
+    rms_swr: bool = False,
 ) -> dict[str, float]:
     nearest = min(points, key=lambda item: abs(item[0] - nominal_frequency_hz))[1]
     metrics = dict(nearest)
-    metrics["swr"] = max(item[1]["swr"] for item in points)
+    swr_values = [item[1]["swr"] for item in points]
+    metrics["swr"] = max(swr_values)
+    if rms_swr:
+        metrics["operating_swr_rms"] = math.sqrt(
+            sum(value * value for value in swr_values) / len(swr_values)
+        )
     metrics["target_error_ohm"] = max(item[1]["target_error_ohm"] for item in points)
     metrics["target_swr"] = max(item[1]["target_swr"] for item in points)
     for name, reducer in (
@@ -568,7 +620,6 @@ def _aggregate_metrics(
         values = [item[1][name] for item in points if name in item[1]]
         if values:
             metrics[name] = reducer(values)
-    swr_values = [item[1]["swr"] for item in points]
     metrics["swr_spread"] = max(swr_values) - min(swr_values)
     return metrics
 
@@ -681,6 +732,7 @@ def _metrics(
         "resistance_ohm": impedance.real,
         "reactance_ohm": impedance.imag,
         "swr": point.swr,
+        "operating_swr_rms": point.swr,
         "target_error_ohm": abs(impedance - target),
         "target_swr": swr_for_resistance(impedance, target_resistance_ohm),
     }
@@ -713,6 +765,8 @@ def _score(
     objective = command.objective
     if objective is FamilyOptimizationObjective.TARGET_IMPEDANCE:
         score = _required(metrics, "target_error_ohm")
+    elif objective is FamilyOptimizationObjective.MIN_SWR_OPERATING:
+        score = _required(metrics, "operating_swr_rms")
     elif objective is FamilyOptimizationObjective.MIN_SWR:
         score = _required(metrics, "swr")
     elif objective is FamilyOptimizationObjective.MAX_GAIN:

@@ -19,6 +19,7 @@ from antennadesk.domain.design.band_plan import (
     BandPlan,
     BandSelection,
     default_band_plan,
+    operating_frequencies_for,
 )
 from antennadesk.domain.simulation.bands import amateur_band_by_id
 
@@ -228,3 +229,37 @@ def test_doublet_default_uses_the_high_impedance_feed_line() -> None:
         "12m",
         "10m",
     )
+
+
+def test_ocfd_operating_frequencies_use_band_harmonics() -> None:
+    bands = tuple(
+        BandSelection(band)
+        for band_id in ("40m", "20m", "15m", "10m")
+        if (band := amateur_band_by_id(band_id)) is not None
+    )
+    parameters = OCFDParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.4,
+        height_m=10.0,
+    )
+
+    targets = operating_frequencies_for(parameters, BandPlan(bands))
+
+    assert targets == pytest.approx((7_100_000.0, 14_200_000.0, 21_300_000.0, 28_400_000.0))
+
+
+def test_operating_frequencies_use_band_centers_for_non_harmonic_families() -> None:
+    bands = tuple(
+        BandSelection(band)
+        for band_id in ("40m", "20m", "10m")
+        if (band := amateur_band_by_id(band_id)) is not None
+    )
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    )
+
+    targets = operating_frequencies_for(parameters, BandPlan(bands))
+
+    assert targets == pytest.approx(tuple(selection.center_hz for selection in bands))

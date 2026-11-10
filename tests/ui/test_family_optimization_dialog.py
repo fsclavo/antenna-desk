@@ -255,6 +255,24 @@ def test_family_dialog_locks_installation_context_by_default(qtbot: QtBot) -> No
         assert item.checkState() is expected
 
 
+def test_family_dialog_shows_operating_frequencies_for_the_center_objective(
+    qtbot: QtBot,
+) -> None:
+    from antennadesk.domain.optimization.descriptor import FamilyOptimizationObjective
+
+    dialog = _dialog(operating_frequencies_hz=(7_100_000.0, 14_200_000.0))
+    qtbot.addWidget(dialog)
+    dialog.show()
+    dialog._objective.setCurrentIndex(
+        dialog._objective.findData(FamilyOptimizationObjective.MIN_SWR_OPERATING.value)
+    )
+    dialog._mode.setCurrentIndex(dialog._mode.findData("band_aware"))
+
+    assert dialog._operating_frequencies_label.isVisible() is True
+    assert "7.1000 MHz" in dialog._operating_frequencies_label.text()
+    assert "14.2000 MHz" in dialog._operating_frequencies_label.text()
+
+
 def test_family_dialog_marks_locked_variables_as_partial(qtbot: QtBot) -> None:
     dialog = _dialog()
     qtbot.addWidget(dialog)

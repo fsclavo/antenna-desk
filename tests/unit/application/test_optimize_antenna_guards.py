@@ -138,6 +138,7 @@ def test_bandwidth_objective_requires_a_sweep() -> None:
     [
         (FamilyOptimizationObjective.TARGET_IMPEDANCE, {"target_error_ohm": 2.0}),
         (FamilyOptimizationObjective.MIN_SWR, {"swr": 1.5}),
+        (FamilyOptimizationObjective.MIN_SWR_OPERATING, {"operating_swr_rms": 1.5}),
         (FamilyOptimizationObjective.MAX_GAIN, {"max_gain_db": 8.0}),
         (FamilyOptimizationObjective.MAX_FRONT_TO_BACK, {"front_to_back_db": 20.0}),
         (FamilyOptimizationObjective.MAX_EFFICIENCY, {"efficiency_percent": 80.0}),
@@ -151,6 +152,14 @@ def test_single_objective_scores_use_the_requested_metric(
     score = _score(_scoring_command(objective), metrics)  # type: ignore[arg-type]
 
     assert math.isfinite(score)
+
+
+def test_operating_objective_uses_the_rms_metric_not_the_worst_target() -> None:
+    command = _scoring_command(FamilyOptimizationObjective.MIN_SWR_OPERATING)
+
+    score = _score(command, {"operating_swr_rms": 2.5, "swr": 4.0})  # type: ignore[arg-type]
+
+    assert score == pytest.approx(2.5)
 
 
 def test_multi_objective_score_combines_every_weight() -> None:

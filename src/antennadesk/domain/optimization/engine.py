@@ -63,8 +63,8 @@ def budget_for(profile: BudgetProfile, variable_count: int) -> OptimizationBudge
         global_count = max(60, 12 * variable_count)
         local_count = max(40, 8 * variable_count)
     elif profile is BudgetProfile.THOROUGH:
-        global_count = max(300, 80 * variable_count)
-        local_count = max(200, 40 * variable_count)
+        global_count = max(1_500, 200 * variable_count)
+        local_count = max(1_000, 100 * variable_count)
     else:
         global_count = max(120, 30 * variable_count)
         local_count = max(80, 20 * variable_count)

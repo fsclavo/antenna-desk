@@ -17,6 +17,7 @@ from .variables import OptimizationVariable, apply_default_locks
 class FamilyOptimizationObjective(StrEnum):
     TARGET_IMPEDANCE = "target_impedance"
     MIN_SWR = "min_swr"
+    MIN_SWR_OPERATING = "min_swr_operating"
     MAX_GAIN = "max_gain"
     MAX_FRONT_TO_BACK = "max_front_to_back"
     MAX_EFFICIENCY = "max_efficiency"

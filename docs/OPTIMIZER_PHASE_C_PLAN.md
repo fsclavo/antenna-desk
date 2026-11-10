@@ -146,11 +146,34 @@ The family optimizer dialog adds:
   0 skipped**; without that group, PyNEC is the only skip. Repeated UI stress runs also cover the worker-thread lifetime
   fix in the optimizer dialogs.
 
+## Quality validation (2026-11-10)
+
+The operating-frequency objective and the segmentation/robust fixes were
+validated against real `nec2c` on a 40 m OCFD (feed 1/3, 4:1 transformer,
+10 m height, 1 mm radius, robust 1%). With the 40/20/10 harmonic plan, starts
+of 19.0, 20.4, and 21.5 m all converged to **20.90311 m**, with an operating
+RMS SWR of **1.75397** and a worst target SWR of **1.98267** at 7.1 MHz. A
+repeat of the same start was identical. The quick 500-candidate run and the
+Thorough run produced the same design; the Thorough run stopped after
+414–463 candidate evaluations because the search had already converged, so the
+budget is an upper bound rather than a promise to spend every evaluation.
+
+Including 15 m (the 3rd harmonic, 21.3 MHz) changed the compromise to
+**20.20634 m**, with an operating RMS of **9.88585** and a worst target SWR of
+**18.5467** at 21.3 MHz, again identically from all three starts. The 15 m band
+dominates because the feed ratio and transformer were locked. This confirms the
+expected trade-off: the new objective removes the start-geometry dispersion,
+but it cannot make a non-harmonic band match without the corresponding matching
+variables.
+
 ## Limitations
 
 - Robust mode is a three-corner deterministic sensitivity check, not a
-  statistical tolerance analysis.
-- Band-aware runtime grows linearly with the number of edges and scenarios.
+  statistical tolerance analysis. It perturbs only variables enabled for the
+  optimization.
+- Band-aware runtime grows linearly with the number of scoring frequencies and
+  scenarios. The operating-frequency objective scores only those targets; band
+  edges are checked by the post-apply band analysis.
 - The Pareto front is not exported to CSV yet.
 - Recommendations are heuristics about the search, not validated design advice.
 - Physical antenna/VNA validation remains unavailable.
