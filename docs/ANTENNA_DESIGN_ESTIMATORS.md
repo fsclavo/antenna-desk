@@ -128,6 +128,16 @@ counterpoise is geometry, not an ideal ground. Height, ground, feed-line
 routing, and the common-mode choke are not modeled, so verify the final
 installation with simulation or measurement.
 
+The EFHW model uses a **fixed feed section** at the start of the same physical
+wire (0.5 m by default, three segments) so the NEC delta-gap source does not
+depend on the radiator segmentation. When no real counterpoise is enabled, a
+short **installation return** (0.10 m by default) is modeled as a proxy for the
+unavoidable coax/mast/earth path; it is not a physical radial. These are
+modeling boundary conditions, not extra construction dimensions. The EFHW
+editor can run a segmentation convergence check over 10, 21, and 51 radiator
+segments; an unresolved spread means the absolute SWR is numerically
+segmentation-sensitive. Use the model for trends and verify SWR with a VNA.
+
 The shortened loaded EFHW presets (80-10 m and 40-20-10 m) have no
 frequency-first estimator. A loading coil changes the electrical length
 nonlinearly: the 80-10 m reference uses 20.35 m + 110 µH + 2.39 m, and the

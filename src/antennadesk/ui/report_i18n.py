@@ -22,6 +22,7 @@ REPORT_SPANISH: dict[str, str] = {
     "Construction view": "Vista de construcción",
     "Isometric view": "Vista isométrica",
     "Installation view (front)": "Vista de instalación (frontal)",
+    "Installation return": "Retorno de instalación",
     "Top layout": "Disposición en planta",
     # Title block and table headers.
     "#": "#",
@@ -87,6 +88,7 @@ REPORT_SPANISH: dict[str, str] = {
     "Feed coordinates": "Coordenadas de alimentación",
     "Feed gap": "Separación de alimentación",
     "Feed height": "Altura de alimentación",
+    "Feed section": "Tramo de alimentación",
     "Feed height above ground": "Altura de alimentación sobre el suelo",
     "Feed location": "Ubicación de la alimentación",
     "Feed match": "Adaptación de alimentación",
@@ -445,6 +447,14 @@ REPORT_SPANISH: dict[str, str] = {
         "a {offset} m de la alimentación; los {top} m restantes son el tramo "
         "superior. Usá un transformador {ratio}:1 y la unidad de adaptación "
         "publicada; el contrapeso es {counterpoise}."
+    ),
+    "The first {length} m is a fixed feed section of the same wire; do not cut a separate conductor.": (  # noqa: E501
+        "Los primeros {length} m son un tramo de alimentación fijo del mismo hilo; "
+        "no cortes un conductor separado."
+    ),
+    "The {length} m installation return is a model proxy for the coax/mast/earth path, not a physical radial.": (  # noqa: E501
+        "El retorno de instalación de {length} m es un proxy de modelo para el camino "
+        "del coaxil/mástil/tierra, no una radial física."
     ),
     "Cut the full {total} m wire and mark the link positions at {offset} m either side of the center. Feed the center. {coil_note} The coil model is an ideal series R-L load; tune it for the installed height and ground.": (  # noqa: E501
         "Cortá el hilo completo de {total} m y marcá las posiciones de enlace a "

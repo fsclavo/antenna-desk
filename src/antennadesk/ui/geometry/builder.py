@@ -3625,16 +3625,32 @@ def _summary(
                 feed_wire.start.z_m,
                 feed_wire.end.z_m,
             )
+        wire_length_m = (
+            parameters.length_m
+            if isinstance(parameters, EndFedParameters)
+            else model.wires[0].length_m
+        )
         parts.extend(
             [
                 f"{translator.t('geometry.wire_length').lower()} "
-                f"{_format_length(model.wires[0].length_m, translator, unit_system)}",
+                f"{_format_length(wire_length_m, translator, unit_system)}",
                 f"{translator.t('geometry.feed_height').lower()} "
                 f"{_format_length(feed_height, translator, unit_system)}",
                 f"{translator.t('geometry.end_height').lower()} "
                 f"{_format_length(end_height, translator, unit_system)}",
             ]
         )
+        if isinstance(parameters, EndFedParameters) and parameters.feed_section_active:
+            parts.append(
+                f"{translator.t('endfed.feed_section').lower()} "
+                f"{_format_length(parameters.feed_section_length_m, translator, unit_system)}"
+            )
+        if isinstance(parameters, EndFedParameters) and parameters.installation_return_active:
+            installation_return_length_m = parameters.installation_return_length_m
+            parts.append(
+                f"{translator.t('endfed.installation_return').lower()} "
+                f"{_format_length(installation_return_length_m, translator, unit_system)}"
+            )
         if isinstance(parameters, EndFedParameters) and parameters.coil_active:
             parts.append(
                 f"{translator.t('endfed.loading_coil').lower()} "

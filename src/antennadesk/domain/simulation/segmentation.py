@@ -108,9 +108,10 @@ def aligned_policy_for_model(
 
     policy = base if base is not None else SegmentationPolicy()
     overrides: list[tuple[str, int]] = []
+    explicit = {wire_id for wire_id, _segments in policy.wire_segments}
     for wire in model.wires:
         target = policy.segments_for(wire, frequency_hz)
-        if wire.id == model.feed.wire_id:
+        if wire.id == model.feed.wire_id and wire.id not in explicit:
             target = _aligned_feed_count(wire, model.feed.offset_m, target, policy)
         overrides.append((wire.id, target))
     return replace(policy, segments_per_wire=None, wire_segments=tuple(overrides))

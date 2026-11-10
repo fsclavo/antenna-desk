@@ -818,3 +818,32 @@ def test_v4_migration_adds_optional_transformer_ratios() -> None:
     assert migrated["project"]["designs"][0]["parameters"]["transformer_ratio"] == 1.0
     assert migrated["project"]["designs"][1]["parameters"]["feed_transformer_ratio"] == 1.0
     assert "transformer_ratio" not in migrated["project"]["designs"][2]["parameters"]
+
+
+def test_v31_migration_adds_endfed_feed_section_and_installation_return() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 31,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "endfed",
+                    "parameters": {
+                        "frequency_hz": 7_100_000.0,
+                        "length_m": 20.0,
+                        "feed_height_m": 10.0,
+                        "end_height_m": 10.0,
+                        "transformer_ratio": 49.0,
+                    },
+                }
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    parameters = migrated["project"]["designs"][0]["parameters"]
+    assert parameters["feed_section_length_m"] == 0.0
+    assert parameters["installation_return_length_m"] == 0.0
+    assert "feed_section_length_m" not in document["project"]["designs"][0]["parameters"]

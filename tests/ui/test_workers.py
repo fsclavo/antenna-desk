@@ -14,6 +14,7 @@ from pytestqt.qtbot import QtBot
 from antennadesk.ui.workers import (
     band_analysis_worker,
     element_optimization_worker,
+    endfed_convergence_worker,
     family_optimization_worker,
     open_project_worker,
     optimization_worker,
@@ -241,6 +242,46 @@ def test_open_project_worker_emits_failure(qtbot: QtBot) -> None:
             raise RuntimeError("boom")
 
     worker = open_project_worker.OpenProjectWorker(FailingOpenProject(), object())
+    finished: list[object] = []
+    failed: list[str] = []
+    worker.finished.connect(finished.append)
+    worker.failed.connect(failed.append)
+
+    worker.run()
+
+    assert finished == []
+    assert failed == ["boom"]
+
+
+def test_endfed_convergence_worker_emits_result(qtbot: QtBot) -> None:
+    del qtbot
+
+    class FakeCheck:
+        def execute(self, command: object) -> object:
+            del command
+            return SENTINEL
+
+    worker = endfed_convergence_worker.EndFedConvergenceWorker(FakeCheck(), object())
+    finished: list[object] = []
+    failed: list[str] = []
+    worker.finished.connect(finished.append)
+    worker.failed.connect(failed.append)
+
+    worker.run()
+
+    assert finished == [SENTINEL]
+    assert failed == []
+
+
+def test_endfed_convergence_worker_emits_failure(qtbot: QtBot) -> None:
+    del qtbot
+
+    class FailingCheck:
+        def execute(self, command: object) -> object:
+            del command
+            raise RuntimeError("boom")
+
+    worker = endfed_convergence_worker.EndFedConvergenceWorker(FailingCheck(), object())
     finished: list[object] = []
     failed: list[str] = []
     worker.finished.connect(finished.append)

@@ -552,6 +552,8 @@ class VerticalParametersPayload(StrictModel):
 class EndFedParametersPayload(StrictModel):
     frequency_hz: float = Field(gt=0.0)
     length_m: float = Field(gt=0.0)
+    feed_section_length_m: float = Field(default=0.0, ge=0.0)
+    installation_return_length_m: float = Field(default=0.0, ge=0.0)
     feed_height_m: float = Field(default=10.0, ge=0.0)
     end_height_m: float = Field(default=10.0, ge=0.0)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
@@ -1684,6 +1686,8 @@ def _endfed_parameters_from_domain(value: EndFedParameters) -> EndFedParametersP
     return EndFedParametersPayload(
         frequency_hz=value.frequency_hz,
         length_m=value.length_m,
+        feed_section_length_m=value.feed_section_length_m,
+        installation_return_length_m=value.installation_return_length_m,
         feed_height_m=value.feed_height_m,
         end_height_m=value.end_height_m,
         azimuth_deg=value.azimuth_deg,
@@ -2804,6 +2808,8 @@ def _endfed_parameters_to_domain(value: EndFedParametersPayload) -> EndFedParame
     return EndFedParameters(
         frequency_hz=value.frequency_hz,
         length_m=value.length_m,
+        feed_section_length_m=value.feed_section_length_m,
+        installation_return_length_m=value.installation_return_length_m,
         feed_height_m=value.feed_height_m,
         end_height_m=value.end_height_m,
         azimuth_deg=value.azimuth_deg,

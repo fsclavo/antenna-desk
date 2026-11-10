@@ -323,6 +323,7 @@ def test_every_catalog_entry_has_a_change_template_route(
         fake_self = SimpleNamespace(
             _translator=Translator(Language.ENGLISH),
             _unit_system=UnitSystem.METRIC,
+            _solver=None,
         )
 
         result = MainWindow._parameters_from_catalog(fake_self, key, 7_100_000.0)

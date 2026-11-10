@@ -71,6 +71,12 @@ class EndFedPreset(StrEnum):
 
 COUNTERPOISE_ID = "counterpoise"
 COUNTERPOISE_DROP_ID = "counterpoise-drop"
+FEED_SECTION_ID = "endfed-feed-section"
+INSTALLATION_RETURN_ID = "endfed-installation-return"
+INSTALLATION_RETURN_DROP_ID = "endfed-installation-return-drop"
+DEFAULT_FEED_SECTION_LENGTH_M = 0.5
+DEFAULT_INSTALLATION_RETURN_LENGTH_M = 0.10
+ENDFED_FEED_SECTION_SEGMENTS = 3
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,6 +85,8 @@ class EndFedParameters:
 
     frequency_hz: float
     length_m: float
+    feed_section_length_m: float = 0.0
+    installation_return_length_m: float = 0.0
     feed_height_m: float = 10.0
     end_height_m: float = 10.0
     azimuth_deg: float = 0.0
@@ -98,6 +106,13 @@ class EndFedParameters:
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
         ensure_positive(self.length_m, name="length_m")
+        ensure_non_negative(self.feed_section_length_m, name="feed_section_length_m")
+        ensure_non_negative(
+            self.installation_return_length_m,
+            name="installation_return_length_m",
+        )
+        if self.feed_section_length_m >= self.length_m:
+            raise ValueError("feed_section_length_m must be shorter than length_m")
         ensure_non_negative(self.feed_height_m, name="feed_height_m")
         ensure_non_negative(self.end_height_m, name="end_height_m")
         ensure_positive(self.wire_radius_m, name="wire_radius_m")
@@ -144,6 +159,24 @@ class EndFedParameters:
         return self.loading_coil_enabled and self.loading_coil_inductance_h > 0.0
 
     @property
+    def feed_section_active(self) -> bool:
+        return self.feed_section_length_m > 0.0
+
+    @property
+    def main_radiator_length_m(self) -> float:
+        return max(self.length_m - self.feed_section_length_m, 0.0)
+
+    @property
+    def installation_return_active(self) -> bool:
+        return self.counterpoise_length_m <= 0.0 and self.installation_return_length_m > 0.0
+
+    @property
+    def effective_return_length_m(self) -> float:
+        if self.counterpoise_length_m > 0.0:
+            return self.counterpoise_length_m
+        return self.installation_return_length_m
+
+    @property
     def managed_load_ids(self) -> frozenset[str]:
         if not self.coil_active:
             return frozenset()
@@ -186,20 +219,45 @@ class EndFedParameters:
         rise = self.end_height_m - self.feed_height_m
         horizontal_m = math.sqrt(max(self.length_m * self.length_m - rise * rise, 0.0))
         feed_point = Point3D(x_m=0.0, y_m=0.0, z_m=self.feed_height_m)
-        wires = [
+        end_point = Point3D(
+            x_m=horizontal_m * math.cos(angle),
+            y_m=horizontal_m * math.sin(angle),
+            z_m=self.end_height_m,
+        )
+
+        wires: list[Wire] = []
+        if self.feed_section_active:
+            ratio = self.feed_section_length_m / self.length_m
+            feed_end = Point3D(
+                x_m=feed_point.x_m + (end_point.x_m - feed_point.x_m) * ratio,
+                y_m=feed_point.y_m + (end_point.y_m - feed_point.y_m) * ratio,
+                z_m=feed_point.z_m + (end_point.z_m - feed_point.z_m) * ratio,
+            )
+            wires.append(
+                Wire(
+                    id=FEED_SECTION_ID,
+                    start=feed_point,
+                    end=feed_end,
+                    radius_m=self.wire_radius_m,
+                    material=self.material,
+                )
+            )
+            radiator_start = feed_end
+            feed_wire_id = FEED_SECTION_ID
+        else:
+            radiator_start = feed_point
+            feed_wire_id = RADIATOR_ID
+        wires.append(
             Wire(
                 id=RADIATOR_ID,
-                start=feed_point,
-                end=Point3D(
-                    x_m=horizontal_m * math.cos(angle),
-                    y_m=horizontal_m * math.sin(angle),
-                    z_m=self.end_height_m,
-                ),
+                start=radiator_start,
+                end=end_point,
                 radius_m=self.wire_radius_m,
                 material=self.material,
             )
-        ]
-        if self.counterpoise_length_m > 0.0:
+        )
+
+        if self.effective_return_length_m > 0.0:
             counterpoise_angle = units.degrees_to_radians(self.effective_counterpoise_azimuth_deg)
             counterpoise_start = Point3D(
                 x_m=0.0,
@@ -209,7 +267,11 @@ class EndFedParameters:
             if not math.isclose(self.feed_height_m, self.counterpoise_height_m):
                 wires.append(
                     Wire(
-                        id=COUNTERPOISE_DROP_ID,
+                        id=(
+                            INSTALLATION_RETURN_DROP_ID
+                            if self.installation_return_active
+                            else COUNTERPOISE_DROP_ID
+                        ),
                         start=feed_point,
                         end=counterpoise_start,
                         radius_m=self.wire_radius_m,
@@ -218,38 +280,71 @@ class EndFedParameters:
                 )
             wires.append(
                 Wire(
-                    id=COUNTERPOISE_ID,
+                    id=(
+                        INSTALLATION_RETURN_ID
+                        if self.installation_return_active
+                        else COUNTERPOISE_ID
+                    ),
                     start=counterpoise_start,
                     end=Point3D(
-                        x_m=self.counterpoise_length_m * math.cos(counterpoise_angle),
-                        y_m=self.counterpoise_length_m * math.sin(counterpoise_angle),
+                        x_m=self.effective_return_length_m * math.cos(counterpoise_angle),
+                        y_m=self.effective_return_length_m * math.sin(counterpoise_angle),
                         z_m=self.counterpoise_height_m,
                     ),
                     radius_m=self.wire_radius_m,
                     material=self.material,
                 )
             )
+
+        loads: tuple[SeriesLoad, ...] = ()
+        if self.coil_active:
+            coil_offset_m = self.loading_coil_offset_m
+            if self.feed_section_active and coil_offset_m < self.feed_section_length_m:
+                coil_wire_id = FEED_SECTION_ID
+            else:
+                coil_wire_id = RADIATOR_ID
+                if self.feed_section_active:
+                    coil_offset_m -= self.feed_section_length_m
+            loads = (
+                SeriesLoad(
+                    id=ENDFED_LOADING_COIL_ID,
+                    wire_id=coil_wire_id,
+                    offset_m=coil_offset_m,
+                    inductance_h=self.loading_coil_inductance_h,
+                    resistance_ohm=self.loading_coil_resistance_ohm,
+                ),
+            )
+
         return CustomAntennaParameters(
             frequency_hz=self.frequency_hz,
             wires=tuple(wires),
-            feed=FeedPoint(RADIATOR_ID, 0.0),
+            feed=FeedPoint(feed_wire_id, 0.0),
             ground=self.ground,
-            loads=(
-                (
-                    SeriesLoad(
-                        id=ENDFED_LOADING_COIL_ID,
-                        wire_id=RADIATOR_ID,
-                        offset_m=self.loading_coil_offset_m,
-                        inductance_h=self.loading_coil_inductance_h,
-                        resistance_ohm=self.loading_coil_resistance_ohm,
-                    ),
-                )
-                if self.coil_active
-                else ()
-            ),
+            loads=loads,
             generator_id="endfed",
             generator_name=self.template_name,
         )
+
+
+def endfed_segmentation_overrides(
+    parameters: EndFedParameters,
+) -> tuple[tuple[str, int], ...]:
+    """Return the fixed segmentation for the end-fed feed section."""
+
+    if not parameters.feed_section_active:
+        return ()
+    return ((FEED_SECTION_ID, ENDFED_FEED_SECTION_SEGMENTS),)
+
+
+def endfed_model_warning_keys(parameters: EndFedParameters) -> tuple[str, ...]:
+    """Return user-visible warning keys for a numerically fragile model."""
+
+    keys: list[str] = []
+    if not parameters.feed_section_active:
+        keys.append("endfed.warning.feed_section")
+    if parameters.effective_return_length_m <= 0.0:
+        keys.append("endfed.warning.return")
+    return tuple(keys)
 
 
 def efhw_parameters(
@@ -271,6 +366,7 @@ def efhw_parameters(
     return EndFedParameters(
         frequency_hz=frequency_hz,
         length_m=EFHW_PRESET_LENGTHS_M[band_id],
+        feed_section_length_m=DEFAULT_FEED_SECTION_LENGTH_M,
         feed_height_m=feed_height_m,
         end_height_m=end_height_m,
         azimuth_deg=azimuth_deg,
@@ -295,6 +391,8 @@ def sloper_parameters(
     return EndFedParameters(
         frequency_hz=7_100_000.0,
         length_m=SLOPER_REFERENCE_LENGTH_M,
+        feed_section_length_m=DEFAULT_FEED_SECTION_LENGTH_M,
+        installation_return_length_m=DEFAULT_INSTALLATION_RETURN_LENGTH_M,
         feed_height_m=SLOPER_REFERENCE_FEED_HEIGHT_M,
         end_height_m=SLOPER_REFERENCE_END_HEIGHT_M,
         wire_radius_m=wire_radius_m,
@@ -326,6 +424,7 @@ def shortened_efhw_80_10_parameters(
     return EndFedParameters(
         frequency_hz=SHORTENED_80_10_REFERENCE_FREQUENCY_HZ,
         length_m=length_m,
+        feed_section_length_m=DEFAULT_FEED_SECTION_LENGTH_M,
         feed_height_m=feed_height_m,
         end_height_m=length_m if end_height_m is None else end_height_m,
         azimuth_deg=azimuth_deg,
@@ -368,6 +467,7 @@ def shortened_efhw_40_10_parameters(
     return EndFedParameters(
         frequency_hz=SHORTENED_40_10_REFERENCE_FREQUENCY_HZ,
         length_m=length_m,
+        feed_section_length_m=DEFAULT_FEED_SECTION_LENGTH_M,
         feed_height_m=feed_height_m,
         end_height_m=length_m if end_height_m is None else end_height_m,
         azimuth_deg=azimuth_deg,

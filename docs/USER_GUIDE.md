@@ -513,6 +513,16 @@ the requested end height is outside the wire's vertical reach, the frequency-
 first estimator clamps it to the nearest reachable height and reports a warning.
 EFHW is a first-class experimental template with an inline editor.
 
+The **Fixed feed section** is a modeling partition at the start of the same
+wire, not an extra conductor; it stabilizes the NEC end-fed source. When the
+real counterpoise is disabled, a short **installation return** (0.10 m by
+default) models the unavoidable coax/mast/earth path. It is a model proxy, not
+a physical radial, and the real coax routing dominates the SWR. The editor
+warns when either the fixed feed section or the return/counterpoise is missing.
+**Check convergence** runs the same design with 10, 21, and 51 radiator
+segments and reports the R, X, and SWR spread; an unresolved result means the
+absolute SWR is segmentation-sensitive and should be verified with a VNA.
+
 ### Shortened EFHW with a loading coil
 
 The catalog also has **Shortened EFHW 80-10 m** and **Shortened EFHW

@@ -1147,7 +1147,34 @@ def test_loaded_endfed_round_trips_with_the_coil_load() -> None:
         "endfed-loading-coil",
     ]
     assert restored.designs[0].antenna.loads[0].inductance_h == pytest.approx(110e-6)
-    assert restored.designs[0].antenna.loads[0].offset_m == pytest.approx(20.35)
+    assert restored.designs[0].antenna.loads[0].offset_m == pytest.approx(20.35 - 0.5)
+
+
+def test_endfed_feed_section_and_installation_return_round_trip() -> None:
+    from antennadesk.domain.antennas.endfed import EndFedParameters
+
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_section_length_m=0.5,
+        installation_return_length_m=0.1,
+        feed_height_m=10.0,
+        end_height_m=10.0,
+        transformer_ratio=49.0,
+    )
+    original = _project(parameters, "EFHW feed section")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna.wire_by_id("endfed-feed-section").length_m == pytest.approx(
+        0.5
+    )
+    assert restored.designs[0].antenna.feed.wire_id == "endfed-feed-section"
+    assert restored.designs[0].antenna.wire_by_id("endfed-installation-return").length_m == (
+        pytest.approx(0.1)
+    )
 
 
 def test_transmission_lines_round_trip_through_the_schema() -> None:

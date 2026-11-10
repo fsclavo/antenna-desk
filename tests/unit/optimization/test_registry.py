@@ -375,6 +375,8 @@ _CONTEXT_FIELDS = {
     "trap_frequency_hz",
     "feed_gap_m",
     "element_separation_m",
+    "feed_section_length_m",
+    "installation_return_length_m",
 }
 
 

@@ -656,10 +656,19 @@ def design_summary_rows(
             [
                 ("Type", type_label),
                 ("Length", f"{parameters.length_m:.4f} m"),
+                ("Feed section", f"{parameters.feed_section_length_m:.4f} m"),
                 ("Feed height", f"{parameters.feed_height_m:.4f} m"),
                 ("End height", f"{parameters.end_height_m:.4f} m"),
                 ("Transformer", f"{parameters.transformer_ratio:g}:1"),
                 ("Counterpoise", counterpoise),
+                (
+                    "Installation return",
+                    (
+                        f"{parameters.installation_return_length_m:.4f} m (coax/mast proxy)"
+                        if parameters.installation_return_active
+                        else "not used"
+                    ),
+                ),
                 (
                     "Counterpoise height",
                     f"{parameters.counterpoise_height_m:.4f} m",

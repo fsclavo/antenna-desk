@@ -226,7 +226,9 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         limitation=(
             "The 49:1 transformer is an ideal ratio; the counterpoise is a "
             "straight wire; height, ground, and the common-mode choke are not "
-            "modeled."
+            "modeled. The fixed feed section and installation return reduce "
+            "NEC end-source sensitivity, but absolute SWR remains "
+            "segmentation-sensitive and must be verified with a VNA."
         ),
     ),
     "shortened_endfed_80_10": EvidenceEntry(

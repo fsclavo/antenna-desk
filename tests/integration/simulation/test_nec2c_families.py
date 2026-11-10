@@ -699,3 +699,77 @@ def test_estimated_families_solve_above_ground(
     assert min_z >= -1e-9, f"{key} has a wire below ground"
     assert result.status is SimulationStatus.COMPLETED
     assert math.isfinite(result.frequencies[0].impedance_ohm.real)
+
+
+def test_endfed_convergence_check_is_stable_with_feed_section_and_return(
+    solver: Nec2cSolver,
+) -> None:
+    from antennadesk.application.use_cases.check_endfed_convergence import (
+        CheckEndFedConvergence,
+        CheckEndFedConvergenceCommand,
+    )
+    from antennadesk.domain.antennas.endfed import EndFedParameters
+
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.34,
+        feed_section_length_m=0.5,
+        installation_return_length_m=0.1,
+        feed_height_m=10.0,
+        end_height_m=10.0,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+        transformer_ratio=49.0,
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
+        segmentation=SegmentationPolicy(min_segments_per_wire=1),
+        include_conductor_losses=True,
+        far_field=FarFieldRequest(enabled=False),
+        feed_transformer_ratio=parameters.transformer_ratio,
+    )
+
+    result = CheckEndFedConvergence(solver).execute(
+        CheckEndFedConvergenceCommand(parameters=parameters, base_spec=spec)
+    )
+
+    assert result.completed
+    assert result.converged, result.points
+
+
+def test_endfed_convergence_check_flags_a_legacy_end_fed_model(
+    solver: Nec2cSolver,
+) -> None:
+    from antennadesk.application.use_cases.check_endfed_convergence import (
+        CheckEndFedConvergence,
+        CheckEndFedConvergenceCommand,
+    )
+    from antennadesk.domain.antennas.endfed import EndFedParameters
+
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.34,
+        feed_height_m=10.0,
+        end_height_m=10.0,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+        transformer_ratio=49.0,
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
+        segmentation=SegmentationPolicy(min_segments_per_wire=1),
+        include_conductor_losses=True,
+        far_field=FarFieldRequest(enabled=False),
+        feed_transformer_ratio=parameters.transformer_ratio,
+    )
+
+    result = CheckEndFedConvergence(solver).execute(
+        CheckEndFedConvergenceCommand(parameters=parameters, base_spec=spec)
+    )
+
+    assert result.completed
+    assert not result.converged

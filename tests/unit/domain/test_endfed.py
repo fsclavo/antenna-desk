@@ -64,6 +64,91 @@ def test_endfed_rejects_a_slope_steeper_than_the_wire() -> None:
         )
 
 
+def test_endfed_feed_section_splits_the_wire_and_preserves_the_total_length() -> None:
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_section_length_m=0.5,
+        feed_height_m=10.0,
+        end_height_m=5.0,
+    )
+    custom = parameters.to_custom_parameters()
+
+    assert [wire.id for wire in custom.wires] == ["endfed-feed-section", "radiator"]
+    feed_section, radiator = custom.wires
+    assert feed_section.length_m == pytest.approx(0.5)
+    assert radiator.length_m == pytest.approx(19.5)
+    assert feed_section.end == radiator.start
+    assert radiator.end.z_m == pytest.approx(5.0)
+    assert custom.feed == FeedPoint("endfed-feed-section", 0.0)
+    assert feed_section.length_m + radiator.length_m == pytest.approx(20.0)
+
+
+def test_endfed_rejects_a_feed_section_as_long_as_the_wire() -> None:
+    with pytest.raises(ValueError, match="feed_section_length_m"):
+        EndFedParameters(
+            frequency_hz=7_100_000.0,
+            length_m=20.0,
+            feed_section_length_m=20.0,
+        )
+
+
+def test_endfed_installation_return_is_used_when_there_is_no_counterpoise() -> None:
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_section_length_m=0.5,
+        installation_return_length_m=0.1,
+        feed_height_m=10.0,
+        counterpoise_height_m=0.1,
+    )
+    custom = parameters.to_custom_parameters()
+
+    assert [wire.id for wire in custom.wires] == [
+        "endfed-feed-section",
+        "radiator",
+        "endfed-installation-return-drop",
+        "endfed-installation-return",
+    ]
+    drop, return_wire = custom.wires[2], custom.wires[3]
+    assert drop.length_m == pytest.approx(9.9)
+    assert return_wire.length_m == pytest.approx(0.1)
+
+
+def test_endfed_real_counterpoise_takes_precedence_over_the_installation_return() -> None:
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        installation_return_length_m=0.1,
+        counterpoise_length_m=2.0,
+        counterpoise_height_m=0.2,
+    )
+    custom = parameters.to_custom_parameters()
+
+    assert [wire.id for wire in custom.wires] == [
+        "radiator",
+        "counterpoise-drop",
+        "counterpoise",
+    ]
+    assert not any(wire.id.startswith("endfed-installation") for wire in custom.wires)
+
+
+def test_endfed_model_warning_keys_flag_legacy_and_missing_return() -> None:
+    from antennadesk.domain.antennas.endfed import endfed_model_warning_keys
+
+    legacy = endfed_model_warning_keys(EndFedParameters(frequency_hz=7_100_000.0, length_m=20.0))
+    assert legacy == ("endfed.warning.feed_section", "endfed.warning.return")
+    complete = endfed_model_warning_keys(
+        EndFedParameters(
+            frequency_hz=7_100_000.0,
+            length_m=20.0,
+            feed_section_length_m=0.5,
+            installation_return_length_m=0.1,
+        )
+    )
+    assert complete == ()
+
+
 def test_endfed_counterpoise_adds_a_drop_and_horizontal_wire() -> None:
     parameters = EndFedParameters(
         frequency_hz=7_100_000.0,
@@ -158,9 +243,10 @@ def test_shortened_efhw_80_10_matches_the_published_geometry() -> None:
     assert parameters.loading_coil_top_length_m == pytest.approx(2.39)
     assert parameters.transformer_ratio == pytest.approx(49.0)
     assert parameters.managed_load_ids == frozenset({ENDFED_LOADING_COIL_ID})
-    assert len(custom.wires) == 1
+    assert len(custom.wires) == 2
     assert [load.id for load in custom.loads] == [ENDFED_LOADING_COIL_ID]
-    assert custom.loads[0].offset_m == pytest.approx(20.35)
+    assert custom.loads[0].wire_id == "radiator"
+    assert custom.loads[0].offset_m == pytest.approx(20.35 - 0.5)
     assert custom.loads[0].inductance_h == pytest.approx(110e-6)
 
 

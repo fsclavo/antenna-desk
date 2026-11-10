@@ -4640,6 +4640,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "{counterpoise} · {ratio}:1"
         ),
     },
+    "endfed.feed_section_summary": {
+        Language.ENGLISH: "feed section {value} {unit}",
+        Language.SPANISH: "tramo de alimentación {value} {unit}",
+    },
+    "endfed.installation_return_summary": {
+        Language.ENGLISH: "installation return {value} {unit} (proxy)",
+        Language.SPANISH: "retorno de instalación {value} {unit} (proxy)",
+    },
     "endfed.loaded_geometry": {
         Language.ENGLISH: (
             "Feed {feed} {unit} · end {end} {unit} · coil at {coil} {unit} · "
@@ -4659,6 +4667,83 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "endfed.counterpoise_enabled": {
         Language.ENGLISH: "Use counterpoise",
         Language.SPANISH: "Usar contrapeso",
+    },
+    "endfed.feed_section": {
+        Language.ENGLISH: "Fixed feed section",
+        Language.SPANISH: "Tramo de alimentación fijo",
+    },
+    "endfed.feed_section_hint": {
+        Language.ENGLISH: (
+            "Modeling partition at the start of the same wire; it stabilizes the "
+            "NEC end-fed source. Do not cut a separate conductor."
+        ),
+        Language.SPANISH: (
+            "Partición de modelo al inicio del mismo hilo; estabiliza la fuente "
+            "NEC alimentada en el extremo. No cortar un conductor separado."
+        ),
+    },
+    "endfed.installation_return": {
+        Language.ENGLISH: "Installation return (proxy)",
+        Language.SPANISH: "Retorno de instalación (proxy)",
+    },
+    "endfed.installation_return_hint": {
+        Language.ENGLISH: (
+            "A short return models the unavoidable coax/mast/earth path. It is "
+            "not a physical radial; the real coax routing dominates the SWR. "
+            "Use a real counterpoise when available."
+        ),
+        Language.SPANISH: (
+            "Un retorno corto modela el camino inevitable del coaxil/mástil/"
+            "tierra. No es una radial física; el ruteo real del coaxil domina el "
+            "SWR. Usá un contrapeso real cuando esté disponible."
+        ),
+    },
+    "endfed.warning.feed_section": {
+        Language.ENGLISH: ("No fixed feed section: the end-fed source is segmentation-sensitive."),
+        Language.SPANISH: (
+            "Sin tramo de alimentación fijo: la fuente alimentada en el extremo es "
+            "sensible a la segmentación."
+        ),
+    },
+    "endfed.warning.return": {
+        Language.ENGLISH: (
+            "No counterpoise or installation return: feedpoint impedance depends "
+            "on the coax/mast/earth path."
+        ),
+        Language.SPANISH: (
+            "Sin contrapeso ni retorno de instalación: la impedancia de entrada "
+            "depende del camino del coaxil/mástil/tierra."
+        ),
+    },
+    "endfed.convergence_check": {
+        Language.ENGLISH: "Check convergence",
+        Language.SPANISH: "Verificar convergencia",
+    },
+    "endfed.convergence_running": {
+        Language.ENGLISH: "Checking segment convergence...",
+        Language.SPANISH: "Verificando convergencia de segmentos...",
+    },
+    "endfed.convergence_converged": {
+        Language.ENGLISH: ("Converged: R, X and SWR are stable across segment counts."),
+        Language.SPANISH: ("Convergido: R, X y SWR son estables entre segmentaciones."),
+    },
+    "endfed.convergence_unresolved": {
+        Language.ENGLISH: (
+            "Not converged: the absolute SWR is segmentation-sensitive; verify with a VNA."
+        ),
+        Language.SPANISH: (
+            "No convergido: el SWR absoluto es sensible a la segmentación; verificá con VNA."
+        ),
+    },
+    "endfed.convergence_result": {
+        Language.ENGLISH: (
+            "{status}\n{points}\nSWR spread {swr_spread:.3f} · R spread "
+            "{resistance_spread:.1%} · X spread {reactance_spread:.2f} Ω"
+        ),
+        Language.SPANISH: (
+            "{status}\n{points}\nDispersión de SWR {swr_spread:.3f} · R "
+            "{resistance_spread:.1%} · X {reactance_spread:.2f} Ω"
+        ),
     },
     "endfed.counterpoise_length": {
         Language.ENGLISH: "Counterpoise length (0 = none)",

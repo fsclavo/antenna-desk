@@ -21,10 +21,13 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.endfed import (
+    DEFAULT_FEED_SECTION_LENGTH_M,
+    DEFAULT_INSTALLATION_RETURN_LENGTH_M,
     EFHW_PRESET_LENGTHS_M,
     EndFedParameters,
     EndFedPreset,
     efhw_parameters,
+    endfed_model_warning_keys,
     shortened_efhw_40_10_parameters,
     shortened_efhw_80_10_parameters,
 )
@@ -76,6 +79,13 @@ class EndFedForm(QWidget):
         self._length.setDecimals(3)
         self._length.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._length.setValue(length_from_m(20.0, unit_system))
+
+        self._feed_section = QDoubleSpinBox(self)
+        self._feed_section.setRange(0.0, 100_000.0)
+        self._feed_section.setDecimals(3)
+        self._feed_section.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._feed_section.setValue(length_from_m(DEFAULT_FEED_SECTION_LENGTH_M, unit_system))
+        self._feed_section.setToolTip(translator.t("endfed.feed_section_hint"))
 
         self._feed_height = QDoubleSpinBox(self)
         self._feed_height.setDecimals(3)
@@ -147,6 +157,15 @@ class EndFedForm(QWidget):
         self._counterpoise_azimuth.setDecimals(1)
         self._counterpoise_azimuth.setSuffix("°")
         self._counterpoise_azimuth.setValue(180.0)
+
+        self._installation_return = QDoubleSpinBox(self)
+        self._installation_return.setRange(0.0, 100_000.0)
+        self._installation_return.setDecimals(3)
+        self._installation_return.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._installation_return.setValue(
+            length_from_m(DEFAULT_INSTALLATION_RETURN_LENGTH_M, unit_system)
+        )
+        self._installation_return.setToolTip(translator.t("endfed.installation_return_hint"))
 
         self._azimuth = QDoubleSpinBox(self)
         self._azimuth.setRange(0.0, 360.0)
@@ -224,6 +243,14 @@ class EndFedForm(QWidget):
             self._shortened_buttons[preset] = button
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
+        self._model_warning = QLabel(self)
+        self._model_warning.setWordWrap(True)
+        self._model_warning.setStyleSheet("color: #8a5a00;")
+        self._installation_return_hint = QLabel(
+            translator.t("endfed.installation_return_hint"),
+            self,
+        )
+        self._installation_return_hint.setWordWrap(True)
 
         if parameters is None:
             self._apply_preset_defaults()
@@ -232,6 +259,7 @@ class EndFedForm(QWidget):
         form.addRow(self._labels.label("field.template"), self._preset_label)
         form.addRow(self._labels.label("field.design_frequency"), self._frequency)
         form.addRow(self._labels.label("field.length"), self._length)
+        form.addRow(self._labels.label("endfed.feed_section"), self._feed_section)
         form.addRow(self._labels.label("endfed.feed_height"), self._feed_height)
         form.addRow(self._labels.label("endfed.end_height"), self._end_height)
         form.addRow(self._labels.label("endfed.transformer_ratio"), self._transformer)
@@ -243,6 +271,8 @@ class EndFedForm(QWidget):
             self._labels.label("endfed.counterpoise_azimuth"),
             self._counterpoise_azimuth,
         )
+        form.addRow(self._labels.label("endfed.installation_return"), self._installation_return)
+        form.addRow(self._installation_return_hint)
         form.addRow(self._labels.label("field.azimuth"), self._azimuth)
         form.addRow(self._labels.label("endfed.wire_radius"), self._radius)
         form.addRow(self._labels.label("field.material"), self._material)
@@ -257,10 +287,12 @@ class EndFedForm(QWidget):
         layout.addWidget(self._efhw_widget)
         layout.addWidget(self._shortened_widget)
         layout.addWidget(self._geometry)
+        layout.addWidget(self._model_warning)
 
         for widget in (
             self._frequency,
             self._length,
+            self._feed_section,
             self._feed_height,
             self._end_height,
             self._transformer,
@@ -270,6 +302,7 @@ class EndFedForm(QWidget):
             self._counterpoise_length,
             self._counterpoise_height,
             self._counterpoise_azimuth,
+            self._installation_return,
             self._azimuth,
             self._radius,
             self._permittivity,
@@ -295,6 +328,11 @@ class EndFedForm(QWidget):
         self._ground_presets.retranslate()
         self._labels.retranslate()
         self._counterpoise_enabled.setText(self._translator.t("endfed.counterpoise_enabled"))
+        self._installation_return_hint.setText(
+            self._translator.t("endfed.installation_return_hint")
+        )
+        self._feed_section.setToolTip(self._translator.t("endfed.feed_section_hint"))
+        self._installation_return.setToolTip(self._translator.t("endfed.installation_return_hint"))
         self._efhw_label.setText(self._translator.t("endfed.efhw_presets"))
         self._shortened_label.setText(self._translator.t("endfed.shortened_presets"))
         self._loading_coil_group.setTitle(self._translator.t("endfed.loading_coil"))
@@ -424,6 +462,12 @@ class EndFedForm(QWidget):
         try:
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
             self._length.setValue(length_from_m(parameters.length_m, self._unit_system))
+            self._feed_section.setValue(
+                length_from_m(parameters.feed_section_length_m, self._unit_system)
+            )
+            self._installation_return.setValue(
+                length_from_m(parameters.installation_return_length_m, self._unit_system)
+            )
             self._transformer.setValue(parameters.transformer_ratio)
             self._counterpoise_enabled.setChecked(True)
             self._counterpoise_length.setValue(
@@ -488,6 +532,8 @@ class EndFedForm(QWidget):
         self._counterpoise_length.setEnabled(enabled)
         self._counterpoise_height.setEnabled(enabled)
         self._counterpoise_azimuth.setEnabled(enabled)
+        self._installation_return.setEnabled(not enabled)
+        self._installation_return_hint.setVisible(not enabled)
 
     def _update_ground_controls(self) -> None:
         finite = self._ground.currentData() == GroundKind.FINITE.value
@@ -524,10 +570,12 @@ class EndFedForm(QWidget):
             self._translator,
             unit_system,
             self._length,
+            self._feed_section,
             self._feed_height,
             self._end_height,
             self._counterpoise_length,
             self._counterpoise_height,
+            self._installation_return,
             self._loading_coil_offset,
         )
         if parameters is not None:
@@ -539,6 +587,12 @@ class EndFedForm(QWidget):
             self._preset = parameters.preset
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
             self._length.setValue(length_from_m(parameters.length_m, self._unit_system))
+            self._feed_section.setValue(
+                length_from_m(parameters.feed_section_length_m, self._unit_system)
+            )
+            self._installation_return.setValue(
+                length_from_m(parameters.installation_return_length_m, self._unit_system)
+            )
             self._feed_height.setValue(length_from_m(parameters.feed_height_m, self._unit_system))
             self._end_height.setValue(length_from_m(parameters.end_height_m, self._unit_system))
             self._transformer.setValue(parameters.transformer_ratio)
@@ -596,7 +650,12 @@ class EndFedForm(QWidget):
             parameters = self.parameters()
         except (ValueError, TypeError):
             self._geometry.setText("")
+            self._model_warning.clear()
+            self._model_warning.setVisible(False)
             return
+        warning_keys = endfed_model_warning_keys(parameters)
+        self._model_warning.setText(" · ".join(self._translator.t(key) for key in warning_keys))
+        self._model_warning.setVisible(bool(warning_keys))
         unit = self._translator.t(length_unit_key(self._unit_system))
         counterpoise = (
             f"{length_from_m(parameters.counterpoise_length_m, self._unit_system):.2f} {unit}"
@@ -612,22 +671,19 @@ class EndFedForm(QWidget):
                 parameters.loading_coil_top_length_m,
                 self._unit_system,
             )
-            self._geometry.setText(
-                self._translator.t(
-                    "endfed.loaded_geometry",
-                    feed=f"{length_from_m(parameters.feed_height_m, self._unit_system):.2f}",
-                    end=f"{length_from_m(parameters.end_height_m, self._unit_system):.2f}",
-                    coil=f"{coil_position:.2f}",
-                    inductance=f"{parameters.loading_coil_inductance_h * 1e6:.1f}",
-                    top=f"{top_length:.2f}",
-                    counterpoise=counterpoise,
-                    ratio=f"{parameters.transformer_ratio:g}",
-                    unit=unit,
-                )
+            text = self._translator.t(
+                "endfed.loaded_geometry",
+                feed=f"{length_from_m(parameters.feed_height_m, self._unit_system):.2f}",
+                end=f"{length_from_m(parameters.end_height_m, self._unit_system):.2f}",
+                coil=f"{coil_position:.2f}",
+                inductance=f"{parameters.loading_coil_inductance_h * 1e6:.1f}",
+                top=f"{top_length:.2f}",
+                counterpoise=counterpoise,
+                ratio=f"{parameters.transformer_ratio:g}",
+                unit=unit,
             )
-            return
-        self._geometry.setText(
-            self._translator.t(
+        else:
+            text = self._translator.t(
                 "endfed.geometry",
                 feed=f"{length_from_m(parameters.feed_height_m, self._unit_system):.2f}",
                 end=f"{length_from_m(parameters.end_height_m, self._unit_system):.2f}",
@@ -635,12 +691,33 @@ class EndFedForm(QWidget):
                 ratio=f"{parameters.transformer_ratio:g}",
                 unit=unit,
             )
-        )
+        if parameters.feed_section_active:
+            text += " · " + self._translator.t(
+                "endfed.feed_section_summary",
+                value=f"{length_from_m(parameters.feed_section_length_m, self._unit_system):.2f}",
+                unit=unit,
+            )
+        if parameters.installation_return_active:
+            installation_return_display = length_from_m(
+                parameters.installation_return_length_m,
+                self._unit_system,
+            )
+            text += " · " + self._translator.t(
+                "endfed.installation_return_summary",
+                value=f"{installation_return_display:.2f}",
+                unit=unit,
+            )
+        self._geometry.setText(text)
 
     def parameters(self) -> EndFedParameters:
         return EndFedParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
             length_m=length_to_m(self._length.value(), self._unit_system),
+            feed_section_length_m=length_to_m(self._feed_section.value(), self._unit_system),
+            installation_return_length_m=length_to_m(
+                self._installation_return.value(),
+                self._unit_system,
+            ),
             feed_height_m=length_to_m(self._feed_height.value(), self._unit_system),
             end_height_m=length_to_m(self._end_height.value(), self._unit_system),
             azimuth_deg=self._azimuth.value(),

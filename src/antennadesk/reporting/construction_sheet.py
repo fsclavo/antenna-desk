@@ -700,22 +700,23 @@ def render_construction_sheet(
             if parameters.counterpoise_length_m > 0.0
             else tr("none")
         )
+        feed_section_row = (
+            f"<tr><th>Feed section</th><td>{parameters.feed_section_length_m:.4f} m</td></tr>\n"
+            if parameters.feed_section_active
+            else ""
+        )
+        installation_return_row = (
+            f"<tr><th>Installation return</th><td>{parameters.installation_return_length_m:.4f} m (coax/mast proxy)</td></tr>\n"
+            if parameters.installation_return_active
+            else ""
+        )
         feed_rows = f"""
 <tr><th>Wire length</th><td>{parameters.length_m:.4f} m</td></tr>
-<tr><th>Feed height</th><td>{parameters.feed_height_m:.4f} m</td></tr>
+{feed_section_row}<tr><th>Feed height</th><td>{parameters.feed_height_m:.4f} m</td></tr>
 <tr><th>End height</th><td>{parameters.end_height_m:.4f} m</td></tr>
 <tr><th>Transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
 <tr><th>Counterpoise</th><td>{counterpoise}</td></tr>
-"""
-        if parameters.coil_active:
-            coil_rows = f"""
-<tr><th>Loading coil</th><td>{parameters.loading_coil_inductance_h * 1e6:.4f} µH</td></tr>
-<tr><th>Coil position</th><td>{_escape(tr("{offset:.4f} m from feed", offset=parameters.loading_coil_offset_m))}</td></tr>
-<tr><th>Top section</th><td>{parameters.loading_coil_top_length_m:.4f} m</td></tr>
-"""
-            if parameters.loading_coil_q is not None:
-                coil_rows += f"<tr><th>Coil Q</th><td>{parameters.loading_coil_q:.1f}</td></tr>\n"
-            feed_rows += coil_rows
+{installation_return_row}"""
         construction_note = _note(
             tr,
             "Cut one wire to {length} m and feed it at one end. The feed is at "
@@ -740,6 +741,30 @@ def render_construction_sheet(
                 top=f"{parameters.loading_coil_top_length_m:.4f}",
                 ratio=f"{parameters.transformer_ratio:g}",
                 counterpoise=counterpoise,
+            )
+        if parameters.feed_section_active:
+            construction_note += (
+                "<p>"
+                + _escape(
+                    tr(
+                        "The first {length} m is a fixed feed section of the same wire; "
+                        "do not cut a separate conductor.",
+                        length=f"{parameters.feed_section_length_m:.4f}",
+                    )
+                )
+                + "</p>"
+            )
+        if parameters.installation_return_active:
+            construction_note += (
+                "<p>"
+                + _escape(
+                    tr(
+                        "The {length} m installation return is a model proxy for the "
+                        "coax/mast/earth path, not a physical radial.",
+                        length=f"{parameters.installation_return_length_m:.4f}",
+                    )
+                )
+                + "</p>"
             )
     elif isinstance(parameters, FanDipoleParameters):
         lengths = ", ".join(f"{element.length_m:.4f} m" for element in parameters.elements)

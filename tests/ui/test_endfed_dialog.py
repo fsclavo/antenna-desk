@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from main_window_support import FakeSolver
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
@@ -22,14 +23,22 @@ def test_endfed_dialog_builds_parameters(qtbot: QtBot) -> None:
     assert parameters.feed_height_m == 10.0
     assert parameters.transformer_ratio == 49.0
     assert parameters.counterpoise_length_m == 0.0
+    assert parameters.feed_section_length_m == pytest.approx(0.5)
+    assert parameters.installation_return_length_m == pytest.approx(0.1)
+    assert parameters.installation_return_active is True
     assert dialog._form._counterpoise_enabled.isChecked() is False
     assert dialog._form._counterpoise_length.isEnabled() is False
     assert dialog._form._counterpoise_height.isEnabled() is False
+    assert dialog._form._installation_return.isEnabled() is True
     assert "counterpoise none" in dialog._form._geometry.text()
+    assert "feed section" in dialog._form._geometry.text()
+    assert "installation return" in dialog._form._geometry.text()
+    assert dialog._form._model_warning.text() == ""
 
     dialog._form._counterpoise_enabled.setChecked(True)
     assert dialog._form._counterpoise_length.isEnabled() is True
     assert dialog._form._counterpoise_height.isEnabled() is True
+    assert dialog._form._installation_return.isEnabled() is False
     assert dialog._form._counterpoise_length.value() > 0.0
     dialog._form._counterpoise_length.setValue(2.0)
     assert "counterpoise 2.00 m" in dialog._form._geometry.text()
@@ -38,6 +47,40 @@ def test_endfed_dialog_builds_parameters(qtbot: QtBot) -> None:
     dialog._form._counterpoise_enabled.setChecked(False)
     assert dialog.parameters().counterpoise_length_m == 0.0
     assert dialog._form._ground.currentText() == "Finite ground"
+
+
+def test_endfed_dialog_checks_segment_convergence(qtbot: QtBot) -> None:
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        solver=FakeSolver(),
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._check_button.isEnabled() is True
+    dialog._check_button.click()
+
+    assert "Converged" in dialog._check_result.text()
+
+
+def test_endfed_dialog_warns_about_a_legacy_feed_model(qtbot: QtBot) -> None:
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_height_m=10.0,
+        end_height_m=10.0,
+        transformer_ratio=49.0,
+    )
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=parameters,
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._form._model_warning.text()
+    assert "No fixed feed section" in dialog._form._model_warning.text()
+    assert "No counterpoise or installation return" in dialog._form._model_warning.text()
 
 
 def test_endfed_dialog_loads_efhw_band_presets(qtbot: QtBot) -> None:
