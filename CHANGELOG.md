@@ -15,10 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   analysis uses a determinate counter for the selected bands. Cancelling or
   failing a run resets the bar, and the family and length optimizer dialogs
   now reuse the same widget.
-- The family and length optimizer dialogs now show a determinate progress bar
-  with completed and estimated evaluations. The family bar also shows the best
-  score seen so far. Updates are throttled, the estimate is labeled, and the
-  bar completes when the optimizer stops early.
+- The family, length, element, and synthesis optimizer dialogs now show a
+  determinate progress bar with completed and estimated evaluations. The family
+  bar also shows the best score seen so far. Updates are throttled, the estimate
+  is labeled, and the bar completes when the optimizer stops early.
 - End-fed/EFHW designs now include a fixed **feed section** (0.5 m modeling
   partition of the same wire, three segments) and, when no real counterpoise
   is enabled, a short **installation return** (0.10 m proxy for the coax,

@@ -385,7 +385,7 @@ class OptimizationDialog(QDialog):
         display = min(completed, max(0, total - 1))
         self._task_progress.set_progress(
             display,
-            "optimize.progress_length",
+            "optimize.progress_evaluations",
             completed=completed,
             total=total,
         )

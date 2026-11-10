@@ -1265,7 +1265,8 @@ While a run is active, the dialog shows a determinate progress bar with the
 completed evaluations and the estimated total. The estimate is an upper bound:
 the optimizer may converge early and the bar completes when the run stops. The
 family dialog also shows the best score seen so far; updates are throttled so
-large budgets stay responsive.
+large budgets stay responsive. The element and synthesis dialogs use the same
+progress pattern with their own maximum-evaluation budget.
 
 ### Variables and topology
 

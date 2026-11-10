@@ -7,6 +7,7 @@ from helpers import wait_for_condition
 from PySide6.QtWidgets import QDialog
 from pytestqt.qtbot import QtBot
 
+from antennadesk.application.cancellation import EventCancelToken
 from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.j_pole import JPoleParameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
@@ -19,6 +20,7 @@ from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.ui.dialogs.synthesis_dialog import SynthesisDialog
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem
+from antennadesk.ui.widgets.task_progress import TaskProgressState
 
 
 class AnalyticalOCFDSolver:
@@ -121,8 +123,14 @@ def test_synthesis_dialog_finds_ocfd_dimensions(qtbot: QtBot) -> None:
     dialog.show()
 
     dialog._run.click()
+
+    assert dialog._task_progress.isHidden() is False
+    assert dialog._task_progress.state is TaskProgressState.RUNNING
+    assert dialog._task_progress.progress_maximum == dialog._run_estimated_evaluations
+
     wait_for_condition(lambda: dialog._thread is None, timeout_ms=5_000)
 
+    assert dialog._task_progress.state is TaskProgressState.COMPLETED
     assert dialog._result is not None
     assert dialog._result.status is SynthesisStatus.CONVERGED
     assert dialog.selected_parameters() is not None
@@ -140,3 +148,27 @@ def test_synthesis_dialog_finds_ocfd_dimensions(qtbot: QtBot) -> None:
 
     dialog._apply.click()
     assert dialog.result() == QDialog.DialogCode.Accepted
+
+
+def test_synthesis_dialog_marks_progress_as_cancelling(qtbot: QtBot) -> None:
+    parameters = OCFDParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        feed_ratio=0.33,
+        height_m=10.0,
+    )
+    dialog = SynthesisDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalOCFDSolver(),
+        parameters,
+        SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0)),
+    )
+    qtbot.addWidget(dialog)
+    dialog._task_progress.begin_determinate(10, "synthesis.running")
+    dialog._cancel_token = EventCancelToken()
+
+    dialog._cancel_run()
+
+    assert dialog._task_progress.state is TaskProgressState.CANCELLING
+    assert dialog._task_progress.text == "Cancelling..."

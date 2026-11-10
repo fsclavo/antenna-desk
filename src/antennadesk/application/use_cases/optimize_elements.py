@@ -75,6 +75,7 @@ class OptimizeElementsCommand:
     samples: int = 5
     passes: int = 4
     cancel_token: CancelToken | None = None
+    progress: Callable[[int], None] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,7 +98,7 @@ class OptimizeElements:
             ),
         )
 
-        def evaluate(values: Mapping[str, float]) -> BoundedEvaluation:
+        def _evaluate(values: Mapping[str, float]) -> BoundedEvaluation:
             try:
                 parameters = command.build_parameters(values)
                 model = parameters.to_antenna(name="Optimization")
@@ -196,6 +197,16 @@ class OptimizeElements:
                 result.status.value,
             )
             return BoundedEvaluation(0, dict(values), None, error=message)
+
+        completed_evaluations = 0
+
+        def evaluate(values: Mapping[str, float]) -> BoundedEvaluation:
+            nonlocal completed_evaluations
+            evaluation = _evaluate(values)
+            completed_evaluations += 1
+            if command.progress is not None:
+                command.progress(completed_evaluations)
+            return evaluation
 
         cancel_check = (
             command.cancel_token.is_cancelled if command.cancel_token is not None else None

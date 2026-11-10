@@ -8,6 +8,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog
 from pytestqt.qtbot import QtBot
 
+from antennadesk.application.cancellation import EventCancelToken
 from antennadesk.application.use_cases.optimize_elements import ElementOptimizationObjective
 from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.dipole import DipoleParameters
@@ -23,6 +24,7 @@ from antennadesk.ui.dialogs.element_optimization_dialog import (
 )
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem
+from antennadesk.ui.widgets.task_progress import TaskProgressState
 
 
 class AnalyticalSolver:
@@ -97,8 +99,14 @@ def test_generic_element_dialog_applies_optimized_parameters(qtbot: QtBot) -> No
     dialog.show()
 
     dialog._run.click()
+
+    assert dialog._task_progress.isHidden() is False
+    assert dialog._task_progress.state is TaskProgressState.RUNNING
+    assert dialog._task_progress.progress_maximum == dialog._run_estimated_evaluations
+
     wait_for_condition(lambda: dialog._thread is None, timeout_ms=5_000)
 
+    assert dialog._task_progress.state is TaskProgressState.COMPLETED
     assert dialog._result is not None
     assert dialog._result.status is BoundedStatus.CONVERGED
     selected = dialog.selected_parameters()
@@ -317,3 +325,34 @@ def test_element_dialog_syncs_band_frequency_and_selected_element(qtbot: QtBot) 
     dialog._frequency.setValue(21.0)
     assert dialog._band.currentData() is None
     assert dialog._band_warning.isHidden() is True
+
+
+def test_element_dialog_marks_progress_as_cancelling(qtbot: QtBot) -> None:
+    base = DipoleParameters(frequency_hz=7_100_000.0, total_length_m=20.0, height_m=8.0)
+
+    def build(values: dict[str, float]) -> DipoleParameters:
+        return DipoleParameters(
+            frequency_hz=values["__frequency_hz"],
+            total_length_m=values["length_m"],
+            height_m=base.height_m,
+        )
+
+    dialog = ElementOptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalSolver(),
+        SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0)),
+        title_key="element_optimize.yagi_title",
+        variables=(ElementOptimizationVariable("length_m", "Length", 20.0),),
+        build_parameters=build,
+        objectives=(ElementOptimizationObjective.TARGET_IMPEDANCE,),
+        default_frequency_hz=7_100_000.0,
+    )
+    qtbot.addWidget(dialog)
+    dialog._task_progress.begin_determinate(10, "element_optimize.running")
+    dialog._cancel_token = EventCancelToken()
+
+    dialog._cancel_run()
+
+    assert dialog._task_progress.state is TaskProgressState.CANCELLING
+    assert dialog._task_progress.text == "Cancelling..."

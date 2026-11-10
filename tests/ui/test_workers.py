@@ -226,6 +226,74 @@ def test_optimization_worker_forwards_progress(
     assert progress == [3]
 
 
+@dataclass
+class _ElementProgressCommand:
+    progress: object = None
+
+
+@dataclass
+class _SynthesisProgressCommand:
+    progress: object = None
+
+
+def test_element_optimization_worker_forwards_progress(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    del qtbot
+
+    class FakeUseCase:
+        def __init__(self, solver: object) -> None:
+            self.solver = solver
+
+        def execute(self, command: object) -> object:
+            command.progress(4)  # type: ignore[attr-defined]
+            return SENTINEL
+
+    monkeypatch.setattr(element_optimization_worker, "OptimizeElements", FakeUseCase)
+    external: list[int] = []
+    worker = element_optimization_worker.ElementOptimizationWorker(
+        object(),
+        _ElementProgressCommand(progress=external.append),  # type: ignore[arg-type]
+    )
+    progress: list[int] = []
+    worker.progress.connect(progress.append)
+
+    worker.run()
+
+    assert external == [4]
+    assert progress == [4]
+
+
+def test_synthesis_worker_forwards_progress(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    del qtbot
+
+    class FakeUseCase:
+        def __init__(self, solver: object) -> None:
+            self.solver = solver
+
+        def execute(self, command: object) -> object:
+            command.progress(5)  # type: ignore[attr-defined]
+            return SENTINEL
+
+    monkeypatch.setattr(synthesis_worker, "SynthesizeAntenna", FakeUseCase)
+    external: list[int] = []
+    worker = synthesis_worker.SynthesisWorker(
+        object(),
+        _SynthesisProgressCommand(progress=external.append),  # type: ignore[arg-type]
+    )
+    progress: list[int] = []
+    worker.progress.connect(progress.append)
+
+    worker.run()
+
+    assert external == [5]
+    assert progress == [5]
+
+
 def test_band_analysis_worker_reports_progress(
     qtbot: QtBot,
     monkeypatch: pytest.MonkeyPatch,

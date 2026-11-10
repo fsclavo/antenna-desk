@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import math
+import time
 from dataclasses import replace
 
 from PySide6.QtCore import Qt, QThread
@@ -34,6 +35,7 @@ from ...domain.antennas.ocfd import OCFDParameters
 from ...domain.optimization.synthesis import (
     SynthesisEvaluation,
     SynthesisResult,
+    SynthesisStatus,
     SynthesisTarget,
     SynthesisVariable,
     rank_evaluations,
@@ -48,6 +50,7 @@ from ..units import (
     length_to_m,
     length_unit_key,
 )
+from ..widgets.task_progress import TaskProgressBar, TaskProgressState
 from ..workers.synthesis_worker import SynthesisWorker
 
 
@@ -77,6 +80,8 @@ class SynthesisDialog(QDialog):
         self._result: SynthesisResult | None = None
         self._selected_parameters: AntennaDesignParameters | None = None
         self._run_target: SynthesisTarget | None = None
+        self._run_estimated_evaluations = 0
+        self._last_progress_emit = 0.0
 
         self._is_ocfd = isinstance(base_parameters, OCFDParameters)
         self._folded = isinstance(base_parameters, JPoleParameters) and base_parameters.folded
@@ -206,6 +211,7 @@ class SynthesisDialog(QDialog):
 
         self._summary = QLabel(self)
         self._summary.setWordWrap(True)
+        self._task_progress = TaskProgressBar(translator, self)
         self._hint = QLabel(translator.t("synthesis.apply_hint"), self)
         self._hint.setWordWrap(True)
 
@@ -232,6 +238,7 @@ class SynthesisDialog(QDialog):
         layout.addWidget(self._evaluations_label)
         layout.addWidget(self._evaluations, 1)
         layout.addWidget(self._summary)
+        layout.addWidget(self._task_progress)
         layout.addWidget(self._hint)
         layout.addLayout(buttons)
 
@@ -368,6 +375,24 @@ class SynthesisDialog(QDialog):
             reactance_ohm=self._target_x.value(),
         )
 
+    def _on_progress(self, completed: int) -> None:
+        if self._task_progress.state is not TaskProgressState.RUNNING:
+            return
+        if self._run_estimated_evaluations <= 0:
+            return
+        now = time.monotonic()
+        if now - self._last_progress_emit < 0.1 and completed < self._run_estimated_evaluations:
+            return
+        self._last_progress_emit = now
+        total = max(1, self._run_estimated_evaluations)
+        display = min(completed, max(0, total - 1))
+        self._task_progress.set_progress(
+            display,
+            "optimize.progress_evaluations",
+            completed=completed,
+            total=total,
+        )
+
     def _start(self) -> None:
         if self._thread is not None:
             return
@@ -392,10 +417,17 @@ class SynthesisDialog(QDialog):
             max_evaluations=self._max_evaluations.value(),
             cancel_token=self._cancel_token,
         )
+        self._run_estimated_evaluations = self._max_evaluations.value()
+        self._last_progress_emit = 0.0
+        self._task_progress.begin_determinate(
+            self._run_estimated_evaluations,
+            "synthesis.running",
+        )
         thread = QThread(self)
         worker = SynthesisWorker(self._solver, command)
         worker.moveToThread(thread)
         thread.started.connect(worker.run)
+        worker.progress.connect(self._on_progress)
         worker.finished.connect(self._on_finished)
         worker.failed.connect(self._on_failed)
         worker.finished.connect(thread.quit)
@@ -413,8 +445,18 @@ class SynthesisDialog(QDialog):
             self._cancel_token.cancel()
             self._summary.setText(self._translator.t("synthesis.running"))
             self._cancel.setEnabled(False)
+            self._task_progress.mark_cancelling("status.cancelling")
 
     def _on_finished(self, result: SynthesisResult) -> None:
+        if result.status is SynthesisStatus.CANCELLED:
+            self._task_progress.cancel("progress.cancelled")
+        elif result.status is SynthesisStatus.ERROR:
+            self._task_progress.fail("progress.failed")
+        else:
+            self._task_progress.complete(
+                "optimize.progress_completed",
+                count=len(result.evaluations),
+            )
         self._result = result
         self._populate_evaluations(result.evaluations)
         self._summary.setText(self._summary_text(result))
@@ -423,6 +465,7 @@ class SynthesisDialog(QDialog):
         self._apply.setEnabled(self._selected_parameters is not None)
 
     def _on_failed(self, message: str) -> None:
+        self._task_progress.fail("progress.failed")
         self._summary.setText(self._translator.t("synthesis.error", message=message))
         QMessageBox.critical(
             self,

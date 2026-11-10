@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import math
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -38,6 +39,7 @@ from ...domain.antennas.design import AntennaDesignParameters
 from ...domain.optimization.multi_variable import (
     BoundedEvaluation,
     BoundedResult,
+    BoundedStatus,
     BoundedVariable,
     rank_bounded,
 )
@@ -48,6 +50,7 @@ from ...domain.simulation.spec import SimulationSpec
 from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_unit_key
+from ..widgets.task_progress import TaskProgressBar, TaskProgressState
 from ..workers.element_optimization_worker import ElementOptimizationWorker
 
 
@@ -127,6 +130,8 @@ class ElementOptimizationDialog(QDialog):
         self._ordered_evaluations: tuple[BoundedEvaluation, ...] = ()
         self._updating = False
         self._ready = False
+        self._run_estimated_evaluations = 0
+        self._last_progress_emit = 0.0
 
         self.setWindowTitle(translator.t(title_key))
         self.resize(*scaled_dialog_size(1_050, 760))
@@ -255,6 +260,7 @@ class ElementOptimizationDialog(QDialog):
 
         self._summary = QLabel(self)
         self._summary.setWordWrap(True)
+        self._task_progress = TaskProgressBar(translator, self)
         self._hint = QLabel(translator.t(hint_key), self)
         self._hint.setWordWrap(True)
         self._band_warning = QLabel(self)
@@ -287,6 +293,7 @@ class ElementOptimizationDialog(QDialog):
         layout.addWidget(self._evaluations_label)
         layout.addWidget(self._evaluations, 1)
         layout.addWidget(self._summary)
+        layout.addWidget(self._task_progress)
         layout.addWidget(self._hint)
         layout.addLayout(buttons)
 
@@ -547,6 +554,24 @@ class ElementOptimizationDialog(QDialog):
         target = self._target()
         return self._build({**values, "__frequency_hz": target.frequency_hz})
 
+    def _on_progress(self, completed: int) -> None:
+        if self._task_progress.state is not TaskProgressState.RUNNING:
+            return
+        if self._run_estimated_evaluations <= 0:
+            return
+        now = time.monotonic()
+        if now - self._last_progress_emit < 0.1 and completed < self._run_estimated_evaluations:
+            return
+        self._last_progress_emit = now
+        total = max(1, self._run_estimated_evaluations)
+        display = min(completed, max(0, total - 1))
+        self._task_progress.set_progress(
+            display,
+            "optimize.progress_evaluations",
+            completed=completed,
+            total=total,
+        )
+
     def _start(self) -> None:
         if self._thread is not None:
             return
@@ -582,10 +607,17 @@ class ElementOptimizationDialog(QDialog):
             passes=self._passes.value(),
             cancel_token=self._cancel_token,
         )
+        self._run_estimated_evaluations = self._max_evaluations.value()
+        self._last_progress_emit = 0.0
+        self._task_progress.begin_determinate(
+            self._run_estimated_evaluations,
+            "element_optimize.running",
+        )
         thread = QThread(self)
         worker = ElementOptimizationWorker(self._solver, command)
         worker.moveToThread(thread)
         thread.started.connect(worker.run)
+        worker.progress.connect(self._on_progress)
         worker.finished.connect(self._on_finished)
         worker.failed.connect(self._on_failed)
         worker.finished.connect(thread.quit)
@@ -603,8 +635,18 @@ class ElementOptimizationDialog(QDialog):
             self._cancel_token.cancel()
             self._summary.setText(self._translator.t("element_optimize.running"))
             self._cancel.setEnabled(False)
+            self._task_progress.mark_cancelling("status.cancelling")
 
     def _on_finished(self, result: BoundedResult) -> None:
+        if result.status is BoundedStatus.CANCELLED:
+            self._task_progress.cancel("progress.cancelled")
+        elif result.status is BoundedStatus.ERROR:
+            self._task_progress.fail("progress.failed")
+        else:
+            self._task_progress.complete(
+                "optimize.progress_completed",
+                count=len(result.evaluations),
+            )
         self._result = result
         self._populate_evaluations(result)
         self._summary.setText(self._summary_text(result))
@@ -613,6 +655,7 @@ class ElementOptimizationDialog(QDialog):
         self._apply.setEnabled(self._selected_parameters is not None)
 
     def _on_failed(self, message: str) -> None:
+        self._task_progress.fail("progress.failed")
         self._summary.setText(self._translator.t("element_optimize.error", message=message))
         QMessageBox.critical(
             self,

@@ -134,6 +134,38 @@ def test_target_impedance_swr_is_relative_to_the_target() -> None:
     )
 
 
+def test_optimizer_reports_monotonic_evaluation_progress() -> None:
+    target = SynthesisTarget(14_100_000.0, 100.0, 0.0)
+
+    def build(values: dict[str, float]) -> DipoleParameters:
+        return DipoleParameters(
+            frequency_hz=target.frequency_hz,
+            total_length_m=values["length_m"],
+            height_m=10.0,
+        )
+
+    seen: list[int] = []
+    result = OptimizeElements(AnalyticalPatternSolver()).execute(
+        OptimizeElementsCommand(
+            build_parameters=build,
+            variables=(BoundedVariable("length_m", 19.0, 21.0),),
+            start_values={"length_m": 20.0},
+            target=target,
+            base_spec=SimulationSpec(
+                frequency_plan=FrequencyPlan.single(14_100_000.0),
+            ),
+            objective=ElementOptimizationObjective.TARGET_IMPEDANCE,
+            max_evaluations=10,
+            samples=3,
+            passes=1,
+            progress=seen.append,
+        )
+    )
+
+    assert seen == list(range(1, len(seen) + 1))
+    assert seen[-1] == len(result.evaluations)
+
+
 def test_multi_objective_optimizer_uses_weighted_metrics() -> None:
     target = SynthesisTarget(14_100_000.0, 50.0, 0.0)
 

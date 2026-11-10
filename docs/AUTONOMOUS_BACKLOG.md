@@ -90,7 +90,7 @@ external service and must not be invented or simulated into existence.
 | ~~P3~~ | ~~Band-analysis progress bar~~ | S | P1 | **Done 2026-11-10:** the existing `BandAnalysisWorker.progress(index, total, band)` signal drives a determinate bar and the `Band i/n: band` label; the status text now stays on "Analyzing bands..." while the analysis runs. Tests cover the shared start path, progress updates, and reset. |
 | ~~P4~~ | ~~Family optimizer progress bar~~ | S–M | P1 | **Done 2026-11-10:** `FamilyOptimizationWorker` forwards the existing command progress callback as a Qt signal; the dialog shows a determinate bar with completed/estimated evaluations and the best score, throttles updates, caps running progress below 100%, and completes, cancels, or fails with the result. Tests cover forwarding, estimation text, cancellation, and terminal states. |
 | ~~P5~~ | ~~Length optimizer progress bar~~ | S–M | P1 | **Done 2026-11-10:** `OptimizeDipoleLengthCommand` now reports evaluation progress; `OptimizationWorker` forwards it and the dialog shows a determinate bar using `max_evaluations + 2 * len(sensitivity_offsets_m)` as the estimated denominator. Finish, cancellation, and failure set terminal states; tests cover monotonic counts and the dialog progress lifecycle. |
-| P6 | Element and synthesis optimizer progress bars | M | P1, P4, P5 | Extend the pattern to `OptimizeElementsCommand` and `SynthesizeAntennaCommand`, their workers, and their dialogs. Use each command's maximum evaluation budget as the estimated denominator, throttle updates, and complete on finish. Tests cover each dialog's bar and cancellation. |
+| ~~P6~~ | ~~Element and synthesis optimizer progress bars~~ | M | P1, P4, P5 | **Done 2026-11-10:** `OptimizeElementsCommand` and `SynthesizeAntennaCommand` report evaluation progress; their workers forward it and both dialogs show the shared determinate bar with the maximum-evaluation budget as the estimated denominator. Finish, cancellation, and failure set terminal states; tests cover monotonic counts, worker forwarding, dialog completion, and cancellation. |
 | P7 | True per-frequency simulation progress | L | P2; ADR; benchmark; D4 decision | **Deferred until a benchmark shows a practical need.** Choose between chunked frequency-plan execution and version-tolerant incremental output parsing. Chunking must aggregate `SimulationResult` safely and preserve source, pattern, feed-line, matching-network, and cancellation semantics; parsing must handle partial writes. Add an ADR and benchmark before implementation. Do not use `timeout_s` or elapsed time as a fake percentage. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
@@ -266,8 +266,7 @@ model and solver contract must land first.
    meantime.
 2. **H1** is the next non-optional foundation for the tooltip/help queue;
    **H2–H4** follow.
-3. **P1–P5 are complete.** **P6** extends the progress pattern to element and
-   synthesis optimization. **P7** remains deferred until an ADR and benchmark
+3. **P1–P6 are complete.** **P7** remains deferred until an ADR and benchmark
    show a practical need.
 4. **M1** is the matching-network correctness foundation; **M2** makes the
    override visible, **M3** adds the design-target persistence, **M4** adds
@@ -312,12 +311,13 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **33**.
-- Full gate: **2,365 passed, 0 skipped** with `NEC2C` and the optional
+- Full gate: **2,371 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
-- Last commits: the optimizer progress bars (P4–P5), the shared task-progress
-  widget and Simulate/band progress (P1–P3), the v0.3.1 cross-platform
-  dimension-label release and its coverage restoration, the nec2c wait fix
-  (E5), shortened loaded EFHW presets
+- Last commits: the element/synthesis optimizer progress bars (P6), the
+  optimizer progress bars (P4–P5), the shared task-progress widget and
+  Simulate/band progress (P1–P3), the v0.3.1 cross-platform dimension-label
+  release and its coverage restoration, the nec2c wait fix (E5), shortened
+  loaded EFHW presets
   (G22), the EFHW feed-section/convergence model (G23), the shortened
   horizontal default and convergence-check fix, the fixed loading-coil node
   (G24), the primary matching-unit model (G25), the shortened impedance-only

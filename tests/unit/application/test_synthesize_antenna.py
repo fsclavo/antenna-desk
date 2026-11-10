@@ -73,6 +73,41 @@ class AnalyticalOCFDSolver:
         )
 
 
+def test_synthesis_reports_monotonic_evaluation_progress() -> None:
+    solver = AnalyticalOCFDSolver()
+    base = OCFDParameters(frequency_hz=7_100_000.0, total_length_m=20.0, feed_ratio=0.33)
+    target = SynthesisTarget(7_100_000.0, 50.0, 0.0)
+
+    def build(values: dict[str, float]) -> OCFDParameters:
+        return OCFDParameters(
+            frequency_hz=target.frequency_hz,
+            total_length_m=values["length_m"],
+            feed_ratio=values["feed_ratio"],
+            height_m=base.height_m,
+        )
+
+    seen: list[int] = []
+    result = SynthesizeAntenna(solver).execute(
+        SynthesizeAntennaCommand(
+            build_parameters=build,
+            variables=(
+                SynthesisVariable("length_m", 19.0, 21.0),
+                SynthesisVariable("feed_ratio", 0.23, 0.43),
+            ),
+            target=target,
+            base_spec=SimulationSpec(
+                frequency_plan=FrequencyPlan.single(target.frequency_hz),
+                far_field=FarFieldRequest(enabled=False),
+            ),
+            max_evaluations=9,
+            progress=seen.append,
+        )
+    )
+
+    assert seen == list(range(1, len(seen) + 1))
+    assert seen[-1] == len(result.evaluations)
+
+
 def test_synthesis_uses_single_target_frequency_without_far_field() -> None:
     solver = AnalyticalOCFDSolver()
     base = OCFDParameters(frequency_hz=7_100_000.0, total_length_m=20.0, feed_ratio=0.33)

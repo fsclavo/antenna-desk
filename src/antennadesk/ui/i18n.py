@@ -6339,7 +6339,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Evaluaciones {completed} / ~{total} (estimadas) · mejor puntuación {score}"
         ),
     },
-    "optimize.progress_length": {
+    "optimize.progress_evaluations": {
         Language.ENGLISH: "Evaluations {completed} / ~{total} (estimated)",
         Language.SPANISH: "Evaluaciones {completed} / ~{total} (estimadas)",
     },

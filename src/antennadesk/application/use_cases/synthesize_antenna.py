@@ -35,6 +35,7 @@ class SynthesizeAntennaCommand:
     base_spec: SimulationSpec
     max_evaluations: int = 81
     cancel_token: CancelToken | None = None
+    progress: Callable[[int], None] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,7 +49,7 @@ class SynthesizeAntenna:
             far_field=FarFieldRequest(enabled=False),
         )
 
-        def evaluate(values: Mapping[str, float]) -> SynthesisEvaluation:
+        def _evaluate(values: Mapping[str, float]) -> SynthesisEvaluation:
             try:
                 parameters = command.build_parameters(values)
                 model = parameters.to_antenna(name="Synthesis")
@@ -83,6 +84,16 @@ class SynthesizeAntenna:
                 result.status.value,
             )
             return SynthesisEvaluation(0, dict(values), None, error=message)
+
+        completed_evaluations = 0
+
+        def evaluate(values: Mapping[str, float]) -> SynthesisEvaluation:
+            nonlocal completed_evaluations
+            evaluation = _evaluate(values)
+            completed_evaluations += 1
+            if command.progress is not None:
+                command.progress(completed_evaluations)
+            return evaluation
 
         cancel_check = (
             command.cancel_token.is_cancelled if command.cancel_token is not None else None
