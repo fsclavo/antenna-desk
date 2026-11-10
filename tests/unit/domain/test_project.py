@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -13,8 +13,25 @@ from antennadesk.application.use_cases.create_dipole_project import (
     CreateDipoleProjectCommand,
 )
 from antennadesk.domain.antennas.dipole import DipoleParameters
+from antennadesk.domain.antennas.load import SeriesLoad
+from antennadesk.domain.antennas.transmission_line import TransmissionLine
 from antennadesk.domain.measurement import Measurement, MeasurementPoint
+from antennadesk.domain.optimization.summary import OptimizationMode, OptimizationSummary
 from antennadesk.domain.projects.project import DesignVariant, Project
+
+
+def _summary() -> OptimizationSummary:
+    return OptimizationSummary(
+        mode=OptimizationMode.SINGLE,
+        objective="min_swr",
+        status="converged",
+        budget_profile="balanced",
+        evaluations=12,
+        seed=0,
+        best_values={"total_length_m": 20.0},
+        best_metrics={"swr": 1.1},
+        completed_at=datetime(2026, 11, 7, tzinfo=UTC),
+    )
 
 
 def test_sample_project_is_valid(sample_project: Project) -> None:
@@ -53,30 +70,58 @@ def test_design_with_parameters_returns_a_new_value(sample_project: Project) -> 
 def test_parameter_change_clears_a_stale_optimization_summary(
     sample_project: Project,
 ) -> None:
-    from datetime import UTC
-
-    from antennadesk.domain.optimization.summary import (
-        OptimizationMode,
-        OptimizationSummary,
-    )
-
     design = sample_project.designs[0]
-    summary = OptimizationSummary(
-        mode=OptimizationMode.SINGLE,
-        objective="min_swr",
-        status="converged",
-        budget_profile="balanced",
-        evaluations=12,
-        seed=0,
-        best_values={"total_length_m": 20.0},
-        best_metrics={"swr": 1.1},
-        completed_at=datetime(2026, 11, 7, tzinfo=UTC),
-    )
-    optimized = design.with_optimization_summary(summary)
+    optimized = design.with_optimization_summary(_summary())
 
     edited = optimized.with_parameters(design.parameters.with_length(19.5))
 
     assert edited.optimization_summary is None
+
+
+def test_identical_parameters_preserve_the_optimization_summary(
+    sample_project: Project,
+) -> None:
+    design = sample_project.designs[0]
+    summary = _summary()
+    optimized = design.with_optimization_summary(summary)
+
+    replayed = optimized.with_parameters(design.parameters)
+
+    assert replayed.optimization_summary == summary
+    assert optimized.with_loads(optimized.antenna.loads).optimization_summary == summary
+    assert (
+        optimized.with_transmission_lines(optimized.antenna.transmission_lines).optimization_summary
+        == summary
+    )
+
+
+def test_attachment_changes_clear_a_stale_optimization_summary(
+    sample_project: Project,
+) -> None:
+    design = sample_project.designs[0]
+    optimized = design.with_optimization_summary(_summary())
+    wire_id = optimized.antenna.wires[0].id
+    load = SeriesLoad(
+        id="extra-load",
+        wire_id=wire_id,
+        offset_m=1.0,
+        resistance_ohm=1.0,
+    )
+    line = TransmissionLine(
+        id="extra-line",
+        start_wire_id=wire_id,
+        start_offset_m=1.0,
+        end_wire_id=wire_id,
+        end_offset_m=2.0,
+        characteristic_impedance_ohm=50.0,
+        length_m=5.0,
+    )
+
+    with_load = optimized.with_loads((*optimized.antenna.loads, load))
+    with_line = optimized.with_transmission_lines((*optimized.antenna.transmission_lines, line))
+
+    assert with_load.optimization_summary is None
+    assert with_line.optimization_summary is None
 
 
 def test_project_rejects_duplicate_design_ids(sample_project: Project) -> None:

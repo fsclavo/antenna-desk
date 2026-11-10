@@ -101,16 +101,17 @@ class DesignVariant:
         antenna = generated.with_loads(generated.loads + preserved).with_transmission_lines(
             generated_lines + preserved_lines
         )
+        # A parameter change invalidates the previous optimizer summary. An
+        # identical write-back (for example, the form apply that follows Apply
+        # Best) must preserve the summary attached by the optimizer.
+        summary = self.optimization_summary if parameters == self.parameters else None
         return replace(
             self,
             antenna_type=antenna_type_for(parameters),
             parameters=parameters,
             antenna=antenna,
             provenance=provenance,
-            # A manual or estimator-driven parameter change makes the previous
-            # optimizer summary stale. The Apply Best path attaches its own
-            # summary after the form has been written back.
-            optimization_summary=None,
+            optimization_summary=summary,
         )
 
     def with_band_plan(self, band_plan: BandPlan | None) -> DesignVariant:
@@ -123,15 +124,26 @@ class DesignVariant:
         return replace(self, optimization_summary=optimization_summary)
 
     def with_loads(self, loads: tuple[LumpedLoad, ...]) -> DesignVariant:
-        return replace(self, antenna=self.antenna.with_loads(loads))
+        summary = self.optimization_summary if loads == self.antenna.loads else None
+        return replace(
+            self,
+            antenna=self.antenna.with_loads(loads),
+            optimization_summary=summary,
+        )
 
     def with_transmission_lines(
         self,
         transmission_lines: tuple[TransmissionLine, ...],
     ) -> DesignVariant:
+        summary = (
+            self.optimization_summary
+            if transmission_lines == self.antenna.transmission_lines
+            else None
+        )
         return replace(
             self,
             antenna=self.antenna.with_transmission_lines(transmission_lines),
+            optimization_summary=summary,
         )
 
 

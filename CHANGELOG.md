@@ -286,6 +286,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Apply Best** no longer discards the optimization summary during the
+  post-apply form write-back. The summary is preserved when the form rewrites
+  identical parameters, loads, and transmission lines, and invalidated when the
+  geometry actually changes.
 - The nec2c adapter now waits for the solver process with
   `Popen.wait(timeout=...)` instead of a fixed 50 ms polling sleep. A
   226-evaluation optimization dropped from 11.8 s to 0.47 s on one worker and
