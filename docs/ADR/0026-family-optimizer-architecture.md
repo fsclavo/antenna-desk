@@ -413,6 +413,15 @@ uses the nominal geometry; the tolerance corners remain scoring-only. The
 optimizer result table is still an aggregate summary, not a per-band result
 set.
 
+## Amendment 2026-11-10 — Default optimizer scope
+
+Descriptors mark installation context as locked by default: conductor radius,
+transformer/balun ratios, feed-point placement, and installation heights
+(apex, base, feed, end, counterpoise, and ring heights). The dialog shows them
+unchecked but selectable. `height_m` remains enabled for vertical and
+phased-vertical families because it is radiator length, not installation
+height. A run that excludes any variable is reported as partial.
+
 ## Follow-up
 
 - See [OPTIMIZER_PHASE_A_PLAN.md](../OPTIMIZER_PHASE_A_PLAN.md) and

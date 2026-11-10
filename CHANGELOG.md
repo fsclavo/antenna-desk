@@ -199,6 +199,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The family optimizer now starts with installation context unchecked:
+  installation height, feed-point placement, conductor radius/diameter, and
+  transformer/balun ratios. They remain selectable; excluding them marks the
+  run as partial. The default search focuses on the dimensions users typically
+  tune.
 - Reports now localize diagnostic messages and the evidence registry's source,
   tolerance, and limitation text. Diagnostics use the existing
   `diagnostic.<code>` catalog with an English fallback for unknown codes;

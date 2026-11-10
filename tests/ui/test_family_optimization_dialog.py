@@ -239,6 +239,22 @@ def test_family_dialog_exports_the_evaluation_csv(
     assert "value_total_length_m" in text
 
 
+def test_family_dialog_locks_installation_context_by_default(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    dialog.show()
+
+    checked = {dialog._variables[row].name for row in dialog._selected_indices()}
+
+    assert checked == {"total_length_m"}
+    assert dialog._locked_hint.isVisible() is True
+    for row, variable in enumerate(dialog._variables):
+        item = dialog._table.item(row, 2)
+        assert item is not None
+        expected = Qt.CheckState.Unchecked if variable.locked_by_default else Qt.CheckState.Checked
+        assert item.checkState() is expected
+
+
 def test_family_dialog_marks_locked_variables_as_partial(qtbot: QtBot) -> None:
     dialog = _dialog()
     qtbot.addWidget(dialog)

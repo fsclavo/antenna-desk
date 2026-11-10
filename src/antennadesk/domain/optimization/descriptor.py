@@ -11,7 +11,7 @@ from enum import StrEnum
 from ..antennas.design import AntennaDesignParameters
 from ..common.units import ensure_non_negative
 from .constraints import ConstraintViolation
-from .variables import OptimizationVariable
+from .variables import OptimizationVariable, apply_default_locks
 
 
 class FamilyOptimizationObjective(StrEnum):
@@ -71,9 +71,11 @@ class AntennaOptimizerDescriptor:
     def __post_init__(self) -> None:
         if not self.key.strip():
             raise ValueError("optimizer key must not be empty")
-        if not self.variables:
+        variables = apply_default_locks(self.key, self.variables)
+        object.__setattr__(self, "variables", variables)
+        if not variables:
             raise ValueError("an optimizer requires at least one variable")
-        names = [variable.name for variable in self.variables]
+        names = [variable.name for variable in variables]
         if len(names) != len(set(names)):
             raise ValueError("optimizer variable names must be unique")
         if set(self.initial_values) != set(names):

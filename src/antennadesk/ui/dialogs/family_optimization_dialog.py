@@ -519,6 +519,7 @@ class FamilyOptimizationDialog(QDialog):
                 )
         finally:
             self._updating = False
+        self._locked_hint.setVisible(len(self._selected_indices()) < len(self._variables))
 
     def _display(self, variable: OptimizationVariable, value: float) -> str:
         if variable.kind is VariableKind.INTEGER or variable.unit == "count":

@@ -1228,10 +1228,13 @@ disabled with an explanation.
 ### Variables and topology
 
 The dialog lists every optimizer variable, grouped into **Geometry**, **Feed**,
-**Family loads**, and **Conductor**. All variables are enabled by default; clear
-a checkbox to lock it. Locking a variable is allowed, but the run is marked as a
-partial optimization. The conductor radius is included as a lockable variable;
-material and ground remain installation context.
+**Family loads**, and **Conductor**. Typical tuning dimensions are enabled by
+default. Installation context is available but **unchecked by default**:
+installation height (including apex, base, feed, counterpoise, and ring
+heights), feed-point placement, conductor radius/diameter, and
+transformer/balun ratios. Check a box to include a context variable; clear it
+to lock it. Any excluded variable marks the run as a partial optimization.
+Material and ground remain installation context outside the optimizer.
 
 The topology is chosen in the family editor and stays fixed during a run:
 orientation, polarization, loop sides, Yagi element count, folded elements,

@@ -5,7 +5,8 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from collections.abc import Sequence
+from dataclasses import dataclass, replace
 from enum import StrEnum
 
 
@@ -93,3 +94,39 @@ class OptimizationVariable:
                 min(max(index + (1 if direction > 0 else -1), 0), len(self.choices) - 1)
             ]
         return self.clamp(value + direction * self.step)
+
+
+# Installation context, feed placement, and conductor radius are editable but
+# unchecked by default: they are not the dimensions users typically retune.
+# ``height_m`` is installation height for most families, but it is the radiator
+# length for verticals and phased verticals, so those keys are exempt.
+DEFAULT_LOCKED_VARIABLES = frozenset(
+    {
+        "wire_radius_m",
+        "transformer_ratio",
+        "feed_ratio",
+        "feed_offset_m",
+        "feed_height_m",
+        "end_height_m",
+        "counterpoise_height_m",
+        "apex_height_m",
+        "base_height_m",
+        "ring_height_m",
+    }
+)
+RADIATOR_HEIGHT_KEYS = frozenset({"vertical", "phased_vertical"})
+
+
+def apply_default_locks(
+    key: str,
+    variables: Sequence[OptimizationVariable],
+) -> tuple[OptimizationVariable, ...]:
+    """Return variables with the default search scope applied."""
+
+    locked_names = set(DEFAULT_LOCKED_VARIABLES)
+    if key not in RADIATOR_HEIGHT_KEYS:
+        locked_names.add("height_m")
+    return tuple(
+        replace(variable, locked_by_default=True) if variable.name in locked_names else variable
+        for variable in variables
+    )
