@@ -68,6 +68,7 @@ external service and must not be invented or simulated into existence.
 | ~~G21~~ | ~~Multi-view construction sheet~~ | M | G17 | **Done 2026-11-09:** the sheet shows the dimensioned construction view, the complementary front/top view when available, and an isometric 3D view. HTML uses a responsive grid; the native PDF draws the additional views side by side with captions and keeps them vector. Families without a complementary view still get construction plus isometric. |
 | ~~G22~~ | ~~Shortened loaded EFHW presets~~ | M | none | **Done 2026-11-09:** added 80-10 m (20.35 m + 110 µH + 2.39 m) and 40-20-10 m (10.01 m + 23 µH + 1.85 m) end-fed presets with a 49:1 transformer, editable series loading coil, schema 31, catalog routes, editor, band plans, evidence, construction notes, and optimizer variables. Matching unit, capacitor, choke, ground, and the inverted-L bend remain limitations. |
 | ~~E4~~ | ~~Diagnose high-radial phased-array runtime and numerical validity~~ | S–M | C1 | **Done 2026-11-08:** 4×36 quarter-wave radial screens produced 267 wire crossings, 890 segments, 25.3 s, and negative primary resistance. Halving the radial length or using 2 m radials removed the crossings and completed. The editor now warns when `2 × radial length > element spacing`; ideal-source power absorption remains documented separately. |
+| ~~E5~~ | ~~Diagnose low CPU during family optimization~~ | S | none | **Done 2026-11-10:** the nec2c adapter slept 50 ms per solver run even when `nec2c` finished in about 1 ms. It now uses `Popen.wait(timeout=...)`, which returns as soon as the child exits and keeps the interval only for cancellation checks. A 226-evaluation dipole optimization went from 11.8 s to 0.47 s on one worker and from 5.2 s to 0.30 s on four. Local-search batching was measured and reverted: it did not reduce wall time and changed evaluation counts. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -220,9 +221,9 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **31**.
-- Full gate: **2,196 passed, 0 skipped** with `NEC2C` and the optional
+- Full gate: **2,198 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
-- Last commits: shortened loaded EFHW presets (G22), multi-view construction
+- Last commits: the nec2c wait fix (E5), shortened loaded EFHW presets (G22), multi-view construction
   sheet, localized report diagnostics and evidence, translated catalog names,
   construction-view pass (G1–G18), direct basic-antenna editor, report
   localization, vector native PDF figures, solver timeout and parallel
