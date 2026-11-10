@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
 from ...application.cancellation import EventCancelToken
 from ...application.ports.antenna_solver import AntennaSolver
 from ...application.use_cases.optimize_antenna import (
+    MAX_SEED_RUNS,
     OptimizeAntennaCommand,
     OptimizeAntennaResult,
 )
@@ -74,6 +75,7 @@ _OBJECTIVE_KEYS = {
     FamilyOptimizationObjective.MAX_BANDWIDTH: "optimize.max_bandwidth_objective",
     FamilyOptimizationObjective.MULTI_OBJECTIVE: "optimize.balanced_objective",
 }
+THOROUGH_DEFAULT_SEED_RUNS = 3
 
 
 class FamilyOptimizationDialog(QDialog):
@@ -110,6 +112,8 @@ class FamilyOptimizationDialog(QDialog):
         self._variables = descriptor.variables
         self._updating = False
         self._ready = False
+        self._updating_seed_runs = False
+        self._seed_runs_user_set = False
 
         self.setWindowTitle(translator.t("optimize.family_title"))
         self.resize(*scaled_dialog_size(1_100, 820))
@@ -167,11 +171,17 @@ class FamilyOptimizationDialog(QDialog):
                 profile.value,
             )
         self._budget.setCurrentIndex(self._budget.findData(BudgetProfile.BALANCED.value))
-        self._budget.currentIndexChanged.connect(self._budget_changed)
+        self._budget.currentIndexChanged.connect(self._budget_profile_changed)
 
         self._seed = QSpinBox(self)
         self._seed.setRange(0, 2_147_483_647)
         self._seed.setValue(0)
+
+        self._seed_runs = QSpinBox(self)
+        self._seed_runs.setRange(1, MAX_SEED_RUNS)
+        self._seed_runs.setValue(1)
+        self._seed_runs.setToolTip(translator.t("optimize.seed_runs_hint"))
+        self._seed_runs.valueChanged.connect(self._seed_runs_changed)
 
         self._workers = QSpinBox(self)
         self._workers.setRange(1, MAX_UI_PARALLEL_WORKERS)
@@ -229,6 +239,8 @@ class FamilyOptimizationDialog(QDialog):
 
         self._summary = QLabel(self)
         self._summary.setWordWrap(True)
+        self._verification = QLabel(self)
+        self._verification.setWordWrap(True)
         self._sensitivity = QLabel(self)
         self._sensitivity.setWordWrap(True)
         self._last_summary_label = QLabel(self)
@@ -275,6 +287,7 @@ class FamilyOptimizationDialog(QDialog):
         )
         self._budget_label = QLabel(translator.t("optimize.budget_profile"), self)
         self._seed_label = QLabel(translator.t("optimize.seed"), self)
+        self._seed_runs_label = QLabel(translator.t("optimize.seed_runs"), self)
         self._workers_label = QLabel(translator.t("optimize.workers"), self)
         self._max_boom_label = QLabel(translator.t("optimize.max_boom"), self)
         self._max_turning_label = QLabel(translator.t("optimize.max_turning"), self)
@@ -300,6 +313,7 @@ class FamilyOptimizationDialog(QDialog):
         form.addRow(self._weight_efficiency_label, self._weight_efficiency)
         form.addRow(self._budget_label, self._budget)
         form.addRow(self._seed_label, self._seed)
+        form.addRow(self._seed_runs_label, self._seed_runs)
         form.addRow(self._workers_label, self._workers)
         form.addRow(self._max_boom_label, self._max_boom)
         form.addRow(self._max_turning_label, self._max_turning)
@@ -361,6 +375,7 @@ class FamilyOptimizationDialog(QDialog):
         layout.addWidget(self._pareto_label)
         layout.addWidget(self._pareto, 1)
         layout.addWidget(self._summary)
+        layout.addWidget(self._verification)
         layout.addWidget(self._sensitivity)
         layout.addWidget(self._recommendations)
         layout.addLayout(buttons)
@@ -623,6 +638,26 @@ class FamilyOptimizationDialog(QDialog):
     def _budget_profile(self) -> BudgetProfile:
         return BudgetProfile(str(self._budget.currentData()))
 
+    def _budget_profile_changed(self, *_args: object) -> None:
+        if not self._ready:
+            return
+        if not self._seed_runs_user_set:
+            self._updating_seed_runs = True
+            self._seed_runs.setValue(
+                THOROUGH_DEFAULT_SEED_RUNS
+                if self._budget_profile() is BudgetProfile.THOROUGH
+                else 1
+            )
+            self._updating_seed_runs = False
+        self._budget_changed()
+
+    def _seed_runs_changed(self, *_args: object) -> None:
+        if not self._ready:
+            return
+        if not self._updating_seed_runs:
+            self._seed_runs_user_set = True
+        self._budget_changed()
+
     def _budget_changed(self, *_args: object) -> None:
         if not self._ready:
             return
@@ -630,6 +665,7 @@ class FamilyOptimizationDialog(QDialog):
         budget = budget_for(self._budget_profile(), max(1, count))
         multiplier = 1
         points = self._base_spec.frequency_plan.count
+        key = "optimize.budget_hint"
         if self._objective_value() is FamilyOptimizationObjective.MAX_BANDWIDTH:
             multiplier = max(1, points)
             key = "optimize.budget_hint_sweep"
@@ -646,15 +682,17 @@ class FamilyOptimizationDialog(QDialog):
                     points = 3
             multiplier = points * self._scenario_count()
             key = "optimize.budget_hint_quality"
-        else:
-            key = "optimize.budget_hint"
-        runs = (budget.total + 2 * max(1, count)) * multiplier
+        seed_runs = self._seed_runs.value()
+        if seed_runs > 1:
+            key = f"{key}_seeds"
+        runs = (budget.total + 2 * max(1, count)) * multiplier * seed_runs
         self._budget_hint.setText(
             self._translator.t(
                 key,
                 count=runs,
                 points=points,
                 scenarios=self._scenario_count(),
+                seeds=seed_runs,
             )
         )
         self._update_controls()
@@ -677,6 +715,7 @@ class FamilyOptimizationDialog(QDialog):
             self._weight_efficiency,
             self._budget,
             self._seed,
+            self._seed_runs,
             self._workers,
             self._max_boom,
             self._max_turning,
@@ -736,6 +775,7 @@ class FamilyOptimizationDialog(QDialog):
                 soft_constraints=constraints,
                 locked_variables=locked,
                 seed=self._seed.value(),
+                seed_runs=self._seed_runs.value(),
                 parallel_workers=self._workers.value(),
                 mode=mode,
                 band_edges_hz=band_edges,
@@ -768,6 +808,7 @@ class FamilyOptimizationDialog(QDialog):
         self._pareto_label.setVisible(False)
         self._pareto.setVisible(False)
         self._summary.setText(self._translator.t("optimize.running"))
+        self._verification.setText("")
         self._sensitivity.setText("")
         self._recommendations.setText("")
         self._export.setEnabled(False)
@@ -802,6 +843,7 @@ class FamilyOptimizationDialog(QDialog):
         self._populate_evaluations(result)
         self._populate_pareto(result)
         self._summary.setText(self._summary_text(result))
+        self._verification.setText(self._verification_text(result))
         self._sensitivity.setText(self._sensitivity_text(result))
         if result.summary is not None:
             self._last_summary_label.setText(self._summary_line(result.summary))
@@ -876,6 +918,28 @@ class FamilyOptimizationDialog(QDialog):
             status=status,
             count=len(result.evaluations),
             score=f"{result.best_score:.6g}",
+        )
+
+    def _verification_text(self, result: OptimizeAntennaResult) -> str:
+        requested = result.best_metrics.get("seed_requested")
+        if requested is None or requested <= 1.0:
+            return ""
+        scored = result.best_metrics.get("seed_scored_count", 0.0)
+        score_spread = result.best_metrics.get("seed_score_spread", 0.0)
+        parameter_spread = result.best_metrics.get("seed_parameter_spread", 0.0)
+        converged = result.best_metrics.get("seed_converged", 0.0) >= 0.5
+        key = (
+            "optimize.seed_verification_converged"
+            if converged
+            else "optimize.seed_verification_diverged"
+        )
+        return self._translator.t(
+            key,
+            count=int(scored),
+            requested=int(requested),
+            score_spread=self._number(score_spread),
+            parameter_spread=f"{parameter_spread * 100.0:.1f}",
+            seed=result.seed,
         )
 
     def _sensitivity_text(self, result: OptimizeAntennaResult) -> str:

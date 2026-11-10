@@ -52,6 +52,10 @@ from .run_simulation import RunSimulation, RunSimulationCommand
 DEFAULT_BAND_AWARE_SPAN = 0.05
 ROBUST_SPREAD_PENALTY = 0.1
 ROBUST_DIMENSION_UNITS = frozenset({"m", "radius"})
+MAX_SEED_RUNS = 4
+SEED_SCORE_RELATIVE_TOLERANCE = 0.02
+SEED_SCORE_ABSOLUTE_TOLERANCE = 0.05
+SEED_PARAMETER_TOLERANCE = 0.02
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,6 +70,7 @@ class OptimizeAntennaCommand:
     soft_constraints: tuple[SoftConstraint, ...] = ()
     locked_variables: frozenset[str] = frozenset()
     seed: int = 0
+    seed_runs: int = 1
     parallel_workers: int = 1
     mode: OptimizationMode = OptimizationMode.SINGLE
     band_edges_hz: tuple[float, ...] = ()
@@ -84,6 +89,10 @@ class OptimizeAntennaCommand:
             raise ValueError("target_reactance_ohm must be finite")
         if not 1 <= self.parallel_workers <= 8:
             raise ValueError("parallel_workers must be between 1 and 8")
+        if not 1 <= self.seed_runs <= MAX_SEED_RUNS:
+            raise ValueError(f"seed_runs must be between 1 and {MAX_SEED_RUNS}")
+        if self.seed < 0:
+            raise ValueError("seed must be non-negative")
         if self.objective not in self.descriptor.objectives:
             raise ValueError(f"objective {self.objective.value!r} is not supported")
         object.__setattr__(self, "mode", OptimizationMode(self.mode))
@@ -291,23 +300,54 @@ class OptimizeAntenna:
 
             batch_evaluator = batch_evaluator_fn
 
+        seeds = tuple(command.seed + offset for offset in range(command.seed_runs))
+        runs: list[OptimizerRunResult] = []
+        completed_evaluations = 0
+        cancelled = False
+        best_score_seen: float | None = None
+        progress = command.progress
+
+        def seed_progress(count: int, score: float | None) -> None:
+            nonlocal best_score_seen
+            if score is not None and (best_score_seen is None or score < best_score_seen):
+                best_score_seen = score
+            if progress is not None:
+                progress(completed_evaluations + count, best_score_seen)
+
         try:
-            engine_result = optimize_design(
-                active_variables,
-                initial_values,
-                evaluate,
-                budget=command.budget,
-                seed=command.seed,
-                start_points=start_points,
-                cancel_check=(
-                    command.cancel_token.is_cancelled if command.cancel_token is not None else None
-                ),
-                progress=command.progress,
-                batch_evaluate=batch_evaluator,
-            )
+            for seed in seeds:
+                if command.cancel_token is not None and command.cancel_token.is_cancelled():
+                    cancelled = True
+                    break
+                run = optimize_design(
+                    active_variables,
+                    initial_values,
+                    evaluate,
+                    budget=command.budget,
+                    seed=seed,
+                    start_points=start_points,
+                    cancel_check=(
+                        command.cancel_token.is_cancelled
+                        if command.cancel_token is not None
+                        else None
+                    ),
+                    progress=seed_progress,
+                    batch_evaluate=batch_evaluator,
+                )
+                runs.append(run)
+                completed_evaluations += len(run.evaluations)
+                if run.status is OptimizationStatus.CANCELLED:
+                    cancelled = True
+                    break
         finally:
             if executor is not None:
                 executor.shutdown(wait=True, cancel_futures=True)
+        engine_result = _merge_seed_runs(
+            command,
+            runs,
+            active_variables,
+            cancelled=cancelled,
+        )
         best_parameters: AntennaDesignParameters | None = None
         if engine_result.best_values is not None:
             full_values = dict(descriptor.initial_values)
@@ -331,6 +371,138 @@ class OptimizeAntenna:
             pareto=pareto_front(engine_result.evaluations),
             message=engine_result.message,
         )
+
+
+def _merge_seed_runs(
+    command: OptimizeAntennaCommand,
+    runs: Sequence[OptimizerRunResult],
+    active_variables: Sequence[OptimizationVariable],
+    *,
+    cancelled: bool,
+) -> OptimizerRunResult:
+    """Choose the best seed run and attach verification metrics."""
+
+    if not runs:
+        empty = OptimizerRunResult(
+            status=(OptimizationStatus.CANCELLED if cancelled else OptimizationStatus.NO_FEASIBLE),
+            best_values=None,
+            best_score=None,
+            best_metrics={},
+            evaluations=(),
+            seed=command.seed,
+            message="optimization cancelled" if cancelled else "no feasible candidate found",
+        )
+        if command.seed_runs == 1:
+            return empty
+        metrics = _seed_verification_metrics(
+            command,
+            (),
+            (),
+            empty,
+            active_variables,
+            cancelled=cancelled,
+        )
+        return replace(empty, best_metrics=metrics)
+
+    scored = [run for run in runs if run.best_score is not None and math.isfinite(run.best_score)]
+    if scored:
+        winner = min(
+            scored,
+            key=lambda run: (
+                run.best_score if run.best_score is not None else math.inf,
+                run.seed,
+            ),
+        )
+    elif any(run.status is OptimizationStatus.NO_FEASIBLE for run in runs):
+        winner = next(run for run in runs if run.status is OptimizationStatus.NO_FEASIBLE)
+    else:
+        winner = runs[-1]
+
+    if command.seed_runs == 1:
+        return winner
+
+    metrics = _seed_verification_metrics(
+        command,
+        runs,
+        scored,
+        winner,
+        active_variables,
+        cancelled=cancelled,
+    )
+    status = OptimizationStatus.CANCELLED if cancelled else winner.status
+    message = "optimization cancelled" if cancelled else winner.message
+    return replace(winner, status=status, best_metrics=metrics, message=message)
+
+
+def _seed_verification_metrics(
+    command: OptimizeAntennaCommand,
+    runs: Sequence[OptimizerRunResult],
+    scored: Sequence[OptimizerRunResult],
+    winner: OptimizerRunResult,
+    active_variables: Sequence[OptimizationVariable],
+    *,
+    cancelled: bool,
+) -> dict[str, float]:
+    metrics = dict(winner.best_metrics)
+    metrics["seed_base"] = float(command.seed)
+    metrics["seed_requested"] = float(command.seed_runs)
+    metrics["seed_count"] = float(len(runs))
+    metrics["seed_scored_count"] = float(len(scored))
+    metrics["seed_evaluations_total"] = float(sum(len(run.evaluations) for run in runs))
+    metrics["seed_score_spread"] = 0.0
+    metrics["seed_parameter_spread"] = 0.0
+    converged = False
+    if len(scored) >= 2 and winner.best_score is not None:
+        scores = [run.best_score for run in scored if run.best_score is not None]
+        score_spread = max(scores) - min(scores)
+        parameter_spread = _seed_parameter_spread(scored, active_variables)
+        metrics["seed_score_spread"] = score_spread
+        metrics["seed_parameter_spread"] = parameter_spread
+        if not cancelled and len(runs) == command.seed_runs and len(scored) == command.seed_runs:
+            score_threshold = max(
+                SEED_SCORE_RELATIVE_TOLERANCE * abs(winner.best_score),
+                SEED_SCORE_ABSOLUTE_TOLERANCE,
+            )
+            converged = (
+                score_spread <= score_threshold + 1e-12
+                and parameter_spread <= SEED_PARAMETER_TOLERANCE + 1e-12
+            )
+    metrics["seed_converged"] = 1.0 if converged else 0.0
+    return metrics
+
+
+def _seed_parameter_spread(
+    runs: Sequence[OptimizerRunResult],
+    active_variables: Sequence[OptimizationVariable],
+) -> float:
+    """Return the largest normalized range across the seed designs.
+
+    Continuous variables use their search span as the normalization unit.
+    Integer and choice variables are treated as categorical: any difference is
+    a full-scale spread, so they must match exactly to count as converged.
+    """
+
+    worst = 0.0
+    for variable in active_variables:
+        values = [
+            run.best_values[variable.name]
+            for run in runs
+            if run.best_values is not None and variable.name in run.best_values
+        ]
+        if len(values) < 2:
+            continue
+        if variable.kind is VariableKind.CONTINUOUS:
+            span = variable.maximum - variable.minimum
+            spread = (max(values) - min(values)) / span if span > 0.0 else 0.0
+        else:
+            reference = values[0]
+            spread = (
+                0.0
+                if all(math.isclose(value, reference, abs_tol=1e-9) for value in values)
+                else 1.0
+            )
+        worst = max(worst, spread)
+    return worst
 
 
 def _space_metrics(

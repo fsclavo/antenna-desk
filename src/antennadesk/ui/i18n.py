@@ -6222,6 +6222,19 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "The score is sensitive to the dimensional tolerance. Tighten construction tolerances or re-run in band-aware mode.",
         Language.SPANISH: "La puntuación es sensible a la tolerancia dimensional. Ajusta las tolerancias de construcción o vuelve a ejecutar en modo consciente de banda.",
     },
+    "optimize.recommend.seed_divergence": {
+        Language.ENGLISH: (
+            "The seed runs found different designs or not all of them produced a "
+            "feasible result. The best-scoring design was selected; review it "
+            "before applying and consider a wider budget or a different objective."
+        ),
+        Language.SPANISH: (
+            "Las ejecuciones con distintas semillas encontraron diseños diferentes "
+            "o no todas produjeron un resultado factible. Se seleccionó el diseño "
+            "con mejor puntuación; revísalo antes de aplicarlo y considera un "
+            "presupuesto mayor u otro objetivo."
+        ),
+    },
     "optimize.recommend.sensitive": {
         Language.ENGLISH: "{variables} has the largest effect on the score. Control that dimension during construction.",
         Language.SPANISH: "{variables} tiene el mayor efecto en la puntuación. Controla esa dimensión durante la construcción.",
@@ -6309,6 +6322,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Random seed",
         Language.SPANISH: "Semilla aleatoria",
     },
+    "optimize.seed_runs": {
+        Language.ENGLISH: "Seed runs",
+        Language.SPANISH: "Ejecuciones con semilla",
+    },
+    "optimize.seed_runs_hint": {
+        Language.ENGLISH: (
+            "Run the search with consecutive seeds and compare the designs. "
+            "Thorough defaults to 3; the best-scoring run is used and divergent "
+            "designs are reported."
+        ),
+        Language.SPANISH: (
+            "Ejecuta la búsqueda con semillas consecutivas y compara los diseños. "
+            "Exhaustivo usa 3 por defecto; se usa la ejecución con mejor puntuación "
+            "y se informan los diseños divergentes."
+        ),
+    },
     "optimize.workers": {
         Language.ENGLISH: "Parallel workers",
         Language.SPANISH: "Workers paralelos",
@@ -6345,6 +6374,33 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "No feasible design was found within the selected bounds and constraints.",
         Language.SPANISH: "No se encontró un diseño factible dentro de los límites y restricciones elegidos.",
     },
+    "optimize.seed_verification_converged": {
+        Language.ENGLISH: (
+            "Seed verification: {count}/{requested} runs converged (score spread "
+            "{score_spread}, parameter spread {parameter_spread}%). Winning seed "
+            "{seed}."
+        ),
+        Language.SPANISH: (
+            "Verificación de semillas: {count}/{requested} ejecuciones convergieron "
+            "(dispersión de puntuación {score_spread}, dispersión de parámetros "
+            "{parameter_spread}%). Semilla ganadora {seed}."
+        ),
+    },
+    "optimize.seed_verification_diverged": {
+        Language.ENGLISH: (
+            "Seed verification warning: {count}/{requested} runs produced a "
+            "feasible result, but the designs differ (score spread {score_spread}, "
+            "parameter spread {parameter_spread}%). The best-scoring result was "
+            "selected. Review it before applying."
+        ),
+        Language.SPANISH: (
+            "Advertencia de verificación de semillas: {count}/{requested} "
+            "ejecuciones produjeron un resultado factible, pero los diseños "
+            "difieren (dispersión de puntuación {score_spread}, dispersión de "
+            "parámetros {parameter_spread}%). Se seleccionó el resultado con mejor "
+            "puntuación. Revísalo antes de aplicarlo."
+        ),
+    },
     "optimize.budget_hint": {
         Language.ENGLISH: "Estimated solver runs: {count}, including sensitivity probes. The search may extend automatically.",
         Language.SPANISH: "Corridas estimadas del solver: {count}, incluyendo sondas de sensibilidad. La búsqueda puede extenderse automáticamente.",
@@ -6357,6 +6413,41 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "Corridas estimadas del solver: {count} ({points} frecuencias por candidato). "
             "La optimización por ancho de banda es costosa; la búsqueda puede extenderse automáticamente."
+        ),
+    },
+    "optimize.budget_hint_seeds": {
+        Language.ENGLISH: (
+            "Estimated solver runs: {count} ({seeds} seeds), including sensitivity "
+            "probes. The search may extend automatically."
+        ),
+        Language.SPANISH: (
+            "Corridas estimadas del solver: {count} ({seeds} semillas), incluyendo "
+            "sondas de sensibilidad. La búsqueda puede extenderse automáticamente."
+        ),
+    },
+    "optimize.budget_hint_sweep_seeds": {
+        Language.ENGLISH: (
+            "Estimated solver runs: {count} ({seeds} seeds x {points} frequencies "
+            "per candidate). Bandwidth optimization is expensive; the search may "
+            "extend automatically."
+        ),
+        Language.SPANISH: (
+            "Corridas estimadas del solver: {count} ({seeds} semillas x {points} "
+            "frecuencias por candidato). La optimización por ancho de banda es "
+            "costosa; la búsqueda puede extenderse automáticamente."
+        ),
+    },
+    "optimize.budget_hint_quality_seeds": {
+        Language.ENGLISH: (
+            "Estimated solver runs: {count} ({seeds} seeds x {points} frequencies "
+            "x {scenarios} scenario(s) per candidate). Seed verification multiplies "
+            "the cost; the search may extend automatically."
+        ),
+        Language.SPANISH: (
+            "Corridas estimadas del solver: {count} ({seeds} semillas x {points} "
+            "frecuencias x {scenarios} escenario(s) por candidato). La verificación "
+            "de semillas multiplica el costo; la búsqueda puede extenderse "
+            "automáticamente."
         ),
     },
     "optimize.group": {

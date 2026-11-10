@@ -79,6 +79,21 @@ def build_recommendations(
     if context.locked_variables > 0:
         recommendations.append(OptimizationRecommendation("optimize.recommend.locked"))
 
+    seed_count = _finite(context.best_metrics, "seed_count")
+    seed_converged = _finite(context.best_metrics, "seed_converged")
+    if (
+        seed_count is not None
+        and seed_count > 1.0
+        and seed_converged is not None
+        and seed_converged < 0.5
+    ):
+        recommendations.append(
+            OptimizationRecommendation(
+                "optimize.recommend.seed_divergence",
+                RecommendationSeverity.WARNING,
+            )
+        )
+
     swr = _finite(context.best_metrics, "swr")
     threshold = context.max_swr_constraint
     if threshold is None:

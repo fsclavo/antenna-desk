@@ -273,6 +273,82 @@ def test_family_dialog_shows_operating_frequencies_for_the_center_objective(
     assert "14.2000 MHz" in dialog._operating_frequencies_label.text()
 
 
+def test_family_dialog_multi_seed_defaults_follow_the_budget_profile(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+
+    assert dialog._seed_runs.value() == 1
+
+    dialog._budget.setCurrentIndex(dialog._budget.findData(BudgetProfile.THOROUGH.value))
+    assert dialog._seed_runs.value() == 3
+
+    dialog._budget.setCurrentIndex(dialog._budget.findData(BudgetProfile.BALANCED.value))
+    assert dialog._seed_runs.value() == 1
+
+    dialog._seed_runs.setValue(4)
+    dialog._budget.setCurrentIndex(dialog._budget.findData(BudgetProfile.THOROUGH.value))
+    assert dialog._seed_runs.value() == 4
+
+
+def test_family_dialog_budget_hint_multiplies_by_seed_runs(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    dialog._budget.setCurrentIndex(dialog._budget.findData(BudgetProfile.THOROUGH.value))
+
+    assert "3 seeds" in dialog._budget_hint.text()
+
+    dialog._seed_runs.setValue(4)
+
+    assert "4 seeds" in dialog._budget_hint.text()
+
+
+def test_family_dialog_reports_converged_and_diverged_seed_runs(qtbot: QtBot) -> None:
+    from antennadesk.application.use_cases.optimize_antenna import OptimizeAntennaResult
+    from antennadesk.domain.optimization.engine import (
+        OptimizationStatus,
+        budget_for,
+    )
+
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    metrics = {
+        "seed_requested": 3.0,
+        "seed_scored_count": 3.0,
+        "seed_score_spread": 0.01,
+        "seed_parameter_spread": 0.004,
+        "seed_converged": 1.0,
+    }
+    result = OptimizeAntennaResult(
+        status=OptimizationStatus.CONVERGED,
+        best_parameters=None,
+        best_values=None,
+        best_score=1.0,
+        best_metrics=metrics,
+        evaluations=(),
+        sensitivity=(),
+        budget=budget_for(BudgetProfile.FAST, 3),
+        seed=10,
+    )
+
+    text = dialog._verification_text(result)
+    assert "3/3" in text
+    assert "Winning seed 10" in text
+
+    diverged = OptimizeAntennaResult(
+        status=OptimizationStatus.CONVERGED,
+        best_parameters=None,
+        best_values=None,
+        best_score=1.0,
+        best_metrics={**metrics, "seed_converged": 0.0, "seed_score_spread": 0.4},
+        evaluations=(),
+        sensitivity=(),
+        budget=budget_for(BudgetProfile.FAST, 3),
+        seed=10,
+    )
+
+    assert "warning" in dialog._verification_text(diverged).lower()
+
+
 def test_family_dialog_marks_locked_variables_as_partial(qtbot: QtBot) -> None:
     dialog = _dialog()
     qtbot.addWidget(dialog)

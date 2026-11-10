@@ -1312,11 +1312,27 @@ Choose a search budget:
   local candidate evaluations before the frequency/scenario multiplier.
 
 The budget hint is counted in **solver runs**, not candidate designs: each
-candidate can use several frequencies and tolerance scenarios. The result
-summary reports the number of candidate evaluations actually performed. If the
-best score is still improving near the end of the budget, the run extends
+candidate can use several frequencies and tolerance scenarios. The result table
+and summary report the winning seed's candidate evaluations; the
+`seed_evaluations_total` metric records the total across all seeds. If the best
+score is still improving near the end of the budget, the run extends
 automatically up to twice the initial candidate budget. The random seed is
 exposed for reproducibility.
+
+**Seed runs** executes the same search with consecutive seeds (`seed`,
+`seed + 1`, ...) and compares the resulting designs. **Thorough** defaults to
+three runs; the other profiles default to one, and the control accepts 1–4.
+The runs are evaluated sequentially, so each run keeps its own parallel
+candidate workers, and cancellation stops the current run without starting the
+next one. The best-scoring result is applied and its seed is stored in the
+summary. Two tolerances decide whether the runs converged: the score spread
+must be at most the larger of 2% of the best score or 0.05, and every active
+continuous parameter must stay within 2% of its search span. Integer and choice
+variables must match exactly. When the designs diverge, the dialog reports the
+spread and the recommendation block warns that the selected design should be
+reviewed. To inspect an individual run, set **Seed runs** to 1 and enter that
+seed. With one seed run the result keeps the single-run shape and no
+verification metrics are added.
 
 **Apply Best** applies the best nominal parameters and keeps the optimization
 summary with the design. In **Single frequency** mode it then runs the normal

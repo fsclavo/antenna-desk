@@ -169,7 +169,7 @@ active variables:
 |---|---:|---:|
 | Fast | `max(60, 12n)` | `max(40, 8n)` |
 | Balanced | `max(120, 30n)` | `max(80, 20n)` |
-| Thorough | `max(300, 80n)` | `max(200, 40n)` |
+| Thorough | `max(1_500, 200n)` | `max(1_000, 100n)` |
 
 Balanced is the default. If the best score improves during the final 20% of the
 budget, the run extends by 25%, up to a maximum of twice the initial budget.
@@ -435,6 +435,27 @@ height. A run that excludes any variable is reported as partial.
   feed placement, conductor radius, and transformer ratios stay fixed.
 - **Thorough** now uses at least 1,500 global and 1,000 local candidate
   evaluations before the frequency/scenario multiplier.
+
+## Amendment 2026-11-10 — Multi-seed verification in Thorough
+
+- The optimizer can run the same search with consecutive seeds and compare the
+  winning designs. The dialog exposes **Seed runs** (1–4); **Thorough** defaults
+  to three and the other profiles to one.
+- Runs are sequential; each run keeps its own candidate parallelism. The
+  best-scoring run wins, its seed is stored in the summary, and cancellation
+  stops the current run without starting the next one.
+- Verification metrics are stored in `best_metrics`: `seed_base`,
+  `seed_requested`, `seed_count`, `seed_scored_count`,
+  `seed_evaluations_total`, `seed_score_spread`, `seed_parameter_spread`, and
+  `seed_converged`.
+- Convergence requires every requested seed to produce a feasible score, a
+  score spread within `max(2% of the best score, 0.05)`, and an active
+  continuous-parameter spread within 2% of the search span. Integer and choice
+  variables must match exactly.
+- A divergent verification adds the `optimize.recommend.seed_divergence`
+  warning. The dialog also shows the numeric spread and the winning seed.
+- A single seed run preserves the previous result shape and adds no
+  verification metrics.
 
 ## Follow-up
 

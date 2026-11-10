@@ -118,7 +118,9 @@ The family optimizer dialog adds:
 - an operating-mode selector;
 - an editable comma-separated band-edge field in MHz;
 - a dimensional-tolerance percentage;
-- a quality-mode budget estimate;
+- a seed-runs control (1–4; Thorough defaults to 3);
+- a quality-mode budget estimate that includes the seed multiplier;
+- a seed verification line with the score/parameter spread;
 - a Pareto table when the front has at least two shared metrics;
 - a recommendation block;
 - the last persisted summary line.
@@ -165,6 +167,26 @@ dominates because the feed ratio and transformer were locked. This confirms the
 expected trade-off: the new objective removes the start-geometry dispersion,
 but it cannot make a non-harmonic band match without the corresponding matching
 variables.
+
+### Multi-seed verification
+
+The multi-seed layer is covered by
+`tests/unit/application/test_optimize_antenna_seeds.py`: convergence and
+divergence, best-score selection, integer-variable equality, cumulative
+progress, cancellation before and during the seed loop, command bounds, and the
+single-seed backward-compatible shape. `tests/ui/test_family_optimization_dialog.py`
+covers the Thorough default, the seed-run budget multiplier, and the
+converged/diverged verification text. The default three-run Thorough profile is
+a confidence check, not a replacement for validating the applied geometry with
+the full band analysis.
+
+The same 40 m OCFD was also run with `seed_runs=3` and seeds 0/1/2 at the
+Thorough budget. All three runs converged to **20.90311 m**, with a score
+spread of **0.0**, a normalized parameter spread of **4.7e-8**, and
+**1,363** total candidate evaluations in **15.4 s**. The winning seed was 0,
+and the summary stored that seed with `seed_converged=1`. This is the expected
+behavior when the objective has a stable optimum; the synthetic divergence
+tests cover the warning path because the real 40/20/10 case does not diverge.
 
 ## Limitations
 

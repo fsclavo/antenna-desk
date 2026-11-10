@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The family optimizer can now run **1–4 seeds** and compare the resulting
+  designs. **Thorough** defaults to three consecutive seeds, the best-scoring
+  run is selected, and the winning seed is stored in the optimization summary.
+  The dialog reports the score and parameter spread, the recommendations warn
+  when the designs diverge, and a single seed run keeps the previous behavior.
+  Verification metrics include `seed_base`, `seed_requested`, `seed_count`,
+  `seed_scored_count`, `seed_evaluations_total`, `seed_score_spread`,
+  `seed_parameter_spread`, and `seed_converged`.
+
 ## [0.3.1] - 2026-11-10
 
 ### Fixed
