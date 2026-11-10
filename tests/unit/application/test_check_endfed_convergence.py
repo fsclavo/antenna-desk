@@ -99,3 +99,20 @@ def test_convergence_reports_the_error_diagnostic_not_a_warning() -> None:
 
     assert not result.completed
     assert result.error == "real error"
+
+
+def test_radiator_segment_counts_keep_the_coil_node_and_total_count() -> None:
+    from antennadesk.application.use_cases.check_endfed_convergence import (
+        radiator_segment_counts,
+    )
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+
+    parameters = shortened_efhw_80_10_parameters()
+
+    for total in (10, 21, 51):
+        counts = radiator_segment_counts(parameters, total)
+        assert counts is not None
+        lower, upper = counts
+        assert lower >= 3
+        assert upper >= 3
+        assert lower + upper == total

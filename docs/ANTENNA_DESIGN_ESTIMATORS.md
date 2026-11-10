@@ -145,10 +145,13 @@ for trends and verify SWR with a VNA.
 The shortened loaded EFHW presets (80-10 m and 40-20-10 m) have no
 frequency-first estimator. A loading coil changes the electrical length
 nonlinearly: the 80-10 m reference uses 20.35 m + 110 µH + 2.39 m, and the
-40-20-10 m reference uses 10.01 m + 23 µH + 1.85 m. The default installation is
-horizontal at 10 m; change the feed and end heights for a sloper or vertical
-run. Start from the published preset and edit the coil and wire values; scaling
-those dimensions to another frequency is a heuristic, not a published rule.
+40-20-10 m reference uses 10.01 m + 23 µH + 1.85 m. The loading coil is modeled
+at a fixed node: the radiator is partitioned at the published coil offset, and
+the coil section keeps three segments so segmentation changes do not move the
+coil. The default installation is horizontal at 10 m; change the feed and end
+heights for a sloper or vertical run. Start from the published preset and edit
+the coil and wire values; scaling those dimensions to another frequency is a
+heuristic, not a published rule.
 
 ## Loop polygon correction
 

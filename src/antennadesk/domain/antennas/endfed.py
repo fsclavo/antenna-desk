@@ -72,11 +72,15 @@ class EndFedPreset(StrEnum):
 COUNTERPOISE_ID = "counterpoise"
 COUNTERPOISE_DROP_ID = "counterpoise-drop"
 FEED_SECTION_ID = "endfed-feed-section"
+LOADING_COIL_SECTION_ID = "endfed-loading-coil-section"
+RADIATOR_TOP_ID = "radiator-top"
 INSTALLATION_RETURN_ID = "endfed-installation-return"
 INSTALLATION_RETURN_DROP_ID = "endfed-installation-return-drop"
 DEFAULT_FEED_SECTION_LENGTH_M = 0.5
 DEFAULT_INSTALLATION_RETURN_LENGTH_M = 0.10
 ENDFED_FEED_SECTION_SEGMENTS = 3
+ENDFED_LOADING_COIL_SECTION_LENGTH_M = 0.10
+ENDFED_LOADING_COIL_SECTION_SEGMENTS = 3
 MODEL_ONLY_WIRE_IDS = frozenset({INSTALLATION_RETURN_ID, INSTALLATION_RETURN_DROP_ID})
 
 
@@ -170,6 +174,38 @@ class EndFedParameters:
         return self.feed_section_length_m > 0.0
 
     @property
+    def loading_coil_section_active(self) -> bool:
+        if not self.coil_active:
+            return False
+        half_section_m = ENDFED_LOADING_COIL_SECTION_LENGTH_M / 2.0
+        section_start_m = self.loading_coil_offset_m - half_section_m
+        section_end_m = self.loading_coil_offset_m + half_section_m
+        return (
+            section_start_m > self.feed_section_length_m + 1e-9
+            and section_end_m < self.length_m - 1e-9
+        )
+
+    @property
+    def loading_coil_section_start_m(self) -> float:
+        return self.loading_coil_offset_m - ENDFED_LOADING_COIL_SECTION_LENGTH_M / 2.0
+
+    @property
+    def loading_coil_section_end_m(self) -> float:
+        return self.loading_coil_offset_m + ENDFED_LOADING_COIL_SECTION_LENGTH_M / 2.0
+
+    @property
+    def loading_coil_lower_length_m(self) -> float:
+        if not self.loading_coil_section_active:
+            return 0.0
+        return max(self.loading_coil_section_start_m - self.feed_section_length_m, 0.0)
+
+    @property
+    def loading_coil_upper_length_m(self) -> float:
+        if not self.loading_coil_section_active:
+            return 0.0
+        return max(self.length_m - self.loading_coil_section_end_m, 0.0)
+
+    @property
     def main_radiator_length_m(self) -> float:
         return max(self.length_m - self.feed_section_length_m, 0.0)
 
@@ -232,14 +268,17 @@ class EndFedParameters:
             z_m=self.end_height_m,
         )
 
-        wires: list[Wire] = []
-        if self.feed_section_active:
-            ratio = self.feed_section_length_m / self.length_m
-            feed_end = Point3D(
+        def point_at(distance_m: float) -> Point3D:
+            ratio = distance_m / self.length_m
+            return Point3D(
                 x_m=feed_point.x_m + (end_point.x_m - feed_point.x_m) * ratio,
                 y_m=feed_point.y_m + (end_point.y_m - feed_point.y_m) * ratio,
                 z_m=feed_point.z_m + (end_point.z_m - feed_point.z_m) * ratio,
             )
+
+        wires: list[Wire] = []
+        if self.feed_section_active:
+            feed_end = point_at(self.feed_section_length_m)
             wires.append(
                 Wire(
                     id=FEED_SECTION_ID,
@@ -254,15 +293,44 @@ class EndFedParameters:
         else:
             radiator_start = feed_point
             feed_wire_id = RADIATOR_ID
-        wires.append(
-            Wire(
-                id=RADIATOR_ID,
-                start=radiator_start,
-                end=end_point,
-                radius_m=self.wire_radius_m,
-                material=self.material,
+        if self.loading_coil_section_active:
+            coil_start = point_at(self.loading_coil_section_start_m)
+            coil_end = point_at(self.loading_coil_section_end_m)
+            wires.extend(
+                [
+                    Wire(
+                        id=RADIATOR_ID,
+                        start=radiator_start,
+                        end=coil_start,
+                        radius_m=self.wire_radius_m,
+                        material=self.material,
+                    ),
+                    Wire(
+                        id=LOADING_COIL_SECTION_ID,
+                        start=coil_start,
+                        end=coil_end,
+                        radius_m=self.wire_radius_m,
+                        material=self.material,
+                    ),
+                    Wire(
+                        id=RADIATOR_TOP_ID,
+                        start=coil_end,
+                        end=end_point,
+                        radius_m=self.wire_radius_m,
+                        material=self.material,
+                    ),
+                ]
             )
-        )
+        else:
+            wires.append(
+                Wire(
+                    id=RADIATOR_ID,
+                    start=radiator_start,
+                    end=end_point,
+                    radius_m=self.wire_radius_m,
+                    material=self.material,
+                )
+            )
 
         if self.effective_return_length_m > 0.0:
             counterpoise_angle = units.degrees_to_radians(self.effective_counterpoise_azimuth_deg)
@@ -306,13 +374,19 @@ class EndFedParameters:
 
         loads: tuple[SeriesLoad, ...] = ()
         if self.coil_active:
-            coil_offset_m = self.loading_coil_offset_m
-            if self.feed_section_active and coil_offset_m < self.feed_section_length_m:
+            if self.loading_coil_section_active:
+                coil_wire_id = LOADING_COIL_SECTION_ID
+                coil_offset_m = ENDFED_LOADING_COIL_SECTION_LENGTH_M / 2.0
+            elif (
+                self.feed_section_active and self.loading_coil_offset_m < self.feed_section_length_m
+            ):
                 coil_wire_id = FEED_SECTION_ID
+                coil_offset_m = self.loading_coil_offset_m
             else:
                 coil_wire_id = RADIATOR_ID
-                if self.feed_section_active:
-                    coil_offset_m -= self.feed_section_length_m
+                coil_offset_m = self.loading_coil_offset_m - (
+                    self.feed_section_length_m if self.feed_section_active else 0.0
+                )
             loads = (
                 SeriesLoad(
                     id=ENDFED_LOADING_COIL_ID,
@@ -337,11 +411,14 @@ class EndFedParameters:
 def endfed_segmentation_overrides(
     parameters: EndFedParameters,
 ) -> tuple[tuple[str, int], ...]:
-    """Return the fixed segmentation for the end-fed feed section."""
+    """Return the fixed segmentation for the end-fed model partitions."""
 
-    if not parameters.feed_section_active:
-        return ()
-    return ((FEED_SECTION_ID, ENDFED_FEED_SECTION_SEGMENTS),)
+    overrides: list[tuple[str, int]] = []
+    if parameters.feed_section_active:
+        overrides.append((FEED_SECTION_ID, ENDFED_FEED_SECTION_SEGMENTS))
+    if parameters.loading_coil_section_active:
+        overrides.append((LOADING_COIL_SECTION_ID, ENDFED_LOADING_COIL_SECTION_SEGMENTS))
+    return tuple(overrides)
 
 
 def endfed_model_warning_keys(parameters: EndFedParameters) -> tuple[str, ...]:

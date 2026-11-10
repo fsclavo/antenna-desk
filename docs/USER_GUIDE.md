@@ -546,7 +546,11 @@ heights for a sloper or vertical installation. The coil position, inductance,
 and optional series resistance are editable; the Q is reported when a resistance
 is entered.
 The shortened presets also use the fixed feed section and the installation-
-return proxy when no real counterpoise is enabled.
+return proxy when no real counterpoise is enabled. The loading coil is modeled
+at a fixed node: the radiator is partitioned at the published coil offset, and
+the coil section keeps three segments, so changing the radiator segmentation
+does not move the coil. The wire schedule and bill of materials still show one
+physical conductor.
 The matching unit, capacitor, common-mode choke, ground, and support geometry
 are not modeled, and the published inverted-L bend is represented by a
 straight wire. The 40-20-10 preset follows the 23 µH/100 pF schematic; CA4EMT

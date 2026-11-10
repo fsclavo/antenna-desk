@@ -68,7 +68,7 @@ external service and must not be invented or simulated into existence.
 | ~~G21~~ | ~~Multi-view construction sheet~~ | M | G17 | **Done 2026-11-09:** the sheet shows the dimensioned construction view, the complementary front/top view when available, and an isometric 3D view. HTML uses a responsive grid; the native PDF draws the additional views side by side with captions and keeps them vector. Families without a complementary view still get construction plus isometric. |
 | ~~G22~~ | ~~Shortened loaded EFHW presets~~ | M | none | **Done 2026-11-09:** added 80-10 m (20.35 m + 110 µH + 2.39 m) and 40-20-10 m (10.01 m + 23 µH + 1.85 m) end-fed presets with a 49:1 transformer, editable series loading coil, schema 31, catalog routes, editor, band plans, evidence, construction notes, and optimizer variables. Matching unit, capacitor, choke, ground, and the inverted-L bend remain limitations. |
 | ~~G23~~ | ~~EFHW feed-section and convergence model~~ | M | G22 | **Done 2026-11-10:** end-fed designs use a fixed 0.5 m feed section (three segments, part of the same wire) and, when no real counterpoise is enabled, a 0.10 m installation-return proxy for the coax/mast/earth path. The proxy is modeled but not drawn or included in the wire schedule/BOM; the shortened EFHW presets use it by default. The editor warns about legacy/no-return models and provides **Check convergence** over 10/21/51 radiator segments; the check keeps the normal three-segment minimum on auxiliary wires so the shortened presets complete instead of failing with negative resistance. Schema 32 migrates older projects with both fields at zero. |
-| G24 | Fixed loading-coil node for the shortened EFHW | M | G22, G23 | Split the radiator at `loading_coil_offset_m` into lower and upper sections so the coil stays at an exact physical node. Keep the total wire length, published dimensions, and one-conductor construction. The convergence check varies only the lower/upper radiator segmentation, not the coil position. The scene, wire schedule/BOM, and construction sheet show one physical wire plus a coil marker; tests cover geometry, convergence, scene, persistence, reports, and the optimizer variable mapping. |
+| ~~G24~~ | ~~Fixed loading-coil node for the shortened EFHW~~ | M | G22, G23 | **Done 2026-11-10:** the radiator is split at the published coil offset into lower, coil, and top sections. The coil section is a fixed 0.10 m partition with three segments and the series load at its center, so changing the radiator segmentation no longer moves the coil. The convergence check distributes its 10/21/51 radiator counts between the lower and top sections while keeping the coil node fixed. The wire schedule and BOM merge the feed/coil/top partitions into one physical conductor, and the scene keeps a load marker at the coil. Tests cover the geometry, segmentation split, fallback when the coil is inside the feed section, wire schedule/BOM, persistence, scene contracts, and NEC2C convergence. |
 | G25 | Model the 49:1 matching unit and primary 100 pF capacitor | L | G24; traceable transformer data/measurement; 40-20-10 schematic | **Blocked on a traceable transformer model/measurement and confirmation that the PA0EJH 100 pF is across the primary.** G0KYA places the 100 pF across the centre pin and earth on the input (the transformer primary); K1RF also describes it across the transformer primary. Model the ideal 49:1 with optional leakage inductance and a primary shunt capacitor through `MatchingNetwork`/`PiNetwork`, never as a series load in the radiator. Persist the fields, add a schema migration (0 for old projects, 100 pF for new shortened presets), expose editor hints, and update reports, evidence, and tests. Compare sweeps with the published SWR ranges as a trend only, not as a hard reference. |
 | G26 | Inverted-L option for the shortened EFHW | M | G24 | Add an optional bend (vertical rise plus horizontal run) using the G0KYA starting installation (about 8 m vertical and 15 m horizontal) while keeping the straight horizontal default. Update the scene, dimensions, construction notes, reports, and tests. Do not treat the bend as a new antenna family. |
 | G27 | Optional transformer and common-mode choke losses | M–L | G25; traceable loss data/measurement | **Blocked on measurement or a traceable loss model.** Add optional unun efficiency/core loss and common-mode choke/coax loss to the shortened model; defaults remain ideal/zero. Show the assumptions in reports and evidence, and test both the disabled and enabled paths. Do not invent loss numbers. |
@@ -272,14 +272,14 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **32**.
-- Full gate: **2,332 passed, 0 skipped** with `NEC2C` and the optional
+- Full gate: **2,336 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
 - Last commits: the v0.3.1 cross-platform dimension-label release and its
   coverage restoration, the nec2c wait fix (E5), shortened loaded EFHW presets
   (G22), the EFHW feed-section/convergence model (G23), the shortened
-  horizontal default and convergence-check fix, multi-view construction sheet,
-  localized report diagnostics and evidence, translated catalog names,
-  construction-view pass (G1–G18), direct basic-antenna editor, report
-  localization, vector native PDF figures, solver timeout and parallel
-  analysis, the biquad/Beverage evidence review, and the UI type/coverage debt
-  pass.
+  horizontal default and convergence-check fix, the fixed loading-coil node
+  (G24), multi-view construction sheet, localized report diagnostics and
+  evidence, translated catalog names, construction-view pass (G1–G18), direct
+  basic-antenna editor, report localization, vector native PDF figures, solver
+  timeout and parallel analysis, the biquad/Beverage evidence review, and the
+  UI type/coverage debt pass.

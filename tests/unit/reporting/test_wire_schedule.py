@@ -55,11 +55,16 @@ def test_wire_schedule_excludes_the_endfed_installation_return_proxy() -> None:
     model = shortened_efhw_80_10_parameters().to_antenna()
     rows = wire_schedule_rows(model)
     summary = dict(bom_summary_rows(model))
+    feed = feed_schedule_row(model)
 
     assert INSTALLATION_RETURN_ID in {wire.id for wire in model.wires}
-    assert {row.wire_id for row in rows} == {"endfed-feed-section", "radiator"}
-    assert summary["Wires"] == "2"
-    assert summary["Total conductor"] == f"{sum(row.length_m for row in rows):.4f} m"
+    assert len(rows) == 1
+    assert rows[0].wire_id == "radiator"
+    assert rows[0].length_m == pytest.approx(22.74)
+    assert feed.wire_id == "radiator"
+    assert feed.offset_m == pytest.approx(0.0)
+    assert summary["Wires"] == "1"
+    assert summary["Total conductor"] == "22.7400 m"
 
 
 def test_conductor_bom_groups_by_material_and_diameter(

@@ -14,11 +14,33 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..domain.antennas.antenna import AntennaModel
-from ..domain.antennas.endfed import is_model_only_wire
+from ..domain.antennas.endfed import (
+    FEED_SECTION_ID,
+    LOADING_COIL_SECTION_ID,
+    RADIATOR_ID,
+    RADIATOR_TOP_ID,
+    is_model_only_wire,
+)
 from ..domain.antennas.geometry import Point3D
 from ..domain.antennas.wire import Wire
 from ..domain.projects.project import DesignVariant
 from .localization import Labeler, identity_labeler
+
+_ENDFED_PARTITION_IDS = frozenset(
+    {
+        FEED_SECTION_ID,
+        RADIATOR_ID,
+        LOADING_COIL_SECTION_ID,
+        RADIATOR_TOP_ID,
+    }
+)
+_ENDFED_PARTITION_MARKERS = frozenset(
+    {
+        FEED_SECTION_ID,
+        LOADING_COIL_SECTION_ID,
+        RADIATOR_TOP_ID,
+    }
+)
 
 WIRE_SCHEDULE_HEADER = (
     "index",
@@ -88,7 +110,33 @@ class FeedScheduleRow:
 
 
 def _physical_wires(model: AntennaModel) -> tuple[Wire, ...]:
-    return tuple(wire for wire in model.wires if not is_model_only_wire(wire.id))
+    """Return physical conductors, merging end-fed model partitions."""
+    wires = tuple(wire for wire in model.wires if not is_model_only_wire(wire.id))
+    if not any(wire.id in _ENDFED_PARTITION_MARKERS for wire in wires):
+        return wires
+
+    # The end-fed conductor is straight, so the merged endpoints and the sum of
+    # the partition lengths describe the same physical wire.
+    partition = [wire for wire in wires if wire.id in _ENDFED_PARTITION_IDS]
+    if not partition:
+        return wires
+    merged = Wire(
+        id=RADIATOR_ID,
+        start=partition[0].start,
+        end=partition[-1].end,
+        radius_m=partition[0].radius_m,
+        material=partition[0].material,
+    )
+    physical: list[Wire] = []
+    inserted = False
+    for wire in wires:
+        if wire.id in _ENDFED_PARTITION_IDS:
+            if not inserted:
+                physical.append(merged)
+                inserted = True
+            continue
+        physical.append(wire)
+    return tuple(physical)
 
 
 def wire_schedule_rows(model: AntennaModel) -> tuple[WireScheduleRow, ...]:
@@ -121,7 +169,7 @@ def feed_schedule_row(model: AntennaModel) -> FeedScheduleRow:
         z_m=wire.start.z_m + (wire.end.z_m - wire.start.z_m) * ratio,
     )
     return FeedScheduleRow(
-        wire_id=wire.id,
+        wire_id=(RADIATOR_ID if wire.id in _ENDFED_PARTITION_MARKERS else wire.id),
         offset_m=model.feed.offset_m,
         point=point,
         height_m=point.z_m,

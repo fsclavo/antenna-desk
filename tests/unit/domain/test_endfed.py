@@ -272,12 +272,76 @@ def test_shortened_efhw_80_10_matches_the_published_geometry() -> None:
     assert parameters.loading_coil_top_length_m == pytest.approx(2.39)
     assert parameters.transformer_ratio == pytest.approx(49.0)
     assert parameters.managed_load_ids == frozenset({ENDFED_LOADING_COIL_ID})
-    assert len(custom.wires) == 4
-    assert "endfed-installation-return" in {wire.id for wire in custom.wires}
+    assert parameters.loading_coil_section_active is True
+    assert parameters.loading_coil_lower_length_m == pytest.approx(19.80)
+    assert parameters.loading_coil_upper_length_m == pytest.approx(2.34)
+    assert [wire.id for wire in custom.wires] == [
+        "endfed-feed-section",
+        "radiator",
+        "endfed-loading-coil-section",
+        "radiator-top",
+        "endfed-installation-return-drop",
+        "endfed-installation-return",
+    ]
     assert [load.id for load in custom.loads] == [ENDFED_LOADING_COIL_ID]
-    assert custom.loads[0].wire_id == "radiator"
-    assert custom.loads[0].offset_m == pytest.approx(20.35 - 0.5)
+    assert custom.loads[0].wire_id == "endfed-loading-coil-section"
+    assert custom.loads[0].offset_m == pytest.approx(0.05)
     assert custom.loads[0].inductance_h == pytest.approx(110e-6)
+
+
+def test_shortened_loading_coil_node_stays_at_the_published_offset() -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+
+    parameters = shortened_efhw_80_10_parameters()
+    custom = parameters.to_custom_parameters()
+    wires = {wire.id: wire for wire in custom.wires}
+    feed = wires["endfed-feed-section"]
+    lower = wires["radiator"]
+    coil = wires["endfed-loading-coil-section"]
+    top = wires["radiator-top"]
+
+    assert lower.start == feed.end
+    assert lower.end == coil.start
+    assert coil.end == top.start
+    assert (feed.length_m + lower.length_m + coil.length_m + top.length_m) == pytest.approx(
+        parameters.length_m
+    )
+    midpoint = coil.point_at(coil.length_m / 2.0)
+    assert feed.start.distance_to(midpoint) == pytest.approx(20.35)
+    assert custom.loads[0].wire_id == coil.id
+    assert custom.loads[0].offset_m == pytest.approx(coil.length_m / 2.0)
+
+
+def test_shortened_segmentation_fixes_the_feed_and_coil_sections() -> None:
+    from antennadesk.domain.antennas.endfed import (
+        ENDFED_FEED_SECTION_SEGMENTS,
+        ENDFED_LOADING_COIL_SECTION_SEGMENTS,
+        endfed_segmentation_overrides,
+        shortened_efhw_80_10_parameters,
+    )
+
+    overrides = dict(endfed_segmentation_overrides(shortened_efhw_80_10_parameters()))
+
+    assert overrides == {
+        "endfed-feed-section": ENDFED_FEED_SECTION_SEGMENTS,
+        "endfed-loading-coil-section": ENDFED_LOADING_COIL_SECTION_SEGMENTS,
+    }
+
+
+def test_loading_coil_inside_the_feed_section_keeps_the_legacy_mapping() -> None:
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_section_length_m=0.5,
+        loading_coil_enabled=True,
+        loading_coil_offset_m=0.2,
+        loading_coil_inductance_h=100e-6,
+    )
+    custom = parameters.to_custom_parameters()
+
+    assert parameters.loading_coil_section_active is False
+    assert custom.loads[0].wire_id == "endfed-feed-section"
+    assert custom.loads[0].offset_m == pytest.approx(0.2)
 
 
 def test_shortened_efhw_40_10_matches_the_published_geometry() -> None:
@@ -292,7 +356,12 @@ def test_shortened_efhw_40_10_matches_the_published_geometry() -> None:
     assert parameters.loading_coil_offset_m == pytest.approx(10.01)
     assert parameters.loading_coil_inductance_h == pytest.approx(23e-6)
     assert parameters.loading_coil_top_length_m == pytest.approx(1.85)
-    assert len(parameters.to_custom_parameters().loads) == 1
+    assert parameters.loading_coil_lower_length_m == pytest.approx(9.46)
+    assert parameters.loading_coil_upper_length_m == pytest.approx(1.80)
+    custom = parameters.to_custom_parameters()
+    assert len(custom.loads) == 1
+    assert custom.loads[0].wire_id == "endfed-loading-coil-section"
+    assert custom.loads[0].offset_m == pytest.approx(0.05)
 
 
 def test_endfed_loaded_coil_requires_a_position_and_inductance() -> None:

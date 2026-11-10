@@ -281,7 +281,8 @@ def test_shortened_endfed_simulation_spec_carries_the_coil(
 
     assert spec.feed_transformer_ratio == pytest.approx(49.0)
     assert [load.id for load in model.loads] == ["endfed-loading-coil"]
-    assert model.loads[0].offset_m == pytest.approx(20.35 - 0.5)
+    assert model.loads[0].wire_id == "endfed-loading-coil-section"
+    assert model.loads[0].offset_m == pytest.approx(0.05)
 
 
 def test_fit_spec_to_budget_uses_the_finest_pattern_that_fits(window: MainWindow) -> None:

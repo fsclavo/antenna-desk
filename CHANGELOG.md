@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   radiator segments. The shortened EFHW presets use the same feed section and
   return proxy by default. Schema 32 migrates older projects with both fields
   at zero, preserving their previous model.
+- The shortened EFHW loading coil now sits at a fixed model node. The radiator
+  is split at the published coil offset into lower, coil, and top sections; the
+  coil section stays at three segments, so changing the radiator segmentation
+  no longer moves the coil. The wire schedule and bill of materials still
+  report one physical conductor. This makes the convergence check measure the
+  same antenna at every segment count.
 - Opening a project now reads, decompresses, migrates, and validates it in a
   worker thread with a window-modal busy progress dialog, so large saved
   projects no longer freeze the UI. The project is applied only after

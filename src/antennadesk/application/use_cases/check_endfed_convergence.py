@@ -8,8 +8,11 @@ from dataclasses import dataclass, replace
 
 from ...domain.antennas.endfed import (
     ENDFED_FEED_SECTION_SEGMENTS,
+    ENDFED_LOADING_COIL_SECTION_SEGMENTS,
     FEED_SECTION_ID,
+    LOADING_COIL_SECTION_ID,
     RADIATOR_ID,
+    RADIATOR_TOP_ID,
     EndFedParameters,
 )
 from ...domain.common.validation import Severity
@@ -26,6 +29,30 @@ MIN_SEGMENTS_PER_WIRE = 3
 MAX_SWR_SPREAD = 0.1
 MAX_RESISTANCE_SPREAD_FRACTION = 0.05
 MAX_REACTANCE_SPREAD_OHM = 10.0
+
+
+def radiator_segment_counts(
+    parameters: EndFedParameters,
+    total_segments: int,
+) -> tuple[int, int] | None:
+    """Split radiator segments between the lower and upper coil sections."""
+
+    if not parameters.loading_coil_section_active:
+        return None
+    lower_length_m = parameters.loading_coil_lower_length_m
+    upper_length_m = parameters.loading_coil_upper_length_m
+    radiator_length_m = lower_length_m + upper_length_m
+    if radiator_length_m <= 0.0:
+        return None
+    lower_segments = max(
+        MIN_SEGMENTS_PER_WIRE,
+        min(
+            total_segments - MIN_SEGMENTS_PER_WIRE,
+            round(total_segments * lower_length_m / radiator_length_m),
+        ),
+    )
+    upper_segments = max(MIN_SEGMENTS_PER_WIRE, total_segments - lower_segments)
+    return lower_segments, upper_segments
 
 
 @dataclass(frozen=True, slots=True)
@@ -112,7 +139,18 @@ class CheckEndFedConvergence:
             wire_segments: list[tuple[str, int]] = []
             if parameters.feed_section_active:
                 wire_segments.append((FEED_SECTION_ID, ENDFED_FEED_SECTION_SEGMENTS))
-            wire_segments.append((RADIATOR_ID, count))
+            if parameters.loading_coil_section_active:
+                wire_segments.append(
+                    (LOADING_COIL_SECTION_ID, ENDFED_LOADING_COIL_SECTION_SEGMENTS)
+                )
+                counts = radiator_segment_counts(parameters, count)
+                if counts is not None:
+                    wire_segments.append((RADIATOR_ID, counts[0]))
+                    wire_segments.append((RADIATOR_TOP_ID, counts[1]))
+                else:
+                    wire_segments.append((RADIATOR_ID, count))
+            else:
+                wire_segments.append((RADIATOR_ID, count))
             spec = replace(
                 command.base_spec,
                 frequency_plan=FrequencyPlan.single(frequency_hz),

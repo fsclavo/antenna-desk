@@ -411,7 +411,7 @@ def _cases() -> tuple[FamilyCase, ...]:
             "shortened_endfed_80_10",
             shortened_efhw_80_10_parameters(),
             "endfed",
-            2,
+            4,
             GeometryViewMode.ELEVATION,
             (
                 "End-fed wire",
@@ -425,7 +425,7 @@ def _cases() -> tuple[FamilyCase, ...]:
             "shortened_endfed_40_10",
             shortened_efhw_40_10_parameters(),
             "endfed",
-            2,
+            4,
             GeometryViewMode.ELEVATION,
             (
                 "End-fed wire",

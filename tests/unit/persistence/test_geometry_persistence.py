@@ -1147,7 +1147,8 @@ def test_loaded_endfed_round_trips_with_the_coil_load() -> None:
         "endfed-loading-coil",
     ]
     assert restored.designs[0].antenna.loads[0].inductance_h == pytest.approx(110e-6)
-    assert restored.designs[0].antenna.loads[0].offset_m == pytest.approx(20.35 - 0.5)
+    assert restored.designs[0].antenna.loads[0].wire_id == "endfed-loading-coil-section"
+    assert restored.designs[0].antenna.loads[0].offset_m == pytest.approx(0.05)
 
 
 def test_endfed_feed_section_and_installation_return_round_trip() -> None:
