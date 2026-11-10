@@ -1300,6 +1300,15 @@ automatically up to twice the initial budget. A larger budget can take
 considerably longer; the dialog estimates the run count. The random seed is
 exposed for reproducibility.
 
+**Apply Best** applies the best nominal parameters and keeps the optimization
+summary with the design. In **Single frequency** mode it then runs the normal
+single simulation. In **Band-aware** and **Robust** modes it runs a full band
+analysis with the current band plan, so the **Bands** tab, impedance/SWR charts,
+and patterns show every analyzed band for the applied geometry. Robust mode
+analyzes the nominal geometry; the ± tolerance corners are used only for
+scoring. The optimizer result table remains an aggregate summary (for example,
+the worst SWR across the bands); per-band values are in the band analysis.
+
 **Parallel workers** controls how many independent candidate evaluations run at
 once. The value is capped at four in the dialog and defaults to
 `min(4, max(1, CPU count - 1))`; set it to 1 to keep the sequential path. Only

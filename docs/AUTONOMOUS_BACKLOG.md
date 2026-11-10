@@ -221,7 +221,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **31**.
-- Full gate: **2,259 passed, 0 skipped** with `NEC2C` and the optional
+- Full gate: **2,272 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
 - Last commits: the v0.3.1 cross-platform dimension-label release and its
   coverage restoration, the nec2c wait fix (E5), shortened loaded EFHW presets

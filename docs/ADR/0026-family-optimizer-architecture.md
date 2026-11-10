@@ -402,6 +402,17 @@ The following remain explicitly unavailable:
 - random wire;
 - arbitrary custom geometry and imported designs.
 
+## Amendment 2026-11-10 — Apply Best result presentation
+
+Apply Best applies the best nominal parameters and preserves the optimization
+summary through the form write-back. For band-aware and robust runs, the main
+window then starts a full band analysis with the same band plan used by the
+optimizer, so the **Bands** tab and per-band charts show the applied geometry.
+Single-frequency runs keep the normal single simulation. Robust band analysis
+uses the nominal geometry; the tolerance corners remain scoring-only. The
+optimizer result table is still an aggregate summary, not a per-band result
+set.
+
 ## Follow-up
 
 - See [OPTIMIZER_PHASE_A_PLAN.md](../OPTIMIZER_PHASE_A_PLAN.md) and

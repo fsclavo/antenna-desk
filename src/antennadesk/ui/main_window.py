@@ -138,6 +138,7 @@ from ..domain.design.estimators import supports_estimation
 from ..domain.design.formulas import frequency_for_half_wave_length
 from ..domain.measurement import Measurement
 from ..domain.optimization.registry import optimizer_availability
+from ..domain.optimization.summary import OptimizationMode
 from ..domain.projects.project import DesignProvenance, DesignVariant, Project
 from ..domain.simulation.band_result import BandAnalysisResult, BandResult
 from ..domain.simulation.bands import (
@@ -5662,6 +5663,7 @@ class MainWindow(QMainWindow):
                 self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
                 return
         design = self._project.design_by_id(self._design_id)
+        band_plan = self._current_band_plan(design)
         availability = optimizer_availability(design.parameters)
         if availability.descriptor is None:
             self._show_error(
@@ -5709,7 +5711,16 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
-        self.simulate()
+        updated_design = self._project.design_by_id(self._design_id)
+        summary = result.summary if result is not None else None
+        if (
+            summary is not None
+            and summary.mode in {OptimizationMode.BAND_AWARE, OptimizationMode.ROBUST}
+            and band_plan
+        ):
+            self._start_band_analysis(updated_design, band_plan)
+        else:
+            self.simulate()
 
     def _optimizer_band_edges(self, design: DesignVariant) -> tuple[float, ...]:
         plan = self._current_band_plan(design)

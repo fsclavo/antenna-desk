@@ -290,6 +290,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   post-apply form write-back. The summary is preserved when the form rewrites
   identical parameters, loads, and transmission lines, and invalidated when the
   geometry actually changes.
+- In **band-aware** and **robust** modes, **Apply Best** now applies the best
+  nominal parameters and immediately runs the full band analysis for the
+  current band plan, so the Bands tab and per-band charts show the optimized
+  geometry; robust mode analyzes the nominal case, not the tolerance corners.
+  Single-frequency mode still runs one simulation.
 - The nec2c adapter now waits for the solver process with
   `Popen.wait(timeout=...)` instead of a fixed 50 ms polling sleep. A
   226-evaluation optimization dropped from 11.8 s to 0.47 s on one worker and
