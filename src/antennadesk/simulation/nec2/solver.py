@@ -35,6 +35,9 @@ from .parser import Nec2ParseError, parse_nec2_output
 
 DEFAULT_MAX_OUTPUT_BYTES = 50 * 1024 * 1024
 DEFAULT_VERSION_TIMEOUT_S = 10.0
+# Maximum time between cancellation checks while nec2c is running.  The wait
+# itself returns as soon as the child exits; this is not a per-run delay.
+PROCESS_POLL_INTERVAL_S = 0.05
 
 
 class Nec2cSolver:
@@ -302,7 +305,8 @@ class Nec2cSolver:
                         raw_input=input_text,
                         stderr=stderr,
                     )
-                if time.monotonic() > deadline:
+                remaining_s = deadline - time.monotonic()
+                if remaining_s <= 0.0:
                     self._terminate(process)
                     _, process_stderr = process.communicate(timeout=5)
                     stderr = process_stderr or ""
@@ -322,7 +326,11 @@ class Nec2cSolver:
                         raw_input=input_text,
                         stderr=stderr,
                     )
-                time.sleep(0.05)
+                try:
+                    process.wait(timeout=min(PROCESS_POLL_INTERVAL_S, remaining_s))
+                    break
+                except subprocess.TimeoutExpired:
+                    continue
 
             _, process_stderr = process.communicate(timeout=5)
             stderr = process_stderr or ""

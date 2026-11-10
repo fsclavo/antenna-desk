@@ -274,6 +274,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The nec2c adapter now waits for the solver process with
+  `Popen.wait(timeout=...)` instead of a fixed 50 ms polling sleep. A
+  226-evaluation optimization dropped from 11.8 s to 0.47 s on one worker and
+  from 5.2 s to 0.30 s on four workers; cancellation checks remain at 50 ms
+  intervals.
 - The antenna catalog now shows each template's translated name instead of the
   raw `catalog.<type>.description` key. Custom item data uses Qt user roles, so
   the description no longer overwrites the visible text; the detail pane shows
