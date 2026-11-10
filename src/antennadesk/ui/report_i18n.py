@@ -20,6 +20,7 @@ REPORT_SPANISH: dict[str, str] = {
     "Simulation": "Simulación",
     "Wire schedule": "Lista de hilos",
     "Construction view": "Vista de construcción",
+    "Isometric view": "Vista isométrica",
     "Installation view (front)": "Vista de instalación (frontal)",
     "Top layout": "Disposición en planta",
     # Title block and table headers.

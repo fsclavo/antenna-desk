@@ -6556,17 +6556,21 @@ class MainWindow(QMainWindow):
         try:
             figure_image = self._geometry.construction_image()
             auxiliary_image = self._geometry.auxiliary_image()
+            isometric_image = self._geometry.three_d_image()
             auxiliary_kind = self._geometry.auxiliary_view_kind()
         except OSError:
             figure_image = None
             auxiliary_image = None
+            isometric_image = None
             auxiliary_kind = None
         try:
             figure_svg = self._geometry.construction_svg()
             auxiliary_svg = self._geometry.auxiliary_svg()
+            isometric_svg = self._geometry.three_d_svg()
         except OSError:
             figure_svg = None
             auxiliary_svg = None
+            isometric_svg = None
         dialog = ConstructionDialog(
             self._translator,
             self._project,
@@ -6575,8 +6579,10 @@ class MainWindow(QMainWindow):
             self,
             figure_image=figure_image,
             auxiliary_image=auxiliary_image,
+            isometric_image=isometric_image,
             figure_svg=figure_svg,
             auxiliary_svg=auxiliary_svg,
+            isometric_svg=isometric_svg,
             auxiliary_kind=auxiliary_kind,
         )
         dialog.exec()

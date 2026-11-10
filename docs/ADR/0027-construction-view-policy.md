@@ -19,6 +19,8 @@ dimension labels, which the layout engine can hide when space is tight.
 
 1. The main window exposes two view modes: **Construction** and **3D**.
    Construction is the dimensioned construction drawing; 3D is inspection.
+   The construction sheet may also include the complementary orthographic
+   view and an isometric view; this does not add a second user-facing selector.
 2. Construction resolves to the projection that shows the family's principal
    plane:
    - front/elevation for vertical-plane antennas;
@@ -81,3 +83,8 @@ Negative and limitations:
   remaining vertical and wire families.
 - Revisit an advanced view selector only if users need the secondary
   projection interactively.
+
+Implemented follow-up (2026-11-09): the construction sheet now includes the
+complementary orthographic view when available and an isometric 3D view, so the
+secondary projection is available in the exported document without restoring
+the interactive selector.

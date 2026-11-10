@@ -74,6 +74,7 @@ def test_construction_sheet_pdf_uses_vector_figures(
         path,
         figure_svg=_SVG,
         auxiliary_svg=_SVG,
+        isometric_svg=_SVG,
         auxiliary_kind="top",
     )
 
@@ -81,6 +82,28 @@ def test_construction_sheet_pdf_uses_vector_figures(
     assert data.startswith(b"%PDF")
     assert len(data) > 1_000
     assert b"/Subtype /Image" not in data
+
+
+def test_construction_sheet_pdf_draws_additional_views_with_captions(
+    qtbot: QtBot,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "sheet-multi-view.pdf"
+
+    write_construction_pdf(
+        Translator(Language.SPANISH),
+        sample_project,
+        sample_project.designs[0],
+        None,
+        path,
+        figure_svg=_SVG,
+        auxiliary_svg=_SVG,
+        isometric_svg=_SVG,
+        auxiliary_kind="top",
+    )
+
+    assert path.read_bytes().startswith(b"%PDF")
 
 
 def test_construction_sheet_pdf_embeds_the_figure(

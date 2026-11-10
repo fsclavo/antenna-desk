@@ -103,6 +103,41 @@ def test_construction_sheet_can_label_the_auxiliary_view_as_top_layout(
     assert "Installation view (front)" not in sheet
 
 
+def test_construction_sheet_builds_a_multi_view_grid(sample_project: Project) -> None:
+    sheet = render_construction_sheet(
+        sample_project,
+        sample_project.designs[0],
+        None,
+        figure_png_data_uri="data:image/png;base64,AAAA",
+        auxiliary_png_data_uri="data:image/png;base64,BBBB",
+        isometric_png_data_uri="data:image/png;base64,CCCC",
+        auxiliary_kind="top",
+    )
+
+    assert '<div class="views">' in sheet
+    assert "view-main" in sheet
+    assert sheet.count("view-secondary") == 2
+    assert "isometric-figure" in sheet
+    assert "Isometric view" in sheet
+    assert "Top layout" in sheet
+    assert 'src="data:image/png;base64,CCCC"' in sheet
+
+
+def test_construction_sheet_widens_a_single_secondary_view(
+    sample_project: Project,
+) -> None:
+    sheet = render_construction_sheet(
+        sample_project,
+        sample_project.designs[0],
+        None,
+        figure_png_data_uri="data:image/png;base64,AAAA",
+        isometric_png_data_uri="data:image/png;base64,CCCC",
+    )
+
+    assert "view-wide" in sheet
+    assert "Isometric view" in sheet
+
+
 def test_construction_sheet_works_without_a_result(sample_project: Project) -> None:
     sheet = render_construction_sheet(
         sample_project,

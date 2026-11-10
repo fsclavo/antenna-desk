@@ -443,6 +443,22 @@ def test_construction_svg_is_vector_and_preserves_the_view(qtbot: QtBot) -> None
     assert (view._mode, view._zoom, view._pan, view._height_exaggeration) == before
 
 
+def test_three_d_image_and_svg_render_without_changing_the_view(qtbot: QtBot) -> None:
+    view = _make_view(qtbot)
+    view.set_zoom(2.0)
+    before = (view._mode, view._zoom, view._pan, view._height_exaggeration)
+
+    image = view.three_d_image(400, 300)
+    svg = view.three_d_svg(400, 300)
+
+    assert not image.isNull()
+    assert image.width() == 400
+    assert image.height() == 300
+    assert svg.startswith(b"<?xml")
+    assert b"<svg" in svg
+    assert (view._mode, view._zoom, view._pan, view._height_exaggeration) == before
+
+
 def test_compact_view_exposes_hidden_dimension_values(qtbot: QtBot) -> None:
     from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 

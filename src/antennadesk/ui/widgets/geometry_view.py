@@ -169,7 +169,12 @@ class GeometryView(QWidget):
             raise OSError(f"could not write geometry image: {path}")
 
     @contextmanager
-    def _rendered_mode(self, mode: GeometryViewMode) -> Iterator[None]:
+    def _rendered_mode(
+        self,
+        mode: GeometryViewMode,
+        *,
+        zoom: float = 1.0,
+    ) -> Iterator[None]:
         """Temporarily render another mode without changing the live view."""
 
         previous = (
@@ -182,7 +187,7 @@ class GeometryView(QWidget):
         try:
             self._mode = mode
             self._scene = None
-            self._zoom = 1.0
+            self._zoom = zoom
             self._pan = QPointF(0.0, 0.0)
             self._height_exaggeration = 1.0
             yield
@@ -200,6 +205,8 @@ class GeometryView(QWidget):
         mode: GeometryViewMode,
         width: int,
         height: int,
+        *,
+        zoom: float = 1.0,
     ) -> QImage:
         if self._model is None:
             raise OSError("no geometry model to export")
@@ -209,7 +216,7 @@ class GeometryView(QWidget):
             QImage.Format.Format_ARGB32_Premultiplied,
         )
         image.fill(self._colors.background)
-        with self._rendered_mode(mode):
+        with self._rendered_mode(mode, zoom=zoom):
             painter = QPainter(image)
             try:
                 self._render(painter, QRectF(0.0, 0.0, float(width), float(height)))
@@ -222,6 +229,8 @@ class GeometryView(QWidget):
         mode: GeometryViewMode,
         width: int,
         height: int,
+        *,
+        zoom: float = 1.0,
     ) -> bytes:
         if self._model is None:
             raise OSError("no geometry model to export")
@@ -236,7 +245,7 @@ class GeometryView(QWidget):
         generator.setTitle(self._display_name or "")
         generator.setDescription(self._translator.t("panel.geometry"))
         try:
-            with self._rendered_mode(mode):
+            with self._rendered_mode(mode, zoom=zoom):
                 painter = QPainter(generator)
                 try:
                     painter.fillRect(
@@ -290,6 +299,16 @@ class GeometryView(QWidget):
             return None
         mode = GeometryViewMode.ELEVATION if kind == "installation" else GeometryViewMode.PLAN
         return self._svg_for_mode(mode, width, height)
+
+    def three_d_image(self, width: int = 900, height: int = 650) -> QImage:
+        """Render the isometric inspection view for a construction sheet."""
+
+        return self._image_for_mode(GeometryViewMode.THREE_D, width, height, zoom=1.25)
+
+    def three_d_svg(self, width: int = 900, height: int = 650) -> bytes:
+        """Render the isometric inspection view as a vector SVG document."""
+
+        return self._svg_for_mode(GeometryViewMode.THREE_D, width, height, zoom=1.25)
 
     def save_svg(self, path: Path) -> None:
         generator = QSvgGenerator()

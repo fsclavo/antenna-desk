@@ -57,8 +57,10 @@ class ConstructionDialog(QDialog):
         *,
         figure_image: QImage | None = None,
         auxiliary_image: QImage | None = None,
+        isometric_image: QImage | None = None,
         figure_svg: bytes | None = None,
         auxiliary_svg: bytes | None = None,
+        isometric_svg: bytes | None = None,
         auxiliary_kind: str | None = None,
     ) -> None:
         super().__init__(parent)
@@ -68,11 +70,14 @@ class ConstructionDialog(QDialog):
         self._result = result
         self._figure_image = figure_image
         self._auxiliary_image = auxiliary_image
+        self._isometric_image = isometric_image
         self._figure_svg = figure_svg
         self._auxiliary_svg = auxiliary_svg
+        self._isometric_svg = isometric_svg
         self._auxiliary_kind = auxiliary_kind
         self._figure_data_uri = _png_data_uri(figure_image) if figure_image else None
         self._auxiliary_data_uri = _png_data_uri(auxiliary_image) if auxiliary_image else None
+        self._isometric_data_uri = _png_data_uri(isometric_image) if isometric_image else None
         self.setWindowTitle(translator.t("construction.title"))
         self.resize(*scaled_dialog_size(820, 720))
 
@@ -93,6 +98,12 @@ class ConstructionDialog(QDialog):
                 QUrl("installation-view"),
                 auxiliary_image,
             )
+        if isometric_image is not None:
+            document.addResource(
+                QTextDocument.ResourceType.ImageResource,
+                QUrl("isometric-view"),
+                isometric_image,
+            )
         document.setHtml(
             render_construction_sheet(
                 project,
@@ -100,6 +111,7 @@ class ConstructionDialog(QDialog):
                 result,
                 figure_png_data_uri=preview_uri,
                 auxiliary_png_data_uri=auxiliary_preview,
+                isometric_png_data_uri="isometric-view" if isometric_image is not None else None,
                 auxiliary_kind=self._auxiliary_kind,
                 labeler=translator.report,
                 language=translator.language.value,
@@ -146,6 +158,7 @@ class ConstructionDialog(QDialog):
                 path,
                 figure_png_data_uri=self._figure_data_uri,
                 auxiliary_png_data_uri=self._auxiliary_data_uri,
+                isometric_png_data_uri=self._isometric_data_uri,
                 auxiliary_kind=self._auxiliary_kind,
             )
         except Exception as exc:
@@ -185,8 +198,10 @@ class ConstructionDialog(QDialog):
                 path,
                 figure_image=self._figure_image,
                 auxiliary_image=self._auxiliary_image,
+                isometric_image=self._isometric_image,
                 figure_svg=self._figure_svg,
                 auxiliary_svg=self._auxiliary_svg,
+                isometric_svg=self._isometric_svg,
                 auxiliary_kind=self._auxiliary_kind,
             )
         except Exception as exc:

@@ -204,6 +204,25 @@ def test_spanish_construction_sheet_translates_structure_and_notes(
     assert design.antenna.wires[0].id in sheet
 
 
+def test_spanish_construction_sheet_translates_view_captions(
+    sample_project: Project,
+) -> None:
+    sheet = render_construction_sheet(
+        sample_project,
+        sample_project.designs[0],
+        None,
+        figure_png_data_uri="data:image/png;base64,AAAA",
+        auxiliary_png_data_uri="data:image/png;base64,BBBB",
+        isometric_png_data_uri="data:image/png;base64,CCCC",
+        labeler=Translator(Language.SPANISH).report,
+        language="es",
+    )
+
+    assert "Vista de construcción" in sheet
+    assert "Vista de instalación (frontal)" in sheet
+    assert "Vista isométrica" in sheet
+
+
 def test_english_construction_sheet_stays_english(sample_project: Project) -> None:
     sheet = render_construction_sheet(
         sample_project,

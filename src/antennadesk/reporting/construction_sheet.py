@@ -81,9 +81,17 @@ table.title-block th { width: auto; background: #f7f7f7; }
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .muted { color: #666; font-size: 12px; }
 .notes { background: #f7f7f7; border-left: 4px solid #888; padding: 10px 14px; }
-.construction-figure, .installation-figure { display: block; width: 100%; max-width: 100%; height: auto; border: 1px solid #ddd; background: #fff; margin: 12px 0 2px; }
+.construction-figure, .installation-figure, .isometric-figure { display: block; width: 100%; max-width: 100%; height: auto; border: 1px solid #ddd; background: #fff; margin: 12px 0 2px; }
 figure { margin: 0 0 12px; }
 figcaption { color: #555; font-size: 12px; margin-top: 4px; }
+.views { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
+.views figure { margin: 0; }
+.views .view-main, .views .view-wide { grid-column: 1 / -1; }
+.views .construction-figure, .views .installation-figure, .views .isometric-figure { margin: 0; }
+@media (max-width: 640px) {
+  .views { grid-template-columns: 1fr; }
+  .views .view-main, .views .view-wide { grid-column: auto; }
+}
 footer { margin-top: 28px; color: #777; font-size: 11px; }
 """
 
@@ -135,6 +143,7 @@ def render_construction_sheet(
     *,
     figure_png_data_uri: str | None = None,
     auxiliary_png_data_uri: str | None = None,
+    isometric_png_data_uri: str | None = None,
     auxiliary_kind: str | None = None,
     labeler: Labeler | None = None,
     language: str = "en",
@@ -224,21 +233,36 @@ def render_construction_sheet(
         if evidence_rows
         else ""
     )
-    figures: list[str] = []
+    figures: list[tuple[str, str, str]] = []
     if figure_png_data_uri:
         figures.append(
-            f'<figure><img class="construction-figure" alt="Construction view" '
-            f'src="{_escape(figure_png_data_uri)}">'
-            "<figcaption>Construction view</figcaption></figure>"
+            ("construction-figure view-main", tr("Construction view"), figure_png_data_uri)
         )
     if auxiliary_png_data_uri:
-        auxiliary_caption = "Top layout" if auxiliary_kind == "top" else "Installation view (front)"
-        figures.append(
-            f'<figure><img class="installation-figure" alt="{_escape(auxiliary_caption)}" '
-            f'src="{_escape(auxiliary_png_data_uri)}">'
-            f"<figcaption>{_escape(auxiliary_caption)}</figcaption></figure>"
+        auxiliary_caption = tr(
+            "Top layout" if auxiliary_kind == "top" else "Installation view (front)"
         )
-    figure_section = "".join(figures)
+        figures.append(
+            ("installation-figure view-secondary", auxiliary_caption, auxiliary_png_data_uri)
+        )
+    if isometric_png_data_uri:
+        figures.append(
+            ("isometric-figure view-secondary", tr("Isometric view"), isometric_png_data_uri)
+        )
+    if len(figures) == 2:
+        class_name, caption, uri = figures[1]
+        figures[1] = (class_name.replace("view-secondary", "view-wide"), caption, uri)
+    figure_section = (
+        '<div class="views">'
+        + "".join(
+            f'<figure><img class="{class_name}" alt="{_escape(caption)}" '
+            f'src="{_escape(uri)}"><figcaption>{_escape(caption)}</figcaption></figure>'
+            for class_name, caption, uri in figures
+        )
+        + "</div>"
+        if figures
+        else ""
+    )
     schedule_section = f"""
 <h2>Wire schedule</h2>
 <table class="schedule">
@@ -1105,6 +1129,7 @@ def write_construction_sheet(
     *,
     figure_png_data_uri: str | None = None,
     auxiliary_png_data_uri: str | None = None,
+    isometric_png_data_uri: str | None = None,
     auxiliary_kind: str | None = None,
     labeler: Labeler | None = None,
     language: str = "en",
@@ -1116,6 +1141,7 @@ def write_construction_sheet(
             result,
             figure_png_data_uri=figure_png_data_uri,
             auxiliary_png_data_uri=auxiliary_png_data_uri,
+            isometric_png_data_uri=isometric_png_data_uri,
             auxiliary_kind=auxiliary_kind,
             labeler=labeler,
             language=language,

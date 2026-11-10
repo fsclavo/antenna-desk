@@ -83,8 +83,10 @@ def write_construction_pdf(
     *,
     figure_image: QImage | None = None,
     auxiliary_image: QImage | None = None,
+    isometric_image: QImage | None = None,
     figure_svg: bytes | None = None,
     auxiliary_svg: bytes | None = None,
+    isometric_svg: bytes | None = None,
     auxiliary_kind: str | None = None,
 ) -> None:
     writer = QPdfWriter(str(path))
@@ -192,11 +194,58 @@ def write_construction_pdf(
         )
         y += draw_height + 12.0
 
+    def draw_figure_row(
+        items: list[tuple[str, QSize, QImage | None, bytes | None]],
+    ) -> None:
+        nonlocal y
+        if not items:
+            return
+        available_width = right - left
+        gap = 12.0
+        max_width = available_width if len(items) == 1 else (available_width - gap) / len(items)
+        max_height = writer.height() * 0.35
+        fitted: list[tuple[str, float, float, QImage | None, bytes | None]] = []
+        for caption, source_size, image, svg in items:
+            scale = min(
+                max_width / max(source_size.width(), 1),
+                max_height / max(source_size.height(), 1),
+            )
+            fitted.append(
+                (
+                    caption,
+                    source_size.width() * scale,
+                    source_size.height() * scale,
+                    image,
+                    svg,
+                )
+            )
+        row_height = max(item[2] for item in fitted) + 22.0
+        ensure_space(row_height + 12.0)
+        x = left
+        for caption, draw_width, draw_height, image, svg in fitted:
+            _draw_figure(
+                painter,
+                QRectF(x, y, draw_width, draw_height),
+                image,
+                svg,
+            )
+            painter.setFont(small_font)
+            painter.setPen(Qt.GlobalColor.darkGray)
+            painter.drawText(
+                QRectF(x, y + draw_height + 2.0, draw_width, 16.0),
+                Qt.AlignmentFlag.AlignCenter,
+                caption,
+            )
+            painter.setPen(Qt.GlobalColor.black)
+            x += draw_width + gap
+        y += row_height + 12.0
+
     figure_size = _figure_size(figure_image, figure_svg)
     if figure_size is not None:
         section(translator.t("construction.view"))
         draw_figure(figure_size, figure_image, figure_svg, 0.55)
 
+    secondary_items: list[tuple[str, QSize, QImage | None, bytes | None]] = []
     auxiliary_size = _figure_size(auxiliary_image, auxiliary_svg)
     if auxiliary_size is not None:
         auxiliary_key = (
@@ -204,8 +253,27 @@ def write_construction_pdf(
             if auxiliary_kind == "top"
             else "construction.installation_view"
         )
-        section(translator.t(auxiliary_key))
-        draw_figure(auxiliary_size, auxiliary_image, auxiliary_svg, 0.40)
+        secondary_items.append(
+            (
+                translator.t(auxiliary_key),
+                auxiliary_size,
+                auxiliary_image,
+                auxiliary_svg,
+            )
+        )
+    isometric_size = _figure_size(isometric_image, isometric_svg)
+    if isometric_size is not None:
+        secondary_items.append(
+            (
+                translator.t("construction.isometric_view"),
+                isometric_size,
+                isometric_image,
+                isometric_svg,
+            )
+        )
+    if secondary_items:
+        section(translator.t("construction.additional_views"))
+        draw_figure_row(secondary_items)
 
     section(translator.t("construction.dimensions"))
     for label, value in localize_rows(

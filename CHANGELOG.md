@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The construction sheet now builds a **multi-view grid**: the dimensioned
+  construction view, the complementary front/top view when the family has one,
+  and an **isometric 3D view**. The HTML sheet uses a responsive two-column
+  grid; the native PDF draws the additional views side by side with captions
+  and keeps them vector. Single-view families still get the construction view
+  plus the isometric view.
 - Native PDF construction sheets and simulation reports now keep the
   construction view, auxiliary view, and simulation charts as **vector
   graphics** when an SVG source is available. The construction sheet falls

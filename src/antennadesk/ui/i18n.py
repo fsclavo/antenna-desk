@@ -2893,6 +2893,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Construction view",
         Language.SPANISH: "Vista de construcción",
     },
+    "construction.isometric_view": {
+        Language.ENGLISH: "Isometric view",
+        Language.SPANISH: "Vista isométrica",
+    },
+    "construction.additional_views": {
+        Language.ENGLISH: "Additional views",
+        Language.SPANISH: "Vistas adicionales",
+    },
     "construction.installation_view": {
         Language.ENGLISH: "Installation view (front)",
         Language.SPANISH: "Vista de instalación (frontal)",

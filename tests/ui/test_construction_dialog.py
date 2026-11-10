@@ -70,6 +70,26 @@ def test_construction_dialog_embeds_a_construction_figure(
     assert "construction-figure" in dialog._browser.toHtml()
 
 
+def test_construction_dialog_embeds_an_isometric_view(
+    qtbot: QtBot,
+    sample_project: Project,
+) -> None:
+    image = QImage(200, 150, QImage.Format.Format_RGB32)
+    image.fill(QColor("white"))
+    dialog = ConstructionDialog(
+        Translator(Language.ENGLISH),
+        sample_project,
+        sample_project.designs[0],
+        None,
+        isometric_image=image,
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._isometric_data_uri is not None
+    assert dialog._isometric_data_uri.startswith("data:image/png;base64,")
+    assert "isometric-view" in dialog._browser.toHtml()
+
+
 def test_construction_dialog_embeds_an_installation_view(
     qtbot: QtBot,
     sample_project: Project,
