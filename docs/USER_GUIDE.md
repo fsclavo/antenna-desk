@@ -1261,6 +1261,12 @@ driven by an explicit optimizer descriptor for the current family. There is no
 generic dipole fallback: a family either has its own descriptor or the action is
 disabled with an explanation.
 
+While a run is active, the dialog shows a determinate progress bar with the
+completed evaluations and the estimated total. The estimate is an upper bound:
+the optimizer may converge early and the bar completes when the run stops. The
+family dialog also shows the best score seen so far; updates are throttled so
+large budgets stay responsive.
+
 ### Variables and topology
 
 The dialog lists every optimizer variable, grouped into **Geometry**, **Feed**,

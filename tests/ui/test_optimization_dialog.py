@@ -7,6 +7,7 @@ from helpers import wait_for_condition
 from PySide6.QtWidgets import QDialog
 from pytestqt.qtbot import QtBot
 
+from antennadesk.application.cancellation import EventCancelToken
 from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.common.validation import Diagnostic
@@ -25,6 +26,7 @@ from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.ui.dialogs.optimization_dialog import OptimizationDialog
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem
+from antennadesk.ui.widgets.task_progress import TaskProgressState
 
 
 class AnalyticalSolver:
@@ -124,8 +126,15 @@ def test_optimization_dialog_runs_and_selects_length(qtbot: QtBot) -> None:
     dialog.show()
 
     dialog._run.click()
+
+    assert dialog._task_progress.isHidden() is False
+    assert dialog._task_progress.state is TaskProgressState.RUNNING
+    assert dialog._task_progress.progress_maximum == dialog._run_estimated_evaluations
+
     wait_for_condition(lambda: dialog._thread is None, timeout_ms=5_000)
 
+    assert dialog._task_progress.state is TaskProgressState.COMPLETED
+    assert "Completed" in dialog._task_progress.text
     assert dialog._result is not None
     assert dialog._result.status is LengthOptimizationStatus.CONVERGED
     assert dialog.selected_length_m() == pytest.approx(20.3, abs=0.01)
@@ -346,3 +355,56 @@ def test_optimization_dialog_balances_swr_and_gain(qtbot: QtBot) -> None:
     assert dialog._result.status is LengthOptimizationStatus.CONVERGED
     assert dialog.selected_dimension_m() == pytest.approx(20.3, abs=0.1)
     assert dialog._result.best_score is not None
+
+
+def test_optimization_dialog_reports_estimated_evaluations(qtbot: QtBot) -> None:
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    )
+    dialog = OptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalSolver(),
+        parameters,
+        SimulationSpec(
+            frequency_plan=FrequencyPlan.single(7_100_000.0),
+            far_field=FarFieldRequest(enabled=False),
+        ),
+    )
+    qtbot.addWidget(dialog)
+    dialog._run_estimated_evaluations = 16
+    dialog._last_progress_emit = 0.0
+    dialog._task_progress.begin_determinate(16, "optimize.running")
+
+    dialog._on_progress(5)
+
+    assert dialog._task_progress.progress_value == 5
+    assert "5 / ~16" in dialog._task_progress.text
+
+
+def test_optimization_dialog_marks_progress_as_cancelling(qtbot: QtBot) -> None:
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    )
+    dialog = OptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalSolver(),
+        parameters,
+        SimulationSpec(
+            frequency_plan=FrequencyPlan.single(7_100_000.0),
+            far_field=FarFieldRequest(enabled=False),
+        ),
+    )
+    qtbot.addWidget(dialog)
+    dialog._task_progress.begin_determinate(10, "optimize.running")
+    dialog._cancel_token = EventCancelToken()
+
+    dialog._cancel_run()
+
+    assert dialog._task_progress.state is TaskProgressState.CANCELLING
+    assert dialog._task_progress.text == "Cancelling..."

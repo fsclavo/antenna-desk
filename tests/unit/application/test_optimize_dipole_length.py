@@ -123,6 +123,37 @@ def test_optimizes_length_and_computes_sensitivity() -> None:
     assert max(solver.lengths) == pytest.approx(22.0)
 
 
+def test_reports_monotonic_evaluation_progress() -> None:
+    solver = AnalyticalDipoleSolver()
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    )
+    base_spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.sweep(6_900_000.0, 7_300_000.0, 21),
+        far_field=FarFieldRequest(enabled=True),
+    )
+    seen: list[int] = []
+
+    result = OptimizeDipoleLength(solver).execute(
+        OptimizeDipoleLengthCommand(
+            parameters=parameters,
+            base_spec=base_spec,
+            optimization_spec=LengthOptimizationSpec(
+                min_length_m=18.0,
+                max_length_m=22.0,
+                max_evaluations=12,
+                reactance_tolerance_ohm=0.05,
+            ),
+            progress=seen.append,
+        )
+    )
+
+    assert seen == list(range(1, len(seen) + 1))
+    assert seen[-1] == len(result.evaluations) + len(result.sensitivity)
+
+
 def test_target_impedance_search_reports_swr_against_the_target() -> None:
     solver = AnalyticalDipoleSolver()
     parameters = DipoleParameters(

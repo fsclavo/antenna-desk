@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import math
+import time
 
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QCloseEvent
@@ -41,7 +42,7 @@ from ...domain.optimization.descriptor import (
     FamilyOptimizationObjective,
     OptimizationWeights,
 )
-from ...domain.optimization.engine import BudgetProfile, budget_for
+from ...domain.optimization.engine import BudgetProfile, OptimizationStatus, budget_for
 from ...domain.optimization.summary import (
     OptimizationMode,
     OptimizationRecommendation,
@@ -63,6 +64,7 @@ from ..units import (
     radius_from_m,
     radius_unit_key,
 )
+from ..widgets.task_progress import TaskProgressBar, TaskProgressState
 from ..workers.family_optimization_worker import FamilyOptimizationWorker
 
 _OBJECTIVE_KEYS = {
@@ -114,6 +116,8 @@ class FamilyOptimizationDialog(QDialog):
         self._ready = False
         self._updating_seed_runs = False
         self._seed_runs_user_set = False
+        self._run_estimated_evaluations = 0
+        self._last_progress_emit = 0.0
 
         self.setWindowTitle(translator.t("optimize.family_title"))
         self.resize(*scaled_dialog_size(1_100, 820))
@@ -245,6 +249,7 @@ class FamilyOptimizationDialog(QDialog):
 
         self._summary = QLabel(self)
         self._summary.setWordWrap(True)
+        self._task_progress = TaskProgressBar(translator, self)
         self._verification = QLabel(self)
         self._verification.setWordWrap(True)
         self._sensitivity = QLabel(self)
@@ -386,6 +391,7 @@ class FamilyOptimizationDialog(QDialog):
         layout.addWidget(self._verification)
         layout.addWidget(self._sensitivity)
         layout.addWidget(self._recommendations)
+        layout.addWidget(self._task_progress)
         layout.addLayout(buttons)
 
         self._ready = True
@@ -738,6 +744,31 @@ class FamilyOptimizationDialog(QDialog):
         if running:
             self._apply.setEnabled(False)
 
+    def _estimated_evaluations(self) -> int:
+        count = max(1, len(self._selected_indices()))
+        budget = budget_for(self._budget_profile(), count)
+        return max(1, (budget.total + 2 * count) * self._seed_runs.value())
+
+    def _on_progress(self, completed: int, best_score: object) -> None:
+        if self._task_progress.state is not TaskProgressState.RUNNING:
+            return
+        if self._run_estimated_evaluations <= 0:
+            return
+        now = time.monotonic()
+        if now - self._last_progress_emit < 0.1 and completed < self._run_estimated_evaluations:
+            return
+        self._last_progress_emit = now
+        total = max(1, self._run_estimated_evaluations)
+        display = min(completed, max(0, total - 1))
+        score = float(best_score) if isinstance(best_score, (int, float)) else None
+        self._task_progress.set_progress(
+            display,
+            "optimize.progress",
+            completed=completed,
+            total=total,
+            score=self._number(score),
+        )
+
     def _start(self) -> None:
         if self._thread is not None:
             return
@@ -821,10 +852,17 @@ class FamilyOptimizationDialog(QDialog):
         self._recommendations.setText("")
         self._export.setEnabled(False)
         self._apply.setEnabled(False)
+        self._run_estimated_evaluations = self._estimated_evaluations()
+        self._last_progress_emit = 0.0
+        self._task_progress.begin_determinate(
+            self._run_estimated_evaluations,
+            "optimize.running",
+        )
         thread = QThread(self)
         worker = FamilyOptimizationWorker(self._solver, command)
         worker.moveToThread(thread)
         thread.started.connect(worker.run)
+        worker.progress.connect(self._on_progress)
         worker.finished.connect(self._on_finished)
         worker.failed.connect(self._on_failed)
         worker.finished.connect(thread.quit)
@@ -844,8 +882,18 @@ class FamilyOptimizationDialog(QDialog):
             self._cancel_token.cancel()
             self._cancel.setEnabled(False)
             self._summary.setText(self._translator.t("optimize.running"))
+            self._task_progress.mark_cancelling("status.cancelling")
 
     def _on_finished(self, result: OptimizeAntennaResult) -> None:
+        if result.status is OptimizationStatus.CANCELLED:
+            self._task_progress.cancel("progress.cancelled")
+        elif result.status is OptimizationStatus.ERROR:
+            self._task_progress.fail("progress.failed")
+        else:
+            self._task_progress.complete(
+                "optimize.progress_completed",
+                count=len(result.evaluations),
+            )
         self._result = result
         self._selected_parameters = result.best_parameters
         self._populate_evaluations(result)
@@ -860,6 +908,7 @@ class FamilyOptimizationDialog(QDialog):
             )
 
     def _on_failed(self, message: str) -> None:
+        self._task_progress.fail("progress.failed")
         self._summary.setText(self._translator.t("error.optimize", message=message))
         QMessageBox.critical(
             self,

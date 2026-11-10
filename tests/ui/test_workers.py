@@ -156,6 +156,76 @@ def test_simulation_worker_reports_phases(
     assert phases == ["running", "processing"]
 
 
+@dataclass
+class _FamilyProgressCommand:
+    progress: object = None
+
+
+@dataclass
+class _LengthProgressCommand:
+    progress: object = None
+
+
+def test_family_optimization_worker_forwards_progress(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    del qtbot
+
+    class FakeUseCase:
+        def __init__(self, solver: object) -> None:
+            self.solver = solver
+
+        def execute(self, command: object) -> object:
+            command.progress(2, 1.25)  # type: ignore[attr-defined]
+            return SENTINEL
+
+    monkeypatch.setattr(family_optimization_worker, "OptimizeAntenna", FakeUseCase)
+    external: list[tuple[int, object]] = []
+    worker = family_optimization_worker.FamilyOptimizationWorker(
+        object(),
+        _FamilyProgressCommand(
+            progress=lambda completed, score: external.append((completed, score))
+        ),  # type: ignore[arg-type]
+    )
+    progress: list[tuple[int, object]] = []
+    worker.progress.connect(lambda completed, score: progress.append((completed, score)))
+
+    worker.run()
+
+    assert external == [(2, 1.25)]
+    assert progress == [(2, 1.25)]
+
+
+def test_optimization_worker_forwards_progress(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    del qtbot
+
+    class FakeUseCase:
+        def __init__(self, solver: object) -> None:
+            self.solver = solver
+
+        def execute(self, command: object) -> object:
+            command.progress(3)  # type: ignore[attr-defined]
+            return SENTINEL
+
+    monkeypatch.setattr(optimization_worker, "OptimizeAntennaDimension", FakeUseCase)
+    external: list[int] = []
+    worker = optimization_worker.OptimizationWorker(
+        object(),
+        _LengthProgressCommand(progress=external.append),  # type: ignore[arg-type]
+    )
+    progress: list[int] = []
+    worker.progress.connect(progress.append)
+
+    worker.run()
+
+    assert external == [3]
+    assert progress == [3]
+
+
 def test_band_analysis_worker_reports_progress(
     qtbot: QtBot,
     monkeypatch: pytest.MonkeyPatch,

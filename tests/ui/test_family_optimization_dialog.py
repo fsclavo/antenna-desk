@@ -8,6 +8,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog
 from pytestqt.qtbot import QtBot
 
+from antennadesk.application.cancellation import EventCancelToken
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.optimization.engine import BudgetProfile
 from antennadesk.domain.optimization.registry import optimizer_availability
@@ -17,6 +18,7 @@ from antennadesk.ui.dialogs.family_optimization_dialog import FamilyOptimization
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.pattern_resolution import far_field_request
 from antennadesk.ui.units import UnitSystem
+from antennadesk.ui.widgets.task_progress import TaskProgressState
 
 
 def _dialog(**kwargs: object) -> FamilyOptimizationDialog:
@@ -73,8 +75,15 @@ def test_family_dialog_runs_and_applies_best(qtbot: QtBot) -> None:
     dialog._budget.setCurrentIndex(dialog._budget.findData(BudgetProfile.FAST.value))
 
     dialog._start()
+
+    assert dialog._task_progress.isHidden() is False
+    assert dialog._task_progress.state is TaskProgressState.RUNNING
+    assert dialog._task_progress.progress_maximum == dialog._run_estimated_evaluations
+
     qtbot.waitUntil(lambda: dialog._thread is None, timeout=15_000)
 
+    assert dialog._task_progress.state is TaskProgressState.COMPLETED
+    assert "Completed" in dialog._task_progress.text
     result = dialog.selected_result()
     assert result is not None
     assert result.best_parameters is not None
@@ -83,6 +92,32 @@ def test_family_dialog_runs_and_applies_best(qtbot: QtBot) -> None:
 
     dialog._apply_result()
     assert dialog.result() == QDialog.DialogCode.Accepted
+
+
+def test_family_dialog_reports_estimated_evaluations(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    dialog._run_estimated_evaluations = 100
+    dialog._last_progress_emit = 0.0
+    dialog._task_progress.begin_determinate(100, "optimize.running")
+
+    dialog._on_progress(25, 0.75)
+
+    assert dialog._task_progress.progress_value == 25
+    assert "25 / ~100" in dialog._task_progress.text
+    assert "0.75" in dialog._task_progress.text
+
+
+def test_family_dialog_marks_progress_as_cancelling(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    dialog._task_progress.begin_determinate(10, "optimize.running")
+    dialog._cancel_token = EventCancelToken()
+
+    dialog._cancel_run()
+
+    assert dialog._task_progress.state is TaskProgressState.CANCELLING
+    assert dialog._task_progress.text == "Cancelling..."
 
 
 def test_family_dialog_exposes_quality_modes(qtbot: QtBot) -> None:

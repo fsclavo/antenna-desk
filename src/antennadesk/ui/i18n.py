@@ -6333,6 +6333,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Running optimization...",
         Language.SPANISH: "Ejecutando optimización...",
     },
+    "optimize.progress": {
+        Language.ENGLISH: ("Evaluations {completed} / ~{total} (estimated) · best score {score}"),
+        Language.SPANISH: (
+            "Evaluaciones {completed} / ~{total} (estimadas) · mejor puntuación {score}"
+        ),
+    },
+    "optimize.progress_length": {
+        Language.ENGLISH: "Evaluations {completed} / ~{total} (estimated)",
+        Language.SPANISH: "Evaluaciones {completed} / ~{total} (estimadas)",
+    },
+    "optimize.progress_completed": {
+        Language.ENGLISH: "Completed · {count} evaluations",
+        Language.SPANISH: "Completado · {count} evaluaciones",
+    },
     "optimize.summary": {
         Language.ENGLISH: "Status: {status} · Best dimension: {length} · X={reactance} Ω · SWR={swr}",
         Language.SPANISH: "Estado: {status} · Mejor dimensión: {length} · X={reactance} Ω · ROE={swr}",

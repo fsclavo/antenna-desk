@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 
 from ...domain.antennas.design import (
@@ -37,6 +38,7 @@ class OptimizeDipoleLengthCommand:
     base_spec: SimulationSpec
     optimization_spec: LengthOptimizationSpec
     cancel_token: CancelToken | None = None
+    progress: Callable[[int], None] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,7 +72,7 @@ class OptimizeDipoleLength:
                 far_field=FarFieldRequest(enabled=False),
             )
 
-        def evaluate(length_m: float) -> LengthEvaluation:
+        def _evaluate(length_m: float) -> LengthEvaluation:
             try:
                 model = with_primary_dimension(command.parameters, length_m).to_antenna(
                     name=base_model.name
@@ -138,6 +140,16 @@ class OptimizeDipoleLength:
                 result.status.value,
             )
             return LengthEvaluation(length_m, None, error=message)
+
+        completed_evaluations = 0
+
+        def evaluate(length_m: float) -> LengthEvaluation:
+            nonlocal completed_evaluations
+            evaluation = _evaluate(length_m)
+            completed_evaluations += 1
+            if command.progress is not None:
+                command.progress(completed_evaluations)
+            return evaluation
 
         cancel_check = (
             command.cancel_token.is_cancelled if command.cancel_token is not None else None
