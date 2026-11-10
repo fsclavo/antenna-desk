@@ -151,7 +151,7 @@ UI tests use `pytest-qt` with the Qt offscreen platform:
 - Saving writes a valid `.antennadesk` file.
 - Language switching updates actions.
 - Metric/imperial switching preserves the physical length.
-- The wizard builds a valid dipole and review page state.
+- The basic antenna dialog builds a valid dipole and restores parameters.
 
 ## Phase 4 — comparison and reports
 
@@ -381,7 +381,7 @@ Phase 6 adds tests for:
   value (`106.437 + j9.90578 Ω`).
 - Version 1 to version 2 project migration adding horizontal orientation.
 - Vertical project save/open round trip.
-- Orientation controls in the form and wizard, vertical geometry rendering,
+- Orientation controls in the form and dialog, vertical geometry rendering,
   and orientation-aware construction-sheet dimensions and feed height.
 - Simulation-run domain invariants, recording use case, schema v2 to v3
   migration, rich result round trip (currents, pattern, diagnostics, raw text,
@@ -410,8 +410,8 @@ Phase 6 adds tests for:
   tab.
 - UI type switching, conditional spacing/sides fields, automatic Plan view,
   multi-wire rendering, and optimization across generated template families.
-- Generic New Antenna wizard with type selection, type-aware geometry and
-  review pages, and inheritance of the current design type.
+- Generic New Antenna catalog with direct per-template editors, type-aware
+  geometry, and inheritance of the current design type.
 - Palette-aware diagram colors: light and dark backgrounds, axis/text/line
   contrast, and runtime updates when the Qt palette changes.
 - Geometry-view roles: Plan carries total/leg/feed construction dimensions and

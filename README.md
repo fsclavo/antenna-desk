@@ -95,9 +95,10 @@ truth for each topic, every ADR, and the archived plans.
 - Frequency-first dimension estimates for the families with a documented
   estimator, with assumptions, confidence, and optional numerical refinement.
 - Project-level Undo/Redo and hover cursors on the result charts.
-- Guided antenna wizard and a main window with a design panel, a shape-aware
-  construction sketch with a collision-aware dimension layout, front/plan
-  orthographic views, detail insets, an isometric 3D view, and results tabs.
+- Antenna catalog with direct per-template editors and a main window with a
+  design panel, a shape-aware construction sketch with a collision-aware
+  dimension layout, front/plan orthographic views, detail insets, an isometric
+  3D view, and results tabs.
 - Asynchronous simulation with cancellation, timeouts, and diagnostics.
 - Multiband analysis with family defaults, per-band solver runs, a **Bands**
   results tab, and band-aware CSV/HTML/PDF summaries.

@@ -1373,12 +1373,6 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "T2FD",
         Language.SPANISH: "T2FD",
     },
-    "wizard.name_wire": {Language.ENGLISH: "dipole", Language.SPANISH: "dipolo"},
-    "wizard.name_folded": {
-        Language.ENGLISH: "folded dipole",
-        Language.SPANISH: "dipolo plegado",
-    },
-    "wizard.name_loop": {Language.ENGLISH: "loop", Language.SPANISH: "lazo"},
     "field.height": {Language.ENGLISH: "Height", Language.SPANISH: "Altura"},
     "field.sag": {
         Language.ENGLISH: "Wire sag",
@@ -6818,46 +6812,6 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "dialog.close_simulation": {
         Language.ENGLISH: "Cancel the running simulation before closing the window.",
         Language.SPANISH: "Cancelá la simulación en curso antes de cerrar la ventana.",
-    },
-    "wizard.title": {Language.ENGLISH: "New Antenna", Language.SPANISH: "Nueva antena"},
-    "wizard.project_placeholder": {
-        Language.ENGLISH: "40 m dipole",
-        Language.SPANISH: "dipolo de 40 m",
-    },
-    "wizard.project_page": {Language.ENGLISH: "Frequency", Language.SPANISH: "Frecuencia"},
-    "wizard.project_page_desc": {
-        Language.ENGLISH: "Choose a project name, a band, or a custom frequency.",
-        Language.SPANISH: "Elegí un nombre de proyecto, una banda o una frecuencia personalizada.",
-    },
-    "wizard.geometry_page": {Language.ENGLISH: "Geometry", Language.SPANISH: "Geometría"},
-    "wizard.geometry_page_desc": {
-        Language.ENGLISH: "Suggested dimensions are starting heuristics, not universal final values.",
-        Language.SPANISH: "Las dimensiones sugeridas son heurísticas iniciales, no valores finales universales.",
-    },
-    "wizard.conductor_page": {Language.ENGLISH: "Conductor", Language.SPANISH: "Conductor"},
-    "wizard.conductor_page_desc": {
-        Language.ENGLISH: "Choose the wire material and diameter.",
-        Language.SPANISH: "Elegí el material y el diámetro del hilo.",
-    },
-    "wizard.ground_page": {Language.ENGLISH: "Ground", Language.SPANISH: "Suelo"},
-    "wizard.ground_page_desc": {
-        Language.ENGLISH: "Choose the ground model used by the simulation.",
-        Language.SPANISH: "Elegí el modelo de suelo usado por la simulación.",
-    },
-    "wizard.review_page": {Language.ENGLISH: "Review", Language.SPANISH: "Revisión"},
-    "wizard.review_page_desc": {
-        Language.ENGLISH: "Review the design. You can change it after creating it.",
-        Language.SPANISH: "Revisá el diseño. Podés cambiarlo después de crearlo.",
-    },
-    "wizard.band": {Language.ENGLISH: "Band", Language.SPANISH: "Banda"},
-    "wizard.custom": {Language.ENGLISH: "Custom", Language.SPANISH: "Personalizada"},
-    "wizard.suggest_length": {
-        Language.ENGLISH: "Suggest starting length",
-        Language.SPANISH: "Sugerir longitud inicial",
-    },
-    "wizard.review": {
-        Language.ENGLISH: "Project: {project}\nType: {type}\nFrequency: {frequency} MHz\n{primary_label}: {primary}\n{secondary_label}: {secondary}\n{height_label}: {height}\nAzimuth: {azimuth}°\nWire: {diameter} {material}\nGround: {ground}",
-        Language.SPANISH: "Proyecto: {project}\nTipo: {type}\nFrecuencia: {frequency} MHz\n{primary_label}: {primary}\n{secondary_label}: {secondary}\n{height_label}: {height}\nAzimut: {azimuth}°\nHilo: {diameter} {material}\nSuelo: {ground}",
     },
     "unit.m": {Language.ENGLISH: "m", Language.SPANISH: "m"},
     "unit.ft": {Language.ENGLISH: "ft", Language.SPANISH: "ft"},

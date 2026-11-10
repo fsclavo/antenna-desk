@@ -64,7 +64,7 @@ simulation, and measurement.
 
 ### MVP
 
-- Guided design wizard for a half-wave dipole.
+- Guided design editor for a half-wave dipole.
 - Parametric model of straight conductors.
 - Target frequency, length, height, orientation, and diameter.
 - Basic ground model compatible with the selected solver.
@@ -103,7 +103,7 @@ Adapters**. Do not use microservices: this is a local desktop application.
 ```text
 ┌────────────────────────────────────────────────────────┐
 │ Presentation: PySide6                                  │
-│ Wizard · geometry editor · charts · diagnostics        │
+│ Catalog · geometry editor · charts · diagnostics       │
 └─────────────────────────┬──────────────────────────────┘
                           │ commands / queries
 ┌─────────────────────────▼──────────────────────────────┐
@@ -178,7 +178,7 @@ antennadesk/
 │   ├── reporting/           # report model, HTML/PDF
 │   ├── ui/
 │   │   ├── viewmodels/
-│   │   ├── wizard/
+│   │   ├── dialogs/
 │   │   ├── geometry_view/
 │   │   ├── results_view/
 │   │   └── widgets/
@@ -451,7 +451,7 @@ The application must explain that:
 
 Avoid overloading the MVP. Show advanced features progressively.
 
-### Dipole wizard
+### Basic antenna editor
 
 1. Choose a band or enter a frequency.
 2. Specify orientation and available space.
@@ -776,7 +776,7 @@ independent source.
 
 ### Phase 3 — Guided MVP (P0)
 
-- Main window and wizard.
+- Main window and template editor.
 - Frequency, length, height, and diameter parameters.
 - Automatically generated geometry.
 - Asynchronous simulation.
@@ -839,7 +839,7 @@ Do not start with an attractive interface. First create a vertical slice:
 7. Save the model, configuration, and result.
 8. Reopen the project and generate a minimal report.
 
-After validating this path, implement the wizard and the GUI.
+After validating this path, implement the template editor and the GUI.
 
 ---
 

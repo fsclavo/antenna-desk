@@ -104,7 +104,7 @@ def test_new_antenna_uses_the_current_antenna_type(
 ) -> None:
     captured: dict[str, object] = {}
 
-    class FakeWizard:
+    class FakeBasicDialog:
         def __init__(self, *args: object, **kwargs: object) -> None:
             captured.update(kwargs)
 
@@ -122,16 +122,16 @@ def test_new_antenna_uses_the_current_antenna_type(
             return "loop"
 
     monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
-    monkeypatch.setattr(main_window_module, "DipoleWizard", FakeWizard)
+    monkeypatch.setattr(main_window_module, "BasicAntennaDialog", FakeBasicDialog)
     window._dirty = False
 
     window.new_antenna()
 
-    assert captured["initial_antenna_type"] == "loop"
+    assert captured["antenna_type"] == "loop"
     assert window._new_action.text() == "New Antenna..."
 
 
-def test_new_dipole_alias_still_opens_the_wizard(
+def test_new_dipole_alias_still_opens_the_catalog(
     window: MainWindow,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

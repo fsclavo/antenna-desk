@@ -7,7 +7,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pytest
-from PySide6.QtWidgets import QDialog, QWizard
+from PySide6.QtWidgets import QDialog
 
 from antennadesk.domain.antennas.beverage import beverage_parameters
 from antennadesk.domain.antennas.biquad import (
@@ -283,7 +283,7 @@ def test_every_catalog_entry_has_a_change_template_route(
             return FakeDialog(_parameters)
 
         for class_name in (
-            "DipoleWizard",
+            "BasicAntennaDialog",
             "MoxonDialog",
             "YagiDialog",
             "RingoDialog",
@@ -443,19 +443,19 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         assert calls == [expected], f"wrong New Antenna route for {key}: {calls}"
 
 
-def test_delta_and_quad_change_template_use_the_loop_wizard(
+def test_delta_and_quad_change_template_use_the_loop_dialog(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     captured: list[dict[str, object]] = []
 
-    class FakeWizard:
+    class FakeBasicDialog:
         def __init__(self, *args: object, **kwargs: object) -> None:
             captured.append(kwargs)
 
-        def exec(self) -> QWizard.DialogCode:
-            return QWizard.DialogCode.Accepted
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
 
-        def build_parameters(self) -> LoopParameters:
+        def result_parameters(self) -> LoopParameters:
             return LoopParameters(
                 frequency_hz=7_100_000.0,
                 circumference_m=40.0,
@@ -463,7 +463,7 @@ def test_delta_and_quad_change_template_use_the_loop_wizard(
                 sides=int(captured[-1].get("initial_sides") or 4),
             )
 
-    monkeypatch.setattr(main_window_module, "DipoleWizard", FakeWizard)
+    monkeypatch.setattr(main_window_module, "BasicAntennaDialog", FakeBasicDialog)
     fake_self = SimpleNamespace(
         _translator=Translator(Language.ENGLISH),
         _unit_system=UnitSystem.METRIC,
@@ -473,7 +473,7 @@ def test_delta_and_quad_change_template_use_the_loop_wizard(
         result = MainWindow._parameters_from_catalog(fake_self, key, 7_100_000.0)
         assert isinstance(result, LoopParameters)
         assert result.sides == expected_sides
-        assert captured[-1]["initial_antenna_type"] == "loop"
+        assert captured[-1]["antenna_type"] == "loop"
 
 
 ESTIMATORLESS_CATALOG_KEYS = frozenset(

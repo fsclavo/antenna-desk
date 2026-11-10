@@ -9,7 +9,7 @@ ports.
 
 ```text
 presentation
-  ui/app.py, main_window.py, wizard, widgets, workers, i18n
+  ui/app.py, main_window.py, dialogs, widgets, workers, i18n
         │
 application
   ports: ProjectRepository, AntennaSolver, CancelToken
@@ -97,7 +97,7 @@ diagnostics, rather than escaping into the UI.
 
 ```text
 MainWindow
-  ├─ DipoleWizard / DipoleForm ──► DipoleParameters
+  ├─ BasicAntennaDialog / DipoleForm ──► DipoleParameters
   ├─ UpdateDipoleDesign / CreateDipoleProject ──► immutable Project
   ├─ GeometryView (canonical AntennaModel snapshot)
   ├─ SimulationWorker (QThread) ──► RunSimulation ──► AntennaSolver

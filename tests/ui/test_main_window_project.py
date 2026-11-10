@@ -11,7 +11,7 @@ import pytest
 from helpers import wait_for_condition
 from main_window_support import FakeSolver
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QDialog, QFileDialog, QInputDialog, QMessageBox, QWizard
+from PySide6.QtWidgets import QDialog, QFileDialog, QInputDialog, QMessageBox
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.projects.project import Project
@@ -71,25 +71,26 @@ def test_new_antenna_from_the_empty_state_creates_a_project(
         def selected_key(self) -> str:
             return "wire_dipole"
 
-    class FakeWizard:
+    class FakeBasicDialog:
         def __init__(self, *args: object, **kwargs: object) -> None:
             pass
 
-        def exec(self) -> QWizard.DialogCode:
-            return QWizard.DialogCode.Accepted
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
 
-        def build_parameters(self) -> DipoleParameters:
+        def result_parameters(self) -> DipoleParameters:
             return DipoleParameters(
                 frequency_hz=7_100_000.0,
                 total_length_m=20.0,
                 height_m=8.0,
             )
 
-        def project_name(self) -> str:
-            return "First antenna"
+    def fake_get_text(*args: object, **kwargs: object) -> tuple[str, bool]:
+        return "First antenna", True
 
     monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
-    monkeypatch.setattr(main_window_module, "DipoleWizard", FakeWizard)
+    monkeypatch.setattr(main_window_module, "BasicAntennaDialog", FakeBasicDialog)
+    monkeypatch.setattr(QInputDialog, "getText", fake_get_text)
 
     window.new_antenna()
 

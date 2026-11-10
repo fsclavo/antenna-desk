@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import pytest
-from PySide6.QtWidgets import QDialog, QInputDialog, QMessageBox, QWizard
+from PySide6.QtWidgets import QDialog, QInputDialog, QMessageBox
 from pytestqt.qtbot import QtBot
 
 from antennadesk.ui import main_window as main_window_module
@@ -1013,14 +1013,14 @@ def test_change_template_to_delta_and_quad_loop_creates_real_loops(
         def selected_key(self) -> str:
             return "delta_loop"
 
-    class FakeWizard:
+    class FakeBasicDialog:
         def __init__(self, *args: object, **kwargs: object) -> None:
             self._initial_sides = kwargs.get("initial_sides")
 
-        def exec(self) -> QWizard.DialogCode:
-            return QWizard.DialogCode.Accepted
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
 
-        def build_parameters(self) -> LoopParameters:
+        def result_parameters(self) -> LoopParameters:
             return LoopParameters(
                 frequency_hz=7_100_000.0,
                 circumference_m=40.0,
@@ -1029,7 +1029,7 @@ def test_change_template_to_delta_and_quad_loop_creates_real_loops(
             )
 
     monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
-    monkeypatch.setattr(main_window_module, "DipoleWizard", FakeWizard)
+    monkeypatch.setattr(main_window_module, "BasicAntennaDialog", FakeBasicDialog)
     monkeypatch.setattr(
         QMessageBox,
         "question",
@@ -1056,12 +1056,12 @@ def test_new_delta_and_quad_loop_pass_the_expected_side_count(
 ) -> None:
     captured: dict[str, object] = {}
 
-    class FakeWizard:
+    class FakeBasicDialog:
         def __init__(self, *args: object, **kwargs: object) -> None:
             captured.update(kwargs)
 
-        def exec(self) -> QWizard.DialogCode:
-            return QWizard.DialogCode.Rejected
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Rejected
 
     class FakeCatalog:
         def __init__(self, *args: object, **kwargs: object) -> None:
@@ -1074,10 +1074,10 @@ def test_new_delta_and_quad_loop_pass_the_expected_side_count(
             return "quad_loop"
 
     monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
-    monkeypatch.setattr(main_window_module, "DipoleWizard", FakeWizard)
+    monkeypatch.setattr(main_window_module, "BasicAntennaDialog", FakeBasicDialog)
     window._dirty = False
 
     window.new_antenna()
 
-    assert captured["initial_antenna_type"] == "loop"
+    assert captured["antenna_type"] == "loop"
     assert captured["initial_sides"] == 4

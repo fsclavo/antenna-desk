@@ -528,6 +528,21 @@ class DipoleForm(QWidget):
         self._update_type_controls()
         self._emit_changed()
 
+    def set_change_template_visible(self, visible: bool) -> None:
+        """Show or hide the template-change button for a modal editor."""
+
+        self._change_template.setVisible(visible)
+
+    def set_frequency_hz(self, frequency_hz: float) -> None:
+        """Set the design frequency without changing the other fields."""
+
+        self._frequency.setValue(frequency_hz / 1_000_000.0)
+
+    def set_sides(self, sides: int) -> None:
+        """Set the loop side count."""
+
+        self._sides.setValue(sides)
+
     def _set_orientation(self, value: str) -> None:
         index = self._orientation.findData(value)
         if index >= 0:

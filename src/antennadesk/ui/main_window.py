@@ -43,7 +43,6 @@ from PySide6.QtWidgets import (
     QToolButton,
     QVBoxLayout,
     QWidget,
-    QWizard,
 )
 
 from .. import __version__
@@ -217,6 +216,7 @@ from .dialogs.antenna_catalog_dialog import (
 )
 from .dialogs.balun_loss_dialog import BalunLossDialog
 from .dialogs.band_analysis_dialog import BandAnalysisDialog
+from .dialogs.basic_antenna_dialog import BasicAntennaDialog
 from .dialogs.beverage_dialog import BeverageDialog
 from .dialogs.biquad_dialog import BiquadDialog
 from .dialogs.comparison_dialog import ComparisonDialog
@@ -311,7 +311,6 @@ from .widgets.trap_yagi_form import TrapYagiForm
 from .widgets.vertical_form import VerticalForm
 from .widgets.yagi_form import YagiForm
 from .widgets.zepp_form import ZeppForm
-from .wizard.dipole_wizard import DipoleWizard
 from .workers.band_analysis_worker import BandAnalysisWorker
 from .workers.save_project_worker import SaveProjectWorker
 from .workers.simulation_worker import SimulationWorker
@@ -4687,19 +4686,19 @@ class MainWindow(QMainWindow):
                 CATALOG_TYPE_DELTA_LOOP: 3,
                 CATALOG_TYPE_QUAD_LOOP: 4,
             }.get(selected)
-            wizard = DipoleWizard(
+            dialog: Any = BasicAntennaDialog(
                 self._translator,
                 self._unit_system,
-                initial_frequency_hz=frequency_hz,
-                initial_antenna_type=antenna_type,
+                self,
+                antenna_type=antenna_type,
+                frequency_hz=frequency_hz,
                 initial_sides=initial_sides,
-                parent=self,
             )
-            if wizard.exec() != QWizard.DialogCode.Accepted:
+            if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
-            return wizard.build_parameters()
+            return dialog.result_parameters()
         if selected == CATALOG_TYPE_MOXON:
-            dialog: Any = MoxonDialog(
+            dialog = MoxonDialog(
                 self._translator,
                 self._unit_system,
                 self,
@@ -5171,33 +5170,29 @@ class MainWindow(QMainWindow):
         initial_frequency = 7_100_000.0
         if self._project is not None and self._design_id is not None:
             initial_frequency = self._project.design_by_id(self._design_id).parameters.frequency_hz
-        wizard = DipoleWizard(
+        dialog = BasicAntennaDialog(
             self._translator,
             self._unit_system,
-            initial_frequency_hz=initial_frequency,
-            initial_antenna_type=antenna_type,
+            self,
+            antenna_type=antenna_type,
+            frequency_hz=initial_frequency,
             initial_sides=initial_sides,
-            parent=self,
         )
-        if wizard.exec() != QWizard.DialogCode.Accepted:
+        if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        try:
-            parameters = wizard.build_parameters()
-            project = CreateDipoleProject().execute(
-                CreateDipoleProjectCommand(
-                    project_name=wizard.project_name(),
-                    variant_name="Initial",
-                    parameters=parameters,
-                )
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-            return
-        self._set_project(
-            project,
-            project.designs[0].id,
-            path=None,
-            dirty=True,
+        if antenna_type == CATALOG_TYPE_WIRE_DIPOLE:
+            default_name = "Wire dipole"
+        elif antenna_type == CATALOG_TYPE_FOLDED_DIPOLE:
+            default_name = "Folded dipole"
+        elif initial_sides == 3:
+            default_name = "Delta loop"
+        elif initial_sides == 4:
+            default_name = "Quad loop"
+        else:
+            default_name = "Loop"
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name=default_name,
         )
 
     def new_dipole(self) -> None:

@@ -248,28 +248,31 @@ delta-loop, quad-loop, and magnetic-loop presets; the loop editor switches the
 plane with the **Orientation** field. The Vertical family includes the generic vertical radiator,
 the inverted-L, the half square, the bobtail curtain, and the loaded
 vertical / mobile whip preset. The catalog
-shows a short description and evidence level for each type. For specialized
-templates, choose the template first, complete
-its generator dialog, and then confirm the project name with a suggested name
-such as “40m Ringo”. The basic dipole/folded/loop wizard includes the project
-name in its first page.
+shows a short description and evidence level for each type. For every
+template, choose the type first, complete its single editor dialog, and then
+confirm the project name with a suggested name such as “40m Ringo”. The basic
+dipole, folded dipole, and loop templates open the same variable editor used
+after creation; there is no multi-page wizard.
 
 ### Basic templates
 
-For a wire dipole, folded dipole, or loop, the guided wizard asks for:
+For a wire dipole, folded dipole, or loop, the editor opens directly with
+frequency-aware starting dimensions:
 
-1. Project name, antenna type, band, and frequency.
-2. Geometry for the selected type: wire dipole length/orientation, folded
-   dipole element length/spacing, or loop circumference, side count, and
-   orientation. The suggested length is a heuristic, not a universal final
-   dimension.
-3. Wire material and diameter.
-4. Ground model. Finite ground asks for relative permittivity and conductivity.
+1. Frequency, then the geometry for the selected type: wire dipole
+   length/orientation, folded dipole element length/spacing, or loop
+   circumference, side count, and orientation. The suggested length is a
+   heuristic, not a universal final dimension.
+2. Wire material and diameter.
+3. Ground model. Finite ground asks for relative permittivity and conductivity.
    A **Soil preset** list provides typical starting values for average soil /
    clay, rich soil / loam, dry sand, rocky soil, fresh water, and salt water.
    The two numeric fields remain editable; changing either one switches the
    preset to **Custom / measured**.
-5. A summary before creating the project.
+4. Optional frequency sweep start/stop/points and reference impedance.
+
+Confirm the editor with **OK**, then confirm the project name. The full design
+panel remains available after creation for later changes.
 
 The soil presets are broad HF starting points adapted from the ARRL/Terman
 ground table. Moisture, frequency, and local geology change the real values, so
