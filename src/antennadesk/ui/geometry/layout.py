@@ -57,7 +57,7 @@ class PlacedDimension:
     text_angle: float = 0.0
 
 
-_OFFSETS = (18.0, 30.0, 44.0, 60.0, 78.0, 98.0, 120.0)
+_OFFSETS = (18.0, 30.0, 44.0, 60.0, 78.0, 98.0, 120.0, 145.0, 175.0, 210.0)
 
 
 def _inflate(rect: QRectF, amount: float = 2.0) -> QRectF:
@@ -124,6 +124,7 @@ def layout_dimensions(
     placed: list[PlacedDimension] = []
     label_obstacles = [_inflate(rect, 1.0) for rect in reserved]
     line_obstacles = [_inflate(rect, 1.0) for rect in reserved]
+    placed_label_obstacles: list[QRectF] = []
     geometry_obstacle = _inflate(geometry_rect, 2.0)
     offsets = tuple(value * offset_scale for value in _OFFSETS)
 
@@ -159,6 +160,11 @@ def layout_dimensions(
                 text_rect = _text_rect(label_center, text, metrics)
                 if not safe_rect.contains(text_rect):
                     continue
+                # Overlapping labels are a hard failure: drop the dimension
+                # instead of drawing unreadable text. Reserved areas remain
+                # soft obstacles so the most important labels can still win.
+                if any(text_rect.intersects(obstacle) for obstacle in placed_label_obstacles):
+                    continue
                 if leader_only:
                     line_rect = _line_rect(
                         QPointF((start.x() + end.x()) / 2.0, (start.y() + end.y()) / 2.0),
@@ -166,7 +172,9 @@ def layout_dimensions(
                     )
                 else:
                     line_rect = _line_rect(line_start, line_end)
-                if not safe_rect.contains(line_rect):
+                # The painter clips to safe_rect; keep the label inside but let
+                # the dimension line run past the edge when the text still fits.
+                if not safe_rect.intersects(line_rect):
                     continue
 
                 score = 0
@@ -217,6 +225,7 @@ def layout_dimensions(
             continue
         placed.append(best[1])
         label_obstacles.append(_inflate(best[1].text_rect, 1.0))
+        placed_label_obstacles.append(_inflate(best[1].text_rect, 1.0))
         line_obstacles.append(_inflate(_line_rect(best[1].line_start, best[1].line_end), 1.0))
 
     return tuple(placed)
@@ -249,6 +258,7 @@ def layout_angular_dimensions(
     placed: list[PlacedAngularDimension] = []
     label_obstacles = [_inflate(rect, 1.0) for rect in (*reserved, *occupied_labels)]
     line_obstacles = [_inflate(rect, 1.0) for rect in reserved]
+    placed_label_obstacles = [_inflate(rect, 1.0) for rect in occupied_labels]
     radii = tuple(value * radius_scale for value in (32.0, 44.0, 58.0, 74.0, 92.0))
 
     for dimension in sorted(
@@ -289,6 +299,8 @@ def layout_angular_dimensions(
             if not safe_rect.contains(text_rect):
                 continue
             if not safe_rect.intersects(arc_rect):
+                continue
+            if any(text_rect.intersects(obstacle) for obstacle in placed_label_obstacles):
                 continue
             score = 0
             for obstacle in label_obstacles:
@@ -336,6 +348,7 @@ def layout_angular_dimensions(
             continue
         placed.append(best[1])
         label_obstacles.append(_inflate(best[1].text_rect, 1.0))
+        placed_label_obstacles.append(_inflate(best[1].text_rect, 1.0))
         line_obstacles.append(_inflate(best[1].arc_rect, 1.0))
 
     return tuple(placed)

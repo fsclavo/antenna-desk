@@ -208,3 +208,85 @@ def test_angular_dimension_labels_fit_without_overlap(qtbot: QtBot) -> None:
         assert safe.contains(first.text_rect)
         for second in placed[index + 1 :]:
             assert not first.text_rect.intersects(second.text_rect)
+
+
+class _WideMetrics:
+    """Deterministic wide metrics, independent of the platform font."""
+
+    def __init__(self, char_width: float = 12.0, height: float = 15.0) -> None:
+        self._char_width = char_width
+        self._height = height
+
+    def boundingRect(self, text: str) -> QRectF:
+        return QRectF(0.0, -self._height, len(text) * self._char_width, self._height)
+
+
+def _same_line_scene() -> GeometryScene:
+    return GeometryScene(
+        dimensions=(
+            Dimension(
+                start=ScenePoint(-10.5, 0.0),
+                end=ScenePoint(10.5, 0.0),
+                text="reflector 21.00 m",
+                side="left",
+                priority=90,
+            ),
+            Dimension(
+                start=ScenePoint(-9.5, 0.0),
+                end=ScenePoint(9.5, 0.0),
+                text="director 19.00 m",
+                side="right",
+                priority=90,
+            ),
+        )
+    )
+
+
+def _same_line_transform(safe: QRectF) -> SceneTransform:
+    return SceneTransform(
+        center_scene=ScenePoint(0.0, 0.0),
+        center_screen=safe.center(),
+        scale=15.0,
+        pan=QRectF().topLeft(),
+    )
+
+
+def test_wide_font_metrics_use_larger_offsets_instead_of_overlapping() -> None:
+    scene = _same_line_scene()
+    safe = QRectF(12.0, 54.0, 876.0, 342.0)
+    transform = _same_line_transform(safe)
+    geometry = QRectF(safe.center().x() - 160.0, safe.center().y() - 10.0, 320.0, 20.0)
+
+    placed = layout_dimensions(
+        scene,
+        transform,
+        safe,
+        geometry,
+        (),
+        _WideMetrics(char_width=12.0),  # type: ignore[arg-type]
+    )
+
+    assert len(placed) == 2
+    for index, first in enumerate(placed):
+        assert safe.contains(first.text_rect)
+        for second in placed[index + 1 :]:
+            assert not first.text_rect.intersects(second.text_rect)
+
+
+def test_layout_drops_a_label_when_every_position_overlaps() -> None:
+    scene = _same_line_scene()
+    safe = QRectF(0.0, 0.0, 400.0, 60.0)
+    transform = _same_line_transform(safe)
+    geometry = QRectF(0.0, 25.0, 400.0, 10.0)
+
+    placed = layout_dimensions(
+        scene,
+        transform,
+        safe,
+        geometry,
+        (),
+        _WideMetrics(char_width=18.0),  # type: ignore[arg-type]
+    )
+
+    assert len(placed) == 1
+    assert safe.contains(placed[0].text_rect)

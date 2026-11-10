@@ -7124,7 +7124,10 @@ class MainWindow(QMainWindow):
         widest = max(
             form.minimumSizeHint().width() for form, _scroll, _base_max_width in self._form_panels
         )
-        return max(380, min(680, widest + 24))
+        # Font metrics differ across platforms. Let the panel grow to the
+        # widest form instead of clipping large-font layouts; each form still
+        # lives in a QScrollArea for narrow windows.
+        return max(380, widest + 24)
 
     def _update_form_panel_widths(self) -> None:
         for form, scroll, base_max_width in self._form_panels:

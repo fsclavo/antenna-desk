@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Construction-view dimension labels no longer overlap when the system font is
+  wider than the development font (notably on Windows); a label that cannot be
+  placed without overlapping another label is omitted instead of drawn on top.
+- Large-font Spanish forms now widen the design panel to the widest form
+  instead of being clipped at a fixed 680 px.
+
 ## [0.3.0] - 2026-11-10
 
 ### Added
