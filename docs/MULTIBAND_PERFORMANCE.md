@@ -107,6 +107,26 @@ each batch waits for its slowest band and solver startup is a fixed cost. The
 sequential `parallel_workers=1` path is unchanged and remains the command
 default.
 
+## Solver wait fix re-measurement (2026-11-10)
+
+After E5 replaced the adapter's fixed 50 ms poll sleep with `Popen.wait`, the
+same six cases were re-run with the same method.
+
+| Design | Bands | Sequential s | 4 workers s | Speedup |
+|---|---:|---:|---:|---:|
+| OCFD 40 m | 3 | 0.40 | 0.30 | 1.3× |
+| G5RV | 3 | 0.42 | 0.31 | 1.4× |
+| G5RV | 5 | 0.67 | 0.55 | 1.2× |
+| G5RV | 8 | 1.12 | 0.82 | 1.4× |
+| Fan dipole 40/20/10 m | 3 | 0.42 | 0.28 | 1.5× |
+| Fan dipole wide | 8 | 1.20 | 0.84 | 1.4× |
+
+The sequential path is 10–20 % faster; the four-worker speedup is now
+**1.2–1.5×** because the sequential baseline improved more than the parallel
+one. Parent peak RSS is **403 MiB** sequential and **415 MiB** with four
+workers (+12 MiB); per-solver memory is unchanged. The per-band architecture
+and the bounded worker pool remain the decision.
+
 Reproduce with:
 
 ```bash
