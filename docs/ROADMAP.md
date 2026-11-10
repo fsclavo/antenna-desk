@@ -111,6 +111,10 @@ Completed:
   and SHA-256 checksums. Signing is optional and deferred.
 - `v0.2.0` adds inverted-L and horizontal/sky-loop generators, schema 10,
   the soil presets, asynchronous project saves, and the band-analysis UI.
+- `v0.3.0` adds the construction-view and reporting overhaul, localized
+  sheets/reports with vector PDF figures and multi-view grids, direct basic
+  antenna editors, the expanded family catalog through schema 31, and shortened
+  loaded EFHW presets.
 
 Deferred:
 
