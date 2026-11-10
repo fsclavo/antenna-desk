@@ -68,13 +68,53 @@ external service and must not be invented or simulated into existence.
 | ~~G21~~ | ~~Multi-view construction sheet~~ | M | G17 | **Done 2026-11-09:** the sheet shows the dimensioned construction view, the complementary front/top view when available, and an isometric 3D view. HTML uses a responsive grid; the native PDF draws the additional views side by side with captions and keeps them vector. Families without a complementary view still get construction plus isometric. |
 | ~~G22~~ | ~~Shortened loaded EFHW presets~~ | M | none | **Done 2026-11-09:** added 80-10 m (20.35 m + 110 µH + 2.39 m) and 40-20-10 m (10.01 m + 23 µH + 1.85 m) end-fed presets with a 49:1 transformer, editable series loading coil, schema 31, catalog routes, editor, band plans, evidence, construction notes, and optimizer variables. Matching unit, capacitor, choke, ground, and the inverted-L bend remain limitations. |
 | ~~G23~~ | ~~EFHW feed-section and convergence model~~ | M | G22 | **Done 2026-11-10:** end-fed designs use a fixed 0.5 m feed section (three segments, part of the same wire) and, when no real counterpoise is enabled, a 0.10 m installation-return proxy for the coax/mast/earth path. The proxy is modeled but not drawn or included in the wire schedule/BOM; the shortened EFHW presets use it by default. The editor warns about legacy/no-return models and provides **Check convergence** over 10/21/51 radiator segments; the check keeps the normal three-segment minimum on auxiliary wires so the shortened presets complete instead of failing with negative resistance. Schema 32 migrates older projects with both fields at zero. |
+| G24 | Fixed loading-coil node for the shortened EFHW | M | G22, G23 | Split the radiator at `loading_coil_offset_m` into lower and upper sections so the coil stays at an exact physical node. Keep the total wire length, published dimensions, and one-conductor construction. The convergence check varies only the lower/upper radiator segmentation, not the coil position. The scene, wire schedule/BOM, and construction sheet show one physical wire plus a coil marker; tests cover geometry, convergence, scene, persistence, reports, and the optimizer variable mapping. |
+| G25 | Model the 49:1 matching unit and primary 100 pF capacitor | L | G24; traceable transformer data/measurement; 40-20-10 schematic | **Blocked on a traceable transformer model/measurement and confirmation that the PA0EJH 100 pF is across the primary.** G0KYA places the 100 pF across the centre pin and earth on the input (the transformer primary); K1RF also describes it across the transformer primary. Model the ideal 49:1 with optional leakage inductance and a primary shunt capacitor through `MatchingNetwork`/`PiNetwork`, never as a series load in the radiator. Persist the fields, add a schema migration (0 for old projects, 100 pF for new shortened presets), expose editor hints, and update reports, evidence, and tests. Compare sweeps with the published SWR ranges as a trend only, not as a hard reference. |
+| G26 | Inverted-L option for the shortened EFHW | M | G24 | Add an optional bend (vertical rise plus horizontal run) using the G0KYA starting installation (about 8 m vertical and 15 m horizontal) while keeping the straight horizontal default. Update the scene, dimensions, construction notes, reports, and tests. Do not treat the bend as a new antenna family. |
+| G27 | Optional transformer and common-mode choke losses | M–L | G25; traceable loss data/measurement | **Blocked on measurement or a traceable loss model.** Add optional unun efficiency/core loss and common-mode choke/coax loss to the shortened model; defaults remain ideal/zero. Show the assumptions in reports and evidence, and test both the disabled and enabled paths. Do not invent loss numbers. |
+| G28 | Shortened EFHW convergence and optimizer policy | M | G24, G25, G26 | Re-run the 10/21/51 convergence check with the fixed coil node and matching unit. Decide whether the shortened presets converge on R/X only or R/X/SWR, update the dialog text and tests, and document why. Add matching capacitance and leakage to the family optimizer only if the validated model supports it; otherwise return an explicit unavailable reason. Reassess the published-SWR comparison and the evidence level. |
 | ~~E4~~ | ~~Diagnose high-radial phased-array runtime and numerical validity~~ | S–M | C1 | **Done 2026-11-08:** 4×36 quarter-wave radial screens produced 267 wire crossings, 890 segments, 25.3 s, and negative primary resistance. Halving the radial length or using 2 m radials removed the crossings and completed. The editor now warns when `2 × radial length > element spacing`; ideal-source power absorption remains documented separately. |
 | ~~E5~~ | ~~Diagnose low CPU during family optimization~~ | S | none | **Done 2026-11-10:** the nec2c adapter slept 50 ms per solver run even when `nec2c` finished in about 1 ms. It now uses `Popen.wait(timeout=...)`, which returns as soon as the child exits and keeps the interval only for cancellation checks. A 226-evaluation dipole optimization went from 11.8 s to 0.47 s on one worker and from 5.2 s to 0.30 s on four. Local-search batching was measured and reverted: it did not reduce wall time and changed evaluation counts. |
 | ~~E6~~ | ~~Multi-seed verification for Thorough~~ | M | E2 | **Done 2026-11-10:** the optimizer runs 1–4 consecutive seeds (Thorough defaults to 3), selects the best-scoring result, and stores the winning seed and verification metrics. The dialog shows the score/parameter spread and warns when the designs diverge; integer and choice variables must match exactly. A real 40/20/10 m OCFD run with three seeds converged to 20.90311 m with score spread 0.0 and parameter spread 4.7e-8. |
+| H1 | Tooltip/help infrastructure and UI help style guide | S | none | Add the `help.<key>` translation convention and `Translator.optional()`; add a Qt-only `ui/help.py` helper that resolves an explicit help key, a family-specific override, then an existing `<key>_hint` fallback. Extend `FormLabels` to set tooltips on labels and paired controls and refresh them in `retranslate()`; give `DipoleForm._label` the same behavior. Document a short style guide (1–2 sentences, 80–180 characters, plain text with manual line breaks where needed, no formulas, no full documentation, prioritize fields users cannot infer from the label). Tests cover key resolution, fallback, retranslation, and raw-key avoidance. No domain, solver, persistence, or dependency changes. |
+| H2 | Common field, section, tab, and action tooltips | S–M | H1 | Cover the 33 shared `field.*` labels (frequency, length, height, azimuth, wire diameter/radius, material, ground, soil preset, permittivity, conductivity, reference impedance, sweep, template, etc.) plus the main sections: design panel, advanced simulation, sweep, pattern, band plan, solver, results tabs, geometry controls, and primary actions. Set help on both labels and controls, keep label help available for disabled widgets, and keep English and Spanish in sync. Tests assert label/control/tab/action tooltips and the disabled-label fallback. |
+| H3 | Family-specific and dialog tooltips | M–L | H1, H2 | Add help for the remaining family-specific labels (OCFD feed/transformer, Yagi/Moxon elements/match/polarization, vertical radials/loading coil/top hat, trap dipole/Yagi, magnetic loop, phased vertical, quad/hexbeam, discone, Beverage, loaded dipole, etc.) and the parameter rows in the 19 dialog layouts (feed line, loads, matching network, balun loss, transmission lines, optimizer, synthesis, custom, measurement). Add per-family overrides for ambiguous shared keys such as `field.height` and `field.spacing`, reuse existing `*_hint` text where appropriate, and do not duplicate the user guide. Describe model semantics only; do not add numerical references or performance promises. |
+| H4 | Results, tables, accessibility, and help coverage audit | S–M | H3 | Add tooltips to result tab headers, technical table headers, chart controls, status indicators, and remaining secondary actions. Add `accessibleDescription` and an optional **What's This?** mode for longer explanations so tooltips are not the only keyboard path. Add a coverage manifest/test that every new field or section has English and Spanish help, enforce the length limit, and reject raw keys. Document the maintenance rule in `AGENTS.md` or the UI documentation. Manual QA covers light/dark themes, 100–200% scaling, Spanish text, and disabled controls. |
+| P1 | Shared task-progress widget and state model | S | none | Add a Qt-only `TaskProgressBar` widget with an explicit idle/running/cancelling/completed/cancelled/error state model. It exposes indeterminate and determinate modes, a label, and reset/finish helpers; all text comes from `ui/i18n.py` in English and Spanish. Tests cover state transitions, retranslation, and idle visibility. No domain, solver, or persistence changes. |
+| P2 | Simulation progress feedback | S | P1 | Drive the shared progress bar from `MainWindow.simulate()`: indeterminate while the solver runs, elapsed-time text, and coarse phase labels (preparing model, running NEC-2, processing results). Reset on finish, failure, and cancellation; keep the existing Cancel action. Do not derive a percentage from `timeout_s` or elapsed time. Tests cover start, finish, error, cancel, and status-bar visibility. |
+| P3 | Band-analysis progress bar | S | P1 | Use the existing `BandAnalysisWorker.progress(index, total, band)` signal for a determinate bar (`maximum=total`, `value=index`) and an "Analyzing bands i/n: band" label. Cover both the automatic multi-band Simulate path for fan dipoles and the explicit Analyze Bands action. Tests cover sequential and parallel progress ordering and completion. |
+| P4 | Family optimizer progress bar | S–M | P1 | Forward the existing `OptimizeAntennaCommand.progress(completed, best_score)` callback through `FamilyOptimizationWorker` as a Qt signal and show an estimated determinate bar in `FamilyOptimizationDialog`. The denominator is the evaluation upper bound `(budget.total + 2 * active_variables) * seed_runs`, not the solver-run estimate; label it "estimated", throttle updates to about 10 Hz or 1%, and set 100% on finish even when the optimizer converges early. Show the completed count and best score. Tests cover signal forwarding, monotonic progress, early convergence, cancellation, and no widget access from the worker thread. |
+| P5 | Length optimizer progress bar | S–M | P1 | Add a progress callback to `OptimizeDipoleLengthCommand`/`OptimizeDipoleLength.execute` from the `evaluate` wrapper, forward it through `OptimizationWorker`, and show the bar in `OptimizationDialog`. The estimated denominator is `max_evaluations + 2 * len(sensitivity_offsets_m)`; complete on finish for early convergence and label the estimate. Tests cover count semantics, sensitivity evaluations, cancellation, and dialog state. |
+| P6 | Element and synthesis optimizer progress bars | M | P1, P4, P5 | Extend the pattern to `OptimizeElementsCommand` and `SynthesizeAntennaCommand`, their workers, and their dialogs. Use each command's maximum evaluation budget as the estimated denominator, throttle updates, and complete on finish. Tests cover each dialog's bar and cancellation. |
+| P7 | True per-frequency simulation progress | L | P2; ADR; benchmark; D4 decision | **Deferred until a benchmark shows a practical need.** Choose between chunked frequency-plan execution and version-tolerant incremental output parsing. Chunking must aggregate `SimulationResult` safely and preserve source, pattern, feed-line, matching-network, and cancellation semantics; parsing must handle partial writes. Add an ADR and benchmark before implementation. Do not use `timeout_s` or elapsed time as a fake percentage. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
 | D4 | Segmented frequency plan in one NEC deck | M | solver benchmark | Deferred; current per-band batching is intentional |
+
+## Progress feedback (2026-11-10 analysis)
+
+The progress-feedback queue follows these rules:
+
+- Use a **determinate** bar only when the unit is real: bands for band
+  analysis, evaluations for optimizers. Use an **indeterminate** bar plus
+  elapsed time and phase text for a single solver run.
+- Estimated optimizers use an upper-bound denominator. The bar must be
+  monotonic, must not stick when the engine converges early, and must reach
+  100% on finish. Label the value as estimated.
+- Do not mix units: `OptimizeAntenna` progress counts evaluations, while the
+  dialog budget hint estimates solver runs (evaluations × frequency points ×
+  scenarios × seeds). Show evaluations or add a weighted callback before
+  showing solver runs.
+- The domain and application layers emit plain callbacks; Qt workers
+  translate them into signals. Never touch widgets from a worker thread.
+- Throttle updates (about 10 Hz or 1% steps) for large budgets and parallel
+  workers.
+- Keep every user-visible string in `ui/i18n.py` with English and Spanish in
+  sync.
+- Do not fake a percentage from `timeout_s`, elapsed time, or a fixed
+  estimate. If a true per-frequency percentage is required, implement P7
+  behind an ADR and benchmark.
 
 ## Deferred product work
 
@@ -94,6 +134,7 @@ decision:
 | Custom/imported geometry optimization | Deliberately unavailable because arbitrary geometry has no parameterized topology | [`ADR/0026-family-optimizer-architecture.md`](ADR/0026-family-optimizer-architecture.md) |
 | Physical antenna validation | Blocked on measurements; tracked as B4 above | [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
 | Segmented frequency plan in one NEC deck | Deferred until a benchmark shows a practical need | [`MULTIBAND_PERFORMANCE.md`](MULTIBAND_PERFORMANCE.md), D4 above |
+| True per-frequency simulation progress | Needs an ADR and benchmark to choose between chunked execution and incremental parsing; not justified until simulations are long enough | P7 above, D4 above |
 | Live VNA control, additional full-wave engines, and release signing | Need hardware, an engine decision, or release credentials | D1–D3 above, [`ROADMAP.md`](ROADMAP.md) |
 
 ## Solver runtime notes (2026-11-08)
@@ -183,15 +224,23 @@ model and solver contract must land first.
 
 ## Recommended order
 
-1. All queue items except **B4**, **C3**, and **D1–D4** are complete; see the
-   queue table above.
-2. **B4** waits for a coupled-fan measurement. **C3** is blocked on a
+1. **G24** is the next shortened-EFHW correctness item; **G26** can follow.
+   **G25**, **G27**, and **G28** remain blocked on traceable transformer/loss
+   data or measurement.
+2. **H1** is the foundation for the tooltip/help queue; **H2–H4** follow.
+3. **P1** is the foundation for progress feedback. **P2–P3** deliver the first
+   visible Simulate and band-analysis progress; **P4–P5** add family and
+   length optimizer progress. **P6** extends the pattern to element and
+   synthesis optimization. **P7** is deferred until an ADR and benchmark show
+   a practical need.
+4. **B4** waits for a coupled-fan measurement. **C3** is blocked on a
    transposed boom feed-line model; do not substitute independent ideal
    sources, because NEC2C reported negative primary-feed resistance in the
    prototype.
-3. **D1–D4** remain deferred until the required hardware, engine, or release
-   decision exists.
-4. Product priorities and new antenna candidates live in
+5. **D1–D3** remain deferred until the required hardware, engine, or release
+   decision exists. **D4** stays deferred; coordinate it with P7 before
+   changing the frequency-plan execution model.
+6. Product priorities and new antenna candidates live in
    [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
 ## Technical debt pass (2026-11-08)
@@ -227,8 +276,10 @@ model and solver contract must land first.
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
 - Last commits: the v0.3.1 cross-platform dimension-label release and its
   coverage restoration, the nec2c wait fix (E5), shortened loaded EFHW presets
-  (G22), the EFHW feed-section/convergence model (G23), multi-view construction sheet, localized report diagnostics and
-  evidence, translated catalog names, construction-view pass (G1–G18), direct
-  basic-antenna editor, report localization, vector native PDF figures, solver
-  timeout and parallel analysis, the biquad/Beverage evidence review, and the
-  UI type/coverage debt pass.
+  (G22), the EFHW feed-section/convergence model (G23), the shortened
+  horizontal default and convergence-check fix, multi-view construction sheet,
+  localized report diagnostics and evidence, translated catalog names,
+  construction-view pass (G1–G18), direct basic-antenna editor, report
+  localization, vector native PDF figures, solver timeout and parallel
+  analysis, the biquad/Beverage evidence review, and the UI type/coverage debt
+  pass.
