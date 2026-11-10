@@ -220,6 +220,12 @@ class FamilyOptimizationDialog(QDialog):
         self._locked_hint.setWordWrap(True)
         self._locked_hint.setVisible(False)
 
+        self._context_note = QLabel(self)
+        self._context_note.setWordWrap(True)
+        if descriptor.context_note_key:
+            self._context_note.setText(translator.t(descriptor.context_note_key))
+        self._context_note.setVisible(descriptor.context_note_key is not None)
+
         self._table = QTableWidget(len(self._variables), 6, self)
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
@@ -319,6 +325,8 @@ class FamilyOptimizationDialog(QDialog):
         form.addRow(self._max_turning_label, self._max_turning)
         form.addRow(self._budget_hint)
         form.addRow(self._max_swr_row)
+        if descriptor.context_note_key:
+            form.addRow(self._context_note)
 
         self._table.setHorizontalHeaderLabels(
             [

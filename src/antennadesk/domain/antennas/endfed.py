@@ -16,6 +16,7 @@ from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
 from .load import SeriesLoad
+from .matching_network import MatchingNetwork, PiNetwork
 from .materials import COPPER, ConductorMaterial
 from .wire import Wire
 
@@ -59,6 +60,13 @@ SHORTENED_40_10_LOWER_LENGTH_M = 10.01
 SHORTENED_40_10_TOP_LENGTH_M = 1.85
 SHORTENED_40_10_INDUCTANCE_H = 23e-6
 SHORTENED_EFHW_TRANSFORMER_RATIO = 49.0
+# G0KYA, K1RF, and G4AON describe the 100 pF capacitor across the 50-ohm
+# primary of the 49:1 transformer. The leakage value is an editable starting
+# estimate from a published 49:1 transformer measurement (Squash Practice,
+# 5T/30T on two FT114-43 cores), not a measurement of the exact G0KYA or
+# PA0EJH build. Use 0 for an ideal transformer.
+SHORTENED_EFHW_MATCHING_CAPACITANCE_F = 100e-12
+SHORTENED_EFHW_TRANSFORMER_LEAKAGE_H = 198e-9
 
 
 class EndFedPreset(StrEnum):
@@ -105,6 +113,8 @@ class EndFedParameters:
     material: ConductorMaterial = COPPER
     ground: GroundModel = FREE_SPACE
     transformer_ratio: float = 1.0
+    matching_capacitance_f: float = 0.0
+    transformer_leakage_inductance_h: float = 0.0
     counterpoise_length_m: float = 0.0
     counterpoise_height_m: float = 0.1
     counterpoise_azimuth_deg: float | None = None
@@ -128,6 +138,11 @@ class EndFedParameters:
         ensure_non_negative(self.end_height_m, name="end_height_m")
         ensure_positive(self.wire_radius_m, name="wire_radius_m")
         ensure_positive(self.transformer_ratio, name="transformer_ratio")
+        ensure_non_negative(self.matching_capacitance_f, name="matching_capacitance_f")
+        ensure_non_negative(
+            self.transformer_leakage_inductance_h,
+            name="transformer_leakage_inductance_h",
+        )
         object.__setattr__(self, "preset", EndFedPreset(self.preset))
         ensure_non_negative(self.counterpoise_length_m, name="counterpoise_length_m")
         ensure_non_negative(self.counterpoise_height_m, name="counterpoise_height_m")
@@ -168,6 +183,17 @@ class EndFedParameters:
     @property
     def coil_active(self) -> bool:
         return self.loading_coil_enabled and self.loading_coil_inductance_h > 0.0
+
+    @property
+    def matching_network_active(self) -> bool:
+        return self.matching_capacitance_f > 0.0 or self.transformer_leakage_inductance_h > 0.0
+
+    @property
+    def uses_impedance_only_convergence(self) -> bool:
+        return self.preset in {
+            EndFedPreset.SHORTENED_80_10,
+            EndFedPreset.SHORTENED_40_10,
+        }
 
     @property
     def feed_section_active(self) -> bool:
@@ -421,6 +447,17 @@ def endfed_segmentation_overrides(
     return tuple(overrides)
 
 
+def endfed_matching_network(parameters: EndFedParameters) -> MatchingNetwork | None:
+    """Return the primary-side matching network for an end-fed design."""
+
+    if not parameters.matching_network_active:
+        return None
+    return PiNetwork(
+        series_inductance_h=parameters.transformer_leakage_inductance_h,
+        input_shunt_capacitance_f=parameters.matching_capacitance_f,
+    )
+
+
 def endfed_model_warning_keys(parameters: EndFedParameters) -> tuple[str, ...]:
     """Return user-visible warning keys for a numerically fragile model."""
 
@@ -429,6 +466,11 @@ def endfed_model_warning_keys(parameters: EndFedParameters) -> tuple[str, ...]:
         keys.append("endfed.warning.feed_section")
     if parameters.effective_return_length_m <= 0.0:
         keys.append("endfed.warning.return")
+    if (
+        parameters.matching_capacitance_f > 0.0
+        and parameters.transformer_leakage_inductance_h <= 0.0
+    ):
+        keys.append("endfed.warning.matching_leakage")
     return tuple(keys)
 
 
@@ -526,6 +568,8 @@ def shortened_efhw_80_10_parameters(
             else ground
         ),
         transformer_ratio=SHORTENED_EFHW_TRANSFORMER_RATIO,
+        matching_capacitance_f=SHORTENED_EFHW_MATCHING_CAPACITANCE_F,
+        transformer_leakage_inductance_h=SHORTENED_EFHW_TRANSFORMER_LEAKAGE_H,
         loading_coil_enabled=True,
         loading_coil_offset_m=SHORTENED_80_10_LOWER_LENGTH_M,
         loading_coil_inductance_h=SHORTENED_80_10_INDUCTANCE_H,
@@ -571,6 +615,8 @@ def shortened_efhw_40_10_parameters(
             else ground
         ),
         transformer_ratio=SHORTENED_EFHW_TRANSFORMER_RATIO,
+        matching_capacitance_f=SHORTENED_EFHW_MATCHING_CAPACITANCE_F,
+        transformer_leakage_inductance_h=SHORTENED_EFHW_TRANSFORMER_LEAKAGE_H,
         loading_coil_enabled=True,
         loading_coil_offset_m=SHORTENED_40_10_LOWER_LENGTH_M,
         loading_coil_inductance_h=SHORTENED_40_10_INDUCTANCE_H,

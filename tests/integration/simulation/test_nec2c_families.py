@@ -783,6 +783,8 @@ def test_endfed_convergence_check_handles_shortened_presets(
         CheckEndFedConvergenceCommand,
     )
     from antennadesk.domain.antennas.endfed import (
+        EndFedPreset,
+        endfed_matching_network,
         shortened_efhw_40_10_parameters,
         shortened_efhw_80_10_parameters,
     )
@@ -798,6 +800,7 @@ def test_endfed_convergence_check_handles_shortened_presets(
             include_conductor_losses=True,
             far_field=FarFieldRequest(enabled=False),
             feed_transformer_ratio=parameters.transformer_ratio,
+            matching_network=endfed_matching_network(parameters),
         )
 
         result = CheckEndFedConvergence(solver).execute(
@@ -806,5 +809,63 @@ def test_endfed_convergence_check_handles_shortened_presets(
 
         assert result.completed, result.error
         assert result.error is None
+        assert result.swr_informational is True
         assert len(result.points) == 3
         assert all(point.impedance_ohm.real > 0.0 for point in result.points), result.points
+        if parameters.preset is EndFedPreset.SHORTENED_80_10:
+            assert result.converged, result.points
+        else:
+            assert not result.converged, result.points
+
+
+def test_shortened_endfed_matching_network_is_applied(
+    solver: Nec2cSolver,
+) -> None:
+    from antennadesk.application.use_cases.run_simulation import (
+        RunSimulation,
+        RunSimulationCommand,
+    )
+    from antennadesk.domain.antennas.endfed import (
+        endfed_matching_network,
+        endfed_segmentation_overrides,
+        shortened_efhw_80_10_parameters,
+    )
+
+    parameters = shortened_efhw_80_10_parameters()
+    model = parameters.to_antenna(name="Shortened EFHW matching")
+    frequency_hz = 14_100_000.0
+    base_spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(frequency_hz),
+        segmentation=aligned_policy_for_model(
+            model,
+            frequency_hz,
+            SegmentationPolicy(
+                min_segments_per_wire=3,
+                wire_segments=endfed_segmentation_overrides(parameters),
+            ),
+        ),
+        far_field=FarFieldRequest(enabled=False),
+        feed_transformer_ratio=parameters.transformer_ratio,
+    )
+    without_network = RunSimulation(solver).execute(
+        RunSimulationCommand(model=model, spec=base_spec)
+    )
+    with_network = RunSimulation(solver).execute(
+        RunSimulationCommand(
+            model=model,
+            spec=SimulationSpec(
+                frequency_plan=base_spec.frequency_plan,
+                segmentation=base_spec.segmentation,
+                far_field=base_spec.far_field,
+                feed_transformer_ratio=base_spec.feed_transformer_ratio,
+                matching_network=endfed_matching_network(parameters),
+            ),
+        )
+    )
+
+    assert without_network.status is SimulationStatus.COMPLETED
+    assert with_network.status is SimulationStatus.COMPLETED
+    assert any(
+        diagnostic.code == "matching_network.applied" for diagnostic in with_network.diagnostics
+    )
+    assert with_network.frequencies[0].swr != without_network.frequencies[0].swr

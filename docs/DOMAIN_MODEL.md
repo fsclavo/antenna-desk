@@ -235,6 +235,14 @@ segments and carries the series load at its center, so segmentation changes do
 not move the coil. The wire schedule and bill of materials merge these
 partitions into one physical conductor.
 
+`matching_capacitance_f` and `transformer_leakage_inductance_h` describe an
+optional primary-side matching network: a shunt capacitor across the 49:1
+transformer input plus a series leakage inductance. It is applied by the
+simulation spec, not inserted into the wire geometry. The shortened presets
+start at 100 pF and 0.198 µH; zero disables the network. The leakage value is
+an editable starting estimate from Squash Practice's measured 49:1
+transformer, not a measurement of the exact preset build.
+
 `preset` is `endfed`, `sloper`, `random_wire`, `shortened_80_10`, or
 `shortened_40_10`. The preset is metadata for catalog routing, reports, and the
 inline editor; the geometry and matching fields remain fully editable. A

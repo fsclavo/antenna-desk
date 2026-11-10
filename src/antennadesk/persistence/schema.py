@@ -561,6 +561,8 @@ class EndFedParametersPayload(StrictModel):
     material: MaterialPayload
     ground: GroundPayload
     transformer_ratio: float = Field(default=1.0, gt=0.0)
+    matching_capacitance_f: float = Field(default=0.0, ge=0.0)
+    transformer_leakage_inductance_h: float = Field(default=0.0, ge=0.0)
     counterpoise_length_m: float = Field(default=0.0, ge=0.0)
     counterpoise_height_m: float = Field(default=0.1, ge=0.0)
     counterpoise_azimuth_deg: float | None = Field(default=None, ge=0.0, lt=360.0)
@@ -1695,6 +1697,8 @@ def _endfed_parameters_from_domain(value: EndFedParameters) -> EndFedParametersP
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
         transformer_ratio=value.transformer_ratio,
+        matching_capacitance_f=value.matching_capacitance_f,
+        transformer_leakage_inductance_h=value.transformer_leakage_inductance_h,
         counterpoise_length_m=value.counterpoise_length_m,
         counterpoise_height_m=value.counterpoise_height_m,
         counterpoise_azimuth_deg=value.counterpoise_azimuth_deg,
@@ -2817,6 +2821,8 @@ def _endfed_parameters_to_domain(value: EndFedParametersPayload) -> EndFedParame
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),
         transformer_ratio=value.transformer_ratio,
+        matching_capacitance_f=value.matching_capacitance_f,
+        transformer_leakage_inductance_h=value.transformer_leakage_inductance_h,
         counterpoise_length_m=value.counterpoise_length_m,
         counterpoise_height_m=value.counterpoise_height_m,
         counterpoise_azimuth_deg=value.counterpoise_azimuth_deg,

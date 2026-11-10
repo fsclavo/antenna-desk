@@ -246,10 +246,14 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         ),
         limitation=(
             "Starting dimensions only; the published inverted-L installation is "
-            "modeled as a straight wire. The transformer, 100 pF matching "
-            "capacitor, common-mode choke, ground, and matching losses are not "
-            "modeled. The cited comparison is 8-12 dB below a dipole on 80 m. "
-            "Scaled or edited geometry is experimental."
+            "modeled as a straight wire. The 49:1 transformer uses an ideal "
+            "ratio with an optional primary 100 pF shunt and 0.198 µH leakage "
+            "starting estimate; core loss, winding capacitance, capacitor ESR, "
+            "common-mode choke, ground, and matching losses are not modeled. The "
+            "leakage value is from Squash Practice's measured 49:1 transformer, "
+            "not this exact build. The cited comparison is 8-12 dB below a dipole "
+            "on 80 m. Convergence is judged on R/X stability; SWR remains "
+            "informational. Scaled or edited geometry is experimental."
         ),
     ),
     "shortened_endfed_40_10": EvidenceEntry(
@@ -262,11 +266,16 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         ),
         tolerance="Starting dimensions only; no independent R/X or pattern tolerance is published",
         limitation=(
-            "The matching unit, 100 pF capacitor, choke, ground, and installation "
-            "are not modeled, and the model uses a straight wire. CA4EMT "
-            "documents a different 40-20-10 variant (34 µH, 1.6 m top, 1:8, "
-            "150 pF); this preset follows the 23 µH/100 pF schematic. Scaled or "
-            "edited geometry is experimental."
+            "The 49:1 transformer uses an ideal ratio with an optional primary "
+            "100 pF shunt and 0.198 µH leakage starting estimate; core loss, "
+            "winding capacitance, capacitor ESR, choke, ground, installation, "
+            "and matching losses are not modeled, and the model uses a straight "
+            "wire. The leakage value is from Squash Practice's measured 49:1 "
+            "transformer, not this exact build. CA4EMT documents a different "
+            "40-20-10 variant (34 µH, 1.6 m top, 1:8, 150 pF); this preset "
+            "follows the 23 µH/100 pF schematic. Scaled or edited geometry is "
+            "experimental. Convergence is judged on R/X stability; SWR remains "
+            "informational."
         ),
     ),
     "sloper": EvidenceEntry(

@@ -523,10 +523,11 @@ is at ground level it is a 0.10 m wire on the ground plane. The real coax
 routing dominates the SWR. The editor warns when either the fixed feed section
 or the return/counterpoise is missing. **Check convergence** runs the same
 design with 10, 21, and 51 radiator segments and reports the R, X, and SWR
-spread; an unresolved result means the absolute SWR is segmentation-sensitive
-and should be verified with a VNA. The shortened presets show an additional
-note because their matching capacitor is not modeled, so their absolute SWR is
-not a construction target.
+spread. For the shortened presets the verdict uses **R and X only** (absolute R
+spread up to 1 Ω and X spread up to 10 Ω); the SWR is informational because the
+matching unit is not fully modeled. The 80-10 preset is impedance-converged
+with the current model; the 40-20-10 preset remains R/X-sensitive. Verify the
+installed SWR with a VNA.
 
 ### Shortened EFHW with a loading coil
 
@@ -551,12 +552,16 @@ at a fixed node: the radiator is partitioned at the published coil offset, and
 the coil section keeps three segments, so changing the radiator segmentation
 does not move the coil. The wire schedule and bill of materials still show one
 physical conductor.
-The matching unit, capacitor, common-mode choke, ground, and support geometry
-are not modeled, and the published inverted-L bend is represented by a
-straight wire. The 40-20-10 preset follows the 23 µH/100 pF schematic; CA4EMT
-documents a different 34 µH/150 pF variant. Edited or frequency-scaled geometry
-is experimental. Automatic frequency-first estimation is disabled for these
-loaded presets.
+The 100 pF capacitor is modeled as an ideal **primary shunt** across the 49:1
+transformer; the transformer leakage is an editable starting value (0.198 µH)
+from Squash Practice's measured 49:1 transformer, not this exact build. The
+common-mode choke, ground, support geometry, core loss, winding capacitance,
+capacitor ESR, and the published inverted-L bend are not modeled. The 40-20-10 preset follows the
+23 µH/100 pF schematic; CA4EMT documents a different 34 µH/150 pF variant.
+Edited or frequency-scaled geometry is experimental. Automatic frequency-first
+estimation is disabled for these loaded presets. The matching capacitor and
+transformer leakage remain context values in the family optimizer; they are not
+optimized until a measured transformer model is available.
 
 The frequency is the **design frequency** for the half-wave radiator; the
 matching transformer and counterpoise remain installation-specific. Use

@@ -11,7 +11,7 @@ from dataclasses import replace
 from ...antennas.beverage import BeverageParameters
 from ...antennas.biquad import BiquadParameters
 from ...antennas.discone import DisconeParameters
-from ...antennas.endfed import EndFedParameters
+from ...antennas.endfed import EndFedParameters, EndFedPreset
 from ...antennas.fan_dipole import FanDipoleParameters, FanElement
 from ...antennas.folded_dipole import FoldedDipoleParameters
 from ...antennas.hexbeam import HexbeamParameters
@@ -97,6 +97,7 @@ def _descriptor(
     default_objective: FamilyOptimizationObjective = FamilyOptimizationObjective.TARGET_IMPEDANCE,
     *,
     supports_boom_constraint: bool = False,
+    context_note_key: str | None = None,
 ) -> AntennaOptimizerDescriptor:
     return AntennaOptimizerDescriptor(
         key=key,
@@ -107,6 +108,7 @@ def _descriptor(
         objectives=COMMON_OBJECTIVES,
         default_objective=default_objective,
         supports_boom_constraint=supports_boom_constraint,
+        context_note_key=context_note_key,
     )
 
 
@@ -725,7 +727,18 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
                 )
         return collect(*issues)
 
-    return _descriptor("endfed", tuple(variables), initial, build, validate)
+    return _descriptor(
+        "endfed",
+        tuple(variables),
+        initial,
+        build,
+        validate,
+        context_note_key=(
+            "optimize.endfed.matching_context"
+            if parameters.preset in {EndFedPreset.SHORTENED_80_10, EndFedPreset.SHORTENED_40_10}
+            else None
+        ),
+    )
 
 
 def fan_dipole_descriptor(parameters: FanDipoleParameters) -> AntennaOptimizerDescriptor:

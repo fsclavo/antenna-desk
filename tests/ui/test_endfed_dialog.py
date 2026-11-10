@@ -22,6 +22,8 @@ def test_endfed_dialog_builds_parameters(qtbot: QtBot) -> None:
     assert parameters.length_m > 0.0
     assert parameters.feed_height_m == 10.0
     assert parameters.transformer_ratio == 49.0
+    assert parameters.matching_capacitance_f == 0.0
+    assert parameters.transformer_leakage_inductance_h == 0.0
     assert parameters.counterpoise_length_m == 0.0
     assert parameters.feed_section_length_m == pytest.approx(0.5)
     assert parameters.installation_return_length_m == pytest.approx(0.1)
@@ -63,6 +65,24 @@ def test_endfed_dialog_checks_segment_convergence(qtbot: QtBot) -> None:
     assert "Converged" in dialog._check_result.text()
 
 
+def test_shortened_dialog_exposes_the_primary_matching_network(qtbot: QtBot) -> None:
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        preset=EndFedPreset.SHORTENED_80_10,
+        solver=FakeSolver(),
+    )
+    qtbot.addWidget(dialog)
+
+    parameters = dialog.parameters()
+
+    assert parameters.matching_capacitance_f == pytest.approx(100e-12)
+    assert parameters.transformer_leakage_inductance_h == pytest.approx(198e-9)
+    assert dialog._form._matching_capacitance.value() == pytest.approx(100.0)
+    assert dialog._form._transformer_leakage.value() == pytest.approx(0.198)
+    assert "matching 100 pF" in dialog._form._geometry.text()
+
+
 def test_endfed_dialog_shortened_convergence_reports_the_matching_limitation(
     qtbot: QtBot,
 ) -> None:
@@ -76,7 +96,9 @@ def test_endfed_dialog_shortened_convergence_reports_the_matching_limitation(
 
     dialog._check_button.click()
 
-    assert "matching capacitor" in dialog._check_result.text()
+    assert "primary 100 pF shunt" in dialog._check_result.text()
+    assert "SWR is informational" in dialog._check_result.text()
+    assert "Impedance converged" in dialog._check_result.text()
 
 
 def test_endfed_dialog_warns_about_a_legacy_feed_model(qtbot: QtBot) -> None:
@@ -197,6 +219,8 @@ def test_shortened_efhw_reference_buttons_switch_geometry(qtbot: QtBot) -> None:
     assert parameters.preset is EndFedPreset.SHORTENED_40_10
     assert parameters.length_m == pytest.approx(11.86, abs=1e-3)
     assert parameters.loading_coil_offset_m == pytest.approx(10.01, abs=1e-3)
+    assert parameters.matching_capacitance_f == pytest.approx(100e-12)
+    assert parameters.transformer_leakage_inductance_h == pytest.approx(198e-9)
 
 
 def test_endfed_dialog_restores_existing_geometry(qtbot: QtBot) -> None:

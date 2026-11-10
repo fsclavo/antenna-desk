@@ -25,6 +25,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   no longer moves the coil. The wire schedule and bill of materials still
   report one physical conductor. This makes the convergence check measure the
   same antenna at every segment count.
+- The shortened EFHW presets now model the published **100 pF matching
+  capacitor** as an ideal shunt across the 49:1 transformer primary, together
+  with an editable **0.198 µH transformer leakage** starting estimate. The
+  leakage value comes from a measured 49:1 transformer, not the exact preset
+  build; core loss, winding capacitance, capacitor ESR, choke, ground, and the
+  inverted-L bend remain unmodeled. Schema 33 migrates older projects with both
+  fields at zero, preserving their previous model.
+- The shortened EFHW **Check convergence** verdict now uses **R and X only**
+  for the 80-10 and 40-20-10 presets: absolute R spread up to 1 Ω and X spread
+  up to 10 Ω. The SWR is shown as informational because the matching unit is
+  not fully modeled. With the current model the 80-10 preset is
+  impedance-converged and the 40-20-10 preset remains R/X-sensitive. The
+  matching capacitor and transformer leakage stay as optimizer context values,
+  with an explicit note that they are not optimized until a measured
+  transformer model is available.
 - Opening a project now reads, decompresses, migrates, and validates it in a
   worker thread with a window-modal busy progress dialog, so large saved
   projects no longer freeze the UI. The project is applied only after

@@ -24,7 +24,11 @@ from ...application.use_cases.check_endfed_convergence import (
     CheckEndFedConvergenceCommand,
     EndFedConvergenceResult,
 )
-from ...domain.antennas.endfed import EndFedParameters, EndFedPreset
+from ...domain.antennas.endfed import (
+    EndFedParameters,
+    EndFedPreset,
+    endfed_matching_network,
+)
 from ...domain.design.band_plan import BandPlan, default_band_plan
 from ...domain.simulation.far_field import FarFieldRequest
 from ...domain.simulation.frequency import FrequencyPlan
@@ -142,6 +146,7 @@ class EndFedDialog(QDialog):
             segmentation=SegmentationPolicy(min_segments_per_wire=1),
             far_field=FarFieldRequest(enabled=False),
             feed_transformer_ratio=parameters.transformer_ratio,
+            matching_network=endfed_matching_network(parameters),
         )
         command = CheckEndFedConvergenceCommand(
             parameters=parameters,
@@ -211,24 +216,35 @@ class EndFedDialog(QDialog):
             f"X {point.impedance_ohm.imag:+.1f}, SWR {point.swr:.2f}"
             for point in convergence.points
         )
-        self._check_result.setText(
-            self._translator.t(
+        if convergence.swr_informational:
+            status_key = (
+                "endfed.convergence_impedance_converged"
+                if convergence.converged
+                else "endfed.convergence_impedance_unresolved"
+            )
+            text = self._translator.t(
+                "endfed.convergence_result_impedance",
+                status=self._translator.t(status_key),
+                points=points,
+                resistance_spread=convergence.resistance_spread_ohm or 0.0,
+                reactance_spread=convergence.reactance_spread_ohm or 0.0,
+            )
+        else:
+            status_key = (
+                "endfed.convergence_converged"
+                if convergence.converged
+                else "endfed.convergence_unresolved"
+            )
+            text = self._translator.t(
                 "endfed.convergence_result",
-                status=self._translator.t(
-                    "endfed.convergence_converged"
-                    if convergence.converged
-                    else "endfed.convergence_unresolved"
-                ),
+                status=self._translator.t(status_key),
                 points=points,
                 swr_spread=convergence.swr_spread or 0.0,
                 resistance_spread=convergence.resistance_spread_fraction or 0.0,
                 reactance_spread=convergence.reactance_spread_ohm or 0.0,
             )
-        )
-        if parameters.preset in {
-            EndFedPreset.SHORTENED_80_10,
-            EndFedPreset.SHORTENED_40_10,
-        }:
+        self._check_result.setText(text)
+        if convergence.swr_informational:
             self._check_result.setText(
                 self._check_result.text()
                 + "\n"

@@ -95,6 +95,7 @@ from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import (
     EndFedParameters,
     EndFedPreset,
+    endfed_matching_network,
     endfed_segmentation_overrides,
 )
 from ..domain.antennas.family import antenna_family
@@ -3651,6 +3652,7 @@ class MainWindow(QMainWindow):
             ),
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
             feed_transformer_ratio=parameters.transformer_ratio,
+            matching_network=endfed_matching_network(parameters),
         )
 
     def _j_pole_simulation_spec(self, parameters: JPoleParameters) -> SimulationSpec:

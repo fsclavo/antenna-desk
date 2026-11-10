@@ -208,6 +208,8 @@ REPORT_SPANISH: dict[str, str] = {
     "Total length": "Longitud total",
     "Total wire length": "Longitud total del hilo",
     "Transformer": "Transformador",
+    "Matching capacitor": "Capacitor de adaptación",
+    "Transformer leakage": "Fuga del transformador",
     "Transmission lines": "Líneas de transmisión",
     "Trap capacitance": "Capacitancia de la trampa",
     "Trap frequency": "Frecuencia de la trampa",
@@ -456,6 +458,12 @@ REPORT_SPANISH: dict[str, str] = {
     "The {length} m installation return is a model proxy for the coax/mast/earth path, not a physical radial.": (  # noqa: E501
         "El retorno de instalación de {length} m es un proxy de modelo para el camino "
         "del coaxil/mástil/tierra, no una radial física."
+    ),
+    "The {capacitance} pF capacitor is an ideal shunt across the transformer primary. The {leakage} µH leakage is a starting estimate; measure your transformer. Core loss, capacitor ESR, and winding capacitance are not modeled.": (  # noqa: E501
+        "El capacitor de {capacitance} pF es un shunt ideal en el primario del "
+        "transformador. La fuga de {leakage} µH es una estimación inicial; medí tu "
+        "transformador. Las pérdidas del núcleo, el ESR del capacitor y la capacidad "
+        "de los bobinados no están modelados."
     ),
     "Cut the full {total} m wire and mark the link positions at {offset} m either side of the center. Feed the center. {coil_note} The coil model is an ideal series R-L load; tune it for the installed height and ground.": (  # noqa: E501
         "Cortá el hilo completo de {total} m y marcá las posiciones de enlace a "

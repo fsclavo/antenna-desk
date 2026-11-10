@@ -491,6 +491,27 @@ def _migrate_v31_to_v32(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v32_to_v33(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the optional primary matching network to end-fed designs."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if not isinstance(project, dict):
+        return migrated
+    designs = project.get("designs")
+    if not isinstance(designs, list):
+        return migrated
+    for design in designs:
+        if not isinstance(design, dict) or design.get("antenna_type") != "endfed":
+            continue
+        parameters = design.get("parameters")
+        if not isinstance(parameters, dict):
+            continue
+        parameters.setdefault("matching_capacitance_f", 0.0)
+        parameters.setdefault("transformer_leakage_inductance_h", 0.0)
+    return migrated
+
+
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
@@ -523,6 +544,7 @@ MIGRATIONS: dict[int, Migration] = {
     29: _migrate_v29_to_v30,
     30: _migrate_v30_to_v31,
     31: _migrate_v31_to_v32,
+    32: _migrate_v32_to_v33,
 }
 
 

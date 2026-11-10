@@ -68,10 +68,13 @@ class AntennaOptimizerDescriptor:
     supports_band_aware: bool = False
     supports_robust: bool = False
     supports_boom_constraint: bool = False
+    context_note_key: str | None = None
 
     def __post_init__(self) -> None:
         if not self.key.strip():
             raise ValueError("optimizer key must not be empty")
+        if self.context_note_key is not None and not self.context_note_key.strip():
+            raise ValueError("context note key must not be empty when provided")
         variables = apply_default_locks(self.key, self.variables)
         object.__setattr__(self, "variables", variables)
         if not variables:

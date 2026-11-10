@@ -377,6 +377,8 @@ _CONTEXT_FIELDS = {
     "element_separation_m",
     "feed_section_length_m",
     "installation_return_length_m",
+    "matching_capacitance_f",
+    "transformer_leakage_inductance_h",
 }
 
 
@@ -614,3 +616,16 @@ def test_custom_generator_is_not_silently_treated_as_custom_geometry() -> None:
 
     assert not availability.available
     assert availability.reason_key == "optimize.unavailable.custom_generator"
+
+
+def test_shortened_endfed_optimizer_marks_the_matching_network_as_context() -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+    from antennadesk.domain.optimization.registry import optimizer_availability
+
+    shortened = optimizer_availability(shortened_efhw_80_10_parameters())
+    standard = optimizer_availability(EndFedParameters(frequency_hz=7_100_000.0, length_m=20.0))
+
+    assert shortened.descriptor is not None
+    assert shortened.descriptor.context_note_key == "optimize.endfed.matching_context"
+    assert standard.descriptor is not None
+    assert standard.descriptor.context_note_key is None

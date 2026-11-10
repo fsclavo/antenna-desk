@@ -280,6 +280,7 @@ def test_shortened_endfed_simulation_spec_carries_the_coil(
     model = parameters.to_antenna()
 
     assert spec.feed_transformer_ratio == pytest.approx(49.0)
+    assert spec.matching_network is not None
     assert [load.id for load in model.loads] == ["endfed-loading-coil"]
     assert model.loads[0].wire_id == "endfed-loading-coil-section"
     assert model.loads[0].offset_m == pytest.approx(0.05)

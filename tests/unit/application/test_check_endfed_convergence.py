@@ -116,3 +116,45 @@ def test_radiator_segment_counts_keep_the_coil_node_and_total_count() -> None:
         assert lower >= 3
         assert upper >= 3
         assert lower + upper == total
+
+
+def test_impedance_only_result_ignores_a_large_swr_spread() -> None:
+    result = EndFedConvergenceResult(
+        points=(
+            EndFedConvergencePoint(10, complex(0.20, -8.0), 205.0),
+            EndFedConvergencePoint(21, complex(0.20, -9.0), 232.0),
+            EndFedConvergencePoint(51, complex(0.20, -12.0), 300.0),
+        ),
+        swr_informational=True,
+    )
+
+    assert result.converged
+    assert result.resistance_spread_ohm == pytest.approx(0.0)
+    assert result.reactance_spread_ohm == pytest.approx(4.0)
+
+
+def test_impedance_only_result_flags_a_resistance_spread() -> None:
+    result = EndFedConvergenceResult(
+        points=(
+            EndFedConvergencePoint(10, complex(0.20, -8.0), 205.0),
+            EndFedConvergencePoint(21, complex(2.20, -9.0), 232.0),
+            EndFedConvergencePoint(51, complex(1.20, -12.0), 300.0),
+        ),
+        swr_informational=True,
+    )
+
+    assert not result.converged
+    assert result.resistance_spread_ohm == pytest.approx(2.0)
+
+
+def test_standard_result_still_requires_the_swr_spread() -> None:
+    result = EndFedConvergenceResult(
+        points=(
+            EndFedConvergencePoint(10, complex(50.0, -1.0), 1.0),
+            EndFedConvergencePoint(21, complex(50.0, -1.0), 2.0),
+            EndFedConvergencePoint(51, complex(50.0, -1.0), 1.5),
+        )
+    )
+
+    assert not result.converged
+    assert result.swr_spread == pytest.approx(1.0)

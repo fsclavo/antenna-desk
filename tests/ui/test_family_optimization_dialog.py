@@ -359,3 +359,28 @@ def test_family_dialog_marks_locked_variables_as_partial(qtbot: QtBot) -> None:
     item.setCheckState(Qt.CheckState.Unchecked)
 
     assert dialog._locked_hint.isVisible() is True
+
+
+def test_family_dialog_shows_the_shortened_endfed_matching_context(
+    qtbot: QtBot,
+) -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+    from antennadesk.domain.optimization.registry import optimizer_availability
+
+    parameters = shortened_efhw_80_10_parameters()
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    dialog = FamilyOptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        FakeSolver(),
+        availability.descriptor,
+        SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(3.5e6, 3.8e6, 11),
+            far_field=far_field_request(5.0, parameters.ground),
+        ),
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._context_note.isVisibleTo(dialog) is True
+    assert "matching capacitor" in dialog._context_note.text()

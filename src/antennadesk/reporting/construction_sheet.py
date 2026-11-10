@@ -710,12 +710,18 @@ def render_construction_sheet(
             if parameters.installation_return_active
             else ""
         )
+        matching_rows = (
+            f"<tr><th>Matching capacitor</th><td>{parameters.matching_capacitance_f * 1e12:.1f} pF (primary shunt)</td></tr>\n"
+            f"<tr><th>Transformer leakage</th><td>{parameters.transformer_leakage_inductance_h * 1e6:.4f} µH (starting estimate)</td></tr>\n"
+            if parameters.matching_network_active
+            else ""
+        )
         feed_rows = f"""
 <tr><th>Wire length</th><td>{parameters.length_m:.4f} m</td></tr>
 {feed_section_row}<tr><th>Feed height</th><td>{parameters.feed_height_m:.4f} m</td></tr>
 <tr><th>End height</th><td>{parameters.end_height_m:.4f} m</td></tr>
 <tr><th>Transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
-<tr><th>Counterpoise</th><td>{counterpoise}</td></tr>
+{matching_rows}<tr><th>Counterpoise</th><td>{counterpoise}</td></tr>
 {installation_return_row}"""
         construction_note = _note(
             tr,
@@ -762,6 +768,21 @@ def render_construction_sheet(
                         "The {length} m installation return is a model proxy for the "
                         "coax/mast/earth path, not a physical radial.",
                         length=f"{parameters.installation_return_length_m:.4f}",
+                    )
+                )
+                + "</p>"
+            )
+        if parameters.matching_network_active:
+            construction_note += (
+                "<p>"
+                + _escape(
+                    tr(
+                        "The {capacitance} pF capacitor is an ideal shunt across the "
+                        "transformer primary. The {leakage} µH leakage is a starting "
+                        "estimate; measure your transformer. Core loss, capacitor ESR, "
+                        "and winding capacitance are not modeled.",
+                        capacitance=f"{parameters.matching_capacitance_f * 1e12:.1f}",
+                        leakage=f"{parameters.transformer_leakage_inductance_h * 1e6:.4f}",
                     )
                 )
                 + "</p>"

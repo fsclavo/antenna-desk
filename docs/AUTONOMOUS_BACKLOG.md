@@ -69,10 +69,10 @@ external service and must not be invented or simulated into existence.
 | ~~G22~~ | ~~Shortened loaded EFHW presets~~ | M | none | **Done 2026-11-09:** added 80-10 m (20.35 m + 110 µH + 2.39 m) and 40-20-10 m (10.01 m + 23 µH + 1.85 m) end-fed presets with a 49:1 transformer, editable series loading coil, schema 31, catalog routes, editor, band plans, evidence, construction notes, and optimizer variables. Matching unit, capacitor, choke, ground, and the inverted-L bend remain limitations. |
 | ~~G23~~ | ~~EFHW feed-section and convergence model~~ | M | G22 | **Done 2026-11-10:** end-fed designs use a fixed 0.5 m feed section (three segments, part of the same wire) and, when no real counterpoise is enabled, a 0.10 m installation-return proxy for the coax/mast/earth path. The proxy is modeled but not drawn or included in the wire schedule/BOM; the shortened EFHW presets use it by default. The editor warns about legacy/no-return models and provides **Check convergence** over 10/21/51 radiator segments; the check keeps the normal three-segment minimum on auxiliary wires so the shortened presets complete instead of failing with negative resistance. Schema 32 migrates older projects with both fields at zero. |
 | ~~G24~~ | ~~Fixed loading-coil node for the shortened EFHW~~ | M | G22, G23 | **Done 2026-11-10:** the radiator is split at the published coil offset into lower, coil, and top sections. The coil section is a fixed 0.10 m partition with three segments and the series load at its center, so changing the radiator segmentation no longer moves the coil. The convergence check distributes its 10/21/51 radiator counts between the lower and top sections while keeping the coil node fixed. The wire schedule and BOM merge the feed/coil/top partitions into one physical conductor, and the scene keeps a load marker at the coil. Tests cover the geometry, segmentation split, fallback when the coil is inside the feed section, wire schedule/BOM, persistence, scene contracts, and NEC2C convergence. |
-| G25 | Model the 49:1 matching unit and primary 100 pF capacitor | L | G24; traceable transformer data/measurement; 40-20-10 schematic | **Blocked on a traceable transformer model/measurement and confirmation that the PA0EJH 100 pF is across the primary.** G0KYA places the 100 pF across the centre pin and earth on the input (the transformer primary); K1RF also describes it across the transformer primary. Model the ideal 49:1 with optional leakage inductance and a primary shunt capacitor through `MatchingNetwork`/`PiNetwork`, never as a series load in the radiator. Persist the fields, add a schema migration (0 for old projects, 100 pF for new shortened presets), expose editor hints, and update reports, evidence, and tests. Compare sweeps with the published SWR ranges as a trend only, not as a hard reference. |
+| ~~G25~~ | ~~Model the 49:1 matching unit and primary 100 pF capacitor~~ | L | G24; traceable transformer data/measurement; 40-20-10 schematic | **Done 2026-11-10 with limitations:** the 100 pF capacitor is confirmed as a shunt across the transformer primary (G0KYA; K1RF; G4AON; PA0EJH/PA3HHO describe the input side) and is modeled through `PiNetwork` as an input shunt plus series leakage, never as a series load in the radiator. Schema 33 adds `matching_capacitance_f` and `transformer_leakage_inductance_h`; older projects migrate with both at zero, and new shortened presets start at 100 pF and 0.198 µH. The leakage value is a starting estimate from Squash Practice's measured 49:1 transformer, not the exact preset build; core loss, capacitor ESR, winding capacitance, the choke, ground, and the inverted-L bend remain unmodeled. UI hints, summaries, construction notes, evidence, and tests are updated; the published SWR remains a trend, not a hard reference. |
 | G26 | Inverted-L option for the shortened EFHW | M | G24 | Add an optional bend (vertical rise plus horizontal run) using the G0KYA starting installation (about 8 m vertical and 15 m horizontal) while keeping the straight horizontal default. Update the scene, dimensions, construction notes, reports, and tests. Do not treat the bend as a new antenna family. |
 | G27 | Optional transformer and common-mode choke losses | M–L | G25; traceable loss data/measurement | **Blocked on measurement or a traceable loss model.** Add optional unun efficiency/core loss and common-mode choke/coax loss to the shortened model; defaults remain ideal/zero. Show the assumptions in reports and evidence, and test both the disabled and enabled paths. Do not invent loss numbers. |
-| G28 | Shortened EFHW convergence and optimizer policy | M | G24, G25, G26 | Re-run the 10/21/51 convergence check with the fixed coil node and matching unit. Decide whether the shortened presets converge on R/X only or R/X/SWR, update the dialog text and tests, and document why. Add matching capacitance and leakage to the family optimizer only if the validated model supports it; otherwise return an explicit unavailable reason. Reassess the published-SWR comparison and the evidence level. |
+| ~~G28~~ | ~~Shortened EFHW convergence and optimizer policy~~ | M | G24, G25 | **Done 2026-11-10:** shortened presets use an impedance-only convergence verdict: absolute R spread up to 1 Ω and X spread up to 10 Ω; SWR is shown as informational because the matching unit is not fully modeled. With the current model the 80-10 preset is impedance-converged and the 40-20-10 preset remains R/X-sensitive. The matching capacitor and transformer leakage stay as optimizer context values; the optimizer dialog states that they are not optimized until a measured transformer model is available. Unit, UI, optimizer-registry, and NEC2C integration tests cover the policy; the published SWR remains a trend and the evidence level is unchanged. |
 | ~~E4~~ | ~~Diagnose high-radial phased-array runtime and numerical validity~~ | S–M | C1 | **Done 2026-11-08:** 4×36 quarter-wave radial screens produced 267 wire crossings, 890 segments, 25.3 s, and negative primary resistance. Halving the radial length or using 2 m radials removed the crossings and completed. The editor now warns when `2 × radial length > element spacing`; ideal-source power absorption remains documented separately. |
 | ~~E5~~ | ~~Diagnose low CPU during family optimization~~ | S | none | **Done 2026-11-10:** the nec2c adapter slept 50 ms per solver run even when `nec2c` finished in about 1 ms. It now uses `Popen.wait(timeout=...)`, which returns as soon as the child exits and keeps the interval only for cancellation checks. A 226-evaluation dipole optimization went from 11.8 s to 0.47 s on one worker and from 5.2 s to 0.30 s on four. Local-search batching was measured and reverted: it did not reduce wall time and changed evaluation counts. |
 | ~~E6~~ | ~~Multi-seed verification for Thorough~~ | M | E2 | **Done 2026-11-10:** the optimizer runs 1–4 consecutive seeds (Thorough defaults to 3), selects the best-scoring result, and stores the winning seed and verification metrics. The dialog shows the score/parameter spread and warns when the designs diverge; integer and choice variables must match exactly. A real 40/20/10 m OCFD run with three seeds converged to 20.90311 m with score spread 0.0 and parameter spread 4.7e-8. |
@@ -80,6 +80,11 @@ external service and must not be invented or simulated into existence.
 | H2 | Common field, section, tab, and action tooltips | S–M | H1 | Cover the 33 shared `field.*` labels (frequency, length, height, azimuth, wire diameter/radius, material, ground, soil preset, permittivity, conductivity, reference impedance, sweep, template, etc.) plus the main sections: design panel, advanced simulation, sweep, pattern, band plan, solver, results tabs, geometry controls, and primary actions. Set help on both labels and controls, keep label help available for disabled widgets, and keep English and Spanish in sync. Tests assert label/control/tab/action tooltips and the disabled-label fallback. |
 | H3 | Family-specific and dialog tooltips | M–L | H1, H2 | Add help for the remaining family-specific labels (OCFD feed/transformer, Yagi/Moxon elements/match/polarization, vertical radials/loading coil/top hat, trap dipole/Yagi, magnetic loop, phased vertical, quad/hexbeam, discone, Beverage, loaded dipole, etc.) and the parameter rows in the 19 dialog layouts (feed line, loads, matching network, balun loss, transmission lines, optimizer, synthesis, custom, measurement). Add per-family overrides for ambiguous shared keys such as `field.height` and `field.spacing`, reuse existing `*_hint` text where appropriate, and do not duplicate the user guide. Describe model semantics only; do not add numerical references or performance promises. |
 | H4 | Results, tables, accessibility, and help coverage audit | S–M | H3 | Add tooltips to result tab headers, technical table headers, chart controls, status indicators, and remaining secondary actions. Add `accessibleDescription` and an optional **What's This?** mode for longer explanations so tooltips are not the only keyboard path. Add a coverage manifest/test that every new field or section has English and Spanish help, enforce the length limit, and reject raw keys. Document the maintenance rule in `AGENTS.md` or the UI documentation. Manual QA covers light/dark themes, 100–200% scaling, Spanish text, and disabled controls. |
+| M1 | Effective matching-network precedence for EFHW | M | G25 | Implement the agreed **Override** policy: a project matching network replaces the internal EFHW matching capacitor/leakage when `matching_network_active`; with no project network, the internal network remains active. Derive `override_active`; do not persist a flag. Use one pure resolver in single simulation, band analysis, family optimization, synthesis, and the EFHW convergence check. Keep the ideal transformer ratio. Add the `matching_network.override` diagnostic and tests for the four precedence cases; document that cascade is not modeled. |
+| M2 | Matching-network visibility and override warnings | M | M1 | Add a persistent **Feed & matching** summary to the design panel with separate rows for EFHW design matching, project matching, feed line, and balun. In EndFed forms, mark internal matching values as retained but inactive while override is active, with a link to edit or remove the project network. Show the override warning in the Matching Network dialog and the optimizer dialog; update construction-sheet and design-summary rows plus the EFHW construction note. Tests cover visibility, retranslation, and hiding when there is no override. |
+| M3 | Persist the matching-network design target and preload the dialog | S–M | M1 | Add a project-level `MatchingNetworkDesign` record (frequency, load R/X, source impedance, optional origin) and persist it with schema 34 (or the next available migration); clear it when the project network is removed. Preload the dialog with stored values, add **Use current simulation point**, split Design target from Components, fix the L-only label and irrelevant Pi/T fields, and update the hint. Tests cover apply → optimize → reopen, schema round trip, and undo/redo. |
+| M4 | Create a project matching network from an impedance point | S–M | M3 | Add a context menu to the Impedance/SWR table: **Create Project Matching Network...**. Use the raw feed impedance from `source_results` (divide by the transformer ratio) rather than the post-chain `FrequencyResult.impedance_ohm`; pass frequency, load R/X, and the real reference impedance. Warn or disable when raw impedance is unavailable. Confirm replacement of an existing network and warn when the design is an EFHW with internal matching (override). Tests cover raw versus post-chain, active transformer/line/network, cancellation, and preload. |
+| M5 | Matching-network precedence ADR and user documentation | S | M1 | Record the Override policy, scope (all `EndFedParameters` with active internal matching), no-cascade limitation, project-global behavior, and how to restore the internal network. Update `docs/USER_GUIDE.md` and `CHANGELOG.md`; reference the new ADR from the matching-network documentation. |
 | P1 | Shared task-progress widget and state model | S | none | Add a Qt-only `TaskProgressBar` widget with an explicit idle/running/cancelling/completed/cancelled/error state model. It exposes indeterminate and determinate modes, a label, and reset/finish helpers; all text comes from `ui/i18n.py` in English and Spanish. Tests cover state transitions, retranslation, and idle visibility. No domain, solver, or persistence changes. |
 | P2 | Simulation progress feedback | S | P1 | Drive the shared progress bar from `MainWindow.simulate()`: indeterminate while the solver runs, elapsed-time text, and coarse phase labels (preparing model, running NEC-2, processing results). Reset on finish, failure, and cancellation; keep the existing Cancel action. Do not derive a percentage from `timeout_s` or elapsed time. Tests cover start, finish, error, cancel, and status-bar visibility. |
 | P3 | Band-analysis progress bar | S | P1 | Use the existing `BandAnalysisWorker.progress(index, total, band)` signal for a determinate bar (`maximum=total`, `value=index`) and an "Analyzing bands i/n: band" label. Cover both the automatic multi-band Simulate path for fan dipoles and the explicit Analyze Bands action. Tests cover sequential and parallel progress ordering and completion. |
@@ -91,6 +96,37 @@ external service and must not be invented or simulated into existence.
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
 | D4 | Segmented frequency plan in one NEC deck | M | solver benchmark | Deferred; current per-band batching is intentional |
+
+## Matching-network precedence (2026-11-10 analysis)
+
+G25 models the internal EFHW matching unit. The M queue defines how that model
+coexists with the project-level matching network. The agreed policy is an
+explicit **Override**, not a cascade:
+
+| Project network | EFHW internal matching | Effective network | Override |
+|---|---|---|---|
+| none | active | EFHW internal | no |
+| none | inactive | none | no |
+| active | active | project network | **yes** |
+| active | inactive | project network | no |
+
+- The project matching network is global and applies to every design.
+- On `EndFedParameters` with `matching_network_active`, it replaces the
+  internal matching capacitor and transformer-leakage model. The ideal
+  transformer ratio still applies.
+- The internal values remain in the design and project file; they are simply
+  not applied while the project network exists. Removing the project network
+  restores them.
+- No cascade of two matching networks is modeled in this stage. This is a
+  documented limitation, not a hidden approximation.
+- `override_active` is derived from the project network and the design; it is
+  not a persisted flag.
+- A single resolver must feed every path: simulation, band analysis, family
+  optimization, synthesis, the EFHW convergence check, reports, and the UI.
+- The current code replaces `spec.matching_network` unconditionally in several
+  paths, so a `None` project network can silently drop the internal EFHW
+  network. M1 must remove that behavior before adding more matching-network
+  UI.
 
 ## Progress feedback (2026-11-10 analysis)
 
@@ -224,23 +260,27 @@ model and solver contract must land first.
 
 ## Recommended order
 
-1. **G24** is the next shortened-EFHW correctness item; **G26** can follow.
-   **G25**, **G27**, and **G28** remain blocked on traceable transformer/loss
-   data or measurement.
-2. **H1** is the foundation for the tooltip/help queue; **H2–H4** follow.
+1. The shortened-EFHW correctness work (G24, G25, G28) is done. **G26** is
+   optional, and **G27** remains blocked on traceable loss data or measurement.
+2. **H1** is the next non-optional foundation for the tooltip/help queue;
+   **H2–H4** follow.
 3. **P1** is the foundation for progress feedback. **P2–P3** deliver the first
    visible Simulate and band-analysis progress; **P4–P5** add family and
    length optimizer progress. **P6** extends the pattern to element and
    synthesis optimization. **P7** is deferred until an ADR and benchmark show
    a practical need.
-4. **B4** waits for a coupled-fan measurement. **C3** is blocked on a
+4. **M1** is the matching-network correctness foundation; **M2** makes the
+   override visible, **M3** adds the design-target persistence, **M4** adds
+   the impedance-point context menu, and **M5** records the decision. Do M1
+   and M2 before M3; M3 needs the next schema migration.
+5. **B4** waits for a coupled-fan measurement. **C3** is blocked on a
    transposed boom feed-line model; do not substitute independent ideal
    sources, because NEC2C reported negative primary-feed resistance in the
    prototype.
-5. **D1–D3** remain deferred until the required hardware, engine, or release
+6. **D1–D3** remain deferred until the required hardware, engine, or release
    decision exists. **D4** stays deferred; coordinate it with P7 before
    changing the frequency-plan execution model.
-6. Product priorities and new antenna candidates live in
+7. Product priorities and new antenna candidates live in
    [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
 ## Technical debt pass (2026-11-08)
@@ -271,15 +311,16 @@ model and solver contract must land first.
 
 ## Current baseline
 
-- Schema: **32**.
-- Full gate: **2,336 passed, 0 skipped** with `NEC2C` and the optional
+- Schema: **33**.
+- Full gate: **2,347 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
 - Last commits: the v0.3.1 cross-platform dimension-label release and its
   coverage restoration, the nec2c wait fix (E5), shortened loaded EFHW presets
   (G22), the EFHW feed-section/convergence model (G23), the shortened
   horizontal default and convergence-check fix, the fixed loading-coil node
-  (G24), multi-view construction sheet, localized report diagnostics and
-  evidence, translated catalog names, construction-view pass (G1–G18), direct
-  basic-antenna editor, report localization, vector native PDF figures, solver
-  timeout and parallel analysis, the biquad/Beverage evidence review, and the
-  UI type/coverage debt pass.
+  (G24), the primary matching-unit model (G25), the shortened impedance-only
+  convergence policy (G28), multi-view construction sheet, localized report
+  diagnostics and evidence, translated catalog names, construction-view pass
+  (G1–G18), direct basic-antenna editor, report localization, vector native
+  PDF figures, solver timeout and parallel analysis, the biquad/Beverage
+  evidence review, and the UI type/coverage debt pass.

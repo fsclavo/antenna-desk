@@ -4540,37 +4540,44 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Published shortened EFHW: 20.35 m lower section, 110 µH loading "
             "coil, 2.39 m top section, 49:1 transformer, and a 100 pF matching "
             "capacitor. The default is horizontal at 10 m; change the feed/end "
-            "heights for a sloper or vertical run. The published inverted-L "
-            "bend, matching unit, choke, and ground are not modeled."
+            "heights for a sloper or vertical run. The primary 100 pF shunt and "
+            "0.198 µH leakage starting value are modeled; the inverted-L bend, "
+            "choke, ground, core loss, winding capacitance, and capacitor ESR "
+            "are not."
         ),
         Language.SPANISH: (
             "EFHW acortada publicada: tramo inferior de 20,35 m, bobina de carga "
             "de 110 µH, tramo superior de 2,39 m, transformador 49:1 y capacitor "
             "de adaptación de 100 pF. El valor por defecto es horizontal a 10 m; "
             "cambiá las alturas de alimentación/extremo para un sloper o "
-            "instalación vertical. El codo de la L invertida, la unidad de "
-            "adaptación, el choke y el suelo no están modelados."
+            "instalación vertical. Se modelan el shunt de 100 pF en el primario "
+            "y una fuga inicial de 0,198 µH; el codo de la L invertida, el "
+            "choke, el suelo, las pérdidas del núcleo, la capacidad de los "
+            "bobinados y el ESR del capacitor no están modelados."
         ),
     },
     "endfed.shortened_40_10_hint": {
         Language.ENGLISH: (
             "Published shortened EFHW: 10.01 m lower section, 23 µH loading "
             "coil, 1.85 m top section, 49:1 transformer, and a 100 pF matching "
-            "capacitor. The default is vertical; change the feed/end heights "
-            "for a sloper or horizontal run. The matching unit, choke, ground, "
-            "and support geometry are not modeled. CA4EMT documents a different "
-            "40-20-10 variant (34 µH, 1.6 m top, 1:8); this preset follows the "
-            "23 µH/100 pF schematic."
+            "capacitor. The default is horizontal at 10 m; change the feed/end "
+            "heights for a sloper or vertical run. The primary 100 pF shunt and "
+            "0.198 µH leakage starting value are modeled; the choke, ground, "
+            "support geometry, core loss, winding capacitance, and capacitor ESR "
+            "are not. CA4EMT documents a different 40-20-10 variant (34 µH, "
+            "1.6 m top, 1:8); this preset follows the 23 µH/100 pF schematic."
         ),
         Language.SPANISH: (
             "EFHW acortada publicada: tramo inferior de 10,01 m, bobina de carga "
             "de 23 µH, tramo superior de 1,85 m, transformador 49:1 y capacitor "
             "de adaptación de 100 pF. El valor por defecto es horizontal a 10 m; "
             "cambiá las alturas de alimentación/extremo para un sloper o "
-            "instalación vertical. La unidad de adaptación, el choke, el suelo "
-            "y la geometría de soporte no están modelados. CA4EMT documenta "
-            "otra variante de 40-20-10 (34 µH, tramo superior de 1,6 m, 1:8); "
-            "este preset sigue el esquema de 23 µH/100 pF."
+            "instalación vertical. Se modelan el shunt de 100 pF en el primario "
+            "y una fuga inicial de 0,198 µH; el choke, el suelo, la geometría de "
+            "soporte, las pérdidas del núcleo, la capacidad de los bobinados y "
+            "el ESR del capacitor no están modelados. CA4EMT documenta otra "
+            "variante de 40-20-10 (34 µH, tramo superior de 1,6 m, 1:8); este "
+            "preset sigue el esquema de 23 µH/100 pF."
         ),
     },
     "endfed.sloper_evidence": {
@@ -4600,29 +4607,35 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: (
             "Published starting dimensions from G0KYA, EA7EER, and G4WIF. "
             "The exact 110 µH / 20.35 m / 2.39 m geometry is reference-backed "
-            "for construction only; the matching unit, 100 pF capacitor, "
-            "common-mode choke, ground, and installation are not modeled."
+            "for construction only. The primary 100 pF shunt and 0.198 µH "
+            "leakage starting estimate are modeled; core loss, winding "
+            "capacitance, capacitor ESR, common-mode choke, ground, and "
+            "installation are not."
         ),
         Language.SPANISH: (
             "Dimensiones iniciales publicadas por G0KYA, EA7EER y G4WIF. La "
             "geometría exacta de 110 µH / 20,35 m / 2,39 m tiene referencia "
-            "solo para la construcción; la unidad de adaptación, el capacitor "
-            "de 100 pF, el choke de modo común, el suelo y la instalación no "
-            "están modelados."
+            "solo para la construcción. Se modelan el shunt de 100 pF en el "
+            "primario y una fuga inicial de 0,198 µH; las pérdidas del núcleo, "
+            "la capacidad de los bobinados, el ESR del capacitor, el choke de "
+            "modo común, el suelo y la instalación no están modelados."
         ),
     },
     "endfed.shortened_40_10_evidence": {
         Language.ENGLISH: (
             "Published starting dimensions from the radioaficion / PA0EJH "
-            "schematic: 23 µH / 10.01 m / 1.85 m. The matching unit, 100 pF "
-            "capacitor, choke, ground, and installation are not modeled. "
-            "CA4EMT documents a different 34 µH variant."
+            "schematic: 23 µH / 10.01 m / 1.85 m. The primary 100 pF shunt and "
+            "0.198 µH leakage starting estimate are modeled; core loss, winding "
+            "capacitance, capacitor ESR, choke, ground, and installation are "
+            "not. CA4EMT documents a different 34 µH variant."
         ),
         Language.SPANISH: (
             "Dimensiones iniciales publicadas en el esquema de radioaficion / "
-            "PA0EJH: 23 µH / 10,01 m / 1,85 m. La unidad de adaptación, el "
-            "capacitor de 100 pF, el choke, el suelo y la instalación no están "
-            "modelados. CA4EMT documenta otra variante de 34 µH."
+            "PA0EJH: 23 µH / 10,01 m / 1,85 m. Se modelan el shunt de 100 pF "
+            "en el primario y una fuga inicial de 0,198 µH; las pérdidas del "
+            "núcleo, la capacidad de los bobinados, el ESR del capacitor, el "
+            "choke, el suelo y la instalación no están modelados. CA4EMT "
+            "documenta otra variante de 34 µH."
         ),
     },
     "endfed.title": {
@@ -4673,6 +4686,43 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "endfed.transformer_ratio": {
         Language.ENGLISH: "Transformer ratio",
         Language.SPANISH: "Relación del transformador",
+    },
+    "endfed.matching_capacitance": {
+        Language.ENGLISH: "Matching capacitor (primary)",
+        Language.SPANISH: "Capacitor de adaptación (primario)",
+    },
+    "endfed.matching_capacitance_hint": {
+        Language.ENGLISH: (
+            "Ideal shunt capacitor across the 49:1 transformer primary. "
+            "100 pF is the published starting value; it compensates the "
+            "transformer leakage inductance."
+        ),
+        Language.SPANISH: (
+            "Capacitor shunt ideal en el primario del transformador 49:1. "
+            "100 pF es el valor inicial publicado; compensa la inductancia de "
+            "fuga del transformador."
+        ),
+    },
+    "endfed.transformer_leakage": {
+        Language.ENGLISH: "Transformer leakage",
+        Language.SPANISH: "Fuga del transformador",
+    },
+    "endfed.transformer_leakage_hint": {
+        Language.ENGLISH: (
+            "Primary leakage inductance. The 0.198 µH default is a starting "
+            "estimate from Squash Practice's measured 49:1 transformer, not this "
+            "exact build; "
+            "edit it or set 0 for an ideal transformer."
+        ),
+        Language.SPANISH: (
+            "Inductancia de fuga del primario. El valor inicial de 0,198 µH "
+            "es una estimación de un transformador 49:1 medido, no de esta "
+            "construcción exacta; editalo o usá 0 para un transformador ideal."
+        ),
+    },
+    "endfed.matching_summary": {
+        Language.ENGLISH: "matching {capacitance} pF + {leakage} µH leakage",
+        Language.SPANISH: "adaptación {capacitance} pF + {leakage} µH de fuga",
     },
     "endfed.counterpoise_enabled": {
         Language.ENGLISH: "Use counterpoise",
@@ -4725,6 +4775,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "depende del camino del coaxil/mástil/tierra."
         ),
     },
+    "endfed.warning.matching_leakage": {
+        Language.ENGLISH: (
+            "Primary matching capacitor without transformer leakage: set a "
+            "measured leakage or treat the capacitor as experimental."
+        ),
+        Language.SPANISH: (
+            "Capacitor de adaptación en el primario sin fuga del transformador: "
+            "ingresá una fuga medida o tratá el capacitor como experimental."
+        ),
+    },
     "endfed.convergence_check": {
         Language.ENGLISH: "Check convergence",
         Language.SPANISH: "Verificar convergencia",
@@ -4745,6 +4805,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "No convergido: el SWR absoluto es sensible a la segmentación; verificá con VNA."
         ),
     },
+    "endfed.convergence_impedance_converged": {
+        Language.ENGLISH: ("Impedance converged: R and X are stable across segment counts."),
+        Language.SPANISH: ("Impedancia convergida: R y X son estables entre segmentaciones."),
+    },
+    "endfed.convergence_impedance_unresolved": {
+        Language.ENGLISH: ("Not converged: R or X changes with segmentation."),
+        Language.SPANISH: ("No convergida: R o X cambian con la segmentación."),
+    },
     "endfed.convergence_result": {
         Language.ENGLISH: (
             "{status}\n{points}\nSWR spread {swr_spread:.3f} · R spread "
@@ -4755,14 +4823,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "{resistance_spread:.1%} · X {reactance_spread:.2f} Ω"
         ),
     },
-    "endfed.convergence_matching_note": {
+    "endfed.convergence_result_impedance": {
         Language.ENGLISH: (
-            "The shortened preset's matching capacitor is not modeled; use the "
-            "R/X stability and verify the absolute SWR with a VNA."
+            "{status}\n{points}\nR spread {resistance_spread:.2f} Ω · X "
+            "spread {reactance_spread:.2f} Ω\nSWR is informational; the "
+            "matching unit is not fully modeled."
         ),
         Language.SPANISH: (
-            "El capacitor de adaptación del preset acortado no está modelado; "
-            "usá la estabilidad de R/X y verificá el SWR absoluto con un VNA."
+            "{status}\n{points}\nDispersión de R {resistance_spread:.2f} Ω · X "
+            "{reactance_spread:.2f} Ω\nEl SWR es informativo; la unidad de "
+            "adaptación no está completamente modelada."
+        ),
+    },
+    "endfed.convergence_matching_note": {
+        Language.ENGLISH: (
+            "The primary 100 pF shunt and leakage estimate are modeled, but "
+            "core loss, capacitor ESR, winding capacitance, and the exact "
+            "transformer are not; use the R/X stability and verify the absolute "
+            "SWR with a VNA."
+        ),
+        Language.SPANISH: (
+            "Se modelan el shunt de 100 pF en el primario y la fuga estimada, "
+            "pero no las pérdidas del núcleo, el ESR del capacitor, la capacidad "
+            "de los bobinados ni el transformador exacto; usá la estabilidad de "
+            "R/X y verificá el SWR absoluto con un VNA."
         ),
     },
     "endfed.counterpoise_length": {
@@ -6474,6 +6558,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize.locked_partial": {
         Language.ENGLISH: "Partial optimization: some variables are locked.",
         Language.SPANISH: "Optimización parcial: algunas variables están bloqueadas.",
+    },
+    "optimize.endfed.matching_context": {
+        Language.ENGLISH: (
+            "The primary matching capacitor and transformer leakage stay at "
+            "their design values; they are not optimized until a measured "
+            "transformer model is available."
+        ),
+        Language.SPANISH: (
+            "El capacitor de adaptación en el primario y la fuga del "
+            "transformador quedan en sus valores de diseño; no se optimizan "
+            "hasta tener un modelo medido del transformador."
+        ),
     },
     "optimize.family_summary": {
         Language.ENGLISH: "Status: {status} · Evaluations: {count} · Best score: {score}",

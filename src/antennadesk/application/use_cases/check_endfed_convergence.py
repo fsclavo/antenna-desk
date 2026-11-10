@@ -28,6 +28,7 @@ DEFAULT_SEGMENT_COUNTS = (10, 21, 51)
 MIN_SEGMENTS_PER_WIRE = 3
 MAX_SWR_SPREAD = 0.1
 MAX_RESISTANCE_SPREAD_FRACTION = 0.05
+MAX_RESISTANCE_SPREAD_OHM = 1.0
 MAX_REACTANCE_SPREAD_OHM = 10.0
 
 
@@ -66,6 +67,7 @@ class EndFedConvergencePoint:
 class EndFedConvergenceResult:
     points: tuple[EndFedConvergencePoint, ...]
     error: str | None = None
+    swr_informational: bool = False
 
     @property
     def completed(self) -> bool:
@@ -87,6 +89,13 @@ class EndFedConvergenceResult:
         return 0.0 if mean <= 0.0 else (max(values) - min(values)) / mean
 
     @property
+    def resistance_spread_ohm(self) -> float | None:
+        if not self.completed:
+            return None
+        values = [point.impedance_ohm.real for point in self.points]
+        return max(values) - min(values)
+
+    @property
     def reactance_spread_ohm(self) -> float | None:
         if not self.completed:
             return None
@@ -95,14 +104,26 @@ class EndFedConvergenceResult:
 
     @property
     def converged(self) -> bool:
-        swr_spread = self.swr_spread
-        resistance_spread = self.resistance_spread_fraction
+        if not self.completed:
+            return False
         reactance_spread = self.reactance_spread_ohm
-        if swr_spread is None or resistance_spread is None or reactance_spread is None:
+        if reactance_spread is None:
+            return False
+        if self.swr_informational:
+            resistance_spread = self.resistance_spread_ohm
+            if resistance_spread is None:
+                return False
+            return (
+                resistance_spread <= MAX_RESISTANCE_SPREAD_OHM
+                and reactance_spread <= MAX_REACTANCE_SPREAD_OHM
+            )
+        swr_spread = self.swr_spread
+        resistance_fraction = self.resistance_spread_fraction
+        if swr_spread is None or resistance_fraction is None:
             return False
         return (
             swr_spread <= MAX_SWR_SPREAD
-            and resistance_spread <= MAX_RESISTANCE_SPREAD_FRACTION
+            and resistance_fraction <= MAX_RESISTANCE_SPREAD_FRACTION
             and reactance_spread <= MAX_REACTANCE_SPREAD_OHM
         )
 
@@ -134,6 +155,7 @@ class CheckEndFedConvergence:
         frequency_hz = command.frequency_hz or parameters.frequency_hz
         model = parameters.to_antenna(name="End-fed convergence")
         points: list[EndFedConvergencePoint] = []
+        swr_informational = parameters.uses_impedance_only_convergence
         base_segmentation = command.base_spec.segmentation
         for count in command.segment_counts:
             wire_segments: list[tuple[str, int]] = []
@@ -186,7 +208,11 @@ class CheckEndFedConvergence:
                     (diagnostic.message for diagnostic in result.diagnostics),
                     result.status.value,
                 )
-                return EndFedConvergenceResult(points=tuple(points), error=message)
+                return EndFedConvergenceResult(
+                    points=tuple(points),
+                    error=message,
+                    swr_informational=swr_informational,
+                )
             point = result.frequencies[0]
             points.append(
                 EndFedConvergencePoint(
@@ -195,4 +221,7 @@ class CheckEndFedConvergence:
                     swr=point.swr,
                 )
             )
-        return EndFedConvergenceResult(points=tuple(points))
+        return EndFedConvergenceResult(
+            points=tuple(points),
+            swr_informational=swr_informational,
+        )

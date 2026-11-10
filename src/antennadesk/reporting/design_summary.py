@@ -681,6 +681,19 @@ def design_summary_rows(
                 ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
+        if parameters.matching_network_active:
+            rows.extend(
+                [
+                    (
+                        "Matching capacitor",
+                        f"{parameters.matching_capacitance_f * 1e12:.1f} pF (primary shunt)",
+                    ),
+                    (
+                        "Transformer leakage",
+                        f"{parameters.transformer_leakage_inductance_h * 1e6:.4f} µH",
+                    ),
+                ]
+            )
         if parameters.coil_active:
             rows.extend(
                 [

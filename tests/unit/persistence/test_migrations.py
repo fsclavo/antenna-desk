@@ -847,3 +847,30 @@ def test_v31_migration_adds_endfed_feed_section_and_installation_return() -> Non
     assert parameters["feed_section_length_m"] == 0.0
     assert parameters["installation_return_length_m"] == 0.0
     assert "feed_section_length_m" not in document["project"]["designs"][0]["parameters"]
+
+
+def test_v32_migration_adds_the_endfed_matching_network_fields() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 32,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "endfed",
+                    "parameters": {
+                        "frequency_hz": 7_100_000.0,
+                        "length_m": 20.0,
+                        "transformer_ratio": 49.0,
+                    },
+                }
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    parameters = migrated["project"]["designs"][0]["parameters"]
+    assert parameters["matching_capacitance_f"] == 0.0
+    assert parameters["transformer_leakage_inductance_h"] == 0.0
+    assert "matching_capacitance_f" not in document["project"]["designs"][0]["parameters"]

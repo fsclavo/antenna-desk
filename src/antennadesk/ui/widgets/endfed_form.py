@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import math
+from dataclasses import replace
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
@@ -102,6 +103,20 @@ class EndFedForm(QWidget):
         self._transformer.setDecimals(1)
         self._transformer.setValue(49.0)
         self._transformer.setSuffix(":1")
+
+        self._matching_capacitance = QDoubleSpinBox(self)
+        self._matching_capacitance.setRange(0.0, 100_000.0)
+        self._matching_capacitance.setDecimals(2)
+        self._matching_capacitance.setSuffix(" pF")
+        self._matching_capacitance.setValue(0.0)
+        self._matching_capacitance.setToolTip(translator.t("endfed.matching_capacitance_hint"))
+
+        self._transformer_leakage = QDoubleSpinBox(self)
+        self._transformer_leakage.setRange(0.0, 100_000.0)
+        self._transformer_leakage.setDecimals(3)
+        self._transformer_leakage.setSuffix(" µH")
+        self._transformer_leakage.setValue(0.0)
+        self._transformer_leakage.setToolTip(translator.t("endfed.transformer_leakage_hint"))
 
         self._loading_coil_group = QGroupBox(translator.t("endfed.loading_coil"), self)
         self._loading_coil_group.setCheckable(True)
@@ -263,6 +278,14 @@ class EndFedForm(QWidget):
         form.addRow(self._labels.label("endfed.feed_height"), self._feed_height)
         form.addRow(self._labels.label("endfed.end_height"), self._end_height)
         form.addRow(self._labels.label("endfed.transformer_ratio"), self._transformer)
+        form.addRow(
+            self._labels.label("endfed.matching_capacitance"),
+            self._matching_capacitance,
+        )
+        form.addRow(
+            self._labels.label("endfed.transformer_leakage"),
+            self._transformer_leakage,
+        )
         form.addRow(self._loading_coil_group)
         form.addRow(self._counterpoise_enabled)
         form.addRow(self._labels.label("endfed.counterpoise_length"), self._counterpoise_length)
@@ -296,6 +319,8 @@ class EndFedForm(QWidget):
             self._feed_height,
             self._end_height,
             self._transformer,
+            self._matching_capacitance,
+            self._transformer_leakage,
             self._loading_coil_offset,
             self._loading_coil_inductance,
             self._loading_coil_resistance,
@@ -333,6 +358,10 @@ class EndFedForm(QWidget):
         )
         self._feed_section.setToolTip(self._translator.t("endfed.feed_section_hint"))
         self._installation_return.setToolTip(self._translator.t("endfed.installation_return_hint"))
+        self._matching_capacitance.setToolTip(
+            self._translator.t("endfed.matching_capacitance_hint")
+        )
+        self._transformer_leakage.setToolTip(self._translator.t("endfed.transformer_leakage_hint"))
         self._efhw_label.setText(self._translator.t("endfed.efhw_presets"))
         self._shortened_label.setText(self._translator.t("endfed.shortened_presets"))
         self._loading_coil_group.setTitle(self._translator.t("endfed.loading_coil"))
@@ -405,7 +434,7 @@ class EndFedForm(QWidget):
         ground = self._ground_model()
         if preserve_installation:
             try:
-                return builder(
+                parameters = builder(
                     feed_height_m=length_to_m(
                         self._feed_height.value(),
                         self._unit_system,
@@ -418,6 +447,11 @@ class EndFedForm(QWidget):
                     wire_radius_m=wire_radius_m,
                     material=material,
                     ground=ground,
+                )
+                return replace(
+                    parameters,
+                    matching_capacitance_f=self._matching_capacitance.value() * 1e-12,
+                    transformer_leakage_inductance_h=(self._transformer_leakage.value() * 1e-6),
                 )
             except ValueError:
                 pass
@@ -596,6 +630,8 @@ class EndFedForm(QWidget):
             self._feed_height.setValue(length_from_m(parameters.feed_height_m, self._unit_system))
             self._end_height.setValue(length_from_m(parameters.end_height_m, self._unit_system))
             self._transformer.setValue(parameters.transformer_ratio)
+            self._matching_capacitance.setValue(parameters.matching_capacitance_f * 1e12)
+            self._transformer_leakage.setValue(parameters.transformer_leakage_inductance_h * 1e6)
             self._loading_coil_group.setChecked(parameters.loading_coil_enabled)
             self._loading_coil_offset.setValue(
                 length_from_m(parameters.loading_coil_offset_m, self._unit_system)
@@ -707,6 +743,12 @@ class EndFedForm(QWidget):
                 value=f"{installation_return_display:.2f}",
                 unit=unit,
             )
+        if parameters.matching_network_active:
+            text += " · " + self._translator.t(
+                "endfed.matching_summary",
+                capacitance=f"{parameters.matching_capacitance_f * 1e12:g}",
+                leakage=f"{parameters.transformer_leakage_inductance_h * 1e6:g}",
+            )
         self._geometry.setText(text)
 
     def parameters(self) -> EndFedParameters:
@@ -725,6 +767,8 @@ class EndFedForm(QWidget):
             material=self._selected_material(),
             ground=self._ground_model(),
             transformer_ratio=self._transformer.value(),
+            matching_capacitance_f=self._matching_capacitance.value() * 1e-12,
+            transformer_leakage_inductance_h=(self._transformer_leakage.value() * 1e-6),
             counterpoise_length_m=(
                 length_to_m(self._counterpoise_length.value(), self._unit_system)
                 if self._counterpoise_enabled.isChecked()

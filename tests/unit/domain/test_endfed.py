@@ -174,6 +174,16 @@ def test_endfed_model_warning_keys_flag_legacy_and_missing_return() -> None:
         )
     )
     assert complete == ()
+    cap_only = endfed_model_warning_keys(
+        EndFedParameters(
+            frequency_hz=7_100_000.0,
+            length_m=20.0,
+            feed_section_length_m=0.5,
+            installation_return_length_m=0.1,
+            matching_capacitance_f=100e-12,
+        )
+    )
+    assert cap_only == ("endfed.warning.matching_leakage",)
 
 
 def test_endfed_counterpoise_adds_a_drop_and_horizontal_wire() -> None:
@@ -440,3 +450,39 @@ def test_endfed_presets_keep_their_generator_name_and_template_id() -> None:
     assert antenna_template_id(random_wire) == "random_wire"
     assert antenna_family(sloper) is AntennaFamily.DIPOLE
     assert antenna_family(random_wire) is AntennaFamily.DIPOLE
+
+
+def test_shortened_efhw_matching_network_uses_a_primary_shunt_capacitor() -> None:
+    from antennadesk.domain.antennas.endfed import (
+        endfed_matching_network,
+        shortened_efhw_80_10_parameters,
+    )
+    from antennadesk.domain.antennas.matching_network import PiNetwork
+
+    parameters = shortened_efhw_80_10_parameters()
+    network = endfed_matching_network(parameters)
+
+    assert parameters.matching_capacitance_f == pytest.approx(100e-12)
+    assert parameters.transformer_leakage_inductance_h == pytest.approx(198e-9)
+    assert isinstance(network, PiNetwork)
+    assert network.input_shunt_capacitance_f == pytest.approx(100e-12)
+    assert network.series_inductance_h == pytest.approx(198e-9)
+
+
+def test_standard_endfed_has_no_matching_network_by_default() -> None:
+    from antennadesk.domain.antennas.endfed import endfed_matching_network
+
+    parameters = EndFedParameters(frequency_hz=7_100_000.0, length_m=20.0)
+
+    assert parameters.matching_network_active is False
+    assert endfed_matching_network(parameters) is None
+
+
+def test_shortened_presets_use_impedance_only_convergence() -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+
+    assert shortened_efhw_80_10_parameters().uses_impedance_only_convergence is True
+    assert (
+        EndFedParameters(frequency_hz=7_100_000.0, length_m=20.0).uses_impedance_only_convergence
+        is False
+    )

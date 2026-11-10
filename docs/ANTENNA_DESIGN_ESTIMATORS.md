@@ -137,9 +137,11 @@ modeling boundary conditions, not extra construction dimensions. The proxy
 terminates at the ground plane; for a ground-level feed it is a 0.10 m wire on
 the ground plane. The proxy is excluded from the drawn geometry, wire schedule,
 and bill of materials. The EFHW editor can run a segmentation convergence check
-over 10, 21, and 51 radiator segments; an unresolved spread means the absolute
-SWR is numerically segmentation-sensitive. For the shortened presets the
-unmodeled matching capacitor makes the absolute SWR a trend only. Use the model
+over 10, 21, and 51 radiator segments. For the shortened presets the verdict
+uses **R and X only** (absolute R spread up to 1 Ω and X spread up to 10 Ω)
+because the absolute SWR depends on the unmodeled transformer/core/installation
+details; SWR is shown as informational. The 80-10 preset is impedance-converged
+with the current model; the 40-20-10 preset remains R/X-sensitive. Use the model
 for trends and verify SWR with a VNA.
 
 The shortened loaded EFHW presets (80-10 m and 40-20-10 m) have no
@@ -148,10 +150,13 @@ nonlinearly: the 80-10 m reference uses 20.35 m + 110 µH + 2.39 m, and the
 40-20-10 m reference uses 10.01 m + 23 µH + 1.85 m. The loading coil is modeled
 at a fixed node: the radiator is partitioned at the published coil offset, and
 the coil section keeps three segments so segmentation changes do not move the
-coil. The default installation is horizontal at 10 m; change the feed and end
-heights for a sloper or vertical run. Start from the published preset and edit
-the coil and wire values; scaling those dimensions to another frequency is a
-heuristic, not a published rule.
+coil. The 100 pF capacitor is an ideal primary shunt; the 0.198 µH leakage is
+an editable starting estimate from Squash Practice's measured 49:1
+transformer, not this exact build. Core loss, capacitor ESR, winding capacitance, the choke, ground, and the
+inverted-L bend are not modeled. The default installation is horizontal at
+10 m; change the feed and end heights for a sloper or vertical run. Start from
+the published preset and edit the coil and wire values; scaling those
+dimensions to another frequency is a heuristic, not a published rule.
 
 ## Loop polygon correction
 

@@ -1141,6 +1141,8 @@ def test_loaded_endfed_round_trips_with_the_coil_load() -> None:
     restored = project_from_document(document)
 
     assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].parameters.matching_capacitance_f == pytest.approx(100e-12)
+    assert restored.designs[0].parameters.transformer_leakage_inductance_h == pytest.approx(198e-9)
     assert restored.designs[0].parameters.preset.value == "shortened_80_10"
     assert restored.designs[0].antenna_type == "endfed"
     assert [load.id for load in restored.designs[0].antenna.loads] == [
