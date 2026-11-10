@@ -77,6 +77,13 @@ INSTALLATION_RETURN_DROP_ID = "endfed-installation-return-drop"
 DEFAULT_FEED_SECTION_LENGTH_M = 0.5
 DEFAULT_INSTALLATION_RETURN_LENGTH_M = 0.10
 ENDFED_FEED_SECTION_SEGMENTS = 3
+MODEL_ONLY_WIRE_IDS = frozenset({INSTALLATION_RETURN_ID, INSTALLATION_RETURN_DROP_ID})
+
+
+def is_model_only_wire(wire_id: str) -> bool:
+    """Return whether a wire is a numerical model proxy, not physical hardware."""
+
+    return wire_id in MODEL_ONLY_WIRE_IDS
 
 
 @dataclass(frozen=True, slots=True)
@@ -425,6 +432,7 @@ def shortened_efhw_80_10_parameters(
         frequency_hz=SHORTENED_80_10_REFERENCE_FREQUENCY_HZ,
         length_m=length_m,
         feed_section_length_m=DEFAULT_FEED_SECTION_LENGTH_M,
+        installation_return_length_m=DEFAULT_INSTALLATION_RETURN_LENGTH_M,
         feed_height_m=feed_height_m,
         end_height_m=length_m if end_height_m is None else end_height_m,
         azimuth_deg=azimuth_deg,
@@ -468,6 +476,7 @@ def shortened_efhw_40_10_parameters(
         frequency_hz=SHORTENED_40_10_REFERENCE_FREQUENCY_HZ,
         length_m=length_m,
         feed_section_length_m=DEFAULT_FEED_SECTION_LENGTH_M,
+        installation_return_length_m=DEFAULT_INSTALLATION_RETURN_LENGTH_M,
         feed_height_m=feed_height_m,
         end_height_m=length_m if end_height_m is None else end_height_m,
         azimuth_deg=azimuth_deg,

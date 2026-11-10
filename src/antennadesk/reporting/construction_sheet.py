@@ -706,7 +706,7 @@ def render_construction_sheet(
             else ""
         )
         installation_return_row = (
-            f"<tr><th>Installation return</th><td>{parameters.installation_return_length_m:.4f} m (coax/mast proxy)</td></tr>\n"
+            f"<tr><th>Installation return (proxy)</th><td>{parameters.installation_return_length_m:.4f} m (coax/mast proxy)</td></tr>\n"
             if parameters.installation_return_active
             else ""
         )

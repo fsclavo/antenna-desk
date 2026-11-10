@@ -14,7 +14,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..domain.antennas.antenna import AntennaModel
+from ..domain.antennas.endfed import is_model_only_wire
 from ..domain.antennas.geometry import Point3D
+from ..domain.antennas.wire import Wire
 from ..domain.projects.project import DesignVariant
 from .localization import Labeler, identity_labeler
 
@@ -85,8 +87,12 @@ class FeedScheduleRow:
     height_m: float
 
 
+def _physical_wires(model: AntennaModel) -> tuple[Wire, ...]:
+    return tuple(wire for wire in model.wires if not is_model_only_wire(wire.id))
+
+
 def wire_schedule_rows(model: AntennaModel) -> tuple[WireScheduleRow, ...]:
-    """Return one row per canonical wire, in model order."""
+    """Return one row per physical wire, excluding numerical model proxies."""
 
     return tuple(
         WireScheduleRow(
@@ -98,7 +104,7 @@ def wire_schedule_rows(model: AntennaModel) -> tuple[WireScheduleRow, ...]:
             radius_m=wire.radius_m,
             material=wire.material.name,
         )
-        for index, wire in enumerate(model.wires, start=1)
+        for index, wire in enumerate(_physical_wires(model), start=1)
     )
 
 
@@ -127,10 +133,10 @@ def schedule_rows_for_design(design: DesignVariant) -> tuple[WireScheduleRow, ..
 
 
 def conductor_bom_rows(model: AntennaModel) -> tuple[ConductorBomRow, ...]:
-    """Group the canonical wires by material and diameter."""
+    """Group the physical wires by material and diameter."""
 
     groups: dict[tuple[str, float], list[float]] = {}
-    for wire in model.wires:
+    for wire in _physical_wires(model):
         key = (wire.material.name, round(wire.radius_m * 2000.0, 3))
         groups.setdefault(key, []).append(wire.length_m)
     return tuple(
@@ -147,9 +153,10 @@ def conductor_bom_rows(model: AntennaModel) -> tuple[ConductorBomRow, ...]:
 def bom_summary_rows(model: AntennaModel) -> tuple[tuple[str, str], ...]:
     """Return the non-conductor totals shown in the bill of materials."""
 
+    wires = _physical_wires(model)
     return (
-        ("Wires", str(len(model.wires))),
-        ("Total conductor", f"{sum(wire.length_m for wire in model.wires):.4f} m"),
+        ("Wires", str(len(wires))),
+        ("Total conductor", f"{sum(wire.length_m for wire in wires):.4f} m"),
         ("Loads", str(len(model.loads))),
         ("Transmission lines", str(len(model.transmission_lines))),
         ("Driven sources", str(1 + len(model.sources))),

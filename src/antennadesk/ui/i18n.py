@@ -812,6 +812,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "stub de dos conductores"
         ),
     },
+    "geometry.endfed_return_proxy": {
+        Language.ENGLISH: (
+            "Installation return is modeled but not drawn; it represents the "
+            "coax/mast/earth path, not a physical radial"
+        ),
+        Language.SPANISH: (
+            "El retorno de instalación se modela pero no se dibuja; representa el "
+            "camino del coaxil/mástil/tierra, no una radial física"
+        ),
+    },
     "geometry.radiator": {
         Language.ENGLISH: "Radiator",
         Language.SPANISH: "Radiador",

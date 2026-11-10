@@ -517,7 +517,8 @@ The **Fixed feed section** is a modeling partition at the start of the same
 wire, not an extra conductor; it stabilizes the NEC end-fed source. When the
 real counterpoise is disabled, a short **installation return** (0.10 m by
 default) models the unavoidable coax/mast/earth path. It is a model proxy, not
-a physical radial, and the real coax routing dominates the SWR. The editor
+a physical radial, and is modeled for the solver but not drawn or included in
+the wire schedule/BOM. The real coax routing dominates the SWR. The editor
 warns when either the fixed feed section or the return/counterpoise is missing.
 **Check convergence** runs the same design with 10, 21, and 51 radiator
 segments and reports the R, X, and SWR spread; an unresolved result means the
@@ -539,6 +540,8 @@ coil:
 Both presets open vertically by default. Change the feed and end heights for a
 sloper or horizontal installation. The coil position, inductance, and optional
 series resistance are editable; the Q is reported when a resistance is entered.
+The shortened presets also use the fixed feed section and the installation-
+return proxy when no real counterpoise is enabled.
 The matching unit, capacitor, common-mode choke, ground, and support geometry
 are not modeled, and the published inverted-L bend is represented by a
 straight wire. The 40-20-10 preset follows the 23 µH/100 pF schematic; CA4EMT

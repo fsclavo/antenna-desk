@@ -46,6 +46,26 @@ def test_wire_schedule_covers_a_bent_multi_wire_family() -> None:
     assert all(row.length_m > 0.0 for row in rows)
 
 
+def test_wire_schedule_excludes_the_endfed_installation_return_proxy() -> None:
+    from antennadesk.domain.antennas.endfed import (
+        INSTALLATION_RETURN_DROP_ID,
+        INSTALLATION_RETURN_ID,
+        shortened_efhw_80_10_parameters,
+    )
+
+    model = shortened_efhw_80_10_parameters().to_antenna()
+    rows = wire_schedule_rows(model)
+    summary = dict(bom_summary_rows(model))
+
+    assert {wire.id for wire in model.wires} >= {
+        INSTALLATION_RETURN_DROP_ID,
+        INSTALLATION_RETURN_ID,
+    }
+    assert {row.wire_id for row in rows} == {"endfed-feed-section", "radiator"}
+    assert summary["Wires"] == "2"
+    assert summary["Total conductor"] == f"{sum(row.length_m for row in rows):.4f} m"
+
+
 def test_conductor_bom_groups_by_material_and_diameter(
     sample_project: Project,
 ) -> None:

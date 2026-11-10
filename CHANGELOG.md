@@ -12,10 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - End-fed/EFHW designs now include a fixed **feed section** (0.5 m modeling
   partition of the same wire, three segments) and, when no real counterpoise
   is enabled, a short **installation return** (0.10 m proxy for the coax,
-  mast, or earth path). The editor explains that neither is an extra physical
-  radial, warns when legacy designs lack them, and provides a **Check
-  convergence** action over 10/21/51 radiator segments. Schema 32 migrates
-  older projects with both fields at zero, preserving their previous model.
+  mast, or earth path). The proxy is not drawn and is excluded from the wire
+  schedule, bill of materials, and construction dimensions. The editor
+  explains that neither is an extra physical radial, warns when legacy designs
+  lack them, and provides a **Check convergence** action over 10/21/51
+  radiator segments. The shortened EFHW presets use the same feed section and
+  return proxy by default. Schema 32 migrates older projects with both fields
+  at zero, preserving their previous model.
 - Opening a project now reads, decompresses, migrates, and validates it in a
   worker thread with a window-modal busy progress dialog, so large saved
   projects no longer freeze the UI. The project is applied only after

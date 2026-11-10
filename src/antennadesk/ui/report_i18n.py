@@ -23,6 +23,7 @@ REPORT_SPANISH: dict[str, str] = {
     "Isometric view": "Vista isométrica",
     "Installation view (front)": "Vista de instalación (frontal)",
     "Installation return": "Retorno de instalación",
+    "Installation return (proxy)": "Retorno de instalación (proxy)",
     "Top layout": "Disposición en planta",
     # Title block and table headers.
     "#": "#",

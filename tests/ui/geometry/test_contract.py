@@ -24,6 +24,7 @@ from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.discone import discone_parameters
 from antennadesk.domain.antennas.endfed import (
     EndFedParameters,
+    is_model_only_wire,
     shortened_efhw_40_10_parameters,
     shortened_efhw_80_10_parameters,
 )
@@ -412,7 +413,13 @@ def _cases() -> tuple[FamilyCase, ...]:
             "endfed",
             2,
             GeometryViewMode.ELEVATION,
-            ("End-fed wire", "wire length 22.74 m", "loading coil 110.0 µH", "feed section"),
+            (
+                "End-fed wire",
+                "wire length 22.74 m",
+                "loading coil 110.0 µH",
+                "feed section",
+                "installation return",
+            ),
         ),
         FamilyCase(
             "shortened_endfed_40_10",
@@ -420,7 +427,13 @@ def _cases() -> tuple[FamilyCase, ...]:
             "endfed",
             2,
             GeometryViewMode.ELEVATION,
-            ("End-fed wire", "wire length 11.86 m", "loading coil 23.0 µH", "feed section"),
+            (
+                "End-fed wire",
+                "wire length 11.86 m",
+                "loading coil 23.0 µH",
+                "feed section",
+                "installation return",
+            ),
         ),
         FamilyCase(
             "jpole",
@@ -681,9 +694,10 @@ def test_family_scene_preserves_wires_and_positive_dimensions(
 ) -> None:
     model = case.parameters.to_antenna()
     scene = _scene(case, mode)
+    model_only = sum(1 for wire in model.wires if is_model_only_wire(wire.id))
 
     assert len(scene.polylines) == case.wires
-    assert len(model.wires) == case.wires
+    assert len(model.wires) - model_only == case.wires
     assert scene.summary
     assert any(marker.kind == "feed" for marker in scene.markers)
     if scene.show_ground:

@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from ...domain.antennas.antenna import AntennaModel
 from ...domain.antennas.beverage import (
@@ -24,7 +24,11 @@ from ...domain.antennas.dipole import (
     DipoleParameters,
 )
 from ...domain.antennas.discone import ANTENNA_TYPE_DISCONE, DisconeParameters
-from ...domain.antennas.endfed import ANTENNA_TYPE_ENDFED, EndFedParameters
+from ...domain.antennas.endfed import (
+    ANTENNA_TYPE_ENDFED,
+    EndFedParameters,
+    is_model_only_wire,
+)
 from ...domain.antennas.fan_dipole import (
     ANTENNA_TYPE_FAN_DIPOLE,
     FanDipoleParameters,
@@ -3859,6 +3863,10 @@ def build_scene(
 ) -> GeometryScene:
     """Project ``model`` and attach semantic dimensions for the selected view."""
 
+    model = replace(
+        model,
+        wires=tuple(wire for wire in model.wires if not is_model_only_wire(wire.id)),
+    )
     effective_type = effective_antenna_type(antenna_type, parameters)
     if mode is GeometryViewMode.CONSTRUCTION:
         mode = construction_view(model, antenna_type=effective_type)
@@ -3887,6 +3895,8 @@ def build_scene(
     angular_dimensions: list[AngularDimension] = []
     insets: list[SceneInset] = []
     notes: list[str] = []
+    if isinstance(parameters, EndFedParameters) and parameters.installation_return_active:
+        notes.append(translator.t("geometry.endfed_return_proxy"))
     if effective_type == ZEPP_PRESENTATION_TYPE:
         note_key = (
             "geometry.zepp_note"
