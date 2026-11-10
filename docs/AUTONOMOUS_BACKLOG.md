@@ -174,7 +174,8 @@ model and solver contract must land first.
 
 ## Recommended order
 
-1. ~~A1–C5, E1–E4, B1–B3, and G1–G16~~ completed; see the queue table above.
+1. All queue items except **B4**, **C3**, and **D1–D4** are complete; see the
+   queue table above.
 2. **B4** waits for a coupled-fan measurement. **C3** is blocked on a
    transposed boom feed-line model; do not substitute independent ideal
    sources, because NEC2C reported negative primary-feed resistance in the
