@@ -325,6 +325,44 @@ def test_open_project_cancel_keeps_the_current_project(
     assert window._project is before
 
 
+def test_open_project_processes_events_while_loading(
+    window: MainWindow,
+    qtbot: QtBot,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = tmp_path / "responsive-open.antennadesk"
+    assert window._save_to(source) is True
+    loaded = MainWindow(
+        JsonProjectRepository(),
+        FakeSolver(),
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+    )
+    qtbot.addWidget(loaded)
+    original = loaded._repository.load
+    events: list[str] = []
+
+    def slow(path: Path) -> Project:
+        time.sleep(0.2)
+        return original(path)
+
+    monkeypatch.setattr(loaded._repository, "load", slow)
+    monkeypatch.setattr(
+        QFileDialog,
+        "getOpenFileName",
+        lambda *args, **kwargs: (str(source), ""),
+    )
+    QTimer.singleShot(20, lambda: events.append("event"))
+
+    loaded.open_project()
+
+    assert events == ["event"]
+    assert loaded._project is not None
+    assert loaded._current_path == source
+    loaded.close()
+
+
 def test_open_project_reports_an_error(
     window: MainWindow,
     tmp_path: Path,

@@ -1999,6 +1999,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Preparing project...",
         Language.SPANISH: "Preparando proyecto...",
     },
+    "status.opening": {
+        Language.ENGLISH: "Opening project...",
+        Language.SPANISH: "Abriendo proyecto...",
+    },
     "status.saved": {Language.ENGLISH: "Project saved.", Language.SPANISH: "Proyecto guardado."},
     "status.opened": {Language.ENGLISH: "Project opened.", Language.SPANISH: "Proyecto abierto."},
     "status.no_project": {

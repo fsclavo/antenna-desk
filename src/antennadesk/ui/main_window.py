@@ -321,6 +321,7 @@ from .widgets.vertical_form import VerticalForm
 from .widgets.yagi_form import YagiForm
 from .widgets.zepp_form import ZeppForm
 from .workers.band_analysis_worker import BandAnalysisWorker
+from .workers.open_project_worker import OpenProjectWorker
 from .workers.save_project_worker import SaveProjectWorker
 from .workers.simulation_worker import SimulationWorker
 
@@ -5256,13 +5257,16 @@ class MainWindow(QMainWindow):
         )
         if not filename:
             return
+        progress = self._open_progress_dialog()
         try:
-            project = OpenProject(self._repository).execute(Path(filename))
+            project = self._load_project(Path(filename))
             if not project.designs:
                 raise ValueError("project has no designs")
         except Exception as exc:
             self._show_error(self._translator.t("error.open", message=str(exc)))
             return
+        finally:
+            progress.close()
         self._set_project(
             project,
             project.designs[0].id,
@@ -5298,6 +5302,63 @@ class MainWindow(QMainWindow):
         if path.suffix.lower() != ".antennadesk":
             path = path.with_suffix(".antennadesk")
         return self._save_to(path)
+
+    def _open_progress_dialog(self) -> QProgressDialog:
+        dialog = QProgressDialog(
+            self._translator.t("status.opening"),
+            "",
+            0,
+            0,
+            self,
+        )
+        dialog.setWindowTitle(self._translator.t("dialog.open_title"))
+        dialog.setWindowModality(Qt.WindowModality.WindowModal)
+        dialog.setCancelButton(None)
+        dialog.setMinimumDuration(250)
+        dialog.setAutoClose(False)
+        dialog.setAutoReset(False)
+        dialog.setValue(0)
+        return dialog
+
+    def _load_project(self, path: Path) -> Project:
+        """Read, migrate, and validate a project without blocking the event loop."""
+
+        thread = QThread(self)
+        worker = OpenProjectWorker(OpenProject(self._repository), path)
+        worker.moveToThread(thread)
+        result: dict[str, object] = {}
+        loop = QEventLoop()
+
+        def finished(project: object) -> None:
+            result["project"] = project
+            loop.quit()
+
+        def failed(message: str) -> None:
+            result["error"] = message
+            loop.quit()
+
+        worker.finished.connect(finished)
+        worker.failed.connect(failed)
+        worker.finished.connect(thread.quit)
+        worker.failed.connect(thread.quit)
+        thread.started.connect(worker.run)
+        thread.finished.connect(loop.quit)
+        thread.finished.connect(worker.deleteLater)
+        thread.finished.connect(thread.deleteLater)
+        thread.start()
+        try:
+            loop.exec()
+        finally:
+            thread.quit()
+            thread.wait()
+
+        error = result.get("error")
+        if isinstance(error, str):
+            raise ValueError(error)
+        project = result.get("project")
+        if not isinstance(project, Project):
+            raise RuntimeError("open worker produced no project")
+        return project
 
     def _save_progress_dialog(self) -> QProgressDialog:
         dialog = QProgressDialog(

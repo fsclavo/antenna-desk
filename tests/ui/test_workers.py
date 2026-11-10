@@ -15,6 +15,7 @@ from antennadesk.ui.workers import (
     band_analysis_worker,
     element_optimization_worker,
     family_optimization_worker,
+    open_project_worker,
     optimization_worker,
     save_project_worker,
     simulation_worker,
@@ -208,4 +209,44 @@ def test_save_project_worker_emits_failure(qtbot: QtBot) -> None:
     worker.run()
 
     assert prepared == []
+    assert failed == ["boom"]
+
+
+def test_open_project_worker_emits_project(qtbot: QtBot) -> None:
+    del qtbot
+
+    class FakeOpenProject:
+        def execute(self, path: object) -> object:
+            del path
+            return SENTINEL
+
+    worker = open_project_worker.OpenProjectWorker(FakeOpenProject(), object())
+    finished: list[object] = []
+    failed: list[str] = []
+    worker.finished.connect(finished.append)
+    worker.failed.connect(failed.append)
+
+    worker.run()
+
+    assert finished == [SENTINEL]
+    assert failed == []
+
+
+def test_open_project_worker_emits_failure(qtbot: QtBot) -> None:
+    del qtbot
+
+    class FailingOpenProject:
+        def execute(self, path: object) -> object:
+            del path
+            raise RuntimeError("boom")
+
+    worker = open_project_worker.OpenProjectWorker(FailingOpenProject(), object())
+    finished: list[object] = []
+    failed: list[str] = []
+    worker.finished.connect(finished.append)
+    worker.failed.connect(failed.append)
+
+    worker.run()
+
+    assert finished == []
     assert failed == ["boom"]

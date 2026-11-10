@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Opening a project now reads, decompresses, migrates, and validates it in a
+  worker thread with a window-modal busy progress dialog, so large saved
+  projects no longer freeze the UI. The project is applied only after
+  validation succeeds.
 - The family optimizer can now run **1–4 seeds** and compare the resulting
   designs. **Thorough** defaults to three consecutive seeds, the best-scoring
   run is selected, and the winning seed is stored in the optimization summary.

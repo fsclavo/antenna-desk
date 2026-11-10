@@ -1496,6 +1496,10 @@ does not report the application as unresponsive. The payload is serialized once
 and then written atomically; the 32 MB warning and 64 MB hard limit still
 apply.
 
+Opening a project also runs decompression, migration, and validation in a
+worker thread. A modal **Opening project...** dialog appears for large files and
+the project is applied only after validation succeeds.
+
 ## Language, units, and font size
 
 Use **Edit → Preferences...** (`Ctrl+,`) to set the language (**System**,
