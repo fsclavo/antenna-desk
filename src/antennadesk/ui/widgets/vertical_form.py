@@ -236,6 +236,7 @@ class VerticalForm(QWidget):
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        self._labels.bind_form(form)
         layout.addLayout(form)
         layout.addWidget(self._coil_group)
         layout.addWidget(self._top_hat_group)

@@ -1288,8 +1288,21 @@ class MainWindow(QMainWindow):
         self._pattern_group.setTitle(self._translator.t("pattern.settings_title"))
         self._band_group.setTitle(self._translator.t("band.group_title"))
         self._advanced_toggle.setText(self._translator.t("advanced.title"))
+        self._design_panel.setToolTip(self._translator.t("help.section.design"))
+        self._advanced_toggle.setToolTip(self._translator.t("help.section.advanced"))
+        self._solver_group.setToolTip(self._translator.t("help.section.solver"))
+        self._sweep_group.setToolTip(self._translator.t("help.section.sweep"))
+        self._pattern_group.setToolTip(self._translator.t("help.section.pattern"))
+        self._band_group.setToolTip(self._translator.t("help.section.band"))
+        self._custom_sweep_group.setToolTip(self._translator.t("help.section.sweep"))
+        self._geometry.setToolTip(self._translator.t("help.section.geometry"))
         self._analyze_bands_button.setText(self._translator.t("band.analyze"))
         self._analyze_bands_action.setText(self._translator.t("band.analyze"))
+        self._analyze_bands_button.setToolTip(self._translator.t("help.action.analyze_bands"))
+        self._analyze_bands_action.setToolTip(self._translator.t("help.action.analyze_bands"))
+        self._apply_button.setToolTip(self._translator.t("help.action.apply_design"))
+        self._optimize_button.setToolTip(self._translator.t("help.action.optimize"))
+        self._optimize_action.setToolTip(self._translator.t("help.action.optimize"))
         self._update_band_plan_label()
         self._custom_pattern_label.setText(self._translator.t("custom.pattern_resolution"))
         self._custom_pattern_resolution.setItemText(
@@ -1589,7 +1602,7 @@ class MainWindow(QMainWindow):
         optimizer = optimizer_availability(parameters) if parameters is not None else None
         optimize_available = optimizer is not None and optimizer.available
         optimize_enabled = idle and has_project and optimize_available and self._solver is not None
-        optimize_hint = ""
+        optimize_hint = self._translator.t("help.action.optimize")
         if optimizer is not None and not optimizer.available and optimizer.reason_key:
             optimize_hint = self._translator.t(optimizer.reason_key)
         self._optimize_action.setEnabled(optimize_enabled)

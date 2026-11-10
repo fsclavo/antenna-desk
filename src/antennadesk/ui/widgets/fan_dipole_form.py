@@ -146,6 +146,7 @@ class FanDipoleForm(QWidget):
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        self._labels.bind_form(form)
         layout.addLayout(form)
         layout.addWidget(self._table, 1)
         layout.addLayout(buttons)

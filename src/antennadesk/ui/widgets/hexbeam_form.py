@@ -165,6 +165,7 @@ class HexbeamForm(QWidget):
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        self._labels.bind_form(form)
         layout.addLayout(form)
         layout.addWidget(self._geometry)
 

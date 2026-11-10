@@ -263,6 +263,12 @@ class DipoleForm(QWidget):
         self._group.setTitle(self._translator.t("panel.design"))
         self._sweep_group.setTitle(self._translator.t("field.sweep"))
         self._sweep.setText(self._translator.t("field.sweep_enabled"))
+        apply_help(self._group, self._translator, "section.design")
+        apply_help(self._sweep_group, self._translator, "section.sweep")
+        apply_help(self._sweep, self._translator, "field.sweep_enabled")
+        apply_help(self._sweep_start, self._translator, "field.sweep_start")
+        apply_help(self._sweep_stop, self._translator, "field.sweep_stop")
+        apply_help(self._sweep_points, self._translator, "field.sweep_points")
         labels = self._labels()
         for key, label in labels.items():
             label.setText(self._translator.t(key))

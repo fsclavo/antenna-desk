@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from PySide6.QtWidgets import QComboBox, QLabel, QWidget
+from PySide6.QtWidgets import QComboBox, QFormLayout, QLabel, QWidget
 
 from ..help import apply_help
 from ..i18n import Translator
@@ -48,6 +48,20 @@ class FormLabels:
         for label, key in self._labels.items():
             label.setText(self._translator.t(key))
             self._apply_help(label, key, self._controls.get(label))
+
+    def bind_form(self, form: QFormLayout) -> None:
+        """Pair registered labels with their controls in a form layout."""
+
+        for row in range(form.rowCount()):
+            label_item = form.itemAt(row, QFormLayout.ItemRole.LabelRole)
+            field_item = form.itemAt(row, QFormLayout.ItemRole.FieldRole)
+            label = label_item.widget() if label_item is not None else None
+            if label not in self._labels:
+                continue
+            control = field_item.widget() if field_item is not None else None
+            if control is not None:
+                self._controls[label] = control
+            self._apply_help(label, self._labels[label], control)
 
     def _apply_help(
         self,

@@ -306,6 +306,7 @@ class EndFedForm(QWidget):
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        self._labels.bind_form(form)
         layout.addLayout(form)
         layout.addWidget(self._efhw_widget)
         layout.addWidget(self._shortened_widget)

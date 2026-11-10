@@ -72,6 +72,50 @@ def test_optional_returns_none_instead_of_a_raw_key() -> None:
     assert translator.optional("help.field.frequency") is not None
 
 
+def test_every_shared_field_has_english_and_spanish_help() -> None:
+    field_keys = {
+        "field.antenna_type",
+        "field.azimuth",
+        "field.base_height",
+        "field.circumference",
+        "field.conductivity",
+        "field.design_frequency",
+        "field.diameter",
+        "field.element_length",
+        "field.family",
+        "field.frequency",
+        "field.fundamental_frequency",
+        "field.ground",
+        "field.height",
+        "field.length",
+        "field.material",
+        "field.orientation",
+        "field.permittivity",
+        "field.polarization",
+        "field.primary_dimension",
+        "field.project_name",
+        "field.reference_impedance",
+        "field.sag",
+        "field.secondary_dimension",
+        "field.sides",
+        "field.soil_preset",
+        "field.spacing",
+        "field.sweep",
+        "field.sweep_enabled",
+        "field.sweep_points",
+        "field.sweep_start",
+        "field.sweep_stop",
+        "field.template",
+        "field.wire_radius",
+    }
+    expected = set(Language)
+
+    for key in field_keys:
+        translations = _TRANSLATIONS.get(f"help.{key}", {})
+        assert set(translations) == expected, key
+        assert all(text.strip() for text in translations.values()), key
+
+
 def test_translator_formats_placeholders() -> None:
     text = Translator(Language.ENGLISH).t("app.about", version="1.2.3")
     assert "AntennaDesk 1.2.3" in text

@@ -1372,6 +1372,297 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "usan esta altura por defecto."
         ),
     },
+    "help.field.antenna_type": {
+        Language.ENGLISH: (
+            "Antenna family selected for this design. Changing the family may replace "
+            "the editable topology."
+        ),
+        Language.SPANISH: (
+            "Familia de antena seleccionada para este diseño. Cambiar de familia puede "
+            "reemplazar la topología editable."
+        ),
+    },
+    "help.field.azimuth": {
+        Language.ENGLISH: (
+            "Rotation of the antenna around the vertical axis, in degrees clockwise from north."
+        ),
+        Language.SPANISH: (
+            "Rotación de la antena alrededor del eje vertical, en grados y en sentido "
+            "horario desde el norte."
+        ),
+    },
+    "help.field.base_height": {
+        Language.ENGLISH: "Height of the feed or base above the selected ground model.",
+        Language.SPANISH: "Altura de la alimentación o de la base sobre el modelo de suelo elegido.",
+    },
+    "help.field.circumference": {
+        Language.ENGLISH: (
+            "Total conductor length around the loop; the polygon side length follows "
+            "the side count."
+        ),
+        Language.SPANISH: (
+            "Longitud total del conductor del lazo; el lado del polígono depende de la "
+            "cantidad de lados."
+        ),
+    },
+    "help.field.conductivity": {
+        Language.ENGLISH: (
+            "Ground conductivity in siemens per metre; used only by the finite-ground model."
+        ),
+        Language.SPANISH: (
+            "Conductividad del suelo en siemens por metro; solo la usa el modelo de suelo finito."
+        ),
+    },
+    "help.field.design_frequency": {
+        Language.ENGLISH: (
+            "Frequency used for the template's starting dimensions and the default simulation band."
+        ),
+        Language.SPANISH: (
+            "Frecuencia usada para las dimensiones iniciales de la plantilla y la banda "
+            "de simulación por defecto."
+        ),
+    },
+    "help.field.diameter": {
+        Language.ENGLISH: "Conductor diameter; it affects the modeled impedance and losses.",
+        Language.SPANISH: "Diámetro del conductor; afecta la impedancia y las pérdidas modeladas.",
+    },
+    "help.field.element_length": {
+        Language.ENGLISH: "Length of one driven or parasitic element in the current array.",
+        Language.SPANISH: "Longitud de un elemento alimentado o parásito del arreglo actual.",
+    },
+    "help.field.family": {
+        Language.ENGLISH: "Broad antenna family shown for the current template.",
+        Language.SPANISH: "Familia amplia de antena que corresponde a la plantilla actual.",
+    },
+    "help.field.fundamental_frequency": {
+        Language.ENGLISH: (
+            "Lowest design frequency used to derive the template's harmonic coverage."
+        ),
+        Language.SPANISH: (
+            "Frecuencia de diseño más baja usada para derivar la cobertura armónica de "
+            "la plantilla."
+        ),
+    },
+    "help.field.ground": {
+        Language.ENGLISH: "Ground model used by the solver: free space, perfect, or finite.",
+        Language.SPANISH: "Modelo de suelo del solver: espacio libre, perfecto o finito.",
+    },
+    "help.field.length": {
+        Language.ENGLISH: (
+            "Primary conductor length; the template defines which physical span it represents."
+        ),
+        Language.SPANISH: (
+            "Longitud principal del conductor; la plantilla define qué tramo físico representa."
+        ),
+    },
+    "help.field.material": {
+        Language.ENGLISH: "Conductor material preset; it sets the conductivity used for losses.",
+        Language.SPANISH: "Material del conductor; ajusta la conductividad usada para las pérdidas.",
+    },
+    "help.field.orientation": {
+        Language.ENGLISH: (
+            "Plane of the antenna: horizontal, vertical, or the template-specific equivalent."
+        ),
+        Language.SPANISH: (
+            "Plano de la antena: horizontal, vertical o el equivalente de la plantilla."
+        ),
+    },
+    "help.field.permittivity": {
+        Language.ENGLISH: (
+            "Relative permittivity of the ground; used only by the finite-ground model."
+        ),
+        Language.SPANISH: (
+            "Permitividad relativa del suelo; solo la usa el modelo de suelo finito."
+        ),
+    },
+    "help.field.polarization": {
+        Language.ENGLISH: (
+            "Polarization of the radiated field; it controls the element orientation."
+        ),
+        Language.SPANISH: (
+            "Polarización del campo radiado; controla la orientación de los elementos."
+        ),
+    },
+    "help.field.primary_dimension": {
+        Language.ENGLISH: "Main dimension optimized by the current template.",
+        Language.SPANISH: "Dimensión principal que optimiza la plantilla actual.",
+    },
+    "help.field.project_name": {
+        Language.ENGLISH: "Name shown in the project title and saved in the project file.",
+        Language.SPANISH: "Nombre que aparece en el título del proyecto y se guarda en el archivo.",
+    },
+    "help.field.reference_impedance": {
+        Language.ENGLISH: (
+            "Impedance used for the reported SWR; it does not change the antenna model."
+        ),
+        Language.SPANISH: (
+            "Impedancia usada para la ROE informada; no cambia el modelo de la antena."
+        ),
+    },
+    "help.field.sag": {
+        Language.ENGLISH: (
+            "Additional conductor length for a sagging horizontal span; zero keeps the "
+            "span straight."
+        ),
+        Language.SPANISH: (
+            "Longitud adicional de conductor para un tramo horizontal con flecha; cero "
+            "lo mantiene recto."
+        ),
+    },
+    "help.field.secondary_dimension": {
+        Language.ENGLISH: "Second dimension optimized alongside the primary dimension.",
+        Language.SPANISH: "Segunda dimensión que se optimiza junto con la dimensión principal.",
+    },
+    "help.field.sides": {
+        Language.ENGLISH: "Number of straight segments used to approximate the loop.",
+        Language.SPANISH: "Cantidad de segmentos rectos usados para aproximar el lazo.",
+    },
+    "help.field.soil_preset": {
+        Language.ENGLISH: (
+            "Starting ground values for a typical soil; choosing one fills permittivity "
+            "and conductivity."
+        ),
+        Language.SPANISH: (
+            "Valores iniciales de suelo típico; al elegir uno se completan permitividad "
+            "y conductividad."
+        ),
+    },
+    "help.field.spacing": {
+        Language.ENGLISH: (
+            "Separation between parallel conductors or array elements, depending on the template."
+        ),
+        Language.SPANISH: (
+            "Separación entre conductores paralelos o elementos del arreglo, según la plantilla."
+        ),
+    },
+    "help.field.sweep": {
+        Language.ENGLISH: "Frequency range used for the impedance and SWR sweep.",
+        Language.SPANISH: "Rango de frecuencias usado para el barrido de impedancia y ROE.",
+    },
+    "help.field.sweep_enabled": {
+        Language.ENGLISH: "Adds a frequency sweep instead of a single-frequency run.",
+        Language.SPANISH: "Agrega un barrido de frecuencia en lugar de una corrida de frecuencia única.",
+    },
+    "help.field.sweep_points": {
+        Language.ENGLISH: (
+            "Number of frequency samples in the sweep; more points resolve narrow features."
+        ),
+        Language.SPANISH: (
+            "Cantidad de muestras del barrido; más puntos resuelven detalles estrechos."
+        ),
+    },
+    "help.field.sweep_start": {
+        Language.ENGLISH: "Lowest frequency in the custom sweep.",
+        Language.SPANISH: "Frecuencia más baja del barrido personalizado.",
+    },
+    "help.field.sweep_stop": {
+        Language.ENGLISH: "Highest frequency in the custom sweep.",
+        Language.SPANISH: "Frecuencia más alta del barrido personalizado.",
+    },
+    "help.field.template": {
+        Language.ENGLISH: "Catalog template that defines the current editable fields.",
+        Language.SPANISH: "Plantilla del catálogo que define los campos editables actuales.",
+    },
+    "help.field.wire_radius": {
+        Language.ENGLISH: "Conductor radius; it affects the modeled impedance and losses.",
+        Language.SPANISH: "Radio del conductor; afecta la impedancia y las pérdidas modeladas.",
+    },
+    "help.section.design": {
+        Language.ENGLISH: (
+            "Antenna type, template, geometry, feed, ground, and the apply, estimate, "
+            "and optimize actions."
+        ),
+        Language.SPANISH: (
+            "Tipo de antena, plantilla, geometría, alimentación, suelo y las acciones "
+            "de aplicar, estimar y optimizar."
+        ),
+    },
+    "help.section.advanced": {
+        Language.ENGLISH: (
+            "Solver timeout, frequency sweep, pattern resolution, and band-analysis controls."
+        ),
+        Language.SPANISH: (
+            "Tiempo límite del solver, barrido de frecuencia, resolución de patrón y "
+            "controles de análisis por banda."
+        ),
+    },
+    "help.section.solver": {
+        Language.ENGLISH: (
+            "Per-run solver timeout. It limits each NEC process and does not change the model."
+        ),
+        Language.SPANISH: (
+            "Tiempo límite por corrida. Limita cada proceso NEC y no cambia el modelo."
+        ),
+    },
+    "help.section.sweep": {
+        Language.ENGLISH: "Frequency range used for the impedance and SWR sweep.",
+        Language.SPANISH: "Rango de frecuencias usado para el barrido de impedancia y ROE.",
+    },
+    "help.section.pattern": {
+        Language.ENGLISH: (
+            "Far-field pattern resolution and the frequencies used for pattern snapshots."
+        ),
+        Language.SPANISH: (
+            "Resolución del patrón de campo lejano y las frecuencias usadas para las "
+            "capturas de patrón."
+        ),
+    },
+    "help.section.band": {
+        Language.ENGLISH: "Select and run the amateur bands analyzed for the current design.",
+        Language.SPANISH: "Seleccioná y ejecutá las bandas de radioaficionado analizadas para el diseño actual.",
+    },
+    "help.section.geometry": {
+        Language.ENGLISH: "Dimensioned construction view and 3D view of the canonical wire model.",
+        Language.SPANISH: "Vista de construcción acotada y vista 3D del modelo de hilos canónico.",
+    },
+    "help.action.simulate": {
+        Language.ENGLISH: "Save the current form values and run the solver.",
+        Language.SPANISH: "Guardá los valores actuales del formulario y ejecutá el solver.",
+    },
+    "help.action.analyze_bands": {
+        Language.ENGLISH: "Run the current design over a selected set of amateur bands.",
+        Language.SPANISH: "Ejecutá el diseño actual sobre un conjunto seleccionado de bandas.",
+    },
+    "help.action.apply_design": {
+        Language.ENGLISH: "Save the current form values without running the solver.",
+        Language.SPANISH: "Guardá los valores actuales del formulario sin ejecutar el solver.",
+    },
+    "help.action.optimize": {
+        Language.ENGLISH: "Open the family optimizer for the current design.",
+        Language.SPANISH: "Abrí el optimizador de familia para el diseño actual.",
+    },
+    "help.tab.impedance": {
+        Language.ENGLISH: "Impedance, SWR, and band charts.",
+        Language.SPANISH: "Gráficos de impedancia, ROE y bandas.",
+    },
+    "help.tab.sources": {
+        Language.ENGLISH: "Per-source voltage, current, impedance, and power for multi-source antennas.",
+        Language.SPANISH: "Tensión, corriente, impedancia y potencia por fuente para antenas multifuente.",
+    },
+    "help.tab.pattern": {
+        Language.ENGLISH: "Far-field polar and 3D radiation patterns.",
+        Language.SPANISH: "Patrones de radiación de campo lejano en polar y 3D.",
+    },
+    "help.tab.currents": {
+        Language.ENGLISH: "Wire current distribution.",
+        Language.SPANISH: "Distribución de corriente en los hilos.",
+    },
+    "help.tab.measurements": {
+        Language.ENGLISH: "Imported VNA measurements and comparison.",
+        Language.SPANISH: "Mediciones VNA importadas y comparación.",
+    },
+    "help.tab.diagnostics": {
+        Language.ENGLISH: "Solver warnings and validation messages.",
+        Language.SPANISH: "Advertencias del solver y mensajes de validación.",
+    },
+    "help.tab.raw": {
+        Language.ENGLISH: "Raw NEC input and solver output.",
+        Language.SPANISH: "Entrada NEC y salida del solver sin procesar.",
+    },
+    "help.tab.bands": {
+        Language.ENGLISH: "Per-band results from the last analysis.",
+        Language.SPANISH: "Resultados por banda del último análisis.",
+    },
     "field.fundamental_frequency": {
         Language.ENGLISH: "Fundamental design frequency (MHz)",
         Language.SPANISH: "Frecuencia fundamental de diseño (MHz)",

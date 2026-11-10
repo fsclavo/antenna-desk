@@ -547,6 +547,10 @@ class ResultsView(QWidget):
             self._bands_tab_index,
             self._translator.t("tab.bands"),
         )
+        self._tabs.setTabToolTip(
+            self._bands_tab_index,
+            self._translator.t("help.tab.bands"),
+        )
         self._band_selector.blockSignals(True)
         for band_result in analysis.bands:
             self._band_selector.addItem(band_result.band.name)
@@ -615,20 +619,26 @@ class ResultsView(QWidget):
             self._on_band_selected()
 
     def retranslate(self) -> None:
-        for widget, key in (
-            (self._impedance_tab, "tab.impedance"),
-            (self._sources_tab, "tab.sources"),
-            (self._pattern_tab, "tab.pattern"),
-            (self._currents_tab, "tab.currents"),
-            (self._measurements_tab, "tab.measurements"),
-            (self._diagnostics_tab, "tab.diagnostics"),
-            (self._raw_tab, "tab.raw"),
+        for widget, key, help_key in (
+            (self._impedance_tab, "tab.impedance", "help.tab.impedance"),
+            (self._sources_tab, "tab.sources", "help.tab.sources"),
+            (self._pattern_tab, "tab.pattern", "help.tab.pattern"),
+            (self._currents_tab, "tab.currents", "help.tab.currents"),
+            (self._measurements_tab, "tab.measurements", "help.tab.measurements"),
+            (self._diagnostics_tab, "tab.diagnostics", "help.tab.diagnostics"),
+            (self._raw_tab, "tab.raw", "help.tab.raw"),
         ):
-            self._tabs.setTabText(self._tabs.indexOf(widget), self._translator.t(key))
+            index = self._tabs.indexOf(widget)
+            self._tabs.setTabText(index, self._translator.t(key))
+            self._tabs.setTabToolTip(index, self._translator.t(help_key))
         if self._bands_tab_index >= 0:
             self._tabs.setTabText(
                 self._bands_tab_index,
                 self._translator.t("tab.bands"),
+            )
+            self._tabs.setTabToolTip(
+                self._bands_tab_index,
+                self._translator.t("help.tab.bands"),
             )
         self._band_label.setText(self._translator.t("band.table.band"))
         self._bands_table.setHorizontalHeaderLabels(
@@ -647,6 +657,10 @@ class ResultsView(QWidget):
             self._render_bands()
         self._pattern_view_tabs.setTabText(0, self._translator.t("pattern.cut_tab"))
         self._pattern_view_tabs.setTabText(1, self._translator.t("pattern.3d_tab"))
+        self._pattern_view_tabs.setTabToolTip(0, self._translator.t("help.tab.pattern"))
+        self._pattern_view_tabs.setTabToolTip(1, self._translator.t("help.tab.pattern"))
+        self._raw_tabs.setTabToolTip(0, self._translator.t("help.tab.raw"))
+        self._raw_tabs.setTabToolTip(1, self._translator.t("help.tab.raw"))
         self._table.setHorizontalHeaderLabels(
             [
                 self._translator.t("table.frequency"),

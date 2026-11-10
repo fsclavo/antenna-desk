@@ -633,7 +633,9 @@ def test_results_view_adds_a_band_summary_tab(qtbot: QtBot) -> None:
     assert view._bands_table.item(0, 0).text() == "40m"
     assert view._bands_table.item(0, 2).text() == "1.500"
     assert view._bands_table.item(0, 7).text() == "Simulation completed"
-    assert view._tabs.tabToolTip(view._bands_tab_index) == ""
+    assert view._tabs.tabToolTip(view._bands_tab_index) == (
+        "Per-band results from the last analysis."
+    )
     assert not view._band_bar.isHidden()
     assert view._band_selector.count() == 2
     assert view._band_selector.itemText(0) == "40m"

@@ -77,6 +77,46 @@ def test_form_labels_sets_family_help_and_refreshes(qtbot: QtBot) -> None:
     assert control.toolTip() == label.toolTip()
 
 
+def test_form_labels_binds_controls_from_a_form(qtbot: QtBot) -> None:
+    translator = Translator(Language.ENGLISH)
+    parent = QWidget()
+    qtbot.addWidget(parent)
+    form = QFormLayout(parent)
+    labels = FormLabels(translator, parent)
+    label = labels.label("field.height")
+    control = QLineEdit(parent)
+    form.addRow(label, control)
+
+    labels.bind_form(form)
+
+    assert "selected ground model" in label.toolTip()
+    assert control.toolTip() == label.toolTip()
+
+    control.setEnabled(False)
+    labels.retranslate()
+
+    assert "selected ground model" in label.toolTip()
+
+
+def test_yagi_form_applies_help_to_shared_fields(qtbot: QtBot) -> None:
+    from antennadesk.ui.widgets.yagi_form import YagiForm
+
+    form = YagiForm(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(form)
+    form.retranslate()
+
+    labels = {
+        label.objectName(): label
+        for label in form.findChildren(QLabel)
+        if label.objectName().startswith("field.")
+    }
+
+    assert "selected ground model" in labels["field.height"].toolTip()
+    assert form._height.toolTip() == labels["field.height"].toolTip()
+    assert "Design frequency" in labels["field.frequency"].toolTip()
+    assert form._frequency.toolTip() == labels["field.frequency"].toolTip()
+
+
 def test_apply_help_clears_a_missing_key_instead_of_showing_it(
     qtbot: QtBot,
 ) -> None:
@@ -88,6 +128,28 @@ def test_apply_help_clears_a_missing_key_instead_of_showing_it(
     apply_help(label, Translator(Language.ENGLISH), "field.unknown")
 
     assert label.toolTip() == ""
+
+
+def test_main_window_sections_actions_and_tabs_have_help(window) -> None:  # type: ignore[no-untyped-def]
+    assert "Antenna type" in window._design_panel.toolTip()
+    assert "solver timeout" in window._solver_group.toolTip()
+    assert "Frequency range" in window._sweep_group.toolTip()
+    assert "Far-field" in window._pattern_group.toolTip()
+    assert "amateur bands" in window._band_group.toolTip()
+    assert "Dimensioned construction" in window._geometry.toolTip()
+    assert "amateur bands" in window._analyze_bands_action.toolTip()
+    assert "form values" in window._apply_button.toolTip()
+    assert "family optimizer" in window._optimize_button.toolTip()
+
+    tabs = window._results._tabs
+    impedance = tabs.indexOf(window._results._impedance_tab)
+    pattern = tabs.indexOf(window._results._pattern_tab)
+    assert "Impedance" in tabs.tabToolTip(impedance)
+    assert "radiation" in tabs.tabToolTip(pattern)
+
+    window._set_language(Language.SPANISH)
+    assert "Tiempo límite" in window._solver_group.toolTip()
+    assert "bandas" in window._analyze_bands_action.toolTip()
 
 
 def test_dipole_form_applies_help_to_its_labels_and_controls(qtbot: QtBot) -> None:
@@ -105,3 +167,6 @@ def test_dipole_form_applies_help_to_its_labels_and_controls(qtbot: QtBot) -> No
     assert form._frequency.toolTip() == labels["field.frequency"].toolTip()
     assert "selected ground model" in labels["field.height"].toolTip()
     assert form._height.toolTip() == labels["field.height"].toolTip()
+    assert "frequency sweep" in form._sweep.toolTip()
+    assert "custom sweep" in form._sweep_start.toolTip()
+    assert "custom sweep" in form._sweep_stop.toolTip()

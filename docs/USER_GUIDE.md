@@ -41,7 +41,9 @@ geometry, height, wire diameter, material, ground, reference impedance, and the
 frequency sweep. A single action bar above the panel has **Apply design**,
 **Estimate Dimensions...**, and **Optimize...**. **Apply design** saves the
 current form values without simulating; **Simulate** saves them and runs the
-solver. While a simulation runs, the status bar shows an indeterminate progress
+solver. Where available, hover a field label or its control for a short
+explanation of the model assumption, unit, or starting point. The tooltip is
+optional and does not replace this guide. While a simulation runs, the status bar shows an indeterminate progress
 bar with elapsed time and the current phase (preparing model, running NEC-2,
 processing results). A multi-band analysis, including the automatic fan-dipole
 path, uses a determinate counter for the selected bands. **Simulation →

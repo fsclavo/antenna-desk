@@ -12,10 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added the optional UI-help foundation: `Translator.optional()` returns
   translated help or `None`, and `ui/help.py` resolves an explicit key, a
   family override, shared `help.<key>` text, or the existing `<key>_hint`
-  fallback. The dipole editor's frequency and height rows apply help to both
-  the label and the control, and refresh it on retranslation. Missing help
-  omits the tooltip instead of showing a raw key. The authoring rules are in
-  `docs/UI_HELP_STYLE.md`.
+  fallback. All 33 shared `field.*` labels now have English and Spanish help;
+  family editors pair labels with their controls, and the main window exposes
+  design, advanced-simulation, action, geometry, and result-tab help. Missing
+  help omits the tooltip instead of showing a raw key. The authoring rules are
+  in `docs/UI_HELP_STYLE.md`.
 - Simulate and band analysis now show a shared progress bar in the status bar.
   A single solver run uses an indeterminate bar with elapsed time and phase
   labels (preparing model, running NEC-2, processing results); a multi-band
