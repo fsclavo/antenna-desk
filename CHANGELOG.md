@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Windows simulations and optimizations no longer flash a console window for
+  every `nec2c` process. The adapter now launches the solver with
+  `CREATE_NO_WINDOW`, which also removes the console-allocation and window-show
+  overhead from repeated optimization evaluations.
 - The release workflow now generates `.sha256` assets for the wheel and sdist
   automatically, so every published artifact has a companion checksum.
 

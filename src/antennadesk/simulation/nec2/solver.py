@@ -7,6 +7,7 @@ from __future__ import annotations
 import math
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 from datetime import datetime
@@ -38,6 +39,20 @@ DEFAULT_VERSION_TIMEOUT_S = 10.0
 # Maximum time between cancellation checks while nec2c is running.  The wait
 # itself returns as soon as the child exits; this is not a per-run delay.
 PROCESS_POLL_INTERVAL_S = 0.05
+
+
+def _creation_flags(platform: str | None = None) -> int:
+    """Return Windows process flags that suppress a new console window.
+
+    ``nec2c`` is a console executable. A GUI launch has no console, so each
+    subprocess would otherwise create and destroy its own console window. This
+    is especially visible during optimization, where many solver processes are
+    launched. Returning zero keeps POSIX behavior unchanged.
+    """
+
+    if (platform or sys.platform) != "win32":
+        return 0
+    return int(getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000))
 
 
 class Nec2cSolver:
@@ -75,6 +90,7 @@ class Nec2cSolver:
                 text=True,
                 timeout=self._version_timeout_s,
                 check=False,
+                creationflags=_creation_flags(),
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
             raise SolverNotAvailable(f"could not run nec2c: {exc}") from exc
@@ -279,6 +295,7 @@ class Nec2cSolver:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
+                creationflags=_creation_flags(),
             )
 
             deadline = time.monotonic() + spec.timeout_s

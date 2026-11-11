@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -111,8 +112,15 @@ def test_solver_waits_for_the_child_without_sleeping(
 ) -> None:
     process = _ImmediateProcess()
     sleeps: list[float] = []
-    monkeypatch.setattr(solver_module.subprocess, "Popen", lambda *args, **kwargs: process)
+    captured: list[dict[str, object]] = []
+
+    def popen(*args: object, **kwargs: object) -> _ImmediateProcess:
+        captured.append(kwargs)
+        return process
+
+    monkeypatch.setattr(solver_module.subprocess, "Popen", popen)
     monkeypatch.setattr(solver_module.time, "sleep", sleeps.append)
+    monkeypatch.setattr(solver_module, "_creation_flags", lambda: 123)
 
     _solver().run(_model(), _spec())
 
@@ -121,6 +129,7 @@ def test_solver_waits_for_the_child_without_sleeping(
     assert 0.0 < process.wait_timeout <= solver_module.PROCESS_POLL_INTERVAL_S
     assert sleeps == []
     assert process.terminated is False
+    assert captured[0]["creationflags"] == 123
 
 
 def test_solver_can_cancel_while_waiting_for_the_child(
@@ -143,3 +152,18 @@ def test_solver_can_cancel_while_waiting_for_the_child(
     assert sleeps == []
     assert result.status is SimulationStatus.CANCELLED
     assert any(diagnostic.code == "solver.cancelled" for diagnostic in result.diagnostics)
+
+
+def test_windows_solver_processes_hide_the_console_window() -> None:
+    flags = solver_module._creation_flags(platform="win32")
+
+    assert flags & 0x08000000
+
+
+def test_posix_solver_processes_use_no_windows_creation_flags() -> None:
+    assert solver_module._creation_flags(platform="linux") == 0
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows-only console-hiding check")
+def test_default_creation_flags_hide_consoles_on_windows() -> None:
+    assert solver_module._creation_flags() & 0x08000000
