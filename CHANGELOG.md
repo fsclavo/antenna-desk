@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-11
+
 ### Added
 
 - Windows releases now include an **NSIS installer** in addition to the portable
