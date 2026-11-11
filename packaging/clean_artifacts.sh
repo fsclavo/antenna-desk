@@ -17,6 +17,8 @@ rm -f "$ROOT"/dist/AntennaDesk-*.AppImage \
   "$ROOT"/dist/antennadesk_*.deb.sha256 \
   "$ROOT"/dist/AntennaDesk-*-windows-x86_64.zip \
   "$ROOT"/dist/AntennaDesk-*-windows-x86_64.zip.sha256 \
+  "$ROOT"/dist/AntennaDesk-*-windows-x86_64-setup.exe \
+  "$ROOT"/dist/AntennaDesk-*-windows-x86_64-setup.exe.sha256 \
   "$ROOT"/dist/antennadesk-*.whl \
   "$ROOT"/dist/antennadesk-*.tar.gz
 rmdir "$ROOT/dist" 2>/dev/null || true

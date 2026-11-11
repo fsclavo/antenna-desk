@@ -178,7 +178,10 @@ jobs:
           CC: gcc
         run: bash spikes/phase0/scripts/build_nec2c_windows.sh
 
-      - name: Build Windows bundle
+      - name: Install NSIS
+        run: choco install nsis -y --no-progress
+
+      - name: Build Windows bundle and installer
         shell: pwsh
         run: packaging/build_windows.ps1
 
@@ -191,6 +194,28 @@ jobs:
             if ($process.ExitCode -ne 0) { throw "AntennaDesk.exe $argument failed" }
           }
 
+      - name: Smoke test Windows installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $installer = (Get-ChildItem "dist\AntennaDesk-*-windows-x86_64-setup.exe" | Select-Object -First 1).FullName
+          Start-Process -FilePath $installer -ArgumentList "/S" -Wait
+          $installDir = Join-Path $env:ProgramFiles "AntennaDesk"
+          $exe = Join-Path $installDir "AntennaDesk.exe"
+          $uninstaller = Join-Path $installDir "Uninstall.exe"
+          if (-not (Test-Path $exe)) { throw "installed executable missing: $exe" }
+          if (-not (Test-Path $uninstaller)) { throw "uninstaller missing: $uninstaller" }
+          $desktopLink = Join-Path ([Environment]::GetFolderPath("Desktop")) "AntennaDesk.lnk"
+          if (-not (Test-Path $desktopLink)) { throw "desktop shortcut missing: $desktopLink" }
+          $env:QT_QPA_PLATFORM = "offscreen"
+          foreach ($argument in @("--version", "--check-solver")) {
+            $process = Start-Process -FilePath $exe -ArgumentList $argument -Wait -PassThru
+            if ($process.ExitCode -ne 0) { throw "installed AntennaDesk.exe $argument failed" }
+          }
+          Start-Process -FilePath $uninstaller -ArgumentList "/S" -Wait
+          Start-Sleep -Seconds 2
+          if (Test-Path $exe) { throw "uninstall did not remove $exe" }
+
       - name: Remove Authenticode certificate
         if: always() && env.WINDOWS_SIGN_CERT_BASE64 != ''
         shell: pwsh
@@ -202,6 +227,8 @@ jobs:
           path: |
             dist/*.zip
             dist/*.zip.sha256
+            dist/*-setup.exe
+            dist/*-setup.exe.sha256
 
   release:
     name: Publish GitHub release
