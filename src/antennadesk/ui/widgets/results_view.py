@@ -45,6 +45,7 @@ from ...domain.simulation.result import (
 )
 from ...reporting.result_summary import representative_gain_frequency
 from ..fonts import apply_plot_fonts, scaled_font_copy
+from ..help import apply_help
 from ..i18n import Translator
 from ..theme import theme_colors
 from .chart_cursor import ChartCursor, CursorSeries
@@ -661,6 +662,7 @@ class ResultsView(QWidget):
         self._pattern_view_tabs.setTabToolTip(1, self._translator.t("help.tab.pattern"))
         self._raw_tabs.setTabToolTip(0, self._translator.t("help.tab.raw"))
         self._raw_tabs.setTabToolTip(1, self._translator.t("help.tab.raw"))
+        self._apply_accessibility()
         self._table.setHorizontalHeaderLabels(
             [
                 self._translator.t("table.frequency"),
@@ -733,6 +735,38 @@ class ResultsView(QWidget):
         self._render_measurements()
         self._render_diagnostics()
         self._render_raw()
+
+    def _apply_accessibility(self) -> None:
+        for table, key in (
+            (self._table, "table.impedance"),
+            (self._sources_table, "table.sources"),
+            (self._bands_table, "table.bands"),
+            (self._measurement_table, "table.measurement"),
+            (self._diagnostics, "table.diagnostics"),
+        ):
+            apply_help(table, self._translator, key)
+            text = self._translator.t(f"help.{key}")
+            table.horizontalHeader().setToolTip(text)
+            table.horizontalHeader().setAccessibleDescription(text)
+        for plot, key in (
+            (self._impedance_plot, "chart.impedance"),
+            (self._swr_plot, "chart.swr"),
+            (self._pattern_plot, "chart.pattern"),
+            (self._currents_plot, "chart.currents"),
+            (self._measurement_plot, "chart.measurement"),
+        ):
+            apply_help(plot, self._translator, key)
+        for control, key in (
+            (self._band_selector, "band.selector"),
+            (self._pattern_frequency, "pattern.frequency"),
+            (self._pattern_mode, "pattern.mode"),
+            (self._pattern_cut, "pattern.cut"),
+            (self._pattern_metric, "pattern.metric"),
+            (self._currents_frequency, "currents.frequency"),
+        ):
+            apply_help(control, self._translator, key)
+        self._pattern_view_tabs.setAccessibleDescription(self._translator.t("help.tab.pattern"))
+        self._raw_tabs.setAccessibleDescription(self._translator.t("help.tab.raw"))
 
     def _render_impedance(self) -> None:
         self._table.setRowCount(0)

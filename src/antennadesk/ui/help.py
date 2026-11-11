@@ -47,6 +47,13 @@ def help_text(
     return None
 
 
+def _set_widget_help(widget: QWidget, text: str | None) -> None:
+    value = text or ""
+    widget.setToolTip(value)
+    widget.setWhatsThis(value)
+    widget.setAccessibleDescription(value)
+
+
 def apply_help(
     widget: QWidget,
     translator: Translator,
@@ -55,7 +62,7 @@ def apply_help(
     family: str | None = None,
     explicit_key: str | None = None,
 ) -> None:
-    """Set or clear the tooltip for one help-managed widget."""
+    """Set the tooltip, What's This text, and accessible description."""
 
     text = help_text(
         translator,
@@ -63,7 +70,7 @@ def apply_help(
         family=family,
         explicit_key=explicit_key,
     )
-    widget.setToolTip(text or "")
+    _set_widget_help(widget, text)
 
 
 def apply_form_help(
@@ -102,7 +109,7 @@ def apply_row_help(
     label = label_item.widget() if label_item is not None else None
     text = help_text(translator, key, family=family)
     if isinstance(label, QLabel):
-        label.setToolTip(text or "")
+        _set_widget_help(label, text)
     field = field_item.widget() if field_item is not None else None
     if field is not None:
-        field.setToolTip(text or "")
+        _set_widget_help(field, text)

@@ -116,6 +116,89 @@ def test_every_shared_field_has_english_and_spanish_help() -> None:
         assert all(text.strip() for text in translations.values()), key
 
 
+HELP_MANIFEST = frozenset(
+    {
+        "help.section.design",
+        "help.section.advanced",
+        "help.section.solver",
+        "help.section.sweep",
+        "help.section.pattern",
+        "help.section.band",
+        "help.section.geometry",
+        "help.action.simulate",
+        "help.action.analyze_bands",
+        "help.action.apply_design",
+        "help.action.optimize",
+        "help.action.cancel",
+        "help.action.export",
+        "action.whats_this.tooltip",
+        "help.tab.impedance",
+        "help.tab.sources",
+        "help.tab.pattern",
+        "help.tab.currents",
+        "help.tab.measurements",
+        "help.tab.diagnostics",
+        "help.tab.raw",
+        "help.tab.bands",
+        "help.chart.impedance",
+        "help.chart.swr",
+        "help.chart.pattern",
+        "help.chart.currents",
+        "help.chart.measurement",
+        "help.table.impedance",
+        "help.table.sources",
+        "help.table.bands",
+        "help.table.measurement",
+        "help.table.diagnostics",
+        "help.status.progress",
+        "help.status.solver",
+        "help.status.message",
+        "help.band.selector",
+        "help.pattern.frequency",
+        "help.pattern.mode",
+        "help.pattern.cut",
+        "help.pattern.metric",
+        "help.currents.frequency",
+        "help.feed_line.characteristic_impedance",
+        "help.balun_loss.reference_frequency",
+        "help.loads.offset",
+        "help.matching_network.topology",
+        "help.transmission_lines.z0",
+        "help.optimize.objective",
+        "help.synthesis.target_frequency",
+        "help.custom.feed_offset",
+        "help.measurement.notes",
+        "help.yagi.match_type",
+        "help.trap_yagi.trap_frequency",
+        "help.vertical.radial_system",
+    }
+)
+
+
+def test_help_coverage_manifest_is_bilingual_and_short() -> None:
+    expected = set(Language)
+
+    for key in HELP_MANIFEST:
+        translations = _TRANSLATIONS.get(key, {})
+        assert set(translations) == expected, key
+        for text in translations.values():
+            assert text.strip(), key
+            assert len(text) <= 240, key
+
+
+def test_every_help_entry_is_bilingual_and_short() -> None:
+    expected = set(Language)
+
+    for key, translations in _TRANSLATIONS.items():
+        if not key.startswith("help."):
+            continue
+        assert set(translations) == expected, key
+        for text in translations.values():
+            assert text.strip(), key
+            assert len(text) <= 240, key
+            assert text != key, key
+
+
 def test_translator_formats_placeholders() -> None:
     text = Translator(Language.ENGLISH).t("app.about", version="1.2.3")
     assert "AntennaDesk 1.2.3" in text

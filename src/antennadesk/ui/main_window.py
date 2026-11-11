@@ -43,6 +43,7 @@ from PySide6.QtWidgets import (
     QToolBar,
     QToolButton,
     QVBoxLayout,
+    QWhatsThis,
     QWidget,
 )
 
@@ -276,6 +277,7 @@ from .dialogs.vertical_dialog import VerticalDialog
 from .dialogs.yagi_dialog import YagiDialog
 from .dialogs.zepp_dialog import ZeppDialog
 from .dialogs.zs6bkw_dialog import ZS6BKWDialog
+from .help import apply_help
 from .history import ProjectSnapshot, SnapshotCommand, history_action
 from .i18n import Language, Translator
 from .optimization_adapters import adapter_for
@@ -462,6 +464,9 @@ class MainWindow(QMainWindow):
 
         self._about_action = QAction(self)
         self._about_action.triggered.connect(lambda: self.show_about())
+        self._whats_this_action = QAction(self)
+        self._whats_this_action.setShortcut(QKeySequence("Shift+F1"))
+        self._whats_this_action.triggered.connect(lambda: QWhatsThis.enterWhatsThisMode())
 
         self._new_variant_action = QAction(self)
         self._new_variant_action.setShortcut(QKeySequence("Ctrl+Shift+N"))
@@ -1190,6 +1195,7 @@ class MainWindow(QMainWindow):
         self._tools_menu.addAction(self._compact_history_action)
 
         self._help_menu = self.menuBar().addMenu("")
+        self._help_menu.addAction(self._whats_this_action)
         self._help_menu.addAction(self._about_action)
 
         self._status_label = QLabel(self)
@@ -1251,6 +1257,8 @@ class MainWindow(QMainWindow):
         self._balun_loss_action.setText(self._translator.t("action.balun_loss"))
         self._exit_action.setText(self._translator.t("action.exit"))
         self._about_action.setText(self._translator.t("action.about"))
+        self._whats_this_action.setText(self._translator.t("action.whats_this"))
+        self._whats_this_action.setToolTip(self._translator.t("action.whats_this.tooltip"))
         self._new_variant_action.setText(self._translator.t("action.new_variant"))
         self._rename_variant_action.setText(self._translator.t("action.rename_variant"))
         self._delete_variant_action.setText(self._translator.t("action.delete_variant"))
@@ -1288,21 +1296,29 @@ class MainWindow(QMainWindow):
         self._pattern_group.setTitle(self._translator.t("pattern.settings_title"))
         self._band_group.setTitle(self._translator.t("band.group_title"))
         self._advanced_toggle.setText(self._translator.t("advanced.title"))
-        self._design_panel.setToolTip(self._translator.t("help.section.design"))
-        self._advanced_toggle.setToolTip(self._translator.t("help.section.advanced"))
-        self._solver_group.setToolTip(self._translator.t("help.section.solver"))
-        self._sweep_group.setToolTip(self._translator.t("help.section.sweep"))
-        self._pattern_group.setToolTip(self._translator.t("help.section.pattern"))
-        self._band_group.setToolTip(self._translator.t("help.section.band"))
-        self._custom_sweep_group.setToolTip(self._translator.t("help.section.sweep"))
-        self._geometry.setToolTip(self._translator.t("help.section.geometry"))
+        apply_help(self._design_panel, self._translator, "section.design")
+        apply_help(self._advanced_toggle, self._translator, "section.advanced")
+        apply_help(self._solver_group, self._translator, "section.solver")
+        apply_help(self._sweep_group, self._translator, "section.sweep")
+        apply_help(self._pattern_group, self._translator, "section.pattern")
+        apply_help(self._band_group, self._translator, "section.band")
+        apply_help(self._custom_sweep_group, self._translator, "section.sweep")
+        apply_help(self._geometry, self._translator, "section.geometry")
         self._analyze_bands_button.setText(self._translator.t("band.analyze"))
         self._analyze_bands_action.setText(self._translator.t("band.analyze"))
-        self._analyze_bands_button.setToolTip(self._translator.t("help.action.analyze_bands"))
+        apply_help(self._analyze_bands_button, self._translator, "action.analyze_bands")
         self._analyze_bands_action.setToolTip(self._translator.t("help.action.analyze_bands"))
-        self._apply_button.setToolTip(self._translator.t("help.action.apply_design"))
-        self._optimize_button.setToolTip(self._translator.t("help.action.optimize"))
+        self._analyze_bands_action.setWhatsThis(self._translator.t("help.action.analyze_bands"))
+        apply_help(self._apply_button, self._translator, "action.apply_design")
+        apply_help(self._optimize_button, self._translator, "action.optimize")
         self._optimize_action.setToolTip(self._translator.t("help.action.optimize"))
+        self._optimize_action.setWhatsThis(self._translator.t("help.action.optimize"))
+        self._status_label.setAccessibleDescription(self._translator.t("help.status.message"))
+        self._status_label.setWhatsThis(self._translator.t("help.status.message"))
+        self._solver_label.setAccessibleDescription(self._translator.t("help.status.solver"))
+        self._solver_label.setWhatsThis(self._translator.t("help.status.solver"))
+        self._cancel_action.setToolTip(self._translator.t("help.action.cancel"))
+        self._cancel_action.setWhatsThis(self._translator.t("help.action.cancel"))
         self._update_band_plan_label()
         self._custom_pattern_label.setText(self._translator.t("custom.pattern_resolution"))
         self._custom_pattern_resolution.setItemText(
@@ -1336,9 +1352,27 @@ class MainWindow(QMainWindow):
         self._export_geometry_dxf_action.setText(self._translator.t("action.export_geometry_dxf"))
         self._export_html_action.setText(self._translator.t("action.export_html"))
         self._export_pdf_action.setText(self._translator.t("action.export_pdf"))
+        export_help = self._translator.t("help.action.export")
+        for action in (
+            self._export_csv_action,
+            self._export_sources_csv_action,
+            self._export_wire_schedule_csv_action,
+            self._export_bom_csv_action,
+            self._export_pattern_csv_action,
+            self._export_pattern_png_action,
+            self._export_geometry_png_action,
+            self._export_geometry_svg_action,
+            self._export_geometry_pdf_action,
+            self._export_geometry_dxf_action,
+            self._export_html_action,
+            self._export_pdf_action,
+        ):
+            action.setToolTip(export_help)
+            action.setWhatsThis(export_help)
         self._compact_history_action.setText(self._translator.t("action.compact_history"))
         self._simulate_action.setText(self._translator.t("action.simulate"))
         self._simulate_action.setToolTip(self._translator.t("action.simulate.tooltip"))
+        self._simulate_action.setWhatsThis(self._translator.t("action.simulate.tooltip"))
         self._cancel_action.setText(self._translator.t("action.cancel"))
         self._edit_menu.setTitle(self._translator.t("menu.edit"))
         self._refresh_history_actions()

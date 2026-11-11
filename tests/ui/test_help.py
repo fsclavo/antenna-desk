@@ -7,6 +7,7 @@ from __future__ import annotations
 from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, QWidget
 from pytestqt.qtbot import QtBot
 
+from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.dialogs.balun_loss_dialog import BalunLossDialog
 from antennadesk.ui.dialogs.feed_line_dialog import FeedLineDialog
 from antennadesk.ui.dialogs.loads_dialog import LoadsDialog
@@ -17,6 +18,7 @@ from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem
 from antennadesk.ui.widgets.dipole_form import DipoleForm
 from antennadesk.ui.widgets.form_i18n import FormLabels
+from antennadesk.ui.widgets.results_view import ResultsView
 
 
 def test_help_resolution_order_and_missing_keys() -> None:
@@ -73,6 +75,8 @@ def test_apply_form_help_sets_and_retranslates_label_and_control(
     apply_form_help(form, translator)
 
     assert label.toolTip() == control.toolTip()
+    assert label.whatsThis() == label.toolTip()
+    assert label.accessibleDescription() == label.toolTip()
     assert "selected ground model" in label.toolTip()
 
     translator.set_language(Language.SPANISH)
@@ -153,6 +157,8 @@ def test_apply_help_clears_a_missing_key_instead_of_showing_it(
     apply_help(label, Translator(Language.ENGLISH), "field.unknown")
 
     assert label.toolTip() == ""
+    assert label.whatsThis() == ""
+    assert label.accessibleDescription() == ""
 
 
 def test_main_window_sections_actions_and_tabs_have_help(window) -> None:  # type: ignore[no-untyped-def]
@@ -225,6 +231,42 @@ def test_measurement_details_dialog_applies_help(qtbot: QtBot) -> None:
     assert "Calibration" in dialog._calibration.toolTip()
     assert "reference plane" in dialog._reference_plane.toolTip().lower()
     assert "notes" in dialog._notes.toolTip().lower()
+
+
+def test_whats_this_action_enters_qt_mode(
+    window,  # type: ignore[no-untyped-def]
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    calls: list[bool] = []
+    monkeypatch.setattr(
+        main_window_module.QWhatsThis,
+        "enterWhatsThisMode",
+        lambda: calls.append(True),
+    )
+
+    window._whats_this_action.trigger()
+
+    assert calls == [True]
+    assert window._whats_this_action.shortcut().toString() == "Shift+F1"
+
+
+def test_results_view_exposes_help_and_accessibility(qtbot: QtBot) -> None:
+    translator = Translator(Language.ENGLISH)
+    view = ResultsView(translator)
+    qtbot.addWidget(view)
+
+    assert "Resistance" in view._impedance_plot.toolTip()
+    assert view._impedance_plot.whatsThis() == view._impedance_plot.toolTip()
+    assert view._impedance_plot.accessibleDescription() == view._impedance_plot.toolTip()
+    assert "Frequency" in view._table.horizontalHeader().toolTip()
+    assert "band" in view._band_selector.toolTip().lower()
+    assert view._pattern_view_tabs.accessibleDescription()
+    assert view._raw_tabs.accessibleDescription()
+
+    translator.set_language(Language.SPANISH)
+    view.retranslate()
+
+    assert "Resistencia" in view._impedance_plot.toolTip()
 
 
 def test_dipole_form_applies_help_to_its_labels_and_controls(qtbot: QtBot) -> None:

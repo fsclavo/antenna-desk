@@ -28,6 +28,11 @@ amateur radio. The project is GPL-3.0-or-later.
 - Use PySide6 for the desktop UI and PyQtGraph for charts.
 - Route user-visible strings through `ui/i18n.py`; keep English and Spanish in
   sync. UI strings are English by default, with Spanish translations.
+- Every new field, section, tab, chart, or primary action must have English and
+  Spanish help in `ui/i18n.py`, pass the help coverage manifest, and apply help
+  through `ui/help.py` so tooltips, What's This, and accessible descriptions
+  stay in sync. Run the help tests; visual light/dark and scaling QA remains
+  manual.
 - Keep metric/imperial conversion at the presentation boundary. Domain and
   project files use canonical meters.
 - Run simulations in a worker thread; never block the Qt event loop.

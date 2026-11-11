@@ -24,3 +24,14 @@ is not a second user guide.
 - Forms call `FormLabels.bind_form()` after assembling a `QFormLayout`.
   Dialogs that create their labels inline can call `apply_row_help()` after
   each row instead of renaming their labels.
+
+## Accessibility
+
+- Apply help through `apply_help()` or `apply_row_help()`; both set the tooltip,
+  the What's This text, and the accessible description.
+- Add accessible descriptions to result tables, chart controls, tabs, status
+  indicators, and secondary actions, not just to field labels.
+- **Help → What's This?** (Shift+F1) is the keyboard-accessible path to the same
+  text. A tooltip must never be the only way to read an explanation.
+- Keep help text under 240 characters; the bilingual coverage manifest enforces
+  this limit and rejects raw keys.

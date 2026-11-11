@@ -693,6 +693,98 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "About AntennaDesk",
         Language.SPANISH: "Acerca de AntennaDesk",
     },
+    "action.whats_this": {
+        Language.ENGLISH: "What's This?",
+        Language.SPANISH: "¿Qué es esto?",
+    },
+    "action.whats_this.tooltip": {
+        Language.ENGLISH: "Click a control or label to read its help.",
+        Language.SPANISH: "Hacé clic en un control o etiqueta para leer su ayuda.",
+    },
+    "help.chart.impedance": {
+        Language.ENGLISH: "Resistance and reactance versus frequency.",
+        Language.SPANISH: "Resistencia y reactancia en función de la frecuencia.",
+    },
+    "help.chart.swr": {
+        Language.ENGLISH: "SWR versus frequency for the selected reference impedance.",
+        Language.SPANISH: "ROE en función de la frecuencia para la impedancia de referencia.",
+    },
+    "help.chart.pattern": {
+        Language.ENGLISH: "Far-field gain pattern at the selected snapshot frequency.",
+        Language.SPANISH: "Patrón de ganancia de campo lejano en la frecuencia seleccionada.",
+    },
+    "help.chart.currents": {
+        Language.ENGLISH: "Current magnitude along the modeled wires.",
+        Language.SPANISH: "Magnitud de corriente a lo largo de los hilos modelados.",
+    },
+    "help.chart.measurement": {
+        Language.ENGLISH: "Imported measurement compared with the simulated SWR.",
+        Language.SPANISH: "Medición importada comparada con la ROE simulada.",
+    },
+    "help.band.selector": {
+        Language.ENGLISH: "Select the band shown in the result tabs.",
+        Language.SPANISH: "Seleccioná la banda que se muestra en las pestañas de resultados.",
+    },
+    "help.pattern.frequency": {
+        Language.ENGLISH: "Snapshot frequency used for the pattern.",
+        Language.SPANISH: "Frecuencia de captura usada para el patrón.",
+    },
+    "help.pattern.mode": {
+        Language.ENGLISH: "Pattern cut plane.",
+        Language.SPANISH: "Plano de corte del patrón.",
+    },
+    "help.pattern.cut": {
+        Language.ENGLISH: "Cut angle for the polar pattern.",
+        Language.SPANISH: "Ángulo de corte para el patrón polar.",
+    },
+    "help.pattern.metric": {
+        Language.ENGLISH: "Gain metric shown in the pattern.",
+        Language.SPANISH: "Métrica de ganancia mostrada en el patrón.",
+    },
+    "help.currents.frequency": {
+        Language.ENGLISH: "Frequency used for the current distribution.",
+        Language.SPANISH: "Frecuencia usada para la distribución de corriente.",
+    },
+    "help.table.impedance": {
+        Language.ENGLISH: "Frequency, resistance, reactance, impedance, and SWR rows.",
+        Language.SPANISH: "Filas de frecuencia, resistencia, reactancia, impedancia y ROE.",
+    },
+    "help.table.sources": {
+        Language.ENGLISH: "Per-source voltage, current, impedance, amplitude, phase, and power.",
+        Language.SPANISH: "Tensión, corriente, impedancia, amplitud, fase y potencia por fuente.",
+    },
+    "help.table.bands": {
+        Language.ENGLISH: "Best SWR, frequency, gain, takeoff, efficiency, and status per band.",
+        Language.SPANISH: "Mejor ROE, frecuencia, ganancia, ángulo de salida, eficiencia y estado por banda.",
+    },
+    "help.table.measurement": {
+        Language.ENGLISH: "Imported measurement points and comparison values.",
+        Language.SPANISH: "Puntos de medición importados y valores de comparación.",
+    },
+    "help.table.diagnostics": {
+        Language.ENGLISH: "Severity, message, and field for solver diagnostics.",
+        Language.SPANISH: "Severidad, mensaje y campo de los diagnósticos del solver.",
+    },
+    "help.status.progress": {
+        Language.ENGLISH: "Current background task and its estimated progress.",
+        Language.SPANISH: "Tarea en segundo plano y su progreso estimado.",
+    },
+    "help.status.solver": {
+        Language.ENGLISH: "Configured NEC engine and executable.",
+        Language.SPANISH: "Motor NEC configurado y ejecutable.",
+    },
+    "help.status.message": {
+        Language.ENGLISH: "Current application status and last operation result.",
+        Language.SPANISH: "Estado actual de la aplicación y resultado de la última operación.",
+    },
+    "help.action.cancel": {
+        Language.ENGLISH: "Stop the running simulation or analysis.",
+        Language.SPANISH: "Detené la simulación o el análisis en curso.",
+    },
+    "help.action.export": {
+        Language.ENGLISH: "Export the current result, geometry, or construction data.",
+        Language.SPANISH: "Exportá el resultado, la geometría o los datos de construcción actuales.",
+    },
     "action.simulate": {Language.ENGLISH: "Simulate", Language.SPANISH: "Simular"},
     "action.ok": {Language.ENGLISH: "OK", Language.SPANISH: "Aceptar"},
     "action.cancel": {Language.ENGLISH: "Cancel", Language.SPANISH: "Cancelar"},

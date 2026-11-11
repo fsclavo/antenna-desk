@@ -79,7 +79,7 @@ external service and must not be invented or simulated into existence.
 | ~~H1~~ | ~~Tooltip/help infrastructure and UI help style guide~~ | S | none | **Done 2026-11-10:** added `Translator.optional()`; `ui/help.py` resolves explicit, family-specific, shared `help.<key>`, and `<key>_hint` fallbacks without returning raw keys. `FormLabels` sets and refreshes label plus paired-control tooltips, and `DipoleForm` applies help to its labels and form rows. The style guide is `docs/UI_HELP_STYLE.md`. Tests cover resolution order, missing-key clearing, form application, retranslation, and the dipole form. |
 | ~~H2~~ | ~~Common field, section, tab, and action tooltips~~ | S–M | H1 | **Done 2026-11-10:** all 33 shared `field.*` keys have English/Spanish help; `FormLabels.bind_form` pairs labels with controls across 24 family forms, `DipoleForm` covers its form and sweep controls, and the main window applies section/action/geometry/result-tab help. Missing help stays silent. Tests cover field coverage, bind-form control pairing, disabled labels, the Yagi and dipole forms, window sections/actions/tabs, and English/Spanish retranslation. |
 | ~~H3~~ | ~~Family-specific and dialog tooltips~~ | M–L | H1, H2 | **Done 2026-11-10:** added family-specific help for matching, traps, loading coils, radial systems, phased-array phase/amplitude, transmission-line stubs, magnetic-loop tuning, and related variants. Beam and dipole editors receive family context, with height/spacing overrides for Yagi, Moxon, hexbeam, trap Yagi, phased vertical, quad beam, and folded dipole. The feed-line, balun-loss, loads, matching-network, transmission-line, optimizer, synthesis, custom-antenna, and measurement dialogs apply row help via `apply_row_help()`. Tests cover overrides, representative family keys, and the nine parameter dialogs. |
-| H4 | Results, tables, accessibility, and help coverage audit | S–M | H3 | Add tooltips to result tab headers, technical table headers, chart controls, status indicators, and remaining secondary actions. Add `accessibleDescription` and an optional **What's This?** mode for longer explanations so tooltips are not the only keyboard path. Add a coverage manifest/test that every new field or section has English and Spanish help, enforce the length limit, and reject raw keys. Document the maintenance rule in `AGENTS.md` or the UI documentation. Manual QA covers light/dark themes, 100–200% scaling, Spanish text, and disabled controls. |
+| ~~H4~~ | ~~Results, tables, accessibility, and help coverage audit~~ | S–M | H3 | **Done 2026-11-10:** `apply_help()` now sets tooltip, What's This, and accessible description together; **Help → What's This?** (Shift+F1) enters Qt's help mode. Result tables and headers, charts, band/pattern/current controls, status indicators, and secondary export/cancel actions have help and accessible descriptions. A bilingual coverage manifest enforces section/action/tab/chart/table/dialog help and a 240-character limit, and rejects raw keys. Automated coverage includes Spanish retranslation and disabled-label help; visual light/dark and scaling QA remains manual. |
 | M1 | Effective matching-network precedence for EFHW | M | G25 | Implement the agreed **Override** policy: a project matching network replaces the internal EFHW matching capacitor/leakage when `matching_network_active`; with no project network, the internal network remains active. Derive `override_active`; do not persist a flag. Use one pure resolver in single simulation, band analysis, family optimization, synthesis, and the EFHW convergence check. Keep the ideal transformer ratio. Add the `matching_network.override` diagnostic and tests for the four precedence cases; document that cascade is not modeled. |
 | M2 | Matching-network visibility and override warnings | M | M1 | Add a persistent **Feed & matching** summary to the design panel with separate rows for EFHW design matching, project matching, feed line, and balun. In EndFed forms, mark internal matching values as retained but inactive while override is active, with a link to edit or remove the project network. Show the override warning in the Matching Network dialog and the optimizer dialog; update construction-sheet and design-summary rows plus the EFHW construction note. Tests cover visibility, retranslation, and hiding when there is no override. |
 | M3 | Persist the matching-network design target and preload the dialog | S–M | M1 | Add a project-level `MatchingNetworkDesign` record (frequency, load R/X, source impedance, optional origin) and persist it with schema 34 (or the next available migration); clear it when the project network is removed. Preload the dialog with stored values, add **Use current simulation point**, split Design target from Components, fix the L-only label and irrelevant Pi/T fields, and update the hint. Tests cover apply → optimize → reopen, schema round trip, and undo/redo. |
@@ -264,8 +264,8 @@ model and solver contract must land first.
    optional. **G27** stays blocked/deferred as a whole until measurements or
    traceable datasets exist; do not implement only one loss category in the
    meantime.
-2. **H1–H3 are complete.** **H4** is the next tooltip/help pass: results,
-   tables, accessibility, and a coverage audit.
+2. **H1–H4 are complete.** The help/accessibility queue is closed; the next
+   active queue is **M1–M5**, the matching-network correctness work.
 3. **P1–P6 are complete.** **P7** remains deferred until an ADR and benchmark
    show a practical need.
 4. **M1** is the matching-network correctness foundation; **M2** makes the
@@ -311,14 +311,15 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **33**.
-- Full gate: **2,387 passed, 0 skipped** with `NEC2C` and the optional
+- Full gate: **2,391 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
-- Last commits: the family-specific and parameter-dialog help pass (H3), the
-  common field/section/tab help pass (H2), the help/tooltip foundation (H1),
-  the element/synthesis optimizer progress bars (P6), the optimizer progress
-  bars (P4–P5), the shared task-progress widget and Simulate/band progress
-  (P1–P3), the v0.3.1 cross-platform dimension-label release and its coverage
-  restoration, the nec2c wait fix (E5), shortened loaded EFHW presets
+- Last commits: the results/accessibility help audit (H4), the family-specific
+  and parameter-dialog help pass (H3), the common field/section/tab help pass
+  (H2), the help/tooltip foundation (H1), the element/synthesis optimizer
+  progress bars (P6), the optimizer progress bars (P4–P5), the shared
+  task-progress widget and Simulate/band progress (P1–P3), the v0.3.1
+  cross-platform dimension-label release and its coverage restoration, the
+  nec2c wait fix (E5), shortened loaded EFHW presets
   (G22), the EFHW feed-section/convergence model (G23), the shortened
   horizontal default and convergence-check fix, the fixed loading-coil node
   (G24), the primary matching-unit model (G25), the shortened impedance-only

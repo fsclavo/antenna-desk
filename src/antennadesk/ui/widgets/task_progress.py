@@ -230,3 +230,6 @@ class TaskProgressBar(QWidget):
             )
         self._label.setText(text)
         self._label.setToolTip(text)
+        self._label.setWhatsThis(text)
+        self._label.setAccessibleDescription(text)
+        self._bar.setAccessibleDescription(text)

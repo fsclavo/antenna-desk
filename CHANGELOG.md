@@ -17,12 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   design, advanced-simulation, action, geometry, and result-tab help. Missing
   help omits the tooltip instead of showing a raw key. The authoring rules are
   in `docs/UI_HELP_STYLE.md`.
-- Added family-specific help for matching, traps, loading coils, radial
-  systems, phased-array phase/amplitude, transmission-line stubs, magnetic-loop
-  tuning, and related variants, with height/spacing overrides for the beam and
-  dipole editors. The feed-line, balun-loss, loads, matching-network,
-  transmission-line, optimizer, synthesis, custom-antenna, and measurement
-  dialogs also show row help.
+- Added accessibility coverage to the help system: `apply_help()` now sets the
+  tooltip, the What's This text, and the accessible description together;
+  **Help → What's This?** (Shift+F1) exposes the same text without a mouse.
+  Result tables, charts, band/pattern/current controls, status indicators, and
+  secondary actions have help and accessible descriptions. A bilingual help
+  manifest enforces coverage, the length limit, and raw-key rejection.
 - Simulate and band analysis now show a shared progress bar in the status bar.
   A single solver run uses an indeterminate bar with elapsed time and phase
   labels (preparing model, running NEC-2, processing results); a multi-band
