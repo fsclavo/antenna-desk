@@ -32,9 +32,12 @@ from ...domain.antennas.endfed import (
     shortened_efhw_40_10_parameters,
     shortened_efhw_80_10_parameters,
 )
+from ...domain.antennas.matching_network import MatchingNetwork
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.design.formulas import half_wave_length_m
+from ...domain.design.matching_resolution import resolve_matching_network
 from ...domain.environment.ground import GroundKind, GroundModel
+from ..help import apply_help
 from ..i18n import Translator
 from ..units import (
     UnitSystem,
@@ -53,6 +56,8 @@ MATERIALS = (COPPER, ALUMINUM)
 
 class EndFedForm(QWidget):
     changed = Signal()
+    matching_network_edit_requested = Signal()
+    matching_network_remove_requested = Signal()
 
     def __init__(
         self,
@@ -62,6 +67,7 @@ class EndFedForm(QWidget):
         parent: QWidget | None = None,
         *,
         preset: EndFedPreset = EndFedPreset.STANDARD,
+        show_override_actions: bool = True,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
@@ -69,6 +75,8 @@ class EndFedForm(QWidget):
         self._unit_system = unit_system
         self._updating = False
         self._preset = EndFedPreset(preset)
+        self._project_matching_network: MatchingNetwork | None = None
+        self._show_override_actions = show_override_actions
 
         self._frequency = QDoubleSpinBox(self)
         self._frequency.setRange(0.1, 100_000.0)
@@ -117,6 +125,28 @@ class EndFedForm(QWidget):
         self._transformer_leakage.setSuffix(" µH")
         self._transformer_leakage.setValue(0.0)
         self._transformer_leakage.setToolTip(translator.t("endfed.transformer_leakage_hint"))
+
+        self._matching_override = QLabel(self)
+        self._matching_override.setWordWrap(True)
+        self._matching_override.setStyleSheet("color: #8a5a00;")
+        self._matching_override_edit = QPushButton(self)
+        self._matching_override_edit.setFlat(True)
+        self._matching_override_edit.clicked.connect(self.matching_network_edit_requested)
+        self._matching_override_remove = QPushButton(self)
+        self._matching_override_remove.setFlat(True)
+        self._matching_override_remove.clicked.connect(self.matching_network_remove_requested)
+        self._matching_override_actions = QWidget(self)
+        matching_override_actions = QHBoxLayout(self._matching_override_actions)
+        matching_override_actions.setContentsMargins(0, 0, 0, 0)
+        matching_override_actions.addWidget(self._matching_override_edit)
+        matching_override_actions.addWidget(self._matching_override_remove)
+        matching_override_actions.addStretch(1)
+        self._matching_override_widget = QWidget(self)
+        matching_override_layout = QVBoxLayout(self._matching_override_widget)
+        matching_override_layout.setContentsMargins(0, 0, 0, 0)
+        matching_override_layout.addWidget(self._matching_override)
+        matching_override_layout.addWidget(self._matching_override_actions)
+        self._matching_override_widget.setVisible(False)
 
         self._loading_coil_group = QGroupBox(translator.t("endfed.loading_coil"), self)
         self._loading_coil_group.setCheckable(True)
@@ -286,6 +316,7 @@ class EndFedForm(QWidget):
             self._labels.label("endfed.transformer_leakage"),
             self._transformer_leakage,
         )
+        form.addRow(self._matching_override_widget)
         form.addRow(self._loading_coil_group)
         form.addRow(self._counterpoise_enabled)
         form.addRow(self._labels.label("endfed.counterpoise_length"), self._counterpoise_length)
@@ -363,6 +394,20 @@ class EndFedForm(QWidget):
             self._translator.t("endfed.matching_capacitance_hint")
         )
         self._transformer_leakage.setToolTip(self._translator.t("endfed.transformer_leakage_hint"))
+        self._matching_override.setText(self._translator.t("endfed.matching_override"))
+        self._matching_override_edit.setText(self._translator.t("feed_matching.edit"))
+        self._matching_override_remove.setText(self._translator.t("feed_matching.remove"))
+        apply_help(self._matching_override, self._translator, "feed_matching.override")
+        apply_help(
+            self._matching_override_edit,
+            self._translator,
+            "action.matching_network",
+        )
+        apply_help(
+            self._matching_override_remove,
+            self._translator,
+            "feed_matching.remove",
+        )
         self._efhw_label.setText(self._translator.t("endfed.efhw_presets"))
         self._shortened_label.setText(self._translator.t("endfed.shortened_presets"))
         self._loading_coil_group.setTitle(self._translator.t("endfed.loading_coil"))
@@ -681,8 +726,31 @@ class EndFedForm(QWidget):
         if self._preset is not EndFedPreset.STANDARD:
             self._apply_preset_defaults()
 
+    def set_project_matching_network(self, network: MatchingNetwork | None) -> None:
+        self._project_matching_network = network
+        self._update_matching_override()
+
+    def _update_matching_override(self) -> None:
+        self._matching_override.setText(self._translator.t("endfed.matching_override"))
+        self._matching_override_edit.setText(self._translator.t("feed_matching.edit"))
+        self._matching_override_remove.setText(self._translator.t("feed_matching.remove"))
+        try:
+            parameters = self.parameters()
+        except (ValueError, TypeError):
+            override_active = False
+        else:
+            override_active = resolve_matching_network(
+                parameters,
+                self._project_matching_network,
+            ).override_active
+        self._matching_override_widget.setVisible(override_active)
+        self._matching_override_actions.setVisible(override_active and self._show_override_actions)
+        self._matching_capacitance.setEnabled(not override_active)
+        self._transformer_leakage.setEnabled(not override_active)
+
     def _update_geometry(self) -> None:
         self._update_loading_coil_controls()
+        self._update_matching_override()
         try:
             parameters = self.parameters()
         except (ValueError, TypeError):

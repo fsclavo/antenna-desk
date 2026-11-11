@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The design panel now has a persistent **Feed & matching** summary with
+  separate EFHW internal, project matching-network, feed-line, and balun rows.
+  End-fed designs mark their internal matching values as retained but inactive
+  while a project network overrides them, disable those fields, and offer
+  **Edit project network** and **Remove project network** actions. The
+  matching-network and optimizer dialogs show the override warning, and design
+  summaries, construction sheets, HTML/PDF reports, and the EFHW construction
+  note show the effective project chain and the retained/not-applied state.
 - Added the optional UI-help foundation: `Translator.optional()` returns
   translated help or `None`, and `ui/help.py` resolves an explicit key, a
   family override, shared `help.<key>` text, or the existing `<key>_hint`

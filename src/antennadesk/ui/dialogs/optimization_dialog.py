@@ -45,7 +45,7 @@ from ...domain.optimization.length import (
 )
 from ...domain.simulation.spec import SimulationSpec
 from ..fonts import scaled_dialog_size
-from ..help import apply_row_help
+from ..help import apply_help, apply_row_help
 from ..i18n import Translator
 from ..units import (
     UnitSystem,
@@ -74,6 +74,14 @@ class OptimizationDialog(QDialog):
         self._solver = solver
         self._base_parameters = base_parameters
         self._base_spec = base_spec
+        self._matching_override_warning = QLabel(
+            translator.t("optimize.matching_override"),
+            self,
+        )
+        self._matching_override_warning.setWordWrap(True)
+        self._matching_override_warning.setStyleSheet("color: #8a5a00;")
+        self._matching_override_warning.setVisible(base_spec.matching_network_override)
+        apply_help(self._matching_override_warning, translator, "feed_matching.override")
         self._thread: QThread | None = None
         self._worker: OptimizationWorker | None = None
         self._cancel_token: EventCancelToken | None = None
@@ -224,6 +232,7 @@ class OptimizationDialog(QDialog):
         buttons.addWidget(self._close)
 
         layout = QVBoxLayout(self)
+        layout.addWidget(self._matching_override_warning)
         layout.addLayout(self._form_layout)
         layout.addWidget(self._evaluations_label)
         layout.addWidget(self._evaluations, 1)

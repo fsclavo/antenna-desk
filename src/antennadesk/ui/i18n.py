@@ -2416,6 +2416,38 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Dimensioned construction view and 3D view of the canonical wire model.",
         Language.SPANISH: "Vista de construcción acotada y vista 3D del modelo de hilos canónico.",
     },
+    "help.section.feed_matching": {
+        Language.ENGLISH: (
+            "Internal EFHW matching, project matching network, feed line, and balun "
+            "loss for the current design."
+        ),
+        Language.SPANISH: (
+            "Adaptación interna del EFHW, red de adaptación del proyecto, línea de "
+            "alimentación y pérdida del balun para el diseño actual."
+        ),
+    },
+    "help.feed_matching.override": {
+        Language.ENGLISH: (
+            "The project matching network replaces the internal EFHW matching unit; "
+            "the two networks are not cascaded."
+        ),
+        Language.SPANISH: (
+            "La red del proyecto reemplaza la unidad de adaptación interna del EFHW; "
+            "las dos redes no se conectan en cascada."
+        ),
+    },
+    "help.feed_matching.remove": {
+        Language.ENGLISH: (
+            "Remove the project matching network and restore the internal EFHW matching unit."
+        ),
+        Language.SPANISH: (
+            "Quita la red de adaptación del proyecto y restaura la unidad interna del EFHW."
+        ),
+    },
+    "help.action.matching_network": {
+        Language.ENGLISH: "Edit or create the project-wide L, Pi, or T matching network.",
+        Language.SPANISH: "Edita o crea la red de adaptación L, Pi o T de todo el proyecto.",
+    },
     "help.action.simulate": {
         Language.ENGLISH: "Save the current form values and run the solver.",
         Language.SPANISH: "Guardá los valores actuales del formulario y ejecutá el solver.",
@@ -2951,6 +2983,96 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "un cálculo de pérdidas del núcleo."
         ),
     },
+    "feed_matching.title": {
+        Language.ENGLISH: "Feed & matching",
+        Language.SPANISH: "Alimentación y adaptación",
+    },
+    "feed_matching.endfed": {
+        Language.ENGLISH: "EFHW design matching",
+        Language.SPANISH: "Adaptación del diseño EFHW",
+    },
+    "feed_matching.project": {
+        Language.ENGLISH: "Project matching",
+        Language.SPANISH: "Adaptación del proyecto",
+    },
+    "feed_matching.feed_line": {
+        Language.ENGLISH: "Feed line",
+        Language.SPANISH: "Línea de alimentación",
+    },
+    "feed_matching.balun": {
+        Language.ENGLISH: "Balun/unun loss",
+        Language.SPANISH: "Pérdida de balun/unun",
+    },
+    "feed_matching.none": {
+        Language.ENGLISH: "None",
+        Language.SPANISH: "Ninguna",
+    },
+    "feed_matching.not_applicable": {
+        Language.ENGLISH: "Not applicable",
+        Language.SPANISH: "No aplica",
+    },
+    "feed_matching.active": {
+        Language.ENGLISH: "active",
+        Language.SPANISH: "activa",
+    },
+    "feed_matching.inactive": {
+        Language.ENGLISH: "inactive",
+        Language.SPANISH: "inactiva",
+    },
+    "feed_matching.retained": {
+        Language.ENGLISH: "retained, not applied",
+        Language.SPANISH: "retenida, no aplicada",
+    },
+    "feed_matching.internal_value": {
+        Language.ENGLISH: ("{capacitance} pF shunt + {leakage} µH leakage ({status})"),
+        Language.SPANISH: ("{capacitance} pF en paralelo + {leakage} µH de fuga ({status})"),
+    },
+    "feed_matching.network_state": {
+        Language.ENGLISH: "{network} ({state})",
+        Language.SPANISH: "{network} ({state})",
+    },
+    "feed_matching.feed_line_value": {
+        Language.ENGLISH: "{impedance} Ω · {length} {unit} · VF {velocity}",
+        Language.SPANISH: "{impedance} Ω · {length} {unit} · FV {velocity}",
+    },
+    "feed_matching.balun_value": {
+        Language.ENGLISH: "{loss} dB at {frequency} MHz · exponent {exponent}",
+        Language.SPANISH: "{loss} dB a {frequency} MHz · exponente {exponent}",
+    },
+    "feed_matching.override_warning": {
+        Language.ENGLISH: (
+            "The project matching network overrides the internal EFHW matching "
+            "network. The internal values are retained but not applied; the two "
+            "networks are not cascaded."
+        ),
+        Language.SPANISH: (
+            "La red de adaptación del proyecto reemplaza la red interna del EFHW. "
+            "Los valores internos se retienen pero no se aplican; las dos redes no "
+            "se conectan en cascada."
+        ),
+    },
+    "feed_matching.edit": {
+        Language.ENGLISH: "Edit project network...",
+        Language.SPANISH: "Editar red del proyecto...",
+    },
+    "feed_matching.remove": {
+        Language.ENGLISH: "Remove project network",
+        Language.SPANISH: "Quitar red del proyecto",
+    },
+    "feed_matching.remove_title": {
+        Language.ENGLISH: "Remove matching network",
+        Language.SPANISH: "Quitar red de adaptación",
+    },
+    "feed_matching.remove_question": {
+        Language.ENGLISH: (
+            "Remove the project matching network? The internal EFHW matching "
+            "network will become effective again."
+        ),
+        Language.SPANISH: (
+            "¿Quitar la red de adaptación del proyecto? La red interna del EFHW "
+            "volverá a ser efectiva."
+        ),
+    },
     "matching_network.title": {
         Language.ENGLISH: "Matching Network",
         Language.SPANISH: "Red de adaptación",
@@ -3051,6 +3173,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "Red L sin pérdidas evaluada antes de la línea. Cambia la impedancia "
             "y el SWR, pero no el patrón ni la ganancia de potencia."
+        ),
+    },
+    "matching_network.override_warning": {
+        Language.ENGLISH: (
+            "This network replaces the internal EFHW matching unit on end-fed "
+            "designs. The internal values stay in the design but are not applied; "
+            "the networks are not cascaded."
+        ),
+        Language.SPANISH: (
+            "Esta red reemplaza la unidad de adaptación interna del EFHW en diseños "
+            "alimentados en el extremo. Los valores internos quedan en el diseño "
+            "pero no se aplican; las redes no se conectan en cascada."
         ),
     },
     "field.sweep": {Language.ENGLISH: "Frequency sweep", Language.SPANISH: "Barrido de frecuencia"},
@@ -5886,6 +6020,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "matching {capacitance} pF + {leakage} µH leakage",
         Language.SPANISH: "adaptación {capacitance} pF + {leakage} µH de fuga",
     },
+    "endfed.matching_override": {
+        Language.ENGLISH: (
+            "Internal matching values are retained but inactive because the project "
+            "matching network overrides them. Use Edit or Remove in Feed & matching."
+        ),
+        Language.SPANISH: (
+            "Los valores de adaptación internos se retienen pero están inactivos "
+            "porque la red de adaptación del proyecto los reemplaza. Usá Editar o "
+            "Quitar en Alimentación y adaptación."
+        ),
+    },
     "endfed.counterpoise_enabled": {
         Language.ENGLISH: "Use counterpoise",
         Language.SPANISH: "Usar contrapeso",
@@ -7745,6 +7890,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "El capacitor de adaptación en el primario y la fuga del "
             "transformador quedan en sus valores de diseño; no se optimizan "
             "hasta tener un modelo medido del transformador."
+        ),
+    },
+    "optimize.matching_override": {
+        Language.ENGLISH: (
+            "Optimization includes the project matching network, which replaces the "
+            "internal EFHW matching network. The networks are not cascaded."
+        ),
+        Language.SPANISH: (
+            "La optimización incluye la red de adaptación del proyecto, que "
+            "reemplaza la red interna del EFHW. Las redes no se conectan en cascada."
         ),
     },
     "optimize.family_summary": {

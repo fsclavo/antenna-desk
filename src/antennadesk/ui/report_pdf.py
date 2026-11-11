@@ -25,6 +25,7 @@ from ..domain.simulation.result import SimulationResult
 from ..reporting.design_summary import (
     design_provenance_rows,
     design_summary_rows,
+    feed_matching_rows,
     load_summary_rows,
     optimization_summary_rows,
     transmission_line_summary_rows,
@@ -236,7 +237,17 @@ def write_report_pdf(
     section(translator.t("panel.design"))
     for label, value in localize_rows(
         (
-            *design_summary_rows(design.parameters, labeler=translator.report),
+            *design_summary_rows(
+                design.parameters,
+                labeler=translator.report,
+                project_network=project.matching_network,
+            ),
+            *feed_matching_rows(
+                project.matching_network,
+                project.feed_line,
+                project.balun_loss,
+                labeler=translator.report,
+            ),
             *optimization_summary_rows(design),
             *design_provenance_rows(design),
             *load_summary_rows(design.antenna.loads, labeler=translator.report),

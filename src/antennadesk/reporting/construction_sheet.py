@@ -42,6 +42,7 @@ from ..domain.antennas.zepp import (
     ZeppParameters,
     parallel_wire_impedance_ohm,
 )
+from ..domain.design.matching_resolution import resolve_matching_network
 from ..domain.optimization.length import measure_bandwidth_hz
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
@@ -50,6 +51,7 @@ from .design_summary import (
     design_evidence_rows,
     design_provenance_rows,
     design_summary_rows,
+    feed_matching_rows,
     load_summary_rows,
     optimization_summary_rows,
     transmission_line_summary_rows,
@@ -166,7 +168,17 @@ def render_construction_sheet(
         f"<tr><th>{_escape(label)}</th><td>{_escape(value)}</td></tr>"
         for label, value in localize_rows(
             (
-                *design_summary_rows(parameters, labeler=tr),
+                *design_summary_rows(
+                    parameters,
+                    labeler=tr,
+                    project_network=project.matching_network,
+                ),
+                *feed_matching_rows(
+                    project.matching_network,
+                    project.feed_line,
+                    project.balun_loss,
+                    labeler=tr,
+                ),
                 *optimization_summary_rows(design),
                 *design_provenance_rows(design),
                 *load_summary_rows(design.antenna.loads, labeler=tr),
@@ -695,6 +707,12 @@ def render_construction_sheet(
             spacing=f"{parameters.spacing_m:.4f}",
         )
     elif isinstance(parameters, EndFedParameters):
+        override_active = resolve_matching_network(
+            parameters, project.matching_network
+        ).override_active
+        matching_status = (
+            tr("retained; project network overrides") if override_active else tr("active")
+        )
         counterpoise = (
             f"{parameters.counterpoise_length_m:.4f} m at {parameters.counterpoise_height_m:.4f} m"
             if parameters.counterpoise_length_m > 0.0
@@ -711,8 +729,8 @@ def render_construction_sheet(
             else ""
         )
         matching_rows = (
-            f"<tr><th>Matching capacitor</th><td>{parameters.matching_capacitance_f * 1e12:.1f} pF (primary shunt)</td></tr>\n"
-            f"<tr><th>Transformer leakage</th><td>{parameters.transformer_leakage_inductance_h * 1e6:.4f} µH (starting estimate)</td></tr>\n"
+            f"<tr><th>Matching capacitor</th><td>{parameters.matching_capacitance_f * 1e12:.1f} pF (primary shunt, {_escape(matching_status)})</td></tr>\n"
+            f"<tr><th>Transformer leakage</th><td>{parameters.transformer_leakage_inductance_h * 1e6:.4f} µH ({_escape(matching_status)})</td></tr>\n"
             if parameters.matching_network_active
             else ""
         )
@@ -739,8 +757,8 @@ def render_construction_sheet(
                 tr,
                 "Cut one wire to {length} m. Fit the {inductance} µH loading coil "
                 "at {offset} m from the feed; the remaining {top} m is the top "
-                "section. Use a {ratio}:1 transformer and the published matching "
-                "unit; the counterpoise is {counterpoise}.",
+                "section. Use a {ratio}:1 transformer and the matching unit "
+                "described below; the counterpoise is {counterpoise}.",
                 length=f"{parameters.length_m:.4f}",
                 inductance=f"{parameters.loading_coil_inductance_h * 1e6:.4f}",
                 offset=f"{parameters.loading_coil_offset_m:.4f}",
@@ -773,20 +791,38 @@ def render_construction_sheet(
                 + "</p>"
             )
         if parameters.matching_network_active:
-            construction_note += (
-                "<p>"
-                + _escape(
-                    tr(
-                        "The {capacitance} pF capacitor is an ideal shunt across the "
-                        "transformer primary. The {leakage} µH leakage is a starting "
-                        "estimate; measure your transformer. Core loss, capacitor ESR, "
-                        "and winding capacitance are not modeled.",
-                        capacitance=f"{parameters.matching_capacitance_f * 1e12:.1f}",
-                        leakage=f"{parameters.transformer_leakage_inductance_h * 1e6:.4f}",
+            if override_active:
+                construction_note += (
+                    "<p>"
+                    + _escape(
+                        tr(
+                            "The project matching network replaces the internal EFHW "
+                            "matching unit. The {capacitance} pF capacitor and {leakage} "
+                            "µH leakage are retained in the design but are not installed "
+                            "or applied; do not cascade both networks. The {ratio}:1 "
+                            "transformer ratio still applies.",
+                            capacitance=f"{parameters.matching_capacitance_f * 1e12:.1f}",
+                            leakage=f"{parameters.transformer_leakage_inductance_h * 1e6:.4f}",
+                            ratio=f"{parameters.transformer_ratio:g}",
+                        )
                     )
+                    + "</p>"
                 )
-                + "</p>"
-            )
+            else:
+                construction_note += (
+                    "<p>"
+                    + _escape(
+                        tr(
+                            "The {capacitance} pF capacitor is an ideal shunt across the "
+                            "transformer primary. The {leakage} µH leakage is a starting "
+                            "estimate; measure your transformer. Core loss, capacitor ESR, "
+                            "and winding capacitance are not modeled.",
+                            capacitance=f"{parameters.matching_capacitance_f * 1e12:.1f}",
+                            leakage=f"{parameters.transformer_leakage_inductance_h * 1e6:.4f}",
+                        )
+                    )
+                    + "</p>"
+                )
     elif isinstance(parameters, FanDipoleParameters):
         lengths = ", ".join(f"{element.length_m:.4f} m" for element in parameters.elements)
         angles = ", ".join(f"{element.included_angle_deg:.1f}°" for element in parameters.elements)

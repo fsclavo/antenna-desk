@@ -125,6 +125,7 @@ HELP_MANIFEST = frozenset(
         "help.section.pattern",
         "help.section.band",
         "help.section.geometry",
+        "help.section.feed_matching",
         "help.action.simulate",
         "help.action.analyze_bands",
         "help.action.apply_design",

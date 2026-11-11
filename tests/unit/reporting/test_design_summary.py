@@ -7,6 +7,7 @@ from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.reporting.design_summary import (
     design_evidence_rows,
     design_summary_rows,
+    feed_matching_rows,
     optimization_summary_rows,
 )
 
@@ -538,3 +539,64 @@ def test_g5rv_custom_generator_is_labeled_in_the_summary() -> None:
 
     assert rows["Type"] == "custom wires"
     assert rows["Generator"] == "G5RV"
+
+
+def test_endfed_summary_marks_internal_matching_retained_under_override() -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+    from antennadesk.domain.antennas.matching_network import LNetwork
+
+    parameters = shortened_efhw_80_10_parameters()
+    project = LNetwork(series_inductance_h=1e-6, shunt_capacitance_f=100e-12)
+
+    rows = dict(design_summary_rows(parameters, project_network=project))
+
+    assert "retained; project network overrides" in rows["Matching capacitor"]
+    assert "retained; project network overrides" in rows["Transformer leakage"]
+
+
+def test_endfed_summary_marks_internal_matching_active_without_an_override() -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+
+    rows = dict(design_summary_rows(shortened_efhw_80_10_parameters()))
+
+    assert "primary shunt, active" in rows["Matching capacitor"]
+    assert "µH (active)" in rows["Transformer leakage"]
+
+
+def test_feed_matching_rows_describe_the_project_chain() -> None:
+    from antennadesk.domain.antennas.balun import BalunLoss
+    from antennadesk.domain.antennas.feed_line import FeedLine
+    from antennadesk.domain.antennas.matching_network import LNetwork
+
+    project = LNetwork(series_inductance_h=1e-6, shunt_capacitance_f=100e-12)
+    feed_line = FeedLine(characteristic_impedance_ohm=50.0, length_m=5.0, velocity_factor=0.8)
+    balun = BalunLoss(reference_frequency_hz=7_000_000.0, reference_loss_db=0.5)
+
+    rows = dict(
+        feed_matching_rows(
+            project,
+            feed_line,
+            balun,
+        )
+    )
+
+    assert "L network" in rows["Project matching"]
+    assert "active" in rows["Project matching"]
+    assert "50 Ω, 5.0000 m, velocity factor 0.8" in rows["Feed line"]
+    assert "0.500 dB at 7.000000 MHz" in rows["Balun/unun loss"]
+
+
+def test_feed_matching_rows_omit_inactive_project_items() -> None:
+    from antennadesk.domain.antennas.feed_line import FeedLine
+
+    rows = dict(
+        feed_matching_rows(
+            None,
+            FeedLine(),
+            None,
+        )
+    )
+
+    assert "Project matching" not in rows
+    assert "Feed line" not in rows
+    assert "Balun/unun loss" not in rows

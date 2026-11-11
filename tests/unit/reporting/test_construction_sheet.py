@@ -869,3 +869,27 @@ def test_zepp_construction_sheet_lists_the_stub_and_choke(sample_project: Projec
     assert "Estimated stub impedance" in sheet
     assert "1:1 common-mode choke" in sheet
     assert "10.0283" in sheet
+
+
+def test_endfed_construction_sheet_marks_the_internal_matching_as_overridden(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+    from antennadesk.domain.antennas.matching_network import LNetwork
+
+    design = sample_project.designs[0].with_parameters(shortened_efhw_80_10_parameters())
+    project_network = LNetwork(series_inductance_h=1e-6, shunt_capacitance_f=100e-12)
+    project = sample_project.with_design(
+        design,
+        updated_at=sample_project.updated_at,
+    ).with_matching_network(
+        project_network,
+        updated_at=sample_project.updated_at,
+    )
+
+    sheet = render_construction_sheet(project, design, None)
+
+    assert "retained; project network overrides" in sheet
+    assert "Project matching" in sheet
+    assert "L network" in sheet
+    assert "do not cascade both networks" in sheet

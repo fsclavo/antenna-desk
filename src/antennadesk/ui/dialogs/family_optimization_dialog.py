@@ -53,6 +53,7 @@ from ...domain.optimization.variables import OptimizationVariable, VariableKind
 from ...domain.simulation.spec import SimulationSpec
 from ...reporting.optimizer_csv import write_optimization_csv
 from ..fonts import scaled_dialog_size
+from ..help import apply_help
 from ..i18n import Translator
 from ..parallelism import MAX_UI_PARALLEL_WORKERS, default_parallel_workers
 from ..units import (
@@ -223,6 +224,14 @@ class FamilyOptimizationDialog(QDialog):
         self._locked_hint = QLabel(translator.t("optimize.locked_partial"), self)
         self._locked_hint.setWordWrap(True)
         self._locked_hint.setVisible(False)
+        self._matching_override_warning = QLabel(
+            translator.t("optimize.matching_override"),
+            self,
+        )
+        self._matching_override_warning.setWordWrap(True)
+        self._matching_override_warning.setStyleSheet("color: #8a5a00;")
+        self._matching_override_warning.setVisible(base_spec.matching_network_override)
+        apply_help(self._matching_override_warning, translator, "feed_matching.override")
 
         self._context_note = QLabel(self)
         self._context_note.setWordWrap(True)
@@ -380,6 +389,7 @@ class FamilyOptimizationDialog(QDialog):
 
         layout = QVBoxLayout(self)
         layout.addLayout(form)
+        layout.addWidget(self._matching_override_warning)
         layout.addWidget(self._last_summary_label)
         layout.addWidget(self._locked_hint)
         layout.addWidget(self._table, 1)

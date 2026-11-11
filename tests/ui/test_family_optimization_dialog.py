@@ -29,15 +29,18 @@ def _dialog(**kwargs: object) -> FamilyOptimizationDialog:
     )
     availability = optimizer_availability(parameters)
     assert availability.descriptor is not None
+    base_spec = kwargs.pop("base_spec", None)
+    if not isinstance(base_spec, SimulationSpec):
+        base_spec = SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(6.7e6, 7.5e6, 11),
+            far_field=far_field_request(5.0, parameters.ground),
+        )
     return FamilyOptimizationDialog(
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
         FakeSolver(),
         availability.descriptor,
-        SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(6.7e6, 7.5e6, 11),
-            far_field=far_field_request(5.0, parameters.ground),
-        ),
+        base_spec,
         **kwargs,  # type: ignore[arg-type]
     )
 
@@ -50,6 +53,33 @@ def test_family_dialog_lists_the_family_variables(qtbot: QtBot) -> None:
     assert dialog._table.item(0, 0).text() == "Total length"
     assert dialog._objective.count() >= 4
     assert dialog._budget.count() == 3
+
+
+def test_family_dialog_shows_the_matching_override_warning(qtbot: QtBot) -> None:
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.sweep(6.7e6, 7.5e6, 11),
+        far_field=far_field_request(5.0, parameters.ground),
+        matching_network_override=True,
+    )
+
+    dialog = _dialog(base_spec=spec)
+    qtbot.addWidget(dialog)
+
+    assert dialog._matching_override_warning.isHidden() is False
+    assert "not cascaded" in dialog._matching_override_warning.text()
+    assert dialog._matching_override_warning.toolTip()
+
+
+def test_family_dialog_hides_the_matching_override_warning_by_default(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+
+    assert dialog._matching_override_warning.isHidden() is True
 
 
 def test_family_dialog_localizes_optimizer_constraints(qtbot: QtBot) -> None:

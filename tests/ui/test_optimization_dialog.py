@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 from helpers import wait_for_condition
 from PySide6.QtWidgets import QDialog
@@ -144,6 +146,54 @@ def test_optimization_dialog_runs_and_selects_length(qtbot: QtBot) -> None:
 
     dialog._apply.click()
     assert dialog.result() == QDialog.DialogCode.Accepted
+
+
+def test_optimization_dialog_shows_the_matching_override_warning(qtbot: QtBot) -> None:
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    )
+    base_spec = replace(
+        SimulationSpec(
+            frequency_plan=FrequencyPlan.single(7_100_000.0),
+            far_field=FarFieldRequest(enabled=True),
+        ),
+        matching_network_override=True,
+    )
+    dialog = OptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalSolver(),
+        parameters,
+        base_spec,
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._matching_override_warning.isHidden() is False
+    assert "not cascaded" in dialog._matching_override_warning.text()
+
+
+def test_optimization_dialog_hides_the_matching_override_warning_by_default(
+    qtbot: QtBot,
+) -> None:
+    dialog = OptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalSolver(),
+        DipoleParameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=20.0,
+            height_m=8.0,
+        ),
+        SimulationSpec(
+            frequency_plan=FrequencyPlan.single(7_100_000.0),
+            far_field=FarFieldRequest(enabled=True),
+        ),
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._matching_override_warning.isHidden() is True
 
 
 def test_optimization_dialog_handles_a_loop_circumference(qtbot: QtBot) -> None:

@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from ..domain.antennas.balun import BalunLoss
 from ..domain.antennas.beverage import BeverageParameters
 from ..domain.antennas.biquad import BiquadParameters
 from ..domain.antennas.custom import CustomAntennaParameters
@@ -12,6 +13,7 @@ from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
 from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import EndFedParameters, EndFedPreset
 from ..domain.antennas.fan_dipole import FanDipoleParameters
+from ..domain.antennas.feed_line import FeedLine
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.hexbeam import HexbeamParameters
 from ..domain.antennas.inverted_l import InvertedLParameters
@@ -21,6 +23,7 @@ from ..domain.antennas.load import LumpedLoad, ParallelLoad
 from ..domain.antennas.loaded_dipole import LoadedDipoleParameters
 from ..domain.antennas.loop import LoopOrientation, LoopParameters
 from ..domain.antennas.magnetic_loop import MagneticLoopParameters
+from ..domain.antennas.matching_network import LNetwork, MatchingNetwork, PiNetwork, TNetwork
 from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
@@ -38,6 +41,7 @@ from ..domain.antennas.vertical import VerticalParameters
 from ..domain.antennas.yagi import YagiParameters
 from ..domain.antennas.zepp import ZeppParameters, parallel_wire_impedance_ohm
 from ..domain.design.evidence import EVIDENCE
+from ..domain.design.matching_resolution import resolve_matching_network
 from ..domain.environment.ground import GroundModel
 from ..domain.projects.project import DesignVariant
 from .localization import Labeler, identity_labeler
@@ -127,9 +131,126 @@ def optimization_summary_rows(design: DesignVariant) -> tuple[tuple[str, str], .
     )
 
 
+def _branch_text(
+    inductance_h: float,
+    capacitance_f: float,
+    labeler: Labeler | None = None,
+) -> str:
+    tr = labeler or identity_labeler
+    parts: list[str] = []
+    if inductance_h:
+        parts.append(tr("{value:g} µH", value=inductance_h * 1e6))
+    if capacitance_f:
+        parts.append(tr("{value:g} pF", value=capacitance_f * 1e12))
+    return " + ".join(parts)
+
+
+def matching_network_description(
+    network: MatchingNetwork,
+    labeler: Labeler | None = None,
+) -> str:
+    """Return a compact, topology-specific description of a matching network."""
+
+    tr = labeler or identity_labeler
+    if isinstance(network, LNetwork):
+        shunt_side = tr("input") if network.shunt_at_input else tr("output")
+        description = tr(
+            "L network (series {series}, {side} shunt {shunt})",
+            series=_branch_text(network.series_inductance_h, network.series_capacitance_f, tr),
+            side=shunt_side,
+            shunt=_branch_text(network.shunt_inductance_h, network.shunt_capacitance_f, tr),
+        )
+    elif isinstance(network, PiNetwork):
+        description = tr(
+            "Pi network (input shunt {input_shunt}, series {series}, output shunt {output_shunt})",
+            input_shunt=_branch_text(
+                network.input_shunt_inductance_h,
+                network.input_shunt_capacitance_f,
+                tr,
+            ),
+            series=_branch_text(network.series_inductance_h, network.series_capacitance_f, tr),
+            output_shunt=_branch_text(
+                network.output_shunt_inductance_h,
+                network.output_shunt_capacitance_f,
+                tr,
+            ),
+        )
+    elif isinstance(network, TNetwork):
+        description = tr(
+            "T network (input series {input_series}, shunt {shunt}, output series {output_series})",
+            input_series=_branch_text(
+                network.input_series_inductance_h,
+                network.input_series_capacitance_f,
+                tr,
+            ),
+            shunt=_branch_text(network.shunt_inductance_h, network.shunt_capacitance_f, tr),
+            output_series=_branch_text(
+                network.output_series_inductance_h,
+                network.output_series_capacitance_f,
+                tr,
+            ),
+        )
+    else:
+        raise TypeError(f"unsupported matching network: {type(network)!r}")
+    if network.q_factor:
+        description += tr(", Q {q:g}", q=network.q_factor)
+    return description
+
+
+def feed_matching_rows(
+    project_network: MatchingNetwork | None,
+    feed_line: FeedLine | None,
+    balun_loss: BalunLoss | None,
+    labeler: Labeler | None = None,
+) -> tuple[tuple[str, str], ...]:
+    """Return project-level feed and matching rows for a report."""
+
+    tr = labeler or identity_labeler
+    rows: list[tuple[str, str]] = []
+    if project_network is not None:
+        state = tr("active") if project_network.is_active else tr("inactive")
+        rows.append(
+            (
+                "Project matching",
+                tr(
+                    "{network} · {state}",
+                    network=matching_network_description(project_network, tr),
+                    state=state,
+                ),
+            )
+        )
+    if feed_line is not None and feed_line.is_active:
+        rows.append(
+            (
+                "Feed line",
+                tr(
+                    "{impedance:g} Ω, {length:.4f} m, velocity factor {velocity:g}",
+                    impedance=feed_line.characteristic_impedance_ohm,
+                    length=feed_line.length_m,
+                    velocity=feed_line.velocity_factor,
+                ),
+            )
+        )
+    if balun_loss is not None and balun_loss.is_active:
+        rows.append(
+            (
+                "Balun/unun loss",
+                tr(
+                    "{loss:.3f} dB at {frequency:.6f} MHz (exponent {exponent:g})",
+                    loss=balun_loss.reference_loss_db,
+                    frequency=balun_loss.reference_frequency_hz / 1e6,
+                    exponent=balun_loss.exponent,
+                ),
+            )
+        )
+    return tuple(rows)
+
+
 def design_summary_rows(
     parameters: AntennaDesignParameters,
     labeler: Labeler | None = None,
+    *,
+    project_network: MatchingNetwork | None = None,
 ) -> tuple[tuple[str, str], ...]:
     tr = labeler or identity_labeler
     rows: list[tuple[str, str]] = [
@@ -682,15 +803,27 @@ def design_summary_rows(
             ]
         )
         if parameters.matching_network_active:
+            override_active = resolve_matching_network(parameters, project_network).override_active
+            matching_status = (
+                tr("retained; project network overrides") if override_active else tr("active")
+            )
             rows.extend(
                 [
                     (
                         "Matching capacitor",
-                        f"{parameters.matching_capacitance_f * 1e12:.1f} pF (primary shunt)",
+                        tr(
+                            "{value:.1f} pF (primary shunt, {status})",
+                            value=parameters.matching_capacitance_f * 1e12,
+                            status=matching_status,
+                        ),
                     ),
                     (
                         "Transformer leakage",
-                        f"{parameters.transformer_leakage_inductance_h * 1e6:.4f} µH",
+                        tr(
+                            "{value:.4f} µH ({status})",
+                            value=parameters.transformer_leakage_inductance_h * 1e6,
+                            status=matching_status,
+                        ),
                     ),
                 ]
             )

@@ -74,3 +74,34 @@ def test_matching_network_dialog_builds_pi_and_t_topologies(qtbot: QtBot) -> Non
     t = dialog.network()
     assert isinstance(t, TNetwork)
     assert t.shunt_capacitance_f == pytest.approx(100e-12)
+
+
+def test_matching_network_dialog_warns_when_it_overrides_internal_matching(
+    qtbot: QtBot,
+) -> None:
+    dialog = MatchingNetworkDialog(
+        Translator(Language.ENGLISH),
+        internal_matching_active=True,
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._override_warning.isHidden() is True
+
+    dialog._enabled.setChecked(True)
+
+    assert dialog._override_warning.isHidden() is False
+    assert "not cascaded" in dialog._override_warning.text()
+
+
+def test_matching_network_dialog_hides_the_override_warning_without_internal_matching(
+    qtbot: QtBot,
+) -> None:
+    existing = LNetwork(series_inductance_h=1e-6, shunt_capacitance_f=100e-12)
+    dialog = MatchingNetworkDialog(
+        Translator(Language.ENGLISH),
+        existing,
+        internal_matching_active=False,
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._override_warning.isHidden() is True

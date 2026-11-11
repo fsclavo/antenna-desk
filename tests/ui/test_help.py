@@ -168,6 +168,7 @@ def test_main_window_sections_actions_and_tabs_have_help(window) -> None:  # typ
     assert "Far-field" in window._pattern_group.toolTip()
     assert "amateur bands" in window._band_group.toolTip()
     assert "Dimensioned construction" in window._geometry.toolTip()
+    assert "EFHW" in window._feed_matching_summary.toolTip()
     assert "amateur bands" in window._analyze_bands_action.toolTip()
     assert "form values" in window._apply_button.toolTip()
     assert "family optimizer" in window._optimize_button.toolTip()

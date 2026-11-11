@@ -26,7 +26,7 @@ from ...domain.antennas.matching_network import (
     design_l_network,
 )
 from ..fonts import scaled_dialog_size
-from ..help import apply_row_help
+from ..help import apply_help, apply_row_help
 from ..i18n import Translator
 
 
@@ -38,11 +38,13 @@ class MatchingNetworkDialog(QDialog):
         parent: QWidget | None = None,
         *,
         frequency_hz: float = 14_100_000.0,
+        internal_matching_active: bool = False,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._network = network
         self._frequency_hz = frequency_hz
+        self._internal_matching_active = internal_matching_active
         self.setWindowTitle(translator.t("matching_network.title"))
         self.resize(*scaled_dialog_size(480, 440))
 
@@ -189,6 +191,13 @@ class MatchingNetworkDialog(QDialog):
 
         hint = QLabel(translator.t("matching_network.hint"), self)
         hint.setWordWrap(True)
+        self._override_warning = QLabel(
+            translator.t("matching_network.override_warning"),
+            self,
+        )
+        self._override_warning.setWordWrap(True)
+        self._override_warning.setStyleSheet("color: #8a5a00;")
+        apply_help(self._override_warning, translator, "feed_matching.override")
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
@@ -200,6 +209,7 @@ class MatchingNetworkDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.addWidget(self._enabled)
         layout.addLayout(form)
+        layout.addWidget(self._override_warning)
         layout.addWidget(hint)
         layout.addStretch(1)
         layout.addWidget(buttons)
@@ -253,6 +263,7 @@ class MatchingNetworkDialog(QDialog):
 
     def _update_controls(self) -> None:
         enabled = self._enabled.isChecked()
+        self._override_warning.setVisible(enabled and self._internal_matching_active)
         for widget in (
             self._series_l,
             self._series_c,

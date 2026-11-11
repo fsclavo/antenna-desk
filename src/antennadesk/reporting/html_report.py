@@ -16,6 +16,7 @@ from ..domain.simulation.result import SimulationResult
 from .design_summary import (
     design_provenance_rows,
     design_summary_rows,
+    feed_matching_rows,
     load_summary_rows,
     optimization_summary_rows,
     transmission_line_summary_rows,
@@ -199,7 +200,17 @@ def render_html_report(
         f"<tr><th>{_escape(label)}</th><td>{_escape(value)}</td></tr>"
         for label, value in localize_rows(
             (
-                *design_summary_rows(parameters, labeler=tr),
+                *design_summary_rows(
+                    parameters,
+                    labeler=tr,
+                    project_network=project.matching_network,
+                ),
+                *feed_matching_rows(
+                    project.matching_network,
+                    project.feed_line,
+                    project.balun_loss,
+                    labeler=tr,
+                ),
                 *optimization_summary_rows(design),
                 *design_provenance_rows(design),
                 *load_summary_rows(design.antenna.loads, labeler=tr),

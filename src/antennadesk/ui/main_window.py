@@ -307,6 +307,7 @@ from .widgets.dipole_form import DipoleForm
 from .widgets.discone_form import DisconeForm
 from .widgets.endfed_form import EndFedForm
 from .widgets.fan_dipole_form import FanDipoleForm
+from .widgets.feed_matching_summary import FeedMatchingSummary
 from .widgets.geometry_view import GeometryView, GeometryViewMode
 from .widgets.hexbeam_form import HexbeamForm
 from .widgets.inverted_l_form import InvertedLForm
@@ -643,6 +644,8 @@ class MainWindow(QMainWindow):
 
         self._endfed_form = EndFedForm(self._translator, self._unit_system, parent=self)
         self._endfed_form.changed.connect(self._on_form_changed)
+        self._endfed_form.matching_network_edit_requested.connect(self.configure_matching_network)
+        self._endfed_form.matching_network_remove_requested.connect(self.remove_matching_network)
         self._endfed_scroll = QScrollArea(self)
         self._endfed_scroll.setWidgetResizable(True)
         self._endfed_scroll.setWidget(self._endfed_form)
@@ -1015,6 +1018,13 @@ class MainWindow(QMainWindow):
         self._provenance_label = QLabel(self)
         self._provenance_label.setWordWrap(True)
         self._provenance_label.setVisible(False)
+        self._feed_matching_summary = FeedMatchingSummary(
+            self._translator,
+            self._unit_system,
+            self,
+        )
+        self._feed_matching_summary.edit_network_requested.connect(self.configure_matching_network)
+        self._feed_matching_summary.remove_network_requested.connect(self.remove_matching_network)
         design_panel = QWidget(self)
         design_layout = QVBoxLayout(design_panel)
         design_layout.setContentsMargins(0, 0, 0, 0)
@@ -1024,6 +1034,7 @@ class MainWindow(QMainWindow):
         design_actions.addWidget(self._optimize_button)
         design_layout.addLayout(design_actions)
         design_layout.addWidget(self._design_stack, 1)
+        design_layout.addWidget(self._feed_matching_summary)
         design_layout.addWidget(self._provenance_label)
         design_layout.addWidget(self._advanced_toggle)
         design_layout.addWidget(self._advanced_body)
@@ -1407,6 +1418,7 @@ class MainWindow(QMainWindow):
         self._trap_dipole_form.retranslate()
         self._t2fd_form.retranslate()
         self._endfed_form.retranslate()
+        self._feed_matching_summary.retranslate()
         self._j_pole_form.retranslate()
         self._ringo_form.retranslate()
         self._scv_form.retranslate()
@@ -2071,6 +2083,7 @@ class MainWindow(QMainWindow):
         self._update_height_control()
         self._update_custom_pattern_status()
         self._refresh_auto_sweep_display()
+        self._refresh_feed_matching_summary()
 
     @history_action("history.apply_design")
     def _on_variant_changed(self, *_args: object) -> None:
@@ -2128,6 +2141,7 @@ class MainWindow(QMainWindow):
         self._geometry.clear_model()
         self._main_stack.setCurrentWidget(self._start_page)
         self._last_status_key = "status.ready"
+        self._refresh_feed_matching_summary()
         self._update_title()
         self._update_status_text()
         self._update_actions()
@@ -2784,17 +2798,26 @@ class MainWindow(QMainWindow):
             )
             self._dirty = True
             self._update_title()
+        self._refresh_feed_matching_summary()
 
     @history_action("history.matching_network")
     def configure_matching_network(self) -> None:
         frequency_hz = 14_100_000.0
+        parameters = None
         if self._project is not None and self._design_id is not None:
-            frequency_hz = self._project.design_by_id(self._design_id).parameters.frequency_hz
+            parameters = self._project.design_by_id(self._design_id).parameters
+            frequency_hz = parameters.frequency_hz
+        internal_matching_active = False
+        if parameters is not None:
+            internal_matching_active = (
+                resolve_matching_network(parameters, self._matching_network).internal is not None
+            )
         dialog = MatchingNetworkDialog(
             self._translator,
             self._matching_network,
             self,
             frequency_hz=frequency_hz,
+            internal_matching_active=internal_matching_active,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -2806,6 +2829,30 @@ class MainWindow(QMainWindow):
             )
             self._dirty = True
             self._update_title()
+        self._refresh_feed_matching_summary()
+
+    @history_action("history.matching_network")
+    def remove_matching_network(self) -> None:
+        if self._matching_network is None:
+            return
+        answer = QMessageBox.question(
+            self,
+            self._translator.t("feed_matching.remove_title"),
+            self._translator.t("feed_matching.remove_question"),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        self._matching_network = None
+        if self._project is not None:
+            self._project = self._project.with_matching_network(
+                None,
+                updated_at=utc_now(),
+            )
+            self._dirty = True
+            self._update_title()
+        self._refresh_feed_matching_summary()
 
     @history_action("history.balun_loss")
     def configure_balun_loss(self) -> None:
@@ -2824,6 +2871,19 @@ class MainWindow(QMainWindow):
             )
             self._dirty = True
             self._update_title()
+        self._refresh_feed_matching_summary()
+
+    def _refresh_feed_matching_summary(self) -> None:
+        parameters = None
+        if self._project is not None and self._design_id is not None:
+            parameters = self._project.design_by_id(self._design_id).parameters
+        self._endfed_form.set_project_matching_network(self._matching_network)
+        self._feed_matching_summary.set_state(
+            parameters,
+            self._matching_network,
+            self._feed_line,
+            self._balun_loss,
+        )
 
     def _base_simulation_spec(self, design: DesignVariant) -> SimulationSpec:
         return replace(

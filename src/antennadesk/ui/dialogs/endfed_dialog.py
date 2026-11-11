@@ -71,7 +71,9 @@ class EndFedDialog(QDialog):
             parameters,
             self,
             preset=preset,
+            show_override_actions=False,
         )
+        self._form.set_project_matching_network(self._project_matching_network)
         if frequency_hz is not None and parameters is None:
             self._form.set_frequency_hz(frequency_hz)
         title_key = {

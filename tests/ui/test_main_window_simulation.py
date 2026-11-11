@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from helpers import wait_for_condition
 from main_window_support import FakeSolver, use_parameters
-from PySide6.QtWidgets import QDialog, QFileDialog, QInputDialog
+from PySide6.QtWidgets import QDialog, QFileDialog, QInputDialog, QMessageBox
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.simulation.spec import SimulationSpec
@@ -198,6 +198,61 @@ def test_project_matching_network_overrides_shortened_endfed(window: MainWindow)
 
     assert spec.matching_network is not None
     assert spec.matching_network_override is False
+    window._dirty = False
+
+
+def test_feed_matching_summary_reflects_the_project_override(window: MainWindow) -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+    from antennadesk.domain.antennas.matching_network import LNetwork
+
+    use_parameters(window, shortened_efhw_80_10_parameters())
+    window._matching_network = LNetwork(
+        series_inductance_h=1e-6,
+        shunt_capacitance_f=100e-12,
+    )
+    window._refresh_feed_matching_summary()
+
+    assert window._feed_matching_summary._warning_container.isHidden() is False
+    assert "retained, not applied" in window._feed_matching_summary._endfed_value.text()
+    assert "active" in window._feed_matching_summary._project_value.text()
+
+    window._set_language(Language.SPANISH)
+
+    assert "retenida, no aplicada" in window._feed_matching_summary._endfed_value.text()
+    assert "reemplaza" in window._feed_matching_summary._warning.text()
+
+    window._set_language(Language.ENGLISH)
+    window._dirty = False
+
+
+def test_remove_project_matching_network_restores_the_internal_network(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+    from antennadesk.domain.antennas.matching_network import LNetwork
+
+    use_parameters(window, shortened_efhw_80_10_parameters())
+    network = LNetwork(series_inductance_h=1e-6, shunt_capacitance_f=100e-12)
+    window._matching_network = network
+    assert window._project is not None
+    window._project = window._project.with_matching_network(
+        network,
+        updated_at=window._project.updated_at,
+    )
+    window._refresh_feed_matching_summary()
+    monkeypatch.setattr(
+        main_window_module.QMessageBox,
+        "question",
+        lambda *_args, **_kwargs: QMessageBox.StandardButton.Yes,
+    )
+
+    window.remove_matching_network()
+
+    assert window._matching_network is None
+    assert window._project.matching_network is None
+    assert window._feed_matching_summary._warning_container.isHidden() is True
+    assert "(active)" in window._feed_matching_summary._endfed_value.text()
     window._dirty = False
 
 

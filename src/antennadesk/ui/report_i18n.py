@@ -210,6 +210,8 @@ REPORT_SPANISH: dict[str, str] = {
     "Transformer": "Transformador",
     "Matching capacitor": "Capacitor de adaptación",
     "Transformer leakage": "Fuga del transformador",
+    "Project matching": "Adaptación del proyecto",
+    "Feed line": "Línea de alimentación",
     "Transmission lines": "Líneas de transmisión",
     "Trap capacitance": "Capacitancia de la trampa",
     "Trap frequency": "Frecuencia de la trampa",
@@ -445,11 +447,11 @@ REPORT_SPANISH: dict[str, str] = {
         "está a {feed_height} m y el extremo lejano a {end_height} m. Usá un "
         "transformador {ratio}:1; el contrapeso es {counterpoise}."
     ),
-    "Cut one wire to {length} m. Fit the {inductance} µH loading coil at {offset} m from the feed; the remaining {top} m is the top section. Use a {ratio}:1 transformer and the published matching unit; the counterpoise is {counterpoise}.": (  # noqa: E501
+    "Cut one wire to {length} m. Fit the {inductance} µH loading coil at {offset} m from the feed; the remaining {top} m is the top section. Use a {ratio}:1 transformer and the matching unit described below; the counterpoise is {counterpoise}.": (  # noqa: E501
         "Cortá un hilo de {length} m. Colocá la bobina de carga de {inductance} µH "
         "a {offset} m de la alimentación; los {top} m restantes son el tramo "
         "superior. Usá un transformador {ratio}:1 y la unidad de adaptación "
-        "publicada; el contrapeso es {counterpoise}."
+        "descrita abajo; el contrapeso es {counterpoise}."
     ),
     "The first {length} m is a fixed feed section of the same wire; do not cut a separate conductor.": (  # noqa: E501
         "Los primeros {length} m son un tramo de alimentación fijo del mismo hilo; "
@@ -669,5 +671,42 @@ REPORT_SPANISH: dict[str, str] = {
     "top-loaded vertical": "vertical con carga superior",
     "{kind} (eps_r={permittivity:g}, sigma={conductivity:g} S/m)": (
         "{kind} (eps_r={permittivity:g}, sigma={conductivity:g} S/m)"
+    ),
+    # Feed and matching presentation.
+    "active": "activa",
+    "inactive": "inactiva",
+    "input": "entrada",
+    "output": "salida",
+    "retained; project network overrides": "retenida; la red del proyecto la reemplaza",
+    "{value:g} µH": "{value:g} µH",
+    "{value:g} pF": "{value:g} pF",
+    "{value:.1f} pF (primary shunt, {status})": (
+        "{value:.1f} pF (paralelo en el primario, {status})"
+    ),
+    "{value:.4f} µH ({status})": "{value:.4f} µH ({status})",
+    "L network (series {series}, {side} shunt {shunt})": (
+        "Red L (serie {series}, paralelo de {side} {shunt})"
+    ),
+    "Pi network (input shunt {input_shunt}, series {series}, output shunt {output_shunt})": (
+        "Red Pi (paralelo de entrada {input_shunt}, serie {series}, "
+        "paralelo de salida {output_shunt})"
+    ),
+    "T network (input series {input_series}, shunt {shunt}, output series {output_series})": (
+        "Red T (serie de entrada {input_series}, paralelo {shunt}, serie de salida {output_series})"
+    ),
+    ", Q {q:g}": ", Q {q:g}",
+    "{network} · {state}": "{network} · {state}",
+    "{impedance:g} Ω, {length:.4f} m, velocity factor {velocity:g}": (
+        "{impedance:g} Ω, {length:.4f} m, factor de velocidad {velocity:g}"
+    ),
+    "{loss:.3f} dB at {frequency:.6f} MHz (exponent {exponent:g})": (
+        "{loss:.3f} dB a {frequency:.6f} MHz (exponente {exponent:g})"
+    ),
+    "The project matching network replaces the internal EFHW matching unit. The {capacitance} pF capacitor and {leakage} µH leakage are retained in the design but are not installed or applied; do not cascade both networks. The {ratio}:1 transformer ratio still applies.": (  # noqa: E501
+        "La red de adaptación del proyecto reemplaza la unidad de adaptación "
+        "interna del EFHW. El capacitor de {capacitance} pF y la fuga de {leakage} "
+        "µH se retienen en el diseño pero no se instalan ni se aplican; no "
+        "conectes ambas redes en cascada. La relación del transformador {ratio}:1 "
+        "sigue aplicando."
     ),
 }
