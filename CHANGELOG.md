@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The release workflow now generates `.sha256` assets for the wheel and sdist
+  automatically, so every published artifact has a companion checksum.
+
 ## [0.4.1] - 2026-11-11
 
 ### Added

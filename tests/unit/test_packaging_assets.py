@@ -49,6 +49,9 @@ def test_release_workflow_builds_and_tests_the_installer() -> None:
     assert "Uninstall.exe" in text
     assert "dist/*-setup.exe" in text
     assert "dist/*-setup.exe.sha256" in text
+    assert "Generate wheel and sdist checksums" in text
+    assert "dist/*.whl.sha256" in text
+    assert "dist/*.tar.gz.sha256" in text
 
 
 def test_clean_artifacts_removes_the_installer() -> None:

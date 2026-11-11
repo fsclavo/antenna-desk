@@ -29,6 +29,13 @@ jobs:
           uv sync --locked --python 3.12
           uv build --out-dir dist
 
+      - name: Generate wheel and sdist checksums
+        run: |
+          cd dist
+          for file in *.whl *.tar.gz; do
+            sha256sum "$file" > "$file.sha256"
+          done
+
       - name: Smoke test wheel
         run: |
           python -m venv /tmp/antennadesk-wheel
@@ -41,6 +48,8 @@ jobs:
           path: |
             dist/*.whl
             dist/*.tar.gz
+            dist/*.whl.sha256
+            dist/*.tar.gz.sha256
 
   linux-packages:
     name: Build Linux packages
