@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import pyqtgraph as pg
-from PySide6.QtCore import QEvent, Qt, Signal
+from PySide6.QtCore import QEvent, QPoint, Qt, Signal
 from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import (
     QApplication,
@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
+    QMenu,
     QPlainTextEdit,
     QPushButton,
     QSplitter,
@@ -28,6 +29,10 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.common.validation import Diagnostic, Severity
+from ...domain.design.matching_design import (
+    MatchingNetworkDesign,
+    matching_network_design_from_frequency,
+)
 from ...domain.environment.ground import GroundKind
 from ...domain.measurement import Measurement, MeasurementPoint
 from ...domain.measurement_comparison import compare_measurement
@@ -57,6 +62,7 @@ class ResultsView(QWidget):
     measurement_edit_requested = Signal(object)
     measurement_delete_requested = Signal(object)
     band_selected = Signal(object)
+    matching_network_requested = Signal(object)
 
     def __init__(self, translator: Translator, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -100,6 +106,8 @@ class ResultsView(QWidget):
 
         self._table = QTableWidget(0, 5, self._impedance_tab)
         self._configure_table(self._table)
+        self._table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._table.customContextMenuRequested.connect(self._show_impedance_context_menu)
         self._impedance_plot = self._make_plot()
         self._impedance_plot.addLegend()
         self._swr_plot = self._make_plot()
@@ -767,6 +775,37 @@ class ResultsView(QWidget):
             apply_help(control, self._translator, key)
         self._pattern_view_tabs.setAccessibleDescription(self._translator.t("help.tab.pattern"))
         self._raw_tabs.setAccessibleDescription(self._translator.t("help.tab.raw"))
+
+    def _matching_point_for_row(self, row: int) -> MatchingNetworkDesign | None:
+        result = self._result
+        if result is None or not 0 <= row < len(result.frequencies):
+            return None
+        return matching_network_design_from_frequency(
+            result.frequencies[row],
+            result.spec,
+        )
+
+    def _create_impedance_context_menu(self, row: int) -> QMenu:
+        point = self._matching_point_for_row(row)
+        menu = QMenu(self)
+        action = menu.addAction(self._translator.t("results.create_matching_network"))
+        action.setEnabled(point is not None)
+        action.setToolTip(self._translator.t("help.results.create_matching_network"))
+        if point is not None:
+            action.triggered.connect(
+                lambda _checked=False, point=point: self.matching_network_requested.emit(point)
+            )
+        else:
+            unavailable = menu.addAction(self._translator.t("results.matching_point_unavailable"))
+            unavailable.setEnabled(False)
+        return menu
+
+    def _show_impedance_context_menu(self, position: QPoint) -> None:
+        index = self._table.indexAt(position)
+        if not index.isValid():
+            return
+        menu = self._create_impedance_context_menu(index.row())
+        menu.exec(self._table.viewport().mapToGlobal(position))
 
     def _render_impedance(self) -> None:
         self._table.setRowCount(0)

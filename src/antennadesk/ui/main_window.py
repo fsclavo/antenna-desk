@@ -150,8 +150,8 @@ from ..domain.design.band_plan import (
 from ..domain.design.estimators import supports_estimation
 from ..domain.design.formulas import frequency_for_half_wave_length
 from ..domain.design.matching_design import (
-    MATCHING_DESIGN_ORIGIN_SIMULATION,
     MatchingNetworkDesign,
+    matching_network_design_from_frequency,
 )
 from ..domain.design.matching_resolution import resolve_matching_network
 from ..domain.measurement import Measurement
@@ -1058,6 +1058,7 @@ class MainWindow(QMainWindow):
         self._results.measurement_edit_requested.connect(self.edit_measurement)
         self._results.measurement_delete_requested.connect(self.delete_measurement)
         self._results.band_selected.connect(self._on_band_selected)
+        self._results.matching_network_requested.connect(self.create_matching_network_from_point)
 
         geometry_container = QWidget(self)
         geometry_layout = QVBoxLayout(geometry_container)
@@ -2823,24 +2824,7 @@ class MainWindow(QMainWindow):
             result.frequencies,
             key=lambda item: abs(item.frequency_hz - target_hz),
         )
-        source = next(
-            (item for item in frequency.source_results if item.tag == frequency.feed_tag),
-            None,
-        )
-        if source is None and frequency.source_results:
-            source = frequency.source_results[0]
-        if source is None:
-            return None
-        impedance = source.impedance_ohm / result.spec.feed_transformer_ratio
-        if impedance.real <= 0.0:
-            return None
-        return MatchingNetworkDesign(
-            frequency_hz=frequency.frequency_hz,
-            load_resistance_ohm=impedance.real,
-            load_reactance_ohm=impedance.imag,
-            source_impedance_ohm=result.spec.reference_impedance_ohm,
-            origin=MATCHING_DESIGN_ORIGIN_SIMULATION,
-        )
+        return matching_network_design_from_frequency(frequency, result.spec)
 
     @history_action("history.matching_network")
     def configure_matching_network(self) -> None:
@@ -2865,22 +2849,60 @@ class MainWindow(QMainWindow):
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        self._matching_network = dialog.result_network()
-        self._matching_network_design = (
-            dialog.result_design() if self._matching_network is not None else None
+        network = dialog.result_network()
+        self._set_matching_network(
+            network,
+            dialog.result_design() if network is not None else None,
         )
-        if self._project is not None:
-            timestamp = utc_now()
-            self._project = self._project.with_matching_network(
-                self._matching_network,
-                updated_at=timestamp,
-            ).with_matching_network_design(
-                self._matching_network_design,
-                updated_at=timestamp,
+
+    @history_action("history.matching_network")
+    def create_matching_network_from_point(self, point: object) -> None:
+        if not isinstance(point, MatchingNetworkDesign):
+            return
+        if self._matching_network is not None:
+            answer = QMessageBox.question(
+                self,
+                self._translator.t("matching_network.replace_title"),
+                self._translator.t("matching_network.replace_question"),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
             )
-            self._dirty = True
-            self._update_title()
-        self._refresh_feed_matching_summary()
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+        parameters = None
+        if self._project is not None and self._design_id is not None:
+            parameters = self._project.design_by_id(self._design_id).parameters
+        internal_matching_active = False
+        if parameters is not None:
+            internal_matching_active = (
+                resolve_matching_network(parameters, self._matching_network).internal is not None
+            )
+        if internal_matching_active:
+            answer = QMessageBox.question(
+                self,
+                self._translator.t("matching_network.efhw_override_title"),
+                self._translator.t("matching_network.efhw_override_question"),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+        dialog = MatchingNetworkDialog(
+            self._translator,
+            self._matching_network,
+            self,
+            frequency_hz=point.frequency_hz,
+            internal_matching_active=internal_matching_active,
+            design=point,
+            current_point=point,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        network = dialog.result_network()
+        self._set_matching_network(
+            network,
+            dialog.result_design() if network is not None else None,
+        )
 
     @history_action("history.matching_network")
     def remove_matching_network(self) -> None:
@@ -2895,12 +2917,23 @@ class MainWindow(QMainWindow):
         )
         if answer != QMessageBox.StandardButton.Yes:
             return
-        self._matching_network = None
-        self._matching_network_design = None
+        self._set_matching_network(None, None)
+
+    def _set_matching_network(
+        self,
+        network: MatchingNetwork | None,
+        design: MatchingNetworkDesign | None,
+    ) -> None:
+        self._matching_network = network
+        self._matching_network_design = design if network is not None else None
         if self._project is not None:
+            timestamp = utc_now()
             self._project = self._project.with_matching_network(
-                None,
-                updated_at=utc_now(),
+                network,
+                updated_at=timestamp,
+            ).with_matching_network_design(
+                self._matching_network_design,
+                updated_at=timestamp,
             )
             self._dirty = True
             self._update_title()

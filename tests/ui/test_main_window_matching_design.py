@@ -5,9 +5,11 @@
 from __future__ import annotations
 
 import pytest
-from PySide6.QtWidgets import QDialog
+from main_window_support import use_parameters
+from PySide6.QtWidgets import QDialog, QMessageBox
 from pytestqt.qtbot import QtBot
 
+from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
 from antennadesk.domain.antennas.matching_network import LNetwork
 from antennadesk.domain.design.matching_design import MatchingNetworkDesign
 from antennadesk.domain.simulation.frequency import FrequencyPlan
@@ -208,3 +210,148 @@ def test_matching_design_preloads_from_a_loaded_project(
     assert dialog._load_r.value() == pytest.approx(120.0)
     assert dialog._load_x.value() == pytest.approx(-35.0)
     window._dirty = False
+
+
+def test_create_from_point_warns_on_efhw_override_and_preloads(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    use_parameters(window, shortened_efhw_80_10_parameters())
+    calls: list[dict[str, object]] = []
+    questions: list[str] = []
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            calls.append(kwargs)
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_network(self) -> LNetwork:
+            return _network()
+
+        def result_design(self) -> MatchingNetworkDesign:
+            return _target()
+
+    def answer_yes(*args: object, **kwargs: object) -> QMessageBox.StandardButton:
+        questions.append(str(args[1]))
+        return QMessageBox.StandardButton.Yes
+
+    monkeypatch.setattr(main_window_module, "MatchingNetworkDialog", FakeDialog)
+    monkeypatch.setattr(main_window_module.QMessageBox, "question", answer_yes)
+
+    window.create_matching_network_from_point(_target())
+
+    assert questions == ["EFHW matching override"]
+    assert calls[0]["design"] == _target()
+    assert calls[0]["current_point"] == _target()
+    assert calls[0]["frequency_hz"] == pytest.approx(7_100_000.0)
+    assert window._matching_network == _network()
+    assert window._matching_network_design == _target()
+    assert window._project is not None
+    assert window._project.matching_network_design == _target()
+    window._dirty = False
+
+
+def test_create_from_point_cancels_when_replacing_an_existing_network(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    existing = LNetwork(series_inductance_h=2e-6, shunt_capacitance_f=50e-12)
+    window._matching_network = existing
+    created: list[object] = []
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            created.append(kwargs)
+
+    monkeypatch.setattr(main_window_module, "MatchingNetworkDialog", FakeDialog)
+    monkeypatch.setattr(
+        main_window_module.QMessageBox,
+        "question",
+        lambda *_args, **_kwargs: QMessageBox.StandardButton.No,
+    )
+
+    window.create_matching_network_from_point(_target())
+
+    assert created == []
+    assert window._matching_network is existing
+
+
+def test_create_from_point_replaces_an_existing_network_when_confirmed(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    existing = LNetwork(series_inductance_h=2e-6, shunt_capacitance_f=50e-12)
+    window._matching_network = existing
+    created: list[dict[str, object]] = []
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            created.append(kwargs)
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_network(self) -> LNetwork:
+            return _network()
+
+        def result_design(self) -> MatchingNetworkDesign:
+            return _target()
+
+    monkeypatch.setattr(main_window_module, "MatchingNetworkDialog", FakeDialog)
+    monkeypatch.setattr(
+        main_window_module.QMessageBox,
+        "question",
+        lambda *_args, **_kwargs: QMessageBox.StandardButton.Yes,
+    )
+
+    window.create_matching_network_from_point(_target())
+
+    assert created
+    assert window._matching_network == _network()
+    assert window._matching_network_design == _target()
+    window._dirty = False
+
+
+def test_create_from_point_cancels_on_the_efhw_override_warning(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    use_parameters(window, shortened_efhw_80_10_parameters())
+    created: list[object] = []
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            created.append(kwargs)
+
+    monkeypatch.setattr(main_window_module, "MatchingNetworkDialog", FakeDialog)
+    monkeypatch.setattr(
+        main_window_module.QMessageBox,
+        "question",
+        lambda *_args, **_kwargs: QMessageBox.StandardButton.No,
+    )
+
+    window.create_matching_network_from_point(_target())
+
+    assert created == []
+    assert window._matching_network is None
+
+
+def test_create_from_point_keeps_the_project_network_when_the_dialog_is_cancelled(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Rejected
+
+    monkeypatch.setattr(main_window_module, "MatchingNetworkDialog", FakeDialog)
+
+    window.create_matching_network_from_point(_target())
+
+    assert window._matching_network is None
+    assert window._matching_network_design is None

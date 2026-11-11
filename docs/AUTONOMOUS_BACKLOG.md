@@ -83,7 +83,7 @@ external service and must not be invented or simulated into existence.
 | ~~M1~~ | ~~Effective matching-network precedence for EFHW~~ | M | G25 | **Done 2026-11-10:** added the pure `resolve_matching_network()` resolver and routed single simulation, band analysis, family optimization, synthesis, and the EFHW convergence check through it. An active project network now replaces the internal EFHW matching capacitor/leakage; with no active project network the internal model remains effective. `override_active` is derived at runtime and carried only as the non-persisted `SimulationSpec.matching_network_override` flag. The solver reports `matching_network.override`, the ideal transformer ratio is unchanged, and cascading two networks remains explicitly unmodeled. Tests cover the four precedence cases, the UI spec path, and the diagnostic. |
 | ~~M2~~ | ~~Matching-network visibility and override warnings~~ | M | M1 | **Done 2026-11-10:** the design panel now has a persistent **Feed & matching** summary with separate EFHW internal, project matching, feed-line, and balun rows. End-fed designs mark the internal matching values as retained and disable them while the project network overrides, with **Edit project network** and **Remove project network** actions; removal confirms and restores the internal network. The matching-network and optimizer dialogs show the override warning. Design summaries, construction sheets, HTML/PDF reports, and the EFHW construction note show the project chain and the retained/not-applied state. Tests cover visibility, hiding without an override, retranslation, removal, form state, dialog warnings, and report rows. |
 | ~~M3~~ | ~~Persist the matching-network design target and preload the dialog~~ | S–M | M1 | **Done 2026-11-11:** added the project-level `MatchingNetworkDesign` record (frequency, load R/X, source impedance, optional origin) with schema 34 and a v33→v34 migration. Removing the project network clears the target. The matching-network dialog is split into **Design target** and **Components**, preloads stored values, records manual versus simulation origin, and adds **Use current simulation point** from the raw primary-side feed impedance. Topology-specific fields are shown only where they apply, the enable label no longer says L-only, and the hint covers L, Pi, and T. Tests cover the current-point conversion, apply/reopen, disabled-network clearing, schema round trip, migration, and undo/redo. |
-| M4 | Create a project matching network from an impedance point | S–M | M3 | Add a context menu to the Impedance/SWR table: **Create Project Matching Network...**. Use the raw feed impedance from `source_results` (divide by the transformer ratio) rather than the post-chain `FrequencyResult.impedance_ohm`; pass frequency, load R/X, and the real reference impedance. Warn or disable when raw impedance is unavailable. Confirm replacement of an existing network and warn when the design is an EFHW with internal matching (override). Tests cover raw versus post-chain, active transformer/line/network, cancellation, and preload. |
+| ~~M4~~ | ~~Create a project matching network from an impedance point~~ | S–M | M3 | **Done 2026-11-11:** the Impedance/SWR table now has a **Create Project Matching Network...** context-menu action. It uses the raw feed impedance from `source_results` divided by the ideal transformer ratio, not the post-chain `FrequencyResult.impedance_ohm`, and passes the frequency, load R/X, and real reference impedance into the preloaded matching-network dialog. The action is disabled with an explicit message when raw impedance is unavailable. Creating over an existing network asks for confirmation, and EFHW designs with active internal matching show the override warning before opening the dialog. Tests cover raw versus post-chain values with an active transformer, feed line, and matching network, action enable/disable, replacement confirmation and cancellation, EFHW warning cancellation, dialog cancellation, and preload. |
 | ~~M5~~ | ~~Matching-network precedence ADR and user documentation~~ | S | M1 | **Done 2026-11-11:** added [ADR-0028](ADR/0028-matching-network-precedence.md), recording the Override policy for every `EndFedParameters` design with active internal matching, the four precedence cases, runtime derivation, project-global scope, the no-cascade limitation, the ideal transformer ratio, and how removing the project network restores the internal unit. The user guide now documents the project network, design target, **Use current simulation point**, Feed & matching summary, and restore procedure; the domain model and ADR-0014 cross-reference the new ADR, and `CHANGELOG.md` records the policy. |
 | ~~P1~~ | ~~Shared task-progress widget and state model~~ | S | none | **Done 2026-11-10:** added `ui/widgets/task_progress.py` with explicit idle/running/cancelling/completed/cancelled/error states, indeterminate and determinate modes, an elapsed-time suffix, translated text keys, and reset/finish helpers. Tests cover state transitions, translation, and idle visibility. No domain, solver, or persistence changes. |
 | ~~P2~~ | ~~Simulation progress feedback~~ | S | P1 | **Done 2026-11-10:** `MainWindow` shows an indeterminate status-bar bar with elapsed time and preparing/running/processing phases from `SimulationWorker.phase`; finish, failure, and cancellation reset it. Tests cover the lifecycle and elapsed text. |
@@ -263,14 +263,11 @@ model and solver contract must land first.
    optional. **G27** stays blocked/deferred as a whole until measurements or
    traceable datasets exist; do not implement only one loss category in the
    meantime.
-2. **H1–H4 are complete.** The help/accessibility queue is closed; the next
-   active queue is **M1–M5**, the matching-network correctness work.
-3. **P1–P6 are complete.** **P7** remains deferred until an ADR and benchmark
+2. **H1–H4 are complete.** The help/accessibility queue is closed.
+3. **M1–M5 are complete.** The matching-network correctness queue is closed;
+   future matching work starts from ADR-0028 and the shared resolver.
+4. **P1–P6 are complete.** **P7** remains deferred until an ADR and benchmark
    show a practical need.
-4. **M1** is the matching-network correctness foundation; **M2** makes the
-   override visible, **M3** adds the design-target persistence, **M4** adds
-   the impedance-point context menu, and **M5** records the decision. Do M1
-   and M2 before M3; M3 needs the next schema migration.
 5. **B4** waits for a coupled-fan measurement. **C3** is blocked on a
    transposed boom feed-line model; do not substitute independent ideal
    sources, because NEC2C reported negative primary-feed resistance in the
@@ -310,9 +307,10 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **34**.
-- Full gate: **2,442 passed, 0 skipped** with `NEC2C` and the optional
+- Full gate: **2,453 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
-- Last commits: the matching-network precedence ADR and user guide (M5),
+- Last commits: the impedance-point matching-network action (M4),
+  the matching-network precedence ADR and user guide (M5),
   the persisted matching-network design target (M3),
   the matching-network visibility and override warnings (M2),
   the matching-network precedence resolver (M1), the

@@ -2346,6 +2346,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Place the L-network shunt element on the transmitter side.",
         Language.SPANISH: "Coloca el elemento en derivación de la red L del lado del transmisor.",
     },
+    "help.results.create_matching_network": {
+        Language.ENGLISH: (
+            "Create a project matching network from the raw primary-side feed "
+            "impedance of the selected frequency row."
+        ),
+        Language.SPANISH: (
+            "Crea una red de adaptación del proyecto desde la impedancia cruda de "
+            "alimentación del lado primario de la fila de frecuencia seleccionada."
+        ),
+    },
     "help.matching_network.series_l": {
         Language.ENGLISH: "Series inductance in the matching network.",
         Language.SPANISH: "Inductancia serie de la red de adaptación.",
@@ -3098,6 +3108,43 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "¿Quitar la red de adaptación del proyecto? La red interna del EFHW "
             "volverá a ser efectiva."
         ),
+    },
+    "matching_network.replace_title": {
+        Language.ENGLISH: "Replace matching network",
+        Language.SPANISH: "Reemplazar red de adaptación",
+    },
+    "matching_network.replace_question": {
+        Language.ENGLISH: (
+            "A project matching network already exists. Replace it with a network "
+            "designed from this impedance point?"
+        ),
+        Language.SPANISH: (
+            "Ya existe una red de adaptación del proyecto. ¿Reemplazarla por una "
+            "red diseñada desde este punto de impedancia?"
+        ),
+    },
+    "matching_network.efhw_override_title": {
+        Language.ENGLISH: "EFHW matching override",
+        Language.SPANISH: "Reemplazo de adaptación del EFHW",
+    },
+    "matching_network.efhw_override_question": {
+        Language.ENGLISH: (
+            "This design has an active internal EFHW matching network. The project "
+            "network will replace it; the two networks are not cascaded. Continue?"
+        ),
+        Language.SPANISH: (
+            "Este diseño tiene una red de adaptación interna del EFHW activa. La "
+            "red del proyecto la reemplazará; las dos redes no se conectan en "
+            "cascada. ¿Continuar?"
+        ),
+    },
+    "results.create_matching_network": {
+        Language.ENGLISH: "Create Project Matching Network...",
+        Language.SPANISH: "Crear red de adaptación del proyecto...",
+    },
+    "results.matching_point_unavailable": {
+        Language.ENGLISH: "Raw feed impedance is unavailable for this row.",
+        Language.SPANISH: "La impedancia cruda de alimentación no está disponible para esta fila.",
     },
     "matching_network.title": {
         Language.ENGLISH: "Matching Network",

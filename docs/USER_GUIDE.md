@@ -1265,6 +1265,16 @@ transmitter. Impedance and SWR include the network; pattern and power gain
 remain antenna-side. Network loss is included in realized gain and reported
 separately.
 
+In the Impedance/SWR table, right-click a frequency row and choose **Create
+Project Matching Network...** to start from that simulation point. The action
+uses the raw primary-side feed impedance from the solver source result, divided
+by the ideal transformer ratio, rather than the post-chain impedance shown in
+the table. The dialog opens with the frequency, load R/X, and reference
+impedance filled in. If raw source impedance is unavailable, the action is
+disabled and the menu explains why. Replacing an existing project network asks
+for confirmation, and an EFHW design with active internal matching shows the
+override warning before the dialog opens.
+
 ### Project network on an EFHW design
 
 For an end-fed design with active internal matching, an active project matching

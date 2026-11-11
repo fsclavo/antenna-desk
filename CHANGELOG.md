@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The Impedance/SWR table now offers **Create Project Matching Network...** in
+  its context menu. The action uses the raw feed impedance from the solver
+  source result divided by the ideal transformer ratio, not the post-chain
+  impedance, and preloads the matching-network dialog with the frequency, load
+  R/X, and real reference impedance. It is disabled when raw impedance is
+  unavailable, confirms replacement of an existing network, and warns when the
+  design has active internal EFHW matching.
 - The matching-network dialog now stores a project-level design target with
   frequency, load R/X, source impedance, and an optional origin. Schema 34 adds
   the record, removing the project network clears it, and the dialog preloads
