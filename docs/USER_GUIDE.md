@@ -180,6 +180,30 @@ menus, switch designs, or open another result tab. In Guided mode the panel is
 the quickest path through the design loop; in Standard and Advanced it remains
 available as a lightweight reminder.
 
+## Installation profiles
+
+Use **Design → Installation profile...** to record the physical conditions of a
+site. A project can store several named profiles, and the selected one is the
+**active** profile. Use **Add**, **Duplicate**, and **Remove** to manage them.
+
+Each profile records:
+
+- the available height and horizontal space (leave them at **Not specified** if
+  they are unknown);
+- the preferred orientation;
+- the support type: mast, tree, building, fence, portable, or other;
+- a recommended ground preset;
+- free notes about access, restrictions, or site conditions;
+- an optional local image reference.
+
+The profile is metadata. It does not change the antenna geometry or apply its
+ground preset automatically; use the antenna editor for the model itself. The
+active profile appears below the feed and matching summary and in the design
+summary, construction sheet, HTML report, and native PDF reports. The height and
+space values are upper bounds for the future advisor and comparison features,
+not the design's actual dimensions. The image is referenced by path and is not
+embedded in the project file.
+
 ## Undo and redo
 
 Use **Edit → Undo** and **Edit → Redo**, or the standard Ctrl+Z / Ctrl+Shift+Z

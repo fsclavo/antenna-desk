@@ -24,6 +24,7 @@ from ..measurement import Measurement
 from ..optimization.summary import OptimizationSummary
 from ..simulation.band_result import BandAnalysisResult
 from ..simulation.run import SimulationRun
+from .installation import InstallationProfile
 
 
 @dataclass(frozen=True, slots=True)
@@ -164,11 +165,14 @@ class Project:
     matching_network: MatchingNetwork | None = None
     matching_network_design: MatchingNetworkDesign | None = None
     balun_loss: BalunLoss | None = None
+    installation_profiles: tuple[InstallationProfile, ...] = field(default_factory=tuple)
+    active_installation_profile_id: UUID | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "designs", tuple(self.designs))
         object.__setattr__(self, "simulation_runs", tuple(self.simulation_runs))
         object.__setattr__(self, "measurements", tuple(self.measurements))
+        object.__setattr__(self, "installation_profiles", tuple(self.installation_profiles))
         raise_if_errors(self._invariants())
 
     def _invariants(self) -> tuple[Diagnostic, ...]:
@@ -239,6 +243,46 @@ class Project:
                 )
             seen_names.add(design.name)
 
+        profile_ids: set[UUID] = set()
+        profile_names: set[str] = set()
+        for profile in self.installation_profiles:
+            if profile.id in profile_ids:
+                diagnostics.append(
+                    Diagnostic(
+                        code="project.installation_profile.duplicate_id",
+                        severity=Severity.ERROR,
+                        message=f"duplicate installation profile id: {profile.id}",
+                        field="installation_profiles",
+                    )
+                )
+            profile_ids.add(profile.id)
+            if profile.name in profile_names:
+                diagnostics.append(
+                    Diagnostic(
+                        code="project.installation_profile.duplicate_name",
+                        severity=Severity.ERROR,
+                        message=f"duplicate installation profile name: {profile.name}",
+                        field="installation_profiles",
+                    )
+                )
+            profile_names.add(profile.name)
+
+        if (
+            self.active_installation_profile_id is not None
+            and self.active_installation_profile_id not in profile_ids
+        ):
+            diagnostics.append(
+                Diagnostic(
+                    code="project.installation_profile.unknown_active",
+                    severity=Severity.ERROR,
+                    message=(
+                        "active installation profile references an unknown profile: "
+                        f"{self.active_installation_profile_id}"
+                    ),
+                    field="active_installation_profile_id",
+                )
+            )
+
         design_ids = {design.id for design in self.designs}
         seen_run_ids: set[UUID] = set()
         for run in self.simulation_runs:
@@ -272,6 +316,95 @@ class Project:
             if design.id == design_id:
                 return design
         raise KeyError(f"unknown design id: {design_id}")
+
+    def installation_profile_by_id(self, profile_id: UUID) -> InstallationProfile:
+        for profile in self.installation_profiles:
+            if profile.id == profile_id:
+                return profile
+        raise KeyError(f"unknown installation profile id: {profile_id}")
+
+    @property
+    def active_installation_profile(self) -> InstallationProfile | None:
+        if self.active_installation_profile_id is None:
+            return None
+        return self.installation_profile_by_id(self.active_installation_profile_id)
+
+    def with_installation_state(
+        self,
+        profiles: tuple[InstallationProfile, ...],
+        active_profile_id: UUID | None,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        """Replace the profile set and the active profile in one operation."""
+
+        return replace(
+            self,
+            installation_profiles=tuple(profiles),
+            active_installation_profile_id=active_profile_id,
+            updated_at=updated_at,
+        )
+
+    def with_installation_profile(
+        self,
+        profile: InstallationProfile,
+        *,
+        make_active: bool = True,
+        updated_at: datetime,
+    ) -> Project:
+        profiles = list(self.installation_profiles)
+        for index, current in enumerate(profiles):
+            if current.id == profile.id:
+                profiles[index] = profile
+                break
+        else:
+            profiles.append(profile)
+        active_id = (
+            profile.id
+            if make_active or self.active_installation_profile_id is None
+            else self.active_installation_profile_id
+        )
+        return replace(
+            self,
+            installation_profiles=tuple(profiles),
+            active_installation_profile_id=active_id,
+            updated_at=updated_at,
+        )
+
+    def without_installation_profile(
+        self,
+        profile_id: UUID,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        profiles = tuple(
+            profile for profile in self.installation_profiles if profile.id != profile_id
+        )
+        if len(profiles) == len(self.installation_profiles):
+            raise KeyError(f"unknown installation profile id: {profile_id}")
+        active_id = self.active_installation_profile_id
+        if active_id == profile_id:
+            active_id = profiles[0].id if profiles else None
+        return replace(
+            self,
+            installation_profiles=profiles,
+            active_installation_profile_id=active_id,
+            updated_at=updated_at,
+        )
+
+    def with_active_installation_profile(
+        self,
+        profile_id: UUID | None,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        if profile_id is not None:
+            self.installation_profile_by_id(profile_id)
+        return replace(
+            self,
+            active_installation_profile_id=profile_id,
+            updated_at=updated_at,
+        )
 
     def with_simulation_run(
         self,

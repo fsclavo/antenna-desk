@@ -119,6 +119,13 @@ from ..domain.optimization.summary import (
     OptimizationSummary,
     RecommendationSeverity,
 )
+from ..domain.projects.installation import (
+    MAX_PROFILE_IMAGE_REFERENCE_LENGTH,
+    MAX_PROFILE_NAME_LENGTH,
+    MAX_PROFILE_NOTES_LENGTH,
+    InstallationProfile,
+    InstallationSupport,
+)
 from ..domain.projects.project import DesignProvenance, DesignVariant, Project
 from ..domain.simulation.bands import amateur_band_by_id
 from ..domain.simulation.far_field import FarFieldRequest
@@ -198,6 +205,18 @@ class GroundPayload(StrictModel):
 
 class EnvironmentPayload(StrictModel):
     ground: GroundPayload
+
+
+class InstallationProfilePayload(StrictModel):
+    id: UUID
+    name: str = Field(min_length=1, max_length=MAX_PROFILE_NAME_LENGTH)
+    available_height_m: float | None = Field(default=None, gt=0.0)
+    available_width_m: float | None = Field(default=None, gt=0.0)
+    orientation_deg: float = 0.0
+    ground: GroundPayload | None = None
+    support: InstallationSupport = InstallationSupport.MAST
+    notes: str = Field(default="", max_length=MAX_PROFILE_NOTES_LENGTH)
+    image_reference: str = Field(default="", max_length=MAX_PROFILE_IMAGE_REFERENCE_LENGTH)
 
 
 class LoadPayload(StrictModel):
@@ -1110,6 +1129,23 @@ class ProjectPayload(StrictModel):
     matching_network: LNetworkPayload | None = None
     matching_network_design: MatchingNetworkDesignPayload | None = None
     balun_loss: BalunLossPayload | None = None
+    installation_profiles: list[InstallationProfilePayload] = Field(default_factory=list)
+    active_installation_profile_id: UUID | None = None
+
+    @model_validator(mode="after")
+    def _validate_installation_profiles(self) -> Self:
+        ids = [profile.id for profile in self.installation_profiles]
+        if len(ids) != len(set(ids)):
+            raise ValueError("duplicate installation profile id")
+        names = [profile.name for profile in self.installation_profiles]
+        if len(names) != len(set(names)):
+            raise ValueError("duplicate installation profile name")
+        if (
+            self.active_installation_profile_id is not None
+            and self.active_installation_profile_id not in set(ids)
+        ):
+            raise ValueError("active installation profile id is not in the profile list")
+        return self
 
     @model_validator(mode="after")
     def _validate_timestamps(self) -> Self:
@@ -1177,6 +1213,22 @@ def _ground_from_domain(value: GroundModel) -> GroundPayload:
 
 def _environment_from_domain(value: Environment) -> EnvironmentPayload:
     return EnvironmentPayload(ground=_ground_from_domain(value.ground))
+
+
+def _installation_profile_from_domain(
+    value: InstallationProfile,
+) -> InstallationProfilePayload:
+    return InstallationProfilePayload(
+        id=value.id,
+        name=value.name,
+        available_height_m=value.available_height_m,
+        available_width_m=value.available_width_m,
+        orientation_deg=value.orientation_deg,
+        ground=_ground_from_domain(value.ground) if value.ground is not None else None,
+        support=value.support,
+        notes=value.notes,
+        image_reference=value.image_reference,
+    )
 
 
 def _load_from_domain(value: LumpedLoad) -> LoadPayload:
@@ -2239,6 +2291,10 @@ def _project_from_domain(value: Project) -> ProjectPayload:
             else None
         ),
         balun_loss=_balun_loss_from_domain(value.balun_loss) if value.balun_loss else None,
+        installation_profiles=[
+            _installation_profile_from_domain(profile) for profile in value.installation_profiles
+        ],
+        active_installation_profile_id=value.active_installation_profile_id,
     )
 
 
@@ -2289,6 +2345,22 @@ def _ground_to_domain(value: GroundPayload) -> GroundModel:
 
 def _environment_to_domain(value: EnvironmentPayload) -> Environment:
     return Environment(ground=_ground_to_domain(value.ground))
+
+
+def _installation_profile_to_domain(
+    value: InstallationProfilePayload,
+) -> InstallationProfile:
+    return InstallationProfile(
+        id=value.id,
+        name=value.name,
+        available_height_m=value.available_height_m,
+        available_width_m=value.available_width_m,
+        orientation_deg=value.orientation_deg,
+        ground=_ground_to_domain(value.ground) if value.ground is not None else None,
+        support=value.support,
+        notes=value.notes,
+        image_reference=value.image_reference,
+    )
 
 
 def _load_to_domain(value: LoadPayload) -> SeriesLoad | ParallelLoad:
@@ -3259,4 +3331,9 @@ def project_from_document(document: ProjectDocument) -> Project:
             if document.project.balun_loss
             else None
         ),
+        installation_profiles=tuple(
+            _installation_profile_to_domain(profile)
+            for profile in document.project.installation_profiles
+        ),
+        active_installation_profile_id=document.project.active_installation_profile_id,
     )

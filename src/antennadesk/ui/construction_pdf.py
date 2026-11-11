@@ -19,6 +19,7 @@ from ..reporting.design_summary import (
     design_provenance_rows,
     design_summary_rows,
     feed_matching_rows,
+    installation_profile_rows,
     load_summary_rows,
     optimization_summary_rows,
 )
@@ -283,6 +284,10 @@ def write_construction_pdf(
                 design.parameters,
                 labeler=translator.report,
                 project_network=project.matching_network,
+            ),
+            *installation_profile_rows(
+                project.active_installation_profile,
+                labeler=translator.report,
             ),
             *feed_matching_rows(
                 project.matching_network,

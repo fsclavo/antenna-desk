@@ -223,6 +223,169 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Export PDF report",
         Language.SPANISH: "Exportar informe PDF",
     },
+    "installation.title": {
+        Language.ENGLISH: "Installation profiles",
+        Language.SPANISH: "Perfiles de instalación",
+    },
+    "installation.hint": {
+        Language.ENGLISH: (
+            "Describe the site envelope and constraints. Profiles are metadata: "
+            "they do not change the antenna model by themselves."
+        ),
+        Language.SPANISH: (
+            "Describí el entorno y las restricciones del sitio. Los perfiles son "
+            "metadatos: no cambian el modelo de antena por sí solos."
+        ),
+    },
+    "installation.profiles": {
+        Language.ENGLISH: "Saved installation profiles",
+        Language.SPANISH: "Perfiles de instalación guardados",
+    },
+    "installation.name": {
+        Language.ENGLISH: "Profile name",
+        Language.SPANISH: "Nombre del perfil",
+    },
+    "installation.available_height": {
+        Language.ENGLISH: "Available height",
+        Language.SPANISH: "Altura disponible",
+    },
+    "installation.available_width": {
+        Language.ENGLISH: "Available horizontal space",
+        Language.SPANISH: "Espacio horizontal disponible",
+    },
+    "installation.orientation": {
+        Language.ENGLISH: "Orientation",
+        Language.SPANISH: "Orientación",
+    },
+    "installation.support": {
+        Language.ENGLISH: "Support",
+        Language.SPANISH: "Soporte",
+    },
+    "installation.ground": {
+        Language.ENGLISH: "Ground preset",
+        Language.SPANISH: "Suelo de referencia",
+    },
+    "installation.notes": {
+        Language.ENGLISH: "Notes",
+        Language.SPANISH: "Notas",
+    },
+    "installation.notes_placeholder": {
+        Language.ENGLISH: "Roof, tree, mast, restrictions, access, and other site notes.",
+        Language.SPANISH: "Techo, árbol, mástil, restricciones, acceso y otras notas del sitio.",
+    },
+    "installation.image_reference": {
+        Language.ENGLISH: "Image reference",
+        Language.SPANISH: "Referencia de imagen",
+    },
+    "installation.add": {
+        Language.ENGLISH: "Add",
+        Language.SPANISH: "Agregar",
+    },
+    "installation.duplicate": {
+        Language.ENGLISH: "Duplicate",
+        Language.SPANISH: "Duplicar",
+    },
+    "installation.remove": {
+        Language.ENGLISH: "Remove",
+        Language.SPANISH: "Quitar",
+    },
+    "installation.edit": {
+        Language.ENGLISH: "Edit profile...",
+        Language.SPANISH: "Editar perfil...",
+    },
+    "installation.browse": {
+        Language.ENGLISH: "Browse...",
+        Language.SPANISH: "Examinar...",
+    },
+    "installation.default_name": {
+        Language.ENGLISH: "Site {index}",
+        Language.SPANISH: "Sitio {index}",
+    },
+    "installation.copy_name": {
+        Language.ENGLISH: "{name} copy",
+        Language.SPANISH: "{name} (copia)",
+    },
+    "installation.active_note": {
+        Language.ENGLISH: "The selected profile is the active one.",
+        Language.SPANISH: "El perfil seleccionado es el activo.",
+    },
+    "installation.not_set": {
+        Language.ENGLISH: "Not specified",
+        Language.SPANISH: "Sin especificar",
+    },
+    "installation.none": {
+        Language.ENGLISH: "No installation profile",
+        Language.SPANISH: "Sin perfil de instalación",
+    },
+    "installation.none_hint": {
+        Language.ENGLISH: (
+            "Add a profile to record the available height, space, orientation, support, and ground."
+        ),
+        Language.SPANISH: (
+            "Agregá un perfil para registrar la altura, el espacio, la orientación, "
+            "el soporte y el suelo disponibles."
+        ),
+    },
+    "installation.duplicate_name": {
+        Language.ENGLISH: "Profile names must be unique.",
+        Language.SPANISH: "Los nombres de perfil deben ser únicos.",
+    },
+    "installation.no_selection": {
+        Language.ENGLISH: "Select an installation profile first.",
+        Language.SPANISH: "Seleccioná primero un perfil de instalación.",
+    },
+    "installation.ground_none": {
+        Language.ENGLISH: "Not specified",
+        Language.SPANISH: "Sin especificar",
+    },
+    "installation.ground_free_space": {
+        Language.ENGLISH: "Free space",
+        Language.SPANISH: "Espacio libre",
+    },
+    "installation.ground_perfect": {
+        Language.ENGLISH: "Perfect ground",
+        Language.SPANISH: "Plano perfecto",
+    },
+    "installation.ground_custom": {
+        Language.ENGLISH: "Custom / not listed",
+        Language.SPANISH: "Personalizado / no listado",
+    },
+    "installation.ground_custom_value": {
+        Language.ENGLISH: "Custom (eps_r={permittivity}, sigma={conductivity} S/m)",
+        Language.SPANISH: "Personalizado (eps_r={permittivity}, sigma={conductivity} S/m)",
+    },
+    "installation.image_title": {
+        Language.ENGLISH: "Select an installation image",
+        Language.SPANISH: "Seleccionar una imagen de instalación",
+    },
+    "installation.image_filter": {
+        Language.ENGLISH: "Images (*.png *.jpg *.jpeg *.webp *.bmp)",
+        Language.SPANISH: "Imágenes (*.png *.jpg *.jpeg *.webp *.bmp)",
+    },
+    "installation.support.mast": {
+        Language.ENGLISH: "Mast",
+        Language.SPANISH: "Mástil",
+    },
+    "installation.support.tree": {
+        Language.ENGLISH: "Tree",
+        Language.SPANISH: "Árbol",
+    },
+    "installation.support.building": {
+        Language.ENGLISH: "Building",
+        Language.SPANISH: "Edificio",
+    },
+    "installation.support.fence": {
+        Language.ENGLISH: "Fence",
+        Language.SPANISH: "Cerca",
+    },
+    "installation.support.portable": {
+        Language.ENGLISH: "Portable",
+        Language.SPANISH: "Portátil",
+    },
+    "installation.support.other": {
+        Language.ENGLISH: "Other",
+        Language.SPANISH: "Otro",
+    },
     "advanced.title": {
         Language.ENGLISH: "Advanced simulation",
         Language.SPANISH: "Simulación avanzada",
@@ -345,6 +508,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "action.preferences": {
         Language.ENGLISH: "Preferences...",
         Language.SPANISH: "Preferencias...",
+    },
+    "action.installation_profile": {
+        Language.ENGLISH: "Installation profile...",
+        Language.SPANISH: "Perfil de instalación...",
     },
     "action.new": {Language.ENGLISH: "New Antenna...", Language.SPANISH: "Nueva antena..."},
     "catalog.title": {
@@ -2691,6 +2858,62 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Current recommendation and the next action for this design.",
         Language.SPANISH: "Recomendación actual y próxima acción para este diseño.",
     },
+    "help.section.installation": {
+        Language.ENGLISH: "Active installation profile: site envelope, support, ground, and notes.",
+        Language.SPANISH: "Perfil de instalación activo: entorno, soporte, suelo y notas del sitio.",
+    },
+    "help.action.installation_profile": {
+        Language.ENGLISH: "Create, edit, duplicate, or activate an installation profile.",
+        Language.SPANISH: "Creá, editá, duplicá o activá un perfil de instalación.",
+    },
+    "help.installation.profiles": {
+        Language.ENGLISH: "Saved profiles for this project; the selected one is active.",
+        Language.SPANISH: "Perfiles guardados del proyecto; el seleccionado está activo.",
+    },
+    "help.installation.name": {
+        Language.ENGLISH: "A short name for this site, such as Home, Portable, or Field day.",
+        Language.SPANISH: "Un nombre corto para el sitio, como Casa, Portátil o Field day.",
+    },
+    "help.installation.available_height": {
+        Language.ENGLISH: "Maximum height available for the antenna, or Not specified.",
+        Language.SPANISH: "Altura máxima disponible para la antena, o Sin especificar.",
+    },
+    "help.installation.available_width": {
+        Language.ENGLISH: "Maximum horizontal space available, or Not specified.",
+        Language.SPANISH: "Espacio horizontal máximo disponible, o Sin especificar.",
+    },
+    "help.installation.orientation": {
+        Language.ENGLISH: "Preferred installation orientation in degrees from north.",
+        Language.SPANISH: "Orientación preferida de la instalación en grados desde el norte.",
+    },
+    "help.installation.support": {
+        Language.ENGLISH: "Structure that supports the antenna: mast, tree, building, fence, or portable.",
+        Language.SPANISH: "Estructura que soporta la antena: mástil, árbol, edificio, cerca o portátil.",
+    },
+    "help.installation.ground": {
+        Language.ENGLISH: "Recommended site ground preset; it is not applied automatically.",
+        Language.SPANISH: "Suelo de referencia recomendado para el sitio; no se aplica automáticamente.",
+    },
+    "help.installation.notes": {
+        Language.ENGLISH: "Free notes about access, restrictions, supports, and site conditions.",
+        Language.SPANISH: "Notas libres sobre acceso, restricciones, soportes y condiciones del sitio.",
+    },
+    "help.installation.image_reference": {
+        Language.ENGLISH: "Optional local image path; the image is not embedded in the project.",
+        Language.SPANISH: "Ruta local opcional de una imagen; la imagen no se incrusta en el proyecto.",
+    },
+    "help.installation.add": {
+        Language.ENGLISH: "Add a new installation profile to this project.",
+        Language.SPANISH: "Agregá un nuevo perfil de instalación al proyecto.",
+    },
+    "help.installation.duplicate": {
+        Language.ENGLISH: "Copy the selected profile with a new name.",
+        Language.SPANISH: "Copiá el perfil seleccionado con un nombre nuevo.",
+    },
+    "help.installation.remove": {
+        Language.ENGLISH: "Remove the selected profile from this project.",
+        Language.SPANISH: "Quitá el perfil seleccionado del proyecto.",
+    },
     "help.action.next_step": {
         Language.ENGLISH: "Run the recommended next action for the current design.",
         Language.SPANISH: "Ejecutá la próxima acción recomendada para el diseño actual.",
@@ -3594,6 +3817,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Unsaved changes",
         Language.SPANISH: "Cambios sin guardar",
     },
+    "status.installation_profile": {
+        Language.ENGLISH: "Installation profile updated.",
+        Language.SPANISH: "Perfil de instalación actualizado.",
+    },
     "status.design_changed": {
         Language.ENGLISH: "Design changed. Simulate again.",
         Language.SPANISH: "Diseño modificado. Simulá de nuevo.",
@@ -4496,6 +4723,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "history.matching_network": {
         Language.ENGLISH: "Matching network",
         Language.SPANISH: "Red de adaptación",
+    },
+    "history.installation_profile": {
+        Language.ENGLISH: "installation profile",
+        Language.SPANISH: "perfil de instalación",
     },
     "history.balun_loss": {
         Language.ENGLISH: "Balun/unun loss",
@@ -8949,6 +9180,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "diagnostic.project.design.duplicate_name": {
         Language.ENGLISH: "Two designs use the same name.",
         Language.SPANISH: "Dos diseños usan el mismo nombre.",
+    },
+    "diagnostic.project.installation_profile.duplicate_id": {
+        Language.ENGLISH: "Two installation profiles use the same identifier.",
+        Language.SPANISH: "Dos perfiles de instalación usan el mismo identificador.",
+    },
+    "diagnostic.project.installation_profile.duplicate_name": {
+        Language.ENGLISH: "Two installation profiles use the same name.",
+        Language.SPANISH: "Dos perfiles de instalación usan el mismo nombre.",
+    },
+    "diagnostic.project.installation_profile.unknown_active": {
+        Language.ENGLISH: "The active installation profile does not exist.",
+        Language.SPANISH: "El perfil de instalación activo no existe.",
     },
     "diagnostic.project.name.empty": {
         Language.ENGLISH: "The project name is empty.",

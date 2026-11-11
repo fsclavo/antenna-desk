@@ -625,6 +625,50 @@ def test_round_trip_with_a_project_feed_line(
     assert loaded == project
 
 
+def test_round_trip_with_installation_profiles(
+    repository: JsonProjectRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    from uuid import uuid4
+
+    from antennadesk.domain.environment.ground import FREE_SPACE
+    from antennadesk.domain.projects.installation import (
+        InstallationProfile,
+        InstallationSupport,
+    )
+
+    home = InstallationProfile(
+        id=uuid4(),
+        name="Home",
+        available_height_m=12.0,
+        available_width_m=30.0,
+        orientation_deg=90.0,
+        ground=FREE_SPACE,
+        support=InstallationSupport.MAST,
+        notes="Back yard",
+        image_reference="site.png",
+    )
+    portable = InstallationProfile(
+        id=uuid4(),
+        name="Portable",
+        available_height_m=4.0,
+        support=InstallationSupport.PORTABLE,
+    )
+    project = replace(
+        sample_project,
+        installation_profiles=(home, portable),
+        active_installation_profile_id=portable.id,
+    )
+    path = tmp_path / "installation.antennadesk"
+
+    repository.save(project, path)
+    loaded = repository.load(path)
+
+    assert loaded == project
+    assert loaded.active_installation_profile == portable
+
+
 def test_round_trip_preserves_band_analysis_metadata(
     repository: JsonProjectRepository,
     sample_project: Project,

@@ -94,7 +94,7 @@ external service and must not be invented or simulated into existence.
 | P7 | True per-frequency simulation progress | L | P2; ADR; benchmark; D4 decision | **Deferred until a benchmark shows a practical need.** Choose between chunked frequency-plan execution and version-tolerant incremental output parsing. Chunking must aggregate `SimulationResult` safely and preserve source, pattern, feed-line, matching-network, and cancellation semantics; parsing must handle partial writes. Add an ADR and benchmark before implementation. Do not use `timeout_s` or elapsed time as a fake percentage. |
 | ~~R1~~ | ~~Re-run the `v0.4.0` release workflow and replace manual assets~~ | S | GitHub Actions runner DNS/mirror; tag `v0.4.0` | **Superseded 2026-11-11:** the `v0.4.1` release workflow completed all jobs and published CI-built Linux, Windows installer/zip, and wheel/sdist artifacts. The manual `v0.4.0` assets remain as published; rerunning that older tag is no longer required. |
 | ~~UX1~~ | ~~Guided mode and next-step coach~~ | S–M | none | **Done 2026-11-11:** added persistent Guided, Standard, and Advanced modes in **View → Workflow mode**, the toolbar **Mode** selector, and **Preferences**. Guided hides advanced actions and shows a state-derived next-step panel; Standard keeps the full editor with advanced simulation collapsed; Advanced expands it. The pure workflow state machine covers project, solver, simulation, diagnostics, high-SWR review, construction, measurement, comparison, and completion states; tests cover the transitions, action visibility, persistence, and EN/ES retranslation. |
-| UX2 | Installation profile | S–M | none | Project-level profile with available height, horizontal space, orientation, ground preset, support type, notes, and optional image reference; create/edit/duplicate; schema migration; advisor, comparison, and report headers use it; no electromagnetic claims. |
+| ~~UX2~~ | ~~Installation profile~~ | S–M | none | **Done 2026-11-11:** added project-level installation profiles with name, available height and horizontal space, orientation, support type, ground preset, notes, and optional local image reference. The dialog supports add, duplicate, remove, and active selection; the active profile appears in the design panel and in construction sheets and HTML/PDF reports. Schema 36 persists the profile list and active identifier, older projects migrate with no profiles, and the editor is covered by domain, persistence, reporting, dialog, main-window, undo/redo, and EN/ES retranslation tests. Profiles are metadata and do not apply their ground automatically. |
 | UX3 | Antenna suitability profiles and guided advisor | M | UX1, UX2 | A suitability record per catalog family (bands, footprint, height, feed/tuner, pattern, gain class, construction/portability, use cases such as NVIS, DX, regional, portable, and receive, evidence); a five-question advisor applies hard constraints and returns at least three candidates with a trade-off matrix and evidence; create a project from a candidate; no simulation ranking in the first slice. |
 | UX4 | Comparison 2.0 | M–L | UX2; comparison-basis ADR | Comparison basis record (frequency plan, ground, reference height, feed line, matching, units); 2–4 designs; recompute with progress and cancellation; metric table, overlaid patterns, and size/BOM comparison; visible basis banner; the ADR records the per-family height mapping. |
 | UX5 | Contextual explanations and confidence card | M | none | Contextual help for impedance, SWR, efficiency, gain/directivity/realized gain, takeoff, bandwidth, ground, and feed-line loss; a confidence card with evidence level, modeled/unmodeled items, and dominant uncertainties; EN/ES; the help coverage manifest passes. |
@@ -105,8 +105,8 @@ external service and must not be invented or simulated into existence.
 
 ## Product experience queue (2026-11-11)
 
-UX1 is complete. UX2–UX5 are the active product-experience slice. They are
-deliberately ordered before new antenna work because they remove the largest
+UX1 and UX2 are complete. UX3–UX5 are the active product-experience slice. They
+are deliberately ordered before new antenna work because they remove the largest
 beginner and decision-making gaps. UX6–UX20 remain product scope in
 [`ROADMAP.md`](ROADMAP.md#product-experience-backlog-proposed-2026-11-11); do not
 promote them into this queue until the previous release is closed and the full
@@ -308,8 +308,8 @@ model and solver contract must land first.
 7. **R1** is closed as superseded: `v0.4.1` was published with CI-built Linux
    and Windows artifacts, so rerunning the older `v0.4.0` tag is no longer
    required.
-8. **UX1 is complete.** The active product-experience slice is **UX2–UX5**. It
-   precedes new antenna work; UX6–UX20 remain product scope in
+8. **UX1 and UX2 are complete.** The active product-experience slice is
+   **UX3–UX5**. It precedes new antenna work; UX6–UX20 remain product scope in
    [`ROADMAP.md`](ROADMAP.md).
 9. Product priorities and new antenna candidates live in
    [`ROADMAP.md`](ROADMAP.md), not in this queue.
@@ -342,8 +342,8 @@ model and solver contract must land first.
 
 ## Current baseline
 
-- Schema: **35**.
-- Full gate: **2,475 passed, 1 skipped** with `NEC2C` and the optional
+- Schema: **36**.
+- Full gate: **2,509 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.4.1** published on 2026-11-11 with checksum-verified unsigned

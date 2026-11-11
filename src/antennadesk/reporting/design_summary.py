@@ -43,6 +43,7 @@ from ..domain.antennas.zepp import ZeppParameters, parallel_wire_impedance_ohm
 from ..domain.design.evidence import EVIDENCE
 from ..domain.design.matching_resolution import resolve_matching_network
 from ..domain.environment.ground import GroundModel
+from ..domain.projects.installation import InstallationProfile
 from ..domain.projects.project import DesignVariant
 from .localization import Labeler, identity_labeler
 
@@ -195,6 +196,32 @@ def matching_network_description(
     if network.q_factor:
         description += tr(", Q {q:g}", q=network.q_factor)
     return description
+
+
+def installation_profile_rows(
+    profile: InstallationProfile | None,
+    labeler: Labeler | None = None,
+) -> tuple[tuple[str, str], ...]:
+    """Return the active installation profile as report rows."""
+
+    if profile is None:
+        return ()
+    tr = labeler or identity_labeler
+    height = (
+        f"{profile.available_height_m:.3f} m" if profile.available_height_m is not None else "—"
+    )
+    width = f"{profile.available_width_m:.3f} m" if profile.available_width_m is not None else "—"
+    rows: list[tuple[str, str]] = [
+        ("Installation profile", profile.name),
+        ("Available height", height),
+        ("Available space", width),
+        ("Installation orientation", f"{profile.orientation_deg:.0f}°"),
+        ("Support", tr(profile.support.value)),
+        ("Profile ground", ground_text(profile.ground, tr) if profile.ground else "—"),
+    ]
+    if profile.notes.strip():
+        rows.append(("Profile notes", profile.notes.strip()))
+    return tuple(rows)
 
 
 def feed_matching_rows(

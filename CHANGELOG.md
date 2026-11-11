@@ -22,6 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   construction sheet, import a VNA measurement, compare measured and simulated
   results, or export the final report. The panel is available in Guided and
   Standard modes and has English/Spanish help.
+- **Installation profiles.** A project can now store named site profiles with
+  available height and horizontal space, orientation, support type, ground
+  preset, notes, and an optional local image reference. Profiles can be added,
+  duplicated, removed, and selected as active; the active profile is shown in
+  the design panel and in construction sheets and HTML/PDF reports. Profiles are
+  metadata and do not change the antenna model or apply their ground
+  automatically. Schema 36 adds the optional profile list and active-profile
+  identifier; older projects migrate with no profiles.
 
 ## [0.4.2] - 2026-11-11
 

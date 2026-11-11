@@ -543,6 +543,17 @@ def _migrate_v34_to_v35(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v35_to_v36(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the optional installation profiles to the project."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if isinstance(project, dict):
+        project.setdefault("installation_profiles", [])
+        project.setdefault("active_installation_profile_id", None)
+    return migrated
+
+
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
@@ -578,6 +589,7 @@ MIGRATIONS: dict[int, Migration] = {
     32: _migrate_v32_to_v33,
     33: _migrate_v33_to_v34,
     34: _migrate_v34_to_v35,
+    35: _migrate_v35_to_v36,
 }
 
 

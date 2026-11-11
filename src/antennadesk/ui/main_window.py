@@ -190,6 +190,7 @@ from ..reporting.csv_export import (
     write_pattern_csv,
     write_sources_csv,
 )
+from ..reporting.design_summary import installation_profile_rows
 from ..reporting.html_report import write_html_report
 from ..reporting.wire_schedule import write_bom_csv, write_wire_schedule_csv
 from ..simulation.nec2.solver import Nec2cSolver
@@ -258,6 +259,7 @@ from .dialogs.fan_dipole_dialog import FanDipoleDialog
 from .dialogs.feed_line_dialog import FeedLineDialog
 from .dialogs.g5rv_dialog import G5RVDialog
 from .dialogs.hexbeam_dialog import HexbeamDialog
+from .dialogs.installation_profile_dialog import InstallationProfileDialog
 from .dialogs.inverted_l_dialog import InvertedLDialog
 from .dialogs.inverted_v_dialog import InvertedVDialog
 from .dialogs.j_pole_dialog import JPoleDialog
@@ -514,6 +516,10 @@ class MainWindow(QMainWindow):
         self._change_template_action = QAction(self)
         self._change_template_action.setShortcut(QKeySequence("Ctrl+Shift+T"))
         self._change_template_action.triggered.connect(lambda: self.change_template())
+        self._installation_profile_action = QAction(self)
+        self._installation_profile_action.triggered.connect(
+            lambda: self.edit_installation_profile()
+        )
         self._design_from_frequency_action = QAction(self)
         self._design_from_frequency_action.setShortcut(QKeySequence("Ctrl+Shift+E"))
         self._design_from_frequency_action.triggered.connect(lambda: self.design_from_frequency())
@@ -1071,6 +1077,15 @@ class MainWindow(QMainWindow):
         design_layout.addLayout(design_actions)
         design_layout.addWidget(self._design_stack, 1)
         design_layout.addWidget(self._feed_matching_summary)
+        self._installation_label = QLabel(self)
+        self._installation_label.setWordWrap(True)
+        self._installation_edit = QPushButton(self)
+        self._installation_edit.clicked.connect(lambda: self.edit_installation_profile())
+        installation_layout = QHBoxLayout()
+        installation_layout.setContentsMargins(0, 0, 0, 0)
+        installation_layout.addWidget(self._installation_label, 1)
+        installation_layout.addWidget(self._installation_edit)
+        design_layout.addLayout(installation_layout)
         design_layout.addWidget(self._provenance_label)
         design_layout.addWidget(self._advanced_toggle)
         design_layout.addWidget(self._advanced_body)
@@ -1234,6 +1249,7 @@ class MainWindow(QMainWindow):
         self._variants_menu.addAction(self._compare_action)
         self._design_menu.addSeparator()
         self._design_menu.addAction(self._change_template_action)
+        self._design_menu.addAction(self._installation_profile_action)
         self._design_menu.addAction(self._design_from_frequency_action)
         self._design_menu.addAction(self._optimize_action)
         self._design_menu.addSeparator()
@@ -1343,6 +1359,13 @@ class MainWindow(QMainWindow):
         self._compare_action.setText(self._translator.t("action.compare"))
         self._optimize_action.setText(self._translator.t("action.optimize"))
         self._change_template_action.setText(self._translator.t("action.change_template"))
+        self._installation_profile_action.setText(self._translator.t("action.installation_profile"))
+        self._installation_profile_action.setToolTip(
+            self._translator.t("help.action.installation_profile")
+        )
+        self._installation_profile_action.setWhatsThis(
+            self._translator.t("help.action.installation_profile")
+        )
         self._design_from_frequency_action.setText(
             self._translator.t("action.design_from_frequency")
         )
@@ -1375,6 +1398,8 @@ class MainWindow(QMainWindow):
         self._band_group.setTitle(self._translator.t("band.group_title"))
         self._advanced_toggle.setText(self._translator.t("advanced.title"))
         apply_help(self._design_panel, self._translator, "section.design")
+        apply_help(self._installation_label, self._translator, "section.installation")
+        apply_help(self._installation_edit, self._translator, "action.installation_profile")
         apply_help(self._advanced_toggle, self._translator, "section.advanced")
         apply_help(self._solver_group, self._translator, "section.solver")
         apply_help(self._sweep_group, self._translator, "section.sweep")
@@ -1399,6 +1424,7 @@ class MainWindow(QMainWindow):
         self._cancel_action.setWhatsThis(self._translator.t("help.action.cancel"))
         self._update_band_plan_label()
         self._update_workflow_ui()
+        self._refresh_installation_summary()
         self._custom_pattern_label.setText(self._translator.t("custom.pattern_resolution"))
         self._custom_pattern_resolution.setItemText(
             0,
@@ -1706,6 +1732,8 @@ class MainWindow(QMainWindow):
         is_custom = isinstance(parameters, CustomAntennaParameters)
         estimate_supported = parameters is not None and supports_estimation(parameters)
         self._change_template_action.setEnabled(idle and has_project)
+        self._installation_profile_action.setEnabled(idle and has_project)
+        self._installation_edit.setEnabled(idle and has_project)
         self._design_from_frequency_action.setEnabled(idle and has_project and estimate_supported)
         self._estimate_button.setEnabled(idle and has_project and estimate_supported)
         estimate_hint = ""
@@ -2055,6 +2083,7 @@ class MainWindow(QMainWindow):
             else:
                 self._results.set_result(None)
             self._update_dirty_from_signature()
+            self._refresh_installation_summary()
             self._update_title()
             self._update_actions()
             self._update_status_text()
@@ -2350,6 +2379,7 @@ class MainWindow(QMainWindow):
         self._main_stack.setCurrentWidget(self._start_page)
         self._last_status_key = "status.ready"
         self._refresh_feed_matching_summary()
+        self._refresh_installation_summary()
         self._update_title()
         self._update_status_text()
         self._update_actions()
@@ -2409,6 +2439,7 @@ class MainWindow(QMainWindow):
             self._clean_signature = self._current_project_signature()
             self._clean_run_ids = self._current_run_ids()
         self._dirty = dirty
+        self._refresh_installation_summary()
         self._update_title()
         self._update_actions()
         self._refresh_history_actions()
@@ -3180,6 +3211,54 @@ class MainWindow(QMainWindow):
             self._feed_line,
             self._balun_loss,
         )
+
+    @history_action("history.installation_profile")
+    def edit_installation_profile(self) -> None:
+        if self._project is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        dialog = InstallationProfileDialog(
+            self._translator,
+            self._unit_system,
+            self._project.installation_profiles,
+            self._project.active_installation_profile_id,
+            self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._project = self._project.with_installation_state(
+            dialog.profiles(),
+            dialog.active_profile_id(),
+            updated_at=utc_now(),
+        )
+        self._dirty = True
+        self._refresh_installation_summary()
+        self._update_title()
+        self._update_actions()
+        self._last_status_key = "status.installation_profile"
+        self._update_status_text()
+
+    def _refresh_installation_summary(self) -> None:
+        label = getattr(self, "_installation_label", None)
+        button = getattr(self, "_installation_edit", None)
+        if label is None or button is None:
+            return
+        profile = self._project.active_installation_profile if self._project is not None else None
+        button.setText(
+            self._translator.t("installation.edit" if profile is not None else "installation.add")
+        )
+        if profile is None:
+            label.setText(self._translator.t("installation.none"))
+            label.setToolTip(self._translator.t("installation.none_hint"))
+            return
+        rows = [
+            row
+            for row in installation_profile_rows(profile, labeler=self._translator.report)
+            if row[0] != "Profile notes"
+        ]
+        text = " · ".join(f"{name}: {value}" for name, value in rows)
+        label.setText(text)
+        label.setToolTip(f"{text}\n\n{self._translator.t('help.section.installation')}")
 
     def _base_simulation_spec(self, design: DesignVariant) -> SimulationSpec:
         return replace(
@@ -7761,6 +7840,7 @@ class MainWindow(QMainWindow):
         ):
             form.set_unit_system(unit_system)
         self._geometry.set_unit_system(unit_system)
+        self._refresh_installation_summary()
 
     def _set_unit_system(self, unit_system: UnitSystem) -> None:
         self._unit_system = unit_system

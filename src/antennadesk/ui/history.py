@@ -34,6 +34,8 @@ class ProjectSnapshot:
             self.project.feed_line,
             self.project.matching_network,
             self.project.balun_loss,
+            self.project.installation_profiles,
+            self.project.active_installation_profile_id,
         )
 
 

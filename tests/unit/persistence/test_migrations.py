@@ -896,6 +896,21 @@ def test_v33_migration_adds_the_matching_network_design_target() -> None:
     assert "matching_network_design" not in document["project"]
 
 
+def test_v35_migration_adds_installation_profiles() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 35,
+        "project": {"name": "Site"},
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert migrated["project"]["installation_profiles"] == []
+    assert migrated["project"]["active_installation_profile_id"] is None
+    assert "installation_profiles" not in document["project"]
+
+
 def test_v34_migration_adds_the_endfed_bend_fields() -> None:
     document = {
         "format": "antennadesk-project",

@@ -514,12 +514,16 @@ the summary is compact enough to keep with every design.
 
 An immutable project with an identifier, name, description, timestamps, and a
 tuple of design variants. It also stores the project-level feed line, matching
-network, matching-network design target, and balun loss. Invariants:
+network, matching-network design target, balun loss, installation profiles, and
+the active installation-profile identifier. Invariants:
 
 - Non-empty project name.
 - Timezone-aware timestamps.
 - `updated_at` is not earlier than `created_at`.
 - Unique design identifiers and names.
+- Unique installation-profile identifiers and names.
+- The active installation-profile identifier references an existing profile or
+  is null.
 
 `with_design()` returns a new project, replacing or appending a design.
 
@@ -674,6 +678,8 @@ the application writes version 24.
   Old runs load with an empty source list and keep the primary feed result.
 - Version 30 introduces the hexbeam parameter payload. Existing designs are
   unchanged.
+- Version 36 adds optional installation profiles and the active profile
+  identifier. Old documents load with no profiles.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads

@@ -8,6 +8,7 @@ from antennadesk.reporting.design_summary import (
     design_evidence_rows,
     design_summary_rows,
     feed_matching_rows,
+    installation_profile_rows,
     optimization_summary_rows,
 )
 
@@ -618,3 +619,35 @@ def test_feed_matching_rows_omit_inactive_project_items() -> None:
     assert "Project matching" not in rows
     assert "Feed line" not in rows
     assert "Balun/unun loss" not in rows
+
+
+def test_installation_profile_rows_describe_the_active_site() -> None:
+    from uuid import uuid4
+
+    from antennadesk.domain.environment.ground import FREE_SPACE
+    from antennadesk.domain.projects.installation import (
+        InstallationProfile,
+        InstallationSupport,
+    )
+
+    profile = InstallationProfile(
+        id=uuid4(),
+        name="Home",
+        available_height_m=12.0,
+        available_width_m=30.0,
+        orientation_deg=90.0,
+        ground=FREE_SPACE,
+        support=InstallationSupport.TREE,
+        notes="Back yard",
+    )
+
+    rows = dict(installation_profile_rows(profile))
+
+    assert rows["Installation profile"] == "Home"
+    assert rows["Available height"] == "12.000 m"
+    assert rows["Available space"] == "30.000 m"
+    assert rows["Installation orientation"] == "90°"
+    assert rows["Support"] == "tree"
+    assert rows["Profile ground"] == "free_space"
+    assert rows["Profile notes"] == "Back yard"
+    assert installation_profile_rows(None) == ()
