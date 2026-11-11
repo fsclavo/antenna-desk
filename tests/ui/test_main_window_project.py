@@ -670,7 +670,7 @@ def test_main_menu_is_grouped_by_task(window: MainWindow) -> None:
 def test_menu_order_follows_the_standard_desktop_layout(window: MainWindow) -> None:
     menu_titles = [action.text() for action in window.menuBar().actions() if action.text()]
 
-    assert menu_titles == ["File", "Edit", "Design", "Simulation", "Tools", "Help"]
+    assert menu_titles == ["File", "Edit", "View", "Design", "Simulation", "Tools", "Help"]
     edit_titles = [action.text() for action in window._edit_menu.actions()]
     tools_titles = [action.text() for action in window._tools_menu.actions()]
     assert "Preferences..." in edit_titles

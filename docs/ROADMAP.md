@@ -320,8 +320,8 @@ The 2026-11-11 review of the desired-backlog proposal keeps the product focus on
 the decision-to-measurement workflow instead of adding more antenna families.
 The catalog is broad enough; the next value is helping the operator choose,
 understand, build, and improve a design. This is product scope, not a second
-execution queue. The first slice, UX1–UX5, is promoted to
-[`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md); UX6–UX20 stay here until they
+execution queue. UX1 is complete; UX2–UX5 are the active slice in
+[`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md). UX6–UX20 stay here until they
 are ready to execute.
 
 Rules for this track:
@@ -339,7 +339,7 @@ Rules for this track:
 
 | Release | ID | Item | Outcome | Size | Evidence | Status |
 |---|---|---|---|---|---|---|
-| 0.5 Decide | UX1 | Guided mode and next-step coach | State-driven next action and progressive disclosure | S–M | n/a | active queue |
+| 0.5 Decide | UX1 | Guided mode and next-step coach | State-driven next action and progressive disclosure | S–M | n/a | done 2026-11-11 |
 | 0.5 Decide | UX2 | Installation profile | Reusable site envelope and constraints | S–M | n/a | active queue |
 | 0.5 Decide | UX3 | Antenna suitability profiles and guided advisor | Constraint-filtered shortlist with operating intent and trade-offs | M | B/C | active queue |
 | 0.5 Decide | UX4 | Comparison 2.0 | 2–4 designs under a common basis, recomputed | M–L | B | active queue |
@@ -382,7 +382,7 @@ kept at
 
 Product track:
 
-1. The active product-experience slice is UX1–UX5 in
+1. UX1 is complete. The active product-experience slice is UX2–UX5 in
    [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md); UX6–UX20 remain product
    scope in the product experience backlog above.
 

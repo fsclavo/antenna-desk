@@ -13,6 +13,7 @@ from uuid import UUID, uuid4
 from PySide6.QtCore import QEventLoop, Qt, QThread, QTimer
 from PySide6.QtGui import (
     QAction,
+    QActionGroup,
     QCloseEvent,
     QFont,
     QKeySequence,
@@ -333,12 +334,14 @@ from .widgets.transmission_line_doublet_form import TransmissionLineDoubletForm
 from .widgets.trap_dipole_form import TrapDipoleForm
 from .widgets.trap_yagi_form import TrapYagiForm
 from .widgets.vertical_form import VerticalForm
+from .widgets.workflow_panel import NextStepPanel
 from .widgets.yagi_form import YagiForm
 from .widgets.zepp_form import ZeppForm
 from .workers.band_analysis_worker import BandAnalysisWorker
 from .workers.open_project_worker import OpenProjectWorker
 from .workers.save_project_worker import SaveProjectWorker
 from .workers.simulation_worker import SimulationWorker
+from .workflow import NextStepKind, WorkflowContext, WorkflowMode, next_step
 
 DEFAULT_GENERATED_SWEEP_POINTS = 31
 DEFAULT_TWO_BAND_SWEEP_POINTS = 61
@@ -367,6 +370,7 @@ class MainWindow(QMainWindow):
             language_preference if language_preference is not None else LanguagePreference.SYSTEM
         )
         self._preferences = preferences if preferences is not None else InMemoryPreferencesStore()
+        self._workflow_mode = self._preferences.load().workflow_mode
         if font_size_controller is None:
             app = QApplication.instance()
             base_font = app.font() if isinstance(app, QApplication) else QFont()
@@ -388,6 +392,9 @@ class MainWindow(QMainWindow):
         self._selected_band_ids: dict[UUID, str] = {}
         self._simulation_design_id: UUID | None = None
         self._band_analysis_design_id: UUID | None = None
+        self._workflow_reviewed_swr: set[UUID] = set()
+        self._workflow_construction_viewed: set[UUID] = set()
+        self._workflow_measurement_compared: set[UUID] = set()
         self._loads: tuple[LumpedLoad, ...] = ()
         self._transmission_lines: tuple[TransmissionLine, ...] = ()
         self._feed_line: FeedLine | None = None
@@ -417,6 +424,8 @@ class MainWindow(QMainWindow):
 
         self._build_actions()
         self._build_ui()
+        self._sync_workflow_controls()
+        self._apply_workflow_mode()
         self._show_empty_state()
         self.retranslate()
 
@@ -474,6 +483,22 @@ class MainWindow(QMainWindow):
         self._whats_this_action = QAction(self)
         self._whats_this_action.setShortcut(QKeySequence("Shift+F1"))
         self._whats_this_action.triggered.connect(lambda: QWhatsThis.enterWhatsThisMode())
+
+        self._workflow_guided_action = QAction(self)
+        self._workflow_standard_action = QAction(self)
+        self._workflow_advanced_action = QAction(self)
+        self._workflow_actions = {
+            WorkflowMode.GUIDED: self._workflow_guided_action,
+            WorkflowMode.STANDARD: self._workflow_standard_action,
+            WorkflowMode.ADVANCED: self._workflow_advanced_action,
+        }
+        self._workflow_action_group = QActionGroup(self)
+        self._workflow_action_group.setExclusive(True)
+        for mode, action in self._workflow_actions.items():
+            action.setCheckable(True)
+            action.setData(mode.value)
+            action.triggered.connect(lambda checked=False, mode=mode: self._set_workflow_mode(mode))
+            self._workflow_action_group.addAction(action)
 
         self._new_variant_action = QAction(self)
         self._new_variant_action.setShortcut(QKeySequence("Ctrl+Shift+N"))
@@ -1030,9 +1055,15 @@ class MainWindow(QMainWindow):
         )
         self._feed_matching_summary.edit_network_requested.connect(self.configure_matching_network)
         self._feed_matching_summary.remove_network_requested.connect(self.remove_matching_network)
+        self._workflow_panel = NextStepPanel(self._translator, self)
+        self._workflow_panel.action_requested.connect(self._on_next_step_action)
+        self._workflow_panel.advanced_requested.connect(
+            lambda: self._set_workflow_mode(WorkflowMode.ADVANCED)
+        )
         design_panel = QWidget(self)
         design_layout = QVBoxLayout(design_panel)
         design_layout.setContentsMargins(0, 0, 0, 0)
+        design_layout.addWidget(self._workflow_panel)
         design_actions = QHBoxLayout()
         design_actions.addWidget(self._apply_button)
         design_actions.addWidget(self._estimate_button)
@@ -1059,6 +1090,7 @@ class MainWindow(QMainWindow):
         self._results.measurement_delete_requested.connect(self.delete_measurement)
         self._results.band_selected.connect(self._on_band_selected)
         self._results.matching_network_requested.connect(self.create_matching_network_from_point)
+        self._results.tab_changed.connect(self._on_results_tab_changed)
 
         geometry_container = QWidget(self)
         geometry_layout = QVBoxLayout(geometry_container)
@@ -1144,6 +1176,14 @@ class MainWindow(QMainWindow):
         toolbar.addSeparator()
         toolbar.addAction(self._simulate_action)
         toolbar.addAction(self._cancel_action)
+        toolbar.addSeparator()
+        self._workflow_label = QLabel(self)
+        toolbar.addWidget(self._workflow_label)
+        self._workflow_combo = QComboBox(self)
+        for mode in WorkflowMode:
+            self._workflow_combo.addItem("", mode.value)
+        self._workflow_combo.currentIndexChanged.connect(self._on_workflow_combo_changed)
+        toolbar.addWidget(self._workflow_combo)
 
         self._file_menu = self.menuBar().addMenu("")
         self._file_menu.addAction(self._new_action)
@@ -1154,7 +1194,7 @@ class MainWindow(QMainWindow):
         self._import_menu = self._file_menu.addMenu("")
         self._import_menu.addAction(self._import_nec_action)
         self._import_menu.addAction(self._import_mmana_action)
-        self._import_menu.addSeparator()
+        self._import_separator = self._import_menu.addSeparator()
         self._import_menu.addAction(self._import_vna_action)
         self._export_menu = self._file_menu.addMenu("")
         self._export_menu.addAction(self._export_csv_action)
@@ -1180,6 +1220,11 @@ class MainWindow(QMainWindow):
         self._edit_menu.addSeparator()
         self._edit_menu.addAction(self._preferences_action)
 
+        self._view_menu = self.menuBar().addMenu("")
+        self._workflow_menu = self._view_menu.addMenu("")
+        for mode in WorkflowMode:
+            self._workflow_menu.addAction(self._workflow_actions[mode])
+
         self._design_menu = self.menuBar().addMenu("")
         self._variants_menu = self._design_menu.addMenu("")
         self._variants_menu.addAction(self._new_variant_action)
@@ -1203,7 +1248,7 @@ class MainWindow(QMainWindow):
         self._simulation_menu.addAction(self._simulate_action)
         self._simulation_menu.addAction(self._analyze_bands_action)
         self._simulation_menu.addAction(self._cancel_action)
-        self._simulation_menu.addSeparator()
+        self._simulation_feed_separator = self._simulation_menu.addSeparator()
         self._simulation_menu.addAction(self._feed_line_action)
         self._simulation_menu.addAction(self._matching_network_action)
         self._simulation_menu.addAction(self._balun_loss_action)
@@ -1277,6 +1322,21 @@ class MainWindow(QMainWindow):
         self._about_action.setText(self._translator.t("action.about"))
         self._whats_this_action.setText(self._translator.t("action.whats_this"))
         self._whats_this_action.setToolTip(self._translator.t("action.whats_this.tooltip"))
+        self._view_menu.setTitle(self._translator.t("menu.view"))
+        self._workflow_menu.setTitle(self._translator.t("menu.workflow_mode"))
+        self._workflow_label.setText(self._translator.t("workflow.mode_label"))
+        for index, mode in enumerate(WorkflowMode):
+            self._workflow_combo.setItemText(
+                index,
+                self._translator.t(f"workflow.mode.{mode.value}"),
+            )
+            action = self._workflow_actions[mode]
+            action.setText(self._translator.t(f"workflow.mode.{mode.value}"))
+            action.setToolTip(self._translator.t(f"help.mode.{mode.value}"))
+            action.setWhatsThis(self._translator.t(f"help.mode.{mode.value}"))
+        apply_help(self._workflow_label, self._translator, "preferences.workflow_mode")
+        apply_help(self._workflow_combo, self._translator, "preferences.workflow_mode")
+        self._workflow_panel.retranslate()
         self._new_variant_action.setText(self._translator.t("action.new_variant"))
         self._rename_variant_action.setText(self._translator.t("action.rename_variant"))
         self._delete_variant_action.setText(self._translator.t("action.delete_variant"))
@@ -1338,6 +1398,7 @@ class MainWindow(QMainWindow):
         self._cancel_action.setToolTip(self._translator.t("help.action.cancel"))
         self._cancel_action.setWhatsThis(self._translator.t("help.action.cancel"))
         self._update_band_plan_label()
+        self._update_workflow_ui()
         self._custom_pattern_label.setText(self._translator.t("custom.pattern_resolution"))
         self._custom_pattern_resolution.setItemText(
             0,
@@ -1539,6 +1600,9 @@ class MainWindow(QMainWindow):
         self._simulation_results.pop(design_id, None)
         self._band_analysis_results.pop(design_id, None)
         self._selected_band_ids.pop(design_id, None)
+        self._workflow_reviewed_swr.discard(design_id)
+        self._workflow_construction_viewed.discard(design_id)
+        self._workflow_measurement_compared.discard(design_id)
         if design_id == self._design_id and hasattr(self, "_results"):
             self._results.set_band_analysis(None)
 
@@ -1696,6 +1760,139 @@ class MainWindow(QMainWindow):
         self._solver_group.setEnabled(idle and has_project)
         self._sweep_group.setEnabled(idle and has_project)
         self._toolbar.setVisible(has_project)
+        self._update_workflow_ui()
+
+    def _workflow_context(self) -> WorkflowContext:
+        if self._project is None or self._design_id is None:
+            return WorkflowContext(
+                has_project=False,
+                has_solver=self._solver is not None,
+                has_result=False,
+            )
+        design = self._project.design_by_id(self._design_id)
+        result = self._simulation_results.get(self._design_id)
+        design_swr: float | None = None
+        if result is not None and result.frequencies:
+            target_hz = design.parameters.frequency_hz
+            closest = min(
+                result.frequencies,
+                key=lambda item: abs(item.frequency_hz - target_hz),
+            )
+            design_swr = closest.swr
+        return WorkflowContext(
+            has_project=True,
+            has_solver=self._solver is not None,
+            has_result=result is not None,
+            result_status=result.status if result is not None else None,
+            design_swr=design_swr,
+            reviewed_swr=self._design_id in self._workflow_reviewed_swr,
+            construction_viewed=self._design_id in self._workflow_construction_viewed,
+            has_measurement=bool(self._project.measurements),
+            measurement_compared=self._design_id in self._workflow_measurement_compared,
+        )
+
+    def _update_workflow_ui(self) -> None:
+        panel = getattr(self, "_workflow_panel", None)
+        if panel is None:
+            return
+        panel.set_guided(self._workflow_mode is WorkflowMode.GUIDED)
+        panel.set_step(next_step(self._workflow_context()))
+        panel.setVisible(self._workflow_mode is not WorkflowMode.ADVANCED)
+
+    def _set_workflow_mode(self, mode: WorkflowMode, *, save: bool = True) -> None:
+        changed = mode is not self._workflow_mode
+        self._workflow_mode = mode
+        self._sync_workflow_controls()
+        self._apply_workflow_mode()
+        if changed and save:
+            self._save_preferences()
+
+    def _sync_workflow_controls(self) -> None:
+        combo = getattr(self, "_workflow_combo", None)
+        if combo is not None:
+            combo.blockSignals(True)
+            index = combo.findData(self._workflow_mode.value)
+            if index >= 0:
+                combo.setCurrentIndex(index)
+            combo.blockSignals(False)
+        for mode, action in self._workflow_actions.items():
+            action.blockSignals(True)
+            action.setChecked(mode is self._workflow_mode)
+            action.blockSignals(False)
+
+    def _on_workflow_combo_changed(self, _index: int) -> None:
+        value = self._workflow_combo.currentData()
+        if not isinstance(value, str):
+            return
+        try:
+            mode = WorkflowMode(value)
+        except ValueError:
+            return
+        self._set_workflow_mode(mode)
+
+    def _apply_workflow_mode(self) -> None:
+        guided = self._workflow_mode is WorkflowMode.GUIDED
+        advanced = self._workflow_mode is WorkflowMode.ADVANCED
+        self._advanced_toggle.setVisible(not guided)
+        self._advanced_toggle.setChecked(advanced)
+        self._advanced_body.setVisible(not guided and self._advanced_toggle.isChecked())
+        for action in (
+            self._loads_action,
+            self._transmission_lines_action,
+            self._feed_line_action,
+            self._matching_network_action,
+            self._balun_loss_action,
+            self._optimize_action,
+            self._compact_history_action,
+            self._import_nec_action,
+            self._import_mmana_action,
+        ):
+            action.setVisible(not guided)
+        self._import_separator.setVisible(not guided)
+        self._simulation_feed_separator.setVisible(not guided)
+        self._custom_menu.menuAction().setVisible(not guided)
+        self._optimize_button.setVisible(not guided)
+        self._feed_matching_summary.setVisible(not guided)
+        self._workflow_panel.set_guided(guided)
+        self._workflow_panel.setVisible(not advanced)
+        self._update_workflow_ui()
+
+    def _on_next_step_action(self, kind: object) -> None:
+        if not isinstance(kind, NextStepKind):
+            return
+        if kind is NextStepKind.CREATE_PROJECT:
+            self.new_antenna()
+        elif kind is NextStepKind.CONFIGURE_SOLVER:
+            self.locate_solver()
+        elif kind is NextStepKind.SIMULATE:
+            self.simulate()
+        elif kind is NextStepKind.REVIEW_DIAGNOSTICS:
+            self._results.show_diagnostics()
+        elif kind is NextStepKind.REVIEW_SWR:
+            if self._design_id is not None:
+                self._workflow_reviewed_swr.add(self._design_id)
+            self._results.show_impedance()
+            self._update_workflow_ui()
+        elif kind is NextStepKind.BUILD_SHEET:
+            self.show_construction_sheet()
+        elif kind is NextStepKind.MEASURE:
+            self.import_vna_csv()
+        elif kind is NextStepKind.COMPARE_MEASUREMENT:
+            if self._design_id is not None:
+                self._workflow_measurement_compared.add(self._design_id)
+            self._results.show_measurements()
+            self._update_workflow_ui()
+        elif kind is NextStepKind.COMPLETE:
+            self.export_pdf_report()
+
+    def _on_results_tab_changed(self, view: str) -> None:
+        if self._design_id is None:
+            return
+        if view == "impedance":
+            self._workflow_reviewed_swr.add(self._design_id)
+        elif view == "measurements":
+            self._workflow_measurement_compared.add(self._design_id)
+        self._update_workflow_ui()
 
     def _estimate_unavailable_message(self, parameters: AntennaDesignParameters) -> str:
         if isinstance(parameters, VerticalParameters) and parameters.loading_coil_enabled:
@@ -2133,6 +2330,9 @@ class MainWindow(QMainWindow):
         self._selected_band_ids = {}
         self._simulation_design_id = None
         self._band_analysis_design_id = None
+        self._workflow_reviewed_swr.clear()
+        self._workflow_construction_viewed.clear()
+        self._workflow_measurement_compared.clear()
         self._loads = ()
         self._transmission_lines = ()
         self._undo_stack.clear()
@@ -2190,6 +2390,9 @@ class MainWindow(QMainWindow):
                 self._simulation_results[project_design.id] = latest_run.result
         self._simulation_design_id = None
         self._band_analysis_design_id = None
+        self._workflow_reviewed_swr.clear()
+        self._workflow_construction_viewed.clear()
+        self._workflow_measurement_compared.clear()
         self._results.set_band_analysis(None)
         self._results.set_result(None)
         self._results.set_measurements(project.measurements)
@@ -2847,7 +3050,11 @@ class MainWindow(QMainWindow):
             design=self._matching_network_design,
             current_point=self._current_matching_network_point(),
         )
-        if dialog.exec() != QDialog.DialogCode.Accepted:
+        result = dialog.exec()
+        if self._design_id is not None:
+            self._workflow_reviewed_swr.add(self._design_id)
+            self._update_workflow_ui()
+        if result != QDialog.DialogCode.Accepted:
             return
         network = dialog.result_network()
         self._set_matching_network(
@@ -2896,7 +3103,11 @@ class MainWindow(QMainWindow):
             design=point,
             current_point=point,
         )
-        if dialog.exec() != QDialog.DialogCode.Accepted:
+        result = dialog.exec()
+        if self._design_id is not None:
+            self._workflow_reviewed_swr.add(self._design_id)
+            self._update_workflow_ui()
+        if result != QDialog.DialogCode.Accepted:
             return
         network = dialog.result_network()
         self._set_matching_network(
@@ -3401,6 +3612,8 @@ class MainWindow(QMainWindow):
         if design_id is not None:
             self._band_analysis_results.pop(design_id, None)
             self._selected_band_ids.pop(design_id, None)
+            self._workflow_reviewed_swr.discard(design_id)
+            self._workflow_measurement_compared.discard(design_id)
             self._results.set_band_analysis(None)
             self._simulation_results[design_id] = result
             if self._project is not None and result.status in {
@@ -4710,6 +4923,8 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             self._show_error(self._translator.t("error.import_vna", message=str(exc)))
             return
+        if self._design_id is not None:
+            self._workflow_measurement_compared.discard(self._design_id)
         self._dirty = True
         self._results.set_measurements(self._project.measurements)
         self._tabs_select_measurements()
@@ -6957,6 +7172,8 @@ class MainWindow(QMainWindow):
             auxiliary_kind=auxiliary_kind,
         )
         dialog.exec()
+        self._workflow_construction_viewed.add(self._design_id)
+        self._update_workflow_ui()
 
     def compare_variants(self) -> None:
         if self._project is None or len(self._project.designs) < 2:
@@ -7449,6 +7666,7 @@ class MainWindow(QMainWindow):
             font_size=self._font_size_controller.size,
             language=self._language_preference,
             unit_system=self._unit_system,
+            workflow_mode=self._workflow_mode,
         )
 
     def _save_preferences(self) -> None:
@@ -7493,6 +7711,9 @@ class MainWindow(QMainWindow):
         self._translator.set_language(resolve_language(preferences.language))
         self._font_size_controller.apply(preferences.font_size)
         self._unit_system = preferences.unit_system
+        self._workflow_mode = preferences.workflow_mode
+        self._sync_workflow_controls()
+        self._apply_workflow_mode()
         self._apply_unit_system_to_forms(preferences.unit_system)
         self.retranslate()
         self._update_form_panel_widths()

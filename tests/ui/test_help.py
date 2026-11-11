@@ -172,6 +172,8 @@ def test_main_window_sections_actions_and_tabs_have_help(window) -> None:  # typ
     assert "amateur bands" in window._analyze_bands_action.toolTip()
     assert "form values" in window._apply_button.toolTip()
     assert "family optimizer" in window._optimize_button.toolTip()
+    assert "recommendation" in window._workflow_panel.toolTip()
+    assert "Advanced" in window._workflow_combo.toolTip()
 
     tabs = window._results._tabs
     impedance = tabs.indexOf(window._results._impedance_tab)
@@ -182,6 +184,7 @@ def test_main_window_sections_actions_and_tabs_have_help(window) -> None:  # typ
     window._set_language(Language.SPANISH)
     assert "Tiempo límite" in window._solver_group.toolTip()
     assert "bandas" in window._analyze_bands_action.toolTip()
+    assert "Recomendación" in window._workflow_panel.toolTip()
 
 
 def test_feed_line_dialog_applies_row_help(qtbot: QtBot) -> None:

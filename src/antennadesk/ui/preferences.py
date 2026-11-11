@@ -15,10 +15,12 @@ from PySide6.QtWidgets import QApplication
 from .fonts import set_current_font_scale
 from .i18n import Language
 from .units import UnitSystem
+from .workflow import WorkflowMode
 
 FONT_SIZE_KEY = "ui/font_size"
 LANGUAGE_KEY = "ui/language"
 UNIT_SYSTEM_KEY = "ui/units"
+WORKFLOW_MODE_KEY = "ui/workflow_mode"
 _MIN_POINT_SIZE = 6.0
 _MIN_PIXEL_SIZE = 8
 
@@ -45,6 +47,7 @@ _PreferenceEnum = TypeVar(
     FontSize,
     LanguagePreference,
     UnitSystem,
+    WorkflowMode,
 )
 
 
@@ -62,6 +65,7 @@ class UiPreferences:
     font_size: FontSize = FontSize.MEDIUM
     language: LanguagePreference = LanguagePreference.SYSTEM
     unit_system: UnitSystem = UnitSystem.METRIC
+    workflow_mode: WorkflowMode = WorkflowMode.STANDARD
 
 
 class PreferencesStore(Protocol):
@@ -101,12 +105,18 @@ class QSettingsPreferencesStore:
                 UnitSystem,
                 default_unit_system,
             ),
+            workflow_mode=self._load_enum(
+                WORKFLOW_MODE_KEY,
+                WorkflowMode,
+                WorkflowMode.STANDARD,
+            ),
         )
 
     def save(self, preferences: UiPreferences) -> None:
         self._settings.setValue(FONT_SIZE_KEY, preferences.font_size.value)
         self._settings.setValue(LANGUAGE_KEY, preferences.language.value)
         self._settings.setValue(UNIT_SYSTEM_KEY, preferences.unit_system.value)
+        self._settings.setValue(WORKFLOW_MODE_KEY, preferences.workflow_mode.value)
         self._settings.sync()
 
     def _load_enum(

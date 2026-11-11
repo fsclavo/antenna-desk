@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Guided, Standard, and Advanced workflow modes.** The mode is selectable
+  from the new **View → Workflow mode** menu or the toolbar **Mode** selector,
+  persists across windows, and is also available in **Preferences**. Guided
+  hides advanced actions and shows a state-derived **Next step** panel;
+  Standard keeps the full editor with advanced simulation collapsed; Advanced
+  expands the solver, sweep, pattern, and band-analysis controls. Guided mode
+  exposes a **Show advanced options** action, so no feature is permanently
+  removed.
+- The next-step coach follows the project state: create a project, configure
+  the solver, simulate, review diagnostics, inspect a high-SWR match, open the
+  construction sheet, import a VNA measurement, compare measured and simulated
+  results, or export the final report. The panel is available in Guided and
+  Standard modes and has English/Spanish help.
+
 ## [0.4.2] - 2026-11-11
 
 ### Fixed

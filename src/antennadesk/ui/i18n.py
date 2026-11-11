@@ -46,6 +46,183 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "falta, refiná el diseño y después simulá."
         ),
     },
+    "workflow.mode_label": {
+        Language.ENGLISH: "Mode",
+        Language.SPANISH: "Modo",
+    },
+    "workflow.mode.guided": {
+        Language.ENGLISH: "Guided",
+        Language.SPANISH: "Guiado",
+    },
+    "workflow.mode.standard": {
+        Language.ENGLISH: "Standard",
+        Language.SPANISH: "Estándar",
+    },
+    "workflow.mode.advanced": {
+        Language.ENGLISH: "Advanced",
+        Language.SPANISH: "Avanzado",
+    },
+    "workflow.panel_title": {
+        Language.ENGLISH: "Next step",
+        Language.SPANISH: "Próximo paso",
+    },
+    "workflow.show_advanced": {
+        Language.ENGLISH: "Show advanced options",
+        Language.SPANISH: "Mostrar opciones avanzadas",
+    },
+    "workflow.next.create_project.title": {
+        Language.ENGLISH: "Start a project",
+        Language.SPANISH: "Iniciá un proyecto",
+    },
+    "workflow.next.create_project.body": {
+        Language.ENGLISH: ("Create an antenna from the catalog or open an existing project."),
+        Language.SPANISH: ("Creá una antena desde el catálogo o abrí un proyecto existente."),
+    },
+    "workflow.next.create_project.action": {
+        Language.ENGLISH: "New Antenna...",
+        Language.SPANISH: "Nueva antena...",
+    },
+    "workflow.next.configure_solver.title": {
+        Language.ENGLISH: "Configure the solver",
+        Language.SPANISH: "Configurá el solver",
+    },
+    "workflow.next.configure_solver.body": {
+        Language.ENGLISH: (
+            "AntennaDesk needs nec2c to simulate. Locate the executable and "
+            "then return to this design."
+        ),
+        Language.SPANISH: (
+            "AntennaDesk necesita nec2c para simular. Ubicá el ejecutable y volvé a este diseño."
+        ),
+    },
+    "workflow.next.configure_solver.action": {
+        Language.ENGLISH: "Locate solver...",
+        Language.SPANISH: "Ubicar solver...",
+    },
+    "workflow.next.simulate.title": {
+        Language.ENGLISH: "Simulate the design",
+        Language.SPANISH: "Simulá el diseño",
+    },
+    "workflow.next.simulate.body": {
+        Language.ENGLISH: (
+            "Run the solver to get impedance, SWR, gain, and the radiation pattern."
+        ),
+        Language.SPANISH: (
+            "Ejecutá el solver para obtener impedancia, ROE, ganancia y patrón de radiación."
+        ),
+    },
+    "workflow.next.simulate.action": {
+        Language.ENGLISH: "Simulate",
+        Language.SPANISH: "Simular",
+    },
+    "workflow.next.review_diagnostics.title": {
+        Language.ENGLISH: "Review the diagnostics",
+        Language.SPANISH: "Revisá los diagnósticos",
+    },
+    "workflow.next.review_diagnostics.body": {
+        Language.ENGLISH: (
+            "The last run finished with warnings or errors. Check the diagnostics "
+            "before building or comparing."
+        ),
+        Language.SPANISH: (
+            "La última corrida terminó con advertencias o errores. Revisá los "
+            "diagnósticos antes de construir o comparar."
+        ),
+    },
+    "workflow.next.review_diagnostics.action": {
+        Language.ENGLISH: "View diagnostics",
+        Language.SPANISH: "Ver diagnósticos",
+    },
+    "workflow.next.review_swr.title": {
+        Language.ENGLISH: "Review the match",
+        Language.SPANISH: "Revisá la adaptación",
+    },
+    "workflow.next.review_swr.body": {
+        Language.ENGLISH: (
+            "The SWR at the design frequency is above 2:1. Inspect the impedance "
+            "and consider a matching network, a length adjustment, or a different "
+            "feed point."
+        ),
+        Language.SPANISH: (
+            "La ROE en la frecuencia de diseño supera 2:1. Revisá la impedancia y "
+            "considerá una red de adaptación, un ajuste de longitud u otro punto "
+            "de alimentación."
+        ),
+    },
+    "workflow.next.review_swr.action": {
+        Language.ENGLISH: "Review impedance",
+        Language.SPANISH: "Revisar impedancia",
+    },
+    "workflow.next.build_sheet.title": {
+        Language.ENGLISH: "Prepare the construction sheet",
+        Language.SPANISH: "Prepará la hoja de construcción",
+    },
+    "workflow.next.build_sheet.body": {
+        Language.ENGLISH: (
+            "The design is simulated. Generate the construction sheet to check "
+            "dimensions, the wire schedule, and the bill of materials."
+        ),
+        Language.SPANISH: (
+            "El diseño está simulado. Generá la hoja de construcción para revisar "
+            "dimensiones, el listado de hilos y la lista de materiales."
+        ),
+    },
+    "workflow.next.build_sheet.action": {
+        Language.ENGLISH: "Open construction sheet",
+        Language.SPANISH: "Abrir hoja de construcción",
+    },
+    "workflow.next.measure.title": {
+        Language.ENGLISH: "Measure the built antenna",
+        Language.SPANISH: "Medí la antena construida",
+    },
+    "workflow.next.measure.body": {
+        Language.ENGLISH: (
+            "Import a NanoVNA CSV to compare the real antenna with the model. "
+            "This closes the design loop."
+        ),
+        Language.SPANISH: (
+            "Importá un CSV del NanoVNA para comparar la antena real con el modelo. "
+            "Así cerrás el ciclo de diseño."
+        ),
+    },
+    "workflow.next.measure.action": {
+        Language.ENGLISH: "Import VNA CSV...",
+        Language.SPANISH: "Importar CSV de VNA...",
+    },
+    "workflow.next.compare_measurement.title": {
+        Language.ENGLISH: "Compare measured and simulated",
+        Language.SPANISH: "Compará medido y simulado",
+    },
+    "workflow.next.compare_measurement.body": {
+        Language.ENGLISH: (
+            "Open the Measurements tab to compare SWR, R, X, and resonance with the simulation."
+        ),
+        Language.SPANISH: (
+            "Abrí la pestaña Mediciones para comparar ROE, R, X y resonancia con la simulación."
+        ),
+    },
+    "workflow.next.compare_measurement.action": {
+        Language.ENGLISH: "Compare measurement",
+        Language.SPANISH: "Comparar medición",
+    },
+    "workflow.next.complete.title": {
+        Language.ENGLISH: "Design loop complete",
+        Language.SPANISH: "Ciclo de diseño completo",
+    },
+    "workflow.next.complete.body": {
+        Language.ENGLISH: (
+            "You have a simulated design, a construction sheet, and a measurement "
+            "comparison. Export the report or start another design."
+        ),
+        Language.SPANISH: (
+            "Tenés un diseño simulado, una hoja de construcción y una comparación "
+            "de mediciones. Exportá el informe o empezá otro diseño."
+        ),
+    },
+    "workflow.next.complete.action": {
+        Language.ENGLISH: "Export PDF report",
+        Language.SPANISH: "Exportar informe PDF",
+    },
     "advanced.title": {
         Language.ENGLISH: "Advanced simulation",
         Language.SPANISH: "Simulación avanzada",
@@ -102,6 +279,11 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "menu.file": {Language.ENGLISH: "File", Language.SPANISH: "Archivo"},
     "menu.edit": {Language.ENGLISH: "Edit", Language.SPANISH: "Editar"},
+    "menu.view": {Language.ENGLISH: "View", Language.SPANISH: "Ver"},
+    "menu.workflow_mode": {
+        Language.ENGLISH: "Workflow mode",
+        Language.SPANISH: "Modo de trabajo",
+    },
     "menu.import": {Language.ENGLISH: "Import", Language.SPANISH: "Importar"},
     "menu.export": {Language.ENGLISH: "Export", Language.SPANISH: "Exportar"},
     "menu.design": {Language.ENGLISH: "Design", Language.SPANISH: "Diseño"},
@@ -143,16 +325,21 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Font Size",
         Language.SPANISH: "Tamaño de fuente",
     },
+    "preferences.workflow_mode": {
+        Language.ENGLISH: "Workflow mode",
+        Language.SPANISH: "Modo de trabajo",
+    },
     "preferences.hint": {
         Language.ENGLISH: (
-            "Language, units, and font size apply after you accept. System "
-            "follows the operating system language. Project files always store "
-            "metric SI units."
+            "Language, units, font size, and workflow mode apply after you "
+            "accept. System follows the operating system language. Project "
+            "files always store metric SI units."
         ),
         Language.SPANISH: (
-            "El idioma, las unidades y el tamaño de fuente se aplican al "
-            "aceptar. Sistema sigue el idioma del sistema operativo. Los "
-            "archivos de proyecto siempre guardan unidades SI métricas."
+            "El idioma, las unidades, el tamaño de fuente y el modo de trabajo "
+            "se aplican al aceptar. Sistema sigue el idioma del sistema "
+            "operativo. Los archivos de proyecto siempre guardan unidades SI "
+            "métricas."
         ),
     },
     "action.preferences": {
@@ -2499,6 +2686,34 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Adaptación interna del EFHW, red de adaptación del proyecto, línea de "
             "alimentación y pérdida del balun para el diseño actual."
         ),
+    },
+    "help.section.workflow": {
+        Language.ENGLISH: "Current recommendation and the next action for this design.",
+        Language.SPANISH: "Recomendación actual y próxima acción para este diseño.",
+    },
+    "help.action.next_step": {
+        Language.ENGLISH: "Run the recommended next action for the current design.",
+        Language.SPANISH: "Ejecutá la próxima acción recomendada para el diseño actual.",
+    },
+    "help.action.show_advanced": {
+        Language.ENGLISH: "Reveal the full editor and advanced simulation controls.",
+        Language.SPANISH: "Mostrá el editor completo y los controles de simulación avanzada.",
+    },
+    "help.mode.guided": {
+        Language.ENGLISH: "Guided hides advanced options and shows one next step at a time.",
+        Language.SPANISH: "Guiado oculta las opciones avanzadas y muestra un próximo paso por vez.",
+    },
+    "help.mode.standard": {
+        Language.ENGLISH: "Standard shows the full editor with advanced options collapsed.",
+        Language.SPANISH: "Estándar muestra el editor completo con las opciones avanzadas contraídas.",
+    },
+    "help.mode.advanced": {
+        Language.ENGLISH: "Advanced expands the solver, sweep, pattern, and band-analysis controls.",
+        Language.SPANISH: "Avanzado expande el solver, el barrido, el patrón y el análisis por banda.",
+    },
+    "help.preferences.workflow_mode": {
+        Language.ENGLISH: "Guided, Standard, or Advanced control how much of the editor is visible.",
+        Language.SPANISH: "Guiado, Estándar o Avanzado controlan cuánto del editor se muestra.",
     },
     "help.feed_matching.override": {
         Language.ENGLISH: (

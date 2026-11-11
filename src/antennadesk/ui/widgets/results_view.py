@@ -63,6 +63,7 @@ class ResultsView(QWidget):
     measurement_delete_requested = Signal(object)
     band_selected = Signal(object)
     matching_network_requested = Signal(object)
+    tab_changed = Signal(str)
 
     def __init__(self, translator: Translator, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -286,6 +287,7 @@ class ResultsView(QWidget):
         self._tabs.addTab(self._diagnostics_tab, "")
         self._tabs.addTab(self._raw_tab, "")
         self._tabs.setTabVisible(self._tabs.indexOf(self._sources_tab), False)
+        self._tabs.currentChanged.connect(self._on_tab_changed)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -429,6 +431,27 @@ class ResultsView(QWidget):
     def set_design(self, design: DesignVariant | None) -> None:
         self._design = design
         self._render_pattern()
+
+    def _on_tab_changed(self, _index: int) -> None:
+        self.tab_changed.emit(self.current_view())
+
+    def current_view(self) -> str:
+        """Return a stable name for the visible result tab."""
+
+        current = self._tabs.currentWidget()
+        if current is self._impedance_tab:
+            return "impedance"
+        if current is self._measurements_tab:
+            return "measurements"
+        if current is self._diagnostics_tab:
+            return "diagnostics"
+        return "other"
+
+    def show_impedance(self) -> None:
+        self._tabs.setCurrentWidget(self._impedance_tab)
+
+    def show_diagnostics(self) -> None:
+        self._tabs.setCurrentWidget(self._diagnostics_tab)
 
     def show_measurements(self) -> None:
         self._tabs.setCurrentWidget(self._measurements_tab)

@@ -21,6 +21,7 @@ from antennadesk.ui.preferences import (
     FONT_SIZE_KEY,
     LANGUAGE_KEY,
     UNIT_SYSTEM_KEY,
+    WORKFLOW_MODE_KEY,
     FontSize,
     FontSizeController,
     InMemoryPreferencesStore,
@@ -30,6 +31,7 @@ from antennadesk.ui.preferences import (
     resolve_language,
 )
 from antennadesk.ui.units import UnitSystem
+from antennadesk.ui.workflow import WorkflowMode
 
 
 def _application() -> QApplication:
@@ -97,6 +99,7 @@ def test_qsettings_store_round_trips_all_preferences(tmp_path: Path) -> None:
         font_size=FontSize.LARGE,
         language=LanguagePreference.SPANISH,
         unit_system=UnitSystem.IMPERIAL,
+        workflow_mode=WorkflowMode.GUIDED,
     )
 
     store.save(preferences)
@@ -121,6 +124,7 @@ def test_missing_preferences_use_the_startup_defaults(tmp_path: Path) -> None:
     assert preferences.font_size is FontSize.MEDIUM
     assert preferences.language is LanguagePreference.SPANISH
     assert preferences.unit_system is UnitSystem.IMPERIAL
+    assert preferences.workflow_mode is WorkflowMode.STANDARD
 
 
 def test_invalid_stored_preferences_fall_back_to_defaults(tmp_path: Path) -> None:
@@ -131,6 +135,7 @@ def test_invalid_stored_preferences_fall_back_to_defaults(tmp_path: Path) -> Non
     settings.setValue(FONT_SIZE_KEY, "huge")
     settings.setValue(LANGUAGE_KEY, "fr")
     settings.setValue(UNIT_SYSTEM_KEY, "cubits")
+    settings.setValue(WORKFLOW_MODE_KEY, "expert")
     store = QSettingsPreferencesStore(settings)
 
     preferences = store.load(
@@ -141,6 +146,7 @@ def test_invalid_stored_preferences_fall_back_to_defaults(tmp_path: Path) -> Non
     assert preferences.font_size is FontSize.MEDIUM
     assert preferences.language is LanguagePreference.SPANISH
     assert preferences.unit_system is UnitSystem.IMPERIAL
+    assert preferences.workflow_mode is WorkflowMode.STANDARD
 
 
 def test_in_memory_store_round_trips_preferences() -> None:
@@ -151,11 +157,13 @@ def test_in_memory_store_round_trips_preferences() -> None:
     )
     assert defaults.language is LanguagePreference.SPANISH
     assert defaults.unit_system is UnitSystem.IMPERIAL
+    assert defaults.workflow_mode is WorkflowMode.STANDARD
 
     preferences = UiPreferences(
         font_size=FontSize.SMALL,
         language=LanguagePreference.ENGLISH,
         unit_system=UnitSystem.METRIC,
+        workflow_mode=WorkflowMode.GUIDED,
     )
     store.save(preferences)
 
@@ -233,6 +241,7 @@ def test_preferences_action_applies_accepted_values(
         font_size=FontSize.LARGE,
         language=LanguagePreference.SPANISH,
         unit_system=UnitSystem.IMPERIAL,
+        workflow_mode=WorkflowMode.GUIDED,
     )
     monkeypatch.setattr(
         PreferencesDialog,
@@ -247,6 +256,7 @@ def test_preferences_action_applies_accepted_values(
     assert window._language_preference is LanguagePreference.SPANISH
     assert window._font_size_controller.size is FontSize.LARGE
     assert window._unit_system is UnitSystem.IMPERIAL
+    assert window._workflow_mode is WorkflowMode.GUIDED
     assert window._ocfd_form._length.suffix().strip() == "ft"
     assert window._simulate_action.text() == "Simular"
     assert window._current_preferences() == accepted
@@ -261,6 +271,7 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
             font_size=FontSize.SMALL,
             language=LanguagePreference.SPANISH,
             unit_system=UnitSystem.IMPERIAL,
+            workflow_mode=WorkflowMode.GUIDED,
         ),
     )
     qtbot.addWidget(dialog)
@@ -268,15 +279,20 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
     assert dialog._language.currentData() == LanguagePreference.SPANISH.value
     assert dialog._units.currentData() == UnitSystem.IMPERIAL.value
     assert dialog._font_size.currentData() == FontSize.SMALL.value
+    assert dialog._workflow_mode.currentData() == WorkflowMode.GUIDED.value
 
     dialog._language.setCurrentIndex(dialog._language.findData(LanguagePreference.ENGLISH.value))
     dialog._units.setCurrentIndex(dialog._units.findData(UnitSystem.METRIC.value))
     dialog._font_size.setCurrentIndex(dialog._font_size.findData(FontSize.LARGE.value))
+    dialog._workflow_mode.setCurrentIndex(
+        dialog._workflow_mode.findData(WorkflowMode.ADVANCED.value)
+    )
 
     assert dialog.preferences() == UiPreferences(
         font_size=FontSize.LARGE,
         language=LanguagePreference.ENGLISH,
         unit_system=UnitSystem.METRIC,
+        workflow_mode=WorkflowMode.ADVANCED,
     )
 
 
@@ -294,6 +310,7 @@ def test_preferences_dialog_restores_defaults(qtbot: QtBot) -> None:
     dialog._restore_defaults()
 
     assert dialog.preferences() == UiPreferences()
+    assert dialog.preferences().workflow_mode is WorkflowMode.STANDARD
 
 
 def test_preferences_action_retranslates_and_replaces_quick_menus(
@@ -328,12 +345,17 @@ def test_preferences_keys_exist_in_both_languages() -> None:
         "preferences.language",
         "preferences.language_system",
         "preferences.units",
+        "preferences.workflow_mode",
         "preferences.restore_defaults",
         "font_size.small",
         "font_size.medium",
         "font_size.large",
+        "workflow.mode.guided",
+        "workflow.mode.standard",
+        "workflow.mode.advanced",
         "preferences.title",
         "preferences.hint",
+        "help.preferences.workflow_mode",
         "action.preferences",
         "action.ok",
         "action.cancel",

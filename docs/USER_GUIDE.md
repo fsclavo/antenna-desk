@@ -158,6 +158,28 @@ template's evidence level, source, tolerance, and unmodeled items. Use the sched
 dimension is too small to read or is hidden by the layout; it is the
 authoritative construction data.
 
+## Workflow modes and the next-step coach
+
+AntennaDesk has three progressive workflow modes. Choose one from **View →
+Workflow mode** or from the **Mode** selector in the toolbar. The choice is
+saved with the other UI preferences and applies to the next window.
+
+- **Guided** hides advanced actions and shows a compact **Next step** panel
+  above the design actions. The panel changes with the project state: simulate,
+  review diagnostics, inspect a high-SWR match, open the construction sheet,
+  import a VNA measurement, or compare measured and simulated results. Use
+  **Show advanced options** to reveal the full **Advanced** mode; no feature is
+  removed permanently.
+- **Standard** shows the full design editor with the **Advanced simulation**
+  section collapsed. This is the default.
+- **Advanced** shows the full editor and expands the solver, sweep, pattern,
+  and band-analysis controls.
+
+The next-step panel is a recommendation, not a lock. You can always use the
+menus, switch designs, or open another result tab. In Guided mode the panel is
+the quickest path through the design loop; in Standard and Advanced it remains
+available as a lightweight reminder.
+
 ## Undo and redo
 
 Use **Edit → Undo** and **Edit → Redo**, or the standard Ctrl+Z / Ctrl+Shift+Z
