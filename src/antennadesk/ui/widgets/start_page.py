@@ -9,14 +9,16 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from ..fonts import scaled_pixel_font
+from ..help import apply_help
 from ..i18n import Translator
 
 
 class StartPage(QWidget):
-    """Small start screen with the two project entry points."""
+    """Small start screen with the project entry points."""
 
     new_requested = Signal()
     open_requested = Signal()
+    advise_requested = Signal()
 
     def __init__(self, translator: Translator, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -41,6 +43,11 @@ class StartPage(QWidget):
         self._open_button.setMinimumWidth(220)
         self._open_button.clicked.connect(self.open_requested)
 
+        self._advise_button = QPushButton(self)
+        self._advise_button.setMinimumHeight(40)
+        self._advise_button.setMinimumWidth(220)
+        self._advise_button.clicked.connect(self.advise_requested)
+
         self._flow = QLabel(self)
         self._flow.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._flow.setWordWrap(True)
@@ -53,6 +60,7 @@ class StartPage(QWidget):
         layout.addWidget(self._description)
         layout.addSpacing(28)
         layout.addWidget(self._new_button, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self._advise_button, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self._open_button, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addSpacing(28)
         layout.addWidget(self._flow)
@@ -82,4 +90,8 @@ class StartPage(QWidget):
         self._description.setText(self._translator.t("start.description"))
         self._new_button.setText(self._translator.t("action.new"))
         self._open_button.setText(self._translator.t("action.open"))
+        self._advise_button.setText(self._translator.t("start.advise"))
         self._flow.setText(self._translator.t("start.flow"))
+        apply_help(self._new_button, self._translator, "action.new")
+        apply_help(self._open_button, self._translator, "action.open")
+        apply_help(self._advise_button, self._translator, "action.antenna_advisor")

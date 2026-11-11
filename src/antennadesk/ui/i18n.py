@@ -386,6 +386,471 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Other",
         Language.SPANISH: "Otro",
     },
+    "advisor.title": {
+        Language.ENGLISH: "Antenna advisor",
+        Language.SPANISH: "Asesor de antenas",
+    },
+    "advisor.hint": {
+        Language.ENGLISH: (
+            "Describe your bands and site. The advisor applies hard constraints "
+            "and shows up to three practical alternatives. It does not simulate "
+            "every candidate; open one to refine it with the solver."
+        ),
+        Language.SPANISH: (
+            "Describí tus bandas y tu sitio. El asesor aplica restricciones duras "
+            "y muestra hasta tres alternativas prácticas. No simula todos los "
+            "candidatos; abrí uno para refinarlo con el solver."
+        ),
+    },
+    "advisor.criteria": {
+        Language.ENGLISH: "Your constraints",
+        Language.SPANISH: "Tus restricciones",
+    },
+    "advisor.bands": {
+        Language.ENGLISH: "Bands",
+        Language.SPANISH: "Bandas",
+    },
+    "advisor.height": {
+        Language.ENGLISH: "Available height",
+        Language.SPANISH: "Altura disponible",
+    },
+    "advisor.width": {
+        Language.ENGLISH: "Available horizontal space",
+        Language.SPANISH: "Espacio horizontal disponible",
+    },
+    "advisor.not_set": {
+        Language.ENGLISH: "Not specified",
+        Language.SPANISH: "Sin especificar",
+    },
+    "advisor.installation": {
+        Language.ENGLISH: "Installation",
+        Language.SPANISH: "Instalación",
+    },
+    "advisor.permanent": {
+        Language.ENGLISH: "Permanent",
+        Language.SPANISH: "Permanente",
+    },
+    "advisor.portable": {
+        Language.ENGLISH: "Portable",
+        Language.SPANISH: "Portátil",
+    },
+    "advisor.intent": {
+        Language.ENGLISH: "Main use",
+        Language.SPANISH: "Uso principal",
+    },
+    "advisor.intent.nvis": {
+        Language.ENGLISH: "NVIS / local",
+        Language.SPANISH: "NVIS / local",
+    },
+    "advisor.intent.regional": {
+        Language.ENGLISH: "Regional",
+        Language.SPANISH: "Regional",
+    },
+    "advisor.intent.dx": {
+        Language.ENGLISH: "DX",
+        Language.SPANISH: "DX",
+    },
+    "advisor.intent.receive": {
+        Language.ENGLISH: "Receive only",
+        Language.SPANISH: "Solo recepción",
+    },
+    "advisor.tuner": {
+        Language.ENGLISH: "I have an antenna tuner",
+        Language.SPANISH: "Tengo un sintonizador de antena",
+    },
+    "advisor.complexity": {
+        Language.ENGLISH: "Maximum construction effort",
+        Language.SPANISH: "Esfuerzo máximo de construcción",
+    },
+    "advisor.complexity.simple": {
+        Language.ENGLISH: "Simple",
+        Language.SPANISH: "Simple",
+    },
+    "advisor.complexity.moderate": {
+        Language.ENGLISH: "Moderate",
+        Language.SPANISH: "Moderado",
+    },
+    "advisor.complexity.advanced": {
+        Language.ENGLISH: "Advanced",
+        Language.SPANISH: "Avanzado",
+    },
+    "advisor.directionality": {
+        Language.ENGLISH: "Pattern preference",
+        Language.SPANISH: "Preferencia de patrón",
+    },
+    "advisor.directionality.any": {
+        Language.ENGLISH: "No preference",
+        Language.SPANISH: "Sin preferencia",
+    },
+    "advisor.directionality.omni": {
+        Language.ENGLISH: "Omnidirectional",
+        Language.SPANISH: "Omnidireccional",
+    },
+    "advisor.directionality.directional": {
+        Language.ENGLISH: "Directional",
+        Language.SPANISH: "Direccional",
+    },
+    "advisor.multiband": {
+        Language.ENGLISH: "One antenna should cover all selected bands",
+        Language.SPANISH: "Una sola antena debe cubrir todas las bandas seleccionadas",
+    },
+    "advisor.find": {
+        Language.ENGLISH: "Find antennas",
+        Language.SPANISH: "Buscar antenas",
+    },
+    "advisor.results": {
+        Language.ENGLISH: "Top matches",
+        Language.SPANISH: "Mejores coincidencias",
+    },
+    "advisor.table.antenna": {
+        Language.ENGLISH: "Antenna",
+        Language.SPANISH: "Antena",
+    },
+    "advisor.table.fit": {
+        Language.ENGLISH: "Fit",
+        Language.SPANISH: "Encaje",
+    },
+    "advisor.table.bands": {
+        Language.ENGLISH: "Bands",
+        Language.SPANISH: "Bandas",
+    },
+    "advisor.table.space": {
+        Language.ENGLISH: "Typical space",
+        Language.SPANISH: "Espacio típico",
+    },
+    "advisor.table.height": {
+        Language.ENGLISH: "Minimum height",
+        Language.SPANISH: "Altura mínima",
+    },
+    "advisor.table.feed": {
+        Language.ENGLISH: "Feed",
+        Language.SPANISH: "Alimentación",
+    },
+    "advisor.table.complexity": {
+        Language.ENGLISH: "Build",
+        Language.SPANISH: "Construcción",
+    },
+    "advisor.open": {
+        Language.ENGLISH: "Open selected design",
+        Language.SPANISH: "Abrir diseño seleccionado",
+    },
+    "advisor.no_bands": {
+        Language.ENGLISH: "Select at least one band.",
+        Language.SPANISH: "Seleccioná al menos una banda.",
+    },
+    "advisor.no_match": {
+        Language.ENGLISH: (
+            "No catalog antenna fits all hard constraints. Try allowing a tuner, "
+            "more space or height, fewer bands, or a simpler build."
+        ),
+        Language.SPANISH: (
+            "Ninguna antena del catálogo cumple todas las restricciones duras. "
+            "Probá permitir un sintonizador, más espacio o altura, menos bandas "
+            "o una construcción más simple."
+        ),
+    },
+    "advisor.blockers": {
+        Language.ENGLISH: "Constraints that blocked candidates:",
+        Language.SPANISH: "Restricciones que bloquearon candidatos:",
+    },
+    "advisor.blocker.bands": {
+        Language.ENGLISH: "band coverage",
+        Language.SPANISH: "cobertura de bandas",
+    },
+    "advisor.blocker.space": {
+        Language.ENGLISH: "available space",
+        Language.SPANISH: "espacio disponible",
+    },
+    "advisor.blocker.height": {
+        Language.ENGLISH: "available height",
+        Language.SPANISH: "altura disponible",
+    },
+    "advisor.blocker.portable": {
+        Language.ENGLISH: "portable installation",
+        Language.SPANISH: "instalación portátil",
+    },
+    "advisor.blocker.tuner": {
+        Language.ENGLISH: "tuner required",
+        Language.SPANISH: "sintonizador requerido",
+    },
+    "advisor.blocker.complexity": {
+        Language.ENGLISH: "construction effort",
+        Language.SPANISH: "esfuerzo de construcción",
+    },
+    "advisor.blocker.pattern": {
+        Language.ENGLISH: "pattern preference",
+        Language.SPANISH: "preferencia de patrón",
+    },
+    "advisor.fit.excellent": {
+        Language.ENGLISH: "Excellent fit",
+        Language.SPANISH: "Encaje excelente",
+    },
+    "advisor.fit.good": {
+        Language.ENGLISH: "Good fit",
+        Language.SPANISH: "Buen encaje",
+    },
+    "advisor.fit.conditional": {
+        Language.ENGLISH: "Conditional",
+        Language.SPANISH: "Condicional",
+    },
+    "advisor.feed.direct": {
+        Language.ENGLISH: "Direct 50 Ω",
+        Language.SPANISH: "Directa 50 Ω",
+    },
+    "advisor.feed.tuner": {
+        Language.ENGLISH: "Tuner",
+        Language.SPANISH: "Sintonizador",
+    },
+    "advisor.feed.transformer": {
+        Language.ENGLISH: "Transformer",
+        Language.SPANISH: "Transformador",
+    },
+    "advisor.feed.matching": {
+        Language.ENGLISH: "Matching network",
+        Language.SPANISH: "Red de adaptación",
+    },
+    "advisor.reason.covers_requested_bands": {
+        Language.ENGLISH: "Covers all selected bands",
+        Language.SPANISH: "Cubre todas las bandas seleccionadas",
+    },
+    "advisor.reason.covers_a_requested_band": {
+        Language.ENGLISH: "Covers a selected band",
+        Language.SPANISH: "Cubre una banda seleccionada",
+    },
+    "advisor.reason.fits_available_space": {
+        Language.ENGLISH: "Fits the available space",
+        Language.SPANISH: "Entra en el espacio disponible",
+    },
+    "advisor.reason.fits_available_height": {
+        Language.ENGLISH: "Fits the available height",
+        Language.SPANISH: "Entra en la altura disponible",
+    },
+    "advisor.reason.portable_supported": {
+        Language.ENGLISH: "Suitable for portable use",
+        Language.SPANISH: "Apta para uso portátil",
+    },
+    "advisor.reason.no_tuner_required": {
+        Language.ENGLISH: "No tuner required",
+        Language.SPANISH: "No requiere sintonizador",
+    },
+    "advisor.reason.tuner_optional": {
+        Language.ENGLISH: "Tuner optional",
+        Language.SPANISH: "Sintonizador opcional",
+    },
+    "advisor.reason.tuner_required": {
+        Language.ENGLISH: "Tuner required",
+        Language.SPANISH: "Requiere sintonizador",
+    },
+    "advisor.warning.height_below_recommended": {
+        Language.ENGLISH: "Below the recommended height; the pattern may change.",
+        Language.SPANISH: "Por debajo de la altura recomendada; el patrón puede cambiar.",
+    },
+    "advisor.warning.needs_tuner": {
+        Language.ENGLISH: "Needs a tuner on at least some bands.",
+        Language.SPANISH: "Necesita sintonizador en algunas bandas.",
+    },
+    "advisor.warning.intent_mismatch": {
+        Language.ENGLISH: "Not the strongest match for the selected use.",
+        Language.SPANISH: "No es la mejor opción para el uso seleccionado.",
+    },
+    "advisor.warning.space_tight": {
+        Language.ENGLISH: "Fits, but with little clearance.",
+        Language.SPANISH: "Entra, pero con poco margen.",
+    },
+    "advisor.warning.experimental_starting_point": {
+        Language.ENGLISH: "Experimental starting point; verify with the solver.",
+        Language.SPANISH: "Punto de partida experimental; verificá con el solver.",
+    },
+    "advisor.details.typical": {
+        Language.ENGLISH: "Typical: gain {gain} · takeoff {takeoff} · bandwidth {bandwidth}",
+        Language.SPANISH: "Típico: ganancia {gain} · salida {takeoff} · ancho de banda {bandwidth}",
+    },
+    "advisor.details.evidence": {
+        Language.ENGLISH: "Evidence: {value}",
+        Language.SPANISH: "Evidencia: {value}",
+    },
+    "advisor.details.reasons": {
+        Language.ENGLISH: "Why it fits:",
+        Language.SPANISH: "Por qué encaja:",
+    },
+    "advisor.details.warnings": {
+        Language.ENGLISH: "Watch out:",
+        Language.SPANISH: "Atención:",
+    },
+    "advisor.open_hint": {
+        Language.ENGLISH: (
+            "Opening a design opens its editor. Set the final frequency and use "
+            "Estimate Dimensions there."
+        ),
+        Language.SPANISH: (
+            "Abrir un diseño abre su editor. Ahí definí la frecuencia final y usá "
+            "Estimar dimensiones."
+        ),
+    },
+    "advisor.disclaimer": {
+        Language.ENGLISH: (
+            "Suitability values are planning heuristics, not validated construction dimensions."
+        ),
+        Language.SPANISH: (
+            "Los valores de idoneidad son heurísticas de planificación, no "
+            "dimensiones de construcción validadas."
+        ),
+    },
+    "advisor.gain.low": {
+        Language.ENGLISH: "low",
+        Language.SPANISH: "baja",
+    },
+    "advisor.gain.medium": {
+        Language.ENGLISH: "medium",
+        Language.SPANISH: "media",
+    },
+    "advisor.gain.high": {
+        Language.ENGLISH: "high",
+        Language.SPANISH: "alta",
+    },
+    "advisor.takeoff.high": {
+        Language.ENGLISH: "high angle",
+        Language.SPANISH: "ángulo alto",
+    },
+    "advisor.takeoff.medium": {
+        Language.ENGLISH: "medium angle",
+        Language.SPANISH: "ángulo medio",
+    },
+    "advisor.takeoff.low": {
+        Language.ENGLISH: "low angle",
+        Language.SPANISH: "ángulo bajo",
+    },
+    "advisor.bandwidth.narrow": {
+        Language.ENGLISH: "narrow",
+        Language.SPANISH: "angosto",
+    },
+    "advisor.bandwidth.moderate": {
+        Language.ENGLISH: "moderate",
+        Language.SPANISH: "moderado",
+    },
+    "advisor.bandwidth.wide": {
+        Language.ENGLISH: "wide",
+        Language.SPANISH: "amplio",
+    },
+    "advisor.profile.wire_dipole.tradeoff": {
+        Language.ENGLISH: (
+            "Simple, inexpensive, and easy to tune. One band per dipole; height "
+            "strongly affects the takeoff angle."
+        ),
+        Language.SPANISH: (
+            "Simple, económico y fácil de sintonizar. Un dipolo por banda; la altura "
+            "afecta mucho el ángulo de salida."
+        ),
+    },
+    "advisor.profile.inverted_v.tradeoff": {
+        Language.ENGLISH: (
+            "Needs one high support and less horizontal span. Higher angle of "
+            "radiation; good for local and NVIS work."
+        ),
+        Language.SPANISH: (
+            "Necesita un soporte alto y menos espacio horizontal. Ángulo de radiación "
+            "más alto; bueno para trabajo local y NVIS."
+        ),
+    },
+    "advisor.profile.endfed.tradeoff": {
+        Language.ENGLISH: (
+            "One wire and a transformer; easy to deploy. Needs a counterpoise or a "
+            "good installation return, and the feed line can affect SWR."
+        ),
+        Language.SPANISH: (
+            "Un solo hilo y un transformador; fácil de instalar. Necesita contrapeso "
+            "o un buen retorno de instalación, y la línea puede afectar la ROE."
+        ),
+    },
+    "advisor.profile.ocfd.tradeoff": {
+        Language.ENGLISH: (
+            "Multiband with a 4:1 transformer; no tuner on the designed bands. Needs "
+            "a longer span and a clear feed point."
+        ),
+        Language.SPANISH: (
+            "Multibanda con transformador 4:1; sin sintonizador en las bandas de "
+            "diseño. Necesita más luz y un punto de alimentación despejado."
+        ),
+    },
+    "advisor.profile.g5rv.tradeoff": {
+        Language.ENGLISH: (
+            "Classic multiband wire with a matching section; a tuner is normally "
+            "required. Long span and feed-line losses matter."
+        ),
+        Language.SPANISH: (
+            "Hilo multibanda clásico con sección de adaptación; normalmente requiere "
+            "sintonizador. Importan la luz y las pérdidas de la línea."
+        ),
+    },
+    "advisor.profile.vertical.tradeoff": {
+        Language.ENGLISH: (
+            "Low angle and small footprint; needs a radial system or counterpoise. "
+            "Ground and radial quality dominate efficiency."
+        ),
+        Language.SPANISH: (
+            "Ángulo bajo y poca planta; necesita radiales o contrapeso. La calidad "
+            "del suelo y de los radiales domina la eficiencia."
+        ),
+    },
+    "advisor.profile.loop.tradeoff": {
+        Language.ENGLISH: (
+            "Quiet receive and broad pattern; needs a large horizontal footprint and "
+            "a matching network."
+        ),
+        Language.SPANISH: (
+            "Recepción más silenciosa y patrón amplio; necesita una planta horizontal "
+            "grande y una red de adaptación."
+        ),
+    },
+    "advisor.profile.yagi.tradeoff": {
+        Language.ENGLISH: (
+            "Directional gain and front-to-back; needs a boom, rotator, and careful "
+            "tuning. Best for DX."
+        ),
+        Language.SPANISH: (
+            "Ganancia directiva y relación frente-espalda; necesita boom, rotor y "
+            "ajuste cuidadoso. Ideal para DX."
+        ),
+    },
+    "advisor.profile.moxon.tradeoff": {
+        Language.ENGLISH: (
+            "Compact directional beam with good front-to-back; less gain than a full "
+            "Yagi and still needs aiming."
+        ),
+        Language.SPANISH: (
+            "Beam direccional compacto con buena relación frente-espalda; menos "
+            "ganancia que un Yagi completo y también necesita orientación."
+        ),
+    },
+    "advisor.profile.random_wire.tradeoff": {
+        Language.ENGLISH: (
+            "Very simple wire and a tuner; performance depends on the tuner, "
+            "counterpoise, and installation. Experimental starting point."
+        ),
+        Language.SPANISH: (
+            "Hilo muy simple y sintonizador; el rendimiento depende del sintonizador, "
+            "el contrapeso y la instalación. Punto de partida experimental."
+        ),
+    },
+    "advisor.profile.fan_dipole.tradeoff": {
+        Language.ENGLISH: (
+            "Multiband with separate resonant legs; no tuner on the designed bands, "
+            "but interaction between legs requires tuning."
+        ),
+        Language.SPANISH: (
+            "Multibanda con ramas resonantes separadas; sin sintonizador en las bandas "
+            "de diseño, pero la interacción entre ramas exige ajuste."
+        ),
+    },
+    "advisor.profile.trap_dipole.tradeoff": {
+        Language.ENGLISH: (
+            "Multiband with traps; compact for its bands, but trap loss and tuning need attention."
+        ),
+        Language.SPANISH: (
+            "Multibanda con trampas; compacto para sus bandas, pero la pérdida de las "
+            "trampas y el ajuste requieren atención."
+        ),
+    },
     "advanced.title": {
         Language.ENGLISH: "Advanced simulation",
         Language.SPANISH: "Simulación avanzada",
@@ -512,6 +977,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "action.installation_profile": {
         Language.ENGLISH: "Installation profile...",
         Language.SPANISH: "Perfil de instalación...",
+    },
+    "action.antenna_advisor": {
+        Language.ENGLISH: "Help me choose...",
+        Language.SPANISH: "Ayúdame a elegir...",
+    },
+    "start.advise": {
+        Language.ENGLISH: "Help me choose...",
+        Language.SPANISH: "Ayúdame a elegir...",
     },
     "action.new": {Language.ENGLISH: "New Antenna...", Language.SPANISH: "Nueva antena..."},
     "catalog.title": {
@@ -2865,6 +3338,70 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.action.installation_profile": {
         Language.ENGLISH: "Create, edit, duplicate, or activate an installation profile.",
         Language.SPANISH: "Creá, editá, duplicá o activá un perfil de instalación.",
+    },
+    "help.section.advisor": {
+        Language.ENGLISH: "Bands, site limits, and practical preferences used to shortlist catalog antennas.",
+        Language.SPANISH: "Bandas, límites del sitio y preferencias prácticas para preseleccionar antenas del catálogo.",
+    },
+    "help.action.antenna_advisor": {
+        Language.ENGLISH: "Describe your needs and get a shortlist of catalog antennas.",
+        Language.SPANISH: "Describí tus necesidades y obtené una preselección de antenas del catálogo.",
+    },
+    "help.action.new": {
+        Language.ENGLISH: "Create a project from the antenna catalog.",
+        Language.SPANISH: "Creá un proyecto desde el catálogo de antenas.",
+    },
+    "help.action.open": {
+        Language.ENGLISH: "Open an existing .antennadesk project.",
+        Language.SPANISH: "Abrí un proyecto .antennadesk existente.",
+    },
+    "help.advisor.bands": {
+        Language.ENGLISH: "Select the amateur bands the antenna should cover.",
+        Language.SPANISH: "Seleccioná las bandas de radioaficionado que debe cubrir la antena.",
+    },
+    "help.advisor.height": {
+        Language.ENGLISH: "Maximum height available for the antenna, or Not specified.",
+        Language.SPANISH: "Altura máxima disponible para la antena, o Sin especificar.",
+    },
+    "help.advisor.width": {
+        Language.ENGLISH: "Maximum horizontal space available, or Not specified.",
+        Language.SPANISH: "Espacio horizontal máximo disponible, o Sin especificar.",
+    },
+    "help.advisor.installation": {
+        Language.ENGLISH: "Whether the antenna is permanent or must be easy to deploy and remove.",
+        Language.SPANISH: "Si la antena es permanente o debe ser fácil de instalar y quitar.",
+    },
+    "help.advisor.intent": {
+        Language.ENGLISH: "Main use: NVIS/local, regional, DX, or receive only.",
+        Language.SPANISH: "Uso principal: NVIS/local, regional, DX o solo recepción.",
+    },
+    "help.advisor.complexity": {
+        Language.ENGLISH: "Maximum construction and tuning effort you want.",
+        Language.SPANISH: "Esfuerzo máximo de construcción y ajuste que querés asumir.",
+    },
+    "help.advisor.directionality": {
+        Language.ENGLISH: "Prefer an omnidirectional antenna, a directional beam, or no preference.",
+        Language.SPANISH: "Preferí una antena omnidireccional, un beam direccional o sin preferencia.",
+    },
+    "help.advisor.tuner": {
+        Language.ENGLISH: "Allow designs that need an antenna tuner on some bands.",
+        Language.SPANISH: "Permitir diseños que necesitan sintonizador en algunas bandas.",
+    },
+    "help.advisor.multiband": {
+        Language.ENGLISH: "Require one antenna to cover all selected bands.",
+        Language.SPANISH: "Exigir que una sola antena cubra todas las bandas seleccionadas.",
+    },
+    "help.advisor.find": {
+        Language.ENGLISH: "Apply the constraints and show up to three catalog matches.",
+        Language.SPANISH: "Aplicá las restricciones y mostrá hasta tres coincidencias del catálogo.",
+    },
+    "help.advisor.open": {
+        Language.ENGLISH: "Open the selected antenna family in its normal editor.",
+        Language.SPANISH: "Abrí la familia de antena seleccionada en su editor normal.",
+    },
+    "help.table.advisor": {
+        Language.ENGLISH: "Shortlisted antennas, fit level, bands, space, height, feed, and build effort.",
+        Language.SPANISH: "Antenas preseleccionadas, encaje, bandas, espacio, altura, alimentación y esfuerzo.",
     },
     "help.installation.profiles": {
         Language.ENGLISH: "Saved profiles for this project; the selected one is active.",

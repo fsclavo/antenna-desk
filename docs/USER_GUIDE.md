@@ -28,6 +28,38 @@ uv run python -m antennadesk
 If the engine is not found automatically, use **Tools → Locate NEC2C...** or set
 the `NEC2C` environment variable.
 
+## Help me choose an antenna
+
+Use **File → Help me choose...** or the **Help me choose...** button on the
+start page when you do not yet know which antenna family you need. The advisor
+asks for:
+
+- the bands you want to cover;
+- the available height and horizontal space (or **Not specified**);
+- whether the installation is permanent or portable;
+- the main use: NVIS/local, regional, DX, or receive only;
+- whether you have an antenna tuner;
+- the maximum construction effort;
+- whether you prefer an omnidirectional antenna, a directional beam, or have
+  no preference;
+- whether one antenna must cover all selected bands.
+
+Press **Find antennas** to get up to three catalog families. The table shows
+the typical space, minimum height, feed arrangement, build effort, and fit
+level. Select a row to see the description, evidence, typical gain/takeoff/
+bandwidth class, reasons, warnings, and limitations.
+
+The advisor applies hard constraints and transparent preferences. It does not
+simulate every candidate, does not call a language model, and does not produce
+a single magic score. Suitability values are planning heuristics, not
+validated construction dimensions. If a project has an active installation
+profile, its available height, space, and portable flag prefill the form.
+
+**Open selected design** opens the normal editor for the chosen family. Set the
+final frequency there and use **Estimate Dimensions...** to refine the starting
+dimensions; the advisor only chooses the family. This first slice covers HF
+bands. VHF/UHF family templates remain available through the catalog.
+
 ## First simulation
 
 The application starts with no project. The start page offers **New Antenna...**

@@ -832,3 +832,19 @@ applies the optimized result through the family editor adapter.
 
 The resulting estimate is a starting point. Numerical refinement remains in
 the optimization and synthesis use cases.
+
+## Design suitability and advisor
+
+`domain/design/suitability.py` defines `SuitabilityProfile`, a practical
+envelope for each catalog family: band coverage, footprint and height
+heuristics, feed/tuner requirement, construction effort, portability,
+operating intents, qualitative gain/takeoff/bandwidth classes, and evidence
+level. Profiles are application heuristics, not validated performance claims.
+
+`domain/design/advisor.py` defines `AdvisorRequest`, `AdvisorCandidate`, and
+`recommend()`. The advisor applies hard constraints first (bands,
+multiband requirement, space, height, portability, tuner, complexity, and
+pattern preference), records blockers, then orders the survivors by
+transparent preferences. It returns at most three candidates with reasons and
+warnings. It never runs the solver and never produces a single opaque score.
+The UI opens the selected family in its normal editor.

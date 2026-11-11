@@ -30,6 +30,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   metadata and do not change the antenna model or apply their ground
   automatically. Schema 36 adds the optional profile list and active-profile
   identifier; older projects migrate with no profiles.
+- **Antenna advisor.** A new **Help me choose...** entry on the start page and
+  in the File menu asks for bands, available height and space, permanent or
+  portable use, main operating intent, tuner availability, construction
+  effort, pattern preference, and whether one antenna must cover all selected
+  bands. It applies hard constraints and returns up to three catalog families
+  with fit status, typical space and height, feed arrangement, reasons,
+  warnings, evidence, and limitations. The advisor is deterministic, does not
+  simulate every candidate, and opens the selected family in its normal editor.
+  It uses the active installation profile as initial values and covers the HF
+  bands in this first slice.
 
 ## [0.4.2] - 2026-11-11
 

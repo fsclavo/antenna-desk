@@ -158,6 +158,7 @@ from ..domain.design.matching_resolution import resolve_matching_network
 from ..domain.measurement import Measurement
 from ..domain.optimization.registry import optimizer_availability
 from ..domain.optimization.summary import OptimizationMode
+from ..domain.projects.installation import InstallationSupport
 from ..domain.projects.project import DesignProvenance, DesignVariant, Project
 from ..domain.simulation.band_result import BandAnalysisResult, BandResult
 from ..domain.simulation.bands import (
@@ -194,6 +195,7 @@ from ..reporting.design_summary import installation_profile_rows
 from ..reporting.html_report import write_html_report
 from ..reporting.wire_schedule import write_bom_csv, write_wire_schedule_csv
 from ..simulation.nec2.solver import Nec2cSolver
+from .dialogs.antenna_advisor_dialog import AntennaAdvisorDialog
 from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_BEVERAGE,
     CATALOG_TYPE_BIQUAD,
@@ -443,6 +445,8 @@ class MainWindow(QMainWindow):
         self._new_action = QAction(self)
         self._new_action.setShortcut(QKeySequence.StandardKey.New)
         self._new_action.triggered.connect(lambda: self.new_antenna())
+        self._advisor_action = QAction(self)
+        self._advisor_action.triggered.connect(lambda: self.show_antenna_advisor())
         self._import_nec_action = QAction(self)
         self._import_nec_action.triggered.connect(lambda: self.import_nec_deck())
         self._import_mmana_action = QAction(self)
@@ -1159,6 +1163,7 @@ class MainWindow(QMainWindow):
 
         self._start_page = StartPage(self._translator, self)
         self._start_page.new_requested.connect(lambda: self.new_antenna())
+        self._start_page.advise_requested.connect(lambda: self.show_antenna_advisor())
         self._start_page.open_requested.connect(lambda: self.open_project())
         self._editor_panel = main_splitter
         self._main_stack = QStackedWidget(self)
@@ -1202,6 +1207,7 @@ class MainWindow(QMainWindow):
 
         self._file_menu = self.menuBar().addMenu("")
         self._file_menu.addAction(self._new_action)
+        self._file_menu.addAction(self._advisor_action)
         self._file_menu.addAction(self._open_action)
         self._file_menu.addAction(self._save_action)
         self._file_menu.addAction(self._save_as_action)
@@ -1323,6 +1329,9 @@ class MainWindow(QMainWindow):
     def retranslate(self) -> None:
         self._update_title()
         self._new_action.setText(self._translator.t("action.new"))
+        self._advisor_action.setText(self._translator.t("action.antenna_advisor"))
+        self._advisor_action.setToolTip(self._translator.t("help.action.antenna_advisor"))
+        self._advisor_action.setWhatsThis(self._translator.t("help.action.antenna_advisor"))
         self._import_nec_action.setText(self._translator.t("action.import_nec"))
         self._import_mmana_action.setText(self._translator.t("action.import_mmana"))
         self._import_vna_action.setText(self._translator.t("action.import_vna"))
@@ -1710,6 +1719,7 @@ class MainWindow(QMainWindow):
             len(frequency.source_results) > 1 for frequency in current_result.frequencies
         )
         self._new_action.setEnabled(idle)
+        self._advisor_action.setEnabled(idle)
         self._apply_button.setEnabled(idle and has_project)
         self._open_action.setEnabled(idle)
         self._save_action.setEnabled(idle and has_project)
@@ -5687,11 +5697,33 @@ class MainWindow(QMainWindow):
         self._update_actions()
         self._update_status_text()
 
+    def show_antenna_advisor(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        profile = self._project.active_installation_profile if self._project is not None else None
+        dialog = AntennaAdvisorDialog(
+            self._translator,
+            self._unit_system,
+            initial_height_m=(profile.available_height_m if profile is not None else None),
+            initial_width_m=(profile.available_width_m if profile is not None else None),
+            portable=(profile is not None and profile.support is InstallationSupport.PORTABLE),
+            parent=self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        selected = dialog.selected_catalog_key()
+        if selected is not None:
+            self._new_antenna_from_key(selected)
+
     def new_antenna(self) -> None:
         dialog = AntennaCatalogDialog(self._translator, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         selected = dialog.selected_key()
+        if selected is not None:
+            self._new_antenna_from_key(selected)
+
+    def _new_antenna_from_key(self, selected: str) -> None:
         if selected == CATALOG_TYPE_CUSTOM:
             self.new_custom_antenna()
         elif selected == CATALOG_TYPE_YAGI:

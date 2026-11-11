@@ -450,9 +450,8 @@ def test_every_catalog_entry_has_a_new_antenna_route(
     monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
 
     for key, expected in routes.items():
-        FakeCatalog.selected = key
         calls.clear()
-        MainWindow.new_antenna(fake_self)
+        MainWindow._new_antenna_from_key(fake_self, key)
         assert calls == [expected], f"wrong New Antenna route for {key}: {calls}"
 
 
