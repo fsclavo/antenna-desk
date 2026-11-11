@@ -149,6 +149,10 @@ from ..domain.design.band_plan import (
 )
 from ..domain.design.estimators import supports_estimation
 from ..domain.design.formulas import frequency_for_half_wave_length
+from ..domain.design.matching_design import (
+    MATCHING_DESIGN_ORIGIN_SIMULATION,
+    MatchingNetworkDesign,
+)
 from ..domain.design.matching_resolution import resolve_matching_network
 from ..domain.measurement import Measurement
 from ..domain.optimization.registry import optimizer_availability
@@ -388,6 +392,7 @@ class MainWindow(QMainWindow):
         self._transmission_lines: tuple[TransmissionLine, ...] = ()
         self._feed_line: FeedLine | None = None
         self._matching_network: MatchingNetwork | None = None
+        self._matching_network_design: MatchingNetworkDesign | None = None
         self._balun_loss: BalunLoss | None = None
         self._custom_pattern_step_deg = DEFAULT_PATTERN_STEP_DEG
         self._custom_run_pattern_step_deg: float | None = None
@@ -1822,6 +1827,7 @@ class MainWindow(QMainWindow):
             self._design_id = selected_id
             self._feed_line = project.feed_line
             self._matching_network = project.matching_network
+            self._matching_network_design = project.matching_network_design
             self._balun_loss = project.balun_loss
             self._form_dirty = False
             self._simulation_results = {}
@@ -2114,6 +2120,7 @@ class MainWindow(QMainWindow):
         self._design_id = None
         self._feed_line = None
         self._matching_network = None
+        self._matching_network_design = None
         self._balun_loss = None
         self._current_path = None
         self._dirty = False
@@ -2158,6 +2165,7 @@ class MainWindow(QMainWindow):
         self._design_id = design_id
         self._feed_line = project.feed_line
         self._matching_network = project.matching_network
+        self._matching_network_design = project.matching_network_design
         self._balun_loss = project.balun_loss
         self._current_path = path
         self._dirty = dirty
@@ -2800,6 +2808,40 @@ class MainWindow(QMainWindow):
             self._update_title()
         self._refresh_feed_matching_summary()
 
+    def _current_matching_network_point(self) -> MatchingNetworkDesign | None:
+        result = self._last_result
+        if (
+            result is None
+            or self._project is None
+            or self._design_id is None
+            or not result.frequencies
+        ):
+            return None
+        design = self._project.design_by_id(self._design_id)
+        target_hz = design.parameters.frequency_hz
+        frequency = min(
+            result.frequencies,
+            key=lambda item: abs(item.frequency_hz - target_hz),
+        )
+        source = next(
+            (item for item in frequency.source_results if item.tag == frequency.feed_tag),
+            None,
+        )
+        if source is None and frequency.source_results:
+            source = frequency.source_results[0]
+        if source is None:
+            return None
+        impedance = source.impedance_ohm / result.spec.feed_transformer_ratio
+        if impedance.real <= 0.0:
+            return None
+        return MatchingNetworkDesign(
+            frequency_hz=frequency.frequency_hz,
+            load_resistance_ohm=impedance.real,
+            load_reactance_ohm=impedance.imag,
+            source_impedance_ohm=result.spec.reference_impedance_ohm,
+            origin=MATCHING_DESIGN_ORIGIN_SIMULATION,
+        )
+
     @history_action("history.matching_network")
     def configure_matching_network(self) -> None:
         frequency_hz = 14_100_000.0
@@ -2818,14 +2860,23 @@ class MainWindow(QMainWindow):
             self,
             frequency_hz=frequency_hz,
             internal_matching_active=internal_matching_active,
+            design=self._matching_network_design,
+            current_point=self._current_matching_network_point(),
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         self._matching_network = dialog.result_network()
+        self._matching_network_design = (
+            dialog.result_design() if self._matching_network is not None else None
+        )
         if self._project is not None:
+            timestamp = utc_now()
             self._project = self._project.with_matching_network(
                 self._matching_network,
-                updated_at=utc_now(),
+                updated_at=timestamp,
+            ).with_matching_network_design(
+                self._matching_network_design,
+                updated_at=timestamp,
             )
             self._dirty = True
             self._update_title()
@@ -2845,6 +2896,7 @@ class MainWindow(QMainWindow):
         if answer != QMessageBox.StandardButton.Yes:
             return
         self._matching_network = None
+        self._matching_network_design = None
         if self._project is not None:
             self._project = self._project.with_matching_network(
                 None,

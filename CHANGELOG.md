@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The matching-network dialog now stores a project-level design target with
+  frequency, load R/X, source impedance, and an optional origin. Schema 34 adds
+  the record, removing the project network clears it, and the dialog preloads
+  the stored values. The dialog is split into **Design target** and
+  **Components**, offers **Use current simulation point** from the raw
+  primary-side feed impedance, shows only the component fields that apply to
+  the selected L/Pi/T topology, and its enable label and hint now cover all
+  three topologies.
 - The design panel now has a persistent **Feed & matching** summary with
   separate EFHW internal, project matching-network, feed-line, and balun rows.
   End-fed designs mark their internal matching values as retained but inactive

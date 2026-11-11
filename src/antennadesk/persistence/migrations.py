@@ -512,6 +512,16 @@ def _migrate_v32_to_v33(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v33_to_v34(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the optional matching-network design target to the project."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if isinstance(project, dict):
+        project.setdefault("matching_network_design", None)
+    return migrated
+
+
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
@@ -545,6 +555,7 @@ MIGRATIONS: dict[int, Migration] = {
     30: _migrate_v30_to_v31,
     31: _migrate_v31_to_v32,
     32: _migrate_v32_to_v33,
+    33: _migrate_v33_to_v34,
 }
 
 

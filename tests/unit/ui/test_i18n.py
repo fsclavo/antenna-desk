@@ -126,6 +126,8 @@ HELP_MANIFEST = frozenset(
         "help.section.band",
         "help.section.geometry",
         "help.section.feed_matching",
+        "help.matching_network.source_impedance",
+        "help.matching_network.use_current_point",
         "help.action.simulate",
         "help.action.analyze_bands",
         "help.action.apply_design",

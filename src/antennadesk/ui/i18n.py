@@ -2320,6 +2320,32 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Frequency used to compute the component values.",
         Language.SPANISH: "Frecuencia usada para calcular los valores de los componentes.",
     },
+    "help.matching_network.source_impedance": {
+        Language.ENGLISH: "Real source impedance the network is designed to match.",
+        Language.SPANISH: "Impedancia real de la fuente a la que se adapta la red.",
+    },
+    "help.matching_network.design_origin": {
+        Language.ENGLISH: "Where the stored design target came from.",
+        Language.SPANISH: "Origen del objetivo de diseño guardado.",
+    },
+    "help.matching_network.use_current_point": {
+        Language.ENGLISH: (
+            "Copy frequency and the raw feed impedance from the current simulation "
+            "result into the design target."
+        ),
+        Language.SPANISH: (
+            "Copia la frecuencia y la impedancia cruda de alimentación del resultado "
+            "de simulación actual al objetivo de diseño."
+        ),
+    },
+    "help.matching_network.auto_design": {
+        Language.ENGLISH: "Compute a lossless L network for the current design target.",
+        Language.SPANISH: "Calcula una red L sin pérdidas para el objetivo de diseño actual.",
+    },
+    "help.matching_network.shunt_at_input": {
+        Language.ENGLISH: "Place the L-network shunt element on the transmitter side.",
+        Language.SPANISH: "Coloca el elemento en derivación de la red L del lado del transmisor.",
+    },
     "help.matching_network.series_l": {
         Language.ENGLISH: "Series inductance in the matching network.",
         Language.SPANISH: "Inductancia serie de la red de adaptación.",
@@ -3077,9 +3103,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Matching Network",
         Language.SPANISH: "Red de adaptación",
     },
+    "matching_network.design_target": {
+        Language.ENGLISH: "Design target",
+        Language.SPANISH: "Objetivo de diseño",
+    },
+    "matching_network.components": {
+        Language.ENGLISH: "Components",
+        Language.SPANISH: "Componentes",
+    },
     "matching_network.enabled": {
-        Language.ENGLISH: "Enable L matching network",
-        Language.SPANISH: "Habilitar red de adaptación L",
+        Language.ENGLISH: "Enable matching network",
+        Language.SPANISH: "Habilitar red de adaptación",
     },
     "matching_network.series_l": {
         Language.ENGLISH: "Series inductance",
@@ -3149,6 +3183,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Load X at design frequency",
         Language.SPANISH: "X de carga en la frecuencia de diseño",
     },
+    "matching_network.source_impedance": {
+        Language.ENGLISH: "Source impedance",
+        Language.SPANISH: "Impedancia de la fuente",
+    },
+    "matching_network.design_origin": {
+        Language.ENGLISH: "Target origin",
+        Language.SPANISH: "Origen del objetivo",
+    },
+    "matching_network.origin.none": {
+        Language.ENGLISH: "Not recorded",
+        Language.SPANISH: "Sin registrar",
+    },
+    "matching_network.origin.manual": {
+        Language.ENGLISH: "Manual entry",
+        Language.SPANISH: "Entrada manual",
+    },
+    "matching_network.origin.simulation": {
+        Language.ENGLISH: "Current simulation point",
+        Language.SPANISH: "Punto de simulación actual",
+    },
+    "matching_network.use_current_point": {
+        Language.ENGLISH: "Use current simulation point",
+        Language.SPANISH: "Usar punto de simulación actual",
+    },
     "matching_network.frequency": {
         Language.ENGLISH: "Design frequency",
         Language.SPANISH: "Frecuencia de diseño",
@@ -3167,12 +3225,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "matching_network.hint": {
         Language.ENGLISH: (
-            "Lossless L-network evaluated before the feed line. It changes "
-            "impedance and SWR but not the antenna pattern or power gain."
+            "Lossless L, Pi, or T network evaluated before the feed line. It "
+            "changes impedance and SWR but not the antenna pattern or power gain."
         ),
         Language.SPANISH: (
-            "Red L sin pérdidas evaluada antes de la línea. Cambia la impedancia "
-            "y el SWR, pero no el patrón ni la ganancia de potencia."
+            "Red L, Pi o T sin pérdidas evaluada antes de la línea. Cambia la "
+            "impedancia y el SWR, pero no el patrón ni la ganancia de potencia."
         ),
     },
     "matching_network.override_warning": {

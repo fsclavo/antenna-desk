@@ -874,3 +874,23 @@ def test_v32_migration_adds_the_endfed_matching_network_fields() -> None:
     assert parameters["matching_capacitance_f"] == 0.0
     assert parameters["transformer_leakage_inductance_h"] == 0.0
     assert "matching_capacitance_f" not in document["project"]["designs"][0]["parameters"]
+
+
+def test_v33_migration_adds_the_matching_network_design_target() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 33,
+        "project": {
+            "matching_network": {
+                "topology": "l",
+                "series_inductance_h": 1e-6,
+                "shunt_capacitance_f": 100e-12,
+            }
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert migrated["project"]["matching_network_design"] is None
+    assert "matching_network_design" not in document["project"]

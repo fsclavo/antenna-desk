@@ -19,6 +19,7 @@ from ..common.time import ensure_utc
 from ..common.units import ensure_non_negative
 from ..common.validation import Diagnostic, Severity, raise_if_errors
 from ..design.band_plan import BandPlan
+from ..design.matching_design import MatchingNetworkDesign
 from ..measurement import Measurement
 from ..optimization.summary import OptimizationSummary
 from ..simulation.band_result import BandAnalysisResult
@@ -161,6 +162,7 @@ class Project:
     measurements: tuple[Measurement, ...] = field(default_factory=tuple)
     feed_line: FeedLine | None = None
     matching_network: MatchingNetwork | None = None
+    matching_network_design: MatchingNetworkDesign | None = None
     balun_loss: BalunLoss | None = None
 
     def __post_init__(self) -> None:
@@ -383,7 +385,26 @@ class Project:
         *,
         updated_at: datetime,
     ) -> Project:
-        return replace(self, matching_network=matching_network, updated_at=updated_at)
+        return replace(
+            self,
+            matching_network=matching_network,
+            matching_network_design=(
+                self.matching_network_design if matching_network is not None else None
+            ),
+            updated_at=updated_at,
+        )
+
+    def with_matching_network_design(
+        self,
+        matching_network_design: MatchingNetworkDesign | None,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        return replace(
+            self,
+            matching_network_design=matching_network_design,
+            updated_at=updated_at,
+        )
 
     def with_balun_loss(
         self,

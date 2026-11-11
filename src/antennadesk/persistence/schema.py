@@ -109,6 +109,7 @@ from ..domain.antennas.yagi import (
 from ..domain.antennas.zepp import ANTENNA_TYPE_ZEPP, ZeppParameters
 from ..domain.common.validation import Diagnostic, Severity
 from ..domain.design.band_plan import BandPlan, BandSelection
+from ..domain.design.matching_design import MatchingNetworkDesign
 from ..domain.environment.environment import Environment
 from ..domain.environment.ground import GroundKind, GroundModel
 from ..domain.measurement import Measurement, MeasurementPoint
@@ -689,6 +690,14 @@ class LNetworkPayload(StrictModel):
     q_factor: float | None = Field(default=None, gt=0.0)
 
 
+class MatchingNetworkDesignPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    load_resistance_ohm: float = Field(gt=0.0)
+    load_reactance_ohm: float
+    source_impedance_ohm: float = Field(default=50.0, gt=0.0)
+    origin: str | None = Field(default=None, max_length=64)
+
+
 class FarFieldRequestPayload(StrictModel):
     enabled: bool = True
     theta_start_deg: float = 0.0
@@ -1097,6 +1106,7 @@ class ProjectPayload(StrictModel):
     measurements: list[MeasurementPayload] = Field(default_factory=list)
     feed_line: FeedLinePayload | None = None
     matching_network: LNetworkPayload | None = None
+    matching_network_design: MatchingNetworkDesignPayload | None = None
     balun_loss: BalunLossPayload | None = None
 
     @model_validator(mode="after")
@@ -1832,6 +1842,30 @@ def _balun_loss_from_domain(value: BalunLoss) -> BalunLossPayload:
     )
 
 
+def _matching_network_design_from_domain(
+    value: MatchingNetworkDesign,
+) -> MatchingNetworkDesignPayload:
+    return MatchingNetworkDesignPayload(
+        frequency_hz=value.frequency_hz,
+        load_resistance_ohm=value.load_resistance_ohm,
+        load_reactance_ohm=value.load_reactance_ohm,
+        source_impedance_ohm=value.source_impedance_ohm,
+        origin=value.origin,
+    )
+
+
+def _matching_network_design_to_domain(
+    value: MatchingNetworkDesignPayload,
+) -> MatchingNetworkDesign:
+    return MatchingNetworkDesign(
+        frequency_hz=value.frequency_hz,
+        load_resistance_ohm=value.load_resistance_ohm,
+        load_reactance_ohm=value.load_reactance_ohm,
+        source_impedance_ohm=value.source_impedance_ohm,
+        origin=value.origin,
+    )
+
+
 def _matching_network_from_domain(value: MatchingNetwork) -> LNetworkPayload:
     if isinstance(value, PiNetwork):
         return LNetworkPayload(
@@ -2193,6 +2227,11 @@ def _project_from_domain(value: Project) -> ProjectPayload:
         matching_network=(
             _matching_network_from_domain(value.matching_network)
             if value.matching_network
+            else None
+        ),
+        matching_network_design=(
+            _matching_network_design_from_domain(value.matching_network_design)
+            if value.matching_network_design
             else None
         ),
         balun_loss=_balun_loss_from_domain(value.balun_loss) if value.balun_loss else None,
@@ -3202,6 +3241,11 @@ def project_from_document(document: ProjectDocument) -> Project:
         matching_network=(
             _matching_network_to_domain(document.project.matching_network)
             if document.project.matching_network
+            else None
+        ),
+        matching_network_design=(
+            _matching_network_design_to_domain(document.project.matching_network_design)
+            if document.project.matching_network_design
             else None
         ),
         balun_loss=(

@@ -223,6 +223,8 @@ def test_matching_network_dialog_applies_row_help(qtbot: QtBot) -> None:
     assert "topology" in dialog._topology.toolTip().lower()
     assert "reactance" in dialog._load_x.toolTip().lower()
     assert "Shunt" in dialog._input_shunt_l.toolTip()
+    assert "source impedance" in dialog._source_impedance.toolTip().lower()
+    assert "simulation" in dialog._use_current_point.toolTip().lower()
 
 
 def test_measurement_details_dialog_applies_help(qtbot: QtBot) -> None:

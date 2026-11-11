@@ -547,3 +547,34 @@ def test_compaction_keeps_only_the_latest_band_batch(sample_project: Project) ->
     assert analysis.batch_id == new_batch
     assert [band.band.name for band in analysis.bands] == ["40m"]
     assert len(compacted.simulation_runs) == 1
+
+
+def test_project_matching_design_is_cleared_when_the_network_is_removed(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.matching_network import LNetwork
+    from antennadesk.domain.design.matching_design import MatchingNetworkDesign
+
+    network = LNetwork(series_inductance_h=1e-6, shunt_capacitance_f=100e-12)
+    target = MatchingNetworkDesign(
+        frequency_hz=7_100_000.0,
+        load_resistance_ohm=100.0,
+        load_reactance_ohm=20.0,
+    )
+    project = sample_project.with_matching_network(
+        network,
+        updated_at=sample_project.updated_at,
+    ).with_matching_network_design(
+        target,
+        updated_at=sample_project.updated_at,
+    )
+
+    assert project.matching_network_design == target
+
+    cleared = project.with_matching_network(
+        None,
+        updated_at=sample_project.updated_at,
+    )
+
+    assert cleared.matching_network is None
+    assert cleared.matching_network_design is None

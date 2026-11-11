@@ -971,6 +971,30 @@ def test_matching_network_round_trips_through_the_project_schema() -> None:
     assert restored.matching_network == network
 
 
+def test_matching_network_design_round_trips_through_the_project_schema() -> None:
+    from antennadesk.domain.antennas.matching_network import LNetwork
+    from antennadesk.domain.design.matching_design import MatchingNetworkDesign
+
+    project = _project(
+        DipoleParameters(frequency_hz=7_100_000.0, total_length_m=20.0, height_m=8.0),
+        "Dipole",
+    )
+    network = LNetwork(series_inductance_h=1e-6, shunt_capacitance_f=100e-12)
+    design = MatchingNetworkDesign(
+        frequency_hz=7_100_000.0,
+        load_resistance_ohm=120.0,
+        load_reactance_ohm=-35.0,
+        source_impedance_ohm=50.0,
+        origin="simulation",
+    )
+    project = project.with_matching_network(network, updated_at=project.updated_at)
+    project = project.with_matching_network_design(design, updated_at=project.updated_at)
+
+    restored = project_from_document(document_from_project(project))
+
+    assert restored.matching_network_design == design
+
+
 def test_balun_loss_round_trips_through_the_project_schema() -> None:
     from antennadesk.domain.antennas.balun import BalunLoss
 
