@@ -311,12 +311,14 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **35**.
-- Full gate: **2,473 passed, 0 skipped** with `NEC2C` and the optional
-  `cross-engine` group; rerun without PyNEC if the environment lacks it.
+- Full gate: **2,475 passed, 1 skipped** with `NEC2C` and the optional
+  `cross-engine` group; the skip is the Windows-only console-hiding test on
+  Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.4.1** published on 2026-11-11 with checksum-verified unsigned
   artifacts, including the Windows NSIS installer. All release jobs completed
   successfully in CI. See [`RELEASE_QA_0.4.1.md`](RELEASE_QA_0.4.1.md).
-- Last commits: the 0.4.1 installer release,
+- Last commits: the Windows hidden-console solver fix,
+  the 0.4.1 installer release,
   the Windows NSIS installer and R1 tracking,
   the 0.4.0 release publication,
   the shortened-EFHW inverted-L option (G26),
