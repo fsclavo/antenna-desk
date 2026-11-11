@@ -125,6 +125,9 @@ Completed:
 - `v0.4.1` adds the Windows NSIS installer and updates the author credit. It is
   published with unsigned, checksum-verified artifacts and keeps the portable
   Windows zip and all previous Linux and Python artifacts.
+- `v0.4.2` hides `nec2c` console windows during Windows simulations and
+  optimizations, and generates wheel/sdist checksums automatically in the
+  release workflow.
 
 Deferred:
 
@@ -331,7 +334,9 @@ Release track:
    smoke-tested locally because the release runner's package mirror DNS failed.
 3. `v0.4.1` is published with the NSIS Windows installer and CI-built Linux
    packages. All release jobs completed successfully.
-4. Add GPG/Authenticode signing in a later release if required.
+4. `v0.4.2` is prepared with the Windows hidden-console solver fix and automatic
+   wheel/sdist checksums.
+5. Add GPG/Authenticode signing in a later release if required.
 
 Validation track:
 
