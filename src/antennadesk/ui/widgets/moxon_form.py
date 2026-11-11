@@ -47,7 +47,7 @@ class MoxonForm(QWidget):
     ) -> None:
         super().__init__(parent)
         self._translator = translator
-        self._labels = FormLabels(translator, self)
+        self._labels = FormLabels(translator, self, family="moxon")
         self._unit_system = unit_system
         self._updating = False
 

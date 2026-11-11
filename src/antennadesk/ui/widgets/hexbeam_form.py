@@ -50,7 +50,7 @@ class HexbeamForm(QWidget):
     ) -> None:
         super().__init__(parent)
         self._translator = translator
-        self._labels = FormLabels(translator, self)
+        self._labels = FormLabels(translator, self, family="hexbeam")
         self._unit_system = unit_system
         self._updating = False
         minimum_length, maximum_length = length_bounds(unit_system)

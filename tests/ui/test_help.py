@@ -23,15 +23,34 @@ def test_help_resolution_order_and_missing_keys() -> None:
         explicit_key="help.wire_dipole.field.height",
     )
     family = help_text(translator, "field.height", family="wire_dipole")
-    shared = help_text(translator, "field.height", family="yagi")
+    shared = help_text(translator, "field.height")
+    yagi_height = help_text(translator, "field.height", family="yagi")
+    dipole_spacing = help_text(translator, "field.spacing", family="dipole")
     hint = help_text(translator, "yagi.polarization")
     missing = help_text(translator, "field.unknown")
 
     assert explicit == family
     assert "horizontal wire" in (explicit or "")
     assert "selected ground model" in (shared or "")
+    assert "Boom centerline" in (yagi_height or "")
+    assert "folded-dipole" in (dipole_spacing or "")
     assert "polarization" in (hint or "").lower()
     assert missing is None
+
+
+def test_family_specific_labels_resolve_help() -> None:
+    translator = Translator(Language.ENGLISH)
+
+    assert "Termination resistor" in (
+        help_text(translator, "beverage.termination_resistance") or ""
+    )
+    assert "Trap resonant" in (help_text(translator, "trap_dipole.trap_frequency") or "")
+    assert "Progressive phase" in (help_text(translator, "phased_vertical.phase_step") or "")
+    assert "loading-coil" in (help_text(translator, "endfed.loading_coil_inductance") or "")
+    assert "matching line" in (help_text(translator, "g5rv.line_impedance") or "")
+    assert "Vertical polarization" in (
+        help_text(translator, "field.polarization", family="yagi") or ""
+    )
 
 
 def test_apply_form_help_sets_and_retranslates_label_and_control(
@@ -111,8 +130,9 @@ def test_yagi_form_applies_help_to_shared_fields(qtbot: QtBot) -> None:
         if label.objectName().startswith("field.")
     }
 
-    assert "selected ground model" in labels["field.height"].toolTip()
+    assert "Boom centerline" in labels["field.height"].toolTip()
     assert form._height.toolTip() == labels["field.height"].toolTip()
+    assert "Vertical polarization" in form._polarization.toolTip()
     assert "Design frequency" in labels["field.frequency"].toolTip()
     assert form._frequency.toolTip() == labels["field.frequency"].toolTip()
 
@@ -167,6 +187,7 @@ def test_dipole_form_applies_help_to_its_labels_and_controls(qtbot: QtBot) -> No
     assert form._frequency.toolTip() == labels["field.frequency"].toolTip()
     assert "selected ground model" in labels["field.height"].toolTip()
     assert form._height.toolTip() == labels["field.height"].toolTip()
+    assert "folded-dipole" in form._spacing.toolTip()
     assert "frequency sweep" in form._sweep.toolTip()
     assert "custom sweep" in form._sweep_start.toolTip()
     assert "custom sweep" in form._sweep_stop.toolTip()

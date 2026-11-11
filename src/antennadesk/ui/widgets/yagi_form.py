@@ -60,7 +60,7 @@ class YagiForm(QWidget):
     ) -> None:
         super().__init__(parent)
         self._translator = translator
-        self._labels = FormLabels(translator, self)
+        self._labels = FormLabels(translator, self, family="yagi")
         self._unit_system = unit_system
         self._updating = False
 

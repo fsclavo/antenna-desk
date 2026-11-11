@@ -272,7 +272,7 @@ class DipoleForm(QWidget):
         labels = self._labels()
         for key, label in labels.items():
             label.setText(self._translator.t(key))
-        apply_form_help(self._form_layout, self._translator)
+        apply_form_help(self._form_layout, self._translator, family="dipole")
         self._material.setItemText(0, self._translator.t("material.copper"))
         self._material.setItemText(1, self._translator.t("material.aluminum"))
         self._ground.setItemText(0, self._translator.t("ground.free_space"))

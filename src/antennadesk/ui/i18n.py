@@ -1567,6 +1567,446 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Conductor radius; it affects the modeled impedance and losses.",
         Language.SPANISH: "Radio del conductor; afecta la impedancia y las pérdidas modeladas.",
     },
+    "help.yagi.field.height": {
+        Language.ENGLISH: (
+            "Boom centerline height above ground; vertical polarization also uses it "
+            "for element clearance."
+        ),
+        Language.SPANISH: (
+            "Altura de la línea central del boom sobre el suelo; la polarización "
+            "vertical también la usa para la separación de los elementos."
+        ),
+    },
+    "help.yagi.field.polarization": {
+        Language.ENGLISH: (
+            "Vertical polarization keeps the boom horizontal and rotates the elements "
+            "around it; height is the boom centerline."
+        ),
+        Language.SPANISH: (
+            "La polarización vertical mantiene el boom horizontal y gira los elementos "
+            "alrededor de él; la altura es la línea central del boom."
+        ),
+    },
+    "help.moxon.field.polarization": {
+        Language.ENGLISH: (
+            "Vertical polarization turns the Moxon rectangle into a vertical-plane "
+            "array; height stays the rectangle center."
+        ),
+        Language.SPANISH: (
+            "La polarización vertical convierte el rectángulo Moxon en un arreglo en "
+            "plano vertical; la altura sigue siendo el centro del rectángulo."
+        ),
+    },
+    "help.moxon.field.height": {
+        Language.ENGLISH: (
+            "Height of the Moxon rectangle center above ground; it sets the modeled "
+            "installation, not the rectangle size."
+        ),
+        Language.SPANISH: (
+            "Altura del centro del rectángulo Moxon sobre el suelo; define la "
+            "instalación modelada, no el tamaño del rectángulo."
+        ),
+    },
+    "help.hexbeam.field.height": {
+        Language.ENGLISH: (
+            "Height of the hexbeam center above ground; the spreader geometry is "
+            "rebuilt around this center."
+        ),
+        Language.SPANISH: (
+            "Altura del centro del hexbeam sobre el suelo; la geometría de los "
+            "separadores se reconstruye alrededor de este centro."
+        ),
+    },
+    "help.trap_yagi.field.height": {
+        Language.ENGLISH: (
+            "Boom centerline height above ground; the trap elements keep their "
+            "published spacing around it."
+        ),
+        Language.SPANISH: (
+            "Altura de la línea central del boom sobre el suelo; los elementos con "
+            "trampas mantienen su separación publicada alrededor de ella."
+        ),
+    },
+    "help.phased_vertical.field.height": {
+        Language.ENGLISH: (
+            "Common vertical-element height above the base; spacing and phase set the "
+            "array pattern."
+        ),
+        Language.SPANISH: (
+            "Altura común de los elementos verticales sobre la base; la separación y "
+            "la fase definen el patrón del arreglo."
+        ),
+    },
+    "help.quad_beam.field.height": {
+        Language.ENGLISH: (
+            "Height of the driven loop center above ground; reflector and director "
+            "loops share the same center height."
+        ),
+        Language.SPANISH: (
+            "Altura del centro del lazo alimentado sobre el suelo; los lazos reflector "
+            "y director comparten esa altura."
+        ),
+    },
+    "help.dipole.field.spacing": {
+        Language.ENGLISH: (
+            "Separation between the two folded-dipole conductors; it does not apply to "
+            "a straight wire dipole."
+        ),
+        Language.SPANISH: (
+            "Separación entre los dos conductores del dipolo plegado; no se aplica a "
+            "un dipolo de hilo recto."
+        ),
+    },
+    "help.beverage.termination_resistance": {
+        Language.ENGLISH: (
+            "Termination resistor at the far end; it absorbs the traveling wave and "
+            "reduces the back lobe."
+        ),
+        Language.SPANISH: (
+            "Resistencia de terminación en el extremo lejano; absorbe la onda viajera y "
+            "reduce el lóbulo trasero."
+        ),
+    },
+    "help.biquad.kind": {
+        Language.ENGLISH: (
+            "Biquad variant; single and double biquads use different loop and reflector geometry."
+        ),
+        Language.SPANISH: (
+            "Variante de biquad; el biquad simple y el doble usan geometrías de lazo y "
+            "reflector diferentes."
+        ),
+    },
+    "help.biquad.reflector_spacing": {
+        Language.ENGLISH: "Distance from the driven loop to the reflector loop.",
+        Language.SPANISH: "Distancia desde el lazo alimentado hasta el lazo reflector.",
+    },
+    "help.discone.cone_radius": {
+        Language.ENGLISH: ("Radius of the cone base; the wire cone approximates a solid skirt."),
+        Language.SPANISH: (
+            "Radio de la base del cono; el cono de hilos aproxima una falda sólida."
+        ),
+    },
+    "help.discone.disc_gap": {
+        Language.ENGLISH: "Feed gap between the cone apex and the disc.",
+        Language.SPANISH: "Separación de alimentación entre el vértice del cono y el disco.",
+    },
+    "help.discone.wire_count": {
+        Language.ENGLISH: "Number of radial wires used to approximate the cone and disc.",
+        Language.SPANISH: "Cantidad de hilos radiales usados para aproximar el cono y el disco.",
+    },
+    "help.endfed.counterpoise_length": {
+        Language.ENGLISH: ("Counterpoise wire length; it is a real wire, not an ideal ground."),
+        Language.SPANISH: ("Longitud del hilo de contrapeso; es un hilo real, no un suelo ideal."),
+    },
+    "help.endfed.counterpoise_height": {
+        Language.ENGLISH: "Counterpoise height above ground.",
+        Language.SPANISH: "Altura del contrapeso sobre el suelo.",
+    },
+    "help.endfed.counterpoise_azimuth": {
+        Language.ENGLISH: "Counterpoise direction around the feed.",
+        Language.SPANISH: "Dirección del contrapeso alrededor de la alimentación.",
+    },
+    "help.endfed.transformer_ratio": {
+        Language.ENGLISH: (
+            "Ideal transformer ratio; the antenna-side impedance is divided by this "
+            "value for reports."
+        ),
+        Language.SPANISH: (
+            "Relación ideal del transformador; la impedancia del lado de la antena se "
+            "divide por este valor en los informes."
+        ),
+    },
+    "help.endfed.loading_coil_inductance": {
+        Language.ENGLISH: (
+            "Series loading-coil inductance; the coil is ideal unless a resistance is entered."
+        ),
+        Language.SPANISH: (
+            "Inductancia de la bobina serie; la bobina es ideal salvo que se ingrese "
+            "una resistencia."
+        ),
+    },
+    "help.endfed.loading_coil_offset": {
+        Language.ENGLISH: "Distance from the feed to the loading coil.",
+        Language.SPANISH: "Distancia desde la alimentación hasta la bobina de carga.",
+    },
+    "help.endfed.loading_coil_resistance": {
+        Language.ENGLISH: "Series resistance of the loading coil; zero keeps it ideal.",
+        Language.SPANISH: "Resistencia serie de la bobina de carga; cero la mantiene ideal.",
+    },
+    "help.endfed.loading_coil_q": {
+        Language.ENGLISH: (
+            "Coil Q at the design frequency; shown only when a series resistance is entered."
+        ),
+        Language.SPANISH: (
+            "Q de la bobina en la frecuencia de diseño; se muestra solo cuando hay una "
+            "resistencia serie."
+        ),
+    },
+    "help.g5rv.line_impedance": {
+        Language.ENGLISH: "Characteristic impedance of the matching line.",
+        Language.SPANISH: "Impedancia característica de la línea de adaptación.",
+    },
+    "help.g5rv.line_length": {
+        Language.ENGLISH: "Physical length of the matching line.",
+        Language.SPANISH: "Longitud física de la línea de adaptación.",
+    },
+    "help.g5rv.velocity_factor": {
+        Language.ENGLISH: (
+            "Line velocity factor; it changes the electrical length of the matching section."
+        ),
+        Language.SPANISH: (
+            "Factor de velocidad de la línea; cambia la longitud eléctrica del tramo de adaptación."
+        ),
+    },
+    "help.hexbeam.tip_gap": {
+        Language.ENGLISH: "Gap between adjacent spreader tips at the element ends.",
+        Language.SPANISH: "Separación entre puntas de separadores adyacentes en los extremos.",
+    },
+    "help.hexbeam.element_separation": {
+        Language.ENGLISH: "Boom-axis spacing between the driven element and reflector.",
+        Language.SPANISH: "Separación sobre el boom entre el elemento alimentado y el reflector.",
+    },
+    "help.hexbeam.turning_radius": {
+        Language.ENGLISH: "Tip-to-boom turning radius used by the space constraint.",
+        Language.SPANISH: "Radio de giro desde la punta al boom usado por la restricción de espacio.",
+    },
+    "help.j_pole.feed_offset": {
+        Language.ENGLISH: "Feed-point distance above the stub.",
+        Language.SPANISH: "Distancia del punto de alimentación por encima del stub.",
+    },
+    "help.j_pole.gap": {
+        Language.ENGLISH: "Gap between the radiator and the stub.",
+        Language.SPANISH: "Separación entre el radiador y el stub.",
+    },
+    "help.j_pole.spacing": {
+        Language.ENGLISH: "Center-to-center spacing between the radiator and stub.",
+        Language.SPANISH: "Separación entre centros del radiador y el stub.",
+    },
+    "help.loaded_dipole.link_offset": {
+        Language.ENGLISH: "Distance from the center to the loading coil or link.",
+        Language.SPANISH: "Distancia desde el centro hasta la bobina de carga o el enlace.",
+    },
+    "help.loaded_dipole.coil_inductance": {
+        Language.ENGLISH: "Loading-coil inductance.",
+        Language.SPANISH: "Inductancia de la bobina de carga.",
+    },
+    "help.loaded_dipole.coil_resistance": {
+        Language.ENGLISH: "Series resistance of the loading coil; zero keeps it ideal.",
+        Language.SPANISH: "Resistencia serie de la bobina de carga; cero la mantiene ideal.",
+    },
+    "help.magnetic_loop.capacitance": {
+        Language.ENGLISH: (
+            "Tuning capacitance; it sets the resonant frequency with the loop inductance."
+        ),
+        Language.SPANISH: (
+            "Capacitancia de sintonía; define la frecuencia de resonancia junto con la "
+            "inductancia del lazo."
+        ),
+    },
+    "help.magnetic_loop.esr": {
+        Language.ENGLISH: "Equivalent series resistance of the tuning capacitor.",
+        Language.SPANISH: "Resistencia serie equivalente del capacitor de sintonía.",
+    },
+    "help.magnetic_loop.gap": {
+        Language.ENGLISH: "Gap in the loop where the tuning capacitor is connected.",
+        Language.SPANISH: "Separación en el lazo donde se conecta el capacitor de sintonía.",
+    },
+    "help.moxon.depth": {
+        Language.ENGLISH: "Front-to-back depth of the Moxon rectangle.",
+        Language.SPANISH: "Profundidad frontal-trasera del rectángulo Moxon.",
+    },
+    "help.moxon.reflector_tip": {
+        Language.ENGLISH: "Reflector tip length beyond the side connector.",
+        Language.SPANISH: "Longitud de la punta del reflector más allá del conector lateral.",
+    },
+    "help.moxon.driven_tip": {
+        Language.ENGLISH: "Driven-element tip length beyond the side connector.",
+        Language.SPANISH: "Longitud de la punta del elemento alimentado más allá del conector lateral.",
+    },
+    "help.ocfd.feed_offset": {
+        Language.ENGLISH: (
+            "Feed-point distance from the wire center as a fraction of total length."
+        ),
+        Language.SPANISH: (
+            "Distancia del punto de alimentación desde el centro del hilo como fracción "
+            "de la longitud total."
+        ),
+    },
+    "help.ocfd.transformer_ratio": {
+        Language.ENGLISH: (
+            "Ideal transformer ratio; the antenna-side impedance is divided by this "
+            "value for reports."
+        ),
+        Language.SPANISH: (
+            "Relación ideal del transformador; la impedancia del lado de la antena se "
+            "divide por este valor en los informes."
+        ),
+    },
+    "help.phased_vertical.amplitude_taper": {
+        Language.ENGLISH: "Relative amplitude applied across the vertical elements.",
+        Language.SPANISH: "Amplitud relativa aplicada a los elementos verticales.",
+    },
+    "help.phased_vertical.phase_step": {
+        Language.ENGLISH: "Progressive phase difference between adjacent vertical elements.",
+        Language.SPANISH: "Diferencia de fase progresiva entre elementos verticales adyacentes.",
+    },
+    "help.phased_vertical.spacing": {
+        Language.ENGLISH: "Center-to-center spacing between adjacent vertical elements.",
+        Language.SPANISH: "Separación entre centros de elementos verticales adyacentes.",
+    },
+    "help.quad_beam.director_scale": {
+        Language.ENGLISH: "Scale factor applied to the director loop size.",
+        Language.SPANISH: "Factor de escala aplicado al tamaño del lazo director.",
+    },
+    "help.quad_beam.reflector_scale": {
+        Language.ENGLISH: "Scale factor applied to the reflector loop size.",
+        Language.SPANISH: "Factor de escala aplicado al tamaño del lazo reflector.",
+    },
+    "help.quad_beam.director_spacing": {
+        Language.ENGLISH: "Boom-axis spacing from the driven loop to the director.",
+        Language.SPANISH: "Separación sobre el boom desde el lazo alimentado hasta el director.",
+    },
+    "help.quad_beam.reflector_spacing": {
+        Language.ENGLISH: "Boom-axis spacing from the reflector to the driven loop.",
+        Language.SPANISH: "Separación sobre el boom desde el reflector hasta el lazo alimentado.",
+    },
+    "help.ringo.ring_diameter": {
+        Language.ENGLISH: "Diameter of the matching ring.",
+        Language.SPANISH: "Diámetro del anillo de adaptación.",
+    },
+    "help.ringo.ring_height": {
+        Language.ENGLISH: "Height of the matching ring above ground.",
+        Language.SPANISH: "Altura del anillo de adaptación sobre el suelo.",
+    },
+    "help.scv.kind": {
+        Language.ENGLISH: "Self-contained vertical variant: half square or bobtail curtain.",
+        Language.SPANISH: "Variante vertical autocontenida: media cuadrada o cortina bobtail.",
+    },
+    "help.scv.feed_offset": {
+        Language.ENGLISH: "Feed-point distance below the top corner.",
+        Language.SPANISH: "Distancia del punto de alimentación por debajo de la esquina superior.",
+    },
+    "help.t2fd.termination": {
+        Language.ENGLISH: (
+            "Termination resistance at the far end; it dissipates part of the input power."
+        ),
+        Language.SPANISH: (
+            "Resistencia de terminación en el extremo lejano; disipa parte de la "
+            "potencia de entrada."
+        ),
+    },
+    "help.t2fd.transformer": {
+        Language.ENGLISH: "Ideal transformer ratio at the feed.",
+        Language.SPANISH: "Relación ideal del transformador en la alimentación.",
+    },
+    "help.trap_dipole.trap_frequency": {
+        Language.ENGLISH: "Trap resonant frequency.",
+        Language.SPANISH: "Frecuencia de resonancia de la trampa.",
+    },
+    "help.trap_dipole.trap_inductance": {
+        Language.ENGLISH: ("Trap inductance; the capacitance is derived from the trap frequency."),
+        Language.SPANISH: (
+            "Inductancia de la trampa; la capacitancia se deriva de la frecuencia de la trampa."
+        ),
+    },
+    "help.trap_dipole.trap_capacitance": {
+        Language.ENGLISH: "Trap capacitance derived from the trap frequency and inductance.",
+        Language.SPANISH: "Capacitancia derivada de la frecuencia y la inductancia de la trampa.",
+    },
+    "help.trap_yagi.high_band_frequency": {
+        Language.ENGLISH: "High-band design frequency for the trapped elements.",
+        Language.SPANISH: "Frecuencia de diseño de banda alta para los elementos con trampas.",
+    },
+    "help.trap_yagi.trap_frequency": {
+        Language.ENGLISH: "Trap resonant frequency.",
+        Language.SPANISH: "Frecuencia de resonancia de la trampa.",
+    },
+    "help.trap_yagi.trap_inductance": {
+        Language.ENGLISH: ("Trap inductance; the capacitance is derived from the trap frequency."),
+        Language.SPANISH: (
+            "Inductancia de la trampa; la capacitancia se deriva de la frecuencia de la trampa."
+        ),
+    },
+    "help.trap_yagi.trap_inset": {
+        Language.ENGLISH: "Distance from the element center to each trap.",
+        Language.SPANISH: "Distancia desde el centro del elemento hasta cada trampa.",
+    },
+    "help.vertical.radial_system": {
+        Language.ENGLISH: ("Radial model; it changes the ground return and the modeled pattern."),
+        Language.SPANISH: ("Modelo de radiales; cambia el retorno de tierra y el patrón modelado."),
+    },
+    "help.vertical.radial_count": {
+        Language.ENGLISH: "Number of radials.",
+        Language.SPANISH: "Cantidad de radiales.",
+    },
+    "help.vertical.radial_length": {
+        Language.ENGLISH: "Radial length.",
+        Language.SPANISH: "Longitud de los radiales.",
+    },
+    "help.vertical.radial_angle": {
+        Language.ENGLISH: "Azimuth step between radials.",
+        Language.SPANISH: "Paso de azimut entre radiales.",
+    },
+    "help.vertical.loading_coil_inductance": {
+        Language.ENGLISH: "Loading-coil inductance.",
+        Language.SPANISH: "Inductancia de la bobina de carga.",
+    },
+    "help.vertical.loading_coil_offset": {
+        Language.ENGLISH: "Distance from the base to the loading coil.",
+        Language.SPANISH: "Distancia desde la base hasta la bobina de carga.",
+    },
+    "help.vertical.loading_coil_resistance": {
+        Language.ENGLISH: "Series resistance of the loading coil; zero keeps it ideal.",
+        Language.SPANISH: "Resistencia serie de la bobina de carga; cero la mantiene ideal.",
+    },
+    "help.vertical.top_hat_radius": {
+        Language.ENGLISH: "Top-hat radius.",
+        Language.SPANISH: "Radio del sombrero capacitivo.",
+    },
+    "help.vertical.top_hat_wires": {
+        Language.ENGLISH: "Number of top-hat wires.",
+        Language.SPANISH: "Cantidad de hilos del sombrero capacitivo.",
+    },
+    "help.yagi.match_type": {
+        Language.ENGLISH: "Matching method; beta/hairpin adds a shorted stub.",
+        Language.SPANISH: "Método de adaptación; beta/hairpin agrega un stub en cortocircuito.",
+    },
+    "help.yagi.match_length": {
+        Language.ENGLISH: "Hairpin stub length.",
+        Language.SPANISH: "Longitud del stub en horquilla.",
+    },
+    "help.yagi.match_spacing": {
+        Language.ENGLISH: "Hairpin stub spacing.",
+        Language.SPANISH: "Separación del stub en horquilla.",
+    },
+    "help.yagi.taper_length": {
+        Language.ENGLISH: "Optional tapered tip length; zero keeps a straight element.",
+        Language.SPANISH: "Longitud opcional de la punta cónica; cero mantiene el elemento recto.",
+    },
+    "help.yagi.taper_radius": {
+        Language.ENGLISH: "Radius at the tapered tip.",
+        Language.SPANISH: "Radio en la punta cónica.",
+    },
+    "help.yagi.fold_spacing": {
+        Language.ENGLISH: "Spacing between the two conductors of the folded driven element.",
+        Language.SPANISH: "Separación entre los dos conductores del elemento alimentado plegado.",
+    },
+    "help.zepp.impedance": {
+        Language.ENGLISH: "Characteristic impedance of the matching stub.",
+        Language.SPANISH: "Impedancia característica del stub de adaptación.",
+    },
+    "help.zepp.matching_length": {
+        Language.ENGLISH: "Physical length of the matching stub.",
+        Language.SPANISH: "Longitud física del stub de adaptación.",
+    },
+    "help.zepp.spacing": {
+        Language.ENGLISH: "Spacing between the radiator and matching stub.",
+        Language.SPANISH: "Separación entre el radiador y el stub de adaptación.",
+    },
+    "help.inverted_v.included_angle": {
+        Language.ENGLISH: "Angle between the two legs at the apex.",
+        Language.SPANISH: "Ángulo entre las dos patas en el vértice.",
+    },
     "help.section.design": {
         Language.ENGLISH: (
             "Antenna type, template, geometry, feed, ground, and the apply, estimate, "
