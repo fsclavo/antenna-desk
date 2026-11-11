@@ -152,7 +152,6 @@ azure.archive.ubuntu.com` in `apt-get`); the Windows and wheel/sdist jobs in the
 same run succeeded. The local Linux AppImage and `.deb` passed the same build
 and smoke checks.
 
-Post-release follow-up: rerun the release workflow if the runner mirror issue is
-resolved, so CI can reproduce and replace the assets with the workflow-built
-versions. Tracked as **R1** in
-[`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md).
+Post-release follow-up: the release workflow issue was resolved by the
+CI-published `v0.4.1` release, which rebuilt all Linux and Windows artifacts
+successfully. R1 is closed as superseded.

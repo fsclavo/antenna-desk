@@ -92,7 +92,7 @@ external service and must not be invented or simulated into existence.
 | ~~P5~~ | ~~Length optimizer progress bar~~ | S–M | P1 | **Done 2026-11-10:** `OptimizeDipoleLengthCommand` now reports evaluation progress; `OptimizationWorker` forwards it and the dialog shows a determinate bar using `max_evaluations + 2 * len(sensitivity_offsets_m)` as the estimated denominator. Finish, cancellation, and failure set terminal states; tests cover monotonic counts and the dialog progress lifecycle. |
 | ~~P6~~ | ~~Element and synthesis optimizer progress bars~~ | M | P1, P4, P5 | **Done 2026-11-10:** `OptimizeElementsCommand` and `SynthesizeAntennaCommand` report evaluation progress; their workers forward it and both dialogs show the shared determinate bar with the maximum-evaluation budget as the estimated denominator. Finish, cancellation, and failure set terminal states; tests cover monotonic counts, worker forwarding, dialog completion, and cancellation. |
 | P7 | True per-frequency simulation progress | L | P2; ADR; benchmark; D4 decision | **Deferred until a benchmark shows a practical need.** Choose between chunked frequency-plan execution and version-tolerant incremental output parsing. Chunking must aggregate `SimulationResult` safely and preserve source, pattern, feed-line, matching-network, and cancellation semantics; parsing must handle partial writes. Add an ADR and benchmark before implementation. Do not use `timeout_s` or elapsed time as a fake percentage. |
-| R1 | Re-run the `v0.4.0` release workflow and replace manual assets | S | GitHub Actions runner DNS/mirror; tag `v0.4.0` | The release was published manually because the tag-triggered **Release** workflow's Linux job failed repeatedly on `apt-get` DNS (`azure.archive.ubuntu.com`); Windows and wheel/sdist jobs passed. When the runner mirror resolves, rerun the workflow for `v0.4.0`, confirm the AppImage and `.deb` build and smoke tests, confirm the release job uploads all artifacts and checksums, and update `docs/RELEASE_QA_0.4.0.md` with the run URL and final checksums. Do not move the tag or weaken smoke tests; if the runner failure persists, record it as external infrastructure and keep the validated manual assets. |
+| ~~R1~~ | ~~Re-run the `v0.4.0` release workflow and replace manual assets~~ | S | GitHub Actions runner DNS/mirror; tag `v0.4.0` | **Superseded 2026-11-11:** the `v0.4.1` release workflow completed all jobs and published CI-built Linux, Windows installer/zip, and wheel/sdist artifacts. The manual `v0.4.0` assets remain as published; rerunning that older tag is no longer required. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -276,9 +276,9 @@ model and solver contract must land first.
 6. **D1–D3** remain deferred until the required hardware, engine, or release
    decision exists. **D4** stays deferred; coordinate it with P7 before
    changing the frequency-plan execution model.
-7. **R1** is the only active release follow-up: rerun the `v0.4.0` release
-   workflow when the GitHub runner mirror DNS recovers, so CI can replace the
-   manually published artifacts with workflow-built equivalents.
+7. **R1** is closed as superseded: `v0.4.1` was published with CI-built Linux
+   and Windows artifacts, so rerunning the older `v0.4.0` tag is no longer
+   required.
 8. Product priorities and new antenna candidates live in
    [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
@@ -313,12 +313,11 @@ model and solver contract must land first.
 - Schema: **35**.
 - Full gate: **2,473 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
-- Release: **0.4.0** published on 2026-11-11 with checksum-verified unsigned
-  artifacts. The Windows bundle was built and smoke-tested in CI; Linux assets
-  were built and smoke-tested locally. See
-  [`RELEASE_QA_0.4.0.md`](RELEASE_QA_0.4.0.md). **R1** tracks the CI rerun
-  that should replace the manual assets when the runner mirror DNS recovers.
-- Last commits: the Windows NSIS installer and R1 tracking,
+- Release: **0.4.1** published on 2026-11-11 with checksum-verified unsigned
+  artifacts, including the Windows NSIS installer. All release jobs completed
+  successfully in CI. See [`RELEASE_QA_0.4.1.md`](RELEASE_QA_0.4.1.md).
+- Last commits: the 0.4.1 installer release,
+  the Windows NSIS installer and R1 tracking,
   the 0.4.0 release publication,
   the shortened-EFHW inverted-L option (G26),
   the impedance-point matching-network action (M4),

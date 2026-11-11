@@ -122,9 +122,9 @@ Completed:
   inverted-L bend (schema 34–35). It is published with unsigned,
   checksum-verified artifacts; the Windows bundle was built and smoke-tested in
   CI.
-- `v0.4.1` adds the Windows NSIS installer and updates the author credit. The
-  release candidate keeps the portable Windows zip and all previous Linux and
-  Python artifacts.
+- `v0.4.1` adds the Windows NSIS installer and updates the author credit. It is
+  published with unsigned, checksum-verified artifacts and keeps the portable
+  Windows zip and all previous Linux and Python artifacts.
 
 Deferred:
 
@@ -192,8 +192,8 @@ Deferred:
   Windows zip, and checksums (completed).
 - Optional GPG detached signatures and Windows Authenticode signing hooks
   (completed, deferred for the initial release).
-- Published `v0.1.0`, `v0.2.0`, `v0.3.0`, `v0.3.1`, and `v0.4.0` with unsigned,
-  SHA-256-verified artifacts (completed).
+- Published `v0.1.0`, `v0.2.0`, `v0.3.0`, `v0.3.1`, `v0.4.0`, and `v0.4.1`
+  with unsigned, SHA-256-verified artifacts (completed).
 - Keep the wheel/sdist smoke test as the fallback distribution path
   (completed).
 
@@ -329,8 +329,8 @@ Release track:
 2. `v0.4.0` is published with checksum-verified unsigned artifacts. The Windows
    bundle was built and smoke-tested in CI; Linux assets were built and
    smoke-tested locally because the release runner's package mirror DNS failed.
-3. `v0.4.1` is prepared as the installer release candidate and includes the
-   NSIS Windows installer.
+3. `v0.4.1` is published with the NSIS Windows installer and CI-built Linux
+   packages. All release jobs completed successfully.
 4. Add GPG/Authenticode signing in a later release if required.
 
 Validation track:
