@@ -324,6 +324,7 @@ def test_every_catalog_entry_has_a_change_template_route(
             _translator=Translator(Language.ENGLISH),
             _unit_system=UnitSystem.METRIC,
             _solver=None,
+            _matching_network=None,
         )
 
         result = MainWindow._parameters_from_catalog(fake_self, key, 7_100_000.0)
@@ -479,6 +480,8 @@ def test_delta_and_quad_change_template_use_the_loop_dialog(
     fake_self = SimpleNamespace(
         _translator=Translator(Language.ENGLISH),
         _unit_system=UnitSystem.METRIC,
+        _solver=None,
+        _matching_network=None,
     )
 
     for key, expected_sides in (("delta_loop", 3), ("quad_loop", 4)):

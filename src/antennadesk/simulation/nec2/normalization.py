@@ -83,6 +83,18 @@ def normalize_nec2_result(
                 field="matching_network",
             )
         )
+    if spec.matching_network_override:
+        problems.append(
+            Diagnostic(
+                code="matching_network.override",
+                severity=Severity.WARNING,
+                message=(
+                    "the project matching network replaces the internal EFHW "
+                    "matching network; the two networks are not cascaded"
+                ),
+                field="matching_network",
+            )
+        )
     if not math.isclose(spec.feed_transformer_ratio, 1.0):
         problems.append(
             Diagnostic(

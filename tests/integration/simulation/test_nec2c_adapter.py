@@ -28,6 +28,7 @@ from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.matching_network import LNetwork
 from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.wire import Wire
+from antennadesk.domain.common.validation import Severity
 from antennadesk.domain.environment.environment import Environment
 from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
@@ -159,6 +160,26 @@ def test_l_network_transforms_impedance_before_the_feed_line(solver: Nec2cSolver
     assert result.frequencies[0].impedance_ohm == pytest.approx(expected, abs=1e-6)
     assert any(diagnostic.code == "matching_network.applied" for diagnostic in result.diagnostics)
     assert any(diagnostic.code == "feed_line.applied" for diagnostic in result.diagnostics)
+
+
+def test_project_network_override_emits_a_cascade_warning(solver: Nec2cSolver) -> None:
+    base = manual_example1_spec()
+    network = LNetwork(series_inductance_h=1e-6, shunt_capacitance_f=100e-12)
+
+    result = solver.run(
+        manual_example1_model(),
+        replace(
+            base,
+            matching_network=network,
+            matching_network_override=True,
+        ),
+    )
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert any(
+        diagnostic.code == "matching_network.override" and diagnostic.severity is Severity.WARNING
+        for diagnostic in result.diagnostics
+    )
 
 
 def test_feed_transformer_scales_impedance_before_the_feed_line(

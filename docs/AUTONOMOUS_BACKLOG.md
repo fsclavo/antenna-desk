@@ -80,7 +80,7 @@ external service and must not be invented or simulated into existence.
 | ~~H2~~ | ~~Common field, section, tab, and action tooltips~~ | S–M | H1 | **Done 2026-11-10:** all 33 shared `field.*` keys have English/Spanish help; `FormLabels.bind_form` pairs labels with controls across 24 family forms, `DipoleForm` covers its form and sweep controls, and the main window applies section/action/geometry/result-tab help. Missing help stays silent. Tests cover field coverage, bind-form control pairing, disabled labels, the Yagi and dipole forms, window sections/actions/tabs, and English/Spanish retranslation. |
 | ~~H3~~ | ~~Family-specific and dialog tooltips~~ | M–L | H1, H2 | **Done 2026-11-10:** added family-specific help for matching, traps, loading coils, radial systems, phased-array phase/amplitude, transmission-line stubs, magnetic-loop tuning, and related variants. Beam and dipole editors receive family context, with height/spacing overrides for Yagi, Moxon, hexbeam, trap Yagi, phased vertical, quad beam, and folded dipole. The feed-line, balun-loss, loads, matching-network, transmission-line, optimizer, synthesis, custom-antenna, and measurement dialogs apply row help via `apply_row_help()`. Tests cover overrides, representative family keys, and the nine parameter dialogs. |
 | ~~H4~~ | ~~Results, tables, accessibility, and help coverage audit~~ | S–M | H3 | **Done 2026-11-10:** `apply_help()` now sets tooltip, What's This, and accessible description together; **Help → What's This?** (Shift+F1) enters Qt's help mode. Result tables and headers, charts, band/pattern/current controls, status indicators, and secondary export/cancel actions have help and accessible descriptions. A bilingual coverage manifest enforces section/action/tab/chart/table/dialog help and a 240-character limit, and rejects raw keys. Automated coverage includes Spanish retranslation and disabled-label help; visual light/dark and scaling QA remains manual. |
-| M1 | Effective matching-network precedence for EFHW | M | G25 | Implement the agreed **Override** policy: a project matching network replaces the internal EFHW matching capacitor/leakage when `matching_network_active`; with no project network, the internal network remains active. Derive `override_active`; do not persist a flag. Use one pure resolver in single simulation, band analysis, family optimization, synthesis, and the EFHW convergence check. Keep the ideal transformer ratio. Add the `matching_network.override` diagnostic and tests for the four precedence cases; document that cascade is not modeled. |
+| ~~M1~~ | ~~Effective matching-network precedence for EFHW~~ | M | G25 | **Done 2026-11-10:** added the pure `resolve_matching_network()` resolver and routed single simulation, band analysis, family optimization, synthesis, and the EFHW convergence check through it. An active project network now replaces the internal EFHW matching capacitor/leakage; with no active project network the internal model remains effective. `override_active` is derived at runtime and carried only as the non-persisted `SimulationSpec.matching_network_override` flag. The solver reports `matching_network.override`, the ideal transformer ratio is unchanged, and cascading two networks remains explicitly unmodeled. Tests cover the four precedence cases, the UI spec path, and the diagnostic. |
 | M2 | Matching-network visibility and override warnings | M | M1 | Add a persistent **Feed & matching** summary to the design panel with separate rows for EFHW design matching, project matching, feed line, and balun. In EndFed forms, mark internal matching values as retained but inactive while override is active, with a link to edit or remove the project network. Show the override warning in the Matching Network dialog and the optimizer dialog; update construction-sheet and design-summary rows plus the EFHW construction note. Tests cover visibility, retranslation, and hiding when there is no override. |
 | M3 | Persist the matching-network design target and preload the dialog | S–M | M1 | Add a project-level `MatchingNetworkDesign` record (frequency, load R/X, source impedance, optional origin) and persist it with schema 34 (or the next available migration); clear it when the project network is removed. Preload the dialog with stored values, add **Use current simulation point**, split Design target from Components, fix the L-only label and irrelevant Pi/T fields, and update the hint. Tests cover apply → optimize → reopen, schema round trip, and undo/redo. |
 | M4 | Create a project matching network from an impedance point | S–M | M3 | Add a context menu to the Impedance/SWR table: **Create Project Matching Network...**. Use the raw feed impedance from `source_results` (divide by the transformer ratio) rather than the post-chain `FrequencyResult.impedance_ohm`; pass frequency, load R/X, and the real reference impedance. Warn or disable when raw impedance is unavailable. Confirm replacement of an existing network and warn when the design is an EFHW with internal matching (override). Tests cover raw versus post-chain, active transformer/line/network, cancellation, and preload. |
@@ -123,10 +123,9 @@ explicit **Override**, not a cascade:
   not a persisted flag.
 - A single resolver must feed every path: simulation, band analysis, family
   optimization, synthesis, the EFHW convergence check, reports, and the UI.
-- The current code replaces `spec.matching_network` unconditionally in several
-  paths, so a `None` project network can silently drop the internal EFHW
-  network. M1 must remove that behavior before adding more matching-network
-  UI.
+- Before M1, several paths replaced `spec.matching_network` unconditionally, so
+  a `None` project network could silently drop the internal EFHW network. M1
+  removed that behavior by routing every path through the resolver.
 
 ## Progress feedback (2026-11-10 analysis)
 
@@ -311,9 +310,10 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **33**.
-- Full gate: **2,391 passed, 0 skipped** with `NEC2C` and the optional
+- Full gate: **2,399 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
-- Last commits: the results/accessibility help audit (H4), the family-specific
+- Last commits: the matching-network precedence resolver (M1), the
+  results/accessibility help audit (H4), the family-specific
   and parameter-dialog help pass (H3), the common field/section/tab help pass
   (H2), the help/tooltip foundation (H1), the element/synthesis optimizer
   progress bars (P6), the optimizer progress bars (P4–P5), the shared

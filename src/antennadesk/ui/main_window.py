@@ -149,6 +149,7 @@ from ..domain.design.band_plan import (
 )
 from ..domain.design.estimators import supports_estimation
 from ..domain.design.formulas import frequency_for_half_wave_length
+from ..domain.design.matching_resolution import resolve_matching_network
 from ..domain.measurement import Measurement
 from ..domain.optimization.registry import optimizer_availability
 from ..domain.optimization.summary import OptimizationMode
@@ -2830,6 +2831,20 @@ class MainWindow(QMainWindow):
             timeout_s=float(self._solver_timeout.value()),
         )
 
+    def _with_project_chain(
+        self,
+        parameters: AntennaDesignParameters,
+        spec: SimulationSpec,
+    ) -> SimulationSpec:
+        resolution = resolve_matching_network(parameters, self._matching_network)
+        return replace(
+            spec,
+            feed_line=self._feed_line,
+            matching_network=resolution.effective,
+            matching_network_override=resolution.override_active,
+            balun_loss=self._balun_loss,
+        )
+
     def _family_simulation_spec(self, design: DesignVariant) -> SimulationSpec:
         parameters = design.parameters
         if isinstance(parameters, CustomAntennaParameters):
@@ -2999,12 +3014,7 @@ class MainWindow(QMainWindow):
         self._results.set_result(None)
         self._simulation_design_id = self._design_id
         spec = self._fit_spec_to_budget(design.antenna, spec)
-        spec = replace(
-            spec,
-            feed_line=self._feed_line,
-            matching_network=self._matching_network,
-            balun_loss=self._balun_loss,
-        )
+        spec = self._with_project_chain(design.parameters, spec)
         self._cancel_token = EventCancelToken()
         self._simulating = True
         self._last_status_key = "status.simulating"
@@ -3104,10 +3114,8 @@ class MainWindow(QMainWindow):
                     spec.frequency_plan,
                     target_hz,
                 ),
-                feed_line=self._feed_line,
-                matching_network=self._matching_network,
-                balun_loss=self._balun_loss,
             )
+            spec = self._with_project_chain(design.parameters, spec)
             requests.append(BandSimulationRequest(selection.band, spec))
 
         fitted = self._fit_band_specs_to_budget(
@@ -4288,6 +4296,7 @@ class MainWindow(QMainWindow):
             self,
             preset=preset,
             solver=self._solver,
+            project_matching_network=self._matching_network,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -4985,6 +4994,7 @@ class MainWindow(QMainWindow):
                 self,
                 frequency_hz=frequency_hz,
                 solver=self._solver,
+                project_matching_network=self._matching_network,
             )
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
@@ -5000,6 +5010,7 @@ class MainWindow(QMainWindow):
                 frequency_hz=frequency_hz,
                 preset=preset,
                 solver=self._solver,
+                project_matching_network=self._matching_network,
             )
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
@@ -5019,6 +5030,7 @@ class MainWindow(QMainWindow):
                 self,
                 preset=preset,
                 solver=self._solver,
+                project_matching_network=self._matching_network,
             )
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
@@ -5863,10 +5875,8 @@ class MainWindow(QMainWindow):
         base_spec = replace(
             adapter.simulation_spec(self, design.parameters),
             timeout_s=float(self._solver_timeout.value()),
-            feed_line=self._feed_line,
-            matching_network=self._matching_network,
-            balun_loss=self._balun_loss,
         )
+        base_spec = self._with_project_chain(design.parameters, base_spec)
         dialog = FamilyOptimizationDialog(
             self._translator,
             self._unit_system,
@@ -5969,10 +5979,8 @@ class MainWindow(QMainWindow):
         base_spec = replace(
             base_spec,
             timeout_s=float(self._solver_timeout.value()),
-            feed_line=self._feed_line,
-            matching_network=self._matching_network,
-            balun_loss=self._balun_loss,
         )
+        base_spec = self._with_project_chain(design.parameters, base_spec)
         dialog = OptimizationDialog(
             self._translator,
             self._unit_system,
@@ -6043,18 +6051,17 @@ class MainWindow(QMainWindow):
             base_spec = self._j_pole_simulation_spec(design.parameters)
         else:
             return
+        synthesis_spec = replace(
+            base_spec,
+            timeout_s=float(self._solver_timeout.value()),
+        )
+        synthesis_spec = self._with_project_chain(design.parameters, synthesis_spec)
         dialog = SynthesisDialog(
             self._translator,
             self._unit_system,
             self._solver,
             design.parameters,
-            replace(
-                base_spec,
-                timeout_s=float(self._solver_timeout.value()),
-                feed_line=self._feed_line,
-                matching_network=self._matching_network,
-                balun_loss=self._balun_loss,
-            ),
+            synthesis_spec,
             self,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
@@ -6136,11 +6143,9 @@ class MainWindow(QMainWindow):
             self._translator,
             self._unit_system,
             self._solver,
-            replace(
+            self._with_project_chain(
+                parameters,
                 self._yagi_simulation_spec(parameters),
-                feed_line=self._feed_line,
-                matching_network=self._matching_network,
-                balun_loss=self._balun_loss,
             ),
             title_key="element_optimize.yagi_title",
             hint_key="element_optimize.yagi_hint",
@@ -6238,11 +6243,9 @@ class MainWindow(QMainWindow):
             self._translator,
             self._unit_system,
             self._solver,
-            replace(
+            self._with_project_chain(
+                parameters,
                 self._fan_dipole_simulation_spec(parameters),
-                feed_line=self._feed_line,
-                matching_network=self._matching_network,
-                balun_loss=self._balun_loss,
             ),
             title_key="element_optimize.fan_title",
             variables=tuple(variables),
@@ -6324,11 +6327,9 @@ class MainWindow(QMainWindow):
             self._translator,
             self._unit_system,
             self._solver,
-            replace(
+            self._with_project_chain(
+                parameters,
                 self._moxon_simulation_spec(parameters),
-                feed_line=self._feed_line,
-                matching_network=self._matching_network,
-                balun_loss=self._balun_loss,
             ),
             title_key="element_optimize.moxon_title",
             variables=variables,
@@ -6387,11 +6388,9 @@ class MainWindow(QMainWindow):
             self._translator,
             self._unit_system,
             self._solver,
-            replace(
+            self._with_project_chain(
+                parameters,
                 self._form.simulation_spec(),
-                feed_line=self._feed_line,
-                matching_network=self._matching_network,
-                balun_loss=self._balun_loss,
             ),
             title_key="element_optimize.loop_title",
             hint_key="element_optimize.loop_hint",
@@ -6464,11 +6463,9 @@ class MainWindow(QMainWindow):
             self._translator,
             self._unit_system,
             self._solver,
-            replace(
+            self._with_project_chain(
+                parameters,
                 self._vertical_simulation_spec(parameters),
-                feed_line=self._feed_line,
-                matching_network=self._matching_network,
-                balun_loss=self._balun_loss,
             ),
             title_key="element_optimize.vertical_title",
             variables=tuple(variables),
@@ -6516,11 +6513,9 @@ class MainWindow(QMainWindow):
             self._translator,
             self._unit_system,
             self._solver,
-            replace(
+            self._with_project_chain(
+                parameters,
                 self._inverted_v_simulation_spec(parameters),
-                feed_line=self._feed_line,
-                matching_network=self._matching_network,
-                balun_loss=self._balun_loss,
             ),
             title_key="element_optimize.inverted_v_title",
             variables=(
@@ -6594,11 +6589,9 @@ class MainWindow(QMainWindow):
             self._translator,
             self._unit_system,
             self._solver,
-            replace(
+            self._with_project_chain(
+                parameters,
                 self._ringo_simulation_spec(parameters),
-                feed_line=self._feed_line,
-                matching_network=self._matching_network,
-                balun_loss=self._balun_loss,
             ),
             title_key="element_optimize.ringo_title",
             variables=variables,
@@ -6666,11 +6659,9 @@ class MainWindow(QMainWindow):
             self._translator,
             self._unit_system,
             self._solver,
-            replace(
+            self._with_project_chain(
+                parameters,
                 self._custom_simulation_spec(parameters),
-                feed_line=self._feed_line,
-                matching_network=self._matching_network,
-                balun_loss=self._balun_loss,
             ),
             title_key="element_optimize.zs6bkw_title",
             variables=(

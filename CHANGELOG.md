@@ -89,6 +89,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Matching-network precedence for end-fed designs is now explicit: an active
+  project matching network replaces the internal EFHW matching capacitor and
+  transformer-leakage model, while the internal model remains effective when
+  no project network is active. Single simulation, band analysis, family
+  optimization, synthesis, and the convergence check share one resolver; the
+  override is derived at runtime, reported as the
+  `matching_network.override` diagnostic, and cascading two matching networks
+  is still not modeled. The ideal transformer ratio is unchanged.
 - The shortened EFHW presets now open **horizontally at 10 m** by default,
   matching the standard End-fed template. Set different feed and end heights
   for a sloper or vertical installation.

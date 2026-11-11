@@ -31,6 +31,7 @@ class SimulationSpec:
     pattern_frequencies_hz: tuple[float, ...] = ()
     feed_line: FeedLine | None = None
     matching_network: MatchingNetwork | None = None
+    matching_network_override: bool = False
     balun_loss: BalunLoss | None = None
     feed_transformer_ratio: float = 1.0
     timeout_s: float = DEFAULT_TIMEOUT_S

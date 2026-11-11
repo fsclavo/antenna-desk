@@ -178,6 +178,29 @@ def test_band_progress_updates_the_bar_text(window: MainWindow) -> None:
     window._task_progress.reset()
 
 
+def test_project_matching_network_overrides_shortened_endfed(window: MainWindow) -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+    from antennadesk.domain.antennas.matching_network import LNetwork
+    from antennadesk.domain.simulation.frequency import FrequencyPlan
+
+    parameters = shortened_efhw_80_10_parameters()
+    project = LNetwork(series_inductance_h=1e-6, shunt_capacitance_f=100e-12)
+    base = SimulationSpec(frequency_plan=FrequencyPlan.single(parameters.frequency_hz))
+    window._matching_network = project
+
+    spec = window._with_project_chain(parameters, base)
+
+    assert spec.matching_network is project
+    assert spec.matching_network_override is True
+
+    window._matching_network = None
+    spec = window._with_project_chain(parameters, base)
+
+    assert spec.matching_network is not None
+    assert spec.matching_network_override is False
+    window._dirty = False
+
+
 def test_simulate_updates_results(window: MainWindow, qtbot: QtBot) -> None:
     window.simulate()
     wait_for_condition(

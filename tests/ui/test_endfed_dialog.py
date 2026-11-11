@@ -7,10 +7,33 @@ from main_window_support import FakeSolver
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
+from antennadesk.domain.antennas.matching_network import LNetwork
 from antennadesk.domain.design.formulas import half_wave_length_m
+from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.ui.dialogs.endfed_dialog import EndFedDialog
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem
+
+
+class _RecordingSolver(FakeSolver):
+    def __init__(self) -> None:
+        self.specs: list[SimulationSpec] = []
+
+    def run(
+        self,
+        model,
+        spec: SimulationSpec,
+        *,
+        progress_callback=None,
+        cancel_token=None,
+    ):
+        self.specs.append(spec)
+        return super().run(
+            model,
+            spec,
+            progress_callback=progress_callback,
+            cancel_token=cancel_token,
+        )
 
 
 def test_endfed_dialog_builds_parameters(qtbot: QtBot) -> None:
@@ -63,6 +86,28 @@ def test_endfed_dialog_checks_segment_convergence(qtbot: QtBot) -> None:
     dialog._check_button.click()
 
     assert "Converged" in dialog._check_result.text()
+
+
+def test_endfed_dialog_convergence_uses_the_project_matching_network(
+    qtbot: QtBot,
+) -> None:
+    project = LNetwork(series_inductance_h=1e-6, shunt_capacitance_f=100e-12)
+    solver = _RecordingSolver()
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        preset=EndFedPreset.SHORTENED_80_10,
+        solver=solver,
+        project_matching_network=project,
+    )
+    qtbot.addWidget(dialog)
+
+    dialog._check_button.click()
+
+    assert len(solver.specs) == 3
+    for spec in solver.specs:
+        assert spec.matching_network is project
+        assert spec.matching_network_override is True
 
 
 def test_shortened_dialog_exposes_the_primary_matching_network(qtbot: QtBot) -> None:

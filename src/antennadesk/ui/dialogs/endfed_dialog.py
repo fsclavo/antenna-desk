@@ -27,9 +27,10 @@ from ...application.use_cases.check_endfed_convergence import (
 from ...domain.antennas.endfed import (
     EndFedParameters,
     EndFedPreset,
-    endfed_matching_network,
 )
+from ...domain.antennas.matching_network import MatchingNetwork
 from ...domain.design.band_plan import BandPlan, default_band_plan
+from ...domain.design.matching_resolution import resolve_matching_network
 from ...domain.simulation.far_field import FarFieldRequest
 from ...domain.simulation.frequency import FrequencyPlan
 from ...domain.simulation.segmentation import SegmentationPolicy
@@ -53,11 +54,13 @@ class EndFedDialog(QDialog):
         parameters: EndFedParameters | None = None,
         preset: EndFedPreset = EndFedPreset.STANDARD,
         solver: AntennaSolver | None = None,
+        project_matching_network: MatchingNetwork | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._parameters: EndFedParameters | None = None
         self._solver = solver
+        self._project_matching_network = project_matching_network
         self._band_plan: BandPlan | None = None
         self._band_plan_edited = False
         if parameters is not None:
@@ -141,12 +144,17 @@ class EndFedDialog(QDialog):
         except (ValueError, TypeError) as exc:
             QMessageBox.critical(self, self.windowTitle(), str(exc))
             return
+        resolution = resolve_matching_network(
+            parameters,
+            self._project_matching_network,
+        )
         base_spec = SimulationSpec(
             frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
             segmentation=SegmentationPolicy(min_segments_per_wire=1),
             far_field=FarFieldRequest(enabled=False),
             feed_transformer_ratio=parameters.transformer_ratio,
-            matching_network=endfed_matching_network(parameters),
+            matching_network=resolution.effective,
+            matching_network_override=resolution.override_active,
         )
         command = CheckEndFedConvergenceCommand(
             parameters=parameters,

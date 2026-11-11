@@ -8284,6 +8284,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "La impedancia, la ROE y la ganancia realizada incluyen la red de adaptación."
         ),
     },
+    "diagnostic.matching_network.override": {
+        Language.ENGLISH: (
+            "The project matching network replaces the internal EFHW matching "
+            "network; the two networks are not cascaded."
+        ),
+        Language.SPANISH: (
+            "La red de adaptación del proyecto reemplaza la red interna del EFHW; "
+            "las dos redes no se conectan en cascada."
+        ),
+    },
     "diagnostic.transformer.applied": {
         Language.ENGLISH: ("Impedance, SWR, and realized gain include the ideal feed transformer."),
         Language.SPANISH: (
