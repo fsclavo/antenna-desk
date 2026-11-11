@@ -65,8 +65,15 @@ Native packages:
   `packaging/build_appimage.sh`.
 - Debian/Ubuntu: `antennadesk_<version>_amd64.deb`, built with
   `packaging/build_deb.sh`.
-- Windows: `AntennaDesk-<version>-windows-x86_64.zip`, built with
-  `packaging/build_windows.ps1`.
+- Windows installer:
+  `AntennaDesk-<version>-windows-x86_64-setup.exe`, built with
+  `packaging/build_windows.ps1` and NSIS.
+- Windows portable: `AntennaDesk-<version>-windows-x86_64.zip`, built by the
+  same script.
+
+The Windows installer creates Start Menu and Desktop shortcuts and registers an
+uninstaller in Add/Remove Programs. The portable zip remains available for
+users who do not want a system installation.
 
 All native packages include `nec2c`. Install from a wheel when you manage the
 solver yourself:

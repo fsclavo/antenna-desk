@@ -1,9 +1,10 @@
 # Release checklist
 
 AntennaDesk is distributed as a Python wheel/sdist, a Linux AppImage, a Debian
-package, and a Windows onedir zip. `nec2c` is bundled in the native packages and
-remains an external runtime dependency for the wheel. The initial release is
-unsigned; signing is optional and deferred until project keys are configured.
+package, a Windows NSIS installer, and a Windows portable onedir zip. `nec2c` is
+bundled in the native packages and remains an external runtime dependency for
+the wheel. The initial release is unsigned; signing is optional and deferred
+until project keys are configured.
 
 ## Versioning
 
@@ -80,12 +81,13 @@ Every native artifact includes:
 missing. The Debian package also installs the notices under
 `/usr/share/doc/antennadesk`.
 
-## Build the Windows bundle
+## Build the Windows bundle and installer
 
 Requirements:
 
 - `uv`
 - MSYS2/UCRT64 for `nec2c.exe`
+- NSIS (`makensis.exe`), for example `choco install nsis -y`
 - PyInstaller, installed by `uv run --group packaging`
 
 ```powershell
@@ -93,9 +95,16 @@ bash spikes/phase0/scripts/build_nec2c_windows.sh
 packaging\build_windows.ps1
 ```
 
-The result is `dist/AntennaDesk-<version>-windows-x86_64.zip` plus a `.sha256`
-file. The zip contains `AntennaDesk.exe`, its `_internal` directory, and
-`nec2c.exe` next to the executable.
+The script builds the PyInstaller onedir bundle, the portable zip, and the NSIS
+installer:
+
+- `dist/AntennaDesk-<version>-windows-x86_64-setup.exe` plus `.sha256`;
+- `dist/AntennaDesk-<version>-windows-x86_64.zip` plus `.sha256`.
+
+The installer is defined in `packaging/windows/antennadesk.nsi`. It installs
+under `Program Files\AntennaDesk`, creates Start Menu and Desktop shortcuts, and
+registers an uninstaller in Add/Remove Programs. The zip contains the same
+bundle for portable use.
 
 ## Smoke tests
 
@@ -142,7 +151,19 @@ Windows:
 build\pyinstaller-dist\AntennaDesk\AntennaDesk.exe --version
 build\pyinstaller-dist\AntennaDesk\AntennaDesk.exe --check-solver
 Get-FileHash dist\AntennaDesk-*-windows-x86_64.zip -Algorithm SHA256
+Get-FileHash dist\AntennaDesk-*-windows-x86_64-setup.exe -Algorithm SHA256
+
+$installer = (Get-ChildItem "dist\AntennaDesk-*-windows-x86_64-setup.exe" | Select-Object -First 1).FullName
+Start-Process -FilePath $installer -ArgumentList "/S" -Wait
+$installed = Join-Path $env:ProgramFiles "AntennaDesk\AntennaDesk.exe"
+& $installed --version
+& $installed --check-solver
+Start-Process -FilePath (Join-Path $env:ProgramFiles "AntennaDesk\Uninstall.exe") `
+  -ArgumentList "/S" -Wait
 ```
+
+The release workflow runs the same install, shortcut, installed-app smoke, and
+uninstall check before uploading the installer.
 
 ## Clean local build artifacts
 
@@ -157,7 +178,7 @@ rm -rf /tmp/antennadesk-build /tmp/antennadesk-dist
 ```
 
 To remove artifacts produced in the repository, including orphan `.deb`,
-AppImage, Windows zip, wheel, sdist, and `build/` files, run:
+AppImage, Windows installer and zip, wheel, sdist, and `build/` files, run:
 
 ```bash
 packaging/clean_artifacts.sh
@@ -180,7 +201,8 @@ integrity verification.
 ### GPG-signed release artifacts
 
 The release workflow can import a GPG key and create detached ASCII-armored
-signatures for the wheel, sdist, AppImage, `.deb`, and Windows zip:
+signatures for the wheel, sdist, AppImage, `.deb`, Windows zip, and Windows
+installer:
 
 - `GPG_PRIVATE_KEY`: ASCII-armored private key.
 - `GPG_KEY_ID`: fingerprint or email of the signing key.
@@ -205,8 +227,8 @@ This is independent of the detached `.asc` signatures.
 
 Set `WINDOWS_SIGN_CERT` to a `.pfx` path, `WINDOWS_SIGN_PASSWORD`, and
 optionally `WINDOWS_TIMESTAMP_URL` before running
-`packaging/build_windows.ps1`. The script signs both `AntennaDesk.exe` and
-`nec2c.exe` with SHA-256 and a timestamp server.
+`packaging/build_windows.ps1`. The script signs `AntennaDesk.exe`, `nec2c.exe`,
+and the generated installer with SHA-256 and a timestamp server.
 
 In the release workflow, set `WINDOWS_SIGN_CERT_BASE64` to the base64-encoded
 `.pfx`; the job decodes it to a temporary file, signs the binaries, and removes
@@ -227,7 +249,8 @@ are absent.
 - Linux with Python 3.11–3.13; the AppImage and `.deb` bundle their own Python
   runtime.
 - Debian/Ubuntu systems with `libc6 >= 2.35` for the `.deb`.
-- Windows with Python 3.11–3.13; the zip bundles its own Python runtime.
+- Windows with Python 3.11–3.13; the installer and zip bundle their own Python
+  runtime.
 - The UI uses PySide6 below 6.12; do not raise that pin without re-running the
   shutdown regression tests in ADR-0025.
 - `ezdxf` is an optional export dependency but is installed with the package
@@ -241,7 +264,8 @@ are absent.
 4. Run `uv run mypy --config-file mypy_ui.ini`.
 5. Run `NEC2C=... uv run pytest`.
 6. Update `CHANGELOG.md` and `__version__`.
-7. Build and test the wheel, AppImage, Debian package, and Windows zip.
+7. Build and test the wheel, AppImage, Debian package, Windows installer, and
+   Windows zip.
 8. Tag `v<version>` and push the tag.
 9. Verify the release workflow attached all artifacts and checksums.
 10. Record the candidate gate, visual QA, artifact smoke tests, and checksums in

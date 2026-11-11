@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Windows releases now include an **NSIS installer** in addition to the portable
+  onedir zip. The installer places AntennaDesk under `Program Files`, creates
+  Start Menu and Desktop shortcuts, registers an uninstaller in Add/Remove
+  Programs, and ships the same bundled `nec2c` and license notices as the zip.
+  The release workflow installs NSIS, builds both artifacts with checksums, and
+  silently installs, exercises, and uninstalls the packaged app before upload.
+
 ### Changed
 
 - The README, documentation index, package metadata, Debian packaging, and
