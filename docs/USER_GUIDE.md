@@ -538,6 +538,14 @@ matching unit is not fully modeled. The 80-10 preset is impedance-converged
 with the current model; the 40-20-10 preset remains R/X-sensitive. Verify the
 installed SWR with a VNA.
 
+The design panel's **Feed & matching** summary shows the internal EFHW matching
+state, the project matching network, the feed line, and the balun loss as
+separate rows. When both an active project network and an active internal EFHW
+matching unit exist, the project network overrides the internal unit; it is
+never cascaded. The internal values are retained but disabled until the project
+network is removed. See
+[ADR-0028](ADR/0028-matching-network-precedence.md).
+
 ### Shortened EFHW with a loading coil
 
 The catalog also has **Shortened EFHW 80-10 m** and **Shortened EFHW
@@ -567,6 +575,9 @@ from Squash Practice's measured 49:1 transformer, not this exact build. The
 common-mode choke, ground, support geometry, core loss, winding capacitance,
 capacitor ESR, and the published inverted-L bend are not modeled. The 40-20-10 preset follows the
 23 µH/100 pF schematic; CA4EMT documents a different 34 µH/150 pF variant.
+When a project matching network is active, it replaces this internal unit
+instead of cascading with it; the internal 100 pF/leakage values stay in the
+design and are marked retained, not applied.
 Edited or frequency-scaled geometry is experimental. Automatic frequency-first
 estimation is disabled for these loaded presets. The matching capacitor and
 transformer leakage remain context values in the family optimizer; they are not
@@ -1229,16 +1240,46 @@ geometry lines and a transmitter feed line.
 ## Matching network and traps
 
 Use **Simulation → Matching Network...** to add a lossless matching network at
-the antenna feed. Choose **L**, **Pi**, or **T** topology and set the reactive
-elements in µH/pF. For an L network, choose whether the shunt element is on the
-transmitter side. Enter the load R/X at the design frequency and use
-**Auto-design L network** to calculate one valid L section; the dialog reports
-when a single section cannot match the load. Pi/T are manual designs in this
-slice. Set a component Q to include loss in the input impedance (0 means
-lossless). The network is evaluated before the feed line: antenna → matching
-network → feed line → transmitter. Impedance and SWR include the network;
-pattern and power gain remain antenna-side. Network loss is included in
-realized gain and reported separately.
+the antenna feed. The dialog separates the **Design target** from the
+**Components**.
+
+The design target stores the design frequency, load R, load X, source
+impedance, and where the target came from. **Use current simulation point**
+copies the frequency and the raw primary-side feed impedance from the current
+simulation result; it divides the solver's antenna-side source impedance by the
+ideal transformer ratio, so it does not copy the post-chain impedance shown in
+the Impedance tab. The target is saved with the project, preloaded the next time
+the dialog opens, and cleared when the project network is removed.
+
+Choose **L**, **Pi**, or **T** topology and set the reactive elements in µH/pF.
+Only the component fields used by the selected topology are shown. For an L
+network, choose whether the shunt element is on the transmitter side. Use
+**Auto-design L network** to calculate one valid L section from the target and
+source impedance; the dialog reports when a single section cannot match the
+load. Pi/T are manual designs in this slice. Set a component Q to include loss
+in the input impedance (0 means lossless).
+
+The project network is global: it applies to every design in the project. It is
+evaluated before the feed line: antenna → matching network → feed line →
+transmitter. Impedance and SWR include the network; pattern and power gain
+remain antenna-side. Network loss is included in realized gain and reported
+separately.
+
+### Project network on an EFHW design
+
+For an end-fed design with active internal matching, an active project matching
+network **replaces** the internal EFHW matching capacitor and transformer
+leakage. The project network is not cascaded with the internal unit. The ideal
+transformer ratio still applies. The internal values stay in the design but are
+disabled and marked **retained, not applied** in the End-fed editor and in the
+**Feed & matching** summary.
+
+To restore the internal EFHW network, use **Remove project network** in the
+summary or the End-fed editor. The project network is then cleared and the
+internal model becomes effective again. The same rule applies to every
+`EndFedParameters` preset. See
+[ADR-0028](ADR/0028-matching-network-precedence.md) for the full policy and the
+no-cascade limitation.
 
 In the load editor, **Add parallel trap** calculates the capacitance for a
 parallel LC trap from the entered inductance and resonant frequency. The trap is

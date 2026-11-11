@@ -105,6 +105,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Documented the matching-network precedence policy in
+  [ADR-0028](docs/ADR/0028-matching-network-precedence.md) and the user guide:
+  an active project network replaces the internal EFHW matching unit for every
+  end-fed design with active internal matching, the two networks are never
+  cascaded, the project network is global, and removing it restores the
+  internal unit.
 - Matching-network precedence for end-fed designs is now explicit: an active
   project matching network replaces the internal EFHW matching capacitor and
   transformer-leakage model, while the internal model remains effective when

@@ -241,7 +241,10 @@ transformer input plus a series leakage inductance. It is applied by the
 simulation spec, not inserted into the wire geometry. The shortened presets
 start at 100 pF and 0.198 µH; zero disables the network. The leakage value is
 an editable starting estimate from Squash Practice's measured 49:1
-transformer, not a measurement of the exact preset build.
+transformer, not a measurement of the exact preset build. An active
+project-level matching network overrides this internal unit; the two networks
+are not cascaded. See
+[ADR-0028](ADR/0028-matching-network-precedence.md).
 
 `preset` is `endfed`, `sloper`, `random_wire`, `shortened_80_10`, or
 `shortened_40_10`. The preset is metadata for catalog routing, reports, and the
@@ -504,7 +507,8 @@ the summary is compact enough to keep with every design.
 ### Project
 
 An immutable project with an identifier, name, description, timestamps, and a
-tuple of design variants. Invariants:
+tuple of design variants. It also stores the project-level feed line, matching
+network, matching-network design target, and balun loss. Invariants:
 
 - Non-empty project name.
 - Timezone-aware timestamps.
