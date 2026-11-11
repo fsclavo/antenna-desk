@@ -2,10 +2,10 @@
 
 - **Candidate:** `0.4.0`
 - **Date:** 2026-11-11
-- **Source commit:** `d082631` (`docs(release): record 0.4.0 candidate QA`);
-  local artifacts were built from the code-identical `32e7b3e` release-prep tree
-- **Status:** release candidate prepared locally and Windows CI validated;
-  **not tagged or published**
+- **Tag:** `v0.4.0` at `75e9ff2`; release published at
+  <https://github.com/fsclavo/antenna-desk/releases/tag/v0.4.0>
+- **Status:** **published** on 2026-11-11 with unsigned, checksum-verified
+  artifacts
 
 ## Scope
 
@@ -122,9 +122,9 @@ smoke-tested locally as recorded above.
 | `antennadesk_0.4.0_amd64.deb` | 102 M | `947648eaeb078d24bcddd09050ec5978e4b7be176e5ea1458d00b2fa8c024d1f` |
 | `AntennaDesk-0.4.0-windows-x86_64.zip` | 103 M | `2f3b3421ec2e1329ea6a56d9c82a8ed2d5a0e4a6cd1a426b95d1e913b65582a2` |
 
-The AppImage, `.deb`, and Windows zip have companion `.sha256` files. The wheel
-and sdist do not have companion checksum files yet; the release workflow
-currently publishes the native checksums and the wheel/sdist artifacts.
+The AppImage, `.deb`, Windows zip, wheel, and sdist are published with
+companion `.sha256` assets. The wheel and sdist checksums were generated for
+this release.
 
 ## Signing
 
@@ -145,10 +145,13 @@ only by SHA-256.
 
 ## Release decision
 
-Windows build and smoke tests are complete. Do not tag or publish until:
+Published as `v0.4.0` on 2026-11-11 with all ten assets uploaded. The release was
+created manually because the tag-triggered Linux package job failed repeatedly
+with a GitHub runner DNS error (`Temporary failure resolving
+azure.archive.ubuntu.com` in `apt-get`); the Windows and wheel/sdist jobs in the
+same run succeeded. The local Linux AppImage and `.deb` passed the same build
+and smoke checks.
 
-1. the platform light/dark and font-scaling QA is completed on a real display;
-2. the maintainer approves the tag `v0.4.0`;
-3. the tag-triggered workflow completes its Linux package job (the candidate
-   branch run was blocked by a GitHub runner DNS failure, while the local Linux
-   artifacts passed the same build and smoke checks).
+Post-release follow-up: rerun the release workflow if the runner mirror issue is
+resolved, so CI can reproduce and replace the assets with the workflow-built
+versions.

@@ -309,10 +309,11 @@ model and solver contract must land first.
 - Schema: **35**.
 - Full gate: **2,468 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
-- Release candidate: **0.4.0** prepared and smoke-tested locally, including the
-  Windows CI bundle; see [`RELEASE_QA_0.4.0.md`](RELEASE_QA_0.4.0.md). It is not
-  tagged or published.
-- Last commits: the 0.4.0 release-candidate preparation,
+- Release: **0.4.0** published on 2026-11-11 with checksum-verified unsigned
+  artifacts. The Windows bundle was built and smoke-tested in CI; Linux assets
+  were built and smoke-tested locally. See
+  [`RELEASE_QA_0.4.0.md`](RELEASE_QA_0.4.0.md).
+- Last commits: the 0.4.0 release publication,
   the shortened-EFHW inverted-L option (G26),
   the impedance-point matching-network action (M4),
   the matching-network precedence ADR and user guide (M5),

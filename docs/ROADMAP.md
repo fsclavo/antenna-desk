@@ -117,10 +117,11 @@ Completed:
   loaded EFHW presets.
 - `v0.3.1` fixes cross-platform construction-label overlap and large-font form
   widths on Windows.
-- `v0.4.0` release candidate adds the matching-network precedence/design target,
-  Feed & matching visibility, impedance-point network creation, and the optional
-  shortened-EFHW inverted-L bend (schema 34–35). The candidate is prepared but
-  not yet tagged or published.
+- `v0.4.0` adds the matching-network precedence/design target, Feed & matching
+  visibility, impedance-point network creation, and the optional shortened-EFHW
+  inverted-L bend (schema 34–35). It is published with unsigned,
+  checksum-verified artifacts; the Windows bundle was built and smoke-tested in
+  CI.
 
 Deferred:
 
@@ -188,7 +189,7 @@ Deferred:
   Windows zip, and checksums (completed).
 - Optional GPG detached signatures and Windows Authenticode signing hooks
   (completed, deferred for the initial release).
-- Published `v0.1.0`, `v0.2.0`, `v0.3.0`, and `v0.3.1` with unsigned,
+- Published `v0.1.0`, `v0.2.0`, `v0.3.0`, `v0.3.1`, and `v0.4.0` with unsigned,
   SHA-256-verified artifacts (completed).
 - Keep the wheel/sdist smoke test as the fallback distribution path
   (completed).
@@ -322,7 +323,9 @@ Modeling track:
 Release track:
 
 1. `v0.3.1` is published with checksum-verified unsigned artifacts.
-2. `v0.4.0` is prepared as a release candidate; tag and publish after QA.
+2. `v0.4.0` is published with checksum-verified unsigned artifacts. The Windows
+   bundle was built and smoke-tested in CI; Linux assets were built and
+   smoke-tested locally because the release runner's package mirror DNS failed.
 3. Add GPG/Authenticode signing in a later release if required.
 
 Validation track:
