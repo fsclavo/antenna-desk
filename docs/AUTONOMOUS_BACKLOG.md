@@ -93,10 +93,39 @@ external service and must not be invented or simulated into existence.
 | ~~P6~~ | ~~Element and synthesis optimizer progress bars~~ | M | P1, P4, P5 | **Done 2026-11-10:** `OptimizeElementsCommand` and `SynthesizeAntennaCommand` report evaluation progress; their workers forward it and both dialogs show the shared determinate bar with the maximum-evaluation budget as the estimated denominator. Finish, cancellation, and failure set terminal states; tests cover monotonic counts, worker forwarding, dialog completion, and cancellation. |
 | P7 | True per-frequency simulation progress | L | P2; ADR; benchmark; D4 decision | **Deferred until a benchmark shows a practical need.** Choose between chunked frequency-plan execution and version-tolerant incremental output parsing. Chunking must aggregate `SimulationResult` safely and preserve source, pattern, feed-line, matching-network, and cancellation semantics; parsing must handle partial writes. Add an ADR and benchmark before implementation. Do not use `timeout_s` or elapsed time as a fake percentage. |
 | ~~R1~~ | ~~Re-run the `v0.4.0` release workflow and replace manual assets~~ | S | GitHub Actions runner DNS/mirror; tag `v0.4.0` | **Superseded 2026-11-11:** the `v0.4.1` release workflow completed all jobs and published CI-built Linux, Windows installer/zip, and wheel/sdist artifacts. The manual `v0.4.0` assets remain as published; rerunning that older tag is no longer required. |
+| UX1 | Guided mode and next-step coach | S–M | none | The mode selector persists; a state-derived next-step panel covers no project, unsimulated design, high SWR, no construction sheet, unmeasured, and measured states; Guided hides advanced actions behind an explicit reveal; tests cover transitions and EN/ES retranslation. |
+| UX2 | Installation profile | S–M | none | Project-level profile with available height, horizontal space, orientation, ground preset, support type, notes, and optional image reference; create/edit/duplicate; schema migration; advisor, comparison, and report headers use it; no electromagnetic claims. |
+| UX3 | Antenna suitability profiles and guided advisor | M | UX1, UX2 | A suitability record per catalog family (bands, footprint, height, feed/tuner, pattern, gain class, construction/portability, use cases such as NVIS, DX, regional, portable, and receive, evidence); a five-question advisor applies hard constraints and returns at least three candidates with a trade-off matrix and evidence; create a project from a candidate; no simulation ranking in the first slice. |
+| UX4 | Comparison 2.0 | M–L | UX2; comparison-basis ADR | Comparison basis record (frequency plan, ground, reference height, feed line, matching, units); 2–4 designs; recompute with progress and cancellation; metric table, overlaid patterns, and size/BOM comparison; visible basis banner; the ADR records the per-family height mapping. |
+| UX5 | Contextual explanations and confidence card | M | none | Contextual help for impedance, SWR, efficiency, gain/directivity/realized gain, takeoff, bandwidth, ground, and feed-line loss; a confidence card with evidence level, modeled/unmodeled items, and dominant uncertainties; EN/ES; the help coverage manifest passes. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
 | D4 | Segmented frequency plan in one NEC deck | M | solver benchmark | Deferred; current per-band batching is intentional |
+
+## Product experience queue (2026-11-11)
+
+UX1–UX5 are the active product-experience slice. They are deliberately ordered
+before new antenna work because they remove the largest beginner and
+decision-making gaps. UX6–UX20 remain product scope in
+[`ROADMAP.md`](ROADMAP.md#product-experience-backlog-proposed-2026-11-11); do not
+promote them into this queue until the previous release is closed and the full
+gate is green.
+
+The first slice accepts these constraints:
+
+- The advisor is deterministic and evidence-backed. It does not call a language
+  model and does not simulate every candidate.
+- The comparison basis is explicit and recalculated. Stored results from
+  different conditions are never presented as directly comparable.
+- The installation profile is metadata. It does not claim terrain, obstacle, or
+  support-structure modeling.
+- Guided mode is progressive disclosure, not a reduced feature set. Every
+  advanced action remains available in Standard or Advanced.
+- The feed-chain topology work starts with an ADR. The current project network is
+  a feedpoint network evaluated before the feed line; a shack tuner and a
+  transmitter-side balun are not the same topology and must not be presented as
+  if they were.
 
 ## Matching-network precedence (2026-11-10 analysis)
 
@@ -279,7 +308,9 @@ model and solver contract must land first.
 7. **R1** is closed as superseded: `v0.4.1` was published with CI-built Linux
    and Windows artifacts, so rerunning the older `v0.4.0` tag is no longer
    required.
-8. Product priorities and new antenna candidates live in
+8. The active product-experience slice is **UX1–UX5**. It precedes new antenna
+   work; UX6–UX20 remain product scope in [`ROADMAP.md`](ROADMAP.md).
+9. Product priorities and new antenna candidates live in
    [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
 ## Technical debt pass (2026-11-08)

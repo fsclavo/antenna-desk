@@ -1,8 +1,8 @@
 # AntennaDesk roadmap and backlog
 
-**Updated:** 2026-11-09
-**Status:** active product roadmap after catalog, measurement, optimization, and
-packaging work.
+**Updated:** 2026-11-11
+**Status:** active product roadmap after catalog, measurement, optimization,
+packaging, and the 2026-11-11 product-experience review.
 **Scope:** product direction, milestones, and the ordered antenna expansion
 backlog. The active execution queue is
 [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md); evidence status is in
@@ -247,7 +247,9 @@ Acceptance criteria:
 
 This table keeps product priority and evidence. Execution status, blockers, and
 acceptance criteria live in
-[`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md).
+[`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md). The 2026-11-11
+product-experience review shifts the emphasis from catalog breadth to the
+decide-build-measure workflow; the new track is below.
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
@@ -312,6 +314,64 @@ EFHW is deliberately **not** listed as a new family: the standard `EndFed`
 template already models it. Item 9 covers explicit EFHW presets, labels, and
 band planning for that existing family.
 
+### Product experience backlog (proposed 2026-11-11)
+
+The 2026-11-11 review of the desired-backlog proposal keeps the product focus on
+the decision-to-measurement workflow instead of adding more antenna families.
+The catalog is broad enough; the next value is helping the operator choose,
+understand, build, and improve a design. This is product scope, not a second
+execution queue. The first slice, UX1–UX5, is promoted to
+[`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md); UX6–UX20 stay here until they
+are ready to execute.
+
+Rules for this track:
+
+- Every item must remove a decision or a manual step. A calculator alone is not
+  enough.
+- No new electromagnetic model without a traceable source or measurement. Items
+  that cannot be validated are labeled experimental and show their limits.
+- Progressive disclosure: Guided, Standard, and Advanced modes; no new dialog
+  for every option.
+- Local-first: no accounts, servers, or telemetry.
+- Pause new antenna families. The existing catalog covers the common cases;
+  log-periodic remains blocked by C3.
+- Each release leaves the full gate green and is usable on its own.
+
+| Release | ID | Item | Outcome | Size | Evidence | Status |
+|---|---|---|---|---|---|---|
+| 0.5 Decide | UX1 | Guided mode and next-step coach | State-driven next action and progressive disclosure | S–M | n/a | active queue |
+| 0.5 Decide | UX2 | Installation profile | Reusable site envelope and constraints | S–M | n/a | active queue |
+| 0.5 Decide | UX3 | Antenna suitability profiles and guided advisor | Constraint-filtered shortlist with operating intent and trade-offs | M | B/C | active queue |
+| 0.5 Decide | UX4 | Comparison 2.0 | 2–4 designs under a common basis, recomputed | M–L | B | active queue |
+| 0.5 Decide | UX5 | Contextual explanations and confidence card | Metric meaning, evidence, assumptions, and limits | M | A/B/C | active queue |
+| 0.6 Build | UX6 | Feed-chain topology and loss budget | Tuner/balun position and per-stage loss | M–L | B/C | proposed |
+| 0.6 Build | UX7 | Construction package 2.0 | As-built, hardware BOM, coil/trap sheet, checklist | M | B/C | proposed |
+| 0.6 Build | UX8 | Integrated coil/trap/loading calculators | Prefilled calculators that apply to the design | M | B | proposed |
+| 0.6 Build | UX9 | Construction pre-flight checks | Detect geometry, feed, segmentation, and support issues | S–M | n/a | proposed |
+| 0.7 Measure | UX10 | Measurement sessions and timeline | Multi-session records and before/after comparison | M | A/B | proposed |
+| 0.7 Measure | UX11 | Sensitivity-based tuning assistant | Bounded adjustment from solver sensitivity | M–L | B/C | proposed |
+| 0.7 Measure | UX12 | Measurement uncertainty card | Calibration, reference-plane, and environment limits | S–M | B/C | proposed |
+| 0.8 Explore | UX13 | Parameter sweeps (what-if) | 1D/2D sweeps with overlays and a budget | M | B | proposed |
+| 0.8 Explore | UX14 | Tolerance and robustness analysis | Corner cases and Monte Carlo with critical dimensions | M–L | B/C | proposed |
+| 0.8 Explore | UX15 | Project journal | Timeline, as-built, photos, notes, and version comparison | M | n/a | proposed |
+| 0.8 Explore | UX16 | Guided experiments | Three tutorials built on the sweep engine | M–L | B | proposed |
+| 0.9 Sustain | UX17 | Curated reference design library | 10–20 sourced designs; published versus simulated | M + content | A/B | proposed |
+| 0.9 Sustain | UX18 | Minimal materials reference | Static, sourced wire/coax/ferrite/insulator table | S–M | B | proposed |
+| 0.9 Sustain | UX19 | Portable project bundle | Export/import project plus assets; no server | S–M | n/a | proposed |
+| 0.9 Sustain | UX20 | Editable BOM costs | Manual cost column and totals | S | n/a | proposed |
+
+Release sequence: **0.5 Decide** is the first slice because it has the highest
+user value and the lowest modeling risk. **0.6 Build** converts a simulation into
+a build package. **0.7 Measure** closes the loop with VNA data. **0.8 Explore**
+adds advanced learning and robustness. **0.9 Sustain** adds content and
+packaging. The names and numbers are working labels, not release commitments.
+
+Deliberate exclusions for this track: server-based community projects, terrain
+and obstacle modeling, common-mode choke and real balun models before G27 has
+measurements or traceable data, a price catalog, live VNA control, additional
+full-wave engines, and new antenna families. These remain deferred, blocked, or
+out of scope; they are not silently implied by the items above.
+
 ## Next
 
 The active execution queue is
@@ -319,6 +379,12 @@ The active execution queue is
 [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md). The archived 2026-11-04 phase plan is
 kept at
 [`archive/PENDING_WORK_PLAN_2026-11-04.md`](archive/PENDING_WORK_PLAN_2026-11-04.md).
+
+Product track:
+
+1. The active product-experience slice is UX1–UX5 in
+   [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md); UX6–UX20 remain product
+   scope in the product experience backlog above.
 
 Modeling track:
 
