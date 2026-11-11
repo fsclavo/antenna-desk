@@ -108,7 +108,7 @@ class FeedMatchingSummary(QGroupBox):
         self._refresh()
 
     def retranslate(self) -> None:
-        self.setTitle(self._translator.t("feed_matching.title"))
+        self.setTitle(self._translator.t("feed_matching.title").replace("&", "&&"))
         self._endfed_label.setText(self._translator.t("feed_matching.endfed"))
         self._project_label.setText(self._translator.t("feed_matching.project"))
         self._feed_line_label.setText(self._translator.t("feed_matching.feed_line"))

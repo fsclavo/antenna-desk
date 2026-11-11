@@ -330,6 +330,14 @@ class ResultsView(QWidget):
         del font
         apply_plot_fonts(self._plots())
         self._apply_raw_fonts()
+        for table in (
+            self._table,
+            self._sources_table,
+            self._bands_table,
+            self._measurement_table,
+            self._diagnostics,
+        ):
+            table.resizeColumnsToContents()
 
     def _apply_theme(self) -> None:
         self._colors = theme_colors(self.palette())
@@ -734,6 +742,14 @@ class ResultsView(QWidget):
         )
         self._raw_tabs.setTabText(0, self._translator.t("raw.input"))
         self._raw_tabs.setTabText(1, self._translator.t("raw.output"))
+        for table in (
+            self._table,
+            self._sources_table,
+            self._bands_table,
+            self._measurement_table,
+            self._diagnostics,
+        ):
+            table.resizeColumnsToContents()
         self._render()
 
     def _render(self) -> None:

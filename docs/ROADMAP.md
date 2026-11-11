@@ -117,6 +117,10 @@ Completed:
   loaded EFHW presets.
 - `v0.3.1` fixes cross-platform construction-label overlap and large-font form
   widths on Windows.
+- `v0.4.0` release candidate adds the matching-network precedence/design target,
+  Feed & matching visibility, impedance-point network creation, and the optional
+  shortened-EFHW inverted-L bend (schema 34–35). The candidate is prepared but
+  not yet tagged or published.
 
 Deferred:
 
@@ -318,7 +322,8 @@ Modeling track:
 Release track:
 
 1. `v0.3.1` is published with checksum-verified unsigned artifacts.
-2. Add GPG/Authenticode signing in a later release if required.
+2. `v0.4.0` is prepared as a release candidate; tag and publish after QA.
+3. Add GPG/Authenticode signing in a later release if required.
 
 Validation track:
 

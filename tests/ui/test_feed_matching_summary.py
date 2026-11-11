@@ -82,7 +82,7 @@ def test_summary_retranslates_its_rows_and_warning(qtbot: QtBot) -> None:
         None,
     )
 
-    assert summary.title() == "Feed & matching"
+    assert summary.title() == "Feed && matching"
     assert "retained, not applied" in summary._endfed_value.text()
 
     translator.set_language(Language.SPANISH)
