@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
-authors = [{ name = "Fernando Sclavo" }]
+authors = [{ name = "Fernando Sclavo (LU2EFI)" }]
 keywords = ["amateur-radio", "antenna", "nec2", "electromagnetics"]
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
@@ -66,7 +66,15 @@ path = "src/antennadesk/__init__.py"
 packages = ["src/antennadesk"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/antennadesk", "tests", "docs", "packaging", "README.md", "LICENSE"]
+include = [
+  "src/antennadesk",
+  "tests",
+  "docs",
+  "packaging",
+  "README.md",
+  "LICENSE",
+  "AUTHORS.md",
+]
 
 [tool.ruff]
 line-length = 100

@@ -1,8 +1,8 @@
 # Confirmed project decisions
 
-**Date:** 2026-10-28  
-**Owner:** Fernando Sclavo  
-**Status:** initial decisions confirmed to start the project
+- **Date:** 2026-10-28
+- **Owner:** Fernando Sclavo (LU2EFI)
+- **Status:** initial decisions confirmed to start the project
 
 This record preserves the answers given before Phase 0. It does not replace
 ADRs: when a decision has technical alternatives and architectural
@@ -11,7 +11,7 @@ consequences, it is documented in `docs/ADR/`.
 ## License and ownership
 
 - Project license: **GPL-3.0-or-later**.
-- Copyright: **2026 Fernando Sclavo**.
+- Copyright: **2026 Fernando Sclavo (LU2EFI)**.
 - Short SPDX headers in source files.
 - Documentation under the same GPL-3.0-or-later license.
 - Binary distribution includes sources and packaging scripts.

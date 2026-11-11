@@ -1,5 +1,10 @@
 # AntennaDesk
 
+[![Tests](https://img.shields.io/github/actions/workflow/status/fsclavo/antenna-desk/ci.yml?branch=main&label=tests)](https://github.com/fsclavo/antenna-desk/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/fsclavo/antenna-desk?label=release&sort=semver)](https://github.com/fsclavo/antenna-desk/releases/latest)
+
+**Developed by Fernando Sclavo (LU2EFI).**
+
 Desktop application for designing, simulating, and building antennas for
 amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
@@ -289,6 +294,11 @@ uv run python scripts/run_reference_simulation.py \
   available in English in the tooltip and raw-output tab.
 - PySide6 is pinned below 6.12 because 6.12 triggered a shutdown refcount crash
   with pyqtgraph in this environment. 6.11.3 was evaluated in ADR-0025.
+
+## Author
+
+AntennaDesk is developed by Fernando Sclavo (LU2EFI), an amateur radio
+operator. See [AUTHORS.md](AUTHORS.md) for attribution.
 
 ## License
 

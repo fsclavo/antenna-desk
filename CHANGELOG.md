@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- The README, documentation index, package metadata, Debian packaging, and
+  **About** dialog now credit the author as Fernando Sclavo (LU2EFI).
+
 ## [0.4.0] - 2026-11-11
 
 ### Added

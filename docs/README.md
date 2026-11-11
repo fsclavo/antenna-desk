@@ -113,3 +113,9 @@ of truth before adding another planning document.
 - Once a plan is superseded, move it to `docs/archive/` and link it from this
   index.
 - Keep one source of truth per question. Cross-link instead of copying status.
+
+## Authorship
+
+AntennaDesk is developed by Fernando Sclavo (LU2EFI). See
+[`../AUTHORS.md`](../AUTHORS.md) for attribution and [`../LICENSE`](../LICENSE)
+for the license terms.

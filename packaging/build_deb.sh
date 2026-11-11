@@ -116,7 +116,7 @@ chmod 755 "$STAGE/DEBIAN/postinst" "$STAGE/DEBIAN/postrm"
   echo
   echo "  * Local package build."
   echo
-  echo " -- Fernando Sclavo <fernando.sclavo@ingenia.la>  $(date -Ru)"
+  echo " -- Fernando Sclavo (LU2EFI) <fernando.sclavo@ingenia.la>  $(date -Ru)"
 } | gzip -9n > "$STAGE/usr/share/doc/antennadesk/changelog.Debian.gz"
 
 INSTALLED_SIZE="$(du -sk "$STAGE/opt" "$STAGE/usr" | awk '{total += $1} END {print total}')"
@@ -126,7 +126,7 @@ Version: $DEB_VERSION
 Section: science
 Priority: optional
 Architecture: $DEB_ARCH
-Maintainer: Fernando Sclavo <fernando.sclavo@ingenia.la>
+Maintainer: Fernando Sclavo (LU2EFI) <fernando.sclavo@ingenia.la>
 Installed-Size: $INSTALLED_SIZE
 Depends: libc6 (>= 2.35), libgl1, libegl1, libxkbcommon-x11-0, libxcb-cursor0, libxcb-icccm4, libxcb-keysyms1, libxcb-shape0, libxcb-xinerama0, libxcb-randr0, libxcb-render-util0, libxcb-xfixes0, libdbus-1-3, libfontconfig1, libglib2.0-0
 Homepage: https://github.com/fsclavo/antenna-desk

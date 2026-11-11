@@ -89,8 +89,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         ),
     },
     "app.about": {
-        Language.ENGLISH: "AntennaDesk {version} — GPL-3.0-or-later\nLocal-first antenna design and simulation.",
-        Language.SPANISH: "AntennaDesk {version} — GPL-3.0-or-later\nDiseño y simulación de antenas local-first.",
+        Language.ENGLISH: (
+            "AntennaDesk {version} — GPL-3.0-or-later\n"
+            "Developed by Fernando Sclavo (LU2EFI).\n"
+            "Local-first antenna design and simulation."
+        ),
+        Language.SPANISH: (
+            "AntennaDesk {version} — GPL-3.0-or-later\n"
+            "Desarrollado por Fernando Sclavo (LU2EFI).\n"
+            "Diseño y simulación de antenas local-first."
+        ),
     },
     "menu.file": {Language.ENGLISH: "File", Language.SPANISH: "Archivo"},
     "menu.edit": {Language.ENGLISH: "Edit", Language.SPANISH: "Editar"},
