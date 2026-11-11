@@ -154,4 +154,5 @@ and smoke checks.
 
 Post-release follow-up: rerun the release workflow if the runner mirror issue is
 resolved, so CI can reproduce and replace the assets with the workflow-built
-versions.
+versions. Tracked as **R1** in
+[`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md).
