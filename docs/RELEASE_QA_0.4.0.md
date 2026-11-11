@@ -2,8 +2,10 @@
 
 - **Candidate:** `0.4.0`
 - **Date:** 2026-11-11
-- **Source commit:** `32e7b3e` (`chore(release): prepare 0.4.0 candidate`)
-- **Status:** release candidate prepared locally; **not tagged or published**
+- **Source commit:** `d082631` (`docs(release): record 0.4.0 candidate QA`);
+  local artifacts were built from the code-identical `32e7b3e` release-prep tree
+- **Status:** release candidate prepared locally and Windows CI validated;
+  **not tagged or published**
 
 ## Scope
 
@@ -90,8 +92,25 @@ Built clean-room from the same frozen bundle. Bundle license audit passed.
 
 ### Windows
 
-Not built in this Linux environment. The tag-triggered workflow must build and
-smoke-test the Windows onedir zip, or the release must wait for a Windows host.
+Built by GitHub Actions run
+[`43042974734`](https://github.com/fsclavo/antenna-desk/actions/runs/43042974734)
+on `windows-latest` from branch `release/0.4.0-qa`:
+
+| Check | Result |
+|---|---|
+| `Build nec2c for Windows` | pass |
+| `Build Windows bundle` | pass |
+| `AntennaDesk.exe --version` | pass in the Windows smoke step |
+| `AntennaDesk.exe --check-solver` | pass in the Windows smoke step |
+| Artifact download and `sha256sum -c` | OK |
+| Zip contents | `AntennaDesk.exe`, `nec2c.exe`, `COPYING`, and `licenses/` present |
+| License audit inside the Windows build | pass |
+
+The same workflow run's Linux package job failed before building because the
+GitHub runner could not resolve `azure.archive.ubuntu.com` for `apt-get`
+(`Temporary failure resolving`). A rerun failed with the same infrastructure
+error. This is not a code failure: the Linux AppImage and `.deb` were built and
+smoke-tested locally as recorded above.
 
 ## Local artifacts
 
@@ -101,10 +120,11 @@ smoke-test the Windows onedir zip, or the release must wait for a Windows host.
 | `antennadesk-0.4.0.tar.gz` | 1.1 M | `7c2e7a719de878d14c04a06105689310f446d2cf142952fa2f4a7c4acfc9e4e0` |
 | `AntennaDesk-0.4.0-x86_64.AppImage` | 120 M | `05925edce790894cf6d0059ccd2dfe64f0e5ce7ddeed30aefaff8e86dec9e4fc` |
 | `antennadesk_0.4.0_amd64.deb` | 102 M | `947648eaeb078d24bcddd09050ec5978e4b7be176e5ea1458d00b2fa8c024d1f` |
+| `AntennaDesk-0.4.0-windows-x86_64.zip` | 103 M | `2f3b3421ec2e1329ea6a56d9c82a8ed2d5a0e4a6cd1a426b95d1e913b65582a2` |
 
-The AppImage and `.deb` have companion `.sha256` files. The wheel and sdist do
-not have companion checksum files yet; the release workflow currently publishes
-the four native checksums and the wheel/sdist artifacts.
+The AppImage, `.deb`, and Windows zip have companion `.sha256` files. The wheel
+and sdist do not have companion checksum files yet; the release workflow
+currently publishes the native checksums and the wheel/sdist artifacts.
 
 ## Signing
 
@@ -125,8 +145,10 @@ only by SHA-256.
 
 ## Release decision
 
-Do not tag or publish until:
+Windows build and smoke tests are complete. Do not tag or publish until:
 
-1. the Windows workflow artifact is built and smoke-tested;
-2. the platform light/dark and font-scaling QA is completed on a real display;
-3. the maintainer approves the tag `v0.4.0`.
+1. the platform light/dark and font-scaling QA is completed on a real display;
+2. the maintainer approves the tag `v0.4.0`;
+3. the tag-triggered workflow completes its Linux package job (the candidate
+   branch run was blocked by a GitHub runner DNS failure, while the local Linux
+   artifacts passed the same build and smoke checks).
