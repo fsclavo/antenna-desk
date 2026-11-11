@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 
 from ...domain.antennas.feed_line import FeedLine
 from ..fonts import scaled_dialog_size
+from ..help import apply_row_help
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
 
@@ -77,6 +78,10 @@ class FeedLineDialog(QDialog):
         form.addRow(self._label_length, self._length)
         form.addRow(self._label_velocity, self._velocity_factor)
         form.addRow(self._label_loss, self._loss)
+        apply_row_help(form, 0, translator, "feed_line.characteristic_impedance")
+        apply_row_help(form, 1, translator, "feed_line.length")
+        apply_row_help(form, 2, translator, "feed_line.velocity_factor")
+        apply_row_help(form, 3, translator, "feed_line.loss")
 
         hint = QLabel(translator.t("feed_line.hint"), self)
         hint.setWordWrap(True)

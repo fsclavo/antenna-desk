@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 
 from ...domain.antennas.balun import BalunLoss
 from ..fonts import scaled_dialog_size
+from ..help import apply_row_help
 from ..i18n import Translator
 
 
@@ -66,6 +67,9 @@ class BalunLossDialog(QDialog):
         form.addRow(translator.t("balun_loss.reference_loss"), self._reference_loss)
         form.addRow(translator.t("balun_loss.exponent"), self._exponent)
         form.addRow(self._preview)
+        apply_row_help(form, 1, translator, "balun_loss.reference_frequency")
+        apply_row_help(form, 2, translator, "balun_loss.reference_loss")
+        apply_row_help(form, 3, translator, "balun_loss.exponent")
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,

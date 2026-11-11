@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 
 from ...domain.antennas.load import LoadKind, LumpedLoad, ParallelLoad, SeriesLoad
 from ..fonts import scaled_dialog_size
+from ..help import apply_row_help
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
 
@@ -105,6 +106,18 @@ class LoadsDialog(QDialog):
         form.addRow(translator.t("loads.inductance"), self._inductance)
         form.addRow(translator.t("loads.capacitance"), self._capacitance)
         form.addRow(translator.t("loads.trap_frequency"), self._trap_frequency)
+        for row, key in enumerate(
+            (
+                "loads.kind",
+                "loads.wire",
+                "loads.offset",
+                "loads.resistance",
+                "loads.inductance",
+                "loads.capacitance",
+                "loads.trap_frequency",
+            )
+        ):
+            apply_row_help(form, row, translator, key)
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
             parent=self,

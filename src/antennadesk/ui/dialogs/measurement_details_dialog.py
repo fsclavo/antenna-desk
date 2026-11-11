@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 
 from ...domain.measurement import Measurement
 from ..fonts import scaled_dialog_size
+from ..help import apply_help, apply_row_help
 from ..i18n import Translator
 
 
@@ -54,6 +55,17 @@ class MeasurementDetailsDialog(QDialog):
         form.addRow(translator.t("measurement.reference_plane"), self._reference_plane)
         form.addRow(translator.t("measurement.feed_line"), self._feed_line)
         self._notes_label = QLabel(translator.t("measurement.notes"), self)
+        for row, key in enumerate(
+            (
+                "measurement.name",
+                "measurement.calibration",
+                "measurement.reference_plane",
+                "measurement.feed_line",
+            )
+        ):
+            apply_row_help(form, row, translator, key)
+        apply_help(self._notes_label, translator, "measurement.notes")
+        apply_help(self._notes, translator, "measurement.notes")
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,

@@ -2007,6 +2007,275 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Angle between the two legs at the apex.",
         Language.SPANISH: "Ángulo entre las dos patas en el vértice.",
     },
+    "help.feed_line.characteristic_impedance": {
+        Language.ENGLISH: (
+            "Characteristic impedance of the feed line; it sets the transformation and "
+            "the SWR at the transmitter end."
+        ),
+        Language.SPANISH: (
+            "Impedancia característica de la línea; define la transformación y la ROE "
+            "en el extremo del transmisor."
+        ),
+    },
+    "help.feed_line.length": {
+        Language.ENGLISH: "Physical feed-line length.",
+        Language.SPANISH: "Longitud física de la línea de alimentación.",
+    },
+    "help.feed_line.velocity_factor": {
+        Language.ENGLISH: (
+            "Velocity factor of the feed line; it sets the electrical length for a "
+            "given physical length."
+        ),
+        Language.SPANISH: (
+            "Factor de velocidad de la línea; define la longitud eléctrica para una "
+            "longitud física dada."
+        ),
+    },
+    "help.feed_line.loss": {
+        Language.ENGLISH: "Matched loss per 100 m at the operating frequency.",
+        Language.SPANISH: "Pérdida adaptada por 100 m en la frecuencia de operación.",
+    },
+    "help.balun_loss.reference_frequency": {
+        Language.ENGLISH: "Frequency at which the reference insertion loss is specified.",
+        Language.SPANISH: "Frecuencia en la que se especifica la pérdida de inserción de referencia.",
+    },
+    "help.balun_loss.reference_loss": {
+        Language.ENGLISH: "Matched insertion loss at the reference frequency.",
+        Language.SPANISH: "Pérdida de inserción adaptada en la frecuencia de referencia.",
+    },
+    "help.balun_loss.exponent": {
+        Language.ENGLISH: (
+            "Frequency exponent used to scale the loss away from the reference frequency."
+        ),
+        Language.SPANISH: (
+            "Exponente de frecuencia usado para escalar la pérdida fuera de la "
+            "frecuencia de referencia."
+        ),
+    },
+    "help.loads.kind": {
+        Language.ENGLISH: "Load type: series or parallel; trap loads combine inductance and capacitance.",
+        Language.SPANISH: "Tipo de carga: serie o paralelo; las trampas combinan inductancia y capacitancia.",
+    },
+    "help.loads.wire": {
+        Language.ENGLISH: "Wire that carries the load.",
+        Language.SPANISH: "Hilo que lleva la carga.",
+    },
+    "help.loads.offset": {
+        Language.ENGLISH: "Distance from the wire start to the load.",
+        Language.SPANISH: "Distancia desde el inicio del hilo hasta la carga.",
+    },
+    "help.loads.resistance": {
+        Language.ENGLISH: "Load resistance.",
+        Language.SPANISH: "Resistencia de la carga.",
+    },
+    "help.loads.inductance": {
+        Language.ENGLISH: "Load inductance.",
+        Language.SPANISH: "Inductancia de la carga.",
+    },
+    "help.loads.capacitance": {
+        Language.ENGLISH: "Load capacitance.",
+        Language.SPANISH: "Capacitancia de la carga.",
+    },
+    "help.loads.trap_frequency": {
+        Language.ENGLISH: "Resonant frequency of the parallel LC trap.",
+        Language.SPANISH: "Frecuencia de resonancia de la trampa LC paralelo.",
+    },
+    "help.transmission_lines.start_wire": {
+        Language.ENGLISH: "Wire where the transmission line starts.",
+        Language.SPANISH: "Hilo donde comienza la línea de transmisión.",
+    },
+    "help.transmission_lines.start_offset": {
+        Language.ENGLISH: "Distance from the start wire's beginning to the line connection.",
+        Language.SPANISH: "Distancia desde el inicio del hilo hasta la conexión de la línea.",
+    },
+    "help.transmission_lines.end_wire": {
+        Language.ENGLISH: "Wire where the transmission line ends.",
+        Language.SPANISH: "Hilo donde termina la línea de transmisión.",
+    },
+    "help.transmission_lines.end_offset": {
+        Language.ENGLISH: "Distance from the end wire's beginning to the line connection.",
+        Language.SPANISH: "Distancia desde el inicio del hilo final hasta la conexión de la línea.",
+    },
+    "help.transmission_lines.z0": {
+        Language.ENGLISH: "Characteristic impedance of the transmission line.",
+        Language.SPANISH: "Impedancia característica de la línea de transmisión.",
+    },
+    "help.transmission_lines.length": {
+        Language.ENGLISH: "Physical transmission-line length.",
+        Language.SPANISH: "Longitud física de la línea de transmisión.",
+    },
+    "help.transmission_lines.velocity_factor": {
+        Language.ENGLISH: "Velocity factor used to convert physical length to electrical length.",
+        Language.SPANISH: "Factor de velocidad usado para convertir longitud física en eléctrica.",
+    },
+    "help.synthesis.target_frequency": {
+        Language.ENGLISH: "Frequency at which the impedance target is evaluated.",
+        Language.SPANISH: "Frecuencia en la que se evalúa el objetivo de impedancia.",
+    },
+    "help.synthesis.target_resistance": {
+        Language.ENGLISH: "Target feed-point resistance.",
+        Language.SPANISH: "Resistencia objetivo en el punto de alimentación.",
+    },
+    "help.synthesis.target_reactance": {
+        Language.ENGLISH: "Target feed-point reactance.",
+        Language.SPANISH: "Reactancia objetivo en el punto de alimentación.",
+    },
+    "help.synthesis.minimum": {
+        Language.ENGLISH: "Lower bound for the selected synthesis variable.",
+        Language.SPANISH: "Límite inferior de la variable de síntesis seleccionada.",
+    },
+    "help.synthesis.maximum": {
+        Language.ENGLISH: "Upper bound for the selected synthesis variable.",
+        Language.SPANISH: "Límite superior de la variable de síntesis seleccionada.",
+    },
+    "help.optimize.objective": {
+        Language.ENGLISH: "Objective used to rank optimization candidates.",
+        Language.SPANISH: "Objetivo usado para ordenar los candidatos de optimización.",
+    },
+    "help.optimize.min_length": {
+        Language.ENGLISH: "Lower bound for the optimized dimension.",
+        Language.SPANISH: "Límite inferior de la dimensión optimizada.",
+    },
+    "help.optimize.max_length": {
+        Language.ENGLISH: "Upper bound for the optimized dimension.",
+        Language.SPANISH: "Límite superior de la dimensión optimizada.",
+    },
+    "help.optimize.target_resistance": {
+        Language.ENGLISH: "Target resistance for the impedance objective.",
+        Language.SPANISH: "Resistencia objetivo para el objetivo de impedancia.",
+    },
+    "help.optimize.target_reactance": {
+        Language.ENGLISH: "Target reactance for the reactance objective.",
+        Language.SPANISH: "Reactancia objetivo para el objetivo de reactancia.",
+    },
+    "help.optimize.swr_limit": {
+        Language.ENGLISH: "SWR limit used by the bandwidth objective.",
+        Language.SPANISH: "Límite de ROE usado por el objetivo de ancho de banda.",
+    },
+    "help.optimize.swr_weight": {
+        Language.ENGLISH: "Relative SWR weight in the balanced objective.",
+        Language.SPANISH: "Peso relativo de la ROE en el objetivo balanceado.",
+    },
+    "help.optimize.gain_weight": {
+        Language.ENGLISH: "Relative gain weight in the balanced objective.",
+        Language.SPANISH: "Peso relativo de la ganancia en el objetivo balanceado.",
+    },
+    "help.optimize.max_evaluations": {
+        Language.ENGLISH: "Maximum number of solver evaluations.",
+        Language.SPANISH: "Cantidad máxima de evaluaciones del solver.",
+    },
+    "help.optimize.tolerance": {
+        Language.ENGLISH: "Convergence tolerance for the selected objective.",
+        Language.SPANISH: "Tolerancia de convergencia para el objetivo seleccionado.",
+    },
+    "help.custom.feed_wire": {
+        Language.ENGLISH: "Wire selected for the feed point.",
+        Language.SPANISH: "Hilo seleccionado para el punto de alimentación.",
+    },
+    "help.custom.feed_offset": {
+        Language.ENGLISH: "Distance from the wire start to the feed point.",
+        Language.SPANISH: "Distancia desde el inicio del hilo hasta el punto de alimentación.",
+    },
+    "help.custom.radial_count": {
+        Language.ENGLISH: "Number of radial wires.",
+        Language.SPANISH: "Cantidad de hilos radiales.",
+    },
+    "help.custom.radial_length": {
+        Language.ENGLISH: "Radial wire length.",
+        Language.SPANISH: "Longitud de los hilos radiales.",
+    },
+    "help.custom.radial_angle": {
+        Language.ENGLISH: "Azimuth step between radial wires.",
+        Language.SPANISH: "Paso de azimut entre hilos radiales.",
+    },
+    "help.measurement.name": {
+        Language.ENGLISH: "Label used for this measurement.",
+        Language.SPANISH: "Etiqueta usada para esta medición.",
+    },
+    "help.measurement.calibration": {
+        Language.ENGLISH: "Calibration type recorded with the measurement.",
+        Language.SPANISH: "Tipo de calibración registrado con la medición.",
+    },
+    "help.measurement.reference_plane": {
+        Language.ENGLISH: "Reference plane of the measurement.",
+        Language.SPANISH: "Plano de referencia de la medición.",
+    },
+    "help.measurement.feed_line": {
+        Language.ENGLISH: "Feed line associated with the measurement.",
+        Language.SPANISH: "Línea de alimentación asociada con la medición.",
+    },
+    "help.measurement.notes": {
+        Language.ENGLISH: "Free-form notes stored with the measurement.",
+        Language.SPANISH: "Notas libres guardadas con la medición.",
+    },
+    "help.matching_network.topology": {
+        Language.ENGLISH: "Matching-network topology; it determines which component fields apply.",
+        Language.SPANISH: "Topología de la red de adaptación; determina qué campos de componentes se usan.",
+    },
+    "help.matching_network.q_factor": {
+        Language.ENGLISH: "Component Q used to estimate matching-network loss.",
+        Language.SPANISH: "Q de los componentes usado para estimar las pérdidas de la red.",
+    },
+    "help.matching_network.load_r": {
+        Language.ENGLISH: "Load resistance presented to the matching network.",
+        Language.SPANISH: "Resistencia de carga presentada a la red de adaptación.",
+    },
+    "help.matching_network.load_x": {
+        Language.ENGLISH: "Load reactance presented to the matching network.",
+        Language.SPANISH: "Reactancia de carga presentada a la red de adaptación.",
+    },
+    "help.matching_network.frequency": {
+        Language.ENGLISH: "Frequency used to compute the component values.",
+        Language.SPANISH: "Frecuencia usada para calcular los valores de los componentes.",
+    },
+    "help.matching_network.series_l": {
+        Language.ENGLISH: "Series inductance in the matching network.",
+        Language.SPANISH: "Inductancia serie de la red de adaptación.",
+    },
+    "help.matching_network.series_c": {
+        Language.ENGLISH: "Series capacitance in the matching network.",
+        Language.SPANISH: "Capacitancia serie de la red de adaptación.",
+    },
+    "help.matching_network.shunt_l": {
+        Language.ENGLISH: "Shunt inductance at the selected node.",
+        Language.SPANISH: "Inductancia en derivación en el nodo seleccionado.",
+    },
+    "help.matching_network.shunt_c": {
+        Language.ENGLISH: "Shunt capacitance at the selected node.",
+        Language.SPANISH: "Capacitancia en derivación en el nodo seleccionado.",
+    },
+    "help.matching_network.input_shunt_l": {
+        Language.ENGLISH: "Shunt inductance on the input side.",
+        Language.SPANISH: "Inductancia en derivación del lado de entrada.",
+    },
+    "help.matching_network.input_shunt_c": {
+        Language.ENGLISH: "Shunt capacitance on the input side.",
+        Language.SPANISH: "Capacitancia en derivación del lado de entrada.",
+    },
+    "help.matching_network.output_shunt_l": {
+        Language.ENGLISH: "Shunt inductance on the output side.",
+        Language.SPANISH: "Inductancia en derivación del lado de salida.",
+    },
+    "help.matching_network.output_shunt_c": {
+        Language.ENGLISH: "Shunt capacitance on the output side.",
+        Language.SPANISH: "Capacitancia en derivación del lado de salida.",
+    },
+    "help.matching_network.input_series_l": {
+        Language.ENGLISH: "Series inductance on the input side.",
+        Language.SPANISH: "Inductancia serie del lado de entrada.",
+    },
+    "help.matching_network.input_series_c": {
+        Language.ENGLISH: "Series capacitance on the input side.",
+        Language.SPANISH: "Capacitancia serie del lado de entrada.",
+    },
+    "help.matching_network.output_series_l": {
+        Language.ENGLISH: "Series inductance on the output side.",
+        Language.SPANISH: "Inductancia serie del lado de salida.",
+    },
+    "help.matching_network.output_series_c": {
+        Language.ENGLISH: "Series capacitance on the output side.",
+        Language.SPANISH: "Capacitancia serie del lado de salida.",
+    },
     "help.section.design": {
         Language.ENGLISH: (
             "Antenna type, template, geometry, feed, ground, and the apply, estimate, "

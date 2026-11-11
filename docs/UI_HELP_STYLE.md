@@ -21,3 +21,6 @@ is not a second user guide.
   never show the raw help key.
 - Apply help to both the label and its paired control when the form provides a
   control. Label help must remain available when the control is disabled.
+- Forms call `FormLabels.bind_form()` after assembling a `QFormLayout`.
+  Dialogs that create their labels inline can call `apply_row_help()` after
+  each row instead of renaming their labels.

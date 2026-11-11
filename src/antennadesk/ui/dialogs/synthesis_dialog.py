@@ -42,6 +42,7 @@ from ...domain.optimization.synthesis import (
 )
 from ...domain.simulation.spec import SimulationSpec
 from ..fonts import scaled_dialog_size
+from ..help import apply_row_help
 from ..i18n import Translator
 from ..units import (
     UnitSystem,
@@ -202,6 +203,14 @@ class SynthesisDialog(QDialog):
         form.addRow(self._label_min_b, self._min_b)
         form.addRow(self._label_max_b, self._max_b)
         form.addRow(self._label_evaluations, self._max_evaluations)
+        apply_row_help(form, 0, translator, "synthesis.target_frequency")
+        apply_row_help(form, 1, translator, "synthesis.target_resistance")
+        apply_row_help(form, 2, translator, "synthesis.target_reactance")
+        apply_row_help(form, 4, translator, "synthesis.minimum")
+        apply_row_help(form, 5, translator, "synthesis.maximum")
+        apply_row_help(form, 6, translator, "synthesis.minimum")
+        apply_row_help(form, 7, translator, "synthesis.maximum")
+        apply_row_help(form, 8, translator, "optimize.max_evaluations")
         self._target_r.valueChanged.connect(self._update_transformer_note)
         self._update_transformer_note()
 

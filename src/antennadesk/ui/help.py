@@ -80,15 +80,29 @@ def apply_form_help(
 
     for row in range(form.rowCount()):
         label_item = form.itemAt(row, QFormLayout.ItemRole.LabelRole)
-        field_item = form.itemAt(row, QFormLayout.ItemRole.FieldRole)
-        label = label_item.widget() if label_item is not None else None
-        if not isinstance(label, QLabel):
-            continue
-        key = label.objectName()
+        label_widget = label_item.widget() if label_item is not None else None
+        key = label_widget.objectName() if isinstance(label_widget, QLabel) else ""
         if not key:
             continue
-        text = help_text(translator, key, family=family)
+        apply_row_help(form, row, translator, key, family=family)
+
+
+def apply_row_help(
+    form: QFormLayout,
+    row: int,
+    translator: Translator,
+    key: str,
+    *,
+    family: str | None = None,
+) -> None:
+    """Apply help to one label/control row without naming the label."""
+
+    label_item = form.itemAt(row, QFormLayout.ItemRole.LabelRole)
+    field_item = form.itemAt(row, QFormLayout.ItemRole.FieldRole)
+    label = label_item.widget() if label_item is not None else None
+    text = help_text(translator, key, family=family)
+    if isinstance(label, QLabel):
         label.setToolTip(text or "")
-        field = field_item.widget() if field_item is not None else None
-        if field is not None:
-            field.setToolTip(text or "")
+    field = field_item.widget() if field_item is not None else None
+    if field is not None:
+        field.setToolTip(text or "")

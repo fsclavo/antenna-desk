@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 from ...domain.antennas.transmission_line import TransmissionLine
 from ...domain.antennas.wire import Wire
 from ..fonts import scaled_dialog_size
+from ..help import apply_row_help
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
 
@@ -106,6 +107,18 @@ class TransmissionLinesDialog(QDialog):
         length_row.addWidget(self._use_distance)
         form.addRow(translator.t("transmission_lines.length"), length_row)
         form.addRow(translator.t("transmission_lines.velocity_factor"), self._velocity)
+        for row, key in enumerate(
+            (
+                "transmission_lines.start_wire",
+                "transmission_lines.start_offset",
+                "transmission_lines.end_wire",
+                "transmission_lines.end_offset",
+                "transmission_lines.z0",
+                "transmission_lines.length",
+                "transmission_lines.velocity_factor",
+            )
+        ):
+            apply_row_help(form, row, translator, key)
 
         hint = QLabel(translator.t("transmission_lines.hint"), self)
         hint.setWordWrap(True)

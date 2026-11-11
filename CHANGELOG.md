@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   design, advanced-simulation, action, geometry, and result-tab help. Missing
   help omits the tooltip instead of showing a raw key. The authoring rules are
   in `docs/UI_HELP_STYLE.md`.
+- Added family-specific help for matching, traps, loading coils, radial
+  systems, phased-array phase/amplitude, transmission-line stubs, magnetic-loop
+  tuning, and related variants, with height/spacing overrides for the beam and
+  dipole editors. The feed-line, balun-loss, loads, matching-network,
+  transmission-line, optimizer, synthesis, custom-antenna, and measurement
+  dialogs also show row help.
 - Simulate and band analysis now show a shared progress bar in the status bar.
   A single solver run uses an indeterminate bar with elapsed time and phase
   labels (preparing model, running NEC-2, processing results); a multi-band

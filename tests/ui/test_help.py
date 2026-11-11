@@ -7,6 +7,11 @@ from __future__ import annotations
 from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, QWidget
 from pytestqt.qtbot import QtBot
 
+from antennadesk.ui.dialogs.balun_loss_dialog import BalunLossDialog
+from antennadesk.ui.dialogs.feed_line_dialog import FeedLineDialog
+from antennadesk.ui.dialogs.loads_dialog import LoadsDialog
+from antennadesk.ui.dialogs.matching_network_dialog import MatchingNetworkDialog
+from antennadesk.ui.dialogs.measurement_details_dialog import MeasurementDetailsDialog
 from antennadesk.ui.help import apply_form_help, apply_help, help_text
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem
@@ -170,6 +175,56 @@ def test_main_window_sections_actions_and_tabs_have_help(window) -> None:  # typ
     window._set_language(Language.SPANISH)
     assert "Tiempo límite" in window._solver_group.toolTip()
     assert "bandas" in window._analyze_bands_action.toolTip()
+
+
+def test_feed_line_dialog_applies_row_help(qtbot: QtBot) -> None:
+    dialog = FeedLineDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+
+    assert "Characteristic impedance" in dialog._label_impedance.toolTip()
+    assert dialog._impedance.toolTip() == dialog._label_impedance.toolTip()
+    assert "feed-line length" in dialog._length.toolTip()
+
+
+def test_balun_loss_dialog_applies_row_help(qtbot: QtBot) -> None:
+    dialog = BalunLossDialog(Translator(Language.ENGLISH))
+    qtbot.addWidget(dialog)
+
+    assert "reference insertion loss" in dialog._reference_frequency.toolTip()
+    assert "insertion loss" in dialog._reference_loss.toolTip()
+    assert "exponent" in dialog._exponent.toolTip()
+
+
+def test_loads_dialog_applies_row_help(qtbot: QtBot) -> None:
+    dialog = LoadsDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        {"radiator": 20.0},
+        (),
+    )
+    qtbot.addWidget(dialog)
+
+    assert "Distance" in dialog._offset.toolTip()
+    assert "resistance" in dialog._resistance.toolTip()
+    assert "trap" in dialog._trap_frequency.toolTip()
+
+
+def test_matching_network_dialog_applies_row_help(qtbot: QtBot) -> None:
+    dialog = MatchingNetworkDialog(Translator(Language.ENGLISH))
+    qtbot.addWidget(dialog)
+
+    assert "topology" in dialog._topology.toolTip().lower()
+    assert "reactance" in dialog._load_x.toolTip().lower()
+    assert "Shunt" in dialog._input_shunt_l.toolTip()
+
+
+def test_measurement_details_dialog_applies_help(qtbot: QtBot) -> None:
+    dialog = MeasurementDetailsDialog(Translator(Language.ENGLISH), "run")
+    qtbot.addWidget(dialog)
+
+    assert "Calibration" in dialog._calibration.toolTip()
+    assert "reference plane" in dialog._reference_plane.toolTip().lower()
+    assert "notes" in dialog._notes.toolTip().lower()
 
 
 def test_dipole_form_applies_help_to_its_labels_and_controls(qtbot: QtBot) -> None:

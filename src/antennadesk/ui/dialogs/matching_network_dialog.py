@@ -26,6 +26,7 @@ from ...domain.antennas.matching_network import (
     design_l_network,
 )
 from ..fonts import scaled_dialog_size
+from ..help import apply_row_help
 from ..i18n import Translator
 
 
@@ -165,6 +166,26 @@ class MatchingNetworkDialog(QDialog):
         form.addRow(translator.t("matching_network.input_series_c"), self._input_series_c)
         form.addRow(translator.t("matching_network.output_series_l"), self._output_series_l)
         form.addRow(translator.t("matching_network.output_series_c"), self._output_series_c)
+        for row, key in (
+            (0, "matching_network.topology"),
+            (1, "matching_network.q_factor"),
+            (2, "matching_network.load_r"),
+            (3, "matching_network.load_x"),
+            (4, "matching_network.frequency"),
+            (6, "matching_network.series_l"),
+            (7, "matching_network.series_c"),
+            (8, "matching_network.shunt_l"),
+            (9, "matching_network.shunt_c"),
+            (11, "matching_network.input_shunt_l"),
+            (12, "matching_network.input_shunt_c"),
+            (13, "matching_network.output_shunt_l"),
+            (14, "matching_network.output_shunt_c"),
+            (15, "matching_network.input_series_l"),
+            (16, "matching_network.input_series_c"),
+            (17, "matching_network.output_series_l"),
+            (18, "matching_network.output_series_c"),
+        ):
+            apply_row_help(form, row, translator, key)
 
         hint = QLabel(translator.t("matching_network.hint"), self)
         hint.setWordWrap(True)

@@ -33,6 +33,7 @@ from ...domain.antennas.wire import Wire
 from ...domain.common.validation import Diagnostic
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..fonts import scaled_dialog_size
+from ..help import apply_row_help
 from ..i18n import Translator
 from ..units import (
     UnitSystem,
@@ -169,6 +170,19 @@ class CustomAntennaDialog(QDialog):
         form.addRow(translator.t("field.conductivity"), self._conductivity)
         form.addRow(translator.t("custom.feed_wire"), self._feed_wire)
         form.addRow(translator.t("custom.feed_offset"), self._feed_offset)
+        for row, key in enumerate(
+            (
+                "field.frequency",
+                "field.material",
+                "field.ground",
+                "field.soil_preset",
+                "field.permittivity",
+                "field.conductivity",
+                "custom.feed_wire",
+                "custom.feed_offset",
+            )
+        ):
+            apply_row_help(form, row, translator, key)
 
         radial_group = QGroupBox(translator.t("custom.radials_title"), self)
         radial_form = QFormLayout(radial_group)
@@ -179,6 +193,9 @@ class CustomAntennaDialog(QDialog):
         radial_hint = QLabel(translator.t("custom.radials_hint"), radial_group)
         radial_hint.setWordWrap(True)
         radial_form.addRow(radial_hint)
+        apply_row_help(radial_form, 0, translator, "custom.radial_count")
+        apply_row_help(radial_form, 1, translator, "custom.radial_length")
+        apply_row_help(radial_form, 2, translator, "custom.radial_angle")
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,

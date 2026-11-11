@@ -45,6 +45,7 @@ from ...domain.optimization.length import (
 )
 from ...domain.simulation.spec import SimulationSpec
 from ..fonts import scaled_dialog_size
+from ..help import apply_row_help
 from ..i18n import Translator
 from ..units import (
     UnitSystem,
@@ -170,6 +171,21 @@ class OptimizationDialog(QDialog):
         self._form_layout.addRow(self._label_gain_weight, self._gain_weight)
         self._form_layout.addRow(self._label_evaluations, self._max_evaluations)
         self._form_layout.addRow(self._label_tolerance, self._tolerance)
+        for row, key in enumerate(
+            (
+                "optimize.objective",
+                "optimize.min_length",
+                "optimize.max_length",
+                "optimize.target_resistance",
+                "optimize.target_reactance",
+                "optimize.swr_limit",
+                "optimize.swr_weight",
+                "optimize.gain_weight",
+                "optimize.max_evaluations",
+                "optimize.tolerance",
+            )
+        ):
+            apply_row_help(self._form_layout, row, translator, key)
 
         self._evaluations_label = QLabel(translator.t("optimize.evaluations"), self)
         self._evaluations = QTableWidget(0, 11, self)
