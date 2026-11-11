@@ -128,6 +128,8 @@ HELP_MANIFEST = frozenset(
         "help.section.feed_matching",
         "help.matching_network.source_impedance",
         "help.matching_network.use_current_point",
+        "help.endfed.bend_enabled",
+        "help.endfed.bend_vertical",
         "help.results.create_matching_network",
         "help.action.simulate",
         "help.action.analyze_bands",

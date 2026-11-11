@@ -734,25 +734,51 @@ def render_construction_sheet(
             if parameters.matching_network_active
             else ""
         )
+        height_rows = (
+            f"<tr><th>Vertical section</th><td>{parameters.bend_vertical_length_m:.4f} m</td></tr>\n"
+            f"<tr><th>Horizontal run</th><td>{parameters.bend_horizontal_length_m:.4f} m</td></tr>\n"
+            f"<tr><th>Top height</th><td>{parameters.bend_top_height_m:.4f} m</td></tr>\n"
+            if parameters.bend_active
+            else f"<tr><th>End height</th><td>{parameters.end_height_m:.4f} m</td></tr>\n"
+        )
         feed_rows = f"""
 <tr><th>Wire length</th><td>{parameters.length_m:.4f} m</td></tr>
 {feed_section_row}<tr><th>Feed height</th><td>{parameters.feed_height_m:.4f} m</td></tr>
-<tr><th>End height</th><td>{parameters.end_height_m:.4f} m</td></tr>
-<tr><th>Transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
+{height_rows}<tr><th>Transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
 {matching_rows}<tr><th>Counterpoise</th><td>{counterpoise}</td></tr>
 {installation_return_row}"""
-        construction_note = _note(
-            tr,
-            "Cut one wire to {length} m and feed it at one end. The feed is at "
-            "{feed_height} m and the far end at {end_height} m. Use a {ratio}:1 "
-            "transformer; the counterpoise is {counterpoise}.",
-            length=f"{parameters.length_m:.4f}",
-            feed_height=f"{parameters.feed_height_m:.4f}",
-            end_height=f"{parameters.end_height_m:.4f}",
-            ratio=f"{parameters.transformer_ratio:g}",
-            counterpoise=counterpoise,
-        )
-        if parameters.coil_active:
+        if parameters.bend_active and parameters.coil_active:
+            construction_note = _note(
+                tr,
+                "Cut one wire to {length} m. Run {vertical} m vertically from the "
+                "feed, bend 90°, then run {horizontal} m horizontally at {top} m. Fit "
+                "the {inductance} µH loading coil at {offset} m from the feed; the "
+                "remaining {top_section} m is the top section. Use a {ratio}:1 "
+                "transformer; the counterpoise is {counterpoise}.",
+                length=f"{parameters.length_m:.4f}",
+                vertical=f"{parameters.bend_vertical_length_m:.4f}",
+                horizontal=f"{parameters.bend_horizontal_length_m:.4f}",
+                top=f"{parameters.bend_top_height_m:.4f}",
+                inductance=f"{parameters.loading_coil_inductance_h * 1e6:.4f}",
+                offset=f"{parameters.loading_coil_offset_m:.4f}",
+                top_section=f"{parameters.loading_coil_top_length_m:.4f}",
+                ratio=f"{parameters.transformer_ratio:g}",
+                counterpoise=counterpoise,
+            )
+        elif parameters.bend_active:
+            construction_note = _note(
+                tr,
+                "Cut one wire to {length} m. Run {vertical} m vertically from the "
+                "feed, bend 90°, then run {horizontal} m horizontally at {top} m. "
+                "Use a {ratio}:1 transformer; the counterpoise is {counterpoise}.",
+                length=f"{parameters.length_m:.4f}",
+                vertical=f"{parameters.bend_vertical_length_m:.4f}",
+                horizontal=f"{parameters.bend_horizontal_length_m:.4f}",
+                top=f"{parameters.bend_top_height_m:.4f}",
+                ratio=f"{parameters.transformer_ratio:g}",
+                counterpoise=counterpoise,
+            )
+        elif parameters.coil_active:
             construction_note = _note(
                 tr,
                 "Cut one wire to {length} m. Fit the {inductance} µH loading coil "
@@ -765,6 +791,31 @@ def render_construction_sheet(
                 top=f"{parameters.loading_coil_top_length_m:.4f}",
                 ratio=f"{parameters.transformer_ratio:g}",
                 counterpoise=counterpoise,
+            )
+        else:
+            construction_note = _note(
+                tr,
+                "Cut one wire to {length} m and feed it at one end. The feed is at "
+                "{feed_height} m and the far end at {end_height} m. Use a {ratio}:1 "
+                "transformer; the counterpoise is {counterpoise}.",
+                length=f"{parameters.length_m:.4f}",
+                feed_height=f"{parameters.feed_height_m:.4f}",
+                end_height=f"{parameters.end_height_m:.4f}",
+                ratio=f"{parameters.transformer_ratio:g}",
+                counterpoise=counterpoise,
+            )
+        if parameters.bend_active:
+            construction_note += (
+                "<p>"
+                + _escape(
+                    tr(
+                        "The bend is a 90° corner at {vertical} m from the feed. Use one "
+                        "continuous conductor and keep the corner mechanically supported; "
+                        "the model uses a sharp corner.",
+                        vertical=f"{parameters.bend_vertical_length_m:.4f}",
+                    )
+                )
+                + "</p>"
             )
         if parameters.feed_section_active:
             construction_note += (

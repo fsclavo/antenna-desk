@@ -567,17 +567,24 @@ The shortened presets also use the fixed feed section and the installation-
 return proxy when no real counterpoise is enabled. The loading coil is modeled
 at a fixed node: the radiator is partitioned at the published coil offset, and
 the coil section keeps three segments, so changing the radiator segmentation
-does not move the coil. The wire schedule and bill of materials still show one
-physical conductor.
+does not move the coil. The wire schedule and bill of materials merge the
+modeling partitions into one physical conductor for straight designs; a bent
+design lists the vertical and horizontal sections separately.
 The 100 pF capacitor is modeled as an ideal **primary shunt** across the 49:1
 transformer; the transformer leakage is an editable starting value (0.198 µH)
 from Squash Practice's measured 49:1 transformer, not this exact build. The
 common-mode choke, ground, support geometry, core loss, winding capacitance,
-capacitor ESR, and the published inverted-L bend are not modeled. The 40-20-10 preset follows the
-23 µH/100 pF schematic; CA4EMT documents a different 34 µH/150 pF variant.
+and capacitor ESR are not modeled. The 40-20-10 preset follows the 23 µH/100 pF
+schematic; CA4EMT documents a different 34 µH/150 pF variant.
 When a project matching network is active, it replaces this internal unit
 instead of cascading with it; the internal 100 pF/leakage values stay in the
 design and are marked retained, not applied.
+Enable **Inverted-L bend** to model the published installation: the
+**Vertical section** is measured from the feed, the horizontal run is the
+remaining wire length, and the form shows the resulting top height. The G0KYA
+starting installation is about 8 m vertical and 15 m horizontal; the model
+uses a sharp 90° corner and has not been independently validated. The default
+is the straight horizontal installation, so existing designs are unchanged.
 Edited or frequency-scaled geometry is experimental. Automatic frequency-first
 estimation is disabled for these loaded presets. The matching capacitor and
 transformer leakage remain context values in the family optimizer; they are not

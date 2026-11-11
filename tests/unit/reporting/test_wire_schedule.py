@@ -67,6 +67,27 @@ def test_wire_schedule_excludes_the_endfed_installation_return_proxy() -> None:
     assert summary["Total conductor"] == "22.7400 m"
 
 
+def test_wire_schedule_splits_a_bent_endfed_conductor_into_two_sections() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+
+    model = replace(
+        shortened_efhw_80_10_parameters(feed_height_m=0.0),
+        bend_enabled=True,
+        bend_vertical_length_m=8.0,
+    ).to_antenna()
+    rows = wire_schedule_rows(model)
+    summary = dict(bom_summary_rows(model))
+
+    assert len(rows) == 2
+    assert [row.wire_id for row in rows] == ["radiator", "endfed-radiator-bend"]
+    assert rows[0].length_m == pytest.approx(8.0)
+    assert rows[1].length_m == pytest.approx(14.74)
+    assert summary["Wires"] == "2"
+    assert summary["Total conductor"] == "22.7400 m"
+
+
 def test_conductor_bom_groups_by_material_and_diameter(
     sample_project: Project,
 ) -> None:

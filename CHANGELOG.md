@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Shortened EFHW designs now support an optional **Inverted-L bend**. The editor
+  takes the vertical conductor length from the feed, derives the horizontal run
+  from the remaining wire length, and shows the resulting top height; the
+  straight horizontal installation remains the default. Schema 35 migrates
+  older end-fed designs with the bend disabled. The scene, dimensions, wire
+  schedule/BOM, design summary, construction sheet, optimizer, and validation
+  notes describe the vertical and horizontal sections. The G0KYA starting
+  installation is about 8 m vertical and 15 m horizontal; the model uses a sharp
+  90° corner and the bend has no independent numerical validation.
 - The Impedance/SWR table now offers **Create Project Matching Network...** in
   its context menu. The action uses the raw feed impedance from the solver
   source result divided by the ideal transformer ratio, not the post-chain

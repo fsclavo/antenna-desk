@@ -563,6 +563,24 @@ def test_endfed_summary_marks_internal_matching_active_without_an_override() -> 
     assert "µH (active)" in rows["Transformer leakage"]
 
 
+def test_endfed_bend_summary_reports_vertical_and_horizontal_sections() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+
+    parameters = replace(
+        shortened_efhw_80_10_parameters(feed_height_m=2.0),
+        bend_enabled=True,
+        bend_vertical_length_m=8.0,
+    )
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Vertical section"] == "8.0000 m"
+    assert rows["Horizontal run"] == "14.7400 m"
+    assert rows["Top height"] == "10.0000 m"
+    assert "End height" not in rows
+
+
 def test_feed_matching_rows_describe_the_project_chain() -> None:
     from antennadesk.domain.antennas.balun import BalunLoss
     from antennadesk.domain.antennas.feed_line import FeedLine

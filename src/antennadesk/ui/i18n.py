@@ -914,6 +914,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "camino del coaxil/mástil/tierra, no una radial física"
         ),
     },
+    "geometry.endfed_bend_note": {
+        Language.ENGLISH: (
+            "The inverted-L bend is a sharp 90° corner; support the corner and keep "
+            "the horizontal run clear of nearby objects"
+        ),
+        Language.SPANISH: (
+            "El codo en L invertida es una esquina recta de 90°; soportá la esquina y "
+            "mantené el tramo horizontal alejado de objetos cercanos"
+        ),
+    },
     "geometry.radiator": {
         Language.ENGLISH: "Radiator",
         Language.SPANISH: "Radiador",
@@ -1797,6 +1807,26 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.endfed.counterpoise_azimuth": {
         Language.ENGLISH: "Counterpoise direction around the feed.",
         Language.SPANISH: "Dirección del contrapeso alrededor de la alimentación.",
+    },
+    "help.endfed.bend_enabled": {
+        Language.ENGLISH: (
+            "Use an inverted-L installation: a vertical rise from the feed followed by "
+            "a horizontal run."
+        ),
+        Language.SPANISH: (
+            "Usa una instalación en L invertida: un tramo vertical desde la alimentación "
+            "seguido de un tramo horizontal."
+        ),
+    },
+    "help.endfed.bend_vertical": {
+        Language.ENGLISH: (
+            "Wire length from the feed to the bend; the horizontal run is the rest of "
+            "the total wire length."
+        ),
+        Language.SPANISH: (
+            "Longitud de hilo desde la alimentación hasta el codo; el tramo horizontal "
+            "es el resto de la longitud total."
+        ),
     },
     "help.endfed.transformer_ratio": {
         Language.ENGLISH: (
@@ -5941,20 +5971,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Published shortened EFHW: 20.35 m lower section, 110 µH loading "
             "coil, 2.39 m top section, 49:1 transformer, and a 100 pF matching "
             "capacitor. The default is horizontal at 10 m; change the feed/end "
-            "heights for a sloper or vertical run. The primary 100 pF shunt and "
-            "0.198 µH leakage starting value are modeled; the inverted-L bend, "
-            "choke, ground, core loss, winding capacitance, and capacitor ESR "
-            "are not."
+            "heights for a sloper, or enable the inverted-L bend for the published "
+            "8 m vertical / about 15 m horizontal starting installation. The "
+            "primary 100 pF shunt and 0.198 µH leakage starting value are modeled; "
+            "the sharp bend, choke, ground, core loss, winding capacitance, and "
+            "capacitor ESR are not independently validated."
         ),
         Language.SPANISH: (
             "EFHW acortada publicada: tramo inferior de 20,35 m, bobina de carga "
             "de 110 µH, tramo superior de 2,39 m, transformador 49:1 y capacitor "
             "de adaptación de 100 pF. El valor por defecto es horizontal a 10 m; "
-            "cambiá las alturas de alimentación/extremo para un sloper o "
-            "instalación vertical. Se modelan el shunt de 100 pF en el primario "
-            "y una fuga inicial de 0,198 µH; el codo de la L invertida, el "
-            "choke, el suelo, las pérdidas del núcleo, la capacidad de los "
-            "bobinados y el ESR del capacitor no están modelados."
+            "cambiá las alturas de alimentación/extremo para un sloper, o "
+            "habilitá el codo en L invertida para la instalación publicada de "
+            "unos 8 m verticales y 15 m horizontales. Se modelan el shunt de "
+            "100 pF en el primario y una fuga inicial de 0,198 µH; el codo recto, "
+            "el choke, el suelo, las pérdidas del núcleo, la capacidad de los "
+            "bobinados y el ESR del capacitor no están validados independientemente."
         ),
     },
     "endfed.shortened_40_10_hint": {
@@ -5962,23 +5994,25 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Published shortened EFHW: 10.01 m lower section, 23 µH loading "
             "coil, 1.85 m top section, 49:1 transformer, and a 100 pF matching "
             "capacitor. The default is horizontal at 10 m; change the feed/end "
-            "heights for a sloper or vertical run. The primary 100 pF shunt and "
-            "0.198 µH leakage starting value are modeled; the choke, ground, "
-            "support geometry, core loss, winding capacitance, and capacitor ESR "
-            "are not. CA4EMT documents a different 40-20-10 variant (34 µH, "
-            "1.6 m top, 1:8); this preset follows the 23 µH/100 pF schematic."
+            "heights for a sloper, or enable the inverted-L bend. The primary "
+            "100 pF shunt and 0.198 µH leakage starting value are modeled; the "
+            "sharp bend, choke, ground, support geometry, core loss, winding "
+            "capacitance, and capacitor ESR are not independently validated. "
+            "CA4EMT documents a different 40-20-10 variant (34 µH, 1.6 m top, "
+            "1:8); this preset follows the 23 µH/100 pF schematic."
         ),
         Language.SPANISH: (
             "EFHW acortada publicada: tramo inferior de 10,01 m, bobina de carga "
             "de 23 µH, tramo superior de 1,85 m, transformador 49:1 y capacitor "
             "de adaptación de 100 pF. El valor por defecto es horizontal a 10 m; "
-            "cambiá las alturas de alimentación/extremo para un sloper o "
-            "instalación vertical. Se modelan el shunt de 100 pF en el primario "
-            "y una fuga inicial de 0,198 µH; el choke, el suelo, la geometría de "
-            "soporte, las pérdidas del núcleo, la capacidad de los bobinados y "
-            "el ESR del capacitor no están modelados. CA4EMT documenta otra "
-            "variante de 40-20-10 (34 µH, tramo superior de 1,6 m, 1:8); este "
-            "preset sigue el esquema de 23 µH/100 pF."
+            "cambiá las alturas de alimentación/extremo para un sloper, o "
+            "habilitá el codo en L invertida. Se modelan el shunt de 100 pF en "
+            "el primario y una fuga inicial de 0,198 µH; el codo recto, el "
+            "choke, el suelo, la geometría de soporte, las pérdidas del núcleo, "
+            "la capacidad de los bobinados y el ESR del capacitor no están "
+            "validados independientemente. CA4EMT documenta otra variante de "
+            "40-20-10 (34 µH, tramo superior de 1,6 m, 1:8); este preset sigue "
+            "el esquema de 23 µH/100 pF."
         ),
     },
     "endfed.sloper_evidence": {
@@ -6009,34 +6043,40 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Published starting dimensions from G0KYA, EA7EER, and G4WIF. "
             "The exact 110 µH / 20.35 m / 2.39 m geometry is reference-backed "
             "for construction only. The primary 100 pF shunt and 0.198 µH "
-            "leakage starting estimate are modeled; core loss, winding "
-            "capacitance, capacitor ESR, common-mode choke, ground, and "
-            "installation are not."
+            "leakage starting estimate are modeled; the optional inverted-L bend "
+            "uses a sharp 90° corner and is not independently validated. Core "
+            "loss, winding capacitance, capacitor ESR, common-mode choke, ground, "
+            "and installation are not modeled."
         ),
         Language.SPANISH: (
             "Dimensiones iniciales publicadas por G0KYA, EA7EER y G4WIF. La "
             "geometría exacta de 110 µH / 20,35 m / 2,39 m tiene referencia "
             "solo para la construcción. Se modelan el shunt de 100 pF en el "
-            "primario y una fuga inicial de 0,198 µH; las pérdidas del núcleo, "
-            "la capacidad de los bobinados, el ESR del capacitor, el choke de "
-            "modo común, el suelo y la instalación no están modelados."
+            "primario y una fuga inicial de 0,198 µH; el codo opcional en L "
+            "invertida usa una esquina recta de 90° y no está validado "
+            "independientemente. Las pérdidas del núcleo, la capacidad de los "
+            "bobinados, el ESR del capacitor, el choke de modo común, el suelo y "
+            "la instalación no están modelados."
         ),
     },
     "endfed.shortened_40_10_evidence": {
         Language.ENGLISH: (
             "Published starting dimensions from the radioaficion / PA0EJH "
             "schematic: 23 µH / 10.01 m / 1.85 m. The primary 100 pF shunt and "
-            "0.198 µH leakage starting estimate are modeled; core loss, winding "
-            "capacitance, capacitor ESR, choke, ground, and installation are "
-            "not. CA4EMT documents a different 34 µH variant."
+            "0.198 µH leakage starting estimate are modeled; the optional "
+            "inverted-L bend is a sharp 90° corner with no independent reference. "
+            "Core loss, winding capacitance, capacitor ESR, choke, ground, and "
+            "installation are not modeled. CA4EMT documents a different 34 µH "
+            "variant."
         ),
         Language.SPANISH: (
             "Dimensiones iniciales publicadas en el esquema de radioaficion / "
             "PA0EJH: 23 µH / 10,01 m / 1,85 m. Se modelan el shunt de 100 pF "
-            "en el primario y una fuga inicial de 0,198 µH; las pérdidas del "
-            "núcleo, la capacidad de los bobinados, el ESR del capacitor, el "
-            "choke, el suelo y la instalación no están modelados. CA4EMT "
-            "documenta otra variante de 34 µH."
+            "en el primario y una fuga inicial de 0,198 µH; el codo opcional en "
+            "L invertida es una esquina recta de 90° sin referencia independiente. "
+            "Las pérdidas del núcleo, la capacidad de los bobinados, el ESR del "
+            "capacitor, el choke, el suelo y la instalación no están modelados. "
+            "CA4EMT documenta otra variante de 34 µH."
         ),
     },
     "endfed.title": {
@@ -6050,6 +6090,64 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "endfed.end_height": {
         Language.ENGLISH: "End height",
         Language.SPANISH: "Altura del extremo",
+    },
+    "endfed.bend_enabled": {
+        Language.ENGLISH: "Inverted-L bend",
+        Language.SPANISH: "Codo en L invertida",
+    },
+    "endfed.bend_vertical": {
+        Language.ENGLISH: "Vertical section",
+        Language.SPANISH: "Tramo vertical",
+    },
+    "endfed.bend_vertical_hint": {
+        Language.ENGLISH: (
+            "Conductor length from the feed up to the bend. The horizontal run is "
+            "the remaining wire length. The published G0KYA installation uses about "
+            "8 m vertical and 15 m horizontal."
+        ),
+        Language.SPANISH: (
+            "Longitud de conductor desde la alimentación hasta el codo. El tramo "
+            "horizontal es el resto de la longitud del hilo. La instalación publicada "
+            "de G0KYA usa unos 8 m verticales y 15 m horizontales."
+        ),
+    },
+    "endfed.bend_horizontal": {
+        Language.ENGLISH: "Horizontal run",
+        Language.SPANISH: "Tramo horizontal",
+    },
+    "endfed.bend_horizontal_none": {
+        Language.ENGLISH: "Disabled; the wire stays straight or sloped.",
+        Language.SPANISH: "Deshabilitado; el hilo queda recto o inclinado.",
+    },
+    "endfed.bend_horizontal_value": {
+        Language.ENGLISH: "{horizontal} {unit} horizontal · top at {top} {unit}",
+        Language.SPANISH: "{horizontal} {unit} horizontales · parte superior a {top} {unit}",
+    },
+    "endfed.bend_geometry": {
+        Language.ENGLISH: (
+            "feed {feed} {unit} · vertical {vertical} {unit} · horizontal "
+            "{horizontal} {unit} · top {top_height} {unit} · counterpoise "
+            "{counterpoise} · {ratio}:1"
+        ),
+        Language.SPANISH: (
+            "alimentación {feed} {unit} · vertical {vertical} {unit} · horizontal "
+            "{horizontal} {unit} · parte superior {top_height} {unit} · contrapeso "
+            "{counterpoise} · {ratio}:1"
+        ),
+    },
+    "endfed.loaded_bend_geometry": {
+        Language.ENGLISH: (
+            "feed {feed} {unit} · vertical {vertical} {unit} · horizontal "
+            "{horizontal} {unit} · top {top_height} {unit} · coil {coil} {unit} · "
+            "{inductance} µH · top section {top} {unit} · counterpoise "
+            "{counterpoise} · {ratio}:1"
+        ),
+        Language.SPANISH: (
+            "alimentación {feed} {unit} · vertical {vertical} {unit} · horizontal "
+            "{horizontal} {unit} · parte superior {top_height} {unit} · bobina "
+            "{coil} {unit} · {inductance} µH · tramo superior {top} {unit} · "
+            "contrapeso {counterpoise} · {ratio}:1"
+        ),
     },
     "endfed.wire_radius": {
         Language.ENGLISH: "Wire radius (mm)",
@@ -8166,6 +8264,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize.constraint.endfed_coil_offset": {
         Language.ENGLISH: "The loading-coil position must be shorter than the wire.",
         Language.SPANISH: "La posición de la bobina de carga debe ser menor que el hilo.",
+    },
+    "optimize.constraint.endfed_bend_length": {
+        Language.ENGLISH: "The bend height must be shorter than the end-fed wire.",
+        Language.SPANISH: "La altura del codo debe ser menor que el hilo alimentado en el extremo.",
+    },
+    "optimize.constraint.endfed_bend_feed_section": {
+        Language.ENGLISH: "The bend must not fall inside the fixed feed section.",
+        Language.SPANISH: "El codo no puede quedar dentro del tramo de alimentación fijo.",
+    },
+    "optimize.constraint.endfed_bend_coil": {
+        Language.ENGLISH: "The bend must not fall inside the loading-coil section.",
+        Language.SPANISH: "El codo no puede quedar dentro del tramo de la bobina de carga.",
     },
     "optimize.constraint.fan_angles": {
         Language.ENGLISH: "Fan-dipole elements must use distinct included angles.",

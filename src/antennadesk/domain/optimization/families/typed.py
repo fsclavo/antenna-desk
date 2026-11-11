@@ -11,7 +11,11 @@ from dataclasses import replace
 from ...antennas.beverage import BeverageParameters
 from ...antennas.biquad import BiquadParameters
 from ...antennas.discone import DisconeParameters
-from ...antennas.endfed import EndFedParameters, EndFedPreset
+from ...antennas.endfed import (
+    ENDFED_LOADING_COIL_SECTION_LENGTH_M,
+    EndFedParameters,
+    EndFedPreset,
+)
 from ...antennas.fan_dipole import FanDipoleParameters, FanElement
 from ...antennas.folded_dipole import FoldedDipoleParameters
 from ...antennas.hexbeam import HexbeamParameters
@@ -533,28 +537,49 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
             0.25,
             0.0,
         ),
-        _length(
-            "end_height_m",
-            "endfed.end_height",
-            "optimize.group.feed",
-            parameters.end_height_m,
-            0.25,
-            0.0,
-        ),
-        _radius(parameters.wire_radius_m),
-        _choice_ratio(
-            "transformer_ratio",
-            "endfed.transformer_ratio",
-            parameters.transformer_ratio,
-        ),
     ]
+    if parameters.bend_active:
+        variables.append(
+            _length(
+                "bend_vertical_length_m",
+                "endfed.bend_vertical",
+                "optimize.group.geometry",
+                parameters.bend_vertical_length_m,
+                0.15,
+                minimum=max(parameters.feed_section_length_m + 0.01, 0.1),
+            )
+        )
+    else:
+        variables.append(
+            _length(
+                "end_height_m",
+                "endfed.end_height",
+                "optimize.group.feed",
+                parameters.end_height_m,
+                0.25,
+                0.0,
+            )
+        )
+    variables.extend(
+        [
+            _radius(parameters.wire_radius_m),
+            _choice_ratio(
+                "transformer_ratio",
+                "endfed.transformer_ratio",
+                parameters.transformer_ratio,
+            ),
+        ]
+    )
     initial = {
         "length_m": parameters.length_m,
         "feed_height_m": parameters.feed_height_m,
-        "end_height_m": parameters.end_height_m,
         "wire_radius_m": parameters.wire_radius_m,
         "transformer_ratio": parameters.transformer_ratio,
     }
+    if parameters.bend_active:
+        initial["bend_vertical_length_m"] = parameters.bend_vertical_length_m
+    else:
+        initial["end_height_m"] = parameters.end_height_m
     if parameters.coil_active:
         low, high = around(
             parameters.loading_coil_offset_m,
@@ -651,7 +676,10 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
             parameters,
             length_m=values["length_m"],
             feed_height_m=values["feed_height_m"],
-            end_height_m=values["end_height_m"],
+            end_height_m=values.get("end_height_m", parameters.end_height_m),
+            bend_vertical_length_m=values.get(
+                "bend_vertical_length_m", parameters.bend_vertical_length_m
+            ),
             wire_radius_m=values["wire_radius_m"],
             transformer_ratio=values["transformer_ratio"],
             counterpoise_length_m=values.get(
@@ -678,18 +706,50 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
         issues: list[ConstraintViolation | None] = [
             positive_violation("length_m", values["length_m"]),
             non_negative_violation("feed_height_m", values["feed_height_m"]),
-            non_negative_violation("end_height_m", values["end_height_m"]),
             positive_violation("wire_radius_m", values["wire_radius_m"]),
             positive_violation("transformer_ratio", values["transformer_ratio"]),
         ]
-        if abs(values["end_height_m"] - values["feed_height_m"]) > values["length_m"] + 1e-9:
-            issues.append(
-                violation(
-                    "end_height_m",
-                    abs(values["end_height_m"] - values["feed_height_m"]) - values["length_m"],
-                    "optimize.constraint.endfed_height",
+        if "end_height_m" in values:
+            issues.append(non_negative_violation("end_height_m", values["end_height_m"]))
+            if abs(values["end_height_m"] - values["feed_height_m"]) > values["length_m"] + 1e-9:
+                issues.append(
+                    violation(
+                        "end_height_m",
+                        abs(values["end_height_m"] - values["feed_height_m"]) - values["length_m"],
+                        "optimize.constraint.endfed_height",
+                    )
                 )
-            )
+        if "bend_vertical_length_m" in values:
+            bend_length = values["bend_vertical_length_m"]
+            issues.append(positive_violation("bend_vertical_length_m", bend_length))
+            if bend_length >= values["length_m"]:
+                issues.append(
+                    violation(
+                        "bend_vertical_length_m",
+                        bend_length - values["length_m"],
+                        "optimize.constraint.endfed_bend_length",
+                    )
+                )
+            if bend_length < parameters.feed_section_length_m:
+                issues.append(
+                    violation(
+                        "bend_vertical_length_m",
+                        parameters.feed_section_length_m - bend_length,
+                        "optimize.constraint.endfed_bend_feed_section",
+                    )
+                )
+            if parameters.coil_active:
+                half_section_m = ENDFED_LOADING_COIL_SECTION_LENGTH_M / 2.0
+                section_start_m = parameters.loading_coil_offset_m - half_section_m
+                section_end_m = parameters.loading_coil_offset_m + half_section_m
+                if section_start_m <= bend_length <= section_end_m:
+                    issues.append(
+                        violation(
+                            "bend_vertical_length_m",
+                            half_section_m,
+                            "optimize.constraint.endfed_bend_coil",
+                        )
+                    )
         if "counterpoise_length_m" in values:
             issues.append(
                 non_negative_violation("counterpoise_length_m", values["counterpoise_length_m"])

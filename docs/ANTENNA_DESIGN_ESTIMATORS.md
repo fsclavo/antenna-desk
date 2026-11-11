@@ -152,11 +152,16 @@ at a fixed node: the radiator is partitioned at the published coil offset, and
 the coil section keeps three segments so segmentation changes do not move the
 coil. The 100 pF capacitor is an ideal primary shunt; the 0.198 µH leakage is
 an editable starting estimate from Squash Practice's measured 49:1
-transformer, not this exact build. Core loss, capacitor ESR, winding capacitance, the choke, ground, and the
-inverted-L bend are not modeled. The default installation is horizontal at
-10 m; change the feed and end heights for a sloper or vertical run. Start from
-the published preset and edit the coil and wire values; scaling those
-dimensions to another frequency is a heuristic, not a published rule.
+transformer, not this exact build. Core loss, capacitor ESR, winding capacitance,
+the choke, and ground are not modeled. An optional inverted-L bend is
+available: the vertical section is measured from the feed, and the horizontal
+run is the remaining wire length. The G0KYA starting installation is about 8 m
+vertical and 15 m horizontal, but the bend is modeled as a sharp 90° corner and
+has not been independently validated. The default installation is horizontal
+at 10 m; change the feed and end heights for a sloper, or enable the bend for
+an inverted-L installation. Start from the published preset and edit the coil
+and wire values; scaling those dimensions to another frequency is a heuristic,
+not a published rule.
 
 ## Loop polygon correction
 

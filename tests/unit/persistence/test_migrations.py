@@ -894,3 +894,30 @@ def test_v33_migration_adds_the_matching_network_design_target() -> None:
     assert migrated["schema_version"] == SCHEMA_VERSION
     assert migrated["project"]["matching_network_design"] is None
     assert "matching_network_design" not in document["project"]
+
+
+def test_v34_migration_adds_the_endfed_bend_fields() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 34,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "endfed",
+                    "parameters": {
+                        "frequency_hz": 7_100_000.0,
+                        "length_m": 20.0,
+                        "transformer_ratio": 49.0,
+                    },
+                }
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    parameters = migrated["project"]["designs"][0]["parameters"]
+    assert parameters["bend_enabled"] is False
+    assert parameters["bend_vertical_length_m"] == 0.0
+    assert "bend_enabled" not in document["project"]["designs"][0]["parameters"]

@@ -2733,6 +2733,88 @@ def _add_inverted_l_dimensions(
         notes.append(translator.t("geometry.vertical_plane_edge_on"))
 
 
+def _add_endfed_bend_dimensions(
+    model: AntennaModel,
+    parameters: EndFedParameters,
+    factory: _Factory,
+    dimensions: list[Dimension],
+    notes: list[str],
+    translator: Translator,
+) -> None:
+    feed_wire = model.feed_wire
+    feed_point = (
+        feed_wire.start
+        if feed_wire is not None
+        else Point3D(x_m=0.0, y_m=0.0, z_m=parameters.feed_height_m)
+    )
+    bend_point = Point3D(
+        x_m=feed_point.x_m,
+        y_m=feed_point.y_m,
+        z_m=feed_point.z_m + parameters.bend_vertical_length_m,
+    )
+    angle = math.radians(parameters.azimuth_deg)
+    end_point = Point3D(
+        x_m=bend_point.x_m + parameters.bend_horizontal_length_m * math.cos(angle),
+        y_m=bend_point.y_m + parameters.bend_horizontal_length_m * math.sin(angle),
+        z_m=bend_point.z_m,
+    )
+    if factory.projection.vertical:
+        dimensions.append(
+            factory.dimension(
+                feed_point,
+                bend_point,
+                parameters.bend_vertical_length_m,
+                side="auto",
+                priority=85,
+            )
+        )
+        dimensions.append(
+            factory.dimension(
+                bend_point,
+                end_point,
+                parameters.bend_horizontal_length_m,
+                side="above",
+                priority=80,
+            )
+        )
+        dimensions.append(
+            factory.vertical_dimension(
+                max(
+                    factory.project(bend_point).x_m,
+                    factory.project(end_point).x_m,
+                ),
+                0.0,
+                parameters.bend_top_height_m,
+                parameters.bend_top_height_m,
+                side="right",
+                priority=70,
+            )
+        )
+        if parameters.feed_height_m > 0.0:
+            dimensions.append(
+                factory.vertical_dimension(
+                    factory.project(feed_point).x_m,
+                    0.0,
+                    parameters.feed_height_m,
+                    parameters.feed_height_m,
+                    side="left",
+                    priority=55,
+                )
+            )
+    else:
+        dimensions.append(
+            factory.dimension(
+                bend_point,
+                end_point,
+                parameters.bend_horizontal_length_m,
+                side="above",
+                priority=75,
+            )
+        )
+        notes.append(translator.t("geometry.vertical_plane_edge_on"))
+    notes.append(translator.t("geometry.endfed_bend_note"))
+
+
 def _add_sloping_array_dimensions(
     model: AntennaModel,
     parameters: object | None,
@@ -3618,7 +3700,7 @@ def _summary(
     elif isinstance(parameters, EndFedParameters) or antenna_type == ANTENNA_TYPE_ENDFED:
         if isinstance(parameters, EndFedParameters):
             feed_height = parameters.feed_height_m
-            end_height = parameters.end_height_m
+            end_height = parameters.effective_end_height_m
         else:
             feed_wire = model.feed_wire
             feed_ratio = model.feed.offset_m / feed_wire.length_m
@@ -3640,10 +3722,36 @@ def _summary(
                 f"{_format_length(wire_length_m, translator, unit_system)}",
                 f"{translator.t('geometry.feed_height').lower()} "
                 f"{_format_length(feed_height, translator, unit_system)}",
-                f"{translator.t('geometry.end_height').lower()} "
-                f"{_format_length(end_height, translator, unit_system)}",
             ]
         )
+        if isinstance(parameters, EndFedParameters) and parameters.bend_active:
+            vertical_text = _format_length(
+                parameters.bend_vertical_length_m,
+                translator,
+                unit_system,
+            )
+            horizontal_text = _format_length(
+                parameters.bend_horizontal_length_m,
+                translator,
+                unit_system,
+            )
+            top_text = _format_length(
+                parameters.bend_top_height_m,
+                translator,
+                unit_system,
+            )
+            parts.extend(
+                [
+                    f"{translator.t('endfed.bend_vertical').lower()} {vertical_text}",
+                    f"{translator.t('endfed.bend_horizontal').lower()} {horizontal_text}",
+                    f"{translator.t('geometry.top_height').lower()} {top_text}",
+                ]
+            )
+        else:
+            parts.append(
+                f"{translator.t('geometry.end_height').lower()} "
+                f"{_format_length(end_height, translator, unit_system)}"
+            )
         if isinstance(parameters, EndFedParameters) and parameters.feed_section_active:
             parts.append(
                 f"{translator.t('endfed.feed_section').lower()} "
@@ -4058,6 +4166,15 @@ def build_scene(
         ANTENNA_TYPE_VERTICAL,
     }:
         _add_sloping_array_dimensions(model, parameters, factory, dimensions, translator)
+    elif isinstance(parameters, EndFedParameters) and parameters.bend_active:
+        _add_endfed_bend_dimensions(
+            model,
+            parameters,
+            factory,
+            dimensions,
+            notes,
+            translator,
+        )
     elif len(model.wires) == 1:
         _add_single_wire_dimensions(model, factory, dimensions, notes, translator)
     else:

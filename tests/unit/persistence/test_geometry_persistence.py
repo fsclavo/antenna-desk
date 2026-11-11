@@ -1204,6 +1204,31 @@ def test_endfed_feed_section_and_installation_return_round_trip() -> None:
     )
 
 
+def test_endfed_bend_round_trips_through_the_schema() -> None:
+    from antennadesk.domain.antennas.endfed import EndFedParameters
+
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_section_length_m=0.5,
+        bend_enabled=True,
+        bend_vertical_length_m=8.0,
+        feed_height_m=2.0,
+        transformer_ratio=49.0,
+    )
+    original = _project(parameters, "EFHW inverted L")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].parameters.bend_active is True
+    assert restored.designs[0].parameters.bend_horizontal_length_m == pytest.approx(12.0)
+    assert restored.designs[0].antenna.wire_by_id("endfed-radiator-bend").length_m == (
+        pytest.approx(12.0)
+    )
+
+
 def test_transmission_lines_round_trip_through_the_schema() -> None:
     from antennadesk.domain.antennas.transmission_line import TransmissionLine
 

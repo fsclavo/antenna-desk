@@ -129,6 +129,36 @@ def test_single_wire_elevation_keeps_a_sloped_end_fed_wire() -> None:
     assert "front view" not in scene.summary
 
 
+def test_endfed_bend_scene_shows_vertical_and_horizontal_sections() -> None:
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        bend_enabled=True,
+        bend_vertical_length_m=8.0,
+        feed_height_m=2.0,
+    )
+
+    scene = _scene(parameters, "endfed", GeometryViewMode.ELEVATION)
+
+    assert len(scene.polylines) == 2
+    vertical, horizontal = scene.polylines
+    assert math.isclose(
+        vertical.points[0].x_m,
+        vertical.points[1].x_m,
+        abs_tol=1e-9,
+    )
+    assert math.isclose(
+        horizontal.points[0].y_m,
+        horizontal.points[1].y_m,
+        abs_tol=1e-9,
+    )
+    assert "vertical section" in scene.summary
+    assert "horizontal run" in scene.summary
+    assert "top height" in scene.summary
+    assert scene.dimensions
+    assert any("sharp 90" in note for note in scene.notes)
+
+
 def test_yagi_plan_keeps_all_elements_and_elevation_warns_about_overlap() -> None:
     parameters = YagiParameters(
         frequency_hz=14_100_000.0,

@@ -779,7 +779,15 @@ def design_summary_rows(
                 ("Length", f"{parameters.length_m:.4f} m"),
                 ("Feed section", f"{parameters.feed_section_length_m:.4f} m"),
                 ("Feed height", f"{parameters.feed_height_m:.4f} m"),
-                ("End height", f"{parameters.end_height_m:.4f} m"),
+                *(
+                    [
+                        ("Vertical section", f"{parameters.bend_vertical_length_m:.4f} m"),
+                        ("Horizontal run", f"{parameters.bend_horizontal_length_m:.4f} m"),
+                        ("Top height", f"{parameters.bend_top_height_m:.4f} m"),
+                    ]
+                    if parameters.bend_active
+                    else [("End height", f"{parameters.end_height_m:.4f} m")]
+                ),
                 ("Transformer", f"{parameters.transformer_ratio:g}:1"),
                 ("Counterpoise", counterpoise),
                 (

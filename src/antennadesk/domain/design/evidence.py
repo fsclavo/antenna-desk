@@ -242,18 +242,22 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         ),
         tolerance=(
             "Starting dimensions: 20.35 m lower section, 110 µH coil, 2.39 m "
-            "top section; published SWR 1.2-3.0 on 80 m and 1.0-1.2 on 40 m"
+            "top section; optional inverted-L starting installation about 8 m "
+            "vertical and 15 m horizontal; published SWR 1.2-3.0 on 80 m and "
+            "1.0-1.2 on 40 m"
         ),
         limitation=(
-            "Starting dimensions only; the published inverted-L installation is "
-            "modeled as a straight wire. The 49:1 transformer uses an ideal "
-            "ratio with an optional primary 100 pF shunt and 0.198 µH leakage "
-            "starting estimate; core loss, winding capacitance, capacitor ESR, "
-            "common-mode choke, ground, and matching losses are not modeled. The "
-            "leakage value is from Squash Practice's measured 49:1 transformer, "
-            "not this exact build. The cited comparison is 8-12 dB below a dipole "
-            "on 80 m. Convergence is judged on R/X stability; SWR remains "
-            "informational. Scaled or edited geometry is experimental."
+            "Starting dimensions only. The optional inverted-L bend is modeled as "
+            "a sharp 90° corner; the horizontal run is the remaining wire length, "
+            "so the published 8 m/15 m figures are a starting installation rather "
+            "than an exact fixed geometry. The 49:1 transformer uses an ideal ratio "
+            "with an optional primary 100 pF shunt and 0.198 µH leakage starting "
+            "estimate; core loss, winding capacitance, capacitor ESR, common-mode "
+            "choke, ground, and matching losses are not modeled. The leakage value "
+            "is from Squash Practice's measured 49:1 transformer, not this exact "
+            "build. The cited comparison is 8-12 dB below a dipole on 80 m. "
+            "Convergence is judged on R/X stability; SWR remains informational. "
+            "Scaled or edited geometry is experimental."
         ),
     ),
     "shortened_endfed_40_10": EvidenceEntry(
@@ -268,14 +272,15 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         limitation=(
             "The 49:1 transformer uses an ideal ratio with an optional primary "
             "100 pF shunt and 0.198 µH leakage starting estimate; core loss, "
-            "winding capacitance, capacitor ESR, choke, ground, installation, "
-            "and matching losses are not modeled, and the model uses a straight "
-            "wire. The leakage value is from Squash Practice's measured 49:1 "
-            "transformer, not this exact build. CA4EMT documents a different "
-            "40-20-10 variant (34 µH, 1.6 m top, 1:8, 150 pF); this preset "
-            "follows the 23 µH/100 pF schematic. Scaled or edited geometry is "
-            "experimental. Convergence is judged on R/X stability; SWR remains "
-            "informational."
+            "winding capacitance, capacitor ESR, choke, ground, installation, and "
+            "matching losses are not modeled. The optional inverted-L bend uses a "
+            "sharp 90° corner and the same remaining-length rule, but has no "
+            "independent reference for this preset. The leakage value is from "
+            "Squash Practice's measured 49:1 transformer, not this exact build. "
+            "CA4EMT documents a different 40-20-10 variant (34 µH, 1.6 m top, "
+            "1:8, 150 pF); this preset follows the 23 µH/100 pF schematic. Scaled "
+            "or edited geometry is experimental. Convergence is judged on R/X "
+            "stability; SWR remains informational."
         ),
     ),
     "sloper": EvidenceEntry(

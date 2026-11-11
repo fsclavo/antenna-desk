@@ -246,6 +246,12 @@ project-level matching network overrides this internal unit; the two networks
 are not cascaded. See
 [ADR-0028](ADR/0028-matching-network-precedence.md).
 
+`bend_enabled` and `bend_vertical_length_m` add an optional inverted-L
+installation. The wire rises vertically from the feed for the entered length,
+turns a sharp 90° corner, and runs horizontally for the remaining conductor
+length. The end height field is ignored while the bend is active. Zero or a
+disabled bend preserves the straight or sloped wire.
+
 `preset` is `endfed`, `sloper`, `random_wire`, `shortened_80_10`, or
 `shortened_40_10`. The preset is metadata for catalog routing, reports, and the
 inline editor; the geometry and matching fields remain fully editable. A

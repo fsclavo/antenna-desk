@@ -35,6 +35,97 @@ def test_endfed_generates_one_wire_with_end_feed() -> None:
     assert antenna_family(custom) is AntennaFamily.DIPOLE
 
 
+def test_endfed_bend_adds_a_vertical_section_and_horizontal_run() -> None:
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_section_length_m=0.5,
+        bend_enabled=True,
+        bend_vertical_length_m=8.0,
+        feed_height_m=2.0,
+        end_height_m=10.0,
+    )
+    custom = parameters.to_custom_parameters()
+
+    assert parameters.bend_active is True
+    assert parameters.bend_horizontal_length_m == pytest.approx(12.0)
+    assert parameters.bend_top_height_m == pytest.approx(10.0)
+    assert [wire.id for wire in custom.wires] == [
+        "endfed-feed-section",
+        "radiator",
+        "endfed-radiator-bend",
+    ]
+    vertical = custom.wires[1]
+    horizontal = custom.wires[2]
+    assert vertical.start.z_m == pytest.approx(2.5)
+    assert vertical.end.z_m == pytest.approx(10.0)
+    assert horizontal.start.z_m == pytest.approx(10.0)
+    assert horizontal.end.z_m == pytest.approx(10.0)
+    assert horizontal.length_m == pytest.approx(12.0)
+    assert sum(wire.length_m for wire in custom.wires) == pytest.approx(20.0)
+
+
+def test_endfed_bend_with_a_loading_coil_splits_at_the_bend_and_keeps_the_load() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+
+    parameters = replace(
+        shortened_efhw_80_10_parameters(feed_height_m=0.0),
+        installation_return_length_m=0.0,
+        bend_enabled=True,
+        bend_vertical_length_m=8.0,
+    )
+    custom = parameters.to_custom_parameters()
+
+    assert [wire.id for wire in custom.wires] == [
+        "endfed-feed-section",
+        "radiator",
+        "endfed-radiator-bend",
+        "endfed-loading-coil-section",
+        "endfed-radiator-top-bend",
+    ]
+    load = custom.loads[0]
+    assert load.wire_id == "endfed-loading-coil-section"
+    assert load.offset_m == pytest.approx(0.05)
+    assert custom.wires[2].start.z_m == pytest.approx(8.0)
+    assert custom.wires[2].end.z_m == pytest.approx(8.0)
+
+
+def test_endfed_bend_rejects_a_bend_inside_the_feed_section() -> None:
+    with pytest.raises(ValueError, match="feed_section"):
+        EndFedParameters(
+            frequency_hz=7_100_000.0,
+            length_m=20.0,
+            feed_section_length_m=0.5,
+            bend_enabled=True,
+            bend_vertical_length_m=0.25,
+        )
+
+
+def test_endfed_bend_rejects_a_bend_inside_the_loading_coil() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+
+    with pytest.raises(ValueError, match="loading-coil"):
+        replace(
+            shortened_efhw_80_10_parameters(),
+            bend_enabled=True,
+            bend_vertical_length_m=20.35,
+        )
+
+
+def test_endfed_bend_rejects_a_vertical_section_longer_than_the_wire() -> None:
+    with pytest.raises(ValueError, match="shorter than length_m"):
+        EndFedParameters(
+            frequency_hz=7_100_000.0,
+            length_m=8.0,
+            bend_enabled=True,
+            bend_vertical_length_m=8.0,
+        )
+
+
 def test_endfed_rejects_below_ground_heights() -> None:
     with pytest.raises(ValueError, match="end_height"):
         EndFedParameters(

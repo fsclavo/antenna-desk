@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.endfed import (
+    DEFAULT_BEND_VERTICAL_LENGTH_M,
     DEFAULT_FEED_SECTION_LENGTH_M,
     DEFAULT_INSTALLATION_RETURN_LENGTH_M,
     EFHW_PRESET_LENGTHS_M,
@@ -105,6 +106,16 @@ class EndFedForm(QWidget):
         self._end_height.setDecimals(3)
         self._end_height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._end_height.setValue(length_from_m(10.0, unit_system))
+
+        self._bend_enabled = QCheckBox(translator.t("endfed.bend_enabled"), self)
+        self._bend_enabled.setChecked(False)
+        self._bend_vertical = QDoubleSpinBox(self)
+        self._bend_vertical.setRange(0.0, 100_000.0)
+        self._bend_vertical.setDecimals(3)
+        self._bend_vertical.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._bend_vertical.setValue(length_from_m(DEFAULT_BEND_VERTICAL_LENGTH_M, unit_system))
+        self._bend_horizontal = QLabel(self)
+        self._bend_horizontal.setWordWrap(True)
 
         self._transformer = QDoubleSpinBox(self)
         self._transformer.setRange(1.0, 100_000.0)
@@ -307,6 +318,9 @@ class EndFedForm(QWidget):
         form.addRow(self._labels.label("endfed.feed_section"), self._feed_section)
         form.addRow(self._labels.label("endfed.feed_height"), self._feed_height)
         form.addRow(self._labels.label("endfed.end_height"), self._end_height)
+        form.addRow(self._bend_enabled)
+        form.addRow(self._labels.label("endfed.bend_vertical"), self._bend_vertical)
+        form.addRow(self._labels.label("endfed.bend_horizontal"), self._bend_horizontal)
         form.addRow(self._labels.label("endfed.transformer_ratio"), self._transformer)
         form.addRow(
             self._labels.label("endfed.matching_capacitance"),
@@ -350,6 +364,7 @@ class EndFedForm(QWidget):
             self._feed_section,
             self._feed_height,
             self._end_height,
+            self._bend_vertical,
             self._transformer,
             self._matching_capacitance,
             self._transformer_leakage,
@@ -367,6 +382,7 @@ class EndFedForm(QWidget):
         ):
             widget.valueChanged.connect(self._emit_changed)
         self._loading_coil_group.toggled.connect(self._loading_coil_toggled)
+        self._bend_enabled.toggled.connect(self._bend_toggled)
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._ground_changed)
         self._counterpoise_length.valueChanged.connect(self._counterpoise_changed)
@@ -390,6 +406,10 @@ class EndFedForm(QWidget):
         )
         self._feed_section.setToolTip(self._translator.t("endfed.feed_section_hint"))
         self._installation_return.setToolTip(self._translator.t("endfed.installation_return_hint"))
+        self._bend_enabled.setText(self._translator.t("endfed.bend_enabled"))
+        self._bend_vertical.setToolTip(self._translator.t("endfed.bend_vertical_hint"))
+        apply_help(self._bend_enabled, self._translator, "endfed.bend_enabled")
+        apply_help(self._bend_vertical, self._translator, "endfed.bend_vertical")
         self._matching_capacitance.setToolTip(
             self._translator.t("endfed.matching_capacitance_hint")
         )
@@ -498,6 +518,11 @@ class EndFedForm(QWidget):
                     parameters,
                     matching_capacitance_f=self._matching_capacitance.value() * 1e-12,
                     transformer_leakage_inductance_h=(self._transformer_leakage.value() * 1e-6),
+                    bend_enabled=self._bend_enabled.isChecked(),
+                    bend_vertical_length_m=length_to_m(
+                        self._bend_vertical.value(),
+                        self._unit_system,
+                    ),
                 )
             except ValueError:
                 pass
@@ -586,6 +611,52 @@ class EndFedForm(QWidget):
             self._update_geometry()
             self.changed.emit()
 
+    def _bend_toggled(self, checked: bool) -> None:
+        if checked:
+            length_display = self._length.value()
+            max_display = max(length_display - 0.001, 0.001)
+            min_display = min(max(self._feed_section.value() + 0.001, 0.001), max_display)
+            self._bend_vertical.setMaximum(max_display)
+            self._bend_vertical.setMinimum(min_display)
+            if self._bend_vertical.value() <= min_display:
+                default_display = min(
+                    length_from_m(DEFAULT_BEND_VERTICAL_LENGTH_M, self._unit_system),
+                    max_display,
+                )
+                self._bend_vertical.setValue(max(default_display, min_display))
+        self._update_bend_controls()
+        if not self._updating:
+            self._update_geometry()
+            self.changed.emit()
+
+    def _update_bend_controls(self) -> None:
+        enabled = self._bend_enabled.isChecked()
+        length_display = self._length.value()
+        max_display = max(length_display - 0.001, 0.001)
+        min_display = (
+            min(max(self._feed_section.value() + 0.001, 0.001), max_display) if enabled else 0.0
+        )
+        self._bend_vertical.setMaximum(max_display)
+        self._bend_vertical.setMinimum(min_display)
+        self._bend_vertical.setEnabled(enabled)
+        self._end_height.setEnabled(not enabled)
+        if not enabled:
+            self._bend_horizontal.setText(self._translator.t("endfed.bend_horizontal_none"))
+            return
+        length_m = length_to_m(length_display, self._unit_system)
+        vertical_m = length_to_m(self._bend_vertical.value(), self._unit_system)
+        horizontal_m = max(length_m - vertical_m, 0.0)
+        top_height_m = length_to_m(self._feed_height.value(), self._unit_system) + vertical_m
+        unit = self._translator.t(length_unit_key(self._unit_system))
+        self._bend_horizontal.setText(
+            self._translator.t(
+                "endfed.bend_horizontal_value",
+                horizontal=f"{length_from_m(horizontal_m, self._unit_system):.2f}",
+                top=f"{length_from_m(top_height_m, self._unit_system):.2f}",
+                unit=unit,
+            )
+        )
+
     def _update_loading_coil_controls(self) -> None:
         enabled = self._loading_coil_group.isChecked()
         self._loading_coil_offset.setEnabled(enabled)
@@ -673,6 +744,10 @@ class EndFedForm(QWidget):
             self._installation_return.setValue(
                 length_from_m(parameters.installation_return_length_m, self._unit_system)
             )
+            self._bend_enabled.setChecked(parameters.bend_enabled)
+            self._bend_vertical.setValue(
+                length_from_m(parameters.bend_vertical_length_m, self._unit_system)
+            )
             self._feed_height.setValue(length_from_m(parameters.feed_height_m, self._unit_system))
             self._end_height.setValue(length_from_m(parameters.end_height_m, self._unit_system))
             self._transformer.setValue(parameters.transformer_ratio)
@@ -751,6 +826,7 @@ class EndFedForm(QWidget):
     def _update_geometry(self) -> None:
         self._update_loading_coil_controls()
         self._update_matching_override()
+        self._update_bend_controls()
         try:
             parameters = self.parameters()
         except (ValueError, TypeError):
@@ -767,6 +843,18 @@ class EndFedForm(QWidget):
             if parameters.counterpoise_length_m > 0.0
             else "none"
         )
+        vertical_display = length_from_m(
+            parameters.bend_vertical_length_m,
+            self._unit_system,
+        )
+        horizontal_display = length_from_m(
+            parameters.bend_horizontal_length_m,
+            self._unit_system,
+        )
+        top_height_display = length_from_m(
+            parameters.bend_top_height_m,
+            self._unit_system,
+        )
         if parameters.coil_active:
             coil_position = length_from_m(
                 parameters.loading_coil_offset_m,
@@ -776,13 +864,39 @@ class EndFedForm(QWidget):
                 parameters.loading_coil_top_length_m,
                 self._unit_system,
             )
+            if parameters.bend_active:
+                text = self._translator.t(
+                    "endfed.loaded_bend_geometry",
+                    feed=f"{length_from_m(parameters.feed_height_m, self._unit_system):.2f}",
+                    vertical=f"{vertical_display:.2f}",
+                    horizontal=f"{horizontal_display:.2f}",
+                    top_height=f"{top_height_display:.2f}",
+                    coil=f"{coil_position:.2f}",
+                    inductance=f"{parameters.loading_coil_inductance_h * 1e6:.1f}",
+                    top=f"{top_length:.2f}",
+                    counterpoise=counterpoise,
+                    ratio=f"{parameters.transformer_ratio:g}",
+                    unit=unit,
+                )
+            else:
+                text = self._translator.t(
+                    "endfed.loaded_geometry",
+                    feed=f"{length_from_m(parameters.feed_height_m, self._unit_system):.2f}",
+                    end=f"{length_from_m(parameters.end_height_m, self._unit_system):.2f}",
+                    coil=f"{coil_position:.2f}",
+                    inductance=f"{parameters.loading_coil_inductance_h * 1e6:.1f}",
+                    top=f"{top_length:.2f}",
+                    counterpoise=counterpoise,
+                    ratio=f"{parameters.transformer_ratio:g}",
+                    unit=unit,
+                )
+        elif parameters.bend_active:
             text = self._translator.t(
-                "endfed.loaded_geometry",
+                "endfed.bend_geometry",
                 feed=f"{length_from_m(parameters.feed_height_m, self._unit_system):.2f}",
-                end=f"{length_from_m(parameters.end_height_m, self._unit_system):.2f}",
-                coil=f"{coil_position:.2f}",
-                inductance=f"{parameters.loading_coil_inductance_h * 1e6:.1f}",
-                top=f"{top_length:.2f}",
+                vertical=f"{vertical_display:.2f}",
+                horizontal=f"{horizontal_display:.2f}",
+                top_height=f"{top_height_display:.2f}",
                 counterpoise=counterpoise,
                 ratio=f"{parameters.transformer_ratio:g}",
                 unit=unit,
@@ -827,6 +941,11 @@ class EndFedForm(QWidget):
             feed_section_length_m=length_to_m(self._feed_section.value(), self._unit_system),
             installation_return_length_m=length_to_m(
                 self._installation_return.value(),
+                self._unit_system,
+            ),
+            bend_enabled=self._bend_enabled.isChecked(),
+            bend_vertical_length_m=length_to_m(
+                self._bend_vertical.value(),
                 self._unit_system,
             ),
             feed_height_m=length_to_m(self._feed_height.value(), self._unit_system),

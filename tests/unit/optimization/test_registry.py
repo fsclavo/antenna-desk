@@ -379,6 +379,8 @@ _CONTEXT_FIELDS = {
     "installation_return_length_m",
     "matching_capacitance_f",
     "transformer_leakage_inductance_h",
+    "bend_enabled",
+    "bend_vertical_length_m",
 }
 
 
@@ -629,3 +631,20 @@ def test_shortened_endfed_optimizer_marks_the_matching_network_as_context() -> N
     assert shortened.descriptor.context_note_key == "optimize.endfed.matching_context"
     assert standard.descriptor is not None
     assert standard.descriptor.context_note_key is None
+
+
+def test_bent_endfed_optimizer_searches_the_bend_instead_of_the_end_height() -> None:
+    parameters = replace(
+        shortened_efhw_80_10_parameters(),
+        bend_enabled=True,
+        bend_vertical_length_m=8.0,
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    descriptor = availability.descriptor
+    names = {variable.name for variable in descriptor.variables}
+
+    assert "bend_vertical_length_m" in names
+    assert "end_height_m" not in names
+    assert descriptor.validate(descriptor.initial_values) == ()
+    assert descriptor.build_parameters(descriptor.initial_values) == parameters

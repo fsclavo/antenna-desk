@@ -7,6 +7,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 from enum import StrEnum
+from itertools import pairwise
 
 from ..common import units
 from ..common.units import ensure_non_negative, ensure_positive
@@ -82,10 +83,13 @@ COUNTERPOISE_DROP_ID = "counterpoise-drop"
 FEED_SECTION_ID = "endfed-feed-section"
 LOADING_COIL_SECTION_ID = "endfed-loading-coil-section"
 RADIATOR_TOP_ID = "radiator-top"
+BEND_RADIATOR_ID = "endfed-radiator-bend"
+BEND_RADIATOR_TOP_ID = "endfed-radiator-top-bend"
 INSTALLATION_RETURN_ID = "endfed-installation-return"
 INSTALLATION_RETURN_DROP_ID = "endfed-installation-return-drop"
 DEFAULT_FEED_SECTION_LENGTH_M = 0.5
 DEFAULT_INSTALLATION_RETURN_LENGTH_M = 0.10
+DEFAULT_BEND_VERTICAL_LENGTH_M = 8.0
 ENDFED_FEED_SECTION_SEGMENTS = 3
 ENDFED_LOADING_COIL_SECTION_LENGTH_M = 0.10
 ENDFED_LOADING_COIL_SECTION_SEGMENTS = 3
@@ -106,6 +110,8 @@ class EndFedParameters:
     length_m: float
     feed_section_length_m: float = 0.0
     installation_return_length_m: float = 0.0
+    bend_enabled: bool = False
+    bend_vertical_length_m: float = 0.0
     feed_height_m: float = 10.0
     end_height_m: float = 10.0
     azimuth_deg: float = 0.0
@@ -155,6 +161,30 @@ class EndFedParameters:
             self.loading_coil_resistance_ohm,
             name="loading_coil_resistance_ohm",
         )
+        ensure_non_negative(
+            self.bend_vertical_length_m,
+            name="bend_vertical_length_m",
+        )
+        bend_active = self.bend_enabled and self.bend_vertical_length_m > 0.0
+        if self.bend_enabled:
+            ensure_positive(
+                self.bend_vertical_length_m,
+                name="bend_vertical_length_m",
+            )
+            if self.bend_vertical_length_m >= self.length_m:
+                raise ValueError("bend_vertical_length_m must be shorter than length_m")
+            if self.bend_vertical_length_m < self.feed_section_length_m:
+                raise ValueError(
+                    "bend_vertical_length_m must not be shorter than feed_section_length_m"
+                )
+            if self.coil_active:
+                half_section_m = ENDFED_LOADING_COIL_SECTION_LENGTH_M / 2.0
+                section_start_m = self.loading_coil_offset_m - half_section_m
+                section_end_m = self.loading_coil_offset_m + half_section_m
+                if section_start_m <= self.bend_vertical_length_m <= section_end_m:
+                    raise ValueError(
+                        "bend_vertical_length_m must not fall inside the loading-coil section"
+                    )
         if self.loading_coil_offset_m > self.length_m:
             raise ValueError("loading_coil_offset_m must not exceed length_m")
         if self.loading_coil_enabled:
@@ -164,7 +194,7 @@ class EndFedParameters:
             )
             if self.loading_coil_offset_m <= 0.0:
                 raise ValueError("loading_coil_offset_m must be positive when the coil is enabled")
-        if abs(self.end_height_m - self.feed_height_m) > self.length_m + 1e-12:
+        if not bend_active and abs(self.end_height_m - self.feed_height_m) > self.length_m + 1e-12:
             raise ValueError(
                 "the height difference between the feed and the end must not exceed the wire length"
             )
@@ -183,6 +213,24 @@ class EndFedParameters:
     @property
     def coil_active(self) -> bool:
         return self.loading_coil_enabled and self.loading_coil_inductance_h > 0.0
+
+    @property
+    def bend_active(self) -> bool:
+        return self.bend_enabled and self.bend_vertical_length_m > 0.0
+
+    @property
+    def bend_top_height_m(self) -> float:
+        return self.feed_height_m + self.bend_vertical_length_m
+
+    @property
+    def bend_horizontal_length_m(self) -> float:
+        if not self.bend_active:
+            return 0.0
+        return max(self.length_m - self.bend_vertical_length_m, 0.0)
+
+    @property
+    def effective_end_height_m(self) -> float:
+        return self.bend_top_height_m if self.bend_active else self.end_height_m
 
     @property
     def matching_network_active(self) -> bool:
@@ -285,78 +333,114 @@ class EndFedParameters:
 
     def to_custom_parameters(self) -> CustomAntennaParameters:
         angle = units.degrees_to_radians(self.azimuth_deg)
-        rise = self.end_height_m - self.feed_height_m
-        horizontal_m = math.sqrt(max(self.length_m * self.length_m - rise * rise, 0.0))
         feed_point = Point3D(x_m=0.0, y_m=0.0, z_m=self.feed_height_m)
-        end_point = Point3D(
-            x_m=horizontal_m * math.cos(angle),
-            y_m=horizontal_m * math.sin(angle),
-            z_m=self.end_height_m,
-        )
-
-        def point_at(distance_m: float) -> Point3D:
-            ratio = distance_m / self.length_m
-            return Point3D(
-                x_m=feed_point.x_m + (end_point.x_m - feed_point.x_m) * ratio,
-                y_m=feed_point.y_m + (end_point.y_m - feed_point.y_m) * ratio,
-                z_m=feed_point.z_m + (end_point.z_m - feed_point.z_m) * ratio,
+        if self.bend_active:
+            vertical_length_m = self.bend_vertical_length_m
+            horizontal_length_m = self.bend_horizontal_length_m
+            bend_point = Point3D(
+                x_m=0.0,
+                y_m=0.0,
+                z_m=self.bend_top_height_m,
+            )
+            end_point = Point3D(
+                x_m=horizontal_length_m * math.cos(angle),
+                y_m=horizontal_length_m * math.sin(angle),
+                z_m=self.bend_top_height_m,
             )
 
-        wires: list[Wire] = []
+            def point_at(distance_m: float) -> Point3D:
+                if distance_m <= vertical_length_m:
+                    ratio = (
+                        0.0
+                        if vertical_length_m <= 0.0
+                        else min(max(distance_m / vertical_length_m, 0.0), 1.0)
+                    )
+                    return Point3D(
+                        x_m=feed_point.x_m + (bend_point.x_m - feed_point.x_m) * ratio,
+                        y_m=feed_point.y_m + (bend_point.y_m - feed_point.y_m) * ratio,
+                        z_m=feed_point.z_m + (bend_point.z_m - feed_point.z_m) * ratio,
+                    )
+                ratio = (
+                    0.0
+                    if horizontal_length_m <= 0.0
+                    else min(
+                        max((distance_m - vertical_length_m) / horizontal_length_m, 0.0),
+                        1.0,
+                    )
+                )
+                return Point3D(
+                    x_m=bend_point.x_m + (end_point.x_m - bend_point.x_m) * ratio,
+                    y_m=bend_point.y_m + (end_point.y_m - bend_point.y_m) * ratio,
+                    z_m=bend_point.z_m + (end_point.z_m - bend_point.z_m) * ratio,
+                )
+
+        else:
+            rise = self.end_height_m - self.feed_height_m
+            horizontal_m = math.sqrt(max(self.length_m * self.length_m - rise * rise, 0.0))
+            end_point = Point3D(
+                x_m=horizontal_m * math.cos(angle),
+                y_m=horizontal_m * math.sin(angle),
+                z_m=self.end_height_m,
+            )
+
+            def point_at(distance_m: float) -> Point3D:
+                ratio = distance_m / self.length_m
+                return Point3D(
+                    x_m=feed_point.x_m + (end_point.x_m - feed_point.x_m) * ratio,
+                    y_m=feed_point.y_m + (end_point.y_m - feed_point.y_m) * ratio,
+                    z_m=feed_point.z_m + (end_point.z_m - feed_point.z_m) * ratio,
+                )
+
+        breakpoints = [0.0, self.length_m]
         if self.feed_section_active:
-            feed_end = point_at(self.feed_section_length_m)
-            wires.append(
-                Wire(
-                    id=FEED_SECTION_ID,
-                    start=feed_point,
-                    end=feed_end,
-                    radius_m=self.wire_radius_m,
-                    material=self.material,
-                )
-            )
-            radiator_start = feed_end
-            feed_wire_id = FEED_SECTION_ID
-        else:
-            radiator_start = feed_point
-            feed_wire_id = RADIATOR_ID
+            breakpoints.append(self.feed_section_length_m)
         if self.loading_coil_section_active:
-            coil_start = point_at(self.loading_coil_section_start_m)
-            coil_end = point_at(self.loading_coil_section_end_m)
-            wires.extend(
-                [
-                    Wire(
-                        id=RADIATOR_ID,
-                        start=radiator_start,
-                        end=coil_start,
-                        radius_m=self.wire_radius_m,
-                        material=self.material,
-                    ),
-                    Wire(
-                        id=LOADING_COIL_SECTION_ID,
-                        start=coil_start,
-                        end=coil_end,
-                        radius_m=self.wire_radius_m,
-                        material=self.material,
-                    ),
-                    Wire(
-                        id=RADIATOR_TOP_ID,
-                        start=coil_end,
-                        end=end_point,
-                        radius_m=self.wire_radius_m,
-                        material=self.material,
-                    ),
-                ]
-            )
-        else:
+            breakpoints.append(self.loading_coil_section_start_m)
+            breakpoints.append(self.loading_coil_section_end_m)
+        if self.bend_active:
+            breakpoints.append(self.bend_vertical_length_m)
+        ordered = sorted({round(min(max(value, 0.0), self.length_m), 9) for value in breakpoints})
+
+        coil_start_m = (
+            self.loading_coil_section_start_m if self.loading_coil_section_active else None
+        )
+        coil_end_m = self.loading_coil_section_end_m if self.loading_coil_section_active else None
+
+        def wire_id_for_interval(start_m: float) -> str:
+            if self.feed_section_active and start_m < self.feed_section_length_m - 1e-9:
+                return FEED_SECTION_ID
+            if (
+                coil_start_m is not None
+                and coil_end_m is not None
+                and coil_start_m - 1e-9 <= start_m < coil_end_m - 1e-9
+            ):
+                return LOADING_COIL_SECTION_ID
+            if coil_end_m is not None and start_m >= coil_end_m - 1e-9:
+                if self.bend_active and start_m >= self.bend_vertical_length_m - 1e-9:
+                    return BEND_RADIATOR_TOP_ID
+                return RADIATOR_TOP_ID
+            if self.bend_active and start_m >= self.bend_vertical_length_m - 1e-9:
+                return BEND_RADIATOR_ID
+            return RADIATOR_ID
+
+        intervals: list[tuple[float, float, str]] = []
+        wires: list[Wire] = []
+        for start_m, end_m in pairwise(ordered):
+            if end_m - start_m <= 1e-9:
+                continue
+            wire_id = wire_id_for_interval(start_m)
+            intervals.append((start_m, end_m, wire_id))
             wires.append(
                 Wire(
-                    id=RADIATOR_ID,
-                    start=radiator_start,
-                    end=end_point,
+                    id=wire_id,
+                    start=point_at(start_m),
+                    end=point_at(end_m),
                     radius_m=self.wire_radius_m,
                     material=self.material,
                 )
             )
+
+        feed_wire_id = intervals[0][2] if intervals else RADIATOR_ID
 
         if self.effective_return_length_m > 0.0:
             counterpoise_angle = units.degrees_to_radians(self.effective_counterpoise_azimuth_deg)
@@ -400,19 +484,15 @@ class EndFedParameters:
 
         loads: tuple[SeriesLoad, ...] = ()
         if self.coil_active:
-            if self.loading_coil_section_active:
-                coil_wire_id = LOADING_COIL_SECTION_ID
-                coil_offset_m = ENDFED_LOADING_COIL_SECTION_LENGTH_M / 2.0
-            elif (
-                self.feed_section_active and self.loading_coil_offset_m < self.feed_section_length_m
-            ):
-                coil_wire_id = FEED_SECTION_ID
-                coil_offset_m = self.loading_coil_offset_m
-            else:
-                coil_wire_id = RADIATOR_ID
-                coil_offset_m = self.loading_coil_offset_m - (
-                    self.feed_section_length_m if self.feed_section_active else 0.0
-                )
+            coil_wire_id = RADIATOR_ID
+            coil_offset_m = self.loading_coil_offset_m - (
+                self.feed_section_length_m if self.feed_section_active else 0.0
+            )
+            for start_m, end_m, wire_id in intervals:
+                if start_m - 1e-9 <= self.loading_coil_offset_m <= end_m + 1e-9:
+                    coil_wire_id = wire_id
+                    coil_offset_m = self.loading_coil_offset_m - start_m
+                    break
             loads = (
                 SeriesLoad(
                     id=ENDFED_LOADING_COIL_ID,

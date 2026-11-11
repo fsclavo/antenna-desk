@@ -10,11 +10,14 @@ its endpoints, length, diameter, and material, plus the feed point.
 from __future__ import annotations
 
 import html
+import math
 from dataclasses import dataclass
 from pathlib import Path
 
 from ..domain.antennas.antenna import AntennaModel
 from ..domain.antennas.endfed import (
+    BEND_RADIATOR_ID,
+    BEND_RADIATOR_TOP_ID,
     FEED_SECTION_ID,
     LOADING_COIL_SECTION_ID,
     RADIATOR_ID,
@@ -32,6 +35,8 @@ _ENDFED_PARTITION_IDS = frozenset(
         RADIATOR_ID,
         LOADING_COIL_SECTION_ID,
         RADIATOR_TOP_ID,
+        BEND_RADIATOR_ID,
+        BEND_RADIATOR_TOP_ID,
     }
 )
 _ENDFED_PARTITION_MARKERS = frozenset(
@@ -39,6 +44,8 @@ _ENDFED_PARTITION_MARKERS = frozenset(
         FEED_SECTION_ID,
         LOADING_COIL_SECTION_ID,
         RADIATOR_TOP_ID,
+        BEND_RADIATOR_ID,
+        BEND_RADIATOR_TOP_ID,
     }
 )
 
@@ -109,30 +116,62 @@ class FeedScheduleRow:
     height_m: float
 
 
+def _wire_direction(wire: Wire) -> tuple[float, float, float]:
+    if wire.length_m <= 1e-12:
+        return (0.0, 0.0, 0.0)
+    return (
+        (wire.end.x_m - wire.start.x_m) / wire.length_m,
+        (wire.end.y_m - wire.start.y_m) / wire.length_m,
+        (wire.end.z_m - wire.start.z_m) / wire.length_m,
+    )
+
+
+def _same_direction(first: Wire, second: Wire) -> bool:
+    first_direction = _wire_direction(first)
+    second_direction = _wire_direction(second)
+    return all(
+        math.isclose(a, b, rel_tol=0.0, abs_tol=1e-6)
+        for a, b in zip(first_direction, second_direction, strict=True)
+    )
+
+
 def _physical_wires(model: AntennaModel) -> tuple[Wire, ...]:
-    """Return physical conductors, merging end-fed model partitions."""
+    """Return physical conductors, merging collinear end-fed partitions."""
     wires = tuple(wire for wire in model.wires if not is_model_only_wire(wire.id))
     if not any(wire.id in _ENDFED_PARTITION_MARKERS for wire in wires):
         return wires
 
-    # The end-fed conductor is straight, so the merged endpoints and the sum of
-    # the partition lengths describe the same physical wire.
     partition = [wire for wire in wires if wire.id in _ENDFED_PARTITION_IDS]
     if not partition:
         return wires
-    merged = Wire(
-        id=RADIATOR_ID,
-        start=partition[0].start,
-        end=partition[-1].end,
-        radius_m=partition[0].radius_m,
-        material=partition[0].material,
-    )
+
+    groups: list[list[Wire]] = [[partition[0]]]
+    for wire in partition[1:]:
+        if _same_direction(groups[-1][-1], wire):
+            groups[-1].append(wire)
+        else:
+            groups.append([wire])
+
+    merged_groups: list[Wire] = []
+    for index, group in enumerate(groups):
+        first = group[0]
+        last = group[-1]
+        merged_groups.append(
+            Wire(
+                id=RADIATOR_ID if index == 0 else first.id,
+                start=first.start,
+                end=last.end,
+                radius_m=first.radius_m,
+                material=first.material,
+            )
+        )
+
     physical: list[Wire] = []
     inserted = False
     for wire in wires:
         if wire.id in _ENDFED_PARTITION_IDS:
             if not inserted:
-                physical.append(merged)
+                physical.extend(merged_groups)
                 inserted = True
             continue
         physical.append(wire)

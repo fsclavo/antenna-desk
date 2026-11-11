@@ -78,6 +78,7 @@ REPORT_SPANISH: dict[str, str] = {
     "End (m)": "Fin (m)",
     "End connector length": "Longitud del conector de extremo",
     "End height": "Altura del extremo",
+    "Horizontal run": "Tramo horizontal",
     "End heights": "Alturas de extremos",
     "Equivalent diameter": "Diámetro equivalente",
     "Estimated stub impedance": "Impedancia estimada del stub",
@@ -708,5 +709,23 @@ REPORT_SPANISH: dict[str, str] = {
         "µH se retienen en el diseño pero no se instalan ni se aplican; no "
         "conectes ambas redes en cascada. La relación del transformador {ratio}:1 "
         "sigue aplicando."
+    ),
+    "Cut one wire to {length} m. Run {vertical} m vertically from the feed, bend 90°, then run {horizontal} m horizontally at {top} m. Use a {ratio}:1 transformer; the counterpoise is {counterpoise}.": (  # noqa: E501
+        "Cortá un hilo de {length} m. Subí {vertical} m en vertical desde la "
+        "alimentación, hacé un codo de 90° y luego corré {horizontal} m en "
+        "horizontal a {top} m. Usá un transformador {ratio}:1; el contrapeso es "
+        "{counterpoise}."
+    ),
+    "Cut one wire to {length} m. Run {vertical} m vertically from the feed, bend 90°, then run {horizontal} m horizontally at {top} m. Fit the {inductance} µH loading coil at {offset} m from the feed; the remaining {top_section} m is the top section. Use a {ratio}:1 transformer; the counterpoise is {counterpoise}.": (  # noqa: E501
+        "Cortá un hilo de {length} m. Subí {vertical} m en vertical desde la "
+        "alimentación, hacé un codo de 90° y luego corré {horizontal} m en "
+        "horizontal a {top} m. Colocá la bobina de carga de {inductance} µH a "
+        "{offset} m de la alimentación; los {top_section} m restantes son el tramo "
+        "superior. Usá un transformador {ratio}:1; el contrapeso es {counterpoise}."
+    ),
+    "The bend is a 90° corner at {vertical} m from the feed. Use one continuous conductor and keep the corner mechanically supported; the model uses a sharp corner.": (  # noqa: E501
+        "El codo es una esquina de 90° a {vertical} m de la alimentación. Usá un "
+        "conductor continuo y mantené la esquina soportada mecánicamente; el modelo "
+        "usa una esquina recta."
     ),
 }

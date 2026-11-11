@@ -893,3 +893,28 @@ def test_endfed_construction_sheet_marks_the_internal_matching_as_overridden(
     assert "Project matching" in sheet
     assert "L network" in sheet
     assert "do not cascade both networks" in sheet
+
+
+def test_endfed_bend_construction_sheet_lists_the_vertical_and_horizontal_sections(
+    sample_project: Project,
+) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
+
+    parameters = replace(
+        shortened_efhw_80_10_parameters(feed_height_m=2.0),
+        bend_enabled=True,
+        bend_vertical_length_m=8.0,
+    )
+    design = sample_project.designs[0].with_parameters(parameters)
+    project = sample_project.with_design(design, updated_at=sample_project.updated_at)
+
+    sheet = render_construction_sheet(project, design, None)
+
+    assert "Vertical section" in sheet
+    assert "8.0000 m" in sheet
+    assert "Horizontal run" in sheet
+    assert "14.7400 m" in sheet
+    assert "Top height" in sheet
+    assert "The bend is a 90° corner" in sheet

@@ -522,6 +522,27 @@ def _migrate_v33_to_v34(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v34_to_v35(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the optional inverted-L bend to end-fed designs."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if not isinstance(project, dict):
+        return migrated
+    designs = project.get("designs")
+    if not isinstance(designs, list):
+        return migrated
+    for design in designs:
+        if not isinstance(design, dict) or design.get("antenna_type") != "endfed":
+            continue
+        parameters = design.get("parameters")
+        if not isinstance(parameters, dict):
+            continue
+        parameters.setdefault("bend_enabled", False)
+        parameters.setdefault("bend_vertical_length_m", 0.0)
+    return migrated
+
+
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
@@ -556,6 +577,7 @@ MIGRATIONS: dict[int, Migration] = {
     31: _migrate_v31_to_v32,
     32: _migrate_v32_to_v33,
     33: _migrate_v33_to_v34,
+    34: _migrate_v34_to_v35,
 }
 
 
