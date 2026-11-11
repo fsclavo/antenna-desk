@@ -127,7 +127,7 @@ Completed:
   Windows zip and all previous Linux and Python artifacts.
 - `v0.4.2` hides `nec2c` console windows during Windows simulations and
   optimizations, and generates wheel/sdist checksums automatically in the
-  release workflow.
+  release workflow. It is published with unsigned, checksum-verified artifacts.
 
 Deferred:
 
@@ -195,8 +195,8 @@ Deferred:
   Windows zip, and checksums (completed).
 - Optional GPG detached signatures and Windows Authenticode signing hooks
   (completed, deferred for the initial release).
-- Published `v0.1.0`, `v0.2.0`, `v0.3.0`, `v0.3.1`, `v0.4.0`, and `v0.4.1`
-  with unsigned, SHA-256-verified artifacts (completed).
+- Published `v0.1.0`, `v0.2.0`, `v0.3.0`, `v0.3.1`, `v0.4.0`, `v0.4.1`, and
+  `v0.4.2` with unsigned, SHA-256-verified artifacts (completed).
 - Keep the wheel/sdist smoke test as the fallback distribution path
   (completed).
 
@@ -334,8 +334,8 @@ Release track:
    smoke-tested locally because the release runner's package mirror DNS failed.
 3. `v0.4.1` is published with the NSIS Windows installer and CI-built Linux
    packages. All release jobs completed successfully.
-4. `v0.4.2` is prepared with the Windows hidden-console solver fix and automatic
-   wheel/sdist checksums.
+4. `v0.4.2` is published with the Windows hidden-console solver fix and
+   automatic wheel/sdist checksums.
 5. Add GPG/Authenticode signing in a later release if required.
 
 Validation track:
