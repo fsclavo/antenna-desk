@@ -311,14 +311,15 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **35**.
-- Full gate: **2,468 passed, 0 skipped** with `NEC2C` and the optional
+- Full gate: **2,473 passed, 0 skipped** with `NEC2C` and the optional
   `cross-engine` group; rerun without PyNEC if the environment lacks it.
 - Release: **0.4.0** published on 2026-11-11 with checksum-verified unsigned
   artifacts. The Windows bundle was built and smoke-tested in CI; Linux assets
   were built and smoke-tested locally. See
   [`RELEASE_QA_0.4.0.md`](RELEASE_QA_0.4.0.md). **R1** tracks the CI rerun
   that should replace the manual assets when the runner mirror DNS recovers.
-- Last commits: the 0.4.0 release publication,
+- Last commits: the Windows NSIS installer and R1 tracking,
+  the 0.4.0 release publication,
   the shortened-EFHW inverted-L option (G26),
   the impedance-point matching-network action (M4),
   the matching-network precedence ADR and user guide (M5),
