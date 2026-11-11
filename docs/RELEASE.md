@@ -244,7 +244,9 @@ are absent.
 7. Build and test the wheel, AppImage, Debian package, and Windows zip.
 8. Tag `v<version>` and push the tag.
 9. Verify the release workflow attached all artifacts and checksums.
-10. Record known limitations and experimental templates in the release notes.
+10. Record the candidate gate, visual QA, artifact smoke tests, and checksums in
+    `docs/RELEASE_QA_<version>.md`, and record known limitations and
+    experimental templates in the release notes.
 11. For the initial release, signing may be skipped; keep the SHA-256 checksums
     and note that signatures are deferred.
 
