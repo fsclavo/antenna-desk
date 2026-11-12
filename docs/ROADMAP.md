@@ -132,7 +132,7 @@ Completed:
   transformer defaults; the project current-balun record; side-by-side
   azimuth/elevation pattern cuts; metric-aware pattern views; and the
   accumulated project, measurement, construction, and workflow work through
-  schema 44. It is prepared as the current release candidate.
+  schema 44. It is published with unsigned, checksum-verified artifacts.
 
 Deferred:
 
@@ -200,8 +200,8 @@ Deferred:
   Windows zip, and checksums (completed).
 - Optional GPG detached signatures and Windows Authenticode signing hooks
   (completed, deferred for the initial release).
-- Published `v0.1.0`, `v0.2.0`, `v0.3.0`, `v0.3.1`, `v0.4.0`, `v0.4.1`, and
-  `v0.4.2` with unsigned, SHA-256-verified artifacts (completed).
+- Published `v0.1.0`, `v0.2.0`, `v0.3.0`, `v0.3.1`, `v0.4.0`, `v0.4.1`,
+  `v0.4.2`, and `v0.5.0` with unsigned, SHA-256-verified artifacts (completed).
 - Keep the wheel/sdist smoke test as the fallback distribution path
   (completed).
 
@@ -412,11 +412,10 @@ Release track:
    packages. All release jobs completed successfully.
 4. `v0.4.2` is published with the Windows hidden-console solver fix and
    automatic wheel/sdist checksums.
-5. `v0.5.0` is the current release candidate with the feed-transformer defaults,
-   current-balun record (schema 44), side-by-side pattern cuts, and the
-   accumulated project, measurement, construction, and workflow work. Local
-   artifacts pass their smoke tests, and CI run `43310098954` passed the Windows
-   bundle and installer QA. Tag pending.
+5. `v0.5.0` is published with the feed-transformer defaults, current-balun
+   record (schema 44), side-by-side pattern cuts, and the accumulated project,
+   measurement, construction, and workflow work. All release jobs completed
+   successfully in CI, including the Windows bundle and installer QA.
 6. Add GPG/Authenticode signing in a later release if required.
 
 Validation track:

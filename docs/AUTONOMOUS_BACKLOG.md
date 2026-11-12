@@ -364,14 +364,15 @@ model and solver contract must land first.
 - Full gate: **2,866 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
-- Release: **0.5.0** release candidate prepared on 2026-11-12; local Linux and
-  Python artifact smoke tests passed, and CI run `43310098954` passed the
-  Windows bundle and installer QA. Tag pending. **0.4.2** is the latest
-  published release (2026-11-11) with checksum-verified unsigned artifacts,
-  including the Windows NSIS installer and the hidden-console solver fix. See
-  [`RELEASE_QA_0.4.2.md`](RELEASE_QA_0.4.2.md).
-- Last commits: the 0.5.0 release QA, the folded-dipole, full-wave loop, and
-  Yagi folded-driven feed transformers, the current-balun record,
+- Release: **0.5.0** published on 2026-11-12 with checksum-verified unsigned
+  artifacts, including the Windows NSIS installer, portable zip, AppImage,
+  Debian package, wheel, and sdist. All release jobs completed successfully in
+  CI; all six published checksums were verified. See
+  [`RELEASE_QA_0.5.0.md`](RELEASE_QA_0.5.0.md). **0.4.2** remains the previous
+  release.
+- Last commits: the 0.5.0 release publication and QA, the folded-dipole,
+  full-wave loop, and Yagi folded-driven feed transformers, the current-balun
+  record,
   the side-by-side pattern cuts and metric-aware views (UX21–UX22),
   the reference design library (UX17),
   the guided experiments (UX16),

@@ -1,15 +1,14 @@
-# AntennaDesk 0.5.0 release-candidate QA
+# AntennaDesk 0.5.0 release QA
 
-- **Candidate:** `0.5.0`
+- **Version:** `0.5.0`
 - **Date:** 2026-11-12
-- **Tag:** none yet; candidate on `release/0.5.0-qa` after the release-prep
-  merge and CI QA
-- **Status:** local static checks, Linux/Python artifact smoke tests, and CI
-  Windows bundle/installer QA passed; ready to tag
+- **Tag:** `v0.5.0` at `3597781`
+- **Release:** <https://github.com/fsclavo/antenna-desk/releases/tag/v0.5.0>
+- **Status:** published with unsigned, checksum-verified artifacts
 
 ## Scope
 
-This candidate covers the accumulated work since `v0.4.2` and moves the project
+This release covers the accumulated work since `v0.4.2` and moves the project
 schema from 35 to 44. The release-facing changes are:
 
 - folded-dipole **4:1**, full-wave loop **2:1**, and Yagi folded-driven **4:1**
@@ -21,7 +20,7 @@ schema from 35 to 44. The release-facing changes are:
 - metric-aware pattern titles, axis labels, polar scale footers, 3D label, cursor
   readout, and a power/directivity/realized-gain summary;
 - the accumulated project, measurement, construction, workflow, and reporting
-  work delivered between `v0.4.2` and this candidate, including the project
+  work delivered between `v0.4.2` and this release, including the project
   journal, reference design library, guided experiments, workflow modes,
   installation profiles, antenna advisor, comparison 2.0, confidence card,
   parameter sweeps, tolerance analysis, measurement sessions, preflight checks,
@@ -130,22 +129,30 @@ on `release/0.5.0-qa` completed all build jobs successfully:
 | Linux AppImage and `.deb` jobs | pass |
 | Publish GitHub release | skipped, because the run was not a tag |
 
-## Local artifacts
+The tag-triggered run
+[`43311469581`](https://github.com/fsclavo/antenna-desk/actions/runs/43311469581)
+repeated the Windows, Linux, and wheel jobs and completed the **Publish GitHub
+release** job successfully.
 
-| Artifact | Size | SHA-256 |
+## Published assets
+
+| Asset | Size | SHA-256 |
 |---|---:|---|
-| `antennadesk-0.5.0-py3-none-any.whl` | 924 K | `c8b03bda867d903d08e154a5c7a8eb210216fb4e516b1a1ce058c11c8cdfe0d0` |
-| `antennadesk-0.5.0.tar.gz` | 1.3 M | `e31fdd3a4aac9ea358f03617debfb94c1b2ebead28fd87310b1fe6fb3868c737` |
-| `AntennaDesk-0.5.0-x86_64.AppImage` | 120 M | `f42a7feb87c210b58ac004020f45ae8f6cc19e522a497225eccca64485ebca48` |
-| `antennadesk_0.5.0_amd64.deb` | 102 M | `188997bbda1f8e513a7334c4b1917d405bfc87630363e6a97eea3c0aab8fe146` |
+| `antennadesk-0.5.0-py3-none-any.whl` | 924 K | `71f92cde779084748e05a43d617b5e790198fce6733196d04da77ccd3bfd7fb3` |
+| `antennadesk-0.5.0.tar.gz` | 1.3 M | `d9d2f63f2f11760c95f792cdef6766db267bedbc4a437beaa2b8f7437bb95b61` |
+| `AntennaDesk-0.5.0-x86_64.AppImage` | 129 M | `1a8437c726afa001fac85f78cb1cc1fb4852ed94d7da23f59983a29fa8f6bb15` |
+| `antennadesk_0.5.0_amd64.deb` | 109 M | `a83122765e18cbc8ecb2b404e3b0d00c96145d53ee58a1be48fdf82ea6b7219a` |
+| `AntennaDesk-0.5.0-windows-x86_64.zip` | 103 M | `55beef7c525ff54ed95af17d7f2f393eee48ab35c9c3bb6a1cfb179411f81abf` |
+| `AntennaDesk-0.5.0-windows-x86_64-setup.exe` | 71 M | `b2338d78ea0ec856f29809587559cc93068954c735203f0488c297c38f66ea92` |
 
-These are local candidate artifacts. They are unsigned and are not the published
-release assets.
+Every asset has a companion `.sha256` file. All six checksums were verified
+with `sha256sum -c` after downloading the published assets.
 
 ## Signing
 
 Signing remains deferred. No GPG key or Windows Authenticode certificate was
-configured for this candidate. Verify the SHA-256 checksums.
+configured for this release. The published assets are unsigned and verified only
+by SHA-256.
 
 ## Known limitations
 
@@ -164,8 +171,9 @@ configured for this candidate. Verify the SHA-256 checksums.
 
 ## Release decision
 
-The 0.5.0 candidate is ready to tag and publish. The code and documentation
-passed the static gate, the local Linux/Python smoke tests, and the CI Windows
-bundle and installer QA. Tag `v0.5.0` on this candidate and push the tag; the
-tag-triggered workflow will rebuild, sign if configured, and publish the
-checksum-verified artifacts.
+Published as `v0.5.0` on 2026-11-12 with all twelve assets — six artifacts and
+six companion `.sha256` files — uploaded to
+<https://github.com/fsclavo/antenna-desk/releases/tag/v0.5.0>. The tag-triggered
+workflow completed every job successfully, including the Windows installer
+install, shortcut, installed-app, and uninstall checks. The published checksums
+were downloaded and verified against every asset.
