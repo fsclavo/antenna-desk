@@ -395,3 +395,19 @@ def test_every_help_entry_is_bilingual_and_short() -> None:
 def test_translator_formats_placeholders() -> None:
     text = Translator(Language.ENGLISH).t("app.about", version="1.2.3")
     assert "AntennaDesk 1.2.3" in text
+
+
+def test_polar_scale_footer_names_the_metric_and_scale() -> None:
+    english = Translator(Language.ENGLISH).t(
+        "pattern.polar_scale",
+        metric="Directivity",
+        gain=5.0,
+    )
+    spanish = Translator(Language.SPANISH).t(
+        "pattern.polar_scale",
+        metric="Directividad",
+        gain=5.0,
+    )
+
+    assert english == "Directivity scale · 5 dBi"
+    assert spanish == "Escala de Directividad · 5 dBi"

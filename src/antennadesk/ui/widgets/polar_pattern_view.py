@@ -223,7 +223,11 @@ class PolarPatternView(QWidget):
         )
         painter.drawText(
             QRectF(rect.left() + 14.0, rect.bottom() - 22.0, rect.width() - 28.0, 16.0),
-            f"{self._metric_label}: {max_gain:g} dBi",
+            self._translator.t(
+                "pattern.polar_scale",
+                metric=self._metric_label,
+                gain=max_gain,
+            ),
         )
 
     def _draw_label(

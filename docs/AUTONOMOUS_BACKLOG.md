@@ -360,14 +360,17 @@ model and solver contract must land first.
 
 ## Current baseline
 
-- Schema: **39**.
-- Full gate: **2,816 passed, 1 skipped** with `NEC2C` and the optional
+- Schema: **44**.
+- Full gate: **2,866 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
-- Release: **0.4.1** published on 2026-11-11 with checksum-verified unsigned
-  artifacts, including the Windows NSIS installer. All release jobs completed
-  successfully in CI. See [`RELEASE_QA_0.4.1.md`](RELEASE_QA_0.4.1.md).
-- Last commits: the reference design library (UX17),
+- Release: **0.5.0** release candidate prepared on 2026-11-12 with local Linux
+  and Python artifact smoke tests; Windows installer QA remains in CI. **0.4.2**
+  is the latest published release, with checksum-verified unsigned artifacts.
+- Last commits: the 0.5.0 release QA, the folded-dipole, full-wave loop, and
+  Yagi folded-driven feed transformers, the current-balun record,
+  the side-by-side pattern cuts and metric-aware views (UX21–UX22),
+  the reference design library (UX17),
   the guided experiments (UX16),
   the project journal (UX15),
   the tolerance and robustness analysis (UX14),

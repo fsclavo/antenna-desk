@@ -128,6 +128,11 @@ Completed:
 - `v0.4.2` hides `nec2c` console windows during Windows simulations and
   optimizations, and generates wheel/sdist checksums automatically in the
   release workflow.
+- `v0.5.0` adds folded-dipole, full-wave loop, and Yagi folded-driven feed
+  transformer defaults; the project current-balun record; side-by-side
+  azimuth/elevation pattern cuts; metric-aware pattern views; and the
+  accumulated project, measurement, construction, and workflow work through
+  schema 44. It is prepared as the current release candidate.
 
 Deferred:
 
@@ -405,9 +410,14 @@ Release track:
    smoke-tested locally because the release runner's package mirror DNS failed.
 3. `v0.4.1` is published with the NSIS Windows installer and CI-built Linux
    packages. All release jobs completed successfully.
-4. `v0.4.2` is prepared with the Windows hidden-console solver fix and automatic
-   wheel/sdist checksums.
-5. Add GPG/Authenticode signing in a later release if required.
+4. `v0.4.2` is published with the Windows hidden-console solver fix and
+   automatic wheel/sdist checksums.
+5. `v0.5.0` is the current release candidate with the feed-transformer defaults,
+   current-balun record (schema 44), side-by-side pattern cuts, and the
+   accumulated project, measurement, construction, and workflow work. Local
+   artifacts pass their smoke tests; Windows installer QA remains in CI and no
+   tag has been created.
+6. Add GPG/Authenticode signing in a later release if required.
 
 Validation track:
 

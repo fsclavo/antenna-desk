@@ -8014,6 +8014,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Elevation lobes",
         Language.SPANISH: "Lóbulos de elevación",
     },
+    "pattern.polar_scale": {
+        Language.ENGLISH: "{metric} scale · {gain:g} dBi",
+        Language.SPANISH: "Escala de {metric} · {gain:g} dBi",
+    },
     "currents.frequency": {Language.ENGLISH: "Frequency", Language.SPANISH: "Frecuencia"},
     "compare.title": {Language.ENGLISH: "Compare Designs", Language.SPANISH: "Comparar diseños"},
     "compare.variant_a": {Language.ENGLISH: "Design A", Language.SPANISH: "Diseño A"},

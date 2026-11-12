@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-12
+
 ### Added
 
 - **Side-by-side pattern cuts.** The **Cuts** tab now shows azimuth and
@@ -18,11 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   axes, cursor readout, and empty state, and the pattern PNG export saves the
   whole 2×2 Cuts view; the 3D tab still saves the 3D view.
 - **Pattern metric visibility.** The metric selector now names the selected
-  metric in both cut titles, axis labels, polar footers, 3D label, and cursor
-  readout. A summary lists power gain, directivity, and realized gain for the
-  selected frequency, with an explicit localized unavailable value instead of a
-  silent omission. The lobe shape and metric definitions are unchanged; no
-  schema or solver changes.
+  metric in both cut titles, axis labels, polar scale footers, 3D label, and
+  cursor readout. A summary lists power gain, directivity, and realized gain
+  for the selected frequency, with an explicit localized unavailable value
+  instead of a silent omission. The lobe shape and metric definitions are
+  unchanged; no schema or solver changes.
 - **Folded-dipole feed transformer.** New folded dipoles start with an ideal
   **4:1** feed transformer, matching the common equal-conductor balun. The ratio
   is editable to **6:1**, **1:1**, or another value and is applied by the
