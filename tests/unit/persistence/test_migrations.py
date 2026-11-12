@@ -896,6 +896,32 @@ def test_v33_migration_adds_the_matching_network_design_target() -> None:
     assert "matching_network_design" not in document["project"]
 
 
+def test_v38_migration_adds_measurement_sessions() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 38,
+        "project": {
+            "name": "Site",
+            "measurements": [
+                {"id": "measurement", "name": "Field sweep"},
+                {"id": "legacy", "name": "Legacy"},
+            ],
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert migrated["project"]["measurement_sessions"] == []
+    assert all(
+        measurement["session_id"] is None for measurement in migrated["project"]["measurements"]
+    )
+    assert "measurement_sessions" not in document["project"]
+    assert all(
+        "session_id" not in measurement for measurement in document["project"]["measurements"]
+    )
+
+
 def test_v37_migration_adds_the_construction_record() -> None:
     document = {
         "format": "antennadesk-project",

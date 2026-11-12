@@ -177,6 +177,67 @@ def test_project_document_and_repository_round_trip(
         assert repository.load(path) == project
 
 
+def test_measurement_sessions_round_trip() -> None:
+    from uuid import uuid4
+
+    from antennadesk.domain.measurement import (
+        Measurement,
+        MeasurementPoint,
+        MeasurementSession,
+    )
+
+    project = _project(
+        project_name="Sessions",
+        description="",
+        design_name="Initial",
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        azimuth_deg=0.0,
+        wire_radius_m=0.001,
+        orientation=DipoleOrientation.HORIZONTAL,
+        ground=GroundModel.free_space(),
+    )
+    session = MeasurementSession(
+        id=uuid4(),
+        name="Before tuning",
+        created_at=FIXED_NOW,
+        design_id=project.designs[0].id,
+        location="Back yard",
+        conditions="Dry ground",
+        notes="First session",
+    )
+    measurement = Measurement(
+        id=uuid4(),
+        name="Field sweep",
+        created_at=FIXED_NOW,
+        reference_impedance_ohm=50.0,
+        points=(MeasurementPoint(7_100_000.0, complex(50.0, 0.0)),),
+        calibration="SOL",
+        session_id=session.id,
+    )
+    project = project.with_measurement_session(
+        session,
+        updated_at=FIXED_NOW,
+    ).with_measurement(
+        measurement,
+        updated_at=FIXED_NOW,
+    )
+
+    document = document_from_project(project)
+    restored = project_from_document(document)
+
+    assert restored == project
+    assert restored.measurement_sessions == (session,)
+    assert restored.measurements[0].session_id == session.id
+
+    repository = JsonProjectRepository()
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "sessions.antennadesk"
+        repository.save(project, path)
+        assert repository.load(path) == project
+
+
 @settings(max_examples=50, deadline=None)
 @given(
     project_name=NAME,

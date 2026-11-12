@@ -91,6 +91,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   in the construction sheet, native PDF, and ZIP package (`preflight.txt`), and
   the solver adapter and pre-flight now share the NEC-2 assumption validator.
   No schema change.
+- **Measurement sessions and before/after comparison.** Measurements can now
+  be grouped into named field sessions with a date and time, optional design,
+  location, conditions, and notes. The **Measurements** tab has **Sessions...**
+  and **Compare...** actions; the timeline lists sessions newest first, keeps
+  unassigned legacy measurements accessible, and supports creating, editing,
+  deleting, and reassigning measurements. Deleting a session keeps its
+  measurements and detaches them instead of deleting data. The comparison
+  dialog aligns two measurements on their overlapping frequency range, shows
+  R/X/SWR and `Δ|Z|`/`ΔSWR` per point, mean/max impedance change, mean SWR, and
+  a resonance shift when unambiguous, and warns when calibration, reference
+  plane, or feed-line conditions differ. Schema 39 adds sessions and the
+  optional measurement session link; older projects migrate with no sessions
+  and unassigned measurements.
 
 ## [0.4.2] - 2026-11-11
 

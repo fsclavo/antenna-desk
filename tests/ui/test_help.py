@@ -181,6 +181,7 @@ def test_main_window_sections_actions_and_tabs_have_help(window) -> None:  # typ
     assert "as-built" in window._construction_record_action.toolTip().lower()
     assert "calculators" in window._calculator_action.toolTip().lower()
     assert "pre-flight" in window._preflight_action.toolTip().lower()
+    assert "sessions" in window._measurement_sessions_action.toolTip().lower()
 
     tabs = window._results._tabs
     impedance = tabs.indexOf(window._results._impedance_tab)
@@ -198,6 +199,7 @@ def test_main_window_sections_actions_and_tabs_have_help(window) -> None:  # typ
     assert "as-built" in window._construction_record_action.toolTip().lower()
     assert "calculadoras" in window._calculator_action.toolTip().lower()
     assert "construir" in window._preflight_action.toolTip().lower()
+    assert "sesiones" in window._measurement_sessions_action.toolTip().lower()
 
 
 def test_feed_line_dialog_applies_row_help(qtbot: QtBot) -> None:

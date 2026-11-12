@@ -586,6 +586,22 @@ def _migrate_v36_to_v37(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v38_to_v39(document: dict[str, Any]) -> dict[str, Any]:
+    """Add measurement sessions and the optional measurement session link."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if not isinstance(project, dict):
+        return migrated
+    project.setdefault("measurement_sessions", [])
+    measurements = project.get("measurements")
+    if isinstance(measurements, list):
+        for measurement in measurements:
+            if isinstance(measurement, dict):
+                measurement.setdefault("session_id", None)
+    return migrated
+
+
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
@@ -624,6 +640,7 @@ MIGRATIONS: dict[int, Migration] = {
     35: _migrate_v35_to_v36,
     36: _migrate_v36_to_v37,
     37: _migrate_v37_to_v38,
+    38: _migrate_v38_to_v39,
 }
 
 

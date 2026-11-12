@@ -1531,6 +1531,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Component Calculators...",
         Language.SPANISH: "Calculadoras de componentes...",
     },
+    "action.measurement_sessions": {
+        Language.ENGLISH: "Measurement Sessions...",
+        Language.SPANISH: "Sesiones de medición...",
+    },
     "action.exit": {Language.ENGLISH: "Exit", Language.SPANISH: "Salir"},
     "action.about": {
         Language.ENGLISH: "About AntennaDesk",
@@ -3365,6 +3369,106 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Open coil, trap, balun, and conductor construction calculators.",
         Language.SPANISH: "Abrí calculadoras de bobina, trampa, balun y conductor.",
     },
+    "help.action.measurement_sessions": {
+        Language.ENGLISH: (
+            "Group measurements into field sessions and compare them before and after tuning."
+        ),
+        Language.SPANISH: (
+            "Agrupá mediciones en sesiones de campo y comparalas antes y después de ajustar."
+        ),
+    },
+    "help.measurement.session": {
+        Language.ENGLISH: "Optional field session that groups measurements taken under the same setup.",
+        Language.SPANISH: "Sesión de campo opcional que agrupa mediciones tomadas con la misma instalación.",
+    },
+    "help.measurement.sessions": {
+        Language.ENGLISH: "Open the measurement timeline and session manager.",
+        Language.SPANISH: "Abrí la línea de tiempo y el gestor de sesiones de medición.",
+    },
+    "help.measurement.compare": {
+        Language.ENGLISH: "Compare two measurements on their overlapping frequency range.",
+        Language.SPANISH: "Compará dos mediciones en su rango de frecuencia superpuesto.",
+    },
+    "help.measurement.session.name": {
+        Language.ENGLISH: "Name shown in the timeline and measurement selector.",
+        Language.SPANISH: "Nombre que aparece en la línea de tiempo y el selector.",
+    },
+    "help.measurement.session.date": {
+        Language.ENGLISH: "Date and time of the field session.",
+        Language.SPANISH: "Fecha y hora de la sesión de campo.",
+    },
+    "help.measurement.session.design": {
+        Language.ENGLISH: "Design measured in this session; optional.",
+        Language.SPANISH: "Diseño medido en esta sesión; opcional.",
+    },
+    "help.measurement.session.location": {
+        Language.ENGLISH: "Site or location of the session.",
+        Language.SPANISH: "Sitio o ubicación de la sesión.",
+    },
+    "help.measurement.session.conditions": {
+        Language.ENGLISH: "Ground, weather, height, and other conditions.",
+        Language.SPANISH: "Suelo, clima, altura y otras condiciones.",
+    },
+    "help.measurement.session.notes": {
+        Language.ENGLISH: "What changed or what to remember about the session.",
+        Language.SPANISH: "Qué cambió o qué recordar de la sesión.",
+    },
+    "help.measurement.sessions.timeline": {
+        Language.ENGLISH: "Sessions ordered by date; unassigned measurements appear at the end.",
+        Language.SPANISH: "Sesiones ordenadas por fecha; las mediciones sin sesión aparecen al final.",
+    },
+    "help.measurement.sessions.details": {
+        Language.ENGLISH: "Selected session date, design, location, conditions, and notes.",
+        Language.SPANISH: "Fecha, diseño, ubicación, condiciones y notas de la sesión.",
+    },
+    "help.measurement.sessions.table": {
+        Language.ENGLISH: "Measurements in the selected session.",
+        Language.SPANISH: "Mediciones de la sesión seleccionada.",
+    },
+    "help.measurement.sessions.new": {
+        Language.ENGLISH: "Create a field session.",
+        Language.SPANISH: "Crear una sesión de campo.",
+    },
+    "help.measurement.sessions.edit": {
+        Language.ENGLISH: "Change the selected session.",
+        Language.SPANISH: "Cambiar la sesión seleccionada.",
+    },
+    "help.measurement.sessions.delete": {
+        Language.ENGLISH: "Delete the session and keep its measurements as unassigned.",
+        Language.SPANISH: "Eliminar la sesión y conservar sus mediciones sin sesión.",
+    },
+    "help.measurement.sessions.edit_measurement": {
+        Language.ENGLISH: "Edit the selected measurement or assign it to a session.",
+        Language.SPANISH: "Editar la medición seleccionada o asignarla a una sesión.",
+    },
+    "help.measurement.sessions.compare": {
+        Language.ENGLISH: "Compare two measurements from any session.",
+        Language.SPANISH: "Comparar dos mediciones de cualquier sesión.",
+    },
+    "help.measurement.comparison.reference": {
+        Language.ENGLISH: "Reference impedance used for both SWR curves; it does not change R or X.",
+        Language.SPANISH: "Impedancia de referencia usada para ambas curvas de ROE; no cambia R ni X.",
+    },
+    "help.measurement.comparison.before": {
+        Language.ENGLISH: "Baseline measurement.",
+        Language.SPANISH: "Medición de referencia.",
+    },
+    "help.measurement.comparison.after": {
+        Language.ENGLISH: "Measurement after the change.",
+        Language.SPANISH: "Medición después del cambio.",
+    },
+    "help.measurement.comparison.summary": {
+        Language.ENGLISH: "Compared points and mean/max impedance change.",
+        Language.SPANISH: "Puntos comparados y cambio medio/máximo de impedancia.",
+    },
+    "help.measurement.comparison.table": {
+        Language.ENGLISH: "Aligned frequency, R, X, SWR, and deltas for both measurements.",
+        Language.SPANISH: "Frecuencia, R, X, ROE y diferencias alineadas para ambas mediciones.",
+    },
+    "help.measurement.comparison.plot": {
+        Language.ENGLISH: "SWR before and after at the comparison reference impedance.",
+        Language.SPANISH: "ROE antes y después con la impedancia de referencia elegida.",
+    },
     "help.component_calculator.coil": {
         Language.ENGLISH: "Wheeler air-core coil approximation and turns estimate.",
         Language.SPANISH: "Aproximación de Wheeler para bobina de aire y estimación de vueltas.",
@@ -4682,6 +4786,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Measurement deleted.",
         Language.SPANISH: "Medición eliminada.",
     },
+    "status.measurement_sessions": {
+        Language.ENGLISH: "Measurement sessions updated.",
+        Language.SPANISH: "Sesiones de medición actualizadas.",
+    },
     "design.provenance": {
         Language.ENGLISH: "Estimated design: {method} · confidence: {confidence} · tolerance: {tolerance}",
         Language.SPANISH: "Diseño estimado: {method} · confianza: {confidence} · tolerancia: {tolerance}",
@@ -5091,6 +5199,229 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "measurement.delete_confirm": {
         Language.ENGLISH: "Delete measurement '{name}'? This cannot be undone.",
         Language.SPANISH: "¿Eliminar la medición '{name}'? No se puede deshacer.",
+    },
+    "measurement.session": {
+        Language.ENGLISH: "Session",
+        Language.SPANISH: "Sesión",
+    },
+    "measurement.session_unassigned": {
+        Language.ENGLISH: "Unassigned",
+        Language.SPANISH: "Sin sesión",
+    },
+    "measurement.session_value": {
+        Language.ENGLISH: "Session: {value}",
+        Language.SPANISH: "Sesión: {value}",
+    },
+    "measurement.sessions": {
+        Language.ENGLISH: "Sessions...",
+        Language.SPANISH: "Sesiones...",
+    },
+    "measurement.compare": {
+        Language.ENGLISH: "Compare...",
+        Language.SPANISH: "Comparar...",
+    },
+    "measurement.session_title": {
+        Language.ENGLISH: "Measurement session",
+        Language.SPANISH: "Sesión de medición",
+    },
+    "measurement.session_name": {
+        Language.ENGLISH: "Session name",
+        Language.SPANISH: "Nombre de la sesión",
+    },
+    "measurement.session_name_required": {
+        Language.ENGLISH: "Enter a session name.",
+        Language.SPANISH: "Ingresá un nombre de sesión.",
+    },
+    "measurement.session_date": {
+        Language.ENGLISH: "Date and time",
+        Language.SPANISH: "Fecha y hora",
+    },
+    "measurement.session_design": {
+        Language.ENGLISH: "Design",
+        Language.SPANISH: "Diseño",
+    },
+    "measurement.session_location": {
+        Language.ENGLISH: "Location",
+        Language.SPANISH: "Ubicación",
+    },
+    "measurement.session_conditions": {
+        Language.ENGLISH: "Conditions",
+        Language.SPANISH: "Condiciones",
+    },
+    "measurement.session_notes": {
+        Language.ENGLISH: "Notes",
+        Language.SPANISH: "Notas",
+    },
+    "measurement.session_no_design": {
+        Language.ENGLISH: "Project (all designs)",
+        Language.SPANISH: "Proyecto (todos los diseños)",
+    },
+    "measurement.sessions_title": {
+        Language.ENGLISH: "Measurement sessions",
+        Language.SPANISH: "Sesiones de medición",
+    },
+    "measurement.sessions_timeline": {
+        Language.ENGLISH: (
+            "Timeline · newest sessions first. Select a session to see its measurements."
+        ),
+        Language.SPANISH: (
+            "Línea de tiempo · sesiones más nuevas primero. Seleccioná una sesión "
+            "para ver sus mediciones."
+        ),
+    },
+    "measurement.sessions_measurements": {
+        Language.ENGLISH: "Measurements in the selected session",
+        Language.SPANISH: "Mediciones de la sesión seleccionada",
+    },
+    "measurement.sessions_unassigned": {
+        Language.ENGLISH: "Unassigned measurements",
+        Language.SPANISH: "Mediciones sin sesión",
+    },
+    "measurement.sessions_unassigned_hint": {
+        Language.ENGLISH: ("Measurements without a session. Edit a measurement to assign it."),
+        Language.SPANISH: ("Mediciones sin sesión. Editá una medición para asignarla."),
+    },
+    "measurement.sessions_count": {
+        Language.ENGLISH: "Measurements",
+        Language.SPANISH: "Mediciones",
+    },
+    "measurement.session_new": {
+        Language.ENGLISH: "New session...",
+        Language.SPANISH: "Nueva sesión...",
+    },
+    "measurement.session_edit": {
+        Language.ENGLISH: "Edit session...",
+        Language.SPANISH: "Editar sesión...",
+    },
+    "measurement.session_delete": {
+        Language.ENGLISH: "Delete session",
+        Language.SPANISH: "Eliminar sesión",
+    },
+    "measurement.session_delete_title": {
+        Language.ENGLISH: "Delete measurement session",
+        Language.SPANISH: "Eliminar sesión de medición",
+    },
+    "measurement.session_delete_confirm": {
+        Language.ENGLISH: (
+            "Delete session '{name}'? Its measurements are kept and become unassigned."
+        ),
+        Language.SPANISH: (
+            "¿Eliminar la sesión '{name}'? Sus mediciones se conservan y quedan sin sesión."
+        ),
+    },
+    "measurement.sessions_edit_measurement": {
+        Language.ENGLISH: "Edit measurement...",
+        Language.SPANISH: "Editar medición...",
+    },
+    "measurement.sessions_compare": {
+        Language.ENGLISH: "Compare measurements...",
+        Language.SPANISH: "Comparar mediciones...",
+    },
+    "measurement.points": {
+        Language.ENGLISH: "Points",
+        Language.SPANISH: "Puntos",
+    },
+    "measurement.reference": {
+        Language.ENGLISH: "Reference",
+        Language.SPANISH: "Referencia",
+    },
+    "measurement.source": {
+        Language.ENGLISH: "Source",
+        Language.SPANISH: "Origen",
+    },
+    "measurement.before_after_title": {
+        Language.ENGLISH: "Measurement before / after",
+        Language.SPANISH: "Medición antes / después",
+    },
+    "measurement.before_after_summary": {
+        Language.ENGLISH: (
+            "Compared {count} points · mean |ΔZ| {mean} Ω · max {maximum} Ω · "
+            "mean SWR {before} → {after}"
+        ),
+        Language.SPANISH: (
+            "Comparados {count} puntos · |ΔZ| medio {mean} Ω · máximo {maximum} Ω · "
+            "ROE media {before} → {after}"
+        ),
+    },
+    "measurement.before_after_no_overlap": {
+        Language.ENGLISH: ("No overlapping frequency range between the selected measurements."),
+        Language.SPANISH: (
+            "No hay un rango de frecuencia superpuesto entre las mediciones seleccionadas."
+        ),
+    },
+    "measurement.comparison_unavailable": {
+        Language.ENGLISH: "Select two measurements.",
+        Language.SPANISH: "Seleccioná dos mediciones.",
+    },
+    "measurement.comparison_need_two": {
+        Language.ENGLISH: ("Import or record at least two measurements to compare."),
+        Language.SPANISH: ("Importá o registrá al menos dos mediciones para comparar."),
+    },
+    "measurement.comparison_conditions": {
+        Language.ENGLISH: ("Conditions differ: {fields}. Treat the comparison as indicative."),
+        Language.SPANISH: (
+            "Las condiciones difieren: {fields}. Tomá la comparación como indicativa."
+        ),
+    },
+    "measurement.comparison_resonance_before": {
+        Language.ENGLISH: "Resonance before: {value}",
+        Language.SPANISH: "Resonancia antes: {value}",
+    },
+    "measurement.comparison_resonance_after": {
+        Language.ENGLISH: "Resonance after: {value}",
+        Language.SPANISH: "Resonancia después: {value}",
+    },
+    "measurement.comparison_resonance_shift": {
+        Language.ENGLISH: "Shift: {value} kHz",
+        Language.SPANISH: "Desplazamiento: {value} kHz",
+    },
+    "measurement.comparison_before": {
+        Language.ENGLISH: "Before",
+        Language.SPANISH: "Antes",
+    },
+    "measurement.comparison_after": {
+        Language.ENGLISH: "After",
+        Language.SPANISH: "Después",
+    },
+    "measurement.comparison_reference": {
+        Language.ENGLISH: "Comparison SWR reference",
+        Language.SPANISH: "Referencia de ROE para comparar",
+    },
+    "measurement.frequency_mhz": {
+        Language.ENGLISH: "Frequency (MHz)",
+        Language.SPANISH: "Frecuencia (MHz)",
+    },
+    "measurement.comparison_before_r": {
+        Language.ENGLISH: "Before R (Ω)",
+        Language.SPANISH: "R antes (Ω)",
+    },
+    "measurement.comparison_before_x": {
+        Language.ENGLISH: "Before X (Ω)",
+        Language.SPANISH: "X antes (Ω)",
+    },
+    "measurement.comparison_before_swr": {
+        Language.ENGLISH: "Before SWR",
+        Language.SPANISH: "ROE antes",
+    },
+    "measurement.comparison_after_r": {
+        Language.ENGLISH: "After R (Ω)",
+        Language.SPANISH: "R después (Ω)",
+    },
+    "measurement.comparison_after_x": {
+        Language.ENGLISH: "After X (Ω)",
+        Language.SPANISH: "X después (Ω)",
+    },
+    "measurement.comparison_after_swr": {
+        Language.ENGLISH: "After SWR",
+        Language.SPANISH: "ROE después",
+    },
+    "measurement.comparison_delta_z": {
+        Language.ENGLISH: "Δ|Z| (Ω)",
+        Language.SPANISH: "Δ|Z| (Ω)",
+    },
+    "measurement.comparison_delta_swr": {
+        Language.ENGLISH: "ΔSWR",
+        Language.SPANISH: "ΔROE",
     },
     "measurement.none": {
         Language.ENGLISH: "No measurements imported.",
@@ -5889,6 +6220,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "history.measurement_delete": {
         Language.ENGLISH: "Delete measurement",
         Language.SPANISH: "Eliminar medición",
+    },
+    "history.measurement_sessions": {
+        Language.ENGLISH: "Measurement sessions",
+        Language.SPANISH: "Sesiones de medición",
     },
     "history.simulate": {
         Language.ENGLISH: "Simulate",
@@ -10866,6 +11201,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "la altura de los radiales y el modelo de suelo; las ganancias de campo "
             "lejano no están disponibles."
         ),
+    },
+    "diagnostic.project.measurement.duplicate_id": {
+        Language.ENGLISH: "Two measurements use the same identifier.",
+        Language.SPANISH: "Dos mediciones usan el mismo identificador.",
+    },
+    "diagnostic.project.measurement.unknown_session": {
+        Language.ENGLISH: "A measurement references an unknown session.",
+        Language.SPANISH: "Una medición referencia una sesión inexistente.",
+    },
+    "diagnostic.project.measurement_session.duplicate_id": {
+        Language.ENGLISH: "Two measurement sessions use the same identifier.",
+        Language.SPANISH: "Dos sesiones de medición usan el mismo identificador.",
+    },
+    "diagnostic.project.measurement_session.unknown_design": {
+        Language.ENGLISH: "A measurement session references an unknown design.",
+        Language.SPANISH: "Una sesión de medición referencia un diseño inexistente.",
     },
     "diagnostic.project.design.duplicate_id": {
         Language.ENGLISH: "Two designs use the same identifier.",

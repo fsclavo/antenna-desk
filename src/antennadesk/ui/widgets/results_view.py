@@ -7,6 +7,7 @@ from __future__ import annotations
 import math
 from collections.abc import Sequence
 from pathlib import Path
+from uuid import UUID
 
 import pyqtgraph as pg
 from PySide6.QtCore import QEvent, QPoint, Qt, Signal
@@ -74,6 +75,8 @@ CONFIDENCE_TOPICS: tuple[str, ...] = (
 class ResultsView(QWidget):
     measurement_edit_requested = Signal(object)
     measurement_delete_requested = Signal(object)
+    measurement_sessions_requested = Signal()
+    measurement_compare_requested = Signal(object)
     band_selected = Signal(object)
     matching_network_requested = Signal(object)
     tab_changed = Signal(str)
@@ -217,6 +220,7 @@ class ResultsView(QWidget):
         currents_layout.addWidget(self._currents_plot)
 
         self._measurements: tuple[Measurement, ...] = ()
+        self._measurement_session_names: dict[UUID, str] = {}
         self._measurement_selector = QComboBox(self._measurements_tab)
         self._measurement_selector_label = QLabel(self._measurements_tab)
         self._measurement_selector.currentIndexChanged.connect(self._render_measurements)
@@ -233,16 +237,26 @@ class ResultsView(QWidget):
         self._measurement_delete = QPushButton(
             translator.t("measurement.delete"), self._measurements_tab
         )
+        self._measurement_sessions = QPushButton(
+            translator.t("measurement.sessions"), self._measurements_tab
+        )
+        self._measurement_compare = QPushButton(
+            translator.t("measurement.compare"), self._measurements_tab
+        )
         self._measurement_edit.setEnabled(False)
         self._measurement_delete.setEnabled(False)
+        self._measurement_compare.setEnabled(False)
         self._measurement_edit.clicked.connect(self._request_measurement_edit)
         self._measurement_delete.clicked.connect(self._request_measurement_delete)
+        self._measurement_sessions.clicked.connect(self.measurement_sessions_requested.emit)
+        self._measurement_compare.clicked.connect(self._request_measurement_compare)
         self._measurement_table = QTableWidget(0, 8, self._measurements_tab)
         self._configure_table(self._measurement_table)
         self._measurement_plot = self._make_plot()
         self._measurement_plot.addLegend()
         self._measurement_details = QLabel(self._measurements_tab)
         self._measurement_details.setWordWrap(True)
+        self._measurement_details.setTextFormat(Qt.TextFormat.PlainText)
         self._measurement_comparison = QLabel(self._measurements_tab)
         self._measurement_comparison.setWordWrap(True)
         self._measurement_resonance = QLabel(self._measurements_tab)
@@ -256,6 +270,9 @@ class ResultsView(QWidget):
         measurement_controls.addSpacing(12)
         measurement_controls.addWidget(self._measurement_edit)
         measurement_controls.addWidget(self._measurement_delete)
+        measurement_controls.addSpacing(12)
+        measurement_controls.addWidget(self._measurement_sessions)
+        measurement_controls.addWidget(self._measurement_compare)
         measurement_controls.addStretch(1)
         measurement_layout = QVBoxLayout(self._measurements_tab)
         measurement_layout.setContentsMargins(0, 0, 0, 0)
@@ -537,15 +554,27 @@ class ResultsView(QWidget):
         if self._bands_tab_index >= 0:
             self._tabs.setCurrentWidget(self._bands_tab)
 
-    def set_measurements(self, measurements: tuple[Measurement, ...]) -> None:
+    def set_measurements(
+        self,
+        measurements: tuple[Measurement, ...],
+        session_names: dict[UUID, str] | None = None,
+    ) -> None:
         self._measurements = measurements
+        self._measurement_session_names = session_names or {}
         self._measurement_selector.blockSignals(True)
         self._measurement_selector.clear()
         for measurement in measurements:
-            self._measurement_selector.addItem(measurement.name)
+            session = (
+                self._measurement_session_names.get(measurement.session_id)
+                if measurement.session_id is not None
+                else None
+            )
+            label = f"{measurement.name} · {session}" if session else measurement.name
+            self._measurement_selector.addItem(label)
         self._measurement_selector.blockSignals(False)
         if self._measurement_selector.count():
             self._measurement_selector.setCurrentIndex(0)
+        self._measurement_compare.setEnabled(len(measurements) >= 2)
         self._render_measurements()
 
     def set_result(
@@ -839,6 +868,8 @@ class ResultsView(QWidget):
         self._measurement_metric_label.setText(self._translator.t("measurement.metric"))
         self._measurement_edit.setText(self._translator.t("measurement.edit"))
         self._measurement_delete.setText(self._translator.t("measurement.delete"))
+        self._measurement_sessions.setText(self._translator.t("measurement.sessions"))
+        self._measurement_compare.setText(self._translator.t("measurement.compare"))
         self._measurement_metric.setItemText(0, self._translator.t("table.swr"))
         self._measurement_metric.setItemText(1, self._translator.t("table.resistance"))
         self._measurement_metric.setItemText(2, self._translator.t("table.reactance"))
@@ -895,6 +926,8 @@ class ResultsView(QWidget):
             (self._measurement_plot, "chart.measurement"),
         ):
             apply_help(plot, self._translator, key)
+        apply_help(self._measurement_sessions, self._translator, "measurement.sessions")
+        apply_help(self._measurement_compare, self._translator, "measurement.compare")
         for control, key in (
             (self._band_selector, "band.selector"),
             (self._pattern_frequency, "pattern.frequency"),
@@ -1501,7 +1534,15 @@ class ResultsView(QWidget):
         if not valid:
             return
         measurement = self._measurements[index]
+        self._measurement_compare.setEnabled(len(self._measurements) >= 2)
         details = []
+        session = (
+            self._measurement_session_names.get(measurement.session_id)
+            if measurement.session_id is not None
+            else None
+        )
+        if session:
+            details.append(self._translator.t("measurement.session_value", value=session))
         if measurement.calibration:
             details.append(
                 self._translator.t("measurement.calibration_value", value=measurement.calibration)
@@ -1727,6 +1768,11 @@ class ResultsView(QWidget):
         index = self._measurement_selector.currentIndex()
         if 0 <= index < len(self._measurements):
             self.measurement_delete_requested.emit(self._measurements[index])
+
+    def _request_measurement_compare(self) -> None:
+        index = self._measurement_selector.currentIndex()
+        measurement = self._measurements[index] if 0 <= index < len(self._measurements) else None
+        self.measurement_compare_requested.emit(measurement)
 
     def _render_diagnostics(self) -> None:
         self._render_confidence()

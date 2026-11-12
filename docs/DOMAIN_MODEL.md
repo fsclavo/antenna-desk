@@ -571,9 +571,23 @@ See [ADR-0030](ADR/0030-feed-chain-topology.md).
 
 `MeasurementPoint` stores a measured frequency and complex impedance.
 `Measurement` stores a name, timestamp, reference impedance, source, points,
-calibration, reference plane, feed line/accessories, and notes. Measurements are
-stored in the project and rendered with SWR computed at their reference
-impedance.
+calibration, reference plane, feed line/accessories, notes, and an optional
+`session_id`. Measurements are stored in the project and rendered with SWR
+computed at their reference impedance.
+
+`MeasurementSession` groups measurements taken under one setup. It stores a
+name, UTC timestamp, optional design id, location, conditions, and notes.
+Sessions are project-level and may be linked to a design; deleting a session
+keeps its measurements and clears their `session_id`. `Project` validates unique
+measurement/session ids and rejects references to unknown sessions or designs.
+
+`compare_measurement_pair()` aligns two measurements on the union of their
+frequencies inside the overlapping range, interpolating only there. It reports
+per-point R/X/SWR and `Δ|Z|`/`ΔSWR`, mean and maximum impedance change, mean SWR
+for both sides, and resonance points. A resonance shift is reported only when
+each measurement has exactly one resonance. SWR uses an explicit comparison
+reference impedance; it is not tied to either measurement's calibration
+reference.
 
 ## Project file
 

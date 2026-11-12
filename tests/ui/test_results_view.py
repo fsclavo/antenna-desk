@@ -502,6 +502,47 @@ def test_results_view_compares_measured_and_simulated_impedance(qtbot: QtBot) ->
     )
 
 
+def test_results_view_exposes_sessions_and_before_after_buttons(qtbot: QtBot) -> None:
+    from datetime import UTC, datetime
+    from uuid import uuid4
+
+    from antennadesk.domain.measurement import Measurement, MeasurementPoint
+
+    session_id = uuid4()
+    measurements = (
+        Measurement(
+            id=uuid4(),
+            name="Before",
+            created_at=datetime(2026, 11, 12, 14, 0, tzinfo=UTC),
+            reference_impedance_ohm=50.0,
+            points=(MeasurementPoint(7_100_000.0, complex(50.0, 0.0)),),
+            session_id=session_id,
+        ),
+        Measurement(
+            id=uuid4(),
+            name="After",
+            created_at=datetime(2026, 11, 12, 16, 0, tzinfo=UTC),
+            reference_impedance_ohm=50.0,
+            points=(MeasurementPoint(7_100_000.0, complex(50.0, 0.0)),),
+            session_id=session_id,
+        ),
+    )
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    view.set_measurements(measurements, {session_id: "Field day"})
+
+    assert view._measurement_sessions.text() == "Sessions..."
+    assert view._measurement_compare.isEnabled()
+    assert "Field day" in view._measurement_selector.itemText(0)
+    assert "Session: Field day" in view._measurement_details.text()
+
+    with qtbot.waitSignal(view.measurement_sessions_requested):
+        view._measurement_sessions.click()
+    with qtbot.waitSignal(view.measurement_compare_requested) as compare_signal:
+        view._measurement_compare.click()
+    assert compare_signal.args[0] == measurements[0]
+
+
 def test_results_view_requests_measurement_edit_and_delete(qtbot: QtBot) -> None:
     from uuid import UUID
 

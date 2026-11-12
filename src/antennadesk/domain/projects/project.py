@@ -20,7 +20,7 @@ from ..common.units import ensure_non_negative
 from ..common.validation import Diagnostic, Severity, raise_if_errors
 from ..design.band_plan import BandPlan
 from ..design.matching_design import MatchingNetworkDesign
-from ..measurement import Measurement
+from ..measurement import Measurement, MeasurementSession
 from ..optimization.summary import OptimizationSummary
 from ..simulation.band_result import BandAnalysisResult
 from ..simulation.run import SimulationRun
@@ -170,11 +170,13 @@ class Project:
     installation_profiles: tuple[InstallationProfile, ...] = field(default_factory=tuple)
     active_installation_profile_id: UUID | None = None
     construction_record: ConstructionRecord | None = None
+    measurement_sessions: tuple[MeasurementSession, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "designs", tuple(self.designs))
         object.__setattr__(self, "simulation_runs", tuple(self.simulation_runs))
         object.__setattr__(self, "measurements", tuple(self.measurements))
+        object.__setattr__(self, "measurement_sessions", tuple(self.measurement_sessions))
         object.__setattr__(self, "installation_profiles", tuple(self.installation_profiles))
         object.__setattr__(
             self,
@@ -292,6 +294,54 @@ class Project:
             )
 
         design_ids = {design.id for design in self.designs}
+        session_ids: set[UUID] = set()
+        for session in self.measurement_sessions:
+            if session.id in session_ids:
+                diagnostics.append(
+                    Diagnostic(
+                        code="project.measurement_session.duplicate_id",
+                        severity=Severity.ERROR,
+                        message=f"duplicate measurement session id: {session.id}",
+                        field="measurement_sessions",
+                    )
+                )
+            session_ids.add(session.id)
+            if session.design_id is not None and session.design_id not in design_ids:
+                diagnostics.append(
+                    Diagnostic(
+                        code="project.measurement_session.unknown_design",
+                        severity=Severity.ERROR,
+                        message=(
+                            f"measurement session references an unknown design: {session.design_id}"
+                        ),
+                        field="measurement_sessions",
+                    )
+                )
+
+        measurement_ids: set[UUID] = set()
+        for measurement in self.measurements:
+            if measurement.id in measurement_ids:
+                diagnostics.append(
+                    Diagnostic(
+                        code="project.measurement.duplicate_id",
+                        severity=Severity.ERROR,
+                        message=f"duplicate measurement id: {measurement.id}",
+                        field="measurements",
+                    )
+                )
+            measurement_ids.add(measurement.id)
+            if measurement.session_id is not None and measurement.session_id not in session_ids:
+                diagnostics.append(
+                    Diagnostic(
+                        code="project.measurement.unknown_session",
+                        severity=Severity.ERROR,
+                        message=(
+                            f"measurement references an unknown session: {measurement.session_id}"
+                        ),
+                        field="measurements",
+                    )
+                )
+
         seen_run_ids: set[UUID] = set()
         for run in self.simulation_runs:
             if run.id in seen_run_ids:
@@ -468,6 +518,73 @@ class Project:
             batch_id=batch_id,
             created_at=max(run.created_at for run in runs),
             runs=tuple((run.band_id or "", run.result) for run in ordered),
+        )
+
+    def measurement_session_by_id(self, session_id: UUID) -> MeasurementSession:
+        for session in self.measurement_sessions:
+            if session.id == session_id:
+                return session
+        raise KeyError(f"unknown measurement session id: {session_id}")
+
+    def measurements_for_session(self, session_id: UUID) -> tuple[Measurement, ...]:
+        return tuple(
+            measurement for measurement in self.measurements if measurement.session_id == session_id
+        )
+
+    def unassigned_measurements(self) -> tuple[Measurement, ...]:
+        return tuple(
+            measurement for measurement in self.measurements if measurement.session_id is None
+        )
+
+    def with_measurement_session(
+        self,
+        session: MeasurementSession,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        return replace(
+            self,
+            measurement_sessions=(*self.measurement_sessions, session),
+            updated_at=updated_at,
+        )
+
+    def with_updated_measurement_session(
+        self,
+        session: MeasurementSession,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        if not any(item.id == session.id for item in self.measurement_sessions):
+            raise KeyError(f"unknown measurement session id: {session.id}")
+        return replace(
+            self,
+            measurement_sessions=tuple(
+                session if item.id == session.id else item for item in self.measurement_sessions
+            ),
+            updated_at=updated_at,
+        )
+
+    def without_measurement_session(
+        self,
+        session_id: UUID,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        if not any(item.id == session_id for item in self.measurement_sessions):
+            raise KeyError(f"unknown measurement session id: {session_id}")
+        measurements = tuple(
+            replace(measurement, session_id=None)
+            if measurement.session_id == session_id
+            else measurement
+            for measurement in self.measurements
+        )
+        return replace(
+            self,
+            measurement_sessions=tuple(
+                item for item in self.measurement_sessions if item.id != session_id
+            ),
+            measurements=measurements,
+            updated_at=updated_at,
         )
 
     def with_measurement(

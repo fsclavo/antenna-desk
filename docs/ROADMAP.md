@@ -1,6 +1,6 @@
 # AntennaDesk roadmap and backlog
 
-**Updated:** 2026-11-11
+**Updated:** 2026-11-12
 **Status:** active product roadmap after catalog, measurement, optimization,
 packaging, and the 2026-11-11 product-experience review.
 **Scope:** product direction, milestones, and the ordered antenna expansion
@@ -320,9 +320,9 @@ The 2026-11-11 review of the desired-backlog proposal keeps the product focus on
 the decision-to-measurement workflow instead of adding more antenna families.
 The catalog is broad enough; the next value is helping the operator choose,
 understand, build, and improve a design. This is product scope, not a second
-execution queue. UX1–UX9 are complete; the 0.5 **Decide** and 0.6 **Build** releases are closed.
-UX10–UX20 stay here until the next product slice is selected and they are ready
-to execute.
+execution queue. UX1–UX10 are complete; the 0.5 **Decide** and 0.6 **Build** releases are
+closed, and the 0.7 **Measure** release is in progress. UX11–UX20 stay here
+until the next product slice is selected and they are ready to execute.
 
 Rules for this track:
 
@@ -348,7 +348,7 @@ Rules for this track:
 | 0.6 Build | UX7 | Construction package 2.0 | As-built, hardware BOM, coil/trap sheet, checklist | M | B/C | done 2026-11-11 |
 | 0.6 Build | UX8 | Integrated coil/trap/loading calculators | Prefilled calculators that apply to the design | M | B | done 2026-11-11 |
 | 0.6 Build | UX9 | Construction pre-flight checks | Detect geometry, feed, segmentation, and support issues | S–M | n/a | done 2026-11-12 |
-| 0.7 Measure | UX10 | Measurement sessions and timeline | Multi-session records and before/after comparison | M | A/B | proposed |
+| 0.7 Measure | UX10 | Measurement sessions and timeline | Multi-session records and before/after comparison | M | A/B | done 2026-11-12 |
 | 0.7 Measure | UX11 | Sensitivity-based tuning assistant | Bounded adjustment from solver sensitivity | M–L | B/C | proposed |
 | 0.7 Measure | UX12 | Measurement uncertainty card | Calibration, reference-plane, and environment limits | S–M | B/C | proposed |
 | 0.8 Explore | UX13 | Parameter sweeps (what-if) | 1D/2D sweeps with overlays and a budget | M | B | proposed |
@@ -382,9 +382,9 @@ kept at
 
 Product track:
 
-1. UX1–UX9 are complete. The 0.5 **Decide** and 0.6 **Build** releases are
-   closed. UX10–UX20 remain product scope in the backlog above; the 0.7
-   **Measure** release is the next candidate.
+1. UX1–UX10 are complete. The 0.5 **Decide** and 0.6 **Build** releases are
+   closed, and the 0.7 **Measure** release is in progress. UX11–UX20 remain
+   product scope in the backlog above; UX11 is the next candidate.
 
 Modeling track:
 

@@ -1288,6 +1288,32 @@ plane, feed line, and notes without touching the imported points. **Delete**
 removes the measurement after confirmation. Imported data is treated as
 untrusted input; invalid rows are skipped with warnings.
 
+## Measurement sessions and before/after comparison
+
+Measurements can be grouped into **sessions** that record when and where a
+sweep was taken. A session has a name, date and time, optional design, location,
+conditions, and notes. Use the **Sessions...** button in the **Measurements**
+tab, or **Tools → Measurement Sessions...**, to open the timeline.
+
+The timeline lists sessions newest first. Select one to see its measurements
+and conditions. **New session...** creates a session, **Edit session...**
+changes it, and **Delete session** removes the session while keeping its
+measurements (they become unassigned). The **Unassigned measurements** row
+shows imported measurements that are not in a session. **Edit measurement...**
+changes a measurement's conditions or assigns it to a session; the session
+selector is also available while importing or editing a VNA file.
+
+**Compare measurements...** compares two measurements across any sessions. It
+aligns the frequencies in their overlapping range, interpolates only inside
+that overlap, and never extrapolates. The dialog shows R, X, SWR, `Δ|Z|`, and
+`ΔSWR` for each aligned point, plus mean/max impedance change, mean SWR before
+and after, and the measured resonance before/after when each sweep has exactly
+one. SWR uses the comparison reference impedance you choose; R and X do not
+depend on it. If calibration, reference plane, or feed-line conditions differ,
+the dialog warns that the comparison is only indicative. A lower SWR is not
+proof of a better antenna; verify gain, pattern, and construction limits with
+the solver and field checks.
+
 ## Feed line
 
 Use **Simulation → Feed Line...** to configure a uniform transmission line between

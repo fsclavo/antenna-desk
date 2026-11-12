@@ -235,6 +235,14 @@ merged back on restore, so undoing a design edit does not delete completed
 solver history. `ResultsView` shares a reusable `ChartCursor` across the
 impedance, SWR, pattern, currents, and measurement charts.
 
+Measurement sessions are project metadata: `MeasurementSession` groups
+imported `Measurement` records, and `Measurement.session_id` is the only link.
+The sessions dialog edits a local immutable `Project` and returns it to the main
+window, where it enters the normal undo history. The before/after comparison is
+a pure `measurement_comparison` function over two measurements; the dialog only
+formats its points and warnings. No measurement path performs electromagnetic
+calculations.
+
 The frequency-first estimator layer is domain code: `DesignIntent` and
 `DimensionEstimate` are Qt-free, and `EstimateAntennaDimensions` is an
 application use case. The UI displays the estimate and applies the resulting

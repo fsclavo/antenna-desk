@@ -237,6 +237,9 @@ def test_import_vna_csv_adds_a_measurement(
         def notes(self) -> str:
             return "Dry ground"
 
+        def session_id(self) -> None:
+            return None
+
     monkeypatch.setattr(
         QFileDialog,
         "getOpenFileName",
@@ -309,6 +312,9 @@ def test_edit_and_delete_measurement(
 
         def notes(self) -> str:
             return "after tuning"
+
+        def session_id(self) -> None:
+            return None
 
     monkeypatch.setattr(main_window_module, "MeasurementDetailsDialog", FakeDetailsDialog)
     window.edit_measurement(measurement)

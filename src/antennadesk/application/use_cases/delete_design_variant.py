@@ -31,10 +31,15 @@ class DeleteDesignVariant:
         runs = tuple(
             run for run in command.project.simulation_runs if run.design_id != command.design_id
         )
+        sessions = tuple(
+            replace(session, design_id=None) if session.design_id == command.design_id else session
+            for session in command.project.measurement_sessions
+        )
         timestamp = command.updated_at if command.updated_at is not None else utc_now()
         return replace(
             command.project,
             designs=remaining,
             simulation_runs=runs,
+            measurement_sessions=sessions,
             updated_at=timestamp,
         )

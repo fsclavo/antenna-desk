@@ -287,7 +287,9 @@ from .dialogs.loaded_dipole_dialog import LoadedDipoleDialog
 from .dialogs.loads_dialog import LoadsDialog
 from .dialogs.magnetic_loop_dialog import MagneticLoopDialog
 from .dialogs.matching_network_dialog import MatchingNetworkDialog
+from .dialogs.measurement_comparison_dialog import MeasurementComparisonDialog
 from .dialogs.measurement_details_dialog import MeasurementDetailsDialog
+from .dialogs.measurement_sessions_dialog import MeasurementSessionsDialog
 from .dialogs.moxon_dialog import MoxonDialog
 from .dialogs.ocfd_dialog import OCFDDialog
 from .dialogs.optimization_dialog import OptimizationDialog
@@ -597,6 +599,10 @@ class MainWindow(QMainWindow):
         self._compact_history_action.triggered.connect(lambda: self.compact_simulation_history())
         self._calculator_action = QAction(self)
         self._calculator_action.triggered.connect(lambda: self.show_component_calculators())
+        self._measurement_sessions_action = QAction(self)
+        self._measurement_sessions_action.triggered.connect(
+            lambda: self.edit_measurement_sessions()
+        )
 
         self._simulate_action = QAction(self)
         self._simulate_action.setShortcut(QKeySequence("F5"))
@@ -1139,6 +1145,8 @@ class MainWindow(QMainWindow):
         self._results = ResultsView(self._translator)
         self._results.measurement_edit_requested.connect(self.edit_measurement)
         self._results.measurement_delete_requested.connect(self.delete_measurement)
+        self._results.measurement_sessions_requested.connect(self.edit_measurement_sessions)
+        self._results.measurement_compare_requested.connect(self.compare_measurements)
         self._results.band_selected.connect(self._on_band_selected)
         self._results.matching_network_requested.connect(self.create_matching_network_from_point)
         self._results.tab_changed.connect(self._on_results_tab_changed)
@@ -1313,6 +1321,7 @@ class MainWindow(QMainWindow):
         self._tools_menu = self.menuBar().addMenu("")
         self._tools_menu.addAction(self._locate_solver_action)
         self._tools_menu.addAction(self._calculator_action)
+        self._tools_menu.addAction(self._measurement_sessions_action)
         self._tools_menu.addAction(self._compact_history_action)
 
         self._help_menu = self.menuBar().addMenu("")
@@ -1385,6 +1394,13 @@ class MainWindow(QMainWindow):
         self._calculator_action.setText(self._translator.t("action.component_calculator"))
         self._calculator_action.setToolTip(self._translator.t("help.action.component_calculator"))
         self._calculator_action.setWhatsThis(self._translator.t("help.action.component_calculator"))
+        self._measurement_sessions_action.setText(self._translator.t("action.measurement_sessions"))
+        self._measurement_sessions_action.setToolTip(
+            self._translator.t("help.action.measurement_sessions")
+        )
+        self._measurement_sessions_action.setWhatsThis(
+            self._translator.t("help.action.measurement_sessions")
+        )
         self._exit_action.setText(self._translator.t("action.exit"))
         self._about_action.setText(self._translator.t("action.about"))
         self._whats_this_action.setText(self._translator.t("action.whats_this"))
@@ -1778,6 +1794,7 @@ class MainWindow(QMainWindow):
         self._save_as_action.setEnabled(idle and has_project)
         self._locate_solver_action.setEnabled(idle)
         self._calculator_action.setEnabled(idle)
+        self._measurement_sessions_action.setEnabled(idle and has_project)
         self._feed_line_action.setEnabled(idle)
         self._matching_network_action.setEnabled(idle)
         self._balun_loss_action.setEnabled(idle)
@@ -1941,6 +1958,7 @@ class MainWindow(QMainWindow):
             self._optimize_action,
             self._compact_history_action,
             self._calculator_action,
+            self._measurement_sessions_action,
             self._import_nec_action,
             self._import_mmana_action,
         ):
@@ -2143,7 +2161,7 @@ class MainWindow(QMainWindow):
                 if latest_run is not None:
                     self._simulation_results[project_design.id] = latest_run.result
             self._results.set_band_analysis(None)
-            self._results.set_measurements(project.measurements)
+            self._refresh_measurements()
             self._project_name_updating = True
             self._project_name.setText(project.name)
             self._project_name_updating = False
@@ -2497,7 +2515,7 @@ class MainWindow(QMainWindow):
         self._workflow_measurement_compared.clear()
         self._results.set_band_analysis(None)
         self._results.set_result(None)
-        self._results.set_measurements(project.measurements)
+        self._refresh_measurements()
         self._project_name_updating = True
         self._project_name.setText(project.name)
         self._project_name_updating = False
@@ -5029,6 +5047,67 @@ class MainWindow(QMainWindow):
             band_plan=dialog.result_band_plan(),
         )
 
+    @history_action("history.measurement_sessions")
+    def edit_measurement_sessions(self) -> None:
+        if self._project is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        dialog = MeasurementSessionsDialog(
+            self._translator,
+            self._project,
+            self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        updated = dialog.result_project()
+        if updated == self._project:
+            return
+        self._project = updated
+        self._dirty = True
+        self._refresh_measurements()
+        self._tabs_select_measurements()
+        self._last_status_key = "status.measurement_sessions"
+        self._update_title()
+        self._update_actions()
+        self._update_status_text()
+
+    def compare_measurements(self, measurement: Measurement | None = None) -> None:
+        if self._project is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if len(self._project.measurements) < 2:
+            QMessageBox.information(
+                self,
+                self._translator.t("measurement.before_after_title"),
+                self._translator.t("measurement.comparison_need_two"),
+            )
+            return
+        measurements = tuple(sorted(self._project.measurements, key=lambda item: item.created_at))
+        before_id = measurements[-2].id
+        after_id = measurements[-1].id
+        if measurement is not None and any(item.id == measurement.id for item in measurements):
+            index = next(
+                index for index, item in enumerate(measurements) if item.id == measurement.id
+            )
+            if index == 0:
+                before_id = measurements[0].id
+                after_id = measurements[1].id
+            else:
+                before_id = measurements[index - 1].id
+                after_id = measurements[index].id
+        dialog = MeasurementComparisonDialog(
+            self._translator,
+            measurements,
+            self,
+            session_names=self._measurement_session_names(),
+            initial_before_id=before_id,
+            initial_after_id=after_id,
+        )
+        dialog.exec()
+        if self._design_id is not None:
+            self._workflow_measurement_compared.add(self._design_id)
+        self._update_workflow_ui()
+
     @history_action("history.measurement_edit")
     def edit_measurement(self, measurement: Measurement) -> None:
         if self._project is None:
@@ -5039,6 +5118,7 @@ class MainWindow(QMainWindow):
             measurement.name,
             self,
             measurement=measurement,
+            sessions=self._project.measurement_sessions,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -5050,6 +5130,7 @@ class MainWindow(QMainWindow):
                 reference_plane=dialog.reference_plane(),
                 feed_line=dialog.feed_line(),
                 notes=dialog.notes(),
+                session_id=dialog.session_id(),
             )
             self._project = self._project.with_updated_measurement(
                 updated,
@@ -5059,7 +5140,7 @@ class MainWindow(QMainWindow):
             self._show_error(self._translator.t("error.measurement", message=str(exc)))
             return
         self._dirty = True
-        self._results.set_measurements(self._project.measurements)
+        self._refresh_measurements()
         self._tabs_select_measurements()
         self._last_status_key = "status.measurement_updated"
         self._update_title()
@@ -5089,7 +5170,7 @@ class MainWindow(QMainWindow):
             self._show_error(self._translator.t("error.measurement", message=str(exc)))
             return
         self._dirty = True
-        self._results.set_measurements(self._project.measurements)
+        self._refresh_measurements()
         self._tabs_select_measurements()
         self._last_status_key = "status.measurement_deleted"
         self._update_title()
@@ -5112,7 +5193,12 @@ class MainWindow(QMainWindow):
         path = Path(filename)
         try:
             parsed = parse_vna_csv(path.read_text(encoding="utf-8", errors="replace"))
-            details = MeasurementDetailsDialog(self._translator, path.stem, self)
+            details = MeasurementDetailsDialog(
+                self._translator,
+                path.stem,
+                self,
+                sessions=self._project.measurement_sessions,
+            )
             if details.exec() != QDialog.DialogCode.Accepted:
                 return
             measurement = Measurement(
@@ -5126,6 +5212,7 @@ class MainWindow(QMainWindow):
                 reference_plane=details.reference_plane(),
                 feed_line=details.feed_line(),
                 notes=details.notes(),
+                session_id=details.session_id(),
             )
             self._project = self._project.with_measurement(
                 measurement,
@@ -5137,7 +5224,7 @@ class MainWindow(QMainWindow):
         if self._design_id is not None:
             self._workflow_measurement_compared.discard(self._design_id)
         self._dirty = True
-        self._results.set_measurements(self._project.measurements)
+        self._refresh_measurements()
         self._tabs_select_measurements()
         self._update_title()
         self._update_actions()
@@ -5152,6 +5239,20 @@ class MainWindow(QMainWindow):
                     details="\n".join(parsed.warnings[:12]),
                 ),
             )
+
+    def _measurement_session_names(self) -> dict[UUID, str]:
+        if self._project is None:
+            return {}
+        return {session.id: session.name for session in self._project.measurement_sessions}
+
+    def _refresh_measurements(self) -> None:
+        if self._project is None:
+            self._results.set_measurements(())
+            return
+        self._results.set_measurements(
+            self._project.measurements,
+            self._measurement_session_names(),
+        )
 
     def _tabs_select_measurements(self) -> None:
         self._results.show_measurements()

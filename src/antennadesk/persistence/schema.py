@@ -118,7 +118,7 @@ from ..domain.design.band_plan import BandPlan, BandSelection
 from ..domain.design.matching_design import MatchingNetworkDesign
 from ..domain.environment.environment import Environment
 from ..domain.environment.ground import GroundKind, GroundModel
-from ..domain.measurement import Measurement, MeasurementPoint
+from ..domain.measurement import Measurement, MeasurementPoint, MeasurementSession
 from ..domain.optimization.summary import (
     OptimizationMode,
     OptimizationRecommendation,
@@ -895,6 +895,17 @@ class MeasurementPayload(StrictModel):
     reference_plane: str = ""
     feed_line: str = ""
     notes: str = ""
+    session_id: UUID | None = None
+
+
+class MeasurementSessionPayload(StrictModel):
+    id: UUID
+    name: str = Field(min_length=1)
+    created_at: datetime
+    design_id: UUID | None = None
+    location: str = ""
+    conditions: str = ""
+    notes: str = ""
 
 
 class SimulationRunPayload(StrictModel):
@@ -1159,6 +1170,7 @@ class ProjectPayload(StrictModel):
     designs: list[DesignPayload] = Field(default_factory=list)
     simulation_runs: list[SimulationRunPayload] = Field(default_factory=list)
     measurements: list[MeasurementPayload] = Field(default_factory=list)
+    measurement_sessions: list[MeasurementSessionPayload] = Field(default_factory=list)
     feed_line: FeedLinePayload | None = None
     matching_network: LNetworkPayload | None = None
     matching_network_position: MatchingNetworkPosition = MatchingNetworkPosition.FEEDPOINT
@@ -1181,6 +1193,24 @@ class ProjectPayload(StrictModel):
             and self.active_installation_profile_id not in set(ids)
         ):
             raise ValueError("active installation profile id is not in the profile list")
+        return self
+
+    @model_validator(mode="after")
+    def _validate_measurements(self) -> Self:
+        design_ids = {design.id for design in self.designs}
+        session_ids = [session.id for session in self.measurement_sessions]
+        if len(session_ids) != len(set(session_ids)):
+            raise ValueError("duplicate measurement session id")
+        for session in self.measurement_sessions:
+            if session.design_id is not None and session.design_id not in design_ids:
+                raise ValueError("measurement session references an unknown design")
+        measurement_ids = [measurement.id for measurement in self.measurements]
+        if len(measurement_ids) != len(set(measurement_ids)):
+            raise ValueError("duplicate measurement id")
+        known_sessions = set(session_ids)
+        for measurement in self.measurements:
+            if measurement.session_id is not None and measurement.session_id not in known_sessions:
+                raise ValueError("measurement references an unknown session")
         return self
 
     @model_validator(mode="after")
@@ -2180,6 +2210,19 @@ def _measurement_from_domain(value: Measurement) -> MeasurementPayload:
         reference_plane=value.reference_plane,
         feed_line=value.feed_line,
         notes=value.notes,
+        session_id=value.session_id,
+    )
+
+
+def _measurement_session_from_domain(value: MeasurementSession) -> MeasurementSessionPayload:
+    return MeasurementSessionPayload(
+        id=value.id,
+        name=value.name,
+        created_at=value.created_at,
+        design_id=value.design_id,
+        location=value.location,
+        conditions=value.conditions,
+        notes=value.notes,
     )
 
 
@@ -2338,6 +2381,9 @@ def _project_from_domain(value: Project) -> ProjectPayload:
         designs=[_design_from_domain(design) for design in value.designs],
         simulation_runs=[_simulation_run_from_domain(run) for run in value.simulation_runs],
         measurements=[_measurement_from_domain(measurement) for measurement in value.measurements],
+        measurement_sessions=[
+            _measurement_session_from_domain(session) for session in value.measurement_sessions
+        ],
         feed_line=(_feed_line_from_domain(value.feed_line) if value.feed_line else None),
         matching_network=(
             _matching_network_from_domain(value.matching_network)
@@ -3312,6 +3358,19 @@ def _measurement_to_domain(value: MeasurementPayload) -> Measurement:
         reference_plane=value.reference_plane,
         feed_line=value.feed_line,
         notes=value.notes,
+        session_id=value.session_id,
+    )
+
+
+def _measurement_session_to_domain(value: MeasurementSessionPayload) -> MeasurementSession:
+    return MeasurementSession(
+        id=value.id,
+        name=value.name,
+        created_at=value.created_at,
+        design_id=value.design_id,
+        location=value.location,
+        conditions=value.conditions,
+        notes=value.notes,
     )
 
 
@@ -3400,6 +3459,10 @@ def project_from_document(document: ProjectDocument) -> Project:
         ),
         measurements=tuple(
             _measurement_to_domain(measurement) for measurement in document.project.measurements
+        ),
+        measurement_sessions=tuple(
+            _measurement_session_to_domain(session)
+            for session in document.project.measurement_sessions
         ),
         feed_line=(
             _feed_line_to_domain(document.project.feed_line) if document.project.feed_line else None
