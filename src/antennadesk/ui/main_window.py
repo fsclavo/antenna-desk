@@ -114,7 +114,7 @@ from ..domain.antennas.hexbeam import HexbeamParameters
 from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
-from ..domain.antennas.load import LumpedLoad
+from ..domain.antennas.load import LumpedLoad, ParallelLoad
 from ..domain.antennas.loaded_dipole import LoadedDipoleParameters
 from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.magnetic_loop import MagneticLoopParameters
@@ -255,6 +255,10 @@ from .dialogs.basic_antenna_dialog import BasicAntennaDialog
 from .dialogs.beverage_dialog import BeverageDialog
 from .dialogs.biquad_dialog import BiquadDialog
 from .dialogs.comparison_dialog import ComparisonDialog
+from .dialogs.component_calculator_dialog import (
+    CalculatorSeed,
+    ComponentCalculatorDialog,
+)
 from .dialogs.construction_dialog import ConstructionDialog
 from .dialogs.construction_record_dialog import ConstructionRecordDialog
 from .dialogs.custom_antenna_dialog import CustomAntennaDialog
@@ -586,6 +590,8 @@ class MainWindow(QMainWindow):
         self._export_pdf_action.triggered.connect(lambda: self.export_pdf_report())
         self._compact_history_action = QAction(self)
         self._compact_history_action.triggered.connect(lambda: self.compact_simulation_history())
+        self._calculator_action = QAction(self)
+        self._calculator_action.triggered.connect(lambda: self.show_component_calculators())
 
         self._simulate_action = QAction(self)
         self._simulate_action.setShortcut(QKeySequence("F5"))
@@ -1300,6 +1306,7 @@ class MainWindow(QMainWindow):
 
         self._tools_menu = self.menuBar().addMenu("")
         self._tools_menu.addAction(self._locate_solver_action)
+        self._tools_menu.addAction(self._calculator_action)
         self._tools_menu.addAction(self._compact_history_action)
 
         self._help_menu = self.menuBar().addMenu("")
@@ -1369,6 +1376,9 @@ class MainWindow(QMainWindow):
         self._feed_chain_action.setText(self._translator.t("action.feed_chain"))
         self._feed_chain_action.setToolTip(self._translator.t("help.action.feed_chain"))
         self._feed_chain_action.setWhatsThis(self._translator.t("help.action.feed_chain"))
+        self._calculator_action.setText(self._translator.t("action.component_calculator"))
+        self._calculator_action.setToolTip(self._translator.t("help.action.component_calculator"))
+        self._calculator_action.setWhatsThis(self._translator.t("help.action.component_calculator"))
         self._exit_action.setText(self._translator.t("action.exit"))
         self._about_action.setText(self._translator.t("action.about"))
         self._whats_this_action.setText(self._translator.t("action.whats_this"))
@@ -1758,6 +1768,7 @@ class MainWindow(QMainWindow):
         self._save_action.setEnabled(idle and has_project)
         self._save_as_action.setEnabled(idle and has_project)
         self._locate_solver_action.setEnabled(idle)
+        self._calculator_action.setEnabled(idle)
         self._feed_line_action.setEnabled(idle)
         self._matching_network_action.setEnabled(idle)
         self._balun_loss_action.setEnabled(idle)
@@ -1919,6 +1930,7 @@ class MainWindow(QMainWindow):
             self._feed_chain_action,
             self._optimize_action,
             self._compact_history_action,
+            self._calculator_action,
             self._import_nec_action,
             self._import_mmana_action,
         ):
@@ -3267,6 +3279,27 @@ class MainWindow(QMainWindow):
             self._dirty = True
             self._update_title()
         self._refresh_feed_matching_summary()
+
+    def show_component_calculators(self) -> None:
+        seed = CalculatorSeed()
+        if self._project is not None and self._design_id is not None:
+            design = self._project.design_by_id(self._design_id)
+            loads = design.antenna.loads
+            if loads:
+                load = loads[0]
+                seed = CalculatorSeed(
+                    tab=("trap" if isinstance(load, ParallelLoad) else "coil"),
+                    inductance_h=load.inductance_h or None,
+                    capacitance_f=load.capacitance_f or None,
+                    frequency_hz=design.parameters.frequency_hz,
+                )
+        dialog = ComponentCalculatorDialog(
+            self._translator,
+            self._unit_system,
+            seed=seed,
+            parent=self,
+        )
+        dialog.exec()
 
     def show_feed_chain_budget(self) -> None:
         if self._project is None or self._design_id is None:

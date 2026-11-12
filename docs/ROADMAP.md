@@ -320,8 +320,8 @@ The 2026-11-11 review of the desired-backlog proposal keeps the product focus on
 the decision-to-measurement workflow instead of adding more antenna families.
 The catalog is broad enough; the next value is helping the operator choose,
 understand, build, and improve a design. This is product scope, not a second
-execution queue. UX1–UX7 are complete; the 0.5 **Decide** release is closed and
-the 0.6 **Build** release is in progress. UX8–UX20 stay here until the next
+execution queue. UX1–UX8 are complete; the 0.5 **Decide** release is closed and
+the 0.6 **Build** release is in progress. UX9–UX20 stay here until the next
 product slice is selected and they are ready to execute.
 
 Rules for this track:
@@ -346,7 +346,7 @@ Rules for this track:
 | 0.5 Decide | UX5 | Contextual explanations and confidence card | Metric meaning, evidence, assumptions, and limits | M | A/B/C | done 2026-11-11 |
 | 0.6 Build | UX6 | Feed-chain topology and loss budget | Tuner/balun position and per-stage loss | M–L | B/C | done 2026-11-11 |
 | 0.6 Build | UX7 | Construction package 2.0 | As-built, hardware BOM, coil/trap sheet, checklist | M | B/C | done 2026-11-11 |
-| 0.6 Build | UX8 | Integrated coil/trap/loading calculators | Prefilled calculators that apply to the design | M | B | proposed |
+| 0.6 Build | UX8 | Integrated coil/trap/loading calculators | Prefilled calculators that apply to the design | M | B | done 2026-11-11 |
 | 0.6 Build | UX9 | Construction pre-flight checks | Detect geometry, feed, segmentation, and support issues | S–M | n/a | proposed |
 | 0.7 Measure | UX10 | Measurement sessions and timeline | Multi-session records and before/after comparison | M | A/B | proposed |
 | 0.7 Measure | UX11 | Sensitivity-based tuning assistant | Bounded adjustment from solver sensitivity | M–L | B/C | proposed |
@@ -382,9 +382,9 @@ kept at
 
 Product track:
 
-1. UX1–UX7 are complete. The 0.5 **Decide** release is closed and the 0.6
-   **Build** release is in progress. UX8–UX9 are the next Build candidates;
-   UX10–UX20 remain product scope in the backlog above.
+1. UX1–UX8 are complete. The 0.5 **Decide** release is closed and the 0.6
+   **Build** release is in progress. UX9 is the next Build candidate; UX10–UX20
+   remain product scope in the backlog above.
 
 Modeling track:
 

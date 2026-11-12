@@ -100,6 +100,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX5~~ | ~~Contextual explanations and confidence card~~ | M | none | **Done 2026-11-11:** the Diagnostics tab now starts with a result-confidence card that shows the template evidence level, source, tolerance, limitation, modeled scope, dominant uncertainties, and a verification reminder. A **What does this mean?** selector explains impedance, SWR, efficiency, gain/directivity/realized gain, takeoff, bandwidth, ground, and feed-line/matching losses. EN/ES, accessible help, and tests cover the card, topic switching, no-design state, retranslation, and the help manifest. |
 | ~~UX6~~ | ~~Feed-chain topology and loss budget~~ | L | UX2; ADR-0030 | **Done 2026-11-11:** added `MatchingNetworkPosition` (`FEEDPOINT`, `SHACK`, `NONE`) to the project and simulation specs, with schema 37 and feedpoint migration. The matching-network dialog selects the position; `link_budget()` evaluates the selected chain and reports actual dissipative line and network losses from the two-port power balance. Added the **Feed-Chain Loss Budget...** dialog with path, transmitter power, per-frequency SWR, mismatch, line, network, balun, delivered/radiated power, and dominant stage. Reports and the feed/matching summary include the position. ADR-0030 documents the chain order, the conservative balun-position limitation, and the loss semantics. Tests cover two-port loss, shack/feedpoint line loss, persistence, dialogs, reports, and main-window configuration. |
 | ~~UX7~~ | ~~Construction package 2.0~~ | M | UX6 | **Done 2026-11-11:** added a persistent `ConstructionRecord` with as-built notes, measured design/actual dimensions, and checklist state (schema 38). Added the **As-Built / Checklist...** editor, a hardware BOM, target coil/trap values, and a printable checklist in the construction sheet and native PDF. The construction sheet dialog exports a ZIP package with HTML, PDF, wire schedule CSV, conductor BOM CSV, and build notes. Tests cover domain validation, persistence/migration, reporting rows, HTML/PDF sections, the editor, undo/redo, the ZIP contents, and EN/ES text. |
+| ~~UX8~~ | ~~Integrated coil/trap/loading calculators~~ | M | UX7 | **Done 2026-11-11:** added deterministic component calculators for Wheeler coil inductance/turns, ideal trap/LC resonance and reactance, ideal balun/unun turns and impedance ratios, copper/aluminum conductor resistance and skin depth, and common-mode choke reference notes. **Tools → Component Calculators...** hosts the set; the **Loads** editor opens the coil/trap tab seeded from the current load and applies the result back to the form. Tests cover formulas, invalid inputs, tabs, seed/apply behavior, and EN/ES help. No new schema. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -107,9 +108,9 @@ external service and must not be invented or simulated into existence.
 
 ## Product experience queue (2026-11-11)
 
-UX1–UX7 are complete. The 0.5 **Decide** release is closed and the 0.6
-**Build** release is in progress. UX8–UX9 are the next Build candidates and
-UX10–UX20 remain product scope in
+UX1–UX8 are complete. The 0.5 **Decide** release is closed and the 0.6
+**Build** release is in progress. UX9 is the next Build candidate and UX10–UX20
+remain product scope in
 [`ROADMAP.md`](ROADMAP.md#product-experience-backlog-proposed-2026-11-11); do
 not promote them into this queue until the next slice is selected and the full
 gate is green.
@@ -310,9 +311,9 @@ model and solver contract must land first.
 7. **R1** is closed as superseded: `v0.4.1` was published with CI-built Linux
    and Windows artifacts, so rerunning the older `v0.4.0` tag is no longer
    required.
-8. **UX1–UX7 are complete.** The 0.5 **Decide** release is closed and the 0.6
-   **Build** release is in progress. UX8–UX9 are the next Build candidates;
-   UX10–UX20 remain product scope in [`ROADMAP.md`](ROADMAP.md).
+8. **UX1–UX8 are complete.** The 0.5 **Decide** release is closed and the 0.6
+   **Build** release is in progress. UX9 is the next Build candidate; UX10–UX20
+   remain product scope in [`ROADMAP.md`](ROADMAP.md).
 9. Product priorities and new antenna candidates live in
    [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
@@ -345,7 +346,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **38**.
-- Full gate: **2,583 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **2,598 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.4.1** published on 2026-11-11 with checksum-verified unsigned

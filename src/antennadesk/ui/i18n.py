@@ -1527,6 +1527,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Feed-Chain Loss Budget...",
         Language.SPANISH: "Presupuesto de pérdidas...",
     },
+    "action.component_calculator": {
+        Language.ENGLISH: "Component Calculators...",
+        Language.SPANISH: "Calculadoras de componentes...",
+    },
     "action.exit": {Language.ENGLISH: "Exit", Language.SPANISH: "Salir"},
     "action.about": {
         Language.ENGLISH: "About AntennaDesk",
@@ -3356,6 +3360,78 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.action.feed_chain": {
         Language.ENGLISH: "Show the feed-chain stages and their dissipative losses.",
         Language.SPANISH: "Mostrá las etapas de la cadena y sus pérdidas disipativas.",
+    },
+    "help.action.component_calculator": {
+        Language.ENGLISH: "Open coil, trap, balun, and conductor construction calculators.",
+        Language.SPANISH: "Abrí calculadoras de bobina, trampa, balun y conductor.",
+    },
+    "help.component_calculator.coil": {
+        Language.ENGLISH: "Wheeler air-core coil approximation and turns estimate.",
+        Language.SPANISH: "Aproximación de Wheeler para bobina de aire y estimación de vueltas.",
+    },
+    "help.component_calculator.trap": {
+        Language.ENGLISH: "Ideal LC trap resonance and reactance calculation.",
+        Language.SPANISH: "Resonancia y reactancia ideales de una trampa LC.",
+    },
+    "help.component_calculator.balun": {
+        Language.ENGLISH: "Ideal turns ratio and impedance ratio relation.",
+        Language.SPANISH: "Relación ideal entre vueltas e impedancias.",
+    },
+    "help.component_calculator.conductor": {
+        Language.ENGLISH: "Compare DC and approximate RF conductor resistance.",
+        Language.SPANISH: "Compará resistencia CC y RF aproximada de conductores.",
+    },
+    "help.component_calculator.choke": {
+        Language.ENGLISH: "Reference notes for common-mode chokes; no numeric model.",
+        Language.SPANISH: "Notas de referencia sobre chokes de modo común; sin modelo numérico.",
+    },
+    "help.component_calculator.inductance": {
+        Language.ENGLISH: "Target or calculated inductance in microhenries.",
+        Language.SPANISH: "Inductancia objetivo o calculada en microhenrios.",
+    },
+    "help.component_calculator.diameter": {
+        Language.ENGLISH: "Coil form or conductor diameter in the current units.",
+        Language.SPANISH: "Diámetro del soporte o conductor en las unidades actuales.",
+    },
+    "help.component_calculator.winding_length": {
+        Language.ENGLISH: "Physical length of the single-layer winding.",
+        Language.SPANISH: "Longitud física del bobinado de una capa.",
+    },
+    "help.component_calculator.turns": {
+        Language.ENGLISH: "Number of turns in the coil.",
+        Language.SPANISH: "Cantidad de vueltas de la bobina.",
+    },
+    "help.component_calculator.frequency": {
+        Language.ENGLISH: "Operating or resonant frequency.",
+        Language.SPANISH: "Frecuencia de operación o resonancia.",
+    },
+    "help.component_calculator.capacitance": {
+        Language.ENGLISH: "Capacitance in picofarads.",
+        Language.SPANISH: "Capacitancia en picofaradios.",
+    },
+    "help.component_calculator.turns_ratio": {
+        Language.ENGLISH: "Ideal transformer turns ratio.",
+        Language.SPANISH: "Relación de vueltas del transformador ideal.",
+    },
+    "help.component_calculator.impedance_ratio": {
+        Language.ENGLISH: "Ideal impedance transformation ratio.",
+        Language.SPANISH: "Relación de transformación de impedancia ideal.",
+    },
+    "help.component_calculator.material": {
+        Language.ENGLISH: "Conductor material preset.",
+        Language.SPANISH: "Preset de material conductor.",
+    },
+    "help.component_calculator.use": {
+        Language.ENGLISH: "Return the coil or trap result to the load editor.",
+        Language.SPANISH: "Devolver el resultado de bobina o trampa al editor de cargas.",
+    },
+    "help.component_calculator.calculate": {
+        Language.ENGLISH: "Calculate the conductor comparison.",
+        Language.SPANISH: "Calcular la comparación de conductores.",
+    },
+    "help.loads.calculator": {
+        Language.ENGLISH: "Open a coil or trap calculator seeded from these load fields.",
+        Language.SPANISH: "Abrí una calculadora de bobina o trampa con estos campos.",
     },
     "help.action.construction_record": {
         Language.ENGLISH: "Record as-built dimensions, notes, and the construction checklist.",
@@ -9209,9 +9285,190 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "modelo de línea de alimentación cuando importen las pérdidas."
         ),
     },
+    "component_calculator.title": {
+        Language.ENGLISH: "Component calculators",
+        Language.SPANISH: "Calculadoras de componentes",
+    },
+    "component_calculator.coil": {
+        Language.ENGLISH: "Coil",
+        Language.SPANISH: "Bobina",
+    },
+    "component_calculator.trap": {
+        Language.ENGLISH: "Trap / LC",
+        Language.SPANISH: "Trampa / LC",
+    },
+    "component_calculator.balun": {
+        Language.ENGLISH: "Balun / unun",
+        Language.SPANISH: "Balun / unun",
+    },
+    "component_calculator.conductor": {
+        Language.ENGLISH: "Conductor",
+        Language.SPANISH: "Conductor",
+    },
+    "component_calculator.choke": {
+        Language.ENGLISH: "Common-mode choke",
+        Language.SPANISH: "Choke de modo común",
+    },
+    "component_calculator.inductance": {
+        Language.ENGLISH: "Inductance",
+        Language.SPANISH: "Inductancia",
+    },
+    "component_calculator.diameter": {
+        Language.ENGLISH: "Diameter",
+        Language.SPANISH: "Diámetro",
+    },
+    "component_calculator.winding_length": {
+        Language.ENGLISH: "Winding length",
+        Language.SPANISH: "Longitud del bobinado",
+    },
+    "component_calculator.turns": {
+        Language.ENGLISH: "Turns",
+        Language.SPANISH: "Vueltas",
+    },
+    "component_calculator.frequency": {
+        Language.ENGLISH: "Frequency",
+        Language.SPANISH: "Frecuencia",
+    },
+    "component_calculator.capacitance": {
+        Language.ENGLISH: "Capacitance",
+        Language.SPANISH: "Capacitancia",
+    },
+    "component_calculator.turns_ratio": {
+        Language.ENGLISH: "Turns ratio",
+        Language.SPANISH: "Relación de vueltas",
+    },
+    "component_calculator.impedance_ratio": {
+        Language.ENGLISH: "Impedance ratio",
+        Language.SPANISH: "Relación de impedancias",
+    },
+    "component_calculator.material": {
+        Language.ENGLISH: "Material",
+        Language.SPANISH: "Material",
+    },
+    "component_calculator.copper": {
+        Language.ENGLISH: "Copper",
+        Language.SPANISH: "Cobre",
+    },
+    "component_calculator.aluminum": {
+        Language.ENGLISH: "Aluminum",
+        Language.SPANISH: "Aluminio",
+    },
+    "component_calculator.from_turns": {
+        Language.ENGLISH: "Inductance from turns",
+        Language.SPANISH: "Inductancia desde vueltas",
+    },
+    "component_calculator.for_inductance": {
+        Language.ENGLISH: "Turns for inductance",
+        Language.SPANISH: "Vueltas para inductancia",
+    },
+    "component_calculator.solve_c": {
+        Language.ENGLISH: "Solve C",
+        Language.SPANISH: "Resolver C",
+    },
+    "component_calculator.solve_l": {
+        Language.ENGLISH: "Solve L",
+        Language.SPANISH: "Resolver L",
+    },
+    "component_calculator.solve_f": {
+        Language.ENGLISH: "Solve f",
+        Language.SPANISH: "Resolver f",
+    },
+    "component_calculator.impedance_from_turns": {
+        Language.ENGLISH: "Impedance from turns",
+        Language.SPANISH: "Impedancia desde vueltas",
+    },
+    "component_calculator.turns_from_impedance": {
+        Language.ENGLISH: "Turns from impedance",
+        Language.SPANISH: "Vueltas desde impedancia",
+    },
+    "component_calculator.calculate": {
+        Language.ENGLISH: "Calculate",
+        Language.SPANISH: "Calcular",
+    },
+    "component_calculator.use": {
+        Language.ENGLISH: "Use result",
+        Language.SPANISH: "Usar resultado",
+    },
+    "component_calculator.result_coil": {
+        Language.ENGLISH: "Estimated {inductance} µH for {turns} turns (Wheeler approximation).",
+        Language.SPANISH: "Inductancia estimada: {inductance} µH para {turns} vueltas (aproximación de Wheeler).",
+    },
+    "component_calculator.result_turns": {
+        Language.ENGLISH: "Estimated {turns} turns for {inductance} µH (Wheeler approximation).",
+        Language.SPANISH: "Vueltas estimadas: {turns} para {inductance} µH (aproximación de Wheeler).",
+    },
+    "component_calculator.result_trap_c": {
+        Language.ENGLISH: "Capacitance {capacitance} pF resonates at {frequency} MHz.",
+        Language.SPANISH: "Una capacidad de {capacitance} pF resuena a {frequency} MHz.",
+    },
+    "component_calculator.result_trap_l": {
+        Language.ENGLISH: "Inductance {inductance} µH resonates at {frequency} MHz.",
+        Language.SPANISH: "Una inductancia de {inductance} µH resuena a {frequency} MHz.",
+    },
+    "component_calculator.result_trap_f": {
+        Language.ENGLISH: "Resonance at {frequency} MHz · XL {xl} Ω · XC {xc} Ω.",
+        Language.SPANISH: "Resonancia a {frequency} MHz · XL {xl} Ω · XC {xc} Ω.",
+    },
+    "component_calculator.result_balun_impedance": {
+        Language.ENGLISH: "{turns}:1 turns gives a {ratio}:1 impedance ratio.",
+        Language.SPANISH: "{turns}:1 vueltas dan una relación de impedancias {ratio}:1.",
+    },
+    "component_calculator.result_balun_turns": {
+        Language.ENGLISH: "{ratio}:1 impedance needs about {turns}:1 turns.",
+        Language.SPANISH: "{ratio}:1 de impedancia necesita unas {turns}:1 vueltas.",
+    },
+    "component_calculator.result_conductor": {
+        Language.ENGLISH: "DC {dc} Ω/m · RF estimate {rf} Ω/m · skin depth {depth} µm.",
+        Language.SPANISH: "CC {dc} Ω/m · estimación RF {rf} Ω/m · profundidad de piel {depth} µm.",
+    },
+    "component_calculator.coil_hint": {
+        Language.ENGLISH: "Wheeler air-core approximation. Winding length should not be much shorter than the diameter; verify the actual coil.",
+        Language.SPANISH: "Aproximación de Wheeler para núcleo de aire. El bobinado no debería ser mucho más corto que el diámetro; verificá la bobina real.",
+    },
+    "component_calculator.trap_hint": {
+        Language.ENGLISH: "Ideal LC resonance. Trap loss, self-capacitance, and component tolerance are not included.",
+        Language.SPANISH: "Resonancia LC ideal. No se incluyen pérdidas de la trampa, autocapacidad ni tolerancias de componentes.",
+    },
+    "component_calculator.balun_hint": {
+        Language.ENGLISH: "Ideal turns/impedance relation only. Core loss, winding capacitance, power rating, and bandwidth are not modeled.",
+        Language.SPANISH: "Solo la relación ideal vueltas/impedancia. No se modelan pérdidas de núcleo, capacidad de bobinado, potencia ni ancho de banda.",
+    },
+    "component_calculator.conductor_hint": {
+        Language.ENGLISH: "DC resistance plus an approximate high-frequency skin-effect estimate. Compare materials and diameters, not exact losses.",
+        Language.SPANISH: "Resistencia CC más una estimación aproximada de efecto piel. Compará materiales y diámetros, no pérdidas exactas.",
+    },
+    "component_calculator.choke_text": {
+        Language.ENGLISH: (
+            "<h3>Common-mode choke reference</h3>"
+            "<p>A current balun/choke suppresses common-mode current on the outside "
+            "of the coax. It is not the same as a differential impedance transformer.</p>"
+            "<p>The useful quantity is the common-mode impedance <b>Zcm(f)</b>; it "
+            "depends on the ferrite mix, number of turns, cable diameter, and power "
+            "level. A matched insertion-loss number does not describe it.</p>"
+            "<p>AntennaDesk does not model a common-mode choke. Use the manufacturer's "
+            "Zcm(f) data or a measurement; do not count its resistance as differential "
+            "feed-line loss.</p>"
+        ),
+        Language.SPANISH: (
+            "<h3>Referencia de choke de modo común</h3>"
+            "<p>Un balun/choke de corriente suprime la corriente de modo común por el "
+            "exterior del coax. No es lo mismo que un transformador de impedancia "
+            "diferencial.</p>"
+            "<p>La magnitud útil es la impedancia de modo común <b>Zcm(f)</b>; depende "
+            "del material de ferrita, las vueltas, el diámetro del cable y la potencia. "
+            "Una pérdida de inserción adaptada no la describe.</p>"
+            "<p>AntennaDesk no modela un choke de modo común. Usá datos Zcm(f) del "
+            "fabricante o una medición; no cuentes su resistencia como pérdida "
+            "diferencial de la línea.</p>"
+        ),
+    },
     "loads.title": {
         Language.ENGLISH: "Series Loads",
         Language.SPANISH: "Cargas en serie",
+    },
+    "loads.calculator": {
+        Language.ENGLISH: "Calculator...",
+        Language.SPANISH: "Calculadora...",
     },
     "loads.protected_message": {
         Language.ENGLISH: (

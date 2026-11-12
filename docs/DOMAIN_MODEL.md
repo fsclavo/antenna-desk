@@ -528,6 +528,14 @@ optional construction record. Invariants:
 
 `with_design()` returns a new project, replacing or appending a design.
 
+## Component calculators
+
+`domain/design/component_calculators.py` provides pure construction aids:
+Wheeler air-core solenoid inductance and turns, ideal LC resonance and
+reactance, copper/aluminum conductor resistance and skin depth, and ideal
+balun/unun turns/impedance conversion. These functions are not antenna models;
+the UI labels the approximations and never applies them silently.
+
 ## Construction record
 
 `ConstructionRecord` stores as-built notes, a tuple of `AsBuiltDimension`

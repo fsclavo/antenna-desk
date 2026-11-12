@@ -25,9 +25,14 @@ from PySide6.QtWidgets import (
 
 from ...domain.antennas.load import LoadKind, LumpedLoad, ParallelLoad, SeriesLoad
 from ..fonts import scaled_dialog_size
-from ..help import apply_row_help
+from ..help import apply_help, apply_row_help
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from .component_calculator_dialog import (
+    CalculatorKind,
+    CalculatorSeed,
+    ComponentCalculatorDialog,
+)
 
 
 class LoadsDialog(QDialog):
@@ -90,9 +95,12 @@ class LoadsDialog(QDialog):
         self._add = QPushButton(translator.t("loads.add"), self)
         self._add_trap = QPushButton(translator.t("loads.add_trap"), self)
         self._remove = QPushButton(translator.t("loads.remove"), self)
+        self._calculator = QPushButton(translator.t("loads.calculator"), self)
         self._add.clicked.connect(self._add_load)
         self._add_trap.clicked.connect(self._add_trap_load)
         self._remove.clicked.connect(self._remove_load)
+        self._calculator.clicked.connect(self._open_calculator)
+        apply_help(self._calculator, translator, "loads.calculator")
         self._remove.setEnabled(False)
         self._table.itemSelectionChanged.connect(
             lambda: self._remove.setEnabled(bool(self._table.selectedItems()))
@@ -128,6 +136,7 @@ class LoadsDialog(QDialog):
         add_remove.addWidget(self._add)
         add_remove.addWidget(self._add_trap)
         add_remove.addWidget(self._remove)
+        add_remove.addWidget(self._calculator)
         add_remove.addStretch(1)
 
         layout = QVBoxLayout(self)
@@ -178,6 +187,37 @@ class LoadsDialog(QDialog):
             for column, value in enumerate(values):
                 self._table.setItem(row, column, QTableWidgetItem(value))
         self._table.resizeColumnsToContents()
+
+    def _open_calculator(self) -> None:
+        seed = CalculatorSeed(
+            tab=("trap" if self._kind.currentData() == LoadKind.PARALLEL.value else "coil"),
+            inductance_h=self._inductance.value() * 1e-6,
+            capacitance_f=self._capacitance.value() * 1e-12,
+            frequency_hz=self._trap_frequency.value() * 1_000_000.0,
+        )
+        dialog = ComponentCalculatorDialog(
+            self._translator,
+            self._unit_system,
+            seed=seed,
+            parent=self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        result = dialog.calculator_result()
+        if result is None:
+            return
+        if result.kind is CalculatorKind.COIL and result.inductance_h is not None:
+            self._kind.setCurrentIndex(self._kind.findData(LoadKind.SERIES.value))
+            self._inductance.setValue(result.inductance_h * 1e6)
+            self._capacitance.setValue(0.0)
+        elif result.kind is CalculatorKind.TRAP:
+            self._kind.setCurrentIndex(self._kind.findData(LoadKind.PARALLEL.value))
+            if result.inductance_h is not None:
+                self._inductance.setValue(result.inductance_h * 1e6)
+            if result.capacitance_f is not None:
+                self._capacitance.setValue(result.capacitance_f * 1e12)
+            if result.frequency_hz is not None:
+                self._trap_frequency.setValue(result.frequency_hz / 1e6)
 
     def _add_load(self) -> None:
         wire_id = self._wire.currentData()

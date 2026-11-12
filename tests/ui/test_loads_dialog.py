@@ -42,6 +42,51 @@ def test_loads_dialog_adds_and_removes_series_loads(qtbot: QtBot) -> None:
     assert [load.id for load in dialog.loads()] == ["load-2", "load-3"]
 
 
+def test_loads_dialog_calculator_applies_a_trap_result(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from PySide6.QtWidgets import QDialog
+
+    from antennadesk.domain.antennas.load import LoadKind
+    from antennadesk.ui.dialogs import loads_dialog as loads_dialog_module
+    from antennadesk.ui.dialogs.component_calculator_dialog import (
+        CalculatorKind,
+        CalculatorResult,
+    )
+
+    class FakeCalculator:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def calculator_result(self) -> CalculatorResult:
+            return CalculatorResult(
+                CalculatorKind.TRAP,
+                inductance_h=5e-6,
+                capacitance_f=100e-12,
+                frequency_hz=7_100_000.0,
+            )
+
+    monkeypatch.setattr(loads_dialog_module, "ComponentCalculatorDialog", FakeCalculator)
+    dialog = LoadsDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        {"radiator": 20.0},
+        (),
+    )
+    qtbot.addWidget(dialog)
+
+    dialog._calculator.click()
+
+    assert dialog._kind.currentData() == LoadKind.PARALLEL.value
+    assert dialog._inductance.value() == pytest.approx(5.0)
+    assert dialog._capacitance.value() == pytest.approx(100.0)
+    assert dialog._trap_frequency.value() == pytest.approx(7.1)
+
+
 def test_loads_dialog_adds_a_parallel_trap(qtbot: QtBot) -> None:
     import math
 

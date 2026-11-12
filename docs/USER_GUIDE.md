@@ -1343,6 +1343,27 @@ model is a matched insertion loss and is not assigned a shack/antenna position;
 a measured frequency-dependent balun model would be needed for that. See
 [ADR-0030](ADR/0030-feed-chain-topology.md).
 
+## Component calculators
+
+Use **Tools → Component Calculators...** for construction helpers:
+
+- **Coil**: Wheeler air-core approximation; calculate inductance from turns or
+  turns for a target inductance.
+- **Trap / LC**: solve the missing capacitance, inductance, or resonant
+  frequency and show the inductive and capacitive reactance at resonance.
+- **Balun / unun**: ideal turns-ratio and impedance-ratio conversion. It does
+  not model core loss, winding capacitance, power rating, or bandwidth.
+- **Conductor**: compare DC resistance, an approximate high-frequency
+  resistance, and skin depth for copper or aluminum.
+- **Common-mode choke**: reference notes. AntennaDesk does not model a
+  common-mode choke; use measured `Zcm(f)` data.
+
+The **Loads** editor has a **Calculator...** button. It opens the coil or trap
+tab with the current load values and **Use result** copies the calculated
+inductance/capacitance back into the load form. Coil and trap results are
+starting values; verify them with the solver and a measurement. The calculators
+are construction aids, not antenna models.
+
 ## Transmission lines as geometry
 
 Use **Design → Transmission Lines...** to add a lossless two-port between two

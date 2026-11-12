@@ -179,6 +179,7 @@ def test_main_window_sections_actions_and_tabs_have_help(window) -> None:  # typ
     assert "shortlist" in window._advisor_action.toolTip()
     assert "feed-chain" in window._feed_chain_action.toolTip()
     assert "as-built" in window._construction_record_action.toolTip().lower()
+    assert "calculators" in window._calculator_action.toolTip().lower()
 
     tabs = window._results._tabs
     impedance = tabs.indexOf(window._results._impedance_tab)
@@ -194,6 +195,7 @@ def test_main_window_sections_actions_and_tabs_have_help(window) -> None:  # typ
     assert "preselección" in window._advisor_action.toolTip()
     assert "cadena" in window._feed_chain_action.toolTip()
     assert "as-built" in window._construction_record_action.toolTip().lower()
+    assert "calculadoras" in window._calculator_action.toolTip().lower()
 
 
 def test_feed_line_dialog_applies_row_help(qtbot: QtBot) -> None:

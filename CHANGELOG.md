@@ -73,6 +73,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   measured dimensions, notes, and checklist state in the project (schema 38).
   The construction sheet dialog can export a single ZIP package with the HTML
   sheet, native PDF, wire schedule CSV, conductor BOM CSV, and build notes.
+- **Component calculators.** Added a **Tools → Component Calculators...**
+  dialog with Wheeler coil inductance/turns, ideal trap/LC resonance, ideal
+  balun/unun turns and impedance ratios, copper/aluminum conductor resistance
+  and skin-depth estimates, and common-mode choke reference notes. The loads
+  editor can open the coil/trap calculator seeded from the current load and
+  apply the result back to the form. Warnings state that these are construction
+  aids, not antenna models.
 
 ## [0.4.2] - 2026-11-11
 
