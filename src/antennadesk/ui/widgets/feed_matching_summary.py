@@ -19,7 +19,10 @@ from ...domain.antennas.balun import BalunLoss
 from ...domain.antennas.design import AntennaDesignParameters
 from ...domain.antennas.endfed import EndFedParameters
 from ...domain.antennas.feed_line import FeedLine
-from ...domain.antennas.matching_network import MatchingNetwork
+from ...domain.antennas.matching_network import (
+    MatchingNetwork,
+    MatchingNetworkPosition,
+)
 from ...domain.design.matching_resolution import resolve_matching_network
 from ...reporting.design_summary import matching_network_description
 from ..help import apply_help
@@ -44,6 +47,7 @@ class FeedMatchingSummary(QGroupBox):
         self._unit_system = unit_system
         self._parameters: AntennaDesignParameters | None = None
         self._project_network: MatchingNetwork | None = None
+        self._matching_network_position = MatchingNetworkPosition.FEEDPOINT
         self._feed_line: FeedLine | None = None
         self._balun_loss: BalunLoss | None = None
 
@@ -100,9 +104,12 @@ class FeedMatchingSummary(QGroupBox):
         project_network: MatchingNetwork | None,
         feed_line: FeedLine | None,
         balun_loss: BalunLoss | None,
+        *,
+        position: MatchingNetworkPosition = MatchingNetworkPosition.FEEDPOINT,
     ) -> None:
         self._parameters = parameters
         self._project_network = project_network
+        self._matching_network_position = MatchingNetworkPosition(position)
         self._feed_line = feed_line
         self._balun_loss = balun_loss
         self._refresh()
@@ -169,10 +176,16 @@ class FeedMatchingSummary(QGroupBox):
         state = self._translator.t(
             "feed_matching.active" if network.is_active else "feed_matching.inactive"
         )
+        position = self._translator.t(
+            "feed_matching.position_shack"
+            if self._matching_network_position is MatchingNetworkPosition.SHACK
+            else "feed_matching.position_feedpoint"
+        )
         return self._translator.t(
             "feed_matching.network_state",
             network=matching_network_description(network, self._translator.report),
             state=state,
+            position=position,
         )
 
     def _feed_line_text(self) -> str:

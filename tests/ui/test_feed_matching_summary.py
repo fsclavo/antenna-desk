@@ -34,7 +34,8 @@ def test_summary_shows_override_and_the_project_chain(qtbot: QtBot) -> None:
     assert "100 pF" in summary._endfed_value.text()
     assert "0.198 µH" in summary._endfed_value.text()
     assert "L network" in summary._project_value.text()
-    assert "(active)" in summary._project_value.text()
+    assert "active" in summary._project_value.text()
+    assert "at feedpoint" in summary._project_value.text()
     assert "50 Ω" in summary._feed_line_value.text()
     assert "5.00 m" in summary._feed_line_value.text()
     assert "0.50 dB" in summary._balun_value.text()
@@ -114,6 +115,6 @@ def test_summary_shows_an_inactive_project_network(qtbot: QtBot) -> None:
     qtbot.addWidget(summary)
     summary.set_state(shortened_efhw_80_10_parameters(), LNetwork(), None, None)
 
-    assert "(inactive)" in summary._project_value.text()
+    assert "inactive" in summary._project_value.text()
     assert "(active)" in summary._endfed_value.text()
     assert summary._warning_container.isHidden() is True

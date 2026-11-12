@@ -6,9 +6,23 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from enum import StrEnum
 
 from ..common.units import ensure_non_negative, ensure_positive
 from .two_port import Abcd
+
+
+class MatchingNetworkPosition(StrEnum):
+    """Where the project matching network sits in the feed chain.
+
+    ``SHACK`` places the tuner before the feed line, so the line sees the
+    antenna impedance. ``FEEDPOINT`` places it after the line, which is the
+    legacy behavior. ``NONE`` disables an otherwise defined network.
+    """
+
+    NONE = "none"
+    FEEDPOINT = "feedpoint"
+    SHACK = "shack"
 
 
 def _branch_impedance(

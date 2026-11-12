@@ -180,6 +180,7 @@ def render_construction_sheet(
                     project.feed_line,
                     project.balun_loss,
                     labeler=tr,
+                    position=project.matching_network_position,
                 ),
                 *optimization_summary_rows(design),
                 *design_provenance_rows(design),

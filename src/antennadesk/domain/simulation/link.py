@@ -4,10 +4,15 @@
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
 
-from ..antennas.two_port import Abcd, reflection_loss_db, transducer_gain_db
+from ..antennas.matching_network import MatchingNetworkPosition
+from ..antennas.two_port import (
+    Abcd,
+    dissipative_loss_db,
+    reflection_loss_db,
+    transducer_gain_db,
+)
 from .spec import SimulationSpec
 
 
@@ -31,23 +36,66 @@ def link_budget(
 ) -> LinkBudget:
     """Evaluate the transformer, matching network, and feed line chain.
 
-    The cascade order from the transmitter is feed line, matching network, and
-    ideal transformer.  ``transducer_gain_db`` is relative to the available
-    power of a source at ``spec.reference_impedance_ohm``; it therefore includes
-    transmitter mismatch, line loss, network loss, and any residual mismatch at
-    the antenna.
+    The matching network is placed either in the shack, before the feed line,
+    or at the feedpoint, after the line. The ideal transformer remains at the
+    antenna in both cases. ``feed_line_loss_db`` and ``network_loss_db`` are the
+    actual dissipative losses under the modeled impedances, not the matched-line
+    loss. ``transducer_gain_db`` is relative to the available power of a source
+    at ``spec.reference_impedance_ohm`` and includes transmitter mismatch, line
+    loss, network loss, and the residual mismatch at the antenna.
     """
 
     source_impedance_ohm = spec.reference_impedance_ohm
     load_impedance_ohm = antenna_impedance_ohm / spec.feed_transformer_ratio
     line = spec.feed_line
+    line_active = line is not None and line.is_active
     network = spec.matching_network
+    network_active = (
+        network is not None
+        and network.is_active
+        and spec.matching_network_position is not MatchingNetworkPosition.NONE
+    )
+    position = spec.matching_network_position
 
     cascade = Abcd()
-    if line is not None and line.is_active:
-        cascade = cascade @ line.abcd(frequency_hz)
-    if network is not None and network.is_active:
-        cascade = cascade @ network.abcd(frequency_hz)
+    network_source_ohm = source_impedance_ohm
+    network_load_ohm = load_impedance_ohm
+    line_source_ohm = source_impedance_ohm
+    line_load_ohm = load_impedance_ohm
+
+    if (
+        line_active
+        and network_active
+        and position is MatchingNetworkPosition.SHACK
+        and line is not None
+        and network is not None
+    ):
+        line_abcd = line.abcd(frequency_hz)
+        network_abcd = network.abcd(frequency_hz)
+        line_input_ohm = line_abcd.input_impedance(load_impedance_ohm)
+        cascade = network_abcd @ line_abcd
+        network_load_ohm = line_input_ohm
+        # A shack tuner presents the line with its design impedance. The line
+        # still sees the mismatched antenna on its output side.
+        line_source_ohm = line.characteristic_impedance_ohm
+        line_load_ohm = load_impedance_ohm
+    elif line_active and network_active and line is not None and network is not None:
+        line_abcd = line.abcd(frequency_hz)
+        network_abcd = network.abcd(frequency_hz)
+        network_input_ohm = network_abcd.input_impedance(load_impedance_ohm)
+        cascade = line_abcd @ network_abcd
+        network_source_ohm = line.characteristic_impedance_ohm
+        network_load_ohm = load_impedance_ohm
+        line_source_ohm = source_impedance_ohm
+        line_load_ohm = network_input_ohm
+    elif line_active and line is not None:
+        cascade = line.abcd(frequency_hz)
+        line_source_ohm = source_impedance_ohm
+        line_load_ohm = load_impedance_ohm
+    elif network_active and network is not None:
+        cascade = network.abcd(frequency_hz)
+        network_source_ohm = source_impedance_ohm
+        network_load_ohm = load_impedance_ohm
 
     input_impedance_ohm = cascade.input_impedance(load_impedance_ohm)
     mismatch_loss_db = reflection_loss_db(input_impedance_ohm, source_impedance_ohm)
@@ -57,31 +105,23 @@ def link_budget(
         else 0.0
     )
     feed_line_loss_db = (
-        line.matched_loss_db_per_100m * line.length_m / 100.0
-        if line is not None and line.is_active
+        dissipative_loss_db(
+            line.abcd(frequency_hz),
+            line_source_ohm,
+            line_load_ohm,
+        )
+        if line_active and line is not None
         else 0.0
     )
-
-    network_loss_db = 0.0
-    if network is not None and network.is_active:
-        network_source_ohm = (
-            line.characteristic_impedance_ohm
-            if line is not None and line.is_active
-            else source_impedance_ohm
-        )
-        network_abcd = network.abcd(frequency_hz)
-        network_input_ohm = network_abcd.input_impedance(load_impedance_ohm)
-        network_gain_db = transducer_gain_db(
-            network_abcd,
+    network_loss_db = (
+        dissipative_loss_db(
+            network.abcd(frequency_hz),
             network_source_ohm,
-            load_impedance_ohm,
+            network_load_ohm,
         )
-        network_mismatch_db = reflection_loss_db(
-            network_input_ohm,
-            network_source_ohm,
-        )
-        if math.isfinite(network_gain_db) and math.isfinite(network_mismatch_db):
-            network_loss_db = max(0.0, -(network_gain_db + network_mismatch_db))
+        if network_active and network is not None
+        else 0.0
+    )
 
     return LinkBudget(
         input_impedance_ohm=input_impedance_ohm,

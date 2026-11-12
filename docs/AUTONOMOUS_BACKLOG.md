@@ -98,6 +98,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX3~~ | ~~Antenna suitability profiles and guided advisor~~ | M | UX1, UX2 | **Done 2026-11-11:** added twelve HF suitability profiles with band coverage, footprint and height heuristics, feed/tuner requirement, construction effort, portability, operating intents, qualitative gain/takeoff/bandwidth classes, and evidence level. A deterministic advisor applies hard constraints (bands, space, height, portability, tuner, complexity, pattern) and returns up to three candidates with fit status, reasons, warnings, blockers, and stable ordering. Added the **Help me choose...** start-page and File-menu entry, prefilled from the active installation profile, with a result table and detail pane; **Open selected design** launches the existing family editor. No LLM or solver ranking. Tests cover the advisor engine, footprint scaling, blockers, dialog behavior, main-window integration, and EN/ES help. |
 | ~~UX4~~ | ~~Comparison 2.0~~ | M–L | UX2; comparison-basis ADR | **Done 2026-11-11:** added [ADR-0029](ADR/0029-comparison-basis.md) and a `ComparisonBasis` with common frequency plan, ground, reference height, and reference frequency. The dialog compares two to four designs, shows the basis explicitly, and requires **Recompute comparison**, which runs each design through a new bounded comparison worker with progress and cancellation. Height mapping is conservative: direct/apex families move to the reference, verticals shift their base, and ambiguous families keep native height with visible warnings; **Native heights** disables mapping. The table has one column per design and adds footprint, maximum height, conductor length, wire/load/line counts, and build effort; band summaries and SWR/pattern overlays are dynamic. Tests cover the basis, mapping, batch use case, worker path, dialog behavior, and main-window run construction. |
 | ~~UX5~~ | ~~Contextual explanations and confidence card~~ | M | none | **Done 2026-11-11:** the Diagnostics tab now starts with a result-confidence card that shows the template evidence level, source, tolerance, limitation, modeled scope, dominant uncertainties, and a verification reminder. A **What does this mean?** selector explains impedance, SWR, efficiency, gain/directivity/realized gain, takeoff, bandwidth, ground, and feed-line/matching losses. EN/ES, accessible help, and tests cover the card, topic switching, no-design state, retranslation, and the help manifest. |
+| ~~UX6~~ | ~~Feed-chain topology and loss budget~~ | L | UX2; ADR-0030 | **Done 2026-11-11:** added `MatchingNetworkPosition` (`FEEDPOINT`, `SHACK`, `NONE`) to the project and simulation specs, with schema 37 and feedpoint migration. The matching-network dialog selects the position; `link_budget()` evaluates the selected chain and reports actual dissipative line and network losses from the two-port power balance. Added the **Feed-Chain Loss Budget...** dialog with path, transmitter power, per-frequency SWR, mismatch, line, network, balun, delivered/radiated power, and dominant stage. Reports and the feed/matching summary include the position. ADR-0030 documents the chain order, the conservative balun-position limitation, and the loss semantics. Tests cover two-port loss, shack/feedpoint line loss, persistence, dialogs, reports, and main-window configuration. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -105,11 +106,12 @@ external service and must not be invented or simulated into existence.
 
 ## Product experience queue (2026-11-11)
 
-UX1–UX5 are complete. The 0.5 **Decide** release is closed. UX6–UX20 remain
-product scope in
+UX1–UX6 are complete. The 0.5 **Decide** release is closed and the 0.6
+**Build** release is in progress. UX7–UX9 are the next Build candidates and
+UX10–UX20 remain product scope in
 [`ROADMAP.md`](ROADMAP.md#product-experience-backlog-proposed-2026-11-11); do
-not promote them into this queue until the next product slice is selected and
-the full gate is green.
+not promote them into this queue until the next slice is selected and the full
+gate is green.
 
 The first slice accepts these constraints:
 
@@ -307,9 +309,9 @@ model and solver contract must land first.
 7. **R1** is closed as superseded: `v0.4.1` was published with CI-built Linux
    and Windows artifacts, so rerunning the older `v0.4.0` tag is no longer
    required.
-8. **UX1–UX5 are complete.** The 0.5 **Decide** release is closed. UX6–UX20
-   remain product scope in [`ROADMAP.md`](ROADMAP.md); the next candidate is
-   UX6 (feed-chain topology), but it is not promoted yet.
+8. **UX1–UX6 are complete.** The 0.5 **Decide** release is closed and the 0.6
+   **Build** release is in progress. UX7–UX9 are the next Build candidates;
+   UX10–UX20 remain product scope in [`ROADMAP.md`](ROADMAP.md).
 9. Product priorities and new antenna candidates live in
    [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
@@ -341,8 +343,8 @@ model and solver contract must land first.
 
 ## Current baseline
 
-- Schema: **36**.
-- Full gate: **2,554 passed, 1 skipped** with `NEC2C` and the optional
+- Schema: **37**.
+- Full gate: **2,563 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.4.1** published on 2026-11-11 with checksum-verified unsigned

@@ -896,6 +896,31 @@ def test_v33_migration_adds_the_matching_network_design_target() -> None:
     assert "matching_network_design" not in document["project"]
 
 
+def test_v36_migration_adds_the_matching_network_position() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 36,
+        "project": {
+            "matching_network": {
+                "topology": "l",
+                "series_inductance_h": 1e-6,
+                "shunt_capacitance_f": 100e-12,
+            },
+            "simulation_runs": [{"result": {"spec": {}}}],
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert migrated["project"]["matching_network_position"] == "feedpoint"
+    assert (
+        migrated["project"]["simulation_runs"][0]["result"]["spec"]["matching_network_position"]
+        == "feedpoint"
+    )
+    assert "matching_network_position" not in document["project"]
+
+
 def test_v35_migration_adds_installation_profiles() -> None:
     document = {
         "format": "antennadesk-project",

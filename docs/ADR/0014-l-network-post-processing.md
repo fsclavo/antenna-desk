@@ -1,6 +1,6 @@
 # ADR-0014 — L-network post-processing and trap preset
 
-- **Status:** Accepted; precedence extended by ADR-0028
+- **Status:** Accepted; precedence extended by ADR-0028; chain position extended by ADR-0030
 - **Date:** 2026-11-01
 - **Supersedes:** the matching-network limitation in ADR-0008
 

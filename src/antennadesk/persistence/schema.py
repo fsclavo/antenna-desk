@@ -65,7 +65,13 @@ from ..domain.antennas.magnetic_loop import (
     ANTENNA_TYPE_MAGNETIC_LOOP,
     MagneticLoopParameters,
 )
-from ..domain.antennas.matching_network import LNetwork, MatchingNetwork, PiNetwork, TNetwork
+from ..domain.antennas.matching_network import (
+    LNetwork,
+    MatchingNetwork,
+    MatchingNetworkPosition,
+    PiNetwork,
+    TNetwork,
+)
 from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
 from ..domain.antennas.ocfd import ANTENNA_TYPE_OCFD, OCFDParameters
@@ -739,6 +745,7 @@ class SimulationSpecPayload(StrictModel):
     pattern_frequencies_hz: list[float] = Field(default_factory=list)
     feed_line: FeedLinePayload | None = None
     matching_network: LNetworkPayload | None = None
+    matching_network_position: MatchingNetworkPosition = MatchingNetworkPosition.FEEDPOINT
     balun_loss: BalunLossPayload | None = None
     feed_transformer_ratio: float = Field(default=1.0, gt=0.0)
     timeout_s: float = Field(default=60.0, gt=0.0)
@@ -1127,6 +1134,7 @@ class ProjectPayload(StrictModel):
     measurements: list[MeasurementPayload] = Field(default_factory=list)
     feed_line: FeedLinePayload | None = None
     matching_network: LNetworkPayload | None = None
+    matching_network_position: MatchingNetworkPosition = MatchingNetworkPosition.FEEDPOINT
     matching_network_design: MatchingNetworkDesignPayload | None = None
     balun_loss: BalunLossPayload | None = None
     installation_profiles: list[InstallationProfilePayload] = Field(default_factory=list)
@@ -1983,6 +1991,7 @@ def _simulation_spec_from_domain(value: SimulationSpec) -> SimulationSpecPayload
             if value.matching_network
             else None
         ),
+        matching_network_position=value.matching_network_position,
         balun_loss=_balun_loss_from_domain(value.balun_loss) if value.balun_loss else None,
         feed_transformer_ratio=value.feed_transformer_ratio,
         timeout_s=value.timeout_s,
@@ -2285,6 +2294,7 @@ def _project_from_domain(value: Project) -> ProjectPayload:
             if value.matching_network
             else None
         ),
+        matching_network_position=value.matching_network_position,
         matching_network_design=(
             _matching_network_design_from_domain(value.matching_network_design)
             if value.matching_network_design
@@ -3124,6 +3134,7 @@ def _simulation_spec_to_domain(value: SimulationSpecPayload) -> SimulationSpec:
         matching_network=(
             _matching_network_to_domain(value.matching_network) if value.matching_network else None
         ),
+        matching_network_position=value.matching_network_position,
         balun_loss=_balun_loss_to_domain(value.balun_loss) if value.balun_loss else None,
         feed_transformer_ratio=value.feed_transformer_ratio,
         timeout_s=value.timeout_s,
@@ -3321,6 +3332,7 @@ def project_from_document(document: ProjectDocument) -> Project:
             if document.project.matching_network
             else None
         ),
+        matching_network_position=document.project.matching_network_position,
         matching_network_design=(
             _matching_network_design_to_domain(document.project.matching_network_design)
             if document.project.matching_network_design

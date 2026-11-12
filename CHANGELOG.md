@@ -57,6 +57,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   feed-line/matching losses with practical bilingual text. The card is
   available without a completed simulation because the evidence belongs to the
   design.
+- **Feed-chain position and loss budget.** The matching network can now be
+  placed at the antenna feedpoint or in the shack before the feed line. The
+  chain order is persisted in the project and in simulation specs (schema 37);
+  older projects default to feedpoint. Feed-line and matching-network losses are
+  now the actual dissipative losses under the modeled impedances, not the
+  matched-line value. A new **Feed-Chain Loss Budget...** dialog shows the path,
+  per-frequency SWR, mismatch, line, network, balun, delivered, and radiated
+  power, and the dominant loss stage. See
+  [ADR-0030](docs/ADR/0030-feed-chain-topology.md).
 
 ## [0.4.2] - 2026-11-11
 

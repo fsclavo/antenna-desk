@@ -5,7 +5,10 @@ from __future__ import annotations
 import pytest
 from pytestqt.qtbot import QtBot
 
-from antennadesk.domain.antennas.matching_network import LNetwork
+from antennadesk.domain.antennas.matching_network import (
+    LNetwork,
+    MatchingNetworkPosition,
+)
 from antennadesk.domain.design.matching_design import MatchingNetworkDesign
 from antennadesk.ui.dialogs.matching_network_dialog import MatchingNetworkDialog
 from antennadesk.ui.i18n import Language, Translator
@@ -25,6 +28,21 @@ def test_matching_network_dialog_builds_an_l_network(qtbot: QtBot) -> None:
     assert network is not None
     assert network.series_inductance_h == pytest.approx(1e-6)
     assert network.shunt_capacitance_f == pytest.approx(100e-12)
+
+
+def test_matching_network_dialog_returns_the_selected_position(qtbot: QtBot) -> None:
+    dialog = MatchingNetworkDialog(
+        Translator(Language.ENGLISH),
+        position=MatchingNetworkPosition.SHACK,
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog.position() is MatchingNetworkPosition.SHACK
+
+    dialog._position_combo.setCurrentIndex(
+        dialog._position_combo.findData(MatchingNetworkPosition.FEEDPOINT.value)
+    )
+    assert dialog.position() is MatchingNetworkPosition.FEEDPOINT
 
 
 def test_matching_network_dialog_can_disable_the_network(qtbot: QtBot) -> None:

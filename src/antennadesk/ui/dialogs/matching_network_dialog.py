@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 from ...domain.antennas.matching_network import (
     LNetwork,
     MatchingNetwork,
+    MatchingNetworkPosition,
     PiNetwork,
     TNetwork,
     design_l_network,
@@ -47,10 +48,12 @@ class MatchingNetworkDialog(QDialog):
         internal_matching_active: bool = False,
         design: MatchingNetworkDesign | None = None,
         current_point: MatchingNetworkDesign | None = None,
+        position: MatchingNetworkPosition = MatchingNetworkPosition.FEEDPOINT,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._network = network
+        self._position = MatchingNetworkPosition(position)
         self._frequency_hz = frequency_hz
         self._internal_matching_active = internal_matching_active
         self._current_point = current_point
@@ -137,6 +140,24 @@ class MatchingNetworkDialog(QDialog):
             self._topology.setCurrentIndex(2)
         self._topology.currentIndexChanged.connect(self._topology_changed)
 
+        self._position_combo = QComboBox(self)
+        self._position_combo.addItem(
+            translator.t("matching_network.position_feedpoint"),
+            MatchingNetworkPosition.FEEDPOINT.value,
+        )
+        self._position_combo.addItem(
+            translator.t("matching_network.position_shack"),
+            MatchingNetworkPosition.SHACK.value,
+        )
+        index = self._position_combo.findData(self._position.value)
+        if index >= 0:
+            self._position_combo.setCurrentIndex(index)
+        apply_help(
+            self._position_combo,
+            translator,
+            "matching_network.position",
+        )
+
         def initial_value(name: str, default: float) -> float:
             if network is None:
                 return default
@@ -194,6 +215,8 @@ class MatchingNetworkDialog(QDialog):
         components_form = QFormLayout(self._components_group)
         self._components_label_topology = self._label("matching_network.topology")
         components_form.addRow(self._components_label_topology, self._topology)
+        self._components_label_position = self._label("matching_network.position")
+        components_form.addRow(self._components_label_position, self._position_combo)
         self._components_label_q = self._label("matching_network.q_factor")
         components_form.addRow(self._components_label_q, self._q_factor)
         self._rows: dict[str, tuple[QLabel, QWidget]] = {}
@@ -349,6 +372,7 @@ class MatchingNetworkDialog(QDialog):
             self._shunt_c,
             self._shunt_at_input,
             self._topology,
+            self._position_combo,
             self._q_factor,
             self._input_shunt_l,
             self._input_shunt_c,
@@ -404,6 +428,10 @@ class MatchingNetworkDialog(QDialog):
             shunt_at_input=self._shunt_at_input.isChecked(),
             q_factor=q_factor,
         )
+
+    def position(self) -> MatchingNetworkPosition:
+        value = self._position_combo.currentData()
+        return MatchingNetworkPosition(value) if isinstance(value, str) else self._position
 
     def result_design(self) -> MatchingNetworkDesign:
         return MatchingNetworkDesign(

@@ -23,7 +23,13 @@ from ..domain.antennas.load import LumpedLoad, ParallelLoad
 from ..domain.antennas.loaded_dipole import LoadedDipoleParameters
 from ..domain.antennas.loop import LoopOrientation, LoopParameters
 from ..domain.antennas.magnetic_loop import MagneticLoopParameters
-from ..domain.antennas.matching_network import LNetwork, MatchingNetwork, PiNetwork, TNetwork
+from ..domain.antennas.matching_network import (
+    LNetwork,
+    MatchingNetwork,
+    MatchingNetworkPosition,
+    PiNetwork,
+    TNetwork,
+)
 from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
@@ -229,6 +235,7 @@ def feed_matching_rows(
     feed_line: FeedLine | None,
     balun_loss: BalunLoss | None,
     labeler: Labeler | None = None,
+    position: MatchingNetworkPosition = MatchingNetworkPosition.FEEDPOINT,
 ) -> tuple[tuple[str, str], ...]:
     """Return project-level feed and matching rows for a report."""
 
@@ -236,13 +243,17 @@ def feed_matching_rows(
     rows: list[tuple[str, str]] = []
     if project_network is not None:
         state = tr("active") if project_network.is_active else tr("inactive")
+        position_text = (
+            tr("in shack") if position is MatchingNetworkPosition.SHACK else tr("at feedpoint")
+        )
         rows.append(
             (
                 "Project matching",
                 tr(
-                    "{network} · {state}",
+                    "{network} · {state} · {position}",
                     network=matching_network_description(project_network, tr),
                     state=state,
+                    position=position_text,
                 ),
             )
         )

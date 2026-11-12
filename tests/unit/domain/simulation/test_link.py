@@ -7,7 +7,10 @@ from dataclasses import replace
 import pytest
 
 from antennadesk.domain.antennas.feed_line import FeedLine
-from antennadesk.domain.antennas.matching_network import design_l_network
+from antennadesk.domain.antennas.matching_network import (
+    MatchingNetworkPosition,
+    design_l_network,
+)
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.link import link_budget
 from antennadesk.domain.simulation.spec import SimulationSpec
@@ -115,6 +118,39 @@ def test_lossless_matching_network_has_no_insertion_loss() -> None:
 
     assert budget.transducer_gain_db == pytest.approx(0.0, abs=1e-6)
     assert budget.network_loss_db == pytest.approx(0.0, abs=1e-6)
+
+
+def test_a_shack_tuner_makes_the_line_carry_the_mismatch() -> None:
+    load = complex(500.0, 0.0)
+    network = design_l_network(load, FREQUENCY_HZ)
+    assert network is not None
+    line = FeedLine(
+        characteristic_impedance_ohm=50.0,
+        length_m=30.0,
+        velocity_factor=0.66,
+        matched_loss_db_per_100m=2.0,
+    )
+    feedpoint = link_budget(
+        antenna_impedance_ohm=load,
+        frequency_hz=FREQUENCY_HZ,
+        spec=_spec(
+            feed_line=line,
+            matching_network=network,
+            matching_network_position=MatchingNetworkPosition.FEEDPOINT,
+        ),
+    )
+    shack = link_budget(
+        antenna_impedance_ohm=load,
+        frequency_hz=FREQUENCY_HZ,
+        spec=_spec(
+            feed_line=line,
+            matching_network=network,
+            matching_network_position=MatchingNetworkPosition.SHACK,
+        ),
+    )
+
+    assert shack.feed_line_loss_db > feedpoint.feed_line_loss_db
+    assert shack.transducer_gain_db < feedpoint.transducer_gain_db
 
 
 def test_lossy_matching_network_adds_insertion_loss() -> None:

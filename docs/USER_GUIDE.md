@@ -1318,6 +1318,31 @@ This is an application fit, not a core-loss calculation; use measured
 insertion-loss data when available. The setting is project-level and saved
 with the project and simulation runs.
 
+## Feed-chain position and loss budget
+
+The project matching network can sit in two places. Open **Simulation →
+Matching Network...** and choose **Position**:
+
+- **At the antenna feedpoint**: transmitter → feed line → matching network →
+  antenna. This is the legacy behavior.
+- **In the shack, before the feed line**: transmitter → matching network → feed
+  line → antenna. The line carries the antenna mismatch, so its loss can be
+  much higher even though the transmitter sees a good SWR.
+
+Use **Simulation → Feed-Chain Loss Budget...** after a simulation to inspect the
+selected chain. The dialog shows the path, lets you set the transmitter power,
+and lists per frequency: SWR, mismatch loss, actual line loss, matching-network
+loss, balun loss, power delivered at the antenna, radiated power, and the
+dominant loss stage. The line loss is the dissipative loss under the modeled
+impedance, not the matched-line value. Component values may not add exactly
+when mismatch changes between stages. Change the position or line and simulate
+again to refresh the budget.
+
+The ideal family transformer remains at the antenna. The current balun/unun
+model is a matched insertion loss and is not assigned a shack/antenna position;
+a measured frequency-dependent balun model would be needed for that. See
+[ADR-0030](ADR/0030-feed-chain-topology.md).
+
 ## Transmission lines as geometry
 
 Use **Design → Transmission Lines...** to add a lossless two-port between two
@@ -1364,11 +1389,14 @@ source impedance; the dialog reports when a single section cannot match the
 load. Pi/T are manual designs in this slice. Set a component Q to include loss
 in the input impedance (0 means lossless).
 
-The project network is global: it applies to every design in the project. It is
-evaluated before the feed line: antenna → matching network → feed line →
-transmitter. Impedance and SWR include the network; pattern and power gain
-remain antenna-side. Network loss is included in realized gain and reported
-separately.
+The project network is global: it applies to every design in the project. Its
+**Position** selects the chain order. **At the antenna feedpoint** evaluates
+transmitter → feed line → matching network → antenna; **In the shack** evaluates
+transmitter → matching network → feed line → antenna. The default is feedpoint
+for compatibility with older projects. Impedance and SWR include the network;
+pattern and power gain remain antenna-side. Network loss is included in realized
+gain and reported separately, and the actual line loss changes with the selected
+position.
 
 In the Impedance/SWR table, right-click a frequency row and choose **Create
 Project Matching Network...** to start from that simulation point. The action

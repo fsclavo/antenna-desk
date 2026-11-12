@@ -6,11 +6,42 @@ import math
 
 import pytest
 
+from antennadesk.domain.antennas.feed_line import FeedLine
 from antennadesk.domain.antennas.two_port import (
     Abcd,
+    dissipative_loss_db,
     reflection_loss_db,
     transducer_gain_db,
 )
+
+
+def test_dissipative_loss_matches_the_matched_line_and_grows_with_swr() -> None:
+    line = FeedLine(
+        characteristic_impedance_ohm=50.0,
+        length_m=100.0,
+        velocity_factor=1.0,
+        matched_loss_db_per_100m=1.0,
+    )
+    frequency = 7_100_000.0
+
+    matched = dissipative_loss_db(line.abcd(frequency), 50.0, complex(50.0, 0.0))
+    mismatched = dissipative_loss_db(line.abcd(frequency), 50.0, complex(200.0, 0.0))
+
+    assert matched == pytest.approx(1.0, abs=1e-6)
+    assert mismatched > matched
+
+
+def test_lossless_line_has_no_dissipative_loss_with_a_mismatched_load() -> None:
+    line = FeedLine(
+        characteristic_impedance_ohm=50.0,
+        length_m=100.0,
+        velocity_factor=1.0,
+        matched_loss_db_per_100m=0.0,
+    )
+
+    loss = dissipative_loss_db(line.abcd(7_100_000.0), 50.0, complex(200.0, 0.0))
+
+    assert loss == pytest.approx(0.0, abs=1e-9)
 
 
 def test_series_and_shunt_impedances_match_circuit_theory() -> None:

@@ -1523,6 +1523,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Balun/Unun Loss...",
         Language.SPANISH: "Pérdida de balun/unun...",
     },
+    "action.feed_chain": {
+        Language.ENGLISH: "Feed-Chain Loss Budget...",
+        Language.SPANISH: "Presupuesto de pérdidas...",
+    },
     "action.exit": {Language.ENGLISH: "Exit", Language.SPANISH: "Salir"},
     "action.about": {
         Language.ENGLISH: "About AntennaDesk",
@@ -3169,6 +3173,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Matching-network topology; it determines which component fields apply.",
         Language.SPANISH: "Topología de la red de adaptación; determina qué campos de componentes se usan.",
     },
+    "help.matching_network.position": {
+        Language.ENGLISH: (
+            "Place the network at the antenna feedpoint or in the shack before "
+            "the feed line. A shack tuner makes the line carry a high SWR."
+        ),
+        Language.SPANISH: (
+            "Ubicá la red en el punto de alimentación o en la estación antes de la "
+            "línea. Un sintonizador de shack hace que la línea transporte ROE alta."
+        ),
+    },
     "help.matching_network.q_factor": {
         Language.ENGLISH: "Component Q used to estimate matching-network loss.",
         Language.SPANISH: "Q de los componentes usado para estimar las pérdidas de la red.",
@@ -3338,6 +3352,26 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.action.installation_profile": {
         Language.ENGLISH: "Create, edit, duplicate, or activate an installation profile.",
         Language.SPANISH: "Creá, editá, duplicá o activá un perfil de instalación.",
+    },
+    "help.action.feed_chain": {
+        Language.ENGLISH: "Show the feed-chain stages and their dissipative losses.",
+        Language.SPANISH: "Mostrá las etapas de la cadena y sus pérdidas disipativas.",
+    },
+    "help.feed_chain.path": {
+        Language.ENGLISH: "Order of the transmitter, matching network, feed line, and antenna.",
+        Language.SPANISH: "Orden del transmisor, red de adaptación, línea y antena.",
+    },
+    "help.feed_chain.power": {
+        Language.ENGLISH: "Transmitter power used to estimate power at the antenna and radiated power.",
+        Language.SPANISH: "Potencia del transmisor usada para estimar la potencia en antena y radiada.",
+    },
+    "help.feed_chain.hint": {
+        Language.ENGLISH: "Loss components are evaluated from the current simulation result.",
+        Language.SPANISH: "Los componentes de pérdida se evalúan con el resultado actual.",
+    },
+    "help.table.feed_chain": {
+        Language.ENGLISH: "Per-frequency SWR, mismatch, line, network, balun, delivered, and radiated power.",
+        Language.SPANISH: "ROE, desadaptación, línea, red, balun, potencia entregada y radiada por frecuencia.",
     },
     "help.section.advisor": {
         Language.ENGLISH: "Bands, site limits, and practical preferences used to shortlist catalog antennas.",
@@ -4121,8 +4155,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: ("{capacitance} pF en paralelo + {leakage} µH de fuga ({status})"),
     },
     "feed_matching.network_state": {
-        Language.ENGLISH: "{network} ({state})",
-        Language.SPANISH: "{network} ({state})",
+        Language.ENGLISH: "{network} ({state}, {position})",
+        Language.SPANISH: "{network} ({state}, {position})",
+    },
+    "feed_matching.position_feedpoint": {
+        Language.ENGLISH: "at feedpoint",
+        Language.SPANISH: "en el feedpoint",
+    },
+    "feed_matching.position_shack": {
+        Language.ENGLISH: "in shack",
+        Language.SPANISH: "en la estación",
     },
     "feed_matching.feed_line_value": {
         Language.ENGLISH: "{impedance} Ω · {length} {unit} · VF {velocity}",
@@ -4131,6 +4173,78 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "feed_matching.balun_value": {
         Language.ENGLISH: "{loss} dB at {frequency} MHz · exponent {exponent}",
         Language.SPANISH: "{loss} dB a {frequency} MHz · exponente {exponent}",
+    },
+    "feed_chain.title": {
+        Language.ENGLISH: "Feed-chain loss budget",
+        Language.SPANISH: "Presupuesto de pérdidas de la cadena",
+    },
+    "feed_chain.path_direct": {
+        Language.ENGLISH: "Transmitter → feed line → antenna.",
+        Language.SPANISH: "Transmisor → línea → antena.",
+    },
+    "feed_chain.path_feedpoint": {
+        Language.ENGLISH: "Transmitter → feed line → matching network (feedpoint) → antenna.",
+        Language.SPANISH: "Transmisor → línea → red de adaptación (feedpoint) → antena.",
+    },
+    "feed_chain.path_shack": {
+        Language.ENGLISH: "Transmitter → matching network (shack) → feed line → antenna.",
+        Language.SPANISH: "Transmisor → red de adaptación (estación) → línea → antena.",
+    },
+    "feed_chain.power": {
+        Language.ENGLISH: "Transmitter power",
+        Language.SPANISH: "Potencia del transmisor",
+    },
+    "feed_chain.frequency": {
+        Language.ENGLISH: "Frequency (MHz)",
+        Language.SPANISH: "Frecuencia (MHz)",
+    },
+    "feed_chain.swr": {
+        Language.ENGLISH: "SWR",
+        Language.SPANISH: "ROE",
+    },
+    "feed_chain.mismatch": {
+        Language.ENGLISH: "Mismatch",
+        Language.SPANISH: "Desadaptación",
+    },
+    "feed_chain.line": {
+        Language.ENGLISH: "Line",
+        Language.SPANISH: "Línea",
+    },
+    "feed_chain.network": {
+        Language.ENGLISH: "Network",
+        Language.SPANISH: "Red",
+    },
+    "feed_chain.balun": {
+        Language.ENGLISH: "Balun",
+        Language.SPANISH: "Balun",
+    },
+    "feed_chain.delivered": {
+        Language.ENGLISH: "At antenna",
+        Language.SPANISH: "En antena",
+    },
+    "feed_chain.radiated": {
+        Language.ENGLISH: "Radiated",
+        Language.SPANISH: "Radiada",
+    },
+    "feed_chain.dominant": {
+        Language.ENGLISH: "Dominant loss",
+        Language.SPANISH: "Pérdida dominante",
+    },
+    "feed_chain.summary": {
+        Language.ENGLISH: ("At {power} W: worst line loss {line} dB, worst SWR {swr}."),
+        Language.SPANISH: ("Con {power} W: peor pérdida de línea {line} dB, peor ROE {swr}."),
+    },
+    "feed_chain.hint": {
+        Language.ENGLISH: (
+            "Losses are evaluated from the current simulation. The component "
+            "values may not add exactly under mismatch. Change the matching-network "
+            "position or feed line and simulate again to update the budget."
+        ),
+        Language.SPANISH: (
+            "Las pérdidas se evalúan con la simulación actual. Los componentes "
+            "pueden no sumar exactamente con desadaptación. Cambiá la posición de "
+            "la red o la línea y volvé a simular para actualizar el presupuesto."
+        ),
     },
     "feed_matching.override_warning": {
         Language.ENGLISH: (
@@ -4246,6 +4360,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "matching_network.topology": {
         Language.ENGLISH: "Topology",
         Language.SPANISH: "Topología",
+    },
+    "matching_network.position": {
+        Language.ENGLISH: "Position",
+        Language.SPANISH: "Posición",
+    },
+    "matching_network.position_feedpoint": {
+        Language.ENGLISH: "At the antenna feedpoint",
+        Language.SPANISH: "En el punto de alimentación",
+    },
+    "matching_network.position_shack": {
+        Language.ENGLISH: "In the shack, before the feed line",
+        Language.SPANISH: "En la estación, antes de la línea",
     },
     "matching_network.input_shunt_l": {
         Language.ENGLISH: "Input shunt inductance",

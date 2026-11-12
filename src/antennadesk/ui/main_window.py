@@ -118,7 +118,7 @@ from ..domain.antennas.load import LumpedLoad
 from ..domain.antennas.loaded_dipole import LoadedDipoleParameters
 from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.magnetic_loop import MagneticLoopParameters
-from ..domain.antennas.matching_network import MatchingNetwork
+from ..domain.antennas.matching_network import MatchingNetwork, MatchingNetworkPosition
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.phased_vertical import PhasedVerticalParameters
@@ -268,6 +268,7 @@ from .dialogs.element_optimization_dialog import (
 from .dialogs.endfed_dialog import EndFedDialog
 from .dialogs.family_optimization_dialog import FamilyOptimizationDialog
 from .dialogs.fan_dipole_dialog import FanDipoleDialog
+from .dialogs.feed_chain_dialog import FeedChainDialog
 from .dialogs.feed_line_dialog import FeedLineDialog
 from .dialogs.g5rv_dialog import G5RVDialog
 from .dialogs.hexbeam_dialog import HexbeamDialog
@@ -414,6 +415,7 @@ class MainWindow(QMainWindow):
         self._transmission_lines: tuple[TransmissionLine, ...] = ()
         self._feed_line: FeedLine | None = None
         self._matching_network: MatchingNetwork | None = None
+        self._matching_network_position = MatchingNetworkPosition.FEEDPOINT
         self._matching_network_design: MatchingNetworkDesign | None = None
         self._balun_loss: BalunLoss | None = None
         self._custom_pattern_step_deg = DEFAULT_PATTERN_STEP_DEG
@@ -493,6 +495,8 @@ class MainWindow(QMainWindow):
         self._matching_network_action.triggered.connect(lambda: self.configure_matching_network())
         self._balun_loss_action = QAction(self)
         self._balun_loss_action.triggered.connect(lambda: self.configure_balun_loss())
+        self._feed_chain_action = QAction(self)
+        self._feed_chain_action.triggered.connect(lambda: self.show_feed_chain_budget())
 
         self._exit_action = QAction(self)
         self._exit_action.setShortcut(QKeySequence.StandardKey.Quit)
@@ -1288,6 +1292,7 @@ class MainWindow(QMainWindow):
         self._simulation_menu.addAction(self._feed_line_action)
         self._simulation_menu.addAction(self._matching_network_action)
         self._simulation_menu.addAction(self._balun_loss_action)
+        self._simulation_menu.addAction(self._feed_chain_action)
 
         self._tools_menu = self.menuBar().addMenu("")
         self._tools_menu.addAction(self._locate_solver_action)
@@ -1357,6 +1362,9 @@ class MainWindow(QMainWindow):
         self._feed_line_action.setText(self._translator.t("action.feed_line"))
         self._matching_network_action.setText(self._translator.t("action.matching_network"))
         self._balun_loss_action.setText(self._translator.t("action.balun_loss"))
+        self._feed_chain_action.setText(self._translator.t("action.feed_chain"))
+        self._feed_chain_action.setToolTip(self._translator.t("help.action.feed_chain"))
+        self._feed_chain_action.setWhatsThis(self._translator.t("help.action.feed_chain"))
         self._exit_action.setText(self._translator.t("action.exit"))
         self._about_action.setText(self._translator.t("action.about"))
         self._whats_this_action.setText(self._translator.t("action.whats_this"))
@@ -1742,6 +1750,7 @@ class MainWindow(QMainWindow):
         self._feed_line_action.setEnabled(idle)
         self._matching_network_action.setEnabled(idle)
         self._balun_loss_action.setEnabled(idle)
+        self._feed_chain_action.setEnabled(idle and has_result)
         self._exit_action.setEnabled(idle)
         self._new_variant_action.setEnabled(idle and has_designs)
         self._rename_variant_action.setEnabled(idle and has_designs)
@@ -1894,6 +1903,7 @@ class MainWindow(QMainWindow):
             self._feed_line_action,
             self._matching_network_action,
             self._balun_loss_action,
+            self._feed_chain_action,
             self._optimize_action,
             self._compact_history_action,
             self._import_nec_action,
@@ -2077,6 +2087,7 @@ class MainWindow(QMainWindow):
             self._design_id = selected_id
             self._feed_line = project.feed_line
             self._matching_network = project.matching_network
+            self._matching_network_position = project.matching_network_position
             self._matching_network_design = project.matching_network_design
             self._balun_loss = project.balun_loss
             self._form_dirty = False
@@ -2371,6 +2382,7 @@ class MainWindow(QMainWindow):
         self._design_id = None
         self._feed_line = None
         self._matching_network = None
+        self._matching_network_position = MatchingNetworkPosition.FEEDPOINT
         self._matching_network_design = None
         self._balun_loss = None
         self._current_path = None
@@ -2420,6 +2432,7 @@ class MainWindow(QMainWindow):
         self._design_id = design_id
         self._feed_line = project.feed_line
         self._matching_network = project.matching_network
+        self._matching_network_position = project.matching_network_position
         self._matching_network_design = project.matching_network_design
         self._balun_loss = project.balun_loss
         self._current_path = path
@@ -3104,6 +3117,7 @@ class MainWindow(QMainWindow):
             internal_matching_active=internal_matching_active,
             design=self._matching_network_design,
             current_point=self._current_matching_network_point(),
+            position=self._matching_network_position,
         )
         result = dialog.exec()
         if self._design_id is not None:
@@ -3112,9 +3126,15 @@ class MainWindow(QMainWindow):
         if result != QDialog.DialogCode.Accepted:
             return
         network = dialog.result_network()
+        position = getattr(
+            dialog,
+            "position",
+            lambda: self._matching_network_position,
+        )()
         self._set_matching_network(
             network,
             dialog.result_design() if network is not None else None,
+            position,
         )
 
     @history_action("history.matching_network")
@@ -3157,6 +3177,7 @@ class MainWindow(QMainWindow):
             internal_matching_active=internal_matching_active,
             design=point,
             current_point=point,
+            position=self._matching_network_position,
         )
         result = dialog.exec()
         if self._design_id is not None:
@@ -3165,9 +3186,15 @@ class MainWindow(QMainWindow):
         if result != QDialog.DialogCode.Accepted:
             return
         network = dialog.result_network()
+        position = getattr(
+            dialog,
+            "position",
+            lambda: self._matching_network_position,
+        )()
         self._set_matching_network(
             network,
             dialog.result_design() if network is not None else None,
+            position,
         )
 
     @history_action("history.matching_network")
@@ -3189,13 +3216,17 @@ class MainWindow(QMainWindow):
         self,
         network: MatchingNetwork | None,
         design: MatchingNetworkDesign | None,
+        position: MatchingNetworkPosition | None = None,
     ) -> None:
         self._matching_network = network
+        if position is not None:
+            self._matching_network_position = MatchingNetworkPosition(position)
         self._matching_network_design = design if network is not None else None
         if self._project is not None:
             timestamp = utc_now()
             self._project = self._project.with_matching_network(
                 network,
+                position=self._matching_network_position,
                 updated_at=timestamp,
             ).with_matching_network_design(
                 self._matching_network_design,
@@ -3224,6 +3255,25 @@ class MainWindow(QMainWindow):
             self._update_title()
         self._refresh_feed_matching_summary()
 
+    def show_feed_chain_budget(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        design = self._project.design_by_id(self._design_id)
+        result = self._simulation_results.get(self._design_id)
+        if result is None:
+            self._show_error(self._translator.t("error.no_result"))
+            return
+        dialog = FeedChainDialog(
+            self._translator,
+            self._project,
+            design,
+            result,
+            self._unit_system,
+            self,
+        )
+        dialog.exec()
+
     def _refresh_feed_matching_summary(self) -> None:
         parameters = None
         if self._project is not None and self._design_id is not None:
@@ -3234,6 +3284,7 @@ class MainWindow(QMainWindow):
             self._matching_network,
             self._feed_line,
             self._balun_loss,
+            position=self._matching_network_position,
         )
 
     @history_action("history.installation_profile")
@@ -3300,6 +3351,7 @@ class MainWindow(QMainWindow):
             spec,
             feed_line=self._feed_line,
             matching_network=resolution.effective,
+            matching_network_position=self._matching_network_position,
             matching_network_override=resolution.override_active,
             balun_loss=self._balun_loss,
         )

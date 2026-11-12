@@ -554,6 +554,28 @@ def _migrate_v35_to_v36(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v36_to_v37(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the matching-network position to the project and saved runs."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if not isinstance(project, dict):
+        return migrated
+    project.setdefault("matching_network_position", "feedpoint")
+    runs = project.get("simulation_runs")
+    if isinstance(runs, list):
+        for run in runs:
+            if not isinstance(run, dict):
+                continue
+            result = run.get("result")
+            if not isinstance(result, dict):
+                continue
+            spec = result.get("spec")
+            if isinstance(spec, dict):
+                spec.setdefault("matching_network_position", "feedpoint")
+    return migrated
+
+
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
@@ -590,6 +612,7 @@ MIGRATIONS: dict[int, Migration] = {
     33: _migrate_v33_to_v34,
     34: _migrate_v34_to_v35,
     35: _migrate_v35_to_v36,
+    36: _migrate_v36_to_v37,
 }
 
 

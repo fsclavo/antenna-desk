@@ -603,6 +603,19 @@ def test_feed_matching_rows_describe_the_project_chain() -> None:
     assert "active" in rows["Project matching"]
     assert "50 Ω, 5.0000 m, velocity factor 0.8" in rows["Feed line"]
     assert "0.500 dB at 7.000000 MHz" in rows["Balun/unun loss"]
+    assert "at feedpoint" in rows["Project matching"]
+
+    from antennadesk.domain.antennas.matching_network import MatchingNetworkPosition
+
+    shack_rows = dict(
+        feed_matching_rows(
+            project,
+            feed_line,
+            balun,
+            position=MatchingNetworkPosition.SHACK,
+        )
+    )
+    assert "in shack" in shack_rows["Project matching"]
 
 
 def test_feed_matching_rows_omit_inactive_project_items() -> None:

@@ -609,19 +609,26 @@ def test_round_trip_with_a_project_feed_line(
     sample_project: Project,
     tmp_path: Path,
 ) -> None:
+    from antennadesk.domain.antennas.matching_network import MatchingNetworkPosition
+
     line = FeedLine(
         characteristic_impedance_ohm=75.0,
         length_m=30.0,
         velocity_factor=0.8,
         matched_loss_db_per_100m=1.5,
     )
-    project = replace(sample_project, feed_line=line)
+    project = replace(
+        sample_project,
+        feed_line=line,
+        matching_network_position=MatchingNetworkPosition.SHACK,
+    )
     path = tmp_path / "feed-line.antennadesk"
 
     repository.save(project, path)
     loaded = repository.load(path)
 
     assert loaded.feed_line == line
+    assert loaded.matching_network_position is MatchingNetworkPosition.SHACK
     assert loaded == project
 
 

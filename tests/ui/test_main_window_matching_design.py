@@ -10,7 +10,10 @@ from PySide6.QtWidgets import QDialog, QMessageBox
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
-from antennadesk.domain.antennas.matching_network import LNetwork
+from antennadesk.domain.antennas.matching_network import (
+    LNetwork,
+    MatchingNetworkPosition,
+)
 from antennadesk.domain.design.matching_design import MatchingNetworkDesign
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.result import (
@@ -149,6 +152,36 @@ def test_configure_matching_network_persists_and_reopens_the_design_target(
     window._undo_stack.redo()
     assert window._matching_network_design == _target()
     assert window._project.matching_network_design == _target()
+    window._dirty = False
+
+
+def test_configure_matching_network_persists_the_shack_position(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_network(self) -> LNetwork:
+            return _network()
+
+        def result_design(self) -> MatchingNetworkDesign:
+            return _target()
+
+        def position(self) -> MatchingNetworkPosition:
+            return MatchingNetworkPosition.SHACK
+
+    monkeypatch.setattr(main_window_module, "MatchingNetworkDialog", FakeDialog)
+
+    window.configure_matching_network()
+
+    assert window._matching_network_position is MatchingNetworkPosition.SHACK
+    assert window._project is not None
+    assert window._project.matching_network_position is MatchingNetworkPosition.SHACK
     window._dirty = False
 
 

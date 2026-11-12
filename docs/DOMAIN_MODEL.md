@@ -514,8 +514,9 @@ the summary is compact enough to keep with every design.
 
 An immutable project with an identifier, name, description, timestamps, and a
 tuple of design variants. It also stores the project-level feed line, matching
-network, matching-network design target, balun loss, installation profiles, and
-the active installation-profile identifier. Invariants:
+network, matching-network position, matching-network design target, balun loss,
+installation profiles, and the active installation-profile identifier.
+Invariants:
 
 - Non-empty project name.
 - Timezone-aware timestamps.
@@ -526,6 +527,15 @@ the active installation-profile identifier. Invariants:
   is null.
 
 `with_design()` returns a new project, replacing or appending a design.
+
+## Feed chain
+
+`MatchingNetworkPosition` selects whether the project matching network is at
+the antenna feedpoint (after the feed line) or in the shack (before it). The
+ideal family transformer remains at the antenna. `link_budget()` evaluates the
+selected order and reports actual dissipative line and network losses from the
+two-port power balance; the balun loss remains a matched scalar attenuation.
+See [ADR-0030](ADR/0030-feed-chain-topology.md).
 
 ## Measurements
 
@@ -680,6 +690,8 @@ the application writes version 24.
   unchanged.
 - Version 36 adds optional installation profiles and the active profile
   identifier. Old documents load with no profiles.
+- Version 37 adds the matching-network position to the project and to every
+  stored simulation spec. Old documents load with the feedpoint position.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads

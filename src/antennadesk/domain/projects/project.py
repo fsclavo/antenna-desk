@@ -13,7 +13,7 @@ from ..antennas.balun import BalunLoss
 from ..antennas.design import AntennaDesignParameters, antenna_type_for, template_load_ids
 from ..antennas.feed_line import FeedLine
 from ..antennas.load import LumpedLoad
-from ..antennas.matching_network import MatchingNetwork
+from ..antennas.matching_network import MatchingNetwork, MatchingNetworkPosition
 from ..antennas.transmission_line import TransmissionLine
 from ..common.time import ensure_utc
 from ..common.units import ensure_non_negative
@@ -163,6 +163,7 @@ class Project:
     measurements: tuple[Measurement, ...] = field(default_factory=tuple)
     feed_line: FeedLine | None = None
     matching_network: MatchingNetwork | None = None
+    matching_network_position: MatchingNetworkPosition = MatchingNetworkPosition.FEEDPOINT
     matching_network_design: MatchingNetworkDesign | None = None
     balun_loss: BalunLoss | None = None
     installation_profiles: tuple[InstallationProfile, ...] = field(default_factory=tuple)
@@ -173,6 +174,11 @@ class Project:
         object.__setattr__(self, "simulation_runs", tuple(self.simulation_runs))
         object.__setattr__(self, "measurements", tuple(self.measurements))
         object.__setattr__(self, "installation_profiles", tuple(self.installation_profiles))
+        object.__setattr__(
+            self,
+            "matching_network_position",
+            MatchingNetworkPosition(self.matching_network_position),
+        )
         raise_if_errors(self._invariants())
 
     def _invariants(self) -> tuple[Diagnostic, ...]:
@@ -516,11 +522,15 @@ class Project:
         self,
         matching_network: MatchingNetwork | None,
         *,
+        position: MatchingNetworkPosition | None = None,
         updated_at: datetime,
     ) -> Project:
         return replace(
             self,
             matching_network=matching_network,
+            matching_network_position=(
+                position if position is not None else self.matching_network_position
+            ),
             matching_network_design=(
                 self.matching_network_design if matching_network is not None else None
             ),

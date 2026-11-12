@@ -81,6 +81,42 @@ def transducer_gain_db(
     return 10.0 * math.log10(gain)
 
 
+def dissipative_loss_db(
+    cascade: Abcd,
+    source_impedance_ohm: float,
+    load_impedance_ohm: complex,
+) -> float:
+    """Return the power dissipated inside a passive two-port in dB.
+
+    The result is the ratio between the power entering the two-port and the
+    power delivered to its load, evaluated with the actual source and load
+    impedances. Mismatch at the input is not counted as dissipation; it changes
+    both powers by the same factor. A lossless network returns approximately
+    zero even with a mismatched load.
+    """
+
+    ensure_positive(source_impedance_ohm, name="source_impedance_ohm")
+    if load_impedance_ohm.real <= 0.0:
+        return math.inf
+    input_impedance = cascade.input_impedance(load_impedance_ohm)
+    if input_impedance.real <= 0.0:
+        return math.inf
+    denominator = source_impedance_ohm + input_impedance
+    if abs(denominator) < 1e-18:
+        return math.inf
+    input_current = 1.0 / denominator
+    input_power = 0.5 * abs(input_current) ** 2 * input_impedance.real
+    output_denominator = cascade.c * load_impedance_ohm + cascade.d
+    if abs(output_denominator) < 1e-18:
+        return math.inf
+    output_current = input_current / output_denominator
+    output_power = 0.5 * abs(output_current) ** 2 * load_impedance_ohm.real
+    if input_power <= 0.0 or output_power <= 0.0:
+        return math.inf
+    loss = 10.0 * math.log10(input_power / output_power)
+    return max(0.0, loss)
+
+
 def reflection_loss_db(
     impedance_ohm: complex,
     reference_impedance_ohm: float,
