@@ -3509,6 +3509,26 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Angle between the two legs at the apex.",
         Language.SPANISH: "Ángulo entre las dos patas en el vértice.",
     },
+    "help.feed_line.catalog": {
+        Language.ENGLISH: (
+            "Fill the feed line from a source-backed coax datasheet point. Selecting a "
+            "cable also enables the feed line; the length stays editable."
+        ),
+        Language.SPANISH: (
+            "Completá la línea de alimentación desde un punto de hoja de datos de coaxil "
+            "con fuente. Seleccionar un cable también habilita la línea; la longitud sigue "
+            "editable."
+        ),
+    },
+    "help.feed_line.catalog_hint": {
+        Language.ENGLISH: (
+            "Shows the selected cable's reference frequency and constant matched loss."
+        ),
+        Language.SPANISH: (
+            "Muestra la frecuencia de referencia y la pérdida adaptada constante del cable "
+            "seleccionado."
+        ),
+    },
     "help.feed_line.characteristic_impedance": {
         Language.ENGLISH: (
             "Characteristic impedance of the feed line; it sets the transformation and "
@@ -5197,6 +5217,35 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "feed_line.enabled": {
         Language.ENGLISH: "Enable feed line",
         Language.SPANISH: "Habilitar línea de alimentación",
+    },
+    "feed_line.catalog": {
+        Language.ENGLISH: "Catalog",
+        Language.SPANISH: "Catálogo",
+    },
+    "feed_line.catalog_custom": {
+        Language.ENGLISH: "Custom",
+        Language.SPANISH: "Personalizado",
+    },
+    "feed_line.catalog_custom_hint": {
+        Language.ENGLISH: (
+            "Custom values. Select a catalog cable to fill impedance, velocity factor, "
+            "and matched loss and enable the feed line."
+        ),
+        Language.SPANISH: (
+            "Valores personalizados. Seleccioná un cable del catálogo para completar "
+            "impedancia, factor de velocidad y pérdida adaptada y habilitar la línea de "
+            "alimentación."
+        ),
+    },
+    "feed_line.catalog_hint": {
+        Language.ENGLISH: (
+            "Datasheet point: {loss} at {frequency}. The simulation uses this constant "
+            "matched loss."
+        ),
+        Language.SPANISH: (
+            "Punto de hoja de datos: {loss} a {frequency}. La simulación usa esta pérdida "
+            "adaptada constante."
+        ),
     },
     "feed_line.characteristic_impedance": {
         Language.ENGLISH: "Characteristic impedance",
@@ -12428,6 +12477,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Source",
         Language.SPANISH: "Fuente",
     },
+    "materials.revision": {
+        Language.ENGLISH: "Revision",
+        Language.SPANISH: "Revisión",
+    },
     "materials.weather.excellent": {
         Language.ENGLISH: "Excellent",
         Language.SPANISH: "Excelente",
@@ -12510,6 +12563,191 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "Cable de 50 Ω de baja pérdida para tiradas largas de VHF/UHF. Pérdida de hoja "
             "de datos a 150 MHz; el simulador usa una pérdida adaptada constante."
+        ),
+    },
+    "materials.coax.rg8x.name": {
+        Language.ENGLISH: "RG-8X",
+        Language.SPANISH: "RG-8X",
+    },
+    "materials.coax.rg8x.note": {
+        Language.ENGLISH: (
+            "Flexible medium-loss 50 Ω cable for portable and medium HF/VHF runs. Datasheet "
+            "loss at 100 MHz; the simulator uses a constant matched loss."
+        ),
+        Language.SPANISH: (
+            "Cable flexible de 50 Ω y pérdida media para uso portátil y tiradas medias de "
+            "HF/VHF. Pérdida de hoja de datos a 100 MHz; el simulador usa una pérdida "
+            "adaptada constante."
+        ),
+    },
+    "materials.coax.rg8.name": {
+        Language.ENGLISH: "RG-8/U",
+        Language.SPANISH: "RG-8/U",
+    },
+    "materials.coax.rg8.note": {
+        Language.ENGLISH: (
+            "Legacy 50 Ω cable for medium HF/VHF runs. Datasheet loss at 100 MHz; the "
+            "simulator uses a constant matched loss."
+        ),
+        Language.SPANISH: (
+            "Cable legacy de 50 Ω para tiradas medias de HF/VHF. Pérdida de hoja de datos a "
+            "100 MHz; el simulador usa una pérdida adaptada constante."
+        ),
+    },
+    "materials.coax.rg214.name": {
+        Language.ENGLISH: "RG-214/U",
+        Language.SPANISH: "RG-214/U",
+    },
+    "materials.coax.rg214.note": {
+        Language.ENGLISH: (
+            "Double-shielded RG-213 for rugged or low-leakage runs. Datasheet loss at "
+            "100 MHz; the simulator uses a constant matched loss."
+        ),
+        Language.SPANISH: (
+            "RG-213 de doble blindaje para instalaciones robustas o de baja fuga. Pérdida de "
+            "hoja de datos a 100 MHz; el simulador usa una pérdida adaptada constante."
+        ),
+    },
+    "materials.coax.rg174.name": {
+        Language.ENGLISH: "RG-174/U",
+        Language.SPANISH: "RG-174/U",
+    },
+    "materials.coax.rg174.note": {
+        Language.ENGLISH: (
+            "Very small 50 Ω cable for short jumpers and portable use. High loss; datasheet "
+            "value at 100 MHz."
+        ),
+        Language.SPANISH: (
+            "Cable de 50 Ω muy pequeño para puentes cortos y uso portátil. Pérdida alta; "
+            "valor de hoja de datos a 100 MHz."
+        ),
+    },
+    "materials.coax.rg316.name": {
+        Language.ENGLISH: "RG-316/U",
+        Language.SPANISH: "RG-316/U",
+    },
+    "materials.coax.rg316.note": {
+        Language.ENGLISH: (
+            "PTFE 50 Ω cable for short SDR and portable jumpers. High loss; datasheet value "
+            "at 100 MHz."
+        ),
+        Language.SPANISH: (
+            "Cable de 50 Ω con PTFE para puentes cortos de SDR y portátiles. Pérdida alta; "
+            "valor de hoja de datos a 100 MHz."
+        ),
+    },
+    "materials.coax.rg400.name": {
+        Language.ENGLISH: "RG-400/U",
+        Language.SPANISH: "RG-400/U",
+    },
+    "materials.coax.rg400.note": {
+        Language.ENGLISH: (
+            "Double-shielded PTFE 50 Ω cable for short VHF/UHF jumpers. Datasheet value at "
+            "400 MHz; the simulator uses that constant loss."
+        ),
+        Language.SPANISH: (
+            "Cable de 50 Ω con PTFE y doble blindaje para puentes cortos de VHF/UHF. Valor "
+            "de hoja de datos a 400 MHz; el simulador usa esa pérdida constante."
+        ),
+    },
+    "materials.coax.rg6.name": {
+        Language.ENGLISH: "RG-6/U",
+        Language.SPANISH: "RG-6/U",
+    },
+    "materials.coax.rg6.note": {
+        Language.ENGLISH: (
+            "75 Ω receive, SDR, and satellite cable. Datasheet loss at 100 MHz; verify "
+            "connectors and matching before using it on a 50 Ω transmitter."
+        ),
+        Language.SPANISH: (
+            "Cable de 75 Ω para recepción, SDR y satélite. Pérdida de hoja de datos a "
+            "100 MHz; verificá conectores y adaptación antes de usarlo en un transmisor de "
+            "50 Ω."
+        ),
+    },
+    "materials.coax.rg11.name": {
+        Language.ENGLISH: "RG-11/U",
+        Language.SPANISH: "RG-11/U",
+    },
+    "materials.coax.rg11.note": {
+        Language.ENGLISH: (
+            "Low-loss 75 Ω cable for longer receive and SDR runs. Datasheet loss at 100 MHz; "
+            "not a 50 Ω transmitter cable without matching."
+        ),
+        Language.SPANISH: (
+            "Cable de 75 Ω de baja pérdida para tiradas largas de recepción y SDR. Pérdida "
+            "de hoja de datos a 100 MHz; no es un cable de 50 Ω para transmisor sin "
+            "adaptación."
+        ),
+    },
+    "materials.coax.lmr240.name": {
+        Language.ENGLISH: "LMR-240",
+        Language.SPANISH: "LMR-240",
+    },
+    "materials.coax.lmr240.note": {
+        Language.ENGLISH: (
+            "Small low-loss 50 Ω cable for HF/VHF/UHF runs. Datasheet loss at 150 MHz; the "
+            "simulator uses a constant matched loss."
+        ),
+        Language.SPANISH: (
+            "Cable de 50 Ω pequeño y de baja pérdida para HF/VHF/UHF. Pérdida de hoja de "
+            "datos a 150 MHz; el simulador usa una pérdida adaptada constante."
+        ),
+    },
+    "materials.coax.lmr600.name": {
+        Language.ENGLISH: "LMR-600",
+        Language.SPANISH: "LMR-600",
+    },
+    "materials.coax.lmr600.note": {
+        Language.ENGLISH: (
+            "Large low-loss 50 Ω cable for long VHF/UHF runs. Datasheet loss at 150 MHz; the "
+            "simulator uses a constant matched loss."
+        ),
+        Language.SPANISH: (
+            "Cable de 50 Ω grande y de baja pérdida para tiradas largas de VHF/UHF. Pérdida "
+            "de hoja de datos a 150 MHz; el simulador usa una pérdida adaptada constante."
+        ),
+    },
+    "materials.coax.belden9913.name": {
+        Language.ENGLISH: "Belden 9913",
+        Language.SPANISH: "Belden 9913",
+    },
+    "materials.coax.belden9913.note": {
+        Language.ENGLISH: (
+            "Low-loss 50 Ω cable with a semi-air dielectric. Datasheet loss at 100 MHz; keep "
+            "water out of the air space."
+        ),
+        Language.SPANISH: (
+            "Cable de 50 Ω de baja pérdida con dieléctrico semi-aire. Pérdida de hoja de "
+            "datos a 100 MHz; evitá el ingreso de agua en el espacio de aire."
+        ),
+    },
+    "materials.coax.ldf4.name": {
+        Language.ENGLISH: "LDF4-50A",
+        Language.SPANISH: "LDF4-50A",
+    },
+    "materials.coax.ldf4.note": {
+        Language.ENGLISH: (
+            "1/2-inch hardline for long low-loss runs. Datasheet loss at 100 MHz; rigid "
+            "installation and connectors are not modeled."
+        ),
+        Language.SPANISH: (
+            "Hardline de 1/2 pulgada para tiradas largas de baja pérdida. Pérdida de hoja de "
+            "datos a 100 MHz; no se modelan la instalación rígida ni los conectores."
+        ),
+    },
+    "materials.coax.ultraflex7.name": {
+        Language.ENGLISH: "Ultraflex 7",
+        Language.SPANISH: "Ultraflex 7",
+    },
+    "materials.coax.ultraflex7.note": {
+        Language.ENGLISH: (
+            "Flexible low-loss 50 Ω cable common in Europe. Datasheet loss at 100 MHz; the "
+            "simulator uses a constant matched loss."
+        ),
+        Language.SPANISH: (
+            "Cable flexible de 50 Ω y baja pérdida común en Europa. Pérdida de hoja de datos "
+            "a 100 MHz; el simulador usa una pérdida adaptada constante."
         ),
     },
     "materials.ferrite.fairrite_31.name": {

@@ -88,8 +88,8 @@ def test_feed_line_dialog_uses_the_scaled_initial_size(qtbot: QtBot) -> None:
     dialog = FeedLineDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(dialog)
 
-    assert dialog.width() == 528
-    assert dialog.height() == 312
+    assert dialog.width() == 624
+    assert dialog.height() == 408
 
 
 def test_main_window_renders_large_spanish(qtbot: QtBot) -> None:

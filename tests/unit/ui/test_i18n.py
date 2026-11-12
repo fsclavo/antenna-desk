@@ -341,6 +341,8 @@ HELP_MANIFEST = frozenset(
         "help.pattern.cut",
         "help.pattern.metric",
         "help.currents.frequency",
+        "help.feed_line.catalog",
+        "help.feed_line.catalog_hint",
         "help.feed_line.characteristic_impedance",
         "help.balun_loss.reference_frequency",
         "help.loads.offset",

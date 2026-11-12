@@ -287,9 +287,15 @@ class MaterialsReferenceDialog(QDialog):
             if source.url
             else source_label
         )
+        revision = (
+            f" · {html.escape(self._translator.t('materials.revision'))}: "
+            f"{html.escape(source.revision)}"
+            if source.revision
+            else ""
+        )
         self._details.setText(
             f"<b>{html.escape(name)}</b><br>{html.escape(note)}<br>"
-            f"{html.escape(self._translator.t('materials.source'))}: {source_html}"
+            f"{html.escape(self._translator.t('materials.source'))}: {source_html}{revision}"
         )
 
     def _apply_coax(self) -> None:

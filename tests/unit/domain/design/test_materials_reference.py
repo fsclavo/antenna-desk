@@ -32,6 +32,9 @@ def test_every_reference_has_a_traceable_source() -> None:
         for entry in entries:
             assert entry.source.label.strip()
             assert entry.source.url.startswith("https://") or entry.source.url.startswith("http://")
+    assert len(COAX_REFERENCES) == 16
+    for entry in COAX_REFERENCES:
+        assert entry.source.revision.strip(), entry.key
 
 
 def test_wire_references_publish_solver_conductivity() -> None:

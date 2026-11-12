@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   constant matched loss. Wire conductivity, ferrite mixes, and insulator
   dielectric strength are reference data and do not change the solver model. No
   schema change.
+- **Common coax catalog.** The materials reference now lists 16 source-backed
+  cables: RG-58A/U, RG-8X, RG-8/U, RG-213/U, RG-214/U, RG-174/U, RG-316/U,
+  RG-400/U, RG-6/U, RG-11/U, LMR-240, LMR-400, LMR-600, Belden 9913, LDF4-50A,
+  and Ultraflex 7. The feed-line editor has a **Catalog** selector that fills
+  impedance, velocity factor, and matched loss while keeping the length
+  editable; manual edits to those three fields switch back to **Custom**. The
+  catalog key is not persisted, and the simulation keeps a constant matched loss
+  at the displayed datasheet reference frequency. No schema change.
 
 ## [0.5.0] - 2026-11-12
 

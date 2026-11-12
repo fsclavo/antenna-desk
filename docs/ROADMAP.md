@@ -368,7 +368,7 @@ Rules for this track:
 | 0.9 Sustain | UX20 | Editable BOM costs | Manual cost column and totals | S | n/a | proposed |
 | 0.9 Sustain | UX21 | Side-by-side azimuth/elevation pattern cuts | Four-pane Cuts view with independent cuts | M | n/a | done 2026-11-12 |
 | 0.9 Sustain | UX22 | Pattern metric visibility | Metric-aware titles and a three-metric summary | S–M | n/a | done 2026-11-12 |
-| 0.9 Sustain | UX23 | Common coax catalog and feed-line presets | 15–16 source-backed cables with auto-filled VF and loss | M | B | queued 2026-11-12 |
+| 0.9 Sustain | UX23 | Common coax catalog and feed-line presets | 16 source-backed cables with a shared feed-line selector | M | B | done 2026-11-12 |
 
 Release sequence: **0.5 Decide** is the first slice because it has the highest
 user value and the lowest modeling risk. **0.6 Build** converts a simulation into
@@ -394,9 +394,9 @@ Product track:
 
 1. UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**,
    and 0.8 **Explore** releases are closed, and 0.9 **Sustain** is in progress.
-   UX18 was implemented on 2026-11-12. UX21–UX22 were implemented from direct user
-   feedback; UX23 remains queued from the same feedback. UX19–UX20 remain product
-   scope in the backlog above, and UX19 is the next proposed candidate after UX23.
+   UX18 was implemented on 2026-11-12. UX21–UX23 were implemented from direct user
+   feedback. UX19–UX20 remain product scope in the backlog above, and UX19 is the
+   next proposed candidate.
 
 Modeling track:
 

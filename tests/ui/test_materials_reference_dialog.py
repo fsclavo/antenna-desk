@@ -45,14 +45,19 @@ def test_dialog_exposes_all_reference_tables(qtbot: QtBot) -> None:
     assert dialog._details.text()
     assert "Copper" in dialog._details.text()
     assert "https://" in dialog._details.text()
+    assert "Revision" in dialog._details.text()
     assert dialog._details.toolTip()
     assert dialog._apply_button.toolTip()
+
+
+def _coax_row(key: str) -> int:
+    return next(index for index, entry in enumerate(COAX_REFERENCES) if entry.key == key)
 
 
 def test_dialog_selection_updates_the_details(qtbot: QtBot) -> None:
     dialog = _dialog(qtbot)
     dialog._tabs.setCurrentIndex(1)
-    dialog._tables["coax"].selectRow(2)
+    dialog._tables["coax"].selectRow(_coax_row("lmr400"))
 
     assert "LMR-400" in dialog._details.text()
     assert "150 MHz" in dialog._details.text()
@@ -68,7 +73,7 @@ def test_dialog_applies_a_coax_preset_and_preserves_length(qtbot: QtBot) -> None
     )
     dialog = _dialog(qtbot, feed_line=existing)
     dialog._tabs.setCurrentIndex(1)
-    dialog._tables["coax"].selectRow(1)
+    dialog._tables["coax"].selectRow(_coax_row("rg213"))
 
     dialog._apply_button.click()
 

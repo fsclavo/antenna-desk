@@ -113,7 +113,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX18~~ | ~~Minimal materials reference~~ | S–M | none | **Done 2026-11-12:** added **Tools → Materials Reference...** with four source-backed tabs. Wire lists copper and aluminum nominal conductivity/permeability; coax lists RG-58A/U, RG-213/U, and LMR-400 with impedance, velocity factor, matched loss, and reference frequency; ferrite lists Fair-Rite 31/43/61; insulators lists PTFE, Delrin, and 96% alumina. Each row shows its source, note, and limitations. The coax tab can apply the selected datasheet point to the project feed line while preserving its length; the simulation keeps a constant matched loss. Wire, ferrite, and insulator rows are reference only. Tests cover catalog invariants, sources, dialog tabs/selection, EN/ES labels/help, feed-line apply, main-window undo, and no-project behavior. No schema change. |
 | ~~UX21~~ | ~~Show azimuth and elevation pattern cuts side by side~~ | M | none | **Done 2026-11-12:** the **Cuts** tab shows four panes: azimuth line chart and polar lobes on the left, elevation line chart and polar lobes on the right. Frequency and metric stay shared; each plane has an independent cut selector (θ for azimuth, φ for elevation) defaulting to the maximum-gain direction and preserving selections across frequency and band changes. Each pane has its own title, axis labels, cursor readout, and a localized empty state when a cut is unavailable. The **3D lobe** tab is unchanged. The layout uses resizable splitters and remains usable at the minimum supported window size. Pattern PNG export saves the whole 2×2 Cuts view; the 3D tab saves the 3D view. No domain, solver, or persistence changes. Tests, EN/ES help, accessibility, user guide, and changelog updated. |
 | ~~UX22~~ | ~~Make the pattern metric selector visibly meaningful~~ | S–M | none (coordinate with UX21) | **Done 2026-11-12:** the pattern chart titles and polar footers name the selected metric; the left axis, cursor readout, 3D label, and summary reflect the selection. A compact summary shows power gain, directivity, and realized gain for the selected frequency, with an explicit localized unavailable value instead of a silent omission. The metric definitions and lobe shape are unchanged. Tests cover titles, summary, cursor, unavailable values, retranslation, and independent cuts. EN/ES help, user guide, and changelog updated. No solver or schema changes. |
-| UX23 | Expand the common coax catalog and add feed-line presets | M | UX18; G27 only if frequency-dependent loss is included | **Added 2026-11-12 from user feedback.** Expand the existing source-backed coax reference from three entries to approximately 15–16 common amateur cables, each with impedance, velocity factor, matched loss at a documented reference frequency, source URL/revision, and visible limitations. Add a coax preset selector to the feed-line editor (or a **Load from catalog...** action) that fills impedance, velocity factor, and loss while keeping length editable and preserving custom values. Use one shared catalog in both the materials-reference dialog and the feed-line editor; do not duplicate data. Every value must be transcribed from the cited manufacturer datasheet; do not use generic RG tables or invented numbers. This item uses the existing scalar loss model and shows the reference frequency; frequency-dependent interpolation remains G27. Decide whether to persist the selected catalog key (schema migration) or show **Custom** after reopening. Tests cover catalog invariants, source coverage, auto-fill, custom override, unavailable sources, EN/ES labels/help, and persistence round-trip if added. User guide and changelog updated. No solver changes. |
+| ~~UX23~~ | ~~Expand the common coax catalog and add feed-line presets~~ | M | UX18; G27 only if frequency-dependent loss is included | **Done 2026-11-12:** expanded the shared source-backed coax catalog to 16 cables: RG-58A/U, RG-8X, RG-8/U, RG-213/U, RG-214/U, RG-174/U, RG-316/U, RG-400/U, RG-6/U, RG-11/U, LMR-240, LMR-400, LMR-600, Belden 9913, LDF4-50A, and Ultraflex 7. Each entry has impedance, velocity factor, matched loss at a documented reference frequency, source URL, revision, and visible limitations. The feed-line editor has a **Catalog** selector that fills the three electrical fields while keeping length editable; manual edits switch to **Custom**. The catalog key is not persisted; on reopen, a unique electrical match is preselected and ambiguous matches show **Custom**. The materials-reference dialog uses the same catalog. The simulation keeps the scalar matched-loss model; frequency interpolation remains G27. Tests cover catalog invariants, source/revision coverage, auto-fill, custom override, duplicate-value handling, dialog restoration, dialog behavior, and EN/ES labels/help. No schema change. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -126,10 +126,9 @@ UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**, and
 was implemented on 2026-11-12; UX19–UX20 remain product scope in
 [`ROADMAP.md`](ROADMAP.md#product-experience-backlog-proposed-2026-11-11). Do
 not promote those items into this queue until the next slice is selected and
-the full gate is green. UX21–UX22 were added on 2026-11-12 from direct user
-feedback and completed the same day; UX23 was added from the same feedback and
-remains queued. These request-driven items do not promote the proposed
-UX19–UX20 roadmap entries.
+the full gate is green. UX21–UX23 were added on 2026-11-12 from direct user
+feedback and completed the same day. These request-driven items do not promote
+the proposed UX19–UX20 roadmap entries.
 
 The first slice accepts these constraints:
 
@@ -148,7 +147,13 @@ The first slice accepts these constraints:
 
 ## UX23 — Common coax catalog (research note, 2026-11-12)
 
-The current materials-reference work has three source-backed entries: Belden
+**Implemented on 2026-11-12.** The final 16-entry catalog, values, revisions,
+and limitations live in
+[`MATERIALS_REFERENCE.md`](MATERIALS_REFERENCE.md). The candidate table below is
+kept as the research starting point; several final entries use a different
+datasheet from the candidate list where that source had clearer values.
+
+The initial materials-reference work has three source-backed entries: Belden
 8219 RG-58A/U, Belden 8267 RG-213/U, and Times Microwave LMR-400. UX23 expands
 that same catalog instead of creating a second list. The candidate set below covers
 the common amateur 50 Ω families plus 75 Ω cables used for receive, SDR, and
@@ -417,7 +422,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **44**.
-- Full gate: **2,883 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **2,889 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.5.0** published on 2026-11-12 with checksum-verified unsigned
@@ -426,9 +431,9 @@ model and solver contract must land first.
   CI; all six published checksums were verified. See
   [`RELEASE_QA_0.5.0.md`](RELEASE_QA_0.5.0.md). **0.4.2** remains the previous
   release.
-- Last commits: the materials reference (UX18), the 0.5.0 release publication
-  and QA, the folded-dipole, full-wave loop, and Yagi folded-driven feed
-  transformers, the current-balun record,
+- Last commits: the common coax catalog (UX23), the materials reference (UX18),
+  the 0.5.0 release publication and QA, the folded-dipole, full-wave loop, and
+  Yagi folded-driven feed transformers, the current-balun record,
   the side-by-side pattern cuts and metric-aware views (UX21–UX22),
   the reference design library (UX17),
   the guided experiments (UX16),

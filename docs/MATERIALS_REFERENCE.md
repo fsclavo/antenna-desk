@@ -23,22 +23,53 @@ connections, and temperature are not modeled.
 
 ## Coax
 
-| Type | Z₀ | Velocity factor | Matched loss | Datasheet reference | Source |
-|---|---:|---:|---:|---:|---|
-| RG-58A/U | 50 Ω | 0.73 | 14.76 dB/100 m | 100 MHz | Belden 8219 technical data sheet |
-| RG-213/U | 50 Ω | 0.66 | 6.23 dB/100 m | 100 MHz | Belden 8267 technical data sheet |
-| LMR-400 | 50 Ω | 0.84 | 5.00 dB/100 m | 150 MHz | Times Microwave LMR-400 data sheet |
+The shared catalog contains 16 source-backed cables. The materials-reference
+dialog and the feed-line editor both read this one catalog.
 
-The **Apply to feed line** action copies the selected impedance, velocity
-factor, and matched loss into the project feed line. The current feed-line
-length is preserved; a new line starts at 10 m. The feed-line dialog remains
-the place to edit the length, impedance, velocity factor, and loss directly.
+### 50 Ω cables
+
+| Type | Velocity factor | Matched loss | Datasheet reference | Source and revision |
+|---|---:|---:|---:|---|
+| RG-58A/U | 0.73 | 14.76 dB/100 m | 100 MHz | Belden 8219, Rev 2 (2008-09-23) |
+| RG-8X | 0.82 | 10.17 dB/100 m | 100 MHz | Belden 9258, Rev 0.344 (2022-04-08) |
+| RG-8/U | 0.66 | 6.23 dB/100 m | 100 MHz | Belden 8237, Rev 0.342 (2020-11-09) |
+| RG-213/U | 0.66 | 6.23 dB/100 m | 100 MHz | Belden 8267, Rev 0.336 (2020-09-30) |
+| RG-214/U | 0.66 | 6.23 dB/100 m | 100 MHz | Belden 8268, Rev 0.290 (2019-08-22) |
+| RG-174/U | 0.66 | 27.56 dB/100 m | 100 MHz | Belden 8216, Rev 2 (2009-09-30) |
+| RG-316/U | 0.69 | 36.09 dB/100 m | 100 MHz | Fairview FMC03051, Rev 1.5 (2018) |
+| RG-400/U | 0.70 | 29.53 dB/100 m | 400 MHz | Fairview RG400, Rev A (2024-07-24) |
+| LMR-240 | 0.83 | 9.90 dB/100 m | 150 MHz | Times Microwave LMR-240, 2022-06 |
+| LMR-400 | 0.84 | 5.00 dB/100 m | 150 MHz | Times Microwave LMR-400, 2022-06 |
+| LMR-600 | 0.87 | 3.28 dB/100 m | 150 MHz | Times Microwave LMR-600, Fairview copy Rev B (2024-05-13) |
+| Belden 9913 | 0.84 | 4.59 dB/100 m | 100 MHz | Belden 9913, Rev 0.367 (2022-04-08) |
+| LDF4-50A | 0.88 | 2.169 dB/100 m | 100 MHz | Andrew/CommScope LDF4-50A, revised 2026-07-10 |
+| Ultraflex 7 | 0.83 | 5.80 dB/100 m | 100 MHz | Messi & Paoloni Ultraflex 7, 2022 catalog |
+
+### 75 Ω cables
+
+| Type | Velocity factor | Matched loss | Datasheet reference | Source and revision |
+|---|---:|---:|---:|---|
+| RG-6/U | 0.82 | 6.04 dB/100 m | 100 MHz | Belden 1694A, Rev 1 (2003-12-04) |
+| RG-11/U | 0.84 | 4.27 dB/100 m | 100 MHz | Belden 8213, Rev 0.342 (2022-04-08) |
+
+The **Apply to feed line** action in the materials-reference dialog copies the
+selected impedance, velocity factor, and matched loss into the project feed
+line. The feed-line editor also has a **Catalog** selector that fills the same
+three fields; the length stays editable, and manual edits to impedance, velocity
+factor, or loss switch the selector back to **Custom**.
+
+The selected catalog key is not persisted. When a project feed line has exactly
+one matching catalog entry, reopening the dialog selects that entry. When
+several cables share the same electrical values (for example RG-8/U, RG-213/U,
+and RG-214/U), the selector shows **Custom** rather than claiming a specific
+cable. The electrical values remain intact.
 
 The simulation uses a **constant matched loss**, not a frequency-dependent
 attenuation table. The datasheet point is shown with its reference frequency so
 the choice is visible. Datasheet values assume a matched line (VSWR 1.0) and
 typically 25 °C; connectors, aging, moisture, and the actual installation are
-not included.
+not included. The 75 Ω cables are receive/SDR/satellite choices; verify
+connectors and matching before using them on a 50 Ω transmitter.
 
 ## Ferrite
 
@@ -89,10 +120,36 @@ mounting are not designed by this table.
   <https://www.astm.org/b0230-07r18.html>
 - Belden 8219 RG-58A/U technical data sheet:
   <https://objects.eanixter.com/PD319399.PDF>
+- Belden 9258 RG-8X technical data sheet:
+  <https://www.rigpix.com/otherusefulinfo/coax/belden_rg8x.pdf>
+- Belden 8237 RG-8/U technical data sheet:
+  <https://belden-cable.ru/upload/iblock/33b/33beead6f24b16cb0b9e4155cf65d96e.pdf>
 - Belden 8267 RG-213/U technical data sheet:
-  <https://www.belden.com/products/Cable/Coax-Triax-Cable/50-Ohm-Coax-Cable/8267>
+  <https://www.belden-cable.ru/upload/iblock/688/688ddc9aaec82bfaa742ae04c74872a5.pdf>
+- Belden 8268 RG-214/U technical data sheet:
+  <https://mra-raycom.com/wp-content/uploads/simple-file-list/Specifications/Belden-RG214-Coax-8268-Techdata.pdf>
+- Belden 8216 RG-174/U technical data sheet:
+  <https://objects.eanixter.com/PD319397.PDF>
+- Fairview RG316/U data sheet (FMC03051):
+  <https://www.fairviewmicrowave.com/content/dam/infinite-electronics/product-assets/fairview-microwave/olcc-datasheets/FMC03051.pdf>
+- Fairview RG400/U data sheet:
+  <https://www.fairviewmicrowave.com/content/dam/infinite-electronics/product-assets/fairview-microwave/product-datasheets/RG400-U-BULK.pdf>
+- Belden 1694A RG-6/U technical data sheet:
+  <https://docs.rs-online.com/94d8/0900766b80027eb3.pdf>
+- Belden 8213 RG-11/U technical data sheet:
+  <https://www.gca.co.uk/document/1820/RG11DATASHEET.pdf>
+- Times Microwave LMR-240 data sheet:
+  <https://timesmicrowave.com/wp-content/uploads/2022/06/lmr-240-datasheet.pdf>
 - Times Microwave LMR-400 data sheet:
   <https://timesmicrowave.com/wp-content/uploads/2022/06/lmr-400-datasheet-1.pdf>
+- Times Microwave LMR-600 data sheet (Fairview copy):
+  <https://www.fairviewmicrowave.com/content/dam/infinite-electronics/product-assets/fairview-microwave/product-datasheets/LMR-600.pdf>
+- Belden 9913 technical data sheet:
+  <https://docs.rs-online.com/2c0b/A700000008749587.pdf>
+- Andrew/CommScope LDF4-50A data sheet:
+  <https://www.andrew.com/globalassets/digizuite/115611-p360-ldf4-50a-external.pdf>
+- Messi & Paoloni Ultraflex 7 full data sheet:
+  <https://www.freebytes.com/catalog/files/Ultraflex%207%20-%20Full%20Datasheet%20ENG.pdf>
 - Fair-Rite 31 Material data sheet: <https://fair-rite.com/31-material-data-sheet/>
 - Fair-Rite 43 Material data sheet: <https://fair-rite.com/43-material-data-sheet/>
 - Fair-Rite 61 Material data sheet: <https://fair-rite.com/61-material-data-sheet/>

@@ -1529,11 +1529,18 @@ with measurements and repeat the analysis after changing the design.
 
 Use **Simulation → Feed Line...** to configure a uniform transmission line between
 the transmitter and the antenna feed. Set its characteristic impedance, length,
-velocity factor, and matched loss in dB per 100 m. When enabled, the Impedance /
-SWR tab reports the impedance and SWR at the **transmitter end**; the Pattern
-tab still reports antenna power gain, because the line does not change the
-radiation pattern. Realized gain in the results summary includes the line loss
-and mismatch. A diagnostics row confirms that the line was applied.
+velocity factor, and matched loss in dB per 100 m. The **Catalog** selector fills
+impedance, velocity factor, and matched loss from the same 16 cables as the
+materials reference; the length stays editable, and manual edits to impedance,
+velocity factor, or loss switch the selector back to **Custom**. The selected
+catalog key is not persisted: on reopen, a unique electrical match is
+preselected and ambiguous matches show **Custom**. The hint shows the datasheet
+reference frequency and states that the simulation uses a constant matched
+loss. When enabled, the Impedance / SWR tab
+reports the impedance and SWR at the **transmitter end**; the Pattern tab still
+reports antenna power gain, because the line does not change the radiation
+pattern. Realized gain in the results summary includes the line loss and
+mismatch. A diagnostics row confirms that the line was applied.
 
 Disable the feed line to return to antenna-terminal impedance. The feed-line
 configuration is saved with the project and with each simulation run; it is
@@ -1609,11 +1616,12 @@ table:
 - **Wire**: nominal conductivity and relative permeability for copper and
   aluminum. The solver uses the same homogeneous values; plating, stranding,
   connections, and temperature are not modeled.
-- **Coax**: impedance, velocity factor, and matched loss at a stated datasheet
-  frequency for RG-58A/U, RG-213/U, and LMR-400. Select a row and use **Apply to
-  feed line** to initialize the project feed line; the current length is
-  preserved and a new line starts at 10 m. The simulation uses a constant
-  matched loss and does not interpolate by frequency.
+- **Coax**: 16 source-backed cables with impedance, velocity factor, and
+  matched loss at a stated datasheet frequency, from RG-58A/U and RG-213/U to
+  LMR-240/400/600, Belden 9913, LDF4-50A, RG-6/RG-11, and Ultraflex 7. Select a
+  row and use **Apply to feed line** to initialize the project feed line; the
+  current length is preserved and a new line starts at 10 m. The simulation uses
+  a constant matched loss and does not interpolate by frequency.
 - **Ferrite**: Fair-Rite 31, 43, and 61 suppression ranges and initial
   permeability. This is reference data; AntennaDesk does not model a ferrite
   core or common-mode impedance.
