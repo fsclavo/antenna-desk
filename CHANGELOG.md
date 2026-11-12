@@ -17,6 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   modeled ratio; a 4:1 leaves about 67 Ω on a ~267 Ω folded dipole, so the
   residual SWR is about 1.3 and a matching network is still needed for an exact
   50 Ω match. Schema 41 adds the field and migrates folded dipoles to 4:1.
+- **Full-wave loop feed transformer.** New loops start with an ideal **2:1**
+  feed transformer, matching the common 100-150 Ω full-wave loop to a 50 Ω
+  system. The ratio is editable to **1:1**, **4:1**, or another value and is
+  applied by the simulation link budget without changing the NEC geometry. The
+  estimator, form, family and element optimizers, design summary, construction
+  sheet, and reports show the modeled ratio; the element optimizer target is
+  now transmitter-side 50 Ω instead of raw-loop 100 Ω. A 2:1 leaves about 50-75 Ω
+  on a 100-150 Ω loop, so the residual SWR is about 1.0-1.5 and a matching
+  network may still be needed for an exact 50 Ω match. Schema 42 adds the field
+  and migrates loops to 2:1.
 - **Project journal.** **Tools → Project Journal...** adds a manual, local
   timeline of dated notes, decisions, as-built records, measurements, tuning
   notes, and photos. Entries store a title, kind, UTC date, free notes, an

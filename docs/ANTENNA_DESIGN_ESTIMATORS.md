@@ -56,7 +56,7 @@ warnings, and a dimension tolerance.
 |---|---|---|---|
 | Wire dipole | `0.5λ × 0.95` total length | empirical | Height and ground affect resonance |
 | Folded dipole | same element length; `0.02λ` spacing; 4:1 ideal feed transformer | empirical | Spacing controls step-up impedance; the 4:1 default is editable to 6:1 or 1:1 |
-| Loop / quad / delta | circumference `λ × (1.02895 + 0.05028/N + 0.09665/N²)` | empirical | `N` sides; quad=4, delta=3; calibrated polygon preset; the delta case falls in ON4UN's published 1.05–1.06λ range; vertical and horizontal loops share the same circumference rule |
+| Loop / quad / delta | circumference `λ × (1.02895 + 0.05028/N + 0.09665/N²)`; 2:1 ideal feed transformer | empirical | `N` sides; quad=4, delta=3; calibrated polygon preset; the delta case falls in ON4UN's published 1.05–1.06λ range; vertical and horizontal loops share the same circumference rule; the 2:1 default is editable to 1:1 or 4:1 |
 | Vertical 1/4 | `0.25λ × 0.95`; radial `0.25λ` | empirical | ARRL 234/f length rule; radial count/length are starting values |
 | Vertical 1/2 | `0.5λ × 0.95`; radial `0.25λ` | empirical | High feed impedance; matching required |
 | Vertical 5/8 | `0.625λ × 0.95`; radial `0.25λ` | empirical | ARRL 585/f length rule; high feed impedance; matching required |
@@ -92,6 +92,20 @@ displayed SWR is about 1.3, not 1.0. Use the project matching network for an
 exact 50 Ω match. The transformer is ideal: balun loss, common-mode current, and
 balance are not modeled. The estimator warning and the construction sheet state
 the modeled ratio.
+
+### Loop feed transformer
+
+A resonant full-wave loop normally presents 100–150 Ω. New designs start with an
+ideal 2:1 feed transformer, stored in `LoopParameters.transformer_ratio` and
+applied by `SimulationSpec.feed_transformer_ratio`. The ratio does not change
+the NEC geometry. It is editable because a 150 Ω loop leaves about 75 Ω after a
+2:1, so some installations use 1:1 with a tuner or a matching network instead.
+The estimator warning, family optimizer, element optimizer, reports, and
+construction sheet state the modeled ratio.
+
+The transformer is ideal: balun loss, common-mode current, and balance are not
+modeled. A full-wave loop is a balanced antenna, so a real installation still
+needs a current balun or choke.
 
 ### J Pole and Slim Jim starting point
 

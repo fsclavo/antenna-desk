@@ -165,6 +165,8 @@ def test_html_report_supports_new_geometry_summaries(sample_project: Project) ->
     loop_report = render_html_report(sample_project, loop, make_result(sample_project))
     assert "loop" in loop_report
     assert "Circumference" in loop_report
+    assert "Feed transformer" in loop_report
+    assert "2:1" in loop_report
 
 
 def test_html_report_includes_estimator_provenance(sample_project: Project) -> None:

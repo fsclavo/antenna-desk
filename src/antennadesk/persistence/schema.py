@@ -57,6 +57,7 @@ from ..domain.antennas.loaded_dipole import (
 )
 from ..domain.antennas.loop import (
     ANTENNA_TYPE_LOOP,
+    LOOP_REFERENCE_TRANSFORMER_RATIO,
     MAX_SIDES,
     MIN_SIDES,
     LoopOrientation,
@@ -327,6 +328,10 @@ class LoopParametersPayload(StrictModel):
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
+    transformer_ratio: float = Field(
+        default=LOOP_REFERENCE_TRANSFORMER_RATIO,
+        gt=0.0,
+    )
 
 
 class MagneticLoopParametersPayload(StrictModel):
@@ -1437,6 +1442,7 @@ def _loop_parameters_from_domain(value: LoopParameters) -> LoopParametersPayload
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
+        transformer_ratio=value.transformer_ratio,
     )
 
 
@@ -2615,6 +2621,7 @@ def _loop_parameters_to_domain(value: LoopParametersPayload) -> LoopParameters:
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),
+        transformer_ratio=value.transformer_ratio,
     )
 
 

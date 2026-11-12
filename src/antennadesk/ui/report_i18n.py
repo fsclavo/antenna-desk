@@ -628,6 +628,11 @@ REPORT_SPANISH: dict[str, str] = {
         "un elemento a través de un transformador {ratio}:1. La longitud total del "
         "conductor es {conductor} m."
     ),
+    "Cut one conductor to {circumference} m and close it into {sides} equal sides of {side} m in a {plane} plane. Feed the midpoint of the first side through a {ratio}:1 transformer.": (  # noqa: E501
+        "Cortá un conductor de {circumference} m y cerralo en {sides} lados iguales "
+        "de {side} m en un plano {plane}. Alimentá el punto medio del primer lado a "
+        "través de un transformador {ratio}:1."
+    ),
     "Cut two legs of {leg} m and join them at the apex with an included angle of {angle}°. The apex is {apex} m above ground.": (  # noqa: E501
         "Cortá dos tramos de {leg} m y unilos en el vértice con un ángulo incluido "
         "de {angle}°. El vértice está a {apex} m sobre el suelo."

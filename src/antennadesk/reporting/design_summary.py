@@ -511,6 +511,7 @@ def design_summary_rows(
                 ("Circumference", f"{parameters.circumference_m:.4f} m"),
                 ("Sides", str(parameters.sides)),
                 ("Equivalent diameter", f"{parameters.diameter_m:.4f} m"),
+                ("Feed transformer", f"{parameters.transformer_ratio:g}:1"),
             ]
         )
         if parameters.orientation is LoopOrientation.HORIZONTAL:

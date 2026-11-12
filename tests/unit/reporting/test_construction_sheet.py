@@ -355,8 +355,30 @@ def test_loop_construction_sheet(sample_project: Project) -> None:
     assert "Circumference" in sheet
     assert "Side length" in sheet
     assert "Feed side" in sheet
+    assert "Feed transformer" in sheet
+    assert "2:1" in sheet
+    assert "through a 2:1 transformer" in sheet
     assert "5.0000 m" in sheet
     assert "8 equal sides" in sheet
+
+
+def test_loop_construction_sheet_can_show_a_1_to_1_feed(sample_project: Project) -> None:
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    design = sample_project.designs[0]
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=40.0,
+        height_m=8.0,
+        sides=4,
+        transformer_ratio=1.0,
+    )
+    loop = design.with_parameters(parameters)
+    sheet = render_construction_sheet(sample_project, loop, None)
+
+    assert "Feed transformer" in sheet
+    assert "1:1" in sheet
+    assert "through a 1:1 transformer" not in sheet
 
 
 def test_horizontal_loop_construction_sheet(sample_project: Project) -> None:

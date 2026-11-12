@@ -68,6 +68,8 @@ def test_loop_estimate_uses_shape_side_count() -> None:
     assert isinstance(quad.parameters, LoopParameters)
     assert delta.parameters.sides == 3
     assert quad.parameters.sides == 4
+    assert delta.parameters.transformer_ratio == pytest.approx(2.0)
+    assert quad.parameters.transformer_ratio == pytest.approx(2.0)
     assert delta.parameters.circumference_m == pytest.approx(
         loop_circumference_m(7_100_000.0, sides=3)
     )

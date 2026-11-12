@@ -1255,19 +1255,33 @@ def render_construction_sheet(
 {height_row}
 <tr><th>Feed side</th><td>{_escape(antenna.feed.wire_id)}</td></tr>
 <tr><th>Feed location</th><td>{_escape(tr("midpoint of the first side"))}</td></tr>
+<tr><th>Feed transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
 <tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
 """
         plane = tr("horizontal" if horizontal else "vertical")
-        construction_note = _note(
-            tr,
-            "Cut one conductor to {circumference} m and close it into {sides} "
-            "equal sides of {side} m in a {plane} plane. Feed the midpoint of the "
-            "first side.",
-            circumference=f"{parameters.circumference_m:.4f}",
-            sides=parameters.sides,
-            side=f"{parameters.side_length_m:.4f}",
-            plane=plane,
-        )
+        if parameters.transformer_ratio == 1.0:
+            construction_note = _note(
+                tr,
+                "Cut one conductor to {circumference} m and close it into {sides} "
+                "equal sides of {side} m in a {plane} plane. Feed the midpoint of the "
+                "first side.",
+                circumference=f"{parameters.circumference_m:.4f}",
+                sides=parameters.sides,
+                side=f"{parameters.side_length_m:.4f}",
+                plane=plane,
+            )
+        else:
+            construction_note = _note(
+                tr,
+                "Cut one conductor to {circumference} m and close it into {sides} "
+                "equal sides of {side} m in a {plane} plane. Feed the midpoint of the "
+                "first side through a {ratio}:1 transformer.",
+                circumference=f"{parameters.circumference_m:.4f}",
+                sides=parameters.sides,
+                side=f"{parameters.side_length_m:.4f}",
+                plane=plane,
+                ratio=f"{parameters.transformer_ratio:g}",
+            )
     elif isinstance(parameters, TransmissionLineDoubletParameters):
         feed_rows = f"""
 <tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>

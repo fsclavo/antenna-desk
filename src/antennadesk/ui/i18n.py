@@ -2713,8 +2713,15 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "las verticales de 5/8 necesitan adaptación y un sistema de radiales adecuado",
     },
     "estimator.warning.loop_matching": {
-        Language.ENGLISH: "full-wave loops normally present 100-150 Ω; use a 2:1 balun or matching network for 50 Ω",
-        Language.SPANISH: "los lazos de onda completa suelen presentar 100-150 Ω; usá un balun 2:1 o una red de adaptación para 50 Ω",
+        Language.ENGLISH: (
+            "full-wave loops normally present 100-150 Ω; the 2:1 starting transformer "
+            "is ideal, so verify the residual SWR or add a matching network"
+        ),
+        Language.SPANISH: (
+            "los lazos de onda completa suelen presentar 100-150 Ω; el transformador "
+            "2:1 inicial es ideal, así que verificá la ROE residual o agregá una red "
+            "de adaptación"
+        ),
     },
     "estimator.warning.ocfd_matching": {
         Language.ENGLISH: "off-center feed impedance depends on the offset and height; the preset uses an ideal 4:1 transformer, so verify the real balun",
@@ -3087,13 +3094,15 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "help.dipole.field.transformer_ratio": {
         Language.ENGLISH: (
-            "Ideal folded-dipole balun. 4:1 is typical; on a ~267 Ω folded dipole it "
-            "leaves about 67 Ω, so verify the residual SWR or add a matching network."
+            "Ideal feed transformer ratio. 1.0 shows the raw antenna impedance; 4:1 is "
+            "typical for a folded dipole and 2:1 for a full-wave loop. Verify the "
+            "residual SWR and add a matching network if needed."
         ),
         Language.SPANISH: (
-            "Balún ideal del dipolo plegado. 4:1 es lo típico; en un dipolo plegado de "
-            "~267 Ω deja unos 67 Ω, así que verificá la ROE residual o agregá una red "
-            "de adaptación."
+            "Relación del transformador ideal. 1.0 muestra la impedancia cruda de la "
+            "antena; 4:1 es lo típico para un dipolo plegado y 2:1 para un lazo de onda "
+            "completa. Verificá la ROE residual y agregá una red de adaptación si hace "
+            "falta."
         ),
     },
     "help.beverage.termination_resistance": {
@@ -11451,8 +11460,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "La cantidad de elementos queda fija; solo se optimizan las longitudes y separaciones seleccionadas. La posición del primer elemento queda fija, las separaciones mantienen un mínimo de 0,1 m y los radios no cambian. Para cambiar la cantidad de elementos, editá la Yagi antes de optimizar.",
     },
     "element_optimize.loop_hint": {
-        Language.ENGLISH: "Full-wave loops typically show 100-150 Ω at resonance, so the target resistance defaults to 100 Ω. Use a 2:1 balun or Matching Network for a 50 Ω system; the loop shape and side count are preserved.",
-        Language.SPANISH: "Los lazos de onda completa suelen presentar 100-150 Ω en resonancia, por eso la resistencia objetivo parte de 100 Ω. Usá un balun 2:1 o una red de adaptación para un sistema de 50 Ω; la forma y la cantidad de lados se conservan.",
+        Language.ENGLISH: "The default 2:1 feed transformer is applied, so targets are transmitter-side: 50 Ω at the transmitter is about 100 Ω at the loop. Set the transformer to 1:1 in the design panel to target the raw loop impedance. The loop shape and side count are preserved.",
+        Language.SPANISH: "Se aplica el transformador 2:1 por defecto, así que los objetivos son del lado del transmisor: 50 Ω en el transmisor equivalen a unos 100 Ω en el lazo. Poné el transformador en 1:1 en el panel de diseño para apuntar a la impedancia cruda del lazo. La forma y la cantidad de lados se conservan.",
     },
     "element_optimize.selected_summary": {
         Language.ENGLISH: "Selected candidate: {objective}",
@@ -12577,7 +12586,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "hasta tener un modelo medido del transformador."
         ),
     },
-    "optimize.folded_dipole.transformer_context": {
+    "optimize.feed_transformer.transformer_context": {
         Language.ENGLISH: (
             "Targets are transmitter-side. The ideal feed transformer is applied "
             "before the SWR target; the antenna-side target is the target "

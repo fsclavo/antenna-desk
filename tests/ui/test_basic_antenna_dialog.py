@@ -120,7 +120,9 @@ def test_loop_dialog_keeps_the_delta_and_quad_side_counts(qtbot: QtBot) -> None:
         assert dialog.windowTitle() == title
         assert isinstance(parameters, LoopParameters)
         assert parameters.sides == sides
+        assert parameters.transformer_ratio == pytest.approx(2.0)
         assert parameters.orientation is LoopOrientation.VERTICAL
+        assert not dialog._form._transformer.isHidden()
 
 
 def test_dialog_restores_existing_parameters(qtbot: QtBot) -> None:

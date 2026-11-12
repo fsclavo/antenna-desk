@@ -322,7 +322,10 @@ def test_v10_migration_keeps_existing_designs_unchanged() -> None:
     migrated = migrate_document(document)
 
     assert migrated["schema_version"] == SCHEMA_VERSION
-    assert migrated["project"]["designs"][0] == document["project"]["designs"][0]
+    migrated_design = migrated["project"]["designs"][0]
+    assert migrated_design["parameters"]["transformer_ratio"] == 2.0
+    migrated_design["parameters"].pop("transformer_ratio")
+    assert migrated_design == document["project"]["designs"][0]
 
 
 def test_v11_migration_adds_straight_driven_yagi_defaults() -> None:
@@ -953,6 +956,45 @@ def test_v40_migration_tolerates_a_missing_project() -> None:
     document = {
         "format": "antennadesk-project",
         "schema_version": 40,
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert "project" not in migrated
+
+
+def test_v41_migration_adds_the_loop_transformer() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 41,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "loop",
+                    "parameters": {"circumference_m": 40.0},
+                },
+                {
+                    "antenna_type": "wire_dipole",
+                    "parameters": {"total_length_m": 20.0},
+                },
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    loop, wire = migrated["project"]["designs"]
+    assert loop["parameters"]["transformer_ratio"] == 2.0
+    assert "transformer_ratio" not in wire["parameters"]
+    assert "transformer_ratio" not in document["project"]["designs"][0]["parameters"]
+
+
+def test_v41_migration_tolerates_a_missing_project() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 41,
     }
 
     migrated = migrate_document(document)

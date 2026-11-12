@@ -149,6 +149,7 @@ User-facing parameters for a regular-polygon loop:
 - `wire_radius_m`
 - `material`
 - `ground`
+- `transformer_ratio`: ideal feed transformer ratio, default `2.0`
 
 `to_antenna()` generates one wire per side, connected end-to-start into a
 closed polygon. A vertical loop lies in a vertical plane with `height_m` as its
@@ -158,7 +159,8 @@ lies in a horizontal plane at `height_m`; its `top_height_m` is the plane
 height. `azimuth_deg` rotates the vertical loop plane around the vertical axis,
 or the horizontal polygon within its plane. The feed is at the midpoint of the
 first side. A square loop uses four sides; a larger side count approximates a
-circular loop.
+circular loop. The ideal 2:1 transformer is applied by
+`SimulationSpec.feed_transformer_ratio`; it is not part of the NEC geometry.
 
 ### MagneticLoopParameters
 
@@ -737,11 +739,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 41.
+the application writes version 42.
 
 ## Schema policy
 
-- Current version: `41`.
+- Current version: `42`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -822,6 +824,8 @@ the application writes version 41.
 - Version 41 adds the folded-dipole `transformer_ratio`. The migration writes
   the 4:1 reference value; the field remains editable to 6:1, 1:1, or another
   ratio.
+- Version 42 adds the loop `transformer_ratio`. The migration writes the 2:1
+  reference value; the field remains editable to 1:1, 4:1, or another ratio.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads

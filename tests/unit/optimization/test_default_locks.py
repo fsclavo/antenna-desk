@@ -134,7 +134,7 @@ def test_default_lock_policy_covers_context_and_exempts_radiator_height() -> Non
                 circumference_m=21.5,
                 height_m=2.0,
             ),
-            {"height_m", "wire_radius_m"},
+            {"height_m", "transformer_ratio", "wire_radius_m"},
         ),
         (
             scv_parameters(ScvKind.HALF_SQUARE, 7_150_000.0),

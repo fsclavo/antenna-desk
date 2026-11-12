@@ -172,7 +172,7 @@ def folded_dipole_descriptor(parameters: FoldedDipoleParameters) -> AntennaOptim
         build,
         validate,
         context_note_key=(
-            "optimize.folded_dipole.transformer_context"
+            "optimize.feed_transformer.transformer_context"
             if parameters.transformer_ratio != 1.0
             else None
         ),
@@ -192,11 +192,17 @@ def loop_descriptor(parameters: LoopParameters) -> AntennaOptimizerDescriptor:
             "height_m", "field.height", "optimize.group.geometry", parameters.height_m, 0.25, 0.0
         ),
         _radius(parameters.wire_radius_m),
+        _choice_ratio(
+            "transformer_ratio",
+            "field.transformer_ratio",
+            parameters.transformer_ratio,
+        ),
     )
     initial = {
         "circumference_m": parameters.circumference_m,
         "height_m": parameters.height_m,
         "wire_radius_m": parameters.wire_radius_m,
+        "transformer_ratio": parameters.transformer_ratio,
     }
 
     def build(values: Mapping[str, float]) -> LoopParameters:
@@ -205,6 +211,7 @@ def loop_descriptor(parameters: LoopParameters) -> AntennaOptimizerDescriptor:
             circumference_m=values["circumference_m"],
             height_m=values["height_m"],
             wire_radius_m=values["wire_radius_m"],
+            transformer_ratio=values["transformer_ratio"],
         )
 
     def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
@@ -212,9 +219,21 @@ def loop_descriptor(parameters: LoopParameters) -> AntennaOptimizerDescriptor:
             positive_violation("circumference_m", values["circumference_m"]),
             non_negative_violation("height_m", values["height_m"]),
             positive_violation("wire_radius_m", values["wire_radius_m"]),
+            positive_violation("transformer_ratio", values["transformer_ratio"]),
         )
 
-    return _descriptor("loop", variables, initial, build, validate)
+    return _descriptor(
+        "loop",
+        variables,
+        initial,
+        build,
+        validate,
+        context_note_key=(
+            "optimize.feed_transformer.transformer_context"
+            if parameters.transformer_ratio != 1.0
+            else None
+        ),
+    )
 
 
 def inverted_v_descriptor(parameters: InvertedVParameters) -> AntennaOptimizerDescriptor:

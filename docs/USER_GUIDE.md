@@ -118,7 +118,9 @@ The basic templates are:
   network.
 - **Loop**: a regular polygon in a vertical or horizontal plane; set the
   circumference, the number of sides, the orientation, and the height above
-  ground. A horizontal loop is the sky-loop configuration.
+  ground. A horizontal loop is the sky-loop configuration. The feed transformer
+  ratio defaults to **2:1** and remains editable to **1:1** or **4:1** for a
+  full-wave loop.
 
 Changing the template converts the current design only after the explicit
 confirmation. The center shows a dimensioned sketch with a ground line and
@@ -404,11 +406,12 @@ templates now have their own inline editors. The Template field is read-only;
 use **Change...** next to it or **Design → Change Template...** (or Ctrl+Shift+T)
 to open the catalog and replace the current design with another template.
 
-A full-wave loop normally presents roughly 100-150 Ω at resonance, so a direct
-50 Ω target may require a matching network. Use a 2:1 balun or the Matching
-Network dialog for a 50 Ω system. The loop optimizer keeps the selected loop
-shape, orientation, and side count fixed and searches circumference, height,
-and conductor radius jointly. The
+A full-wave loop normally presents roughly 100-150 Ω at resonance. New loops
+start with an ideal **2:1** feed transformer, editable to **1:1** or **4:1**;
+the 2:1 leaves about 50-75 Ω, so use the Matching Network dialog for an exact
+50 Ω match. The loop optimizer keeps the selected loop shape, orientation, and
+side count fixed and searches circumference, height, conductor radius, and the
+optional transformer ratio jointly. The
 suggested circumference includes a polygon correction calibrated for the
 AntennaDesk loop model; it is still a starting point, so verify it with a
 simulation.

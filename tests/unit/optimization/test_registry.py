@@ -241,6 +241,27 @@ def test_folded_dipole_descriptor_exposes_the_transformer_choice() -> None:
     assert rebuilt.transformer_ratio == pytest.approx(6.0)
 
 
+def test_loop_descriptor_exposes_the_transformer_choice() -> None:
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=40.0,
+        height_m=8.0,
+    )
+    availability = optimizer_availability(parameters)
+    descriptor = availability.descriptor
+    assert descriptor is not None
+
+    variable = next(item for item in descriptor.variables if item.name == "transformer_ratio")
+    assert variable.kind is VariableKind.CHOICE
+    assert variable.locked_by_default
+    assert 2.0 in variable.choices
+    assert 4.0 in variable.choices
+
+    rebuilt = descriptor.build_parameters({**descriptor.initial_values, "transformer_ratio": 4.0})
+    assert isinstance(rebuilt, LoopParameters)
+    assert rebuilt.transformer_ratio == pytest.approx(4.0)
+
+
 def _typed_samples() -> list[AntennaDesignParameters]:
     return [
         _dipole(),

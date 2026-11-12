@@ -309,6 +309,24 @@ def test_folded_dipole_summary_reports_the_feed_transformer() -> None:
     assert rows["Feed transformer"] == "6:1"
 
 
+def test_loop_summary_reports_the_feed_transformer() -> None:
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=40.0,
+        height_m=8.0,
+        sides=4,
+        transformer_ratio=4.0,
+    )
+
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Type"] == "loop"
+    assert rows["Circumference"] == "40.0000 m"
+    assert rows["Feed transformer"] == "4:1"
+
+
 def test_endfed_presets_are_labeled_in_the_summary() -> None:
     from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
 

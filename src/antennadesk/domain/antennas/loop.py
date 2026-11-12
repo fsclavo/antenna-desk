@@ -21,6 +21,7 @@ from .wire import Wire
 ANTENNA_TYPE_LOOP = "loop"
 MIN_SIDES = 3
 MAX_SIDES = 128
+LOOP_REFERENCE_TRANSFORMER_RATIO = 2.0
 
 
 class LoopOrientation(StrEnum):
@@ -39,6 +40,11 @@ class LoopParameters:
     loop uses ``height_m`` as the plane height above ground and is rotated by
     ``azimuth_deg`` in the horizontal plane.  The feed is at the midpoint of
     the first side.
+
+    ``transformer_ratio`` is the ideal feed transformer ratio applied by the
+    simulation link budget.  It is not part of the NEC geometry.  The default
+    of 2:1 is the common matching choice for a full-wave loop presenting
+    100-150 Ω, and remains editable for a 1:1 or other feed.
     """
 
     frequency_hz: float
@@ -50,12 +56,14 @@ class LoopParameters:
     wire_radius_m: float = 0.001
     material: ConductorMaterial = COPPER
     ground: GroundModel = FREE_SPACE
+    transformer_ratio: float = LOOP_REFERENCE_TRANSFORMER_RATIO
 
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
         ensure_positive(self.circumference_m, name="circumference_m")
         ensure_non_negative(self.height_m, name="height_m")
         ensure_positive(self.wire_radius_m, name="wire_radius_m")
+        ensure_positive(self.transformer_ratio, name="transformer_ratio")
         if not MIN_SIDES <= self.sides <= MAX_SIDES:
             raise ValueError(f"sides must be between {MIN_SIDES} and {MAX_SIDES}")
         object.__setattr__(self, "orientation", LoopOrientation(self.orientation))

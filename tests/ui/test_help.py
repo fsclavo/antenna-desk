@@ -43,7 +43,7 @@ def test_help_resolution_order_and_missing_keys() -> None:
     assert "Boom centerline" in (yagi_height or "")
     assert "folded-dipole" in (dipole_spacing or "")
     assert "4:1" in (dipole_transformer or "")
-    assert "67" in (dipole_transformer or "")
+    assert "2:1" in (dipole_transformer or "")
     assert "polarization" in (hint or "").lower()
     assert missing is None
 

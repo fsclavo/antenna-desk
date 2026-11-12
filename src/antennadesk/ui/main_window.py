@@ -6898,9 +6898,10 @@ class MainWindow(QMainWindow):
                 feed_ratio=previous.feed_ratio,
                 transformer_ratio=previous.transformer_ratio,
             )
-        elif isinstance(previous, FoldedDipoleParameters) and isinstance(
-            estimated, FoldedDipoleParameters
-        ):
+        elif (
+            isinstance(previous, FoldedDipoleParameters)
+            and isinstance(estimated, FoldedDipoleParameters)
+        ) or (isinstance(previous, LoopParameters) and isinstance(estimated, LoopParameters)):
             updates["transformer_ratio"] = previous.transformer_ratio
         elif isinstance(previous, JPoleParameters) and isinstance(estimated, JPoleParameters):
             updates.update(folded=previous.folded, gap_m=previous.gap_m)
@@ -7484,7 +7485,7 @@ class MainWindow(QMainWindow):
                 ElementOptimizationObjective.MULTI_OBJECTIVE,
             ),
             default_frequency_hz=parameters.frequency_hz,
-            default_target_resistance_ohm=100.0,
+            default_target_resistance_ohm=50.0,
             parent=self,
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:

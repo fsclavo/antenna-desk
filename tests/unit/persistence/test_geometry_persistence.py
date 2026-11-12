@@ -91,6 +91,25 @@ def test_folded_dipole_transformer_ratio_round_trips() -> None:
     assert restored.designs[0].parameters == parameters
 
 
+def test_loop_transformer_ratio_round_trips() -> None:
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=40.0,
+        height_m=8.0,
+        sides=4,
+        transformer_ratio=4.0,
+    )
+    original = _project(parameters, "Loop 4:1")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    payload = document.project.designs[0].parameters
+    assert isinstance(payload, LoopParametersPayload)
+    assert payload.transformer_ratio == pytest.approx(4.0)
+    assert restored.designs[0].parameters == parameters
+
+
 def test_schema_rejects_payload_shape_for_the_declared_type() -> None:
     project = _project(
         LoopParameters(

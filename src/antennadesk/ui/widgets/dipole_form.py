@@ -31,7 +31,12 @@ from ...domain.antennas.folded_dipole import (
     FOLDED_DIPOLE_REFERENCE_TRANSFORMER_RATIO,
     FoldedDipoleParameters,
 )
-from ...domain.antennas.loop import ANTENNA_TYPE_LOOP, LoopOrientation, LoopParameters
+from ...domain.antennas.loop import (
+    ANTENNA_TYPE_LOOP,
+    LOOP_REFERENCE_TRANSFORMER_RATIO,
+    LoopOrientation,
+    LoopParameters,
+)
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.environment.ground import GroundKind, GroundModel
 from ...domain.simulation.frequency import FrequencyPlan
@@ -408,6 +413,7 @@ class DipoleForm(QWidget):
             antenna_type = ANTENNA_TYPE_LOOP
             length_m = parameters.circumference_m
             self._sides.setValue(parameters.sides)
+            self._transformer.setValue(parameters.transformer_ratio)
             orientation_index = self._orientation.findData(parameters.orientation.value)
             if orientation_index >= 0:
                 self._orientation.setCurrentIndex(orientation_index)
@@ -505,6 +511,7 @@ class DipoleForm(QWidget):
                 ground=ground,
                 circumference_m=length_m,
                 sides=self._sides.value(),
+                transformer_ratio=self._transformer.value(),
             )
         orientation = DipoleOrientation(self._orientation.currentData())
         sag_m = (
@@ -544,6 +551,10 @@ class DipoleForm(QWidget):
             self._set_orientation(LoopOrientation.VERTICAL.value)
         elif previous_type == ANTENNA_TYPE_LOOP and antenna_type != ANTENNA_TYPE_LOOP:
             self._set_orientation(DipoleOrientation.HORIZONTAL.value)
+        if antenna_type == ANTENNA_TYPE_FOLDED_DIPOLE:
+            self._transformer.setValue(FOLDED_DIPOLE_REFERENCE_TRANSFORMER_RATIO)
+        elif antenna_type == ANTENNA_TYPE_LOOP:
+            self._transformer.setValue(LOOP_REFERENCE_TRANSFORMER_RATIO)
         self._update_type_controls()
         self._emit_changed()
 
@@ -593,11 +604,7 @@ class DipoleForm(QWidget):
             segmentation=segmentation,
             reference_impedance_ohm=self._reference.value(),
             far_field=far_field,
-            feed_transformer_ratio=(
-                parameters.transformer_ratio
-                if isinstance(parameters, FoldedDipoleParameters)
-                else 1.0
-            ),
+            feed_transformer_ratio=float(getattr(parameters, "transformer_ratio", 1.0)),
         )
 
     def _set_row_visible(self, field: QWidget, visible: bool) -> None:
@@ -613,7 +620,7 @@ class DipoleForm(QWidget):
         is_loop = antenna_type == ANTENNA_TYPE_LOOP
         self._set_row_visible(self._orientation, is_dipole or is_loop)
         self._set_row_visible(self._spacing, is_folded)
-        self._set_row_visible(self._transformer, is_folded)
+        self._set_row_visible(self._transformer, is_folded or is_loop)
         self._set_row_visible(self._sides, is_loop)
         self._set_row_visible(self._sag, is_dipole)
         self._family_value.setText(

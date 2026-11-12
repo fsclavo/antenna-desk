@@ -6,7 +6,11 @@ import math
 
 import pytest
 
-from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
+from antennadesk.domain.antennas.loop import (
+    LOOP_REFERENCE_TRANSFORMER_RATIO,
+    LoopOrientation,
+    LoopParameters,
+)
 
 
 def _parameters(**overrides: object) -> LoopParameters:
@@ -61,6 +65,19 @@ def test_loop_side_and_diameter() -> None:
     assert parameters.top_height_m == pytest.approx(8.0 + parameters.diameter_m)
 
 
+def test_loop_defaults_to_the_2_to_1_reference_transformer() -> None:
+    parameters = _parameters()
+
+    assert parameters.transformer_ratio == pytest.approx(LOOP_REFERENCE_TRANSFORMER_RATIO)
+    assert parameters.transformer_ratio == pytest.approx(2.0)
+
+
+def test_loop_accepts_a_4_to_1_transformer() -> None:
+    parameters = _parameters(transformer_ratio=4.0)
+
+    assert parameters.transformer_ratio == pytest.approx(4.0)
+
+
 def test_loop_azimuth_rotates_the_first_vertex() -> None:
     parameters = _parameters(azimuth_deg=90.0)
     wire = parameters.to_antenna().wires[0]
@@ -79,6 +96,7 @@ def test_loop_azimuth_rotates_the_first_vertex() -> None:
         ("sides", 2),
         ("sides", 129),
         ("wire_radius_m", 0.0),
+        ("transformer_ratio", 0.0),
     ],
 )
 def test_loop_rejects_invalid_parameters(field: str, value: float) -> None:

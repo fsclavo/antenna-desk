@@ -230,6 +230,32 @@ def test_spanish_folded_dipole_sheet_translates_the_transformer_note(
     assert "through a 4:1 transformer" not in sheet
 
 
+def test_spanish_loop_sheet_translates_the_transformer_note(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.loop import LoopParameters
+
+    parameters = LoopParameters(
+        frequency_hz=7_100_000.0,
+        circumference_m=40.0,
+        height_m=8.0,
+        sides=4,
+        transformer_ratio=2.0,
+    )
+    loop = sample_project.designs[0].with_parameters(parameters)
+    sheet = render_construction_sheet(
+        sample_project,
+        loop,
+        None,
+        labeler=Translator(Language.SPANISH).report,
+        language="es",
+    )
+
+    assert "Transformador de alimentación" in sheet
+    assert "a través de un transformador 2:1" in sheet
+    assert "through a 2:1 transformer" not in sheet
+
+
 def test_spanish_construction_sheet_translates_view_captions(
     sample_project: Project,
 ) -> None:

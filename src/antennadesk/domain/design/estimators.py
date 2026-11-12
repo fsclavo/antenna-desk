@@ -26,7 +26,11 @@ from ..antennas.folded_dipole import (
 )
 from ..antennas.inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
 from ..antennas.j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
-from ..antennas.loop import ANTENNA_TYPE_LOOP, LoopParameters
+from ..antennas.loop import (
+    ANTENNA_TYPE_LOOP,
+    LOOP_REFERENCE_TRANSFORMER_RATIO,
+    LoopParameters,
+)
 from ..antennas.moxon import ANTENNA_TYPE_MOXON, moxon_20m_wire
 from ..antennas.ocfd import (
     ANTENNA_TYPE_OCFD,
@@ -156,6 +160,7 @@ def estimate_loop(intent: DesignIntent) -> DimensionEstimate:
         wire_radius_m=intent.wire_radius_m,
         material=intent.material,
         ground=intent.ground,
+        transformer_ratio=LOOP_REFERENCE_TRANSFORMER_RATIO,
     )
     return DimensionEstimate(
         parameters=parameters,

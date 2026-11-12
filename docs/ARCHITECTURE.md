@@ -326,8 +326,9 @@ vertical array design type, version 26 adds the quad beam design type, version
 27 adds the discone design type, version 28 adds the trapped Yagi design type,
 version 29 adds optional per-source input results, version 30 adds the hexbeam
 design type, version 39 adds measurement sessions, version 40 adds the project
-journal, version 41 adds the folded-dipole feed transformer ratio, and older
-documents are migrated explicitly.
+journal, version 41 adds the folded-dipole feed transformer ratio, version 42
+adds the full-wave loop feed transformer ratio, and older documents are
+migrated explicitly.
 
 Simulation runs are persisted in schema version 30. Raw solver text is stored
 with the normalized result. Project files are compact JSON compressed with

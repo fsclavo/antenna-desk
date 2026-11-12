@@ -64,6 +64,8 @@ def test_switching_to_a_loop_updates_the_design(window: MainWindow) -> None:
     parameters = window._project.designs[0].parameters
     assert isinstance(parameters, LoopParameters)
     assert parameters.sides == 8
+    assert parameters.transformer_ratio == pytest.approx(2.0)
+    assert window._form.simulation_spec().feed_transformer_ratio == pytest.approx(2.0)
     assert len(window._project.designs[0].antenna.wires) == 8
     assert window._view_combo.currentData() == "construction"
     assert window._geometry.resolved_mode().value == "elevation"
