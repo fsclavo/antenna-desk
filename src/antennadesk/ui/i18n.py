@@ -1535,6 +1535,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Measurement Sessions...",
         Language.SPANISH: "Sesiones de medición...",
     },
+    "action.tuning_assistant": {
+        Language.ENGLISH: "Tuning Assistant...",
+        Language.SPANISH: "Asistente de ajuste...",
+    },
     "action.exit": {Language.ENGLISH: "Exit", Language.SPANISH: "Salir"},
     "action.about": {
         Language.ENGLISH: "About AntennaDesk",
@@ -3377,6 +3381,51 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Agrupá mediciones en sesiones de campo y comparalas antes y después de ajustar."
         ),
     },
+    "help.action.tuning_assistant": {
+        Language.ENGLISH: (
+            "Estimate a bounded primary-dimension change from a measured reference and solver sensitivity."
+        ),
+        Language.SPANISH: (
+            "Estimá un cambio acotado de la dimensión principal a partir de una referencia "
+            "medida y la sensibilidad del solver."
+        ),
+    },
+    "help.tuning.measurement": {
+        Language.ENGLISH: "Measurement used for the current physical reference.",
+        Language.SPANISH: "Medición usada como referencia física actual.",
+    },
+    "help.tuning.target": {
+        Language.ENGLISH: "Frequency the tuned antenna should reach.",
+        Language.SPANISH: "Frecuencia que debería alcanzar la antena ajustada.",
+    },
+    "help.tuning.current_dimension": {
+        Language.ENGLISH: "Primary family dimension that the assistant will adjust.",
+        Language.SPANISH: "Dimensión principal de la familia que ajustará el asistente.",
+    },
+    "help.tuning.max_adjustment": {
+        Language.ENGLISH: "Hard bound on the proposed change; the estimate is clipped to this value.",
+        Language.SPANISH: "Límite duro del cambio propuesto; la estimación se recorta a este valor.",
+    },
+    "help.tuning.analyze": {
+        Language.ENGLISH: "Run the bounded solver probes and build a proposal.",
+        Language.SPANISH: "Ejecutá las sondas acotadas del solver y generá una propuesta.",
+    },
+    "help.tuning.cancel": {
+        Language.ENGLISH: "Stop the running solver probes.",
+        Language.SPANISH: "Detené las sondas del solver en ejecución.",
+    },
+    "help.tuning.apply": {
+        Language.ENGLISH: "Apply the proposed primary dimension to the design.",
+        Language.SPANISH: "Aplicá la dimensión principal propuesta al diseño.",
+    },
+    "help.tuning.table": {
+        Language.ENGLISH: "Solver probes at the current, lower, higher, and proposed dimensions.",
+        Language.SPANISH: "Sondas del solver en la dimensión actual, menor, mayor y propuesta.",
+    },
+    "help.tuning.assumptions": {
+        Language.ENGLISH: "The estimate is local and model-based; verify with a new measurement.",
+        Language.SPANISH: "La estimación es local y basada en el modelo; verificá con una nueva medición.",
+    },
     "help.measurement.session": {
         Language.ENGLISH: "Optional field session that groups measurements taken under the same setup.",
         Language.SPANISH: "Sesión de campo opcional que agrupa mediciones tomadas con la misma instalación.",
@@ -3388,6 +3437,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.measurement.compare": {
         Language.ENGLISH: "Compare two measurements on their overlapping frequency range.",
         Language.SPANISH: "Compará dos mediciones en su rango de frecuencia superpuesto.",
+    },
+    "help.measurement.tune": {
+        Language.ENGLISH: "Estimate a bounded dimension change from this measurement and the solver.",
+        Language.SPANISH: "Estimá un cambio acotado de dimensión desde esta medición y el solver.",
     },
     "help.measurement.session.name": {
         Language.ENGLISH: "Name shown in the timeline and measurement selector.",
@@ -4790,6 +4843,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Measurement sessions updated.",
         Language.SPANISH: "Sesiones de medición actualizadas.",
     },
+    "status.tuning_applied": {
+        Language.ENGLISH: "Tuning change applied.",
+        Language.SPANISH: "Cambio de ajuste aplicado.",
+    },
     "design.provenance": {
         Language.ENGLISH: "Estimated design: {method} · confidence: {confidence} · tolerance: {tolerance}",
         Language.SPANISH: "Diseño estimado: {method} · confianza: {confidence} · tolerancia: {tolerance}",
@@ -5220,6 +5277,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Compare...",
         Language.SPANISH: "Comparar...",
     },
+    "measurement.tune": {
+        Language.ENGLISH: "Tune...",
+        Language.SPANISH: "Ajustar...",
+    },
     "measurement.session_title": {
         Language.ENGLISH: "Measurement session",
         Language.SPANISH: "Sesión de medición",
@@ -5422,6 +5483,182 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "measurement.comparison_delta_swr": {
         Language.ENGLISH: "ΔSWR",
         Language.SPANISH: "ΔROE",
+    },
+    "tuning.title": {
+        Language.ENGLISH: "Sensitivity tuning assistant",
+        Language.SPANISH: "Asistente de ajuste por sensibilidad",
+    },
+    "tuning.measurement": {
+        Language.ENGLISH: "Measurement",
+        Language.SPANISH: "Medición",
+    },
+    "tuning.target": {
+        Language.ENGLISH: "Target frequency",
+        Language.SPANISH: "Frecuencia objetivo",
+    },
+    "tuning.current_dimension": {
+        Language.ENGLISH: "Current primary dimension",
+        Language.SPANISH: "Dimensión principal actual",
+    },
+    "tuning.max_adjustment": {
+        Language.ENGLISH: "Maximum adjustment",
+        Language.SPANISH: "Ajuste máximo",
+    },
+    "tuning.measured_resonance": {
+        Language.ENGLISH: "Measured resonance: {value}",
+        Language.SPANISH: "Resonancia medida: {value}",
+    },
+    "tuning.measured_min_swr": {
+        Language.ENGLISH: "Measured minimum-SWR frequency: {value}",
+        Language.SPANISH: "Frecuencia de ROE mínima medida: {value}",
+    },
+    "tuning.analyze": {
+        Language.ENGLISH: "Analyze",
+        Language.SPANISH: "Analizar",
+    },
+    "tuning.cancel": {
+        Language.ENGLISH: "Cancel analysis",
+        Language.SPANISH: "Cancelar análisis",
+    },
+    "tuning.apply": {
+        Language.ENGLISH: "Apply proposed change",
+        Language.SPANISH: "Aplicar cambio propuesto",
+    },
+    "tuning.sensitivity": {
+        Language.ENGLISH: "Sensitivity: {value}",
+        Language.SPANISH: "Sensibilidad: {value}",
+    },
+    "tuning.proposed_change": {
+        Language.ENGLISH: "Proposed change: {value}",
+        Language.SPANISH: "Cambio propuesto: {value}",
+    },
+    "tuning.proposed_change_clipped": {
+        Language.ENGLISH: "Proposed change: {value} (clipped to the adjustment limit)",
+        Language.SPANISH: "Cambio propuesto: {value} (limitado por el ajuste máximo)",
+    },
+    "tuning.bounds": {
+        Language.ENGLISH: "Allowed change: {lower} to {upper}",
+        Language.SPANISH: "Cambio permitido: {lower} a {upper}",
+    },
+    "tuning.predicted": {
+        Language.ENGLISH: "Predicted model resonance: {resonance} · SWR at target: {swr}",
+        Language.SPANISH: "Resonancia modelada prevista: {resonance} · ROE en el objetivo: {swr}",
+    },
+    "tuning.predicted_no_resonance": {
+        Language.ENGLISH: "No modeled resonance in the verification sweep. Predicted SWR at target: {swr}",
+        Language.SPANISH: "No hay resonancia modelada en el barrido de verificación. ROE prevista en el objetivo: {swr}",
+    },
+    "tuning.assumptions_text": {
+        Language.ENGLISH: (
+            "This is a local finite-difference estimate from the current solver model, "
+            "not a measurement. Ground, height, nearby objects, and calibration can "
+            "shift the real resonance. Change the antenna in small steps and re-measure."
+        ),
+        Language.SPANISH: (
+            "Es una estimación local por diferencias finitas del modelo actual, no una "
+            "medición. El suelo, la altura, los objetos cercanos y la calibración pueden "
+            "desplazar la resonancia real. Cambiá la antena en pasos pequeños y volvé a medir."
+        ),
+    },
+    "tuning.table.probe": {
+        Language.ENGLISH: "Probe",
+        Language.SPANISH: "Sonda",
+    },
+    "tuning.table.dimension": {
+        Language.ENGLISH: "Dimension",
+        Language.SPANISH: "Dimensión",
+    },
+    "tuning.table.resonance": {
+        Language.ENGLISH: "Model resonance",
+        Language.SPANISH: "Resonancia del modelo",
+    },
+    "tuning.table.swr": {
+        Language.ENGLISH: "SWR at target",
+        Language.SPANISH: "ROE en el objetivo",
+    },
+    "tuning.probe.current": {
+        Language.ENGLISH: "Current",
+        Language.SPANISH: "Actual",
+    },
+    "tuning.probe.lower": {
+        Language.ENGLISH: "Lower",
+        Language.SPANISH: "Menor",
+    },
+    "tuning.probe.higher": {
+        Language.ENGLISH: "Higher",
+        Language.SPANISH: "Mayor",
+    },
+    "tuning.probe.proposed": {
+        Language.ENGLISH: "Proposed",
+        Language.SPANISH: "Propuesta",
+    },
+    "tuning.message.ready": {
+        Language.ENGLISH: "Set the target and maximum adjustment, then Analyze.",
+        Language.SPANISH: "Definí el objetivo y el ajuste máximo, y luego Analizá.",
+    },
+    "tuning.message.running": {
+        Language.ENGLISH: "Probing the solver around the current dimension.",
+        Language.SPANISH: "Sondeando el solver alrededor de la dimensión actual.",
+    },
+    "tuning.message.proposed": {
+        Language.ENGLISH: "A bounded adjustment is available for review.",
+        Language.SPANISH: "Hay un ajuste acotado disponible para revisar.",
+    },
+    "tuning.message.verified": {
+        Language.ENGLISH: "The proposed dimension was verified with the solver.",
+        Language.SPANISH: "La dimensión propuesta se verificó con el solver.",
+    },
+    "tuning.message.verified_no_resonance": {
+        Language.ENGLISH: "The proposed dimension has no modeled resonance in the sweep.",
+        Language.SPANISH: "La dimensión propuesta no tiene resonancia modelada en el barrido.",
+    },
+    "tuning.message.no_change": {
+        Language.ENGLISH: "The measured reference is already at the target within the estimate.",
+        Language.SPANISH: "La referencia medida ya está en el objetivo dentro de la estimación.",
+    },
+    "tuning.message.no_sensitivity": {
+        Language.ENGLISH: "The model resonance is not sensitive enough to this dimension.",
+        Language.SPANISH: "La resonancia del modelo no es suficientemente sensible a esta dimensión.",
+    },
+    "tuning.message.no_resonance": {
+        Language.ENGLISH: "No model resonance was found near the measured reference.",
+        Language.SPANISH: "No se encontró una resonancia del modelo cerca de la referencia medida.",
+    },
+    "tuning.message.cancelled": {
+        Language.ENGLISH: "Analysis cancelled.",
+        Language.SPANISH: "Análisis cancelado.",
+    },
+    "tuning.message.error": {
+        Language.ENGLISH: "The tuning analysis failed.",
+        Language.SPANISH: "Falló el análisis de ajuste.",
+    },
+    "tuning.need_measurement": {
+        Language.ENGLISH: "Import a measurement before using the tuning assistant.",
+        Language.SPANISH: "Importá una medición antes de usar el asistente de ajuste.",
+    },
+    "tuning.unavailable_family": {
+        Language.ENGLISH: (
+            "The tuning assistant needs a family with an editable primary dimension."
+        ),
+        Language.SPANISH: (
+            "El asistente de ajuste necesita una familia con una dimensión principal editable."
+        ),
+    },
+    "tuning.progress": {
+        Language.ENGLISH: "Solver probes: {completed}/{total}",
+        Language.SPANISH: "Sondas del solver: {completed}/{total}",
+    },
+    "tuning.progress_done": {
+        Language.ENGLISH: "Analysis complete.",
+        Language.SPANISH: "Análisis completo.",
+    },
+    "tuning.cancelling": {
+        Language.ENGLISH: "Cancelling the analysis...",
+        Language.SPANISH: "Cancelando el análisis...",
+    },
+    "tuning.failed": {
+        Language.ENGLISH: "Analysis failed.",
+        Language.SPANISH: "El análisis falló.",
     },
     "measurement.none": {
         Language.ENGLISH: "No measurements imported.",
@@ -6224,6 +6461,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "history.measurement_sessions": {
         Language.ENGLISH: "Measurement sessions",
         Language.SPANISH: "Sesiones de medición",
+    },
+    "history.tuning": {
+        Language.ENGLISH: "Apply tuning change",
+        Language.SPANISH: "Aplicar cambio de ajuste",
     },
     "history.simulate": {
         Language.ENGLISH: "Simulate",

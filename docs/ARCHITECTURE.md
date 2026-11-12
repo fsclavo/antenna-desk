@@ -240,8 +240,12 @@ imported `Measurement` records, and `Measurement.session_id` is the only link.
 The sessions dialog edits a local immutable `Project` and returns it to the main
 window, where it enters the normal undo history. The before/after comparison is
 a pure `measurement_comparison` function over two measurements; the dialog only
-formats its points and warnings. No measurement path performs electromagnetic
-calculations.
+formats its points and warnings. The tuning assistant runs the
+`TuneMeasurement` application use case in a worker thread. It executes three
+bounded solver probes around the primary dimension plus one verification probe,
+then applies the proposed parameters through the existing family UI adapter.
+The estimate is a local finite-difference result; no measurement path performs
+electromagnetic calculations itself.
 
 The frequency-first estimator layer is domain code: `DesignIntent` and
 `DimensionEstimate` are Qt-free, and `EstimateAntennaDimensions` is an

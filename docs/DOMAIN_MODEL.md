@@ -589,6 +589,15 @@ each measurement has exactly one resonance. SWR uses an explicit comparison
 reference impedance; it is not tied to either measurement's calibration
 reference.
 
+`design/tuning.py` implements the bounded tuning estimate. It selects the
+measured resonance nearest the target (or the minimum-SWR point when there is
+no resonance), estimates `df/dD` from solver probes around the current primary
+dimension, and proposes `ΔD = (target - measured) / (df/dD)` clipped to the
+user's maximum adjustment. A verification probe reports the model resonance
+and SWR at the target. The result is an explicit `TuningProposal` with
+`PROPOSED`, `NO_CHANGE`, `NO_SENSITIVITY`, `NO_RESONANCE`, `CANCELLED`, or
+`ERROR` status. It is model guidance, not a measurement or a guarantee.
+
 ## Project file
 
 The native format is versioned JSON, stored losslessly gzip-compressed.

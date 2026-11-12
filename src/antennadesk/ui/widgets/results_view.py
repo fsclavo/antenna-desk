@@ -77,6 +77,7 @@ class ResultsView(QWidget):
     measurement_delete_requested = Signal(object)
     measurement_sessions_requested = Signal()
     measurement_compare_requested = Signal(object)
+    measurement_tune_requested = Signal(object)
     band_selected = Signal(object)
     matching_network_requested = Signal(object)
     tab_changed = Signal(str)
@@ -243,13 +244,18 @@ class ResultsView(QWidget):
         self._measurement_compare = QPushButton(
             translator.t("measurement.compare"), self._measurements_tab
         )
+        self._measurement_tune = QPushButton(
+            translator.t("measurement.tune"), self._measurements_tab
+        )
         self._measurement_edit.setEnabled(False)
         self._measurement_delete.setEnabled(False)
         self._measurement_compare.setEnabled(False)
+        self._measurement_tune.setEnabled(False)
         self._measurement_edit.clicked.connect(self._request_measurement_edit)
         self._measurement_delete.clicked.connect(self._request_measurement_delete)
         self._measurement_sessions.clicked.connect(self.measurement_sessions_requested.emit)
         self._measurement_compare.clicked.connect(self._request_measurement_compare)
+        self._measurement_tune.clicked.connect(self._request_measurement_tune)
         self._measurement_table = QTableWidget(0, 8, self._measurements_tab)
         self._configure_table(self._measurement_table)
         self._measurement_plot = self._make_plot()
@@ -273,6 +279,7 @@ class ResultsView(QWidget):
         measurement_controls.addSpacing(12)
         measurement_controls.addWidget(self._measurement_sessions)
         measurement_controls.addWidget(self._measurement_compare)
+        measurement_controls.addWidget(self._measurement_tune)
         measurement_controls.addStretch(1)
         measurement_layout = QVBoxLayout(self._measurements_tab)
         measurement_layout.setContentsMargins(0, 0, 0, 0)
@@ -870,6 +877,7 @@ class ResultsView(QWidget):
         self._measurement_delete.setText(self._translator.t("measurement.delete"))
         self._measurement_sessions.setText(self._translator.t("measurement.sessions"))
         self._measurement_compare.setText(self._translator.t("measurement.compare"))
+        self._measurement_tune.setText(self._translator.t("measurement.tune"))
         self._measurement_metric.setItemText(0, self._translator.t("table.swr"))
         self._measurement_metric.setItemText(1, self._translator.t("table.resistance"))
         self._measurement_metric.setItemText(2, self._translator.t("table.reactance"))
@@ -928,6 +936,7 @@ class ResultsView(QWidget):
             apply_help(plot, self._translator, key)
         apply_help(self._measurement_sessions, self._translator, "measurement.sessions")
         apply_help(self._measurement_compare, self._translator, "measurement.compare")
+        apply_help(self._measurement_tune, self._translator, "measurement.tune")
         for control, key in (
             (self._band_selector, "band.selector"),
             (self._pattern_frequency, "pattern.frequency"),
@@ -1531,6 +1540,7 @@ class ResultsView(QWidget):
         valid = 0 <= index < len(self._measurements)
         self._measurement_edit.setEnabled(valid)
         self._measurement_delete.setEnabled(valid)
+        self._measurement_tune.setEnabled(valid)
         if not valid:
             return
         measurement = self._measurements[index]
@@ -1773,6 +1783,11 @@ class ResultsView(QWidget):
         index = self._measurement_selector.currentIndex()
         measurement = self._measurements[index] if 0 <= index < len(self._measurements) else None
         self.measurement_compare_requested.emit(measurement)
+
+    def _request_measurement_tune(self) -> None:
+        index = self._measurement_selector.currentIndex()
+        if 0 <= index < len(self._measurements):
+            self.measurement_tune_requested.emit(self._measurements[index])
 
     def _render_diagnostics(self) -> None:
         self._render_confidence()

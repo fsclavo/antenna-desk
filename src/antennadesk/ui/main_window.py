@@ -95,6 +95,7 @@ from ..domain.antennas.custom import CustomAntennaParameters
 from ..domain.antennas.design import (
     AntennaDesignParameters,
     antenna_type_for,
+    primary_dimension_m,
     template_load_ids,
     with_primary_dimension,
 )
@@ -304,6 +305,7 @@ from .dialogs.t2fd_dialog import T2FDDialog
 from .dialogs.transmission_lines_dialog import TransmissionLinesDialog
 from .dialogs.trap_dipole_dialog import TrapDipoleDialog
 from .dialogs.trap_yagi_dialog import TrapYagiDialog
+from .dialogs.tuning_assistant_dialog import TuningAssistantDialog
 from .dialogs.vertical_dialog import VerticalDialog
 from .dialogs.yagi_dialog import YagiDialog
 from .dialogs.zepp_dialog import ZeppDialog
@@ -603,6 +605,8 @@ class MainWindow(QMainWindow):
         self._measurement_sessions_action.triggered.connect(
             lambda: self.edit_measurement_sessions()
         )
+        self._tuning_action = QAction(self)
+        self._tuning_action.triggered.connect(lambda: self.tune_measurement())
 
         self._simulate_action = QAction(self)
         self._simulate_action.setShortcut(QKeySequence("F5"))
@@ -1147,6 +1151,7 @@ class MainWindow(QMainWindow):
         self._results.measurement_delete_requested.connect(self.delete_measurement)
         self._results.measurement_sessions_requested.connect(self.edit_measurement_sessions)
         self._results.measurement_compare_requested.connect(self.compare_measurements)
+        self._results.measurement_tune_requested.connect(self.tune_measurement)
         self._results.band_selected.connect(self._on_band_selected)
         self._results.matching_network_requested.connect(self.create_matching_network_from_point)
         self._results.tab_changed.connect(self._on_results_tab_changed)
@@ -1322,6 +1327,7 @@ class MainWindow(QMainWindow):
         self._tools_menu.addAction(self._locate_solver_action)
         self._tools_menu.addAction(self._calculator_action)
         self._tools_menu.addAction(self._measurement_sessions_action)
+        self._tools_menu.addAction(self._tuning_action)
         self._tools_menu.addAction(self._compact_history_action)
 
         self._help_menu = self.menuBar().addMenu("")
@@ -1401,6 +1407,9 @@ class MainWindow(QMainWindow):
         self._measurement_sessions_action.setWhatsThis(
             self._translator.t("help.action.measurement_sessions")
         )
+        self._tuning_action.setText(self._translator.t("action.tuning_assistant"))
+        self._tuning_action.setToolTip(self._translator.t("help.action.tuning_assistant"))
+        self._tuning_action.setWhatsThis(self._translator.t("help.action.tuning_assistant"))
         self._exit_action.setText(self._translator.t("action.exit"))
         self._about_action.setText(self._translator.t("action.about"))
         self._whats_this_action.setText(self._translator.t("action.whats_this"))
@@ -1835,6 +1844,14 @@ class MainWindow(QMainWindow):
         self._optimize_button.setEnabled(optimize_enabled)
         self._optimize_action.setToolTip(optimize_hint)
         self._optimize_button.setToolTip(optimize_hint)
+        has_measurements = bool(self._project.measurements) if self._project is not None else False
+        self._tuning_action.setEnabled(
+            idle
+            and has_project
+            and has_measurements
+            and self._tuning_supported(parameters)
+            and self._solver is not None
+        )
         self._preflight_action.setEnabled(idle and has_project)
         self._construction_action.setEnabled(idle and has_project)
         self._construction_record_action.setEnabled(idle and has_project)
@@ -1959,6 +1976,7 @@ class MainWindow(QMainWindow):
             self._compact_history_action,
             self._calculator_action,
             self._measurement_sessions_action,
+            self._tuning_action,
             self._import_nec_action,
             self._import_mmana_action,
         ):
@@ -5108,6 +5126,66 @@ class MainWindow(QMainWindow):
             self._workflow_measurement_compared.add(self._design_id)
         self._update_workflow_ui()
 
+    @history_action("history.tuning")
+    def tune_measurement(self, measurement: Measurement | None = None) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._solver is None:
+            self._show_error(self._translator.t("error.solver"))
+            return
+        if measurement is None:
+            if not self._project.measurements:
+                QMessageBox.information(
+                    self,
+                    self._translator.t("tuning.title"),
+                    self._translator.t("tuning.need_measurement"),
+                )
+                return
+            measurement = max(
+                self._project.measurements,
+                key=lambda item: item.created_at,
+            )
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        design = self._project.design_by_id(self._design_id)
+        adapter = adapter_for(design.parameters)
+        if not self._tuning_supported(design.parameters) or adapter is None:
+            self._show_error(self._translator.t("tuning.unavailable_family"))
+            return
+        base_spec = self._with_project_chain(
+            design.parameters,
+            self._base_simulation_spec(design),
+        )
+        dialog = TuningAssistantDialog(
+            self._translator,
+            self._unit_system,
+            self._solver,
+            design,
+            measurement,
+            base_spec,
+            self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        selected = dialog.result_parameters()
+        if selected is None:
+            return
+        try:
+            adapter.apply_parameters(self, selected)
+            self._form_dirty = True
+            self._apply_fields()
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._last_status_key = "status.tuning_applied"
+        self._update_status_text()
+        self.simulate()
+
     @history_action("history.measurement_edit")
     def edit_measurement(self, measurement: Measurement) -> None:
         if self._project is None:
@@ -5239,6 +5317,15 @@ class MainWindow(QMainWindow):
                     details="\n".join(parsed.warnings[:12]),
                 ),
             )
+
+    def _tuning_supported(self, parameters: AntennaDesignParameters | None) -> bool:
+        if parameters is None or adapter_for(parameters) is None:
+            return False
+        try:
+            primary_dimension_m(parameters)
+        except TypeError:
+            return False
+        return True
 
     def _measurement_session_names(self) -> dict[UUID, str]:
         if self._project is None:

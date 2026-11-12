@@ -533,6 +533,8 @@ def test_results_view_exposes_sessions_and_before_after_buttons(qtbot: QtBot) ->
 
     assert view._measurement_sessions.text() == "Sessions..."
     assert view._measurement_compare.isEnabled()
+    assert view._measurement_tune.isEnabled()
+    assert view._measurement_tune.text() == "Tune..."
     assert "Field day" in view._measurement_selector.itemText(0)
     assert "Session: Field day" in view._measurement_details.text()
 
@@ -541,6 +543,9 @@ def test_results_view_exposes_sessions_and_before_after_buttons(qtbot: QtBot) ->
     with qtbot.waitSignal(view.measurement_compare_requested) as compare_signal:
         view._measurement_compare.click()
     assert compare_signal.args[0] == measurements[0]
+    with qtbot.waitSignal(view.measurement_tune_requested) as tune_signal:
+        view._measurement_tune.click()
+    assert tune_signal.args[0] == measurements[0]
 
 
 def test_results_view_requests_measurement_edit_and_delete(qtbot: QtBot) -> None:

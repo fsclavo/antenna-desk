@@ -1314,6 +1314,34 @@ the dialog warns that the comparison is only indicative. A lower SWR is not
 proof of a better antenna; verify gain, pattern, and construction limits with
 the solver and field checks.
 
+## Sensitivity tuning assistant
+
+Use **Measurements → Tune...** or **Tools → Tuning Assistant...** to estimate a
+bounded change to the current family's primary dimension from a measured
+sweep. The assistant needs a family with an editable primary dimension and an
+installed solver.
+
+Choose the **Target frequency** (normally the operating frequency) and a
+**Maximum adjustment**. The assistant finds the measured resonance nearest the
+target, or the minimum-SWR frequency when the sweep has no resonance. It then
+probes the solver at the current dimension and at slightly lower and higher
+dimensions, estimates the local resonance slope, and proposes a dimension
+change that is clipped to the maximum adjustment. A fourth probe verifies the
+proposed dimension and reports the model resonance and SWR at the target.
+
+The result table shows every probe, dimension, modeled resonance, and SWR at
+the target. **Apply proposed change** applies the new primary dimension to the
+design and runs the normal simulation so the result is not left stale. Nothing
+is applied until you press the button.
+
+The estimate is local and model-based. It assumes the current feed chain,
+ground model, segmentation, and family geometry, and it does not model
+construction tolerances, nearby objects, or the measurement calibration. Ground
+and height changes can shift the real resonance. Change the antenna in small
+steps, cut less than the full prediction when trimming, and re-measure. The
+assistant does not claim that the physical antenna will move by the predicted
+amount.
+
 ## Feed line
 
 Use **Simulation → Feed Line...** to configure a uniform transmission line between

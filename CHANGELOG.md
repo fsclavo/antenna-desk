@@ -104,6 +104,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   plane, or feed-line conditions differ. Schema 39 adds sessions and the
   optional measurement session link; older projects migrate with no sessions
   and unassigned measurements.
+- **Sensitivity tuning assistant.** Added **Measurements → Tune...** and
+  **Tools → Tuning Assistant...** for families with an editable primary
+  dimension. The assistant selects the measured resonance nearest the target
+  (or the minimum-SWR frequency when no resonance exists), probes the solver at
+  the current, lower, and higher dimensions, estimates the local resonance
+  slope, and proposes a dimension change clipped to a user-selected maximum.
+  A verification probe reports the model resonance and SWR at the target. The
+  proposal is never applied automatically; applying it updates the design
+  through the existing family adapter, records undo history, and runs a normal
+  simulation. The dialog states that this is local model guidance, not a
+  measurement or a guarantee.
 
 ## [0.4.2] - 2026-11-11
 
