@@ -292,6 +292,7 @@ from .dialogs.loaded_dipole_dialog import LoadedDipoleDialog
 from .dialogs.loads_dialog import LoadsDialog
 from .dialogs.magnetic_loop_dialog import MagneticLoopDialog
 from .dialogs.matching_network_dialog import MatchingNetworkDialog
+from .dialogs.materials_reference_dialog import MaterialsReferenceDialog
 from .dialogs.measurement_comparison_dialog import MeasurementComparisonDialog
 from .dialogs.measurement_details_dialog import MeasurementDetailsDialog
 from .dialogs.measurement_sessions_dialog import MeasurementSessionsDialog
@@ -619,6 +620,8 @@ class MainWindow(QMainWindow):
         self._compact_history_action.triggered.connect(lambda: self.compact_simulation_history())
         self._calculator_action = QAction(self)
         self._calculator_action.triggered.connect(lambda: self.show_component_calculators())
+        self._materials_action = QAction(self)
+        self._materials_action.triggered.connect(lambda: self.show_materials_reference())
         self._measurement_sessions_action = QAction(self)
         self._measurement_sessions_action.triggered.connect(
             lambda: self.edit_measurement_sessions()
@@ -1367,6 +1370,7 @@ class MainWindow(QMainWindow):
         self._tools_menu = self.menuBar().addMenu("")
         self._tools_menu.addAction(self._locate_solver_action)
         self._tools_menu.addAction(self._calculator_action)
+        self._tools_menu.addAction(self._materials_action)
         self._tools_menu.addAction(self._measurement_sessions_action)
         self._tools_menu.addAction(self._journal_action)
         self._tools_menu.addAction(self._tuning_action)
@@ -1446,6 +1450,9 @@ class MainWindow(QMainWindow):
         self._calculator_action.setText(self._translator.t("action.component_calculator"))
         self._calculator_action.setToolTip(self._translator.t("help.action.component_calculator"))
         self._calculator_action.setWhatsThis(self._translator.t("help.action.component_calculator"))
+        self._materials_action.setText(self._translator.t("action.materials_reference"))
+        self._materials_action.setToolTip(self._translator.t("help.action.materials_reference"))
+        self._materials_action.setWhatsThis(self._translator.t("help.action.materials_reference"))
         self._journal_action.setText(self._translator.t("action.project_journal"))
         self._journal_action.setToolTip(self._translator.t("help.action.project_journal"))
         self._journal_action.setWhatsThis(self._translator.t("help.action.project_journal"))
@@ -1877,6 +1884,7 @@ class MainWindow(QMainWindow):
         self._save_as_action.setEnabled(idle and has_project)
         self._locate_solver_action.setEnabled(idle)
         self._calculator_action.setEnabled(idle)
+        self._materials_action.setEnabled(idle)
         self._measurement_sessions_action.setEnabled(idle and has_project)
         self._journal_action.setEnabled(idle and has_project)
         self._feed_line_action.setEnabled(idle)
@@ -2065,6 +2073,7 @@ class MainWindow(QMainWindow):
             self._optimize_action,
             self._compact_history_action,
             self._calculator_action,
+            self._materials_action,
             self._measurement_sessions_action,
             self._journal_action,
             self._tuning_action,
@@ -3458,6 +3467,29 @@ class MainWindow(QMainWindow):
             parent=self,
         )
         dialog.exec()
+
+    @history_action("history.feed_line")
+    def show_materials_reference(self) -> None:
+        dialog = MaterialsReferenceDialog(
+            self._translator,
+            feed_line=self._feed_line,
+            can_apply=self._project is not None,
+            parent=self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        feed_line = dialog.result_feed_line()
+        if feed_line is None:
+            return
+        self._feed_line = feed_line
+        if self._project is not None:
+            self._project = self._project.with_feed_line(
+                feed_line,
+                updated_at=utc_now(),
+            )
+            self._dirty = True
+            self._update_title()
+        self._refresh_feed_matching_summary()
 
     def show_feed_chain_budget(self) -> None:
         if self._project is None or self._design_id is None:

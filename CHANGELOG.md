@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Materials reference.** **Tools → Materials Reference...** adds source-backed
+  wire, coax, ferrite, and insulator tables with citations and limitations. The
+  coax tab can apply a datasheet impedance, velocity factor, and matched loss to
+  the project feed line while preserving its length; the simulation keeps a
+  constant matched loss. Wire conductivity, ferrite mixes, and insulator
+  dielectric strength are reference data and do not change the solver model. No
+  schema change.
+
 ## [0.5.0] - 2026-11-12
 
 ### Added

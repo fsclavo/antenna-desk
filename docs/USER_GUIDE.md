@@ -1601,6 +1601,31 @@ inductance/capacitance back into the load form. Coil and trap results are
 starting values; verify them with the solver and a measurement. The calculators
 are construction aids, not antenna models.
 
+## Materials reference
+
+Use **Tools → Materials Reference...** for a read-only, source-backed selection
+table:
+
+- **Wire**: nominal conductivity and relative permeability for copper and
+  aluminum. The solver uses the same homogeneous values; plating, stranding,
+  connections, and temperature are not modeled.
+- **Coax**: impedance, velocity factor, and matched loss at a stated datasheet
+  frequency for RG-58A/U, RG-213/U, and LMR-400. Select a row and use **Apply to
+  feed line** to initialize the project feed line; the current length is
+  preserved and a new line starts at 10 m. The simulation uses a constant
+  matched loss and does not interpolate by frequency.
+- **Ferrite**: Fair-Rite 31, 43, and 61 suppression ranges and initial
+  permeability. This is reference data; AntennaDesk does not model a ferrite
+  core or common-mode impedance.
+- **Insulators**: PTFE, Delrin, and 96% alumina dielectric strength and weather
+  resistance. Dielectric strength depends on thickness and test method; the
+  table is not a creepage/clearance or mechanical design.
+
+Select a row to read its note, limitation, and source link. Values are nominal
+datasheet or standards data, not measurements of a specific part. See
+[`MATERIALS_REFERENCE.md`](MATERIALS_REFERENCE.md) for the full tables, sources,
+assumptions, and limitations.
+
 ## Transmission lines as geometry
 
 Use **Design → Transmission Lines...** to add a lossless two-port between two

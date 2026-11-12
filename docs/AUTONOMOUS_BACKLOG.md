@@ -110,8 +110,10 @@ external service and must not be invented or simulated into existence.
 | ~~UX15~~ | ~~Project journal~~ | M | UX14 | **Done 2026-11-12:** added **Tools → Project Journal...** with a newest-first timeline of manual dated entries. Entries store a UTC timestamp, title, kind (note, decision, as-built, measurement, tuning, photo, other), notes, an optional design link, and up to twelve local image references. Creating a linked entry can capture an immutable `JournalDesignSnapshot` with canonical summary rows and model wire/load/line/source counts. **Compare versions...** shows changed, added, removed, and unchanged fields between two stored snapshots or a snapshot and the current design, without judging quality. Editing text never recaptures a snapshot; deleting a design detaches the link but preserves the snapshot. Journal edits enter project undo. Schema 40 adds optional journal entries with a v39→v40 migration; tests cover domain validation, project CRUD/invariants, design-deletion detach, snapshot building/comparison, persistence round-trip and migration, editor/timeline/comparison dialogs, main-window undo, and EN/ES help. |
 | ~~UX16~~ | ~~Guided experiments~~ | M–L | UX15 | **Done 2026-11-12:** added **Tools → Guided Experiments...** with three curated sweep presets: **Resonance and match** over the primary length dimension, **Height above ground** over a separate height dimension, and **Two dimensions at once** over length × height. The chooser explains the question, steps, range, metric, what to look for, and limits, and reports explicit reasons when a family lacks a required dimension. Starting one opens the existing **Parameter Sweep** dialog with axes preset and a guide banner; ranges, points, metric, validation, cancellation, and apply/undo behavior remain single-sourced. The experiments evaluate one target frequency and do not claim bandwidth, efficiency, pattern, or an optimum between points. Tests cover role resolution, unavailable reasons, 1D/2D plan counts, preset application in the sweep dialog, chooser details/retranslation, main-window apply/undo/availability, and EN/ES help. No schema change. |
 | ~~UX17~~ | ~~Curated reference design library~~ | M + content | UX16 | **Done 2026-11-12:** added **File → Reference Design Library...** with twelve source-backed starting designs: ARRL 40 m dipole, Cebik 20 m Moxon, NBS 6 m Yagi, W3DZZ trap dipole, G3TXQ 20 m hexbeam, G5RV, ZS6BKW, Cebik half square, Cebik bobtail curtain, ARRL 40 m EFHW, Chameleon LEFS sloper, and ARRL 120° inverted V. Search filters by design, band, family, or source term; details show published reference, modeled scope, evidence level, source, tolerance, and limitations. **Open design** creates a normal project through the existing creation path and optionally runs the normal simulation. The library does not pre-run simulations or claim that published values were reproduced. Tests cover source-backed dimensions, unique keys, evidence levels, consistent design variants, filtering, details, retranslation, open/cancel behavior, and main-window project creation/simulation. No schema change. |
+| ~~UX18~~ | ~~Minimal materials reference~~ | S–M | none | **Done 2026-11-12:** added **Tools → Materials Reference...** with four source-backed tabs. Wire lists copper and aluminum nominal conductivity/permeability; coax lists RG-58A/U, RG-213/U, and LMR-400 with impedance, velocity factor, matched loss, and reference frequency; ferrite lists Fair-Rite 31/43/61; insulators lists PTFE, Delrin, and 96% alumina. Each row shows its source, note, and limitations. The coax tab can apply the selected datasheet point to the project feed line while preserving its length; the simulation keeps a constant matched loss. Wire, ferrite, and insulator rows are reference only. Tests cover catalog invariants, sources, dialog tabs/selection, EN/ES labels/help, feed-line apply, main-window undo, and no-project behavior. No schema change. |
 | ~~UX21~~ | ~~Show azimuth and elevation pattern cuts side by side~~ | M | none | **Done 2026-11-12:** the **Cuts** tab shows four panes: azimuth line chart and polar lobes on the left, elevation line chart and polar lobes on the right. Frequency and metric stay shared; each plane has an independent cut selector (θ for azimuth, φ for elevation) defaulting to the maximum-gain direction and preserving selections across frequency and band changes. Each pane has its own title, axis labels, cursor readout, and a localized empty state when a cut is unavailable. The **3D lobe** tab is unchanged. The layout uses resizable splitters and remains usable at the minimum supported window size. Pattern PNG export saves the whole 2×2 Cuts view; the 3D tab saves the 3D view. No domain, solver, or persistence changes. Tests, EN/ES help, accessibility, user guide, and changelog updated. |
 | ~~UX22~~ | ~~Make the pattern metric selector visibly meaningful~~ | S–M | none (coordinate with UX21) | **Done 2026-11-12:** the pattern chart titles and polar footers name the selected metric; the left axis, cursor readout, 3D label, and summary reflect the selection. A compact summary shows power gain, directivity, and realized gain for the selected frequency, with an explicit localized unavailable value instead of a silent omission. The metric definitions and lobe shape are unchanged. Tests cover titles, summary, cursor, unavailable values, retranslation, and independent cuts. EN/ES help, user guide, and changelog updated. No solver or schema changes. |
+| UX23 | Expand the common coax catalog and add feed-line presets | M | UX18; G27 only if frequency-dependent loss is included | **Added 2026-11-12 from user feedback.** Expand the existing source-backed coax reference from three entries to approximately 15–16 common amateur cables, each with impedance, velocity factor, matched loss at a documented reference frequency, source URL/revision, and visible limitations. Add a coax preset selector to the feed-line editor (or a **Load from catalog...** action) that fills impedance, velocity factor, and loss while keeping length editable and preserving custom values. Use one shared catalog in both the materials-reference dialog and the feed-line editor; do not duplicate data. Every value must be transcribed from the cited manufacturer datasheet; do not use generic RG tables or invented numbers. This item uses the existing scalar loss model and shows the reference frequency; frequency-dependent interpolation remains G27. Decide whether to persist the selected catalog key (schema migration) or show **Custom** after reopening. Tests cover catalog invariants, source coverage, auto-fill, custom override, unavailable sources, EN/ES labels/help, and persistence round-trip if added. User guide and changelog updated. No solver changes. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -120,13 +122,14 @@ external service and must not be invented or simulated into existence.
 ## Product experience queue (2026-11-11)
 
 UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**, and
-0.8 **Explore** releases are closed, and 0.9 **Sustain** is in progress. UX18–UX20
-remain product scope in
+0.8 **Explore** releases are closed, and 0.9 **Sustain** is in progress. UX18
+was implemented on 2026-11-12; UX19–UX20 remain product scope in
 [`ROADMAP.md`](ROADMAP.md#product-experience-backlog-proposed-2026-11-11). Do
 not promote those items into this queue until the next slice is selected and
 the full gate is green. UX21–UX22 were added on 2026-11-12 from direct user
-feedback and completed the same day; they do not promote the proposed UX18–UX20
-roadmap entries.
+feedback and completed the same day; UX23 was added from the same feedback and
+remains queued. These request-driven items do not promote the proposed
+UX19–UX20 roadmap entries.
 
 The first slice accepts these constraints:
 
@@ -142,6 +145,58 @@ The first slice accepts these constraints:
   a feedpoint network evaluated before the feed line; a shack tuner and a
   transmitter-side balun are not the same topology and must not be presented as
   if they were.
+
+## UX23 — Common coax catalog (research note, 2026-11-12)
+
+The current materials-reference work has three source-backed entries: Belden
+8219 RG-58A/U, Belden 8267 RG-213/U, and Times Microwave LMR-400. UX23 expands
+that same catalog instead of creating a second list. The candidate set below covers
+the common amateur 50 Ω families plus 75 Ω cables used for receive, SDR, and
+legacy installations. It is a research starting point, not a list of values to
+copy blindly: every entry still needs its datasheet values verified.
+
+| Cable | Z₀ | Typical role | Primary source |
+|---|---:|---|---|
+| RG-58A/U | 50 Ω | Short HF/VHF runs, mobile, jumpers | [Belden 8219](https://www.belden.com/products/Cable/Coax-Triax-Cable/50-Ohm-Coax-Cable/8219) |
+| RG-8X | 50 Ω | Medium HF/VHF runs, portable | [Belden 9258](https://www.belden.com/products/Cable/Coax-Triax-Cable/50-Ohm-Coax-Cable/9258) |
+| RG-8/U | 50 Ω | Legacy HF/VHF, medium runs | [Belden 8237](https://www.belden.com/products/Cable/Coax-Triax-Cable/50-Ohm-Coax-Cable/8237) |
+| RG-213/U | 50 Ω | Rugged HF/VHF, longer runs | [Belden 8267](https://www.belden.com/products/Cable/Coax-Triax-Cable/50-Ohm-Coax-Cable/8267) |
+| RG-214/U | 50 Ω | Double-shielded RG-213 | [Belden 8268](https://www.belden.com/products/Cable/Coax-Triax-Cable/50-Ohm-Coax-Cable/8268) |
+| RG-174/U | 50 Ω | Very short jumpers, portable | [Belden 8216](https://www.belden.com/products/Cable/Coax-Triax-Cable/50-Ohm-Coax-Cable/8216) |
+| RG-316/U | 50 Ω | PTFE jumpers, SDR and portable use | [RG 316 U datasheet](https://www.tme.eu/Document/f95eb7ec6601001fd1c465534b0403a1/RG316.pdf) |
+| RG-400/U | 50 Ω | PTFE double-shielded jumpers | [Fairview RG400](https://www.fairviewmicrowave.com/content/dam/infinite-electronics/product-assets/fairview-microwave/product-datasheets/RG400-U-BULK.pdf) |
+| RG-6/U | 75 Ω | Receive, SDR, satellite and TV | [Belden 1694A](https://www.belden.com/products/cable/video-cable/coaxial-video-cable/1694a) |
+| RG-11/U | 75 Ω | Low-loss 75 Ω runs | [Belden 8213](https://www.belden.com/products/Cable/Video-Cable/Coaxial-Video-Cable/8213) |
+| LMR-240 | 50 Ω | Smaller low-loss HF/VHF/UHF | [Times LMR-240](https://timesmicrowave.com/wp-content/uploads/2022/06/lmr-240-datasheet.pdf) |
+| LMR-400 | 50 Ω | Common low-loss HF/VHF/UHF | [Times LMR-400](https://timesmicrowave.com/wp-content/uploads/2022/06/lmr-400-datasheet-1.pdf) |
+| LMR-600 | 50 Ω | Long low-loss VHF/UHF runs | [Times LMR-600](https://timesmicrowave.com/wp-content/uploads/2022/03/lmr-600-coax-cables-datasheet.pdf) |
+| Belden 9913 | 50 Ω | Low-loss HF/VHF | [Belden 9913](https://www.belden.com/products/cable/coax-triax-cable/50-ohm-coax-cable/9913) |
+| CommScope LDF4-50A | 50 Ω | 1/2-inch hardline, long runs | [Andrew LDF4-50A](https://www.andrew.com/globalassets/digizuite/115611-p360-ldf4-50a-external.pdf) |
+| Messi & Paoloni Ultraflex 7 | 50 Ω | Flexible low-loss, European market | [Ultraflex 7](https://messi.it/en/catalogue/50-ohm-cables/ultraflex-7.htm) |
+
+Optional legacy or regional variants: RG-59/U 75 Ω
+([Belden 8241F](https://www.belden.com/products/Cable/Video-Cable/Coaxial-Video-Cable/8241f)),
+RG-58C/U if a manufacturer datasheet is available, and regional low-loss
+equivalents such as DXE-400MAX or Davis BuryFlex only when their own datasheet
+is traceable. Do not substitute one manufacturer's values for another. The
+table's 50 Ω/75 Ω values are class labels; store the datasheet's exact nominal
+impedance, because some RG-8/U and RG-58 variants are slightly off 50 Ω.
+
+Data rules for every entry:
+
+- Store `key`, display name, characteristic impedance, velocity factor, matched
+  loss, reference frequency, source label/URL, and a visible limitation.
+- Transcribe velocity factor and attenuation from the cited manufacturer
+  datasheet at a documented frequency. Do not copy values from a generic RG
+  table, a distributor summary, or another cable family.
+- Keep variants separate: RG-58A/U and RG-58C/U are not interchangeable;
+  standard, foam, and double-shielded constructions can differ.
+- Show the reference frequency in the UI. The current `FeedLine` model uses one
+  scalar matched-loss value, so a datasheet point is not a frequency-dependent
+  attenuation model.
+- Any multi-point attenuation table or interpolation belongs to G27 and must
+  interpolate only inside the documented frequency range. Do not silently
+  extrapolate or claim accuracy outside it.
 
 ## Matching-network precedence (2026-11-10 analysis)
 
@@ -328,7 +383,8 @@ model and solver contract must land first.
    **Measure**, and 0.8 **Explore** releases are closed, and 0.9 **Sustain** is
    in progress. UX18–UX20 remain product scope in [`ROADMAP.md`](ROADMAP.md).
    **UX21–UX22** were added from direct user feedback and completed on
-   2026-11-12; they do not promote UX18–UX20.
+   2026-11-12; **UX23** remains queued from the same feedback. These
+   request-driven items do not promote UX18–UX20.
 9. Product priorities and new antenna candidates live in
    [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
@@ -361,7 +417,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **44**.
-- Full gate: **2,866 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **2,883 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.5.0** published on 2026-11-12 with checksum-verified unsigned
@@ -370,9 +426,9 @@ model and solver contract must land first.
   CI; all six published checksums were verified. See
   [`RELEASE_QA_0.5.0.md`](RELEASE_QA_0.5.0.md). **0.4.2** remains the previous
   release.
-- Last commits: the 0.5.0 release publication and QA, the folded-dipole,
-  full-wave loop, and Yagi folded-driven feed transformers, the current-balun
-  record,
+- Last commits: the materials reference (UX18), the 0.5.0 release publication
+  and QA, the folded-dipole, full-wave loop, and Yagi folded-driven feed
+  transformers, the current-balun record,
   the side-by-side pattern cuts and metric-aware views (UX21–UX22),
   the reference design library (UX17),
   the guided experiments (UX16),

@@ -23,7 +23,9 @@ Yagi and Moxon arrays support horizontal or vertical polarization with a
 horizontal boom, plus optional folded driven elements and beta/hairpin
 matching stubs. Projects use versioned JSON persistence, lossless gzip
 compression, and explicit migrations. VNA CSV import
-and measured/simulated comparison are available.
+and measured/simulated comparison are available. A source-backed materials
+reference covers wire, coax, ferrite, and insulators, and coax presets can
+initialize the project feed line.
 
 ## Launch the GUI
 

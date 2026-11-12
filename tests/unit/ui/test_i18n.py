@@ -162,6 +162,16 @@ HELP_MANIFEST = frozenset(
         "help.reference.library.simulate",
         "help.action.feed_chain",
         "help.action.component_calculator",
+        "help.action.materials_reference",
+        "help.materials.reference_only",
+        "help.materials.wire",
+        "help.materials.coax",
+        "help.materials.ferrite",
+        "help.materials.insulator",
+        "help.materials.table",
+        "help.materials.apply",
+        "help.materials.apply_hint",
+        "help.materials.details",
         "help.component_calculator.coil",
         "help.component_calculator.trap",
         "help.component_calculator.balun",
@@ -411,3 +421,15 @@ def test_polar_scale_footer_names_the_metric_and_scale() -> None:
 
     assert english == "Directivity scale · 5 dBi"
     assert spanish == "Escala de Directividad · 5 dBi"
+
+
+def test_materials_reference_rows_have_bilingual_names_and_notes() -> None:
+    from antennadesk.domain.design.materials_reference import MATERIALS_REFERENCE
+
+    for tab, entries in MATERIALS_REFERENCE.items():
+        for entry in entries:
+            for suffix in ("name", "note"):
+                key = f"materials.{tab}.{entry.key}.{suffix}"
+                translations = _TRANSLATIONS.get(key)
+                assert translations is not None, key
+                assert set(translations) == set(Language), key

@@ -1975,6 +1975,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Component Calculators...",
         Language.SPANISH: "Calculadoras de componentes...",
     },
+    "action.materials_reference": {
+        Language.ENGLISH: "Materials Reference...",
+        Language.SPANISH: "Referencia de materiales...",
+    },
     "action.measurement_sessions": {
         Language.ENGLISH: "Measurement Sessions...",
         Language.SPANISH: "Sesiones de medición...",
@@ -3888,6 +3892,84 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.action.component_calculator": {
         Language.ENGLISH: "Open coil, trap, balun, and conductor construction calculators.",
         Language.SPANISH: "Abrí calculadoras de bobina, trampa, balun y conductor.",
+    },
+    "help.action.materials_reference": {
+        Language.ENGLISH: ("Open source-backed wire, coax, ferrite, and insulator reference data."),
+        Language.SPANISH: (
+            "Abrí datos de referencia con fuentes de alambre, coaxil, ferrita y aisladores."
+        ),
+    },
+    "help.materials.reference_only": {
+        Language.ENGLISH: (
+            "Reference data only. Verify the manufacturer datasheet for the exact part."
+        ),
+        Language.SPANISH: (
+            "Solo datos de referencia. Verificá la hoja de datos del fabricante para la "
+            "pieza exacta."
+        ),
+    },
+    "help.materials.wire": {
+        Language.ENGLISH: (
+            "Conductor conductivity and permeability reference; not a wire product catalog."
+        ),
+        Language.SPANISH: (
+            "Referencia de conductividad y permeabilidad de conductores; no es un "
+            "catálogo de alambres."
+        ),
+    },
+    "help.materials.coax": {
+        Language.ENGLISH: (
+            "Datasheet impedance, velocity factor, and matched loss at a stated frequency."
+        ),
+        Language.SPANISH: (
+            "Impedancia, factor de velocidad y pérdida adaptada de hoja de datos a una "
+            "frecuencia indicada."
+        ),
+    },
+    "help.materials.ferrite": {
+        Language.ENGLISH: (
+            "Fair-Rite mix permeability and suppression range; not a common-mode choke model."
+        ),
+        Language.SPANISH: (
+            "Permeabilidad y rango de supresión de mezclas Fair-Rite; no es un modelo de "
+            "choke de modo común."
+        ),
+    },
+    "help.materials.insulator": {
+        Language.ENGLISH: (
+            "Typical dielectric strength and weather resistance for construction insulators."
+        ),
+        Language.SPANISH: (
+            "Rigidez dieléctrica y resistencia a la intemperie típicas de aisladores de "
+            "construcción."
+        ),
+    },
+    "help.materials.table": {
+        Language.ENGLISH: "Reference rows; select a row to see its note and source.",
+        Language.SPANISH: "Filas de referencia; seleccioná una fila para ver su nota y fuente.",
+    },
+    "help.materials.apply": {
+        Language.ENGLISH: (
+            "Initialize the project feed line from the selected coax datasheet point."
+        ),
+        Language.SPANISH: (
+            "Inicializá la línea de alimentación del proyecto con el punto de hoja de "
+            "datos del coaxil seleccionado."
+        ),
+    },
+    "help.materials.apply_hint": {
+        Language.ENGLISH: (
+            "The current feed-line length is preserved. The simulation uses a constant "
+            "matched loss and does not interpolate by frequency."
+        ),
+        Language.SPANISH: (
+            "Se conserva la longitud actual de la línea. La simulación usa una pérdida "
+            "adaptada constante y no interpola por frecuencia."
+        ),
+    },
+    "help.materials.details": {
+        Language.ENGLISH: "Selected row note, limitation, and source link.",
+        Language.SPANISH: "Nota, limitación y enlace de fuente de la fila seleccionada.",
     },
     "help.action.measurement_sessions": {
         Language.ENGLISH: (
@@ -12223,6 +12305,298 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "<p>AntennaDesk no modela un choke de modo común. Usá datos Zcm(f) del "
             "fabricante o una medición; no cuentes su resistencia como pérdida "
             "diferencial de la línea.</p>"
+        ),
+    },
+    "materials.title": {
+        Language.ENGLISH: "Materials Reference",
+        Language.SPANISH: "Referencia de materiales",
+    },
+    "materials.reference_only": {
+        Language.ENGLISH: (
+            "Reference data only. Values are nominal datasheet or standards data, not "
+            "measurements of a specific part. Verify the manufacturer datasheet before "
+            "buying or building."
+        ),
+        Language.SPANISH: (
+            "Solo datos de referencia. Los valores son nominales de hojas de datos o "
+            "normas, no mediciones de una pieza específica. Verificá la hoja de datos del "
+            "fabricante antes de comprar o construir."
+        ),
+    },
+    "materials.wire": {
+        Language.ENGLISH: "Wire",
+        Language.SPANISH: "Alambre",
+    },
+    "materials.coax": {
+        Language.ENGLISH: "Coax",
+        Language.SPANISH: "Coaxil",
+    },
+    "materials.ferrite": {
+        Language.ENGLISH: "Ferrite",
+        Language.SPANISH: "Ferrita",
+    },
+    "materials.insulator": {
+        Language.ENGLISH: "Insulators",
+        Language.SPANISH: "Aisladores",
+    },
+    "materials.column.material": {
+        Language.ENGLISH: "Material",
+        Language.SPANISH: "Material",
+    },
+    "materials.column.conductivity": {
+        Language.ENGLISH: "Conductivity",
+        Language.SPANISH: "Conductividad",
+    },
+    "materials.column.permeability": {
+        Language.ENGLISH: "Relative permeability",
+        Language.SPANISH: "Permeabilidad relativa",
+    },
+    "materials.column.source": {
+        Language.ENGLISH: "Source",
+        Language.SPANISH: "Fuente",
+    },
+    "materials.column.type": {
+        Language.ENGLISH: "Type",
+        Language.SPANISH: "Tipo",
+    },
+    "materials.column.impedance": {
+        Language.ENGLISH: "Z₀",
+        Language.SPANISH: "Z₀",
+    },
+    "materials.column.velocity_factor": {
+        Language.ENGLISH: "Velocity factor",
+        Language.SPANISH: "Factor de velocidad",
+    },
+    "materials.column.loss": {
+        Language.ENGLISH: "Matched loss",
+        Language.SPANISH: "Pérdida adaptada",
+    },
+    "materials.column.reference_frequency": {
+        Language.ENGLISH: "Reference frequency",
+        Language.SPANISH: "Frecuencia de referencia",
+    },
+    "materials.column.mix": {
+        Language.ENGLISH: "Mix",
+        Language.SPANISH: "Mezcla",
+    },
+    "materials.column.material_type": {
+        Language.ENGLISH: "Type",
+        Language.SPANISH: "Tipo",
+    },
+    "materials.column.initial_permeability": {
+        Language.ENGLISH: "µi",
+        Language.SPANISH: "µi",
+    },
+    "materials.column.frequency_range": {
+        Language.ENGLISH: "Range",
+        Language.SPANISH: "Rango",
+    },
+    "materials.column.dielectric_strength": {
+        Language.ENGLISH: "Dielectric strength",
+        Language.SPANISH: "Rigidez dieléctrica",
+    },
+    "materials.column.weather": {
+        Language.ENGLISH: "Weather",
+        Language.SPANISH: "Intemperie",
+    },
+    "materials.apply": {
+        Language.ENGLISH: "Apply to feed line",
+        Language.SPANISH: "Aplicar a la línea de alimentación",
+    },
+    "materials.apply_hint": {
+        Language.ENGLISH: (
+            "Uses the selected coax impedance, velocity factor, and matched loss. The "
+            "current feed-line length is preserved; a new line uses 10 m. The simulation "
+            "keeps a constant loss and does not interpolate by frequency."
+        ),
+        Language.SPANISH: (
+            "Usa la impedancia, el factor de velocidad y la pérdida adaptada del coaxil "
+            "seleccionado. Se conserva la longitud actual de la línea; una línea nueva usa "
+            "10 m. La simulación mantiene una pérdida constante y no interpola por "
+            "frecuencia."
+        ),
+    },
+    "materials.apply_unavailable": {
+        Language.ENGLISH: "Open a project to apply a coax preset to its feed line.",
+        Language.SPANISH: "Abrí un proyecto para aplicar un coaxil a su línea de alimentación.",
+    },
+    "materials.details.none": {
+        Language.ENGLISH: "Select a row to see its note and source.",
+        Language.SPANISH: "Seleccioná una fila para ver su nota y fuente.",
+    },
+    "materials.source": {
+        Language.ENGLISH: "Source",
+        Language.SPANISH: "Fuente",
+    },
+    "materials.weather.excellent": {
+        Language.ENGLISH: "Excellent",
+        Language.SPANISH: "Excelente",
+    },
+    "materials.weather.good": {
+        Language.ENGLISH: "Good (UV-stabilized grades)",
+        Language.SPANISH: "Buena (grados estabilizados UV)",
+    },
+    "materials.weather.limited": {
+        Language.ENGLISH: "Limited",
+        Language.SPANISH: "Limitada",
+    },
+    "materials.wire.copper.name": {
+        Language.ENGLISH: "Copper",
+        Language.SPANISH: "Cobre",
+    },
+    "materials.wire.copper.note": {
+        Language.ENGLISH: (
+            "Bare or insulated wire, traps, coils, and general HF conductors. Nominal "
+            "annealed copper (100% IACS); plating, stranding, and temperature change the "
+            "effective loss."
+        ),
+        Language.SPANISH: (
+            "Alambre desnudo o aislado, trampas, bobinas y conductores generales de HF. "
+            "Cobre recocido nominal (100 % IACS); el baño, el cableado y la temperatura "
+            "cambian la pérdida efectiva."
+        ),
+    },
+    "materials.wire.aluminum.name": {
+        Language.ENGLISH: "Aluminum",
+        Language.SPANISH: "Aluminio",
+    },
+    "materials.wire.aluminum.note": {
+        Language.ENGLISH: (
+            "Lightweight elements and long spans. Nominal 1350 aluminum (61% IACS); alloy, "
+            "temper, and connection quality change the effective loss."
+        ),
+        Language.SPANISH: (
+            "Elementos livianos y vanos largos. Aluminio 1350 nominal (61 % IACS); la "
+            "aleación, el temple y la calidad de las conexiones cambian la pérdida efectiva."
+        ),
+    },
+    "materials.coax.rg58a.name": {
+        Language.ENGLISH: "RG-58A/U",
+        Language.SPANISH: "RG-58A/U",
+    },
+    "materials.coax.rg58a.note": {
+        Language.ENGLISH: (
+            "Flexible 50 Ω cable for short jumpers and low-power runs. Datasheet loss at "
+            "100 MHz; the simulator uses a constant matched loss."
+        ),
+        Language.SPANISH: (
+            "Cable flexible de 50 Ω para puentes cortos y potencias bajas. Pérdida de hoja "
+            "de datos a 100 MHz; el simulador usa una pérdida adaptada constante."
+        ),
+    },
+    "materials.coax.rg213.name": {
+        Language.ENGLISH: "RG-213/U",
+        Language.SPANISH: "RG-213/U",
+    },
+    "materials.coax.rg213.note": {
+        Language.ENGLISH: (
+            "Rugged 50 Ω cable for permanent HF/VHF runs. Datasheet loss at 100 MHz; the "
+            "simulator uses a constant matched loss."
+        ),
+        Language.SPANISH: (
+            "Cable robusto de 50 Ω para instalaciones permanentes de HF/VHF. Pérdida de "
+            "hoja de datos a 100 MHz; el simulador usa una pérdida adaptada constante."
+        ),
+    },
+    "materials.coax.lmr400.name": {
+        Language.ENGLISH: "LMR-400",
+        Language.SPANISH: "LMR-400",
+    },
+    "materials.coax.lmr400.note": {
+        Language.ENGLISH: (
+            "Low-loss 50 Ω cable for longer VHF/UHF runs. Datasheet loss at 150 MHz; the "
+            "simulator uses a constant matched loss."
+        ),
+        Language.SPANISH: (
+            "Cable de 50 Ω de baja pérdida para tiradas largas de VHF/UHF. Pérdida de hoja "
+            "de datos a 150 MHz; el simulador usa una pérdida adaptada constante."
+        ),
+    },
+    "materials.ferrite.fairrite_31.name": {
+        Language.ENGLISH: "Fair-Rite 31",
+        Language.SPANISH: "Fair-Rite 31",
+    },
+    "materials.ferrite.fairrite_31.note": {
+        Language.ENGLISH: (
+            "MnZn broadband suppression from HF through UHF. Reference only; ferrite cores "
+            "and common-mode impedance are not modeled."
+        ),
+        Language.SPANISH: (
+            "Supresión de banda ancha MnZn desde HF hasta UHF. Solo referencia; no se "
+            "modelan núcleos de ferrita ni impedancia de modo común."
+        ),
+    },
+    "materials.ferrite.fairrite_43.name": {
+        Language.ENGLISH: "Fair-Rite 43",
+        Language.SPANISH: "Fair-Rite 43",
+    },
+    "materials.ferrite.fairrite_43.note": {
+        Language.ENGLISH: (
+            "Popular NiZn suppression mix for upper HF and VHF. Reference only; ferrite "
+            "cores and common-mode impedance are not modeled."
+        ),
+        Language.SPANISH: (
+            "Mezcla NiZn popular para la parte alta de HF y VHF. Solo referencia; no se "
+            "modelan núcleos de ferrita ni impedancia de modo común."
+        ),
+    },
+    "materials.ferrite.fairrite_61.name": {
+        Language.ENGLISH: "Fair-Rite 61",
+        Language.SPANISH: "Fair-Rite 61",
+    },
+    "materials.ferrite.fairrite_61.note": {
+        Language.ENGLISH: (
+            "Low-permeability NiZn mix for VHF/UHF suppression; Fair-Rite also lists "
+            "inductive use up to 25 MHz. Reference only; not a common-mode model."
+        ),
+        Language.SPANISH: (
+            "Mezcla NiZn de baja permeabilidad para supresión de VHF/UHF; Fair-Rite también "
+            "indica uso inductivo hasta 25 MHz. Solo referencia; no es un modelo de modo común."
+        ),
+    },
+    "materials.insulator.ptfe.name": {
+        Language.ENGLISH: "PTFE (Teflon)",
+        Language.SPANISH: "PTFE (Teflón)",
+    },
+    "materials.insulator.ptfe.note": {
+        Language.ENGLISH: (
+            "Excellent weather and chemical resistance. Dielectric strength depends on "
+            "thickness and test method; use for exposed feedpoint supports and high-voltage "
+            "insulation."
+        ),
+        Language.SPANISH: (
+            "Excelente resistencia a la intemperie y a los químicos. La rigidez dieléctrica "
+            "depende del espesor y del método de ensayo; usalo para soportes de feedpoint "
+            "expuestos y aislamiento de alta tensión."
+        ),
+    },
+    "materials.insulator.delrin.name": {
+        Language.ENGLISH: "Delrin (acetal)",
+        Language.SPANISH: "Delrin (acetal)",
+    },
+    "materials.insulator.delrin.note": {
+        Language.ENGLISH: (
+            "Easy to machine and dimensionally stable. Use UV-stabilized grades outdoors; "
+            "the dielectric strength is quoted at 3.2 mm."
+        ),
+        Language.SPANISH: (
+            "Fácil de mecanizar y dimensionalmente estable. Usá grados estabilizados UV a "
+            "la intemperie; la rigidez dieléctrica corresponde a 3.2 mm."
+        ),
+    },
+    "materials.insulator.alumina_96.name": {
+        Language.ENGLISH: "96% alumina ceramic",
+        Language.SPANISH: "Cerámica de alúmina 96 %",
+    },
+    "materials.insulator.alumina_96.note": {
+        Language.ENGLISH: (
+            "Excellent weather and heat resistance; brittle, so avoid point loads. The range "
+            "is typical for 96% alumina and depends on thickness and porosity."
+        ),
+        Language.SPANISH: (
+            "Excelente resistencia a la intemperie y al calor; es frágil, evitá cargas "
+            "puntuales. El rango es típico de alúmina 96 % y depende del espesor y la "
+            "porosidad."
         ),
     },
     "loads.title": {

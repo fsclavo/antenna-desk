@@ -17,6 +17,7 @@ of truth before adding another planning document.
 | How is the solver integrated? | [`SOLVER_ADAPTER.md`](SOLVER_ADAPTER.md) |
 | How is the construction sketch generated? | [`GEOMETRY_PRESENTATION.md`](GEOMETRY_PRESENTATION.md) |
 | Where do the starting dimensions come from? | [`ANTENNA_DESIGN_ESTIMATORS.md`](ANTENNA_DESIGN_ESTIMATORS.md) |
+| Where do material properties come from? | [`MATERIALS_REFERENCE.md`](MATERIALS_REFERENCE.md) |
 
 ## Planning
 
@@ -45,6 +46,8 @@ of truth before adding another planning document.
   contract.
 - [`ANTENNA_DESIGN_ESTIMATORS.md`](ANTENNA_DESIGN_ESTIMATORS.md) — estimator
   sources, assumptions, confidence, and tolerances.
+- [`MATERIALS_REFERENCE.md`](MATERIALS_REFERENCE.md) — source-backed wire,
+  coax, ferrite, and insulator reference data.
 - [`QA_STRATEGY.md`](QA_STRATEGY.md) — test lanes and quality gate.
 - [`EXPERIMENTAL_VALIDATION_PROTOCOL.md`](EXPERIMENTAL_VALIDATION_PROTOCOL.md) —
   how experimental templates are validated.

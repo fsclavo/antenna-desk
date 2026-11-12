@@ -325,11 +325,11 @@ The 2026-11-11 review of the desired-backlog proposal keeps the product focus on
 the decision-to-measurement workflow instead of adding more antenna families.
 The catalog is broad enough; the next value is helping the operator choose,
 understand, build, and improve a design. This is product scope, not a second
-execution queue. UX1–UX17 are complete; the 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**, and
+execution queue. UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**, and
 0.8 **Explore** releases are closed, and the 0.9 **Sustain** release is in
-progress. UX18–UX20 stay here until the next product slice is selected and they
-are ready to execute. UX21–UX22 were added from direct user feedback and
-implemented on 2026-11-12.
+progress. UX18 was implemented on 2026-11-12; UX19–UX20 stay here until the next
+product slice is selected and they are ready to execute. UX21–UX22 were added
+from direct user feedback and implemented on 2026-11-12. UX23 is queued from the same feedback.
 
 Rules for this track:
 
@@ -363,11 +363,12 @@ Rules for this track:
 | 0.8 Explore | UX15 | Project journal | Timeline, as-built, photos, notes, and version comparison | M | n/a | done 2026-11-12 |
 | 0.8 Explore | UX16 | Guided experiments | Three tutorials built on the sweep engine | M–L | B | done 2026-11-12 |
 | 0.9 Sustain | UX17 | Curated reference design library | 10–20 sourced designs; published versus simulated | M + content | A/B | done 2026-11-12 |
-| 0.9 Sustain | UX18 | Minimal materials reference | Static, sourced wire/coax/ferrite/insulator table | S–M | B | proposed |
+| 0.9 Sustain | UX18 | Minimal materials reference | Source-backed four-tab table with coax feed-line apply | S–M | B | done 2026-11-12 |
 | 0.9 Sustain | UX19 | Portable project bundle | Export/import project plus assets; no server | S–M | n/a | proposed |
 | 0.9 Sustain | UX20 | Editable BOM costs | Manual cost column and totals | S | n/a | proposed |
 | 0.9 Sustain | UX21 | Side-by-side azimuth/elevation pattern cuts | Four-pane Cuts view with independent cuts | M | n/a | done 2026-11-12 |
 | 0.9 Sustain | UX22 | Pattern metric visibility | Metric-aware titles and a three-metric summary | S–M | n/a | done 2026-11-12 |
+| 0.9 Sustain | UX23 | Common coax catalog and feed-line presets | 15–16 source-backed cables with auto-filled VF and loss | M | B | queued 2026-11-12 |
 
 Release sequence: **0.5 Decide** is the first slice because it has the highest
 user value and the lowest modeling risk. **0.6 Build** converts a simulation into
@@ -393,8 +394,9 @@ Product track:
 
 1. UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**,
    and 0.8 **Explore** releases are closed, and 0.9 **Sustain** is in progress.
-   UX21–UX22 were implemented from direct user feedback; UX18–UX20 remain
-   product scope in the backlog above, and UX18 is the next proposed candidate.
+   UX18 was implemented on 2026-11-12. UX21–UX22 were implemented from direct user
+   feedback; UX23 remains queued from the same feedback. UX19–UX20 remain product
+   scope in the backlog above, and UX19 is the next proposed candidate after UX23.
 
 Modeling track:
 
