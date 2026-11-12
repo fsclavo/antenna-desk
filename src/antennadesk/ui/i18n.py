@@ -1546,6 +1546,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Parameter Sweep...",
         Language.SPANISH: "Barrido de parámetros...",
     },
+    "action.robustness": {
+        Language.ENGLISH: "Tolerance & Robustness...",
+        Language.SPANISH: "Tolerancia y robustez...",
+    },
     "action.exit": {Language.ENGLISH: "Exit", Language.SPANISH: "Salir"},
     "action.about": {
         Language.ENGLISH: "About AntennaDesk",
@@ -3391,6 +3395,59 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.action.parameter_sweep": {
         Language.ENGLISH: ("Run a bounded 1D or 2D what-if sweep over family design variables."),
         Language.SPANISH: ("Ejecutá un barrido acotado 1D o 2D de variables del diseño."),
+    },
+    "help.action.robustness": {
+        Language.ENGLISH: (
+            "Run deterministic corner cases and a seeded Monte Carlo tolerance analysis."
+        ),
+        Language.SPANISH: (
+            "Ejecutá casos de esquina deterministas y un análisis de tolerancia "
+            "Monte Carlo con semilla."
+        ),
+    },
+    "help.robustness.variables": {
+        Language.ENGLISH: "Continuous length or radius dimensions to perturb.",
+        Language.SPANISH: "Dimensiones continuas de longitud o radio a perturbar.",
+    },
+    "help.robustness.tolerance": {
+        Language.ENGLISH: "Fractional band around each current dimension value.",
+        Language.SPANISH: "Banda fraccional alrededor de cada valor actual.",
+    },
+    "help.robustness.corners": {
+        Language.ENGLISH: "Evaluate every combination of the tolerance endpoints.",
+        Language.SPANISH: "Evaluá cada combinación de los extremos de tolerancia.",
+    },
+    "help.robustness.samples": {
+        Language.ENGLISH: "Number of uniform Monte Carlo samples inside the tolerance band.",
+        Language.SPANISH: "Cantidad de muestras Monte Carlo uniformes dentro de la banda.",
+    },
+    "help.robustness.seed": {
+        Language.ENGLISH: "Deterministic seed for the Monte Carlo sample.",
+        Language.SPANISH: "Semilla determinista para la muestra Monte Carlo.",
+    },
+    "help.robustness.swr_limit": {
+        Language.ENGLISH: "SWR threshold used for the Monte Carlo pass fraction.",
+        Language.SPANISH: "Umbral de ROE usado para la fracción aprobada de Monte Carlo.",
+    },
+    "help.robustness.target": {
+        Language.ENGLISH: "Frequency at which every scenario is evaluated.",
+        Language.SPANISH: "Frecuencia en la que se evalúa cada escenario.",
+    },
+    "help.robustness.run": {
+        Language.ENGLISH: "Run the bounded robustness analysis.",
+        Language.SPANISH: "Ejecutá el análisis acotado de robustez.",
+    },
+    "help.robustness.cancel": {
+        Language.ENGLISH: "Stop the analysis and keep completed scenarios.",
+        Language.SPANISH: "Detené el análisis y conservá los escenarios completados.",
+    },
+    "help.robustness.plot": {
+        Language.ENGLISH: "Monte Carlo SWR histogram with the SWR limit marked.",
+        Language.SPANISH: "Histograma de ROE Monte Carlo con el límite de ROE marcado.",
+    },
+    "help.robustness.table": {
+        Language.ENGLISH: "Nominal, corner, and Monte Carlo scenarios with metrics and status.",
+        Language.SPANISH: "Escenarios nominal, de esquina y Monte Carlo con métricas y estado.",
     },
     "help.sweep.axes": {
         Language.ENGLISH: "Choose the variable ranges and number of points for the sweep.",
@@ -5795,6 +5852,173 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Menos de la mitad de los puntos medidos se superponen con el rango "
             "simulado; la comparación es parcial."
         ),
+    },
+    "robustness.title": {
+        Language.ENGLISH: "Tolerance and robustness",
+        Language.SPANISH: "Tolerancia y robustez",
+    },
+    "robustness.critical_dimensions": {
+        Language.ENGLISH: "Critical dimensions",
+        Language.SPANISH: "Dimensiones críticas",
+    },
+    "robustness.variables": {
+        Language.ENGLISH: "Dimensions to perturb",
+        Language.SPANISH: "Dimensiones a perturbar",
+    },
+    "robustness.variables_hint": {
+        Language.ENGLISH: (
+            "Select up to 5 continuous length or radius dimensions. "
+            "The tolerance is one fractional band around each current value."
+        ),
+        Language.SPANISH: (
+            "Seleccioná hasta 5 dimensiones continuas de longitud o radio. "
+            "La tolerancia es una banda fraccional alrededor de cada valor actual."
+        ),
+    },
+    "robustness.settings": {
+        Language.ENGLISH: "Analysis settings",
+        Language.SPANISH: "Configuración del análisis",
+    },
+    "robustness.tolerance": {
+        Language.ENGLISH: "Tolerance",
+        Language.SPANISH: "Tolerancia",
+    },
+    "robustness.include_corners": {
+        Language.ENGLISH: "Include corner cases",
+        Language.SPANISH: "Incluir casos de esquina",
+    },
+    "robustness.samples": {
+        Language.ENGLISH: "Monte Carlo samples",
+        Language.SPANISH: "Muestras Monte Carlo",
+    },
+    "robustness.seed": {
+        Language.ENGLISH: "Random seed",
+        Language.SPANISH: "Semilla aleatoria",
+    },
+    "robustness.swr_limit": {
+        Language.ENGLISH: "SWR limit",
+        Language.SPANISH: "Límite de ROE",
+    },
+    "robustness.target": {
+        Language.ENGLISH: "Target frequency",
+        Language.SPANISH: "Frecuencia objetivo",
+    },
+    "robustness.budget": {
+        Language.ENGLISH: (
+            "{runs} solver runs · {corners} corner cases + {samples} Monte Carlo samples"
+        ),
+        Language.SPANISH: (
+            "{runs} ejecuciones del solver · {corners} casos de esquina + "
+            "{samples} muestras Monte Carlo"
+        ),
+    },
+    "robustness.budget_unavailable": {
+        Language.ENGLISH: "Budget unavailable; check the selected dimensions.",
+        Language.SPANISH: "Presupuesto no disponible; revisá las dimensiones seleccionadas.",
+    },
+    "robustness.budget_warning": {
+        Language.ENGLISH: ("Large analysis: {runs} solver runs. Reduce the dimensions or samples."),
+        Language.SPANISH: (
+            "Análisis grande: {runs} ejecuciones del solver. Reducí dimensiones o muestras."
+        ),
+    },
+    "robustness.run": {
+        Language.ENGLISH: "Run analysis",
+        Language.SPANISH: "Ejecutar análisis",
+    },
+    "robustness.cancel": {
+        Language.ENGLISH: "Cancel analysis",
+        Language.SPANISH: "Cancelar análisis",
+    },
+    "robustness.progress": {
+        Language.ENGLISH: "Robustness scenarios: {completed}/{total}",
+        Language.SPANISH: "Escenarios de robustez: {completed}/{total}",
+    },
+    "robustness.progress_done": {
+        Language.ENGLISH: "Analysis complete.",
+        Language.SPANISH: "Análisis completo.",
+    },
+    "robustness.cancelling": {
+        Language.ENGLISH: "Cancelling the analysis...",
+        Language.SPANISH: "Cancelando el análisis...",
+    },
+    "robustness.cancelled": {
+        Language.ENGLISH: "Analysis cancelled; completed scenarios are shown.",
+        Language.SPANISH: "Análisis cancelado; se muestran los escenarios completados.",
+    },
+    "robustness.failed": {
+        Language.ENGLISH: "Robustness analysis failed.",
+        Language.SPANISH: "Falló el análisis de robustez.",
+    },
+    "robustness.summary_nominal": {
+        Language.ENGLISH: "Nominal SWR {swr} · completed {completed}/{total}",
+        Language.SPANISH: "ROE nominal {swr} · completados {completed}/{total}",
+    },
+    "robustness.summary_corner": {
+        Language.ENGLISH: "Worst corner SWR {swr} at {values}",
+        Language.SPANISH: "Peor caso de esquina: ROE {swr} en {values}",
+    },
+    "robustness.summary_no_mc": {
+        Language.ENGLISH: "Monte Carlo: not requested or no valid samples.",
+        Language.SPANISH: "Monte Carlo: no solicitado o sin muestras válidas.",
+    },
+    "robustness.summary_mc": {
+        Language.ENGLISH: (
+            "Monte Carlo: {count} samples · median {median} · P90 {p90} · "
+            "P95 {p95} · {passed}/{count} at or below SWR {limit} ({fraction}%)"
+        ),
+        Language.SPANISH: (
+            "Monte Carlo: {count} muestras · mediana {median} · P90 {p90} · "
+            "P95 {p95} · {passed}/{count} con ROE igual o menor a {limit} ({fraction}%)"
+        ),
+    },
+    "robustness.plot_title": {
+        Language.ENGLISH: "Monte Carlo SWR distribution",
+        Language.SPANISH: "Distribución de ROE Monte Carlo",
+    },
+    "robustness.count": {
+        Language.ENGLISH: "Samples",
+        Language.SPANISH: "Muestras",
+    },
+    "robustness.method": {
+        Language.ENGLISH: "Method",
+        Language.SPANISH: "Método",
+    },
+    "robustness.method.nominal": {
+        Language.ENGLISH: "Nominal",
+        Language.SPANISH: "Nominal",
+    },
+    "robustness.method.corner": {
+        Language.ENGLISH: "Corner",
+        Language.SPANISH: "Esquina",
+    },
+    "robustness.method.monte_carlo": {
+        Language.ENGLISH: "Monte Carlo",
+        Language.SPANISH: "Monte Carlo",
+    },
+    "robustness.dimensions": {
+        Language.ENGLISH: "Dimensions",
+        Language.SPANISH: "Dimensiones",
+    },
+    "robustness.worst_corner": {
+        Language.ENGLISH: "Worst corner",
+        Language.SPANISH: "Peor esquina",
+    },
+    "robustness.no_variables": {
+        Language.ENGLISH: "Select at least one critical dimension.",
+        Language.SPANISH: "Seleccioná al menos una dimensión crítica.",
+    },
+    "robustness.too_many_variables": {
+        Language.ENGLISH: "Select at most {maximum} dimensions.",
+        Language.SPANISH: "Seleccioná como máximo {maximum} dimensiones.",
+    },
+    "robustness.too_many_runs": {
+        Language.ENGLISH: "The analysis is limited to {maximum} solver runs.",
+        Language.SPANISH: "El análisis está limitado a {maximum} ejecuciones del solver.",
+    },
+    "robustness.unavailable_family": {
+        Language.ENGLISH: "Tolerance analysis is not available for this family.",
+        Language.SPANISH: "El análisis de tolerancia no está disponible para esta familia.",
     },
     "sweep.title": {
         Language.ENGLISH: "Parameter sweep",

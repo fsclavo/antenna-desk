@@ -320,8 +320,8 @@ The 2026-11-11 review of the desired-backlog proposal keeps the product focus on
 the decision-to-measurement workflow instead of adding more antenna families.
 The catalog is broad enough; the next value is helping the operator choose,
 understand, build, and improve a design. This is product scope, not a second
-execution queue. UX1–UX13 are complete; the 0.5 **Decide**, 0.6 **Build**, and 0.7 **Measure**
-releases are closed, and the 0.8 **Explore** release is in progress. UX14–UX20
+execution queue. UX1–UX14 are complete; the 0.5 **Decide**, 0.6 **Build**, and 0.7 **Measure**
+releases are closed, and the 0.8 **Explore** release is in progress. UX15–UX20
 stay here until the next product slice is selected and they are ready to
 execute.
 
@@ -353,7 +353,7 @@ Rules for this track:
 | 0.7 Measure | UX11 | Sensitivity-based tuning assistant | Bounded adjustment from solver sensitivity | M–L | B/C | done 2026-11-12 |
 | 0.7 Measure | UX12 | Measurement uncertainty card | Calibration, reference-plane, and environment limits | S–M | B/C | done 2026-11-12 |
 | 0.8 Explore | UX13 | Parameter sweeps (what-if) | 1D/2D sweeps with overlays and a budget | M | B | done 2026-11-12 |
-| 0.8 Explore | UX14 | Tolerance and robustness analysis | Corner cases and Monte Carlo with critical dimensions | M–L | B/C | proposed |
+| 0.8 Explore | UX14 | Tolerance and robustness analysis | Corner cases and Monte Carlo with critical dimensions | M–L | B/C | done 2026-11-12 |
 | 0.8 Explore | UX15 | Project journal | Timeline, as-built, photos, notes, and version comparison | M | n/a | proposed |
 | 0.8 Explore | UX16 | Guided experiments | Three tutorials built on the sweep engine | M–L | B | proposed |
 | 0.9 Sustain | UX17 | Curated reference design library | 10–20 sourced designs; published versus simulated | M + content | A/B | proposed |
@@ -383,9 +383,9 @@ kept at
 
 Product track:
 
-1. UX1–UX13 are complete. The 0.5 **Decide**, 0.6 **Build**, and 0.7
+1. UX1–UX14 are complete. The 0.5 **Decide**, 0.6 **Build**, and 0.7
    **Measure** releases are closed, and the 0.8 **Explore** release is in
-   progress. UX14–UX20 remain product scope in the backlog above; UX14 is the
+   progress. UX15–UX20 remain product scope in the backlog above; UX15 is the
    next candidate.
 
 Modeling track:

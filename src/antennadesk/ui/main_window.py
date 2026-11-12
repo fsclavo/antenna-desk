@@ -301,6 +301,7 @@ from .dialogs.preferences_dialog import PreferencesDialog
 from .dialogs.preflight_dialog import PreflightDialog
 from .dialogs.quad_beam_dialog import QuadBeamDialog
 from .dialogs.ringo_dialog import RingoDialog
+from .dialogs.robustness_dialog import RobustnessDialog
 from .dialogs.scv_dialog import ScvDialog
 from .dialogs.synthesis_dialog import SynthesisDialog
 from .dialogs.t2fd_dialog import T2FDDialog
@@ -619,6 +620,8 @@ class MainWindow(QMainWindow):
         self._tuning_action.triggered.connect(lambda: self.tune_measurement())
         self._sweep_action = QAction(self)
         self._sweep_action.triggered.connect(lambda: self.parameter_sweep())
+        self._robustness_action = QAction(self)
+        self._robustness_action.triggered.connect(lambda: self.tolerance_robustness())
 
         self._simulate_action = QAction(self)
         self._simulate_action.setShortcut(QKeySequence("F5"))
@@ -1354,6 +1357,7 @@ class MainWindow(QMainWindow):
         self._tools_menu.addAction(self._measurement_sessions_action)
         self._tools_menu.addAction(self._tuning_action)
         self._tools_menu.addAction(self._sweep_action)
+        self._tools_menu.addAction(self._robustness_action)
         self._tools_menu.addAction(self._compact_history_action)
 
         self._help_menu = self.menuBar().addMenu("")
@@ -1433,6 +1437,9 @@ class MainWindow(QMainWindow):
         self._sweep_action.setText(self._translator.t("action.parameter_sweep"))
         self._sweep_action.setToolTip(self._translator.t("help.action.parameter_sweep"))
         self._sweep_action.setWhatsThis(self._translator.t("help.action.parameter_sweep"))
+        self._robustness_action.setText(self._translator.t("action.robustness"))
+        self._robustness_action.setToolTip(self._translator.t("help.action.robustness"))
+        self._robustness_action.setWhatsThis(self._translator.t("help.action.robustness"))
         self._exit_action.setText(self._translator.t("action.exit"))
         self._about_action.setText(self._translator.t("action.about"))
         self._whats_this_action.setText(self._translator.t("action.whats_this"))
@@ -1889,6 +1896,12 @@ class MainWindow(QMainWindow):
         self._sweep_action.setEnabled(
             idle and has_project and self._sweep_supported(parameters) and self._solver is not None
         )
+        self._robustness_action.setEnabled(
+            idle
+            and has_project
+            and self._robustness_supported(parameters)
+            and self._solver is not None
+        )
         self._preflight_action.setEnabled(idle and has_project)
         self._construction_action.setEnabled(idle and has_project)
         self._construction_record_action.setEnabled(idle and has_project)
@@ -2018,6 +2031,7 @@ class MainWindow(QMainWindow):
             self._measurement_sessions_action,
             self._tuning_action,
             self._sweep_action,
+            self._robustness_action,
             self._import_nec_action,
             self._import_mmana_action,
         ):
@@ -5167,6 +5181,40 @@ class MainWindow(QMainWindow):
             self._workflow_measurement_compared.add(self._design_id)
         self._update_workflow_ui()
 
+    def tolerance_robustness(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._solver is None:
+            self._show_error(self._translator.t("error.solver"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        design = self._project.design_by_id(self._design_id)
+        availability = optimizer_availability(design.parameters)
+        descriptor = availability.descriptor
+        if descriptor is None:
+            self._show_error(self._translator.t("robustness.unavailable_family"))
+            return
+        base_spec = self._with_project_chain(
+            design.parameters,
+            self._base_simulation_spec(design),
+        )
+        dialog = RobustnessDialog(
+            self._translator,
+            self._unit_system,
+            self._solver,
+            descriptor,
+            design,
+            base_spec,
+            self,
+        )
+        dialog.exec()
+
     @history_action("history.parameter_sweep")
     def parameter_sweep(self) -> None:
         if self._project is None or self._design_id is None:
@@ -5420,6 +5468,14 @@ class MainWindow(QMainWindow):
 
     def _sweep_supported(self, parameters: AntennaDesignParameters | None) -> bool:
         if parameters is None or adapter_for(parameters) is None:
+            return False
+        return optimizer_availability(parameters).descriptor is not None
+
+    def _robustness_supported(
+        self,
+        parameters: AntennaDesignParameters | None,
+    ) -> bool:
+        if parameters is None:
             return False
         return optimizer_availability(parameters).descriptor is not None
 

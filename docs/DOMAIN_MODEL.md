@@ -596,6 +596,15 @@ count; and simulated comparison coverage/spacing. It returns a documentation
 level (`documented`, `partial`, `limited`) and explicit warning keys. It does
 not compute a numerical uncertainty budget or assign ±Ω/±dB values.
 
+`design/robustness.py` implements bounded tolerance analysis. `RobustnessSpec`
+stores a target frequency, one fractional tolerance, up to five continuous
+length/radius dimensions, corner-case and Monte Carlo settings, a deterministic
+seed, and an SWR limit. `RobustnessScenario` stores the perturbed values and
+SWR/R/X/|Z|; `RobustnessResult` exposes nominal, corners, worst corner, Monte
+Carlo statistics, and histogram bins. Monte Carlo uses independent uniform
+multiplicative perturbations, not a calibrated physical distribution. Results
+are transient and are not persisted.
+
 `design/sweep.py` implements bounded parameter sweeps. `SweepAxis` stores
 strictly increasing values for one variable; `SweepPlan` combines one or two
 axes with a target frequency and metric; `SweepPoint` stores SWR, R, X, and

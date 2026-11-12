@@ -1405,6 +1405,31 @@ does not persist the grid. Invalid or failed points remain visible instead of
 being hidden. A low SWR at one frequency does not prove efficiency, bandwidth,
 pattern, or buildability; verify with a full simulation and measurement.
 
+## Tolerance and robustness
+
+Use **Tools → Tolerance & Robustness...** to study how construction tolerances
+affect the match at one target frequency. The analysis uses the current
+family's continuous length and radius variables; select at least one and at
+most five. The **Tolerance** is a single fractional band around each current
+value; it is not a measured manufacturing distribution.
+
+The analysis always evaluates the **Nominal** design. With **Include corner
+cases**, it evaluates every combination of the selected dimensions at the low
+and high tolerance endpoints. With **Monte Carlo samples**, it evaluates a
+seeded uniform sample inside the same band. The **Budget** shows the number of
+solver runs and warns above 100. All dimensions are perturbed independently;
+the analysis does not model correlations between dimensions.
+
+Results show the nominal SWR, the worst corner SWR and its dimensions, and the
+Monte Carlo median, P90, P95, and the fraction at or below the **SWR limit**.
+The histogram shows the sampled SWR distribution with the limit marked. The
+table lists every scenario, including invalid points and solver errors.
+
+This is a bounded sensitivity study, not a calibrated tolerance budget. A
+uniform Monte Carlo is a transparent what-if assumption, not evidence about a
+real workshop, and the results are not persisted. Verify critical dimensions
+with measurements and repeat the analysis after changing the design.
+
 ## Feed line
 
 Use **Simulation → Feed Line...** to configure a uniform transmission line between

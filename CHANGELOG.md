@@ -141,6 +141,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   **Apply best SWR** update the design through the normal family adapter, enter
   undo history, and run a simulation. Sweeps are transient and do not imply
   optimization between points. No schema change.
+- **Tolerance and robustness analysis.** Added **Tools → Tolerance &
+  Robustness...** with a bounded nominal, corner-case, and seeded Monte Carlo
+  study over up to five continuous length/radius dimensions. The analysis uses
+  one fractional tolerance band, reports nominal and worst-corner SWR,
+  Monte Carlo median/P90/P95 and pass fraction against an SWR limit, and shows
+  the sampled SWR histogram and full scenario table. Invalid scenarios and
+  solver errors stay visible. Monte Carlo perturbations are independent and
+  uniform inside the band; the dialog states that this is a what-if assumption,
+  not a calibrated manufacturing distribution. The analysis is read-only,
+  transient, and does not change the project. No schema change.
 
 ### Changed
 
