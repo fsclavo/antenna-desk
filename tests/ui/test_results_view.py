@@ -129,7 +129,8 @@ def test_results_view_reports_negative_resistance_instead_of_an_empty_pattern(
     view.set_result(replace(result, frequencies=frequencies))
 
     expected = Translator(Language.ENGLISH).t("pattern.negative_resistance")
-    assert view._pattern_plot.plotItem.titleLabel.text == expected
+    assert view._azimuth_plot.plotItem.titleLabel.text == expected
+    assert view._elevation_plot.plotItem.titleLabel.text == expected
 
 
 def test_results_view_localizes_known_diagnostics(qtbot: QtBot) -> None:
@@ -195,21 +196,25 @@ def test_results_view_builds_a_polar_lobe_plot(qtbot: QtBot, tmp_path: Path) -> 
     view.set_result(result)
     view._pattern_frequency.setCurrentIndex(0)
 
-    assert view._pattern_mode.currentData() == "azimuth"
-    assert view._pattern_cut.currentData() == pytest.approx(0.0)
-    assert len(view._polar_pattern._points) == 2
-    assert view._polar_pattern._mirror is False
-    assert view._polar_pattern.grab().isNull() is False
+    assert view._azimuth_cut.currentData() == pytest.approx(0.0)
+    assert len(view._azimuth_polar._points) == 2
+    assert view._azimuth_polar._mirror is False
+    assert view._azimuth_polar.grab().isNull() is False
 
-    view._pattern_mode.setCurrentIndex(1)
-    assert len(view._pattern_cursor._series) == 1
-    view._pattern_cursor.show_at_x(45.0)
-    assert "φ=45" in view._pattern_cursor._label.text()
-    assert view._pattern_mode.currentData() == "elevation"
-    assert view._pattern_cut.currentData() == pytest.approx(0.0)
-    assert len(view._polar_pattern._points) == 4
-    assert view._polar_pattern._mirror is True
+    assert view._elevation_cut.currentData() == pytest.approx(0.0)
+    assert len(view._elevation_polar._points) == 4
+    assert view._elevation_polar._mirror is True
+    assert len(view._elevation_cursor._series) == 1
+    view._elevation_cursor.show_at_x(45.0)
+    assert "θ=45" in view._elevation_cursor._label.text()
     assert len(view._pattern_3d._points) == 8
+
+    view._azimuth_cut.setCurrentIndex(view._azimuth_cut.findData(90.0))
+    assert view._elevation_cut.currentData() == pytest.approx(0.0)
+    assert len(view._azimuth_polar._points) == 2
+    view._elevation_cut.setCurrentIndex(view._elevation_cut.findData(90.0))
+    assert view._azimuth_cut.currentData() == pytest.approx(90.0)
+    assert len(view._elevation_polar._points) == 4
     view._pattern_view_tabs.setCurrentIndex(1)
     assert view._pattern_3d.grab().isNull() is False
 
@@ -256,7 +261,7 @@ def test_results_view_lists_only_pattern_snapshot_frequencies(qtbot: QtBot) -> N
     assert view._pattern_frequency.count() == 1
     assert view._pattern_frequency.itemText(0) == "7.1 MHz (40m)"
     assert view._selected_pattern_frequency() is result.frequencies[1]
-    assert len(view._polar_pattern._points) == 1
+    assert len(view._azimuth_polar._points) == 1
 
 
 def test_gain_color_maps_green_yellow_and_red() -> None:
@@ -907,6 +912,43 @@ def test_results_view_saves_one_pattern_image_per_band(
     assert all(path.read_bytes().startswith(b"\x89PNG") for path in paths)
 
 
+def test_pattern_views_retranslate_labels_and_metric_summary(qtbot: QtBot) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.simulation.result import FarFieldPoint
+
+    translator = Translator(Language.ENGLISH)
+    points = (
+        FarFieldPoint(0.0, 0.0, 2.0, None, 5.0, 0.0, 0.0, "LINEAR", None, None, None, None),
+        FarFieldPoint(90.0, 0.0, 2.0, None, 2.0, 0.0, 0.0, "LINEAR", None, None, None, None),
+    )
+    base = _make_result()
+    frequency = replace(
+        base.frequencies[0],
+        far_field=points,
+        directivity_db=8.0,
+        realized_gain_db=4.0,
+    )
+    view = ResultsView(translator)
+    qtbot.addWidget(view)
+    view.set_result(replace(base, frequencies=(frequency,)))
+    from antennadesk.domain.simulation.pattern import PatternGainMetric
+
+    view._pattern_metric.setCurrentIndex(
+        view._pattern_metric.findData(PatternGainMetric.REALIZED.value)
+    )
+
+    translator.set_language(Language.SPANISH)
+    view.retranslate()
+
+    assert view._azimuth_cut_label.text() == "Azimut en θ"
+    assert view._elevation_cut_label.text() == "Elevación en φ"
+    assert "Ganancia de potencia" in view._pattern_metric_summary.text()
+    assert "Ganancia realizada" in view._pattern_metric_summary.text()
+    assert "Ganancia realizada" in view._azimuth_plot.plotItem.titleLabel.text
+    assert "Ganancia realizada" in view._elevation_plot.plotItem.titleLabel.text
+
+
 def test_results_view_selects_the_pattern_gain_metric(qtbot: QtBot) -> None:
     from dataclasses import replace
 
@@ -932,14 +974,23 @@ def test_results_view_selects_the_pattern_gain_metric(qtbot: QtBot) -> None:
     view._pattern_metric.setCurrentIndex(
         view._pattern_metric.findData(PatternGainMetric.DIRECTIVITY.value)
     )
-    view._pattern_cursor.show_at_x(0.0)
+    view._azimuth_cursor.show_at_x(0.0)
 
-    assert "Directivity" in view._pattern_cursor._label.text()
-    assert "8.000 dBi" in view._pattern_cursor._label.text()
+    assert "Directivity" in view._azimuth_cursor._label.text()
+    assert "8.000 dBi" in view._azimuth_cursor._label.text()
+    assert "Power gain 5.00 dBi" in view._pattern_metric_summary.text()
+    assert "Directivity 8.00 dBi" in view._pattern_metric_summary.text()
+    assert "Realized gain 4.00 dBi" in view._pattern_metric_summary.text()
+    assert "Directivity" in view._azimuth_plot.plotItem.titleLabel.text
+    assert "Directivity" in view._elevation_plot.plotItem.titleLabel.text
+    assert view._azimuth_polar._metric_label == "Directivity"
+    assert view._elevation_polar._metric_label == "Directivity"
+    assert view._pattern_3d._metric_label == "Directivity"
 
     frequency = replace(frequency, directivity_db=None)
     view.set_result(replace(result, frequencies=(frequency,)))
     view._pattern_metric.setCurrentIndex(
         view._pattern_metric.findData(PatternGainMetric.DIRECTIVITY.value)
     )
-    assert "unavailable" in view._pattern_plot.plotItem.titleLabel.text
+    assert "unavailable" in view._azimuth_plot.plotItem.titleLabel.text
+    assert "unavailable" in view._pattern_metric_summary.text()

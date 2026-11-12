@@ -2048,9 +2048,27 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Cut angle for the polar pattern.",
         Language.SPANISH: "Ángulo de corte para el patrón polar.",
     },
+    "help.pattern.azimuth_cut": {
+        Language.ENGLISH: ("Elevation angle θ used for the azimuth cut; the chart sweeps φ."),
+        Language.SPANISH: (
+            "Ángulo de elevación θ usado para el corte de azimut; el gráfico recorre φ."
+        ),
+    },
+    "help.pattern.elevation_cut": {
+        Language.ENGLISH: ("Azimuth plane φ used for the elevation cut; the chart sweeps θ."),
+        Language.SPANISH: (
+            "Plano de azimut φ usado para el corte de elevación; el gráfico recorre θ."
+        ),
+    },
     "help.pattern.metric": {
-        Language.ENGLISH: "Gain metric shown in the pattern.",
-        Language.SPANISH: "Métrica de ganancia mostrada en el patrón.",
+        Language.ENGLISH: "Gain metric shown in both cuts and the 3D lobe.",
+        Language.SPANISH: "Métrica de ganancia mostrada en ambos cortes y el lóbulo 3D.",
+    },
+    "help.pattern.metric_summary": {
+        Language.ENGLISH: ("Power gain, directivity, and realized gain at the selected frequency."),
+        Language.SPANISH: (
+            "Ganancia de potencia, directividad y ganancia realizada en la frecuencia seleccionada."
+        ),
     },
     "help.currents.frequency": {
         Language.ENGLISH: "Frequency used for the current distribution.",
@@ -4647,8 +4665,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Tensión, corriente, impedancia y potencia por fuente para antenas multifuente.",
     },
     "help.tab.pattern": {
-        Language.ENGLISH: "Far-field polar and 3D radiation patterns.",
-        Language.SPANISH: "Patrones de radiación de campo lejano en polar y 3D.",
+        Language.ENGLISH: (
+            "Side-by-side azimuth and elevation cuts, plus the 3D radiation pattern."
+        ),
+        Language.SPANISH: (
+            "Cortes de azimut y elevación lado a lado, más el patrón de radiación 3D."
+        ),
     },
     "help.tab.currents": {
         Language.ENGLISH: "Wire current distribution.",
@@ -7856,6 +7878,43 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "pattern.cut_theta": {
         Language.ENGLISH: "Elevation θ",
         Language.SPANISH: "Elevación θ",
+    },
+    "pattern.azimuth_cut": {
+        Language.ENGLISH: "Azimuth at θ",
+        Language.SPANISH: "Azimut en θ",
+    },
+    "pattern.elevation_cut": {
+        Language.ENGLISH: "Elevation at φ",
+        Language.SPANISH: "Elevación en φ",
+    },
+    "pattern.azimuth_title": {
+        Language.ENGLISH: "Azimuth · θ={cut}° · {metric}",
+        Language.SPANISH: "Azimut · θ={cut}° · {metric}",
+    },
+    "pattern.elevation_title": {
+        Language.ENGLISH: "Elevation · φ={cut}° · {metric}",
+        Language.SPANISH: "Elevación · φ={cut}° · {metric}",
+    },
+    "pattern.metric_summary": {
+        Language.ENGLISH: (
+            "Power gain {power} · Directivity {directivity} · Realized gain {realized}"
+        ),
+        Language.SPANISH: (
+            "Ganancia de potencia {power} · Directividad {directivity} · Ganancia "
+            "realizada {realized}"
+        ),
+    },
+    "pattern.metric_value_unavailable": {
+        Language.ENGLISH: "unavailable",
+        Language.SPANISH: "no disponible",
+    },
+    "pattern.max_metric_ground": {
+        Language.ENGLISH: "{metric} {gain:.2f} dBi · {angle:.1f}° above ground",
+        Language.SPANISH: "{metric} {gain:.2f} dBi · {angle:.1f}° sobre el suelo",
+    },
+    "pattern.max_metric_elevation": {
+        Language.ENGLISH: "{metric} {gain:.2f} dBi · {angle:.1f}° elevation",
+        Language.SPANISH: "{metric} {gain:.2f} dBi · {angle:.1f}° de elevación",
     },
     "pattern.mode": {Language.ENGLISH: "Pattern", Language.SPANISH: "Patrón"},
     "pattern.mode_azimuth": {

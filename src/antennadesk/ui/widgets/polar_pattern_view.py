@@ -31,6 +31,7 @@ class PolarPatternView(QWidget):
         self._antenna_azimuth: float | None = None
         self._antenna_vertical = False
         self._title: str | None = None
+        self._metric_label = translator.t("pattern.metric.power")
         self._colors = theme_colors(self.palette())
         self.setMinimumHeight(220)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -69,6 +70,10 @@ class PolarPatternView(QWidget):
 
     def set_title(self, title: str | None) -> None:
         self._title = title
+        self.update()
+
+    def set_metric_label(self, label: str) -> None:
+        self._metric_label = label
         self.update()
 
     def changeEvent(self, event: QEvent) -> None:
@@ -218,7 +223,7 @@ class PolarPatternView(QWidget):
         )
         painter.drawText(
             QRectF(rect.left() + 14.0, rect.bottom() - 22.0, rect.width() - 28.0, 16.0),
-            f"{self._translator.t('pattern.gain')}: {max_gain:g} dBi",
+            f"{self._metric_label}: {max_gain:g} dBi",
         )
 
     def _draw_label(

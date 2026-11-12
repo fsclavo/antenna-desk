@@ -394,6 +394,7 @@ class RadiationPattern3DView(QWidget):
     def __init__(self, translator: Translator, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._translator = translator
+        self._metric_label = translator.t("pattern.metric.power")
         self._points: tuple[tuple[float, float, float], ...] = ()
         self._full_mesh: _Mesh | None = None
         self._interactive_mesh: _Mesh | None = None
@@ -418,6 +419,10 @@ class RadiationPattern3DView(QWidget):
 
     def sizeHint(self) -> QSize:
         return QSize(640, 420)
+
+    def set_metric_label(self, label: str) -> None:
+        self._metric_label = label
+        self.update()
 
     def set_points(
         self,
@@ -526,9 +531,10 @@ class RadiationPattern3DView(QWidget):
         super().changeEvent(event)
 
     def _max_gain_label(self, point: tuple[float, float, float]) -> str:
-        key = "pattern.max_gain_ground" if self._ground else "pattern.max_gain_elevation"
+        key = "pattern.max_metric_ground" if self._ground else "pattern.max_metric_elevation"
         return self._translator.t(
             key,
+            metric=self._metric_label,
             gain=point[2],
             angle=takeoff_angle_deg(point[0]),
         )
@@ -751,7 +757,7 @@ class RadiationPattern3DView(QWidget):
         painter.setFont(scaled_font(8))
         painter.drawText(
             QRectF(rect.left() + 14.0, rect.top() + 8.0, rect.width() - 28.0, 18.0),
-            self._translator.t("pattern.3d_polar"),
+            f"{self._translator.t('pattern.3d_polar')} · {self._metric_label}",
         )
         painter.drawText(
             QRectF(rect.left() + 14.0, rect.bottom() - 22.0, rect.width() - 28.0, 16.0),

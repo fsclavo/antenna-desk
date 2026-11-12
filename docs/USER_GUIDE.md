@@ -1165,19 +1165,23 @@ with a large top load.
   reactance, and ideal input power. Negative power marks a source that absorbs
   power; the simulation also adds a diagnostic warning, and the primary feed
   still sets the reported impedance and SWR.
-- **Pattern**: selectable **Azimuth** or **Elevation** cuts, with a **Metric**
-  selector for **Power gain**, **Directivity**, or **Realized gain**, for each
-  simulated frequency. The **Cuts** tab shows a line chart and a polar
-  lobe diagram; the **3D lobe** tab shows a projected wireframe of the complete
-  pattern, with each line colored by gain (green low, yellow intermediate, red
-  high) and a min/max dBi legend. The interior stays transparent because only
-  lines are drawn. Azimuth is the default cut view; use the selectors to inspect
-  another plane. The default azimuth cut is chosen at the elevation with the
-  highest gain; the azimuth diagram includes a dashed line showing the antenna
-  orientation. Above-ground elevation cuts are drawn as open arcs rather than
-  closed lobes. The angular resolution comes from **Pattern resolution** in the
-  global **Simulation pattern** group in the **Simulation** tab; higher
-  resolution samples the same NEC solution more finely.
+- **Pattern**: the **Cuts** tab shows azimuth and elevation side by side.
+  Each plane has its own line chart and polar lobe diagram: the azimuth pane
+  selects an elevation angle **θ** and sweeps azimuth **φ**; the elevation pane
+  selects an azimuth plane **φ** and sweeps elevation **θ**. Both default to the
+  maximum-gain direction and keep their selections when the frequency or band
+  changes. A shared **Metric** selector offers **Power gain**, **Directivity**,
+  or **Realized gain**, and a compact summary lists all three values for the
+  selected frequency. The azimuth diagram includes a dashed line showing the
+  antenna orientation. Above-ground elevation cuts are drawn as open arcs rather
+  than closed lobes. The pattern PNG export saves the whole 2×2 Cuts view; the
+  **3D lobe** tab saves the 3D view. The **3D lobe** tab shows a projected
+  wireframe of the complete pattern, with each line colored by gain (green low,
+  yellow intermediate, red high) and a min/max dBi legend. The interior stays
+  transparent because only lines are drawn. The angular resolution comes from
+  **Pattern resolution** in the global **Simulation pattern** group in the
+  **Simulation** tab; higher resolution samples the same NEC solution more
+  finely.
   While you rotate or zoom the 3D lobe, AntennaDesk draws a coarser interactive
   mesh. When the movement stops it redraws the high-resolution display mesh,
   capped to **60% of the stored angular resolution** (40% coarser) for large
@@ -1193,10 +1197,10 @@ with a large top load.
   highest sampled direction, so the reported angle is quantized to the selected
   pattern resolution. Drag the 3D lobe to rotate
   it, use the mouse wheel to zoom, and double-click to reset the view. The
-  **Metric** selector changes the cuts, polar plot, 3D lobe, and cursor readout.
-  Directivity and realized gain are derived by shifting the power-gain pattern
-  to the corresponding value at its maximum direction. Power gain is not
-  realized gain; see the gain summary below.
+  **Metric** selector changes the cut titles, axis labels, polar footers, 3D
+  label, and cursor readout. Directivity and realized gain are derived by
+  shifting the power-gain pattern to the corresponding value at its maximum
+  direction. Power gain is not realized gain; see the gain summary below.
 - **Currents**: segment current magnitude for the selected frequency, with the
   feed segment marked.
 - **Measurements**: imported VNA sweeps with measured and simulated SWR,
