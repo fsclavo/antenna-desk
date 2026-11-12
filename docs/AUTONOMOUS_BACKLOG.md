@@ -104,6 +104,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX9~~ | ~~Construction pre-flight checks~~ | S–M | UX7 | **Done 2026-11-12:** added a read-only `PreflightReport` grouped by errors, warnings, and information. It checks canonical geometry, wire crossings/overlaps, short wires, feed/load/source/line positions, feed and line segment centering, segmentation, active installation height/width and ground, simulation status/staleness, and missing as-built/checklist data. **Design → Construction Pre-flight...** shows the grouped report and **Go to problem** opens the relevant editor; the status is never ready with an error. The sheet, native PDF, and ZIP package include the report and the package adds `preflight.txt`. The NEC-2 ground/permeability/far-field checks moved to a shared pure validator used by both the solver and pre-flight. Tests cover every new check, the dialog, main-window routing, report/PDF/package rendering, and EN/ES text. No new schema. |
 | ~~UX10~~ | ~~Measurement sessions and timeline~~ | M | UX9 | **Done 2026-11-12:** added project-level `MeasurementSession` records with UTC date, optional design, location, conditions, and notes, plus an optional `Measurement.session_id`. The **Measurements** tab and **Tools → Measurement Sessions...** open a newest-first timeline; sessions can be created, edited, and deleted, with measurements preserved and detached on delete. **Edit measurement...** assigns a session, and legacy unassigned measurements remain accessible. **Compare measurements...** aligns two sweeps on their overlapping range, interpolates only there, and shows per-point R/X/SWR, `Δ|Z|`, `ΔSWR`, mean/max impedance change, mean SWR, and a resonance shift when unambiguous; differing calibration/reference plane/feed-line conditions are flagged. Schema 39 persists sessions and the measurement link; older projects migrate with no sessions and unassigned measurements. Tests cover validation, project invariants, deletion detach, migration/round-trip, comparison math, timeline dialogs, session editing, main-window undo, import assignment, and EN/ES text. |
 | ~~UX11~~ | ~~Sensitivity-based tuning assistant~~ | M–L | UX10 | **Done 2026-11-12:** added a bounded tuning estimate from a measured reference and solver probes. It selects the nearest measured resonance (or minimum-SWR frequency), estimates the local `df/dD` slope with current/lower/higher probes, proposes `ΔD = (target - measured) / slope` clipped to the user's maximum adjustment, and verifies the proposed dimension with a fourth probe. **Measurements → Tune...** and **Tools → Tuning Assistant...** run the `TuneMeasurement` use case in a worker thread with progress and cancellation. Applying the proposal updates the design through the existing family adapter, enters undo history, and runs a normal simulation. The UI shows every probe, model resonance, SWR at target, bounds, clipping, and explicit local-model limitations. Families without an editable primary dimension are disabled with an explicit reason. Tests cover the domain estimate and clipping, solver probes, cancellation/errors, dialog proposal rendering and worker path, main-window apply/undo/availability, ResultsView routing, and EN/ES text. No schema change. |
+| ~~UX12~~ | ~~Measurement uncertainty card~~ | S–M | UX10 | **Done 2026-11-12:** added a qualitative measurement uncertainty card to the **Measurements** tab. It reports calibration, reference plane, feed line/accessories, session conditions, point count, span, maximum spacing, reference impedance, resonance count, and simulated coverage/spacing; classifies documentation as documented, partially documented, or limited; and lists warnings for missing metadata, no/multiple resonances, and no/partial coverage. The assessment is a pure domain function and deliberately assigns no numeric ±Ω/±dB uncertainty. Tests cover documentation levels, missing/uncertain calibration, coverage warnings, resonance counts, sweep statistics, card rendering/retranslation/empty state, and EN/ES help. No schema change. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -111,12 +112,11 @@ external service and must not be invented or simulated into existence.
 
 ## Product experience queue (2026-11-11)
 
-UX1–UX11 are complete. The 0.5 **Decide** and 0.6 **Build** releases are
-closed, and the 0.7 **Measure** release is in progress. UX12–UX20 remain product
-scope in
-[`ROADMAP.md`](ROADMAP.md#product-experience-backlog-proposed-2026-11-11). Do
-not promote those items into this queue until the next slice is selected and
-the full gate is green.
+UX1–UX12 are complete. The 0.5 **Decide**, 0.6 **Build**, and 0.7 **Measure**
+releases are closed. UX13–UX20 remain product scope in
+[`ROADMAP.md`](ROADMAP.md#product-experience-backlog-proposed-2026-11-11); the
+0.8 **Explore** release is the next candidate. Do not promote those items into
+this queue until the next slice is selected and the full gate is green.
 
 The first slice accepts these constraints:
 
@@ -314,9 +314,9 @@ model and solver contract must land first.
 7. **R1** is closed as superseded: `v0.4.1` was published with CI-built Linux
    and Windows artifacts, so rerunning the older `v0.4.0` tag is no longer
    required.
-8. **UX1–UX11 are complete.** The 0.5 **Decide** and 0.6 **Build** releases are
-   closed, and the 0.7 **Measure** release is in progress. UX12–UX20 remain
-   product scope in [`ROADMAP.md`](ROADMAP.md).
+8. **UX1–UX12 are complete.** The 0.5 **Decide**, 0.6 **Build**, and 0.7
+   **Measure** releases are closed. UX13–UX20 remain product scope in
+   [`ROADMAP.md`](ROADMAP.md); the 0.8 **Explore** release is the next candidate.
 9. Product priorities and new antenna candidates live in
    [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
@@ -349,13 +349,14 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **39**.
-- Full gate: **2,704 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **2,719 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.4.1** published on 2026-11-11 with checksum-verified unsigned
   artifacts, including the Windows NSIS installer. All release jobs completed
   successfully in CI. See [`RELEASE_QA_0.4.1.md`](RELEASE_QA_0.4.1.md).
-- Last commits: the sensitivity tuning assistant (UX11),
+- Last commits: the measurement uncertainty card (UX12),
+  the sensitivity tuning assistant (UX11),
   the measurement sessions and before/after comparison (UX10),
   the construction pre-flight checks (UX9),
   the integrated component calculators (UX8),

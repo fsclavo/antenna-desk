@@ -589,6 +589,13 @@ each measurement has exactly one resonance. SWR uses an explicit comparison
 reference impedance; it is not tied to either measurement's calibration
 reference.
 
+`measurement_uncertainty.py` implements the qualitative measurement
+assessment. It reports calibration, reference-plane, feed-line, and session
+condition documentation; point count, span, and maximum spacing; resonance
+count; and simulated comparison coverage/spacing. It returns a documentation
+level (`documented`, `partial`, `limited`) and explicit warning keys. It does
+not compute a numerical uncertainty budget or assign ±Ω/±dB values.
+
 `design/tuning.py` implements the bounded tuning estimate. It selects the
 measured resonance nearest the target (or the minimum-SWR point when there is
 no resonance), estimates `df/dD` from solver probes around the current primary

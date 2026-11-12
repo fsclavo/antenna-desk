@@ -1344,6 +1344,35 @@ steps, cut less than the full prediction when trimming, and re-measure. The
 assistant does not claim that the physical antenna will move by the predicted
 amount.
 
+## Measurement uncertainty card
+
+The **Measurements** tab shows a **Measurement uncertainty** card for the
+selected sweep. It summarizes what is documented and what is missing:
+
+- calibration method;
+- reference plane;
+- feed line and accessories;
+- session conditions (ground, height, weather, and nearby objects);
+- number of points, frequency span, and maximum spacing;
+- measurement reference impedance;
+- resonance count;
+- how many measured points fall inside the simulated frequency range, plus
+  the simulated spacing when a result exists.
+
+The card classifies the record as **Documented**, **Partially documented**, or
+**Limited documentation** from those fields. This is a documentation-quality
+indicator, not a numerical uncertainty budget. The card deliberately does not
+assign ±Ω or ±dB values: doing so would require a calibrated uncertainty model,
+instrument specifications, connector and fixture data, and repeatability
+measurements.
+
+Warnings explain missing calibration, an unrecognized calibration method, an
+unspecified reference plane or feed line, missing session conditions, no or
+multiple resonances, and no/partial simulated coverage. Use a calibrated VNA, a
+known reference plane, and repeat measurements where possible. A low error
+against one simulation does not prove that the antenna or the simulation is
+correct.
+
 ## Feed line
 
 Use **Simulation → Feed Line...** to configure a uniform transmission line between

@@ -502,6 +502,109 @@ def test_results_view_compares_measured_and_simulated_impedance(qtbot: QtBot) ->
     )
 
 
+def test_results_view_shows_the_measurement_uncertainty_card(qtbot: QtBot) -> None:
+    from datetime import UTC, datetime
+    from uuid import UUID, uuid4
+
+    from antennadesk.domain.measurement import (
+        Measurement,
+        MeasurementPoint,
+        MeasurementSession,
+    )
+
+    session = MeasurementSession(
+        id=uuid4(),
+        name="Before tuning",
+        created_at=datetime(2026, 11, 12, 15, 0, tzinfo=UTC),
+        conditions="Dry ground, 8 m",
+    )
+    measurement = Measurement(
+        id=UUID("00000000-0000-0000-0000-000000000071"),
+        name="Field sweep",
+        created_at=datetime(2026, 11, 12, 15, 0, tzinfo=UTC),
+        reference_impedance_ohm=50.0,
+        points=(
+            MeasurementPoint(7_000_000.0, complex(50.0, -10.0)),
+            MeasurementPoint(7_100_000.0, complex(50.0, 10.0)),
+        ),
+        calibration="SOL",
+        reference_plane="antenna terminals",
+        feed_line="10 m RG-58",
+        session_id=session.id,
+    )
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    view.set_measurements((measurement,), {session.id: session.name}, (session,))
+    view.set_result(_make_result())
+
+    assert view._uncertainty_group.isHidden() is False
+    assert "Documented" in view._uncertainty_level.text()
+    assert "Calibration: SOL" in view._uncertainty_factors.text()
+    assert "Conditions: Before tuning: Dry ground, 8 m" in view._uncertainty_factors.text()
+    assert "Simulated comparison: 2/2" in view._uncertainty_factors.text()
+    assert "No missing documentation" in view._uncertainty_warnings.text()
+    assert "not a calibrated uncertainty budget" in view._uncertainty_disclaimer.text()
+
+
+def test_results_view_warns_about_missing_measurement_documentation(
+    qtbot: QtBot,
+) -> None:
+    from datetime import UTC, datetime
+    from uuid import UUID
+
+    from antennadesk.domain.measurement import Measurement, MeasurementPoint
+
+    measurement = Measurement(
+        id=UUID("00000000-0000-0000-0000-000000000072"),
+        name="Field sweep",
+        created_at=datetime(2026, 11, 12, 15, 0, tzinfo=UTC),
+        reference_impedance_ohm=50.0,
+        points=(MeasurementPoint(7_100_000.0, complex(50.0, 0.0)),),
+    )
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+
+    view.set_measurements((measurement,))
+
+    assert "Limited documentation" in view._uncertainty_level.text()
+    assert "Calibration: not specified" in view._uncertainty_factors.text()
+    assert "Calibration is not specified" in view._uncertainty_warnings.text()
+    assert "Simulated comparison: no simulation result" in view._uncertainty_factors.text()
+
+
+def test_results_view_uncertainty_card_retranslates(qtbot: QtBot) -> None:
+    from datetime import UTC, datetime
+    from uuid import UUID
+
+    from antennadesk.domain.measurement import Measurement, MeasurementPoint
+
+    measurement = Measurement(
+        id=UUID("00000000-0000-0000-0000-000000000073"),
+        name="Field sweep",
+        created_at=datetime(2026, 11, 12, 15, 0, tzinfo=UTC),
+        reference_impedance_ohm=50.0,
+        points=(MeasurementPoint(7_100_000.0, complex(50.0, 0.0)),),
+        calibration="SOL",
+    )
+    view = ResultsView(Translator(Language.SPANISH))
+    qtbot.addWidget(view)
+
+    view.set_measurements((measurement,))
+
+    assert view._uncertainty_group.title() == "Incertidumbre de la medición"
+    assert "Calibración: SOL" in view._uncertainty_factors.text()
+    assert "No es un presupuesto de incertidumbre" in view._uncertainty_disclaimer.text()
+
+
+def test_results_view_hides_uncertainty_without_measurements(qtbot: QtBot) -> None:
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+
+    view.set_measurements(())
+
+    assert view._uncertainty_group.isHidden() is True
+
+
 def test_results_view_exposes_sessions_and_before_after_buttons(qtbot: QtBot) -> None:
     from datetime import UTC, datetime
     from uuid import uuid4

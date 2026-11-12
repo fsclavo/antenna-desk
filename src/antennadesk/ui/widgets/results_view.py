@@ -36,8 +36,13 @@ from ...domain.design.matching_design import (
     matching_network_design_from_frequency,
 )
 from ...domain.environment.ground import GroundKind
-from ...domain.measurement import Measurement, MeasurementPoint
+from ...domain.measurement import Measurement, MeasurementPoint, MeasurementSession
 from ...domain.measurement_comparison import compare_measurement
+from ...domain.measurement_uncertainty import (
+    MeasurementDocumentationStatus,
+    MeasurementUncertaintyLevel,
+    assess_measurement_uncertainty,
+)
 from ...domain.projects.project import DesignVariant
 from ...domain.simulation.band_result import BandAnalysisResult, BandResult
 from ...domain.simulation.band_summary import summarize_band
@@ -222,6 +227,7 @@ class ResultsView(QWidget):
 
         self._measurements: tuple[Measurement, ...] = ()
         self._measurement_session_names: dict[UUID, str] = {}
+        self._measurement_session_data: dict[UUID, MeasurementSession] = {}
         self._measurement_selector = QComboBox(self._measurements_tab)
         self._measurement_selector_label = QLabel(self._measurements_tab)
         self._measurement_selector.currentIndexChanged.connect(self._render_measurements)
@@ -281,9 +287,52 @@ class ResultsView(QWidget):
         measurement_controls.addWidget(self._measurement_compare)
         measurement_controls.addWidget(self._measurement_tune)
         measurement_controls.addStretch(1)
+        self._uncertainty_group = QGroupBox(self._measurements_tab)
+        self._uncertainty_level = QLabel(self._uncertainty_group)
+        self._uncertainty_level.setTextFormat(Qt.TextFormat.PlainText)
+        self._uncertainty_group.setVisible(False)
+        self._uncertainty_factors = QLabel(self._uncertainty_group)
+        self._uncertainty_factors.setWordWrap(True)
+        self._uncertainty_factors.setTextFormat(Qt.TextFormat.PlainText)
+        self._uncertainty_factors.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        self._uncertainty_warnings = QLabel(self._uncertainty_group)
+        self._uncertainty_warnings.setWordWrap(True)
+        self._uncertainty_warnings.setTextFormat(Qt.TextFormat.PlainText)
+        self._uncertainty_warnings.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        self._uncertainty_warnings.setStyleSheet(f"color: {self._colors.reactance.name()};")
+        self._uncertainty_disclaimer = QLabel(self._uncertainty_group)
+        self._uncertainty_disclaimer.setWordWrap(True)
+        self._uncertainty_disclaimer.setTextFormat(Qt.TextFormat.PlainText)
+        self._uncertainty_disclaimer.setStyleSheet("font-style: italic;")
+        uncertainty_layout = QVBoxLayout(self._uncertainty_group)
+        uncertainty_layout.addWidget(self._uncertainty_level)
+        uncertainty_layout.addWidget(self._uncertainty_factors)
+        uncertainty_layout.addWidget(self._uncertainty_warnings)
+        uncertainty_layout.addWidget(self._uncertainty_disclaimer)
+        apply_help(self._uncertainty_group, self._translator, "measurement.uncertainty.title")
+        apply_help(
+            self._uncertainty_level,
+            self._translator,
+            "measurement.uncertainty.level",
+        )
+        apply_help(
+            self._uncertainty_factors,
+            self._translator,
+            "measurement.uncertainty.factors",
+        )
+        apply_help(
+            self._uncertainty_warnings,
+            self._translator,
+            "measurement.uncertainty.warnings",
+        )
         measurement_layout = QVBoxLayout(self._measurements_tab)
         measurement_layout.setContentsMargins(0, 0, 0, 0)
         measurement_layout.addLayout(measurement_controls)
+        measurement_layout.addWidget(self._uncertainty_group)
         measurement_layout.addWidget(self._measurement_details)
         measurement_layout.addWidget(self._measurement_comparison)
         measurement_layout.addWidget(self._measurement_resonance)
@@ -565,9 +614,11 @@ class ResultsView(QWidget):
         self,
         measurements: tuple[Measurement, ...],
         session_names: dict[UUID, str] | None = None,
+        sessions: tuple[MeasurementSession, ...] = (),
     ) -> None:
         self._measurements = measurements
         self._measurement_session_names = session_names or {}
+        self._measurement_session_data = {session.id: session for session in sessions}
         self._measurement_selector.blockSignals(True)
         self._measurement_selector.clear()
         for measurement in measurements:
@@ -878,6 +929,30 @@ class ResultsView(QWidget):
         self._measurement_sessions.setText(self._translator.t("measurement.sessions"))
         self._measurement_compare.setText(self._translator.t("measurement.compare"))
         self._measurement_tune.setText(self._translator.t("measurement.tune"))
+        self._uncertainty_group.setTitle(self._translator.t("measurement.uncertainty.title"))
+        self._uncertainty_disclaimer.setText(
+            self._translator.t("measurement.uncertainty.disclaimer")
+        )
+        apply_help(
+            self._uncertainty_group,
+            self._translator,
+            "measurement.uncertainty.title",
+        )
+        apply_help(
+            self._uncertainty_level,
+            self._translator,
+            "measurement.uncertainty.level",
+        )
+        apply_help(
+            self._uncertainty_factors,
+            self._translator,
+            "measurement.uncertainty.factors",
+        )
+        apply_help(
+            self._uncertainty_warnings,
+            self._translator,
+            "measurement.uncertainty.warnings",
+        )
         self._measurement_metric.setItemText(0, self._translator.t("table.swr"))
         self._measurement_metric.setItemText(1, self._translator.t("table.resistance"))
         self._measurement_metric.setItemText(2, self._translator.t("table.reactance"))
@@ -1536,6 +1611,7 @@ class ResultsView(QWidget):
         )
         self._measurement_resonance.setText("")
         self._measurement_resonance.setVisible(False)
+        self._uncertainty_group.setVisible(False)
         index = self._measurement_selector.currentIndex()
         valid = 0 <= index < len(self._measurements)
         self._measurement_edit.setEnabled(valid)
@@ -1544,6 +1620,8 @@ class ResultsView(QWidget):
         if not valid:
             return
         measurement = self._measurements[index]
+        self._uncertainty_group.setVisible(True)
+        self._render_measurement_uncertainty(measurement)
         self._measurement_compare.setEnabled(len(self._measurements) >= 2)
         details = []
         session = (
@@ -1759,6 +1837,133 @@ class ResultsView(QWidget):
             )
         self._measurement_resonance.setText(" · ".join(resonance_parts))
         self._measurement_resonance.setVisible(bool(resonance_parts))
+
+    def _render_measurement_uncertainty(self, measurement: Measurement) -> None:
+        session = (
+            self._measurement_session_data.get(measurement.session_id)
+            if measurement.session_id is not None
+            else None
+        )
+        assessment = assess_measurement_uncertainty(
+            measurement,
+            session=session,
+            simulation=self._result,
+        )
+        t = self._translator.t
+        level = t(f"measurement.uncertainty.level.{assessment.level.value}")
+        self._uncertainty_level.setText(t("measurement.uncertainty.level_label", level=level))
+        level_color = {
+            MeasurementUncertaintyLevel.DOCUMENTED: self._colors.swr,
+            MeasurementUncertaintyLevel.PARTIAL: self._colors.reactance,
+            MeasurementUncertaintyLevel.LIMITED: self._colors.feed,
+        }[assessment.level]
+        self._uncertainty_level.setStyleSheet(f"font-weight: bold; color: {level_color.name()};")
+        lines = [
+            self._documentation_line(
+                "calibration",
+                assessment.calibration_status,
+                assessment.calibration_value,
+            ),
+            self._documentation_line(
+                "reference_plane",
+                assessment.reference_plane_status,
+                assessment.reference_plane_value,
+            ),
+            self._documentation_line(
+                "feed_line",
+                assessment.feed_line_status,
+                assessment.feed_line_value,
+            ),
+        ]
+        if assessment.conditions_status is MeasurementDocumentationStatus.DOCUMENTED:
+            value = assessment.conditions_value
+            if assessment.session_name:
+                value = f"{assessment.session_name}: {value}"
+            lines.append(t("measurement.uncertainty.conditions_value", value=value))
+        else:
+            lines.append(t("measurement.uncertainty.conditions_missing"))
+        lines.append(
+            t(
+                "measurement.uncertainty.points_value",
+                count=assessment.point_count,
+                start=f"{assessment.start_frequency_hz / 1e6:.6f}",
+                stop=f"{assessment.stop_frequency_hz / 1e6:.6f}",
+                gap=f"{assessment.max_spacing_hz / 1e3:.3f}",
+            )
+        )
+        lines.append(
+            t(
+                "measurement.uncertainty.reference_impedance_value",
+                value=f"{assessment.reference_impedance_ohm:g}",
+            )
+        )
+        if not assessment.resonance_frequencies_hz:
+            lines.append(t("measurement.uncertainty.resonance_none"))
+        elif len(assessment.resonance_frequencies_hz) == 1:
+            lines.append(
+                t(
+                    "measurement.uncertainty.resonance_one",
+                    frequency=f"{assessment.resonance_frequencies_hz[0] / 1e6:.6f}",
+                )
+            )
+        else:
+            frequencies = ", ".join(
+                f"{frequency / 1e6:.3f}" for frequency in assessment.resonance_frequencies_hz
+            )
+            lines.append(
+                t(
+                    "measurement.uncertainty.resonance_multiple",
+                    count=len(assessment.resonance_frequencies_hz),
+                    frequencies=frequencies,
+                )
+            )
+        if assessment.compared_count is None:
+            lines.append(t("measurement.uncertainty.comparison_unavailable"))
+        else:
+            coverage = assessment.coverage_percent or 0.0
+            lines.append(
+                t(
+                    "measurement.uncertainty.comparison_value",
+                    compared=assessment.compared_count,
+                    total=assessment.point_count,
+                    coverage=f"{coverage:.0f}",
+                )
+            )
+            if assessment.simulated_max_spacing_hz is not None:
+                if assessment.simulated_max_spacing_hz > 0.0:
+                    lines.append(
+                        t(
+                            "measurement.uncertainty.simulation_spacing_value",
+                            gap=f"{assessment.simulated_max_spacing_hz / 1e3:.3f}",
+                        )
+                    )
+                else:
+                    lines.append(t("measurement.uncertainty.simulation_single"))
+        self._uncertainty_factors.setText("\n".join(lines))
+        warnings = [t(key) for key in assessment.warnings]
+        self._uncertainty_warnings.setText(
+            "\n".join(warnings) if warnings else t("measurement.uncertainty.warnings_none")
+        )
+        self._uncertainty_warnings.setStyleSheet(f"color: {self._colors.reactance.name()};")
+        self._uncertainty_disclaimer.setText(t("measurement.uncertainty.disclaimer"))
+
+    def _documentation_line(
+        self,
+        prefix: str,
+        status: MeasurementDocumentationStatus,
+        value: str,
+    ) -> str:
+        if status is MeasurementDocumentationStatus.MISSING:
+            return self._translator.t(f"measurement.uncertainty.{prefix}_missing")
+        if status is MeasurementDocumentationStatus.UNCERTAIN:
+            return self._translator.t(
+                f"measurement.uncertainty.{prefix}_uncertain",
+                value=value,
+            )
+        return self._translator.t(
+            f"measurement.uncertainty.{prefix}_value",
+            value=value,
+        )
 
     def _measurement_readout(
         self,

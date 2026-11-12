@@ -5369,6 +5369,7 @@ class MainWindow(QMainWindow):
         self._results.set_measurements(
             self._project.measurements,
             self._measurement_session_names(),
+            self._project.measurement_sessions,
         )
 
     def _tabs_select_measurements(self) -> None:

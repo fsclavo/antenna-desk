@@ -183,6 +183,7 @@ def test_main_window_sections_actions_and_tabs_have_help(window) -> None:  # typ
     assert "pre-flight" in window._preflight_action.toolTip().lower()
     assert "sessions" in window._measurement_sessions_action.toolTip().lower()
     assert "dimension" in window._tuning_action.toolTip().lower()
+    assert "documentation" in window._results._uncertainty_group.toolTip().lower()
 
     design_tab = window._sidebar_tabs.indexOf(window._design_tab)
     simulation_tab = window._sidebar_tabs.indexOf(window._simulation_tab)
@@ -207,6 +208,7 @@ def test_main_window_sections_actions_and_tabs_have_help(window) -> None:  # typ
     assert "construir" in window._preflight_action.toolTip().lower()
     assert "sesiones" in window._measurement_sessions_action.toolTip().lower()
     assert "dimensión" in window._tuning_action.toolTip().lower()
+    assert "documentación" in window._results._uncertainty_group.toolTip().lower()
 
     assert "parámetros" in window._sidebar_tabs.tabToolTip(design_tab).lower()
     assert "barrido" in window._sidebar_tabs.tabToolTip(simulation_tab).lower()

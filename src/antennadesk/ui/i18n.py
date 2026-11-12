@@ -3424,6 +3424,37 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Optional field session that groups measurements taken under the same setup.",
         Language.SPANISH: "Sesión de campo opcional que agrupa mediciones tomadas con la misma instalación.",
     },
+    "help.measurement.uncertainty.title": {
+        Language.ENGLISH: "Documentation and comparison limits for the selected measurement.",
+        Language.SPANISH: "Límites de documentación y comparación de la medición seleccionada.",
+    },
+    "help.measurement.uncertainty.level": {
+        Language.ENGLISH: (
+            "Documentation quality based on calibration, reference plane, feed line, "
+            "and session conditions; not a numerical uncertainty."
+        ),
+        Language.SPANISH: (
+            "Calidad de documentación según calibración, plano de referencia, línea y "
+            "condiciones; no es una incertidumbre numérica."
+        ),
+    },
+    "help.measurement.uncertainty.factors": {
+        Language.ENGLISH: (
+            "Documented fields, sweep resolution, resonance count, and simulated coverage."
+        ),
+        Language.SPANISH: (
+            "Campos documentados, resolución del barrido, cantidad de resonancias y "
+            "cobertura simulada."
+        ),
+    },
+    "help.measurement.uncertainty.warnings": {
+        Language.ENGLISH: (
+            "Missing metadata and comparison limits that can affect interpretation."
+        ),
+        Language.SPANISH: (
+            "Metadatos faltantes y límites de comparación que pueden afectar la interpretación."
+        ),
+    },
     "help.measurement.sessions": {
         Language.ENGLISH: "Open the measurement timeline and session manager.",
         Language.SPANISH: "Abrí la línea de tiempo y el gestor de sesiones de medición.",
@@ -5506,6 +5537,212 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "measurement.comparison_delta_swr": {
         Language.ENGLISH: "ΔSWR",
         Language.SPANISH: "ΔROE",
+    },
+    "measurement.uncertainty.title": {
+        Language.ENGLISH: "Measurement uncertainty",
+        Language.SPANISH: "Incertidumbre de la medición",
+    },
+    "measurement.uncertainty.level.documented": {
+        Language.ENGLISH: "Documented",
+        Language.SPANISH: "Documentada",
+    },
+    "measurement.uncertainty.level.partial": {
+        Language.ENGLISH: "Partially documented",
+        Language.SPANISH: "Parcialmente documentada",
+    },
+    "measurement.uncertainty.level.limited": {
+        Language.ENGLISH: "Limited documentation",
+        Language.SPANISH: "Documentación limitada",
+    },
+    "measurement.uncertainty.level_label": {
+        Language.ENGLISH: "Documentation: {level}",
+        Language.SPANISH: "Documentación: {level}",
+    },
+    "measurement.uncertainty.calibration_value": {
+        Language.ENGLISH: "Calibration: {value}",
+        Language.SPANISH: "Calibración: {value}",
+    },
+    "measurement.uncertainty.calibration_missing": {
+        Language.ENGLISH: "Calibration: not specified",
+        Language.SPANISH: "Calibración: no especificada",
+    },
+    "measurement.uncertainty.calibration_uncertain": {
+        Language.ENGLISH: "Calibration: {value} (method not recognized)",
+        Language.SPANISH: "Calibración: {value} (método no reconocido)",
+    },
+    "measurement.uncertainty.reference_plane_value": {
+        Language.ENGLISH: "Reference plane: {value}",
+        Language.SPANISH: "Plano de referencia: {value}",
+    },
+    "measurement.uncertainty.reference_plane_missing": {
+        Language.ENGLISH: "Reference plane: not specified",
+        Language.SPANISH: "Plano de referencia: no especificado",
+    },
+    "measurement.uncertainty.feed_line_value": {
+        Language.ENGLISH: "Feed line/accessories: {value}",
+        Language.SPANISH: "Línea de alimentación/accesorios: {value}",
+    },
+    "measurement.uncertainty.feed_line_missing": {
+        Language.ENGLISH: "Feed line/accessories: not specified",
+        Language.SPANISH: "Línea de alimentación/accesorios: no especificados",
+    },
+    "measurement.uncertainty.conditions_value": {
+        Language.ENGLISH: "Conditions: {value}",
+        Language.SPANISH: "Condiciones: {value}",
+    },
+    "measurement.uncertainty.conditions_missing": {
+        Language.ENGLISH: "Conditions: no session conditions recorded",
+        Language.SPANISH: "Condiciones: no se registraron condiciones de sesión",
+    },
+    "measurement.uncertainty.points_value": {
+        Language.ENGLISH: ("Points: {count} · {start} - {stop} MHz · max spacing {gap} kHz"),
+        Language.SPANISH: ("Puntos: {count} · {start} - {stop} MHz · separación máxima {gap} kHz"),
+    },
+    "measurement.uncertainty.reference_impedance_value": {
+        Language.ENGLISH: "Measurement reference impedance: {value} Ω",
+        Language.SPANISH: "Impedancia de referencia de la medición: {value} Ω",
+    },
+    "measurement.uncertainty.resonance_none": {
+        Language.ENGLISH: "Resonance: none in the sweep",
+        Language.SPANISH: "Resonancia: ninguna en el barrido",
+    },
+    "measurement.uncertainty.resonance_one": {
+        Language.ENGLISH: "Resonance: {frequency} MHz",
+        Language.SPANISH: "Resonancia: {frequency} MHz",
+    },
+    "measurement.uncertainty.resonance_multiple": {
+        Language.ENGLISH: "Resonances ({count}): {frequencies} MHz",
+        Language.SPANISH: "Resonancias ({count}): {frequencies} MHz",
+    },
+    "measurement.uncertainty.comparison_unavailable": {
+        Language.ENGLISH: "Simulated comparison: no simulation result",
+        Language.SPANISH: "Comparación simulada: no hay resultado de simulación",
+    },
+    "measurement.uncertainty.comparison_value": {
+        Language.ENGLISH: (
+            "Simulated comparison: {compared}/{total} measured points inside the "
+            "simulated range ({coverage}%)"
+        ),
+        Language.SPANISH: (
+            "Comparación simulada: {compared}/{total} puntos medidos dentro del "
+            "rango simulado ({coverage}%)"
+        ),
+    },
+    "measurement.uncertainty.simulation_spacing_value": {
+        Language.ENGLISH: "Simulated spacing: max {gap} kHz",
+        Language.SPANISH: "Separación simulada: máxima {gap} kHz",
+    },
+    "measurement.uncertainty.simulation_single": {
+        Language.ENGLISH: "Simulated sweep: single frequency",
+        Language.SPANISH: "Barrido simulado: una sola frecuencia",
+    },
+    "measurement.uncertainty.warnings_none": {
+        Language.ENGLISH: (
+            "No missing documentation fields were found; the remaining limits are "
+            "physical and calibration-related."
+        ),
+        Language.SPANISH: (
+            "No se encontraron campos de documentación faltantes; los límites "
+            "restantes son físicos y de calibración."
+        ),
+    },
+    "measurement.uncertainty.disclaimer": {
+        Language.ENGLISH: (
+            "This card summarizes documentation and comparison coverage. It is not "
+            "a calibrated uncertainty budget and does not assign ±Ω or ±dB values. "
+            "Use a calibrated VNA, a known reference plane, and repeat measurements "
+            "where possible."
+        ),
+        Language.SPANISH: (
+            "Esta tarjeta resume la documentación y la cobertura de comparación. No "
+            "es un presupuesto de incertidumbre calibrado y no asigna valores ±Ω ni "
+            "±dB. Usá un VNA calibrado, un plano de referencia conocido y repetí "
+            "mediciones cuando sea posible."
+        ),
+    },
+    "measurement.uncertainty.warning.calibration_missing": {
+        Language.ENGLISH: (
+            "Calibration is not specified; measured impedance may include instrument "
+            "and fixture errors."
+        ),
+        Language.SPANISH: (
+            "No se especificó la calibración; la impedancia medida puede incluir "
+            "errores del instrumento y del fixture."
+        ),
+    },
+    "measurement.uncertainty.warning.calibration_unverified": {
+        Language.ENGLISH: (
+            "The calibration method is not recognized; verify that it applies to this measurement."
+        ),
+        Language.SPANISH: (
+            "No se reconoce el método de calibración; verificá que se aplique a esta medición."
+        ),
+    },
+    "measurement.uncertainty.warning.reference_plane_missing": {
+        Language.ENGLISH: (
+            "The reference plane is not specified; a reference-plane offset shifts "
+            "impedance and SWR."
+        ),
+        Language.SPANISH: (
+            "No se especificó el plano de referencia; un desplazamiento del plano "
+            "cambia la impedancia y la ROE."
+        ),
+    },
+    "measurement.uncertainty.warning.feed_line_missing": {
+        Language.ENGLISH: (
+            "Feed line and accessories are not specified; they transform impedance and add loss."
+        ),
+        Language.SPANISH: (
+            "No se especificaron la línea ni los accesorios; transforman la impedancia "
+            "y agregan pérdidas."
+        ),
+    },
+    "measurement.uncertainty.warning.conditions_missing": {
+        Language.ENGLISH: (
+            "No session conditions are recorded; ground, height, weather, and nearby "
+            "objects are unknown."
+        ),
+        Language.SPANISH: (
+            "No hay condiciones de sesión registradas; se desconocen suelo, altura, "
+            "clima y objetos cercanos."
+        ),
+    },
+    "measurement.uncertainty.warning.no_resonance": {
+        Language.ENGLISH: (
+            "No resonance is present in the measured sweep; resonance comparison is unavailable."
+        ),
+        Language.SPANISH: (
+            "No hay resonancia en el barrido medido; la comparación de resonancia no "
+            "está disponible."
+        ),
+    },
+    "measurement.uncertainty.warning.multiple_resonances": {
+        Language.ENGLISH: (
+            "The sweep contains multiple resonances; identify the one for the operating band."
+        ),
+        Language.SPANISH: (
+            "El barrido contiene varias resonancias; identificá la de la banda de operación."
+        ),
+    },
+    "measurement.uncertainty.warning.no_comparison": {
+        Language.ENGLISH: (
+            "No measured points fall inside the simulated frequency range; measured "
+            "and simulated results cannot be compared."
+        ),
+        Language.SPANISH: (
+            "Ningún punto medido cae dentro del rango simulado; no se pueden comparar "
+            "los resultados medidos y simulados."
+        ),
+    },
+    "measurement.uncertainty.warning.partial_comparison": {
+        Language.ENGLISH: (
+            "Less than half of the measured points overlap the simulated range; the "
+            "comparison is partial."
+        ),
+        Language.SPANISH: (
+            "Menos de la mitad de los puntos medidos se superponen con el rango "
+            "simulado; la comparación es parcial."
+        ),
     },
     "tuning.title": {
         Language.ENGLISH: "Sensitivity tuning assistant",

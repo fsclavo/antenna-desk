@@ -245,7 +245,10 @@ formats its points and warnings. The tuning assistant runs the
 bounded solver probes around the primary dimension plus one verification probe,
 then applies the proposed parameters through the existing family UI adapter.
 The estimate is a local finite-difference result; no measurement path performs
-electromagnetic calculations itself.
+electromagnetic calculations itself. The measurement uncertainty card uses a
+pure `measurement_uncertainty` assessment that reports documentation gaps,
+resonance count, sweep spacing, and simulated comparison coverage. It does not
+invent numerical uncertainty values.
 
 The frequency-first estimator layer is domain code: `DesignIntent` and
 `DimensionEstimate` are Qt-free, and `EstimateAntennaDimensions` is an

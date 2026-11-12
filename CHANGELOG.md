@@ -122,6 +122,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   through the existing family adapter, records undo history, and runs a normal
   simulation. The dialog states that this is local model guidance, not a
   measurement or a guarantee.
+- **Measurement uncertainty card.** The **Measurements** tab now shows a
+  documentation and comparison-limits card for the selected sweep. It reports
+  calibration, reference plane, feed line/accessories, session conditions,
+  point count, span, maximum spacing, reference impedance, resonance count, and
+  how many measured points fall inside the simulated range. It classifies the
+  record as documented, partially documented, or limited documentation and
+  lists explicit warnings for missing metadata, no/multiple resonances, and
+  no/partial coverage. The card is deliberately qualitative: it does not
+  invent ±Ω or ±dB uncertainty values.
 
 ### Changed
 
