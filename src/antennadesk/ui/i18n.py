@@ -1542,6 +1542,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Tuning Assistant...",
         Language.SPANISH: "Asistente de ajuste...",
     },
+    "action.parameter_sweep": {
+        Language.ENGLISH: "Parameter Sweep...",
+        Language.SPANISH: "Barrido de parámetros...",
+    },
     "action.exit": {Language.ENGLISH: "Exit", Language.SPANISH: "Salir"},
     "action.about": {
         Language.ENGLISH: "About AntennaDesk",
@@ -3384,6 +3388,50 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "medida y la sensibilidad del solver."
         ),
     },
+    "help.action.parameter_sweep": {
+        Language.ENGLISH: ("Run a bounded 1D or 2D what-if sweep over family design variables."),
+        Language.SPANISH: ("Ejecutá un barrido acotado 1D o 2D de variables del diseño."),
+    },
+    "help.sweep.axes": {
+        Language.ENGLISH: "Choose the variable ranges and number of points for the sweep.",
+        Language.SPANISH: "Elegí los rangos de variables y la cantidad de puntos del barrido.",
+    },
+    "help.sweep.variable": {
+        Language.ENGLISH: "Family variable to vary; the other variables keep their current values.",
+        Language.SPANISH: "Variable de la familia a variar; las demás conservan sus valores actuales.",
+    },
+    "help.sweep.metric": {
+        Language.ENGLISH: "Metric shown at the target frequency.",
+        Language.SPANISH: "Métrica mostrada en la frecuencia objetivo.",
+    },
+    "help.sweep.target": {
+        Language.ENGLISH: "Frequency at which every sweep point is evaluated.",
+        Language.SPANISH: "Frecuencia en la que se evalúa cada punto del barrido.",
+    },
+    "help.sweep.run": {
+        Language.ENGLISH: "Run the bounded solver sweep.",
+        Language.SPANISH: "Ejecutá el barrido acotado del solver.",
+    },
+    "help.sweep.cancel": {
+        Language.ENGLISH: "Stop the running sweep and keep completed points.",
+        Language.SPANISH: "Detené el barrido y conservá los puntos completados.",
+    },
+    "help.sweep.apply_selected": {
+        Language.ENGLISH: "Apply the variable values of the selected point to the design.",
+        Language.SPANISH: "Aplicá al diseño los valores de la variable del punto seleccionado.",
+    },
+    "help.sweep.apply_best": {
+        Language.ENGLISH: "Apply the point with the lowest modeled SWR.",
+        Language.SPANISH: "Aplicá el punto con la ROE modelada más baja.",
+    },
+    "help.sweep.plot": {
+        Language.ENGLISH: "1D metric overlay with a dashed line at the current design value.",
+        Language.SPANISH: "Superposición de métricas 1D con una línea punteada en el valor actual.",
+    },
+    "help.sweep.table": {
+        Language.ENGLISH: "Sweep points; in 2D the colored grid is the heatmap and supports selection.",
+        Language.SPANISH: "Puntos del barrido; en 2D la grilla coloreada es el mapa de calor y permite seleccionar.",
+    },
     "help.tuning.measurement": {
         Language.ENGLISH: "Measurement used for the current physical reference.",
         Language.SPANISH: "Medición usada como referencia física actual.",
@@ -4899,6 +4947,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Tuning change applied.",
         Language.SPANISH: "Cambio de ajuste aplicado.",
     },
+    "status.parameter_sweep_applied": {
+        Language.ENGLISH: "Sweep point applied.",
+        Language.SPANISH: "Punto del barrido aplicado.",
+    },
     "design.provenance": {
         Language.ENGLISH: "Estimated design: {method} · confidence: {confidence} · tolerance: {tolerance}",
         Language.SPANISH: "Diseño estimado: {method} · confianza: {confidence} · tolerancia: {tolerance}",
@@ -5743,6 +5795,186 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Menos de la mitad de los puntos medidos se superponen con el rango "
             "simulado; la comparación es parcial."
         ),
+    },
+    "sweep.title": {
+        Language.ENGLISH: "Parameter sweep",
+        Language.SPANISH: "Barrido de parámetros",
+    },
+    "sweep.axes": {
+        Language.ENGLISH: "Sweep axes",
+        Language.SPANISH: "Ejes del barrido",
+    },
+    "sweep.x_axis": {
+        Language.ENGLISH: "X variable",
+        Language.SPANISH: "Variable X",
+    },
+    "sweep.y_axis": {
+        Language.ENGLISH: "Y variable",
+        Language.SPANISH: "Variable Y",
+    },
+    "sweep.from": {
+        Language.ENGLISH: "From",
+        Language.SPANISH: "Desde",
+    },
+    "sweep.to": {
+        Language.ENGLISH: "To",
+        Language.SPANISH: "Hasta",
+    },
+    "sweep.points": {
+        Language.ENGLISH: "Points",
+        Language.SPANISH: "Puntos",
+    },
+    "sweep.metric": {
+        Language.ENGLISH: "Metric",
+        Language.SPANISH: "Métrica",
+    },
+    "sweep.metric.swr": {
+        Language.ENGLISH: "SWR",
+        Language.SPANISH: "ROE",
+    },
+    "sweep.metric.resistance": {
+        Language.ENGLISH: "Resistance",
+        Language.SPANISH: "Resistencia",
+    },
+    "sweep.metric.reactance": {
+        Language.ENGLISH: "Reactance",
+        Language.SPANISH: "Reactancia",
+    },
+    "sweep.metric.impedance_magnitude": {
+        Language.ENGLISH: "Impedance magnitude",
+        Language.SPANISH: "Magnitud de impedancia",
+    },
+    "sweep.target": {
+        Language.ENGLISH: "Target frequency",
+        Language.SPANISH: "Frecuencia objetivo",
+    },
+    "sweep.none": {
+        Language.ENGLISH: "None (1D sweep)",
+        Language.SPANISH: "Ninguna (barrido 1D)",
+    },
+    "sweep.budget_1d": {
+        Language.ENGLISH: "{runs} solver runs ({x} points)",
+        Language.SPANISH: "{runs} ejecuciones del solver ({x} puntos)",
+    },
+    "sweep.budget_2d": {
+        Language.ENGLISH: "{runs} solver runs ({x} x {y})",
+        Language.SPANISH: "{runs} ejecuciones del solver ({x} x {y})",
+    },
+    "sweep.budget_unavailable": {
+        Language.ENGLISH: "Budget unavailable; check the axis ranges.",
+        Language.SPANISH: "Presupuesto no disponible; revisá los rangos.",
+    },
+    "sweep.budget_warning": {
+        Language.ENGLISH: (
+            "Large sweep: {runs} solver runs. Reduce the points for a faster what-if."
+        ),
+        Language.SPANISH: (
+            "Barrido grande: {runs} ejecuciones del solver. Reducí los puntos para un what-if más rápido."
+        ),
+    },
+    "sweep.run": {
+        Language.ENGLISH: "Run sweep",
+        Language.SPANISH: "Ejecutar barrido",
+    },
+    "sweep.cancel": {
+        Language.ENGLISH: "Cancel sweep",
+        Language.SPANISH: "Cancelar barrido",
+    },
+    "sweep.apply_selected": {
+        Language.ENGLISH: "Apply selected",
+        Language.SPANISH: "Aplicar seleccionado",
+    },
+    "sweep.apply_best": {
+        Language.ENGLISH: "Apply best SWR",
+        Language.SPANISH: "Aplicar mejor ROE",
+    },
+    "sweep.progress": {
+        Language.ENGLISH: "Sweep points: {completed}/{total}",
+        Language.SPANISH: "Puntos del barrido: {completed}/{total}",
+    },
+    "sweep.progress_done": {
+        Language.ENGLISH: "Sweep complete.",
+        Language.SPANISH: "Barrido completo.",
+    },
+    "sweep.cancelling": {
+        Language.ENGLISH: "Cancelling the sweep...",
+        Language.SPANISH: "Cancelando el barrido...",
+    },
+    "sweep.cancelled": {
+        Language.ENGLISH: "Sweep cancelled; completed points are shown.",
+        Language.SPANISH: "Barrido cancelado; se muestran los puntos completados.",
+    },
+    "sweep.failed": {
+        Language.ENGLISH: "Sweep failed.",
+        Language.SPANISH: "El barrido falló.",
+    },
+    "sweep.summary": {
+        Language.ENGLISH: (
+            "Completed {completed}/{total} points · {valid} valid · best SWR {best}"
+        ),
+        Language.SPANISH: (
+            "Completados {completed}/{total} puntos · {valid} válidos · mejor ROE {best}"
+        ),
+    },
+    "sweep.summary_cancelled": {
+        Language.ENGLISH: (
+            "Cancelled after {completed}/{total} points · {valid} valid · best SWR {best}"
+        ),
+        Language.SPANISH: (
+            "Cancelado tras {completed}/{total} puntos · {valid} válidos · mejor ROE {best}"
+        ),
+    },
+    "sweep.selected": {
+        Language.ENGLISH: (
+            "Selected: X {x} · Y {y} · SWR {swr} · R {r} Ω · X {x_reactance} Ω · |Z| {z} Ω"
+        ),
+        Language.SPANISH: (
+            "Seleccionado: X {x} · Y {y} · ROE {swr} · R {r} Ω · X {x_reactance} Ω · |Z| {z} Ω"
+        ),
+    },
+    "sweep.status": {
+        Language.ENGLISH: "Status",
+        Language.SPANISH: "Estado",
+    },
+    "sweep.valid": {
+        Language.ENGLISH: "Valid",
+        Language.SPANISH: "Válido",
+    },
+    "sweep.best_swr": {
+        Language.ENGLISH: "Best SWR",
+        Language.SPANISH: "Mejor ROE",
+    },
+    "sweep.cell_tooltip": {
+        Language.ENGLISH: "SWR {swr} · R {r} Ω · X {x} Ω · |Z| {z} Ω",
+        Language.SPANISH: "ROE {swr} · R {r} Ω · X {x} Ω · |Z| {z} Ω",
+    },
+    "sweep.heatmap_hint": {
+        Language.ENGLISH: "Rows: {y} · Columns: {x} · Color: {metric}",
+        Language.SPANISH: "Filas: {y} · Columnas: {x} · Color: {metric}",
+    },
+    "sweep.plot_title": {
+        Language.ENGLISH: "{metric} across the sweep",
+        Language.SPANISH: "{metric} a lo largo del barrido",
+    },
+    "sweep.error.range": {
+        Language.ENGLISH: "The axis maximum must be greater than its minimum.",
+        Language.SPANISH: "El máximo del eje debe ser mayor que el mínimo.",
+    },
+    "sweep.error.duplicate": {
+        Language.ENGLISH: "Choose different variables for X and Y.",
+        Language.SPANISH: "Elegí variables distintas para X e Y.",
+    },
+    "sweep.error.too_many": {
+        Language.ENGLISH: "The sweep is limited to {maximum} points.",
+        Language.SPANISH: "El barrido está limitado a {maximum} puntos.",
+    },
+    "sweep.no_variables": {
+        Language.ENGLISH: "This family has no continuous or integer variables to sweep.",
+        Language.SPANISH: "Esta familia no tiene variables continuas o enteras para barrer.",
+    },
+    "sweep.unavailable_family": {
+        Language.ENGLISH: "The parameter sweep is not available for this family.",
+        Language.SPANISH: "El barrido de parámetros no está disponible para esta familia.",
     },
     "tuning.title": {
         Language.ENGLISH: "Sensitivity tuning assistant",
@@ -6725,6 +6957,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "history.tuning": {
         Language.ENGLISH: "Apply tuning change",
         Language.SPANISH: "Aplicar cambio de ajuste",
+    },
+    "history.parameter_sweep": {
+        Language.ENGLISH: "Apply sweep point",
+        Language.SPANISH: "Aplicar punto del barrido",
     },
     "history.simulate": {
         Language.ENGLISH: "Simulate",

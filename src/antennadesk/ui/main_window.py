@@ -295,6 +295,7 @@ from .dialogs.measurement_sessions_dialog import MeasurementSessionsDialog
 from .dialogs.moxon_dialog import MoxonDialog
 from .dialogs.ocfd_dialog import OCFDDialog
 from .dialogs.optimization_dialog import OptimizationDialog
+from .dialogs.parameter_sweep_dialog import ParameterSweepDialog
 from .dialogs.phased_vertical_dialog import PhasedVerticalDialog
 from .dialogs.preferences_dialog import PreferencesDialog
 from .dialogs.preflight_dialog import PreflightDialog
@@ -616,6 +617,8 @@ class MainWindow(QMainWindow):
         )
         self._tuning_action = QAction(self)
         self._tuning_action.triggered.connect(lambda: self.tune_measurement())
+        self._sweep_action = QAction(self)
+        self._sweep_action.triggered.connect(lambda: self.parameter_sweep())
 
         self._simulate_action = QAction(self)
         self._simulate_action.setShortcut(QKeySequence("F5"))
@@ -1350,6 +1353,7 @@ class MainWindow(QMainWindow):
         self._tools_menu.addAction(self._calculator_action)
         self._tools_menu.addAction(self._measurement_sessions_action)
         self._tools_menu.addAction(self._tuning_action)
+        self._tools_menu.addAction(self._sweep_action)
         self._tools_menu.addAction(self._compact_history_action)
 
         self._help_menu = self.menuBar().addMenu("")
@@ -1426,6 +1430,9 @@ class MainWindow(QMainWindow):
         self._tuning_action.setText(self._translator.t("action.tuning_assistant"))
         self._tuning_action.setToolTip(self._translator.t("help.action.tuning_assistant"))
         self._tuning_action.setWhatsThis(self._translator.t("help.action.tuning_assistant"))
+        self._sweep_action.setText(self._translator.t("action.parameter_sweep"))
+        self._sweep_action.setToolTip(self._translator.t("help.action.parameter_sweep"))
+        self._sweep_action.setWhatsThis(self._translator.t("help.action.parameter_sweep"))
         self._exit_action.setText(self._translator.t("action.exit"))
         self._about_action.setText(self._translator.t("action.about"))
         self._whats_this_action.setText(self._translator.t("action.whats_this"))
@@ -1879,6 +1886,9 @@ class MainWindow(QMainWindow):
             and self._tuning_supported(parameters)
             and self._solver is not None
         )
+        self._sweep_action.setEnabled(
+            idle and has_project and self._sweep_supported(parameters) and self._solver is not None
+        )
         self._preflight_action.setEnabled(idle and has_project)
         self._construction_action.setEnabled(idle and has_project)
         self._construction_record_action.setEnabled(idle and has_project)
@@ -2007,6 +2017,7 @@ class MainWindow(QMainWindow):
             self._calculator_action,
             self._measurement_sessions_action,
             self._tuning_action,
+            self._sweep_action,
             self._import_nec_action,
             self._import_mmana_action,
         ):
@@ -5156,6 +5167,56 @@ class MainWindow(QMainWindow):
             self._workflow_measurement_compared.add(self._design_id)
         self._update_workflow_ui()
 
+    @history_action("history.parameter_sweep")
+    def parameter_sweep(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._solver is None:
+            self._show_error(self._translator.t("error.solver"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        design = self._project.design_by_id(self._design_id)
+        availability = optimizer_availability(design.parameters)
+        descriptor = availability.descriptor
+        adapter = adapter_for(design.parameters)
+        if descriptor is None or adapter is None:
+            self._show_error(self._translator.t("sweep.unavailable_family"))
+            return
+        base_spec = self._with_project_chain(
+            design.parameters,
+            self._base_simulation_spec(design),
+        )
+        dialog = ParameterSweepDialog(
+            self._translator,
+            self._unit_system,
+            self._solver,
+            descriptor,
+            design,
+            base_spec,
+            self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        selected = dialog.selected_parameters()
+        if selected is None:
+            return
+        try:
+            adapter.apply_parameters(self, selected)
+            self._form_dirty = True
+            self._apply_fields()
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._last_status_key = "status.parameter_sweep_applied"
+        self._update_status_text()
+        self.simulate()
+
     @history_action("history.tuning")
     def tune_measurement(self, measurement: Measurement | None = None) -> None:
         if self._project is None or self._design_id is None:
@@ -5356,6 +5417,11 @@ class MainWindow(QMainWindow):
         except TypeError:
             return False
         return True
+
+    def _sweep_supported(self, parameters: AntennaDesignParameters | None) -> bool:
+        if parameters is None or adapter_for(parameters) is None:
+            return False
+        return optimizer_availability(parameters).descriptor is not None
 
     def _measurement_session_names(self) -> dict[UUID, str]:
         if self._project is None:

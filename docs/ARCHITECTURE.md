@@ -248,7 +248,11 @@ The estimate is a local finite-difference result; no measurement path performs
 electromagnetic calculations itself. The measurement uncertainty card uses a
 pure `measurement_uncertainty` assessment that reports documentation gaps,
 resonance count, sweep spacing, and simulated comparison coverage. It does not
-invent numerical uncertainty values.
+invent numerical uncertainty values. Parameter sweeps use the family optimizer
+descriptor for bounded variable sets and parameter construction; the
+`RunParameterSweep` use case runs each grid point through the solver in a
+worker thread. The dialog only renders the points and applies the selected
+parameters through the normal family adapter.
 
 The frequency-first estimator layer is domain code: `DesignIntent` and
 `DimensionEstimate` are Qt-free, and `EstimateAntennaDimensions` is an

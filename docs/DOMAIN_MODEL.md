@@ -596,6 +596,13 @@ count; and simulated comparison coverage/spacing. It returns a documentation
 level (`documented`, `partial`, `limited`) and explicit warning keys. It does
 not compute a numerical uncertainty budget or assign ±Ω/±dB values.
 
+`design/sweep.py` implements bounded parameter sweeps. `SweepAxis` stores
+strictly increasing values for one variable; `SweepPlan` combines one or two
+axes with a target frequency and metric; `SweepPoint` stores SWR, R, X, and
+`|Z|` at that frequency; `ParameterSweepResult` exposes valid points and the
+best modeled SWR. The total is capped at 400 points. Sweeps are transient
+what-if evaluations and are not persisted.
+
 `design/tuning.py` implements the bounded tuning estimate. It selects the
 measured resonance nearest the target (or the minimum-SWR point when there is
 no resonance), estimates `df/dD` from solver probes around the current primary

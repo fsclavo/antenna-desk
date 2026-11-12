@@ -1373,6 +1373,38 @@ known reference plane, and repeat measurements where possible. A low error
 against one simulation does not prove that the antenna or the simulation is
 correct.
 
+## Parameter sweeps (what-if)
+
+Use **Tools → Parameter Sweep...** to see how a family's primary design
+variables affect impedance and SWR at one target frequency. The sweep uses the
+same bounded variables as the family optimizer; the current design supplies
+the starting values for every variable that is not swept.
+
+Choose a **X variable** and, optionally, a **Y variable** for a 2D sweep. Set
+the range and number of points for each axis. The **Budget** label shows the
+total number of solver runs; the sweep is limited to 400 points and warns when
+more than 100 runs are requested. Every point runs the solver with the current
+feed chain, segmentation, ground, and all non-swept variables unchanged.
+
+**Metric** selects what the table and the 2D color grid show: SWR, resistance,
+reactance, or impedance magnitude at the **Target frequency**. A 1D sweep plots
+the selected metric; choosing resistance, reactance, or impedance magnitude
+also overlays R, X, and |Z| with a dashed line at the current design value. A
+2D sweep shows a colored grid (rows are Y values, columns are X values) that
+supports selecting a cell. The table shows every completed point, including
+invalid points and solver errors.
+
+**Apply selected** applies the variable values of the selected row or cell to
+the design; **Apply best SWR** applies the point with the lowest modeled SWR.
+Applying goes through the normal family editor, enters undo history, and runs a
+normal simulation.
+
+The sweep is a bounded what-if evaluation, not an optimization: it does not
+search between points, does not change variables that were not selected, and
+does not persist the grid. Invalid or failed points remain visible instead of
+being hidden. A low SWR at one frequency does not prove efficiency, bandwidth,
+pattern, or buildability; verify with a full simulation and measurement.
+
 ## Feed line
 
 Use **Simulation → Feed Line...** to configure a uniform transmission line between

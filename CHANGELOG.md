@@ -131,6 +131,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   lists explicit warnings for missing metadata, no/multiple resonances, and
   no/partial coverage. The card is deliberately qualitative: it does not
   invent ±Ω or ±dB uncertainty values.
+- **Parameter sweeps (what-if).** Added **Tools → Parameter Sweep...** for
+  bounded 1D and 2D sweeps over family optimizer variables. The dialog shows a
+  solver-run budget (capped at 400 points and warned above 100), evaluates the
+  selected grid at one target frequency, and reports SWR, R, X, and |Z|.
+  One-dimensional results use a metric plot with R/X/|Z| overlays and a
+  current-design marker; two-dimensional results use a selectable colored grid.
+  Invalid points and solver errors stay visible. **Apply selected** and
+  **Apply best SWR** update the design through the normal family adapter, enter
+  undo history, and run a simulation. Sweeps are transient and do not imply
+  optimization between points. No schema change.
 
 ### Changed
 
