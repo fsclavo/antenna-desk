@@ -3439,6 +3439,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Metric-by-design comparison table.",
         Language.SPANISH: "Tabla de métricas por diseño.",
     },
+    "help.confidence.title": {
+        Language.ENGLISH: "Evidence, modeled scope, limitations, and uncertainties for the current result.",
+        Language.SPANISH: "Evidencia, alcance modelado, limitaciones e incertidumbres del resultado actual.",
+    },
+    "help.confidence.topic": {
+        Language.ENGLISH: "Choose a result topic to read its practical meaning and limitations.",
+        Language.SPANISH: "Elegí un tema del resultado para leer su significado práctico y sus límites.",
+    },
     "help.installation.profiles": {
         Language.ENGLISH: "Saved profiles for this project; the selected one is active.",
         Language.SPANISH: "Perfiles guardados del proyecto; el seleccionado está activo.",
@@ -4878,6 +4886,177 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "tab.diagnostics": {Language.ENGLISH: "Diagnostics", Language.SPANISH: "Diagnósticos"},
     "tab.raw": {Language.ENGLISH: "Raw data", Language.SPANISH: "Datos crudos"},
+    "confidence.title": {
+        Language.ENGLISH: "Result confidence",
+        Language.SPANISH: "Confianza del resultado",
+    },
+    "confidence.topic_label": {
+        Language.ENGLISH: "What does this mean?",
+        Language.SPANISH: "¿Qué significa esto?",
+    },
+    "confidence.no_design": {
+        Language.ENGLISH: "Select a design to see its evidence and limitations.",
+        Language.SPANISH: "Seleccioná un diseño para ver su evidencia y limitaciones.",
+    },
+    "confidence.modeled": {
+        Language.ENGLISH: (
+            "Modeled: canonical wires, feed, ground, loads, and the feed-line/"
+            "matching post-processing chain."
+        ),
+        Language.SPANISH: (
+            "Modelado: hilos canónicos, alimentación, suelo, cargas y la cadena de "
+            "post-procesamiento de línea y adaptación."
+        ),
+    },
+    "confidence.uncertainties": {
+        Language.ENGLISH: (
+            "Dominant uncertainties: ground model, installation height, feed-line "
+            "routing, common-mode current, and construction tolerances."
+        ),
+        Language.SPANISH: (
+            "Incertidumbres dominantes: modelo de suelo, altura de instalación, "
+            "recorrido de la línea, corriente de modo común y tolerancias de construcción."
+        ),
+    },
+    "confidence.disclaimer": {
+        Language.ENGLISH: (
+            "The model is an estimate. Verify critical dimensions and the installed "
+            "match with measurements."
+        ),
+        Language.SPANISH: (
+            "El modelo es una estimación. Verificá las dimensiones críticas y la "
+            "adaptación instalada con mediciones."
+        ),
+    },
+    "confidence.topic.impedance": {
+        Language.ENGLISH: "Impedance",
+        Language.SPANISH: "Impedancia",
+    },
+    "confidence.topic.swr": {Language.ENGLISH: "SWR", Language.SPANISH: "ROE"},
+    "confidence.topic.efficiency": {
+        Language.ENGLISH: "Efficiency",
+        Language.SPANISH: "Eficiencia",
+    },
+    "confidence.topic.gain": {
+        Language.ENGLISH: "Gain, directivity, and realized gain",
+        Language.SPANISH: "Ganancia, directividad y ganancia realizada",
+    },
+    "confidence.topic.takeoff": {
+        Language.ENGLISH: "Takeoff angle",
+        Language.SPANISH: "Ángulo de salida",
+    },
+    "confidence.topic.bandwidth": {
+        Language.ENGLISH: "Bandwidth",
+        Language.SPANISH: "Ancho de banda",
+    },
+    "confidence.topic.ground": {
+        Language.ENGLISH: "Ground model",
+        Language.SPANISH: "Modelo de suelo",
+    },
+    "confidence.topic.feed_loss": {
+        Language.ENGLISH: "Feed-line and matching losses",
+        Language.SPANISH: "Pérdidas de línea y adaptación",
+    },
+    "confidence.explain.impedance": {
+        Language.ENGLISH: (
+            "Impedance has a resistive part R and a reactive part X. R includes "
+            "radiation and loss; X comes from stored energy. A 50 Ω system wants "
+            "about 50 + j0 Ω at the feedpoint, but a good match does not guarantee "
+            "high efficiency."
+        ),
+        Language.SPANISH: (
+            "La impedancia tiene una parte resistiva R y una reactiva X. R incluye "
+            "radiación y pérdidas; X viene de energía almacenada. Un sistema de 50 Ω "
+            "quiere unos 50 + j0 Ω en el punto de alimentación, pero una buena "
+            "adaptación no garantiza alta eficiencia."
+        ),
+    },
+    "confidence.explain.swr": {
+        Language.ENGLISH: (
+            "SWR describes mismatch at the reference plane, not antenna quality. A "
+            "low SWR can hide high loss in a lossy antenna or feed line. Read SWR "
+            "together with efficiency and realized gain."
+        ),
+        Language.SPANISH: (
+            "La ROE describe la desadaptación en el plano de referencia, no la calidad "
+            "de la antena. Una ROE baja puede ocultar pérdidas altas en una antena o "
+            "línea con pérdidas. Leé la ROE junto con la eficiencia y la ganancia realizada."
+        ),
+    },
+    "confidence.explain.efficiency": {
+        Language.ENGLISH: (
+            "Efficiency is radiated power divided by accepted power. Conductor, "
+            "ground, load, and mismatch losses reduce it. A low-efficiency antenna "
+            "can still show a low SWR."
+        ),
+        Language.SPANISH: (
+            "La eficiencia es la potencia radiada dividida por la potencia aceptada. "
+            "Las pérdidas de conductor, suelo, cargas y desadaptación la reducen. Una "
+            "antena de baja eficiencia puede mostrar igualmente una ROE baja."
+        ),
+    },
+    "confidence.explain.gain": {
+        Language.ENGLISH: (
+            "Power gain is the far-field maximum relative to an isotropic radiator "
+            "(dBi). Directivity ignores losses; realized gain includes mismatch, "
+            "feed-line, matching, and balun loss. Compare like with like."
+        ),
+        Language.SPANISH: (
+            "La ganancia de potencia es el máximo de campo lejano respecto de un "
+            "radiador isotrópico (dBi). La directividad ignora las pérdidas; la "
+            "ganancia realizada incluye desadaptación, línea, adaptación y balun. "
+            "Compará cosas equivalentes."
+        ),
+    },
+    "confidence.explain.takeoff": {
+        Language.ENGLISH: (
+            "Takeoff angle is the elevation of the main lobe. Low angles favor DX; "
+            "high angles favor NVIS and regional paths. Height, ground, and the "
+            "antenna type change it."
+        ),
+        Language.SPANISH: (
+            "El ángulo de salida es la elevación del lóbulo principal. Los ángulos "
+            "bajos favorecen DX; los altos favorecen NVIS y trayectos regionales. La "
+            "altura, el suelo y el tipo de antena lo cambian."
+        ),
+    },
+    "confidence.explain.bandwidth": {
+        Language.ENGLISH: (
+            "Bandwidth is the frequency range that meets the chosen SWR or gain "
+            "criterion. It depends on conductor size, height, ground, and matching. "
+            "A narrow design may need careful tuning."
+        ),
+        Language.SPANISH: (
+            "El ancho de banda es el rango de frecuencia que cumple el criterio de ROE "
+            "o ganancia elegido. Depende del diámetro del conductor, la altura, el "
+            "suelo y la adaptación. Un diseño angosto puede necesitar ajuste cuidadoso."
+        ),
+    },
+    "confidence.explain.ground": {
+        Language.ENGLISH: (
+            "The ground model changes the pattern, feedpoint impedance, and losses. "
+            "Average soil is a starting point, not a measurement. Use the soil "
+            "presets and verify with the installed antenna."
+        ),
+        Language.SPANISH: (
+            "El modelo de suelo cambia el patrón, la impedancia de alimentación y las "
+            "pérdidas. El suelo promedio es un punto de partida, no una medición. Usá "
+            "los presets y verificá con la antena instalada."
+        ),
+    },
+    "confidence.explain.feed_loss": {
+        Language.ENGLISH: (
+            "Feed-line, matching-network, and balun losses reduce realized gain. A "
+            "tuner can lower SWR at the transmitter while increasing line loss, "
+            "especially with high SWR. Check the loss breakdown, not only SWR."
+        ),
+        Language.SPANISH: (
+            "Las pérdidas de línea, red de adaptación y balun reducen la ganancia "
+            "realizada. Un sintonizador puede bajar la ROE en el transmisor y a la vez "
+            "aumentar la pérdida de línea, sobre todo con ROE alta. Revisá el desglose "
+            "de pérdidas, no solo la ROE."
+        ),
+    },
     "table.frequency": {Language.ENGLISH: "Frequency (MHz)", Language.SPANISH: "Frecuencia (MHz)"},
     "table.resistance": {Language.ENGLISH: "R (Ω)", Language.SPANISH: "R (Ω)"},
     "table.reactance": {Language.ENGLISH: "X (Ω)", Language.SPANISH: "X (Ω)"},

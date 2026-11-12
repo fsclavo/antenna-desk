@@ -320,9 +320,9 @@ The 2026-11-11 review of the desired-backlog proposal keeps the product focus on
 the decision-to-measurement workflow instead of adding more antenna families.
 The catalog is broad enough; the next value is helping the operator choose,
 understand, build, and improve a design. This is product scope, not a second
-execution queue. UX1–UX4 are complete; UX5 is the active slice in
-[`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md). UX6–UX20 stay here until they
-are ready to execute.
+execution queue. UX1–UX5 are complete; the 0.5 **Decide** release is closed.
+UX6–UX20 stay here until the next product slice is selected and they are ready
+to execute.
 
 Rules for this track:
 
@@ -343,7 +343,7 @@ Rules for this track:
 | 0.5 Decide | UX2 | Installation profile | Reusable site envelope and constraints | S–M | n/a | done 2026-11-11 |
 | 0.5 Decide | UX3 | Antenna suitability profiles and guided advisor | Constraint-filtered shortlist with operating intent and trade-offs | M | B/C | done 2026-11-11 |
 | 0.5 Decide | UX4 | Comparison 2.0 | 2–4 designs under a common basis, recomputed | M–L | B | done 2026-11-11 |
-| 0.5 Decide | UX5 | Contextual explanations and confidence card | Metric meaning, evidence, assumptions, and limits | M | A/B/C | active queue |
+| 0.5 Decide | UX5 | Contextual explanations and confidence card | Metric meaning, evidence, assumptions, and limits | M | A/B/C | done 2026-11-11 |
 | 0.6 Build | UX6 | Feed-chain topology and loss budget | Tuner/balun position and per-stage loss | M–L | B/C | proposed |
 | 0.6 Build | UX7 | Construction package 2.0 | As-built, hardware BOM, coil/trap sheet, checklist | M | B/C | proposed |
 | 0.6 Build | UX8 | Integrated coil/trap/loading calculators | Prefilled calculators that apply to the design | M | B | proposed |
@@ -382,9 +382,9 @@ kept at
 
 Product track:
 
-1. UX1–UX4 are complete. The active product-experience slice is UX5 in
-   [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md); UX6–UX20 remain product
-   scope in the product experience backlog above.
+1. UX1–UX5 are complete. The 0.5 **Decide** release is closed. UX6–UX20 remain
+   product scope in the product experience backlog above; UX6 is the next
+   candidate but is not promoted yet.
 
 Modeling track:
 

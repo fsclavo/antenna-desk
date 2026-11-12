@@ -49,6 +49,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   summary and SWR/pattern overlays are dynamic. Height mapping is conservative
   and warns when a family keeps its native height. See
   [ADR-0029](docs/ADR/0029-comparison-basis.md).
+- **Result confidence and contextual explanations.** The Diagnostics tab now
+  starts with a confidence card showing the template evidence level, source,
+  tolerance, limitation, modeled scope, and dominant uncertainties. A **What
+  does this mean?** selector explains impedance, SWR, efficiency,
+  gain/directivity/realized gain, takeoff angle, bandwidth, ground, and
+  feed-line/matching losses with practical bilingual text. The card is
+  available without a completed simulation because the evidence belongs to the
+  design.
 
 ## [0.4.2] - 2026-11-11
 

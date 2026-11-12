@@ -271,6 +271,8 @@ def test_results_view_exposes_help_and_accessibility(qtbot: QtBot) -> None:
     assert view._impedance_plot.accessibleDescription() == view._impedance_plot.toolTip()
     assert "Frequency" in view._table.horizontalHeader().toolTip()
     assert "band" in view._band_selector.toolTip().lower()
+    assert "Evidence" in view._confidence_group.toolTip()
+    assert "topic" in view._confidence_topic.toolTip().lower()
     assert view._pattern_view_tabs.accessibleDescription()
     assert view._raw_tabs.accessibleDescription()
 
@@ -278,6 +280,7 @@ def test_results_view_exposes_help_and_accessibility(qtbot: QtBot) -> None:
     view.retranslate()
 
     assert "Resistencia" in view._impedance_plot.toolTip()
+    assert "Evidencia" in view._confidence_group.toolTip()
 
 
 def test_dipole_form_applies_help_to_its_labels_and_controls(qtbot: QtBot) -> None:

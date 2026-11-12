@@ -166,6 +166,8 @@ HELP_MANIFEST = frozenset(
         "help.compare.reference_frequency",
         "help.compare.recompute",
         "help.table.comparison",
+        "help.confidence.title",
+        "help.confidence.topic",
         "help.installation.profiles",
         "help.installation.name",
         "help.installation.available_height",

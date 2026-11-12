@@ -14,6 +14,7 @@ from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
+    QGroupBox,
     QHBoxLayout,
     QHeaderView,
     QLabel,
@@ -48,6 +49,7 @@ from ...domain.simulation.result import (
     SimulationResult,
     SimulationStatus,
 )
+from ...reporting.design_summary import design_evidence_rows
 from ...reporting.result_summary import representative_gain_frequency
 from ..fonts import apply_plot_fonts, scaled_font_copy
 from ..help import apply_help
@@ -56,6 +58,17 @@ from ..theme import theme_colors
 from .chart_cursor import ChartCursor, CursorSeries
 from .polar_pattern_view import PolarPatternView
 from .radiation_pattern_3d_view import RadiationPattern3DView
+
+CONFIDENCE_TOPICS: tuple[str, ...] = (
+    "impedance",
+    "swr",
+    "efficiency",
+    "gain",
+    "takeoff",
+    "bandwidth",
+    "ground",
+    "feed_loss",
+)
 
 
 class ResultsView(QWidget):
@@ -253,6 +266,39 @@ class ResultsView(QWidget):
         measurement_layout.addWidget(self._measurement_table, 1)
         measurement_layout.addWidget(self._measurement_plot, 2)
 
+        self._confidence_group = QGroupBox(self._diagnostics_tab)
+        self._confidence_evidence = QLabel(self._confidence_group)
+        self._confidence_evidence.setWordWrap(True)
+        self._confidence_evidence.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        self._confidence_topic_label = QLabel(self._confidence_group)
+        self._confidence_topic = QComboBox(self._confidence_group)
+        for topic in CONFIDENCE_TOPICS:
+            self._confidence_topic.addItem("", topic)
+        self._confidence_topic.currentIndexChanged.connect(self._render_confidence_explanation)
+        self._confidence_explanation = QLabel(self._confidence_group)
+        self._confidence_explanation.setWordWrap(True)
+        self._confidence_explanation.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        self._confidence_disclaimer = QLabel(self._confidence_group)
+        self._confidence_disclaimer.setWordWrap(True)
+        self._confidence_disclaimer.setStyleSheet("font-style: italic;")
+        confidence_layout = QVBoxLayout(self._confidence_group)
+        confidence_layout.addWidget(self._confidence_evidence)
+        confidence_layout.addWidget(self._confidence_topic_label)
+        confidence_layout.addWidget(self._confidence_topic)
+        confidence_layout.addWidget(self._confidence_explanation)
+        confidence_layout.addWidget(self._confidence_disclaimer)
+        apply_help(self._confidence_group, self._translator, "confidence.title")
+        apply_help(self._confidence_topic, self._translator, "confidence.topic")
+        apply_help(
+            self._confidence_explanation,
+            self._translator,
+            "confidence.topic",
+        )
+
         self._summary = QLabel(self._diagnostics_tab)
         self._summary.setWordWrap(True)
         self._summary.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
@@ -265,6 +311,7 @@ class ResultsView(QWidget):
         self._diagnostics_empty = QLabel(self._diagnostics_tab)
         diagnostics_layout = QVBoxLayout(self._diagnostics_tab)
         diagnostics_layout.setContentsMargins(0, 0, 0, 0)
+        diagnostics_layout.addWidget(self._confidence_group)
         diagnostics_layout.addWidget(self._summary)
         diagnostics_layout.addWidget(self._gain_summary)
         diagnostics_layout.addWidget(self._diagnostics)
@@ -431,6 +478,36 @@ class ResultsView(QWidget):
     def set_design(self, design: DesignVariant | None) -> None:
         self._design = design
         self._render_pattern()
+        self._render_confidence()
+
+    def _render_confidence(self) -> None:
+        t = self._translator.t
+        if self._design is None:
+            self._confidence_evidence.setText(t("confidence.no_design"))
+            self._confidence_topic.setEnabled(False)
+        else:
+            rows = design_evidence_rows(
+                self._design,
+                labeler=self._translator.report,
+            )
+            lines = [
+                f"{self._translator.report(label)}: {self._translator.report(value)}"
+                for label, value in rows
+            ]
+            lines.append(t("confidence.modeled"))
+            lines.append(t("confidence.uncertainties"))
+            self._confidence_evidence.setText("\n".join(lines))
+            self._confidence_topic.setEnabled(True)
+        self._confidence_disclaimer.setText(t("confidence.disclaimer"))
+        self._render_confidence_explanation()
+
+    def _render_confidence_explanation(self, *_args: object) -> None:
+        if self._design is None:
+            self._confidence_explanation.clear()
+            return
+        topic = self._confidence_topic.currentData()
+        if isinstance(topic, str):
+            self._confidence_explanation.setText(self._translator.t(f"confidence.explain.{topic}"))
 
     def _on_tab_changed(self, _index: int) -> None:
         self.tab_changed.emit(self.current_view())
@@ -680,6 +757,21 @@ class ResultsView(QWidget):
                 self._bands_tab_index,
                 self._translator.t("help.tab.bands"),
             )
+        self._confidence_group.setTitle(self._translator.t("confidence.title"))
+        self._confidence_topic_label.setText(self._translator.t("confidence.topic_label"))
+        for index, topic in enumerate(CONFIDENCE_TOPICS):
+            self._confidence_topic.setItemText(
+                index,
+                self._translator.t(f"confidence.topic.{topic}"),
+            )
+        apply_help(self._confidence_group, self._translator, "confidence.title")
+        apply_help(self._confidence_topic, self._translator, "confidence.topic")
+        apply_help(
+            self._confidence_explanation,
+            self._translator,
+            "confidence.topic",
+        )
+        self._render_confidence()
         self._band_label.setText(self._translator.t("band.table.band"))
         self._bands_table.setHorizontalHeaderLabels(
             [
@@ -1637,6 +1729,7 @@ class ResultsView(QWidget):
             self.measurement_delete_requested.emit(self._measurements[index])
 
     def _render_diagnostics(self) -> None:
+        self._render_confidence()
         self._diagnostics.setRowCount(0)
         if self._result is None:
             self._summary.setText(self._translator.t("results.none"))

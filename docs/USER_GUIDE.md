@@ -326,6 +326,26 @@ Defaults are evidence-labelled in the dialog. Transformer, tuner, counterpoise,
 ground, and installation effects are not modeled as ideal guarantees; verify
 the selected bands with a simulation and, when possible, a measurement.
 
+## Result confidence and explanations
+
+The **Diagnostics** tab now begins with a **Result confidence** card for the
+current design. It shows:
+
+- the template evidence level, source, tolerance, and limitation;
+- what the model includes: canonical wires, feed, ground, loads, and the
+  feed-line/matching post-processing chain;
+- the dominant uncertainties: ground model, installation height, feed-line
+  routing, common-mode current, and construction tolerances;
+- a reminder that the model is an estimate and that critical dimensions and the
+  installed match should be verified with measurements.
+
+Use **What does this mean?** to switch between short explanations of impedance,
+SWR, efficiency, gain/directivity/realized gain, takeoff angle, bandwidth,
+ground model, and feed-line/matching losses. The explanations are contextual and
+practical; they do not replace the solver results or the template limitations.
+The same card is available without a completed simulation, because the evidence
+and limitations belong to the design, not only to the last run.
+
 ## Create an antenna
 
 Use **File → New Antenna...** to open the antenna catalog. Search or filter by
