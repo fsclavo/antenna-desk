@@ -14,6 +14,7 @@ from PySide6.QtWidgets import QApplication
 
 from .fonts import set_current_font_scale
 from .i18n import Language
+from .theme import ThemePreference
 from .units import UnitSystem
 from .workflow import WorkflowMode
 
@@ -21,6 +22,7 @@ FONT_SIZE_KEY = "ui/font_size"
 LANGUAGE_KEY = "ui/language"
 UNIT_SYSTEM_KEY = "ui/units"
 WORKFLOW_MODE_KEY = "ui/workflow_mode"
+THEME_KEY = "ui/theme"
 _MIN_POINT_SIZE = 6.0
 _MIN_PIXEL_SIZE = 8
 
@@ -48,6 +50,7 @@ _PreferenceEnum = TypeVar(
     LanguagePreference,
     UnitSystem,
     WorkflowMode,
+    ThemePreference,
 )
 
 
@@ -66,6 +69,7 @@ class UiPreferences:
     language: LanguagePreference = LanguagePreference.SYSTEM
     unit_system: UnitSystem = UnitSystem.METRIC
     workflow_mode: WorkflowMode = WorkflowMode.STANDARD
+    theme: ThemePreference = ThemePreference.SYSTEM
 
 
 class PreferencesStore(Protocol):
@@ -110,6 +114,11 @@ class QSettingsPreferencesStore:
                 WorkflowMode,
                 WorkflowMode.STANDARD,
             ),
+            theme=self._load_enum(
+                THEME_KEY,
+                ThemePreference,
+                ThemePreference.SYSTEM,
+            ),
         )
 
     def save(self, preferences: UiPreferences) -> None:
@@ -117,6 +126,7 @@ class QSettingsPreferencesStore:
         self._settings.setValue(LANGUAGE_KEY, preferences.language.value)
         self._settings.setValue(UNIT_SYSTEM_KEY, preferences.unit_system.value)
         self._settings.setValue(WORKFLOW_MODE_KEY, preferences.workflow_mode.value)
+        self._settings.setValue(THEME_KEY, preferences.theme.value)
         self._settings.sync()
 
     def _load_enum(

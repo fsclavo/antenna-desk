@@ -18,6 +18,7 @@ from ..fonts import scaled_dialog_size
 from ..help import apply_row_help
 from ..i18n import Translator
 from ..preferences import FontSize, LanguagePreference, UiPreferences
+from ..theme import ThemePreference
 from ..units import UnitSystem
 from ..workflow import WorkflowMode
 
@@ -34,7 +35,7 @@ class PreferencesDialog(QDialog):
         self._initial = preferences
 
         self.setWindowTitle(translator.t("preferences.title"))
-        self.resize(*scaled_dialog_size(460, 340))
+        self.resize(*scaled_dialog_size(460, 380))
         self.setSizeGripEnabled(True)
 
         self._language = QComboBox(self)
@@ -63,6 +64,12 @@ class PreferencesDialog(QDialog):
         self._font_size.addItem(translator.t("font_size.large"), FontSize.LARGE.value)
         self._select(self._font_size, preferences.font_size.value)
 
+        self._theme = QComboBox(self)
+        self._theme.addItem(translator.t("theme.system"), ThemePreference.SYSTEM.value)
+        self._theme.addItem(translator.t("theme.light"), ThemePreference.LIGHT.value)
+        self._theme.addItem(translator.t("theme.dark"), ThemePreference.DARK.value)
+        self._select(self._theme, preferences.theme.value)
+
         self._workflow_mode = QComboBox(self)
         for mode in WorkflowMode:
             self._workflow_mode.addItem(
@@ -75,6 +82,7 @@ class PreferencesDialog(QDialog):
         form.addRow(QLabel(translator.t("preferences.language"), self), self._language)
         form.addRow(QLabel(translator.t("preferences.units"), self), self._units)
         form.addRow(QLabel(translator.t("preferences.font_size"), self), self._font_size)
+        form.addRow(QLabel(translator.t("preferences.theme"), self), self._theme)
         form.addRow(
             QLabel(translator.t("preferences.workflow_mode"), self),
             self._workflow_mode,
@@ -84,6 +92,7 @@ class PreferencesDialog(QDialog):
                 "preferences.language",
                 "preferences.units",
                 "preferences.font_size",
+                "preferences.theme",
                 "preferences.workflow_mode",
             )
         ):
@@ -124,12 +133,14 @@ class PreferencesDialog(QDialog):
         self._select(self._language, LanguagePreference.SYSTEM.value)
         self._select(self._units, UnitSystem.METRIC.value)
         self._select(self._font_size, FontSize.MEDIUM.value)
+        self._select(self._theme, ThemePreference.SYSTEM.value)
         self._select(self._workflow_mode, WorkflowMode.STANDARD.value)
 
     def preferences(self) -> UiPreferences:
         language = self._language.currentData()
         unit_system = self._units.currentData()
         font_size = self._font_size.currentData()
+        theme = self._theme.currentData()
         workflow_mode = self._workflow_mode.currentData()
         return UiPreferences(
             font_size=(
@@ -150,4 +161,5 @@ class PreferencesDialog(QDialog):
                 if isinstance(workflow_mode, str)
                 else self._initial.workflow_mode
             ),
+            theme=(ThemePreference(theme) if isinstance(theme, str) else self._initial.theme),
         )

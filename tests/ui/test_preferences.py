@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 from main_window_support import FakeSolver
 from PySide6.QtCore import QSettings
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QApplication, QDialog
+from PySide6.QtGui import QFont, QPalette
+from PySide6.QtWidgets import QApplication, QDialog, QStyleFactory
 from pytestqt.qtbot import QtBot
 
 from antennadesk.persistence.json_repository import JsonProjectRepository
@@ -20,6 +20,7 @@ from antennadesk.ui.main_window import MainWindow
 from antennadesk.ui.preferences import (
     FONT_SIZE_KEY,
     LANGUAGE_KEY,
+    THEME_KEY,
     UNIT_SYSTEM_KEY,
     WORKFLOW_MODE_KEY,
     FontSize,
@@ -29,6 +30,11 @@ from antennadesk.ui.preferences import (
     QSettingsPreferencesStore,
     UiPreferences,
     resolve_language,
+)
+from antennadesk.ui.theme import (
+    ThemeController,
+    ThemePreference,
+    is_dark_palette,
 )
 from antennadesk.ui.units import UnitSystem
 from antennadesk.ui.workflow import WorkflowMode
@@ -100,6 +106,7 @@ def test_qsettings_store_round_trips_all_preferences(tmp_path: Path) -> None:
         language=LanguagePreference.SPANISH,
         unit_system=UnitSystem.IMPERIAL,
         workflow_mode=WorkflowMode.GUIDED,
+        theme=ThemePreference.DARK,
     )
 
     store.save(preferences)
@@ -125,6 +132,7 @@ def test_missing_preferences_use_the_startup_defaults(tmp_path: Path) -> None:
     assert preferences.language is LanguagePreference.SPANISH
     assert preferences.unit_system is UnitSystem.IMPERIAL
     assert preferences.workflow_mode is WorkflowMode.STANDARD
+    assert preferences.theme is ThemePreference.SYSTEM
 
 
 def test_invalid_stored_preferences_fall_back_to_defaults(tmp_path: Path) -> None:
@@ -136,6 +144,7 @@ def test_invalid_stored_preferences_fall_back_to_defaults(tmp_path: Path) -> Non
     settings.setValue(LANGUAGE_KEY, "fr")
     settings.setValue(UNIT_SYSTEM_KEY, "cubits")
     settings.setValue(WORKFLOW_MODE_KEY, "expert")
+    settings.setValue(THEME_KEY, "sepia")
     store = QSettingsPreferencesStore(settings)
 
     preferences = store.load(
@@ -147,6 +156,7 @@ def test_invalid_stored_preferences_fall_back_to_defaults(tmp_path: Path) -> Non
     assert preferences.language is LanguagePreference.SPANISH
     assert preferences.unit_system is UnitSystem.IMPERIAL
     assert preferences.workflow_mode is WorkflowMode.STANDARD
+    assert preferences.theme is ThemePreference.SYSTEM
 
 
 def test_in_memory_store_round_trips_preferences() -> None:
@@ -158,12 +168,14 @@ def test_in_memory_store_round_trips_preferences() -> None:
     assert defaults.language is LanguagePreference.SPANISH
     assert defaults.unit_system is UnitSystem.IMPERIAL
     assert defaults.workflow_mode is WorkflowMode.STANDARD
+    assert defaults.theme is ThemePreference.SYSTEM
 
     preferences = UiPreferences(
         font_size=FontSize.SMALL,
         language=LanguagePreference.ENGLISH,
         unit_system=UnitSystem.METRIC,
         workflow_mode=WorkflowMode.GUIDED,
+        theme=ThemePreference.LIGHT,
     )
     store.save(preferences)
 
@@ -223,6 +235,65 @@ def test_main_window_starts_with_the_saved_font_size(qtbot: QtBot) -> None:
     assert window._font_size_controller.size is FontSize.LARGE
 
 
+def test_theme_controller_switches_between_system_light_and_dark(qtbot: QtBot) -> None:
+    app = _application()
+    controller = ThemeController()
+    system_window = controller.system_palette.color(QPalette.ColorRole.Window)
+
+    controller.apply(ThemePreference.DARK)
+
+    assert controller.preference is ThemePreference.DARK
+    assert is_dark_palette(app.palette())
+
+    controller.apply(ThemePreference.LIGHT)
+
+    assert controller.preference is ThemePreference.LIGHT
+    assert not is_dark_palette(app.palette())
+
+    controller.apply(ThemePreference.SYSTEM)
+
+    assert controller.preference is ThemePreference.SYSTEM
+    assert app.palette().color(QPalette.ColorRole.Window) == system_window
+
+
+def test_theme_controller_does_not_change_the_application_style(qtbot: QtBot) -> None:
+    app = _application()
+    available_styles = QStyleFactory.keys()
+    alternative = next(
+        (name for name in available_styles if name.lower() != "fusion"),
+        None,
+    )
+    if alternative is not None:
+        app.setStyle(alternative)
+    style = app.style().name()
+    controller = ThemeController()
+
+    for preference in (
+        ThemePreference.LIGHT,
+        ThemePreference.DARK,
+        ThemePreference.SYSTEM,
+    ):
+        controller.apply(preference)
+        assert app.style().name() == style
+
+
+def test_main_window_starts_with_the_saved_theme(qtbot: QtBot) -> None:
+    app = _application()
+    preferences = InMemoryPreferencesStore(UiPreferences(theme=ThemePreference.DARK))
+    window = MainWindow(
+        JsonProjectRepository(),
+        FakeSolver(),
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        preferences=preferences,
+    )
+    qtbot.addWidget(window)
+
+    assert window._theme_controller.preference is ThemePreference.DARK
+    assert window._current_preferences().theme is ThemePreference.DARK
+    assert is_dark_palette(app.palette())
+
+
 def test_language_and_units_are_persisted(window: MainWindow) -> None:
     window._set_language(Language.SPANISH)
     window._set_unit_system(UnitSystem.IMPERIAL)
@@ -242,6 +313,7 @@ def test_preferences_action_applies_accepted_values(
         language=LanguagePreference.SPANISH,
         unit_system=UnitSystem.IMPERIAL,
         workflow_mode=WorkflowMode.GUIDED,
+        theme=ThemePreference.DARK,
     )
     monkeypatch.setattr(
         PreferencesDialog,
@@ -257,6 +329,8 @@ def test_preferences_action_applies_accepted_values(
     assert window._font_size_controller.size is FontSize.LARGE
     assert window._unit_system is UnitSystem.IMPERIAL
     assert window._workflow_mode is WorkflowMode.GUIDED
+    assert window._theme_controller.preference is ThemePreference.DARK
+    assert is_dark_palette(_application().palette())
     assert window._ocfd_form._length.suffix().strip() == "ft"
     assert window._simulate_action.text() == "Simular"
     assert window._current_preferences() == accepted
@@ -272,6 +346,7 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
             language=LanguagePreference.SPANISH,
             unit_system=UnitSystem.IMPERIAL,
             workflow_mode=WorkflowMode.GUIDED,
+            theme=ThemePreference.LIGHT,
         ),
     )
     qtbot.addWidget(dialog)
@@ -279,11 +354,14 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
     assert dialog._language.currentData() == LanguagePreference.SPANISH.value
     assert dialog._units.currentData() == UnitSystem.IMPERIAL.value
     assert dialog._font_size.currentData() == FontSize.SMALL.value
+    assert dialog._theme.currentData() == ThemePreference.LIGHT.value
     assert dialog._workflow_mode.currentData() == WorkflowMode.GUIDED.value
+    assert "palette" in dialog._theme.toolTip().lower()
 
     dialog._language.setCurrentIndex(dialog._language.findData(LanguagePreference.ENGLISH.value))
     dialog._units.setCurrentIndex(dialog._units.findData(UnitSystem.METRIC.value))
     dialog._font_size.setCurrentIndex(dialog._font_size.findData(FontSize.LARGE.value))
+    dialog._theme.setCurrentIndex(dialog._theme.findData(ThemePreference.DARK.value))
     dialog._workflow_mode.setCurrentIndex(
         dialog._workflow_mode.findData(WorkflowMode.ADVANCED.value)
     )
@@ -293,6 +371,7 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
         language=LanguagePreference.ENGLISH,
         unit_system=UnitSystem.METRIC,
         workflow_mode=WorkflowMode.ADVANCED,
+        theme=ThemePreference.DARK,
     )
 
 
@@ -303,6 +382,7 @@ def test_preferences_dialog_restores_defaults(qtbot: QtBot) -> None:
             font_size=FontSize.LARGE,
             language=LanguagePreference.SPANISH,
             unit_system=UnitSystem.IMPERIAL,
+            theme=ThemePreference.DARK,
         ),
     )
     qtbot.addWidget(dialog)
@@ -311,6 +391,7 @@ def test_preferences_dialog_restores_defaults(qtbot: QtBot) -> None:
 
     assert dialog.preferences() == UiPreferences()
     assert dialog.preferences().workflow_mode is WorkflowMode.STANDARD
+    assert dialog.preferences().theme is ThemePreference.SYSTEM
 
 
 def test_preferences_action_retranslates_and_replaces_quick_menus(
@@ -344,17 +425,22 @@ def test_preferences_keys_exist_in_both_languages() -> None:
         "preferences.font_size",
         "preferences.language",
         "preferences.language_system",
+        "preferences.theme",
         "preferences.units",
         "preferences.workflow_mode",
         "preferences.restore_defaults",
         "font_size.small",
         "font_size.medium",
         "font_size.large",
+        "theme.system",
+        "theme.light",
+        "theme.dark",
         "workflow.mode.guided",
         "workflow.mode.standard",
         "workflow.mode.advanced",
         "preferences.title",
         "preferences.hint",
+        "help.preferences.theme",
         "help.preferences.workflow_mode",
         "action.preferences",
         "action.ok",

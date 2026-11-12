@@ -97,7 +97,7 @@ Completed:
   dipole, T2FD, and doublet, with a Bands results tab and band-aware reports.
   The Pattern frequency selector lists all analyzed bands, and each band uses
   the global pattern-frequency policy.
-- Global **Simulation sweep** in Advanced simulation: Auto (template) or a
+- Global **Simulation sweep** in the Simulation tab: Auto (template) or a
   custom Start/Stop/Points override for every antenna family.
 - Optional ideal OCFD feed transformer (4:1 default for new designs), preserved
   through custom-wire conversion and usable by the synthesis dialog.

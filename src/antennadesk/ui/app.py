@@ -21,6 +21,7 @@ from .preferences import (
     resolve_language,
 )
 from .solver_locator import find_nec2c
+from .theme import ThemeController
 
 
 def main() -> int:
@@ -48,6 +49,13 @@ def main() -> int:
     preferences = preferences_store.load()
     font_size_controller = FontSizeController(app.font())
     font_size_controller.apply(preferences.font_size)
+    theme_controller = ThemeController()
+    # Use one widget style for every theme. Changing QApplication.style() at
+    # runtime leaves cached popup metrics from the previous style behind, which
+    # can make a QComboBox show scroll arrows with only part of its items.
+    if app.style().name().lower() != "fusion":
+        app.setStyle("Fusion")
+    theme_controller.apply(preferences.theme)
 
     translator = Translator(resolve_language(preferences.language))
     executable = find_nec2c()
@@ -60,6 +68,7 @@ def main() -> int:
         preferences=preferences_store,
         font_size_controller=font_size_controller,
         language_preference=preferences.language,
+        theme_controller=theme_controller,
     )
     window.show()
     return app.exec()

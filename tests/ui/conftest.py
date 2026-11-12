@@ -8,7 +8,7 @@ from collections.abc import Iterator
 
 import pytest
 from main_window_support import FakeSolver
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QPalette
 from PySide6.QtWidgets import QApplication
 from pytestqt.qtbot import QtBot
 
@@ -20,15 +20,22 @@ from antennadesk.ui.units import UnitSystem
 
 
 @pytest.fixture(autouse=True)
-def _restore_application_font(qtbot: QtBot) -> Iterator[None]:
+def _restore_application_appearance(qtbot: QtBot) -> Iterator[None]:
     app = QApplication.instance()
-    original = QFont(app.font()) if isinstance(app, QApplication) else None
+    original_font = QFont(app.font()) if isinstance(app, QApplication) else None
+    original_palette = QPalette(app.palette()) if isinstance(app, QApplication) else None
+    original_style = app.style().name() if isinstance(app, QApplication) else None
     original_scale = current_font_scale()
     try:
         yield
     finally:
-        if isinstance(app, QApplication) and original is not None:
-            app.setFont(original)
+        if isinstance(app, QApplication):
+            if original_style is not None and app.style().name() != original_style:
+                app.setStyle(original_style)
+            if original_palette is not None:
+                app.setPalette(original_palette)
+            if original_font is not None:
+                app.setFont(original_font)
         set_current_font_scale(original_scale)
 
 

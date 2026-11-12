@@ -81,11 +81,11 @@ bar with elapsed time and the current phase (preparing model, running NEC-2,
 processing results). A multi-band analysis, including the automatic fan-dipole
 path, uses a determinate counter for the selected bands. **Simulation →
 Cancel** or the toolbar cancel action stops the run; the bar reports the
-cancelling state until the worker stops. The collapsible **Advanced
-simulation** section at the bottom of the panel contains **Solver**,
-**Simulation sweep**, **Simulation pattern**, and **Band analysis**. The sweep
-field shows the template's effective range and is read-only until **Custom** is
-selected.
+cancelling state until the worker stops. The side panel separates **Design** and
+**Simulation** tabs. The **Simulation** tab contains **Solver**,
+**Simulation sweep**, **Simulation pattern**, and **Band analysis**, and scrolls
+independently when the window is short. The sweep field shows the template's
+effective range and is read-only until **Custom** is selected.
 
 For a frequency-first start, select a template first and then press **Estimate
 Dimensions...** above the design panel. The dialog refines only the template
@@ -196,16 +196,17 @@ AntennaDesk has three progressive workflow modes. Choose one from **View →
 Workflow mode** or from the **Mode** selector in the toolbar. The choice is
 saved with the other UI preferences and applies to the next window.
 
-- **Guided** hides advanced actions and shows a compact **Next step** panel
-  above the design actions. The panel changes with the project state: simulate,
-  review diagnostics, inspect a high-SWR match, open the construction sheet,
-  import a VNA measurement, or compare measured and simulated results. Use
-  **Show advanced options** to reveal the full **Advanced** mode; no feature is
-  removed permanently.
-- **Standard** shows the full design editor with the **Advanced simulation**
-  section collapsed. This is the default.
-- **Advanced** shows the full editor and expands the solver, sweep, pattern,
-  and band-analysis controls.
+- **Guided** hides advanced actions and shows only the **Design** tab with a
+  compact **Next step** panel above the design actions. The panel changes with
+  the project state: simulate, review diagnostics, inspect a high-SWR match,
+  open the construction sheet, import a VNA measurement, or compare measured and
+  simulated results. Use **Show advanced options** to reveal the full
+  **Advanced** mode; no feature is removed permanently.
+- **Standard** shows the full design editor and both sidebar tabs, with
+  **Design** selected. This is the default.
+- **Advanced** shows the full editor and opens the **Simulation** tab with the
+  solver, sweep, pattern, and band-analysis controls. You can switch back to
+  **Design** at any time.
 
 The next-step panel is a recommendation, not a lock. You can always use the
 menus, switch designs, or open another result tab. In Guided mode the panel is
@@ -272,9 +273,9 @@ vertical or horizontal orientation and applies the estimated circumference.
 
 ## Analyze multiple bands
 
-Use **Simulation → Analyze Bands...** or expand **Advanced simulation** at the
-bottom of the design panel and use its **Band analysis** group to run the
-current design over several amateur bands. The dialog starts from the family
+Use **Simulation → Analyze Bands...** or open the **Simulation** tab in the
+sidebar and use its **Band analysis** group to run the current design over
+several amateur bands. The dialog starts from the family
 default and lets you select any catalog band from 160 m to 23 cm, with a sweep
 point count for each band.
 
@@ -312,7 +313,7 @@ the selected order. Cancellation is propagated to every running band and keeps
 the results that completed. Set the value to 1 for large models or a
 memory-limited machine.
 
-The global **Simulation pattern** group in **Advanced simulation** controls the
+The global **Simulation pattern** group in the **Simulation** tab controls the
 angular resolution and the pattern-frequency policy. Band analysis applies that
 policy inside every selected band, so **Auto (bands)** uses the band snapshots
 and a fixed count uses that many snapshots per band. The **Pattern** frequency
@@ -1162,7 +1163,7 @@ with a large top load.
   highest gain; the azimuth diagram includes a dashed line showing the antenna
   orientation. Above-ground elevation cuts are drawn as open arcs rather than
   closed lobes. The angular resolution comes from **Pattern resolution** in the
-  global **Simulation pattern** group under **Advanced simulation**; higher
+  global **Simulation pattern** group in the **Simulation** tab; higher
   resolution samples the same NEC solution more finely.
   While you rotate or zoom the 3D lobe, AntennaDesk draws a coarser interactive
   mesh. When the movement stops it redraws the high-resolution display mesh,
@@ -1236,7 +1237,8 @@ stuck solver. A timeout does not fix invalid geometry or a negative-resistance
 result, so check the diagnostics after a large run. The cancel action remains
 available while the solver is running.
 
-The **Simulation sweep** group controls the impedance/SWR frequency plan. In
+The **Simulation sweep** group in the **Simulation** tab controls the
+impedance/SWR frequency plan. In
 **Auto (template)** mode the fields show the effective template range and use
 the generator's default: a 31-point ±5% sweep for most generated templates, a
 100-point sweep for basic and custom designs, the wide G5RV range, and the
@@ -1865,20 +1867,26 @@ Opening a project also runs decompression, migration, and validation in a
 worker thread. A modal **Opening project...** dialog appears for large files and
 the project is applied only after validation succeeds.
 
-## Language, units, and font size
+## Language, units, font size, and theme
 
 Use **Edit → Preferences...** (`Ctrl+,`) to set the language (**System**,
-English, or Español), the display units (metric m/mm or imperial ft/in), and
-the font size (Small, Normal, or Large). **Restore Defaults** returns to
-System, metric units, and Normal font size.
+English, or Español), the display units (metric m/mm or imperial ft/in), the
+theme (**System**, **Light**, or **Dark**), and the font size (Small, Normal, or
+Large). **Restore Defaults** returns to System language, metric units, System
+theme, and Normal font size.
 
-Preferences are saved and applied at startup. **Normal** restores the system
-font. The font preset scales the standard widgets, the antenna sketch, the
-pattern views, the chart axes and legends, the start-page headline, and dialog
-initial sizes. Changing the language updates every antenna-family editor, and
-changing the units converts every editor and generator dialog without losing
-the physical dimensions. Exported reports keep their own fixed typography. The
-domain and project files always store canonical meters and hertz.
+Preferences are saved and applied at startup. **System** follows the
+operating-system palette detected at startup; **Light** and **Dark** apply a
+fixed application palette immediately, including the antenna sketch, charts,
+and pattern views. The application always uses the Fusion widget style, so
+switching themes only changes colors and does not disturb popup geometry or
+layout metrics. **Normal** restores the system font. The font preset scales
+the standard widgets, the antenna sketch, the pattern views, the chart axes and
+legends, the start-page headline, and dialog initial sizes. Changing the
+language updates every antenna-family editor, and changing the units converts
+every editor and generator dialog without losing the physical dimensions.
+Exported reports keep their own fixed typography. The domain and project files
+always store canonical meters and hertz.
 
 ## Current limitations
 

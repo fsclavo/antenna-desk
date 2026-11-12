@@ -851,10 +851,6 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "trampas y el ajuste requieren atención."
         ),
     },
-    "advanced.title": {
-        Language.ENGLISH: "Advanced simulation",
-        Language.SPANISH: "Simulación avanzada",
-    },
     "solver.group_title": {
         Language.ENGLISH: "Solver",
         Language.SPANISH: "Solver",
@@ -929,6 +925,9 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "font_size.small": {Language.ENGLISH: "Small", Language.SPANISH: "Pequeño"},
     "font_size.medium": {Language.ENGLISH: "Normal", Language.SPANISH: "Normal"},
     "font_size.large": {Language.ENGLISH: "Large", Language.SPANISH: "Grande"},
+    "theme.system": {Language.ENGLISH: "System", Language.SPANISH: "Sistema"},
+    "theme.light": {Language.ENGLISH: "Light", Language.SPANISH: "Claro"},
+    "theme.dark": {Language.ENGLISH: "Dark", Language.SPANISH: "Oscuro"},
     "preferences.title": {
         Language.ENGLISH: "Preferences",
         Language.SPANISH: "Preferencias",
@@ -953,21 +952,25 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Font Size",
         Language.SPANISH: "Tamaño de fuente",
     },
+    "preferences.theme": {
+        Language.ENGLISH: "Theme",
+        Language.SPANISH: "Tema",
+    },
     "preferences.workflow_mode": {
         Language.ENGLISH: "Workflow mode",
         Language.SPANISH: "Modo de trabajo",
     },
     "preferences.hint": {
         Language.ENGLISH: (
-            "Language, units, font size, and workflow mode apply after you "
-            "accept. System follows the operating system language. Project "
-            "files always store metric SI units."
+            "Language, units, font size, theme, and workflow mode apply after you "
+            "accept. System follows the operating system language and palette at "
+            "startup. Project files always store metric SI units."
         ),
         Language.SPANISH: (
-            "El idioma, las unidades, el tamaño de fuente y el modo de trabajo "
-            "se aplican al aceptar. Sistema sigue el idioma del sistema "
-            "operativo. Los archivos de proyecto siempre guardan unidades SI "
-            "métricas."
+            "El idioma, las unidades, el tamaño de fuente, el tema y el modo de "
+            "trabajo se aplican al aceptar. Sistema sigue el idioma y la paleta del "
+            "sistema operativo al iniciar. Los archivos de proyecto siempre guardan "
+            "unidades SI métricas."
         ),
     },
     "action.preferences": {
@@ -3305,15 +3308,6 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "de aplicar, estimar y optimizar."
         ),
     },
-    "help.section.advanced": {
-        Language.ENGLISH: (
-            "Solver timeout, frequency sweep, pattern resolution, and band-analysis controls."
-        ),
-        Language.SPANISH: (
-            "Tiempo límite del solver, barrido de frecuencia, resolución de patrón y "
-            "controles de análisis por banda."
-        ),
-    },
     "help.section.solver": {
         Language.ENGLISH: (
             "Per-run solver timeout. It limits each NEC process and does not change the model."
@@ -3832,6 +3826,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Guided, Standard, or Advanced control how much of the editor is visible.",
         Language.SPANISH: "Guiado, Estándar o Avanzado controlan cuánto del editor se muestra.",
     },
+    "help.preferences.theme": {
+        Language.ENGLISH: (
+            "System follows the operating-system palette at startup. Light and Dark "
+            "apply a fixed application palette immediately."
+        ),
+        Language.SPANISH: (
+            "Sistema sigue la paleta del sistema operativo al iniciar. Claro y Oscuro "
+            "aplican una paleta fija de la aplicación de inmediato."
+        ),
+    },
     "help.feed_matching.override": {
         Language.ENGLISH: (
             "The project matching network replaces the internal EFHW matching unit; "
@@ -3869,6 +3873,23 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.action.optimize": {
         Language.ENGLISH: "Open the family optimizer for the current design.",
         Language.SPANISH: "Abrí el optimizador de familia para el diseño actual.",
+    },
+    "help.tab.design": {
+        Language.ENGLISH: (
+            "Antenna parameters, feed and matching, and the active installation profile."
+        ),
+        Language.SPANISH: (
+            "Parámetros de la antena, alimentación y adaptación, y perfil de instalación activo."
+        ),
+    },
+    "help.tab.simulation": {
+        Language.ENGLISH: (
+            "Solver timeout, frequency sweep, pattern resolution, and band analysis."
+        ),
+        Language.SPANISH: (
+            "Tiempo límite del solver, barrido de frecuencias, resolución del patrón y "
+            "análisis por bandas."
+        ),
     },
     "help.tab.impedance": {
         Language.ENGLISH: "Impedance, SWR, and band charts.",
@@ -5185,6 +5206,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Band {index}/{total}: {band}",
         Language.SPANISH: "Banda {index}/{total}: {band}",
     },
+    "tab.design": {Language.ENGLISH: "Design", Language.SPANISH: "Diseño"},
+    "tab.simulation": {Language.ENGLISH: "Simulation", Language.SPANISH: "Simulación"},
     "tab.impedance": {Language.ENGLISH: "Impedance / SWR", Language.SPANISH: "Impedancia / ROE"},
     "tab.sources": {Language.ENGLISH: "Sources", Language.SPANISH: "Fuentes"},
     "tab.pattern": {Language.ENGLISH: "Pattern", Language.SPANISH: "Patrón"},

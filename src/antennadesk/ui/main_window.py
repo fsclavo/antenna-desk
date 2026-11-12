@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
+    QFrame,
     QGroupBox,
     QHBoxLayout,
     QInputDialog,
@@ -41,8 +42,8 @@ from PySide6.QtWidgets import (
     QSplitter,
     QStackedWidget,
     QStyle,
+    QTabWidget,
     QToolBar,
-    QToolButton,
     QVBoxLayout,
     QWhatsThis,
     QWidget,
@@ -332,6 +333,7 @@ from .preferences import (
 )
 from .report_pdf import write_report_pdf
 from .template_identity import catalog_key_for, label_key_for
+from .theme import ThemeController
 from .units import UnitSystem, length_from_m, length_unit_key
 from .widgets.beverage_form import BeverageForm
 from .widgets.biquad_form import BiquadForm
@@ -388,6 +390,7 @@ class MainWindow(QMainWindow):
         preferences: PreferencesStore | None = None,
         font_size_controller: FontSizeController | None = None,
         language_preference: LanguagePreference | None = None,
+        theme_controller: ThemeController | None = None,
     ) -> None:
         super().__init__(parent)
         self._repository = repository
@@ -398,7 +401,13 @@ class MainWindow(QMainWindow):
             language_preference if language_preference is not None else LanguagePreference.SYSTEM
         )
         self._preferences = preferences if preferences is not None else InMemoryPreferencesStore()
-        self._workflow_mode = self._preferences.load().workflow_mode
+        self._theme_controller = (
+            theme_controller if theme_controller is not None else ThemeController()
+        )
+        loaded_preferences = self._preferences.load()
+        self._theme_controller.apply(loaded_preferences.theme)
+        self._workflow_mode = loaded_preferences.workflow_mode
+        self._last_applied_workflow_mode: WorkflowMode | None = None
         if font_size_controller is None:
             app = QApplication.instance()
             base_font = app.font() if isinstance(app, QApplication) else QFont()
@@ -1003,12 +1012,6 @@ class MainWindow(QMainWindow):
         solver_layout.addRow(self._solver_timeout_label, self._solver_timeout)
         solver_layout.addRow(self._solver_timeout_hint)
 
-        self._advanced_toggle = QToolButton(self)
-        self._advanced_toggle.setCheckable(True)
-        self._advanced_toggle.setChecked(False)
-        self._advanced_toggle.setArrowType(Qt.ArrowType.RightArrow)
-        self._advanced_toggle.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        self._advanced_toggle.toggled.connect(self._on_advanced_toggled)
         self._advanced_body = QWidget(self)
         advanced_layout = QVBoxLayout(self._advanced_body)
         advanced_layout.setContentsMargins(0, 0, 0, 0)
@@ -1016,7 +1019,7 @@ class MainWindow(QMainWindow):
         advanced_layout.addWidget(self._sweep_group)
         advanced_layout.addWidget(self._pattern_group)
         advanced_layout.addWidget(self._band_group)
-        self._advanced_body.setVisible(False)
+        advanced_layout.addStretch(1)
 
         self._custom_panel = QWidget(self)
         custom_layout = QVBoxLayout(self._custom_panel)
@@ -1112,17 +1115,21 @@ class MainWindow(QMainWindow):
         self._workflow_panel.advanced_requested.connect(
             lambda: self._set_workflow_mode(WorkflowMode.ADVANCED)
         )
-        design_panel = QWidget(self)
-        design_layout = QVBoxLayout(design_panel)
-        design_layout.setContentsMargins(0, 0, 0, 0)
-        design_layout.addWidget(self._workflow_panel)
+        self._sidebar_tabs = QTabWidget(self)
+        self._sidebar_tabs.setDocumentMode(True)
+        self._sidebar_tabs.setUsesScrollButtons(False)
+
+        self._design_tab = QWidget(self._sidebar_tabs)
+        design_tab_layout = QVBoxLayout(self._design_tab)
+        design_tab_layout.setContentsMargins(0, 0, 0, 0)
+        design_tab_layout.addWidget(self._workflow_panel)
         design_actions = QHBoxLayout()
         design_actions.addWidget(self._apply_button)
         design_actions.addWidget(self._estimate_button)
         design_actions.addWidget(self._optimize_button)
-        design_layout.addLayout(design_actions)
-        design_layout.addWidget(self._design_stack, 1)
-        design_layout.addWidget(self._feed_matching_summary)
+        design_tab_layout.addLayout(design_actions)
+        design_tab_layout.addWidget(self._design_stack, 1)
+        design_tab_layout.addWidget(self._feed_matching_summary)
         self._installation_label = QLabel(self)
         self._installation_label.setWordWrap(True)
         self._installation_edit = QPushButton(self)
@@ -1131,10 +1138,25 @@ class MainWindow(QMainWindow):
         installation_layout.setContentsMargins(0, 0, 0, 0)
         installation_layout.addWidget(self._installation_label, 1)
         installation_layout.addWidget(self._installation_edit)
-        design_layout.addLayout(installation_layout)
-        design_layout.addWidget(self._provenance_label)
-        design_layout.addWidget(self._advanced_toggle)
-        design_layout.addWidget(self._advanced_body)
+        design_tab_layout.addLayout(installation_layout)
+        design_tab_layout.addWidget(self._provenance_label)
+
+        self._simulation_tab = QWidget(self._sidebar_tabs)
+        simulation_tab_layout = QVBoxLayout(self._simulation_tab)
+        simulation_tab_layout.setContentsMargins(0, 0, 0, 0)
+        self._simulation_scroll = QScrollArea(self._simulation_tab)
+        self._simulation_scroll.setWidgetResizable(True)
+        self._simulation_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self._simulation_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._simulation_scroll.setWidget(self._advanced_body)
+        simulation_tab_layout.addWidget(self._simulation_scroll, 1)
+
+        self._design_tab_index = self._sidebar_tabs.addTab(self._design_tab, "")
+        self._simulation_tab_index = self._sidebar_tabs.addTab(self._simulation_tab, "")
+        design_panel = QWidget(self)
+        design_layout = QVBoxLayout(design_panel)
+        design_layout.setContentsMargins(0, 0, 0, 0)
+        design_layout.addWidget(self._sidebar_tabs)
         self._design_panel = design_panel
         self._update_form_panel_widths()
 
@@ -1341,12 +1363,6 @@ class MainWindow(QMainWindow):
         self.statusBar().addPermanentWidget(self._task_progress)
         self.statusBar().addPermanentWidget(self._solver_label)
 
-    def _on_advanced_toggled(self, expanded: bool) -> None:
-        self._advanced_body.setVisible(expanded)
-        self._advanced_toggle.setArrowType(
-            Qt.ArrowType.DownArrow if expanded else Qt.ArrowType.RightArrow
-        )
-
     def _on_sweep_mode_changed(self, _index: int) -> None:
         custom = self._sweep_mode.currentData() == "custom"
         if custom and not self._sweep_custom_initialized:
@@ -1482,11 +1498,22 @@ class MainWindow(QMainWindow):
         self._sweep_hint.setText(self._translator.t("sweep.hint"))
         self._pattern_group.setTitle(self._translator.t("pattern.settings_title"))
         self._band_group.setTitle(self._translator.t("band.group_title"))
-        self._advanced_toggle.setText(self._translator.t("advanced.title"))
+        self._sidebar_tabs.setTabText(self._design_tab_index, self._translator.t("tab.design"))
+        self._sidebar_tabs.setTabText(
+            self._simulation_tab_index, self._translator.t("tab.simulation")
+        )
+        for index, key in (
+            (self._design_tab_index, "help.tab.design"),
+            (self._simulation_tab_index, "help.tab.simulation"),
+        ):
+            help_text = self._translator.t(key)
+            self._sidebar_tabs.setTabToolTip(index, help_text)
+            self._sidebar_tabs.setTabWhatsThis(index, help_text)
         apply_help(self._design_panel, self._translator, "section.design")
+        apply_help(self._design_tab, self._translator, "tab.design")
+        apply_help(self._simulation_tab, self._translator, "tab.simulation")
         apply_help(self._installation_label, self._translator, "section.installation")
         apply_help(self._installation_edit, self._translator, "action.installation_profile")
-        apply_help(self._advanced_toggle, self._translator, "section.advanced")
         apply_help(self._solver_group, self._translator, "section.solver")
         apply_help(self._sweep_group, self._translator, "section.sweep")
         apply_help(self._pattern_group, self._translator, "section.pattern")
@@ -1885,7 +1912,6 @@ class MainWindow(QMainWindow):
         self._custom_edit.setEnabled(idle and has_project and is_custom)
         self._project_name.setEnabled(idle and has_project)
         self._variant_combo.setEnabled(idle and has_designs)
-        self._advanced_toggle.setEnabled(idle and has_project)
         self._solver_group.setEnabled(idle and has_project)
         self._sweep_group.setEnabled(idle and has_project)
         self._toolbar.setVisible(has_project)
@@ -1962,9 +1988,13 @@ class MainWindow(QMainWindow):
     def _apply_workflow_mode(self) -> None:
         guided = self._workflow_mode is WorkflowMode.GUIDED
         advanced = self._workflow_mode is WorkflowMode.ADVANCED
-        self._advanced_toggle.setVisible(not guided)
-        self._advanced_toggle.setChecked(advanced)
-        self._advanced_body.setVisible(not guided and self._advanced_toggle.isChecked())
+        self._sidebar_tabs.tabBar().setVisible(not guided)
+        self._sidebar_tabs.setTabVisible(self._simulation_tab_index, not guided)
+        if self._last_applied_workflow_mode is not self._workflow_mode:
+            self._sidebar_tabs.setCurrentWidget(
+                self._simulation_tab if advanced else self._design_tab
+            )
+            self._last_applied_workflow_mode = self._workflow_mode
         for action in (
             self._loads_action,
             self._transmission_lines_action,
@@ -8366,6 +8396,7 @@ class MainWindow(QMainWindow):
             language=self._language_preference,
             unit_system=self._unit_system,
             workflow_mode=self._workflow_mode,
+            theme=self._theme_controller.preference,
         )
 
     def _save_preferences(self) -> None:
@@ -8406,6 +8437,7 @@ class MainWindow(QMainWindow):
             self._apply_preferences(dialog.preferences())
 
     def _apply_preferences(self, preferences: UiPreferences) -> None:
+        self._theme_controller.apply(preferences.theme)
         self._language_preference = preferences.language
         self._translator.set_language(resolve_language(preferences.language))
         self._font_size_controller.apply(preferences.font_size)

@@ -184,6 +184,11 @@ def test_main_window_sections_actions_and_tabs_have_help(window) -> None:  # typ
     assert "sessions" in window._measurement_sessions_action.toolTip().lower()
     assert "dimension" in window._tuning_action.toolTip().lower()
 
+    design_tab = window._sidebar_tabs.indexOf(window._design_tab)
+    simulation_tab = window._sidebar_tabs.indexOf(window._simulation_tab)
+    assert "parameters" in window._sidebar_tabs.tabToolTip(design_tab).lower()
+    assert "sweep" in window._sidebar_tabs.tabToolTip(simulation_tab).lower()
+
     tabs = window._results._tabs
     impedance = tabs.indexOf(window._results._impedance_tab)
     pattern = tabs.indexOf(window._results._pattern_tab)
@@ -202,6 +207,9 @@ def test_main_window_sections_actions_and_tabs_have_help(window) -> None:  # typ
     assert "construir" in window._preflight_action.toolTip().lower()
     assert "sesiones" in window._measurement_sessions_action.toolTip().lower()
     assert "dimensión" in window._tuning_action.toolTip().lower()
+
+    assert "parámetros" in window._sidebar_tabs.tabToolTip(design_tab).lower()
+    assert "barrido" in window._sidebar_tabs.tabToolTip(simulation_tab).lower()
 
 
 def test_feed_line_dialog_applies_row_help(qtbot: QtBot) -> None:

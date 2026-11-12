@@ -12,11 +12,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Guided, Standard, and Advanced workflow modes.** The mode is selectable
   from the new **View → Workflow mode** menu or the toolbar **Mode** selector,
   persists across windows, and is also available in **Preferences**. Guided
-  hides advanced actions and shows a state-derived **Next step** panel;
-  Standard keeps the full editor with advanced simulation collapsed; Advanced
-  expands the solver, sweep, pattern, and band-analysis controls. Guided mode
+  hides advanced actions and shows only the Design tab; Standard keeps the full
+  editor with both sidebar tabs and Design selected; Advanced opens the
+  Simulation tab with the solver, sweep, pattern, and band-analysis controls.
+  Guided mode
   exposes a **Show advanced options** action, so no feature is permanently
   removed.
+- **Theme preference.** **Edit → Preferences...** can select **System**,
+  **Light**, or **Dark**. System keeps the operating-system palette captured at
+  startup; Light and Dark apply fixed palettes immediately to widgets, the
+  antenna sketch, charts, and pattern views. The widget style remains Fusion so
+  theme changes only swap colors, and the choice persists with the other UI
+  preferences.
 - The next-step coach follows the project state: create a project, configure
   the solver, simulate, review diagnostics, inspect a high-SWR match, open the
   construction sheet, import a VNA measurement, compare measured and simulated
@@ -115,6 +122,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   through the existing family adapter, records undo history, and runs a normal
   simulation. The dialog states that this is local model guidance, not a
   measurement or a guarantee.
+
+### Changed
+
+- The design sidebar now separates **Design** and **Simulation** into tabs.
+  Design keeps the family form, feed/matching summary, and installation
+  profile; Simulation contains the solver, sweep, pattern, and band-analysis
+  settings in its own scroll area. Standard selects Design and Advanced opens
+  Simulation; both tabs remain available in those modes.
+
+### Fixed
+
+- The toolbar **Mode** selector no longer shows only two of its three options
+  with scroll arrows after changing between **System** and **Light/Dark**. The
+  application now uses Fusion as its single widget style and themes only swap
+  palettes, avoiding stale `QComboBox` popup geometry from runtime style
+  changes.
+- The simulation sweep, pattern, and band controls no longer overlap when the
+  window is shorter than the full sidebar. The Simulation tab guarantees its
+  content its minimum height and scrolls instead of compressing
+  `QFormLayout` rows.
 
 ## [0.4.2] - 2026-11-11
 

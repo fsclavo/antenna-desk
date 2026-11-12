@@ -735,16 +735,16 @@ def test_band_analysis_controls_are_centralized(window: MainWindow) -> None:
     assert window._band_plan_label.text().startswith("Bands: 40m")
 
 
-def test_advanced_simulation_controls_start_collapsed(window: MainWindow) -> None:
-    assert window._advanced_toggle.text() == "Advanced simulation"
-    assert window._advanced_body.isHidden() is True
+def test_simulation_controls_are_grouped_in_the_simulation_tab(window: MainWindow) -> None:
+    assert window._sidebar_tabs.tabText(window._simulation_tab_index) == "Simulation"
+    assert window._sidebar_tabs.currentWidget() is window._design_tab
     assert window._advanced_body.isAncestorOf(window._sweep_group) is True
     assert window._advanced_body.isAncestorOf(window._pattern_group) is True
     assert window._advanced_body.isAncestorOf(window._band_group) is True
 
-    window._advanced_toggle.setChecked(True)
+    window._sidebar_tabs.setCurrentWidget(window._simulation_tab)
 
-    assert window._advanced_body.isHidden() is False
+    assert window._sidebar_tabs.currentWidget() is window._simulation_tab
 
 
 def test_custom_sweep_overrides_a_generated_template(

@@ -23,11 +23,12 @@ def test_next_step_starts_with_a_simulation(window: MainWindow) -> None:
     assert step.kind is NextStepKind.SIMULATE
 
 
-def test_guided_mode_hides_advanced_actions(window: MainWindow) -> None:
+def test_guided_mode_hides_the_simulation_tab(window: MainWindow) -> None:
     window._set_workflow_mode(WorkflowMode.GUIDED)
 
-    assert window._advanced_toggle.isHidden()
-    assert window._advanced_body.isHidden()
+    assert window._sidebar_tabs.isTabVisible(window._simulation_tab_index) is False
+    assert window._sidebar_tabs.tabBar().isHidden()
+    assert window._sidebar_tabs.currentWidget() is window._design_tab
     assert window._optimize_button.isHidden()
     assert not window._optimize_action.isVisible()
     assert not window._loads_action.isVisible()
@@ -40,11 +41,14 @@ def test_guided_mode_hides_advanced_actions(window: MainWindow) -> None:
     assert not window._workflow_panel.isHidden()
 
 
-def test_standard_mode_restores_the_full_editor(window: MainWindow) -> None:
+def test_standard_mode_shows_the_design_tab(window: MainWindow) -> None:
     window._set_workflow_mode(WorkflowMode.STANDARD)
 
-    assert not window._advanced_toggle.isHidden()
-    assert window._advanced_body.isHidden()
+    assert window._sidebar_tabs.isTabVisible(window._simulation_tab_index) is True
+    assert not window._sidebar_tabs.tabBar().isHidden()
+    assert window._sidebar_tabs.currentWidget() is window._design_tab
+    assert window._sidebar_tabs.tabText(window._design_tab_index) == "Design"
+    assert window._sidebar_tabs.tabText(window._simulation_tab_index) == "Simulation"
     assert not window._optimize_button.isHidden()
     assert window._loads_action.isVisible()
     assert window._feed_line_action.isVisible()
@@ -52,11 +56,11 @@ def test_standard_mode_restores_the_full_editor(window: MainWindow) -> None:
     assert not window._workflow_panel.isHidden()
 
 
-def test_advanced_mode_expands_the_advanced_panel(window: MainWindow) -> None:
+def test_advanced_mode_opens_the_simulation_tab(window: MainWindow) -> None:
     window._set_workflow_mode(WorkflowMode.ADVANCED)
 
-    assert window._advanced_toggle.isChecked()
-    assert not window._advanced_body.isHidden()
+    assert window._sidebar_tabs.isTabVisible(window._simulation_tab_index) is True
+    assert window._sidebar_tabs.currentWidget() is window._simulation_tab
     assert window._workflow_panel.isHidden()
 
 
