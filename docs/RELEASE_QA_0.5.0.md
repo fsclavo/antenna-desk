@@ -2,10 +2,10 @@
 
 - **Candidate:** `0.5.0`
 - **Date:** 2026-11-12
-- **Tag:** none yet; candidate prepared from `c5f7c1d` plus the version and QA
-  changes
-- **Status:** local static checks and Linux/Python artifact smoke tests passed;
-  Windows bundle and installer QA remains in CI
+- **Tag:** none yet; candidate on `release/0.5.0-qa` after the release-prep
+  merge and CI QA
+- **Status:** local static checks, Linux/Python artifact smoke tests, and CI
+  Windows bundle/installer QA passed; ready to tag
 
 ## Scope
 
@@ -114,9 +114,21 @@ passed it.
 
 ### Windows
 
-Not run locally: `makensis` is unavailable on this machine. The Windows
-PyInstaller bundle, portable zip, NSIS installer, installed-app smoke test, and
-uninstall check must run in CI before the release is tagged.
+Not built locally because `makensis` is unavailable on this machine. GitHub
+Actions run
+[`43310098954`](https://github.com/fsclavo/antenna-desk/actions/runs/43310098954)
+on `release/0.5.0-qa` completed all build jobs successfully:
+
+| Check | Result |
+|---|---|
+| Wheel and sdist job | pass |
+| Windows bundle, `nec2c.exe`, and NSIS installer | pass |
+| Frozen `AntennaDesk.exe --version` / `--check-solver` | pass |
+| Installer install, desktop shortcut, and uninstaller | pass |
+| Installed `AntennaDesk.exe --version` / `--check-solver` | pass |
+| Silent uninstall | pass |
+| Linux AppImage and `.deb` jobs | pass |
+| Publish GitHub release | skipped, because the run was not a tag |
 
 ## Local artifacts
 
@@ -137,8 +149,8 @@ configured for this candidate. Verify the SHA-256 checksums.
 
 ## Known limitations
 
-- The Windows bundle and installer were not built or smoke-tested locally;
-  that remains a CI gate.
+- The Windows bundle and installer were built and smoke-tested in CI rather
+  than locally because `makensis` is unavailable on this machine.
 - Visual QA is offscreen only; real-display themes, platform scaling, and
   font-size settings still need a manual pass.
 - The native packages are unsigned.
@@ -152,7 +164,8 @@ configured for this candidate. Verify the SHA-256 checksums.
 
 ## Release decision
 
-The 0.5.0 candidate is ready for the Windows CI gate and final release review.
-It has not been tagged or published. After the Windows bundle, installer,
-installed-app, shortcut, and uninstall checks pass in CI, tag the release and
-publish the checksum-verified artifacts.
+The 0.5.0 candidate is ready to tag and publish. The code and documentation
+passed the static gate, the local Linux/Python smoke tests, and the CI Windows
+bundle and installer QA. Tag `v0.5.0` on this candidate and push the tag; the
+tag-triggered workflow will rebuild, sign if configured, and publish the
+checksum-verified artifacts.

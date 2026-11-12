@@ -415,8 +415,8 @@ Release track:
 5. `v0.5.0` is the current release candidate with the feed-transformer defaults,
    current-balun record (schema 44), side-by-side pattern cuts, and the
    accumulated project, measurement, construction, and workflow work. Local
-   artifacts pass their smoke tests; Windows installer QA remains in CI and no
-   tag has been created.
+   artifacts pass their smoke tests, and CI run `43310098954` passed the Windows
+   bundle and installer QA. Tag pending.
 6. Add GPG/Authenticode signing in a later release if required.
 
 Validation track:
