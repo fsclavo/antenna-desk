@@ -323,7 +323,8 @@ understand, build, and improve a design. This is product scope, not a second
 execution queue. UX1–UX17 are complete; the 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**, and
 0.8 **Explore** releases are closed, and the 0.9 **Sustain** release is in
 progress. UX18–UX20 stay here until the next product slice is selected and they
-are ready to execute.
+are ready to execute. UX21–UX22 were added on 2026-11-12 from direct user
+feedback and are queued for execution.
 
 Rules for this track:
 
@@ -360,6 +361,8 @@ Rules for this track:
 | 0.9 Sustain | UX18 | Minimal materials reference | Static, sourced wire/coax/ferrite/insulator table | S–M | B | proposed |
 | 0.9 Sustain | UX19 | Portable project bundle | Export/import project plus assets; no server | S–M | n/a | proposed |
 | 0.9 Sustain | UX20 | Editable BOM costs | Manual cost column and totals | S | n/a | proposed |
+| 0.9 Sustain | UX21 | Side-by-side azimuth/elevation pattern cuts | Four-pane Cuts view with independent cuts | M | n/a | queued 2026-11-12 |
+| 0.9 Sustain | UX22 | Pattern metric visibility | Metric-aware titles and a three-metric summary | S–M | n/a | queued 2026-11-12 |
 
 Release sequence: **0.5 Decide** is the first slice because it has the highest
 user value and the lowest modeling risk. **0.6 Build** converts a simulation into
@@ -385,8 +388,9 @@ Product track:
 
 1. UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**,
    and 0.8 **Explore** releases are closed, and 0.9 **Sustain** is in progress.
-   UX18–UX20 remain product scope in the backlog above; UX18 is the next
-   candidate.
+   UX21–UX22 are queued from direct user feedback; UX18–UX20 remain product
+   scope in the backlog above, and UX18 is the next proposed candidate after
+   those queued items.
 
 Modeling track:
 
