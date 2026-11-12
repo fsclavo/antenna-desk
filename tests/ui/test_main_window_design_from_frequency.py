@@ -373,6 +373,56 @@ def test_design_from_frequency_preserves_t2fd_matching(
     window._dirty = False
 
 
+def test_design_from_frequency_preserves_folded_dipole_transformer(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
+    from antennadesk.domain.design import Confidence, DimensionEstimate
+
+    current = FoldedDipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        spacing_m=0.2,
+        transformer_ratio=6.0,
+    )
+    use_parameters(window, current)
+    estimated = FoldedDipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=19.8,
+        height_m=8.0,
+        spacing_m=0.84,
+    )
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def estimated_estimate(self) -> DimensionEstimate:
+            return DimensionEstimate(
+                parameters=estimated,
+                method_id="test.folded",
+                confidence=Confidence.EMPIRICAL,
+                tolerance_m=0.5,
+            )
+
+    monkeypatch.setattr(main_window_module, "DesignFromFrequencyDialog", FakeDialog)
+    window._dirty = False
+
+    window.design_from_frequency()
+
+    assert window._project is not None
+    design = window._project.designs[0]
+    assert isinstance(design.parameters, FoldedDipoleParameters)
+    assert design.parameters.total_length_m == pytest.approx(19.8)
+    assert design.parameters.transformer_ratio == pytest.approx(6.0)
+    window._dirty = False
+
+
 def test_apply_design_saves_without_simulating(window: MainWindow) -> None:
     window._form._length.setValue(22.0)
 

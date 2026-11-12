@@ -111,7 +111,11 @@ The basic templates are:
   adds the sag and conductor length. Sag is a geometry setting and is not
   optimized.
 - **Folded dipole**: two parallel elements and two end connectors; set the
-  element length and spacing.
+  element length and spacing. The feed transformer ratio defaults to **4:1**
+  and remains editable to **6:1** or **1:1**. It is an ideal transformer; balun
+  loss and common-mode current are not modeled. A 4:1 on a ~267 Ω folded dipole
+  leaves about 67 Ω, so the residual SWR is about 1.3 unless you add a matching
+  network.
 - **Loop**: a regular polygon in a vertical or horizontal plane; set the
   circumference, the number of sides, the orientation, and the height above
   ground. A horizontal loop is the sky-loop configuration.

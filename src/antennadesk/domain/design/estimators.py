@@ -21,6 +21,7 @@ from ..antennas.fan_dipole import (
 )
 from ..antennas.folded_dipole import (
     ANTENNA_TYPE_FOLDED_DIPOLE,
+    FOLDED_DIPOLE_REFERENCE_TRANSFORMER_RATIO,
     FoldedDipoleParameters,
 )
 from ..antennas.inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
@@ -122,6 +123,7 @@ def estimate_folded_dipole(intent: DesignIntent) -> DimensionEstimate:
         wire_radius_m=intent.wire_radius_m,
         material=intent.material,
         ground=intent.ground,
+        transformer_ratio=FOLDED_DIPOLE_REFERENCE_TRANSFORMER_RATIO,
     )
     return DimensionEstimate(
         parameters=parameters,

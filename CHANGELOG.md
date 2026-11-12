@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Folded-dipole feed transformer.** New folded dipoles start with an ideal
+  **4:1** feed transformer, matching the common equal-conductor balun. The ratio
+  is editable to **6:1**, **1:1**, or another value and is applied by the
+  simulation link budget without changing the NEC geometry. The estimator,
+  form, optimizer, design summary, construction sheet, and reports show the
+  modeled ratio; a 4:1 leaves about 67 Ω on a ~267 Ω folded dipole, so the
+  residual SWR is about 1.3 and a matching network is still needed for an exact
+  50 Ω match. Schema 41 adds the field and migrates folded dipoles to 4:1.
 - **Project journal.** **Tools → Project Journal...** adds a manual, local
   timeline of dated notes, decisions, as-built records, measurements, tuning
   notes, and photos. Entries store a title, kind, UTC date, free notes, an
@@ -194,6 +202,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Family optimization now applies the candidate feed-transformer ratio to each
+  simulated point instead of reusing the starting spec. This corrects OCFD,
+  T2FD, end-fed, folded-dipole, and custom optimizations when the transformer
+  variable is unlocked; previously the reported impedance and SWR could belong
+  to the starting ratio while the optimizer table showed a different one.
 - The toolbar **Mode** selector no longer shows only two of its three options
   with scroll arrows after changing between **System** and **Light/Dark**. The
   application now uses Fusion as its single widget style and themes only swap

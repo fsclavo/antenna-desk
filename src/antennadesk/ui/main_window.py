@@ -111,6 +111,7 @@ from ..domain.antennas.endfed import (
 from ..domain.antennas.family import antenna_family
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.feed_line import FeedLine
+from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.g5rv import G5RV_DIPOLE_ID
 from ..domain.antennas.hexbeam import HexbeamParameters
 from ..domain.antennas.inverted_l import InvertedLParameters
@@ -6897,6 +6898,10 @@ class MainWindow(QMainWindow):
                 feed_ratio=previous.feed_ratio,
                 transformer_ratio=previous.transformer_ratio,
             )
+        elif isinstance(previous, FoldedDipoleParameters) and isinstance(
+            estimated, FoldedDipoleParameters
+        ):
+            updates["transformer_ratio"] = previous.transformer_ratio
         elif isinstance(previous, JPoleParameters) and isinstance(estimated, JPoleParameters):
             updates.update(folded=previous.folded, gap_m=previous.gap_m)
         elif isinstance(previous, RingoParameters) and isinstance(estimated, RingoParameters):

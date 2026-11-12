@@ -127,10 +127,14 @@ User-facing parameters for a horizontal two-wire folded dipole:
 - `wire_radius_m`
 - `material`
 - `ground`
+- `transformer_ratio`: ideal feed transformer ratio, default `4.0`
 
 `to_antenna()` generates four wires: two parallel elements and two end
 connectors. The feed is at the center of the driven element. The total
-conductor length is `2 * total_length_m + 2 * spacing_m`.
+conductor length is `2 * total_length_m + 2 * spacing_m`. The ideal transformer
+is applied by `SimulationSpec.feed_transformer_ratio`; it is not part of the NEC
+geometry. The default 4:1 matches the common equal-conductor folded-dipole
+balun and remains editable for a 6:1 or 1:1 feed.
 
 ### LoopParameters
 
@@ -733,11 +737,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 40.
+the application writes version 41.
 
 ## Schema policy
 
-- Current version: `40`.
+- Current version: `41`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -815,6 +819,9 @@ the application writes version 40.
 - Version 40 adds the optional project journal: dated entries, design links,
   local image references, and immutable design snapshots for version
   comparison. Old documents load with an empty journal.
+- Version 41 adds the folded-dipole `transformer_ratio`. The migration writes
+  the 4:1 reference value; the field remains editable to 6:1, 1:1, or another
+  ratio.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads

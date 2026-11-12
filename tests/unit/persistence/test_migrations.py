@@ -922,6 +922,45 @@ def test_v39_migration_tolerates_a_missing_project() -> None:
     assert "project" not in migrated
 
 
+def test_v40_migration_adds_the_folded_dipole_transformer() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 40,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "folded_dipole",
+                    "parameters": {"total_length_m": 20.0},
+                },
+                {
+                    "antenna_type": "wire_dipole",
+                    "parameters": {"total_length_m": 20.0},
+                },
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    folded, wire = migrated["project"]["designs"]
+    assert folded["parameters"]["transformer_ratio"] == 4.0
+    assert "transformer_ratio" not in wire["parameters"]
+    assert "transformer_ratio" not in document["project"]["designs"][0]["parameters"]
+
+
+def test_v40_migration_tolerates_a_missing_project() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 40,
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert "project" not in migrated
+
+
 def test_v38_migration_adds_measurement_sessions() -> None:
     document = {
         "format": "antennadesk-project",

@@ -72,6 +72,25 @@ def test_new_geometry_round_trips_through_the_schema(
     assert restored.designs[0].antenna_type == original.designs[0].antenna_type
 
 
+def test_folded_dipole_transformer_ratio_round_trips() -> None:
+    parameters = FoldedDipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        spacing_m=0.2,
+        transformer_ratio=6.0,
+    )
+    original = _project(parameters, "Folded 6:1")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    payload = document.project.designs[0].parameters
+    assert isinstance(payload, FoldedDipoleParametersPayload)
+    assert payload.transformer_ratio == pytest.approx(6.0)
+    assert restored.designs[0].parameters == parameters
+
+
 def test_schema_rejects_payload_shape_for_the_declared_type() -> None:
     project = _project(
         LoopParameters(

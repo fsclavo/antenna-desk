@@ -132,12 +132,18 @@ def folded_dipole_descriptor(parameters: FoldedDipoleParameters) -> AntennaOptim
             "spacing_m", "field.spacing", "optimize.group.geometry", parameters.spacing_m, 0.5, 0.01
         ),
         _radius(parameters.wire_radius_m),
+        _choice_ratio(
+            "transformer_ratio",
+            "field.transformer_ratio",
+            parameters.transformer_ratio,
+        ),
     )
     initial = {
         "total_length_m": parameters.total_length_m,
         "height_m": parameters.height_m,
         "spacing_m": parameters.spacing_m,
         "wire_radius_m": parameters.wire_radius_m,
+        "transformer_ratio": parameters.transformer_ratio,
     }
 
     def build(values: Mapping[str, float]) -> FoldedDipoleParameters:
@@ -147,6 +153,7 @@ def folded_dipole_descriptor(parameters: FoldedDipoleParameters) -> AntennaOptim
             height_m=values["height_m"],
             spacing_m=values["spacing_m"],
             wire_radius_m=values["wire_radius_m"],
+            transformer_ratio=values["transformer_ratio"],
         )
 
     def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
@@ -155,9 +162,21 @@ def folded_dipole_descriptor(parameters: FoldedDipoleParameters) -> AntennaOptim
             non_negative_violation("height_m", values["height_m"]),
             positive_violation("spacing_m", values["spacing_m"]),
             positive_violation("wire_radius_m", values["wire_radius_m"]),
+            positive_violation("transformer_ratio", values["transformer_ratio"]),
         )
 
-    return _descriptor("folded_dipole", variables, initial, build, validate)
+    return _descriptor(
+        "folded_dipole",
+        variables,
+        initial,
+        build,
+        validate,
+        context_note_key=(
+            "optimize.folded_dipole.transformer_context"
+            if parameters.transformer_ratio != 1.0
+            else None
+        ),
+    )
 
 
 def loop_descriptor(parameters: LoopParameters) -> AntennaOptimizerDescriptor:

@@ -11,6 +11,7 @@ from antennadesk.application.ports.cancellation import CancelToken
 from antennadesk.application.use_cases.optimize_antenna import (
     OptimizeAntenna,
     OptimizeAntennaCommand,
+    _single_metrics,
     _spec_for_point,
 )
 from antennadesk.domain.antennas.antenna import AntennaModel
@@ -56,6 +57,7 @@ class RecordingSolver:
         self.radii: list[float] = []
         self.heights: list[float] = []
         self.lengths: list[float] = []
+        self.transformer_ratios: list[float] = []
 
     def capabilities(self) -> SolverCapabilities:
         return SolverCapabilities(
@@ -88,6 +90,7 @@ class RecordingSolver:
         self.radii.append(model.wires[0].radius_m)
         self.heights.append(model.wires[0].start.z_m)
         self.lengths.append(model.wires[0].length_m)
+        self.transformer_ratios.append(spec.feed_transformer_ratio)
         frequency_hz = spec.frequency_plan.start_hz
         return SimulationResult(
             status=SimulationStatus.COMPLETED,
@@ -148,6 +151,23 @@ def _command(
         robust_tolerance=tolerance,
         locked_variables=locked,
     )
+
+
+def test_single_metrics_applies_the_candidate_transformer_ratio() -> None:
+    solver = RecordingSolver()
+    parameters = replace(_parameters(), transformer_ratio=6.0)
+    command = _command(parameters)
+
+    metrics = _single_metrics(
+        command,
+        solver,
+        parameters,
+        needs_pattern=False,
+        needs_sweep=False,
+    )
+
+    assert solver.transformer_ratios == [6.0]
+    assert metrics["target_error_ohm"] == 0.0
 
 
 def test_operating_objective_scores_only_operating_frequencies() -> None:

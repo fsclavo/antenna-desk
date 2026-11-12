@@ -8,6 +8,7 @@ import pytest
 
 from antennadesk.domain.antennas.folded_dipole import (
     DRIVEN_WIRE_ID,
+    FOLDED_DIPOLE_REFERENCE_TRANSFORMER_RATIO,
     FoldedDipoleParameters,
 )
 from antennadesk.domain.environment.ground import GroundModel
@@ -61,6 +62,19 @@ def test_folded_dipole_total_conductor_length() -> None:
     assert parameters.total_conductor_length_m == pytest.approx(40.4)
 
 
+def test_folded_dipole_defaults_to_the_4_to_1_reference_transformer() -> None:
+    parameters = _parameters()
+
+    assert parameters.transformer_ratio == pytest.approx(FOLDED_DIPOLE_REFERENCE_TRANSFORMER_RATIO)
+    assert parameters.transformer_ratio == pytest.approx(4.0)
+
+
+def test_folded_dipole_accepts_a_6_to_1_transformer() -> None:
+    parameters = _parameters(transformer_ratio=6.0)
+
+    assert parameters.transformer_ratio == pytest.approx(6.0)
+
+
 def test_folded_dipole_azimuth_rotates_the_elements() -> None:
     wire = _parameters(azimuth_deg=90.0).to_antenna().wires[0]
 
@@ -88,6 +102,7 @@ def test_folded_dipole_preserves_ground() -> None:
         ("height_m", -1.0),
         ("spacing_m", 0.0),
         ("wire_radius_m", 0.0),
+        ("transformer_ratio", 0.0),
         ("frequency_hz", math.nan),
     ],
 )

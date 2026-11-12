@@ -2699,8 +2699,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: ("la altura del extremo se limitó al alcance vertical del hilo"),
     },
     "estimator.warning.folded_impedance": {
-        Language.ENGLISH: "spacing affects the step-up impedance; a 4:1 balun is typical for a 50 Ω system",
-        Language.SPANISH: "la separación afecta la impedancia elevada; un balun 4:1 es lo típico para un sistema de 50 Ω",
+        Language.ENGLISH: (
+            "the 4:1 starting transformer is ideal; a real 4:1 leaves about 67 Ω, so "
+            "verify the residual SWR or add a matching network"
+        ),
+        Language.SPANISH: (
+            "el transformador 4:1 inicial es ideal; un 4:1 real deja unos 67 Ω, así "
+            "que verificá la ROE residual o agregá una red de adaptación"
+        ),
     },
     "estimator.warning.vertical_matching": {
         Language.ENGLISH: "5/8-wave verticals need matching and a suitable radial system",
@@ -2948,6 +2954,15 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Separación entre conductores paralelos o elementos del arreglo, según la plantilla."
         ),
     },
+    "help.field.transformer_ratio": {
+        Language.ENGLISH: (
+            "Ideal feed transformer ratio applied by the simulation; 1.0 means no transformer."
+        ),
+        Language.SPANISH: (
+            "Relación del transformador ideal de alimentación aplicada por la simulación; "
+            "1.0 significa sin transformador."
+        ),
+    },
     "help.field.sweep": {
         Language.ENGLISH: "Frequency range used for the impedance and SWR sweep.",
         Language.SPANISH: "Rango de frecuencias usado para el barrido de impedancia y ROE.",
@@ -3068,6 +3083,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "Separación entre los dos conductores del dipolo plegado; no se aplica a "
             "un dipolo de hilo recto."
+        ),
+    },
+    "help.dipole.field.transformer_ratio": {
+        Language.ENGLISH: (
+            "Ideal folded-dipole balun. 4:1 is typical; on a ~267 Ω folded dipole it "
+            "leaves about 67 Ω, so verify the residual SWR or add a matching network."
+        ),
+        Language.SPANISH: (
+            "Balún ideal del dipolo plegado. 4:1 es lo típico; en un dipolo plegado de "
+            "~267 Ω deja unos 67 Ω, así que verificá la ROE residual o agregá una red "
+            "de adaptación."
         ),
     },
     "help.beverage.termination_resistance": {
@@ -4655,6 +4681,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Plantilla: {value}",
     },
     "field.spacing": {Language.ENGLISH: "Spacing", Language.SPANISH: "Separación"},
+    "field.transformer_ratio": {
+        Language.ENGLISH: "Feed transformer ratio",
+        Language.SPANISH: "Relación del transformador de alimentación",
+    },
     "field.sides": {Language.ENGLISH: "Sides", Language.SPANISH: "Lados"},
     "field.primary_dimension": {
         Language.ENGLISH: "Main dimension",
@@ -12545,6 +12575,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "El capacitor de adaptación en el primario y la fuga del "
             "transformador quedan en sus valores de diseño; no se optimizan "
             "hasta tener un modelo medido del transformador."
+        ),
+    },
+    "optimize.folded_dipole.transformer_context": {
+        Language.ENGLISH: (
+            "Targets are transmitter-side. The ideal feed transformer is applied "
+            "before the SWR target; the antenna-side target is the target "
+            "multiplied by the transformer ratio."
+        ),
+        Language.SPANISH: (
+            "Los objetivos son del lado del transmisor. El transformador ideal se "
+            "aplica antes del objetivo de ROE; el objetivo del lado de la antena "
+            "es el objetivo multiplicado por la relación del transformador."
         ),
     },
     "optimize.matching_override": {

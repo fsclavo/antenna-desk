@@ -33,6 +33,7 @@ def test_help_resolution_order_and_missing_keys() -> None:
     shared = help_text(translator, "field.height")
     yagi_height = help_text(translator, "field.height", family="yagi")
     dipole_spacing = help_text(translator, "field.spacing", family="dipole")
+    dipole_transformer = help_text(translator, "field.transformer_ratio", family="dipole")
     hint = help_text(translator, "yagi.polarization")
     missing = help_text(translator, "field.unknown")
 
@@ -41,6 +42,8 @@ def test_help_resolution_order_and_missing_keys() -> None:
     assert "selected ground model" in (shared or "")
     assert "Boom centerline" in (yagi_height or "")
     assert "folded-dipole" in (dipole_spacing or "")
+    assert "4:1" in (dipole_transformer or "")
+    assert "67" in (dipole_transformer or "")
     assert "polarization" in (hint or "").lower()
     assert missing is None
 

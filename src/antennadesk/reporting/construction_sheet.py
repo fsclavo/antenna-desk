@@ -537,17 +537,31 @@ def render_construction_sheet(
 <tr><th>Driven element length</th><td>{parameters.total_length_m:.4f} m</td></tr>
 <tr><th>End connector length</th><td>{parameters.spacing_m:.4f} m</td></tr>
 <tr><th>Feed location</th><td>{_escape(tr("center of driven element"))}</td></tr>
+<tr><th>Feed transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
 <tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
 """
-        construction_note = _note(
-            tr,
-            "Cut two equal driven elements of {total} m and two end connectors of "
-            "{spacing} m. Join them at both ends and feed the center of one "
-            "element. The total conductor length is {conductor} m.",
-            total=f"{parameters.total_length_m:.4f}",
-            spacing=f"{parameters.spacing_m:.4f}",
-            conductor=f"{parameters.total_conductor_length_m:.4f}",
-        )
+        if parameters.transformer_ratio == 1.0:
+            construction_note = _note(
+                tr,
+                "Cut two equal driven elements of {total} m and two end connectors of "
+                "{spacing} m. Join them at both ends and feed the center of one "
+                "element. The total conductor length is {conductor} m.",
+                total=f"{parameters.total_length_m:.4f}",
+                spacing=f"{parameters.spacing_m:.4f}",
+                conductor=f"{parameters.total_conductor_length_m:.4f}",
+            )
+        else:
+            construction_note = _note(
+                tr,
+                "Cut two equal driven elements of {total} m and two end connectors of "
+                "{spacing} m. Join them at both ends and feed the center of one "
+                "element through a {ratio}:1 transformer. The total conductor "
+                "length is {conductor} m.",
+                total=f"{parameters.total_length_m:.4f}",
+                spacing=f"{parameters.spacing_m:.4f}",
+                ratio=f"{parameters.transformer_ratio:g}",
+                conductor=f"{parameters.total_conductor_length_m:.4f}",
+            )
     elif isinstance(parameters, ScvParameters):
         if parameters.kind is ScvKind.HALF_SQUARE:
             feed_point = tr("the top corner of one outer vertical")

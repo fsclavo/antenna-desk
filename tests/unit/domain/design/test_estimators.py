@@ -465,6 +465,7 @@ def test_folded_and_endfed_estimates_are_dimensionally_complete() -> None:
 
     assert isinstance(folded, FoldedDipoleParameters)
     assert folded.spacing_m > 0.0
+    assert folded.transformer_ratio == pytest.approx(4.0)
     assert isinstance(endfed, EndFedParameters)
     assert endfed.length_m > 0.0
     assert endfed.feed_height_m == pytest.approx(10.0)

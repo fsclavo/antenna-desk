@@ -622,6 +622,12 @@ REPORT_SPANISH: dict[str, str] = {
         "extremo de {spacing} m. Unilos en ambos extremos y alimentá el centro de "
         "un elemento. La longitud total del conductor es {conductor} m."
     ),
+    "Cut two equal driven elements of {total} m and two end connectors of {spacing} m. Join them at both ends and feed the center of one element through a {ratio}:1 transformer. The total conductor length is {conductor} m.": (  # noqa: E501
+        "Cortá dos elementos alimentados iguales de {total} m y dos conectores de "
+        "extremo de {spacing} m. Unilos en ambos extremos y alimentá el centro de "
+        "un elemento a través de un transformador {ratio}:1. La longitud total del "
+        "conductor es {conductor} m."
+    ),
     "Cut two legs of {leg} m and join them at the apex with an included angle of {angle}°. The apex is {apex} m above ground.": (  # noqa: E501
         "Cortá dos tramos de {leg} m y unilos en el vértice con un ángulo incluido "
         "de {angle}°. El vértice está a {apex} m sobre el suelo."

@@ -42,6 +42,7 @@ from ..domain.antennas.feed import FeedPoint, Source
 from ..domain.antennas.feed_line import FeedLine
 from ..domain.antennas.folded_dipole import (
     ANTENNA_TYPE_FOLDED_DIPOLE,
+    FOLDED_DIPOLE_REFERENCE_TRANSFORMER_RATIO,
     FoldedDipoleParameters,
 )
 from ..domain.antennas.geometry import Point3D
@@ -310,6 +311,10 @@ class FoldedDipoleParametersPayload(StrictModel):
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
+    transformer_ratio: float = Field(
+        default=FOLDED_DIPOLE_REFERENCE_TRANSFORMER_RATIO,
+        gt=0.0,
+    )
 
 
 class LoopParametersPayload(StrictModel):
@@ -1417,6 +1422,7 @@ def _folded_parameters_from_domain(
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
+        transformer_ratio=value.transformer_ratio,
     )
 
 
@@ -2594,6 +2600,7 @@ def _folded_parameters_to_domain(
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),
+        transformer_ratio=value.transformer_ratio,
     )
 
 

@@ -28,6 +28,7 @@ from ...domain.antennas.dipole import (
 )
 from ...domain.antennas.folded_dipole import (
     ANTENNA_TYPE_FOLDED_DIPOLE,
+    FOLDED_DIPOLE_REFERENCE_TRANSFORMER_RATIO,
     FoldedDipoleParameters,
 )
 from ...domain.antennas.loop import ANTENNA_TYPE_LOOP, LoopOrientation, LoopParameters
@@ -98,6 +99,11 @@ class DipoleForm(QWidget):
         self._length = QDoubleSpinBox(self)
         self._spacing = QDoubleSpinBox(self)
         self._spacing.setValue(0.1)
+        self._transformer = QDoubleSpinBox(self)
+        self._transformer.setRange(1.0, 100.0)
+        self._transformer.setDecimals(1)
+        self._transformer.setSuffix(":1")
+        self._transformer.setValue(FOLDED_DIPOLE_REFERENCE_TRANSFORMER_RATIO)
         self._sides = QSpinBox(self)
         self._sides.setRange(3, 128)
         self._sides.setValue(16)
@@ -167,6 +173,7 @@ class DipoleForm(QWidget):
         form.addRow(self._label("field.orientation"), self._orientation)
         form.addRow(self._label("field.length"), self._length)
         form.addRow(self._label("field.spacing"), self._spacing)
+        form.addRow(self._label("field.transformer_ratio"), self._transformer)
         form.addRow(self._label("field.sides"), self._sides)
         form.addRow(self._label("field.height"), self._height)
         form.addRow(self._label("field.sag"), self._sag)
@@ -205,6 +212,7 @@ class DipoleForm(QWidget):
             self._frequency,
             self._length,
             self._spacing,
+            self._transformer,
             self._height,
             self._sag,
             self._azimuth,
@@ -395,6 +403,7 @@ class DipoleForm(QWidget):
             antenna_type = ANTENNA_TYPE_FOLDED_DIPOLE
             length_m = parameters.total_length_m
             self._spacing.setValue(length_from_m(parameters.spacing_m, self._unit_system))
+            self._transformer.setValue(parameters.transformer_ratio)
         elif isinstance(parameters, LoopParameters):
             antenna_type = ANTENNA_TYPE_LOOP
             length_m = parameters.circumference_m
@@ -483,6 +492,7 @@ class DipoleForm(QWidget):
                 ground=ground,
                 total_length_m=length_m,
                 spacing_m=length_to_m(self._spacing.value(), self._unit_system),
+                transformer_ratio=self._transformer.value(),
             )
         if antenna_type == ANTENNA_TYPE_LOOP:
             return LoopParameters(
@@ -583,6 +593,11 @@ class DipoleForm(QWidget):
             segmentation=segmentation,
             reference_impedance_ohm=self._reference.value(),
             far_field=far_field,
+            feed_transformer_ratio=(
+                parameters.transformer_ratio
+                if isinstance(parameters, FoldedDipoleParameters)
+                else 1.0
+            ),
         )
 
     def _set_row_visible(self, field: QWidget, visible: bool) -> None:
@@ -598,6 +613,7 @@ class DipoleForm(QWidget):
         is_loop = antenna_type == ANTENNA_TYPE_LOOP
         self._set_row_visible(self._orientation, is_dipole or is_loop)
         self._set_row_visible(self._spacing, is_folded)
+        self._set_row_visible(self._transformer, is_folded)
         self._set_row_visible(self._sides, is_loop)
         self._set_row_visible(self._sag, is_dipole)
         self._family_value.setText(

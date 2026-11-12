@@ -19,6 +19,7 @@ from .wire import Wire
 
 ANTENNA_TYPE_FOLDED_DIPOLE = "folded_dipole"
 DRIVEN_WIRE_ID = "folded-1"
+FOLDED_DIPOLE_REFERENCE_TRANSFORMER_RATIO = 4.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,6 +30,11 @@ class FoldedDipoleParameters:
     ``spacing_m`` is the center-to-center spacing between them, and
     ``height_m`` is the wire height above ground.  The feed is at the center
     of the driven conductor.
+
+    ``transformer_ratio`` is the ideal feed transformer ratio applied by the
+    simulation link budget.  It is not part of the NEC geometry.  The default
+    of 4:1 is the common balun for an equal-conductor folded dipole and remains
+    editable for a 6:1 or other matching choice.
     """
 
     frequency_hz: float
@@ -39,6 +45,7 @@ class FoldedDipoleParameters:
     wire_radius_m: float = 0.001
     material: ConductorMaterial = COPPER
     ground: GroundModel = FREE_SPACE
+    transformer_ratio: float = FOLDED_DIPOLE_REFERENCE_TRANSFORMER_RATIO
 
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
@@ -46,6 +53,7 @@ class FoldedDipoleParameters:
         ensure_non_negative(self.height_m, name="height_m")
         ensure_positive(self.spacing_m, name="spacing_m")
         ensure_positive(self.wire_radius_m, name="wire_radius_m")
+        ensure_positive(self.transformer_ratio, name="transformer_ratio")
         object.__setattr__(
             self,
             "azimuth_deg",

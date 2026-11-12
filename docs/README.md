@@ -94,6 +94,10 @@ of truth before adding another planning document.
 - [ADR-0025 — PySide6 version pin and Qt upgrade policy](ADR/0025-pyside6-version-pin.md)
 - [ADR-0026 — Family optimizer descriptors on a shared hybrid engine](ADR/0026-family-optimizer-architecture.md)
 - [ADR-0027 — Construction view policy and wire schedule](ADR/0027-construction-view-policy.md)
+- [ADR-0028 — Matching-network precedence for end-fed designs](ADR/0028-matching-network-precedence.md)
+- [ADR-0029 — Comparison basis](ADR/0029-comparison-basis.md)
+- [ADR-0030 — Feed-chain topology and loss budget](ADR/0030-feed-chain-topology.md)
+- [ADR-0031 — Folded-dipole feed transformer](ADR/0031-folded-dipole-feed-transformer.md)
 
 ## Archive
 

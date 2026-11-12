@@ -415,6 +415,7 @@ def design_summary_rows(
                 ("Element length", f"{parameters.total_length_m:.4f} m"),
                 ("Spacing", f"{parameters.spacing_m:.4f} m"),
                 ("Total conductor length", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Feed transformer", f"{parameters.transformer_ratio:g}:1"),
                 ("Height", f"{parameters.height_m:.4f} m"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
             ]

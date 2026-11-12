@@ -290,6 +290,25 @@ def test_t2fd_summary_reports_the_band_termination_and_transformer() -> None:
     assert rows["Feed transformer"] == "16:1"
 
 
+def test_folded_dipole_summary_reports_the_feed_transformer() -> None:
+    from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
+
+    parameters = FoldedDipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        spacing_m=0.2,
+        transformer_ratio=6.0,
+    )
+
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Type"] == "folded dipole"
+    assert rows["Element length"] == "20.0000 m"
+    assert rows["Spacing"] == "0.2000 m"
+    assert rows["Feed transformer"] == "6:1"
+
+
 def test_endfed_presets_are_labeled_in_the_summary() -> None:
     from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
 

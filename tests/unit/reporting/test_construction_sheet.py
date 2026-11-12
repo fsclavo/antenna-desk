@@ -290,7 +290,31 @@ def test_folded_dipole_construction_sheet(sample_project: Project) -> None:
     assert "Spacing" in sheet
     assert "Total conductor length" in sheet
     assert "End connector length" in sheet
+    assert "Feed transformer" in sheet
+    assert "4:1" in sheet
+    assert "through a 4:1 transformer" in sheet
     assert "40.4000 m" in sheet
+
+
+def test_folded_dipole_construction_sheet_can_show_a_1_to_1_feed(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
+
+    design = sample_project.designs[0]
+    parameters = FoldedDipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        spacing_m=0.2,
+        transformer_ratio=1.0,
+    )
+    folded = design.with_parameters(parameters)
+    sheet = render_construction_sheet(sample_project, folded, None)
+
+    assert "Feed transformer" in sheet
+    assert "1:1" in sheet
+    assert "through a 1:1 transformer" not in sheet
 
 
 def test_inverted_l_construction_sheet(sample_project: Project) -> None:

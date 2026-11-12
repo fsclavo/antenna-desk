@@ -55,7 +55,7 @@ warnings, and a dimension tolerance.
 | Family | Starting estimate | Confidence | Notes |
 |---|---|---|---|
 | Wire dipole | `0.5λ × 0.95` total length | empirical | Height and ground affect resonance |
-| Folded dipole | same element length; `0.02λ` spacing | empirical | Spacing controls step-up impedance |
+| Folded dipole | same element length; `0.02λ` spacing; 4:1 ideal feed transformer | empirical | Spacing controls step-up impedance; the 4:1 default is editable to 6:1 or 1:1 |
 | Loop / quad / delta | circumference `λ × (1.02895 + 0.05028/N + 0.09665/N²)` | empirical | `N` sides; quad=4, delta=3; calibrated polygon preset; the delta case falls in ON4UN's published 1.05–1.06λ range; vertical and horizontal loops share the same circumference rule |
 | Vertical 1/4 | `0.25λ × 0.95`; radial `0.25λ` | empirical | ARRL 234/f length rule; radial count/length are starting values |
 | Vertical 1/2 | `0.5λ × 0.95`; radial `0.25λ` | empirical | High feed impedance; matching required |
@@ -77,6 +77,21 @@ Ground-mounted radials are placed 1 cm above the ground plane in the NEC deck.
 The estimator and project keep the requested base height; the clearance is a
 solver constraint, not a design dimension. NEC-2 rejects horizontal radials
 lying exactly on a ground plane.
+
+### Folded dipole feed transformer
+
+An equal-conductor folded dipole is an approximately 4:1 impedance
+transformation. New designs start with an ideal 4:1 feed transformer, stored in
+`FoldedDipoleParameters.transformer_ratio` and applied by
+`SimulationSpec.feed_transformer_ratio`. The ratio does not change the NEC
+geometry. It is editable because 6:1 is a common alternative for a 300 Ω feed,
+and 1:1 shows the raw antenna impedance.
+
+A 4:1 transformer on a ~267 Ω resonant folded dipole leaves about 67 Ω, so the
+displayed SWR is about 1.3, not 1.0. Use the project matching network for an
+exact 50 Ω match. The transformer is ideal: balun loss, common-mode current, and
+balance are not modeled. The estimator warning and the construction sheet state
+the modeled ratio.
 
 ### J Pole and Slim Jim starting point
 

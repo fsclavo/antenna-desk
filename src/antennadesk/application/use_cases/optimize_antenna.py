@@ -566,6 +566,16 @@ def _candidate_segmentation_policy(base: SegmentationPolicy) -> SegmentationPoli
     )
 
 
+def _feed_transformer_ratio(parameters: AntennaDesignParameters) -> float:
+    """Return the ideal feed-transformer ratio carried by a family."""
+
+    ratio = getattr(parameters, "transformer_ratio", None)
+    if isinstance(ratio, (int, float)):
+        return float(ratio)
+    fallback = getattr(parameters, "feed_transformer_ratio", 1.0)
+    return float(fallback)
+
+
 def _spec_for_point(
     command: OptimizeAntennaCommand,
     model: AntennaModel,
@@ -573,26 +583,31 @@ def _spec_for_point(
     *,
     needs_pattern: bool,
     needs_sweep: bool,
+    feed_transformer_ratio: float | None = None,
 ) -> SimulationSpec:
     if needs_sweep:
-        return replace(
+        spec = replace(
             command.base_spec,
             far_field=(
                 command.base_spec.far_field if needs_pattern else FarFieldRequest(enabled=False)
             ),
         )
-    return replace(
-        command.base_spec,
-        frequency_plan=FrequencyPlan.single(frequency_hz),
-        segmentation=aligned_policy_for_model(
-            model,
-            frequency_hz,
-            _candidate_segmentation_policy(command.base_spec.segmentation),
-        ),
-        far_field=(
-            command.base_spec.far_field if needs_pattern else FarFieldRequest(enabled=False)
-        ),
-    )
+    else:
+        spec = replace(
+            command.base_spec,
+            frequency_plan=FrequencyPlan.single(frequency_hz),
+            segmentation=aligned_policy_for_model(
+                model,
+                frequency_hz,
+                _candidate_segmentation_policy(command.base_spec.segmentation),
+            ),
+            far_field=(
+                command.base_spec.far_field if needs_pattern else FarFieldRequest(enabled=False)
+            ),
+        )
+    if feed_transformer_ratio is not None:
+        spec = replace(spec, feed_transformer_ratio=feed_transformer_ratio)
+    return spec
 
 
 def _run_point(
@@ -603,6 +618,7 @@ def _run_point(
     *,
     needs_pattern: bool,
     needs_sweep: bool,
+    feed_transformer_ratio: float | None = None,
 ) -> _PointOutcome:
     try:
         result = RunSimulation(solver).execute(
@@ -614,6 +630,7 @@ def _run_point(
                     frequency_hz,
                     needs_pattern=needs_pattern,
                     needs_sweep=needs_sweep,
+                    feed_transformer_ratio=feed_transformer_ratio,
                 ),
                 cancel_token=command.cancel_token,
             )
@@ -652,6 +669,7 @@ def _single_metrics(
         frequency_hz,
         needs_pattern=needs_pattern,
         needs_sweep=needs_sweep,
+        feed_transformer_ratio=_feed_transformer_ratio(parameters),
     )
     if outcome.cancelled:
         raise _EvaluationCancelled
@@ -716,6 +734,7 @@ def _multi_metrics(
                 frequency_hz,
                 needs_pattern=needs_pattern,
                 needs_sweep=False,
+                feed_transformer_ratio=_feed_transformer_ratio(scenario_parameters),
             )
             if outcome.cancelled:
                 raise _EvaluationCancelled

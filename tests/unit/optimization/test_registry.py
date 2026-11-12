@@ -55,6 +55,7 @@ from antennadesk.domain.optimization.registry import (
     SUPPORTED_OPTIMIZER_TYPES,
     optimizer_availability,
 )
+from antennadesk.domain.optimization.variables import VariableKind
 
 
 def _dipole() -> DipoleParameters:
@@ -216,6 +217,28 @@ def test_descriptor_variables_cover_every_geometric_field() -> None:
             field_names |= {f"gap_{index}" for index in range(1, len(parameters.elements))}
         assert field_names, "the parameter class has no fields"
         assert expected <= field_names
+
+
+def test_folded_dipole_descriptor_exposes_the_transformer_choice() -> None:
+    parameters = FoldedDipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        spacing_m=0.2,
+    )
+    availability = optimizer_availability(parameters)
+    descriptor = availability.descriptor
+    assert descriptor is not None
+
+    variable = next(item for item in descriptor.variables if item.name == "transformer_ratio")
+    assert variable.kind is VariableKind.CHOICE
+    assert variable.locked_by_default
+    assert 4.0 in variable.choices
+    assert 6.0 in variable.choices
+
+    rebuilt = descriptor.build_parameters({**descriptor.initial_values, "transformer_ratio": 6.0})
+    assert isinstance(rebuilt, FoldedDipoleParameters)
+    assert rebuilt.transformer_ratio == pytest.approx(6.0)
 
 
 def _typed_samples() -> list[AntennaDesignParameters]:

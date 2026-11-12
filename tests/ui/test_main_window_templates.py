@@ -43,6 +43,8 @@ def test_switching_to_a_folded_dipole_updates_the_design_and_view(
     parameters = window._project.designs[0].parameters
     assert isinstance(parameters, FoldedDipoleParameters)
     assert parameters.spacing_m == pytest.approx(0.2, abs=1e-6)
+    assert parameters.transformer_ratio == pytest.approx(4.0)
+    assert window._form.simulation_spec().feed_transformer_ratio == pytest.approx(4.0)
     assert len(window._project.designs[0].antenna.wires) == 4
     assert window._view_combo.currentData() == "construction"
     assert window._geometry.resolved_mode().value == "plan"

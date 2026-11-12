@@ -151,6 +151,8 @@ def test_html_report_supports_new_geometry_summaries(sample_project: Project) ->
     folded_report = render_html_report(sample_project, folded, make_result(sample_project))
     assert "folded dipole" in folded_report
     assert "Element length" in folded_report
+    assert "Feed transformer" in folded_report
+    assert "4:1" in folded_report
 
     loop = design.with_parameters(
         LoopParameters(

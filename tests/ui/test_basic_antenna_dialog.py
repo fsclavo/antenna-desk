@@ -42,6 +42,7 @@ def test_wire_dipole_dialog_opens_the_full_editor(qtbot: QtBot) -> None:
     )
     assert parameters.height_m == pytest.approx(8.0)
     assert parameters.ground.kind.value == "finite"
+    assert dialog._form._transformer.isHidden()
     assert dialog._form._change_template.isHidden()
 
 
@@ -82,7 +83,25 @@ def test_folded_dipole_dialog_opens_the_full_editor(qtbot: QtBot) -> None:
     assert isinstance(parameters, FoldedDipoleParameters)
     assert parameters.total_length_m > 19.0
     assert parameters.spacing_m > 0.0
+    assert parameters.transformer_ratio == pytest.approx(4.0)
+    assert not dialog._form._transformer.isHidden()
     assert dialog._form._change_template.isHidden()
+
+
+def test_folded_dipole_transformer_can_be_changed_to_6_to_1(qtbot: QtBot) -> None:
+    dialog = BasicAntennaDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        antenna_type=ANTENNA_TYPE_FOLDED_DIPOLE,
+        frequency_hz=7_100_000.0,
+    )
+    qtbot.addWidget(dialog)
+
+    dialog._form._transformer.setValue(6.0)
+    parameters = dialog.parameters()
+
+    assert isinstance(parameters, FoldedDipoleParameters)
+    assert parameters.transformer_ratio == pytest.approx(6.0)
 
 
 def test_loop_dialog_keeps_the_delta_and_quad_side_counts(qtbot: QtBot) -> None:
