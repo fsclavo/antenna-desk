@@ -635,6 +635,14 @@ axes with a target frequency and metric; `SweepPoint` stores SWR, R, X, and
 best modeled SWR. The total is capped at 400 points. Sweeps are transient
 what-if evaluations and are not persisted.
 
+`design/guided_experiments.py` builds three curated `SweepPlan` presets from the
+family optimizer descriptor: a primary-length resonance sweep, a separate
+height sweep, and a two-dimensional length-by-height interaction sweep. The
+resolver selects continuous length variables by role and reports an explicit
+reason key when the family lacks a required dimension. Guided experiments do
+not add a solver path, optimize between points, or persist results; they only
+preselect axes and limits for the normal sweep engine.
+
 `design/tuning.py` implements the bounded tuning estimate. It selects the
 measured resonance nearest the target (or the minimum-SWR point when there is
 no resonance), estimates `df/dD` from solver probes around the current primary

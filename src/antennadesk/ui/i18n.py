@@ -1550,6 +1550,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Parameter Sweep...",
         Language.SPANISH: "Barrido de parámetros...",
     },
+    "action.guided_experiments": {
+        Language.ENGLISH: "Guided Experiments...",
+        Language.SPANISH: "Experimentos guiados...",
+    },
     "action.robustness": {
         Language.ENGLISH: "Tolerance & Robustness...",
         Language.SPANISH: "Tolerancia y robustez...",
@@ -3410,6 +3414,51 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: ("Run a bounded 1D or 2D what-if sweep over family design variables."),
         Language.SPANISH: ("Ejecutá un barrido acotado 1D o 2D de variables del diseño."),
     },
+    "help.action.guided_experiments": {
+        Language.ENGLISH: (
+            "Run one of three curated sweeps that explain resonance, ground height, "
+            "and two-dimensional interaction."
+        ),
+        Language.SPANISH: (
+            "Ejecutá uno de tres barridos guiados que explican resonancia, altura "
+            "sobre el suelo e interacción en dos dimensiones."
+        ),
+    },
+    "help.guided.list": {
+        Language.ENGLISH: (
+            "Choose one of three experiments; unavailable experiments state why this "
+            "family cannot run them."
+        ),
+        Language.SPANISH: (
+            "Elegí uno de tres experimentos; los no disponibles explican por qué esta "
+            "familia no puede ejecutarlos."
+        ),
+    },
+    "help.guided.details": {
+        Language.ENGLISH: (
+            "Question, steps, variable range, what to look for, and limits before running."
+        ),
+        Language.SPANISH: (
+            "Pregunta, pasos, rango de variables, qué observar y límites antes de ejecutar."
+        ),
+    },
+    "help.guided.start": {
+        Language.ENGLISH: (
+            "Open the sweep dialog with this experiment preset; ranges and points remain editable."
+        ),
+        Language.SPANISH: (
+            "Abrí el barrido con este experimento preconfigurado; los rangos y puntos "
+            "siguen siendo editables."
+        ),
+    },
+    "help.guided.guide": {
+        Language.ENGLISH: (
+            "The experiment question, what to look for, and limits while the sweep is running."
+        ),
+        Language.SPANISH: (
+            "La pregunta del experimento, qué observar y sus límites durante el barrido."
+        ),
+    },
     "help.action.robustness": {
         Language.ENGLISH: (
             "Run deterministic corner cases and a seeded Monte Carlo tolerance analysis."
@@ -5026,6 +5075,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Sweep point applied.",
         Language.SPANISH: "Punto del barrido aplicado.",
     },
+    "status.guided_experiment_applied": {
+        Language.ENGLISH: "Guided experiment point applied.",
+        Language.SPANISH: "Punto del experimento guiado aplicado.",
+    },
     "design.provenance": {
         Language.ENGLISH: "Estimated design: {method} · confidence: {confidence} · tolerance: {tolerance}",
         Language.SPANISH: "Diseño estimado: {method} · confianza: {confidence} · tolerancia: {tolerance}",
@@ -6401,6 +6454,204 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Tolerance analysis is not available for this family.",
         Language.SPANISH: "El análisis de tolerancia no está disponible para esta familia.",
     },
+    "guided.title": {
+        Language.ENGLISH: "Guided experiments",
+        Language.SPANISH: "Experimentos guiados",
+    },
+    "guided.intro": {
+        Language.ENGLISH: (
+            "Choose one experiment. Each preset only fills the sweep controls; you can "
+            "adjust the ranges and point counts before running."
+        ),
+        Language.SPANISH: (
+            "Elegí un experimento. Cada preset solo completa los controles del barrido; "
+            "podés ajustar rangos y cantidad de puntos antes de ejecutar."
+        ),
+    },
+    "guided.start": {
+        Language.ENGLISH: "Start experiment",
+        Language.SPANISH: "Iniciar experimento",
+    },
+    "guided.unavailable_family": {
+        Language.ENGLISH: "Guided experiments are not available for this family.",
+        Language.SPANISH: "Los experimentos guiados no están disponibles para esta familia.",
+    },
+    "guided.steps": {
+        Language.ENGLISH: "Steps",
+        Language.SPANISH: "Pasos",
+    },
+    "guided.look_for": {
+        Language.ENGLISH: "What to look for",
+        Language.SPANISH: "Qué observar",
+    },
+    "guided.limits": {
+        Language.ENGLISH: "Limits",
+        Language.SPANISH: "Límites",
+    },
+    "guided.range_x": {
+        Language.ENGLISH: ("Horizontal axis: {variable} · {low} to {high} · {points} points"),
+        Language.SPANISH: ("Eje horizontal: {variable} · {low} a {high} · {points} puntos"),
+    },
+    "guided.range_y": {
+        Language.ENGLISH: "Vertical axis: {variable} · {low} to {high} · {points} points",
+        Language.SPANISH: "Eje vertical: {variable} · {low} a {high} · {points} puntos",
+    },
+    "guided.metric": {
+        Language.ENGLISH: "Metric: {metric}",
+        Language.SPANISH: "Métrica: {metric}",
+    },
+    "guided.unavailable": {
+        Language.ENGLISH: "Unavailable: {reason}",
+        Language.SPANISH: "No disponible: {reason}",
+    },
+    "guided.reason.primary": {
+        Language.ENGLISH: "This family has no continuous length dimension to sweep.",
+        Language.SPANISH: "Esta familia no tiene una dimensión de longitud continua para barrer.",
+    },
+    "guided.reason.height": {
+        Language.ENGLISH: "This family has no separate continuous height dimension.",
+        Language.SPANISH: "Esta familia no tiene una dimensión de altura continua separada.",
+    },
+    "guided.reason.interaction": {
+        Language.ENGLISH: (
+            "This experiment needs both a continuous length and a separate height dimension."
+        ),
+        Language.SPANISH: (
+            "Este experimento necesita una longitud continua y una altura separada."
+        ),
+    },
+    "guided.resonance.title": {
+        Language.ENGLISH: "Resonance and match",
+        Language.SPANISH: "Resonancia y adaptación",
+    },
+    "guided.resonance.question": {
+        Language.ENGLISH: (
+            "Where does the antenna become resonant, and does the lowest SWR occur there?"
+        ),
+        Language.SPANISH: ("¿Dónde entra en resonancia la antena y coincide allí la ROE más baja?"),
+    },
+    "guided.resonance.step.1": {
+        Language.ENGLISH: "Run the sweep and inspect the reactance curve.",
+        Language.SPANISH: "Ejecutá el barrido y mirá la curva de reactancia.",
+    },
+    "guided.resonance.step.2": {
+        Language.ENGLISH: (
+            "Find where reactance crosses zero and compare it with the lowest SWR row."
+        ),
+        Language.SPANISH: (
+            "Buscá dónde cruza cero la reactancia y compará con la fila de ROE más baja."
+        ),
+    },
+    "guided.resonance.step.3": {
+        Language.ENGLISH: "Select a row to inspect R, X, |Z|, and SWR together.",
+        Language.SPANISH: "Seleccioná una fila para ver R, X, |Z| y ROE juntos.",
+    },
+    "guided.resonance.look_for": {
+        Language.ENGLISH: (
+            "Zero reactance indicates resonance. SWR also depends on resistance, so "
+            "the lowest SWR may not be exactly at resonance."
+        ),
+        Language.SPANISH: (
+            "Reactancia cero indica resonancia. La ROE también depende de la resistencia, "
+            "así que la ROE más baja puede no estar exactamente en resonancia."
+        ),
+    },
+    "guided.resonance.limits": {
+        Language.ENGLISH: (
+            "One frequency is evaluated. This does not establish bandwidth, efficiency, "
+            "pattern, or a construction tolerance."
+        ),
+        Language.SPANISH: (
+            "Se evalúa una frecuencia. Esto no establece ancho de banda, eficiencia, "
+            "patrón ni tolerancia de construcción."
+        ),
+    },
+    "guided.ground_height.title": {
+        Language.ENGLISH: "Height above ground",
+        Language.SPANISH: "Altura sobre el suelo",
+    },
+    "guided.ground_height.question": {
+        Language.ENGLISH: (
+            "How does the height above the selected ground model change the feedpoint impedance?"
+        ),
+        Language.SPANISH: (
+            "¿Cómo cambia la impedancia de alimentación con la altura sobre el modelo de suelo?"
+        ),
+    },
+    "guided.ground_height.step.1": {
+        Language.ENGLISH: "Run the sweep and follow R, X, and |Z| as height changes.",
+        Language.SPANISH: "Ejecutá el barrido y seguí R, X y |Z| al cambiar la altura.",
+    },
+    "guided.ground_height.step.2": {
+        Language.ENGLISH: "Compare the current-height marker with the curve.",
+        Language.SPANISH: "Compará el marcador de altura actual con la curva.",
+    },
+    "guided.ground_height.step.3": {
+        Language.ENGLISH: "Select a row to inspect SWR at that height.",
+        Language.SPANISH: "Seleccioná una fila para ver la ROE a esa altura.",
+    },
+    "guided.ground_height.look_for": {
+        Language.ENGLISH: (
+            "Ground coupling changes the feedpoint impedance. A better match is not "
+            "automatically a better radiator."
+        ),
+        Language.SPANISH: (
+            "El acoplamiento con el suelo cambia la impedancia de alimentación. Mejor "
+            "adaptación no significa automáticamente mejor radiación."
+        ),
+    },
+    "guided.ground_height.limits": {
+        Language.ENGLISH: (
+            "The selected ground model is used as-is. Ground loss, takeoff angle, and "
+            "gain are not reported by this experiment."
+        ),
+        Language.SPANISH: (
+            "Se usa el modelo de suelo elegido. Este experimento no informa pérdidas "
+            "en el suelo, ángulo de salida ni ganancia."
+        ),
+    },
+    "guided.interaction.title": {
+        Language.ENGLISH: "Two dimensions at once",
+        Language.SPANISH: "Dos dimensiones a la vez",
+    },
+    "guided.interaction.question": {
+        Language.ENGLISH: "Does the best primary dimension change when height changes?",
+        Language.SPANISH: "¿La mejor dimensión principal cambia al variar la altura?",
+    },
+    "guided.interaction.step.1": {
+        Language.ENGLISH: "Run the 2D sweep and read the SWR grid.",
+        Language.SPANISH: "Ejecutá el barrido 2D y leé la grilla de ROE.",
+    },
+    "guided.interaction.step.2": {
+        Language.ENGLISH: ("Pick several height rows and compare where SWR is lowest in each row."),
+        Language.SPANISH: (
+            "Elegí varias filas de altura y compará dónde es más baja la ROE en cada una."
+        ),
+    },
+    "guided.interaction.step.3": {
+        Language.ENGLISH: "Select a cell to inspect R, X, |Z|, and SWR.",
+        Language.SPANISH: "Seleccioná una celda para ver R, X, |Z| y ROE.",
+    },
+    "guided.interaction.look_for": {
+        Language.ENGLISH: (
+            "If the low-SWR column moves as height changes, the dimensions interact. "
+            "A one-dimensional sweep can hide that."
+        ),
+        Language.SPANISH: (
+            "Si la columna de ROE baja se mueve al cambiar la altura, las dimensiones "
+            "interactúan. Un barrido 1D puede ocultarlo."
+        ),
+    },
+    "guided.interaction.limits": {
+        Language.ENGLISH: (
+            "SWR is evaluated at one frequency. The grid is descriptive, not an "
+            "optimization, and invalid cells remain visible."
+        ),
+        Language.SPANISH: (
+            "La ROE se evalúa en una frecuencia. La grilla es descriptiva, no una "
+            "optimización, y las celdas inválidas siguen visibles."
+        ),
+    },
     "sweep.title": {
         Language.ENGLISH: "Parameter sweep",
         Language.SPANISH: "Barrido de parámetros",
@@ -7570,6 +7821,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "history.parameter_sweep": {
         Language.ENGLISH: "Apply sweep point",
         Language.SPANISH: "Aplicar punto del barrido",
+    },
+    "history.guided_experiment": {
+        Language.ENGLISH: "Apply guided experiment",
+        Language.SPANISH: "Aplicar experimento guiado",
     },
     "history.simulate": {
         Language.ENGLISH: "Simulate",

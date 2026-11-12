@@ -262,7 +262,10 @@ invent numerical uncertainty values. Parameter sweeps use the family optimizer
 descriptor for bounded variable sets and parameter construction; the
 `RunParameterSweep` use case runs each grid point through the solver in a
 worker thread. The dialog only renders the points and applies the selected
-parameters through the normal family adapter. Tolerance analysis uses the same
+parameters through the normal family adapter. Guided experiments are curated
+`SweepPlan` presets from `design/guided_experiments.py`; the chooser opens the
+same sweep dialog with those axes and a guide banner, so plotting, validation,
+cancellation, and apply behavior remain single-sourced. Tolerance analysis uses the same
 descriptor contract: `RunRobustness` evaluates nominal, corner, and seeded
 Monte Carlo scenarios in a worker thread, and the dialog is read-only. It does
 not change the project or persist its transient grid and sample results.

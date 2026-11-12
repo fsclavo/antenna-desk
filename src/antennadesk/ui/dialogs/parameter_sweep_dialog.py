@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 
 import pyqtgraph as pg
 from PySide6.QtCore import Qt, QThread
@@ -61,6 +62,16 @@ from ..widgets.task_progress import TaskProgressBar
 from ..workers.parameter_sweep_worker import ParameterSweepWorker
 
 
+@dataclass(frozen=True, slots=True)
+class SweepGuide:
+    """Translated-key references for a guided experiment banner."""
+
+    title_key: str
+    question_key: str
+    look_for_key: str
+    limits_key: str
+
+
 class ParameterSweepDialog(QDialog):
     """Run a bounded what-if sweep over one or two family variables."""
 
@@ -73,6 +84,9 @@ class ParameterSweepDialog(QDialog):
         design: DesignVariant,
         base_spec: SimulationSpec,
         parent: QWidget | None = None,
+        *,
+        preset_plan: SweepPlan | None = None,
+        guide: SweepGuide | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
@@ -81,6 +95,7 @@ class ParameterSweepDialog(QDialog):
         self._descriptor = descriptor
         self._design = design
         self._base_spec = base_spec
+        self._guide = guide
         self._colors = theme_colors(self.palette())
         self._result: ParameterSweepResult | None = None
         self._selected_parameters: AntennaDesignParameters | None = None
@@ -159,6 +174,11 @@ class ParameterSweepDialog(QDialog):
         self._axis_hint = QLabel(self)
         self._axis_hint.setWordWrap(True)
         self._axis_hint.hide()
+        self._guide_label = QLabel(self)
+        self._guide_label.setWordWrap(True)
+        self._guide_label.setTextFormat(Qt.TextFormat.PlainText)
+        self._guide_label.hide()
+        apply_help(self._guide_label, translator, "guided.guide")
 
         self._plot = pg.PlotWidget(self)
         self._plot.showGrid(x=True, y=True, alpha=0.3)
@@ -211,6 +231,7 @@ class ParameterSweepDialog(QDialog):
         actions.addWidget(self._close)
 
         layout = QVBoxLayout(self)
+        layout.addWidget(self._guide_label)
         layout.addWidget(axis_group)
         layout.addWidget(self._validation)
         layout.addWidget(self._summary)
@@ -229,6 +250,8 @@ class ParameterSweepDialog(QDialog):
         self._target.valueChanged.connect(self._update_budget)
 
         self._populate_variables()
+        if preset_plan is not None:
+            self._apply_plan(preset_plan)
         self.retranslate()
         self._update_budget()
 
@@ -281,6 +304,52 @@ class ParameterSweepDialog(QDialog):
             self._y_count,
             default_count=9,
         )
+
+    def _apply_plan(self, plan: SweepPlan) -> None:
+        """Populate the controls from a guided-experiment preset."""
+
+        self._updating_axes = True
+        try:
+            self._select_variable(self._x_variable, plan.x_axis.name)
+            self._select_variable(
+                self._y_variable,
+                plan.y_axis.name if plan.y_axis is not None else None,
+            )
+            self._configure_axis(
+                self._x_variable,
+                self._x_min,
+                self._x_max,
+                self._x_count,
+                default_count=plan.x_axis.count,
+            )
+            self._configure_axis(
+                self._y_variable,
+                self._y_min,
+                self._y_max,
+                self._y_count,
+                default_count=plan.y_axis.count if plan.y_axis is not None else 9,
+            )
+            self._x_min.setValue(self._to_display(plan.x_axis.unit, plan.x_axis.values[0]))
+            self._x_max.setValue(self._to_display(plan.x_axis.unit, plan.x_axis.values[-1]))
+            self._x_count.setValue(plan.x_axis.count)
+            if plan.y_axis is not None:
+                self._y_min.setValue(self._to_display(plan.y_axis.unit, plan.y_axis.values[0]))
+                self._y_max.setValue(self._to_display(plan.y_axis.unit, plan.y_axis.values[-1]))
+                self._y_count.setValue(plan.y_axis.count)
+            metric_index = self._metric.findData(plan.metric.value)
+            if metric_index >= 0:
+                self._metric.setCurrentIndex(metric_index)
+            self._target.setValue(plan.target_frequency_hz / 1e6)
+        finally:
+            self._updating_axes = False
+        self._update_budget()
+
+    @staticmethod
+    def _select_variable(combo: QComboBox, name: str | None) -> None:
+        for index in range(combo.count()):
+            if combo.itemData(index) == name:
+                combo.setCurrentIndex(index)
+                return
 
     def _variable(self, combo: QComboBox) -> OptimizationVariable | None:
         name = combo.currentData()
@@ -935,7 +1004,20 @@ class ParameterSweepDialog(QDialog):
 
     def retranslate(self) -> None:
         t = self._translator.t
-        self.setWindowTitle(t("sweep.title"))
+        self.setWindowTitle(
+            t(self._guide.title_key) if self._guide is not None else t("sweep.title")
+        )
+        if self._guide is not None:
+            self._guide_label.setText(
+                "\n".join(
+                    (
+                        t(self._guide.question_key),
+                        f"{t('guided.look_for')}: {t(self._guide.look_for_key)}",
+                        f"{t('guided.limits')}: {t(self._guide.limits_key)}",
+                    )
+                )
+            )
+            self._guide_label.show()
         self._axis_group.setTitle(t("sweep.axes"))
         self._y_variable.setItemText(0, t("sweep.none"))
         for combo in (self._x_variable, self._y_variable):

@@ -12,6 +12,8 @@ from pytestqt.qtbot import QtBot
 from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.common.validation import Diagnostic
+from antennadesk.domain.design.guided_experiments import guided_experiments
+from antennadesk.domain.design.sweep import SweepPlan
 from antennadesk.domain.optimization.registry import optimizer_availability
 from antennadesk.domain.projects.project import DesignVariant
 from antennadesk.domain.simulation.frequency import FrequencyPlan
@@ -22,7 +24,10 @@ from antennadesk.domain.simulation.result import (
 )
 from antennadesk.domain.simulation.solver import SolverCapabilities, SolverMetadata
 from antennadesk.domain.simulation.spec import SimulationSpec
-from antennadesk.ui.dialogs.parameter_sweep_dialog import ParameterSweepDialog
+from antennadesk.ui.dialogs.parameter_sweep_dialog import (
+    ParameterSweepDialog,
+    SweepGuide,
+)
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem
 
@@ -88,6 +93,8 @@ def _dialog(
     qtbot: QtBot,
     *,
     language: Language = Language.ENGLISH,
+    preset_plan: SweepPlan | None = None,
+    guide: SweepGuide | None = None,
 ) -> ParameterSweepDialog:
     parameters = DipoleParameters(
         frequency_hz=7_100_000.0,
@@ -110,6 +117,8 @@ def _dialog(
         availability.descriptor,
         design,
         SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0)),
+        preset_plan=preset_plan,
+        guide=guide,
     )
     qtbot.addWidget(dialog)
     return dialog
@@ -164,6 +173,67 @@ def test_dialog_runs_a_2d_sweep_and_selects_a_cell(qtbot: QtBot) -> None:
     assert dialog._apply_selected.isEnabled() is True
     dialog._apply_selected_point()
     assert dialog.result() == QDialog.DialogCode.Accepted
+
+
+def test_dialog_accepts_a_guided_preset_and_guide(qtbot: QtBot) -> None:
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=10.0,
+        height_m=8.0,
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    preset = guided_experiments(availability.descriptor, 7_100_000.0)[0].experiment
+    assert preset is not None
+    guide = SweepGuide(
+        title_key="guided.resonance.title",
+        question_key="guided.resonance.question",
+        look_for_key="guided.resonance.look_for",
+        limits_key="guided.resonance.limits",
+    )
+
+    dialog = _dialog(qtbot, preset_plan=preset.plan, guide=guide)
+
+    assert dialog.windowTitle() == "Resonance and match"
+    assert dialog._x_variable.currentData() == "total_length_m"
+    assert dialog._x_count.value() == 21
+    assert dialog._y_variable.currentData() is None
+    assert dialog._metric.currentData() == "reactance"
+    assert "21 solver runs" in dialog._budget.text()
+    assert dialog._guide_label.isHidden() is False
+    assert "resonant" in dialog._guide_label.text()
+    assert "One frequency" in dialog._guide_label.text()
+    assert dialog._x_variable.isEnabled() is True
+    assert dialog._validation.isHidden() is True
+
+
+def test_dialog_accepts_a_two_dimensional_guided_preset(qtbot: QtBot) -> None:
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=10.0,
+        height_m=8.0,
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    preset = guided_experiments(availability.descriptor, 7_100_000.0)[2].experiment
+    assert preset is not None
+    guide = SweepGuide(
+        title_key="guided.interaction.title",
+        question_key="guided.interaction.question",
+        look_for_key="guided.interaction.look_for",
+        limits_key="guided.interaction.limits",
+    )
+
+    dialog = _dialog(qtbot, preset_plan=preset.plan, guide=guide)
+
+    assert dialog.windowTitle() == "Two dimensions at once"
+    assert dialog._x_variable.currentData() == "total_length_m"
+    assert dialog._x_count.value() == 9
+    assert dialog._y_variable.currentData() == "height_m"
+    assert dialog._y_count.value() == 7
+    assert dialog._metric.currentData() == "swr"
+    assert "63 solver runs" in dialog._budget.text()
+    assert dialog._validation.isHidden() is True
 
 
 def test_dialog_warns_about_large_budgets_and_rejects_inverted_ranges(

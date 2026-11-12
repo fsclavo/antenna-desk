@@ -21,6 +21,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   never recaptures its snapshot, and deleting a design detaches the link while
   preserving the snapshot. Journal changes enter project undo. Schema 40 adds
   the optional journal; older projects migrate with an empty journal.
+- **Guided experiments.** **Tools → Guided Experiments...** adds three curated
+  sweeps over the existing family optimizer variables: **Resonance and match**
+  (primary length), **Height above ground** (separate height dimension), and
+  **Two dimensions at once** (length-by-height interaction). The chooser shows
+  the question, steps, range, what to look for, limits, and an explicit
+  availability reason for incompatible families. Starting an experiment opens
+  the normal **Parameter Sweep** dialog with the axes preset and a guide banner;
+  ranges, points, metric, and apply behavior remain unchanged. The experiments
+  evaluate one target frequency and do not establish bandwidth, efficiency,
+  pattern, or an optimum between points. No schema change.
 - **Guided, Standard, and Advanced workflow modes.** The mode is selectable
   from the new **View → Workflow mode** menu or the toolbar **Mode** selector,
   persists across windows, and is also available in **Preferences**. Guided

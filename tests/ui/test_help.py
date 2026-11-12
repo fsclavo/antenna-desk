@@ -187,6 +187,7 @@ def test_main_window_sections_actions_and_tabs_have_help(window) -> None:  # typ
     assert "sweep" in window._sweep_action.toolTip().lower()
     assert "corner" in window._robustness_action.toolTip().lower()
     assert "snapshots" in window._journal_action.toolTip().lower()
+    assert "resonance" in window._guided_experiments_action.toolTip().lower()
 
     design_tab = window._sidebar_tabs.indexOf(window._design_tab)
     simulation_tab = window._sidebar_tabs.indexOf(window._simulation_tab)
@@ -215,6 +216,7 @@ def test_main_window_sections_actions_and_tabs_have_help(window) -> None:  # typ
     assert "barrido" in window._sweep_action.toolTip().lower()
     assert "tolerancia" in window._robustness_action.toolTip().lower()
     assert "instantáneas" in window._journal_action.toolTip().lower()
+    assert "resonancia" in window._guided_experiments_action.toolTip().lower()
 
     assert "parámetros" in window._sidebar_tabs.tabToolTip(design_tab).lower()
     assert "barrido" in window._sidebar_tabs.tabToolTip(simulation_tab).lower()

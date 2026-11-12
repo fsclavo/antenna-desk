@@ -280,6 +280,7 @@ from .dialogs.fan_dipole_dialog import FanDipoleDialog
 from .dialogs.feed_chain_dialog import FeedChainDialog
 from .dialogs.feed_line_dialog import FeedLineDialog
 from .dialogs.g5rv_dialog import G5RVDialog
+from .dialogs.guided_experiments_dialog import GuidedExperimentsDialog
 from .dialogs.hexbeam_dialog import HexbeamDialog
 from .dialogs.installation_profile_dialog import InstallationProfileDialog
 from .dialogs.inverted_l_dialog import InvertedLDialog
@@ -623,6 +624,8 @@ class MainWindow(QMainWindow):
         self._tuning_action.triggered.connect(lambda: self.tune_measurement())
         self._sweep_action = QAction(self)
         self._sweep_action.triggered.connect(lambda: self.parameter_sweep())
+        self._guided_experiments_action = QAction(self)
+        self._guided_experiments_action.triggered.connect(lambda: self.guided_experiments())
         self._robustness_action = QAction(self)
         self._robustness_action.triggered.connect(lambda: self.tolerance_robustness())
 
@@ -1361,6 +1364,7 @@ class MainWindow(QMainWindow):
         self._tools_menu.addAction(self._journal_action)
         self._tools_menu.addAction(self._tuning_action)
         self._tools_menu.addAction(self._sweep_action)
+        self._tools_menu.addAction(self._guided_experiments_action)
         self._tools_menu.addAction(self._robustness_action)
         self._tools_menu.addAction(self._compact_history_action)
 
@@ -1444,6 +1448,13 @@ class MainWindow(QMainWindow):
         self._sweep_action.setText(self._translator.t("action.parameter_sweep"))
         self._sweep_action.setToolTip(self._translator.t("help.action.parameter_sweep"))
         self._sweep_action.setWhatsThis(self._translator.t("help.action.parameter_sweep"))
+        self._guided_experiments_action.setText(self._translator.t("action.guided_experiments"))
+        self._guided_experiments_action.setToolTip(
+            self._translator.t("help.action.guided_experiments")
+        )
+        self._guided_experiments_action.setWhatsThis(
+            self._translator.t("help.action.guided_experiments")
+        )
         self._robustness_action.setText(self._translator.t("action.robustness"))
         self._robustness_action.setToolTip(self._translator.t("help.action.robustness"))
         self._robustness_action.setWhatsThis(self._translator.t("help.action.robustness"))
@@ -1904,6 +1915,9 @@ class MainWindow(QMainWindow):
         self._sweep_action.setEnabled(
             idle and has_project and self._sweep_supported(parameters) and self._solver is not None
         )
+        self._guided_experiments_action.setEnabled(
+            idle and has_project and self._sweep_supported(parameters) and self._solver is not None
+        )
         self._robustness_action.setEnabled(
             idle
             and has_project
@@ -2040,6 +2054,7 @@ class MainWindow(QMainWindow):
             self._journal_action,
             self._tuning_action,
             self._sweep_action,
+            self._guided_experiments_action,
             self._robustness_action,
             self._import_nec_action,
             self._import_mmana_action,
@@ -5294,6 +5309,56 @@ class MainWindow(QMainWindow):
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
         self._last_status_key = "status.parameter_sweep_applied"
+        self._update_status_text()
+        self.simulate()
+
+    @history_action("history.guided_experiment")
+    def guided_experiments(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._solver is None:
+            self._show_error(self._translator.t("error.solver"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        design = self._project.design_by_id(self._design_id)
+        availability = optimizer_availability(design.parameters)
+        descriptor = availability.descriptor
+        adapter = adapter_for(design.parameters)
+        if descriptor is None or adapter is None:
+            self._show_error(self._translator.t("guided.unavailable_family"))
+            return
+        base_spec = self._with_project_chain(
+            design.parameters,
+            self._base_simulation_spec(design),
+        )
+        dialog = GuidedExperimentsDialog(
+            self._translator,
+            self._unit_system,
+            self._solver,
+            descriptor,
+            design,
+            base_spec,
+            self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        selected = dialog.selected_parameters()
+        if selected is None:
+            return
+        try:
+            adapter.apply_parameters(self, selected)
+            self._form_dirty = True
+            self._apply_fields()
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._last_status_key = "status.guided_experiment_applied"
         self._update_status_text()
         self.simulate()
 

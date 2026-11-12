@@ -1373,6 +1373,33 @@ known reference plane, and repeat measurements where possible. A low error
 against one simulation does not prove that the antenna or the simulation is
 correct.
 
+## Guided experiments
+
+Use **Tools → Guided Experiments...** to start from one of three curated
+sweeps. The chooser explains the question, the steps, the variable range, what
+to look for, and the limits before anything runs. The three experiments are:
+
+- **Resonance and match** sweeps the primary length dimension. Reactance near
+  zero indicates resonance; SWR also depends on resistance, so the lowest SWR
+  may not be exactly at resonance.
+- **Height above ground** sweeps the height dimension. Ground coupling changes
+  the feedpoint impedance, but a better match does not automatically mean a
+  better radiator.
+- **Two dimensions at once** sweeps the primary dimension and height together.
+  It shows whether the low-SWR region moves when height changes, something a
+  one-dimensional sweep can hide.
+
+Each experiment only presets the normal **Parameter Sweep** controls; you can
+change the ranges, point count, metric, and target frequency before running.
+The result uses the same plot, table, invalid-point handling, and **Apply
+selected** / **Apply best SWR** behavior as a manual sweep. The guide banner
+stays visible while the sweep runs.
+
+Unavailable experiments state why the current family cannot run them, for
+example because it has no separate continuous height dimension. The experiments
+evaluate one target frequency. They do not establish bandwidth, efficiency,
+pattern, construction tolerance, or an optimum between grid points.
+
 ## Parameter sweeps (what-if)
 
 Use **Tools → Parameter Sweep...** to see how a family's primary design
