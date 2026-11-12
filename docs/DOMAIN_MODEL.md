@@ -848,3 +848,12 @@ pattern preference), records blockers, then orders the survivors by
 transparent preferences. It returns at most three candidates with reasons and
 warnings. It never runs the solver and never produces a single opaque score.
 The UI opens the selected family in its normal editor.
+
+`domain/design/comparison.py` defines `ComparisonBasis` and
+`apply_comparison_basis()`. A basis carries a common frequency plan, ground,
+reference height, and reference frequency. The application use case
+`CompareDesigns` runs one solver pass per selected design and returns partial
+results with errors and cancellation. Height mapping is conservative: direct
+and apex families move to the reference height, vertical families shift their
+base, and ambiguous families keep their native height with a warning. See
+[ADR-0029](ADR/0029-comparison-basis.md).

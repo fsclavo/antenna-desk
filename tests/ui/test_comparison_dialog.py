@@ -35,9 +35,8 @@ def test_comparison_dialog_shows_two_variants(
     qtbot.addWidget(dialog)
     dialog.show()
 
-    assert dialog._combo_a.count() == 2
-    assert dialog._combo_b.count() == 2
-    assert dialog._combo_b.currentIndex() == 1
+    assert dialog._design_list.count() == 2
+    assert len(dialog._selected_ids()) == 2
     assert dialog._table.rowCount() > 5
     assert dialog._table.columnCount() == 3
     assert dialog._note.isVisible() is False
@@ -152,5 +151,66 @@ def test_comparison_dialog_shows_a_band_summary(
 
     assert dialog._band_table.isVisible() is True
     assert dialog._band_table.rowCount() == 2
+    assert dialog._band_table.columnCount() == 3
     assert dialog._band_table.item(0, 0).text() == "40m"
     assert dialog._band_table.item(0, 1).text() == "1.000"
+
+
+def test_comparison_dialog_emits_the_common_basis(
+    qtbot: QtBot,
+    sample_project: Project,
+) -> None:
+    project = AddDesignVariant().execute(
+        AddDesignVariantCommand(
+            project=sample_project,
+            source_design_id=sample_project.designs[0].id,
+            name="Second",
+        )
+    )
+    dialog = ComparisonDialog(
+        Translator(Language.ENGLISH),
+        project,
+        {},
+    )
+    qtbot.addWidget(dialog)
+    received: list[tuple[object, object]] = []
+    dialog.recompute_requested.connect(lambda basis, ids: received.append((basis, ids)))
+    dialog._start.setValue(7.0)
+    dialog._stop.setValue(7.3)
+    dialog._points.setValue(11)
+    dialog._reference_height.setValue(0.0)
+    dialog._reference_frequency.setValue(7.15)
+
+    dialog._request_recompute()
+
+    assert len(received) == 1
+    basis, ids = received[0]
+    assert basis.frequency_plan.count == 11
+    assert basis.reference_height_m is None
+    assert len(ids) == 2
+
+
+def test_comparison_dialog_shows_height_mapping_warnings(
+    qtbot: QtBot,
+    sample_project: Project,
+) -> None:
+    project = AddDesignVariant().execute(
+        AddDesignVariantCommand(
+            project=sample_project,
+            source_design_id=sample_project.designs[0].id,
+            name="Second",
+        )
+    )
+    results = {design.id: make_completed_result() for design in project.designs}
+    mapping = {design.id: (False, ("native_height",)) for design in project.designs}
+    dialog = ComparisonDialog(
+        Translator(Language.ENGLISH),
+        project,
+        results,
+        height_mapping=mapping,
+    )
+    qtbot.addWidget(dialog)
+    dialog.show()
+
+    assert dialog._note.isVisible() is True
+    assert "Native height used" in dialog._note.text()

@@ -1388,10 +1388,29 @@ design inside the same project, **Rename Design...** to change its name, and
 between designs. Completed runs are stored in the project; the latest run for
 each design is shown when you switch or reopen the project.
 
-Simulate the designs you want to compare, then use **Design → Designs → Compare
-Designs...**. The dialog shows design and result metrics side by side, an SWR
-overlay, and a gain-pattern overlay for the frequency nearest each design's
-design frequency. Missing results are reported in the dialog.
+Use **Design → Designs → Compare Designs...** to compare **two to four**
+designs. The dialog no longer treats stored results from different conditions as
+directly comparable. It shows a **Common comparison basis** with a shared
+frequency sweep, ground model, optional reference height, and reference
+frequency. Press **Recompute comparison** to run every selected design with that
+basis. The project's feed line, matching network, and balun loss remain part of
+the common chain.
+
+The reference height maps the family's own height field: horizontal wire
+families use their wire or apex height; Yagi, Moxon, and beams use the boom
+height; verticals shift their base so the radiator top reaches the reference.
+Ambiguous families keep their native height and show a warning. Choose **Native
+heights** to disable height mapping explicitly; the ground is still normalized.
+The basis and warnings stay visible, so a comparison never silently claims
+equivalent conditions.
+
+The metric table has one column per design and includes impedance, SWR, gain,
+directivity, realized gain, efficiency, footprint, maximum height, conductor
+length, wire/load/line counts, and build effort. When band analyses exist, a
+band-summary table shows the best SWR per design and band. The SWR and gain
+pattern charts overlay every selected design, and missing results are reported.
+The comparison is based on the same solver results, not a new electromagnetic
+model; see [ADR-0029](ADR/0029-comparison-basis.md).
 
 ## Optimize the current design
 

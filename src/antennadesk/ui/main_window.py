@@ -57,6 +57,11 @@ from ..application.use_cases.add_design_variant import (
     AddDesignVariantCommand,
 )
 from ..application.use_cases.analyze_bands import BandSimulationRequest
+from ..application.use_cases.compare_designs import (
+    CompareDesignsCommand,
+    ComparisonOutcome,
+    ComparisonRun,
+)
 from ..application.use_cases.create_dipole_project import (
     CreateDipoleProject,
     CreateDipoleProjectCommand,
@@ -147,6 +152,11 @@ from ..domain.design.band_plan import (
     BandSelection,
     default_band_plan,
     operating_frequencies_for,
+)
+from ..domain.design.comparison import (
+    ComparisonBasis,
+    apply_comparison_basis,
+    native_height_m,
 )
 from ..domain.design.estimators import supports_estimation
 from ..domain.design.formulas import frequency_for_half_wave_length
@@ -342,6 +352,7 @@ from .widgets.workflow_panel import NextStepPanel
 from .widgets.yagi_form import YagiForm
 from .widgets.zepp_form import ZeppForm
 from .workers.band_analysis_worker import BandAnalysisWorker
+from .workers.comparison_worker import ComparisonWorker
 from .workers.open_project_worker import OpenProjectWorker
 from .workers.save_project_worker import SaveProjectWorker
 from .workers.simulation_worker import SimulationWorker
@@ -413,8 +424,11 @@ class MainWindow(QMainWindow):
         self._pending_pattern_diagnostic: Diagnostic | None = None
         self._last_status_key = "status.ready"
         self._thread: QThread | None = None
-        self._worker: SimulationWorker | BandAnalysisWorker | None = None
+        self._worker: SimulationWorker | BandAnalysisWorker | ComparisonWorker | None = None
         self._cancel_token: EventCancelToken | None = None
+        self._comparison_dialog: ComparisonDialog | None = None
+        self._comparison_basis: ComparisonBasis | None = None
+        self._comparison_height_mapping: dict[UUID, tuple[bool, tuple[str, ...]]] = {}
         self._progress_started_at: float | None = None
         self._progress_timer = QTimer(self)
         self._progress_timer.setInterval(1000)
@@ -7289,6 +7303,11 @@ class MainWindow(QMainWindow):
     def compare_variants(self) -> None:
         if self._project is None or len(self._project.designs) < 2:
             return
+        current = self._design_id or self._project.designs[0].id
+        initial_ids = [current]
+        for design in self._project.designs:
+            if design.id != current and len(initial_ids) < 4:
+                initial_ids.append(design.id)
         dialog = ComparisonDialog(
             self._translator,
             self._project,
@@ -7296,8 +7315,190 @@ class MainWindow(QMainWindow):
             self,
             band_analyses=self._band_analysis_results,
             unit_system=self._unit_system,
+            initial_basis=self._default_comparison_basis(),
+            initial_design_ids=initial_ids,
+            height_mapping=self._comparison_height_mapping,
         )
-        dialog.exec()
+        dialog.recompute_requested.connect(
+            lambda basis, design_ids: self._start_comparison(
+                dialog,
+                basis,
+                design_ids,
+            )
+        )
+        dialog.rejected.connect(self._cancel_comparison_if_running)
+        self._comparison_dialog = dialog
+        try:
+            dialog.exec()
+        finally:
+            self._comparison_dialog = None
+            self._comparison_basis = None
+            self._comparison_height_mapping = {}
+
+    def _default_comparison_basis(self) -> ComparisonBasis:
+        if self._project is None:
+            raise ValueError(self._translator.t("error.no_project"))
+        design = (
+            self._project.design_by_id(self._design_id)
+            if self._design_id is not None
+            else self._project.designs[0]
+        )
+        spec = self._apply_sweep_override(design, self._base_simulation_spec(design))
+        plan = spec.frequency_plan
+        reference_hz = design.parameters.frequency_hz
+        if not plan.start_hz <= reference_hz <= plan.stop_hz:
+            reference_hz = plan.start_hz + (plan.stop_hz - plan.start_hz) / 2.0
+        height = native_height_m(design.parameters)
+        return ComparisonBasis(
+            frequency_plan=plan,
+            ground=design.parameters.ground,
+            reference_height_m=height,
+            reference_frequency_hz=reference_hz,
+        )
+
+    def _build_comparison_runs(
+        self,
+        basis: ComparisonBasis,
+        design_ids: object,
+    ) -> tuple[tuple[ComparisonRun, ...], dict[UUID, tuple[bool, tuple[str, ...]]]]:
+        if self._project is None:
+            raise ValueError(self._translator.t("error.no_project"))
+        runs: list[ComparisonRun] = []
+        height_mapping: dict[UUID, tuple[bool, tuple[str, ...]]] = {}
+        if not isinstance(design_ids, (tuple, list)):
+            return (), {}
+        for value in design_ids:
+            if not isinstance(value, UUID):
+                continue
+            design = self._project.design_by_id(value)
+            application = apply_comparison_basis(design, basis)
+            height_mapping[value] = (
+                application.height_mapped,
+                application.warnings,
+            )
+            spec = replace(
+                self._base_simulation_spec(application.design),
+                frequency_plan=basis.frequency_plan,
+                pattern_frequencies_hz=(basis.reference_frequency_hz,),
+            )
+            spec = self._fit_spec_to_budget(application.design.antenna, spec)
+            spec = self._with_project_chain(application.design.parameters, spec)
+            runs.append(
+                ComparisonRun(
+                    design_id=value,
+                    name=design.name,
+                    model=application.design.antenna,
+                    spec=spec,
+                )
+            )
+        return tuple(runs), height_mapping
+
+    def _start_comparison(
+        self,
+        dialog: ComparisonDialog,
+        basis: ComparisonBasis,
+        design_ids: object,
+    ) -> None:
+        if self._simulating or self._solver is None or self._project is None:
+            if self._solver is None:
+                dialog.set_error(self._translator.t("error.solver"))
+            return
+        if not isinstance(design_ids, (tuple, list)) or len(design_ids) < 2:
+            return
+        try:
+            runs, height_mapping = self._build_comparison_runs(basis, design_ids)
+        except Exception as exc:
+            dialog.set_error(str(exc))
+            return
+        if len(runs) < 2:
+            return
+        self._comparison_dialog = dialog
+        self._comparison_basis = basis
+        self._comparison_height_mapping = height_mapping
+        dialog.set_recomputing(True)
+        self._cancel_token = EventCancelToken()
+        self._simulating = True
+        self._last_status_key = "status.comparing"
+        self._update_actions()
+        self._update_status_text()
+        self._start_determinate_progress(len(runs), "status.comparing")
+        thread = QThread(self)
+        worker = ComparisonWorker(
+            self._solver,
+            CompareDesignsCommand(
+                runs=tuple(runs),
+                cancel_token=self._cancel_token,
+            ),
+        )
+        worker.moveToThread(thread)
+        thread.started.connect(worker.run)
+        worker.progress.connect(self._on_comparison_progress)
+        worker.finished.connect(self._on_comparison_finished)
+        worker.failed.connect(self._on_comparison_failed)
+        worker.finished.connect(thread.quit)
+        worker.failed.connect(thread.quit)
+        thread.finished.connect(worker.deleteLater)
+        thread.finished.connect(thread.deleteLater)
+        thread.finished.connect(self._on_worker_thread_finished)
+        self._thread = thread
+        self._worker = worker
+        thread.start()
+
+    def _on_comparison_progress(self, index: int, total: int, name: str) -> None:
+        self._task_progress.set_progress(
+            index,
+            "status.comparing_progress",
+            index=index,
+            total=total,
+            name=name,
+        )
+        self._status_label.setText(
+            self._translator.t(
+                "status.comparing_progress",
+                index=index,
+                total=total,
+                name=name,
+            )
+        )
+
+    def _on_comparison_finished(self, outcome: object) -> None:
+        self._simulating = False
+        self._cancel_token = None
+        self._finish_progress()
+        if not isinstance(outcome, ComparisonOutcome):
+            return
+        dialog = self._comparison_dialog
+        results = {
+            item.design_id: item.result for item in outcome.results if item.result is not None
+        }
+        if dialog is not None:
+            dialog.set_results(
+                results,
+                basis=self._comparison_basis,
+                band_analyses={},
+                height_mapping=self._comparison_height_mapping,
+            )
+        self._last_status_key = (
+            "status.comparison_cancelled" if outcome.cancelled else "status.comparison_done"
+        )
+        self._update_actions()
+        self._update_status_text()
+
+    def _on_comparison_failed(self, message: str) -> None:
+        self._simulating = False
+        self._cancel_token = None
+        self._finish_progress()
+        dialog = self._comparison_dialog
+        if dialog is not None:
+            dialog.set_error(message)
+        self._last_status_key = "status.error"
+        self._update_actions()
+        self._status_label.setText(self._translator.t("status.error"))
+        self._show_error(self._translator.t("error.simulation", message=message))
+
+    def _cancel_comparison_if_running(self) -> None:
+        if self._simulating and isinstance(self._worker, ComparisonWorker):
+            self.cancel_simulation()
 
     def _current_export_data(
         self,

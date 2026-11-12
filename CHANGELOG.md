@@ -40,6 +40,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   simulate every candidate, and opens the selected family in its normal editor.
   It uses the active installation profile as initial values and covers the HF
   bands in this first slice.
+- **Comparison 2.0.** The comparison dialog now compares two to four designs
+  under an explicit common basis: shared frequency sweep, ground, reference
+  height, and reference frequency. **Recompute comparison** runs every selected
+  design with the same conditions; stored results from different conditions are
+  no longer presented as directly comparable. The table adds footprint, maximum
+  height, conductor length, wire/load/line counts, and build effort; the band
+  summary and SWR/pattern overlays are dynamic. Height mapping is conservative
+  and warns when a family keeps its native height. See
+  [ADR-0029](docs/ADR/0029-comparison-basis.md).
 
 ## [0.4.2] - 2026-11-11
 

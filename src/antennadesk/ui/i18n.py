@@ -3403,6 +3403,42 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Shortlisted antennas, fit level, bands, space, height, feed, and build effort.",
         Language.SPANISH: "Antenas preseleccionadas, encaje, bandas, espacio, altura, alimentación y esfuerzo.",
     },
+    "help.compare.designs": {
+        Language.ENGLISH: "Select two to four designs to compare.",
+        Language.SPANISH: "Seleccioná de dos a cuatro diseños para comparar.",
+    },
+    "help.compare.start": {
+        Language.ENGLISH: "First frequency of the common comparison sweep.",
+        Language.SPANISH: "Primera frecuencia del barrido común de comparación.",
+    },
+    "help.compare.stop": {
+        Language.ENGLISH: "Last frequency of the common comparison sweep.",
+        Language.SPANISH: "Última frecuencia del barrido común de comparación.",
+    },
+    "help.compare.points": {
+        Language.ENGLISH: "Number of frequency points used for every design.",
+        Language.SPANISH: "Cantidad de puntos de frecuencia usados para cada diseño.",
+    },
+    "help.compare.ground": {
+        Language.ENGLISH: "Ground model applied to every design before recomputing.",
+        Language.SPANISH: "Modelo de suelo aplicado a cada diseño antes de recalcular.",
+    },
+    "help.compare.reference_height": {
+        Language.ENGLISH: "Common height, or Native heights to keep each design's height.",
+        Language.SPANISH: "Altura común, o Alturas nativas para conservar la de cada diseño.",
+    },
+    "help.compare.reference_frequency": {
+        Language.ENGLISH: "Frequency used for impedance, SWR, and pattern comparison.",
+        Language.SPANISH: "Frecuencia usada para comparar impedancia, ROE y patrón.",
+    },
+    "help.compare.recompute": {
+        Language.ENGLISH: "Re-run every selected design with the common basis.",
+        Language.SPANISH: "Volvé a simular cada diseño con la base común.",
+    },
+    "help.table.comparison": {
+        Language.ENGLISH: "Metric-by-design comparison table.",
+        Language.SPANISH: "Tabla de métricas por diseño.",
+    },
     "help.installation.profiles": {
         Language.ENGLISH: "Saved profiles for this project; the selected one is active.",
         Language.SPANISH: "Perfiles guardados del proyecto; el seleccionado está activo.",
@@ -4325,6 +4361,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "status.ready": {Language.ENGLISH: "Ready", Language.SPANISH: "Listo"},
     "status.simulating": {Language.ENGLISH: "Simulating...", Language.SPANISH: "Simulando..."},
+    "status.comparing": {
+        Language.ENGLISH: "Comparing designs...",
+        Language.SPANISH: "Comparando diseños...",
+    },
+    "status.comparing_progress": {
+        Language.ENGLISH: "Comparing {index}/{total}: {name}",
+        Language.SPANISH: "Comparando {index}/{total}: {name}",
+    },
+    "status.comparison_done": {
+        Language.ENGLISH: "Comparison complete.",
+        Language.SPANISH: "Comparación completa.",
+    },
+    "status.comparison_cancelled": {
+        Language.ENGLISH: "Comparison cancelled.",
+        Language.SPANISH: "Comparación cancelada.",
+    },
     "status.completed": {
         Language.ENGLISH: "Simulation completed",
         Language.SPANISH: "Simulación completada",
@@ -4988,6 +5040,124 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "compare.no_result": {
         Language.ENGLISH: "Simulate a design to include it in the comparison.",
         Language.SPANISH: "Simulá un diseño para incluirlo en la comparación.",
+    },
+    "compare.designs": {
+        Language.ENGLISH: "Designs to compare",
+        Language.SPANISH: "Diseños a comparar",
+    },
+    "compare.basis": {
+        Language.ENGLISH: "Common comparison basis",
+        Language.SPANISH: "Base común de comparación",
+    },
+    "compare.start": {
+        Language.ENGLISH: "Start frequency",
+        Language.SPANISH: "Frecuencia inicial",
+    },
+    "compare.stop": {
+        Language.ENGLISH: "Stop frequency",
+        Language.SPANISH: "Frecuencia final",
+    },
+    "compare.points": {
+        Language.ENGLISH: "Sweep points",
+        Language.SPANISH: "Puntos del barrido",
+    },
+    "compare.ground": {
+        Language.ENGLISH: "Ground",
+        Language.SPANISH: "Suelo",
+    },
+    "compare.ground_free_space": {
+        Language.ENGLISH: "Free space",
+        Language.SPANISH: "Espacio libre",
+    },
+    "compare.ground_perfect": {
+        Language.ENGLISH: "Perfect ground",
+        Language.SPANISH: "Plano perfecto",
+    },
+    "compare.reference_height": {
+        Language.ENGLISH: "Reference height",
+        Language.SPANISH: "Altura de referencia",
+    },
+    "compare.height_native": {
+        Language.ENGLISH: "Native heights",
+        Language.SPANISH: "Alturas nativas",
+    },
+    "compare.reference_frequency": {
+        Language.ENGLISH: "Compare at",
+        Language.SPANISH: "Comparar en",
+    },
+    "compare.recompute": {
+        Language.ENGLISH: "Recompute comparison",
+        Language.SPANISH: "Recalcular comparación",
+    },
+    "compare.basis_text": {
+        Language.ENGLISH: (
+            "Basis: {start}-{stop} MHz · {points} points · height {height} · "
+            "compare at {frequency} MHz. Recompute to apply changes."
+        ),
+        Language.SPANISH: (
+            "Base: {start}-{stop} MHz · {points} puntos · altura {height} · "
+            "comparar en {frequency} MHz. Recalculá para aplicar cambios."
+        ),
+    },
+    "compare.invalid_range": {
+        Language.ENGLISH: "Stop frequency must be greater than start frequency.",
+        Language.SPANISH: "La frecuencia final debe ser mayor que la inicial.",
+    },
+    "compare.select_two": {
+        Language.ENGLISH: "Select at least two designs.",
+        Language.SPANISH: "Seleccioná al menos dos diseños.",
+    },
+    "compare.max_four": {
+        Language.ENGLISH: "Select up to four designs.",
+        Language.SPANISH: "Seleccioná hasta cuatro diseños.",
+    },
+    "compare.recomputing": {
+        Language.ENGLISH: "Recomputing with the selected basis...",
+        Language.SPANISH: "Recalculando con la base seleccionada...",
+    },
+    "compare.recompute_error": {
+        Language.ENGLISH: "Comparison failed: {message}",
+        Language.SPANISH: "La comparación falló: {message}",
+    },
+    "compare.height_warning.native_height": {
+        Language.ENGLISH: "Native height used for {name}.",
+        Language.SPANISH: "Se usó la altura nativa de {name}.",
+    },
+    "compare.height_warning.height_too_low": {
+        Language.ENGLISH: "Reference height is too low for {name}; native height used.",
+        Language.SPANISH: "La altura de referencia es demasiado baja para {name}; se usó la nativa.",
+    },
+    "compare.height_warning.height_mapping_unavailable": {
+        Language.ENGLISH: "Height mapping is not available for {name}; native height used.",
+        Language.SPANISH: "No hay mapeo de altura para {name}; se usó la nativa.",
+    },
+    "compare.footprint": {
+        Language.ENGLISH: "Footprint",
+        Language.SPANISH: "Planta",
+    },
+    "compare.max_height": {
+        Language.ENGLISH: "Max height",
+        Language.SPANISH: "Altura máxima",
+    },
+    "compare.conductor_length": {
+        Language.ENGLISH: "Conductor length",
+        Language.SPANISH: "Longitud de conductor",
+    },
+    "compare.wires": {
+        Language.ENGLISH: "Wires",
+        Language.SPANISH: "Hilos",
+    },
+    "compare.loads": {
+        Language.ENGLISH: "Loads",
+        Language.SPANISH: "Cargas",
+    },
+    "compare.lines": {
+        Language.ENGLISH: "Transmission lines",
+        Language.SPANISH: "Líneas de transmisión",
+    },
+    "compare.build_effort": {
+        Language.ENGLISH: "Build effort",
+        Language.SPANISH: "Esfuerzo de construcción",
     },
     "action.compare": {
         Language.ENGLISH: "Compare Designs...",

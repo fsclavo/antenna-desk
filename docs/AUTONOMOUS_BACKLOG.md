@@ -96,7 +96,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX1~~ | ~~Guided mode and next-step coach~~ | S–M | none | **Done 2026-11-11:** added persistent Guided, Standard, and Advanced modes in **View → Workflow mode**, the toolbar **Mode** selector, and **Preferences**. Guided hides advanced actions and shows a state-derived next-step panel; Standard keeps the full editor with advanced simulation collapsed; Advanced expands it. The pure workflow state machine covers project, solver, simulation, diagnostics, high-SWR review, construction, measurement, comparison, and completion states; tests cover the transitions, action visibility, persistence, and EN/ES retranslation. |
 | ~~UX2~~ | ~~Installation profile~~ | S–M | none | **Done 2026-11-11:** added project-level installation profiles with name, available height and horizontal space, orientation, support type, ground preset, notes, and optional local image reference. The dialog supports add, duplicate, remove, and active selection; the active profile appears in the design panel and in construction sheets and HTML/PDF reports. Schema 36 persists the profile list and active identifier, older projects migrate with no profiles, and the editor is covered by domain, persistence, reporting, dialog, main-window, undo/redo, and EN/ES retranslation tests. Profiles are metadata and do not apply their ground automatically. |
 | ~~UX3~~ | ~~Antenna suitability profiles and guided advisor~~ | M | UX1, UX2 | **Done 2026-11-11:** added twelve HF suitability profiles with band coverage, footprint and height heuristics, feed/tuner requirement, construction effort, portability, operating intents, qualitative gain/takeoff/bandwidth classes, and evidence level. A deterministic advisor applies hard constraints (bands, space, height, portability, tuner, complexity, pattern) and returns up to three candidates with fit status, reasons, warnings, blockers, and stable ordering. Added the **Help me choose...** start-page and File-menu entry, prefilled from the active installation profile, with a result table and detail pane; **Open selected design** launches the existing family editor. No LLM or solver ranking. Tests cover the advisor engine, footprint scaling, blockers, dialog behavior, main-window integration, and EN/ES help. |
-| UX4 | Comparison 2.0 | M–L | UX2; comparison-basis ADR | Comparison basis record (frequency plan, ground, reference height, feed line, matching, units); 2–4 designs; recompute with progress and cancellation; metric table, overlaid patterns, and size/BOM comparison; visible basis banner; the ADR records the per-family height mapping. |
+| ~~UX4~~ | ~~Comparison 2.0~~ | M–L | UX2; comparison-basis ADR | **Done 2026-11-11:** added [ADR-0029](ADR/0029-comparison-basis.md) and a `ComparisonBasis` with common frequency plan, ground, reference height, and reference frequency. The dialog compares two to four designs, shows the basis explicitly, and requires **Recompute comparison**, which runs each design through a new bounded comparison worker with progress and cancellation. Height mapping is conservative: direct/apex families move to the reference, verticals shift their base, and ambiguous families keep native height with visible warnings; **Native heights** disables mapping. The table has one column per design and adds footprint, maximum height, conductor length, wire/load/line counts, and build effort; band summaries and SWR/pattern overlays are dynamic. Tests cover the basis, mapping, batch use case, worker path, dialog behavior, and main-window run construction. |
 | UX5 | Contextual explanations and confidence card | M | none | Contextual help for impedance, SWR, efficiency, gain/directivity/realized gain, takeoff, bandwidth, ground, and feed-line loss; a confidence card with evidence level, modeled/unmodeled items, and dominant uncertainties; EN/ES; the help coverage manifest passes. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
@@ -105,8 +105,8 @@ external service and must not be invented or simulated into existence.
 
 ## Product experience queue (2026-11-11)
 
-UX1–UX3 are complete. UX4–UX5 are the active product-experience slice. They are
-deliberately ordered before new antenna work because they remove the largest
+UX1–UX4 are complete. UX5 is the active product-experience slice. It is
+deliberately ordered before new antenna work because it removes the largest
 beginner and decision-making gaps. UX6–UX20 remain product scope in
 [`ROADMAP.md`](ROADMAP.md#product-experience-backlog-proposed-2026-11-11); do not
 promote them into this queue until the previous release is closed and the full
@@ -308,7 +308,7 @@ model and solver contract must land first.
 7. **R1** is closed as superseded: `v0.4.1` was published with CI-built Linux
    and Windows artifacts, so rerunning the older `v0.4.0` tag is no longer
    required.
-8. **UX1–UX3 are complete.** The active product-experience slice is **UX4–UX5**.
+8. **UX1–UX4 are complete.** The active product-experience slice is **UX5**.
    It precedes new antenna work; UX6–UX20 remain product scope in
    [`ROADMAP.md`](ROADMAP.md).
 9. Product priorities and new antenna candidates live in
@@ -343,7 +343,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **36**.
-- Full gate: **2,534 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **2,550 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.4.1** published on 2026-11-11 with checksum-verified unsigned
