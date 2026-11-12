@@ -4,11 +4,14 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 from main_window_support import use_parameters
 from PySide6.QtWidgets import QDialog
 from pytestqt.qtbot import QtBot
 
+from antennadesk.domain.antennas.yagi import YagiParameters
 from antennadesk.persistence.json_repository import JsonProjectRepository
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.i18n import Language, Translator
@@ -470,6 +473,55 @@ def test_design_from_frequency_preserves_loop_transformer(
     assert isinstance(design.parameters, LoopParameters)
     assert design.parameters.circumference_m == pytest.approx(44.2)
     assert design.parameters.transformer_ratio == pytest.approx(4.0)
+    window._dirty = False
+
+
+def test_design_from_frequency_preserves_yagi_folded_transformer(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+    from antennadesk.domain.design import Confidence, DimensionEstimate
+
+    current = replace(
+        nbs_five_element(
+            frequency_hz=14_100_000.0,
+            height_m=10.0,
+            folded_driven=True,
+        ),
+        transformer_ratio=6.0,
+    )
+    use_parameters(window, current)
+    estimated = nbs_five_element(
+        frequency_hz=14_100_000.0,
+        height_m=10.0,
+    )
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def estimated_estimate(self) -> DimensionEstimate:
+            return DimensionEstimate(
+                parameters=estimated,
+                method_id="test.yagi",
+                confidence=Confidence.REFERENCE_SCALED,
+                tolerance_m=0.5,
+            )
+
+    monkeypatch.setattr(main_window_module, "DesignFromFrequencyDialog", FakeDialog)
+    window._dirty = False
+
+    window.design_from_frequency()
+
+    assert window._project is not None
+    design = window._project.designs[0]
+    assert isinstance(design.parameters, YagiParameters)
+    assert design.parameters.driven_folded is True
+    assert design.parameters.transformer_ratio == pytest.approx(6.0)
     window._dirty = False
 
 

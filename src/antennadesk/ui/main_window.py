@@ -6936,6 +6936,7 @@ class MainWindow(QMainWindow):
             updates["match_type"] = previous.match_type
             updates["match_length_m"] = previous.match_length_m
             updates["match_spacing_m"] = previous.match_spacing_m
+            updates["transformer_ratio"] = previous.transformer_ratio
             if previous.elements and estimated.elements:
                 radius_m = previous.elements[0].radius_m
                 estimated = replace(
