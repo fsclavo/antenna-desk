@@ -578,3 +578,18 @@ def test_project_matching_design_is_cleared_when_the_network_is_removed(
 
     assert cleared.matching_network is None
     assert cleared.matching_network_design is None
+
+
+def test_project_records_a_current_balun(sample_project: Project) -> None:
+    updated = sample_project.with_current_balun(
+        True,
+        updated_at=sample_project.updated_at,
+    )
+    cleared = updated.with_current_balun(
+        False,
+        updated_at=sample_project.updated_at,
+    )
+
+    assert sample_project.current_balun is False
+    assert updated.current_balun is True
+    assert cleared.current_balun is False

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
+    QCheckBox,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
@@ -23,6 +24,7 @@ from ...domain.antennas.matching_network import (
     MatchingNetwork,
     MatchingNetworkPosition,
 )
+from ...domain.design.feed_balance import FeedBalance, feed_balance
 from ...domain.design.matching_resolution import resolve_matching_network
 from ...reporting.design_summary import matching_network_description
 from ..help import apply_help
@@ -35,6 +37,7 @@ class FeedMatchingSummary(QGroupBox):
 
     edit_network_requested = Signal()
     remove_network_requested = Signal()
+    current_balun_changed = Signal(bool)
 
     def __init__(
         self,
@@ -50,6 +53,7 @@ class FeedMatchingSummary(QGroupBox):
         self._matching_network_position = MatchingNetworkPosition.FEEDPOINT
         self._feed_line: FeedLine | None = None
         self._balun_loss: BalunLoss | None = None
+        self._current_balun_installed = False
 
         self._endfed_label = QLabel(self)
         self._project_label = QLabel(self)
@@ -59,12 +63,17 @@ class FeedMatchingSummary(QGroupBox):
         self._project_value = self._value_label()
         self._feed_line_value = self._value_label()
         self._balun_value = self._value_label()
+        self._balance_label = QLabel(self)
+        self._current_balun = QCheckBox(self)
+        self._balance_note = QLabel(self)
+        self._balance_note.setWordWrap(True)
 
         form = QFormLayout()
         form.addRow(self._endfed_label, self._endfed_value)
         form.addRow(self._project_label, self._project_value)
         form.addRow(self._feed_line_label, self._feed_line_value)
         form.addRow(self._balun_label, self._balun_value)
+        form.addRow(self._balance_label, self._current_balun)
 
         self._warning = QLabel(self)
         self._warning.setWordWrap(True)
@@ -87,8 +96,11 @@ class FeedMatchingSummary(QGroupBox):
         warning_layout.addLayout(actions)
         self._warning_container.setVisible(False)
 
+        self._current_balun.toggled.connect(self.current_balun_changed.emit)
+
         layout = QVBoxLayout(self)
         layout.addLayout(form)
+        layout.addWidget(self._balance_note)
         layout.addWidget(self._warning_container)
         self.retranslate()
 
@@ -106,12 +118,17 @@ class FeedMatchingSummary(QGroupBox):
         balun_loss: BalunLoss | None,
         *,
         position: MatchingNetworkPosition = MatchingNetworkPosition.FEEDPOINT,
+        current_balun: bool = False,
     ) -> None:
         self._parameters = parameters
         self._project_network = project_network
         self._matching_network_position = MatchingNetworkPosition(position)
         self._feed_line = feed_line
         self._balun_loss = balun_loss
+        self._current_balun_installed = bool(current_balun)
+        self._current_balun.blockSignals(True)
+        self._current_balun.setChecked(self._current_balun_installed)
+        self._current_balun.blockSignals(False)
         self._refresh()
 
     def retranslate(self) -> None:
@@ -120,11 +137,15 @@ class FeedMatchingSummary(QGroupBox):
         self._project_label.setText(self._translator.t("feed_matching.project"))
         self._feed_line_label.setText(self._translator.t("feed_matching.feed_line"))
         self._balun_label.setText(self._translator.t("feed_matching.balun"))
+        self._balance_label.setText(self._translator.t("feed_matching.balance"))
+        self._current_balun.setText(self._translator.t("feed_matching.current_balun"))
         self._edit_button.setText(self._translator.t("feed_matching.edit"))
         self._remove_button.setText(self._translator.t("feed_matching.remove"))
         self._warning.setText(self._translator.t("feed_matching.override_warning"))
         apply_help(self, self._translator, "section.feed_matching")
         apply_help(self._warning, self._translator, "feed_matching.override")
+        apply_help(self._current_balun, self._translator, "feed_matching.current_balun")
+        apply_help(self._balance_note, self._translator, "feed_matching.balance")
         apply_help(self._edit_button, self._translator, "action.matching_network")
         apply_help(self._remove_button, self._translator, "feed_matching.remove")
         self._refresh()
@@ -144,6 +165,8 @@ class FeedMatchingSummary(QGroupBox):
                 strict=True,
             ):
                 label.setText(value)
+            self._balance_note.setText("")
+            self._current_balun.setEnabled(False)
             self._warning_container.setVisible(False)
             return
 
@@ -152,6 +175,26 @@ class FeedMatchingSummary(QGroupBox):
         self._project_value.setText(self._project_network_text())
         self._feed_line_value.setText(self._feed_line_text())
         self._balun_value.setText(self._balun_text())
+        self._current_balun.setEnabled(True)
+        self._current_balun.blockSignals(True)
+        self._current_balun.setChecked(self._current_balun_installed)
+        self._current_balun.blockSignals(False)
+        balance = feed_balance(parameters)
+        if balance is FeedBalance.BALANCED and self._current_balun_installed:
+            balance_key = "feed_matching.balance_installed"
+        elif balance is FeedBalance.BALANCED:
+            balance_key = "feed_matching.balance_required"
+        elif balance is FeedBalance.UNKNOWN:
+            balance_key = "feed_matching.balance_unknown"
+        else:
+            balance_key = "feed_matching.balance_not_required"
+        self._balance_note.setText(self._translator.t(balance_key))
+        self._balance_note.setStyleSheet(
+            "color: #8a5a00;"
+            if (balance is FeedBalance.BALANCED and not self._current_balun_installed)
+            or balance is FeedBalance.UNKNOWN
+            else ""
+        )
         self._warning_container.setVisible(resolution.override_active)
 
     def _endfed_text(self, parameters: AntennaDesignParameters, override_active: bool) -> str:

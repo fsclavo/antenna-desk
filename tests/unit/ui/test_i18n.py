@@ -134,6 +134,8 @@ HELP_MANIFEST = frozenset(
         "help.matching_network.position",
         "help.matching_network.source_impedance",
         "help.matching_network.use_current_point",
+        "help.feed_matching.current_balun",
+        "help.feed_matching.balance",
         "help.mode.guided",
         "help.mode.standard",
         "help.mode.advanced",

@@ -1053,6 +1053,18 @@ def test_balun_loss_round_trips_through_the_project_schema() -> None:
     assert restored.balun_loss == balun
 
 
+def test_current_balun_round_trips_through_the_project_schema() -> None:
+    project = _project(
+        DipoleParameters(frequency_hz=7_100_000.0, total_length_m=20.0, height_m=8.0),
+        "Dipole",
+    )
+    project = project.with_current_balun(True, updated_at=project.updated_at)
+
+    restored = project_from_document(document_from_project(project))
+
+    assert restored.current_balun is True
+
+
 def test_pi_matching_network_round_trips_through_the_project_schema() -> None:
     from antennadesk.domain.antennas.matching_network import PiNetwork
 

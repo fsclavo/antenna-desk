@@ -675,6 +675,16 @@ def _migrate_v42_to_v43(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v43_to_v44(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the project-level current-balun record."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if isinstance(project, dict):
+        project.setdefault("current_balun", False)
+    return migrated
+
+
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
@@ -718,6 +728,7 @@ MIGRATIONS: dict[int, Migration] = {
     40: _migrate_v40_to_v41,
     41: _migrate_v41_to_v42,
     42: _migrate_v42_to_v43,
+    43: _migrate_v43_to_v44,
 }
 
 

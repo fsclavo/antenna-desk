@@ -445,6 +445,7 @@ class MainWindow(QMainWindow):
         self._matching_network_position = MatchingNetworkPosition.FEEDPOINT
         self._matching_network_design: MatchingNetworkDesign | None = None
         self._balun_loss: BalunLoss | None = None
+        self._current_balun = False
         self._custom_pattern_step_deg = DEFAULT_PATTERN_STEP_DEG
         self._custom_run_pattern_step_deg: float | None = None
         self._custom_pattern_frequency_count: int | None = None
@@ -1126,6 +1127,7 @@ class MainWindow(QMainWindow):
         )
         self._feed_matching_summary.edit_network_requested.connect(self.configure_matching_network)
         self._feed_matching_summary.remove_network_requested.connect(self.remove_matching_network)
+        self._feed_matching_summary.current_balun_changed.connect(self.set_current_balun)
         self._workflow_panel = NextStepPanel(self._translator, self)
         self._workflow_panel.action_requested.connect(self._on_next_step_action)
         self._workflow_panel.advanced_requested.connect(
@@ -2253,6 +2255,7 @@ class MainWindow(QMainWindow):
             self._matching_network_position = project.matching_network_position
             self._matching_network_design = project.matching_network_design
             self._balun_loss = project.balun_loss
+            self._current_balun = project.current_balun
             self._form_dirty = False
             self._simulation_results = {}
             self._band_analysis_results = {}
@@ -2548,6 +2551,7 @@ class MainWindow(QMainWindow):
         self._matching_network_position = MatchingNetworkPosition.FEEDPOINT
         self._matching_network_design = None
         self._balun_loss = None
+        self._current_balun = False
         self._current_path = None
         self._dirty = False
         self._form_dirty = False
@@ -2598,6 +2602,7 @@ class MainWindow(QMainWindow):
         self._matching_network_position = project.matching_network_position
         self._matching_network_design = project.matching_network_design
         self._balun_loss = project.balun_loss
+        self._current_balun = project.current_balun
         self._current_path = path
         self._dirty = dirty
         self._form_dirty = False
@@ -3418,6 +3423,21 @@ class MainWindow(QMainWindow):
             self._update_title()
         self._refresh_feed_matching_summary()
 
+    @history_action("history.current_balun")
+    def set_current_balun(self, installed: bool) -> None:
+        installed = bool(installed)
+        if installed == self._current_balun:
+            return
+        self._current_balun = installed
+        if self._project is not None:
+            self._project = self._project.with_current_balun(
+                installed,
+                updated_at=utc_now(),
+            )
+            self._dirty = True
+            self._update_title()
+        self._refresh_feed_matching_summary()
+
     def show_component_calculators(self) -> None:
         seed = CalculatorSeed()
         if self._project is not None and self._design_id is not None:
@@ -3469,6 +3489,7 @@ class MainWindow(QMainWindow):
             self._feed_line,
             self._balun_loss,
             position=self._matching_network_position,
+            current_balun=self._current_balun,
         )
 
     @history_action("history.installation_profile")

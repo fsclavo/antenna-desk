@@ -168,6 +168,7 @@ class Project:
     matching_network_position: MatchingNetworkPosition = MatchingNetworkPosition.FEEDPOINT
     matching_network_design: MatchingNetworkDesign | None = None
     balun_loss: BalunLoss | None = None
+    current_balun: bool = False
     installation_profiles: tuple[InstallationProfile, ...] = field(default_factory=tuple)
     active_installation_profile_id: UUID | None = None
     construction_record: ConstructionRecord | None = None
@@ -760,6 +761,14 @@ class Project:
         updated_at: datetime,
     ) -> Project:
         return replace(self, balun_loss=balun_loss, updated_at=updated_at)
+
+    def with_current_balun(
+        self,
+        current_balun: bool,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        return replace(self, current_balun=bool(current_balun), updated_at=updated_at)
 
     def _retained_simulation_runs(self) -> tuple[SimulationRun, ...]:
         retained_ids: set[UUID] = set()

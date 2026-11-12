@@ -1678,6 +1678,23 @@ internal model becomes effective again. The same rule applies to every
 [ADR-0028](ADR/0028-matching-network-precedence.md) for the full policy and the
 no-cascade limitation.
 
+### Current balun / balanced feed
+
+The **Feed & matching** summary shows a **Feed balance** note and a **Current
+balun/choke installed** checkbox. Balanced families (dipoles, loops, Yagis,
+Moxons, quads, hexbeams, biquads, fan/trap/loaded dipoles, inverted Vs, T2FDs,
+OCFDs, SCV arrays, Zepps, and doublets) normally need a current balun or choke.
+The note states that requirement when the project has not recorded one, and
+states that the balun is recorded when the checkbox is enabled. Unbalanced
+families such as verticals, inverted Ls, end-fed wires, J Poles, Ringos, and
+discones show that the family does not require one.
+
+This is a **construction record**, not a common-mode model. It does not change
+geometry, impedance, SWR, gain, or the ideal feed transformer. Use **Simulation
+→ Balun/Unun Loss...** for a matched insertion-loss estimate. The record is
+project-wide, like the feed line and matching network, and appears in the
+construction sheet, HTML report, and native PDF reports.
+
 In the load editor, **Add parallel trap** calculates the capacitance for a
 parallel LC trap from the entered inductance and resonant frequency. The trap is
 stored as a normal parallel RLC load and emitted as a NEC `LD 1` load.

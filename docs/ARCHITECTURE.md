@@ -328,7 +328,8 @@ version 29 adds optional per-source input results, version 30 adds the hexbeam
 design type, version 39 adds measurement sessions, version 40 adds the project
 journal, version 41 adds the folded-dipole feed transformer ratio, version 42
 adds the full-wave loop feed transformer ratio, version 43 adds the Yagi
-folded-driven transformer ratio, and older documents are migrated explicitly.
+folded-driven transformer ratio, version 44 adds the project current-balun
+record, and older documents are migrated explicitly.
 
 Simulation runs are persisted in schema version 30. Raw solver text is stored
 with the normalized result. Project files are compact JSON compressed with

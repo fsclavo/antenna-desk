@@ -424,6 +424,31 @@ def test_folded_yagi_construction_sheet_lists_the_fold(sample_project: Project) 
     assert "through a 4:1 transformer" in sheet
 
 
+def test_balanced_construction_sheet_notes_the_current_balun(
+    sample_project: Project,
+) -> None:
+    sheet = render_construction_sheet(
+        sample_project,
+        sample_project.designs[0],
+        None,
+    )
+
+    assert "current balun/choke" in sheet
+    assert "install a current balun/choke" in sheet
+
+    recorded = sample_project.with_current_balun(
+        True,
+        updated_at=sample_project.updated_at,
+    )
+    recorded_sheet = render_construction_sheet(
+        recorded,
+        recorded.designs[0],
+        None,
+    )
+
+    assert "is recorded in the project" in recorded_sheet
+
+
 def test_top_loaded_vertical_construction_sheet_lists_the_hat(
     sample_project: Project,
 ) -> None:

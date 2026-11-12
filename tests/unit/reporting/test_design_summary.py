@@ -656,6 +656,12 @@ def test_feed_matching_rows_describe_the_project_chain() -> None:
     assert "in shack" in shack_rows["Project matching"]
 
 
+def test_feed_matching_rows_record_a_current_balun() -> None:
+    rows = dict(feed_matching_rows(None, None, None, current_balun=True))
+
+    assert rows["Current balun"] == "recorded; common-mode choking is not modeled"
+
+
 def test_feed_matching_rows_omit_inactive_project_items() -> None:
     from antennadesk.domain.antennas.feed_line import FeedLine
 

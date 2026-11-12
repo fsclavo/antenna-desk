@@ -575,7 +575,13 @@ the antenna feedpoint (after the feed line) or in the shack (before it). The
 ideal family transformer remains at the antenna. `link_budget()` evaluates the
 selected order and reports actual dissipative line and network losses from the
 two-port power balance; the balun loss remains a matched scalar attenuation.
-See [ADR-0030](ADR/0030-feed-chain-topology.md).
+The project also stores a `current_balun` record: it states that a physical
+current balun/choke is installed. It is a construction note only and does not
+change impedance, SWR, gain, or the ideal feed transformer. Balanced families
+are classified in `domain/design/feed_balance.py`; the Feed & matching summary
+and construction sheet show whether a current balun is required or recorded.
+See [ADR-0030](ADR/0030-feed-chain-topology.md) and
+[ADR-0034](ADR/0034-current-balun-record.md).
 
 ## Measurements
 
@@ -743,11 +749,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 43.
+the application writes version 44.
 
 ## Schema policy
 
-- Current version: `43`.
+- Current version: `44`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -833,6 +839,8 @@ the application writes version 43.
 - Version 43 adds the Yagi `transformer_ratio` for a folded driven element. The
   migration writes 1.0 so existing Yagis keep their raw feed; new folded designs
   start at 4:1 in the editor and NBS preset.
+- Version 44 adds the project-level `current_balun` record. The migration writes
+  `False`; it is a construction note and does not affect simulation results.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads

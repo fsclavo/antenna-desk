@@ -236,6 +236,8 @@ def feed_matching_rows(
     balun_loss: BalunLoss | None,
     labeler: Labeler | None = None,
     position: MatchingNetworkPosition = MatchingNetworkPosition.FEEDPOINT,
+    *,
+    current_balun: bool = False,
 ) -> tuple[tuple[str, str], ...]:
     """Return project-level feed and matching rows for a report."""
 
@@ -279,6 +281,13 @@ def feed_matching_rows(
                     frequency=balun_loss.reference_frequency_hz / 1e6,
                     exponent=balun_loss.exponent,
                 ),
+            )
+        )
+    if current_balun:
+        rows.append(
+            (
+                "Current balun",
+                "recorded; common-mode choking is not modeled",
             )
         )
     return tuple(rows)

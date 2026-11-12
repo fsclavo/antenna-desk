@@ -253,6 +253,7 @@ def write_report_pdf(
                 project.balun_loss,
                 labeler=translator.report,
                 position=project.matching_network_position,
+                current_balun=project.current_balun,
             ),
             *optimization_summary_rows(design),
             *design_provenance_rows(design),

@@ -169,6 +169,18 @@ def test_html_report_supports_new_geometry_summaries(sample_project: Project) ->
     assert "2:1" in loop_report
 
 
+def test_html_report_includes_the_current_balun_record(sample_project: Project) -> None:
+    project = sample_project.with_current_balun(
+        True,
+        updated_at=sample_project.updated_at,
+    )
+
+    report = render_html_report(project, project.designs[0], make_result(project))
+
+    assert "Current balun" in report
+    assert "recorded; common-mode choking is not modeled" in report
+
+
 def test_html_report_includes_estimator_provenance(sample_project: Project) -> None:
     from antennadesk.domain.projects.project import DesignProvenance
 

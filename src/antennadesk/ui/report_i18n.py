@@ -117,6 +117,18 @@ REPORT_SPANISH: dict[str, str] = {
     "Feed offset from start": "Desplazamiento de alimentación desde el inicio",
     "Feed side": "Lado de alimentación",
     "Feed transformer": "Transformador de alimentación",
+    "Current balun": "Balún de corriente",
+    "recorded; common-mode choking is not modeled": (
+        "registrado; el choking de modo común no está modelado"
+    ),
+    "Balanced antenna: install a current balun/choke at the feed. Common-mode choking is not modeled.": (  # noqa: E501
+        "Antena balanceada: instalá un balún/choke de corriente en la alimentación. "
+        "El choking de modo común no está modelado."
+    ),
+    "Balanced antenna: a current balun/choke is recorded in the project. Common-mode choking is not modeled.": (  # noqa: E501
+        "Antena balanceada: hay un balún/choke de corriente registrado en el proyecto. "
+        "El choking de modo común no está modelado."
+    ),
     "Feed wire": "Hilo de alimentación",
     "Feed/base height": "Altura de alimentación/base",
     "First leg (from wire start)": "Primer tramo (desde el inicio del hilo)",

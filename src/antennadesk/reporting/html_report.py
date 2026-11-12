@@ -213,6 +213,7 @@ def render_html_report(
                     project.balun_loss,
                     labeler=tr,
                     position=project.matching_network_position,
+                    current_balun=project.current_balun,
                 ),
                 *optimization_summary_rows(design),
                 *design_provenance_rows(design),

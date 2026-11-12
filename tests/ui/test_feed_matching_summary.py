@@ -110,6 +110,57 @@ def test_summary_emits_edit_and_remove_actions(qtbot: QtBot) -> None:
     assert emitted == ["edit", "remove"]
 
 
+def test_summary_flags_a_balanced_feed_without_a_current_balun(qtbot: QtBot) -> None:
+    summary = FeedMatchingSummary(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(summary)
+    summary.set_state(
+        DipoleParameters(frequency_hz=7_100_000.0, total_length_m=20.0, height_m=8.0),
+        None,
+        None,
+        None,
+    )
+
+    assert summary._current_balun.isChecked() is False
+    assert "normally required" in summary._balance_note.text()
+    assert summary._current_balun.isEnabled() is True
+
+
+def test_summary_records_a_current_balun_and_emits_the_change(qtbot: QtBot) -> None:
+    summary = FeedMatchingSummary(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(summary)
+    summary.set_state(
+        DipoleParameters(frequency_hz=7_100_000.0, total_length_m=20.0, height_m=8.0),
+        None,
+        None,
+        None,
+        current_balun=True,
+    )
+    changes: list[bool] = []
+    summary.current_balun_changed.connect(changes.append)
+
+    assert summary._current_balun.isChecked() is True
+    assert "is recorded" in summary._balance_note.text()
+
+    summary._current_balun.setChecked(False)
+
+    assert changes == [False]
+
+
+def test_summary_marks_an_unbalanced_feed_as_not_requiring_a_balun(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    summary = FeedMatchingSummary(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(summary)
+    summary.set_state(
+        VerticalParameters(frequency_hz=14_100_000.0, height_m=5.0),
+        None,
+        None,
+        None,
+    )
+
+    assert "not required" in summary._balance_note.text()
+
+
 def test_summary_shows_an_inactive_project_network(qtbot: QtBot) -> None:
     summary = FeedMatchingSummary(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(summary)

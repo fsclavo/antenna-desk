@@ -37,6 +37,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   migrates existing Yagis to 1.0; new folded designs and the NBS folded preset
   start at 4:1. A 4:1 transformer alone may not fix a reactive folded feed;
   tune the geometry, beta/hairpin, or matching network.
+- **Current balun / balanced-feed record.** The **Feed & matching** summary now
+  shows a **Feed balance** note and a **Current balun/choke installed**
+  checkbox. Balanced families (dipoles, loops, Yagis, Moxons, quads, hexbeams,
+  biquads, fan/trap/loaded dipoles, inverted Vs, T2FDs, OCFDs, SCV arrays,
+  Zepps, and doublets) are flagged as normally requiring a current balun/choke;
+  unbalanced families are flagged as not requiring one. The checkbox is a
+  project-level construction record, persisted with undo/redo and shown in the
+  construction sheet, HTML report, and native PDFs. It does not model
+  common-mode current or change SWR or gain; use Balun/Unun Loss for insertion
+  loss. Schema 44 adds the record and migrates existing projects to off.
 - **Project journal.** **Tools → Project Journal...** adds a manual, local
   timeline of dated notes, decisions, as-built records, measurements, tuning
   notes, and photos. Entries store a title, kind, UTC date, free notes, an

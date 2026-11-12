@@ -1212,6 +1212,7 @@ class ProjectPayload(StrictModel):
     matching_network_position: MatchingNetworkPosition = MatchingNetworkPosition.FEEDPOINT
     matching_network_design: MatchingNetworkDesignPayload | None = None
     balun_loss: BalunLossPayload | None = None
+    current_balun: bool = False
     installation_profiles: list[InstallationProfilePayload] = Field(default_factory=list)
     active_installation_profile_id: UUID | None = None
     construction_record: ConstructionRecordPayload | None = None
@@ -2470,6 +2471,7 @@ def _project_from_domain(value: Project) -> ProjectPayload:
             else None
         ),
         balun_loss=_balun_loss_from_domain(value.balun_loss) if value.balun_loss else None,
+        current_balun=value.current_balun,
         installation_profiles=[
             _installation_profile_from_domain(profile) for profile in value.installation_profiles
         ],
@@ -3589,6 +3591,7 @@ def project_from_document(document: ProjectDocument) -> Project:
             if document.project.balun_loss
             else None
         ),
+        current_balun=document.project.current_balun,
         installation_profiles=tuple(
             _installation_profile_to_domain(profile)
             for profile in document.project.installation_profiles

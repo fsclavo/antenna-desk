@@ -225,6 +225,35 @@ def test_feed_matching_summary_reflects_the_project_override(window: MainWindow)
     window._dirty = False
 
 
+def test_current_balun_flag_persists_and_undoes(window: MainWindow) -> None:
+    from antennadesk.domain.antennas.dipole import DipoleParameters
+
+    use_parameters(
+        window,
+        DipoleParameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=20.0,
+            height_m=8.0,
+        ),
+    )
+    window._refresh_feed_matching_summary()
+    assert "normally required" in window._feed_matching_summary._balance_note.text()
+
+    window.set_current_balun(True)
+
+    assert window._project is not None
+    assert window._project.current_balun is True
+    assert window._feed_matching_summary._current_balun.isChecked() is True
+    assert "is recorded" in window._feed_matching_summary._balance_note.text()
+
+    window._undo_stack.undo()
+
+    assert window._project is not None
+    assert window._project.current_balun is False
+    assert window._feed_matching_summary._current_balun.isChecked() is False
+    window._dirty = False
+
+
 def test_remove_project_matching_network_restores_the_internal_network(
     window: MainWindow,
     monkeypatch: pytest.MonkeyPatch,

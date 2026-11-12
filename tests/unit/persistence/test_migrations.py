@@ -964,6 +964,32 @@ def test_v40_migration_tolerates_a_missing_project() -> None:
     assert "project" not in migrated
 
 
+def test_v43_migration_adds_the_current_balun_record() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 43,
+        "project": {"name": "Balanced feed"},
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert migrated["project"]["current_balun"] is False
+    assert "current_balun" not in document["project"]
+
+
+def test_v43_migration_tolerates_a_missing_project() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 43,
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert "project" not in migrated
+
+
 def test_v42_migration_adds_the_yagi_transformer() -> None:
     document = {
         "format": "antennadesk-project",

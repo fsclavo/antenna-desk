@@ -4581,6 +4581,26 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Quita la red de adaptación del proyecto y restaura la unidad interna del EFHW."
         ),
     },
+    "help.feed_matching.current_balun": {
+        Language.ENGLISH: (
+            "Record that a physical current balun/choke is installed. It is a "
+            "construction note; common-mode current is not modeled."
+        ),
+        Language.SPANISH: (
+            "Registra que hay un balún/choke de corriente físico instalado. Es una "
+            "nota de construcción; la corriente de modo común no está modelada."
+        ),
+    },
+    "help.feed_matching.balance": {
+        Language.ENGLISH: (
+            "Shows whether this family has a balanced feed that normally needs a "
+            "current balun/choke."
+        ),
+        Language.SPANISH: (
+            "Muestra si esta familia tiene una alimentación balanceada que normalmente "
+            "requiere un balún/choke de corriente."
+        ),
+    },
     "help.action.matching_network": {
         Language.ENGLISH: "Edit or create the project-wide L, Pi, or T matching network.",
         Language.SPANISH: "Edita o crea la red de adaptación L, Pi o T de todo el proyecto.",
@@ -5160,6 +5180,48 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "feed_matching.balun": {
         Language.ENGLISH: "Balun/unun loss",
         Language.SPANISH: "Pérdida de balun/unun",
+    },
+    "feed_matching.balance": {
+        Language.ENGLISH: "Feed balance",
+        Language.SPANISH: "Balance de alimentación",
+    },
+    "feed_matching.current_balun": {
+        Language.ENGLISH: "Current balun/choke installed",
+        Language.SPANISH: "Balún/choke de corriente instalado",
+    },
+    "feed_matching.balance_required": {
+        Language.ENGLISH: (
+            "Balanced antenna: a current balun/choke is normally required. "
+            "Common-mode choking is not modeled."
+        ),
+        Language.SPANISH: (
+            "Antena balanceada: normalmente se requiere un balún/choke de corriente. "
+            "El choking de modo común no está modelado."
+        ),
+    },
+    "feed_matching.balance_installed": {
+        Language.ENGLISH: (
+            "Balanced antenna: a current balun/choke is recorded. Common-mode "
+            "choking is not modeled."
+        ),
+        Language.SPANISH: (
+            "Antena balanceada: hay un balún/choke de corriente registrado. El "
+            "choking de modo común no está modelado."
+        ),
+    },
+    "feed_matching.balance_not_required": {
+        Language.ENGLISH: "This feed is unbalanced; a current balun/choke is not required by the family.",
+        Language.SPANISH: "Esta alimentación es desbalanceada; la familia no requiere un balún/choke de corriente.",
+    },
+    "feed_matching.balance_unknown": {
+        Language.ENGLISH: (
+            "Feed balance is not classified for this geometry; verify whether a "
+            "current balun/choke is needed."
+        ),
+        Language.SPANISH: (
+            "El balance de alimentación no está clasificado para esta geometría; "
+            "verificá si hace falta un balún/choke de corriente."
+        ),
     },
     "feed_matching.none": {
         Language.ENGLISH: "None",
@@ -8321,6 +8383,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "history.balun_loss": {
         Language.ENGLISH: "Balun/unun loss",
         Language.SPANISH: "Pérdida de balun/unun",
+    },
+    "history.current_balun": {
+        Language.ENGLISH: "Current balun/choke",
+        Language.SPANISH: "Balún/choke de corriente",
     },
     "history.loads": {
         Language.ENGLISH: "Series loads",

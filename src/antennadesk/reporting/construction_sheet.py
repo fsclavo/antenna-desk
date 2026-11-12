@@ -42,6 +42,7 @@ from ..domain.antennas.zepp import (
     ZeppParameters,
     parallel_wire_impedance_ohm,
 )
+from ..domain.design.feed_balance import requires_current_balun
 from ..domain.design.matching_resolution import resolve_matching_network
 from ..domain.design.preflight import PreflightReport, PreflightStatus
 from ..domain.optimization.length import measure_bandwidth_hz
@@ -239,6 +240,7 @@ def render_construction_sheet(
                     project.balun_loss,
                     labeler=tr,
                     position=project.matching_network_position,
+                    current_balun=project.current_balun,
                 ),
                 *optimization_summary_rows(design),
                 *design_provenance_rows(design),
@@ -1397,6 +1399,19 @@ def render_construction_sheet(
     else:
         raise TypeError(f"unsupported antenna parameters: {type(parameters)!r}")
 
+    balance_note = ""
+    if requires_current_balun(parameters):
+        balance_note = _note(
+            tr,
+            (
+                "Balanced antenna: a current balun/choke is recorded in the "
+                "project. Common-mode choking is not modeled."
+                if project.current_balun
+                else "Balanced antenna: install a current balun/choke at the "
+                "feed. Common-mode choking is not modeled."
+            ),
+        )
+
     bandwidth_row = ""
     if result is not None and len(result.frequencies) >= 2:
         swr_points = [
@@ -1465,6 +1480,7 @@ def render_construction_sheet(
 <h2>Construction notes</h2>
 <div class="notes">
 {construction_note}
+{balance_note}
 <p>{_escape(tr("Trim and re-measure after installation. Real ground, supports, feed line, and nearby objects can shift the result. A low SWR does not prove high efficiency or a useful radiation pattern."))}</p>
 </div>
 
