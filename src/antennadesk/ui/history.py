@@ -32,6 +32,7 @@ class ProjectSnapshot:
             self.project.designs,
             self.project.measurements,
             self.project.measurement_sessions,
+            self.project.journal_entries,
             self.project.feed_line,
             self.project.matching_network,
             self.project.balun_loss,

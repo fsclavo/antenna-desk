@@ -1538,6 +1538,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Measurement Sessions...",
         Language.SPANISH: "Sesiones de medición...",
     },
+    "action.project_journal": {
+        Language.ENGLISH: "Project Journal...",
+        Language.SPANISH: "Bitácora del proyecto...",
+    },
     "action.tuning_assistant": {
         Language.ENGLISH: "Tuning Assistant...",
         Language.SPANISH: "Asistente de ajuste...",
@@ -3383,6 +3387,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Agrupá mediciones en sesiones de campo y comparalas antes y después de ajustar."
         ),
     },
+    "help.action.project_journal": {
+        Language.ENGLISH: (
+            "Record dated decisions, as-built changes, photos, and notes, and compare "
+            "captured design snapshots."
+        ),
+        Language.SPANISH: (
+            "Registrá decisiones fechadas, cambios as-built, fotos y notas, y compará "
+            "instantáneas de diseño capturadas."
+        ),
+    },
     "help.action.tuning_assistant": {
         Language.ENGLISH: (
             "Estimate a bounded primary-dimension change from a measured reference and solver sensitivity."
@@ -5000,6 +5014,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Measurement sessions updated.",
         Language.SPANISH: "Sesiones de medición actualizadas.",
     },
+    "status.project_journal": {
+        Language.ENGLISH: "Project journal updated.",
+        Language.SPANISH: "Bitácora del proyecto actualizada.",
+    },
     "status.tuning_applied": {
         Language.ENGLISH: "Tuning change applied.",
         Language.SPANISH: "Cambio de ajuste aplicado.",
@@ -5851,6 +5869,369 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "Menos de la mitad de los puntos medidos se superponen con el rango "
             "simulado; la comparación es parcial."
+        ),
+    },
+    "journal.title": {
+        Language.ENGLISH: "Project journal",
+        Language.SPANISH: "Bitácora del proyecto",
+    },
+    "journal.timeline": {
+        Language.ENGLISH: (
+            "Journal timeline · {count} entries · {snapshots} with design snapshots"
+        ),
+        Language.SPANISH: (
+            "Línea de tiempo · {count} entradas · {snapshots} con instantáneas de diseño"
+        ),
+    },
+    "journal.date": {
+        Language.ENGLISH: "Date (UTC)",
+        Language.SPANISH: "Fecha (UTC)",
+    },
+    "journal.kind_column": {
+        Language.ENGLISH: "Kind",
+        Language.SPANISH: "Tipo",
+    },
+    "journal.title_column": {
+        Language.ENGLISH: "Title",
+        Language.SPANISH: "Título",
+    },
+    "journal.design": {
+        Language.ENGLISH: "Design",
+        Language.SPANISH: "Diseño",
+    },
+    "journal.images": {
+        Language.ENGLISH: "Images",
+        Language.SPANISH: "Imágenes",
+    },
+    "journal.snapshot": {
+        Language.ENGLISH: "Snapshot",
+        Language.SPANISH: "Instantánea",
+    },
+    "journal.snapshot_available": {
+        Language.ENGLISH: "Captured · {name}",
+        Language.SPANISH: "Capturada · {name}",
+    },
+    "journal.details_meta": {
+        Language.ENGLISH: "{date} · {kind} · {design}",
+        Language.SPANISH: "{date} · {kind} · {design}",
+    },
+    "journal.no_design": {
+        Language.ENGLISH: "No design",
+        Language.SPANISH: "Sin diseño",
+    },
+    "journal.no_notes": {
+        Language.ENGLISH: "No notes.",
+        Language.SPANISH: "Sin notas.",
+    },
+    "journal.empty": {
+        Language.ENGLISH: (
+            "No journal entries yet. Add an entry to record decisions, as-built changes, "
+            "photos, or measurements."
+        ),
+        Language.SPANISH: (
+            "Todavía no hay entradas. Agregá una para registrar decisiones, cambios "
+            "as-built, fotos o mediciones."
+        ),
+    },
+    "journal.new": {
+        Language.ENGLISH: "New entry",
+        Language.SPANISH: "Nueva entrada",
+    },
+    "journal.edit": {
+        Language.ENGLISH: "Edit entry",
+        Language.SPANISH: "Editar entrada",
+    },
+    "journal.delete": {
+        Language.ENGLISH: "Delete entry",
+        Language.SPANISH: "Eliminar entrada",
+    },
+    "journal.compare": {
+        Language.ENGLISH: "Compare versions...",
+        Language.SPANISH: "Comparar versiones...",
+    },
+    "journal.delete_title": {
+        Language.ENGLISH: "Delete journal entry",
+        Language.SPANISH: "Eliminar entrada de la bitácora",
+    },
+    "journal.delete_confirm": {
+        Language.ENGLISH: (
+            "Delete “{title}”? Project undo can still restore it while the session is open."
+        ),
+        Language.SPANISH: (
+            "¿Eliminar “{title}”? Deshacer el proyecto todavía puede restaurarla mientras "
+            "la sesión esté abierta."
+        ),
+    },
+    "journal.current_design": {
+        Language.ENGLISH: "Current design — {name}",
+        Language.SPANISH: "Diseño actual — {name}",
+    },
+    "journal.preview_hint": {
+        Language.ENGLISH: "Select an image reference to preview it.",
+        Language.SPANISH: "Seleccioná una referencia de imagen para previsualizarla.",
+    },
+    "journal.preview_unavailable": {
+        Language.ENGLISH: "Preview unavailable or file not found.",
+        Language.SPANISH: "Vista previa no disponible o archivo no encontrado.",
+    },
+    "journal.entry_title": {
+        Language.ENGLISH: "Journal entry",
+        Language.SPANISH: "Entrada de la bitácora",
+    },
+    "journal.field.title": {
+        Language.ENGLISH: "Title",
+        Language.SPANISH: "Título",
+    },
+    "journal.field.date": {
+        Language.ENGLISH: "Date (UTC)",
+        Language.SPANISH: "Fecha (UTC)",
+    },
+    "journal.field.kind": {
+        Language.ENGLISH: "Kind",
+        Language.SPANISH: "Tipo",
+    },
+    "journal.field.design": {
+        Language.ENGLISH: "Linked design",
+        Language.SPANISH: "Diseño vinculado",
+    },
+    "journal.field.body": {
+        Language.ENGLISH: "Notes",
+        Language.SPANISH: "Notas",
+    },
+    "journal.field.images": {
+        Language.ENGLISH: "Image references",
+        Language.SPANISH: "Referencias de imágenes",
+    },
+    "journal.capture_snapshot": {
+        Language.ENGLISH: "Capture a design snapshot for version comparison",
+        Language.SPANISH: "Capturar una instantánea del diseño para comparar versiones",
+    },
+    "journal.snapshot_stored": {
+        Language.ENGLISH: (
+            "Stored snapshot of {name} ({rows} rows). Editing this entry does not recapture it."
+        ),
+        Language.SPANISH: (
+            "Instantánea guardada de {name} ({rows} filas). Editar esta entrada no la "
+            "vuelve a capturar."
+        ),
+    },
+    "journal.title_required": {
+        Language.ENGLISH: "Enter a title for the journal entry.",
+        Language.SPANISH: "Ingresá un título para la entrada.",
+    },
+    "journal.images_limit": {
+        Language.ENGLISH: "A journal entry supports at most {maximum} image references.",
+        Language.SPANISH: "Una entrada admite como máximo {maximum} referencias de imágenes.",
+    },
+    "journal.image_add": {
+        Language.ENGLISH: "Add images...",
+        Language.SPANISH: "Agregar imágenes...",
+    },
+    "journal.image_remove": {
+        Language.ENGLISH: "Remove",
+        Language.SPANISH: "Quitar",
+    },
+    "journal.image_open": {
+        Language.ENGLISH: "Open",
+        Language.SPANISH: "Abrir",
+    },
+    "journal.image_choose": {
+        Language.ENGLISH: "Add image references",
+        Language.SPANISH: "Agregar referencias de imágenes",
+    },
+    "journal.image_filter": {
+        Language.ENGLISH: "Images (*.png *.jpg *.jpeg *.webp *.bmp)",
+        Language.SPANISH: "Imágenes (*.png *.jpg *.jpeg *.webp *.bmp)",
+    },
+    "journal.image_missing": {
+        Language.ENGLISH: "File not found: {path}",
+        Language.SPANISH: "Archivo no encontrado: {path}",
+    },
+    "journal.kind.note": {
+        Language.ENGLISH: "Note",
+        Language.SPANISH: "Nota",
+    },
+    "journal.kind.decision": {
+        Language.ENGLISH: "Decision",
+        Language.SPANISH: "Decisión",
+    },
+    "journal.kind.as_built": {
+        Language.ENGLISH: "As built",
+        Language.SPANISH: "As-built",
+    },
+    "journal.kind.measurement": {
+        Language.ENGLISH: "Measurement",
+        Language.SPANISH: "Medición",
+    },
+    "journal.kind.tuning": {
+        Language.ENGLISH: "Tuning",
+        Language.SPANISH: "Ajuste",
+    },
+    "journal.kind.photo": {
+        Language.ENGLISH: "Photo",
+        Language.SPANISH: "Foto",
+    },
+    "journal.kind.other": {
+        Language.ENGLISH: "Other",
+        Language.SPANISH: "Otro",
+    },
+    "journal.comparison.title": {
+        Language.ENGLISH: "Compare design versions",
+        Language.SPANISH: "Comparar versiones de diseño",
+    },
+    "journal.comparison.before": {
+        Language.ENGLISH: "Before",
+        Language.SPANISH: "Antes",
+    },
+    "journal.comparison.after": {
+        Language.ENGLISH: "After",
+        Language.SPANISH: "Después",
+    },
+    "journal.comparison.field": {
+        Language.ENGLISH: "Field",
+        Language.SPANISH: "Campo",
+    },
+    "journal.comparison.change": {
+        Language.ENGLISH: "Change",
+        Language.SPANISH: "Cambio",
+    },
+    "journal.comparison.summary": {
+        Language.ENGLISH: (
+            "{changed} changed · {same} unchanged · {added} added · {removed} removed"
+        ),
+        Language.SPANISH: (
+            "{changed} cambiados · {same} sin cambios · {added} agregados · {removed} quitados"
+        ),
+    },
+    "journal.comparison.change.same": {
+        Language.ENGLISH: "Same",
+        Language.SPANISH: "Igual",
+    },
+    "journal.comparison.change.changed": {
+        Language.ENGLISH: "Changed",
+        Language.SPANISH: "Cambiado",
+    },
+    "journal.comparison.change.added": {
+        Language.ENGLISH: "Added",
+        Language.SPANISH: "Agregado",
+    },
+    "journal.comparison.change.removed": {
+        Language.ENGLISH: "Removed",
+        Language.SPANISH: "Quitado",
+    },
+    "journal.comparison.need_two": {
+        Language.ENGLISH: (
+            "Capture a design snapshot in a journal entry before comparing versions."
+        ),
+        Language.SPANISH: (
+            "Capturá una instantánea de diseño en una entrada antes de comparar versiones."
+        ),
+    },
+    "help.journal.timeline": {
+        Language.ENGLISH: (
+            "Entries are listed newest first. Automatic history is not inferred; every "
+            "record is manual."
+        ),
+        Language.SPANISH: (
+            "Las entradas se ordenan de la más nueva a la más antigua. No se infiere "
+            "historial automático; cada registro es manual."
+        ),
+    },
+    "help.journal.table": {
+        Language.ENGLISH: "Dated journal entries with their kind, design link, and snapshot.",
+        Language.SPANISH: "Entradas fechadas con su tipo, diseño vinculado e instantánea.",
+    },
+    "help.journal.details": {
+        Language.ENGLISH: "Notes, image references, and stored snapshot for the selected entry.",
+        Language.SPANISH: "Notas, referencias de imágenes e instantánea de la entrada elegida.",
+    },
+    "help.journal.new": {
+        Language.ENGLISH: "Create a dated note, decision, as-built record, or photo entry.",
+        Language.SPANISH: "Creá una nota, decisión, registro as-built o foto con fecha.",
+    },
+    "help.journal.edit": {
+        Language.ENGLISH: "Edit the selected entry. A stored snapshot is never recaptured.",
+        Language.SPANISH: "Editá la entrada elegida. Una instantánea guardada nunca se recaptura.",
+    },
+    "help.journal.delete": {
+        Language.ENGLISH: "Delete the selected entry after confirmation.",
+        Language.SPANISH: "Eliminá la entrada elegida después de confirmar.",
+    },
+    "help.journal.compare": {
+        Language.ENGLISH: "Compare two stored snapshots or a snapshot with the current design.",
+        Language.SPANISH: "Compará dos instantáneas o una instantánea con el diseño actual.",
+    },
+    "help.journal.title": {
+        Language.ENGLISH: "Short label shown on the timeline and in snapshot choices.",
+        Language.SPANISH: "Etiqueta corta en la línea de tiempo y en las instantáneas.",
+    },
+    "help.journal.date": {
+        Language.ENGLISH: (
+            "When the event happened or was recorded. Stored in UTC, independent of the "
+            "design timestamp."
+        ),
+        Language.SPANISH: (
+            "Cuándo ocurrió o se registró el evento. Se guarda en UTC, independiente de "
+            "la fecha del diseño."
+        ),
+    },
+    "help.journal.kind": {
+        Language.ENGLISH: "Entry category for scanning the timeline; it does not change behavior.",
+        Language.SPANISH: "Categoría para recorrer la línea de tiempo; no cambia el comportamiento.",
+    },
+    "help.journal.design": {
+        Language.ENGLISH: "Optional design this entry refers to. Deleting the design detaches it.",
+        Language.SPANISH: "Diseño opcional al que se refiere la entrada. Si se elimina, se desvincula.",
+    },
+    "help.journal.body": {
+        Language.ENGLISH: "Manual notes about decisions, construction, tuning, or observations.",
+        Language.SPANISH: "Notas manuales sobre decisiones, construcción, ajuste u observaciones.",
+    },
+    "help.journal.snapshot": {
+        Language.ENGLISH: (
+            "Store the design summary and model counts for later comparison. Snapshots "
+            "are historical and never update automatically."
+        ),
+        Language.SPANISH: (
+            "Guarda el resumen del diseño y los conteos del modelo para comparar luego. "
+            "Las instantáneas son históricas y no se actualizan solas."
+        ),
+    },
+    "help.journal.images": {
+        Language.ENGLISH: "Local file references only; images are not embedded in the project.",
+        Language.SPANISH: "Solo referencias a archivos locales; las imágenes no se incrustan.",
+    },
+    "help.journal.image_add": {
+        Language.ENGLISH: "Choose local image files to reference from this entry.",
+        Language.SPANISH: "Elegí archivos de imagen locales para referenciar desde la entrada.",
+    },
+    "help.journal.image_remove": {
+        Language.ENGLISH: "Remove the selected image reference; the file on disk is unchanged.",
+        Language.SPANISH: "Quitá la referencia elegida; el archivo en disco no cambia.",
+    },
+    "help.journal.image_open": {
+        Language.ENGLISH: "Open the selected local image in the system viewer.",
+        Language.SPANISH: "Abrí la imagen local elegida en el visor del sistema.",
+    },
+    "help.journal.preview": {
+        Language.ENGLISH: "Preview of the selected local image reference when it is available.",
+        Language.SPANISH: "Vista previa de la referencia local elegida cuando está disponible.",
+    },
+    "help.journal.comparison.left": {
+        Language.ENGLISH: "Older snapshot; it remains historical even when the design changes.",
+        Language.SPANISH: "Instantánea anterior; sigue siendo histórica aunque cambie el diseño.",
+    },
+    "help.journal.comparison.right": {
+        Language.ENGLISH: "Newer snapshot or the current design summary.",
+        Language.SPANISH: "Instantánea más nueva o el resumen del diseño actual.",
+    },
+    "help.journal.comparison.table": {
+        Language.ENGLISH: (
+            "Field-by-field text comparison. It reports differences but does not judge "
+            "which version is better."
+        ),
+        Language.SPANISH: (
+            "Comparación campo por campo. Informa diferencias pero no juzga qué versión es mejor."
         ),
     },
     "robustness.title": {
@@ -7177,6 +7558,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "history.measurement_sessions": {
         Language.ENGLISH: "Measurement sessions",
         Language.SPANISH: "Sesiones de medición",
+    },
+    "history.project_journal": {
+        Language.ENGLISH: "Project journal",
+        Language.SPANISH: "Bitácora del proyecto",
     },
     "history.tuning": {
         Language.ENGLISH: "Apply tuning change",
@@ -12178,6 +12563,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "diagnostic.project.measurement_session.unknown_design": {
         Language.ENGLISH: "A measurement session references an unknown design.",
         Language.SPANISH: "Una sesión de medición referencia un diseño inexistente.",
+    },
+    "diagnostic.project.journal_entry.duplicate_id": {
+        Language.ENGLISH: "Two journal entries use the same identifier.",
+        Language.SPANISH: "Dos entradas de la bitácora usan el mismo identificador.",
+    },
+    "diagnostic.project.journal_entry.unknown_design": {
+        Language.ENGLISH: "A journal entry references an unknown design.",
+        Language.SPANISH: "Una entrada de la bitácora referencia un diseño inexistente.",
     },
     "diagnostic.project.design.duplicate_id": {
         Language.ENGLISH: "Two designs use the same identifier.",

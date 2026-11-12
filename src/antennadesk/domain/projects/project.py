@@ -26,6 +26,7 @@ from ..simulation.band_result import BandAnalysisResult
 from ..simulation.run import SimulationRun
 from .construction import ConstructionRecord
 from .installation import InstallationProfile
+from .journal import JournalEntry
 
 
 @dataclass(frozen=True, slots=True)
@@ -171,12 +172,14 @@ class Project:
     active_installation_profile_id: UUID | None = None
     construction_record: ConstructionRecord | None = None
     measurement_sessions: tuple[MeasurementSession, ...] = field(default_factory=tuple)
+    journal_entries: tuple[JournalEntry, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "designs", tuple(self.designs))
         object.__setattr__(self, "simulation_runs", tuple(self.simulation_runs))
         object.__setattr__(self, "measurements", tuple(self.measurements))
         object.__setattr__(self, "measurement_sessions", tuple(self.measurement_sessions))
+        object.__setattr__(self, "journal_entries", tuple(self.journal_entries))
         object.__setattr__(self, "installation_profiles", tuple(self.installation_profiles))
         object.__setattr__(
             self,
@@ -339,6 +342,28 @@ class Project:
                             f"measurement references an unknown session: {measurement.session_id}"
                         ),
                         field="measurements",
+                    )
+                )
+
+        seen_journal_ids: set[UUID] = set()
+        for entry in self.journal_entries:
+            if entry.id in seen_journal_ids:
+                diagnostics.append(
+                    Diagnostic(
+                        code="project.journal_entry.duplicate_id",
+                        severity=Severity.ERROR,
+                        message=f"duplicate journal entry id: {entry.id}",
+                        field="journal_entries",
+                    )
+                )
+            seen_journal_ids.add(entry.id)
+            if entry.design_id is not None and entry.design_id not in design_ids:
+                diagnostics.append(
+                    Diagnostic(
+                        code="project.journal_entry.unknown_design",
+                        severity=Severity.ERROR,
+                        message=(f"journal entry references an unknown design: {entry.design_id}"),
+                        field="journal_entries",
                     )
                 )
 
@@ -626,6 +651,54 @@ class Project:
         return replace(
             self,
             measurements=tuple(item for item in self.measurements if item.id != measurement_id),
+            updated_at=updated_at,
+        )
+
+    def journal_entry_by_id(self, entry_id: UUID) -> JournalEntry:
+        for entry in self.journal_entries:
+            if entry.id == entry_id:
+                return entry
+        raise KeyError(f"unknown journal entry id: {entry_id}")
+
+    def with_journal_entry(
+        self,
+        entry: JournalEntry,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        return replace(
+            self,
+            journal_entries=(*self.journal_entries, entry),
+            updated_at=updated_at,
+        )
+
+    def with_updated_journal_entry(
+        self,
+        entry: JournalEntry,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        if not any(item.id == entry.id for item in self.journal_entries):
+            raise KeyError(f"unknown journal entry id: {entry.id}")
+        return replace(
+            self,
+            journal_entries=tuple(
+                entry if item.id == entry.id else item for item in self.journal_entries
+            ),
+            updated_at=updated_at,
+        )
+
+    def without_journal_entry(
+        self,
+        entry_id: UUID,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        if not any(item.id == entry_id for item in self.journal_entries):
+            raise KeyError(f"unknown journal entry id: {entry_id}")
+        return replace(
+            self,
+            journal_entries=tuple(item for item in self.journal_entries if item.id != entry_id),
             updated_at=updated_at,
         )
 

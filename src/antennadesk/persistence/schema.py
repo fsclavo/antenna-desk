@@ -140,6 +140,11 @@ from ..domain.projects.installation import (
     InstallationProfile,
     InstallationSupport,
 )
+from ..domain.projects.journal import (
+    JournalDesignSnapshot,
+    JournalEntry,
+    JournalEntryKind,
+)
 from ..domain.projects.project import DesignProvenance, DesignVariant, Project
 from ..domain.simulation.bands import amateur_band_by_id
 from ..domain.simulation.far_field import FarFieldRequest
@@ -908,6 +913,25 @@ class MeasurementSessionPayload(StrictModel):
     notes: str = ""
 
 
+class JournalDesignSnapshotPayload(StrictModel):
+    design_id: UUID | None = None
+    design_name: str = Field(min_length=1)
+    antenna_type: str = Field(min_length=1)
+    frequency_hz: float = Field(gt=0.0)
+    rows: list[tuple[str, str]] = Field(default_factory=list)
+
+
+class JournalEntryPayload(StrictModel):
+    id: UUID
+    created_at: datetime
+    title: str = Field(min_length=1)
+    kind: JournalEntryKind = JournalEntryKind.NOTE
+    body: str = ""
+    design_id: UUID | None = None
+    snapshot: JournalDesignSnapshotPayload | None = None
+    image_references: list[str] = Field(default_factory=list)
+
+
 class SimulationRunPayload(StrictModel):
     id: UUID
     design_id: UUID
@@ -1171,6 +1195,7 @@ class ProjectPayload(StrictModel):
     simulation_runs: list[SimulationRunPayload] = Field(default_factory=list)
     measurements: list[MeasurementPayload] = Field(default_factory=list)
     measurement_sessions: list[MeasurementSessionPayload] = Field(default_factory=list)
+    journal_entries: list[JournalEntryPayload] = Field(default_factory=list)
     feed_line: FeedLinePayload | None = None
     matching_network: LNetworkPayload | None = None
     matching_network_position: MatchingNetworkPosition = MatchingNetworkPosition.FEEDPOINT
@@ -1211,6 +1236,12 @@ class ProjectPayload(StrictModel):
         for measurement in self.measurements:
             if measurement.session_id is not None and measurement.session_id not in known_sessions:
                 raise ValueError("measurement references an unknown session")
+        journal_ids = [entry.id for entry in self.journal_entries]
+        if len(journal_ids) != len(set(journal_ids)):
+            raise ValueError("duplicate journal entry id")
+        for entry in self.journal_entries:
+            if entry.design_id is not None and entry.design_id not in design_ids:
+                raise ValueError("journal entry references an unknown design")
         return self
 
     @model_validator(mode="after")
@@ -2226,6 +2257,33 @@ def _measurement_session_from_domain(value: MeasurementSession) -> MeasurementSe
     )
 
 
+def _journal_snapshot_from_domain(
+    value: JournalDesignSnapshot,
+) -> JournalDesignSnapshotPayload:
+    return JournalDesignSnapshotPayload(
+        design_id=value.design_id,
+        design_name=value.design_name,
+        antenna_type=value.antenna_type,
+        frequency_hz=value.frequency_hz,
+        rows=[(label, row_value) for label, row_value in value.rows],
+    )
+
+
+def _journal_entry_from_domain(value: JournalEntry) -> JournalEntryPayload:
+    return JournalEntryPayload(
+        id=value.id,
+        created_at=value.created_at,
+        title=value.title,
+        kind=value.kind,
+        body=value.body,
+        design_id=value.design_id,
+        snapshot=(
+            _journal_snapshot_from_domain(value.snapshot) if value.snapshot is not None else None
+        ),
+        image_references=list(value.image_references),
+    )
+
+
 def _simulation_run_from_domain(value: SimulationRun) -> SimulationRunPayload:
     return SimulationRunPayload(
         id=value.id,
@@ -2384,6 +2442,7 @@ def _project_from_domain(value: Project) -> ProjectPayload:
         measurement_sessions=[
             _measurement_session_from_domain(session) for session in value.measurement_sessions
         ],
+        journal_entries=[_journal_entry_from_domain(entry) for entry in value.journal_entries],
         feed_line=(_feed_line_from_domain(value.feed_line) if value.feed_line else None),
         matching_network=(
             _matching_network_from_domain(value.matching_network)
@@ -3374,6 +3433,33 @@ def _measurement_session_to_domain(value: MeasurementSessionPayload) -> Measurem
     )
 
 
+def _journal_snapshot_to_domain(
+    value: JournalDesignSnapshotPayload,
+) -> JournalDesignSnapshot:
+    return JournalDesignSnapshot(
+        design_id=value.design_id,
+        design_name=value.design_name,
+        antenna_type=value.antenna_type,
+        frequency_hz=value.frequency_hz,
+        rows=tuple((label, row_value) for label, row_value in value.rows),
+    )
+
+
+def _journal_entry_to_domain(value: JournalEntryPayload) -> JournalEntry:
+    return JournalEntry(
+        id=value.id,
+        created_at=value.created_at,
+        title=value.title,
+        kind=value.kind,
+        body=value.body,
+        design_id=value.design_id,
+        snapshot=(
+            _journal_snapshot_to_domain(value.snapshot) if value.snapshot is not None else None
+        ),
+        image_references=tuple(value.image_references),
+    )
+
+
 def _simulation_run_to_domain(value: SimulationRunPayload) -> SimulationRun:
     return SimulationRun(
         id=value.id,
@@ -3463,6 +3549,9 @@ def project_from_document(document: ProjectDocument) -> Project:
         measurement_sessions=tuple(
             _measurement_session_to_domain(session)
             for session in document.project.measurement_sessions
+        ),
+        journal_entries=tuple(
+            _journal_entry_to_domain(entry) for entry in document.project.journal_entries
         ),
         feed_line=(
             _feed_line_to_domain(document.project.feed_line) if document.project.feed_line else None

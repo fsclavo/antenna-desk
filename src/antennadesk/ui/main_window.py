@@ -285,6 +285,7 @@ from .dialogs.installation_profile_dialog import InstallationProfileDialog
 from .dialogs.inverted_l_dialog import InvertedLDialog
 from .dialogs.inverted_v_dialog import InvertedVDialog
 from .dialogs.j_pole_dialog import JPoleDialog
+from .dialogs.journal_dialog import JournalDialog
 from .dialogs.loaded_dipole_dialog import LoadedDipoleDialog
 from .dialogs.loads_dialog import LoadsDialog
 from .dialogs.magnetic_loop_dialog import MagneticLoopDialog
@@ -616,6 +617,8 @@ class MainWindow(QMainWindow):
         self._measurement_sessions_action.triggered.connect(
             lambda: self.edit_measurement_sessions()
         )
+        self._journal_action = QAction(self)
+        self._journal_action.triggered.connect(lambda: self.edit_project_journal())
         self._tuning_action = QAction(self)
         self._tuning_action.triggered.connect(lambda: self.tune_measurement())
         self._sweep_action = QAction(self)
@@ -1355,6 +1358,7 @@ class MainWindow(QMainWindow):
         self._tools_menu.addAction(self._locate_solver_action)
         self._tools_menu.addAction(self._calculator_action)
         self._tools_menu.addAction(self._measurement_sessions_action)
+        self._tools_menu.addAction(self._journal_action)
         self._tools_menu.addAction(self._tuning_action)
         self._tools_menu.addAction(self._sweep_action)
         self._tools_menu.addAction(self._robustness_action)
@@ -1424,6 +1428,9 @@ class MainWindow(QMainWindow):
         self._calculator_action.setText(self._translator.t("action.component_calculator"))
         self._calculator_action.setToolTip(self._translator.t("help.action.component_calculator"))
         self._calculator_action.setWhatsThis(self._translator.t("help.action.component_calculator"))
+        self._journal_action.setText(self._translator.t("action.project_journal"))
+        self._journal_action.setToolTip(self._translator.t("help.action.project_journal"))
+        self._journal_action.setWhatsThis(self._translator.t("help.action.project_journal"))
         self._measurement_sessions_action.setText(self._translator.t("action.measurement_sessions"))
         self._measurement_sessions_action.setToolTip(
             self._translator.t("help.action.measurement_sessions")
@@ -1845,6 +1852,7 @@ class MainWindow(QMainWindow):
         self._locate_solver_action.setEnabled(idle)
         self._calculator_action.setEnabled(idle)
         self._measurement_sessions_action.setEnabled(idle and has_project)
+        self._journal_action.setEnabled(idle and has_project)
         self._feed_line_action.setEnabled(idle)
         self._matching_network_action.setEnabled(idle)
         self._balun_loss_action.setEnabled(idle)
@@ -2029,6 +2037,7 @@ class MainWindow(QMainWindow):
             self._compact_history_action,
             self._calculator_action,
             self._measurement_sessions_action,
+            self._journal_action,
             self._tuning_action,
             self._sweep_action,
             self._robustness_action,
@@ -5140,6 +5149,29 @@ class MainWindow(QMainWindow):
         self._refresh_measurements()
         self._tabs_select_measurements()
         self._last_status_key = "status.measurement_sessions"
+        self._update_title()
+        self._update_actions()
+        self._update_status_text()
+
+    @history_action("history.project_journal")
+    def edit_project_journal(self) -> None:
+        if self._project is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        dialog = JournalDialog(
+            self._translator,
+            self._project,
+            self,
+            default_design_id=self._design_id,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        updated = dialog.result_project()
+        if updated == self._project:
+            return
+        self._project = updated
+        self._dirty = True
+        self._last_status_key = "status.project_journal"
         self._update_title()
         self._update_actions()
         self._update_status_text()

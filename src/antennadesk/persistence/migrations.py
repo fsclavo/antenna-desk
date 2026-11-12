@@ -602,6 +602,16 @@ def _migrate_v38_to_v39(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v39_to_v40(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the optional project journal to the project."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if isinstance(project, dict):
+        project.setdefault("journal_entries", [])
+    return migrated
+
+
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
@@ -641,6 +651,7 @@ MIGRATIONS: dict[int, Migration] = {
     36: _migrate_v36_to_v37,
     37: _migrate_v37_to_v38,
     38: _migrate_v38_to_v39,
+    39: _migrate_v39_to_v40,
 }
 
 

@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Project journal.** **Tools → Project Journal...** adds a manual, local
+  timeline of dated notes, decisions, as-built records, measurements, tuning
+  notes, and photos. Entries store a title, kind, UTC date, free notes, an
+  optional design link, and up to twelve local image references; images are
+  referenced by path and are not embedded. When a design is linked at creation,
+  the entry can capture an immutable design snapshot with the summary rows and
+  canonical model counts. **Compare versions...** reports changed, added, and
+  removed fields between two stored snapshots or between a snapshot and the
+  current design; it does not judge which version is better. Editing an entry
+  never recaptures its snapshot, and deleting a design detaches the link while
+  preserving the snapshot. Journal changes enter project undo. Schema 40 adds
+  the optional journal; older projects migrate with an empty journal.
 - **Guided, Standard, and Advanced workflow modes.** The mode is selectable
   from the new **View → Workflow mode** menu or the toolbar **Mode** selector,
   persists across windows, and is also available in **Preferences**. Guided

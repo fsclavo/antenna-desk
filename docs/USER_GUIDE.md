@@ -1405,6 +1405,29 @@ does not persist the grid. Invalid or failed points remain visible instead of
 being hidden. A low SWR at one frequency does not prove efficiency, bandwidth,
 pattern, or buildability; verify with a full simulation and measurement.
 
+## Project journal
+
+Use **Tools → Project Journal...** to keep a manual, local record of the
+project. Entries are listed newest first and store a UTC date, a title, a kind
+(note, decision, as-built, measurement, tuning, photo, or other), free notes, an
+optional linked design, and up to twelve local image references. Images are
+referenced by path; they are not copied into the project file. Keep those files
+with the project backup if the journal references them.
+
+The journal also records design snapshots for version comparison. When you link
+a design while creating an entry, **Capture a design snapshot** stores the
+current design summary and the canonical model wire/load/line/source counts.
+Use **Compare versions...** to compare two stored snapshots or a stored snapshot
+with the current design. The comparison reports changed, added, and removed
+fields in text; it does not judge which version is better.
+
+Snapshots are historical: editing the entry text or linking a different design
+does not recapture or overwrite the stored snapshot. Delete the entry and create
+a new one to capture a later version. Deleting a design detaches it from journal
+entries but keeps their snapshots. Automatic history is never inferred; every
+record is written by the operator. Journal edits are part of project undo and
+mark the project dirty until saved.
+
 ## Tolerance and robustness
 
 Use **Tools → Tolerance & Robustness...** to study how construction tolerances

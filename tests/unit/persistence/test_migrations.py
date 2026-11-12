@@ -896,6 +896,32 @@ def test_v33_migration_adds_the_matching_network_design_target() -> None:
     assert "matching_network_design" not in document["project"]
 
 
+def test_v39_migration_adds_the_project_journal() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 39,
+        "project": {"name": "Site"},
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert migrated["project"]["journal_entries"] == []
+    assert "journal_entries" not in document["project"]
+
+
+def test_v39_migration_tolerates_a_missing_project() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 39,
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert "project" not in migrated
+
+
 def test_v38_migration_adds_measurement_sessions() -> None:
     document = {
         "format": "antennadesk-project",

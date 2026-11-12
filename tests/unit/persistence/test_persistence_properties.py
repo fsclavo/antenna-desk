@@ -238,6 +238,78 @@ def test_measurement_sessions_round_trip() -> None:
         assert repository.load(path) == project
 
 
+def test_journal_entries_round_trip() -> None:
+    from uuid import uuid4
+
+    from antennadesk.domain.projects.journal import (
+        JournalDesignSnapshot,
+        JournalEntry,
+        JournalEntryKind,
+    )
+
+    project = _project(
+        project_name="Journal",
+        description="",
+        design_name="Initial",
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        azimuth_deg=0.0,
+        wire_radius_m=0.001,
+        orientation=DipoleOrientation.HORIZONTAL,
+        ground=GroundModel.free_space(),
+    )
+    design = project.designs[0]
+    snapshot = JournalDesignSnapshot(
+        design_id=design.id,
+        design_name=design.name,
+        antenna_type=design.antenna_type,
+        frequency_hz=design.parameters.frequency_hz,
+        rows=(
+            ("Frequency", "7.100000 MHz"),
+            ("Total wire length", "20.0000 m"),
+            ("Model wires", "1"),
+        ),
+    )
+    entry = JournalEntry(
+        id=uuid4(),
+        created_at=FIXED_NOW,
+        title="As built",
+        kind=JournalEntryKind.AS_BUILT,
+        body="Trimmed to 20.05 m after the first field check.",
+        design_id=design.id,
+        snapshot=snapshot,
+        image_references=("/home/operator/photos/as-built.jpg",),
+    )
+    detached = JournalEntry(
+        id=uuid4(),
+        created_at=FIXED_NOW,
+        title="Site note",
+        kind=JournalEntryKind.OTHER,
+        body="Moved the mast to the north corner.",
+    )
+    project = project.with_journal_entry(
+        entry,
+        updated_at=FIXED_NOW,
+    ).with_journal_entry(
+        detached,
+        updated_at=FIXED_NOW,
+    )
+
+    document = document_from_project(project)
+    restored = project_from_document(document)
+
+    assert restored == project
+    assert restored.journal_entries[0].snapshot == snapshot
+    assert restored.journal_entries[1].design_id is None
+
+    repository = JsonProjectRepository()
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "journal.antennadesk"
+        repository.save(project, path)
+        assert repository.load(path) == project
+
+
 @settings(max_examples=50, deadline=None)
 @given(
     project_name=NAME,

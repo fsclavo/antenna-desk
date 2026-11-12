@@ -7,6 +7,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pytest
+from pydantic import ValidationError
 
 from antennadesk.domain.antennas.beverage import ANTENNA_TYPE_BEVERAGE
 from antennadesk.domain.antennas.biquad import (
@@ -91,6 +92,18 @@ def test_parameters_to_domain_rejects_a_foreign_payload(antenna_type: str) -> No
 
     with pytest.raises(ValueError, match="wrong shape"):
         schema._parameters_to_domain(payload)  # type: ignore[arg-type]
+
+
+def test_journal_entry_payload_rejects_an_unknown_kind() -> None:
+    with pytest.raises(ValidationError, match="kind"):
+        schema.JournalEntryPayload.model_validate(
+            {
+                "id": "00000000-0000-0000-0000-000000000010",
+                "created_at": "2026-11-12T20:00:00Z",
+                "title": "Entry",
+                "kind": "unsupported",
+            }
+        )
 
 
 def test_parameters_to_domain_rejects_an_unsupported_type() -> None:

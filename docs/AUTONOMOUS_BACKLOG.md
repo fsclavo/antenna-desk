@@ -107,6 +107,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX12~~ | ~~Measurement uncertainty card~~ | S–M | UX10 | **Done 2026-11-12:** added a qualitative measurement uncertainty card to the **Measurements** tab. It reports calibration, reference plane, feed line/accessories, session conditions, point count, span, maximum spacing, reference impedance, resonance count, and simulated coverage/spacing; classifies documentation as documented, partially documented, or limited; and lists warnings for missing metadata, no/multiple resonances, and no/partial coverage. The assessment is a pure domain function and deliberately assigns no numeric ±Ω/±dB uncertainty. Tests cover documentation levels, missing/uncertain calibration, coverage warnings, resonance counts, sweep statistics, card rendering/retranslation/empty state, and EN/ES help. No schema change. |
 | ~~UX13~~ | ~~Parameter sweeps (what-if)~~ | M | UX12 | **Done 2026-11-12:** added **Tools → Parameter Sweep...** with bounded 1D/2D sweeps over the family optimizer variables. The dialog validates ranges and a 400-point cap, warns above 100 solver runs, evaluates SWR/R/X/|Z| at one target frequency, and shows a 1D metric plot with R/X/|Z| overlays and a current-design marker or a selectable 2D color grid. Invalid points and solver errors stay visible. **Apply selected** and **Apply best SWR** use the normal family adapter, undo history, and a follow-up simulation. Sweeps are transient and do not interpolate or optimize between points. Tests cover axis generation, budget/plan validation, 1D/2D evaluation order, solver errors, cancellation, dialog budget/plotting/table/selection, main-window apply/undo/availability, and EN/ES help. No schema change. |
 | ~~UX14~~ | ~~Tolerance and robustness analysis~~ | M–L | UX13 | **Done 2026-11-12:** added **Tools → Tolerance & Robustness...** with a bounded study over up to five continuous length/radius dimensions. It evaluates the nominal design, every selected tolerance-endpoint corner, and a seeded uniform Monte Carlo sample inside one fractional tolerance band. Results include nominal/worst-corner SWR, Monte Carlo median/P90/P95, pass fraction against an SWR limit, an SWR histogram, and a full scenario table; invalid points and solver errors stay visible. The analysis is read-only and transient, uses the same family descriptor as the optimizer, and runs in a worker thread with progress/cancellation. Tests cover spec limits, corner generation, deterministic Monte Carlo, statistics/histograms, solver scenarios, cancellation, dialog budget/run/retranslation, main-window availability, and EN/ES help. No schema change. |
+| ~~UX15~~ | ~~Project journal~~ | M | UX14 | **Done 2026-11-12:** added **Tools → Project Journal...** with a newest-first timeline of manual dated entries. Entries store a UTC timestamp, title, kind (note, decision, as-built, measurement, tuning, photo, other), notes, an optional design link, and up to twelve local image references. Creating a linked entry can capture an immutable `JournalDesignSnapshot` with canonical summary rows and model wire/load/line/source counts. **Compare versions...** shows changed, added, removed, and unchanged fields between two stored snapshots or a snapshot and the current design, without judging quality. Editing text never recaptures a snapshot; deleting a design detaches the link but preserves the snapshot. Journal edits enter project undo. Schema 40 adds optional journal entries with a v39→v40 migration; tests cover domain validation, project CRUD/invariants, design-deletion detach, snapshot building/comparison, persistence round-trip and migration, editor/timeline/comparison dialogs, main-window undo, and EN/ES help. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -114,8 +115,8 @@ external service and must not be invented or simulated into existence.
 
 ## Product experience queue (2026-11-11)
 
-UX1–UX14 are complete. The 0.5 **Decide**, 0.6 **Build**, and 0.7 **Measure**
-releases are closed, and the 0.8 **Explore** release is in progress. UX15–UX20
+UX1–UX15 are complete. The 0.5 **Decide**, 0.6 **Build**, and 0.7 **Measure**
+releases are closed, and the 0.8 **Explore** release is in progress. UX16–UX20
 remain product scope in
 [`ROADMAP.md`](ROADMAP.md#product-experience-backlog-proposed-2026-11-11). Do
 not promote those items into this queue until the next slice is selected and
@@ -317,9 +318,9 @@ model and solver contract must land first.
 7. **R1** is closed as superseded: `v0.4.1` was published with CI-built Linux
    and Windows artifacts, so rerunning the older `v0.4.0` tag is no longer
    required.
-8. **UX1–UX14 are complete.** The 0.5 **Decide**, 0.6 **Build**, and 0.7
+8. **UX1–UX15 are complete.** The 0.5 **Decide**, 0.6 **Build**, and 0.7
    **Measure** releases are closed, and the 0.8 **Explore** release is in
-   progress. UX15–UX20 remain product scope in [`ROADMAP.md`](ROADMAP.md).
+   progress. UX16–UX20 remain product scope in [`ROADMAP.md`](ROADMAP.md).
 9. Product priorities and new antenna candidates live in
    [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
@@ -352,13 +353,14 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **39**.
-- Full gate: **2,758 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **2,788 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.4.1** published on 2026-11-11 with checksum-verified unsigned
   artifacts, including the Windows NSIS installer. All release jobs completed
   successfully in CI. See [`RELEASE_QA_0.4.1.md`](RELEASE_QA_0.4.1.md).
-- Last commits: the tolerance and robustness analysis (UX14),
+- Last commits: the project journal (UX15),
+  the tolerance and robustness analysis (UX14),
   the parameter sweeps (UX13),
   the measurement uncertainty card (UX12),
   the sensitivity tuning assistant (UX11),

@@ -596,6 +596,29 @@ count; and simulated comparison coverage/spacing. It returns a documentation
 level (`documented`, `partial`, `limited`) and explicit warning keys. It does
 not compute a numerical uncertainty budget or assign ±Ω/±dB values.
 
+## Project journal
+
+`JournalEntry` is a dated project-level record with a title, kind, notes, an
+optional design link, local image-reference strings, and an optional
+`JournalDesignSnapshot`. Kinds are `note`, `decision`, `as_built`,
+`measurement`, `tuning`, `photo`, and `other`. Titles and image references are
+trimmed; timestamps are UTC. Images are stored as paths only and are never
+embedded. Journal order is presentation logic; the project keeps entries in
+creation order.
+
+`JournalDesignSnapshot` stores the linked design name and type, its frequency,
+and a tuple of canonical English summary rows captured at entry creation. The
+reporting layer builds the rows from `design_summary_rows()` plus canonical
+model wire/load/transmission-line/source counts. Snapshots are immutable after
+creation: editing entry text or changing its design link does not recapture
+them. `compare_journal_snapshots()` returns ordered `same`, `changed`, `added`,
+and `removed` rows without numeric inference or a quality judgment.
+
+`Project` validates unique journal entry ids and rejects links to unknown
+designs. Deleting a design clears the entry link but preserves the stored
+snapshot. Journal entries participate in the undo history signature and are
+persisted with the project.
+
 `design/robustness.py` implements bounded tolerance analysis. `RobustnessSpec`
 stores a target frequency, one fractional tolerance, up to five continuous
 length/radius dimensions, corner-case and Monte Carlo settings, a deterministic
@@ -694,11 +717,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 24.
+the application writes version 40.
 
 ## Schema policy
 
-- Current version: `24`.
+- Current version: `40`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -770,6 +793,12 @@ the application writes version 24.
   stored simulation spec. Old documents load with the feedpoint position.
 - Version 38 adds the optional as-built construction record (notes, measured
   dimensions, and checklist). Old documents load with no record.
+- Version 39 adds measurement sessions and the optional `session_id` link on
+  each measurement. Old documents load with no sessions and unassigned
+  measurements.
+- Version 40 adds the optional project journal: dated entries, design links,
+  local image references, and immutable design snapshots for version
+  comparison. Old documents load with an empty journal.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads

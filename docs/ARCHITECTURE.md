@@ -240,7 +240,17 @@ imported `Measurement` records, and `Measurement.session_id` is the only link.
 The sessions dialog edits a local immutable `Project` and returns it to the main
 window, where it enters the normal undo history. The before/after comparison is
 a pure `measurement_comparison` function over two measurements; the dialog only
-formats its points and warnings. The tuning assistant runs the
+formats its points and warnings.
+
+The project journal is also project metadata. `JournalEntry` records are
+created and edited in a local immutable project copy and returned to the main
+window through the normal undo history. The reporting layer captures snapshot
+rows once, at explicit request; the comparison dialog only renders the stored
+rows and never recaptures them. Images remain local file references. The
+timeline, editor, and comparison dialogs do not modify the design or run the
+solver.
+
+The tuning assistant runs the
 `TuneMeasurement` application use case in a worker thread. It executes three
 bounded solver probes around the primary dimension plus one verification probe,
 then applies the proposed parameters through the existing family UI adapter.
@@ -307,7 +317,8 @@ additional antenna sources with amplitude and phase, version 25 adds the phased
 vertical array design type, version 26 adds the quad beam design type, version
 27 adds the discone design type, version 28 adds the trapped Yagi design type,
 version 29 adds optional per-source input results, version 30 adds the hexbeam
-design type, and older documents are migrated explicitly.
+design type, version 39 adds measurement sessions, version 40 adds the project
+journal, and older documents are migrated explicitly.
 
 Simulation runs are persisted in schema version 30. Raw solver text is stored
 with the normalized result. Project files are compact JSON compressed with
