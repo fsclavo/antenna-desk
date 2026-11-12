@@ -21,6 +21,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   never recaptures its snapshot, and deleting a design detaches the link while
   preserving the snapshot. Journal changes enter project undo. Schema 40 adds
   the optional journal; older projects migrate with an empty journal.
+- **Reference design library.** **File → Reference Design Library...** adds
+  twelve source-backed starting designs: ARRL 40 m half-wave dipole, Cebik
+  20 m Moxon, NBS 6 m five-element Yagi, W3DZZ trap dipole, G3TXQ 20 m hexbeam,
+  G5RV and ZS6BKW doublets, Cebik half square and bobtail curtain, ARRL 40 m
+  EFHW, Chameleon LEFS sloper, and ARRL 120° inverted V. Search filters by
+  name, band, family, or source term. Each entry shows its published reference,
+  modeled scope, evidence level, source, published tolerance, and limits.
+  Opening creates a normal project and can run the normal simulation; no
+  published value is presented as pre-validated. The library reuses the
+  evidence registry and existing family parameters. No schema change.
 - **Guided experiments.** **Tools → Guided Experiments...** adds three curated
   sweeps over the existing family optimizer variables: **Resonance and match**
   (primary length), **Height above ground** (separate height dimension), and

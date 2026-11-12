@@ -109,6 +109,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX14~~ | ~~Tolerance and robustness analysis~~ | M–L | UX13 | **Done 2026-11-12:** added **Tools → Tolerance & Robustness...** with a bounded study over up to five continuous length/radius dimensions. It evaluates the nominal design, every selected tolerance-endpoint corner, and a seeded uniform Monte Carlo sample inside one fractional tolerance band. Results include nominal/worst-corner SWR, Monte Carlo median/P90/P95, pass fraction against an SWR limit, an SWR histogram, and a full scenario table; invalid points and solver errors stay visible. The analysis is read-only and transient, uses the same family descriptor as the optimizer, and runs in a worker thread with progress/cancellation. Tests cover spec limits, corner generation, deterministic Monte Carlo, statistics/histograms, solver scenarios, cancellation, dialog budget/run/retranslation, main-window availability, and EN/ES help. No schema change. |
 | ~~UX15~~ | ~~Project journal~~ | M | UX14 | **Done 2026-11-12:** added **Tools → Project Journal...** with a newest-first timeline of manual dated entries. Entries store a UTC timestamp, title, kind (note, decision, as-built, measurement, tuning, photo, other), notes, an optional design link, and up to twelve local image references. Creating a linked entry can capture an immutable `JournalDesignSnapshot` with canonical summary rows and model wire/load/line/source counts. **Compare versions...** shows changed, added, removed, and unchanged fields between two stored snapshots or a snapshot and the current design, without judging quality. Editing text never recaptures a snapshot; deleting a design detaches the link but preserves the snapshot. Journal edits enter project undo. Schema 40 adds optional journal entries with a v39→v40 migration; tests cover domain validation, project CRUD/invariants, design-deletion detach, snapshot building/comparison, persistence round-trip and migration, editor/timeline/comparison dialogs, main-window undo, and EN/ES help. |
 | ~~UX16~~ | ~~Guided experiments~~ | M–L | UX15 | **Done 2026-11-12:** added **Tools → Guided Experiments...** with three curated sweep presets: **Resonance and match** over the primary length dimension, **Height above ground** over a separate height dimension, and **Two dimensions at once** over length × height. The chooser explains the question, steps, range, metric, what to look for, and limits, and reports explicit reasons when a family lacks a required dimension. Starting one opens the existing **Parameter Sweep** dialog with axes preset and a guide banner; ranges, points, metric, validation, cancellation, and apply/undo behavior remain single-sourced. The experiments evaluate one target frequency and do not claim bandwidth, efficiency, pattern, or an optimum between points. Tests cover role resolution, unavailable reasons, 1D/2D plan counts, preset application in the sweep dialog, chooser details/retranslation, main-window apply/undo/availability, and EN/ES help. No schema change. |
+| ~~UX17~~ | ~~Curated reference design library~~ | M + content | UX16 | **Done 2026-11-12:** added **File → Reference Design Library...** with twelve source-backed starting designs: ARRL 40 m dipole, Cebik 20 m Moxon, NBS 6 m Yagi, W3DZZ trap dipole, G3TXQ 20 m hexbeam, G5RV, ZS6BKW, Cebik half square, Cebik bobtail curtain, ARRL 40 m EFHW, Chameleon LEFS sloper, and ARRL 120° inverted V. Search filters by design, band, family, or source term; details show published reference, modeled scope, evidence level, source, tolerance, and limitations. **Open design** creates a normal project through the existing creation path and optionally runs the normal simulation. The library does not pre-run simulations or claim that published values were reproduced. Tests cover source-backed dimensions, unique keys, evidence levels, consistent design variants, filtering, details, retranslation, open/cancel behavior, and main-window project creation/simulation. No schema change. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -116,8 +117,9 @@ external service and must not be invented or simulated into existence.
 
 ## Product experience queue (2026-11-11)
 
-UX1–UX16 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**, and
-0.8 **Explore** releases are closed. UX17–UX20 remain product scope in
+UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**, and
+0.8 **Explore** releases are closed, and 0.9 **Sustain** is in progress. UX18–UX20
+remain product scope in
 [`ROADMAP.md`](ROADMAP.md#product-experience-backlog-proposed-2026-11-11). Do
 not promote those items into this queue until the next slice is selected and
 the full gate is green.
@@ -318,9 +320,9 @@ model and solver contract must land first.
 7. **R1** is closed as superseded: `v0.4.1` was published with CI-built Linux
    and Windows artifacts, so rerunning the older `v0.4.0` tag is no longer
    required.
-8. **UX1–UX16 are complete.** The 0.5 **Decide**, 0.6 **Build**, 0.7
-   **Measure**, and 0.8 **Explore** releases are closed. UX17–UX20 remain
-   product scope in [`ROADMAP.md`](ROADMAP.md).
+8. **UX1–UX17 are complete.** The 0.5 **Decide**, 0.6 **Build**, 0.7
+   **Measure**, and 0.8 **Explore** releases are closed, and 0.9 **Sustain** is
+   in progress. UX18–UX20 remain product scope in [`ROADMAP.md`](ROADMAP.md).
 9. Product priorities and new antenna candidates live in
    [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
@@ -353,13 +355,14 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **39**.
-- Full gate: **2,802 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **2,816 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.4.1** published on 2026-11-11 with checksum-verified unsigned
   artifacts, including the Windows NSIS installer. All release jobs completed
   successfully in CI. See [`RELEASE_QA_0.4.1.md`](RELEASE_QA_0.4.1.md).
-- Last commits: the guided experiments (UX16),
+- Last commits: the reference design library (UX17),
+  the guided experiments (UX16),
   the project journal (UX15),
   the tolerance and robustness analysis (UX14),
   the parameter sweeps (UX13),

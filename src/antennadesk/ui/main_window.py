@@ -302,6 +302,7 @@ from .dialogs.phased_vertical_dialog import PhasedVerticalDialog
 from .dialogs.preferences_dialog import PreferencesDialog
 from .dialogs.preflight_dialog import PreflightDialog
 from .dialogs.quad_beam_dialog import QuadBeamDialog
+from .dialogs.reference_library_dialog import ReferenceLibraryDialog
 from .dialogs.ringo_dialog import RingoDialog
 from .dialogs.robustness_dialog import RobustnessDialog
 from .dialogs.scv_dialog import ScvDialog
@@ -488,6 +489,8 @@ class MainWindow(QMainWindow):
         self._new_action.triggered.connect(lambda: self.new_antenna())
         self._advisor_action = QAction(self)
         self._advisor_action.triggered.connect(lambda: self.show_antenna_advisor())
+        self._reference_library_action = QAction(self)
+        self._reference_library_action.triggered.connect(lambda: self.show_reference_library())
         self._import_nec_action = QAction(self)
         self._import_nec_action.triggered.connect(lambda: self.import_nec_deck())
         self._import_mmana_action = QAction(self)
@@ -1287,6 +1290,7 @@ class MainWindow(QMainWindow):
         self._file_menu = self.menuBar().addMenu("")
         self._file_menu.addAction(self._new_action)
         self._file_menu.addAction(self._advisor_action)
+        self._file_menu.addAction(self._reference_library_action)
         self._file_menu.addAction(self._open_action)
         self._file_menu.addAction(self._save_action)
         self._file_menu.addAction(self._save_as_action)
@@ -1413,6 +1417,13 @@ class MainWindow(QMainWindow):
         self._update_title()
         self._new_action.setText(self._translator.t("action.new"))
         self._advisor_action.setText(self._translator.t("action.antenna_advisor"))
+        self._reference_library_action.setText(self._translator.t("action.reference_library"))
+        self._reference_library_action.setToolTip(
+            self._translator.t("help.action.reference_library")
+        )
+        self._reference_library_action.setWhatsThis(
+            self._translator.t("help.action.reference_library")
+        )
         self._advisor_action.setToolTip(self._translator.t("help.action.antenna_advisor"))
         self._advisor_action.setWhatsThis(self._translator.t("help.action.antenna_advisor"))
         self._import_nec_action.setText(self._translator.t("action.import_nec"))
@@ -1856,6 +1867,7 @@ class MainWindow(QMainWindow):
         )
         self._new_action.setEnabled(idle)
         self._advisor_action.setEnabled(idle)
+        self._reference_library_action.setEnabled(idle)
         self._apply_button.setEnabled(idle and has_project)
         self._open_action.setEnabled(idle)
         self._save_action.setEnabled(idle and has_project)
@@ -4763,16 +4775,18 @@ class MainWindow(QMainWindow):
         default_name: str,
         feed_line: FeedLine | None = None,
         band_plan: BandPlan | None = None,
-    ) -> None:
+        description: str = "",
+    ) -> bool:
         name = self._ask_project_name(self._suggested_project_name(parameters, default_name))
         if name is None:
-            return
+            return False
         try:
             project = CreateDipoleProject().execute(
                 CreateDipoleProjectCommand(
                     project_name=name,
                     variant_name="Initial",
                     parameters=parameters,
+                    description=description,
                     band_plan=band_plan,
                 )
             )
@@ -4783,8 +4797,9 @@ class MainWindow(QMainWindow):
                 )
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-            return
+            return False
         self._set_project(project, project.designs[0].id, path=None, dirty=True)
+        return True
 
     def new_custom_antenna(self) -> None:
         if not self._maybe_save_changes():
@@ -6256,6 +6271,36 @@ class MainWindow(QMainWindow):
         self._update_title()
         self._update_actions()
         self._update_status_text()
+
+    def show_reference_library(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        dialog = ReferenceLibraryDialog(self._translator, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        reference = dialog.selected_reference()
+        if reference is None:
+            return
+        try:
+            band_default = default_band_plan(reference.parameters)
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        created = self._create_project_from_parameters(
+            reference.parameters,
+            default_name=self._translator.t(reference.project_name_key),
+            band_plan=band_default.plan,
+            description=self._translator.t(
+                "reference.library.project_description",
+                published=self._translator.t(reference.published_key),
+            ),
+        )
+        if not created:
+            return
+        self._last_status_key = "status.reference_opened"
+        self._update_status_text()
+        if dialog.simulate_after_open() and self._solver is not None:
+            self.simulate()
 
     def show_antenna_advisor(self) -> None:
         if not self._maybe_save_changes():

@@ -981,6 +981,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Installation profile...",
         Language.SPANISH: "Perfil de instalación...",
     },
+    "action.reference_library": {
+        Language.ENGLISH: "Reference Design Library...",
+        Language.SPANISH: "Biblioteca de diseños de referencia...",
+    },
     "action.antenna_advisor": {
         Language.ENGLISH: "Help me choose...",
         Language.SPANISH: "Ayúdame a elegir...",
@@ -1478,6 +1482,443 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "catalog.custom.description": {
         Language.ENGLISH: "Start from an empty wire table and define arbitrary coordinates.",
         Language.SPANISH: "Comenzar con una tabla vacía y definir coordenadas arbitrarias.",
+    },
+    "reference.library.title": {
+        Language.ENGLISH: "Reference design library",
+        Language.SPANISH: "Biblioteca de diseños de referencia",
+    },
+    "reference.library.intro": {
+        Language.ENGLISH: (
+            "Twelve source-backed starting designs. Published values and the modeled "
+            "scope are shown before opening; the library does not pre-run simulations."
+        ),
+        Language.SPANISH: (
+            "Doce diseños iniciales con fuente. Los valores publicados y el alcance "
+            "modelado se muestran antes de abrir; la biblioteca no precalcula simulaciones."
+        ),
+    },
+    "reference.library.search_placeholder": {
+        Language.ENGLISH: "Search by name, band, family, or source term",
+        Language.SPANISH: "Buscá por nombre, banda, familia o término de la fuente",
+    },
+    "reference.library.item": {
+        Language.ENGLISH: "{title} · {band} · {level}",
+        Language.SPANISH: "{title} · {band} · {level}",
+    },
+    "reference.library.band": {
+        Language.ENGLISH: "Band",
+        Language.SPANISH: "Banda",
+    },
+    "reference.library.evidence": {
+        Language.ENGLISH: "Evidence",
+        Language.SPANISH: "Evidencia",
+    },
+    "reference.library.published": {
+        Language.ENGLISH: "Published reference",
+        Language.SPANISH: "Referencia publicada",
+    },
+    "reference.library.modeled": {
+        Language.ENGLISH: "Modeled here",
+        Language.SPANISH: "Modelado aquí",
+    },
+    "reference.library.source": {
+        Language.ENGLISH: "Source",
+        Language.SPANISH: "Fuente",
+    },
+    "reference.library.tolerance": {
+        Language.ENGLISH: "Published tolerance",
+        Language.SPANISH: "Tolerancia publicada",
+    },
+    "reference.library.limitation": {
+        Language.ENGLISH: "Limits",
+        Language.SPANISH: "Límites",
+    },
+    "reference.library.simulate_after": {
+        Language.ENGLISH: "Run a normal simulation after opening",
+        Language.SPANISH: "Ejecutar una simulación normal después de abrir",
+    },
+    "reference.library.open": {
+        Language.ENGLISH: "Open design",
+        Language.SPANISH: "Abrir diseño",
+    },
+    "reference.library.no_match": {
+        Language.ENGLISH: "No reference design matches the search.",
+        Language.SPANISH: "Ningún diseño de referencia coincide con la búsqueda.",
+    },
+    "reference.library.project_description": {
+        Language.ENGLISH: (
+            "Reference design. Published: {published} Compare this with the simulated "
+            "results and the evidence card."
+        ),
+        Language.SPANISH: (
+            "Diseño de referencia. Publicado: {published} Compará esto con los resultados "
+            "simulados y la tarjeta de evidencia."
+        ),
+    },
+    "reference.library.evidence.reference": {
+        Language.ENGLISH: "A — reference-backed",
+        Language.SPANISH: "A — con referencia",
+    },
+    "reference.library.evidence.published": {
+        Language.ENGLISH: "B — published starting point",
+        Language.SPANISH: "B — punto de partida publicado",
+    },
+    "reference.library.evidence.experimental": {
+        Language.ENGLISH: "C — experimental",
+        Language.SPANISH: "C — experimental",
+    },
+    "status.reference_opened": {
+        Language.ENGLISH: "Reference design opened.",
+        Language.SPANISH: "Diseño de referencia abierto.",
+    },
+    "reference.arrl_dipole_40m.title": {
+        Language.ENGLISH: "40 m half-wave wire dipole",
+        Language.SPANISH: "Dipolo de hilo de media onda para 40 m",
+    },
+    "reference.arrl_dipole_40m.project_name": {
+        Language.ENGLISH: "40 m dipole",
+        Language.SPANISH: "Dipolo de 40 m",
+    },
+    "reference.arrl_dipole_40m.summary": {
+        Language.ENGLISH: "Classic center-fed half-wave wire for the 40 m band.",
+        Language.SPANISH: "Hilo clásico de media onda alimentado al centro para 40 m.",
+    },
+    "reference.arrl_dipole_40m.published": {
+        Language.ENGLISH: (
+            "Practical half-wave length at 7.1 MHz; the free-space gain is about 2.15 dBi."
+        ),
+        Language.SPANISH: (
+            "Longitud práctica de media onda en 7.1 MHz; la ganancia en espacio libre "
+            "es de aproximadamente 2.15 dBi."
+        ),
+    },
+    "reference.arrl_dipole_40m.modeled": {
+        Language.ENGLISH: (
+            "Ideal center-fed wire at 10 m over free space; no balun, feed line, or supports."
+        ),
+        Language.SPANISH: (
+            "Hilo ideal alimentado al centro a 10 m en espacio libre; sin balun, línea "
+            "de alimentación ni soportes."
+        ),
+    },
+    "reference.cebik_moxon_20m.title": {
+        Language.ENGLISH: "20 m Moxon rectangle",
+        Language.SPANISH: "Rectángulo Moxon de 20 m",
+    },
+    "reference.cebik_moxon_20m.project_name": {
+        Language.ENGLISH: "20 m Moxon",
+        Language.SPANISH: "Moxon de 20 m",
+    },
+    "reference.cebik_moxon_20m.summary": {
+        Language.ENGLISH: "Cebik's published 20 m wire Moxon with bent tips.",
+        Language.SPANISH: "Moxon de hilo de 20 m publicado por Cebik, con puntas dobladas.",
+    },
+    "reference.cebik_moxon_20m.published": {
+        Language.ENGLISH: (
+            "14.17 MHz: 25.00 ft width, 9.57 ft depth, 4.85/4.00 ft tips; "
+            "56-58 Ω, 5.8 dBi, and greater than 32 dB front-to-back."
+        ),
+        Language.SPANISH: (
+            "14.17 MHz: 25.00 ft de ancho, 9.57 ft de profundidad, puntas de "
+            "4.85/4.00 ft; 56-58 Ω, 5.8 dBi y más de 32 dB de relación frente-espalda."
+        ),
+    },
+    "reference.cebik_moxon_20m.modeled": {
+        Language.ENGLISH: (
+            "Bent-wire Moxon at 10 m over free space; no supports, balun, or matching hardware."
+        ),
+        Language.SPANISH: (
+            "Moxon de hilos doblados a 10 m en espacio libre; sin soportes, balun ni "
+            "hardware de adaptación."
+        ),
+    },
+    "reference.nbs_yagi_6m.title": {
+        Language.ENGLISH: "6 m NBS five-element Yagi",
+        Language.SPANISH: "Yagi NBS de cinco elementos para 6 m",
+    },
+    "reference.nbs_yagi_6m.project_name": {
+        Language.ENGLISH: "6 m NBS Yagi",
+        Language.SPANISH: "Yagi NBS de 6 m",
+    },
+    "reference.nbs_yagi_6m.summary": {
+        Language.ENGLISH: "NBS TN-688 five-element, 0.8 λ starting beam at 50.1 MHz.",
+        Language.SPANISH: "Haz inicial NBS TN-688 de cinco elementos y 0.8 λ a 50.1 MHz.",
+    },
+    "reference.nbs_yagi_6m.published": {
+        Language.ENGLISH: "NBS TN-688 geometry with a measured 9.2 dBd (11.35 dBi) gain.",
+        Language.SPANISH: "Geometría NBS TN-688 con ganancia medida de 9.2 dBd (11.35 dBi).",
+    },
+    "reference.nbs_yagi_6m.modeled": {
+        Language.ENGLISH: (
+            "Five straight wire elements at 10 m over free space; no boom, balun, or mount."
+        ),
+        Language.SPANISH: (
+            "Cinco elementos de hilo recto a 10 m en espacio libre; sin boom, balun ni montaje."
+        ),
+    },
+    "reference.w3dzz_trap_dipole.title": {
+        Language.ENGLISH: "W3DZZ trap dipole",
+        Language.SPANISH: "Dipolo con trampas W3DZZ",
+    },
+    "reference.w3dzz_trap_dipole.project_name": {
+        Language.ENGLISH: "W3DZZ trap dipole",
+        Language.SPANISH: "Dipolo W3DZZ",
+    },
+    "reference.w3dzz_trap_dipole.summary": {
+        Language.ENGLISH: "Published 80-10 m trap dipole with two 7.1 MHz traps.",
+        Language.SPANISH: "Dipolo con trampas de 80-10 m con dos trampas de 7.1 MHz.",
+    },
+    "reference.w3dzz_trap_dipole.published": {
+        Language.ENGLISH: (
+            "33 ft inner and 22 ft outer sections, 7.1 MHz traps, 5.024 µH and 100 pF; "
+            "80/40/20/15/10 m coverage."
+        ),
+        Language.SPANISH: (
+            "Secciones internas de 33 ft y externas de 22 ft, trampas de 7.1 MHz, "
+            "5.024 µH y 100 pF; cobertura de 80/40/20/15/10 m."
+        ),
+    },
+    "reference.w3dzz_trap_dipole.modeled": {
+        Language.ENGLISH: ("Ideal parallel-LC traps; no feed line, tuner, trap loss, or hardware."),
+        Language.SPANISH: (
+            "Trampas LC paralelo ideales; sin línea, sintonizador, pérdidas de trampa ni hardware."
+        ),
+    },
+    "reference.g3txq_hexbeam_20m.title": {
+        Language.ENGLISH: "G3TXQ 20 m hexbeam",
+        Language.SPANISH: "Hexbeam G3TXQ de 20 m",
+    },
+    "reference.g3txq_hexbeam_20m.project_name": {
+        Language.ENGLISH: "20 m hexbeam",
+        Language.SPANISH: "Hexbeam de 20 m",
+    },
+    "reference.g3txq_hexbeam_20m.summary": {
+        Language.ENGLISH: "Published 20 m reference geometry for the G3TXQ hexbeam.",
+        Language.SPANISH: "Geometría de referencia publicada del hexbeam G3TXQ de 20 m.",
+    },
+    "reference.g3txq_hexbeam_20m.published": {
+        Language.ENGLISH: (
+            "14.184 MHz: 219 in driver half, 207 in reflector half, 24 in tip gap, "
+            "and 130 in turning radius."
+        ),
+        Language.SPANISH: (
+            "14.184 MHz: media del excitador de 219 in, media del reflector de 207 in, "
+            "separación de puntas de 24 in y radio de giro de 130 in."
+        ),
+    },
+    "reference.g3txq_hexbeam_20m.modeled": {
+        Language.ENGLISH: (
+            "Bent W/U wire approximation; no spreaders, frame, balun, or multiband nesting."
+        ),
+        Language.SPANISH: (
+            "Aproximación de hilos en W/U; sin largueros, marco, balun ni anidado multibanda."
+        ),
+    },
+    "reference.g5rv.title": {
+        Language.ENGLISH: "G5RV multiband doublet",
+        Language.SPANISH: "Doblete multibanda G5RV",
+    },
+    "reference.g5rv.project_name": {
+        Language.ENGLISH: "G5RV",
+        Language.SPANISH: "G5RV",
+    },
+    "reference.g5rv.summary": {
+        Language.ENGLISH: "102 ft doublet with a published matching section.",
+        Language.SPANISH: "Doble 102 ft con sección de adaptación publicada.",
+    },
+    "reference.g5rv.published": {
+        Language.ENGLISH: ("102 ft dipole with a 300 Ω/29 ft or 450 Ω/34 ft matching section."),
+        Language.SPANISH: (
+            "Dipolo de 102 ft con sección de adaptación de 300 Ω/29 ft o 450 Ω/34 ft."
+        ),
+    },
+    "reference.g5rv.modeled": {
+        Language.ENGLISH: (
+            "Wire dipole plus ideal transmission line; no tuner, balun, or line loss."
+        ),
+        Language.SPANISH: (
+            "Dipolo de hilo con línea de transmisión ideal; sin sintonizador, balun "
+            "ni pérdidas de línea."
+        ),
+    },
+    "reference.zs6bkw.title": {
+        Language.ENGLISH: "ZS6BKW multiband doublet",
+        Language.SPANISH: "Doble ZS6BKW multibanda",
+    },
+    "reference.zs6bkw.project_name": {
+        Language.ENGLISH: "ZS6BKW",
+        Language.SPANISH: "ZS6BKW",
+    },
+    "reference.zs6bkw.summary": {
+        Language.ENGLISH: "Cebik's 28.4 m doublet with a 13.6 m matching section.",
+        Language.SPANISH: "Doble Cebik de 28.4 m con sección de adaptación de 13.6 m.",
+    },
+    "reference.zs6bkw.published": {
+        Language.ENGLISH: (
+            "28.4 m doublet with a 13.6 m, 400 Ω matching section (Cebik reference)."
+        ),
+        Language.SPANISH: (
+            "Doble de 28.4 m con sección de adaptación de 13.6 m y 400 Ω (referencia de Cebik)."
+        ),
+    },
+    "reference.zs6bkw.modeled": {
+        Language.ENGLISH: (
+            "Wire doublet plus ideal transmission line; no tuner, balun, or line loss."
+        ),
+        Language.SPANISH: (
+            "Doble de hilo con línea de transmisión ideal; sin sintonizador, balun "
+            "ni pérdidas de línea."
+        ),
+    },
+    "reference.cebik_half_square.title": {
+        Language.ENGLISH: "Cebik half square",
+        Language.SPANISH: "Half square de Cebik",
+    },
+    "reference.cebik_half_square.project_name": {
+        Language.ENGLISH: "Half square",
+        Language.SPANISH: "Half square",
+    },
+    "reference.cebik_half_square.summary": {
+        Language.ENGLISH: "Two verticals joined by a top wire, fed at one corner.",
+        Language.SPANISH: "Dos verticales unidas por un hilo superior, alimentadas en una esquina.",
+    },
+    "reference.cebik_half_square.published": {
+        Language.ENGLISH: (
+            "7.15 MHz: 62.4 ft horizontal by 39 ft vertical; about 4.6 dBi and 65 Ω."
+        ),
+        Language.SPANISH: (
+            "7.15 MHz: 62.4 ft horizontal por 39 ft vertical; aproximadamente 4.6 dBi y 65 Ω."
+        ),
+    },
+    "reference.cebik_half_square.modeled": {
+        Language.ENGLISH: (
+            "Wire array at 2.5 m base height over free space; no supports, feed line, "
+            "or matching network."
+        ),
+        Language.SPANISH: (
+            "Conjunto de hilos con base a 2.5 m en espacio libre; sin soportes, línea "
+            "ni red de adaptación."
+        ),
+    },
+    "reference.cebik_bobtail_curtain.title": {
+        Language.ENGLISH: "Cebik bobtail curtain",
+        Language.SPANISH: "Bobtail curtain de Cebik",
+    },
+    "reference.cebik_bobtail_curtain.project_name": {
+        Language.ENGLISH: "Bobtail curtain",
+        Language.SPANISH: "Bobtail curtain",
+    },
+    "reference.cebik_bobtail_curtain.summary": {
+        Language.ENGLISH: "Three verticals joined by a top wire, fed at the center.",
+        Language.SPANISH: "Tres verticales unidas por un hilo superior, alimentadas al centro.",
+    },
+    "reference.cebik_bobtail_curtain.published": {
+        Language.ENGLISH: (
+            "7.15 MHz: 125 ft horizontal by 38 ft vertical; about 6.3 dBi and 40 Ω "
+            "at the center-wire/top junction."
+        ),
+        Language.SPANISH: (
+            "7.15 MHz: 125 ft horizontal por 38 ft vertical; aproximadamente 6.3 dBi "
+            "y 40 Ω en la unión del hilo central con el superior."
+        ),
+    },
+    "reference.cebik_bobtail_curtain.modeled": {
+        Language.ENGLISH: (
+            "Wire array at 2.5 m base height over free space; no supports, feed line, "
+            "or matching network."
+        ),
+        Language.SPANISH: (
+            "Conjunto de hilos con base a 2.5 m en espacio libre; sin soportes, línea "
+            "ni red de adaptación."
+        ),
+    },
+    "reference.arrl_efhw_40m.title": {
+        Language.ENGLISH: "ARRL 40 m end-fed half-wave",
+        Language.SPANISH: "End-fed de media onda ARRL para 40 m",
+    },
+    "reference.arrl_efhw_40m.project_name": {
+        Language.ENGLISH: "40 m EFHW",
+        Language.SPANISH: "EFHW de 40 m",
+    },
+    "reference.arrl_efhw_40m.summary": {
+        Language.ENGLISH: "End-fed half-wave wire with a 49:1 transformer and counterpoise.",
+        Language.SPANISH: "Hilo de media onda alimentado en el extremo con transformador 49:1 y contrapeso.",
+    },
+    "reference.arrl_efhw_40m.published": {
+        Language.ENGLISH: (
+            "66 ft radiator, 49:1 transformer, about 2500 Ω, and a 0.05 λ counterpoise."
+        ),
+        Language.SPANISH: (
+            "Radiador de 66 ft, transformador 49:1, aproximadamente 2500 Ω y contrapeso de 0.05 λ."
+        ),
+    },
+    "reference.arrl_efhw_40m.modeled": {
+        Language.ENGLISH: (
+            "End-fed wire with an ideal 49:1 transformer and straight counterpoise; "
+            "no core loss, choke, or site coupling."
+        ),
+        Language.SPANISH: (
+            "Hilo alimentado en el extremo con transformador 49:1 ideal y contrapeso "
+            "recto; sin pérdidas de núcleo, choke ni acople del sitio."
+        ),
+    },
+    "reference.chameleon_sloper.title": {
+        Language.ENGLISH: "Chameleon LEFS sloper",
+        Language.SPANISH: "Sloper Chameleon LEFS",
+    },
+    "reference.chameleon_sloper.project_name": {
+        Language.ENGLISH: "LEFS sloper",
+        Language.SPANISH: "Sloper LEFS",
+    },
+    "reference.chameleon_sloper.summary": {
+        Language.ENGLISH: "Portable 66.5 ft end-fed sloper for 40-10 m.",
+        Language.SPANISH: "Sloper portátil end-fed de 66.5 ft para 40-10 m.",
+    },
+    "reference.chameleon_sloper.published": {
+        Language.ENGLISH: (
+            "66.5 ft radiator, 49:1 transformer, about 3 ft feed height and 25 ft "
+            "far end; tested on 40/20/15/10 m."
+        ),
+        Language.SPANISH: (
+            "Radiador de 66.5 ft, transformador 49:1, alimentación a unos 3 ft y "
+            "extremo lejano a 25 ft; probado en 40/20/15/10 m."
+        ),
+    },
+    "reference.chameleon_sloper.modeled": {
+        Language.ENGLISH: (
+            "Straight sloper with an ideal 49:1 transformer; no transformer loss, "
+            "feed line, choke, or site coupling."
+        ),
+        Language.SPANISH: (
+            "Sloper recto con transformador 49:1 ideal; sin pérdidas del transformador, "
+            "línea, choke ni acople del sitio."
+        ),
+    },
+    "reference.arrl_inverted_v.title": {
+        Language.ENGLISH: "ARRL 120° inverted V",
+        Language.SPANISH: "V invertida ARRL de 120°",
+    },
+    "reference.arrl_inverted_v.project_name": {
+        Language.ENGLISH: "40 m inverted V",
+        Language.SPANISH: "V invertida de 40 m",
+    },
+    "reference.arrl_inverted_v.summary": {
+        Language.ENGLISH: "Apex-fed 120° inverted V for the 40 m band.",
+        Language.SPANISH: "V invertida de 120° alimentada en el vértice para 40 m.",
+    },
+    "reference.arrl_inverted_v.published": {
+        Language.ENGLISH: "120° inverted V with a total length of 465.6/f MHz feet.",
+        Language.SPANISH: "V invertida de 120° con longitud total de 465.6/f MHz pies.",
+    },
+    "reference.arrl_inverted_v.modeled": {
+        Language.ENGLISH: (
+            "Two sloping wires with an apex feed at 10 m over free space; no supports, "
+            "balun, or site coupling."
+        ),
+        Language.SPANISH: (
+            "Dos hilos inclinados con alimentación en el vértice a 10 m en espacio "
+            "libre; sin soportes, balun ni acople del sitio."
+        ),
     },
     "catalog.evidence.builtin": {
         Language.ENGLISH: "Built-in template; simulation model",
@@ -3848,6 +4289,46 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.section.advisor": {
         Language.ENGLISH: "Bands, site limits, and practical preferences used to shortlist catalog antennas.",
         Language.SPANISH: "Bandas, límites del sitio y preferencias prácticas para preseleccionar antenas del catálogo.",
+    },
+    "help.action.reference_library": {
+        Language.ENGLISH: (
+            "Browse source-backed starting designs, inspect their published reference "
+            "and modeled scope, and open one as a new project."
+        ),
+        Language.SPANISH: (
+            "Recorré diseños iniciales con fuente, revisá su referencia publicada y "
+            "alcance modelado, y abrí uno como proyecto nuevo."
+        ),
+    },
+    "help.reference.library.search": {
+        Language.ENGLISH: "Filter by design name, band, family, or source term.",
+        Language.SPANISH: "Filtrá por nombre, banda, familia o término de la fuente.",
+    },
+    "help.reference.library.list": {
+        Language.ENGLISH: "Curated designs with their band and evidence level.",
+        Language.SPANISH: "Diseños curados con su banda y nivel de evidencia.",
+    },
+    "help.reference.library.details": {
+        Language.ENGLISH: (
+            "Published reference, modeled scope, source, tolerance, and limitations."
+        ),
+        Language.SPANISH: (
+            "Referencia publicada, alcance modelado, fuente, tolerancia y limitaciones."
+        ),
+    },
+    "help.reference.library.open": {
+        Language.ENGLISH: "Create a new project from the selected source-backed design.",
+        Language.SPANISH: "Creá un proyecto nuevo con el diseño de referencia elegido.",
+    },
+    "help.reference.library.simulate": {
+        Language.ENGLISH: (
+            "Run the normal solver after opening so published and simulated values can "
+            "be compared in Results."
+        ),
+        Language.SPANISH: (
+            "Ejecutá el solver normal después de abrir para comparar valores publicados "
+            "y simulados en Resultados."
+        ),
     },
     "help.action.antenna_advisor": {
         Language.ENGLISH: "Describe your needs and get a shortlist of catalog antennas.",

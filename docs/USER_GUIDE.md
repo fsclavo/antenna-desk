@@ -1373,6 +1373,34 @@ known reference plane, and repeat measurements where possible. A low error
 against one simulation does not prove that the antenna or the simulation is
 correct.
 
+## Reference design library
+
+Use **File → Reference Design Library...** to start from one of twelve
+source-backed designs. The library includes the ARRL 40 m half-wave dipole, the
+Cebik 20 m Moxon, the NBS 6 m five-element Yagi, the W3DZZ trap dipole, the
+G3TXQ 20 m hexbeam, the G5RV and ZS6BKW doublets, the Cebik half square and
+bobtail curtain, the ARRL 40 m EFHW, the Chameleon LEFS sloper, and the ARRL
+120° inverted V.
+
+Search by name, band, family, or source term. The details panel shows:
+
+- the **published reference**: dimensions or performance reported by the
+  source;
+- the **modeled here** scope: what this application actually represents;
+- the **evidence level**, source, published tolerance, and limits.
+
+**Open design** creates a new project from the selected parameters. Leave
+**Run a normal simulation after opening** checked to run the usual solver and
+populate Results; clear it if you only want to inspect or edit the geometry
+first. A prompt asks for the new project name.
+
+The library does not pre-run simulations and does not claim that a published
+value has been reproduced. Published and simulated values may differ because
+the source used different ground, feed line, matching, hardware, or measurement
+conditions. Compare them explicitly and read the limits before trusting a
+match. The entries are starting points, not calibrated copies of commercial
+products.
+
 ## Guided experiments
 
 Use **Tools → Guided Experiments...** to start from one of three curated

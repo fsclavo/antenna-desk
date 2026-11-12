@@ -265,7 +265,12 @@ worker thread. The dialog only renders the points and applies the selected
 parameters through the normal family adapter. Guided experiments are curated
 `SweepPlan` presets from `design/guided_experiments.py`; the chooser opens the
 same sweep dialog with those axes and a guide banner, so plotting, validation,
-cancellation, and apply behavior remain single-sourced. Tolerance analysis uses the same
+cancellation, and apply behavior remain single-sourced. The reference design
+library is a thin chooser over `design/reference_library.py`: entries return
+existing family parameters, the dialog displays the evidence registry and
+published/modeled text, and the main window creates a project through the same
+project-creation path before optionally running the normal simulation. It adds
+no alternate solver or persistence path. Tolerance analysis uses the same
 descriptor contract: `RunRobustness` evaluates nominal, corner, and seeded
 Monte Carlo scenarios in a worker thread, and the dialog is read-only. It does
 not change the project or persist its transient grid and sample results.

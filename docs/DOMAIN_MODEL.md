@@ -643,6 +643,14 @@ reason key when the family lacks a required dimension. Guided experiments do
 not add a solver path, optimize between points, or persist results; they only
 preselect axes and limits for the normal sweep engine.
 
+`design/reference_library.py` defines twelve concrete `ReferenceDesign` entries.
+Each entry stores presentation keys, an existing evidence-registry template,
+and ordinary family parameters built from the published starting dimensions.
+The library does not add geometry rules or performance claims. Sources,
+tolerances, and limitations remain in `evidence.py`; the UI localizes them and
+shows the published reference beside the modeled scope. Opening an entry uses
+the normal project-creation path and may run the normal simulation.
+
 `design/tuning.py` implements the bounded tuning estimate. It selects the
 measured resonance nearest the target (or the minimum-SWR point when there is
 no resonance), estimates `df/dD` from solver probes around the current primary
