@@ -27,6 +27,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   on a 100-150 Ω loop, so the residual SWR is about 1.0-1.5 and a matching
   network may still be needed for an exact 50 Ω match. Schema 42 adds the field
   and migrates loops to 2:1.
+- **Yagi folded-driven transformer.** Enabling **Folded driven element** in the
+  Yagi editor now sets an editable ideal **4:1** feed transformer, matching the
+  common balun for a folded driven element. The field is hidden and forced to
+  1.0 for a straight driven element or a beta/hairpin match, so the two
+  matching mechanisms are not cascaded. The ratio is applied through the
+  simulation link budget, preserved through custom-wire conversion, and shown
+  in the design summary and construction sheet. Schema 43 adds the field and
+  migrates existing Yagis to 1.0; new folded designs and the NBS folded preset
+  start at 4:1. A 4:1 transformer alone may not fix a reactive folded feed;
+  tune the geometry, beta/hairpin, or matching network.
 - **Project journal.** **Tools → Project Journal...** adds a manual, local
   timeline of dated notes, decisions, as-built records, measurements, tuning
   notes, and photos. Entries store a title, kind, UTC date, free notes, an

@@ -196,11 +196,15 @@ on the first conductor. When `match_type` is `beta_hairpin`, the straight
 driven element is split at its centre and a shorted two-conductor stub is added
 along the boom; `match_length_m` and `match_spacing_m` set the stub length and
 the driven-element gap. A folded driven element and a beta/hairpin match are
-mutually exclusive. Gamma matches are not modeled because NEC-2 close-spaced
-gamma assemblies are unreliable; use the matching-network dialog for an
-equivalent. Vertical geometry is rejected when the longest element would reach
-the ground. The NBS TN-688 5-element 0.8λ preset is a starting geometry; the
-published design uses a folded driven element, which can be enabled explicitly.
+mutually exclusive. `transformer_ratio` is the ideal feed transformer applied
+by the simulation when `driven_folded` is true; it is not part of the NEC
+geometry. New folded designs start at 4:1, and the field is forced to 1.0 when
+the driven element is straight or a beta/hairpin match is active. Gamma matches
+are not modeled because NEC-2 close-spaced gamma assemblies are unreliable; use
+the matching-network dialog for an equivalent. Vertical geometry is rejected
+when the longest element would reach the ground. The NBS TN-688 5-element 0.8λ
+preset is a starting geometry; the published design uses a folded driven
+element, which can be enabled explicitly.
 Optional `taper_tip_length_m` and `taper_tip_radius_m` add a smaller-radius tip
 section to both ends of every element; a tapered element is three collinear
 wires (center plus two tips). Tapering is rejected with a folded or
@@ -739,11 +743,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 42.
+the application writes version 43.
 
 ## Schema policy
 
-- Current version: `42`.
+- Current version: `43`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -826,6 +830,9 @@ the application writes version 42.
   ratio.
 - Version 42 adds the loop `transformer_ratio`. The migration writes the 2:1
   reference value; the field remains editable to 1:1, 4:1, or another ratio.
+- Version 43 adds the Yagi `transformer_ratio` for a folded driven element. The
+  migration writes 1.0 so existing Yagis keep their raw feed; new folded designs
+  start at 4:1 in the editor and NBS preset.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads

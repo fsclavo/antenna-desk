@@ -479,10 +479,13 @@ boom. Height is the boom centerline, so a vertical Yagi needs enough clearance
 for the longest element to stay above ground. The form rejects a geometry whose
 lowest tip would reach the ground. Enable **Folded driven element** to replace
 the driven element with two parallel conductors and two end connectors; set
-**Fold spacing** to control the feed impedance and matching. Alternatively,
-select **Feed match → Beta / hairpin** to split the straight driven element and
-add a shorted stub along the boom; set its length and spacing. A folded driven
-element and a beta/hairpin match cannot be combined. Hairpin length and spacing
+**Fold spacing** to control the feed impedance and matching. Enabling the folded
+element also sets the ideal **Feed transformer ratio** to **4:1**; edit it to
+**1:1** or **6:1** as needed. Alternatively, select **Feed match → Beta /
+hairpin** to split the straight driven element and add a shorted stub along the
+boom; set its length and spacing. A folded driven element and a beta/hairpin
+match cannot be combined, and the transformer is forced to 1.0 with a
+beta/hairpin match. Hairpin length and spacing
 must exceed twice the driven-element radius, otherwise the conductors overlap and
 NEC-2 can report negative resistance. Matching hardware is not rescaled when the
 frequency changes; tune it separately. Projects saved with undersized matching
@@ -505,9 +508,12 @@ the boom diameter and clamps matter.
 
 The NBS preset is reference-backed for gain: the published design has 9.2 dBd
 gain over a half-wave dipole. The published design uses a folded driven
-element; enable the folded option to model it. The feed impedance is not the
-reference impedance in the straight, folded, or beta/hairpin case, so tune the
-matching with the solver or the matching network. Once you edit positions or lengths, the result is an
+element; enable the folded option to model it with a **4:1** starting
+transformer. The feed impedance is not the reference impedance in the straight,
+folded, or beta/hairpin case, so tune the matching with the solver, the
+transformer ratio, or the matching network. A 4:1 transformer alone does not
+cancel a reactive feed; use the beta/hairpin match or retune the geometry when
+needed. Once you edit positions or lengths, the result is an
 experimental geometry with no external reference; simulate it and judge it on
 its own modeled performance. The design panel keeps the element table editable;
 use **Edit Custom Wires...** only when you want raw coordinates.

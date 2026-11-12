@@ -191,6 +191,7 @@ def test_descriptor_variables_cover_every_geometric_field() -> None:
                 "gap_1",
                 "height_m",
                 "driven_fold_spacing_m",
+                "transformer_ratio",
             },
         ),
         (
@@ -239,6 +240,23 @@ def test_folded_dipole_descriptor_exposes_the_transformer_choice() -> None:
     rebuilt = descriptor.build_parameters({**descriptor.initial_values, "transformer_ratio": 6.0})
     assert isinstance(rebuilt, FoldedDipoleParameters)
     assert rebuilt.transformer_ratio == pytest.approx(6.0)
+
+
+def test_yagi_folded_descriptor_exposes_the_transformer_choice() -> None:
+    parameters = _yagi_folded()
+    availability = optimizer_availability(parameters)
+    descriptor = availability.descriptor
+    assert descriptor is not None
+
+    variable = next(item for item in descriptor.variables if item.name == "transformer_ratio")
+    assert variable.kind is VariableKind.CHOICE
+    assert variable.locked_by_default
+    assert 4.0 in variable.choices
+    assert 6.0 in variable.choices
+
+    rebuilt = descriptor.build_parameters({**descriptor.initial_values, "transformer_ratio": 4.0})
+    assert isinstance(rebuilt, YagiParameters)
+    assert rebuilt.transformer_ratio == pytest.approx(4.0)
 
 
 def test_loop_descriptor_exposes_the_transformer_choice() -> None:

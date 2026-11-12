@@ -1088,17 +1088,26 @@ def render_construction_sheet(
         positions = [element.position_m for element in parameters.elements]
         folded_row = ""
         folded_note = ""
+        transformer_row = ""
         if parameters.driven_folded:
             folded_row = f"""
 <tr><th>Folded driven element</th><td>{_escape(tr("yes"))}</td></tr>
 <tr><th>Fold spacing</th><td>{parameters.driven_fold_spacing_m:.4f} m</td></tr>
 """
+            transformer_row = (
+                f"<tr><th>Feed transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>"
+            )
             folded_note = tr(
                 " The driven element is folded with {spacing:.4f} m spacing and "
                 "two end connectors. Feed one conductor at its center; the second "
                 "conductor remains passive.",
                 spacing=parameters.driven_fold_spacing_m,
             )
+            if parameters.transformer_ratio != 1.0:
+                folded_note += tr(
+                    " Feed the folded element through a {ratio}:1 transformer.",
+                    ratio=f"{parameters.transformer_ratio:g}",
+                )
         match_row = ""
         match_note = ""
         if parameters.match_type.value == "beta_hairpin":
@@ -1118,6 +1127,7 @@ def render_construction_sheet(
 <tr><th>Boom length</th><td>{max(positions) - min(positions):.4f} m</td></tr>
 <tr><th>Driven element</th><td>{parameters.driven_index + 1}</td></tr>
 {folded_row}
+{transformer_row}
 {match_row}
 <tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
 <tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>

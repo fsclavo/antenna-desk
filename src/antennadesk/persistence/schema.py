@@ -694,6 +694,7 @@ class YagiParametersPayload(StrictModel):
     polarization: Polarization = Polarization.HORIZONTAL
     material: MaterialPayload
     ground: GroundPayload
+    transformer_ratio: float = Field(default=1.0, gt=0.0)
 
 
 class CustomParametersPayload(StrictModel):
@@ -1945,6 +1946,7 @@ def _yagi_parameters_from_domain(value: YagiParameters) -> YagiParametersPayload
         polarization=value.polarization,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
+        transformer_ratio=value.transformer_ratio,
     )
 
 
@@ -3195,6 +3197,7 @@ def _yagi_parameters_to_domain(value: YagiParametersPayload) -> YagiParameters:
         polarization=value.polarization,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),
+        transformer_ratio=value.transformer_ratio,
     )
 
 

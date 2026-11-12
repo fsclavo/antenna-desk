@@ -11,7 +11,7 @@ from ...antennas.polarization import Polarization
 from ...antennas.yagi import ANTENNA_TYPE_YAGI, YagiMatchType, YagiParameters
 from ..constraints import ConstraintViolation
 from ..descriptor import AntennaOptimizerDescriptor, FamilyOptimizationObjective
-from ..variables import OptimizationVariable
+from ..variables import OptimizationVariable, VariableKind
 from .common import around, collect, non_negative_violation, positive_violation, violation
 
 _OBJECTIVES = frozenset(
@@ -105,6 +105,21 @@ def yagi_descriptor(parameters: YagiParameters) -> AntennaOptimizerDescriptor:
         )
         initial["driven_fold_spacing_m"] = parameters.driven_fold_spacing_m
 
+        ratio_choices = tuple(sorted({parameters.transformer_ratio, 1.0, 4.0, 6.0, 9.0}))
+        variables.append(
+            OptimizationVariable(
+                "transformer_ratio",
+                "field.transformer_ratio",
+                "optimize.group.feed",
+                ratio_choices[0],
+                ratio_choices[-1],
+                kind=VariableKind.CHOICE,
+                unit="ratio",
+                choices=ratio_choices,
+            )
+        )
+        initial["transformer_ratio"] = parameters.transformer_ratio
+
     if parameters.match_type is YagiMatchType.BETA_HAIRPIN:
         length_low, length_high = around(
             parameters.match_length_m,
@@ -166,6 +181,11 @@ def yagi_descriptor(parameters: YagiParameters) -> AntennaOptimizerDescriptor:
                 updated,
                 driven_fold_spacing_m=values["driven_fold_spacing_m"],
             )
+        if "transformer_ratio" in values:
+            updated = replace(
+                updated,
+                transformer_ratio=values["transformer_ratio"],
+            )
         if "match_length_m" in values:
             updated = replace(
                 updated,
@@ -200,6 +220,8 @@ def yagi_descriptor(parameters: YagiParameters) -> AntennaOptimizerDescriptor:
                         "optimize.constraint.conductor_spacing",
                     )
                 )
+        if "transformer_ratio" in values:
+            issues.append(positive_violation("transformer_ratio", values["transformer_ratio"]))
         if "match_length_m" in values:
             if values["match_length_m"] < 8.0 * max_radius:
                 issues.append(
@@ -292,4 +314,9 @@ def yagi_descriptor(parameters: YagiParameters) -> AntennaOptimizerDescriptor:
         objectives=_OBJECTIVES,
         default_objective=FamilyOptimizationObjective.MAX_GAIN,
         supports_boom_constraint=True,
+        context_note_key=(
+            "optimize.feed_transformer.transformer_context"
+            if parameters.transformer_ratio != 1.0
+            else None
+        ),
     )

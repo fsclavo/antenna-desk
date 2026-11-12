@@ -434,6 +434,9 @@ REPORT_SPANISH: dict[str, str] = {
         "{spacing:.4f} m y dos conectores de extremo. Alimentá un conductor "
         "en su centro; el segundo conductor queda pasivo."
     ),
+    " Feed the folded element through a {ratio}:1 transformer.": (
+        " Alimentá el elemento plegado a través de un transformador {ratio}:1."
+    ),
     "A wire reflector sits {spacing:.4f} m behind the driven plane.": (
         "Un reflector de hilo está a {spacing:.4f} m detrás del plano alimentado."
     ),

@@ -382,6 +382,7 @@ def test_folded_yagi_parameters_round_trip() -> None:
     assert restored.designs[0].parameters == parameters
     assert restored.designs[0].parameters.driven_folded is True
     assert restored.designs[0].parameters.driven_fold_spacing_m == pytest.approx(0.1)
+    assert restored.designs[0].parameters.transformer_ratio == pytest.approx(4.0)
 
 
 def test_stale_yagi_geometry_is_regenerated_after_migration() -> None:

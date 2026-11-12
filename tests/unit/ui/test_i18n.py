@@ -140,6 +140,7 @@ HELP_MANIFEST = frozenset(
         "help.preferences.workflow_mode",
         "help.preferences.theme",
         "help.dipole.field.transformer_ratio",
+        "help.yagi.field.transformer_ratio",
         "help.endfed.bend_enabled",
         "help.endfed.bend_vertical",
         "help.results.create_matching_network",

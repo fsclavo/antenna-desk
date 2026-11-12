@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
 from ...domain.antennas.polarization import Polarization
 from ...domain.antennas.yagi import (
+    YAGI_FOLDED_REFERENCE_TRANSFORMER_RATIO,
     YagiElement,
     YagiMatchType,
     YagiParameters,
@@ -160,6 +161,12 @@ class YagiForm(QWidget):
         self._driven_fold_spacing.setDecimals(3)
         self._driven_fold_spacing.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._driven_fold_spacing.setValue(length_from_m(0.1, unit_system))
+        self._transformer = QDoubleSpinBox(self)
+        self._transformer.setRange(1.0, 100.0)
+        self._transformer.setDecimals(1)
+        self._transformer.setSuffix(":1")
+        self._transformer.setValue(1.0)
+        self._transformer_label = self._labels.label("field.transformer_ratio")
 
         self._match_type = QComboBox(self)
         self._match_type.addItem(translator.t("yagi.match_none"), YagiMatchType.NONE.value)
@@ -209,6 +216,7 @@ class YagiForm(QWidget):
         form.addRow(self._labels.label("yagi.driven"), self._driven)
         form.addRow(self._driven_folded)
         form.addRow(self._labels.label("yagi.fold_spacing"), self._driven_fold_spacing)
+        form.addRow(self._transformer_label, self._transformer)
         form.addRow(self._labels.label("yagi.match_type"), self._match_type)
         form.addRow(self._labels.label("yagi.match_length"), self._match_length)
         form.addRow(self._labels.label("yagi.match_spacing"), self._match_spacing)
@@ -239,6 +247,7 @@ class YagiForm(QWidget):
             self._taper_length,
             self._taper_radius,
             self._driven_fold_spacing,
+            self._transformer,
             self._match_length,
             self._match_spacing,
             self._permittivity,
@@ -302,6 +311,10 @@ class YagiForm(QWidget):
             index = self._match_type.findData(YagiMatchType.NONE.value)
             if index >= 0:
                 self._match_type.setCurrentIndex(index)
+            if math.isclose(self._transformer.value(), 1.0, abs_tol=1e-9):
+                self._transformer.setValue(YAGI_FOLDED_REFERENCE_TRANSFORMER_RATIO)
+        else:
+            self._transformer.setValue(1.0)
         self._update_folded_controls()
         self._update_match_controls()
         self._emit_changed()
@@ -311,8 +324,12 @@ class YagiForm(QWidget):
         self._emit_changed()
 
     def _update_folded_controls(self) -> None:
-        self._driven_fold_spacing.setEnabled(self._driven_folded.isChecked())
-        self._match_type.setEnabled(not self._driven_folded.isChecked())
+        folded = self._driven_folded.isChecked()
+        self._driven_fold_spacing.setEnabled(folded)
+        self._match_type.setEnabled(not folded)
+        self._transformer_label.setVisible(folded)
+        self._transformer.setVisible(folded)
+        self._transformer.setEnabled(folded)
 
     def _update_match_controls(self) -> None:
         active = self._selected_match_type() is YagiMatchType.BETA_HAIRPIN
@@ -463,6 +480,7 @@ class YagiForm(QWidget):
         index = self._driven.findData(yagi.driven_index)
         if index >= 0:
             self._driven.setCurrentIndex(index)
+        self._transformer.setValue(yagi.transformer_ratio)
         self._update_geometry()
 
     def _refresh_driven_values(self, *_args: object) -> None:
@@ -569,6 +587,7 @@ class YagiForm(QWidget):
             self._driven_fold_spacing.setValue(
                 length_from_m(parameters.driven_fold_spacing_m, self._unit_system)
             )
+            self._transformer.setValue(parameters.transformer_ratio)
             match_index = self._match_type.findData(parameters.match_type.value)
             if match_index >= 0:
                 self._match_type.setCurrentIndex(match_index)
@@ -659,6 +678,11 @@ class YagiForm(QWidget):
                 spacing=f"{length_from_m(parameters.driven_fold_spacing_m, self._unit_system):.3f}",
                 unit=unit,
             )
+            if parameters.transformer_ratio != 1.0:
+                geometry += " · " + self._translator.t(
+                    "yagi.transformer_geometry",
+                    ratio=f"{parameters.transformer_ratio:g}",
+                )
         if parameters.match_type is YagiMatchType.BETA_HAIRPIN:
             geometry += " · " + self._translator.t(
                 "yagi.match_geometry",
@@ -708,6 +732,9 @@ class YagiForm(QWidget):
             match_type=self._selected_match_type(),
             match_length_m=length_to_m(self._match_length.value(), self._unit_system),
             match_spacing_m=length_to_m(self._match_spacing.value(), self._unit_system),
+            transformer_ratio=(
+                self._transformer.value() if self._driven_folded.isChecked() else 1.0
+            ),
             azimuth_deg=self._azimuth.value(),
             polarization=self._selected_polarization(),
             material=self._selected_material(),

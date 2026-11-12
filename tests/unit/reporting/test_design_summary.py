@@ -407,6 +407,7 @@ def test_yagi_summary_reports_a_folded_driven_element() -> None:
 
     assert rows["Folded driven"] == "yes"
     assert rows["Fold spacing"] == "0.1000 m"
+    assert rows["Feed transformer"] == "4:1"
 
 
 def test_yagi_summary_reports_a_beta_hairpin_match() -> None:

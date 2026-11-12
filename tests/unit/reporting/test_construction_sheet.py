@@ -417,8 +417,11 @@ def test_folded_yagi_construction_sheet_lists_the_fold(sample_project: Project) 
 
     assert "Folded driven element" in sheet
     assert "Fold spacing" in sheet
+    assert "Feed transformer" in sheet
+    assert "4:1" in sheet
     assert "0.1000 m" in sheet
     assert "second conductor remains passive" in sheet
+    assert "through a 4:1 transformer" in sheet
 
 
 def test_top_loaded_vertical_construction_sheet_lists_the_hat(

@@ -230,6 +230,30 @@ def test_spanish_folded_dipole_sheet_translates_the_transformer_note(
     assert "through a 4:1 transformer" not in sheet
 
 
+def test_spanish_folded_yagi_sheet_translates_the_transformer_note(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+
+    parameters = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        folded_driven=True,
+    )
+    yagi = sample_project.designs[0].with_parameters(parameters)
+    sheet = render_construction_sheet(
+        sample_project,
+        yagi,
+        None,
+        labeler=Translator(Language.SPANISH).report,
+        language="es",
+    )
+
+    assert "Transformador de alimentación" in sheet
+    assert "a través de un transformador 4:1" in sheet
+    assert "through a 4:1 transformer" not in sheet
+
+
 def test_spanish_loop_sheet_translates_the_transformer_note(
     sample_project: Project,
 ) -> None:

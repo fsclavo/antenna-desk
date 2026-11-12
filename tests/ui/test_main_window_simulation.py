@@ -802,6 +802,20 @@ def test_ocfd_and_custom_specs_include_the_transformer_ratio(window: MainWindow)
     assert custom_spec.feed_transformer_ratio == pytest.approx(4.0)
 
 
+def test_yagi_specs_include_the_folded_transformer(window: MainWindow) -> None:
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+
+    straight = nbs_five_element(frequency_hz=14_100_000.0, height_m=10.0)
+    folded = nbs_five_element(
+        frequency_hz=14_100_000.0,
+        height_m=10.0,
+        folded_driven=True,
+    )
+
+    assert window._yagi_simulation_spec(straight).feed_transformer_ratio == pytest.approx(1.0)
+    assert window._yagi_simulation_spec(folded).feed_transformer_ratio == pytest.approx(4.0)
+
+
 def test_fan_dipole_simulate_covers_all_element_bands(
     window: MainWindow,
     qtbot: QtBot,

@@ -141,6 +141,43 @@ def test_yagi_folded_driven_element_adds_two_conductors_and_connectors() -> None
     assert yagi.elements[1].length_m == pytest.approx(by_id["element-2-a"].length_m)
 
 
+def test_nbs_folded_preset_uses_a_4_to_1_transformer() -> None:
+    straight = nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0)
+    folded = nbs_five_element(
+        frequency_hz=50_100_000.0,
+        height_m=8.0,
+        folded_driven=True,
+    )
+
+    assert straight.transformer_ratio == pytest.approx(1.0)
+    assert folded.transformer_ratio == pytest.approx(4.0)
+
+
+def test_yagi_folded_transformer_round_trips_through_custom_parameters() -> None:
+    original = replace(
+        nbs_five_element(
+            frequency_hz=50_100_000.0,
+            height_m=8.0,
+            folded_driven=True,
+        ),
+        transformer_ratio=6.0,
+    )
+
+    custom = original.to_custom_parameters()
+    restored = YagiParameters.from_custom_parameters(custom)
+
+    assert custom.feed_transformer_ratio == pytest.approx(6.0)
+    assert restored.transformer_ratio == pytest.approx(6.0)
+
+
+def test_yagi_rejects_an_invalid_transformer_ratio() -> None:
+    with pytest.raises(ValueError, match="transformer_ratio"):
+        replace(
+            nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0),
+            transformer_ratio=0.0,
+        )
+
+
 def test_yagi_folded_driven_element_round_trips() -> None:
     original = nbs_five_element(
         frequency_hz=50_100_000.0,

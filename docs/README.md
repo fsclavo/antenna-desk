@@ -99,6 +99,7 @@ of truth before adding another planning document.
 - [ADR-0030 — Feed-chain topology and loss budget](ADR/0030-feed-chain-topology.md)
 - [ADR-0031 — Folded-dipole feed transformer](ADR/0031-folded-dipole-feed-transformer.md)
 - [ADR-0032 — Full-wave loop feed transformer](ADR/0032-loop-feed-transformer.md)
+- [ADR-0033 — Yagi folded-driven feed transformer](ADR/0033-yagi-folded-driven-transformer.md)
 
 ## Archive
 

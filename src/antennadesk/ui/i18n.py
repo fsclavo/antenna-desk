@@ -3459,6 +3459,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Spacing between the two conductors of the folded driven element.",
         Language.SPANISH: "Separación entre los dos conductores del elemento alimentado plegado.",
     },
+    "help.yagi.field.transformer_ratio": {
+        Language.ENGLISH: (
+            "Ideal feed transformer for the folded driven element. 4:1 is typical; "
+            "use 1.0 with a beta/hairpin match. A transformer alone may not fix a "
+            "reactive feed."
+        ),
+        Language.SPANISH: (
+            "Transformador ideal para el elemento alimentado plegado. 4:1 es lo "
+            "típico; usá 1.0 con un beta/hairpin. Un transformador solo puede no "
+            "corregir una alimentación reactiva."
+        ),
+    },
     "help.zepp.impedance": {
         Language.ENGLISH: "Characteristic impedance of the matching stub.",
         Language.SPANISH: "Impedancia característica del stub de adaptación.",
@@ -11280,16 +11292,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "folded driven · spacing {spacing} {unit}",
         Language.SPANISH: "alimentado plegado · separación {spacing} {unit}",
     },
+    "yagi.transformer_geometry": {
+        Language.ENGLISH: "feed transformer {ratio}:1",
+        Language.SPANISH: "transformador de alimentación {ratio}:1",
+    },
     "yagi.folded_hint": {
         Language.ENGLISH: (
             "Adds a second driven conductor and two end connectors. The driven "
-            "element length stays the same; spacing changes the feed impedance "
-            "and matching."
+            "element length stays the same; spacing changes the feed impedance. "
+            "A 4:1 transformer is the typical starting point; use 1.0 with a "
+            "beta/hairpin match."
         ),
         Language.SPANISH: (
             "Agrega un segundo conductor alimentado y dos conectores de extremo. "
             "La longitud del elemento alimentado no cambia; la separación cambia "
-            "la impedancia de alimentación y la adaptación."
+            "la impedancia de alimentación. Un transformador 4:1 es el punto de "
+            "partida típico; usá 1.0 con un beta/hairpin."
         ),
     },
     "yagi.polarization_hint": {

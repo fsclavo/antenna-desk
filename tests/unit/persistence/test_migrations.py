@@ -964,6 +964,48 @@ def test_v40_migration_tolerates_a_missing_project() -> None:
     assert "project" not in migrated
 
 
+def test_v42_migration_adds_the_yagi_transformer() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 42,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "yagi",
+                    "parameters": {"driven_folded": True},
+                },
+                {
+                    "antenna_type": "loop",
+                    "parameters": {
+                        "circumference_m": 40.0,
+                        "transformer_ratio": 2.0,
+                    },
+                },
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    yagi, loop = migrated["project"]["designs"]
+    assert yagi["parameters"]["transformer_ratio"] == 1.0
+    assert loop["parameters"]["transformer_ratio"] == 2.0
+    assert "transformer_ratio" not in document["project"]["designs"][0]["parameters"]
+
+
+def test_v42_migration_tolerates_a_missing_project() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 42,
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert "project" not in migrated
+
+
 def test_v41_migration_adds_the_loop_transformer() -> None:
     document = {
         "format": "antennadesk-project",

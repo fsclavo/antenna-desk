@@ -67,7 +67,7 @@ warnings, and a dimension tolerance.
 | J Pole / Slim Jim | J Pole: 0.75λ overall, 0.5λ radiator, 0.25λ stub; Slim Jim: 0.5λ radiator above a 0.25λ folded stub and gap | empirical | M0UKD published rule and G2BCX 2 m length; feed offset and stub still need tuning |
 | Zepp | 0.5λ radiator above a 0.25λ two-wire stub; spacing and radius set the stub impedance | empirical | Published 3/4-wave topology; the real second conductor is modeled, but the 1:1 choke and common-mode current are not |
 | Ringo | 0.725-wave vertical with a small horizontal matching ring, calibrated for the simplified AntennaDesk geometry | heuristic | Not a universal commercial Ringo formula |
-| Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; optimize for the target; horizontal or vertical polarization |
+| Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; optimize for the target; horizontal or vertical polarization; a folded driven element starts with an ideal 4:1 transformer |
 | Moxon | Cebik 20 m wire reference scaled by frequency | reference scaled | Gap and tips are sensitive; horizontal or vertical polarization |
 | Biquad / double biquad | loop side `0.25λ × 0.95`; reflector `0.5 × side` | heuristic | No independent numerical reference; the wire reflector and shared-rail current distribution are experimental |
 | Beverage | length `1.0λ`; height and termination from the editor | heuristic | Receiving antenna; the termination and low gain are not independently validated |
@@ -417,7 +417,9 @@ elements of the published DL6WU 32-element reference (Cebik, derived from the
 RSGB VHF/UHF DX Book). Shorter Yagis use the DL6WU trimming principle: keep the
 reflector, driven element, and the first directors. The driven element is
 always index 1. The estimate itself is a straight driven element; applying it
-in the UI preserves the current folded-driven option and spacing.
+in the UI preserves the current folded-driven option, spacing, and transformer
+ratio. A folded driven element starts with an ideal 4:1 transformer; use 1.0
+with a beta/hairpin match.
 
 The DL6WU reference dimensions assume 4 mm elements at 432 MHz. Element
 diameter correction and boom-mounting correction are not applied; this is a

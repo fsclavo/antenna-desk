@@ -169,7 +169,23 @@ def test_yagi_dialog_supports_a_folded_driven_element(qtbot: QtBot) -> None:
 
     assert parameters.driven_folded is True
     assert parameters.driven_fold_spacing_m == pytest.approx(0.08, abs=1e-3)
+    assert parameters.transformer_ratio == pytest.approx(4.0)
+    assert not dialog._form._transformer.isHidden()
     assert len(parameters.to_antenna().wires) == 8
+
+
+def test_yagi_dialog_folded_transformer_can_be_changed(qtbot: QtBot) -> None:
+    dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+
+    dialog._driven_folded.setChecked(True)
+    dialog._form._transformer.setValue(6.0)
+
+    assert dialog.parameters().transformer_ratio == pytest.approx(6.0)
+
+    dialog._driven_folded.setChecked(False)
+    assert dialog.parameters().transformer_ratio == pytest.approx(1.0)
+    assert dialog._form._transformer.isHidden()
 
 
 def test_yagi_dialog_supports_a_beta_hairpin_match(qtbot: QtBot) -> None:
@@ -187,6 +203,8 @@ def test_yagi_dialog_supports_a_beta_hairpin_match(qtbot: QtBot) -> None:
     assert parameters.match_type is YagiMatchType.BETA_HAIRPIN
     assert parameters.match_length_m == pytest.approx(0.2, abs=1e-3)
     assert parameters.match_spacing_m == pytest.approx(0.1, abs=1e-3)
+    assert parameters.transformer_ratio == pytest.approx(1.0)
+    assert dialog._form._transformer.isHidden()
     assert len(parameters.to_antenna().wires) == 10
 
 
@@ -217,7 +235,9 @@ def test_yagi_dialog_disables_match_with_folded_driven(qtbot: QtBot) -> None:
 
     assert dialog._match_type.currentData() == YagiMatchType.NONE.value
     assert dialog._match_type.isEnabled() is False
-    assert dialog.parameters().match_type is YagiMatchType.NONE
+    parameters = dialog.parameters()
+    assert parameters.match_type is YagiMatchType.NONE
+    assert parameters.transformer_ratio == pytest.approx(4.0)
 
 
 def test_yagi_dialog_restores_folded_driven_settings(qtbot: QtBot) -> None:
@@ -237,7 +257,10 @@ def test_yagi_dialog_restores_folded_driven_settings(qtbot: QtBot) -> None:
     qtbot.addWidget(dialog)
 
     assert dialog._driven_folded.isChecked() is True
-    assert dialog.parameters().driven_fold_spacing_m == pytest.approx(0.12)
+    parameters = dialog.parameters()
+    assert parameters.driven_fold_spacing_m == pytest.approx(0.12)
+    assert parameters.transformer_ratio == pytest.approx(4.0)
+    assert dialog._form._transformer.isHidden() is False
 
 
 def test_yagi_dialog_warns_when_vertical_elements_reach_the_ground(qtbot: QtBot) -> None:

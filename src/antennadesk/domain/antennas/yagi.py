@@ -23,6 +23,7 @@ YAGI_ELEMENT_ID_PREFIX = "element"
 ANTENNA_TYPE_YAGI = "yagi"
 YAGI_ELEMENT_LENGTH_MIN_FACTOR = 0.35
 YAGI_ELEMENT_LENGTH_MAX_FACTOR = 0.65
+YAGI_FOLDED_REFERENCE_TRANSFORMER_RATIO = 4.0
 
 
 class YagiMatchType(StrEnum):
@@ -50,7 +51,13 @@ class YagiElement:
 
 @dataclass(frozen=True, slots=True)
 class YagiParameters:
-    """A Yagi-Uda geometry with arbitrary element lengths and spacings."""
+    """A Yagi-Uda geometry with arbitrary element lengths and spacings.
+
+    ``transformer_ratio`` is the ideal feed transformer applied by the
+    simulation link budget when ``driven_folded`` is enabled.  It is not part of
+    the NEC geometry.  A 4:1 transformer is the common choice for a folded
+    driven element; 1.0 means no transformation.
+    """
 
     frequency_hz: float
     elements: tuple[YagiElement, ...]
@@ -67,10 +74,12 @@ class YagiParameters:
     polarization: Polarization = Polarization.HORIZONTAL
     material: ConductorMaterial = COPPER
     ground: GroundModel = FREE_SPACE
+    transformer_ratio: float = 1.0
 
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
         ensure_non_negative(self.height_m, name="height_m")
+        ensure_positive(self.transformer_ratio, name="transformer_ratio")
         ensure_non_negative(self.taper_tip_length_m, name="taper_tip_length_m")
         ensure_non_negative(self.taper_tip_radius_m, name="taper_tip_radius_m")
         if (self.taper_tip_length_m > 0.0) != (self.taper_tip_radius_m > 0.0):
@@ -253,6 +262,7 @@ class YagiParameters:
             polarization=polarization,
             material=first.material,
             ground=parameters.ground,
+            transformer_ratio=parameters.feed_transformer_ratio,
         )
 
     @classmethod
@@ -372,6 +382,7 @@ class YagiParameters:
             polarization=Polarization.VERTICAL if vertical else Polarization.HORIZONTAL,
             material=left.material,
             ground=parameters.ground,
+            transformer_ratio=parameters.feed_transformer_ratio,
         )
 
     @classmethod
@@ -484,6 +495,7 @@ class YagiParameters:
             polarization=Polarization.VERTICAL if vertical else Polarization.HORIZONTAL,
             material=main[0].material,
             ground=parameters.ground,
+            transformer_ratio=parameters.feed_transformer_ratio,
         )
 
     def to_antenna(self, *, name: str = "Yagi") -> AntennaModel:
@@ -712,6 +724,7 @@ class YagiParameters:
             ground=self.ground,
             generator_id="yagi",
             generator_name="Yagi",
+            feed_transformer_ratio=self.transformer_ratio,
         )
 
 
@@ -763,8 +776,9 @@ def nbs_five_element(
     reference measured gain is 9.2 dBd over a half-wave dipole.  The published
     design uses a folded driven element; the default here keeps a straight
     driven element for backward compatibility.  Set ``folded_driven=True`` to
-    model the folded version.  Gain and pattern remain the relevant comparison;
-    the feed impedance is not the reference impedance in either case.
+    model the folded version with a 4:1 ideal feed transformer.  Gain and
+    pattern remain the relevant comparison; the feed impedance is not the
+    reference impedance in either case.
     """
 
     wavelength = units.wavelength_m(frequency_hz)
@@ -789,4 +803,5 @@ def nbs_five_element(
         polarization=polarization,
         material=material,
         ground=ground,
+        transformer_ratio=(YAGI_FOLDED_REFERENCE_TRANSFORMER_RATIO if folded_driven else 1.0),
     )

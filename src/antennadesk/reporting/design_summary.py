@@ -975,7 +975,10 @@ def design_summary_rows(
                 ("Driven element", str(parameters.driven_index + 1)),
                 ("Folded driven", "yes" if parameters.driven_folded else "no"),
                 *(
-                    [("Fold spacing", f"{parameters.driven_fold_spacing_m:.4f} m")]
+                    [
+                        ("Fold spacing", f"{parameters.driven_fold_spacing_m:.4f} m"),
+                        ("Feed transformer", f"{parameters.transformer_ratio:g}:1"),
+                    ]
                     if parameters.driven_folded
                     else []
                 ),
