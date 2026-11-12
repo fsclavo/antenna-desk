@@ -39,6 +39,45 @@ def test_construction_sheet_pdf_is_written(
     assert len(data) > 1_000
 
 
+def test_construction_sheet_pdf_includes_the_construction_record(
+    qtbot: QtBot,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    from dataclasses import replace
+    from uuid import uuid4
+
+    from antennadesk.domain.projects.construction import (
+        AsBuiltDimension,
+        ConstructionChecklistItem,
+        ConstructionRecord,
+    )
+
+    record = ConstructionRecord(
+        as_built_notes="Built in the back yard",
+        dimensions=(
+            AsBuiltDimension(
+                id=uuid4(),
+                label="Radiator length",
+                design_value_m=20.0,
+                actual_value_m=19.9,
+            ),
+        ),
+        checklist=(ConstructionChecklistItem("measure_swr", checked=True),),
+    )
+    path = tmp_path / "sheet-record.pdf"
+
+    write_construction_pdf(
+        Translator(Language.ENGLISH),
+        replace(sample_project, construction_record=record),
+        sample_project.designs[0],
+        None,
+        path,
+    )
+
+    assert path.read_bytes().startswith(b"%PDF")
+
+
 def test_construction_sheet_pdf_is_written_in_spanish(
     qtbot: QtBot,
     sample_project: Project,

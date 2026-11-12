@@ -66,6 +66,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   per-frequency SWR, mismatch, line, network, balun, delivered, and radiated
   power, and the dominant loss stage. See
   [ADR-0030](docs/ADR/0030-feed-chain-topology.md).
+- **Construction package 2.0.** The construction sheet now includes an as-built
+  record with design/actual/difference dimensions and notes, a starting
+  hardware BOM, target values for loading coils and traps, and a printable
+  construction checklist. A new **As-Built / Checklist...** editor persists the
+  measured dimensions, notes, and checklist state in the project (schema 38).
+  The construction sheet dialog can export a single ZIP package with the HTML
+  sheet, native PDF, wire schedule CSV, conductor BOM CSV, and build notes.
 
 ## [0.4.2] - 2026-11-11
 

@@ -1702,6 +1702,17 @@ and second leg lengths; folded dipoles show element and connector lengths;
 loops show orientation, side length, circumference, side count, height, and
 feed side.
 **Save HTML...** writes the sheet and **Save PDF...** writes a native PDF.
+**Save Package...** writes one ZIP with the HTML sheet, the native PDF, the
+wire-schedule CSV, the conductor BOM CSV, and a plain-text build-notes file.
+
+Use **Design → As-Built / Checklist...** to record what was actually built:
+measured dimensions with their design values and differences, free notes, and
+a construction checklist. The record is saved in the project and appears in the
+construction sheet and PDF. The sheet also includes a starting hardware BOM
+(insulators, supports, connectors, balun/unun, radial wire, ground rod, traps,
+loading coils, and guy line) and target values for every loading coil and trap.
+Hardware quantities are starting estimates; adjust them for your actual
+installation.
 
 ## Export results
 

@@ -47,6 +47,12 @@ from ..domain.optimization.length import measure_bandwidth_hz
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import FrequencyResult, SimulationResult
+from .construction_package import (
+    as_built_rows,
+    checklist_rows,
+    coil_trap_rows,
+    hardware_bom_rows,
+)
 from .design_summary import (
     design_evidence_rows,
     design_provenance_rows,
@@ -232,6 +238,100 @@ def render_construction_sheet(
 </table>
 <table>
 {bom_summary}
+</table>
+"""
+    record = project.construction_record
+    as_built_section = ""
+    if record is not None:
+        as_built_values = "".join(
+            "<tr>"
+            f"<td>{_escape(label)}</td>"
+            f"<td>{_escape(design_value)}</td>"
+            f"<td>{_escape(actual_value)}</td>"
+            f"<td>{_escape(difference)}</td>"
+            f"<td>{_escape(notes)}</td>"
+            "</tr>"
+            for label, design_value, actual_value, difference, notes in as_built_rows(
+                record,
+                tr,
+            )
+        )
+        notes = (
+            f'<div class="notes"><p>{_escape(record.as_built_notes)}</p></div>'
+            if record.as_built_notes.strip()
+            else ""
+        )
+        if as_built_values or notes:
+            as_built_section = f"""
+<h2>As-built record</h2>
+{notes}
+<table class="schedule">
+<thead>
+<tr><th>Dimension</th><th>Design</th><th>Actual</th><th>Difference</th><th>Notes</th></tr>
+</thead>
+<tbody>
+{as_built_values}
+</tbody>
+</table>
+"""
+    hardware_values = "".join(
+        "<tr>"
+        f"<td>{_escape(item)}</td>"
+        f"<td>{_escape(quantity)}</td>"
+        f"<td>{_escape(unit)}</td>"
+        f"<td>{_escape(note)}</td>"
+        "</tr>"
+        for item, quantity, unit, note in hardware_bom_rows(project, design, tr)
+    )
+    hardware_section = f"""
+<h2>Hardware BOM</h2>
+<table class="schedule">
+<thead>
+<tr><th>Item</th><th>Qty</th><th>Unit</th><th>Notes</th></tr>
+</thead>
+<tbody>
+{hardware_values}
+</tbody>
+</table>
+"""
+    coil_values = "".join(
+        "<tr>"
+        f"<td>{_escape(kind)}</td>"
+        f"<td>{_escape(wire_id)}</td>"
+        f"<td>{_escape(position)}</td>"
+        f"<td>{_escape(inductance)}</td>"
+        f"<td>{_escape(capacitance)}</td>"
+        f"<td>{_escape(resistance)}</td>"
+        f"<td>{_escape(note)}</td>"
+        "</tr>"
+        for kind, wire_id, position, inductance, capacitance, resistance, note in coil_trap_rows(
+            design,
+            tr,
+        )
+    )
+    coil_section = (
+        f"""
+<h2>Coils and traps</h2>
+<table class="schedule">
+<thead>
+<tr><th>Type</th><th>Wire</th><th>Position</th><th>Inductance</th><th>Capacitance</th><th>Resistance</th><th>Notes</th></tr>
+</thead>
+<tbody>
+{coil_values}
+</tbody>
+</table>
+"""
+        if coil_values
+        else ""
+    )
+    checklist_values = "".join(
+        f"<tr><td>{'&#9745;' if checked else '&#9744;'}</td><td>{_escape(label)}</td></tr>"
+        for label, checked in checklist_rows(record, tr)
+    )
+    checklist_section = f"""
+<h2>Construction checklist</h2>
+<table>
+{checklist_values}
 </table>
 """
     evidence_rows = "".join(
@@ -1259,8 +1359,12 @@ def render_construction_sheet(
 {dimension_rows}
 {feed_rows}
 </table>
+{as_built_section}
 {schedule_section}
 {bom_section}
+{hardware_section}
+{coil_section}
+{checklist_section}
 {evidence_section}
 <h2>Simulation</h2>
 <table>

@@ -27,6 +27,7 @@ from ...reporting.construction_sheet import (
     render_construction_sheet,
     write_construction_sheet,
 )
+from ..construction_package import write_construction_package
 from ..construction_pdf import write_construction_pdf
 from ..fonts import scaled_dialog_size
 from ..i18n import Translator
@@ -121,14 +122,17 @@ class ConstructionDialog(QDialog):
 
         self._save = QPushButton(translator.t("construction.save"), self)
         self._save_pdf = QPushButton(translator.t("construction.save_pdf"), self)
+        self._save_package = QPushButton(translator.t("construction.save_package"), self)
         self._close = QPushButton(translator.t("action.close"), self)
         self._save.clicked.connect(self._save_html)
         self._save_pdf.clicked.connect(self._save_pdf_file)
+        self._save_package.clicked.connect(self._save_package_file)
         self._close.clicked.connect(self.accept)
         buttons = QHBoxLayout()
         buttons.addStretch(1)
         buttons.addWidget(self._save)
         buttons.addWidget(self._save_pdf)
+        buttons.addWidget(self._save_package)
         buttons.addWidget(self._close)
 
         layout = QVBoxLayout(self)
@@ -191,6 +195,49 @@ class ConstructionDialog(QDialog):
             path = path.with_suffix(".pdf")
         try:
             write_construction_pdf(
+                self._translator,
+                self._project,
+                self._design,
+                self._result,
+                path,
+                figure_image=self._figure_image,
+                auxiliary_image=self._auxiliary_image,
+                isometric_image=self._isometric_image,
+                figure_svg=self._figure_svg,
+                auxiliary_svg=self._auxiliary_svg,
+                isometric_svg=self._isometric_svg,
+                auxiliary_kind=self._auxiliary_kind,
+            )
+        except Exception as exc:
+            QMessageBox.critical(
+                self,
+                self._translator.t("construction.title"),
+                self._translator.t("error.export", message=str(exc)),
+            )
+            return
+        QMessageBox.information(
+            self,
+            self._translator.t("construction.title"),
+            self._translator.t("status.exported"),
+        )
+
+    def _save_package_file(self) -> None:
+        suggested = f"{self._project.name}-{self._design.name}-construction.zip".replace(
+            "/", "-"
+        ).replace("\\", "-")
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            self._translator.t("dialog.zip_title"),
+            str(Path.home() / suggested),
+            self._translator.t("dialog.zip_filter"),
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.lower() != ".zip":
+            path = path.with_suffix(".zip")
+        try:
+            write_construction_package(
                 self._translator,
                 self._project,
                 self._design,

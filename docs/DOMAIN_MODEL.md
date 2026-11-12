@@ -515,8 +515,8 @@ the summary is compact enough to keep with every design.
 An immutable project with an identifier, name, description, timestamps, and a
 tuple of design variants. It also stores the project-level feed line, matching
 network, matching-network position, matching-network design target, balun loss,
-installation profiles, and the active installation-profile identifier.
-Invariants:
+installation profiles, the active installation-profile identifier, and an
+optional construction record. Invariants:
 
 - Non-empty project name.
 - Timezone-aware timestamps.
@@ -527,6 +527,15 @@ Invariants:
   is null.
 
 `with_design()` returns a new project, replacing or appending a design.
+
+## Construction record
+
+`ConstructionRecord` stores as-built notes, a tuple of `AsBuiltDimension`
+records (label, design value, actual value, notes), and a
+`ConstructionChecklistItem` tuple. It is optional project metadata; the
+construction sheet and PDF include it when present. The hardware BOM, coil/trap
+targets, and checklist rendering are reporting helpers, not a new
+electromagnetic model.
 
 ## Feed chain
 
@@ -692,6 +701,8 @@ the application writes version 24.
   identifier. Old documents load with no profiles.
 - Version 37 adds the matching-network position to the project and to every
   stored simulation spec. Old documents load with the feedpoint position.
+- Version 38 adds the optional as-built construction record (notes, measured
+  dimensions, and checklist). Old documents load with no record.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads

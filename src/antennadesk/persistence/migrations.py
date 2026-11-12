@@ -554,6 +554,16 @@ def _migrate_v35_to_v36(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v37_to_v38(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the optional construction record to the project."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if isinstance(project, dict):
+        project.setdefault("construction_record", None)
+    return migrated
+
+
 def _migrate_v36_to_v37(document: dict[str, Any]) -> dict[str, Any]:
     """Add the matching-network position to the project and saved runs."""
 
@@ -613,6 +623,7 @@ MIGRATIONS: dict[int, Migration] = {
     34: _migrate_v34_to_v35,
     35: _migrate_v35_to_v36,
     36: _migrate_v36_to_v37,
+    37: _migrate_v37_to_v38,
 }
 
 

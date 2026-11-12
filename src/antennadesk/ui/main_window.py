@@ -256,6 +256,7 @@ from .dialogs.beverage_dialog import BeverageDialog
 from .dialogs.biquad_dialog import BiquadDialog
 from .dialogs.comparison_dialog import ComparisonDialog
 from .dialogs.construction_dialog import ConstructionDialog
+from .dialogs.construction_record_dialog import ConstructionRecordDialog
 from .dialogs.custom_antenna_dialog import CustomAntennaDialog
 from .dialogs.design_from_frequency_dialog import DesignFromFrequencyDialog
 from .dialogs.discone_dialog import DisconeDialog
@@ -547,6 +548,8 @@ class MainWindow(QMainWindow):
         self._design_from_frequency_action.triggered.connect(lambda: self.design_from_frequency())
         self._construction_action = QAction(self)
         self._construction_action.triggered.connect(lambda: self.show_construction_sheet())
+        self._construction_record_action = QAction(self)
+        self._construction_record_action.triggered.connect(lambda: self.edit_construction_record())
         self._loads_action = QAction(self)
         self._loads_action.triggered.connect(lambda: self.edit_loads())
         self._transmission_lines_action = QAction(self)
@@ -1278,6 +1281,7 @@ class MainWindow(QMainWindow):
         self._design_menu.addAction(self._optimize_action)
         self._design_menu.addSeparator()
         self._design_menu.addAction(self._construction_action)
+        self._design_menu.addAction(self._construction_record_action)
         self._design_menu.addAction(self._loads_action)
         self._design_menu.addAction(self._transmission_lines_action)
         self._custom_menu = self._design_menu.addMenu("")
@@ -1404,6 +1408,13 @@ class MainWindow(QMainWindow):
         self._apply_button.setToolTip(self._translator.t("action.apply.tooltip"))
         self._optimize_button.setText(self._translator.t("action.optimize"))
         self._construction_action.setText(self._translator.t("action.construction"))
+        self._construction_record_action.setText(self._translator.t("action.construction_record"))
+        self._construction_record_action.setToolTip(
+            self._translator.t("help.action.construction_record")
+        )
+        self._construction_record_action.setWhatsThis(
+            self._translator.t("help.action.construction_record")
+        )
         self._loads_action.setText(self._translator.t("action.loads"))
         self._transmission_lines_action.setText(self._translator.t("action.transmission_lines"))
         self._edit_custom_action.setText(self._translator.t("action.edit_custom"))
@@ -1787,6 +1798,8 @@ class MainWindow(QMainWindow):
         self._optimize_button.setEnabled(optimize_enabled)
         self._optimize_action.setToolTip(optimize_hint)
         self._optimize_button.setToolTip(optimize_hint)
+        self._construction_action.setEnabled(idle and has_project)
+        self._construction_record_action.setEnabled(idle and has_project)
         self._loads_action.setEnabled(idle and has_project)
         self._transmission_lines_action.setEnabled(idle and has_project)
         self._edit_custom_action.setEnabled(idle and has_project and is_custom)
@@ -7302,6 +7315,29 @@ class MainWindow(QMainWindow):
         self._dirty = True
         self.apply_design()
         self._last_status_key = "status.design_changed"
+        self._update_status_text()
+
+    @history_action("history.construction_record")
+    def edit_construction_record(self) -> None:
+        if self._project is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        dialog = ConstructionRecordDialog(
+            self._translator,
+            self._unit_system,
+            self._project.construction_record,
+            self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._project = self._project.with_construction_record(
+            dialog.record(),
+            updated_at=utc_now(),
+        )
+        self._dirty = True
+        self._last_status_key = "status.construction_record"
+        self._update_title()
+        self._update_actions()
         self._update_status_text()
 
     def show_construction_sheet(self) -> None:

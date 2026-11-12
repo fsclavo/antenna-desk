@@ -61,6 +61,65 @@ def test_construction_sheet_contains_dimensions_and_result(sample_project: Proje
     assert "Construction notes" in sheet
 
 
+def test_construction_sheet_includes_as_built_hardware_coils_and_checklist(
+    sample_project: Project,
+) -> None:
+    from uuid import uuid4
+
+    from antennadesk.domain.antennas.load import ParallelLoad, SeriesLoad
+    from antennadesk.domain.projects.construction import (
+        AsBuiltDimension,
+        ConstructionChecklistItem,
+        ConstructionRecord,
+    )
+
+    design = sample_project.designs[0].with_loads(
+        (
+            SeriesLoad(
+                id="coil",
+                wire_id="radiator",
+                offset_m=5.0,
+                inductance_h=10e-6,
+            ),
+            ParallelLoad(
+                id="trap",
+                wire_id="radiator",
+                offset_m=7.5,
+                inductance_h=5e-6,
+                capacitance_f=100e-12,
+            ),
+        )
+    )
+    record = ConstructionRecord(
+        as_built_notes="Built in the back yard",
+        dimensions=(
+            AsBuiltDimension(
+                id=uuid4(),
+                label="Radiator length",
+                design_value_m=20.0,
+                actual_value_m=19.9,
+            ),
+        ),
+        checklist=(ConstructionChecklistItem("measure_swr", checked=True),),
+    )
+    project = replace(
+        sample_project,
+        designs=(design,),
+        construction_record=record,
+    )
+
+    sheet = render_construction_sheet(project, design, None)
+
+    assert "As-built record" in sheet
+    assert "Radiator length" in sheet
+    assert "Hardware BOM" in sheet
+    assert "Coils and traps" in sheet
+    assert "Loading coil" in sheet
+    assert "Construction checklist" in sheet
+    assert "&#9745;" in sheet
+    assert "Built in the back yard" in sheet
+
+
 def test_construction_sheet_embeds_a_figure(sample_project: Project) -> None:
     sheet = render_construction_sheet(
         sample_project,

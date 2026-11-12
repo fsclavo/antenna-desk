@@ -14,6 +14,12 @@ from PySide6.QtSvg import QSvgRenderer
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import SimulationResult
+from ..reporting.construction_package import (
+    as_built_rows,
+    checklist_rows,
+    coil_trap_rows,
+    hardware_bom_rows,
+)
 from ..reporting.design_summary import (
     design_evidence_rows,
     design_provenance_rows,
@@ -313,6 +319,17 @@ def write_construction_pdf(
         )
     y += 12.0
 
+    if project.construction_record is not None:
+        section(translator.t("construction.as_built"))
+        if project.construction_record.as_built_notes.strip():
+            row("", project.construction_record.as_built_notes)
+        for label, design_value, actual_value, difference, notes in as_built_rows(
+            project.construction_record,
+            translator.report,
+        ):
+            row(label, f"{design_value} → {actual_value} ({difference}) · {notes}")
+        y += 12.0
+
     section(translator.t("construction.bom"))
     for row_item in conductor_bom_rows(design.antenna):
         row(
@@ -332,6 +349,33 @@ def write_construction_pdf(
         translator.report,
     ):
         row(label, value)
+    y += 12.0
+
+    section(translator.t("construction.hardware_bom"))
+    for item, quantity, unit, note in hardware_bom_rows(
+        project,
+        design,
+        translator.report,
+    ):
+        row(item, f"{quantity} {unit} · {note}")
+    y += 12.0
+
+    coil_rows = coil_trap_rows(design, translator.report)
+    if coil_rows:
+        section(translator.t("construction.coils_traps"))
+        for kind, wire_id, position, inductance, capacitance, resistance, note in coil_rows:
+            row(
+                f"{kind} · {wire_id} @ {position}",
+                f"{inductance} · {capacitance} · {resistance} · {note}",
+            )
+        y += 12.0
+
+    section(translator.t("construction.checklist"))
+    for label, checked in checklist_rows(
+        project.construction_record,
+        translator.report,
+    ):
+        row(f"{'[x]' if checked else '[ ]'} {label}", "")
     y += 12.0
 
     evidence_rows = localize_rows(

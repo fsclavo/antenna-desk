@@ -125,6 +125,14 @@ from ..domain.optimization.summary import (
     OptimizationSummary,
     RecommendationSeverity,
 )
+from ..domain.projects.construction import (
+    MAX_CONSTRUCTION_LABEL_LENGTH,
+    MAX_CONSTRUCTION_NOTES_LENGTH,
+    MAX_DIMENSION_NOTES_LENGTH,
+    AsBuiltDimension,
+    ConstructionChecklistItem,
+    ConstructionRecord,
+)
 from ..domain.projects.installation import (
     MAX_PROFILE_IMAGE_REFERENCE_LENGTH,
     MAX_PROFILE_NAME_LENGTH,
@@ -223,6 +231,25 @@ class InstallationProfilePayload(StrictModel):
     support: InstallationSupport = InstallationSupport.MAST
     notes: str = Field(default="", max_length=MAX_PROFILE_NOTES_LENGTH)
     image_reference: str = Field(default="", max_length=MAX_PROFILE_IMAGE_REFERENCE_LENGTH)
+
+
+class AsBuiltDimensionPayload(StrictModel):
+    id: UUID
+    label: str = Field(min_length=1, max_length=MAX_CONSTRUCTION_LABEL_LENGTH)
+    design_value_m: float | None = Field(default=None, ge=0.0)
+    actual_value_m: float | None = Field(default=None, ge=0.0)
+    notes: str = Field(default="", max_length=MAX_DIMENSION_NOTES_LENGTH)
+
+
+class ConstructionChecklistItemPayload(StrictModel):
+    key: str = Field(min_length=1)
+    checked: bool = False
+
+
+class ConstructionRecordPayload(StrictModel):
+    as_built_notes: str = Field(default="", max_length=MAX_CONSTRUCTION_NOTES_LENGTH)
+    dimensions: list[AsBuiltDimensionPayload] = Field(default_factory=list)
+    checklist: list[ConstructionChecklistItemPayload] = Field(default_factory=list)
 
 
 class LoadPayload(StrictModel):
@@ -1139,6 +1166,7 @@ class ProjectPayload(StrictModel):
     balun_loss: BalunLossPayload | None = None
     installation_profiles: list[InstallationProfilePayload] = Field(default_factory=list)
     active_installation_profile_id: UUID | None = None
+    construction_record: ConstructionRecordPayload | None = None
 
     @model_validator(mode="after")
     def _validate_installation_profiles(self) -> Self:
@@ -2278,6 +2306,28 @@ def _design_from_domain(value: DesignVariant) -> DesignPayload:
     )
 
 
+def _construction_record_from_domain(
+    value: ConstructionRecord,
+) -> ConstructionRecordPayload:
+    return ConstructionRecordPayload(
+        as_built_notes=value.as_built_notes,
+        dimensions=[
+            AsBuiltDimensionPayload(
+                id=dimension.id,
+                label=dimension.label,
+                design_value_m=dimension.design_value_m,
+                actual_value_m=dimension.actual_value_m,
+                notes=dimension.notes,
+            )
+            for dimension in value.dimensions
+        ],
+        checklist=[
+            ConstructionChecklistItemPayload(key=item.key, checked=item.checked)
+            for item in value.checklist
+        ],
+    )
+
+
 def _project_from_domain(value: Project) -> ProjectPayload:
     return ProjectPayload(
         id=value.id,
@@ -2305,6 +2355,11 @@ def _project_from_domain(value: Project) -> ProjectPayload:
             _installation_profile_from_domain(profile) for profile in value.installation_profiles
         ],
         active_installation_profile_id=value.active_installation_profile_id,
+        construction_record=(
+            _construction_record_from_domain(value.construction_record)
+            if value.construction_record is not None
+            else None
+        ),
     )
 
 
@@ -3310,6 +3365,28 @@ def _design_to_domain(value: DesignPayload) -> DesignVariant:
     )
 
 
+def _construction_record_to_domain(
+    value: ConstructionRecordPayload,
+) -> ConstructionRecord:
+    return ConstructionRecord(
+        as_built_notes=value.as_built_notes,
+        dimensions=tuple(
+            AsBuiltDimension(
+                id=dimension.id,
+                label=dimension.label,
+                design_value_m=dimension.design_value_m,
+                actual_value_m=dimension.actual_value_m,
+                notes=dimension.notes,
+            )
+            for dimension in value.dimensions
+        ),
+        checklist=tuple(
+            ConstructionChecklistItem(key=item.key, checked=item.checked)
+            for item in value.checklist
+        ),
+    )
+
+
 def project_from_document(document: ProjectDocument) -> Project:
     return Project(
         id=document.project.id,
@@ -3348,4 +3425,9 @@ def project_from_document(document: ProjectDocument) -> Project:
             for profile in document.project.installation_profiles
         ),
         active_installation_profile_id=document.project.active_installation_profile_id,
+        construction_record=(
+            _construction_record_to_domain(document.project.construction_record)
+            if document.project.construction_record is not None
+            else None
+        ),
     )

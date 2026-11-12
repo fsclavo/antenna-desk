@@ -216,6 +216,82 @@ REPORT_SPANISH: dict[str, str] = {
     "at feedpoint": "en el feedpoint",
     "in shack": "en la estación",
     "Feed line": "Línea de alimentación",
+    "As-built record": "Registro as-built",
+    "Hardware BOM": "Lista de materiales de herrajes",
+    "Coils and traps": "Bobinas y trampas",
+    "Construction checklist": "Lista de control de construcción",
+    "Dimension": "Dimensión",
+    "Actual": "Real",
+    "Difference": "Diferencia",
+    "Notes": "Notas",
+    "Item": "Ítem",
+    "Qty": "Cant.",
+    "Unit": "Unidad",
+    "Position": "Posición",
+    "Inductance": "Inductancia",
+    "Capacitance": "Capacitancia",
+    "Resistance": "Resistencia",
+    "Antenna conductor": "Conductor de antena",
+    "End insulators": "Aisladores de extremo",
+    "Element clamps": "Abrazaderas de elemento",
+    "Boom": "Boom",
+    "Feedpoint support / insulator": "Soporte / aislador del feedpoint",
+    "Mast or support": "Mástil o soporte",
+    "Coaxial connector": "Conector coaxial",
+    "Balun / unun": "Balun / unun",
+    "Radial wire": "Hilo de radial",
+    "Ground rod": "Jabalina de tierra",
+    "Trap": "Trampa",
+    "Guy line / support rope": "Viento / cuerda de soporte",
+    "From the conductor BOM": "De la lista de conductores",
+    "Starting estimate": "Estimación inicial",
+    "Use the transformer or balun in the design": "Usar el transformador o balun del diseño",
+    "Radial system": "Sistema de radiales",
+    "Verify the local grounding requirement": ("Verificar el requisito local de puesta a tierra"),
+    "From the load table": "De la tabla de cargas",
+    "Target value; verify with the solver and a measurement": (
+        "Valor objetivo; verificar con el solver y una medición"
+    ),
+    "checklist.prepare_drawings": "Preparar el plano de construcción y la lista de hilos.",
+    "checklist.check_dimensions": "Verificar cada dimensión contra el diseño antes de cortar.",
+    "checklist.inspect_insulators": "Inspeccionar aisladores, soportes y herrajes.",
+    "checklist.check_feedpoint": (
+        "Revisar el punto de alimentación, balun/unun y alivio de tensión."
+    ),
+    "checklist.seal_connectors": "Sellar conectores exteriores y tender el coax de forma segura.",
+    "checklist.check_supports": "Revisar mástil, vientos y distancias de seguridad.",
+    "checklist.verify_grounding": "Verificar la puesta a tierra de la estación y la antena.",
+    "checklist.measure_swr": "Medir ROE y resonancia con la línea instalada.",
+    "checklist.record_measurement": "Registrar la sesión de medición en el proyecto.",
+    "checklist.update_as_built": "Actualizar las dimensiones y notas as-built.",
+    "Prepare the construction drawing and wire schedule.": (
+        "Preparar el plano de construcción y la lista de hilos."
+    ),
+    "Check every dimension against the design before cutting.": (
+        "Verificar cada dimensión contra el diseño antes de cortar."
+    ),
+    "Inspect insulators, supports, and hardware for damage.": (
+        "Inspeccionar aisladores, soportes y herrajes."
+    ),
+    "Check the feedpoint, balun/unun, and strain relief.": (
+        "Revisar el punto de alimentación, balun/unun y alivio de tensión."
+    ),
+    "Seal outdoor connectors and route the coax safely.": (
+        "Sellar conectores exteriores y tender el coax de forma segura."
+    ),
+    "Check mast, guy lines, and clearances.": (
+        "Revisar mástil, vientos y distancias de seguridad."
+    ),
+    "Verify station and antenna grounding.": (
+        "Verificar la puesta a tierra de la estación y la antena."
+    ),
+    "Measure SWR and resonance with the installed feed line.": (
+        "Medir ROE y resonancia con la línea instalada."
+    ),
+    "Record the measurement session in the project.": (
+        "Registrar la sesión de medición en el proyecto."
+    ),
+    "Update the as-built dimensions and notes.": ("Actualizar las dimensiones y notas as-built."),
     "Installation profile": "Perfil de instalación",
     "Available height": "Altura disponible",
     "Available space": "Espacio disponible",

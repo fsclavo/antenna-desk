@@ -896,6 +896,20 @@ def test_v33_migration_adds_the_matching_network_design_target() -> None:
     assert "matching_network_design" not in document["project"]
 
 
+def test_v37_migration_adds_the_construction_record() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 37,
+        "project": {"name": "Site"},
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert migrated["project"]["construction_record"] is None
+    assert "construction_record" not in document["project"]
+
+
 def test_v36_migration_adds_the_matching_network_position() -> None:
     document = {
         "format": "antennadesk-project",

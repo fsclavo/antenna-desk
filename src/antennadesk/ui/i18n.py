@@ -3357,6 +3357,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Show the feed-chain stages and their dissipative losses.",
         Language.SPANISH: "Mostrá las etapas de la cadena y sus pérdidas disipativas.",
     },
+    "help.action.construction_record": {
+        Language.ENGLISH: "Record as-built dimensions, notes, and the construction checklist.",
+        Language.SPANISH: "Registrá dimensiones as-built, notas y la lista de control.",
+    },
+    "help.construction_record.notes": {
+        Language.ENGLISH: "Free notes about the actual build and any deviations from the design.",
+        Language.SPANISH: "Notas libres sobre la construcción real y desvíos del diseño.",
+    },
+    "help.construction_record.dimensions": {
+        Language.ENGLISH: "Compare design and measured dimensions; differences use the current units.",
+        Language.SPANISH: "Compará dimensiones de diseño y medidas; las diferencias usan las unidades actuales.",
+    },
+    "help.construction_record.checklist": {
+        Language.ENGLISH: "Mark the construction, safety, and measurement checks you completed.",
+        Language.SPANISH: "Marcá las verificaciones de construcción, seguridad y medición completadas.",
+    },
+    "help.construction_record.add": {
+        Language.ENGLISH: "Add a measured dimension row.",
+        Language.SPANISH: "Agregá una fila de dimensión medida.",
+    },
+    "help.construction_record.remove": {
+        Language.ENGLISH: "Remove the selected measured dimension row.",
+        Language.SPANISH: "Quitá la fila de dimensión medida seleccionada.",
+    },
     "help.feed_chain.path": {
         Language.ENGLISH: "Order of the transmitter, matching network, feed line, and antenna.",
         Language.SPANISH: "Orden del transmisor, red de adaptación, línea y antena.",
@@ -4543,6 +4567,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "status.installation_profile": {
         Language.ENGLISH: "Installation profile updated.",
         Language.SPANISH: "Perfil de instalación actualizado.",
+    },
+    "status.construction_record": {
+        Language.ENGLISH: "As-built record updated.",
+        Language.SPANISH: "Registro as-built actualizado.",
     },
     "status.design_changed": {
         Language.ENGLISH: "Design changed. Simulate again.",
@@ -5740,6 +5768,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "installation profile",
         Language.SPANISH: "perfil de instalación",
     },
+    "history.construction_record": {
+        Language.ENGLISH: "as-built record",
+        Language.SPANISH: "registro as-built",
+    },
     "history.balun_loss": {
         Language.ENGLISH: "Balun/unun loss",
         Language.SPANISH: "Pérdida de balun/unun",
@@ -5812,6 +5844,98 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Construction Sheet...",
         Language.SPANISH: "Hoja de construcción...",
     },
+    "action.construction_record": {
+        Language.ENGLISH: "As-Built / Checklist...",
+        Language.SPANISH: "As-built / lista de control...",
+    },
+    "construction_record.title": {
+        Language.ENGLISH: "As-built record and checklist",
+        Language.SPANISH: "Registro as-built y lista de control",
+    },
+    "construction_record.notes": {
+        Language.ENGLISH: "As-built notes",
+        Language.SPANISH: "Notas as-built",
+    },
+    "construction_record.notes_placeholder": {
+        Language.ENGLISH: "Actual build deviations, hardware substitutions, and field notes.",
+        Language.SPANISH: "Desvíos reales de construcción, sustituciones de hardware y notas de campo.",
+    },
+    "construction_record.dimensions": {
+        Language.ENGLISH: "Measured dimensions",
+        Language.SPANISH: "Dimensiones medidas",
+    },
+    "construction_record.checklist": {
+        Language.ENGLISH: "Construction checklist",
+        Language.SPANISH: "Lista de control de construcción",
+    },
+    "construction_record.add": {
+        Language.ENGLISH: "Add dimension",
+        Language.SPANISH: "Agregar dimensión",
+    },
+    "construction_record.remove": {
+        Language.ENGLISH: "Remove dimension",
+        Language.SPANISH: "Quitar dimensión",
+    },
+    "construction_record.label": {
+        Language.ENGLISH: "Dimension",
+        Language.SPANISH: "Dimensión",
+    },
+    "construction_record.design_value": {
+        Language.ENGLISH: "Design ({unit})",
+        Language.SPANISH: "Diseño ({unit})",
+    },
+    "construction_record.actual_value": {
+        Language.ENGLISH: "Actual ({unit})",
+        Language.SPANISH: "Real ({unit})",
+    },
+    "construction_record.notes_column": {
+        Language.ENGLISH: "Notes",
+        Language.SPANISH: "Notas",
+    },
+    "construction_record.invalid_value": {
+        Language.ENGLISH: "Row {row}, column {column}: enter a valid number or leave it empty.",
+        Language.SPANISH: "Fila {row}, columna {column}: ingresá un número válido o dejalo vacío.",
+    },
+    "construction_record.checklist.prepare_drawings": {
+        Language.ENGLISH: "Prepare the construction drawing and wire schedule.",
+        Language.SPANISH: "Preparar el plano de construcción y la lista de hilos.",
+    },
+    "construction_record.checklist.check_dimensions": {
+        Language.ENGLISH: "Check every dimension against the design before cutting.",
+        Language.SPANISH: "Verificar cada dimensión contra el diseño antes de cortar.",
+    },
+    "construction_record.checklist.inspect_insulators": {
+        Language.ENGLISH: "Inspect insulators, supports, and hardware for damage.",
+        Language.SPANISH: "Inspeccionar aisladores, soportes y herrajes en busca de daños.",
+    },
+    "construction_record.checklist.check_feedpoint": {
+        Language.ENGLISH: "Check the feedpoint, balun/unun, and strain relief.",
+        Language.SPANISH: "Revisar el punto de alimentación, balun/unun y alivio de tensión.",
+    },
+    "construction_record.checklist.seal_connectors": {
+        Language.ENGLISH: "Seal outdoor connectors and route the coax safely.",
+        Language.SPANISH: "Sellar conectores exteriores y tender el coax de forma segura.",
+    },
+    "construction_record.checklist.check_supports": {
+        Language.ENGLISH: "Check mast, guy lines, and clearances.",
+        Language.SPANISH: "Revisar mástil, vientos y distancias de seguridad.",
+    },
+    "construction_record.checklist.verify_grounding": {
+        Language.ENGLISH: "Verify station and antenna grounding.",
+        Language.SPANISH: "Verificar la puesta a tierra de la estación y la antena.",
+    },
+    "construction_record.checklist.measure_swr": {
+        Language.ENGLISH: "Measure SWR and resonance with the installed feed line.",
+        Language.SPANISH: "Medir ROE y resonancia con la línea instalada.",
+    },
+    "construction_record.checklist.record_measurement": {
+        Language.ENGLISH: "Record the measurement session in the project.",
+        Language.SPANISH: "Registrar la sesión de medición en el proyecto.",
+    },
+    "construction_record.checklist.update_as_built": {
+        Language.ENGLISH: "Update the as-built dimensions and notes.",
+        Language.SPANISH: "Actualizar las dimensiones y notas as-built.",
+    },
     "construction.project": {
         Language.ENGLISH: "Project",
         Language.SPANISH: "Proyecto",
@@ -5836,6 +5960,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Updated",
         Language.SPANISH: "Actualizado",
     },
+    "construction.as_built": {
+        Language.ENGLISH: "As-built record",
+        Language.SPANISH: "Registro as-built",
+    },
+    "construction.hardware_bom": {
+        Language.ENGLISH: "Hardware BOM",
+        Language.SPANISH: "Lista de materiales de herrajes",
+    },
+    "construction.coils_traps": {
+        Language.ENGLISH: "Coils and traps",
+        Language.SPANISH: "Bobinas y trampas",
+    },
+    "construction.checklist": {
+        Language.ENGLISH: "Construction checklist",
+        Language.SPANISH: "Lista de control de construcción",
+    },
     "construction.bom": {
         Language.ENGLISH: "Bill of materials",
         Language.SPANISH: "Lista de materiales",
@@ -5855,6 +5995,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "construction.save_pdf": {
         Language.ENGLISH: "Save PDF...",
         Language.SPANISH: "Guardar PDF...",
+    },
+    "construction.save_package": {
+        Language.ENGLISH: "Save Package...",
+        Language.SPANISH: "Guardar paquete...",
     },
     "construction.pdf_subtitle": {
         Language.ENGLISH: "AntennaDesk construction sheet · SI units",
@@ -5987,6 +6131,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "dialog.pdf_title": {
         Language.ENGLISH: "Save PDF",
         Language.SPANISH: "Guardar PDF",
+    },
+    "dialog.zip_title": {
+        Language.ENGLISH: "Export construction package",
+        Language.SPANISH: "Exportar paquete de construcción",
+    },
+    "dialog.zip_filter": {
+        Language.ENGLISH: "ZIP package (*.zip)",
+        Language.SPANISH: "Paquete ZIP (*.zip)",
     },
     "dialog.pdf_filter": {
         Language.ENGLISH: "PDF files (*.pdf)",

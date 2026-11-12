@@ -36,6 +36,7 @@ class ProjectSnapshot:
             self.project.balun_loss,
             self.project.installation_profiles,
             self.project.active_installation_profile_id,
+            self.project.construction_record,
         )
 
 

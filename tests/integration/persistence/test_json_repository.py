@@ -632,6 +632,45 @@ def test_round_trip_with_a_project_feed_line(
     assert loaded == project
 
 
+def test_round_trip_with_a_construction_record(
+    repository: JsonProjectRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    from uuid import uuid4
+
+    from antennadesk.domain.projects.construction import (
+        AsBuiltDimension,
+        ConstructionChecklistItem,
+        ConstructionRecord,
+    )
+
+    record = ConstructionRecord(
+        as_built_notes="Built in the back yard",
+        dimensions=(
+            AsBuiltDimension(
+                id=uuid4(),
+                label="Radiator length",
+                design_value_m=20.0,
+                actual_value_m=19.9,
+                notes="Cut slightly long",
+            ),
+        ),
+        checklist=(
+            ConstructionChecklistItem("check_dimensions", checked=True),
+            ConstructionChecklistItem("measure_swr"),
+        ),
+    )
+    project = replace(sample_project, construction_record=record)
+    path = tmp_path / "construction.antennadesk"
+
+    repository.save(project, path)
+    loaded = repository.load(path)
+
+    assert loaded.construction_record == record
+    assert loaded == project
+
+
 def test_round_trip_with_installation_profiles(
     repository: JsonProjectRepository,
     sample_project: Project,

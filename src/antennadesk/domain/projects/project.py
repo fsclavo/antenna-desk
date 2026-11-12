@@ -24,6 +24,7 @@ from ..measurement import Measurement
 from ..optimization.summary import OptimizationSummary
 from ..simulation.band_result import BandAnalysisResult
 from ..simulation.run import SimulationRun
+from .construction import ConstructionRecord
 from .installation import InstallationProfile
 
 
@@ -168,6 +169,7 @@ class Project:
     balun_loss: BalunLoss | None = None
     installation_profiles: tuple[InstallationProfile, ...] = field(default_factory=tuple)
     active_installation_profile_id: UUID | None = None
+    construction_record: ConstructionRecord | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "designs", tuple(self.designs))
@@ -507,6 +509,18 @@ class Project:
         return replace(
             self,
             measurements=tuple(item for item in self.measurements if item.id != measurement_id),
+            updated_at=updated_at,
+        )
+
+    def with_construction_record(
+        self,
+        construction_record: ConstructionRecord | None,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        return replace(
+            self,
+            construction_record=construction_record,
             updated_at=updated_at,
         )
 
