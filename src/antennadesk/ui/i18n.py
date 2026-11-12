@@ -3433,6 +3433,28 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Open a coil or trap calculator seeded from these load fields.",
         Language.SPANISH: "Abrí una calculadora de bobina o trampa con estos campos.",
     },
+    "help.action.preflight": {
+        Language.ENGLISH: (
+            "Pre-flight check of geometry, feedpoint, segmentation, site, "
+            "simulation, and construction data before building."
+        ),
+        Language.SPANISH: (
+            "Revisá geometría, alimentación, segmentación, sitio, simulación y "
+            "datos de construcción antes de construir."
+        ),
+    },
+    "help.preflight.table": {
+        Language.ENGLISH: "Findings grouped by severity, with the affected item and the suggested fix.",
+        Language.SPANISH: "Hallazgos agrupados por severidad, con el elemento afectado y la corrección sugerida.",
+    },
+    "help.preflight.status": {
+        Language.ENGLISH: "Overall readiness. Any error blocks a ready-to-build result.",
+        Language.SPANISH: "Preparación general. Cualquier error impide declarar listo para construir.",
+    },
+    "help.preflight.go_to": {
+        Language.ENGLISH: "Close this report and open the editor that can resolve the selected finding.",
+        Language.SPANISH: "Cerrá este informe y abrí el editor que puede resolver el hallazgo seleccionado.",
+    },
     "help.action.construction_record": {
         Language.ENGLISH: "Record as-built dimensions, notes, and the construction checklist.",
         Language.SPANISH: "Registrá dimensiones as-built, notas y la lista de control.",
@@ -5916,6 +5938,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Optimize Moxon Dimensions...",
         Language.SPANISH: "Optimizar dimensiones del Moxon...",
     },
+    "action.preflight": {
+        Language.ENGLISH: "Construction Pre-flight...",
+        Language.SPANISH: "Pre-flight de construcción...",
+    },
     "action.construction": {
         Language.ENGLISH: "Construction Sheet...",
         Language.SPANISH: "Hoja de construcción...",
@@ -6011,6 +6037,140 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "construction_record.checklist.update_as_built": {
         Language.ENGLISH: "Update the as-built dimensions and notes.",
         Language.SPANISH: "Actualizar las dimensiones y notas as-built.",
+    },
+    "preflight.title": {
+        Language.ENGLISH: "Construction pre-flight",
+        Language.SPANISH: "Pre-flight de construcción",
+    },
+    "preflight.intro": {
+        Language.ENGLISH: (
+            "Read-only checks of the current design before cutting wire. "
+            "Pre-flight does not replace a simulation or a physical measurement."
+        ),
+        Language.SPANISH: (
+            "Verificaciones de solo lectura del diseño actual antes de cortar "
+            "hilo. El pre-flight no reemplaza una simulación ni una medición real."
+        ),
+    },
+    "preflight.summary.error": {
+        Language.ENGLISH: "Not ready to build: {errors} error(s) must be fixed.",
+        Language.SPANISH: "No listo para construir: hay que corregir {errors} error(es).",
+    },
+    "preflight.summary.warning": {
+        Language.ENGLISH: (
+            "Ready to build with {warnings} warning(s). Review them before cutting."
+        ),
+        Language.SPANISH: (
+            "Listo para construir con {warnings} advertencia(s). Revisalas antes de cortar."
+        ),
+    },
+    "preflight.summary.ready": {
+        Language.ENGLISH: "Ready to build: no pre-flight issues found.",
+        Language.SPANISH: "Listo para construir: no se encontraron problemas de pre-flight.",
+    },
+    "preflight.summary.ready_info": {
+        Language.ENGLISH: "Ready to build: {info} informational note(s).",
+        Language.SPANISH: "Listo para construir: {info} nota(s) informativa(s).",
+    },
+    "preflight.counts": {
+        Language.ENGLISH: "Errors: {errors} · Warnings: {warnings} · Info: {info}",
+        Language.SPANISH: "Errores: {errors} · Advertencias: {warnings} · Información: {info}",
+    },
+    "preflight.group.errors": {
+        Language.ENGLISH: "Errors",
+        Language.SPANISH: "Errores",
+    },
+    "preflight.group.warnings": {
+        Language.ENGLISH: "Warnings",
+        Language.SPANISH: "Advertencias",
+    },
+    "preflight.group.info": {
+        Language.ENGLISH: "Information",
+        Language.SPANISH: "Información",
+    },
+    "preflight.column.finding": {
+        Language.ENGLISH: "Finding",
+        Language.SPANISH: "Hallazgo",
+    },
+    "preflight.column.category": {
+        Language.ENGLISH: "Category",
+        Language.SPANISH: "Categoría",
+    },
+    "preflight.column.where": {
+        Language.ENGLISH: "Where",
+        Language.SPANISH: "Dónde",
+    },
+    "preflight.column.action": {
+        Language.ENGLISH: "Suggested action",
+        Language.SPANISH: "Acción sugerida",
+    },
+    "preflight.no_findings": {
+        Language.ENGLISH: "No pre-flight issues found.",
+        Language.SPANISH: "No se encontraron problemas de pre-flight.",
+    },
+    "preflight.go_to": {
+        Language.ENGLISH: "Go to problem",
+        Language.SPANISH: "Ir al problema",
+    },
+    "preflight.category.geometry": {
+        Language.ENGLISH: "Geometry",
+        Language.SPANISH: "Geometría",
+    },
+    "preflight.category.feed": {
+        Language.ENGLISH: "Feedpoint and connections",
+        Language.SPANISH: "Alimentación y conexiones",
+    },
+    "preflight.category.segmentation": {
+        Language.ENGLISH: "Segmentation",
+        Language.SPANISH: "Segmentación",
+    },
+    "preflight.category.supports": {
+        Language.ENGLISH: "Site and supports",
+        Language.SPANISH: "Sitio y soportes",
+    },
+    "preflight.category.construction": {
+        Language.ENGLISH: "Construction data",
+        Language.SPANISH: "Datos de construcción",
+    },
+    "preflight.category.simulation": {
+        Language.ENGLISH: "Simulation",
+        Language.SPANISH: "Simulación",
+    },
+    "preflight.category.solver": {
+        Language.ENGLISH: "Solver assumptions",
+        Language.SPANISH: "Supuestos del solver",
+    },
+    "preflight.action.edit_geometry": {
+        Language.ENGLISH: "Review the geometry",
+        Language.SPANISH: "Revisar la geometría",
+    },
+    "preflight.action.edit_feed": {
+        Language.ENGLISH: "Review the feedpoint",
+        Language.SPANISH: "Revisar la alimentación",
+    },
+    "preflight.action.edit_loads": {
+        Language.ENGLISH: "Open the loads editor",
+        Language.SPANISH: "Abrir el editor de cargas",
+    },
+    "preflight.action.edit_lines": {
+        Language.ENGLISH: "Open the transmission lines editor",
+        Language.SPANISH: "Abrir el editor de líneas de transmisión",
+    },
+    "preflight.action.edit_segmentation": {
+        Language.ENGLISH: "Review segmentation",
+        Language.SPANISH: "Revisar la segmentación",
+    },
+    "preflight.action.edit_supports": {
+        Language.ENGLISH: "Open the installation profile",
+        Language.SPANISH: "Abrir el perfil de instalación",
+    },
+    "preflight.action.edit_construction": {
+        Language.ENGLISH: "Open the as-built record",
+        Language.SPANISH: "Abrir el registro as-built",
+    },
+    "preflight.action.run_simulation": {
+        Language.ENGLISH: "Review or run the simulation",
+        Language.SPANISH: "Revisar o ejecutar la simulación",
     },
     "construction.project": {
         Language.ENGLISH: "Project",
@@ -10424,6 +10584,119 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "results.none": {
         Language.ENGLISH: "No simulation results yet.",
         Language.SPANISH: "Todavía no hay resultados de simulación.",
+    },
+    "diagnostic.geometry.wire_too_short": {
+        Language.ENGLISH: "Wire {wire} is shorter than 1 cm.",
+        Language.SPANISH: "El hilo {wire} mide menos de 1 cm.",
+    },
+    "diagnostic.geometry.wire_overlap": {
+        Language.ENGLISH: (
+            "Wires {first} and {second} overlap. Separate or merge them before construction."
+        ),
+        Language.SPANISH: (
+            "Los hilos {first} y {second} se superponen. Sepalos o unificalos antes de construir."
+        ),
+    },
+    "diagnostic.geometry.wire_crossing": {
+        Language.ENGLISH: (
+            "Wires {first} and {second} cross without a shared connection. "
+            "Add an insulator or reroute them."
+        ),
+        Language.SPANISH: (
+            "Los hilos {first} y {second} se cruzan sin una conexión compartida. "
+            "Agregá un aislador o cambiales el recorrido."
+        ),
+    },
+    "diagnostic.geometry.free_space": {
+        Language.ENGLISH: (
+            "The model uses free space. Confirm that this matches the installed antenna."
+        ),
+        Language.SPANISH: (
+            "El modelo usa espacio libre. Confirmá que coincida con la antena instalada."
+        ),
+    },
+    "diagnostic.supports.no_profile": {
+        Language.ENGLISH: (
+            "No active installation profile: height, width, and support type are unchecked."
+        ),
+        Language.SPANISH: (
+            "No hay un perfil de instalación activo: no se verificaron altura, ancho ni soporte."
+        ),
+    },
+    "diagnostic.supports.height_unknown": {
+        Language.ENGLISH: "The profile has no available height; confirm the {top} m top height fits.",
+        Language.SPANISH: (
+            "El perfil no tiene altura disponible; confirmá que entren los {top} m de altura."
+        ),
+    },
+    "diagnostic.supports.height_exceeded": {
+        Language.ENGLISH: (
+            "The design top height {top} m exceeds the profile's available height {available} m."
+        ),
+        Language.SPANISH: (
+            "La altura superior del diseño ({top} m) supera la altura disponible del perfil "
+            "({available} m)."
+        ),
+    },
+    "diagnostic.supports.width_unknown": {
+        Language.ENGLISH: "The profile has no available width; confirm the {span} m span fits.",
+        Language.SPANISH: (
+            "El perfil no tiene ancho disponible; confirmá que entren los {span} m de extensión."
+        ),
+    },
+    "diagnostic.supports.width_exceeded": {
+        Language.ENGLISH: (
+            "The design horizontal span {span} m exceeds the profile's available width "
+            "{available} m."
+        ),
+        Language.SPANISH: (
+            "La extensión horizontal del diseño ({span} m) supera el ancho disponible del "
+            "perfil ({available} m)."
+        ),
+    },
+    "diagnostic.supports.ground_mismatch": {
+        Language.ENGLISH: (
+            "The model ground differs from the installation profile's recommended ground."
+        ),
+        Language.SPANISH: (
+            "El suelo del modelo difiere del suelo recomendado por el perfil de instalación."
+        ),
+    },
+    "diagnostic.construction.record_missing": {
+        Language.ENGLISH: "No as-built record or checklist has been started.",
+        Language.SPANISH: "No se inició un registro as-built ni una lista de control.",
+    },
+    "diagnostic.construction.dimensions_missing": {
+        Language.ENGLISH: "The as-built record has no measured dimensions yet.",
+        Language.SPANISH: "El registro as-built todavía no tiene dimensiones medidas.",
+    },
+    "diagnostic.construction.checklist_incomplete": {
+        Language.ENGLISH: "The construction checklist is incomplete ({checked} of {total}).",
+        Language.SPANISH: "La lista de control de construcción está incompleta ({checked} de {total}).",
+    },
+    "diagnostic.simulation.missing": {
+        Language.ENGLISH: "No simulation result is stored; electrical performance is unverified.",
+        Language.SPANISH: "No hay un resultado de simulación guardado; el desempeño eléctrico no está verificado.",
+    },
+    "diagnostic.simulation.failed": {
+        Language.ENGLISH: "The latest simulation finished with an error.",
+        Language.SPANISH: "La última simulación terminó con un error.",
+    },
+    "diagnostic.simulation.cancelled": {
+        Language.ENGLISH: "The latest simulation was cancelled.",
+        Language.SPANISH: "La última simulación se canceló.",
+    },
+    "diagnostic.simulation.partial": {
+        Language.ENGLISH: "The latest simulation finished only partially.",
+        Language.SPANISH: "La última simulación terminó solo parcialmente.",
+    },
+    "diagnostic.simulation.stale": {
+        Language.ENGLISH: "The latest simulation used a different antenna model.",
+        Language.SPANISH: "La última simulación usó un modelo de antena diferente.",
+    },
+    "diagnostic.segmentation.invalid": {
+        Language.ENGLISH: "Segmentation could not be evaluated for this model.",
+        Language.SPANISH: "No se pudo evaluar la segmentación de este modelo.",
     },
     "diagnostic.severity": {Language.ENGLISH: "Severity", Language.SPANISH: "Severidad"},
     "diagnostic.code": {Language.ENGLISH: "Code", Language.SPANISH: "Código"},

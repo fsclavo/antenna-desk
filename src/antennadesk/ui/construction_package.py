@@ -11,6 +11,7 @@ from pathlib import Path
 
 from PySide6.QtGui import QImage
 
+from ..domain.design.preflight import PreflightReport, PreflightStatus
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.result import SimulationResult
 from ..reporting.construction_package import (
@@ -20,6 +21,10 @@ from ..reporting.construction_package import (
     hardware_bom_rows,
 )
 from ..reporting.construction_sheet import write_construction_sheet
+from ..reporting.localization import (
+    PREFLIGHT_CATEGORY_LABELS,
+    localize_preflight_message,
+)
 from ..reporting.wire_schedule import write_bom_csv, write_wire_schedule_csv
 from .construction_pdf import write_construction_pdf
 from .i18n import Translator
@@ -73,6 +78,29 @@ def _notes_text(
     return "\n".join(lines) + "\n"
 
 
+def _preflight_text(report: PreflightReport, translator: Translator) -> str:
+    if report.status is PreflightStatus.ERROR:
+        status = translator.report("Not ready to build: fix the errors below.")
+    elif report.status is PreflightStatus.WARNING:
+        status = translator.report("Ready to build with warnings.")
+    else:
+        status = translator.report("Ready to build.")
+    lines = [
+        translator.report("Construction pre-flight"),
+        f"{translator.report('Status')}: {status}",
+        "",
+    ]
+    if not report.findings:
+        lines.append(translator.report("No pre-flight issues found."))
+    for finding in report.sorted_findings():
+        severity = translator.report(finding.severity.value.title())
+        category = translator.report(PREFLIGHT_CATEGORY_LABELS[finding.category])
+        message = localize_preflight_message(finding, translator.report)
+        where = finding.subject or finding.field or "—"
+        lines.append(f"[{severity}] {category}: {message} ({where})")
+    return "\n".join(lines) + "\n"
+
+
 def write_construction_package(
     translator: Translator,
     project: Project,
@@ -87,6 +115,7 @@ def write_construction_package(
     auxiliary_svg: bytes | None = None,
     isometric_svg: bytes | None = None,
     auxiliary_kind: str | None = None,
+    preflight: PreflightReport | None = None,
 ) -> None:
     """Write HTML, PDF, CSVs, and build notes into one ZIP archive."""
 
@@ -95,6 +124,7 @@ def write_construction_package(
         html_path = root / "construction-sheet.html"
         pdf_path = root / "construction-sheet.pdf"
         notes_path = root / "build-notes.txt"
+        preflight_path = root / "preflight.txt"
         write_construction_sheet(
             project,
             design,
@@ -106,6 +136,7 @@ def write_construction_package(
             auxiliary_kind=auxiliary_kind,
             labeler=translator.report,
             language=translator.language.value,
+            preflight=preflight,
         )
         write_construction_pdf(
             translator,
@@ -120,6 +151,7 @@ def write_construction_package(
             auxiliary_svg=auxiliary_svg,
             isometric_svg=isometric_svg,
             auxiliary_kind=auxiliary_kind,
+            preflight=preflight,
         )
         write_wire_schedule_csv(design, root / "wire-schedule.csv")
         write_bom_csv(design, root / "bom.csv")
@@ -128,12 +160,20 @@ def write_construction_package(
             encoding="utf-8",
             newline="\n",
         )
+        entries = [
+            html_path,
+            pdf_path,
+            root / "wire-schedule.csv",
+            root / "bom.csv",
+            notes_path,
+        ]
+        if preflight is not None:
+            preflight_path.write_text(
+                _preflight_text(preflight, translator),
+                encoding="utf-8",
+                newline="\n",
+            )
+            entries.append(preflight_path)
         with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-            for entry in (
-                html_path,
-                pdf_path,
-                root / "wire-schedule.csv",
-                root / "bom.csv",
-                notes_path,
-            ):
+            for entry in entries:
                 archive.write(entry, arcname=entry.name)

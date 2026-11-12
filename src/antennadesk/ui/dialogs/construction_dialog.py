@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ...domain.design.preflight import PreflightReport
 from ...domain.projects.project import DesignVariant, Project
 from ...domain.simulation.result import SimulationResult
 from ...reporting.construction_sheet import (
@@ -63,12 +64,14 @@ class ConstructionDialog(QDialog):
         auxiliary_svg: bytes | None = None,
         isometric_svg: bytes | None = None,
         auxiliary_kind: str | None = None,
+        preflight: PreflightReport | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._project = project
         self._design = design
         self._result = result
+        self._preflight = preflight
         self._figure_image = figure_image
         self._auxiliary_image = auxiliary_image
         self._isometric_image = isometric_image
@@ -116,6 +119,7 @@ class ConstructionDialog(QDialog):
                 auxiliary_kind=self._auxiliary_kind,
                 labeler=translator.report,
                 language=translator.language.value,
+                preflight=self._preflight,
             )
         )
         self._browser.setDocument(document)
@@ -164,6 +168,7 @@ class ConstructionDialog(QDialog):
                 auxiliary_png_data_uri=self._auxiliary_data_uri,
                 isometric_png_data_uri=self._isometric_data_uri,
                 auxiliary_kind=self._auxiliary_kind,
+                preflight=self._preflight,
             )
         except Exception as exc:
             QMessageBox.critical(
@@ -207,6 +212,7 @@ class ConstructionDialog(QDialog):
                 auxiliary_svg=self._auxiliary_svg,
                 isometric_svg=self._isometric_svg,
                 auxiliary_kind=self._auxiliary_kind,
+                preflight=self._preflight,
             )
         except Exception as exc:
             QMessageBox.critical(
@@ -250,6 +256,7 @@ class ConstructionDialog(QDialog):
                 auxiliary_svg=self._auxiliary_svg,
                 isometric_svg=self._isometric_svg,
                 auxiliary_kind=self._auxiliary_kind,
+                preflight=self._preflight,
             )
         except Exception as exc:
             QMessageBox.critical(

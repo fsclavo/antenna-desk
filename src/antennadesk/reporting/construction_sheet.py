@@ -43,6 +43,7 @@ from ..domain.antennas.zepp import (
     parallel_wire_impedance_ohm,
 )
 from ..domain.design.matching_resolution import resolve_matching_network
+from ..domain.design.preflight import PreflightReport, PreflightStatus
 from ..domain.optimization.length import measure_bandwidth_hz
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
@@ -64,9 +65,11 @@ from .design_summary import (
     transmission_line_summary_rows,
 )
 from .localization import (
+    PREFLIGHT_CATEGORY_LABELS,
     Labeler,
     identity_labeler,
     localize_html_labels,
+    localize_preflight_message,
     localize_rows,
 )
 from .result_summary import gain_metric_rows
@@ -90,6 +93,10 @@ table.title-block th { width: auto; background: #f7f7f7; }
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .muted { color: #666; font-size: 12px; }
 .notes { background: #f7f7f7; border-left: 4px solid #888; padding: 10px 14px; }
+.preflight { padding: 8px 12px; margin: 8px 0; border-left: 4px solid #888; }
+.preflight-error { background: #fef3f2; border-left-color: #b42318; }
+.preflight-warning { background: #fffaeb; border-left-color: #b54708; }
+.preflight-ready { background: #ecfdf3; border-left-color: #067647; }
 .construction-figure, .installation-figure, .isometric-figure { display: block; width: 100%; max-width: 100%; height: auto; border: 1px solid #ddd; background: #fff; margin: 12px 0 2px; }
 figure { margin: 0 0 12px; }
 figcaption { color: #555; font-size: 12px; margin-top: 4px; }
@@ -145,6 +152,50 @@ def _resonance_text(result: SimulationResult | None, tr: Labeler) -> str:
     )
 
 
+def _preflight_status_text(report: PreflightReport, tr: Labeler) -> str:
+    if report.status is PreflightStatus.ERROR:
+        return tr("Not ready to build: fix the errors below.")
+    if report.status is PreflightStatus.WARNING:
+        return tr("Ready to build with warnings.")
+    return tr("Ready to build.")
+
+
+def _preflight_section(report: PreflightReport | None, tr: Labeler) -> str:
+    if report is None:
+        return ""
+    status_text = _preflight_status_text(report, tr)
+    css_class = f"preflight-{report.status.value}"
+    if not report.findings:
+        return (
+            "<h2>Construction pre-flight</h2>"
+            f'<div class="preflight {css_class}">'
+            f"<p>{_escape(status_text)}</p>"
+            f"<p>{_escape(tr('No pre-flight issues found.'))}</p>"
+            "</div>"
+        )
+    rows = "".join(
+        "<tr>"
+        f"<td>{_escape(tr(finding.severity.value.title()))}</td>"
+        f"<td>{_escape(tr(PREFLIGHT_CATEGORY_LABELS[finding.category]))}</td>"
+        f"<td>{_escape(localize_preflight_message(finding, tr))}</td>"
+        f"<td>{_escape(finding.subject or finding.field or '—')}</td>"
+        "</tr>"
+        for finding in report.sorted_findings()
+    )
+    return f"""
+<h2>Construction pre-flight</h2>
+<div class="preflight {css_class}"><p>{_escape(status_text)}</p></div>
+<table class="schedule">
+<thead>
+<tr><th>Severity</th><th>Category</th><th>Finding</th><th>Where</th></tr>
+</thead>
+<tbody>
+{rows}
+</tbody>
+</table>
+"""
+
+
 def render_construction_sheet(
     project: Project,
     design: DesignVariant,
@@ -156,6 +207,7 @@ def render_construction_sheet(
     auxiliary_kind: str | None = None,
     labeler: Labeler | None = None,
     language: str = "en",
+    preflight: PreflightReport | None = None,
 ) -> str:
     tr = labeler or identity_labeler
     parameters = design.parameters
@@ -1365,6 +1417,7 @@ def render_construction_sheet(
 {hardware_section}
 {coil_section}
 {checklist_section}
+{_preflight_section(preflight, tr)}
 {evidence_section}
 <h2>Simulation</h2>
 <table>
@@ -1396,6 +1449,7 @@ def write_construction_sheet(
     auxiliary_kind: str | None = None,
     labeler: Labeler | None = None,
     language: str = "en",
+    preflight: PreflightReport | None = None,
 ) -> None:
     path.write_text(
         render_construction_sheet(
@@ -1408,6 +1462,7 @@ def write_construction_sheet(
             auxiliary_kind=auxiliary_kind,
             labeler=labeler,
             language=language,
+            preflight=preflight,
         ),
         encoding="utf-8",
         newline="\n",

@@ -11,17 +11,13 @@ from ...domain.antennas.antenna import AntennaModel
 from ...domain.antennas.load import ParallelLoad
 from ...domain.environment.ground import GroundKind
 from ...domain.simulation.spec import SimulationSpec
+from ..assumptions import GROUND_CLEARANCE_M
 from ..discretization import (
     FeedSegment,
     SegmentLayout,
     WireSegmentation,
     build_segment_layout,
 )
-
-# NEC-2 requires wires to be separated from a ground plane. Ground-mounted
-# radials and dipoles are raised by this small physical clearance when the
-# canonical model sits exactly on the ground.
-GROUND_CLEARANCE_M = 0.01
 
 
 @dataclass(frozen=True, slots=True)

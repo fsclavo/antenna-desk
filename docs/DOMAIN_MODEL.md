@@ -536,6 +536,19 @@ reactance, copper/aluminum conductor resistance and skin depth, and ideal
 balun/unun turns/impedance conversion. These functions are not antenna models;
 the UI labels the approximations and never applies them silently.
 
+## Construction pre-flight
+
+`PreflightFinding` and `PreflightReport` are computed, read-only validation
+records. `domain/design/preflight.py` checks the canonical model, wire
+crossings and overlaps, the active installation envelope, and construction
+record completeness. `simulation/preflight.py` adds segmentation diagnostics,
+NEC-2 assumptions, and simulation status/freshness. Findings carry a
+`PreflightCategory`, `Severity`, stable code, English fallback message,
+optional subject, suggested `PreflightAction`, and named translation values.
+`PreflightReport.ready` is false whenever an error is present; warnings and
+information never block `ready`, but the review status remains visible. The
+report is not persisted and does not change the schema.
+
 ## Construction record
 
 `ConstructionRecord` stores as-built notes, a tuple of `AsBuiltDimension`

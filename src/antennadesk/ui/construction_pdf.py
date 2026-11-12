@@ -11,6 +11,7 @@ from PySide6.QtCore import QByteArray, QMarginsF, QRectF, QSize, Qt
 from PySide6.QtGui import QFont, QImage, QPageLayout, QPageSize, QPainter, QPdfWriter
 from PySide6.QtSvg import QSvgRenderer
 
+from ..domain.design.preflight import PreflightReport, PreflightStatus
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import SimulationResult
@@ -29,7 +30,11 @@ from ..reporting.design_summary import (
     load_summary_rows,
     optimization_summary_rows,
 )
-from ..reporting.localization import localize_rows
+from ..reporting.localization import (
+    PREFLIGHT_CATEGORY_LABELS,
+    localize_preflight_message,
+    localize_rows,
+)
 from ..reporting.wire_schedule import (
     bom_summary_rows,
     conductor_bom_rows,
@@ -96,6 +101,7 @@ def write_construction_pdf(
     auxiliary_svg: bytes | None = None,
     isometric_svg: bytes | None = None,
     auxiliary_kind: str | None = None,
+    preflight: PreflightReport | None = None,
 ) -> None:
     writer = QPdfWriter(str(path))
     writer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
@@ -377,6 +383,25 @@ def write_construction_pdf(
     ):
         row(f"{'[x]' if checked else '[ ]'} {label}", "")
     y += 12.0
+
+    if preflight is not None:
+        section(translator.report("Construction pre-flight"))
+        if preflight.status is PreflightStatus.ERROR:
+            status_text = translator.report("Not ready to build: fix the errors below.")
+        elif preflight.status is PreflightStatus.WARNING:
+            status_text = translator.report("Ready to build with warnings.")
+        else:
+            status_text = translator.report("Ready to build.")
+        row(translator.report("Status"), status_text)
+        if not preflight.findings:
+            row(translator.report("No pre-flight issues found."), "")
+        for finding in preflight.sorted_findings():
+            severity = translator.report(finding.severity.value.title())
+            category = translator.report(PREFLIGHT_CATEGORY_LABELS[finding.category])
+            message = localize_preflight_message(finding, translator.report)
+            where = finding.subject or finding.field or "—"
+            row(f"{severity} · {category}", f"{message} ({where})")
+        y += 12.0
 
     evidence_rows = localize_rows(
         design_evidence_rows(design, labeler=translator.report),

@@ -80,6 +80,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   editor can open the coil/trap calculator seeded from the current load and
   apply the result back to the form. Warnings state that these are construction
   aids, not antenna models.
+- **Construction pre-flight.** Added **Design → Construction Pre-flight...**,
+  a read-only report grouped into errors, warnings, and information. It checks
+  below-ground geometry, ground clearance, ground-mounted conductors, wire
+  crossings/overlaps, short wires, feed/load/source/line positions, feed and
+  line segment centering, segmentation quality, active installation height and
+  width, profile ground consistency, simulation status/staleness, and missing
+  as-built or checklist data. **Go to problem** opens the relevant editor. The
+  status never says ready while an error exists. The same section is included
+  in the construction sheet, native PDF, and ZIP package (`preflight.txt`), and
+  the solver adapter and pre-flight now share the NEC-2 assumption validator.
+  No schema change.
 
 ## [0.4.2] - 2026-11-11
 

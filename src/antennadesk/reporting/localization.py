@@ -17,6 +17,17 @@ from collections.abc import Iterable
 from typing import Protocol
 
 from ..domain.common.validation import Diagnostic
+from ..domain.design.preflight import PreflightCategory, PreflightFinding
+
+PREFLIGHT_CATEGORY_LABELS: dict[PreflightCategory, str] = {
+    PreflightCategory.GEOMETRY: "Geometry",
+    PreflightCategory.FEED: "Feedpoint and connections",
+    PreflightCategory.SEGMENTATION: "Segmentation",
+    PreflightCategory.SUPPORTS: "Site and supports",
+    PreflightCategory.CONSTRUCTION: "Construction data",
+    PreflightCategory.SIMULATION: "Simulation",
+    PreflightCategory.SOLVER: "Solver assumptions",
+}
 
 
 class Labeler(Protocol):
@@ -60,6 +71,16 @@ def localize_diagnostic(diagnostic: Diagnostic, labeler: Labeler | None) -> str:
     key = f"diagnostic.{diagnostic.code}"
     translated = labeler(key)
     return diagnostic.message if translated == key else translated
+
+
+def localize_preflight_message(finding: PreflightFinding, labeler: Labeler | None) -> str:
+    """Return the translated pre-flight message with an English fallback."""
+
+    if labeler is None:
+        return finding.message
+    key = f"diagnostic.{finding.code}"
+    translated = labeler(key, **finding.translation_values())
+    return finding.message if translated == key else translated
 
 
 _LABEL_TAG = re.compile(

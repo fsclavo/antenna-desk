@@ -1,6 +1,6 @@
 # Autonomous execution backlog
 
-**Date:** 2026-11-11
+**Date:** 2026-11-12
 **Status:** active execution queue.
 
 This is the only active execution queue. It contains shippable items,
@@ -101,6 +101,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX6~~ | ~~Feed-chain topology and loss budget~~ | L | UX2; ADR-0030 | **Done 2026-11-11:** added `MatchingNetworkPosition` (`FEEDPOINT`, `SHACK`, `NONE`) to the project and simulation specs, with schema 37 and feedpoint migration. The matching-network dialog selects the position; `link_budget()` evaluates the selected chain and reports actual dissipative line and network losses from the two-port power balance. Added the **Feed-Chain Loss Budget...** dialog with path, transmitter power, per-frequency SWR, mismatch, line, network, balun, delivered/radiated power, and dominant stage. Reports and the feed/matching summary include the position. ADR-0030 documents the chain order, the conservative balun-position limitation, and the loss semantics. Tests cover two-port loss, shack/feedpoint line loss, persistence, dialogs, reports, and main-window configuration. |
 | ~~UX7~~ | ~~Construction package 2.0~~ | M | UX6 | **Done 2026-11-11:** added a persistent `ConstructionRecord` with as-built notes, measured design/actual dimensions, and checklist state (schema 38). Added the **As-Built / Checklist...** editor, a hardware BOM, target coil/trap values, and a printable checklist in the construction sheet and native PDF. The construction sheet dialog exports a ZIP package with HTML, PDF, wire schedule CSV, conductor BOM CSV, and build notes. Tests cover domain validation, persistence/migration, reporting rows, HTML/PDF sections, the editor, undo/redo, the ZIP contents, and EN/ES text. |
 | ~~UX8~~ | ~~Integrated coil/trap/loading calculators~~ | M | UX7 | **Done 2026-11-11:** added deterministic component calculators for Wheeler coil inductance/turns, ideal trap/LC resonance and reactance, ideal balun/unun turns and impedance ratios, copper/aluminum conductor resistance and skin depth, and common-mode choke reference notes. **Tools → Component Calculators...** hosts the set; the **Loads** editor opens the coil/trap tab seeded from the current load and applies the result back to the form. Tests cover formulas, invalid inputs, tabs, seed/apply behavior, and EN/ES help. No new schema. |
+| ~~UX9~~ | ~~Construction pre-flight checks~~ | S–M | UX7 | **Done 2026-11-12:** added a read-only `PreflightReport` grouped by errors, warnings, and information. It checks canonical geometry, wire crossings/overlaps, short wires, feed/load/source/line positions, feed and line segment centering, segmentation, active installation height/width and ground, simulation status/staleness, and missing as-built/checklist data. **Design → Construction Pre-flight...** shows the grouped report and **Go to problem** opens the relevant editor; the status is never ready with an error. The sheet, native PDF, and ZIP package include the report and the package adds `preflight.txt`. The NEC-2 ground/permeability/far-field checks moved to a shared pure validator used by both the solver and pre-flight. Tests cover every new check, the dialog, main-window routing, report/PDF/package rendering, and EN/ES text. No new schema. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -108,12 +109,11 @@ external service and must not be invented or simulated into existence.
 
 ## Product experience queue (2026-11-11)
 
-UX1–UX8 are complete. The 0.5 **Decide** release is closed and the 0.6
-**Build** release is in progress. UX9 is the next Build candidate and UX10–UX20
-remain product scope in
-[`ROADMAP.md`](ROADMAP.md#product-experience-backlog-proposed-2026-11-11); do
-not promote them into this queue until the next slice is selected and the full
-gate is green.
+UX1–UX9 are complete. The 0.5 **Decide** and 0.6 **Build** releases are closed.
+UX10–UX20 remain product scope in
+[`ROADMAP.md`](ROADMAP.md#product-experience-backlog-proposed-2026-11-11); the
+0.7 **Measure** release is the next candidate. Do not promote those items into
+this queue until the next slice is selected and the full gate is green.
 
 The first slice accepts these constraints:
 
@@ -311,9 +311,9 @@ model and solver contract must land first.
 7. **R1** is closed as superseded: `v0.4.1` was published with CI-built Linux
    and Windows artifacts, so rerunning the older `v0.4.0` tag is no longer
    required.
-8. **UX1–UX8 are complete.** The 0.5 **Decide** release is closed and the 0.6
-   **Build** release is in progress. UX9 is the next Build candidate; UX10–UX20
-   remain product scope in [`ROADMAP.md`](ROADMAP.md).
+8. **UX1–UX9 are complete.** The 0.5 **Decide** and 0.6 **Build** releases are
+   closed. UX10–UX20 remain product scope in [`ROADMAP.md`](ROADMAP.md); the
+   0.7 **Measure** release is the next candidate.
 9. Product priorities and new antenna candidates live in
    [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
@@ -346,13 +346,17 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **38**.
-- Full gate: **2,598 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **2,649 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.4.1** published on 2026-11-11 with checksum-verified unsigned
   artifacts, including the Windows NSIS installer. All release jobs completed
   successfully in CI. See [`RELEASE_QA_0.4.1.md`](RELEASE_QA_0.4.1.md).
-- Last commits: the Windows hidden-console solver fix,
+- Last commits: the construction pre-flight checks (UX9),
+  the integrated component calculators (UX8),
+  the construction package and as-built record (UX7),
+  the feed-chain loss budget (UX6),
+  the Windows hidden-console solver fix,
   the 0.4.1 installer release,
   the Windows NSIS installer and R1 tracking,
   the 0.4.0 release publication,

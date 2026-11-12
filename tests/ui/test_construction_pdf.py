@@ -7,6 +7,13 @@ from pathlib import Path
 from PySide6.QtGui import QColor, QImage
 from pytestqt.qtbot import QtBot
 
+from antennadesk.domain.common.validation import Severity
+from antennadesk.domain.design.preflight import (
+    PreflightAction,
+    PreflightCategory,
+    PreflightFinding,
+    PreflightReport,
+)
 from antennadesk.domain.projects.project import Project
 from antennadesk.ui.construction_pdf import write_construction_pdf
 from antennadesk.ui.i18n import Language, Translator
@@ -76,6 +83,40 @@ def test_construction_sheet_pdf_includes_the_construction_record(
     )
 
     assert path.read_bytes().startswith(b"%PDF")
+
+
+def test_construction_sheet_pdf_includes_the_preflight(
+    qtbot: QtBot,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    report = PreflightReport(
+        (
+            PreflightFinding(
+                code="supports.height_exceeded",
+                category=PreflightCategory.SUPPORTS,
+                severity=Severity.ERROR,
+                message="the design is too tall",
+                subject="Small yard",
+                action=PreflightAction.EDIT_SUPPORTS,
+                values=(("top", "8.000"), ("available", "5.000")),
+            ),
+        )
+    )
+    path = tmp_path / "sheet-preflight.pdf"
+
+    write_construction_pdf(
+        Translator(Language.SPANISH),
+        sample_project,
+        sample_project.designs[0],
+        None,
+        path,
+        preflight=report,
+    )
+
+    data = path.read_bytes()
+    assert data.startswith(b"%PDF")
+    assert len(data) > 1_000
 
 
 def test_construction_sheet_pdf_is_written_in_spanish(

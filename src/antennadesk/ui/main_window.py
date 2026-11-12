@@ -165,6 +165,7 @@ from ..domain.design.matching_design import (
     matching_network_design_from_frequency,
 )
 from ..domain.design.matching_resolution import resolve_matching_network
+from ..domain.design.preflight import PreflightAction, PreflightReport
 from ..domain.measurement import Measurement
 from ..domain.optimization.registry import optimizer_availability
 from ..domain.optimization.summary import OptimizationMode
@@ -205,6 +206,7 @@ from ..reporting.design_summary import installation_profile_rows
 from ..reporting.html_report import write_html_report
 from ..reporting.wire_schedule import write_bom_csv, write_wire_schedule_csv
 from ..simulation.nec2.solver import Nec2cSolver
+from ..simulation.preflight import run_preflight
 from .dialogs.antenna_advisor_dialog import AntennaAdvisorDialog
 from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_BEVERAGE,
@@ -291,6 +293,7 @@ from .dialogs.ocfd_dialog import OCFDDialog
 from .dialogs.optimization_dialog import OptimizationDialog
 from .dialogs.phased_vertical_dialog import PhasedVerticalDialog
 from .dialogs.preferences_dialog import PreferencesDialog
+from .dialogs.preflight_dialog import PreflightDialog
 from .dialogs.quad_beam_dialog import QuadBeamDialog
 from .dialogs.ringo_dialog import RingoDialog
 from .dialogs.scv_dialog import ScvDialog
@@ -550,6 +553,8 @@ class MainWindow(QMainWindow):
         self._design_from_frequency_action = QAction(self)
         self._design_from_frequency_action.setShortcut(QKeySequence("Ctrl+Shift+E"))
         self._design_from_frequency_action.triggered.connect(lambda: self.design_from_frequency())
+        self._preflight_action = QAction(self)
+        self._preflight_action.triggered.connect(lambda: self.show_preflight())
         self._construction_action = QAction(self)
         self._construction_action.triggered.connect(lambda: self.show_construction_sheet())
         self._construction_record_action = QAction(self)
@@ -1286,6 +1291,7 @@ class MainWindow(QMainWindow):
         self._design_menu.addAction(self._design_from_frequency_action)
         self._design_menu.addAction(self._optimize_action)
         self._design_menu.addSeparator()
+        self._design_menu.addAction(self._preflight_action)
         self._design_menu.addAction(self._construction_action)
         self._design_menu.addAction(self._construction_record_action)
         self._design_menu.addAction(self._loads_action)
@@ -1417,6 +1423,9 @@ class MainWindow(QMainWindow):
         self._apply_button.setText(self._translator.t("action.apply"))
         self._apply_button.setToolTip(self._translator.t("action.apply.tooltip"))
         self._optimize_button.setText(self._translator.t("action.optimize"))
+        self._preflight_action.setText(self._translator.t("action.preflight"))
+        self._preflight_action.setToolTip(self._translator.t("help.action.preflight"))
+        self._preflight_action.setWhatsThis(self._translator.t("help.action.preflight"))
         self._construction_action.setText(self._translator.t("action.construction"))
         self._construction_record_action.setText(self._translator.t("action.construction_record"))
         self._construction_record_action.setToolTip(
@@ -1809,6 +1818,7 @@ class MainWindow(QMainWindow):
         self._optimize_button.setEnabled(optimize_enabled)
         self._optimize_action.setToolTip(optimize_hint)
         self._optimize_button.setToolTip(optimize_hint)
+        self._preflight_action.setEnabled(idle and has_project)
         self._construction_action.setEnabled(idle and has_project)
         self._construction_record_action.setEnabled(idle and has_project)
         self._loads_action.setEnabled(idle and has_project)
@@ -7350,6 +7360,73 @@ class MainWindow(QMainWindow):
         self._last_status_key = "status.design_changed"
         self._update_status_text()
 
+    def _preflight_report_for_current_design(self) -> PreflightReport | None:
+        if self._project is None or self._design_id is None:
+            return None
+        design = self._project.design_by_id(self._design_id)
+        spec = self._with_project_chain(
+            design.parameters,
+            self._base_simulation_spec(design),
+        )
+        return run_preflight(
+            self._project,
+            design,
+            spec,
+            result=self._simulation_results.get(self._design_id),
+        )
+
+    def show_preflight(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        report = self._preflight_report_for_current_design()
+        if report is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        dialog = PreflightDialog(self._translator, report, self)
+        dialog.exec()
+        action = dialog.selected_action
+        if action is not None:
+            self._handle_preflight_action(action)
+
+    def _handle_preflight_action(self, action: PreflightAction) -> None:
+        if action is PreflightAction.EDIT_LOADS:
+            self.edit_loads()
+            return
+        if action is PreflightAction.EDIT_LINES:
+            self.edit_transmission_lines()
+            return
+        if action is PreflightAction.EDIT_SUPPORTS:
+            self.edit_installation_profile()
+            return
+        if action is PreflightAction.EDIT_CONSTRUCTION:
+            self.edit_construction_record()
+            return
+        if action is PreflightAction.RUN_SIMULATION:
+            self.simulate()
+            return
+        if action is PreflightAction.NONE:
+            return
+        if action is PreflightAction.EDIT_GEOMETRY:
+            design = (
+                self._project.design_by_id(self._design_id)
+                if self._project is not None and self._design_id is not None
+                else None
+            )
+            if design is not None and isinstance(design.parameters, CustomAntennaParameters):
+                self.edit_custom_wires()
+                return
+        self._design_panel.setFocus()
+        current = self._design_stack.currentWidget()
+        if current is not None:
+            current.setFocus()
+
     @history_action("history.construction_record")
     def edit_construction_record(self) -> None:
         if self._project is None:
@@ -7416,6 +7493,7 @@ class MainWindow(QMainWindow):
             auxiliary_svg=auxiliary_svg,
             isometric_svg=isometric_svg,
             auxiliary_kind=auxiliary_kind,
+            preflight=self._preflight_report_for_current_design(),
         )
         dialog.exec()
         self._workflow_construction_viewed.add(self._design_id)

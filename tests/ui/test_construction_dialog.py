@@ -29,6 +29,45 @@ def test_construction_dialog_shows_dimensions(
     assert "No result yet." in text
 
 
+def test_construction_dialog_shows_the_preflight_report(
+    qtbot: QtBot,
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.common.validation import Severity
+    from antennadesk.domain.design.preflight import (
+        PreflightAction,
+        PreflightCategory,
+        PreflightFinding,
+        PreflightReport,
+    )
+
+    report = PreflightReport(
+        (
+            PreflightFinding(
+                code="supports.height_exceeded",
+                category=PreflightCategory.SUPPORTS,
+                severity=Severity.ERROR,
+                message="the design is too tall",
+                subject="Small yard",
+                action=PreflightAction.EDIT_SUPPORTS,
+            ),
+        )
+    )
+    dialog = ConstructionDialog(
+        Translator(Language.ENGLISH),
+        sample_project,
+        sample_project.designs[0],
+        None,
+        preflight=report,
+    )
+    qtbot.addWidget(dialog)
+
+    text = dialog._browser.toPlainText()
+    assert "Construction pre-flight" in text
+    assert "Not ready to build" in text
+    assert "the design is too tall" in text
+
+
 def test_construction_dialog_follows_the_spanish_language(
     qtbot: QtBot,
     sample_project: Project,

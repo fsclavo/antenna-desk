@@ -93,6 +93,29 @@ contains the raw input and output text. Expected runtime failures
 represented as a result with status `error` or `cancelled` and structured
 diagnostics, rather than escaping into the UI.
 
+## Pre-flight flow
+
+```text
+MainWindow
+  ├─ base/family SimulationSpec + project feed chain
+  ├─ domain/design/preflight.py
+  │    ├─ AntennaModel.validate()
+  │    ├─ shared wire crossing/overlap checks
+  │    ├─ installation envelope and construction record
+  │    └─ PreflightFinding / PreflightReport
+  └─ simulation/preflight.py
+       ├─ validate_segmentation()
+       ├─ validate_nec2_assumptions()
+       └─ stored result status and model fingerprint
+```
+
+`PreflightReport` is computed on demand and is not persisted. The UI dialog,
+construction sheet, native PDF, and ZIP package all render the same report.
+Errors make `ready` false; warnings and information remain review items. The
+solver adapter calls the same `validate_nec2_assumptions()` helper, so
+pre-flight and a real run cannot disagree about below-ground geometry,
+ground clearance, permeability, or the far-field ground request.
+
 ## Phase 3 flow
 
 ```text

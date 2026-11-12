@@ -977,3 +977,92 @@ def test_endfed_bend_construction_sheet_lists_the_vertical_and_horizontal_sectio
     assert "14.7400 m" in sheet
     assert "Top height" in sheet
     assert "The bend is a 90° corner" in sheet
+
+
+def _preflight_report():
+    from antennadesk.domain.common.validation import Severity
+    from antennadesk.domain.design.preflight import (
+        PreflightAction,
+        PreflightCategory,
+        PreflightFinding,
+        PreflightReport,
+    )
+
+    return PreflightReport(
+        (
+            PreflightFinding(
+                code="supports.height_exceeded",
+                category=PreflightCategory.SUPPORTS,
+                severity=Severity.ERROR,
+                message="the design is too tall",
+                subject="Small yard",
+                action=PreflightAction.EDIT_SUPPORTS,
+                values=(("top", "8.000"), ("available", "5.000")),
+            ),
+            PreflightFinding(
+                code="geometry.wire_crossing",
+                category=PreflightCategory.GEOMETRY,
+                severity=Severity.WARNING,
+                message="Wires a and b cross without a shared connection.",
+                subject="a / b",
+                action=PreflightAction.EDIT_GEOMETRY,
+                values=(("first", "a"), ("second", "b")),
+            ),
+        )
+    )
+
+
+def test_construction_sheet_includes_the_preflight_report(sample_project: Project) -> None:
+    sheet = render_construction_sheet(
+        sample_project,
+        sample_project.designs[0],
+        None,
+        preflight=_preflight_report(),
+    )
+
+    assert "Construction pre-flight" in sheet
+    assert "Not ready to build" in sheet
+    assert "Site and supports" in sheet
+    assert "Small yard" in sheet
+    assert "Wires a and b cross" in sheet
+
+
+def test_construction_sheet_preflight_ready_state(sample_project: Project) -> None:
+    from antennadesk.domain.design.preflight import PreflightReport
+
+    sheet = render_construction_sheet(
+        sample_project,
+        sample_project.designs[0],
+        None,
+        preflight=PreflightReport(),
+    )
+
+    assert "Construction pre-flight" in sheet
+    assert "Ready to build." in sheet
+    assert "No pre-flight issues found." in sheet
+
+
+def test_construction_sheet_preflight_is_localized(sample_project: Project) -> None:
+    from antennadesk.ui.i18n import Language, Translator
+
+    sheet = render_construction_sheet(
+        sample_project,
+        sample_project.designs[0],
+        None,
+        labeler=Translator(Language.SPANISH).report,
+        language="es",
+        preflight=_preflight_report(),
+    )
+
+    assert "Pre-flight de construcción" in sheet
+    assert "No listo para construir" in sheet
+    assert "Sitio y soportes" in sheet
+    assert "supera la altura disponible" in sheet
+
+
+def test_construction_sheet_omits_preflight_when_not_provided(
+    sample_project: Project,
+) -> None:
+    sheet = render_construction_sheet(sample_project, sample_project.designs[0], None)
+
+    assert "Construction pre-flight" not in sheet

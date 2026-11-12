@@ -1714,6 +1714,39 @@ superseded by the family optimizer for the affected typed families. Bounded
 impedance synthesis remains an internal application capability, not a separate
 menu action.
 
+## Construction pre-flight
+
+Use **Design → Construction Pre-flight...** before cutting wire. It is a
+read-only check of the current design and project; it does not run the solver or
+change the model. Findings are grouped into errors, warnings, and information:
+
+- **Geometry:** wires below ground, ground clearance, ground-mounted
+  conductors, short wires, and non-endpoint wire crossings or overlaps.
+- **Feedpoint and connections:** feed, load, source, and transmission-line
+  positions; feed-at-wire-end; and feed/line points that are not centered on a
+  simulated segment.
+- **Segmentation:** too few segments, segments that are too long or too short,
+  thin-wire radius ratios, and the delta-gap approximation.
+- **Site and supports:** active installation profile, available height and
+  width, the profile's ground recommendation, and the largest horizontal span.
+- **Simulation:** missing, cancelled, partial, failed, or stale results. A
+  result is stale when the antenna model changed after it ran.
+- **Construction data:** missing as-built record, measured dimensions, or
+  checklist progress.
+
+The status is **Ready to build** only when there are no errors. Warnings still
+allow a ready result, but they are listed for review. **Go to problem** closes
+the report and opens the editor that can resolve the selected finding: the
+geometry editor, loads, transmission lines, installation profile, as-built
+record, or the simulation action. The construction sheet, native PDF, and ZIP
+package include the same pre-flight section; the package also adds
+`preflight.txt`.
+
+Pre-flight checks the canonical model and the assumptions the NEC-2 adapter
+can represent. It cannot prove mechanical strength, clearance from people or
+power lines, weather sealing, or that the installation matches the model.
+Those remain field checks.
+
 ## Construction sheet
 
 Use **Design → Construction Sheet...** for a printable sheet with target
