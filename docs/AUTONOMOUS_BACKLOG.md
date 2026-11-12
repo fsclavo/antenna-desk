@@ -366,7 +366,9 @@ model and solver contract must land first.
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.5.0** release candidate prepared on 2026-11-12 with local Linux
   and Python artifact smoke tests; Windows installer QA remains in CI. **0.4.2**
-  is the latest published release, with checksum-verified unsigned artifacts.
+  is the latest published release (2026-11-11) with checksum-verified unsigned
+  artifacts, including the Windows NSIS installer and the hidden-console solver
+  fix. See [`RELEASE_QA_0.4.2.md`](RELEASE_QA_0.4.2.md).
 - Last commits: the 0.5.0 release QA, the folded-dipole, full-wave loop, and
   Yagi folded-driven feed transformers, the current-balun record,
   the side-by-side pattern cuts and metric-aware views (UX21–UX22),
@@ -382,6 +384,7 @@ model and solver contract must land first.
   the integrated component calculators (UX8),
   the construction package and as-built record (UX7),
   the feed-chain loss budget (UX6),
+  the 0.4.2 hidden-console release,
   the Windows hidden-console solver fix,
   the 0.4.1 installer release,
   the Windows NSIS installer and R1 tracking,

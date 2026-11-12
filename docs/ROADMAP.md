@@ -127,7 +127,7 @@ Completed:
   Windows zip and all previous Linux and Python artifacts.
 - `v0.4.2` hides `nec2c` console windows during Windows simulations and
   optimizations, and generates wheel/sdist checksums automatically in the
-  release workflow.
+  release workflow. It is published with unsigned, checksum-verified artifacts.
 - `v0.5.0` adds folded-dipole, full-wave loop, and Yagi folded-driven feed
   transformer defaults; the project current-balun record; side-by-side
   azimuth/elevation pattern cuts; metric-aware pattern views; and the
@@ -200,8 +200,8 @@ Deferred:
   Windows zip, and checksums (completed).
 - Optional GPG detached signatures and Windows Authenticode signing hooks
   (completed, deferred for the initial release).
-- Published `v0.1.0`, `v0.2.0`, `v0.3.0`, `v0.3.1`, `v0.4.0`, and `v0.4.1`
-  with unsigned, SHA-256-verified artifacts (completed).
+- Published `v0.1.0`, `v0.2.0`, `v0.3.0`, `v0.3.1`, `v0.4.0`, `v0.4.1`, and
+  `v0.4.2` with unsigned, SHA-256-verified artifacts (completed).
 - Keep the wheel/sdist smoke test as the fallback distribution path
   (completed).
 

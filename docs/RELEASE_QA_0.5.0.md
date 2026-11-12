@@ -37,7 +37,7 @@ common-mode or transformer-loss models.
 |---|---|
 | `uv lock --check` | pass |
 | `uv run ruff check .` | pass |
-| `uv run ruff format --check .` | pass, 701 files |
+| `uv run ruff format --check .` | pass, 702 files |
 | `uv run mypy` | pass, 189 source files |
 | `uv run mypy --config-file mypy_ui.ini` | pass, 142 UI files |
 | `uv run pytest` | **2,866 passed, 1 skipped** |
