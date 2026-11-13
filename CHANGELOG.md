@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-12
+
 ### Added
 
 - **Materials reference.** **Tools → Materials Reference...** adds source-backed
@@ -38,6 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   labor is included. The construction sheet, native PDF, construction package,
   and conductor BOM CSV show the costs and totals when present. Schema 45 adds
   the optional record; older projects migrate with no costs.
+
+### Changed
+
 - **Catalog starting frequencies.** New Moxon editors start at **28.500 MHz**
   with the Cebik 20 m wire reference scaled to that frequency. New Yagi editors
   start at **145.000 MHz** with the NBS five-element preset scaled from its

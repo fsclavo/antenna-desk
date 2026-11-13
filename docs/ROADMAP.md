@@ -133,6 +133,10 @@ Completed:
   azimuth/elevation pattern cuts; metric-aware pattern views; and the
   accumulated project, measurement, construction, and workflow work through
   schema 44. It is published with unsigned, checksum-verified artifacts.
+- `v0.6.0` adds the source-backed materials reference, the 16-cable coax catalog
+  with feed-line presets, portable project bundles, editable BOM costs (schema
+  45), and the Moxon/Yagi catalog starting frequencies. It is prepared as the
+  current release candidate.
 
 Deferred:
 
@@ -420,7 +424,11 @@ Release track:
    record (schema 44), side-by-side pattern cuts, and the accumulated project,
    measurement, construction, and workflow work. All release jobs completed
    successfully in CI, including the Windows bundle and installer QA.
-6. Add GPG/Authenticode signing in a later release if required.
+6. `v0.6.0` is the current release candidate with the materials reference, coax
+   catalog and feed-line presets, portable project bundles, BOM costs (schema
+   45), and catalog starting frequencies. Local artifacts pass their smoke
+   tests; Windows installer QA and publication are pending.
+7. Add GPG/Authenticode signing in a later release if required.
 
 Validation track:
 
