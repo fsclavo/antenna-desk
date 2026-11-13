@@ -134,9 +134,10 @@ def test_family_dialog_can_apply_the_lowest_swr_candidate(qtbot: QtBot) -> None:
 
     dialog = _dialog()
     qtbot.addWidget(dialog)
-    initial = dict(dialog._descriptor.initial_values)
-    low_swr_values = {**initial, "total_length_m": 21.0}
-    high_swr_values = {**initial, "total_length_m": 20.0}
+    # Candidate evaluations carry only the active variables; the locked ones
+    # live in the descriptor's initial values.
+    low_swr_values = {"total_length_m": 21.0}
+    high_swr_values = {"total_length_m": 20.0}
     low_swr = CandidateEvaluation(
         index=0,
         values=low_swr_values,
@@ -151,7 +152,9 @@ def test_family_dialog_can_apply_the_lowest_swr_candidate(qtbot: QtBot) -> None:
         feasible=True,
         metrics={"swr": 3.0, "resistance_ohm": 25.0, "reactance_ohm": 10.0},
     )
-    best_parameters = dialog._descriptor.build_parameters(high_swr_values)
+    best_parameters = dialog._descriptor.build_parameters(
+        {**dialog._descriptor.initial_values, **high_swr_values}
+    )
     dialog._result = OptimizeAntennaResult(
         status=OptimizationStatus.CONVERGED,
         best_parameters=best_parameters,

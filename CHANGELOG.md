@@ -52,6 +52,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Apply Best SWR with locked variables.** The optimizer stores candidate
+  values for active variables only; **Apply Best SWR** now merges the
+  descriptor's initial values before building the parameters. This fixes the
+  `KeyError` for locked fields such as `feed_height_m` and `ring_height_m` on
+  shortened EFHW, Ringo, and any family with locked variables.
 - **Shortened-EFHW optimizer segmentation.** Family optimization candidates for
   the shortened EFHW presets now keep the fixed three-segment feed section and
   loading-coil section while the radiator counts are recalculated. The lumped

@@ -1095,8 +1095,12 @@ class FamilyOptimizationDialog(QDialog):
         evaluation = self._best_swr_evaluation()
         if evaluation is None:
             return None
+        # Candidate evaluations carry only the active variables; locked
+        # variables are stored in the descriptor's initial values.
+        values = dict(self._descriptor.initial_values)
+        values.update(evaluation.values)
         try:
-            return self._descriptor.build_parameters(evaluation.values)
+            return self._descriptor.build_parameters(values)
         except (TypeError, ValueError):
             return None
 
