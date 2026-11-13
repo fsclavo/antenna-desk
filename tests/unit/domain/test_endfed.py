@@ -275,6 +275,16 @@ def test_endfed_model_warning_keys_flag_legacy_and_missing_return() -> None:
         )
     )
     assert cap_only == ("endfed.warning.matching_leakage",)
+    shortened = endfed_model_warning_keys(
+        EndFedParameters(
+            frequency_hz=7_100_000.0,
+            length_m=11.86,
+            feed_section_length_m=0.5,
+            installation_return_length_m=0.1,
+            preset=EndFedPreset.SHORTENED_40_10,
+        )
+    )
+    assert shortened == ("endfed.warning.return_proxy",)
 
 
 def test_endfed_counterpoise_adds_a_drop_and_horizontal_wire() -> None:

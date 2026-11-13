@@ -299,6 +299,15 @@ REPORT_SPANISH: dict[str, str] = {
     "Evidence level": "Nivel de evidencia",
     "Evidence source": "Fuente de evidencia",
     "Evidence tolerance": "Tolerancia de evidencia",
+    "Model confidence": "Confianza del modelo",
+    "Absolute SWR is informational. The installation return is a model proxy, not a physical counterpoise; the real coax/mast/earth path dominates SWR.": (  # noqa: E501
+        "La ROE absoluta es informativa. El retorno de instalación es un proxy "
+        "del modelo, no un contrapeso físico; el camino real del "
+        "coaxil/mástil/tierra domina la ROE."
+    ),
+    "Absolute SWR is informational; the shortened preset is judged by R/X convergence.": (
+        "La ROE absoluta es informativa; el preset acortado se evalúa por la convergencia de R/X."
+    ),
     "Far field": "Campo lejano",
     "Feed": "Alimentación",
     "Feed coordinates": "Coordenadas de alimentación",

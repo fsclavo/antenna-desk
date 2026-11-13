@@ -74,6 +74,23 @@ def test_endfed_dialog_builds_parameters(qtbot: QtBot) -> None:
     assert dialog._form._ground.currentText() == "Finite ground"
 
 
+def test_shortened_endfed_warns_about_the_installation_return_proxy(
+    qtbot: QtBot,
+) -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=shortened_efhw_40_10_parameters(),
+    )
+    qtbot.addWidget(dialog)
+
+    warning = dialog._form._model_warning.text()
+    assert "installation-return proxy" in warning
+    assert "Absolute SWR is informational" in warning
+
+
 def test_endfed_dialog_checks_segment_convergence(qtbot: QtBot) -> None:
     dialog = EndFedDialog(
         Translator(Language.ENGLISH),

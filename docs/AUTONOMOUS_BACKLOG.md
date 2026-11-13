@@ -124,7 +124,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX29~~ | ~~Show the constructive feed connection at the feedpoint~~ | M–L | UX6, UX7, UX9, ADR-0031, ADR-0033, ADR-0034 | **Done 2026-11-13:** added the read-only `FeedConnectionDetail` resolver, explicit Yagi straight/folded/beta/hairpin cases, a renderer-neutral SVG schematic, a **Connection** row and **View feed connection...** action, a read-only detail dialog, and a feedpoint assembly section in the construction sheet, native PDF, and ZIP. The four modeled/recorded/recommended/not-modeled states are separate; unclassified families return explicit unknown. ADR-0036, user guide, domain model, help, and tests are updated. No `FeedPoint`, solver, simulation, or schema change. |
 | ~~EF1~~ | ~~Preserve shortened-EFHW structural segmentation in optimizer candidates~~ | S–M | none | **Done 2026-11-13:** the optimizer descriptor can declare model-defined wire partitions. Only the shortened EFHW presets opt in, preserving the fixed three-segment feed and loading-coil sections while the radiator counts are recalculated. Unit tests cover 80-10 and 40-10; other families keep a `None` hook and the previous segmentation path. No solver, schema, or UI change. |
 | ~~EF2~~ | ~~Diagnose input-shunt matching-network topology limits~~ | S | EF1 optional | **Done 2026-11-13:** added `MatchingNetworkOrigin` as runtime-only simulation context, a domain `input_shunt_l_network_swr_floor()` predicate, a `LinkBudget` floor field, and a `matching_network.topology_limit` warning. The warning appears only when the effective network is the internal EFHW input-shunt unit; project networks and other families stay unchanged. The origin is excluded from the model fingerprint and is not persisted. EN/ES diagnostic text, domain, link, fingerprint, resolution, and real NEC2C tests cover the path. |
-| EF3 | Warn about the installation-return proxy and SWR confidence | S | none | **Queued 2026-11-13.** When a shortened EFHW uses the 0.1 m installation-return proxy instead of a real counterpoise, surface the limitation in results and reports. Mark absolute SWR as informational for the shortened presets, whose convergence verdict is R/X-only. Gate all new text to shortened end-fed designs; no numerical change. |
+| ~~EF3~~ | ~~Warn about the installation-return proxy and SWR confidence~~ | S | none | **Done 2026-11-13:** shortened EFHW editors now add an `endfed.warning.return_proxy` warning when the 0.1 m installation-return proxy is active. The results confidence card and exported reports add a **Model confidence** row that marks absolute SWR as informational and states that the installation return is a proxy, not a physical counterpoise. Standard end-fed, sloper, random wire, and every other family are unchanged. No solver or numerical change. |
 | EF4 | Clarify the optimizer objective and expose best-SWR selection | S–M | none | **Queued 2026-11-13.** The shortened presets currently default to **Target impedance** (`|Z−50|`), not SWR. Add a concise warning when the selected candidate's SWR is high, and add an explicit **Apply best SWR** action independent of the objective. Keep every other family's default objective and scoring unchanged. A new `MIN_MISMATCH` objective based on `|Γ|` is a separate ADR, not part of this item. |
 | EF5 | Recommend action when the optimizer optimum hits a search bound | S | EF1 | **Queued 2026-11-13.** For descriptors that opt in, report which continuous variables are at their bounds and add a recommendation to widen the range only when the resulting geometry is buildable. No automatic bound expansion and no change for families that do not opt in. |
 | EF6 | Investigate 40-10 shortened-EFHW convergence | M | EF1, EF3 | **Queued 2026-11-13.** The 40-10 preset remains R/X-sensitive at 10/21/51 radiator segments. Sweep radiator and coil-section counts, inspect the lumped-load placement in the 0.10 m section, and decide between a model/segmentation fix or a permanent informational-SWR warning. Do not relax the convergence thresholds to make the preset pass. |
@@ -146,7 +146,7 @@ same day. UX25 and UX26 were queued on 2026-11-13. UX27 and UX28 were added the
 same day from terminology feedback; UX27 and UX28 were completed on 2026-11-13.
 UX29 was added and completed the same day from feed-connection feedback.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
-EF1 and EF2 are implemented and EF3 is the next active item.
+EF1–EF3 are implemented and EF4 is the next active item.
 
 The first slice accepts these constraints:
 
@@ -1077,9 +1077,9 @@ scaling QA remains manual.
 
 ## EF1–EF9 — Shortened-EFHW optimizer and model-confidence queue (2026-11-13)
 
-**EF1 and EF2 are implemented on 2026-11-13.** EF3–EF6 are queued. EF7–EF9
-are blocked/deferred until a measured transformer, a common-mode return model,
-or a design-specific matching-network ADR exists. The ordered plan is:
+**EF1–EF3 are implemented on 2026-11-13.** EF4–EF6 are queued. EF7–EF9 are
+blocked/deferred until a measured transformer, a common-mode return model, or a
+design-specific matching-network ADR exists. The ordered plan is:
 
 | ID | Scope | Why it is separate |
 |---|---|---|
@@ -1154,15 +1154,28 @@ the warning and its theoretical floor; the same design without the internal
 origin emits no topology warning; domain, link, fingerprint, resolution, and
 real NEC2C tests pass; EN/ES text is present.
 
-### EF3 — Proxy return and confidence warnings (next)
+### EF3 — Proxy return and confidence warnings (implemented)
 
 When a shortened EFHW uses the 0.1 m installation-return proxy instead of a real
-counterpoise, surface that in the result/report and mark absolute SWR as
-informational. The convergence check already uses `swr_informational`; extend
-the same notion to the main result view for shortened presets. No numerical
-change and no new warning for other families.
+counterpoise, the editor now adds an explicit warning and the confidence card
+marks absolute SWR as informational.
 
-### EF4 — Objective clarity and best-SWR action
+Implementation contract:
+
+- `endfed_model_warning_keys()` adds `endfed.warning.return_proxy` only when
+  `installation_return_active` and the preset is `SHORTENED_80_10` or
+  `SHORTENED_40_10`.
+- `design_evidence_rows()` adds a **Model confidence** row for the shortened
+  presets. With the proxy active, it states that the installation return is not
+  a physical counterpoise and the real coax/mast/earth path dominates SWR.
+  Without the proxy, it states that SWR is informational and the preset is
+  judged by R/X convergence.
+- The row reaches the Diagnostics confidence card and HTML/PDF reports through
+  the existing localized row path. EN/ES report text is present.
+- No solver, impedance, SWR, gain, schema, or fingerprint change. Standard
+  end-fed, sloper, random wire, and every other family are unchanged.
+
+### EF4 — Objective clarity and best-SWR action (next)
 
 `TARGET_IMPEDANCE` minimizes `|Z−50|`, not SWR. Add a warning when the selected
 candidate has high SWR and a better-SWR candidate exists, and add an explicit
@@ -1406,11 +1419,12 @@ model and solver contract must land first.
 12. **UX29 is complete.** The read-only constructive feed connection is closed.
     Do not change `FeedPoint`, the NEC deck, the solver, or the schema without a
     new ADR.
-13. **EF1 and EF2 are complete.** The shortened-EFHW optimizer keeps the fixed
-    feed and loading-coil partitions, and results now report the input-shunt
-    matching-topology floor only for the internal end-fed unit. **EF3** is next:
-    add the proxy-return and SWR-confidence warnings. Then EF4–EF6 in order;
-    EF7–EF9 remain blocked/deferred.
+13. **EF1–EF3 are complete.** The shortened-EFHW optimizer keeps the fixed feed
+    and loading-coil partitions, results report the input-shunt matching-topology
+    floor only for the internal end-fed unit, and the confidence card marks
+    absolute SWR as informational with the proxy-return limitation. **EF4** is
+    next: clarify the objective and add best-SWR selection. Then EF5–EF6 in
+    order; EF7–EF9 remain blocked/deferred.
 14. Product priorities and new antenna candidates live in
     [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
@@ -1443,7 +1457,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **45**.
-- Full gate: **3,018 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **3,022 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.6.0** published on 2026-11-13 with checksum-verified unsigned

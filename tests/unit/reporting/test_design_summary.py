@@ -558,6 +558,17 @@ def test_hexbeam_evidence_rows_report_the_limitations(sample_project) -> None:
     assert "frame" in rows["Limitation"]
 
 
+def test_shortened_endfed_evidence_rows_report_model_confidence(sample_project) -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+
+    design = sample_project.designs[0].with_parameters(shortened_efhw_40_10_parameters())
+    rows = dict(design_evidence_rows(design))
+
+    assert rows["Evidence level"] == "B (published)"
+    assert "installation return" in rows["Model confidence"]
+    assert "Absolute SWR is informational" in rows["Model confidence"]
+
+
 def test_fan_dipole_summary_reports_angles_and_end_heights() -> None:
     from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
 

@@ -11204,6 +11204,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "depende del camino del coaxil/mástil/tierra."
         ),
     },
+    "endfed.warning.return_proxy": {
+        Language.ENGLISH: (
+            "The shortened EFHW uses a 0.10 m installation-return proxy, not a "
+            "physical counterpoise. Absolute SWR is informational; the real "
+            "coax/mast/earth path dominates it."
+        ),
+        Language.SPANISH: (
+            "La EFHW acortada usa un retorno de instalación proxy de 0,10 m, no "
+            "un contrapeso físico. La ROE absoluta es informativa; el camino real "
+            "del coaxil/mástil/tierra la domina."
+        ),
+    },
     "endfed.warning.matching_leakage": {
         Language.ENGLISH: (
             "Primary matching capacitor without transformer leakage: set a "

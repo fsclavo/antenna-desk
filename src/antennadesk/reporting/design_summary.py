@@ -110,12 +110,28 @@ def design_evidence_rows(
         translated = tr(key)
         return text if translated == key else translated
 
-    return (
+    rows: list[tuple[str, str]] = [
         ("Evidence level", f"{entry.level.value} ({entry.level.name.lower()})"),
         ("Evidence source", evidence_text("source", entry.source)),
         ("Evidence tolerance", evidence_text("tolerance", entry.tolerance)),
         ("Limitation", evidence_text("limitation", entry.limitation)),
-    )
+    ]
+    if isinstance(design.parameters, EndFedParameters) and design.parameters.preset in {
+        EndFedPreset.SHORTENED_80_10,
+        EndFedPreset.SHORTENED_40_10,
+    }:
+        if design.parameters.installation_return_active:
+            confidence = tr(
+                "Absolute SWR is informational. The installation return is a "
+                "model proxy, not a physical counterpoise; the real "
+                "coax/mast/earth path dominates SWR."
+            )
+        else:
+            confidence = tr(
+                "Absolute SWR is informational; the shortened preset is judged by R/X convergence."
+            )
+        rows.append(("Model confidence", confidence))
+    return tuple(rows)
 
 
 def optimization_summary_rows(design: DesignVariant) -> tuple[tuple[str, str], ...]:

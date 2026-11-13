@@ -701,6 +701,12 @@ resistance above the source reference. The warning reports the theoretical SWR
 floor and points to the transformer ratio or the antenna return path; it is not
 a request to change the published geometry. The check applies only to the
 internal end-fed network, not to project networks or other families.
+The shortened presets also show a **Model confidence** row in the Diagnostics
+confidence card and in reports. It states that absolute SWR is informational and
+that the 0.10 m installation return is a model proxy, not a physical
+counterpoise; the real coax, mast, or earth path dominates the measured SWR.
+Use **Check convergence** and the R/X spread, then verify the installed antenna
+with a VNA.
 Enable **Inverted-L bend** to model the published installation: the
 **Vertical section** is measured from the feed, the horizontal run is the
 remaining wire length, and the form shows the resulting top height. The G0KYA

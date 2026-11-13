@@ -48,6 +48,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   theoretical SWR floor. The warning is gated to the internal end-fed network,
   is excluded from the model fingerprint, and is not persisted; project
   matching networks and other families are unchanged. No schema change.
+- **Shortened-EFHW confidence warnings.** The shortened presets now flag the
+  0.10 m installation-return proxy as a model proxy, not a physical
+  counterpoise, and the results confidence card and reports add a **Model
+  confidence** row that marks absolute SWR as informational. Standard end-fed,
+  sloper, random wire, and every other family are unchanged. No solver,
+  numerical, schema, or fingerprint change.
 
 ## [0.6.0] - 2026-11-12
 

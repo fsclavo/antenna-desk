@@ -546,6 +546,11 @@ def endfed_model_warning_keys(parameters: EndFedParameters) -> tuple[str, ...]:
         keys.append("endfed.warning.feed_section")
     if parameters.effective_return_length_m <= 0.0:
         keys.append("endfed.warning.return")
+    if parameters.installation_return_active and parameters.preset in {
+        EndFedPreset.SHORTENED_80_10,
+        EndFedPreset.SHORTENED_40_10,
+    }:
+        keys.append("endfed.warning.return_proxy")
     if (
         parameters.matching_capacitance_f > 0.0
         and parameters.transformer_leakage_inductance_h <= 0.0
