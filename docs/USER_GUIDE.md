@@ -700,9 +700,15 @@ from Squash Practice's measured 49:1 transformer, not this exact build. The
 49:1 reference (2xFT114-43, 5T/30T) that adds 2.7 pF of secondary winding
 capacitance and 25.8 µH of magnetizing inductance, both referred to the primary.
 That preset is a reference build, not a measurement of your transformer. The
-common-mode choke, ground, support geometry, core/frequency-dependent loss, and
-capacitor ESR are not modeled. The 40-20-10 preset follows the 23 µH/100 pF
-schematic; CA4EMT documents a different 34 µH/150 pF variant.
+**Transformer loss** selector can add the same reference build's measured loss
+table: 0.43/0.33/0.30/0.32 dB at the 80/40/20/10 m band centers. The values are
+interpolated in log frequency between 3.75 and 28.5 MHz and clamped outside
+that range. The model is off by default, requires a 49:1 ratio, and is reported
+separately from mismatch loss and from the project balun/unun loss. It is not a
+universal loss model, and the source measured one build at 50 W FT8, not your
+transformer. The common-mode choke, ground, support geometry, capacitor ESR,
+and coax-shield loss are not modeled. The 40-20-10 preset follows the
+23 µH/100 pF schematic; CA4EMT documents a different 34 µH/150 pF variant.
 When a project matching network is active, it replaces this internal unit
 instead of cascading with it; the internal 100 pF/leakage values stay in the
 design and are marked retained, not applied.

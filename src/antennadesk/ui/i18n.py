@@ -3189,6 +3189,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Number of radial wires used to approximate the cone and disc.",
         Language.SPANISH: "Cantidad de hilos radiales usados para aproximar el cono y el disco.",
     },
+    "help.endfed.transformer_loss_model": {
+        Language.ENGLISH: (
+            "Optional measured 49:1 transformer loss table from Squash Practice; "
+            "it is separate from mismatch loss and from the project balun loss."
+        ),
+        Language.SPANISH: (
+            "Tabla opcional de pérdidas medidas del transformador 49:1 de Squash "
+            "Practice; es independiente de la pérdida por desadaptación y del "
+            "balún del proyecto."
+        ),
+    },
     "help.endfed.return_path": {
         Language.ENGLISH: (
             "Select the return conductor: legacy automatic, installation proxy, "
@@ -5722,6 +5733,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "feed_chain.balun": {
         Language.ENGLISH: "Balun",
         Language.SPANISH: "Balun",
+    },
+    "feed_chain.transformer": {
+        Language.ENGLISH: "Transformer",
+        Language.SPANISH: "Transformador",
     },
     "feed_chain.delivered": {
         Language.ENGLISH: "At antenna",
@@ -11186,6 +11201,33 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "transformador."
         ),
     },
+    "endfed.transformer_loss_model": {
+        Language.ENGLISH: "Transformer loss",
+        Language.SPANISH: "Pérdida del transformador",
+    },
+    "endfed.transformer_loss_model.none": {
+        Language.ENGLISH: "None (ideal)",
+        Language.SPANISH: "Ninguna (ideal)",
+    },
+    "endfed.transformer_loss_model.squash_practice_49_1": {
+        Language.ENGLISH: "Measured 49:1 (Squash Practice)",
+        Language.SPANISH: "49:1 medido (Squash Practice)",
+    },
+    "endfed.transformer_loss_model_hint": {
+        Language.ENGLISH: (
+            "Optional measured loss table for the 2xFT114-43, 5T/30T reference: "
+            "0.43/0.33/0.30/0.32 dB at the 80/40/20/10 m band centers. Values "
+            "are interpolated in log frequency and clamped outside 3.75-28.5 MHz. "
+            "It is a reference build, not a universal loss model."
+        ),
+        Language.SPANISH: (
+            "Tabla de pérdidas medida opcional para la referencia 2xFT114-43, "
+            "5T/30T: 0,43/0,33/0,30/0,32 dB en los centros de 80/40/20/10 m. Los "
+            "valores se interpolan en frecuencia logarítmica y se recortan fuera "
+            "de 3,75-28,5 MHz. Es una construcción de referencia, no un modelo "
+            "universal de pérdidas."
+        ),
+    },
     "endfed.matching_capacitance": {
         Language.ENGLISH: "Matching capacitor (primary)",
         Language.SPANISH: "Capacitor de adaptación (primario)",
@@ -14874,12 +14916,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "results.link_summary": {
         Language.ENGLISH: (
-            "Mismatch {mismatch} · line {line} · network {network} · balun {balun} "
-            "at {frequency} MHz"
+            "Mismatch {mismatch} · line {line} · network {network} · balun {balun} · "
+            "transformer {transformer} at {frequency} MHz"
         ),
         Language.SPANISH: (
-            "Desadaptación {mismatch} · línea {line} · red {network} · balun {balun} "
-            "a {frequency} MHz"
+            "Desadaptación {mismatch} · línea {line} · red {network} · balun {balun} · "
+            "transformador {transformer} a {frequency} MHz"
         ),
     },
     "results.summary": {

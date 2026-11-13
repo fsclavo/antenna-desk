@@ -430,6 +430,7 @@ _CONTEXT_FIELDS = {
     "counterpoise_height_m",
     "transformer_ratio",
     "transformer_model",
+    "transformer_loss_model",
     "return_path",
     "element_count",
     "radial_count",

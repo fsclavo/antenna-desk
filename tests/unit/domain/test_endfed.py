@@ -712,6 +712,36 @@ def test_measured_transformer_model_requires_the_49_to_1_ratio() -> None:
         )
 
 
+def test_measured_transformer_loss_is_optional_and_source_backed() -> None:
+    from antennadesk.domain.antennas.endfed import (
+        EndFedTransformerLossModel,
+        shortened_efhw_40_10_parameters,
+    )
+
+    default = shortened_efhw_40_10_parameters()
+    measured = replace(
+        default,
+        transformer_loss_model=EndFedTransformerLossModel.SQUASH_PRACTICE_49_1,
+    )
+
+    assert default.transformer_loss is None
+    assert measured.transformer_loss is not None
+    assert measured.transformer_loss.loss_db(14_175_000.0) == pytest.approx(0.30)
+    assert "Squash Practice" in measured.transformer_loss.source
+
+
+def test_measured_transformer_loss_requires_the_49_to_1_ratio() -> None:
+    from antennadesk.domain.antennas.endfed import EndFedTransformerLossModel
+
+    with pytest.raises(ValueError, match="49:1"):
+        EndFedParameters(
+            frequency_hz=7_100_000.0,
+            length_m=20.0,
+            transformer_ratio=36.0,
+            transformer_loss_model=EndFedTransformerLossModel.SQUASH_PRACTICE_49_1,
+        )
+
+
 def test_standard_endfed_has_no_matching_network_by_default() -> None:
     from antennadesk.domain.antennas.endfed import endfed_matching_network
 

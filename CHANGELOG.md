@@ -15,6 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   corrosion-resistant use case; the solver emits conductivity through `LD 5`
   and does not trigger the permeability warning. Copper remains the default and
   the project schema is unchanged.
+- **Optional measured 49:1 transformer loss.** The End-fed editor can apply
+  Squash Practice/AF7NX's measured loss table for the 2xFT114-43, 5T/30T
+  reference: 0.43/0.33/0.30/0.32 dB at the 80/40/20/10 m band centers. Values
+  are interpolated in log frequency between 3.75 and 28.5 MHz and clamped
+  outside that range. The model is off by default, requires a 49:1 ratio, and
+  is reported separately from mismatch loss and the project balun/unun loss.
+  Schema 48 persists the selector and the per-frequency transformer loss; CSV,
+  feed-chain, results, and report rows expose it. It is a reference build, not
+  a universal transformer loss model; common-mode choke and coax-shield loss
+  remain unmodeled.
 - **Selectable end-fed return path.** The End-fed editor now offers
   **Automatic (legacy)**, **Installation proxy**, **Counterpoise**, and
   **Coax shield** return paths. Counterpoise and coax shield use the existing

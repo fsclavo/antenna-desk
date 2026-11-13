@@ -98,6 +98,7 @@ class FrequencyResult:
     feed_line_loss_db: float | None = None
     network_loss_db: float | None = None
     balun_loss_db: float | None = None
+    transformer_loss_db: float | None = None
 
 
 @dataclass(frozen=True, slots=True)

@@ -29,6 +29,7 @@ class LinkBudget:
     feed_line_loss_db: float
     network_loss_db: float
     balun_loss_db: float
+    transformer_loss_db: float = 0.0
     matching_network_topology_floor_swr: float | None = None
 
 
@@ -108,6 +109,11 @@ def link_budget(
         if spec.balun_loss is not None and spec.balun_loss.is_active
         else 0.0
     )
+    transformer_loss_db = (
+        spec.transformer_loss.loss_db(frequency_hz)
+        if spec.transformer_loss is not None and spec.transformer_loss.is_active
+        else 0.0
+    )
     feed_line_loss_db = (
         dissipative_loss_db(
             line.abcd(frequency_hz),
@@ -145,10 +151,12 @@ def link_budget(
                 load_impedance_ohm,
             )
             - balun_loss_db
+            - transformer_loss_db
         ),
         mismatch_loss_db=mismatch_loss_db,
         feed_line_loss_db=feed_line_loss_db,
         network_loss_db=network_loss_db,
         balun_loss_db=balun_loss_db,
+        transformer_loss_db=transformer_loss_db,
         matching_network_topology_floor_swr=topology_floor_swr,
     )

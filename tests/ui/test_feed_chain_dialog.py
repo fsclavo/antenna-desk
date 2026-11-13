@@ -26,6 +26,7 @@ def _result_with_losses():
         feed_line_loss_db=1.5,
         network_loss_db=0.3,
         balun_loss_db=0.5,
+        transformer_loss_db=0.4,
     )
     return replace(base, frequencies=(frequency,))
 
@@ -53,8 +54,9 @@ def test_feed_chain_dialog_shows_the_path_and_loss_table(
     assert "matching network (shack)" in dialog._path.text()
     assert dialog._table.rowCount() == 1
     assert dialog._table.item(0, 3).text() == "1.50 dB"
-    assert dialog._table.item(0, 8).text() == "Line"
-    assert "56.23 W" in dialog._table.item(0, 6).text()
+    assert dialog._table.item(0, 6).text() == "0.40 dB"
+    assert dialog._table.item(0, 9).text() == "Line"
+    assert "51.29 W" in dialog._table.item(0, 7).text()
 
 
 def test_feed_chain_dialog_uses_the_feedpoint_path(
@@ -94,3 +96,4 @@ def test_feed_chain_dialog_retranslates(
 
     assert dialog.windowTitle() == "Presupuesto de pérdidas de la cadena"
     assert dialog._table.horizontalHeaderItem(3).text() == "Línea"
+    assert dialog._table.horizontalHeaderItem(6).text() == "Transformador"

@@ -733,6 +733,37 @@ def _migrate_v46_to_v47(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v47_to_v48(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the optional end-fed transformer loss model and result loss row."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if not isinstance(project, dict):
+        return migrated
+    designs = project.get("designs")
+    if isinstance(designs, list):
+        for design in designs:
+            if not isinstance(design, dict) or design.get("antenna_type") != "endfed":
+                continue
+            parameters = design.get("parameters")
+            if isinstance(parameters, dict):
+                parameters.setdefault("transformer_loss_model", "none")
+    runs = project.get("simulation_runs")
+    if isinstance(runs, list):
+        for run in runs:
+            if not isinstance(run, dict):
+                continue
+            result = run.get("result")
+            if not isinstance(result, dict):
+                continue
+            frequencies = result.get("frequencies")
+            if isinstance(frequencies, list):
+                for frequency in frequencies:
+                    if isinstance(frequency, dict):
+                        frequency.setdefault("transformer_loss_db", None)
+    return migrated
+
+
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
@@ -780,6 +811,7 @@ MIGRATIONS: dict[int, Migration] = {
     44: _migrate_v44_to_v45,
     45: _migrate_v45_to_v46,
     46: _migrate_v46_to_v47,
+    47: _migrate_v47_to_v48,
 }
 
 

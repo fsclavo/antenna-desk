@@ -12,7 +12,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..domain.antennas.antenna import AntennaModel
-from ..domain.antennas.balun import BalunLoss
+from ..domain.antennas.balun import BalunLoss, LossPoint
 from ..domain.antennas.beverage import ANTENNA_TYPE_BEVERAGE, BeverageParameters
 from ..domain.antennas.biquad import (
     ANTENNA_TYPE_BIQUAD,
@@ -33,6 +33,7 @@ from ..domain.antennas.endfed import (
     EndFedParameters,
     EndFedPreset,
     EndFedReturnPath,
+    EndFedTransformerLossModel,
     EndFedTransformerModel,
 )
 from ..domain.antennas.fan_dipole import (
@@ -658,6 +659,7 @@ class EndFedParametersPayload(StrictModel):
     ground: GroundPayload
     transformer_ratio: float = Field(default=1.0, gt=0.0)
     transformer_model: EndFedTransformerModel = EndFedTransformerModel.IDEAL
+    transformer_loss_model: EndFedTransformerLossModel = EndFedTransformerLossModel.NONE
     matching_capacitance_f: float = Field(default=0.0, ge=0.0)
     transformer_leakage_inductance_h: float = Field(default=0.0, ge=0.0)
     counterpoise_length_m: float = Field(default=0.0, ge=0.0)
@@ -762,11 +764,18 @@ class FeedLinePayload(StrictModel):
     matched_loss_db_per_100m: float = Field(default=0.0, ge=0.0)
 
 
+class LossPointPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    loss_db: float = Field(ge=0.0)
+
+
 class BalunLossPayload(StrictModel):
     enabled: bool = True
     reference_frequency_hz: float = Field(default=7_000_000.0, gt=0.0)
     reference_loss_db: float = Field(default=0.5, ge=0.0)
     exponent: float = Field(default=0.5, ge=0.0)
+    points: list[LossPointPayload] = Field(default_factory=list)
+    source: str = ""
 
 
 class LNetworkPayload(StrictModel):
@@ -817,6 +826,7 @@ class SimulationSpecPayload(StrictModel):
     matching_network: LNetworkPayload | None = None
     matching_network_position: MatchingNetworkPosition = MatchingNetworkPosition.FEEDPOINT
     balun_loss: BalunLossPayload | None = None
+    transformer_loss: BalunLossPayload | None = None
     feed_transformer_ratio: float = Field(default=1.0, gt=0.0)
     timeout_s: float = Field(default=60.0, gt=0.0)
 
@@ -904,6 +914,7 @@ class FrequencyResultPayload(StrictModel):
     feed_line_loss_db: float | None = None
     network_loss_db: float | None = None
     balun_loss_db: float | None = None
+    transformer_loss_db: float | None = None
 
 
 class SimulationResultPayload(StrictModel):
@@ -1904,6 +1915,7 @@ def _endfed_parameters_from_domain(value: EndFedParameters) -> EndFedParametersP
         ground=_ground_from_domain(value.ground),
         transformer_ratio=value.transformer_ratio,
         transformer_model=value.transformer_model,
+        transformer_loss_model=value.transformer_loss_model,
         matching_capacitance_f=value.matching_capacitance_f,
         transformer_leakage_inductance_h=value.transformer_leakage_inductance_h,
         counterpoise_length_m=value.counterpoise_length_m,
@@ -2037,6 +2049,11 @@ def _balun_loss_from_domain(value: BalunLoss) -> BalunLossPayload:
         reference_frequency_hz=value.reference_frequency_hz,
         reference_loss_db=value.reference_loss_db,
         exponent=value.exponent,
+        points=[
+            LossPointPayload(frequency_hz=point.frequency_hz, loss_db=point.loss_db)
+            for point in value.points
+        ],
+        source=value.source,
     )
 
 
@@ -2129,6 +2146,9 @@ def _simulation_spec_from_domain(value: SimulationSpec) -> SimulationSpecPayload
         ),
         matching_network_position=value.matching_network_position,
         balun_loss=_balun_loss_from_domain(value.balun_loss) if value.balun_loss else None,
+        transformer_loss=(
+            _balun_loss_from_domain(value.transformer_loss) if value.transformer_loss else None
+        ),
         feed_transformer_ratio=value.feed_transformer_ratio,
         timeout_s=value.timeout_s,
     )
@@ -2249,6 +2269,7 @@ def _frequency_result_from_domain(value: FrequencyResult) -> FrequencyResultPayl
         feed_line_loss_db=value.feed_line_loss_db,
         network_loss_db=value.network_loss_db,
         balun_loss_db=value.balun_loss_db,
+        transformer_loss_db=value.transformer_loss_db,
     )
 
 
@@ -3168,6 +3189,7 @@ def _endfed_parameters_to_domain(value: EndFedParametersPayload) -> EndFedParame
         ground=_ground_to_domain(value.ground),
         transformer_ratio=value.transformer_ratio,
         transformer_model=value.transformer_model,
+        transformer_loss_model=value.transformer_loss_model,
         matching_capacitance_f=value.matching_capacitance_f,
         transformer_leakage_inductance_h=value.transformer_leakage_inductance_h,
         counterpoise_length_m=value.counterpoise_length_m,
@@ -3296,6 +3318,11 @@ def _balun_loss_to_domain(value: BalunLossPayload) -> BalunLoss:
         reference_frequency_hz=value.reference_frequency_hz,
         reference_loss_db=value.reference_loss_db,
         exponent=value.exponent,
+        points=tuple(
+            LossPoint(frequency_hz=point.frequency_hz, loss_db=point.loss_db)
+            for point in value.points
+        ),
+        source=value.source,
     )
 
 
@@ -3357,6 +3384,9 @@ def _simulation_spec_to_domain(value: SimulationSpecPayload) -> SimulationSpec:
         ),
         matching_network_position=value.matching_network_position,
         balun_loss=_balun_loss_to_domain(value.balun_loss) if value.balun_loss else None,
+        transformer_loss=(
+            _balun_loss_to_domain(value.transformer_loss) if value.transformer_loss else None
+        ),
         feed_transformer_ratio=value.feed_transformer_ratio,
         timeout_s=value.timeout_s,
     )
@@ -3440,6 +3470,7 @@ def _frequency_result_to_domain(value: FrequencyResultPayload) -> FrequencyResul
         feed_line_loss_db=value.feed_line_loss_db,
         network_loss_db=value.network_loss_db,
         balun_loss_db=value.balun_loss_db,
+        transformer_loss_db=value.transformer_loss_db,
     )
 
 

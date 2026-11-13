@@ -29,6 +29,7 @@ from ...domain.antennas.endfed import (
     EndFedParameters,
     EndFedPreset,
     EndFedReturnPath,
+    EndFedTransformerLossModel,
     EndFedTransformerModel,
     efhw_parameters,
     endfed_model_warning_keys,
@@ -136,6 +137,18 @@ class EndFedForm(QWidget):
             )
         self._transformer_model.setToolTip(translator.t("endfed.transformer_model_hint"))
         self._transformer_model.currentIndexChanged.connect(self._transformer_model_changed)
+
+        self._transformer_loss_model = QComboBox(self)
+        for loss_model in EndFedTransformerLossModel:
+            self._transformer_loss_model.addItem(
+                translator.t(f"endfed.transformer_loss_model.{loss_model.value}"),
+                loss_model.value,
+            )
+        self._transformer_loss_model.setToolTip(translator.t("endfed.transformer_loss_model_hint"))
+        self._transformer_loss_model.currentIndexChanged.connect(
+            self._transformer_loss_model_changed
+        )
+        self._transformer.valueChanged.connect(self._transformer_ratio_changed)
 
         self._matching_capacitance = QDoubleSpinBox(self)
         self._matching_capacitance.setRange(0.0, 100_000.0)
@@ -347,6 +360,10 @@ class EndFedForm(QWidget):
             self._transformer_model,
         )
         form.addRow(
+            self._labels.label("endfed.transformer_loss_model"),
+            self._transformer_loss_model,
+        )
+        form.addRow(
             self._labels.label("endfed.matching_capacitance"),
             self._matching_capacitance,
         )
@@ -453,6 +470,17 @@ class EndFedForm(QWidget):
                 self._translator.t(f"endfed.transformer_model.{model.value}"),
             )
         self._transformer_model.setToolTip(self._translator.t("endfed.transformer_model_hint"))
+        for index in range(self._transformer_loss_model.count()):
+            loss_model = EndFedTransformerLossModel(
+                str(self._transformer_loss_model.itemData(index))
+            )
+            self._transformer_loss_model.setItemText(
+                index,
+                self._translator.t(f"endfed.transformer_loss_model.{loss_model.value}"),
+            )
+        self._transformer_loss_model.setToolTip(
+            self._translator.t("endfed.transformer_loss_model_hint")
+        )
         self._matching_override.setText(self._translator.t("endfed.matching_override"))
         self._matching_override_edit.setText(self._translator.t("feed_matching.edit"))
         self._matching_override_remove.setText(self._translator.t("feed_matching.remove"))
@@ -800,6 +828,11 @@ class EndFedForm(QWidget):
             model_index = self._transformer_model.findData(parameters.transformer_model.value)
             if model_index >= 0:
                 self._transformer_model.setCurrentIndex(model_index)
+            loss_model_index = self._transformer_loss_model.findData(
+                parameters.transformer_loss_model.value
+            )
+            if loss_model_index >= 0:
+                self._transformer_loss_model.setCurrentIndex(loss_model_index)
             self._matching_capacitance.setValue(parameters.matching_capacitance_f * 1e12)
             self._transformer_leakage.setValue(parameters.transformer_leakage_inductance_h * 1e6)
             self._loading_coil_group.setChecked(parameters.loading_coil_enabled)
@@ -1016,6 +1049,9 @@ class EndFedForm(QWidget):
     def _selected_transformer_model(self) -> EndFedTransformerModel:
         return EndFedTransformerModel(str(self._transformer_model.currentData()))
 
+    def _selected_transformer_loss_model(self) -> EndFedTransformerLossModel:
+        return EndFedTransformerLossModel(str(self._transformer_loss_model.currentData()))
+
     def _transformer_model_changed(self, *_args: object) -> None:
         if self._updating:
             return
@@ -1023,6 +1059,23 @@ class EndFedForm(QWidget):
             self._transformer.setValue(49.0)
         self._update_matching_override()
         self._emit_changed()
+
+    def _transformer_loss_model_changed(self, *_args: object) -> None:
+        if self._updating:
+            return
+        if (
+            self._selected_transformer_loss_model()
+            is EndFedTransformerLossModel.SQUASH_PRACTICE_49_1
+        ):
+            self._transformer.setValue(49.0)
+        self._emit_changed()
+
+    def _transformer_ratio_changed(self, *_args: object) -> None:
+        if self._updating or math.isclose(self._transformer.value(), 49.0):
+            return
+        index = self._transformer_loss_model.findData(EndFedTransformerLossModel.NONE.value)
+        if index >= 0 and self._transformer_loss_model.currentIndex() != index:
+            self._transformer_loss_model.setCurrentIndex(index)
 
     def parameters(self) -> EndFedParameters:
         return EndFedParameters(
@@ -1046,6 +1099,7 @@ class EndFedForm(QWidget):
             ground=self._ground_model(),
             transformer_ratio=self._transformer.value(),
             transformer_model=self._selected_transformer_model(),
+            transformer_loss_model=self._selected_transformer_loss_model(),
             matching_capacitance_f=self._matching_capacitance.value() * 1e-12,
             transformer_leakage_inductance_h=(self._transformer_leakage.value() * 1e-6),
             return_path=self._selected_return_path(),

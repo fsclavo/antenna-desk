@@ -4599,6 +4599,7 @@ class MainWindow(QMainWindow):
             ),
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
             feed_transformer_ratio=parameters.transformer_ratio,
+            transformer_loss=parameters.transformer_loss,
             matching_network=matching_network,
             matching_network_origin=(
                 MatchingNetworkOrigin.INTERNAL_ENDFED
@@ -7210,6 +7211,7 @@ class MainWindow(QMainWindow):
             updates.update(
                 preset=previous.preset,
                 transformer_ratio=previous.transformer_ratio,
+                transformer_loss_model=previous.transformer_loss_model,
                 return_path=previous.return_path,
                 installation_return_length_m=previous.installation_return_length_m,
                 counterpoise_length_m=previous.counterpoise_length_m,

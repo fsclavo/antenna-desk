@@ -263,6 +263,16 @@ transformer, not a measurement of the exact preset build. An active
 project-level matching network overrides this internal unit; the two networks
 are not cascaded. See
 [ADR-0028](ADR/0028-matching-network-precedence.md).
+
+`transformer_loss_model` is an optional, separate post-processing loss model.
+`none` is the default. `squash_practice_49_1` applies the measured
+2xFT114-43, 5T/30T loss table at the 80/40/20/10 m band centers (0.43, 0.33,
+0.30, and 0.32 dB), interpolated linearly in log frequency between 3.75 and
+28.5 MHz and clamped to the endpoint values outside that range. It requires a
+49:1 ratio and is reported as `transformer_loss_db`, separate from mismatch
+loss and from the project `BalunLoss`. The source measured a reference build
+at 50 W FT8 (21 W average), not the user's transformer; the exact spot
+frequencies are not published, so the values are assigned to band centers.
 `transformer_model` selects the ideal ratio or the optional measured
 `SQUASH_PRACTICE_49_1` reference. The measured model adds 2.7 pF of secondary
 winding capacitance referred to the primary and 25.8 µH of magnetizing

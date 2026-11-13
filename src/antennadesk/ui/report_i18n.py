@@ -449,6 +449,8 @@ REPORT_SPANISH: dict[str, str] = {
     "Total length": "Longitud total",
     "Total wire length": "Longitud total del hilo",
     "Transformer": "Transformador",
+    "Transformer loss": "Pérdida del transformador",
+    "measured 49:1 (Squash Practice)": "49:1 medido (Squash Practice)",
     "Matching capacitor": "Capacitor de adaptación",
     "Transformer leakage": "Fuga del transformador",
     "Project matching": "Adaptación del proyecto",

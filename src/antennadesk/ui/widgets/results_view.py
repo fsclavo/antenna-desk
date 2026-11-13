@@ -2204,6 +2204,7 @@ class ResultsView(QWidget):
                 frequency.feed_line_loss_db,
                 frequency.network_loss_db,
                 frequency.balun_loss_db,
+                frequency.transformer_loss_db,
             )
         if all(metric is None for metric in metrics):
             return ""
@@ -2227,6 +2228,7 @@ class ResultsView(QWidget):
             line=value(frequency.feed_line_loss_db, "dB"),
             network=value(frequency.network_loss_db, "dB"),
             balun=value(frequency.balun_loss_db, "dB"),
+            transformer=value(frequency.transformer_loss_db, "dB"),
         )
         return f"{first} · {second}"
 

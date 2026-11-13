@@ -300,6 +300,9 @@ def normalize_nec2_result(
                     link.network_loss_db if math.isfinite(link.network_loss_db) else None
                 ),
                 balun_loss_db=(link.balun_loss_db if math.isfinite(link.balun_loss_db) else None),
+                transformer_loss_db=(
+                    link.transformer_loss_db if math.isfinite(link.transformer_loss_db) else None
+                ),
             )
         )
 

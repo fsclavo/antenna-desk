@@ -69,9 +69,9 @@ external service and must not be invented or simulated into existence.
 | ~~G22~~ | ~~Shortened loaded EFHW presets~~ | M | none | **Done 2026-11-09:** added 80-10 m (20.35 m + 110 µH + 2.39 m) and 40-20-10 m (10.01 m + 23 µH + 1.85 m) end-fed presets with a 49:1 transformer, editable series loading coil, schema 31, catalog routes, editor, band plans, evidence, construction notes, and optimizer variables. Matching unit, capacitor, choke, ground, and the inverted-L bend remain limitations. |
 | ~~G23~~ | ~~EFHW feed-section and convergence model~~ | M | G22 | **Done 2026-11-10:** end-fed designs use a fixed 0.5 m feed section (three segments, part of the same wire) and, when no real counterpoise is enabled, a 0.10 m installation-return proxy for the coax/mast/earth path. The proxy is modeled but not drawn or included in the wire schedule/BOM; the shortened EFHW presets use it by default. The editor warns about legacy/no-return models and provides **Check convergence** over 10/21/51 radiator segments; the check keeps the normal three-segment minimum on auxiliary wires so the shortened presets complete instead of failing with negative resistance. Schema 32 migrates older projects with both fields at zero. |
 | ~~G24~~ | ~~Fixed loading-coil node for the shortened EFHW~~ | M | G22, G23 | **Done 2026-11-10:** the radiator is split at the published coil offset into lower, coil, and top sections. The coil section is a fixed 0.10 m partition with three segments and the series load at its center, so changing the radiator segmentation no longer moves the coil. The convergence check distributes its 10/21/51 radiator counts between the lower and top sections while keeping the coil node fixed. The wire schedule and BOM merge the feed/coil/top partitions into one physical conductor, and the scene keeps a load marker at the coil. Tests cover the geometry, segmentation split, fallback when the coil is inside the feed section, wire schedule/BOM, persistence, scene contracts, and NEC2C convergence. |
-| ~~G25~~ | ~~Model the 49:1 matching unit and primary 100 pF capacitor~~ | L | G24; traceable transformer data/measurement; 40-20-10 schematic | **Done 2026-11-10 with limitations:** the 100 pF capacitor is confirmed as a shunt across the transformer primary (G0KYA; K1RF; G4AON; PA0EJH/PA3HHO describe the input side) and is modeled through `PiNetwork` as an input shunt plus series leakage, never as a series load in the radiator. Schema 33 adds `matching_capacitance_f` and `transformer_leakage_inductance_h`; older projects migrate with both at zero, and new shortened presets start at 100 pF and 0.198 µH. The leakage value is a starting estimate from Squash Practice's measured 49:1 transformer, not the exact preset build; core loss, capacitor ESR, winding capacitance, the choke, ground, and the inverted-L bend remain unmodeled. UI hints, summaries, construction notes, evidence, and tests are updated; the published SWR remains a trend, not a hard reference. |
+| ~~G25~~ | ~~Model the 49:1 matching unit and primary 100 pF capacitor~~ | L | G24; traceable transformer data/measurement; 40-20-10 schematic | **Done 2026-11-10 with limitations:** the 100 pF capacitor is confirmed as a shunt across the transformer primary (G0KYA; K1RF; G4AON; PA0EJH/PA3HHO describe the input side) and is modeled through `PiNetwork` as an input shunt plus series leakage, never as a series load in the radiator. Schema 33 adds `matching_capacitance_f` and `transformer_leakage_inductance_h`; older projects migrate with both at zero, and new shortened presets start at 100 pF and 0.198 µH. The leakage value is a starting estimate from Squash Practice's measured 49:1 transformer, not the exact preset build; capacitor ESR, winding capacitance, the choke, ground, and the inverted-L bend remain unmodeled. Core loss is now available as an optional measured table in EF7b. UI hints, summaries, construction notes, evidence, and tests are updated; the published SWR remains a trend, not a hard reference. |
 | ~~G26~~ | ~~Inverted-L option for the shortened EFHW~~ | M | G24 | **Done 2026-11-11:** added optional `bend_enabled`/`bend_vertical_length_m` fields with schema 35. The End-fed editor offers **Inverted-L bend**, a vertical section measured from the feed, and a derived horizontal run that preserves the total wire length; the straight horizontal installation remains the default. The G0KYA starting installation is about 8 m vertical and 15 m horizontal, and the model uses a sharp 90° corner. The scene, dimensions, wire schedule/BOM, design summary, construction sheet, optimizer variable/constraints, evidence, and validation notes are updated. Tests cover geometry, validation, persistence/migration, scene, schedule, reports, optimizer, and editor behavior. |
-| G27 | Optional transformer, common-mode choke, and coaxial loss models | L | G25; measured transformer insertion loss/core data; common-mode current model or measurement; manufacturer coax attenuation data | **Blocked/deferred as a whole until measurements or traceable datasets exist. Do not ship a partial slice.** Scope: (1) frequency-dependent coax attenuation with source/provenance and interpolation only inside the documented range, reusing `FeedLine`; (2) measured transformer insertion-loss table or fit, reusing `BalunLoss`, plus optional analytical ferrite core loss (KN5L) only with complex permeability, core geometry, winding, load, and excitation data; (3) common-mode choke characterization (G3TXQ-style `Zcm(f)`) without counting `Rcm` as differential loss unless a common-mode current model or measurement exists; (4) a power-budget and evidence audit that prevents double counting with NEC conductor loss and preserves ideal behavior when every optional loss is disabled. All loss fields stay optional and off/zero by default; no invented loss numbers. |
+| G27 | Optional transformer, common-mode choke, and coaxial loss models | L | G25; measured transformer insertion loss/core data; common-mode current model or measurement; manufacturer coax attenuation data | **Partially delivered as EF7b.** The transformer insertion-loss table now reuses `BalunLoss` with provenance, log-frequency interpolation, endpoint clamping, and a separate `transformer_loss_db` result field. Still blocked/deferred: (1) frequency-dependent coax attenuation with manufacturer data, reusing `FeedLine`; (2) analytical ferrite core loss only with complex permeability, core geometry, winding, load, and excitation data; (3) common-mode choke characterization (G3TXQ-style `Zcm(f)`) without counting `Rcm` as differential loss; (4) the remaining power-budget and evidence audit for coax/choke losses. All loss fields stay optional and off/zero by default; no invented loss numbers. |
 | ~~G28~~ | ~~Shortened EFHW convergence and optimizer policy~~ | M | G24, G25 | **Done 2026-11-10:** shortened presets use an impedance-only convergence verdict: absolute R spread up to 1 Ω and X spread up to 10 Ω; SWR is shown as informational because the matching unit is not fully modeled. With the current model the 80-10 preset is impedance-converged and the 40-20-10 preset remains R/X-sensitive. The matching capacitor and transformer leakage stay as optimizer context values; the optimizer dialog states that they are not optimized until a measured transformer model is available. Unit, UI, optimizer-registry, and NEC2C integration tests cover the policy; the published SWR remains a trend and the evidence level is unchanged. |
 | ~~E4~~ | ~~Diagnose high-radial phased-array runtime and numerical validity~~ | S–M | C1 | **Done 2026-11-08:** 4×36 quarter-wave radial screens produced 267 wire crossings, 890 segments, 25.3 s, and negative primary resistance. Halving the radial length or using 2 m radials removed the crossings and completed. The editor now warns when `2 × radial length > element spacing`; ideal-source power absorption remains documented separately. |
 | ~~E5~~ | ~~Diagnose low CPU during family optimization~~ | S | none | **Done 2026-11-10:** the nec2c adapter slept 50 ms per solver run even when `nec2c` finished in about 1 ms. It now uses `Popen.wait(timeout=...)`, which returns as soon as the child exits and keeps the interval only for cancellation checks. A 226-evaluation dipole optimization went from 11.8 s to 0.47 s on one worker and from 5.2 s to 0.30 s on four. Local-search batching was measured and reverted: it did not reduce wall time and changed evaluation counts. |
@@ -129,7 +129,7 @@ external service and must not be invented or simulated into existence.
 | ~~EF5~~ | ~~Recommend action when the optimizer optimum hits a search bound~~ | S | EF1 | **Done 2026-11-13:** added `variables_at_bounds()` in the optimizer variable module and a descriptor opt-in flag. The shortened EFHW descriptors set the flag; their summaries name the continuous unlocked variables within 1 % of a bound and recommend widening the range only when buildable. No automatic bound expansion; other families keep the previous recommendation set. |
 | ~~EF6~~ | ~~Investigate 40-10 shortened-EFHW convergence~~ | M | EF1, EF3 | **Done 2026-11-13:** spike completed; no model change is justified without a traceable reference. Coil segment count 1–5 at the 0.10 m section does not remove the R/X sensitivity. A wider 0.20–0.50 m section makes 40-10 converge but makes 80-10 substantially worse, so there is no single section length that improves both. The preset keeps its R/X convergence check and gains an explicit editor warning that absolute SWR is informational. Thresholds were not relaxed. |
 | ~~EF7a~~ | ~~Measured 49:1 transformer reactive preset~~ | M | EF6 | **Done 2026-11-13:** added an optional `EndFedTransformerModel` preset using Squash Practice's measured 2xFT114-43, 5T/30T build: 198 nH leakage, 2.7 pF secondary winding capacitance, and 25.8 µH magnetizing inductance. The model is selectable in the editor, persisted in schema 46, and used by the internal matching network only; core/frequency-dependent loss remains EF7b. No optimizer variables were added. |
-| EF7b | Measured transformer loss and frequency dependence | L | EF7a; measured loss data | **Partially unblocked.** Squash Practice reports 0.30–0.43 dB transmission loss from 80–10 m and KN5L reports ~0.3 dB core loss at 14 MHz/20 W. Add a frequency-dependent transformer loss table/model with provenance, interpolation limits, and a clear separation from mismatch loss. Do not treat it as a universal transformer loss. |
+| ~~EF7b~~ | ~~Measured transformer loss and frequency dependence~~ | L | EF7a; measured loss data | **Done 2026-11-13:** added the optional `EndFedTransformerLossModel` selector with the Squash Practice/AF7NX 2xFT114-43, 5T/30T table: 0.43/0.33/0.30/0.32 dB at the 80/40/20/10 m band centers. Values are interpolated linearly in log frequency between 3.75 and 28.5 MHz and clamped outside; the source measured one reference build at 50 W FT8, so this is not a universal loss model. The loss is off by default, requires a 49:1 ratio, and is reported as `transformer_loss_db`, separate from mismatch loss and the project `BalunLoss`. Schema 48 persists the selector and the per-frequency loss; CSV, feed-chain, results, construction sheet, and EN/ES help expose it. KN5L's ~0.3 dB core-loss data is cited as corroboration, not used to invent extra frequency points. |
 | ~~EF8a~~ | ~~User-selectable end-fed return path~~ | M | EF3 | **Done 2026-11-13:** added `EndFedReturnPath` (`auto`, `installation_proxy`, `counterpoise`, `coax_shield`) and persisted it in schema 47. `auto` preserves the legacy counterpoise-or-proxy behavior; counterpoise and coax shield use the existing return length/height/azimuth fields, with the shield as a model-only straight-wire approximation. The optimizer searches the return length for counterpoise/coax and keeps the height variable only for a physical counterpoise. The editor, reports, construction sheet, scene note, and EN/ES help state that common-mode choking and shield transfer impedance are not modeled. No solver change for other families. |
 | EF8 | Common-mode return / coax-shield model for end-fed antennas | L | measurement or validated common-mode model | **Partially unblocked by EF8a.** The user can now select the return conductor, but the full common-mode choke and coax-shield electrical model remains blocked on a traceable measurement or validated model. EF8a's coax shield is a wire approximation, not a validated shield model; do not optimize the installation proxy as if it were a physical radial. Requires an ADR and validation. |
 | EF9 | Design-specific matching-network optimization | L | EF7b, EF8, ADR | **Blocked/deferred.** The current project matching network is global and replaces the internal EFHW unit (ADR-0028). A design-specific L/Pi/T network with optimizer variables is the only coherent way to let the optimizer tune a match; it requires an ADR, schema, UI, and regression coverage. Do not add loose C/L variables to the fixed input-shunt network. |
@@ -149,7 +149,8 @@ UX27 and UX28 were added the same day from terminology feedback; UX27 and UX28
 were completed on 2026-11-13.
 UX29 was added and completed the same day from feed-connection feedback.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
-EF1–EF6 and EF7a are implemented; EF7b–EF9 remain blocked/deferred.
+EF1–EF6, EF7a, EF7b, and EF8a are implemented; EF8's full common-mode model and
+EF9 remain blocked/deferred.
 
 The first slice accepts these constraints:
 
@@ -1081,9 +1082,9 @@ scaling QA remains manual.
 
 ## EF1–EF9 — Shortened-EFHW optimizer and model-confidence queue (2026-11-13)
 
-**EF1–EF6 and EF7a are implemented on 2026-11-13.** EF7b–EF9 are blocked or
-deferred until a measured transformer loss model, a common-mode return model, or
-a design-specific matching-network ADR exists. The ordered plan is:
+**EF1–EF6, EF7a, EF7b, and EF8a are implemented on 2026-11-13.** EF8's full
+common-mode model and EF9 are blocked or deferred until a validated return model
+or a design-specific matching-network ADR exists. The ordered plan is:
 
 | ID | Scope | Why it is separate |
 |---|---|---|
@@ -1094,7 +1095,7 @@ a design-specific matching-network ADR exists. The ordered plan is:
 | EF5 | Recommend action when an optimum hits a search bound | Optimizer guardrail gated by descriptor |
 | EF6 | Investigate 40-10 convergence | Needs a segment/load-placement spike before changing the model |
 | EF7a | Measured 49:1 transformer reactive preset | Implemented from Squash Practice measurements |
-| EF7b | Measured transformer loss and frequency dependence | Partially unblocked; needs loss-table scope |
+| EF7b | Measured transformer loss and frequency dependence | Implemented from the Squash Practice band-loss table |
 | EF8a | User-selectable end-fed return path | Implemented; `auto` preserves legacy behavior |
 | EF8 | Common-mode return / coax-shield model | Partially unblocked by EF8a; full electrical model still blocked |
 | EF9 | Design-specific matching-network optimization | Follow-up to ADR-0028; needs EF7/EF8 |
@@ -1257,10 +1258,11 @@ The existing NEC2C integration test continues to assert that 80-10 converges and
   primary-referred shunt/series network. The preset is clearly labeled as a
   reference build, not the user's transformer; the external 100 pF capacitor
   remains separate. Schema 46 adds the persisted model selector.
-- **EF7b:** measured transformer loss and frequency dependence. Add a loss table
-  or fit from the Squash Practice 0.30–0.43 dB measurements and KN5L's ~0.3 dB
-  core-loss data, with interpolation limits and no double counting with
-  mismatch loss.
+- **EF7b:** measured transformer loss and frequency dependence. Implemented as
+  an optional Squash Practice/AF7NX table at the 80/40/20/10 m band centers,
+  with log-frequency interpolation, endpoint clamping, a 49:1 requirement, and
+  a separate `transformer_loss_db` result field. KN5L's ~0.3 dB core-loss data
+  corroborates the magnitude but was not used to add frequency points.
 - **EF8:** common-mode return / coax-shield model. EF8a adds the selectable
   return path and a model-only coax-shield wire approximation. The full
   electrical model still requires a traceable measurement or validated
@@ -1478,18 +1480,18 @@ model and solver contract must land first.
 12. **UX29 is complete.** The read-only constructive feed connection is closed.
     Do not change `FeedPoint`, the NEC deck, the solver, or the schema without a
     new ADR.
-13. **EF1–EF6, EF7a, and EF8a are complete.** The shortened-EFHW optimizer keeps
+13. **EF1–EF6, EF7a, EF7b, and EF8a are complete.** The shortened-EFHW optimizer keeps
     the fixed feed and loading-coil partitions, results report the input-shunt
     matching-topology floor only for the internal end-fed unit, the confidence
     card marks absolute SWR as informational with the proxy-return limitation,
     the optimizer defaults to Minimum SWR with an Apply Best SWR action, a
     bound-hit warning names the limiting variables, and the 40-10 convergence
     spike keeps the model unchanged with an explicit informational-SWR warning.
-    The optional measured 49:1 transformer preset and the selectable end-fed
-    return path are available and persisted in schema 47; `auto` preserves the
-    legacy behavior. EF7b, EF8's full common-mode model, and EF9 remain
-    blocked/deferred until measured loss, return, or matching-network data
-    exists.
+    The optional measured 49:1 transformer preset, its optional measured loss
+    table, and the selectable end-fed return path are available and persisted
+    in schema 48; `auto` preserves the legacy behavior. EF8's full common-mode
+    model and EF9 remain blocked/deferred until a validated return or
+    matching-network model exists.
 14. Product priorities and new antenna candidates live in
     [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
@@ -1521,8 +1523,8 @@ model and solver contract must land first.
 
 ## Current baseline
 
-- Schema: **47**.
-- Full gate: **3,060 passed, 1 skipped** with `NEC2C` and the optional
+- Schema: **48**.
+- Full gate: **3,074 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.6.0** published on 2026-11-13 with checksum-verified unsigned

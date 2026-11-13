@@ -409,6 +409,7 @@ def test_invalid_ground_is_rejected(
 def _rich_result() -> SimulationResult:
     from datetime import UTC, datetime
 
+    from antennadesk.domain.antennas.balun import SQUASH_PRACTICE_49_1_LOSS
     from antennadesk.domain.common.validation import Diagnostic, Severity
     from antennadesk.domain.simulation.far_field import FarFieldRequest
     from antennadesk.domain.simulation.frequency import FrequencyPlan
@@ -437,6 +438,7 @@ def _rich_result() -> SimulationResult:
             velocity_factor=0.8,
             matched_loss_db_per_100m=1.5,
         ),
+        transformer_loss=SQUASH_PRACTICE_49_1_LOSS,
         feed_transformer_ratio=4.0,
     )
     current = CurrentSample(
@@ -495,6 +497,7 @@ def _rich_result() -> SimulationResult:
             feed_line_loss_db=0.45,
             network_loss_db=0.05,
             balun_loss_db=0.03,
+            transformer_loss_db=0.30,
         ),
         FrequencyResult(
             frequency_hz=7_100_000.0,
@@ -537,6 +540,7 @@ def test_round_trip_with_a_simulation_run(
         RecordSimulationRun,
         RecordSimulationRunCommand,
     )
+    from antennadesk.domain.antennas.balun import SQUASH_PRACTICE_49_1_LOSS
 
     project = RecordSimulationRun().execute(
         RecordSimulationRunCommand(
@@ -563,6 +567,8 @@ def test_round_trip_with_a_simulation_run(
     assert run.result.frequencies[0].feed_line_loss_db == pytest.approx(0.45)
     assert run.result.frequencies[0].network_loss_db == pytest.approx(0.05)
     assert run.result.frequencies[0].balun_loss_db == pytest.approx(0.03)
+    assert run.result.frequencies[0].transformer_loss_db == pytest.approx(0.30)
+    assert run.result.spec.transformer_loss == SQUASH_PRACTICE_49_1_LOSS
     assert run.result.frequencies[0].source_results[0].wire_id == "radiator"
     assert run.result.frequencies[0].source_results[0].impedance_ohm == complex(60.0, -10.0)
     assert run.result.frequencies[0].source_results[0].power_w == pytest.approx(0.001)

@@ -849,6 +849,10 @@ def design_summary_rows(
             "counterpoise": "counterpoise",
             "coax_shield": "coax shield",
         }[parameters.return_path.value]
+        transformer_loss_label = {
+            "none": "none",
+            "squash_practice_49_1": "measured 49:1 (Squash Practice)",
+        }[parameters.transformer_loss_model.value]
         type_label = {
             EndFedPreset.STANDARD: "end-fed wire",
             EndFedPreset.SLOPER: "sloper",
@@ -872,6 +876,7 @@ def design_summary_rows(
                     else [("End height", f"{parameters.end_height_m:.4f} m")]
                 ),
                 ("Transformer", f"{parameters.transformer_ratio:g}:1"),
+                ("Transformer loss", transformer_loss_label),
                 ("Return path", return_path_label),
                 ("Return length", f"{parameters.effective_return_length_m:.4f} m"),
                 ("Counterpoise", counterpoise),

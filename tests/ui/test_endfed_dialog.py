@@ -113,6 +113,56 @@ def test_endfed_dialog_selects_the_measured_transformer_model(
     assert dialog._form._transformer_leakage.isEnabled() is False
 
 
+def test_endfed_dialog_selects_the_measured_transformer_loss(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.endfed import (
+        EndFedTransformerLossModel,
+        shortened_efhw_40_10_parameters,
+    )
+
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=shortened_efhw_40_10_parameters(),
+    )
+    qtbot.addWidget(dialog)
+    index = dialog._form._transformer_loss_model.findData(
+        EndFedTransformerLossModel.SQUASH_PRACTICE_49_1.value
+    )
+    assert index >= 0
+
+    dialog._form._transformer_loss_model.setCurrentIndex(index)
+
+    parameters = dialog.parameters()
+    assert parameters.transformer_loss_model is EndFedTransformerLossModel.SQUASH_PRACTICE_49_1
+    assert parameters.transformer_ratio == pytest.approx(49.0)
+    assert parameters.transformer_loss is not None
+
+
+def test_endfed_dialog_clears_the_measured_loss_when_the_ratio_changes(
+    qtbot: QtBot,
+) -> None:
+    from antennadesk.domain.antennas.endfed import (
+        EndFedTransformerLossModel,
+        shortened_efhw_40_10_parameters,
+    )
+
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=shortened_efhw_40_10_parameters(),
+    )
+    qtbot.addWidget(dialog)
+    index = dialog._form._transformer_loss_model.findData(
+        EndFedTransformerLossModel.SQUASH_PRACTICE_49_1.value
+    )
+    dialog._form._transformer_loss_model.setCurrentIndex(index)
+
+    dialog._form._transformer.setValue(9.0)
+
+    assert dialog._form._selected_transformer_loss_model() is EndFedTransformerLossModel.NONE
+    assert dialog.parameters().transformer_loss is None
+
+
 def test_endfed_dialog_selects_a_coax_shield_return_path(qtbot: QtBot) -> None:
     from antennadesk.domain.antennas.endfed import (
         EndFedReturnPath,

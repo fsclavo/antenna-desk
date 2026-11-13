@@ -936,6 +936,10 @@ def render_construction_sheet(
             "counterpoise": tr("counterpoise"),
             "coax_shield": tr("coax shield"),
         }[parameters.return_path.value]
+        transformer_loss_label = {
+            "none": tr("none"),
+            "squash_practice_49_1": tr("measured 49:1 (Squash Practice)"),
+        }[parameters.transformer_loss_model.value]
         return_path_row = f"<tr><th>Return path</th><td>{_escape(return_path_label)}</td></tr>\n"
         coax_shield_row = (
             f"<tr><th>Coax shield</th><td>{parameters.effective_return_length_m:.4f} m</td></tr>\n"
@@ -969,6 +973,7 @@ def render_construction_sheet(
 <tr><th>Wire length</th><td>{parameters.length_m:.4f} m</td></tr>
 {feed_section_row}<tr><th>Feed height</th><td>{parameters.feed_height_m:.4f} m</td></tr>
 {height_rows}<tr><th>Transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
+<tr><th>Transformer loss</th><td>{_escape(transformer_loss_label)}</td></tr>
 {matching_rows}{return_path_row}<tr><th>Counterpoise</th><td>{counterpoise}</td></tr>
 {coax_shield_row}{installation_return_row}"""
         if parameters.bend_active and parameters.coil_active:

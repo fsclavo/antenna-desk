@@ -1267,6 +1267,31 @@ def test_endfed_measured_transformer_model_round_trips() -> None:
     )
 
 
+def test_endfed_transformer_loss_model_round_trips() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.endfed import (
+        EndFedTransformerLossModel,
+        shortened_efhw_40_10_parameters,
+    )
+
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        transformer_loss_model=EndFedTransformerLossModel.SQUASH_PRACTICE_49_1,
+    )
+    original = _project(parameters, "Measured transformer loss")
+
+    restored = project_from_document(document_from_project(original))
+
+    restored_parameters = restored.designs[0].parameters
+    assert (
+        restored_parameters.transformer_loss_model
+        is EndFedTransformerLossModel.SQUASH_PRACTICE_49_1
+    )
+    assert restored_parameters.transformer_loss is not None
+    assert restored_parameters.transformer_loss.loss_db(14_175_000.0) == pytest.approx(0.30)
+
+
 def test_endfed_coax_shield_return_path_round_trips() -> None:
     from dataclasses import replace
 

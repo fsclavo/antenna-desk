@@ -1177,6 +1177,50 @@ def test_v46_migration_adds_the_endfed_return_path() -> None:
     assert "return_path" not in document["project"]["designs"][0]["parameters"]
 
 
+def test_v47_migration_adds_the_endfed_transformer_loss_model() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 47,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "endfed",
+                    "parameters": {
+                        "frequency_hz": 7_100_000.0,
+                        "length_m": 20.0,
+                        "transformer_ratio": 49.0,
+                    },
+                }
+            ],
+            "simulation_runs": [
+                {
+                    "result": {
+                        "frequencies": [
+                            {
+                                "frequency_hz": 7_100_000.0,
+                                "feed_tag": 1,
+                                "feed_segment": 1,
+                                "impedance_real_ohm": 50.0,
+                                "impedance_imag_ohm": 0.0,
+                                "input_power_w": 1.0,
+                            }
+                        ]
+                    }
+                }
+            ],
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    parameters = migrated["project"]["designs"][0]["parameters"]
+    assert parameters["transformer_loss_model"] == "none"
+    frequency = migrated["project"]["simulation_runs"][0]["result"]["frequencies"][0]
+    assert frequency["transformer_loss_db"] is None
+    assert "transformer_loss_model" not in document["project"]["designs"][0]["parameters"]
+
+
 def test_v45_migration_adds_the_endfed_transformer_model() -> None:
     document = {
         "format": "antennadesk-project",

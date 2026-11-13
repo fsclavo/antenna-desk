@@ -42,6 +42,7 @@ class SimulationSpec:
         compare=False,
     )
     balun_loss: BalunLoss | None = None
+    transformer_loss: BalunLoss | None = None
     feed_transformer_ratio: float = 1.0
     timeout_s: float = DEFAULT_TIMEOUT_S
 

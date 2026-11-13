@@ -737,6 +737,7 @@ def test_results_view_shows_directivity_and_realized_gain(qtbot: QtBot) -> None:
         feed_line_loss_db=0.1,
         network_loss_db=0.05,
         balun_loss_db=0.03,
+        transformer_loss_db=0.30,
     )
     result = replace(result, frequencies=(frequency,))
     view = ResultsView(Translator(Language.ENGLISH))
@@ -752,6 +753,7 @@ def test_results_view_shows_directivity_and_realized_gain(qtbot: QtBot) -> None:
     assert "line 0.10 dB" in text
     assert "network 0.05 dB" in text
     assert "balun 0.03 dB" in text
+    assert "transformer 0.30 dB" in text
 
 
 def test_results_view_adds_a_band_summary_tab(qtbot: QtBot) -> None:

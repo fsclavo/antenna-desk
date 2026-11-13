@@ -633,6 +633,23 @@ def test_endfed_bend_summary_reports_vertical_and_horizontal_sections() -> None:
     assert "End height" not in rows
 
 
+def test_endfed_summary_reports_the_optional_transformer_loss_model() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.endfed import (
+        EndFedTransformerLossModel,
+        shortened_efhw_40_10_parameters,
+    )
+
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        transformer_loss_model=EndFedTransformerLossModel.SQUASH_PRACTICE_49_1,
+    )
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Transformer loss"] == "measured 49:1 (Squash Practice)"
+
+
 def test_endfed_coax_shield_summary_reports_the_return_path() -> None:
     from dataclasses import replace
 

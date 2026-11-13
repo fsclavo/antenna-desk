@@ -13,6 +13,7 @@ from ..common import units
 from ..common.units import ensure_non_negative, ensure_positive
 from ..environment.ground import FREE_SPACE, GroundModel
 from .antenna import AntennaModel
+from .balun import SQUASH_PRACTICE_49_1_LOSS, BalunLoss
 from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
@@ -96,6 +97,11 @@ class EndFedReturnPath(StrEnum):
     COAX_SHIELD = "coax_shield"
 
 
+class EndFedTransformerLossModel(StrEnum):
+    NONE = "none"
+    SQUASH_PRACTICE_49_1 = "squash_practice_49_1"
+
+
 COUNTERPOISE_ID = "counterpoise"
 COUNTERPOISE_DROP_ID = "counterpoise-drop"
 FEED_SECTION_ID = "endfed-feed-section"
@@ -151,6 +157,7 @@ class EndFedParameters:
     ground: GroundModel = FREE_SPACE
     transformer_ratio: float = 1.0
     transformer_model: EndFedTransformerModel = EndFedTransformerModel.IDEAL
+    transformer_loss_model: EndFedTransformerLossModel = EndFedTransformerLossModel.NONE
     matching_capacitance_f: float = 0.0
     transformer_leakage_inductance_h: float = 0.0
     counterpoise_length_m: float = 0.0
@@ -194,6 +201,16 @@ class EndFedParameters:
             and not math.isclose(self.transformer_ratio, 49.0, rel_tol=1e-9)
         ):
             raise ValueError("the Squash Practice measured transformer model requires a 49:1 ratio")
+        object.__setattr__(
+            self,
+            "transformer_loss_model",
+            EndFedTransformerLossModel(self.transformer_loss_model),
+        )
+        if (
+            self.transformer_loss_model is EndFedTransformerLossModel.SQUASH_PRACTICE_49_1
+            and not math.isclose(self.transformer_ratio, 49.0, rel_tol=1e-9)
+        ):
+            raise ValueError("the Squash Practice loss model requires a 49:1 ratio")
         ensure_non_negative(self.matching_capacitance_f, name="matching_capacitance_f")
         ensure_non_negative(
             self.transformer_leakage_inductance_h,
@@ -289,6 +306,12 @@ class EndFedParameters:
             or self.matching_capacitance_f > 0.0
             or self.transformer_leakage_inductance_h > 0.0
         )
+
+    @property
+    def transformer_loss(self) -> BalunLoss | None:
+        if self.transformer_loss_model is EndFedTransformerLossModel.NONE:
+            return None
+        return SQUASH_PRACTICE_49_1_LOSS
 
     @property
     def uses_impedance_only_convergence(self) -> bool:

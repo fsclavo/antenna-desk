@@ -67,7 +67,7 @@ class FeedChainDialog(QDialog):
         power_form.addRow(self._power_label, self._power)
         apply_help(self._power_label, translator, "feed_chain.power")
 
-        self._table = QTableWidget(0, 9, self)
+        self._table = QTableWidget(0, 10, self)
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self._table.setAlternatingRowColors(True)
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
@@ -126,6 +126,7 @@ class FeedChainDialog(QDialog):
                 t("feed_chain.line"),
                 t("feed_chain.network"),
                 t("feed_chain.balun"),
+                t("feed_chain.transformer"),
                 t("feed_chain.delivered"),
                 t("feed_chain.radiated"),
                 t("feed_chain.dominant"),
@@ -159,6 +160,7 @@ class FeedChainDialog(QDialog):
                 (t("feed_chain.line"), frequency.feed_line_loss_db),
                 (t("feed_chain.network"), frequency.network_loss_db),
                 (t("feed_chain.balun"), frequency.balun_loss_db),
+                (t("feed_chain.transformer"), frequency.transformer_loss_db),
             )
             known = [(name, value) for name, value in components if value is not None]
             dominant = max(known, key=lambda item: item[1])[0] if known else "—"
@@ -181,6 +183,7 @@ class FeedChainDialog(QDialog):
                 self._value(frequency.feed_line_loss_db),
                 self._value(frequency.network_loss_db),
                 self._value(frequency.balun_loss_db),
+                self._value(frequency.transformer_loss_db),
                 f"{delivered:.2f} W",
                 f"{radiated:.2f} W" if radiated is not None else "—",
                 dominant,
