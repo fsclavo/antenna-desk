@@ -2,9 +2,9 @@
 
 - **Version:** `0.6.0`
 - **Date:** 2026-11-12
-- **Tag:** none yet; candidate on `release/0.6.0-qa`
-- **Status:** local static checks, Linux/Python artifact smoke tests, and
-  offscreen visual QA passed; Windows bundle and installer QA remains in CI
+- **Tag:** none yet; candidate on `release/0.6.0-qa` ready to tag
+- **Status:** local static checks, Linux/Python artifact smoke tests, offscreen
+  visual QA, and CI Windows bundle/installer QA passed; ready to tag
 
 ## Scope
 
@@ -109,11 +109,20 @@ release assets.
 ### Windows
 
 Windows QA runs in GitHub Actions because `makensis` is not available locally.
-The release workflow builds the PyInstaller bundle, portable zip, and NSIS
-installer, then checks the frozen executable, installation, shortcut,
-installed-app commands, and uninstall.
+GitHub Actions run
+[`43348235272`](https://github.com/fsclavo/antenna-desk/actions/runs/43348235272)
+on `release/0.6.0-qa` completed all build jobs successfully:
 
-CI run: pending.
+| Check | Result |
+|---|---|
+| Wheel and sdist job | pass |
+| Windows bundle, `nec2c.exe`, and NSIS installer | pass |
+| Frozen `AntennaDesk.exe --version` / `--check-solver` | pass |
+| Installer install, desktop shortcut, and uninstaller | pass |
+| Installed `AntennaDesk.exe --version` / `--check-solver` | pass |
+| Silent uninstall | pass |
+| Linux AppImage and `.deb` jobs | pass |
+| Publish GitHub release | skipped, because the run was not a tag |
 
 ## Signing
 
@@ -138,7 +147,8 @@ SHA-256.
 
 ## Release decision
 
-The 0.6.0 candidate is ready for the Windows CI gate. It has not been tagged or
-published. After the Windows bundle, installer, installed-app, shortcut, and
-uninstall checks pass in CI, tag the release and publish the checksum-verified
-artifacts.
+The 0.6.0 candidate is ready to tag and publish. The code and documentation
+passed the static gate, local Linux/Python smoke tests, and the CI Windows
+bundle and installer QA. Tag `v0.6.0` on this candidate and push the tag; the
+tag-triggered workflow will rebuild, sign if configured, and publish the
+checksum-verified artifacts.

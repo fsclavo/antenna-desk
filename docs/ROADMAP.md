@@ -427,7 +427,8 @@ Release track:
 6. `v0.6.0` is the current release candidate with the materials reference, coax
    catalog and feed-line presets, portable project bundles, BOM costs (schema
    45), and catalog starting frequencies. Local artifacts pass their smoke
-   tests; Windows installer QA and publication are pending.
+   tests, and CI run `43348235272` passed the Windows bundle and installer QA.
+   Tag pending.
 7. Add GPG/Authenticode signing in a later release if required.
 
 Validation track:
