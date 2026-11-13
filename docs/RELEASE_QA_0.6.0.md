@@ -1,14 +1,14 @@
-# AntennaDesk 0.6.0 release-candidate QA
+# AntennaDesk 0.6.0 release QA
 
 - **Version:** `0.6.0`
-- **Date:** 2026-11-12
-- **Tag:** none yet; candidate on `release/0.6.0-qa` ready to tag
-- **Status:** local static checks, Linux/Python artifact smoke tests, offscreen
-  visual QA, and CI Windows bundle/installer QA passed; ready to tag
+- **Date:** 2026-11-13
+- **Tag:** `v0.6.0` at `b75a6af`
+- **Release:** <https://github.com/fsclavo/antenna-desk/releases/tag/v0.6.0>
+- **Status:** published with unsigned, checksum-verified artifacts
 
 ## Scope
 
-This candidate covers the accumulated work since `v0.5.0` and moves the project
+This release covers the accumulated work since `v0.5.0` and moves the project
 schema from 44 to 45. The release-facing changes are:
 
 - a source-backed materials reference for wire, coax, ferrite, and insulators,
@@ -94,17 +94,20 @@ license audit.
 | `sha256sum -c` | OK |
 | Offscreen GUI launch, 10 s timeout | exited 124, no crash |
 
-## Local artifacts
+## Published assets
 
-| Artifact | Size | SHA-256 |
+| Asset | Size | SHA-256 |
 |---|---:|---|
 | `antennadesk-0.6.0-py3-none-any.whl` | 952 K | `855635cd94446ffdcb7fa75635bc64043e734babc48f8cf50ad7b2e04db34303` |
-| `antennadesk-0.6.0.tar.gz` | 1.3 M | `95a8eba7e903d4865bec88e7ffc05fa41ae8cee24d2f346c4aa61c325a80e9eb` |
-| `AntennaDesk-0.6.0-x86_64.AppImage` | 120 M | `56da9fd082e71c752e18e32d2877a72c72316e3b20f37c08aea2f72bb0964ee2` |
-| `antennadesk_0.6.0_amd64.deb` | 103 M | `4333b51cefc6f64062de4d600f299f62a9462e0c577b20c7ec2be889dd0574bc` |
+| `antennadesk-0.6.0.tar.gz` | 1.3 M | `865ec3a77a1789fbe39db0858889f9f4bec06728c54fe2ccd69cf8fd5cda4ad4` |
+| `AntennaDesk-0.6.0-x86_64.AppImage` | 129 M | `87df01f63327284af98ff24ecb4b76f8b2a0f09b8f7608e1855026d08a6e4a7b` |
+| `antennadesk_0.6.0_amd64.deb` | 109 M | `950e24882e855ab584bb73d5c079f1a2db8be4fa9f70816837d2de80f0857466` |
+| `AntennaDesk-0.6.0-windows-x86_64.zip` | 103 M | `1aed658ff2aad29e459ca36a3cc84bfb255a9abc58e56ec3dc22ce1226bdb2bf` |
+| `AntennaDesk-0.6.0-windows-x86_64-setup.exe` | 70 M | `45c16904d9851232b3e16ff692a0a8bdf957e8f94160a53f3b2a0bd14afc9281` |
 
-These are local candidate artifacts. They are unsigned and are not the published
-release assets.
+Every asset has a companion `.sha256` file. All six checksums were verified
+with `sha256sum -c` after downloading the published assets. The published wheel
+hash matches the local candidate wheel.
 
 ### Windows
 
@@ -124,6 +127,11 @@ on `release/0.6.0-qa` completed all build jobs successfully:
 | Linux AppImage and `.deb` jobs | pass |
 | Publish GitHub release | skipped, because the run was not a tag |
 
+The tag-triggered run
+[`43407953347`](https://github.com/fsclavo/antenna-desk/actions/runs/43407953347)
+repeated the Windows, Linux, and wheel jobs and completed the **Publish GitHub
+release** job successfully.
+
 ## Signing
 
 Signing remains deferred. No GPG key or Windows Authenticode certificate is
@@ -132,7 +140,7 @@ SHA-256.
 
 ## Known limitations
 
-- Windows bundle and installer QA runs in CI rather than locally.
+- Windows bundle and installer QA ran in CI rather than locally.
 - Visual QA is offscreen only.
 - BOM costs are manual; there is no price catalog, currency conversion, tax,
   shipping, labor, or quote history.
@@ -147,8 +155,9 @@ SHA-256.
 
 ## Release decision
 
-The 0.6.0 candidate is ready to tag and publish. The code and documentation
-passed the static gate, local Linux/Python smoke tests, and the CI Windows
-bundle and installer QA. Tag `v0.6.0` on this candidate and push the tag; the
-tag-triggered workflow will rebuild, sign if configured, and publish the
-checksum-verified artifacts.
+Published as `v0.6.0` on 2026-11-13 with all twelve assets — six artifacts and
+six companion `.sha256` files — uploaded to
+<https://github.com/fsclavo/antenna-desk/releases/tag/v0.6.0>. The tag-triggered
+workflow completed every job successfully, including the Windows installer
+install, shortcut, installed-app, and uninstall checks. The published checksums
+were downloaded and verified against every asset.
