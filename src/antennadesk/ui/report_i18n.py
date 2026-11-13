@@ -12,6 +12,197 @@ falls back to English so a partial translation never breaks an export.
 from __future__ import annotations
 
 REPORT_SPANISH: dict[str, str] = {
+    # Feed-connection detail.
+    "Feed connection": "Conexión de alimentación",
+    "Schematic · not to scale": "Esquema · no a escala",
+    "Antenna terminal A": "Terminal A de la antena",
+    "Antenna terminal B": "Terminal B de la antena",
+    "Coax center": "Centro del coaxil",
+    "Coax shield": "Malla del coaxil",
+    "Direct coax": "Coaxil directo",
+    "1:1 current balun": "Balún de corriente 1:1",
+    "Transformer / balun": "Transformador / balún",
+    "Balanced feed line": "Línea de alimentación balanceada",
+    "Multi-port combining network": "Red combinadora multipuerto",
+    "Connection not classified": "Conexión sin clasificar",
+    "Balanced line A": "Línea balanceada A",
+    "Balanced line B": "Línea balanceada B",
+    "Additional sources": "Fuentes adicionales",
+    "Verify the wiring": "Verificar el cableado",
+    "Balance: {balance}": "Balance: {balance}",
+    "balanced": "equilibrada",
+    "unbalanced": "desbalanceada",
+    "Construction aid, not a solver result.": (
+        "Ayuda de construcción, no un resultado del solver."
+    ),
+    "Connection table": "Tabla de conexiones",
+    "From": "Desde",
+    "To": "Hacia",
+    "Modeled": "Modelado",
+    "Recorded": "Registrado",
+    "Recommended": "Recomendado",
+    "Not modeled": "No modelado",
+    "Assembly steps": "Pasos de armado",
+    "Limitations": "Limitaciones",
+    "Matching hardware": "Herraje de adaptación",
+    "Direct connection": "Conexión directa",
+    "Balanced output": "Salida balanceada",
+    "Unbalanced input": "Entrada desbalanceada",
+    "Balanced line": "Línea balanceada",
+    "Primary feed": "Alimentación principal",
+    "Return path": "Camino de retorno",
+    "Verify before construction": "Verificar antes de construir",
+    "Balun balanced A": "Balún, salida balanceada A",
+    "Balun balanced B": "Balún, salida balanceada B",
+    "Balun input center": "Balún, entrada central",
+    "Balun input shield": "Balún, entrada de malla",
+    "Transformer secondary A": "Transformador, secundario A",
+    "Transformer secondary B": "Transformador, secundario B",
+    "Transformer primary center": "Transformador, primario central",
+    "Transformer primary shield": "Transformador, primario de malla",
+    "Ground / radials": "Tierra / radiales",
+    "Primary port": "Puerto principal",
+    "Not classified": "Sin clasificar",
+    "A and B to a 1:1 current balun; coax center and shield to its input.": (
+        "A y B a un balún de corriente 1:1; centro y malla del coaxil a su entrada."
+    ),
+    "A and B to a transformer/balun; coax center and shield to its input.": (
+        "A y B a un transformador/balún; centro y malla del coaxil a su entrada."
+    ),
+    "A and B to the balanced feed line; the balun location depends on the tuner.": (
+        "A y B a la línea de alimentación balanceada; la ubicación del balún "
+        "depende del sintonizador."
+    ),
+    "Primary port plus additional sources; the combining network is not modeled.": (
+        "Puerto principal más fuentes adicionales; la red combinadora no está modelada."
+    ),
+    "Connection not classified; verify the wiring before construction.": (
+        "Conexión sin clasificar; verificá el cableado antes de construir."
+    ),
+    (
+        "Direct coax: A to the center conductor and B to the shield; "
+        "a current balun/choke is recommended."
+    ): (
+        "Coaxil directo: A al conductor central y B a la malla; se recomienda un "
+        "balún/choke de corriente."
+    ),
+    "Direct coax: A to the radiator and B to the ground or return.": (
+        "Coaxil directo: A al radiador y B a la tierra o al retorno."
+    ),
+    "Loop gap: A and B across the gap; verify the coupling or matching method.": (
+        "Gap del lazo: A y B a través del gap; verificá el método de acople o adaptación."
+    ),
+    "Apex gap: A and B across the gap; verify the center/shield assignment.": (
+        "Gap del vértice: A y B a través del gap; verificá la asignación centro/malla."
+    ),
+    "Ideal source at the feed point": "Fuente ideal en el punto de alimentación",
+    "Ideal feed transformer": "Transformador de alimentación ideal",
+    "Current balun/choke installed": "Balún/choke de corriente instalado",
+    "Feed line configured": "Línea de alimentación configurada",
+    "Balun/unun loss configured": "Pérdida de balún/unun configurada",
+    "Install a 1:1 current balun/choke at the feed point": (
+        "Instalá un balún/choke de corriente 1:1 en el punto de alimentación"
+    ),
+    "Use a current balun/transformer at the modeled ratio": (
+        "Usá un balún/transformador de corriente con la relación modelada"
+    ),
+    "A 1:1 current balun/choke is recommended": ("Se recomienda un balún/choke de corriente 1:1"),
+    "No current balun is required by this family": (
+        "Esta familia no requiere un balún de corriente"
+    ),
+    "Verify the shield, ground, and return connection": (
+        "Verificá la conexión de malla, tierra y retorno"
+    ),
+    "Verify the feed transition; this family is not classified": (
+        "Verificá la transición de alimentación; esta familia no está clasificada"
+    ),
+    "Common-mode current on the coax shield": ("Corriente de modo común en la malla del coaxil"),
+    "Balun balance, frequency response, and power handling": (
+        "Balance, respuesta en frecuencia y potencia del balún"
+    ),
+    "Coax shield radiation and connector loss": (
+        "Radiación de la malla del coaxil y pérdida del conector"
+    ),
+    "Gamma and delta matches are not modeled.": (
+        "Las adaptaciones gamma y delta no están modeladas."
+    ),
+    "The physical center/shield assignment is not classified": (
+        "La asignación física de centro/malla no está clasificada"
+    ),
+    "Cut or prepare the feed gap and leave clearance for the feed hardware.": (
+        "Cortá o prepará el gap de alimentación y dejá espacio para el herraje."
+    ),
+    "Connect terminal A and terminal B to the interface as shown.": (
+        "Conectá el terminal A y el terminal B a la interfaz como se muestra."
+    ),
+    "Seal the connector, provide strain relief, and form a drip loop.": (
+        "Sellá el conector, dale alivio de tensión y formá un drip loop."
+    ),
+    "Connect the coax center and shield to the balun or transformer input.": (
+        "Conectá el centro y la malla del coaxil a la entrada del balún o transformador."
+    ),
+    "Keep the balanced line pair together and verify the tuner-side balun.": (
+        "Mantené juntos los conductores de la línea balanceada y verificá el "
+        "balún del lado del sintonizador."
+    ),
+    "Build the combining network separately; it is not part of the antenna model.": (
+        "Construí la red combinadora por separado; no es parte del modelo de la antena."
+    ),
+    "Verify the shield, ground, radial, or counterpoise return path.": (
+        "Verificá el camino de retorno de malla, tierra, radiales o contrapeso."
+    ),
+    "This is a construction aid, not a solver result.": (
+        "Esto es una ayuda de construcción, no un resultado del solver."
+    ),
+    "The app does not model common-mode current or coax shield radiation.": (
+        "La app no modela corriente de modo común ni radiación de la malla del coaxil."
+    ),
+    "The feed gap is not modeled; record it as an as-built dimension.": (
+        "El gap de alimentación no está modelado; registralo como dimensión as-built."
+    ),
+    "The transformer is ideal; verify the real balun ratio and power rating.": (
+        "El transformador es ideal; verificá la relación y la potencia del balún real."
+    ),
+    "The center/shield assignment is not classified; verify it on the build.": (
+        "La asignación centro/malla no está clasificada; verificala en la obra."
+    ),
+    "The hairpin is a matching stub, not a balun.": (
+        "El hairpin es un stub de adaptación, no un balún."
+    ),
+    "Beta/hairpin matching stub; it is not a balun": (
+        "Stub de adaptación beta/hairpin; no es un balún"
+    ),
+    "Conductor B is continuous and connected at both ends; it is not a parasitic": (
+        "El conductor B es continuo y está unido en ambos extremos; no es un parásito"
+    ),
+    "Tapered driven element": "Elemento alimentado con punta cónica",
+    "Off-center feed; verify the actual transformer ratio": (
+        "Alimentación descentrada; verificá la relación real del transformador"
+    ),
+    "Loop feed at a gap or matching section": (
+        "Alimentación del lazo en un gap o sección de adaptación"
+    ),
+    "Counterpoise or installation return is required": (
+        "Se requiere contrapeso o retorno de instalación"
+    ),
+    "The stub is a matching section, not a balun": (
+        "El stub es una sección de adaptación, no un balún"
+    ),
+    "Verify the center/shield assignment at the apex": (
+        "Verificá la asignación centro/malla en el vértice"
+    ),
+    "Top-junction feed; matching and ground return are not modeled": (
+        "Alimentación en la unión superior; adaptación y retorno de tierra no modelados"
+    ),
+    "Primary port plus additional sources; the combining network is ideal": (
+        "Puerto principal más fuentes adicionales; la red combinadora es ideal"
+    ),
+    "Balanced feed line; the balun location depends on the tuner": (
+        "Línea de alimentación balanceada; la ubicación del balún depende del sintonizador"
+    ),
+    "Custom or unclassified geometry; verify the center/shield assignment": (
+        "Geometría personalizada o sin clasificar; verificá la asignación centro/malla"
+    ),
     # Structural headings and captions.
     "Bill of materials": "Lista de materiales",
     "{material} Ø{diameter:.3f} mm": "{material} Ø{diameter:.3f} mm",

@@ -10,12 +10,11 @@ electromagnetic model.
 
 from __future__ import annotations
 
-from enum import StrEnum
-
 from ..antennas.biquad import BiquadParameters
 from ..antennas.custom import CustomAntennaParameters
 from ..antennas.design import AntennaDesignParameters
 from ..antennas.dipole import DipoleParameters
+from ..antennas.feed_connection import FeedBalance
 from ..antennas.folded_dipole import FoldedDipoleParameters
 from ..antennas.hexbeam import HexbeamParameters
 from ..antennas.inverted_v import InvertedVParameters
@@ -32,13 +31,6 @@ from ..antennas.trap_dipole import TrapDipoleParameters
 from ..antennas.trap_yagi import TrapYagiParameters
 from ..antennas.yagi import YagiParameters
 from ..antennas.zepp import ZeppParameters
-
-
-class FeedBalance(StrEnum):
-    BALANCED = "balanced"
-    UNBALANCED = "unbalanced"
-    UNKNOWN = "unknown"
-
 
 _BALANCED_TYPES = (
     BiquadParameters,

@@ -121,7 +121,7 @@ external service and must not be invented or simulated into existence.
 | UX26 | Include canonical geometry and far-field pattern in exported antenna reports | M–L | G17, UX21 | **Queued 2026-11-13.** The HTML and native PDF simulation reports must include a deterministic geometry figure and metric-aware azimuth/elevation pattern cuts generated from the immutable snapshot, not from live widgets. See the **UX26 design note** below. Acceptance: both formats show geometry plus pattern for single-band and band runs; far-field-disabled and missing-data states are explicit; EN/ES headings and help; reporting and PDF tests; full gate green; no schema change. |
 | ~~UX27~~ | ~~Use ROE consistently in the Spanish UI and reports~~ | S–M | none | **Done 2026-11-13:** all 18 Spanish UI keys that still said “SWR” now use “ROE” with feminine agreement; the first explanatory use expands “ROE (relación de ondas estacionarias)”. Hardcoded chart/table labels in the measurement comparison, parameter sweep, robustness, and end-fed dialogs use the shared localized label; the HTML report and construction-sheet bandwidth row are localized. A regression test scans every Spanish UI/report/evidence value for `\bSWR\b`; Spanish dialog and report tests cover the changed surfaces. English, internal identifiers, report keys, CSV columns, schema, and solver are unchanged. |
 | ~~UX28~~ | ~~Call the vertical radiator dimension “length”, not “height”~~ | S–M | none | **Done 2026-11-13:** vertical, J-Pole, Ringo, inverted-L, SCV, and phased-vertical editors and report rows now use “length”/“largo” for the physical radiating element; base, feed, top, ring, coil, apex, stack, boom, and available heights remain “height”/“altura”. The Zepp “Radiator height” and discone “Cone height” exceptions are preserved. EN/ES help and tests cover the changed labels and installation heights. Internal field names, optimizer variables, schema, CSV/JSON keys, and solver behavior are unchanged. |
-| UX29 | Show the constructive feed connection at the feedpoint | M–L | UX6, UX7, UX9, ADR-0031, ADR-0033, ADR-0034 | **Queued 2026-11-13.** Add a read-only feed-connection detail with a schematic, terminal table, and separate modeled/recorded/recommended/not-modeled states. See the **UX29 design note** below. Acceptance: the Yagi straight, folded, and beta/hairpin cases are explicit; every family has a descriptor or an explicit unknown; the construction sheet, PDF, and ZIP show the feedpoint assembly; EN/ES help and tests pass; no solver or schema change; full gate green. |
+| ~~UX29~~ | ~~Show the constructive feed connection at the feedpoint~~ | M–L | UX6, UX7, UX9, ADR-0031, ADR-0033, ADR-0034 | **Done 2026-11-13:** added the read-only `FeedConnectionDetail` resolver, explicit Yagi straight/folded/beta/hairpin cases, a renderer-neutral SVG schematic, a **Connection** row and **View feed connection...** action, a read-only detail dialog, and a feedpoint assembly section in the construction sheet, native PDF, and ZIP. The four modeled/recorded/recommended/not-modeled states are separate; unclassified families return explicit unknown. ADR-0036, user guide, domain model, help, and tests are updated. No `FeedPoint`, solver, simulation, or schema change. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -135,7 +135,7 @@ UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**, and
 selected yet. UX21–UX24 were added from direct user feedback and completed the
 same day. UX25 and UX26 were queued on 2026-11-13. UX27 and UX28 were added the
 same day from terminology feedback; UX27 and UX28 were completed on 2026-11-13.
-UX29 was added the same day from feed-connection feedback.
+UX29 was added and completed the same day from feed-connection feedback.
 
 The first slice accepts these constraints:
 
@@ -649,8 +649,8 @@ installation height. Keep EN/ES in sync and within the 240-character limit.
 
 ## UX29 — Constructive feed connection detail (design note, 2026-11-13)
 
-**Queued 2026-11-13. Not implemented.** This note is the implementation
-contract.
+**Implemented on 2026-11-13.** This note is retained as the implementation
+record.
 
 ### Context
 
@@ -1257,9 +1257,9 @@ model and solver contract must land first.
     headless and deterministic, and do not reuse live-widget captures.
 11. **UX27 and UX28 are complete.** The presentation-only terminology work is
     closed. Do not rename domain fields, schema keys, or solver identifiers.
-12. **UX29** adds the read-only constructive feed connection. Implement it as
-    specified in the UX29 design note; do not change `FeedPoint`, the NEC deck,
-    the solver, or the schema in phase 1.
+12. **UX29 is complete.** The read-only constructive feed connection is closed.
+    Do not change `FeedPoint`, the NEC deck, the solver, or the schema without a
+    new ADR.
 13. Product priorities and new antenna candidates live in
     [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
@@ -1292,7 +1292,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **45**.
-- Full gate: **2,992 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **3,008 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.6.0** published on 2026-11-13 with checksum-verified unsigned

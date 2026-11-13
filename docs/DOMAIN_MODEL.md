@@ -581,6 +581,13 @@ conductor BOM already carries the material/diameter cost.
 
 ## Feed chain
 
+`domain/design/feed_connection.py` derives a read-only
+`FeedConnectionDetail` from the design parameters, the canonical model, and the
+existing project feed records. It describes the physical terminals, the
+balanced/unbalanced interface, the modeled and recorded hardware, and the
+unmodeled limits. It is a construction aid only: it does not change
+`AntennaModel.feed`, the NEC deck, the solver, or the project schema.
+
 `MatchingNetworkPosition` selects whether the project matching network is at
 the antenna feedpoint (after the feed line) or in the shack (before it). The
 ideal family transformer remains at the antenna. `link_budget()` evaluates the

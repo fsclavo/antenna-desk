@@ -21,6 +21,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   **height**/**altura**. Internal field names, schema, optimizer variables, and
   CSV/JSON keys are unchanged. The Zepp “Radiator height” and discone “Cone
   height” exceptions remain.
+- **Constructive feed connection.** The **Feed & matching** summary now has a
+  **Connection** row and **View feed connection...** action, and **Design →
+  Feed Connection Detail...** opens a read-only dialog with a schematic, a
+  terminal connection table, and separate **Modeled**, **Recorded**,
+  **Recommended**, and **Not modeled** states. The construction sheet, native
+  PDF, and ZIP include the same feedpoint assembly. The detail resolves the
+  Yagi straight, folded, and beta/hairpin cases explicitly and returns an
+  explicit unknown state for unclassified geometries. It does not change
+  `FeedPoint`, the NEC deck, the solver, simulation results, or the schema.
+  Common-mode current, real balun balance, coax shield radiation, connector
+  loss, and gamma/delta matches remain unmodeled. See
+  [ADR-0036](docs/ADR/0036-constructive-feed-connection.md).
 
 ## [0.6.0] - 2026-11-12
 

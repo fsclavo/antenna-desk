@@ -43,6 +43,7 @@ from ..domain.antennas.zepp import (
     parallel_wire_impedance_ohm,
 )
 from ..domain.design.feed_balance import requires_current_balun
+from ..domain.design.feed_connection import feed_connection_detail
 from ..domain.design.matching_resolution import resolve_matching_network
 from ..domain.design.preflight import PreflightReport, PreflightStatus
 from ..domain.optimization.length import measure_bandwidth_hz
@@ -66,6 +67,7 @@ from .design_summary import (
     optimization_summary_rows,
     transmission_line_summary_rows,
 )
+from .feed_schematic import feed_schematic_svg
 from .localization import (
     PREFLIGHT_CATEGORY_LABELS,
     Labeler,
@@ -95,6 +97,8 @@ table.title-block th { width: auto; background: #f7f7f7; }
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .muted { color: #666; font-size: 12px; }
 .notes { background: #f7f7f7; border-left: 4px solid #888; padding: 10px 14px; }
+.feed-schematic { border: 1px solid #ddd; background: #fff; padding: 8px; margin: 10px 0; }
+.feed-schematic svg { display: block; width: 100%; height: auto; }
 .preflight { padding: 8px 12px; margin: 8px 0; border-left: 4px solid #888; }
 .preflight-error { background: #fef3f2; border-left-color: #b42318; }
 .preflight-warning { background: #fffaeb; border-left-color: #b54708; }
@@ -214,6 +218,13 @@ def render_construction_sheet(
     tr = labeler or identity_labeler
     parameters = design.parameters
     antenna = design.antenna
+    feed_detail = feed_connection_detail(
+        parameters,
+        antenna,
+        current_balun=project.current_balun,
+        feed_line=project.feed_line,
+        balun_loss=project.balun_loss,
+    )
     feed_wire = antenna.feed_wire
     feed_offset_m = antenna.feed.offset_m
     feed_ratio = feed_offset_m / feed_wire.length_m if feed_wire.length_m > 0 else 0.0
@@ -1476,6 +1487,47 @@ def render_construction_sheet(
     else:
         simulation_rows = f"<tr><th>Simulation</th><td>{_escape(tr('No result yet.'))}</td></tr>"
 
+    feed_connection_svg = feed_schematic_svg(feed_detail, tr)
+    connection_rows = "".join(
+        "<tr>"
+        f"<td>{_escape(tr(connection.source))}</td>"
+        f"<td>{_escape(tr(connection.target))}</td>"
+        f"<td>{_escape(tr(connection.note) if connection.note else '')}</td>"
+        "</tr>"
+        for connection in feed_detail.connections
+    )
+    state_blocks = []
+    for title, values in (
+        ("Modeled", feed_detail.modeled),
+        ("Recorded", feed_detail.recorded),
+        ("Recommended", feed_detail.recommended),
+        ("Not modeled", feed_detail.not_modeled),
+    ):
+        items = "".join(f"<li>{_escape(tr(value))}</li>" for value in values) or "<li>—</li>"
+        state_blocks.append(f"<h3>{_escape(tr(title))}</h3><ul>{items}</ul>")
+    hardware_block = (
+        f"<p><strong>{_escape(tr('Matching hardware'))}:</strong> "
+        f"{_escape(tr(feed_detail.match_hardware))}</p>"
+        if feed_detail.match_hardware
+        else ""
+    )
+    feed_connection_section = f"""
+<h2>{_escape(tr("Feed connection"))}</h2>
+<div class="feed-schematic">{feed_connection_svg}</div>
+<p>{_escape(tr(feed_detail.summary))}</p>
+<h3>{_escape(tr("Connection table"))}</h3>
+<table>
+<thead><tr><th>{_escape(tr("From"))}</th><th>{_escape(tr("To"))}</th><th>{_escape(tr("Notes"))}</th></tr></thead>
+<tbody>{connection_rows}</tbody>
+</table>
+{"".join(state_blocks)}
+{hardware_block}
+<h3>{_escape(tr("Assembly steps"))}</h3>
+<ol>{"".join(f"<li>{_escape(tr(step))}</li>" for step in feed_detail.steps)}</ol>
+<h3>{_escape(tr("Limitations"))}</h3>
+<ul>{"".join(f"<li>{_escape(tr(item))}</li>" for item in feed_detail.limitations)}</ul>
+"""
+
     document = f"""<!DOCTYPE html>
 <html lang="{_escape(language)}">
 <head>
@@ -1508,6 +1560,7 @@ def render_construction_sheet(
 {simulation_rows}
 </table>
 
+{feed_connection_section}
 <h2>Construction notes</h2>
 <div class="notes">
 {construction_note}

@@ -1738,6 +1738,29 @@ geometry, impedance, SWR, gain, or the ideal feed transformer. Use **Simulation
 project-wide, like the feed line and matching network, and appears in the
 construction sheet, HTML report, and native PDF reports.
 
+### Feed connection detail
+
+The **Feed & matching** summary adds a **Connection** row and a **View feed
+connection...** button. **Design → Feed Connection Detail...** opens the same
+read-only dialog. It shows a schematic, an ordered connection table, and four
+separate states: **Modeled**, **Recorded**, **Recommended**, and **Not
+modeled**.
+
+For a Yagi with a straight driven element and no recorded balun, the dialog
+shows a direct coax connection: one half to the center conductor and the other
+to the shield, with a current balun/choke recommended. With a recorded 1:1
+current balun, it shows the balanced output and the coax input. A folded driven
+element shows the transformer/balun secondary across the gap in one conductor;
+the second conductor is continuous, joined at both ends, and is not a
+parasitic. A beta/hairpin is labeled as a matching stub, not a balun. A gamma
+match is reported as not modeled.
+
+The same content is included in the construction sheet, native PDF, and ZIP
+package. It is a construction aid, not a solver result: the app does not model
+common-mode current, real balun balance, coax shield radiation, connector loss,
+or a physical feed gap. Record a measured feed gap as an as-built dimension.
+See [ADR-0036](ADR/0036-constructive-feed-connection.md).
+
 In the load editor, **Add parallel trap** calculates the capacitance for a
 parallel LC trap from the entered inductance and resonant frequency. The trap is
 stored as a normal parallel RLC load and emitted as a NEC `LD 1` load.

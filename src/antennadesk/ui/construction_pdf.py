@@ -11,6 +11,7 @@ from PySide6.QtCore import QByteArray, QMarginsF, QRectF, QSize, Qt
 from PySide6.QtGui import QFont, QImage, QPageLayout, QPageSize, QPainter, QPdfWriter
 from PySide6.QtSvg import QSvgRenderer
 
+from ..domain.design.feed_connection import feed_connection_detail
 from ..domain.design.preflight import PreflightReport, PreflightStatus
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
@@ -36,6 +37,7 @@ from ..reporting.design_summary import (
     load_summary_rows,
     optimization_summary_rows,
 )
+from ..reporting.feed_schematic import feed_schematic_svg
 from ..reporting.localization import (
     PREFLIGHT_CATEGORY_LABELS,
     localize_preflight_message,
@@ -185,6 +187,15 @@ def write_construction_pdf(
     row(translator.t("construction.updated"), project.updated_at.strftime("%Y-%m-%d"))
     y += 8.0
 
+    feed_detail = feed_connection_detail(
+        design.parameters,
+        design.antenna,
+        current_balun=project.current_balun,
+        feed_line=project.feed_line,
+        balun_loss=project.balun_loss,
+    )
+    feed_svg = feed_schematic_svg(feed_detail, translator.report).encode("utf-8")
+
     def draw_figure(
         source_size: QSize,
         image: QImage | None,
@@ -330,6 +341,50 @@ def write_construction_pdf(
             translator.t("construction.feed_height"),
             f"{feed_z:.4f} m",
         )
+    y += 12.0
+
+    section(translator.t("construction.feed_connection"))
+    feed_size = _figure_size(None, feed_svg)
+    if feed_size is not None:
+        draw_figure(feed_size, None, feed_svg, 0.30)
+    row(translator.t("construction.connection"), translator.report(feed_detail.summary))
+    for connection in feed_detail.connections:
+        row(
+            f"{translator.report(connection.source)} → {translator.report(connection.target)}",
+            translator.report(connection.note) if connection.note else "",
+        )
+    row(
+        translator.t("construction.modeled"),
+        "; ".join(translator.report(value) for value in feed_detail.modeled) or "—",
+    )
+    row(
+        translator.t("construction.recorded"),
+        "; ".join(translator.report(value) for value in feed_detail.recorded) or "—",
+    )
+    row(
+        translator.t("construction.recommended"),
+        "; ".join(translator.report(value) for value in feed_detail.recommended) or "—",
+    )
+    row(
+        translator.t("construction.not_modeled"),
+        "; ".join(translator.report(value) for value in feed_detail.not_modeled) or "—",
+    )
+    if feed_detail.match_hardware:
+        row(
+            translator.t("construction.matching_hardware"),
+            translator.report(feed_detail.match_hardware),
+        )
+    row(
+        translator.t("construction.assembly_steps"),
+        "\n".join(
+            f"{index}. {translator.report(step)}"
+            for index, step in enumerate(feed_detail.steps, start=1)
+        ),
+    )
+    row(
+        translator.t("construction.limitations"),
+        "; ".join(translator.report(item) for item in feed_detail.limitations) or "—",
+    )
     y += 12.0
 
     if project.construction_record is not None:

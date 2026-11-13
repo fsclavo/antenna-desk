@@ -169,6 +169,7 @@ from ..domain.design.comparison import (
     native_height_m,
 )
 from ..domain.design.estimators import supports_estimation
+from ..domain.design.feed_connection import feed_connection_detail
 from ..domain.design.formulas import frequency_for_half_wave_length
 from ..domain.design.matching_design import (
     MatchingNetworkDesign,
@@ -287,6 +288,7 @@ from .dialogs.endfed_dialog import EndFedDialog
 from .dialogs.family_optimization_dialog import FamilyOptimizationDialog
 from .dialogs.fan_dipole_dialog import FanDipoleDialog
 from .dialogs.feed_chain_dialog import FeedChainDialog
+from .dialogs.feed_connection_dialog import FeedConnectionDialog
 from .dialogs.feed_line_dialog import FeedLineDialog
 from .dialogs.g5rv_dialog import G5RVDialog
 from .dialogs.guided_experiments_dialog import GuidedExperimentsDialog
@@ -545,6 +547,8 @@ class MainWindow(QMainWindow):
         self._balun_loss_action.triggered.connect(lambda: self.configure_balun_loss())
         self._feed_chain_action = QAction(self)
         self._feed_chain_action.triggered.connect(lambda: self.show_feed_chain_budget())
+        self._feed_connection_action = QAction(self)
+        self._feed_connection_action.triggered.connect(lambda: self.show_feed_connection())
 
         self._exit_action = QAction(self)
         self._exit_action.setShortcut(QKeySequence.StandardKey.Quit)
@@ -1150,6 +1154,7 @@ class MainWindow(QMainWindow):
         self._feed_matching_summary.edit_network_requested.connect(self.configure_matching_network)
         self._feed_matching_summary.remove_network_requested.connect(self.remove_matching_network)
         self._feed_matching_summary.current_balun_changed.connect(self.set_current_balun)
+        self._feed_matching_summary.feed_connection_requested.connect(self.show_feed_connection)
         self._workflow_panel = NextStepPanel(self._translator, self)
         self._workflow_panel.action_requested.connect(self._on_next_step_action)
         self._workflow_panel.advanced_requested.connect(
@@ -1370,6 +1375,7 @@ class MainWindow(QMainWindow):
         self._design_menu.addAction(self._optimize_action)
         self._design_menu.addSeparator()
         self._design_menu.addAction(self._preflight_action)
+        self._design_menu.addAction(self._feed_connection_action)
         self._design_menu.addAction(self._construction_action)
         self._design_menu.addAction(self._construction_record_action)
         self._design_menu.addAction(self._bom_costs_action)
@@ -1483,6 +1489,9 @@ class MainWindow(QMainWindow):
         self._feed_chain_action.setText(self._translator.t("action.feed_chain"))
         self._feed_chain_action.setToolTip(self._translator.t("help.action.feed_chain"))
         self._feed_chain_action.setWhatsThis(self._translator.t("help.action.feed_chain"))
+        self._feed_connection_action.setText(self._translator.t("action.feed_connection"))
+        self._feed_connection_action.setToolTip(self._translator.t("help.action.feed_connection"))
+        self._feed_connection_action.setWhatsThis(self._translator.t("help.action.feed_connection"))
         self._calculator_action.setText(self._translator.t("action.component_calculator"))
         self._calculator_action.setToolTip(self._translator.t("help.action.component_calculator"))
         self._calculator_action.setWhatsThis(self._translator.t("help.action.component_calculator"))
@@ -1932,6 +1941,7 @@ class MainWindow(QMainWindow):
         self._matching_network_action.setEnabled(idle)
         self._balun_loss_action.setEnabled(idle)
         self._feed_chain_action.setEnabled(idle and has_result)
+        self._feed_connection_action.setEnabled(idle and has_project)
         self._exit_action.setEnabled(idle)
         self._new_variant_action.setEnabled(idle and has_designs)
         self._rename_variant_action.setEnabled(idle and has_designs)
@@ -2112,6 +2122,7 @@ class MainWindow(QMainWindow):
             self._matching_network_action,
             self._balun_loss_action,
             self._feed_chain_action,
+            self._feed_connection_action,
             self._optimize_action,
             self._compact_history_action,
             self._calculator_action,
@@ -3552,10 +3563,33 @@ class MainWindow(QMainWindow):
         )
         dialog.exec()
 
+    def show_feed_connection(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        design = self._project.design_by_id(self._design_id)
+        detail = feed_connection_detail(
+            design.parameters,
+            design.antenna,
+            current_balun=self._current_balun,
+            feed_line=self._feed_line,
+            balun_loss=self._balun_loss,
+        )
+        FeedConnectionDialog(self._translator, detail, self).exec()
+
     def _refresh_feed_matching_summary(self) -> None:
         parameters = None
+        detail = None
         if self._project is not None and self._design_id is not None:
-            parameters = self._project.design_by_id(self._design_id).parameters
+            design = self._project.design_by_id(self._design_id)
+            parameters = design.parameters
+            detail = feed_connection_detail(
+                parameters,
+                design.antenna,
+                current_balun=self._current_balun,
+                feed_line=self._feed_line,
+                balun_loss=self._balun_loss,
+            )
         self._endfed_form.set_project_matching_network(self._matching_network)
         self._feed_matching_summary.set_state(
             parameters,
@@ -3564,6 +3598,7 @@ class MainWindow(QMainWindow):
             self._balun_loss,
             position=self._matching_network_position,
             current_balun=self._current_balun,
+            feed_detail=detail,
         )
 
     @history_action("history.installation_profile")

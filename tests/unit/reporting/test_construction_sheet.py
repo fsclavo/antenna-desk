@@ -818,6 +818,40 @@ def test_construction_sheet_reports_swr_bandwidth(sample_project: Project) -> No
     assert "SWR ≤ 2 bandwidth" not in spanish
 
 
+def test_construction_sheet_includes_the_feed_connection(sample_project: Project) -> None:
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+
+    design = sample_project.designs[0].with_parameters(
+        YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+                YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+            ),
+            height_m=10.0,
+        )
+    )
+    project = sample_project.with_design(design, updated_at=sample_project.updated_at)
+
+    sheet = render_construction_sheet(project, design, None)
+
+    assert "Feed connection" in sheet
+    assert "Connection table" in sheet
+    assert "Direct coax" in sheet
+    assert "1:1 current balun" in sheet
+    assert "<svg" in sheet
+
+    spanish = render_construction_sheet(
+        project,
+        design,
+        None,
+        labeler=Translator(Language.SPANISH).report,
+        language="es",
+    )
+    assert "Conexión de alimentación" in spanish
+    assert "Coaxil directo" in spanish
+
+
 def test_construction_sheet_lists_series_loads(sample_project: Project) -> None:
     from antennadesk.domain.antennas.load import SeriesLoad
 

@@ -11,6 +11,8 @@ from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
 from antennadesk.domain.antennas.feed_line import FeedLine
 from antennadesk.domain.antennas.matching_network import LNetwork
+from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+from antennadesk.domain.design.feed_connection import feed_connection_detail
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem
 from antennadesk.ui.widgets.feed_matching_summary import FeedMatchingSummary
@@ -94,6 +96,43 @@ def test_summary_retranslates_its_rows_and_warning(qtbot: QtBot) -> None:
     assert "Red L" in summary._project_value.text()
     assert "FV" in summary._feed_line_value.text()
     assert "reemplaza" in summary._warning.text()
+
+
+def test_summary_shows_the_physical_feed_connection(qtbot: QtBot) -> None:
+    summary = FeedMatchingSummary(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(summary)
+    parameters = YagiParameters(
+        frequency_hz=14_100_000.0,
+        elements=(
+            YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+            YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+        ),
+        height_m=10.0,
+    )
+    detail = feed_connection_detail(parameters, parameters.to_antenna())
+
+    summary.set_state(parameters, None, None, None, feed_detail=detail)
+
+    assert summary._connection_label.text() == "Connection"
+    assert "Direct coax" in summary._connection_value.text()
+    assert summary._connection_button.isEnabled() is True
+    with qtbot.waitSignal(summary.feed_connection_requested):
+        summary._connection_button.click()
+
+
+def test_summary_disables_the_connection_button_without_a_detail(qtbot: QtBot) -> None:
+    summary = FeedMatchingSummary(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(summary)
+
+    summary.set_state(
+        DipoleParameters(frequency_hz=7_100_000.0, total_length_m=20.0, height_m=8.0),
+        None,
+        None,
+        None,
+    )
+
+    assert summary._connection_value.text() == "Not available"
+    assert summary._connection_button.isEnabled() is False
 
 
 def test_summary_emits_edit_and_remove_actions(qtbot: QtBot) -> None:

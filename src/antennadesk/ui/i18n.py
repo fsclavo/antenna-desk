@@ -5454,6 +5454,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Balun/unun loss",
         Language.SPANISH: "Pérdida de balun/unun",
     },
+    "feed_matching.connection": {
+        Language.ENGLISH: "Connection",
+        Language.SPANISH: "Conexión",
+    },
     "feed_matching.balance": {
         Language.ENGLISH: "Feed balance",
         Language.SPANISH: "Balance de alimentación",
@@ -5539,6 +5543,94 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "feed_matching.balun_value": {
         Language.ENGLISH: "{loss} dB at {frequency} MHz · exponent {exponent}",
         Language.SPANISH: "{loss} dB a {frequency} MHz · exponente {exponent}",
+    },
+    "feed_connection.title": {
+        Language.ENGLISH: "Feed connection detail",
+        Language.SPANISH: "Detalle de conexión de alimentación",
+    },
+    "feed_connection.view": {
+        Language.ENGLISH: "View feed connection...",
+        Language.SPANISH: "Ver conexión de alimentación...",
+    },
+    "feed_connection.unavailable": {
+        Language.ENGLISH: "Not available",
+        Language.SPANISH: "No disponible",
+    },
+    "feed_connection.from": {
+        Language.ENGLISH: "From",
+        Language.SPANISH: "Desde",
+    },
+    "feed_connection.to": {
+        Language.ENGLISH: "To",
+        Language.SPANISH: "Hacia",
+    },
+    "feed_connection.notes": {
+        Language.ENGLISH: "Notes",
+        Language.SPANISH: "Notas",
+    },
+    "feed_connection.modeled": {
+        Language.ENGLISH: "Modeled",
+        Language.SPANISH: "Modelado",
+    },
+    "feed_connection.recorded": {
+        Language.ENGLISH: "Recorded",
+        Language.SPANISH: "Registrado",
+    },
+    "feed_connection.recommended": {
+        Language.ENGLISH: "Recommended",
+        Language.SPANISH: "Recomendado",
+    },
+    "feed_connection.not_modeled": {
+        Language.ENGLISH: "Not modeled",
+        Language.SPANISH: "No modelado",
+    },
+    "feed_connection.hardware": {
+        Language.ENGLISH: "Matching hardware: {value}",
+        Language.SPANISH: "Herraje de adaptación: {value}",
+    },
+    "feed_connection.steps_value": {
+        Language.ENGLISH: "Assembly steps:\n{value}",
+        Language.SPANISH: "Pasos de armado:\n{value}",
+    },
+    "feed_connection.limitations_value": {
+        Language.ENGLISH: "Limitations:\n{value}",
+        Language.SPANISH: "Limitaciones:\n{value}",
+    },
+    "action.feed_connection": {
+        Language.ENGLISH: "Feed Connection Detail...",
+        Language.SPANISH: "Detalle de conexión de alimentación...",
+    },
+    "help.section.feed_connection": {
+        Language.ENGLISH: "Physical feed wiring, interface, and modeled limits.",
+        Language.SPANISH: "Cableado físico de alimentación, interfaz y límites modelados.",
+    },
+    "help.action.feed_connection": {
+        Language.ENGLISH: "Open the read-only physical feed connection detail.",
+        Language.SPANISH: "Abrí el detalle físico de conexión de alimentación, solo lectura.",
+    },
+    "help.feed_matching.connection": {
+        Language.ENGLISH: "One-line summary of the physical feed connection.",
+        Language.SPANISH: "Resumen de una línea de la conexión física de alimentación.",
+    },
+    "help.feed_connection.summary": {
+        Language.ENGLISH: "Physical wiring summary; it is not a solver result.",
+        Language.SPANISH: "Resumen del cableado físico; no es un resultado del solver.",
+    },
+    "help.feed_connection.schematic": {
+        Language.ENGLISH: "Schematic of the feed interface; not to scale.",
+        Language.SPANISH: "Esquema de la interfaz de alimentación; no a escala.",
+    },
+    "help.feed_connection.table": {
+        Language.ENGLISH: "Ordered terminal-to-terminal connection table.",
+        Language.SPANISH: "Tabla ordenada de conexiones entre terminales.",
+    },
+    "help.feed_connection.steps": {
+        Language.ENGLISH: "Construction steps for the physical feed.",
+        Language.SPANISH: "Pasos de construcción de la alimentación física.",
+    },
+    "help.feed_connection.limitations": {
+        Language.ENGLISH: "What the model does not predict about the feed.",
+        Language.SPANISH: "Lo que el modelo no predice sobre la alimentación.",
     },
     "feed_chain.title": {
         Language.ENGLISH: "Feed-chain loss budget",
@@ -9200,6 +9292,42 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "construction.dimensions": {
         Language.ENGLISH: "Dimensions",
         Language.SPANISH: "Dimensiones",
+    },
+    "construction.feed_connection": {
+        Language.ENGLISH: "Feed connection",
+        Language.SPANISH: "Conexión de alimentación",
+    },
+    "construction.connection": {
+        Language.ENGLISH: "Connection",
+        Language.SPANISH: "Conexión",
+    },
+    "construction.modeled": {
+        Language.ENGLISH: "Modeled",
+        Language.SPANISH: "Modelado",
+    },
+    "construction.recorded": {
+        Language.ENGLISH: "Recorded",
+        Language.SPANISH: "Registrado",
+    },
+    "construction.recommended": {
+        Language.ENGLISH: "Recommended",
+        Language.SPANISH: "Recomendado",
+    },
+    "construction.not_modeled": {
+        Language.ENGLISH: "Not modeled",
+        Language.SPANISH: "No modelado",
+    },
+    "construction.matching_hardware": {
+        Language.ENGLISH: "Matching hardware",
+        Language.SPANISH: "Herraje de adaptación",
+    },
+    "construction.assembly_steps": {
+        Language.ENGLISH: "Assembly steps",
+        Language.SPANISH: "Pasos de armado",
+    },
+    "construction.limitations": {
+        Language.ENGLISH: "Limitations",
+        Language.SPANISH: "Limitaciones",
     },
     "construction.feed_height": {
         Language.ENGLISH: "Feed height above ground",
