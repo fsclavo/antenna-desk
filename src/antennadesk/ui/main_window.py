@@ -73,6 +73,13 @@ from ..application.use_cases.delete_design_variant import (
 )
 from ..application.use_cases.open_project import OpenProject
 from ..application.use_cases.optimize_elements import ElementOptimizationObjective
+from ..application.use_cases.project_bundle import (
+    BUNDLE_EXTENSION,
+    BundleExportResult,
+    BundleImportResult,
+    ExportProjectBundle,
+    ImportProjectBundle,
+)
 from ..application.use_cases.record_simulation_run import (
     RecordSimulationRun,
     RecordSimulationRunCommand,
@@ -376,6 +383,10 @@ from .widgets.zepp_form import ZeppForm
 from .workers.band_analysis_worker import BandAnalysisWorker
 from .workers.comparison_worker import ComparisonWorker
 from .workers.open_project_worker import OpenProjectWorker
+from .workers.project_bundle_worker import (
+    ProjectBundleExportWorker,
+    ProjectBundleImportWorker,
+)
 from .workers.save_project_worker import SaveProjectWorker
 from .workers.simulation_worker import SimulationWorker
 from .workflow import NextStepKind, WorkflowContext, WorkflowMode, next_step
@@ -512,6 +523,11 @@ class MainWindow(QMainWindow):
         self._save_as_action = QAction(self)
         self._save_as_action.setShortcut(QKeySequence.StandardKey.SaveAs)
         self._save_as_action.triggered.connect(lambda: self.save_project_as())
+
+        self._export_bundle_action = QAction(self)
+        self._export_bundle_action.triggered.connect(lambda: self.export_project_bundle())
+        self._import_bundle_action = QAction(self)
+        self._import_bundle_action.triggered.connect(lambda: self.import_project_bundle())
 
         self._locate_solver_action = QAction(self)
         self._locate_solver_action.triggered.connect(lambda: self.locate_solver())
@@ -1300,6 +1316,8 @@ class MainWindow(QMainWindow):
         self._file_menu.addAction(self._open_action)
         self._file_menu.addAction(self._save_action)
         self._file_menu.addAction(self._save_as_action)
+        self._file_menu.addAction(self._export_bundle_action)
+        self._file_menu.addAction(self._import_bundle_action)
         self._file_menu.addSeparator()
         self._import_menu = self._file_menu.addMenu("")
         self._import_menu.addAction(self._import_nec_action)
@@ -1439,6 +1457,20 @@ class MainWindow(QMainWindow):
         self._open_action.setText(self._translator.t("action.open"))
         self._save_action.setText(self._translator.t("action.save"))
         self._save_as_action.setText(self._translator.t("action.save_as"))
+        self._export_bundle_action.setText(self._translator.t("action.export_project_bundle"))
+        self._export_bundle_action.setToolTip(
+            self._translator.t("help.action.export_project_bundle")
+        )
+        self._export_bundle_action.setWhatsThis(
+            self._translator.t("help.action.export_project_bundle")
+        )
+        self._import_bundle_action.setText(self._translator.t("action.import_project_bundle"))
+        self._import_bundle_action.setToolTip(
+            self._translator.t("help.action.import_project_bundle")
+        )
+        self._import_bundle_action.setWhatsThis(
+            self._translator.t("help.action.import_project_bundle")
+        )
         self._locate_solver_action.setText(self._translator.t("action.locate_solver"))
         self._preferences_action.setText(self._translator.t("action.preferences"))
         self._feed_line_action.setText(self._translator.t("action.feed_line"))
@@ -1882,6 +1914,8 @@ class MainWindow(QMainWindow):
         self._open_action.setEnabled(idle)
         self._save_action.setEnabled(idle and has_project)
         self._save_as_action.setEnabled(idle and has_project)
+        self._export_bundle_action.setEnabled(idle and has_project)
+        self._import_bundle_action.setEnabled(idle)
         self._locate_solver_action.setEnabled(idle)
         self._calculator_action.setEnabled(idle)
         self._materials_action.setEnabled(idle)
@@ -6563,6 +6597,185 @@ class MainWindow(QMainWindow):
         if path.suffix.lower() != ".antennadesk":
             path = path.with_suffix(".antennadesk")
         return self._save_to(path)
+
+    def _bundle_suggested_path(self) -> Path:
+        name = self._project.name if self._project is not None else "project"
+        safe_name = name.replace("/", "-").replace("\\", "-")
+        parent = self._current_path.parent if self._current_path is not None else Path.home()
+        return parent / f"{safe_name}{BUNDLE_EXTENSION}"
+
+    @history_action("history.export_bundle")
+    def export_project_bundle(self) -> None:
+        if self._project is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            self._translator.t("dialog.export_bundle_title"),
+            str(self._bundle_suggested_path()),
+            self._translator.t("dialog.project_bundle_filter"),
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.lower() != BUNDLE_EXTENSION:
+            path = path.with_suffix(BUNDLE_EXTENSION)
+        progress = self._bundle_progress_dialog("status.exporting_bundle")
+        try:
+            result = self._run_export_bundle(path)
+        except Exception as exc:
+            self._show_error(self._translator.t("error.export_bundle", message=str(exc)))
+            return
+        finally:
+            progress.close()
+        self._last_status_key = "status.bundle_exported"
+        self._update_status_text()
+        if result.missing_assets:
+            self._show_bundle_missing_assets(result.missing_assets)
+
+    def import_project_bundle(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        start = (
+            str(self._current_path.parent) if self._current_path is not None else str(Path.home())
+        )
+        filename, _ = QFileDialog.getOpenFileName(
+            self,
+            self._translator.t("dialog.import_bundle_title"),
+            start,
+            self._translator.t("dialog.project_bundle_filter"),
+        )
+        if not filename:
+            return
+        destination = QFileDialog.getExistingDirectory(
+            self,
+            self._translator.t("dialog.import_bundle_destination"),
+            start,
+        )
+        if not destination:
+            return
+        progress = self._bundle_progress_dialog("status.importing_bundle")
+        try:
+            result = self._run_import_bundle(Path(filename), Path(destination))
+        except Exception as exc:
+            self._show_error(self._translator.t("error.import_bundle", message=str(exc)))
+            return
+        finally:
+            progress.close()
+        if not result.project.designs:
+            self._show_error(
+                self._translator.t(
+                    "error.import_bundle",
+                    message=self._translator.t("error.bundle_no_designs"),
+                )
+            )
+            return
+        self._set_project(
+            result.project,
+            result.project.designs[0].id,
+            path=result.project_path,
+            dirty=False,
+        )
+        self._last_status_key = "status.bundle_imported"
+        self._update_status_text()
+        if result.missing_assets:
+            self._show_bundle_missing_assets(result.missing_assets)
+
+    def _run_export_bundle(self, path: Path) -> BundleExportResult:
+        if self._project is None:
+            raise RuntimeError("no project to export")
+        worker = ProjectBundleExportWorker(
+            ExportProjectBundle(self._repository),
+            self._project,
+            path,
+            base_dir=self._current_path.parent if self._current_path is not None else None,
+        )
+        result = self._run_bundle_worker(worker)
+        if not isinstance(result, BundleExportResult):
+            raise RuntimeError("bundle export worker produced no result")
+        return result
+
+    def _run_import_bundle(
+        self,
+        bundle_path: Path,
+        destination_parent: Path,
+    ) -> BundleImportResult:
+        worker = ProjectBundleImportWorker(
+            ImportProjectBundle(self._repository),
+            bundle_path,
+            destination_parent,
+        )
+        result = self._run_bundle_worker(worker)
+        if not isinstance(result, BundleImportResult):
+            raise RuntimeError("bundle import worker produced no result")
+        return result
+
+    def _run_bundle_worker(
+        self,
+        worker: ProjectBundleExportWorker | ProjectBundleImportWorker,
+    ) -> object:
+        thread = QThread(self)
+        worker.moveToThread(thread)
+        result: dict[str, object] = {}
+        loop = QEventLoop()
+
+        def finished(value: object) -> None:
+            result["value"] = value
+            loop.quit()
+
+        def failed(message: str) -> None:
+            result["error"] = message
+            loop.quit()
+
+        worker.finished.connect(finished)
+        worker.failed.connect(failed)
+        worker.finished.connect(thread.quit)
+        worker.failed.connect(thread.quit)
+        thread.started.connect(worker.run)
+        thread.finished.connect(loop.quit)
+        thread.finished.connect(worker.deleteLater)
+        thread.finished.connect(thread.deleteLater)
+        thread.start()
+        try:
+            loop.exec()
+        finally:
+            thread.quit()
+            thread.wait()
+        error = result.get("error")
+        if isinstance(error, str):
+            raise ValueError(error)
+        return result.get("value")
+
+    def _bundle_progress_dialog(self, text_key: str) -> QProgressDialog:
+        dialog = QProgressDialog(self._translator.t(text_key), "", 0, 0, self)
+        dialog.setWindowTitle(self._translator.t("app.title"))
+        dialog.setWindowModality(Qt.WindowModality.WindowModal)
+        dialog.setCancelButton(None)
+        dialog.setMinimumDuration(250)
+        dialog.setAutoClose(False)
+        dialog.setAutoReset(False)
+        dialog.setValue(0)
+        return dialog
+
+    def _show_bundle_missing_assets(self, assets: tuple[str, ...]) -> None:
+        shown = "\n".join(assets[:10])
+        if len(assets) > 10:
+            shown += "\n…"
+        QMessageBox.warning(
+            self,
+            self._translator.t("dialog.bundle_missing_title"),
+            self._translator.t(
+                "dialog.bundle_missing",
+                count=len(assets),
+                assets=shown,
+            ),
+        )
 
     def _open_progress_dialog(self) -> QProgressDialog:
         dialog = QProgressDialog(

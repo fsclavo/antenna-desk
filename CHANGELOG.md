@@ -24,6 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   editable; manual edits to those three fields switch back to **Custom**. The
   catalog key is not persisted, and the simulation keeps a constant matched loss
   at the displayed datasheet reference frequency. No schema change.
+- **Portable project bundles.** **File → Export Project Bundle...** writes a
+  `.antennadesk-bundle` ZIP with the native project payload, a manifest, and
+  every referenced installation/journal image. **File → Import Project
+  Bundle...** validates paths, sizes, manifest version, and asset hashes, then
+  extracts into a new local folder and opens the project. Missing images are
+  recorded and reported; import rejects traversal, symlinks, encrypted or
+  unknown entries, unlisted assets, and checksum mismatches. No schema change.
 
 ## [0.5.0] - 2026-11-12
 

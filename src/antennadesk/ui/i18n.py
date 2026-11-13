@@ -1951,6 +1951,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "action.open": {Language.ENGLISH: "Open Project...", Language.SPANISH: "Abrir proyecto..."},
     "action.save": {Language.ENGLISH: "Save", Language.SPANISH: "Guardar"},
     "action.save_as": {Language.ENGLISH: "Save As...", Language.SPANISH: "Guardar como..."},
+    "action.export_project_bundle": {
+        Language.ENGLISH: "Export Project Bundle...",
+        Language.SPANISH: "Exportar bundle del proyecto...",
+    },
+    "action.import_project_bundle": {
+        Language.ENGLISH: "Import Project Bundle...",
+        Language.SPANISH: "Importar bundle del proyecto...",
+    },
     "action.locate_solver": {
         Language.ENGLISH: "Locate NEC2C...",
         Language.SPANISH: "Ubicar NEC2C...",
@@ -4509,6 +4517,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Open an existing .antennadesk project.",
         Language.SPANISH: "Abrí un proyecto .antennadesk existente.",
     },
+    "help.action.export_project_bundle": {
+        Language.ENGLISH: (
+            "Save the project and its referenced images as one portable ZIP bundle."
+        ),
+        Language.SPANISH: (
+            "Guardá el proyecto y sus imágenes referenciadas en un único bundle ZIP portátil."
+        ),
+    },
+    "help.action.import_project_bundle": {
+        Language.ENGLISH: (
+            "Import a project bundle and extract its images into a new local folder."
+        ),
+        Language.SPANISH: (
+            "Importá un bundle de proyecto y extraé sus imágenes en una carpeta local nueva."
+        ),
+    },
     "help.advisor.bands": {
         Language.ENGLISH: "Select the amateur bands the antenna should cover.",
         Language.SPANISH: "Seleccioná las bandas de radioaficionado que debe cubrir la antena.",
@@ -5889,6 +5913,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "status.saved": {Language.ENGLISH: "Project saved.", Language.SPANISH: "Proyecto guardado."},
     "status.opened": {Language.ENGLISH: "Project opened.", Language.SPANISH: "Proyecto abierto."},
+    "status.exporting_bundle": {
+        Language.ENGLISH: "Preparing project bundle...",
+        Language.SPANISH: "Preparando bundle del proyecto...",
+    },
+    "status.importing_bundle": {
+        Language.ENGLISH: "Importing project bundle...",
+        Language.SPANISH: "Importando bundle del proyecto...",
+    },
+    "status.bundle_exported": {
+        Language.ENGLISH: "Project bundle exported.",
+        Language.SPANISH: "Bundle del proyecto exportado.",
+    },
+    "status.bundle_imported": {
+        Language.ENGLISH: "Project bundle imported.",
+        Language.SPANISH: "Bundle del proyecto importado.",
+    },
     "status.no_project": {
         Language.ENGLISH: "No project open.",
         Language.SPANISH: "No hay proyecto abierto.",
@@ -8641,6 +8681,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "history.save": {
         Language.ENGLISH: "Apply design before saving",
         Language.SPANISH: "Aplicar diseño antes de guardar",
+    },
+    "history.export_bundle": {
+        Language.ENGLISH: "Export bundle",
+        Language.SPANISH: "Exportar bundle",
     },
     "action.optimize": {
         Language.ENGLISH: "Optimize...",
@@ -14342,6 +14386,38 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "AntennaDesk project (*.antennadesk);;All files (*)",
         Language.SPANISH: "Proyecto AntennaDesk (*.antennadesk);;Todos los archivos (*)",
     },
+    "dialog.project_bundle_filter": {
+        Language.ENGLISH: "AntennaDesk project bundle (*.antennadesk-bundle);;All files (*)",
+        Language.SPANISH: (
+            "Bundle de proyecto AntennaDesk (*.antennadesk-bundle);;Todos los archivos (*)"
+        ),
+    },
+    "dialog.export_bundle_title": {
+        Language.ENGLISH: "Export project bundle",
+        Language.SPANISH: "Exportar bundle del proyecto",
+    },
+    "dialog.import_bundle_title": {
+        Language.ENGLISH: "Import project bundle",
+        Language.SPANISH: "Importar bundle del proyecto",
+    },
+    "dialog.import_bundle_destination": {
+        Language.ENGLISH: "Choose the destination folder",
+        Language.SPANISH: "Elegí la carpeta de destino",
+    },
+    "dialog.bundle_missing_title": {
+        Language.ENGLISH: "Project bundle images",
+        Language.SPANISH: "Imágenes del bundle del proyecto",
+    },
+    "dialog.bundle_missing": {
+        Language.ENGLISH: (
+            "The project has {count} image reference(s) that are not available locally. "
+            "They remain in the project:\n{assets}"
+        ),
+        Language.SPANISH: (
+            "El proyecto tiene {count} referencia(s) de imagen que no están disponibles "
+            "localmente. Permanecen en el proyecto:\n{assets}"
+        ),
+    },
     "dialog.all_files": {
         Language.ENGLISH: "All files (*)",
         Language.SPANISH: "Todos los archivos (*)",
@@ -14365,6 +14441,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "error.save": {
         Language.ENGLISH: "Could not save project: {message}",
         Language.SPANISH: "No se pudo guardar el proyecto: {message}",
+    },
+    "error.export_bundle": {
+        Language.ENGLISH: "Could not export the project bundle: {message}",
+        Language.SPANISH: "No se pudo exportar el bundle del proyecto: {message}",
+    },
+    "error.import_bundle": {
+        Language.ENGLISH: "Could not import the project bundle: {message}",
+        Language.SPANISH: "No se pudo importar el bundle del proyecto: {message}",
+    },
+    "error.bundle_no_designs": {
+        Language.ENGLISH: "The bundle project has no designs.",
+        Language.SPANISH: "El proyecto del bundle no tiene diseños.",
     },
     "error.no_project": {
         Language.ENGLISH: "No project is open.",

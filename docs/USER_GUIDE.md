@@ -2098,6 +2098,21 @@ Opening a project also runs decompression, migration, and validation in a
 worker thread. A modal **Opening project...** dialog appears for large files and
 the project is applied only after validation succeeds.
 
+## Portable project bundles
+
+Use **File → Export Project Bundle...** to save the project and its referenced
+images as one `.antennadesk-bundle` ZIP. Use **File → Import Project Bundle...**
+to validate and extract a bundle into a new local folder. Export runs in a
+worker thread; the live project is not modified. Missing images are recorded in
+the bundle manifest and reported after export or import.
+
+Import rejects unsafe ZIP paths, symlinks, encrypted entries, duplicate or
+unknown entries, unlisted assets, and size or checksum mismatches. The imported
+project opens automatically. Image references point to the extracted local
+files; move the folder only by exporting a new bundle. See
+[`PROJECT_BUNDLE.md`](PROJECT_BUNDLE.md) for the format, limits, and validation
+rules.
+
 ## Language, units, font size, and theme
 
 Use **Edit → Preferences...** (`Ctrl+,`) to set the language (**System**,

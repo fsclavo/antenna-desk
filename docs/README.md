@@ -14,6 +14,7 @@ of truth before adding another planning document.
 | How is the system structured? | [`ARCHITECTURE.md`](ARCHITECTURE.md), [`DOMAIN_MODEL.md`](DOMAIN_MODEL.md) |
 | How do I use the application? | [`USER_GUIDE.md`](USER_GUIDE.md) |
 | How do I build and release it? | [`RELEASE.md`](RELEASE.md) |
+| How do I move a project and its images between machines? | [`PROJECT_BUNDLE.md`](PROJECT_BUNDLE.md) |
 | How is the solver integrated? | [`SOLVER_ADAPTER.md`](SOLVER_ADAPTER.md) |
 | How is the construction sketch generated? | [`GEOMETRY_PRESENTATION.md`](GEOMETRY_PRESENTATION.md) |
 | Where do the starting dimensions come from? | [`ANTENNA_DESIGN_ESTIMATORS.md`](ANTENNA_DESIGN_ESTIMATORS.md) |
@@ -48,6 +49,8 @@ of truth before adding another planning document.
   sources, assumptions, confidence, and tolerances.
 - [`MATERIALS_REFERENCE.md`](MATERIALS_REFERENCE.md) — source-backed wire,
   coax, ferrite, and insulator reference data.
+- [`PROJECT_BUNDLE.md`](PROJECT_BUNDLE.md) — portable project bundle format,
+  limits, and import validation.
 - [`QA_STRATEGY.md`](QA_STRATEGY.md) — test lanes and quality gate.
 - [`EXPERIMENTAL_VALIDATION_PROTOCOL.md`](EXPERIMENTAL_VALIDATION_PROTOCOL.md) —
   how experimental templates are validated.

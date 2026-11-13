@@ -25,7 +25,8 @@ matching stubs. Projects use versioned JSON persistence, lossless gzip
 compression, and explicit migrations. VNA CSV import
 and measured/simulated comparison are available. A source-backed materials
 reference covers wire, coax, ferrite, and insulators, and coax presets can
-initialize the project feed line.
+initialize the project feed line. Portable project bundles move a project and
+its referenced images between machines as one ZIP file.
 
 ## Launch the GUI
 

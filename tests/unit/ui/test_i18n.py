@@ -273,6 +273,8 @@ HELP_MANIFEST = frozenset(
         "help.table.feed_chain",
         "help.action.new",
         "help.action.open",
+        "help.action.export_project_bundle",
+        "help.action.import_project_bundle",
         "help.advisor.bands",
         "help.advisor.height",
         "help.advisor.width",
