@@ -51,6 +51,7 @@ class OptimizationWeights:
 
 ParameterBuilder = Callable[[Mapping[str, float]], AntennaDesignParameters]
 ParameterValidator = Callable[[Mapping[str, float]], tuple[ConstraintViolation, ...]]
+StructuralSegmentation = Callable[[AntennaDesignParameters], tuple[tuple[str, int], ...]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,12 +70,15 @@ class AntennaOptimizerDescriptor:
     supports_robust: bool = False
     supports_boom_constraint: bool = False
     context_note_key: str | None = None
+    structural_segmentation: StructuralSegmentation | None = None
 
     def __post_init__(self) -> None:
         if not self.key.strip():
             raise ValueError("optimizer key must not be empty")
         if self.context_note_key is not None and not self.context_note_key.strip():
             raise ValueError("context note key must not be empty when provided")
+        if self.structural_segmentation is not None and not callable(self.structural_segmentation):
+            raise TypeError("structural_segmentation must be callable when provided")
         variables = apply_default_locks(self.key, self.variables)
         object.__setattr__(self, "variables", variables)
         if not variables:

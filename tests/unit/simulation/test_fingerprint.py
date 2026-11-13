@@ -7,6 +7,7 @@ from dataclasses import replace
 
 from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.dipole import DipoleParameters
+from antennadesk.domain.antennas.matching_network import MatchingNetworkOrigin
 from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.segmentation import SegmentationPolicy
@@ -70,3 +71,13 @@ def test_fingerprint_changes_with_feed_transformer_ratio() -> None:
     changed = replace(_spec(), feed_transformer_ratio=4.0)
 
     assert first != model_fingerprint(_model(), changed)
+
+
+def test_matching_network_origin_does_not_change_the_fingerprint() -> None:
+    first = model_fingerprint(_model(), _spec())
+    changed = replace(
+        _spec(),
+        matching_network_origin=MatchingNetworkOrigin.INTERNAL_ENDFED,
+    )
+
+    assert first == model_fingerprint(_model(), changed)

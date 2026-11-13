@@ -15,10 +15,14 @@ FINGERPRINT_FORMAT = "antennadesk-simulation-v1"
 
 
 def model_fingerprint(model: AntennaModel, spec: SimulationSpec) -> str:
+    spec_payload = asdict(spec)
+    # Runtime-only diagnostic context; adding it must not invalidate stored
+    # fingerprints or make a completed result look stale.
+    spec_payload.pop("matching_network_origin", None)
     payload = {
         "format": FINGERPRINT_FORMAT,
         "model": asdict(model),
-        "spec": asdict(spec),
+        "spec": spec_payload,
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()

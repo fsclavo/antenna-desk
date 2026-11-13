@@ -119,6 +119,10 @@ impedance against the computed value `2.351965` at 50 Ω.
   L/Pi/T matching networks and the uniform feed line are post-processed outside
   NEC. General transmission-line geometry is not implemented. The vertical
   generator emits its radial screen as ordinary wires.
+- The fixed internal EFHW matching unit is an input-shunt L-section. When the
+  transformed load resistance exceeds the source reference, the adapter reports
+  the theoretical SWR floor as `matching_network.topology_limit`; this is a
+  topology warning, not a solver correction.
 - Only free-space, perfect, and finite ground models are emitted.
 - Far-field values are NEC power gains; realized gain and directivity are not
   separated by the adapter.

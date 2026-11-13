@@ -10,11 +10,13 @@ from dataclasses import replace
 
 from ...antennas.beverage import BeverageParameters
 from ...antennas.biquad import BiquadParameters
+from ...antennas.design import AntennaDesignParameters
 from ...antennas.discone import DisconeParameters
 from ...antennas.endfed import (
     ENDFED_LOADING_COIL_SECTION_LENGTH_M,
     EndFedParameters,
     EndFedPreset,
+    endfed_segmentation_overrides,
 )
 from ...antennas.fan_dipole import FanDipoleParameters, FanElement
 from ...antennas.folded_dipole import FoldedDipoleParameters
@@ -40,6 +42,7 @@ from ..descriptor import (
     FamilyOptimizationObjective,
     ParameterBuilder,
     ParameterValidator,
+    StructuralSegmentation,
 )
 from ..variables import OptimizationVariable, VariableKind
 from .common import (
@@ -102,6 +105,7 @@ def _descriptor(
     *,
     supports_boom_constraint: bool = False,
     context_note_key: str | None = None,
+    structural_segmentation: StructuralSegmentation | None = None,
 ) -> AntennaOptimizerDescriptor:
     return AntennaOptimizerDescriptor(
         key=key,
@@ -113,6 +117,7 @@ def _descriptor(
         default_objective=default_objective,
         supports_boom_constraint=supports_boom_constraint,
         context_note_key=context_note_key,
+        structural_segmentation=structural_segmentation,
     )
 
 
@@ -825,17 +830,26 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
                 )
         return collect(*issues)
 
+    shortened = parameters.preset in {
+        EndFedPreset.SHORTENED_80_10,
+        EndFedPreset.SHORTENED_40_10,
+    }
+
+    def structural_segmentation(
+        candidate: AntennaDesignParameters,
+    ) -> tuple[tuple[str, int], ...]:
+        if not isinstance(candidate, EndFedParameters) or not shortened:
+            return ()
+        return endfed_segmentation_overrides(candidate)
+
     return _descriptor(
         "endfed",
         tuple(variables),
         initial,
         build,
         validate,
-        context_note_key=(
-            "optimize.endfed.matching_context"
-            if parameters.preset in {EndFedPreset.SHORTENED_80_10, EndFedPreset.SHORTENED_40_10}
-            else None
-        ),
+        context_note_key="optimize.endfed.matching_context" if shortened else None,
+        structural_segmentation=structural_segmentation if shortened else None,
     )
 
 

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from ..antennas.design import AntennaDesignParameters
 from ..antennas.endfed import EndFedParameters, endfed_matching_network
-from ..antennas.matching_network import MatchingNetwork
+from ..antennas.matching_network import MatchingNetwork, MatchingNetworkOrigin
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,6 +24,14 @@ class MatchingNetworkResolution:
     effective: MatchingNetwork | None
     override_active: bool
     project_active: bool
+
+    @property
+    def origin(self) -> MatchingNetworkOrigin:
+        if self.project_active:
+            return MatchingNetworkOrigin.PROJECT
+        if self.internal is not None:
+            return MatchingNetworkOrigin.INTERNAL_ENDFED
+        return MatchingNetworkOrigin.NONE
 
 
 def resolve_matching_network(

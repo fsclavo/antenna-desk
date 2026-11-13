@@ -869,3 +869,69 @@ def test_shortened_endfed_matching_network_is_applied(
         diagnostic.code == "matching_network.applied" for diagnostic in with_network.diagnostics
     )
     assert with_network.frequencies[0].swr != without_network.frequencies[0].swr
+
+
+def test_shortened_endfed_reports_the_input_shunt_topology_floor(
+    solver: Nec2cSolver,
+) -> None:
+    from dataclasses import replace
+
+    from antennadesk.application.use_cases.run_simulation import (
+        RunSimulation,
+        RunSimulationCommand,
+    )
+    from antennadesk.domain.antennas.endfed import (
+        endfed_matching_network,
+        endfed_segmentation_overrides,
+        shortened_efhw_40_10_parameters,
+    )
+    from antennadesk.domain.antennas.matching_network import MatchingNetworkOrigin
+
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        length_m=12.454467819831665,
+        feed_height_m=8.09215492791679,
+        end_height_m=9.5,
+        wire_radius_m=0.0010414124727934967,
+        loading_coil_offset_m=10.868447853892004,
+        loading_coil_inductance_h=2.9512014522288047e-05,
+    )
+    model = parameters.to_antenna(name="Shortened EFHW topology")
+    frequency_hz = parameters.frequency_hz
+    base_spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(frequency_hz),
+        segmentation=aligned_policy_for_model(
+            model,
+            frequency_hz,
+            SegmentationPolicy(
+                min_segments_per_wire=3,
+                wire_segments=endfed_segmentation_overrides(parameters),
+            ),
+        ),
+        far_field=FarFieldRequest(enabled=False),
+        feed_transformer_ratio=parameters.transformer_ratio,
+        matching_network=endfed_matching_network(parameters),
+    )
+
+    result = RunSimulation(solver).execute(
+        RunSimulationCommand(
+            model=model,
+            spec=replace(
+                base_spec,
+                matching_network_origin=MatchingNetworkOrigin.INTERNAL_ENDFED,
+            ),
+        )
+    )
+    assert result.status is SimulationStatus.COMPLETED
+    diagnostic = next(
+        item for item in result.diagnostics if item.code == "matching_network.topology_limit"
+    )
+    assert diagnostic.severity.value == "warning"
+    assert "SWR floor" in diagnostic.message
+
+    without_origin = RunSimulation(solver).execute(
+        RunSimulationCommand(model=model, spec=base_spec)
+    )
+    assert all(
+        item.code != "matching_network.topology_limit" for item in without_origin.diagnostics
+    )

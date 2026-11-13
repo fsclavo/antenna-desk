@@ -6,7 +6,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ..antennas.matching_network import MatchingNetworkPosition
+from ..antennas.matching_network import (
+    MatchingNetworkPosition,
+    input_shunt_l_network_swr_floor,
+)
 from ..antennas.two_port import (
     Abcd,
     dissipative_loss_db,
@@ -26,6 +29,7 @@ class LinkBudget:
     feed_line_loss_db: float
     network_loss_db: float
     balun_loss_db: float
+    matching_network_topology_floor_swr: float | None = None
 
 
 def link_budget(
@@ -122,6 +126,15 @@ def link_budget(
         if network_active and network is not None
         else 0.0
     )
+    topology_floor_swr = (
+        input_shunt_l_network_swr_floor(
+            network,
+            network_load_ohm,
+            network_source_ohm,
+        )
+        if network_active and network is not None
+        else None
+    )
 
     return LinkBudget(
         input_impedance_ohm=input_impedance_ohm,
@@ -137,4 +150,5 @@ def link_budget(
         feed_line_loss_db=feed_line_loss_db,
         network_loss_db=network_loss_db,
         balun_loss_db=balun_loss_db,
+        matching_network_topology_floor_swr=topology_floor_swr,
     )

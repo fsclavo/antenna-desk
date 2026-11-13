@@ -255,6 +255,13 @@ transformer, not a measurement of the exact preset build. An active
 project-level matching network overrides this internal unit; the two networks
 are not cascaded. See
 [ADR-0028](ADR/0028-matching-network-precedence.md).
+`MatchingNetworkOrigin` records whether the effective network is internal,
+project, or absent for diagnostics. It is runtime-only, excluded from the model
+fingerprint, and not persisted. When the internal input-shunt unit sees a
+transformed load resistance above the source reference, `link_budget()` returns
+the theoretical input-shunt SWR floor and the signed result reports a
+`matching_network.topology_limit` warning. Project networks and other families
+do not receive that warning.
 
 `bend_enabled` and `bend_vertical_length_m` add an optional inverted-L
 installation. The wire rises vertically from the feed for the entered length,

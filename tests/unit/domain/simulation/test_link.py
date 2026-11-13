@@ -9,6 +9,7 @@ import pytest
 from antennadesk.domain.antennas.feed_line import FeedLine
 from antennadesk.domain.antennas.matching_network import (
     MatchingNetworkPosition,
+    PiNetwork,
     design_l_network,
 )
 from antennadesk.domain.simulation.frequency import FrequencyPlan
@@ -166,3 +167,30 @@ def test_lossy_matching_network_adds_insertion_loss() -> None:
 
     assert budget.network_loss_db > 0.0
     assert budget.transducer_gain_db < 0.0
+
+
+def test_input_shunt_network_reports_its_topology_floor() -> None:
+    network = PiNetwork(
+        input_shunt_capacitance_f=100e-12,
+        series_inductance_h=198e-9,
+    )
+    budget = link_budget(
+        antenna_impedance_ohm=complex(4_900.0, 0.0),
+        frequency_hz=FREQUENCY_HZ,
+        spec=_spec(
+            matching_network=network,
+            feed_transformer_ratio=49.0,
+        ),
+    )
+
+    assert budget.matching_network_topology_floor_swr == pytest.approx(2.0)
+
+    matched = link_budget(
+        antenna_impedance_ohm=complex(2_450.0, 0.0),
+        frequency_hz=FREQUENCY_HZ,
+        spec=_spec(
+            matching_network=network,
+            feed_transformer_ratio=49.0,
+        ),
+    )
+    assert matched.matching_network_topology_floor_swr is None

@@ -8,7 +8,11 @@ from dataclasses import dataclass, field
 
 from ..antennas.balun import BalunLoss
 from ..antennas.feed_line import FeedLine
-from ..antennas.matching_network import MatchingNetwork, MatchingNetworkPosition
+from ..antennas.matching_network import (
+    MatchingNetwork,
+    MatchingNetworkOrigin,
+    MatchingNetworkPosition,
+)
 from ..common.units import ensure_positive
 from .far_field import FarFieldRequest
 from .frequency import FrequencyPlan
@@ -33,6 +37,10 @@ class SimulationSpec:
     matching_network: MatchingNetwork | None = None
     matching_network_position: MatchingNetworkPosition = MatchingNetworkPosition.FEEDPOINT
     matching_network_override: bool = False
+    matching_network_origin: MatchingNetworkOrigin = field(
+        default=MatchingNetworkOrigin.NONE,
+        compare=False,
+    )
     balun_loss: BalunLoss | None = None
     feed_transformer_ratio: float = 1.0
     timeout_s: float = DEFAULT_TIMEOUT_S
@@ -45,6 +53,11 @@ class SimulationSpec:
             self,
             "matching_network_position",
             MatchingNetworkPosition(self.matching_network_position),
+        )
+        object.__setattr__(
+            self,
+            "matching_network_origin",
+            MatchingNetworkOrigin(self.matching_network_origin),
         )
         if self.timeout_s > MAX_TIMEOUT_S:
             raise ValueError(f"timeout_s must not exceed {MAX_TIMEOUT_S}")

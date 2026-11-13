@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.endfed import EndFedParameters
-from antennadesk.domain.antennas.matching_network import LNetwork
+from antennadesk.domain.antennas.matching_network import LNetwork, MatchingNetworkOrigin
 from antennadesk.domain.design.matching_resolution import resolve_matching_network
 
 
@@ -34,6 +34,7 @@ def test_internal_matching_is_effective_without_a_project_network() -> None:
     assert resolution.effective is resolution.internal
     assert resolution.override_active is False
     assert resolution.project_active is False
+    assert resolution.origin is MatchingNetworkOrigin.INTERNAL_ENDFED
 
 
 def test_project_network_overrides_active_internal_matching() -> None:
@@ -46,6 +47,14 @@ def test_project_network_overrides_active_internal_matching() -> None:
     assert resolution.effective is project
     assert resolution.override_active is True
     assert resolution.project_active is True
+    assert resolution.origin is MatchingNetworkOrigin.PROJECT
+
+
+def test_no_effective_network_has_no_origin() -> None:
+    resolution = resolve_matching_network(_endfed(internal=False), None)
+
+    assert resolution.effective is None
+    assert resolution.origin is MatchingNetworkOrigin.NONE
 
 
 def test_project_network_is_used_when_the_internal_matching_is_inactive() -> None:
@@ -69,6 +78,7 @@ def test_inactive_project_network_keeps_the_internal_matching() -> None:
     assert resolution.effective is resolution.internal
     assert resolution.override_active is False
     assert resolution.project_active is False
+    assert resolution.origin is MatchingNetworkOrigin.INTERNAL_ENDFED
 
 
 def test_non_endfed_design_uses_the_project_network_without_an_override() -> None:
@@ -84,3 +94,4 @@ def test_non_endfed_design_uses_the_project_network_without_an_override() -> Non
     assert resolution.internal is None
     assert resolution.effective is project
     assert resolution.override_active is False
+    assert resolution.origin is MatchingNetworkOrigin.PROJECT

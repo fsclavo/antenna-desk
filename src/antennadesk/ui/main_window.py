@@ -128,7 +128,11 @@ from ..domain.antennas.load import LumpedLoad, ParallelLoad
 from ..domain.antennas.loaded_dipole import LoadedDipoleParameters
 from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.magnetic_loop import MagneticLoopParameters
-from ..domain.antennas.matching_network import MatchingNetwork, MatchingNetworkPosition
+from ..domain.antennas.matching_network import (
+    MatchingNetwork,
+    MatchingNetworkOrigin,
+    MatchingNetworkPosition,
+)
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.phased_vertical import PhasedVerticalParameters
@@ -3667,6 +3671,7 @@ class MainWindow(QMainWindow):
             matching_network=resolution.effective,
             matching_network_position=self._matching_network_position,
             matching_network_override=resolution.override_active,
+            matching_network_origin=resolution.origin,
             balun_loss=self._balun_loss,
         )
 
@@ -4577,6 +4582,7 @@ class MainWindow(QMainWindow):
     def _endfed_simulation_spec(self, parameters: EndFedParameters) -> SimulationSpec:
         model = parameters.to_antenna(name="End-fed")
         frequency_hz = parameters.frequency_hz
+        matching_network = endfed_matching_network(parameters)
         return SimulationSpec(
             frequency_plan=FrequencyPlan.sweep(
                 frequency_hz * 0.95,
@@ -4593,7 +4599,12 @@ class MainWindow(QMainWindow):
             ),
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
             feed_transformer_ratio=parameters.transformer_ratio,
-            matching_network=endfed_matching_network(parameters),
+            matching_network=matching_network,
+            matching_network_origin=(
+                MatchingNetworkOrigin.INTERNAL_ENDFED
+                if matching_network is not None
+                else MatchingNetworkOrigin.NONE
+            ),
         )
 
     def _j_pole_simulation_spec(self, parameters: JPoleParameters) -> SimulationSpec:

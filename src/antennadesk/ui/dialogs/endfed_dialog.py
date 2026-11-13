@@ -157,6 +157,7 @@ class EndFedDialog(QDialog):
             feed_transformer_ratio=parameters.transformer_ratio,
             matching_network=resolution.effective,
             matching_network_override=resolution.override_active,
+            matching_network_origin=resolution.origin,
         )
         command = CheckEndFedConvergenceCommand(
             parameters=parameters,

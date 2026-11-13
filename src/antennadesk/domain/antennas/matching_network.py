@@ -25,6 +25,18 @@ class MatchingNetworkPosition(StrEnum):
     SHACK = "shack"
 
 
+class MatchingNetworkOrigin(StrEnum):
+    """Which owner supplied the effective matching network.
+
+    This is runtime context for diagnostics.  It is not persisted and does not
+    participate in the model fingerprint.
+    """
+
+    NONE = "none"
+    INTERNAL_ENDFED = "internal_endfed"
+    PROJECT = "project"
+
+
 def _branch_impedance(
     inductance_h: float,
     capacitance_f: float,
@@ -335,6 +347,50 @@ class TNetwork:
 
 
 MatchingNetwork = LNetwork | PiNetwork | TNetwork
+
+
+def input_shunt_l_network_swr_floor(
+    network: MatchingNetwork,
+    load_impedance_ohm: complex,
+    source_impedance_ohm: float,
+) -> float | None:
+    """Return the SWR floor for an input-shunt L-section that cannot match.
+
+    The series branch sits between the load and a shunt branch on the source
+    side.  The real part of the input admittance is
+    ``R / (R**2 + (X + Xs)**2)``, whose maximum is ``1 / R``.  Matching a
+    source resistance therefore requires ``R <= source``.  When the load
+    resistance is higher, even ideal lossless reactances cannot reach a
+    conjugate match and the best possible SWR is ``R / source``.  Return
+    ``None`` when the network is not an input-shunt L-section or when the load
+    resistance is at or below the source resistance.
+    """
+
+    ensure_positive(source_impedance_ohm, name="source_impedance_ohm")
+    if isinstance(network, LNetwork):
+        if not network.shunt_at_input:
+            return None
+        shunt_active = _active(network.shunt_inductance_h, network.shunt_capacitance_f)
+        series_active = _active(network.series_inductance_h, network.series_capacitance_f)
+    elif isinstance(network, PiNetwork):
+        if _active(
+            network.output_shunt_inductance_h,
+            network.output_shunt_capacitance_f,
+        ):
+            return None
+        shunt_active = _active(
+            network.input_shunt_inductance_h,
+            network.input_shunt_capacitance_f,
+        )
+        series_active = _active(network.series_inductance_h, network.series_capacitance_f)
+    else:
+        return None
+    if not shunt_active or not series_active:
+        return None
+    resistance = load_impedance_ohm.real
+    if resistance <= 0.0 or resistance <= source_impedance_ohm:
+        return None
+    return resistance / source_impedance_ohm
 
 
 def design_l_network(

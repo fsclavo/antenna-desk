@@ -696,6 +696,11 @@ schematic; CA4EMT documents a different 34 µH/150 pF variant.
 When a project matching network is active, it replaces this internal unit
 instead of cascading with it; the internal 100 pF/leakage values stay in the
 design and are marked retained, not applied.
+The results also warn when this fixed input-shunt network cannot match a load
+resistance above the source reference. The warning reports the theoretical SWR
+floor and points to the transformer ratio or the antenna return path; it is not
+a request to change the published geometry. The check applies only to the
+internal end-fed network, not to project networks or other families.
 Enable **Inverted-L bend** to model the published installation: the
 **Vertical section** is measured from the feed, the horizontal run is the
 remaining wire length, and the form shows the resulting top height. The G0KYA
@@ -1834,6 +1839,10 @@ jointly with a deterministic hybrid of differential evolution and a bounded
 local pattern search. It is not a one-dimensional sweep and not a
 coordinate-only search. Frequency, band plan, ground model, material, and
 pointing azimuth remain design context; they are not silently optimized.
+For the shortened EFHW presets, the optimizer keeps the fixed three-segment feed
+section and loading-coil section so the series coil stays on the same part of
+the wire as the applied design; the radiator segments still follow the target
+frequency. Other families use the normal target-based segmentation.
 
 ### Objectives and constraints
 

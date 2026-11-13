@@ -14387,6 +14387,19 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "las dos redes no se conectan en cascada."
         ),
     },
+    "diagnostic.matching_network.topology_limit": {
+        Language.ENGLISH: (
+            "The fixed input-shunt matching network cannot match a load resistance "
+            "above the source reference; the SWR floor is set by that resistance. "
+            "Check the transformer ratio or the antenna return path."
+        ),
+        Language.SPANISH: (
+            "La red fija con shunt de entrada no puede adaptar una carga con "
+            "resistencia mayor que la referencia de la fuente; el piso de ROE lo "
+            "fija esa resistencia. Revisá la relación del transformador o el "
+            "retorno de la antena."
+        ),
+    },
     "diagnostic.transformer.applied": {
         Language.ENGLISH: ("Impedance, SWR, and realized gain include the ideal feed transformer."),
         Language.SPANISH: (

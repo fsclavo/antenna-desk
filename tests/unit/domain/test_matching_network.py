@@ -6,7 +6,11 @@ import math
 
 import pytest
 
-from antennadesk.domain.antennas.matching_network import LNetwork
+from antennadesk.domain.antennas.matching_network import (
+    LNetwork,
+    PiNetwork,
+    input_shunt_l_network_swr_floor,
+)
 
 
 def test_inactive_network_returns_the_load() -> None:
@@ -182,4 +186,66 @@ def test_matched_lossless_l_network_has_no_insertion_loss() -> None:
 
     assert transducer_gain_db(network.abcd(14_100_000.0), 50.0, load) == pytest.approx(
         0.0, abs=1e-6
+    )
+
+
+def test_input_shunt_l_reports_the_floor_for_a_high_resistance_load() -> None:
+    network = PiNetwork(
+        input_shunt_capacitance_f=100e-12,
+        series_inductance_h=198e-9,
+    )
+
+    assert input_shunt_l_network_swr_floor(
+        network,
+        complex(150.0, 0.0),
+        50.0,
+    ) == pytest.approx(3.0)
+    assert (
+        input_shunt_l_network_swr_floor(
+            network,
+            complex(30.0, 0.0),
+            50.0,
+        )
+        is None
+    )
+
+
+def test_input_shunt_floor_requires_the_input_shunt_topology() -> None:
+    network = LNetwork(
+        series_inductance_h=1e-6,
+        shunt_capacitance_f=100e-12,
+        shunt_at_input=True,
+    )
+    assert input_shunt_l_network_swr_floor(
+        network,
+        complex(100.0, 10.0),
+        50.0,
+    ) == pytest.approx(2.0)
+
+    output_shunt = LNetwork(
+        series_inductance_h=1e-6,
+        shunt_capacitance_f=100e-12,
+        shunt_at_input=False,
+    )
+    assert (
+        input_shunt_l_network_swr_floor(
+            output_shunt,
+            complex(100.0, 10.0),
+            50.0,
+        )
+        is None
+    )
+
+    full_pi = PiNetwork(
+        input_shunt_capacitance_f=100e-12,
+        series_inductance_h=198e-9,
+        output_shunt_capacitance_f=50e-12,
+    )
+    assert (
+        input_shunt_l_network_swr_floor(
+            full_pi,
+            complex(150.0, 0.0),
+            50.0,
+        )
+        is None
     )

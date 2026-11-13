@@ -122,6 +122,15 @@ external service and must not be invented or simulated into existence.
 | ~~UX27~~ | ~~Use ROE consistently in the Spanish UI and reports~~ | S–M | none | **Done 2026-11-13:** all 18 Spanish UI keys that still said “SWR” now use “ROE” with feminine agreement; the first explanatory use expands “ROE (relación de ondas estacionarias)”. Hardcoded chart/table labels in the measurement comparison, parameter sweep, robustness, and end-fed dialogs use the shared localized label; the HTML report and construction-sheet bandwidth row are localized. A regression test scans every Spanish UI/report/evidence value for `\bSWR\b`; Spanish dialog and report tests cover the changed surfaces. English, internal identifiers, report keys, CSV columns, schema, and solver are unchanged. |
 | ~~UX28~~ | ~~Call the vertical radiator dimension “length”, not “height”~~ | S–M | none | **Done 2026-11-13:** vertical, J-Pole, Ringo, inverted-L, SCV, and phased-vertical editors and report rows now use “length”/“largo” for the physical radiating element; base, feed, top, ring, coil, apex, stack, boom, and available heights remain “height”/“altura”. The Zepp “Radiator height” and discone “Cone height” exceptions are preserved. EN/ES help and tests cover the changed labels and installation heights. Internal field names, optimizer variables, schema, CSV/JSON keys, and solver behavior are unchanged. |
 | ~~UX29~~ | ~~Show the constructive feed connection at the feedpoint~~ | M–L | UX6, UX7, UX9, ADR-0031, ADR-0033, ADR-0034 | **Done 2026-11-13:** added the read-only `FeedConnectionDetail` resolver, explicit Yagi straight/folded/beta/hairpin cases, a renderer-neutral SVG schematic, a **Connection** row and **View feed connection...** action, a read-only detail dialog, and a feedpoint assembly section in the construction sheet, native PDF, and ZIP. The four modeled/recorded/recommended/not-modeled states are separate; unclassified families return explicit unknown. ADR-0036, user guide, domain model, help, and tests are updated. No `FeedPoint`, solver, simulation, or schema change. |
+| ~~EF1~~ | ~~Preserve shortened-EFHW structural segmentation in optimizer candidates~~ | S–M | none | **Done 2026-11-13:** the optimizer descriptor can declare model-defined wire partitions. Only the shortened EFHW presets opt in, preserving the fixed three-segment feed and loading-coil sections while the radiator counts are recalculated. Unit tests cover 80-10 and 40-10; other families keep a `None` hook and the previous segmentation path. No solver, schema, or UI change. |
+| ~~EF2~~ | ~~Diagnose input-shunt matching-network topology limits~~ | S | EF1 optional | **Done 2026-11-13:** added `MatchingNetworkOrigin` as runtime-only simulation context, a domain `input_shunt_l_network_swr_floor()` predicate, a `LinkBudget` floor field, and a `matching_network.topology_limit` warning. The warning appears only when the effective network is the internal EFHW input-shunt unit; project networks and other families stay unchanged. The origin is excluded from the model fingerprint and is not persisted. EN/ES diagnostic text, domain, link, fingerprint, resolution, and real NEC2C tests cover the path. |
+| EF3 | Warn about the installation-return proxy and SWR confidence | S | none | **Queued 2026-11-13.** When a shortened EFHW uses the 0.1 m installation-return proxy instead of a real counterpoise, surface the limitation in results and reports. Mark absolute SWR as informational for the shortened presets, whose convergence verdict is R/X-only. Gate all new text to shortened end-fed designs; no numerical change. |
+| EF4 | Clarify the optimizer objective and expose best-SWR selection | S–M | none | **Queued 2026-11-13.** The shortened presets currently default to **Target impedance** (`|Z−50|`), not SWR. Add a concise warning when the selected candidate's SWR is high, and add an explicit **Apply best SWR** action independent of the objective. Keep every other family's default objective and scoring unchanged. A new `MIN_MISMATCH` objective based on `|Γ|` is a separate ADR, not part of this item. |
+| EF5 | Recommend action when the optimizer optimum hits a search bound | S | EF1 | **Queued 2026-11-13.** For descriptors that opt in, report which continuous variables are at their bounds and add a recommendation to widen the range only when the resulting geometry is buildable. No automatic bound expansion and no change for families that do not opt in. |
+| EF6 | Investigate 40-10 shortened-EFHW convergence | M | EF1, EF3 | **Queued 2026-11-13.** The 40-10 preset remains R/X-sensitive at 10/21/51 radiator segments. Sweep radiator and coil-section counts, inspect the lumped-load placement in the 0.10 m section, and decide between a model/segmentation fix or a permanent informational-SWR warning. Do not relax the convergence thresholds to make the preset pass. |
+| EF7 | Measured transformer model for shortened EFHW | L | EF6; measured transformer data | **Blocked/deferred.** Add ratio, leakage, winding capacitance, core loss, and frequency dependence only from a measured or traceable transformer model. Until then the internal 100 pF/198 nH stay fixed context and must not become free optimizer variables. Requires schema, UI, evidence, and ADR work. |
+| EF8 | Common-mode return / coax-shield model for end-fed antennas | L | measurement or validated common-mode model | **Blocked/deferred.** Replace the 0.1 m installation-return proxy with an optional common-mode return model only when a traceable source or measurement exists. Do not optimize the proxy as if it were a physical radial. Requires an ADR and validation. |
+| EF9 | Design-specific matching-network optimization | L | EF7, EF8, ADR | **Blocked/deferred.** The current project matching network is global and replaces the internal EFHW unit (ADR-0028). A design-specific L/Pi/T network with optimizer variables is the only coherent way to let the optimizer tune a match; it requires an ADR, schema, UI, and regression coverage. Do not add loose C/L variables to the fixed input-shunt network. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -136,6 +145,8 @@ selected yet. UX21–UX24 were added from direct user feedback and completed the
 same day. UX25 and UX26 were queued on 2026-11-13. UX27 and UX28 were added the
 same day from terminology feedback; UX27 and UX28 were completed on 2026-11-13.
 UX29 was added and completed the same day from feed-connection feedback.
+EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
+EF1 and EF2 are implemented and EF3 is the next active item.
 
 The first slice accepts these constraints:
 
@@ -1064,6 +1075,141 @@ scaling QA remains manual.
 - Balanced feed lines and multi-port arrays do not fit a single coax schematic.
   Use `BALANCED_LINE`/`MULTI_PORT` and explicit limitations; do not guess.
 
+## EF1–EF9 — Shortened-EFHW optimizer and model-confidence queue (2026-11-13)
+
+**EF1 and EF2 are implemented on 2026-11-13.** EF3–EF6 are queued. EF7–EF9
+are blocked/deferred until a measured transformer, a common-mode return model,
+or a design-specific matching-network ADR exists. The ordered plan is:
+
+| ID | Scope | Why it is separate |
+|---|---|---|
+| EF1 | Preserve model-defined wire partitions in optimizer candidates | Correctness fix; only shortened EFHW descriptors opt in |
+| EF2 | Diagnose input-shunt matching-network topology limits | Explains the fixed-network SWR floor without changing results |
+| EF3 | Warn about the installation-return proxy and SWR confidence | Visibility only; no numerical change |
+| EF4 | Clarify objective semantics and expose best-SWR selection | Product/UI decision; other families keep their defaults |
+| EF5 | Recommend action when an optimum hits a search bound | Optimizer guardrail gated by descriptor |
+| EF6 | Investigate 40-10 convergence | Needs a segment/load-placement spike before changing the model |
+| EF7 | Measured transformer model | Blocked on traceable transformer data |
+| EF8 | Common-mode return / coax-shield model | Blocked on measurement or a validated common-mode model |
+| EF9 | Design-specific matching-network optimization | Follow-up to ADR-0028; needs EF7/EF8 |
+
+### EF1 — Optimizer structural segmentation (implemented)
+
+The optimizer recalculates candidate segmentation from the target frequency and
+the base policy. That is correct for geometry, but it discarded `wire_segments`
+entries that are part of the numerical model. In a shortened EFHW the fixed
+0.5 m feed section and the 0.10 m loading-coil section must keep three segments
+each; otherwise the lumped load lands on a different part of the wire and the
+optimizer evaluates a different model from the one the user applies.
+
+Implementation contract:
+
+- `AntennaOptimizerDescriptor` has an optional `structural_segmentation`
+  callback. The default is `None`, so every existing family follows the previous
+  code path exactly.
+- Only the shortened EFHW descriptors (`SHORTENED_80_10` and
+  `SHORTENED_40_10`) set the callback. Standard end-fed, sloper, random wire, and
+  every other family keep `None`.
+- The callback returns the fixed partition counts from
+  `endfed_segmentation_overrides()`; the optimizer merges them into the
+  recalculated policy and leaves the radiator and other wires on the normal
+  target-based counts.
+- The merge validates that the wire exists in the candidate model. It lowers
+  only the policy's validation minimum when a structural count is below it; all
+  wire counts are explicit, so no other wire changes.
+- `MAX_BANDWIDTH` sweeps also receive the structural partitions; `None` and
+  empty overrides are a no-op.
+
+Acceptance: the 80-10 and 40-10 candidate specs keep the feed and coil sections
+at three segments; standard end-fed and a representative non-end-fed family
+remain `None` and follow the old path; the full gate is green; no schema,
+solver, or UI change. Because the optimizer no longer evaluates a different
+mesh, its reported best SWR can shift slightly; the applied design is now the
+same model the optimizer scored. Tests:
+`tests/unit/application/test_optimize_endfed_segmentation.py`.
+
+### EF2 — Matching-topology diagnostic (implemented)
+
+The internal EFHW unit is an input-shunt L-section (100 pF) plus series leakage
+(198 nH), with no output shunt. When the ideal transformer presents a load with
+R above the source reference, that topology cannot match it even with ideal C/L.
+
+Implementation contract:
+
+- `MatchingNetworkOrigin` distinguishes `NONE`, `INTERNAL_ENDFED`, and
+  `PROJECT` at runtime. It is set by the matching resolver and the end-fed spec
+  builder; it is not persisted and is excluded from the model fingerprint.
+- `input_shunt_l_network_swr_floor()` returns `R / source` only when the network
+  is a two-element input-shunt L-section (or a Pi with no output shunt), the
+  series and input-shunt branches are active, and `R > source`. Otherwise it
+  returns `None`.
+- `LinkBudget` carries the floor so normalization can emit
+  `matching_network.topology_limit` with the expected value.
+- The diagnostic is emitted only for `INTERNAL_ENDFED` and only when the
+  project network is not overriding it. A project network or another family's
+  spec never sees the new warning. The model fingerprint is unchanged.
+
+Acceptance met: a shortened EFHW candidate with a high transformed load emits
+the warning and its theoretical floor; the same design without the internal
+origin emits no topology warning; domain, link, fingerprint, resolution, and
+real NEC2C tests pass; EN/ES text is present.
+
+### EF3 — Proxy return and confidence warnings (next)
+
+When a shortened EFHW uses the 0.1 m installation-return proxy instead of a real
+counterpoise, surface that in the result/report and mark absolute SWR as
+informational. The convergence check already uses `swr_informational`; extend
+the same notion to the main result view for shortened presets. No numerical
+change and no new warning for other families.
+
+### EF4 — Objective clarity and best-SWR action
+
+`TARGET_IMPEDANCE` minimizes `|Z−50|`, not SWR. Add a warning when the selected
+candidate has high SWR and a better-SWR candidate exists, and add an explicit
+**Apply best SWR** action independent of the objective. Do not change the
+default objective or scoring for other families. A new `MIN_MISMATCH` objective
+based on `|Γ|` is a separate ADR.
+
+### EF5 — Bound-hit recommendation
+
+When the best candidate is at a continuous-variable bound, report it and add a
+recommendation to widen the range only if the result is buildable. Do not
+auto-expand bounds. The recommendation must be gated by the descriptor so other
+families' result text is unchanged.
+
+### EF6 — 40-10 convergence investigation
+
+The 40-10 preset remains R/X-sensitive at 10/21/51 radiator segments. Sweep
+radiator and coil-section counts, inspect the lumped-load placement in the
+0.10 m section, and decide between a model/segmentation fix or a permanent
+informational-SWR warning. Do not relax the convergence thresholds to make the
+preset pass. A fix must include a regression test with a real NEC2C run.
+
+### EF7–EF9 — Blocked/deferred
+
+- **EF7:** measured transformer model. Add ratio, leakage, winding capacitance,
+  core loss, and frequency dependence only from measured or traceable data.
+  Until then the internal 100 pF/198 nH stay fixed context; do not expose them
+  as free optimizer variables.
+- **EF8:** common-mode return / coax-shield model. Replace the 0.1 m proxy only
+  when a traceable measurement or validated common-mode model exists. Do not
+  optimize the proxy as a physical radial.
+- **EF9:** design-specific matching-network optimization. The project network is
+  global and replaces the internal EFHW unit (ADR-0028). A design-specific
+  L/Pi/T network with optimizer variables is the coherent path; it needs an ADR,
+  schema, UI, and regression coverage. Do not add loose C/L variables to the
+  fixed input-shunt network.
+
+### No-impact contract for EF1–EF6
+
+The acceptance rule for every queued item is: **non-shortened end-fed and every
+other family produce the same numerical results, diagnostics, and optimizer
+defaults unless the item explicitly says otherwise.** New behavior is gated by a
+descriptor capability, a preset, or a UI context. Before EF3 starts, capture a
+golden matrix of R/X/SWR/gain/efficiency and fixed-seed optimizer results for
+representative designs in every family; after each item, diff it. A change in a
+non-target family is a regression, not an acceptable side effect.
+
 ## Matching-network precedence (2026-11-10 analysis)
 
 G25 models the internal EFHW matching unit. The M queue defines how that model
@@ -1260,7 +1406,12 @@ model and solver contract must land first.
 12. **UX29 is complete.** The read-only constructive feed connection is closed.
     Do not change `FeedPoint`, the NEC deck, the solver, or the schema without a
     new ADR.
-13. Product priorities and new antenna candidates live in
+13. **EF1 and EF2 are complete.** The shortened-EFHW optimizer keeps the fixed
+    feed and loading-coil partitions, and results now report the input-shunt
+    matching-topology floor only for the internal end-fed unit. **EF3** is next:
+    add the proxy-return and SWR-confidence warnings. Then EF4–EF6 in order;
+    EF7–EF9 remain blocked/deferred.
+14. Product priorities and new antenna candidates live in
     [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
 ## Technical debt pass (2026-11-08)
@@ -1292,7 +1443,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **45**.
-- Full gate: **3,008 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **3,018 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.6.0** published on 2026-11-13 with checksum-verified unsigned

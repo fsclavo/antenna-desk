@@ -34,6 +34,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   loss, and gamma/delta matches remain unmodeled. See
   [ADR-0036](docs/ADR/0036-constructive-feed-connection.md).
 
+### Fixed
+
+- **Shortened-EFHW optimizer segmentation.** Family optimization candidates for
+  the shortened EFHW presets now keep the fixed three-segment feed section and
+  loading-coil section while the radiator counts are recalculated. The lumped
+  loading coil therefore lands on the same part of the wire in the optimizer and
+  in the applied design. Standard end-fed, sloper, random wire, and every other
+  family keep the previous segmentation path. No schema, solver, or UI change.
+- **Shortened-EFHW matching-topology warning.** Results now warn when the fixed
+  internal input-shunt matching network (100 pF plus 198 nH) cannot match a
+  transformed load resistance above the source reference, and report the
+  theoretical SWR floor. The warning is gated to the internal end-fed network,
+  is excluded from the model fingerprint, and is not persisted; project
+  matching networks and other families are unchanged. No schema change.
+
 ## [0.6.0] - 2026-11-12
 
 ### Added

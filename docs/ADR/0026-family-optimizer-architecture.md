@@ -67,6 +67,7 @@ AntennaOptimizerDescriptor
   budget_profile
   supports_band_aware
   unavailable_reason
+  structural_segmentation(parameters)   # optional; model-defined partitions
 ```
 
 The descriptor owns the family-specific design space, constraints, parameter
@@ -456,6 +457,26 @@ height. A run that excludes any variable is reported as partial.
   warning. The dialog also shows the numeric spread and the winning seed.
 - A single seed run preserves the previous result shape and adds no
   verification metrics.
+
+## Amendment 2026-11-13 — Structural segmentation opt-in
+
+- The blanket rule that every candidate recalculates segmentation from its
+  geometry was too broad. Wire partitions that are part of the numerical model
+  must survive the recalculation. The shortened EFHW is the first case: its
+  fixed 0.5 m feed section and 0.10 m loading-coil section keep three segments
+  each so the lumped series load stays on the same part of the wire.
+- `AntennaOptimizerDescriptor.structural_segmentation` is an optional callback
+  that returns model-defined `(wire_id, segments)` overrides. The default is
+  `None`. Only the `SHORTENED_80_10` and `SHORTENED_40_10` end-fed descriptors
+  opt in; standard end-fed, sloper, random wire, and every other family keep
+  the previous recalculation path.
+- The optimizer merges the overrides into the candidate policy after the
+  normal target-based counts are calculated. Radiator and other wires still
+  follow the target frequency. A `None` hook or an empty override list is a
+  no-op, so non-opted-in families produce the same simulation specification as
+  before.
+- Acceptance requires a test for the shortened EFHW partitions and a test that
+  standard end-fed and a representative non-end-fed descriptor stay `None`.
 
 ## Follow-up
 

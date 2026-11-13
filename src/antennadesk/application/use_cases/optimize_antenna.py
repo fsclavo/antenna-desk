@@ -576,6 +576,47 @@ def _feed_transformer_ratio(parameters: AntennaDesignParameters) -> float:
     return float(fallback)
 
 
+def _merge_structural_segmentation(
+    policy: SegmentationPolicy,
+    model: AntennaModel,
+    overrides: tuple[tuple[str, int], ...],
+) -> SegmentationPolicy:
+    """Keep the model-defined wire partitions while recalculating the rest.
+
+    Family optimizers may declare partitions that are part of the numerical
+    model, such as the fixed feed section and loading-coil section of a
+    shortened end-fed. Recomputing those counts from the candidate geometry
+    changes where the lumped load lands. Only descriptors that opt in provide
+    overrides, so other families keep the existing segmentation path.
+    """
+
+    if not overrides:
+        return policy
+    model_wire_ids = {wire.id for wire in model.wires}
+    counts = dict(policy.wire_segments)
+    applied = False
+    for wire_id, segments in overrides:
+        if wire_id in model_wire_ids:
+            counts[wire_id] = segments
+            applied = True
+    if not applied:
+        return policy
+    minimum = min((policy.min_segments_per_wire, *counts.values()))
+    return replace(
+        policy,
+        min_segments_per_wire=minimum,
+        wire_segments=tuple(counts.items()),
+    )
+
+
+def _structural_segmentation(
+    command: OptimizeAntennaCommand,
+    parameters: AntennaDesignParameters,
+) -> tuple[tuple[str, int], ...]:
+    hook = command.descriptor.structural_segmentation
+    return hook(parameters) if hook is not None else ()
+
+
 def _spec_for_point(
     command: OptimizeAntennaCommand,
     model: AntennaModel,
@@ -584,6 +625,7 @@ def _spec_for_point(
     needs_pattern: bool,
     needs_sweep: bool,
     feed_transformer_ratio: float | None = None,
+    structural_segmentation: tuple[tuple[str, int], ...] = (),
 ) -> SimulationSpec:
     if needs_sweep:
         spec = replace(
@@ -607,6 +649,15 @@ def _spec_for_point(
         )
     if feed_transformer_ratio is not None:
         spec = replace(spec, feed_transformer_ratio=feed_transformer_ratio)
+    if structural_segmentation:
+        spec = replace(
+            spec,
+            segmentation=_merge_structural_segmentation(
+                spec.segmentation,
+                model,
+                structural_segmentation,
+            ),
+        )
     return spec
 
 
@@ -619,6 +670,7 @@ def _run_point(
     needs_pattern: bool,
     needs_sweep: bool,
     feed_transformer_ratio: float | None = None,
+    structural_segmentation: tuple[tuple[str, int], ...] = (),
 ) -> _PointOutcome:
     try:
         result = RunSimulation(solver).execute(
@@ -631,6 +683,7 @@ def _run_point(
                     needs_pattern=needs_pattern,
                     needs_sweep=needs_sweep,
                     feed_transformer_ratio=feed_transformer_ratio,
+                    structural_segmentation=structural_segmentation,
                 ),
                 cancel_token=command.cancel_token,
             )
@@ -670,6 +723,7 @@ def _single_metrics(
         needs_pattern=needs_pattern,
         needs_sweep=needs_sweep,
         feed_transformer_ratio=_feed_transformer_ratio(parameters),
+        structural_segmentation=_structural_segmentation(command, parameters),
     )
     if outcome.cancelled:
         raise _EvaluationCancelled
@@ -735,6 +789,10 @@ def _multi_metrics(
                 needs_pattern=needs_pattern,
                 needs_sweep=False,
                 feed_transformer_ratio=_feed_transformer_ratio(scenario_parameters),
+                structural_segmentation=_structural_segmentation(
+                    command,
+                    scenario_parameters,
+                ),
             )
             if outcome.cancelled:
                 raise _EvaluationCancelled

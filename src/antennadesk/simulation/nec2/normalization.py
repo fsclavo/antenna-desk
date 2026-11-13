@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from datetime import datetime
 
 from ...domain.antennas.antenna import AntennaModel
+from ...domain.antennas.matching_network import MatchingNetworkOrigin
 from ...domain.common.validation import Diagnostic, Severity
 from ...domain.simulation.link import link_budget
 from ...domain.simulation.result import (
@@ -134,6 +135,7 @@ def normalize_nec2_result(
     frequency_results: list[FrequencyResult] = []
     negative_resistance_hz: list[float] = []
     absorbing_source_hz: list[float] = []
+    topology_limited: list[tuple[float, float]] = []
     main_count = spec.frequency_plan.count
     parsed_main = parsed.frequencies[:main_count]
     parsed_patterns = parsed.frequencies[main_count:] if spec.pattern_frequencies_hz else ()
@@ -241,6 +243,14 @@ def normalize_nec2_result(
             frequency_hz=parsed_frequency.frequency_hz,
             spec=spec,
         )
+        if (
+            link.matching_network_topology_floor_swr is not None
+            and spec.matching_network_origin is MatchingNetworkOrigin.INTERNAL_ENDFED
+            and not spec.matching_network_override
+        ):
+            topology_limited.append(
+                (parsed_frequency.frequency_hz, link.matching_network_topology_floor_swr)
+            )
         input_impedance = link.input_impedance_ohm
         gains = [
             point.gain_total_db
@@ -290,6 +300,26 @@ def normalize_nec2_result(
                     link.network_loss_db if math.isfinite(link.network_loss_db) else None
                 ),
                 balun_loss_db=(link.balun_loss_db if math.isfinite(link.balun_loss_db) else None),
+            )
+        )
+
+    if topology_limited:
+        first = topology_limited[0][0] / 1e6
+        last = topology_limited[-1][0] / 1e6
+        range_text = f"{first:g} MHz" if len(topology_limited) == 1 else f"{first:g}-{last:g} MHz"
+        floor = max(value for _frequency, value in topology_limited)
+        problems.append(
+            Diagnostic(
+                code="matching_network.topology_limit",
+                severity=Severity.WARNING,
+                message=(
+                    "the fixed input-shunt matching network cannot match a load "
+                    f"resistance above the {spec.reference_impedance_ohm:g} Ω "
+                    f"source reference at {range_text}; the theoretical SWR "
+                    f"floor is about {floor:.2f}:1. Check the transformer ratio "
+                    "or the antenna return path."
+                ),
+                field="matching_network",
             )
         )
 
