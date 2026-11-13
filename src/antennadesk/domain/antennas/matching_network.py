@@ -346,7 +346,64 @@ class TNetwork:
         return input_series @ shunt @ output_series
 
 
-MatchingNetwork = LNetwork | PiNetwork | TNetwork
+@dataclass(frozen=True, slots=True)
+class TransformerNetwork:
+    """Primary-referred transformer parasitics and matching elements.
+
+    The ideal impedance ratio is applied before this network.  This block
+    models the primary leakage inductance in series with a shunt combination
+    of the external matching capacitor, the secondary winding capacitance
+    referred to the primary, and the magnetizing inductance.
+    """
+
+    series_inductance_h: float = 0.0
+    input_shunt_capacitance_f: float = 0.0
+    input_shunt_inductance_h: float = 0.0
+
+    def __post_init__(self) -> None:
+        ensure_non_negative(self.series_inductance_h, name="series_inductance_h")
+        ensure_non_negative(
+            self.input_shunt_capacitance_f,
+            name="input_shunt_capacitance_f",
+        )
+        ensure_non_negative(
+            self.input_shunt_inductance_h,
+            name="input_shunt_inductance_h",
+        )
+        if not self.is_active:
+            raise ValueError("a transformer network needs at least one non-zero element")
+
+    @property
+    def is_active(self) -> bool:
+        return (
+            self.series_inductance_h > 0.0
+            or self.input_shunt_capacitance_f > 0.0
+            or self.input_shunt_inductance_h > 0.0
+        )
+
+    def _shunt_admittance(self, omega: float) -> complex:
+        admittance = complex(0.0, 0.0)
+        if self.input_shunt_capacitance_f:
+            admittance += complex(0.0, omega * self.input_shunt_capacitance_f)
+        if self.input_shunt_inductance_h:
+            admittance += complex(0.0, -1.0 / (omega * self.input_shunt_inductance_h))
+        return admittance
+
+    def input_impedance(self, load_impedance_ohm: complex, frequency_hz: float) -> complex:
+        ensure_positive(frequency_hz, name="frequency_hz")
+        omega = 2.0 * math.pi * frequency_hz
+        series = complex(0.0, omega * self.series_inductance_h)
+        return 1.0 / (self._shunt_admittance(omega) + 1.0 / (series + load_impedance_ohm))
+
+    def abcd(self, frequency_hz: float) -> Abcd:
+        ensure_positive(frequency_hz, name="frequency_hz")
+        omega = 2.0 * math.pi * frequency_hz
+        return Abcd.shunt(self._shunt_admittance(omega)) @ Abcd.series(
+            complex(0.0, omega * self.series_inductance_h)
+        )
+
+
+MatchingNetwork = LNetwork | PiNetwork | TNetwork | TransformerNetwork
 
 
 def input_shunt_l_network_swr_floor(

@@ -3220,6 +3220,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "divide por este valor en los informes."
         ),
     },
+    "help.endfed.transformer_model": {
+        Language.ENGLISH: (
+            "Ideal uses the ratio only. The measured 49:1 preset adds measured "
+            "leakage, winding capacitance, and magnetizing inductance."
+        ),
+        Language.SPANISH: (
+            "La relación ideal usa solo el cociente. El preset 49:1 medido agrega "
+            "fuga, capacidad de bobinado e inductancia de magnetización medidas."
+        ),
+    },
     "help.endfed.loading_coil_inductance": {
         Language.ENGLISH: (
             "Series loading-coil inductance; the coil is ideal unless a resistance is entered."
@@ -11124,6 +11134,32 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "endfed.transformer_ratio": {
         Language.ENGLISH: "Transformer ratio",
         Language.SPANISH: "Relación del transformador",
+    },
+    "endfed.transformer_model": {
+        Language.ENGLISH: "Transformer model",
+        Language.SPANISH: "Modelo de transformador",
+    },
+    "endfed.transformer_model.ideal": {
+        Language.ENGLISH: "Ideal ratio",
+        Language.SPANISH: "Relación ideal",
+    },
+    "endfed.transformer_model.squash_practice_49_1": {
+        Language.ENGLISH: "Measured 49:1 (Squash Practice)",
+        Language.SPANISH: "49:1 medido (Squash Practice)",
+    },
+    "endfed.transformer_model_hint": {
+        Language.ENGLISH: (
+            "Ideal uses only the ratio. The measured 49:1 model uses the "
+            "2xFT114-43, 5T/30T reference: 198 nH leakage, 2.7 pF secondary "
+            "winding capacitance, and 25.8 µH magnetizing inductance. It is not "
+            "your transformer."
+        ),
+        Language.SPANISH: (
+            "La relación ideal usa solo el cociente. El modelo 49:1 medido usa "
+            "la referencia 2xFT114-43, 5T/30T: 198 nH de fuga, 2,7 pF de "
+            "capacidad de secundario y 25,8 µH de magnetización. No es tu "
+            "transformador."
+        ),
     },
     "endfed.matching_capacitance": {
         Language.ENGLISH: "Matching capacitor (primary)",

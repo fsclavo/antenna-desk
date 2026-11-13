@@ -1151,6 +1151,32 @@ def test_v35_migration_adds_installation_profiles() -> None:
     assert "installation_profiles" not in document["project"]
 
 
+def test_v45_migration_adds_the_endfed_transformer_model() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 45,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "endfed",
+                    "parameters": {
+                        "frequency_hz": 7_100_000.0,
+                        "length_m": 20.0,
+                        "transformer_ratio": 49.0,
+                    },
+                }
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    parameters = migrated["project"]["designs"][0]["parameters"]
+    assert parameters["transformer_model"] == "ideal"
+    assert "transformer_model" not in document["project"]["designs"][0]["parameters"]
+
+
 def test_v34_migration_adds_the_endfed_bend_fields() -> None:
     document = {
         "format": "antennadesk-project",

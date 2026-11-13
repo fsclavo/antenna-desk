@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from antennadesk.domain.antennas.endfed import (
@@ -571,6 +573,44 @@ def test_shortened_efhw_matching_network_uses_a_primary_shunt_capacitor() -> Non
     assert isinstance(network, PiNetwork)
     assert network.input_shunt_capacitance_f == pytest.approx(100e-12)
     assert network.series_inductance_h == pytest.approx(198e-9)
+
+
+def test_measured_transformer_model_uses_the_reference_parasitics() -> None:
+    from antennadesk.domain.antennas.endfed import (
+        SQUASH_PRACTICE_49_1_MAGNETIZING_INDUCTANCE_H,
+        SQUASH_PRACTICE_49_1_WINDING_CAPACITANCE_F,
+        EndFedTransformerModel,
+        endfed_matching_network,
+        shortened_efhw_40_10_parameters,
+    )
+    from antennadesk.domain.antennas.matching_network import TransformerNetwork
+
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        transformer_model=EndFedTransformerModel.SQUASH_PRACTICE_49_1,
+    )
+    network = endfed_matching_network(parameters)
+
+    assert isinstance(network, TransformerNetwork)
+    assert network.series_inductance_h == pytest.approx(198e-9)
+    assert network.input_shunt_capacitance_f == pytest.approx(
+        100e-12 + 49.0 * SQUASH_PRACTICE_49_1_WINDING_CAPACITANCE_F
+    )
+    assert network.input_shunt_inductance_h == pytest.approx(
+        SQUASH_PRACTICE_49_1_MAGNETIZING_INDUCTANCE_H
+    )
+
+
+def test_measured_transformer_model_requires_the_49_to_1_ratio() -> None:
+    from antennadesk.domain.antennas.endfed import EndFedTransformerModel
+
+    with pytest.raises(ValueError, match="49:1"):
+        EndFedParameters(
+            frequency_hz=7_100_000.0,
+            length_m=20.0,
+            transformer_ratio=36.0,
+            transformer_model=EndFedTransformerModel.SQUASH_PRACTICE_49_1,
+        )
 
 
 def test_standard_endfed_has_no_matching_network_by_default() -> None:

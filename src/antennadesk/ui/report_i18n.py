@@ -1041,6 +1041,9 @@ REPORT_SPANISH: dict[str, str] = {
     "L network (series {series}, {side} shunt {shunt})": (
         "Red L (serie {series}, paralelo de {side} {shunt})"
     ),
+    "Measured transformer (series {series}, input shunt {input_shunt})": (
+        "Transformador medido (serie {series}, paralelo de entrada {input_shunt})"
+    ),
     "Pi network (input shunt {input_shunt}, series {series}, output shunt {output_shunt})": (
         "Red Pi (paralelo de entrada {input_shunt}, serie {series}, "
         "paralelo de salida {output_shunt})"

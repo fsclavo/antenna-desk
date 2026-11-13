@@ -28,6 +28,7 @@ from ...domain.antennas.endfed import (
     EFHW_PRESET_LENGTHS_M,
     EndFedParameters,
     EndFedPreset,
+    EndFedTransformerModel,
     efhw_parameters,
     endfed_model_warning_keys,
     shortened_efhw_40_10_parameters,
@@ -124,6 +125,15 @@ class EndFedForm(QWidget):
         self._transformer.setDecimals(1)
         self._transformer.setValue(49.0)
         self._transformer.setSuffix(":1")
+
+        self._transformer_model = QComboBox(self)
+        for model in EndFedTransformerModel:
+            self._transformer_model.addItem(
+                translator.t(f"endfed.transformer_model.{model.value}"),
+                model.value,
+            )
+        self._transformer_model.setToolTip(translator.t("endfed.transformer_model_hint"))
+        self._transformer_model.currentIndexChanged.connect(self._transformer_model_changed)
 
         self._matching_capacitance = QDoubleSpinBox(self)
         self._matching_capacitance.setRange(0.0, 100_000.0)
@@ -322,6 +332,10 @@ class EndFedForm(QWidget):
         form.addRow(self._labels.label("endfed.bend_horizontal"), self._bend_horizontal)
         form.addRow(self._labels.label("endfed.transformer_ratio"), self._transformer)
         form.addRow(
+            self._labels.label("endfed.transformer_model"),
+            self._transformer_model,
+        )
+        form.addRow(
             self._labels.label("endfed.matching_capacitance"),
             self._matching_capacitance,
         )
@@ -413,6 +427,13 @@ class EndFedForm(QWidget):
             self._translator.t("endfed.matching_capacitance_hint")
         )
         self._transformer_leakage.setToolTip(self._translator.t("endfed.transformer_leakage_hint"))
+        for index in range(self._transformer_model.count()):
+            model = EndFedTransformerModel(str(self._transformer_model.itemData(index)))
+            self._transformer_model.setItemText(
+                index,
+                self._translator.t(f"endfed.transformer_model.{model.value}"),
+            )
+        self._transformer_model.setToolTip(self._translator.t("endfed.transformer_model_hint"))
         self._matching_override.setText(self._translator.t("endfed.matching_override"))
         self._matching_override_edit.setText(self._translator.t("feed_matching.edit"))
         self._matching_override_remove.setText(self._translator.t("feed_matching.remove"))
@@ -511,6 +532,7 @@ class EndFedForm(QWidget):
                 )
                 return replace(
                     parameters,
+                    transformer_model=self._selected_transformer_model(),
                     matching_capacitance_f=self._matching_capacitance.value() * 1e-12,
                     transformer_leakage_inductance_h=(self._transformer_leakage.value() * 1e-6),
                     bend_enabled=self._bend_enabled.isChecked(),
@@ -746,6 +768,9 @@ class EndFedForm(QWidget):
             self._feed_height.setValue(length_from_m(parameters.feed_height_m, self._unit_system))
             self._end_height.setValue(length_from_m(parameters.end_height_m, self._unit_system))
             self._transformer.setValue(parameters.transformer_ratio)
+            model_index = self._transformer_model.findData(parameters.transformer_model.value)
+            if model_index >= 0:
+                self._transformer_model.setCurrentIndex(model_index)
             self._matching_capacitance.setValue(parameters.matching_capacitance_f * 1e12)
             self._transformer_leakage.setValue(parameters.transformer_leakage_inductance_h * 1e6)
             self._loading_coil_group.setChecked(parameters.loading_coil_enabled)
@@ -784,6 +809,7 @@ class EndFedForm(QWidget):
         self._update_counterpoise_controls()
         self._update_loading_coil_controls()
         self._update_efhw_visibility()
+        self._update_matching_override()
         self._update_geometry()
 
     def set_frequency_hz(self, frequency_hz: float) -> None:
@@ -815,8 +841,9 @@ class EndFedForm(QWidget):
             ).override_active
         self._matching_override_widget.setVisible(override_active)
         self._matching_override_actions.setVisible(override_active and self._show_override_actions)
+        measured = self._selected_transformer_model() is EndFedTransformerModel.SQUASH_PRACTICE_49_1
         self._matching_capacitance.setEnabled(not override_active)
-        self._transformer_leakage.setEnabled(not override_active)
+        self._transformer_leakage.setEnabled(not override_active and not measured)
 
     def _update_geometry(self) -> None:
         self._update_loading_coil_controls()
@@ -929,6 +956,17 @@ class EndFedForm(QWidget):
             )
         self._geometry.setText(text)
 
+    def _selected_transformer_model(self) -> EndFedTransformerModel:
+        return EndFedTransformerModel(str(self._transformer_model.currentData()))
+
+    def _transformer_model_changed(self, *_args: object) -> None:
+        if self._updating:
+            return
+        if self._selected_transformer_model() is EndFedTransformerModel.SQUASH_PRACTICE_49_1:
+            self._transformer.setValue(49.0)
+        self._update_matching_override()
+        self._emit_changed()
+
     def parameters(self) -> EndFedParameters:
         return EndFedParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
@@ -950,6 +988,7 @@ class EndFedForm(QWidget):
             material=self._selected_material(),
             ground=self._ground_model(),
             transformer_ratio=self._transformer.value(),
+            transformer_model=self._selected_transformer_model(),
             matching_capacitance_f=self._matching_capacitance.value() * 1e-12,
             transformer_leakage_inductance_h=(self._transformer_leakage.value() * 1e-6),
             counterpoise_length_m=(

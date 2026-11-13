@@ -257,6 +257,12 @@ transformer, not a measurement of the exact preset build. An active
 project-level matching network overrides this internal unit; the two networks
 are not cascaded. See
 [ADR-0028](ADR/0028-matching-network-precedence.md).
+`transformer_model` selects the ideal ratio or the optional measured
+`SQUASH_PRACTICE_49_1` reference. The measured model adds 2.7 pF of secondary
+winding capacitance referred to the primary and 25.8 µH of magnetizing
+inductance; it uses the measured 198 nH leakage and requires a 49:1 ratio. It is
+a specific published build, not a measurement of the user's transformer.
+Core/frequency-dependent loss remains unmodeled.
 `MatchingNetworkOrigin` records whether the effective network is internal,
 project, or absent for diagnostics. It is runtime-only, excluded from the model
 fingerprint, and not persisted. When the internal input-shunt unit sees a

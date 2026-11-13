@@ -17,7 +17,7 @@ from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
 from .load import SeriesLoad
-from .matching_network import MatchingNetwork, PiNetwork
+from .matching_network import MatchingNetwork, PiNetwork, TransformerNetwork
 from .materials import COPPER, ConductorMaterial
 from .wire import Wire
 
@@ -68,6 +68,12 @@ SHORTENED_EFHW_TRANSFORMER_RATIO = 49.0
 # PA0EJH build. Use 0 for an ideal transformer.
 SHORTENED_EFHW_MATCHING_CAPACITANCE_F = 100e-12
 SHORTENED_EFHW_TRANSFORMER_LEAKAGE_H = 198e-9
+# Measured reference transformer: 2x FT114-43, 5 primary / 30 secondary
+# turns (35:5 = 7:1 turns, 49:1 impedance), Gary Rondeau AF7NX / Squash
+# Practice, 2021. Values are for that build, not the user's hardware.
+SQUASH_PRACTICE_49_1_LEAKAGE_H = 198e-9
+SQUASH_PRACTICE_49_1_WINDING_CAPACITANCE_F = 2.7e-12
+SQUASH_PRACTICE_49_1_MAGNETIZING_INDUCTANCE_H = 25.8e-6
 
 
 class EndFedPreset(StrEnum):
@@ -76,6 +82,11 @@ class EndFedPreset(StrEnum):
     RANDOM_WIRE = "random_wire"
     SHORTENED_80_10 = "shortened_80_10"
     SHORTENED_40_10 = "shortened_40_10"
+
+
+class EndFedTransformerModel(StrEnum):
+    IDEAL = "ideal"
+    SQUASH_PRACTICE_49_1 = "squash_practice_49_1"
 
 
 COUNTERPOISE_ID = "counterpoise"
@@ -119,6 +130,7 @@ class EndFedParameters:
     material: ConductorMaterial = COPPER
     ground: GroundModel = FREE_SPACE
     transformer_ratio: float = 1.0
+    transformer_model: EndFedTransformerModel = EndFedTransformerModel.IDEAL
     matching_capacitance_f: float = 0.0
     transformer_leakage_inductance_h: float = 0.0
     counterpoise_length_m: float = 0.0
@@ -144,6 +156,16 @@ class EndFedParameters:
         ensure_non_negative(self.end_height_m, name="end_height_m")
         ensure_positive(self.wire_radius_m, name="wire_radius_m")
         ensure_positive(self.transformer_ratio, name="transformer_ratio")
+        object.__setattr__(
+            self,
+            "transformer_model",
+            EndFedTransformerModel(self.transformer_model),
+        )
+        if (
+            self.transformer_model is EndFedTransformerModel.SQUASH_PRACTICE_49_1
+            and not math.isclose(self.transformer_ratio, 49.0, rel_tol=1e-9)
+        ):
+            raise ValueError("the Squash Practice measured transformer model requires a 49:1 ratio")
         ensure_non_negative(self.matching_capacitance_f, name="matching_capacitance_f")
         ensure_non_negative(
             self.transformer_leakage_inductance_h,
@@ -234,7 +256,11 @@ class EndFedParameters:
 
     @property
     def matching_network_active(self) -> bool:
-        return self.matching_capacitance_f > 0.0 or self.transformer_leakage_inductance_h > 0.0
+        return (
+            self.transformer_model is not EndFedTransformerModel.IDEAL
+            or self.matching_capacitance_f > 0.0
+            or self.transformer_leakage_inductance_h > 0.0
+        )
 
     @property
     def uses_impedance_only_convergence(self) -> bool:
@@ -532,6 +558,15 @@ def endfed_matching_network(parameters: EndFedParameters) -> MatchingNetwork | N
 
     if not parameters.matching_network_active:
         return None
+    if parameters.transformer_model is EndFedTransformerModel.SQUASH_PRACTICE_49_1:
+        return TransformerNetwork(
+            series_inductance_h=SQUASH_PRACTICE_49_1_LEAKAGE_H,
+            input_shunt_capacitance_f=(
+                parameters.matching_capacitance_f
+                + parameters.transformer_ratio * SQUASH_PRACTICE_49_1_WINDING_CAPACITANCE_F
+            ),
+            input_shunt_inductance_h=SQUASH_PRACTICE_49_1_MAGNETIZING_INDUCTANCE_H,
+        )
     return PiNetwork(
         series_inductance_h=parameters.transformer_leakage_inductance_h,
         input_shunt_capacitance_f=parameters.matching_capacitance_f,
@@ -554,7 +589,8 @@ def endfed_model_warning_keys(parameters: EndFedParameters) -> tuple[str, ...]:
     if parameters.preset is EndFedPreset.SHORTENED_40_10:
         keys.append("endfed.warning.convergence_40_10")
     if (
-        parameters.matching_capacitance_f > 0.0
+        parameters.transformer_model is EndFedTransformerModel.IDEAL
+        and parameters.matching_capacitance_f > 0.0
         and parameters.transformer_leakage_inductance_h <= 0.0
     ):
         keys.append("endfed.warning.matching_leakage")

@@ -128,9 +128,10 @@ external service and must not be invented or simulated into existence.
 | ~~EF4~~ | ~~Clarify the optimizer objective and expose best-SWR selection~~ | S–M | none | **Done 2026-11-13:** shortened EFHW descriptors now default to **Minimum SWR** while every other family keeps **Target impedance**. The dialog shows a hint when the selected candidate is worse than another feasible candidate's SWR, and adds **Apply Best SWR** independent of the objective. Objective help now states that target impedance minimizes `|Z−Z0|`, not SWR. No scoring, schema, or solver change; a `MIN_MISMATCH` objective remains a separate ADR. |
 | ~~EF5~~ | ~~Recommend action when the optimizer optimum hits a search bound~~ | S | EF1 | **Done 2026-11-13:** added `variables_at_bounds()` in the optimizer variable module and a descriptor opt-in flag. The shortened EFHW descriptors set the flag; their summaries name the continuous unlocked variables within 1 % of a bound and recommend widening the range only when buildable. No automatic bound expansion; other families keep the previous recommendation set. |
 | ~~EF6~~ | ~~Investigate 40-10 shortened-EFHW convergence~~ | M | EF1, EF3 | **Done 2026-11-13:** spike completed; no model change is justified without a traceable reference. Coil segment count 1–5 at the 0.10 m section does not remove the R/X sensitivity. A wider 0.20–0.50 m section makes 40-10 converge but makes 80-10 substantially worse, so there is no single section length that improves both. The preset keeps its R/X convergence check and gains an explicit editor warning that absolute SWR is informational. Thresholds were not relaxed. |
-| EF7 | Measured transformer model for shortened EFHW | L | EF6; measured transformer data | **Blocked/deferred.** Add ratio, leakage, winding capacitance, core loss, and frequency dependence only from a measured or traceable transformer model. Until then the internal 100 pF/198 nH stay fixed context and must not become free optimizer variables. Requires schema, UI, evidence, and ADR work. |
+| ~~EF7a~~ | ~~Measured 49:1 transformer reactive preset~~ | M | EF6 | **Done 2026-11-13:** added an optional `EndFedTransformerModel` preset using Squash Practice's measured 2xFT114-43, 5T/30T build: 198 nH leakage, 2.7 pF secondary winding capacitance, and 25.8 µH magnetizing inductance. The model is selectable in the editor, persisted in schema 46, and used by the internal matching network only; core/frequency-dependent loss remains EF7b. No optimizer variables were added. |
+| EF7b | Measured transformer loss and frequency dependence | L | EF7a; measured loss data | **Partially unblocked.** Squash Practice reports 0.30–0.43 dB transmission loss from 80–10 m and KN5L reports ~0.3 dB core loss at 14 MHz/20 W. Add a frequency-dependent transformer loss table/model with provenance, interpolation limits, and a clear separation from mismatch loss. Do not treat it as a universal transformer loss. |
 | EF8 | Common-mode return / coax-shield model for end-fed antennas | L | measurement or validated common-mode model | **Blocked/deferred.** Replace the 0.1 m installation-return proxy with an optional common-mode return model only when a traceable source or measurement exists. Do not optimize the proxy as if it were a physical radial. Requires an ADR and validation. |
-| EF9 | Design-specific matching-network optimization | L | EF7, EF8, ADR | **Blocked/deferred.** The current project matching network is global and replaces the internal EFHW unit (ADR-0028). A design-specific L/Pi/T network with optimizer variables is the only coherent way to let the optimizer tune a match; it requires an ADR, schema, UI, and regression coverage. Do not add loose C/L variables to the fixed input-shunt network. |
+| EF9 | Design-specific matching-network optimization | L | EF7b, EF8, ADR | **Blocked/deferred.** The current project matching network is global and replaces the internal EFHW unit (ADR-0028). A design-specific L/Pi/T network with optimizer variables is the only coherent way to let the optimizer tune a match; it requires an ADR, schema, UI, and regression coverage. Do not add loose C/L variables to the fixed input-shunt network. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -147,7 +148,7 @@ UX27 and UX28 were added the same day from terminology feedback; UX27 and UX28
 were completed on 2026-11-13.
 UX29 was added and completed the same day from feed-connection feedback.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
-EF1–EF6 are implemented; EF7–EF9 remain blocked/deferred.
+EF1–EF6 and EF7a are implemented; EF7b–EF9 remain blocked/deferred.
 
 The first slice accepts these constraints:
 
@@ -1060,7 +1061,8 @@ scaling QA remains manual.
 - **Phase 1, read-only detail:** 5–8 days. Types, descriptors, registry, UI,
   sheet/PDF/ZIP, tests, docs. This is the shippable slice.
 - **Phase 2, installation record:** 3–5 days, only if users need structured
-  connector/balun/weatherproofing metadata. Requires an ADR and schema 46.
+  connector/balun/weatherproofing metadata. Requires an ADR and a later schema
+  (47 or higher).
 - **Phase 3, real electrical models:** blocked by G27 and traceable data.
 
 ### Risks
@@ -1078,9 +1080,9 @@ scaling QA remains manual.
 
 ## EF1–EF9 — Shortened-EFHW optimizer and model-confidence queue (2026-11-13)
 
-**EF1–EF6 are implemented on 2026-11-13.** EF7–EF9 are blocked/deferred until
-a measured transformer, a common-mode return model, or a design-specific
-matching-network ADR exists. The ordered plan is:
+**EF1–EF6 and EF7a are implemented on 2026-11-13.** EF7b–EF9 are blocked or
+deferred until a measured transformer loss model, a common-mode return model, or
+a design-specific matching-network ADR exists. The ordered plan is:
 
 | ID | Scope | Why it is separate |
 |---|---|---|
@@ -1090,7 +1092,8 @@ matching-network ADR exists. The ordered plan is:
 | EF4 | Clarify objective semantics and expose best-SWR selection | Product/UI decision; other families keep their defaults |
 | EF5 | Recommend action when an optimum hits a search bound | Optimizer guardrail gated by descriptor |
 | EF6 | Investigate 40-10 convergence | Needs a segment/load-placement spike before changing the model |
-| EF7 | Measured transformer model | Blocked on traceable transformer data |
+| EF7a | Measured 49:1 transformer reactive preset | Implemented from Squash Practice measurements |
+| EF7b | Measured transformer loss and frequency dependence | Partially unblocked; needs loss-table scope |
 | EF8 | Common-mode return / coax-shield model | Blocked on measurement or a validated common-mode model |
 | EF9 | Design-specific matching-network optimization | Follow-up to ADR-0028; needs EF7/EF8 |
 
@@ -1244,12 +1247,18 @@ decision is therefore:
 The existing NEC2C integration test continues to assert that 80-10 converges and
 40-10 does not. No solver, schema, or numerical change was made.
 
-### EF7–EF9 — Blocked/deferred
+### EF7a–EF9 — Implemented / blocked
 
-- **EF7:** measured transformer model. Add ratio, leakage, winding capacitance,
-  core loss, and frequency dependence only from measured or traceable data.
-  Until then the internal 100 pF/198 nH stay fixed context; do not expose them
-  as free optimizer variables.
+- **EF7a (implemented):** optional measured 49:1 transformer preset from
+  Squash Practice's 2xFT114-43, 5T/30T build. It models 198 nH leakage,
+  2.7 pF secondary winding capacitance, and 25.8 µH magnetizing inductance as a
+  primary-referred shunt/series network. The preset is clearly labeled as a
+  reference build, not the user's transformer; the external 100 pF capacitor
+  remains separate. Schema 46 adds the persisted model selector.
+- **EF7b:** measured transformer loss and frequency dependence. Add a loss table
+  or fit from the Squash Practice 0.30–0.43 dB measurements and KN5L's ~0.3 dB
+  core-loss data, with interpolation limits and no double counting with
+  mismatch loss.
 - **EF8:** common-mode return / coax-shield model. Replace the 0.1 m proxy only
   when a traceable measurement or validated common-mode model exists. Do not
   optimize the proxy as a physical radial.
@@ -1465,15 +1474,16 @@ model and solver contract must land first.
 12. **UX29 is complete.** The read-only constructive feed connection is closed.
     Do not change `FeedPoint`, the NEC deck, the solver, or the schema without a
     new ADR.
-13. **EF1–EF6 are complete.** The shortened-EFHW optimizer keeps the fixed feed
-    and loading-coil partitions, results report the input-shunt matching-topology
-    floor only for the internal end-fed unit, the confidence card marks absolute
-    SWR as informational with the proxy-return limitation, the optimizer
-    defaults to Minimum SWR with an Apply Best SWR action, a bound-hit warning
-    names the limiting variables, and the 40-10 convergence spike keeps the
-    model unchanged with an explicit informational-SWR warning. EF7–EF9 remain
-    blocked/deferred until measured transformer, return, or matching-network
-    data exists.
+13. **EF1–EF6 and EF7a are complete.** The shortened-EFHW optimizer keeps the
+    fixed feed and loading-coil partitions, results report the input-shunt
+    matching-topology floor only for the internal end-fed unit, the confidence
+    card marks absolute SWR as informational with the proxy-return limitation,
+    the optimizer defaults to Minimum SWR with an Apply Best SWR action, a
+    bound-hit warning names the limiting variables, and the 40-10 convergence
+    spike keeps the model unchanged with an explicit informational-SWR warning.
+    The optional measured 49:1 transformer preset is available and persisted in
+    schema 46. EF7b–EF9 remain blocked/deferred until measured loss, return, or
+    matching-network data exists.
 14. Product priorities and new antenna candidates live in
     [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
@@ -1505,8 +1515,8 @@ model and solver contract must land first.
 
 ## Current baseline
 
-- Schema: **45**.
-- Full gate: **3,042 passed, 1 skipped** with `NEC2C` and the optional
+- Schema: **46**.
+- Full gate: **3,049 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.6.0** published on 2026-11-13 with checksum-verified unsigned

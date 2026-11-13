@@ -29,6 +29,7 @@ from ..domain.antennas.matching_network import (
     MatchingNetworkPosition,
     PiNetwork,
     TNetwork,
+    TransformerNetwork,
 )
 from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.moxon import MoxonParameters
@@ -213,10 +214,21 @@ def matching_network_description(
                 tr,
             ),
         )
+    elif isinstance(network, TransformerNetwork):
+        description = tr(
+            "Measured transformer (series {series}, input shunt {input_shunt})",
+            series=_branch_text(network.series_inductance_h, 0.0, tr),
+            input_shunt=_branch_text(
+                network.input_shunt_inductance_h,
+                network.input_shunt_capacitance_f,
+                tr,
+            ),
+        )
     else:
         raise TypeError(f"unsupported matching network: {type(network)!r}")
-    if network.q_factor:
-        description += tr(", Q {q:g}", q=network.q_factor)
+    q_factor = getattr(network, "q_factor", None)
+    if q_factor:
+        description += tr(", Q {q:g}", q=q_factor)
     return description
 
 

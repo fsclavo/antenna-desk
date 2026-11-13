@@ -690,8 +690,12 @@ design lists the vertical and horizontal sections separately.
 The 100 pF capacitor is modeled as an ideal **primary shunt** across the 49:1
 transformer; the transformer leakage is an editable starting value (0.198 µH)
 from Squash Practice's measured 49:1 transformer, not this exact build. The
-common-mode choke, ground, support geometry, core loss, winding capacitance,
-and capacitor ESR are not modeled. The 40-20-10 preset follows the 23 µH/100 pF
+**Transformer model** selector can switch from the ideal ratio to a measured
+49:1 reference (2xFT114-43, 5T/30T) that adds 2.7 pF of secondary winding
+capacitance and 25.8 µH of magnetizing inductance, both referred to the primary.
+That preset is a reference build, not a measurement of your transformer. The
+common-mode choke, ground, support geometry, core/frequency-dependent loss, and
+capacitor ESR are not modeled. The 40-20-10 preset follows the 23 µH/100 pF
 schematic; CA4EMT documents a different 34 µH/150 pF variant.
 When a project matching network is active, it replaces this internal unit
 instead of cascading with it; the internal 100 pF/leakage values stay in the

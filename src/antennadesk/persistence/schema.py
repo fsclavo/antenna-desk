@@ -32,6 +32,7 @@ from ..domain.antennas.endfed import (
     ANTENNA_TYPE_ENDFED,
     EndFedParameters,
     EndFedPreset,
+    EndFedTransformerModel,
 )
 from ..domain.antennas.fan_dipole import (
     ANTENNA_TYPE_FAN_DIPOLE,
@@ -73,6 +74,7 @@ from ..domain.antennas.matching_network import (
     MatchingNetworkPosition,
     PiNetwork,
     TNetwork,
+    TransformerNetwork,
 )
 from ..domain.antennas.materials import ConductorMaterial
 from ..domain.antennas.moxon import ANTENNA_TYPE_MOXON, MoxonParameters
@@ -653,6 +655,7 @@ class EndFedParametersPayload(StrictModel):
     material: MaterialPayload
     ground: GroundPayload
     transformer_ratio: float = Field(default=1.0, gt=0.0)
+    transformer_model: EndFedTransformerModel = EndFedTransformerModel.IDEAL
     matching_capacitance_f: float = Field(default=0.0, ge=0.0)
     transformer_leakage_inductance_h: float = Field(default=0.0, ge=0.0)
     counterpoise_length_m: float = Field(default=0.0, ge=0.0)
@@ -1897,6 +1900,7 @@ def _endfed_parameters_from_domain(value: EndFedParameters) -> EndFedParametersP
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
         transformer_ratio=value.transformer_ratio,
+        transformer_model=value.transformer_model,
         matching_capacitance_f=value.matching_capacitance_f,
         transformer_leakage_inductance_h=value.transformer_leakage_inductance_h,
         counterpoise_length_m=value.counterpoise_length_m,
@@ -2080,6 +2084,8 @@ def _matching_network_from_domain(value: MatchingNetwork) -> LNetworkPayload:
             output_series_capacitance_f=value.output_series_capacitance_f,
             q_factor=value.q_factor,
         )
+    if isinstance(value, TransformerNetwork):
+        raise TypeError("the measured transformer network is design-level, not a project network")
     return LNetworkPayload(
         topology="l",
         series_inductance_h=value.series_inductance_h,
@@ -3157,6 +3163,7 @@ def _endfed_parameters_to_domain(value: EndFedParametersPayload) -> EndFedParame
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),
         transformer_ratio=value.transformer_ratio,
+        transformer_model=value.transformer_model,
         matching_capacitance_f=value.matching_capacitance_f,
         transformer_leakage_inductance_h=value.transformer_leakage_inductance_h,
         counterpoise_length_m=value.counterpoise_length_m,

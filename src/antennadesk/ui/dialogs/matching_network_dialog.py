@@ -203,9 +203,8 @@ class MatchingNetworkDialog(QDialog):
         self._q_factor = QDoubleSpinBox(self)
         self._q_factor.setRange(0.0, 100_000.0)
         self._q_factor.setDecimals(1)
-        self._q_factor.setValue(
-            network.q_factor if network is not None and network.q_factor else 0.0
-        )
+        q_factor = getattr(network, "q_factor", None) if network is not None else None
+        self._q_factor.setValue(q_factor or 0.0)
         self._q_factor.setSpecialValueText(translator.t("matching_network.lossless"))
 
         self._components_group = QGroupBox(

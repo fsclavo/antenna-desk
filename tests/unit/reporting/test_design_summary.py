@@ -633,6 +633,23 @@ def test_endfed_bend_summary_reports_vertical_and_horizontal_sections() -> None:
     assert "End height" not in rows
 
 
+def test_measured_transformer_description_is_explicit() -> None:
+    from antennadesk.domain.antennas.matching_network import TransformerNetwork
+    from antennadesk.reporting.design_summary import matching_network_description
+
+    description = matching_network_description(
+        TransformerNetwork(
+            series_inductance_h=198e-9,
+            input_shunt_capacitance_f=232e-12,
+            input_shunt_inductance_h=25.8e-6,
+        )
+    )
+
+    assert "Measured transformer" in description
+    assert "198" in description
+    assert "25.8" in description
+
+
 def test_feed_matching_rows_describe_the_project_chain() -> None:
     from antennadesk.domain.antennas.balun import BalunLoss
     from antennadesk.domain.antennas.feed_line import FeedLine

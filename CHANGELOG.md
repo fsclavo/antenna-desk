@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   corrosion-resistant use case; the solver emits conductivity through `LD 5`
   and does not trigger the permeability warning. Copper remains the default and
   the project schema is unchanged.
+- **Measured 49:1 transformer preset.** The End-fed editor can select an optional
+  measured 49:1 reference model from Squash Practice's 2xFT114-43, 5T/30T build:
+  198 nH leakage, 2.7 pF secondary winding capacitance, and 25.8 µH magnetizing
+  inductance. The preset is a primary-referred reactive model, not a claim about
+  the user's transformer; core/frequency-dependent loss remains a follow-up.
+  Schema 46 persists the selector; the ideal-ratio model remains the default.
 - **Geometry and pattern in simulation reports.** The HTML and native PDF
   simulation reports now include a canonical geometry figure and azimuth plus
   elevation pattern cuts at the maximum-gain direction. The figure is rendered

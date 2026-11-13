@@ -87,6 +87,32 @@ def test_endfed_matching_hints_name_the_preset_defaults(qtbot: QtBot) -> None:
     assert "standard EFHW starts at 0" in leakage_hint
 
 
+def test_endfed_dialog_selects_the_measured_transformer_model(
+    qtbot: QtBot,
+) -> None:
+    from antennadesk.domain.antennas.endfed import (
+        EndFedTransformerModel,
+        shortened_efhw_40_10_parameters,
+    )
+
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=shortened_efhw_40_10_parameters(),
+    )
+    qtbot.addWidget(dialog)
+    index = dialog._form._transformer_model.findData(
+        EndFedTransformerModel.SQUASH_PRACTICE_49_1.value
+    )
+    assert index >= 0
+
+    dialog._form._transformer_model.setCurrentIndex(index)
+
+    assert dialog.parameters().transformer_model is EndFedTransformerModel.SQUASH_PRACTICE_49_1
+    assert dialog.parameters().transformer_ratio == pytest.approx(49.0)
+    assert dialog._form._transformer_leakage.isEnabled() is False
+
+
 def test_shortened_endfed_warns_about_the_installation_return_proxy(
     qtbot: QtBot,
 ) -> None:

@@ -1245,6 +1245,28 @@ def test_loaded_endfed_round_trips_with_the_coil_load() -> None:
     assert restored.designs[0].antenna.loads[0].offset_m == pytest.approx(0.05)
 
 
+def test_endfed_measured_transformer_model_round_trips() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.endfed import (
+        EndFedTransformerModel,
+        shortened_efhw_40_10_parameters,
+    )
+
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        transformer_model=EndFedTransformerModel.SQUASH_PRACTICE_49_1,
+    )
+    original = _project(parameters, "Measured transformer")
+
+    restored = project_from_document(document_from_project(original))
+
+    assert (
+        restored.designs[0].parameters.transformer_model
+        is EndFedTransformerModel.SQUASH_PRACTICE_49_1
+    )
+
+
 def test_endfed_feed_section_and_installation_return_round_trip() -> None:
     from antennadesk.domain.antennas.endfed import EndFedParameters
 

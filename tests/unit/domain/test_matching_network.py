@@ -9,6 +9,7 @@ import pytest
 from antennadesk.domain.antennas.matching_network import (
     LNetwork,
     PiNetwork,
+    TransformerNetwork,
     input_shunt_l_network_swr_floor,
 )
 
@@ -249,3 +250,20 @@ def test_input_shunt_floor_requires_the_input_shunt_topology() -> None:
         )
         is None
     )
+
+
+def test_transformer_network_combines_shunt_c_and_l_with_series_leakage() -> None:
+    network = TransformerNetwork(
+        series_inductance_h=198e-9,
+        input_shunt_capacitance_f=232e-12,
+        input_shunt_inductance_h=25.8e-6,
+    )
+    frequency = 7_100_000.0
+    load = complex(80.0, 37.0)
+    omega = 2.0 * math.pi * frequency
+    shunt = complex(0.0, omega * 232e-12) + complex(0.0, -1.0 / (omega * 25.8e-6))
+    series = complex(0.0, omega * 198e-9)
+    expected = 1.0 / (shunt + 1.0 / (series + load))
+
+    assert network.input_impedance(load, frequency) == pytest.approx(expected)
+    assert network.abcd(frequency).input_impedance(load) == pytest.approx(expected)
