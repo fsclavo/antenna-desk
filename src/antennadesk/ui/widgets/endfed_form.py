@@ -28,6 +28,7 @@ from ...domain.antennas.endfed import (
     EFHW_PRESET_LENGTHS_M,
     EndFedParameters,
     EndFedPreset,
+    EndFedReturnPath,
     EndFedTransformerModel,
     efhw_parameters,
     endfed_model_warning_keys,
@@ -36,6 +37,7 @@ from ...domain.antennas.endfed import (
 )
 from ...domain.antennas.matching_network import MatchingNetwork
 from ...domain.antennas.materials import COPPER, ConductorMaterial
+from ...domain.common import units
 from ...domain.design.formulas import half_wave_length_m
 from ...domain.design.matching_resolution import resolve_matching_network
 from ...domain.environment.ground import GroundKind, GroundModel
@@ -235,6 +237,15 @@ class EndFedForm(QWidget):
         )
         self._installation_return.setToolTip(translator.t("endfed.installation_return_hint"))
 
+        self._return_path = QComboBox(self)
+        for path in EndFedReturnPath:
+            self._return_path.addItem(
+                translator.t(f"endfed.return_path.{path.value}"),
+                path.value,
+            )
+        self._return_path.setToolTip(translator.t("endfed.return_path_hint"))
+        self._return_path.currentIndexChanged.connect(self._return_path_changed)
+
         self._azimuth = QDoubleSpinBox(self)
         self._azimuth.setRange(0.0, 360.0)
         self._azimuth.setDecimals(1)
@@ -345,6 +356,7 @@ class EndFedForm(QWidget):
         )
         form.addRow(self._matching_override_widget)
         form.addRow(self._loading_coil_group)
+        form.addRow(self._labels.label("endfed.return_path"), self._return_path)
         form.addRow(self._counterpoise_enabled)
         form.addRow(self._labels.label("endfed.counterpoise_length"), self._counterpoise_length)
         form.addRow(self._labels.label("endfed.counterpoise_height"), self._counterpoise_height)
@@ -414,6 +426,13 @@ class EndFedForm(QWidget):
         self._ground_presets.retranslate()
         self._labels.retranslate()
         self._counterpoise_enabled.setText(self._translator.t("endfed.counterpoise_enabled"))
+        for index in range(self._return_path.count()):
+            path = EndFedReturnPath(str(self._return_path.itemData(index)))
+            self._return_path.setItemText(
+                index,
+                self._translator.t(f"endfed.return_path.{path.value}"),
+            )
+        self._return_path.setToolTip(self._translator.t("endfed.return_path_hint"))
         self._installation_return_hint.setText(
             self._translator.t("endfed.installation_return_hint")
         )
@@ -696,12 +715,19 @@ class EndFedForm(QWidget):
             self._loading_coil_q.setText("—")
 
     def _update_counterpoise_controls(self) -> None:
-        enabled = self._counterpoise_enabled.isChecked()
-        self._counterpoise_length.setEnabled(enabled)
-        self._counterpoise_height.setEnabled(enabled)
-        self._counterpoise_azimuth.setEnabled(enabled)
-        self._installation_return.setEnabled(not enabled)
-        self._installation_return_hint.setVisible(not enabled)
+        path = self._selected_return_path()
+        auto = path is EndFedReturnPath.AUTO
+        counterpoise = path is EndFedReturnPath.COUNTERPOISE or (
+            auto and self._counterpoise_enabled.isChecked()
+        )
+        coax = path is EndFedReturnPath.COAX_SHIELD
+        self._counterpoise_enabled.setEnabled(auto)
+        self._counterpoise_length.setEnabled(counterpoise or coax)
+        self._counterpoise_height.setEnabled(counterpoise)
+        self._counterpoise_azimuth.setEnabled(counterpoise or coax)
+        installation = path is EndFedReturnPath.INSTALLATION_PROXY or (auto and not counterpoise)
+        self._installation_return.setEnabled(installation)
+        self._installation_return_hint.setVisible(installation)
 
     def _update_ground_controls(self) -> None:
         finite = self._ground.currentData() == GroundKind.FINITE.value
@@ -761,6 +787,9 @@ class EndFedForm(QWidget):
             self._installation_return.setValue(
                 length_from_m(parameters.installation_return_length_m, self._unit_system)
             )
+            return_index = self._return_path.findData(parameters.return_path.value)
+            if return_index >= 0:
+                self._return_path.setCurrentIndex(return_index)
             self._bend_enabled.setChecked(parameters.bend_enabled)
             self._bend_vertical.setValue(
                 length_from_m(parameters.bend_vertical_length_m, self._unit_system)
@@ -779,7 +808,7 @@ class EndFedForm(QWidget):
             )
             self._loading_coil_inductance.setValue(parameters.loading_coil_inductance_h * 1e6)
             self._loading_coil_resistance.setValue(parameters.loading_coil_resistance_ohm)
-            self._counterpoise_enabled.setChecked(parameters.counterpoise_length_m > 0.0)
+            self._counterpoise_enabled.setChecked(parameters.counterpoise_active)
             self._counterpoise_length.setValue(
                 length_from_m(parameters.counterpoise_length_m, self._unit_system)
             )
@@ -862,7 +891,7 @@ class EndFedForm(QWidget):
         unit = self._translator.t(length_unit_key(self._unit_system))
         counterpoise = (
             f"{length_from_m(parameters.counterpoise_length_m, self._unit_system):.2f} {unit}"
-            if parameters.counterpoise_length_m > 0.0
+            if parameters.counterpoise_active
             else "none"
         )
         vertical_display = length_from_m(
@@ -938,6 +967,16 @@ class EndFedForm(QWidget):
                 value=f"{length_from_m(parameters.feed_section_length_m, self._unit_system):.2f}",
                 unit=unit,
             )
+        if parameters.coax_shield_active:
+            coax_shield_display = length_from_m(
+                parameters.effective_return_length_m,
+                self._unit_system,
+            )
+            text += " · " + self._translator.t(
+                "endfed.coax_shield_summary",
+                value=f"{coax_shield_display:.2f}",
+                unit=unit,
+            )
         if parameters.installation_return_active:
             installation_return_display = length_from_m(
                 parameters.installation_return_length_m,
@@ -955,6 +994,24 @@ class EndFedForm(QWidget):
                 leakage=f"{parameters.transformer_leakage_inductance_h * 1e6:g}",
             )
         self._geometry.setText(text)
+
+    def _selected_return_path(self) -> EndFedReturnPath:
+        return EndFedReturnPath(str(self._return_path.currentData()))
+
+    def _return_path_changed(self, *_args: object) -> None:
+        if self._updating:
+            return
+        path = self._selected_return_path()
+        if (
+            path in {EndFedReturnPath.COUNTERPOISE, EndFedReturnPath.COAX_SHIELD}
+            and self._counterpoise_length.value() <= 0.0
+        ):
+            wavelength_m = units.wavelength_m(self._frequency.value() * 1_000_000.0)
+            self._counterpoise_length.setValue(
+                length_from_m(0.05 * wavelength_m, self._unit_system)
+            )
+        self._update_counterpoise_controls()
+        self._emit_changed()
 
     def _selected_transformer_model(self) -> EndFedTransformerModel:
         return EndFedTransformerModel(str(self._transformer_model.currentData()))
@@ -991,12 +1048,23 @@ class EndFedForm(QWidget):
             transformer_model=self._selected_transformer_model(),
             matching_capacitance_f=self._matching_capacitance.value() * 1e-12,
             transformer_leakage_inductance_h=(self._transformer_leakage.value() * 1e-6),
+            return_path=self._selected_return_path(),
             counterpoise_length_m=(
                 length_to_m(self._counterpoise_length.value(), self._unit_system)
-                if self._counterpoise_enabled.isChecked()
+                if (
+                    self._selected_return_path()
+                    in {EndFedReturnPath.COUNTERPOISE, EndFedReturnPath.COAX_SHIELD}
+                    or (
+                        self._selected_return_path() is EndFedReturnPath.AUTO
+                        and self._counterpoise_enabled.isChecked()
+                    )
+                )
                 else 0.0
             ),
-            counterpoise_height_m=length_to_m(self._counterpoise_height.value(), self._unit_system),
+            counterpoise_height_m=length_to_m(
+                self._counterpoise_height.value(),
+                self._unit_system,
+            ),
             counterpoise_azimuth_deg=self._counterpoise_azimuth.value(),
             loading_coil_enabled=self._loading_coil_group.isChecked(),
             loading_coil_offset_m=(

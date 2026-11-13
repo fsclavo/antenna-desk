@@ -240,7 +240,13 @@ horizontal wires or slopers. The generator is experimental.
 An optional feed section is a fixed partition at the start of the same wire; it
 is split into three segments for a stable NEC delta-gap source. The optional
 installation return is a model-only proxy for the coax/mast/earth path; it is
-not drawn and is excluded from the wire schedule and bill of materials. When a
+not drawn and is excluded from the wire schedule and bill of materials.
+`return_path` selects the return conductor: `auto` preserves the legacy
+counterpoise-or-proxy behavior, `installation_proxy` forces the proxy,
+`counterpoise` forces a physical counterpoise, and `coax_shield` models the
+shield as a model-only straight wire. The coax-shield option is a wire
+approximation; it does not include common-mode choking, shield transfer
+impedance, or the real cable route. When a
 loading coil is enabled, the radiator is partitioned at the published coil
 offset into lower, coil, and top sections. The coil section is fixed at three
 segments and carries the series load at its center, so segmentation changes do

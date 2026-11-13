@@ -925,9 +925,22 @@ def render_construction_sheet(
             tr("retained; project network overrides") if override_active else tr("active")
         )
         counterpoise = (
-            f"{parameters.counterpoise_length_m:.4f} m at {parameters.counterpoise_height_m:.4f} m"
-            if parameters.counterpoise_length_m > 0.0
+            f"{parameters.counterpoise_length_m:.4f} m at "
+            f"{parameters.effective_return_height_m:.4f} m"
+            if parameters.counterpoise_active
             else tr("none")
+        )
+        return_path_label = {
+            "auto": tr("automatic"),
+            "installation_proxy": tr("installation proxy"),
+            "counterpoise": tr("counterpoise"),
+            "coax_shield": tr("coax shield"),
+        }[parameters.return_path.value]
+        return_path_row = f"<tr><th>Return path</th><td>{_escape(return_path_label)}</td></tr>\n"
+        coax_shield_row = (
+            f"<tr><th>Coax shield</th><td>{parameters.effective_return_length_m:.4f} m</td></tr>\n"
+            if parameters.coax_shield_active
+            else ""
         )
         feed_section_row = (
             f"<tr><th>Feed section</th><td>{parameters.feed_section_length_m:.4f} m</td></tr>\n"
@@ -956,8 +969,8 @@ def render_construction_sheet(
 <tr><th>Wire length</th><td>{parameters.length_m:.4f} m</td></tr>
 {feed_section_row}<tr><th>Feed height</th><td>{parameters.feed_height_m:.4f} m</td></tr>
 {height_rows}<tr><th>Transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
-{matching_rows}<tr><th>Counterpoise</th><td>{counterpoise}</td></tr>
-{installation_return_row}"""
+{matching_rows}{return_path_row}<tr><th>Counterpoise</th><td>{counterpoise}</td></tr>
+{coax_shield_row}{installation_return_row}"""
         if parameters.bend_active and parameters.coil_active:
             construction_note = _note(
                 tr,

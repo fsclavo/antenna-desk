@@ -430,6 +430,7 @@ _CONTEXT_FIELDS = {
     "counterpoise_height_m",
     "transformer_ratio",
     "transformer_model",
+    "return_path",
     "element_count",
     "radial_count",
     "radial_angle_deg",
@@ -700,6 +701,28 @@ def test_shortened_endfed_optimizer_marks_the_matching_network_as_context() -> N
     assert standard.descriptor.context_note_key is None
     assert standard.descriptor.recommends_bound_hits is False
     assert standard.descriptor.default_objective is FamilyOptimizationObjective.TARGET_IMPEDANCE
+
+
+def test_coax_shield_endfed_optimizer_searches_the_return_length() -> None:
+    from antennadesk.domain.antennas.endfed import (
+        EndFedReturnPath,
+        shortened_efhw_40_10_parameters,
+    )
+    from antennadesk.domain.optimization.registry import optimizer_availability
+
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        return_path=EndFedReturnPath.COAX_SHIELD,
+        counterpoise_length_m=5.0,
+        counterpoise_height_m=0.0,
+        counterpoise_azimuth_deg=180.0,
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    names = {variable.name for variable in availability.descriptor.variables}
+    assert "counterpoise_length_m" in names
+    assert "counterpoise_height_m" not in names
+    assert "counterpoise_azimuth_deg" in names
 
 
 def test_bent_endfed_optimizer_searches_the_bend_instead_of_the_end_height() -> None:

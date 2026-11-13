@@ -840,9 +840,15 @@ def design_summary_rows(
     if isinstance(parameters, EndFedParameters):
         counterpoise = (
             f"{parameters.counterpoise_length_m:.4f} m"
-            if parameters.counterpoise_length_m > 0.0
+            if parameters.counterpoise_active
             else "none"
         )
+        return_path_label = {
+            "auto": "automatic",
+            "installation_proxy": "installation proxy",
+            "counterpoise": "counterpoise",
+            "coax_shield": "coax shield",
+        }[parameters.return_path.value]
         type_label = {
             EndFedPreset.STANDARD: "end-fed wire",
             EndFedPreset.SLOPER: "sloper",
@@ -866,6 +872,8 @@ def design_summary_rows(
                     else [("End height", f"{parameters.end_height_m:.4f} m")]
                 ),
                 ("Transformer", f"{parameters.transformer_ratio:g}:1"),
+                ("Return path", return_path_label),
+                ("Return length", f"{parameters.effective_return_length_m:.4f} m"),
                 ("Counterpoise", counterpoise),
                 (
                     "Installation return",
@@ -877,7 +885,7 @@ def design_summary_rows(
                 ),
                 (
                     "Counterpoise height",
-                    f"{parameters.counterpoise_height_m:.4f} m",
+                    f"{parameters.effective_return_height_m:.4f} m",
                 ),
                 (
                     "Counterpoise azimuth",

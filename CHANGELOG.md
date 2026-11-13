@@ -15,6 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   corrosion-resistant use case; the solver emits conductivity through `LD 5`
   and does not trigger the permeability warning. Copper remains the default and
   the project schema is unchanged.
+- **Selectable end-fed return path.** The End-fed editor now offers
+  **Automatic (legacy)**, **Installation proxy**, **Counterpoise**, and
+  **Coax shield** return paths. Counterpoise and coax shield use the existing
+  return length/height/azimuth fields; the coax shield is a model-only wire
+  approximation, not a common-mode choke or shield-transfer-impedance model.
+  `Automatic` preserves the previous behavior exactly. Schema 47 persists the
+  selector; the optimizer searches the return length for counterpoise/coax and
+  keeps the height variable only for a physical counterpoise. Reports, the
+  construction sheet, the scene note, and EN/ES help expose the limitation.
 - **Measured 49:1 transformer preset.** The End-fed editor can select an optional
   measured 49:1 reference model from Squash Practice's 2xFT114-43, 5T/30T build:
   198 nH leakage, 2.7 pF secondary winding capacitance, and 25.8 µH magnetizing

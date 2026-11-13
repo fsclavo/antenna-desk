@@ -32,6 +32,7 @@ from ..domain.antennas.endfed import (
     ANTENNA_TYPE_ENDFED,
     EndFedParameters,
     EndFedPreset,
+    EndFedReturnPath,
     EndFedTransformerModel,
 )
 from ..domain.antennas.fan_dipole import (
@@ -646,6 +647,7 @@ class EndFedParametersPayload(StrictModel):
     length_m: float = Field(gt=0.0)
     feed_section_length_m: float = Field(default=0.0, ge=0.0)
     installation_return_length_m: float = Field(default=0.0, ge=0.0)
+    return_path: EndFedReturnPath = EndFedReturnPath.AUTO
     bend_enabled: bool = False
     bend_vertical_length_m: float = Field(default=0.0, ge=0.0)
     feed_height_m: float = Field(default=10.0, ge=0.0)
@@ -1891,6 +1893,7 @@ def _endfed_parameters_from_domain(value: EndFedParameters) -> EndFedParametersP
         length_m=value.length_m,
         feed_section_length_m=value.feed_section_length_m,
         installation_return_length_m=value.installation_return_length_m,
+        return_path=value.return_path,
         bend_enabled=value.bend_enabled,
         bend_vertical_length_m=value.bend_vertical_length_m,
         feed_height_m=value.feed_height_m,
@@ -3154,6 +3157,7 @@ def _endfed_parameters_to_domain(value: EndFedParametersPayload) -> EndFedParame
         length_m=value.length_m,
         feed_section_length_m=value.feed_section_length_m,
         installation_return_length_m=value.installation_return_length_m,
+        return_path=value.return_path,
         bend_enabled=value.bend_enabled,
         bend_vertical_length_m=value.bend_vertical_length_m,
         feed_height_m=value.feed_height_m,

@@ -633,6 +633,28 @@ def test_endfed_bend_summary_reports_vertical_and_horizontal_sections() -> None:
     assert "End height" not in rows
 
 
+def test_endfed_coax_shield_summary_reports_the_return_path() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.endfed import (
+        EndFedReturnPath,
+        shortened_efhw_40_10_parameters,
+    )
+
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        return_path=EndFedReturnPath.COAX_SHIELD,
+        counterpoise_length_m=5.0,
+        counterpoise_height_m=0.0,
+    )
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Return path"] == "coax shield"
+    assert rows["Return length"] == "5.0000 m"
+    assert rows["Counterpoise"] == "none"
+    assert rows["Counterpoise height"] == "0.0000 m"
+
+
 def test_measured_transformer_description_is_explicit() -> None:
     from antennadesk.domain.antennas.matching_network import TransformerNetwork
     from antennadesk.reporting.design_summary import matching_network_description

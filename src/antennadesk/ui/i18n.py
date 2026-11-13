@@ -2255,6 +2255,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "camino del coaxil/mástil/tierra, no una radial física"
         ),
     },
+    "geometry.endfed_coax_shield": {
+        Language.ENGLISH: (
+            "Coax shield is a wire approximation of the return path; common-mode "
+            "choking and the real cable route are not modeled"
+        ),
+        Language.SPANISH: (
+            "La malla del coaxil es una aproximación de hilo del camino de "
+            "retorno; no se modelan el choke de modo común ni el recorrido real "
+            "del cable"
+        ),
+    },
     "geometry.endfed_bend_note": {
         Language.ENGLISH: (
             "The inverted-L bend is a sharp 90° corner; support the corner and keep "
@@ -3177,6 +3188,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.discone.wire_count": {
         Language.ENGLISH: "Number of radial wires used to approximate the cone and disc.",
         Language.SPANISH: "Cantidad de hilos radiales usados para aproximar el cono y el disco.",
+    },
+    "help.endfed.return_path": {
+        Language.ENGLISH: (
+            "Select the return conductor: legacy automatic, installation proxy, "
+            "counterpoise, or a coax-shield wire approximation."
+        ),
+        Language.SPANISH: (
+            "Elegí el conductor de retorno: automático heredado, proxy de "
+            "instalación, contrapeso o aproximación de la malla del coaxil."
+        ),
     },
     "help.endfed.counterpoise_length": {
         Language.ENGLISH: ("Counterpoise wire length; it is a real wire, not an ideal ground."),
@@ -11119,6 +11140,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "installation return {value} {unit} (proxy)",
         Language.SPANISH: "retorno de instalación {value} {unit} (proxy)",
     },
+    "endfed.coax_shield_summary": {
+        Language.ENGLISH: "coax shield {value} {unit} (wire approximation)",
+        Language.SPANISH: "malla del coaxil {value} {unit} (aproximación de hilo)",
+    },
     "endfed.loaded_geometry": {
         Language.ENGLISH: (
             "Feed {feed} {unit} · end {end} {unit} · coil at {coil} {unit} · "
@@ -11208,6 +11233,43 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Quitar en Alimentación y adaptación."
         ),
     },
+    "endfed.return_path": {
+        Language.ENGLISH: "Return path",
+        Language.SPANISH: "Camino de retorno",
+    },
+    "endfed.return_path.auto": {
+        Language.ENGLISH: "Automatic (legacy)",
+        Language.SPANISH: "Automático (heredado)",
+    },
+    "endfed.return_path.installation_proxy": {
+        Language.ENGLISH: "Installation proxy",
+        Language.SPANISH: "Proxy de instalación",
+    },
+    "endfed.return_path.counterpoise": {
+        Language.ENGLISH: "Counterpoise",
+        Language.SPANISH: "Contrapeso",
+    },
+    "endfed.return_path.coax_shield": {
+        Language.ENGLISH: "Coax shield",
+        Language.SPANISH: "Malla del coaxil",
+    },
+    "endfed.return_path_hint": {
+        Language.ENGLISH: (
+            "Counterpoise and coax shield use the return length/height/azimuth "
+            "fields. The coax shield is a wire approximation, not a common-mode "
+            "choke model; the installation proxy is a numerical placeholder."
+        ),
+        Language.SPANISH: (
+            "Contrapeso y malla del coaxil usan los campos de longitud/altura/"
+            "azimut del retorno. La malla es una aproximación de hilo, no un "
+            "modelo de choke de modo común; el proxy de instalación es un "
+            "reemplazo numérico."
+        ),
+    },
+    "endfed.return_path_length": {
+        Language.ENGLISH: "Return path length",
+        Language.SPANISH: "Longitud del camino de retorno",
+    },
     "endfed.counterpoise_enabled": {
         Language.ENGLISH: "Use counterpoise",
         Language.SPANISH: "Usar contrapeso",
@@ -11281,6 +11343,19 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "La EFHW acortada usa un retorno de instalación proxy de 0,10 m, no "
             "un contrapeso físico. La ROE absoluta es informativa; el camino real "
             "del coaxil/mástil/tierra la domina."
+        ),
+    },
+    "endfed.warning.return_coax_shield": {
+        Language.ENGLISH: (
+            "The coax shield is modeled as a straight wire return. Common-mode "
+            "choking, shield transfer impedance, and the real cable route are not "
+            "included; absolute SWR is informational."
+        ),
+        Language.SPANISH: (
+            "La malla del coaxil se modela como un hilo recto de retorno. No se "
+            "incluyen el choke de modo común, la impedancia de transferencia de "
+            "la malla ni el recorrido real del cable; la ROE absoluta es "
+            "informativa."
         ),
     },
     "endfed.warning.matching_leakage": {

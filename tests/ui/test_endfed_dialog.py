@@ -113,6 +113,34 @@ def test_endfed_dialog_selects_the_measured_transformer_model(
     assert dialog._form._transformer_leakage.isEnabled() is False
 
 
+def test_endfed_dialog_selects_a_coax_shield_return_path(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.endfed import (
+        EndFedReturnPath,
+        shortened_efhw_40_10_parameters,
+    )
+
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=shortened_efhw_40_10_parameters(),
+    )
+    qtbot.addWidget(dialog)
+    index = dialog._form._return_path.findData(EndFedReturnPath.COAX_SHIELD.value)
+    assert index >= 0
+
+    dialog._form._return_path.setCurrentIndex(index)
+    dialog._form._counterpoise_length.setValue(5.0)
+
+    assert not dialog._form._counterpoise_enabled.isEnabled()
+    assert not dialog._form._counterpoise_height.isEnabled()
+    assert not dialog._form._installation_return.isEnabled()
+
+    parameters = dialog.parameters()
+    assert parameters.return_path is EndFedReturnPath.COAX_SHIELD
+    assert parameters.effective_return_length_m == pytest.approx(5.0)
+    assert parameters.effective_return_height_m == pytest.approx(0.0)
+
+
 def test_shortened_endfed_warns_about_the_installation_return_proxy(
     qtbot: QtBot,
 ) -> None:

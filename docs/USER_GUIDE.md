@@ -646,8 +646,14 @@ default) models the unavoidable coax/mast/earth path. It is a model proxy, not
 a physical radial, and is modeled for the solver but not drawn or included in
 the wire schedule/BOM. The return terminates at the ground plane; when the feed
 is at ground level it is a 0.10 m wire on the ground plane. The real coax
-routing dominates the SWR. The editor warns when either the fixed feed section
-or the return/counterpoise is missing. **Check convergence** runs the same
+routing dominates the SWR. The **Return path** selector makes the model explicit:
+**Automatic (legacy)** keeps the previous counterpoise-or-proxy behavior,
+**Installation proxy** forces the 0.10 m model proxy, **Counterpoise** forces the
+physical counterpoise, and **Coax shield** models the shield as a straight wire
+return. The coax-shield option is an approximation: it does not model
+common-mode choking, shield transfer impedance, or the real cable route, so its
+absolute SWR is informational. The editor warns when either the fixed feed
+section or the return/counterpoise is missing. **Check convergence** runs the same
 design with 10, 21, and 51 radiator segments and reports the R, X, and SWR
 spread. For the shortened presets the verdict uses **R and X only** (absolute R
 spread up to 1 Ω and X spread up to 10 Ω); the SWR is informational because the

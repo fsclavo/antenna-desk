@@ -1267,6 +1267,30 @@ def test_endfed_measured_transformer_model_round_trips() -> None:
     )
 
 
+def test_endfed_coax_shield_return_path_round_trips() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.endfed import (
+        EndFedReturnPath,
+        shortened_efhw_40_10_parameters,
+    )
+
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        return_path=EndFedReturnPath.COAX_SHIELD,
+        counterpoise_length_m=5.0,
+        counterpoise_height_m=0.0,
+    )
+    original = _project(parameters, "Coax return")
+
+    restored = project_from_document(document_from_project(original))
+
+    restored_parameters = restored.designs[0].parameters
+    assert restored_parameters.return_path is EndFedReturnPath.COAX_SHIELD
+    assert restored_parameters.counterpoise_length_m == pytest.approx(5.0)
+    assert restored_parameters.effective_return_length_m == pytest.approx(5.0)
+
+
 def test_endfed_feed_section_and_installation_return_round_trip() -> None:
     from antennadesk.domain.antennas.endfed import EndFedParameters
 

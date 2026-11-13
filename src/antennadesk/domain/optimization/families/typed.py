@@ -677,12 +677,16 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
                 )
             )
             initial["loading_coil_resistance_ohm"] = parameters.loading_coil_resistance_ohm
-    if parameters.counterpoise_length_m > 0.0:
+    if parameters.counterpoise_active or parameters.coax_shield_active:
         low, high = around(parameters.counterpoise_length_m, 0.3, minimum=0.1)
         variables.append(
             OptimizationVariable(
                 "counterpoise_length_m",
-                "endfed.counterpoise_length",
+                (
+                    "endfed.return_path_length"
+                    if parameters.coax_shield_active
+                    else "endfed.counterpoise_length"
+                ),
                 "optimize.group.loads",
                 low,
                 high,
@@ -690,18 +694,19 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
             )
         )
         initial["counterpoise_length_m"] = parameters.counterpoise_length_m
-        low, high = around(parameters.counterpoise_height_m, 0.5, minimum=0.0)
-        variables.append(
-            OptimizationVariable(
-                "counterpoise_height_m",
-                "endfed.counterpoise_height",
-                "optimize.group.loads",
-                low,
-                high,
-                step=0.01,
+        if parameters.counterpoise_active:
+            low, high = around(parameters.counterpoise_height_m, 0.5, minimum=0.0)
+            variables.append(
+                OptimizationVariable(
+                    "counterpoise_height_m",
+                    "endfed.counterpoise_height",
+                    "optimize.group.loads",
+                    low,
+                    high,
+                    step=0.01,
+                )
             )
-        )
-        initial["counterpoise_height_m"] = parameters.counterpoise_height_m
+            initial["counterpoise_height_m"] = parameters.counterpoise_height_m
         if parameters.counterpoise_azimuth_deg is not None:
             variables.append(
                 OptimizationVariable(
@@ -799,9 +804,13 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
             issues.append(
                 non_negative_violation("counterpoise_length_m", values["counterpoise_length_m"])
             )
-            issues.append(
-                non_negative_violation("counterpoise_height_m", values["counterpoise_height_m"])
-            )
+            if "counterpoise_height_m" in values:
+                issues.append(
+                    non_negative_violation(
+                        "counterpoise_height_m",
+                        values["counterpoise_height_m"],
+                    )
+                )
         if "loading_coil_offset_m" in values:
             issues.append(
                 positive_violation(

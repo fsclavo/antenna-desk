@@ -292,6 +292,66 @@ def test_endfed_model_warning_keys_flag_legacy_and_missing_return() -> None:
     )
 
 
+def test_endfed_auto_return_path_preserves_the_legacy_selection() -> None:
+    from antennadesk.domain.antennas.endfed import EndFedReturnPath
+
+    counterpoise = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        counterpoise_length_m=3.0,
+    )
+    proxy = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        installation_return_length_m=0.1,
+    )
+
+    assert counterpoise.return_path is EndFedReturnPath.AUTO
+    assert counterpoise.counterpoise_active
+    assert not counterpoise.installation_return_active
+    assert counterpoise.effective_return_length_m == pytest.approx(3.0)
+    assert proxy.counterpoise_active is False
+    assert proxy.installation_return_active
+    assert proxy.effective_return_length_m == pytest.approx(0.1)
+
+
+def test_endfed_installation_proxy_ignores_a_retained_counterpoise() -> None:
+    from antennadesk.domain.antennas.endfed import EndFedReturnPath
+
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_height_m=10.0,
+        end_height_m=5.0,
+        return_path=EndFedReturnPath.INSTALLATION_PROXY,
+        installation_return_length_m=0.1,
+        counterpoise_length_m=3.0,
+    )
+
+    assert not parameters.counterpoise_active
+    assert parameters.installation_return_active
+    assert parameters.effective_return_length_m == pytest.approx(0.1)
+    assert [wire.id for wire in parameters.to_custom_parameters().wires] == [
+        "radiator",
+        "endfed-installation-return-drop",
+        "endfed-installation-return",
+    ]
+
+
+def test_endfed_coax_shield_warns_about_the_wire_approximation() -> None:
+    from antennadesk.domain.antennas.endfed import EndFedReturnPath, endfed_model_warning_keys
+
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        feed_section_length_m=0.5,
+        return_path=EndFedReturnPath.COAX_SHIELD,
+        counterpoise_length_m=5.0,
+    )
+
+    assert endfed_model_warning_keys(parameters) == ("endfed.warning.return_coax_shield",)
+
+
 def test_endfed_counterpoise_adds_a_drop_and_horizontal_wire() -> None:
     parameters = EndFedParameters(
         frequency_hz=7_100_000.0,
@@ -556,6 +616,45 @@ def test_endfed_presets_keep_their_generator_name_and_template_id() -> None:
     assert antenna_template_id(random_wire) == "random_wire"
     assert antenna_family(sloper) is AntennaFamily.DIPOLE
     assert antenna_family(random_wire) is AntennaFamily.DIPOLE
+
+
+def test_coax_shield_return_path_uses_a_model_only_wire() -> None:
+    from antennadesk.domain.antennas.endfed import (
+        COAX_SHIELD_DROP_ID,
+        COAX_SHIELD_ID,
+        EndFedReturnPath,
+    )
+
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=11.86,
+        feed_height_m=10.0,
+        end_height_m=10.0,
+        return_path=EndFedReturnPath.COAX_SHIELD,
+        counterpoise_length_m=5.0,
+        counterpoise_height_m=0.1,
+    )
+    custom = parameters.to_custom_parameters()
+
+    assert parameters.effective_return_length_m == pytest.approx(5.0)
+    assert parameters.effective_return_height_m == pytest.approx(0.0)
+    assert any(wire.id == COAX_SHIELD_DROP_ID for wire in custom.wires)
+    shield = next(wire for wire in custom.wires if wire.id == COAX_SHIELD_ID)
+    assert shield.length_m == pytest.approx(5.0)
+    assert shield.start.z_m == pytest.approx(0.0)
+    assert shield.end.z_m == pytest.approx(0.0)
+
+
+def test_counterpoise_and_coax_return_paths_require_a_length() -> None:
+    from antennadesk.domain.antennas.endfed import EndFedReturnPath
+
+    for path in (EndFedReturnPath.COUNTERPOISE, EndFedReturnPath.COAX_SHIELD):
+        with pytest.raises(ValueError, match="counterpoise_length_m"):
+            EndFedParameters(
+                frequency_hz=7_100_000.0,
+                length_m=20.0,
+                return_path=path,
+            )
 
 
 def test_shortened_efhw_matching_network_uses_a_primary_shunt_capacitor() -> None:

@@ -7210,6 +7210,8 @@ class MainWindow(QMainWindow):
             updates.update(
                 preset=previous.preset,
                 transformer_ratio=previous.transformer_ratio,
+                return_path=previous.return_path,
+                installation_return_length_m=previous.installation_return_length_m,
                 counterpoise_length_m=previous.counterpoise_length_m,
                 counterpoise_height_m=previous.counterpoise_height_m,
                 counterpoise_azimuth_deg=previous.counterpoise_azimuth_deg,

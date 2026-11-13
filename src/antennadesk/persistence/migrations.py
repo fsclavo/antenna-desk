@@ -714,6 +714,25 @@ def _migrate_v45_to_v46(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v46_to_v47(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the optional end-fed return-path selector."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if not isinstance(project, dict):
+        return migrated
+    designs = project.get("designs")
+    if not isinstance(designs, list):
+        return migrated
+    for design in designs:
+        if not isinstance(design, dict) or design.get("antenna_type") != "endfed":
+            continue
+        parameters = design.get("parameters")
+        if isinstance(parameters, dict):
+            parameters.setdefault("return_path", "auto")
+    return migrated
+
+
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
@@ -760,6 +779,7 @@ MIGRATIONS: dict[int, Migration] = {
     43: _migrate_v43_to_v44,
     44: _migrate_v44_to_v45,
     45: _migrate_v45_to_v46,
+    46: _migrate_v46_to_v47,
 }
 
 

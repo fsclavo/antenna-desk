@@ -1101,6 +1101,34 @@ def test_endfed_bend_construction_sheet_lists_the_vertical_and_horizontal_sectio
     assert "The bend is a 90° corner" in sheet
 
 
+def test_endfed_coax_shield_construction_sheet_lists_the_return_path(
+    sample_project: Project,
+) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.endfed import (
+        EndFedReturnPath,
+        shortened_efhw_40_10_parameters,
+    )
+
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        return_path=EndFedReturnPath.COAX_SHIELD,
+        counterpoise_length_m=5.0,
+        counterpoise_height_m=0.0,
+    )
+    design = sample_project.designs[0].with_parameters(parameters)
+    project = sample_project.with_design(design, updated_at=sample_project.updated_at)
+
+    sheet = render_construction_sheet(project, design, None)
+
+    assert "Return path" in sheet
+    assert "coax shield" in sheet
+    assert "Coax shield" in sheet
+    assert "5.0000 m" in sheet
+    assert "Installation return (proxy)" not in sheet
+
+
 def _preflight_report():
     from antennadesk.domain.common.validation import Severity
     from antennadesk.domain.design.preflight import (

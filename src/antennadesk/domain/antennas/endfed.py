@@ -89,6 +89,13 @@ class EndFedTransformerModel(StrEnum):
     SQUASH_PRACTICE_49_1 = "squash_practice_49_1"
 
 
+class EndFedReturnPath(StrEnum):
+    AUTO = "auto"
+    INSTALLATION_PROXY = "installation_proxy"
+    COUNTERPOISE = "counterpoise"
+    COAX_SHIELD = "coax_shield"
+
+
 COUNTERPOISE_ID = "counterpoise"
 COUNTERPOISE_DROP_ID = "counterpoise-drop"
 FEED_SECTION_ID = "endfed-feed-section"
@@ -98,13 +105,25 @@ BEND_RADIATOR_ID = "endfed-radiator-bend"
 BEND_RADIATOR_TOP_ID = "endfed-radiator-top-bend"
 INSTALLATION_RETURN_ID = "endfed-installation-return"
 INSTALLATION_RETURN_DROP_ID = "endfed-installation-return-drop"
+# EF8a: the coax shield is a straight-wire approximation of the return path.
+# Common-mode choking and shield transfer impedance are intentionally not
+# modeled until a traceable measurement or validated model exists.
+COAX_SHIELD_ID = "endfed-coax-shield"
+COAX_SHIELD_DROP_ID = "endfed-coax-shield-drop"
 DEFAULT_FEED_SECTION_LENGTH_M = 0.5
 DEFAULT_INSTALLATION_RETURN_LENGTH_M = 0.10
 DEFAULT_BEND_VERTICAL_LENGTH_M = 8.0
 ENDFED_FEED_SECTION_SEGMENTS = 3
 ENDFED_LOADING_COIL_SECTION_LENGTH_M = 0.10
 ENDFED_LOADING_COIL_SECTION_SEGMENTS = 3
-MODEL_ONLY_WIRE_IDS = frozenset({INSTALLATION_RETURN_ID, INSTALLATION_RETURN_DROP_ID})
+MODEL_ONLY_WIRE_IDS = frozenset(
+    {
+        INSTALLATION_RETURN_ID,
+        INSTALLATION_RETURN_DROP_ID,
+        COAX_SHIELD_ID,
+        COAX_SHIELD_DROP_ID,
+    }
+)
 
 
 def is_model_only_wire(wire_id: str) -> bool:
@@ -121,6 +140,7 @@ class EndFedParameters:
     length_m: float
     feed_section_length_m: float = 0.0
     installation_return_length_m: float = 0.0
+    return_path: EndFedReturnPath = EndFedReturnPath.AUTO
     bend_enabled: bool = False
     bend_vertical_length_m: float = 0.0
     feed_height_m: float = 10.0
@@ -150,6 +170,14 @@ class EndFedParameters:
             self.installation_return_length_m,
             name="installation_return_length_m",
         )
+        object.__setattr__(self, "return_path", EndFedReturnPath(self.return_path))
+        if (
+            self.return_path in {EndFedReturnPath.COUNTERPOISE, EndFedReturnPath.COAX_SHIELD}
+            and self.counterpoise_length_m <= 0.0
+        ):
+            raise ValueError(
+                "counterpoise/coax-shield return paths require a positive counterpoise_length_m"
+            )
         if self.feed_section_length_m >= self.length_m:
             raise ValueError("feed_section_length_m must be shorter than length_m")
         ensure_non_negative(self.feed_height_m, name="feed_height_m")
@@ -310,14 +338,39 @@ class EndFedParameters:
         return max(self.length_m - self.feed_section_length_m, 0.0)
 
     @property
+    def counterpoise_active(self) -> bool:
+        return self.return_path is EndFedReturnPath.COUNTERPOISE or (
+            self.return_path is EndFedReturnPath.AUTO and self.counterpoise_length_m > 0.0
+        )
+
+    @property
+    def coax_shield_active(self) -> bool:
+        return self.return_path is EndFedReturnPath.COAX_SHIELD
+
+    @property
     def installation_return_active(self) -> bool:
-        return self.counterpoise_length_m <= 0.0 and self.installation_return_length_m > 0.0
+        if self.return_path is EndFedReturnPath.INSTALLATION_PROXY:
+            return self.installation_return_length_m > 0.0
+        if self.return_path is EndFedReturnPath.AUTO:
+            return self.counterpoise_length_m <= 0.0 and self.installation_return_length_m > 0.0
+        return False
 
     @property
     def effective_return_length_m(self) -> float:
+        if self.return_path in {
+            EndFedReturnPath.COUNTERPOISE,
+            EndFedReturnPath.COAX_SHIELD,
+        }:
+            return self.counterpoise_length_m
+        if self.return_path is EndFedReturnPath.INSTALLATION_PROXY:
+            return self.installation_return_length_m
         if self.counterpoise_length_m > 0.0:
             return self.counterpoise_length_m
         return self.installation_return_length_m
+
+    @property
+    def effective_return_height_m(self) -> float:
+        return self.counterpoise_height_m if self.counterpoise_active else 0.0
 
     @property
     def managed_load_ids(self) -> frozenset[str]:
@@ -470,7 +523,16 @@ class EndFedParameters:
 
         if self.effective_return_length_m > 0.0:
             counterpoise_angle = units.degrees_to_radians(self.effective_counterpoise_azimuth_deg)
-            return_height_m = 0.0 if self.installation_return_active else self.counterpoise_height_m
+            return_height_m = self.effective_return_height_m
+            if self.coax_shield_active:
+                return_id = COAX_SHIELD_ID
+                return_drop_id = COAX_SHIELD_DROP_ID
+            elif self.installation_return_active:
+                return_id = INSTALLATION_RETURN_ID
+                return_drop_id = INSTALLATION_RETURN_DROP_ID
+            else:
+                return_id = COUNTERPOISE_ID
+                return_drop_id = COUNTERPOISE_DROP_ID
             counterpoise_start = Point3D(
                 x_m=0.0,
                 y_m=0.0,
@@ -479,11 +541,7 @@ class EndFedParameters:
             if not math.isclose(self.feed_height_m, return_height_m):
                 wires.append(
                     Wire(
-                        id=(
-                            INSTALLATION_RETURN_DROP_ID
-                            if self.installation_return_active
-                            else COUNTERPOISE_DROP_ID
-                        ),
+                        id=return_drop_id,
                         start=feed_point,
                         end=counterpoise_start,
                         radius_m=self.wire_radius_m,
@@ -492,11 +550,7 @@ class EndFedParameters:
                 )
             wires.append(
                 Wire(
-                    id=(
-                        INSTALLATION_RETURN_ID
-                        if self.installation_return_active
-                        else COUNTERPOISE_ID
-                    ),
+                    id=return_id,
                     start=counterpoise_start,
                     end=Point3D(
                         x_m=self.effective_return_length_m * math.cos(counterpoise_angle),
@@ -586,6 +640,8 @@ def endfed_model_warning_keys(parameters: EndFedParameters) -> tuple[str, ...]:
         EndFedPreset.SHORTENED_40_10,
     }:
         keys.append("endfed.warning.return_proxy")
+    if parameters.coax_shield_active:
+        keys.append("endfed.warning.return_coax_shield")
     if parameters.preset is EndFedPreset.SHORTENED_40_10:
         keys.append("endfed.warning.convergence_40_10")
     if (

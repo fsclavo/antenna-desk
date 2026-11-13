@@ -4005,6 +4005,8 @@ def build_scene(
     notes: list[str] = []
     if isinstance(parameters, EndFedParameters) and parameters.installation_return_active:
         notes.append(translator.t("geometry.endfed_return_proxy"))
+    if isinstance(parameters, EndFedParameters) and parameters.coax_shield_active:
+        notes.append(translator.t("geometry.endfed_coax_shield"))
     if effective_type == ZEPP_PRESENTATION_TYPE:
         note_key = (
             "geometry.zepp_note"

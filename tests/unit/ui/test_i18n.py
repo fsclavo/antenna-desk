@@ -159,6 +159,7 @@ HELP_MANIFEST = frozenset(
         "help.yagi.field.transformer_ratio",
         "help.endfed.bend_enabled",
         "help.endfed.bend_vertical",
+        "help.endfed.return_path",
         "help.results.create_matching_network",
         "help.action.simulate",
         "help.action.next_step",
