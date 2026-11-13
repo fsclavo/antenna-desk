@@ -440,7 +440,11 @@ class RobustnessDialog(QDialog):
             self._translator.t("robustness.plot_title"),
             color=self._colors.text,
         )
-        self._plot.setLabel("bottom", "SWR", color=self._colors.text)
+        self._plot.setLabel(
+            "bottom",
+            self._translator.t("table.swr"),
+            color=self._colors.text,
+        )
         self._plot.setLabel("left", self._translator.t("robustness.count"), color=self._colors.text)
         bins = result.histogram
         if not bins:
@@ -475,7 +479,7 @@ class RobustnessDialog(QDialog):
             [
                 self._translator.t("robustness.method"),
                 self._translator.t("robustness.dimensions"),
-                "SWR",
+                self._translator.t("table.swr"),
                 "R (Ω)",
                 "X (Ω)",
                 "|Z| (Ω)",

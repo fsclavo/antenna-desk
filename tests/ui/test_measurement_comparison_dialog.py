@@ -71,6 +71,12 @@ def _dialog(qtbot: QtBot, language: Language = Language.ENGLISH):
     return dialog
 
 
+def test_comparison_dialog_uses_roe_in_spanish(qtbot: QtBot) -> None:
+    dialog = _dialog(qtbot, Language.SPANISH)
+
+    assert dialog._plot.getAxis("left").labelText == "ROE"
+
+
 def test_comparison_dialog_aligns_points_and_shows_deltas(qtbot: QtBot) -> None:
     dialog = _dialog(qtbot)
 

@@ -160,6 +160,18 @@ def test_dialog_can_run_nominal_only_and_retranslates(qtbot: QtBot) -> None:
     assert "no solicitado" in dialog._mc_summary.text()
 
 
+def test_dialog_uses_roe_labels_in_spanish(qtbot: QtBot) -> None:
+    dialog = _dialog(qtbot, language=Language.SPANISH)
+    dialog._corners.setChecked(False)
+    dialog._samples.setValue(0)
+
+    dialog._start()
+    qtbot.waitUntil(lambda: dialog._thread is None, timeout=15_000)
+
+    assert dialog._plot.getAxis("bottom").labelText == "ROE"
+    assert dialog._table.horizontalHeaderItem(2).text() == "ROE"
+
+
 def test_dialog_requires_at_least_one_dimension(qtbot: QtBot) -> None:
     dialog = _dialog(qtbot)
     for row in range(dialog._variables_list.count()):

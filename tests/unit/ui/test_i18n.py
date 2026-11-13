@@ -11,11 +11,14 @@ duplicate keys that would silently overwrite a translation.
 from __future__ import annotations
 
 import ast
+import re
 from pathlib import Path
 from string import Formatter
 
 from antennadesk.ui import i18n
+from antennadesk.ui.evidence_i18n import EVIDENCE_SPANISH
 from antennadesk.ui.i18n import _TRANSLATIONS, Language, Translator
+from antennadesk.ui.report_i18n import REPORT_SPANISH
 
 
 def _fields(formatter: Formatter, text: str) -> set[str]:
@@ -410,6 +413,28 @@ def test_every_help_entry_is_bilingual_and_short() -> None:
             assert text.strip(), key
             assert len(text) <= 240, key
             assert text != key, key
+
+
+def test_spanish_ui_and_reports_use_roe_not_swr() -> None:
+    offenders: list[str] = []
+    for key, translations in _TRANSLATIONS.items():
+        if re.search(r"\bSWR\b", translations.get(Language.SPANISH, "")):
+            offenders.append(key)
+    for key, text in REPORT_SPANISH.items():
+        if re.search(r"\bSWR\b", text):
+            offenders.append(f"report:{key}")
+    for key, fields in EVIDENCE_SPANISH.items():
+        for field, text in fields.items():
+            if re.search(r"\bSWR\b", text):
+                offenders.append(f"evidence:{key}.{field}")
+
+    assert not offenders, offenders
+
+
+def test_spanish_roe_explanation_expands_the_acronym() -> None:
+    text = Translator(Language.SPANISH).t("confidence.explain.swr")
+
+    assert "ROE (relación de ondas estacionarias)" in text
 
 
 def test_translator_formats_placeholders() -> None:

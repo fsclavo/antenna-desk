@@ -16,6 +16,7 @@ from antennadesk.domain.simulation.result import (
 from antennadesk.domain.simulation.solver import SolverMetadata
 from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.reporting.construction_sheet import render_construction_sheet
+from antennadesk.ui.i18n import Language, Translator
 
 
 def _make_result() -> SimulationResult:
@@ -803,6 +804,16 @@ def test_construction_sheet_reports_swr_bandwidth(sample_project: Project) -> No
 
     assert "SWR ≤ 2 bandwidth" in sheet
     assert "200.0 kHz" in sheet
+
+    spanish = render_construction_sheet(
+        sample_project,
+        loop,
+        result,
+        labeler=Translator(Language.SPANISH).report,
+        language="es",
+    )
+    assert "Ancho de banda ROE ≤ 2" in spanish
+    assert "SWR ≤ 2 bandwidth" not in spanish
 
 
 def test_construction_sheet_lists_series_loads(sample_project: Project) -> None:

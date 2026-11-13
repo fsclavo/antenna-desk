@@ -718,12 +718,16 @@ class ParameterSweepDialog(QDialog):
         points = list(result.points)
         x_values = [self._to_display(plan.x_axis.unit, point.x_value) for point in points]
         if plan.metric is SweepMetric.SWR:
-            self._plot.setLabel("left", "SWR", color=self._colors.text)
+            self._plot.setLabel(
+                "left",
+                self._translator.t("table.swr"),
+                color=self._colors.text,
+            )
             self._plot.plot(
                 x_values,
                 [self._finite_or_nan(point.swr) for point in points],
                 pen=pg.mkPen(self._colors.swr, width=2),
-                name="SWR",
+                name=self._translator.t("table.swr"),
                 connect="finite",
             )
         else:
@@ -761,7 +765,7 @@ class ParameterSweepDialog(QDialog):
         self._table.setHorizontalHeaderLabels(
             [
                 self._axis_label(plan.x_axis),
-                "SWR",
+                self._translator.t("table.swr"),
                 "R (Ω)",
                 "X (Ω)",
                 "|Z| (Ω)",

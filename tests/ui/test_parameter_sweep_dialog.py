@@ -153,6 +153,16 @@ def test_dialog_runs_a_1d_sweep_and_applies_a_selected_point(qtbot: QtBot) -> No
     assert dialog.result() == QDialog.DialogCode.Accepted
 
 
+def test_dialog_uses_roe_labels_in_spanish(qtbot: QtBot) -> None:
+    dialog = _dialog(qtbot, language=Language.SPANISH)
+
+    dialog._start()
+    qtbot.waitUntil(lambda: dialog._thread is None, timeout=15_000)
+
+    assert dialog._plot.getAxis("left").labelText == "ROE"
+    assert dialog._table.horizontalHeaderItem(1).text() == "ROE"
+
+
 def test_dialog_runs_a_2d_sweep_and_selects_a_cell(qtbot: QtBot) -> None:
     dialog = _dialog(qtbot)
     height_index = dialog._y_variable.findData("height_m")

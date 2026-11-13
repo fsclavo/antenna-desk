@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Spanish ROE terminology.** Spanish UI and report text now use **ROE**
+  (relación de ondas estacionarias) instead of **SWR**; English remains SWR.
+  The first explanatory use expands the acronym, chart and table labels are
+  localized, and the construction-sheet bandwidth row is translated. Internal
+  identifiers, report keys, CSV columns, solver messages, and domain names are
+  unchanged. No schema or solver change.
+
 ## [0.6.0] - 2026-11-12
 
 ### Added

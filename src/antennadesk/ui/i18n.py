@@ -5338,7 +5338,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "It does not change the antenna pattern or power gain."
         ),
         Language.SPANISH: (
-            "La línea transforma la impedancia y el SWR hacia el transmisor. "
+            "La línea transforma la impedancia y la ROE hacia el transmisor. "
             "No cambia el patrón ni la ganancia de potencia de la antena."
         ),
     },
@@ -5775,7 +5775,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         ),
         Language.SPANISH: (
             "Red L, Pi o T sin pérdidas evaluada antes de la línea. Cambia la "
-            "impedancia y el SWR, pero no el patrón ni la ganancia de potencia."
+            "impedancia y la ROE, pero no el patrón ni la ganancia de potencia."
         ),
     },
     "matching_network.override_warning": {
@@ -7982,9 +7982,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "together with efficiency and realized gain."
         ),
         Language.SPANISH: (
-            "La ROE describe la desadaptación en el plano de referencia, no la calidad "
-            "de la antena. Una ROE baja puede ocultar pérdidas altas en una antena o "
-            "línea con pérdidas. Leé la ROE junto con la eficiencia y la ganancia realizada."
+            "La ROE (relación de ondas estacionarias) mide la desadaptación en el "
+            "plano de referencia, no la calidad de la antena. Una ROE baja puede "
+            "ocultar pérdidas altas. Leé la ROE junto con la eficiencia y la "
+            "ganancia realizada."
         ),
     },
     "confidence.explain.efficiency": {
@@ -10999,8 +11000,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         ),
         Language.SPANISH: (
             "Un retorno corto modela el camino inevitable del coaxil/mástil/"
-            "tierra. No es una radial física; el ruteo real del coaxil domina el "
-            "SWR. Usá un contrapeso real cuando esté disponible."
+            "tierra. No es una radial física; el ruteo real del coaxil domina la "
+            "ROE. Usá un contrapeso real cuando esté disponible."
         ),
     },
     "endfed.warning.feed_section": {
@@ -11040,14 +11041,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "endfed.convergence_converged": {
         Language.ENGLISH: ("Converged: R, X and SWR are stable across segment counts."),
-        Language.SPANISH: ("Convergido: R, X y SWR son estables entre segmentaciones."),
+        Language.SPANISH: ("Convergido: R, X y la ROE son estables entre segmentaciones."),
     },
     "endfed.convergence_unresolved": {
         Language.ENGLISH: (
             "Not converged: the absolute SWR is segmentation-sensitive; verify with a VNA."
         ),
         Language.SPANISH: (
-            "No convergido: el SWR absoluto es sensible a la segmentación; verificá con VNA."
+            "No convergido: la ROE absoluta es sensible a la segmentación; verificá con VNA."
         ),
     },
     "endfed.convergence_impedance_converged": {
@@ -11064,7 +11065,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "{resistance_spread:.1%} · X spread {reactance_spread:.2f} Ω"
         ),
         Language.SPANISH: (
-            "{status}\n{points}\nDispersión de SWR {swr_spread:.3f} · R "
+            "{status}\n{points}\nDispersión de ROE {swr_spread:.3f} · R "
             "{resistance_spread:.1%} · X {reactance_spread:.2f} Ω"
         ),
     },
@@ -11076,7 +11077,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         ),
         Language.SPANISH: (
             "{status}\n{points}\nDispersión de R {resistance_spread:.2f} Ω · X "
-            "{reactance_spread:.2f} Ω\nEl SWR es informativo; la unidad de "
+            "{reactance_spread:.2f} Ω\nLa ROE es informativa; la unidad de "
             "adaptación no está completamente modelada."
         ),
     },
@@ -11091,7 +11092,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Se modelan el shunt de 100 pF en el primario y la fuga estimada, "
             "pero no las pérdidas del núcleo, el ESR del capacitor, la capacidad "
             "de los bobinados ni el transformador exacto; usá la estabilidad de "
-            "R/X y verificá el SWR absoluto con un VNA."
+            "R/X y verificá la ROE absoluta con un VNA."
         ),
     },
     "endfed.counterpoise_length": {
@@ -13091,19 +13092,19 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "optimize.min_swr_objective": {
         Language.ENGLISH: "Minimum SWR",
-        Language.SPANISH: "SWR mínimo",
+        Language.SPANISH: "ROE mínima",
     },
     "optimize.min_swr_edges_objective": {
         Language.ENGLISH: "Minimum SWR at band edges",
-        Language.SPANISH: "SWR mínimo en bordes de banda",
+        Language.SPANISH: "ROE mínima en bordes de banda",
     },
     "optimize.min_swr_operating_objective": {
         Language.ENGLISH: "Minimum SWR at operating frequencies",
-        Language.SPANISH: "SWR mínimo en frecuencias de operación",
+        Language.SPANISH: "ROE mínima en frecuencias de operación",
     },
     "optimize.max_bandwidth_objective": {
         Language.ENGLISH: "Maximum SWR bandwidth",
-        Language.SPANISH: "Máximo ancho de banda de SWR",
+        Language.SPANISH: "Máximo ancho de banda de ROE",
     },
     "optimize.max_gain_objective": {
         Language.ENGLISH: "Maximum power gain",
@@ -13115,7 +13116,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "optimize.balanced_objective": {
         Language.ENGLISH: "Balanced SWR + gain",
-        Language.SPANISH: "SWR + ganancia equilibrados",
+        Language.SPANISH: "ROE + ganancia equilibradas",
     },
     "optimize.target_reactance": {
         Language.ENGLISH: "Target reactance (Ω)",
@@ -13139,11 +13140,11 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "optimize.swr_tolerance": {
         Language.ENGLISH: "SWR tolerance",
-        Language.SPANISH: "Tolerancia de SWR",
+        Language.SPANISH: "Tolerancia de ROE",
     },
     "optimize.swr_limit": {
         Language.ENGLISH: "SWR limit for bandwidth",
-        Language.SPANISH: "Límite de SWR para ancho de banda",
+        Language.SPANISH: "Límite de ROE para ancho de banda",
     },
     "optimize.bandwidth": {
         Language.ENGLISH: "Bandwidth (MHz)",
@@ -13159,7 +13160,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "optimize.swr_weight": {
         Language.ENGLISH: "SWR weight",
-        Language.SPANISH: "Peso de SWR",
+        Language.SPANISH: "Peso de ROE",
     },
     "optimize.gain_weight": {
         Language.ENGLISH: "Gain weight",
@@ -13171,7 +13172,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "optimize.max_swr_constraint": {
         Language.ENGLISH: "Maximum SWR constraint",
-        Language.SPANISH: "Restricción de SWR máximo",
+        Language.SPANISH: "Restricción de ROE máxima",
     },
     "optimize.bandwidth_result": {
         Language.ENGLISH: "Bandwidth {value} MHz",
@@ -13766,7 +13767,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "element_optimize.objective.min_swr": {
         Language.ENGLISH: "Minimum SWR",
-        Language.SPANISH: "SWR mínimo",
+        Language.SPANISH: "ROE mínima",
     },
     "element_optimize.objective.max_efficiency": {
         Language.ENGLISH: "Maximum efficiency",

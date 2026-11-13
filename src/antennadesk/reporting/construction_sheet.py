@@ -1457,7 +1457,8 @@ def render_construction_sheet(
             )
             if bandwidth_hz > 0.0:
                 bandwidth_row = (
-                    f"<tr><th>SWR ≤ 2 bandwidth</th><td>{bandwidth_hz / 1e3:.1f} kHz</td></tr>"
+                    f"<tr><th>{_escape(tr('SWR ≤ 2 bandwidth'))}</th>"
+                    f"<td>{bandwidth_hz / 1e3:.1f} kHz</td></tr>"
                 )
     simulation_rows = ""
     if result is not None and frequency is not None:

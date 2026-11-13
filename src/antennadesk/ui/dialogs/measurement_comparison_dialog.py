@@ -127,7 +127,7 @@ class MeasurementComparisonDialog(QDialog):
         self._plot = pg.PlotWidget(self)
         self._plot.addLegend()
         self._plot.setLabel("bottom", translator.t("measurement.frequency_mhz"))
-        self._plot.setLabel("left", "SWR")
+        self._plot.setLabel("left", translator.t("table.swr"))
         apply_help(self._plot, translator, "measurement.comparison.plot")
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, parent=self)
@@ -314,7 +314,7 @@ class MeasurementComparisonDialog(QDialog):
             ]
         )
         self._plot.setLabel("bottom", t("measurement.frequency_mhz"))
-        self._plot.setLabel("left", "SWR")
+        self._plot.setLabel("left", t("table.swr"))
         apply_help(self._summary, self._translator, "measurement.comparison.summary")
         apply_help(self._table, self._translator, "measurement.comparison.table")
         apply_help(self._plot, self._translator, "measurement.comparison.plot")

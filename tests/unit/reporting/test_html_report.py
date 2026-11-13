@@ -19,6 +19,7 @@ from antennadesk.domain.simulation.segmentation import SegmentationPolicy
 from antennadesk.domain.simulation.solver import SolverMetadata
 from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.reporting.html_report import render_html_report
+from antennadesk.ui.i18n import Language, Translator
 
 
 def make_result(project: Project) -> SimulationResult:
@@ -226,3 +227,16 @@ def test_html_report_includes_a_band_summary(sample_project: Project) -> None:
     assert "Band summary" in report
     assert "Band patterns" in report
     assert "40m" in report
+
+
+def test_spanish_report_uses_roe_not_swr(sample_project: Project) -> None:
+    report = render_html_report(
+        sample_project,
+        sample_project.designs[0],
+        make_result(sample_project),
+        labeler=Translator(Language.SPANISH).report,
+        language="es",
+    )
+
+    assert "ROE" in report
+    assert "SWR" not in report

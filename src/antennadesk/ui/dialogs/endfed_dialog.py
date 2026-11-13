@@ -221,9 +221,10 @@ class EndFedDialog(QDialog):
         if convergence.error is not None:
             QMessageBox.critical(self, self.windowTitle(), convergence.error)
             return
+        swr_label = self._translator.t("table.swr")
         points = " · ".join(
             f"{point.segments} seg: R {point.impedance_ohm.real:.1f}, "
-            f"X {point.impedance_ohm.imag:+.1f}, SWR {point.swr:.2f}"
+            f"X {point.impedance_ohm.imag:+.1f}, {swr_label} {point.swr:.2f}"
             for point in convergence.points
         )
         if convergence.swr_informational:

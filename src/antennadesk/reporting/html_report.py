@@ -148,7 +148,8 @@ def _band_summary_table(analysis: BandAnalysisResult, tr: Labeler) -> str:
             "</tr>"
         )
     return (
-        "<table><thead><tr><th>Band</th><th>Best SWR</th><th>At (MHz)</th>"
+        f"<table><thead><tr><th>Band</th><th>{_escape(tr('Best SWR'))}</th>"
+        "<th>At (MHz)</th>"
         "<th>Gain (dBi)</th><th>Takeoff (°)</th><th>Efficiency (%)</th>"
         "<th>Status</th></tr></thead>"
         f"<tbody>{''.join(rows)}</tbody></table>"
@@ -400,7 +401,7 @@ def render_html_report(
 
 <h2>Impedance</h2>
 <table>
-<thead><tr><th>Frequency (MHz)</th><th>R (Ω)</th><th>X (Ω)</th><th>|Z| (Ω)</th><th>SWR</th><th>Input power (W)</th></tr></thead>
+<thead><tr><th>Frequency (MHz)</th><th>R (Ω)</th><th>X (Ω)</th><th>|Z| (Ω)</th><th>{_escape(tr("SWR"))}</th><th>Input power (W)</th></tr></thead>
 <tbody>{impedance_rows}</tbody>
 </table>
 <div class="chart">{impedance_chart}</div>
@@ -410,7 +411,7 @@ def render_html_report(
 
 {source_section}
 
-<h2>SWR</h2>
+<h2>{_escape(tr("SWR"))}</h2>
 <div class="chart">{swr_chart}</div>
 
 <h2>Far field</h2>

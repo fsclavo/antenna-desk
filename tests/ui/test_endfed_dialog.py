@@ -88,6 +88,21 @@ def test_endfed_dialog_checks_segment_convergence(qtbot: QtBot) -> None:
     assert "Converged" in dialog._check_result.text()
 
 
+def test_endfed_dialog_convergence_uses_roe_in_spanish(qtbot: QtBot) -> None:
+    dialog = EndFedDialog(
+        Translator(Language.SPANISH),
+        UnitSystem.METRIC,
+        solver=FakeSolver(),
+    )
+    qtbot.addWidget(dialog)
+
+    dialog._check_button.click()
+
+    text = dialog._check_result.text()
+    assert "ROE" in text
+    assert "SWR" not in text
+
+
 def test_endfed_dialog_convergence_uses_the_project_matching_network(
     qtbot: QtBot,
 ) -> None:

@@ -701,6 +701,7 @@ REPORT_SPANISH: dict[str, str] = {
         "recepción no están validados independientemente."
     ),
     "SWR ({impedance:g} Ω)": "ROE ({impedance:g} Ω)",
+    "SWR ≤ 2 bandwidth": "Ancho de banda ROE ≤ 2",
     "This variant has no reflector.": "Esta variante no tiene reflector.",
     "Trim and re-measure after installation. Real ground, supports, feed line, and nearby objects can shift the result. A low SWR does not prove high efficiency or a useful radiation pattern.": (  # noqa: E501
         "Recortá y volvé a medir después de la instalación. El suelo real, los "

@@ -119,7 +119,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX24~~ | ~~Retune Moxon and Yagi catalog starting frequencies~~ | S | none | **Done 2026-11-12:** new Moxon editors start at 28.500 MHz with the Cebik 20 m wire reference scaled to that frequency, and new Yagi editors start at 145.000 MHz with the NBS five-element preset scaled from its published 50.1 MHz reference. The default field and starting geometry are generated together; a requested frequency passed to the Moxon dialog regenerates the scaled reference as well. Moxon and Yagi evidence/help state that the scaled defaults are heuristic starting points, while the exact Cebik 14.17 MHz and NBS 50.1 MHz references remain the source-backed cases. The Cebik and NBS reference actions still rescale to the current frequency. Ringo (50.100 MHz) and loaded vertical/mobile whip (7.100 MHz) keep their current defaults and are out of scope. Tests cover both defaults, the Moxon frequency-scaled dialog path, Yagi scaling/clearance behavior, EN/ES help, and the existing reference actions. No schema change. |
 | UX25 | Add stainless steel 304 as a source-backed conductor material | S–M | none | **Queued 2026-11-13.** Add only 304, with the source-backed conductivity and a documented μr = 1.0 approximation; do not add carbon or galvanized steel, export permeability to NEC, or change the schema. See the **UX25 design note** below. Acceptance: 304 selectable in every family editor and the component calculator; source-backed reference row; EN/ES labels and report text; persistence, BOM, report, and NEC-deck tests; full gate green. |
 | UX26 | Include canonical geometry and far-field pattern in exported antenna reports | M–L | G17, UX21 | **Queued 2026-11-13.** The HTML and native PDF simulation reports must include a deterministic geometry figure and metric-aware azimuth/elevation pattern cuts generated from the immutable snapshot, not from live widgets. See the **UX26 design note** below. Acceptance: both formats show geometry plus pattern for single-band and band runs; far-field-disabled and missing-data states are explicit; EN/ES headings and help; reporting and PDF tests; full gate green; no schema change. |
-| UX27 | Use ROE consistently in the Spanish UI and reports | S–M | none | **Queued 2026-11-13.** Replace every user-visible Spanish “SWR” with “ROE”, fix articles and agreement, localize the hardcoded chart/table labels, and keep English and internal identifiers unchanged. See the **UX27 design note** below. Acceptance: no Spanish UI/report string contains “SWR”; EN/ES tests and the help manifest pass; full gate green; no schema or domain change. |
+| ~~UX27~~ | ~~Use ROE consistently in the Spanish UI and reports~~ | S–M | none | **Done 2026-11-13:** all 18 Spanish UI keys that still said “SWR” now use “ROE” with feminine agreement; the first explanatory use expands “ROE (relación de ondas estacionarias)”. Hardcoded chart/table labels in the measurement comparison, parameter sweep, robustness, and end-fed dialogs use the shared localized label; the HTML report and construction-sheet bandwidth row are localized. A regression test scans every Spanish UI/report/evidence value for `\bSWR\b`; Spanish dialog and report tests cover the changed surfaces. English, internal identifiers, report keys, CSV columns, schema, and solver are unchanged. |
 | UX28 | Call the vertical radiator dimension “length”, not “height” | S–M | none | **Queued 2026-11-13.** Rename only the physical vertical radiator and element dimensions in English and Spanish; keep base, feed, top, ring, coil, apex, stack, and boom heights as installation dimensions. See the **UX28 design note** below. Acceptance: vertical, J-Pole, Ringo, inverted-L, SCV, and phased-vertical editors and reports use length; the Zepp and discone exceptions are preserved; EN/ES help and tests pass; full gate green; no schema or domain change. |
 | UX29 | Show the constructive feed connection at the feedpoint | M–L | UX6, UX7, UX9, ADR-0031, ADR-0033, ADR-0034 | **Queued 2026-11-13.** Add a read-only feed-connection detail with a schematic, terminal table, and separate modeled/recorded/recommended/not-modeled states. See the **UX29 design note** below. Acceptance: the Yagi straight, folded, and beta/hairpin cases are explicit; every family has a descriptor or an explicit unknown; the construction sheet, PDF, and ZIP show the feedpoint assembly; EN/ES help and tests pass; no solver or schema change; full gate green. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
@@ -134,8 +134,8 @@ UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**, and
 2026-11-12; the 0.9 **Sustain** slice is complete. The next product slice is not
 selected yet. UX21–UX24 were added from direct user feedback and completed the
 same day. UX25 and UX26 were queued on 2026-11-13. UX27 and UX28 were added the
-same day from terminology feedback. UX29 was added the same day from
-feed-connection feedback.
+same day from terminology feedback; UX27 was completed on 2026-11-13. UX29 was
+added the same day from feed-connection feedback.
 
 The first slice accepts these constraints:
 
@@ -421,8 +421,8 @@ immutable result snapshot.
 
 ## UX27 — Spanish ROE terminology (design note, 2026-11-13)
 
-**Queued 2026-11-13. Not implemented.** This note is the implementation
-contract.
+**Implemented on 2026-11-13.** This note is retained as the implementation
+record.
 
 ### Decision
 
@@ -1255,9 +1255,9 @@ model and solver contract must land first.
 10. **UX26** adds geometry and pattern figures to the HTML and PDF simulation
     reports. Implement it as specified in the UX26 design note; keep rendering
     headless and deterministic, and do not reuse live-widget captures.
-11. **UX27 and UX28** are presentation-only terminology changes. Implement them
-    as specified in their design notes; do not rename domain fields, schema
-    keys, or solver identifiers.
+11. **UX27 is complete.** **UX28** is the remaining presentation-only
+    terminology change. Implement it as specified in its design note; do not
+    rename domain fields, schema keys, or solver identifiers.
 12. **UX29** adds the read-only constructive feed connection. Implement it as
     specified in the UX29 design note; do not change `FeedPoint`, the NEC deck,
     the solver, or the schema in phase 1.
@@ -1293,7 +1293,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **45**.
-- Full gate: **2,972 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **2,979 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.6.0** published on 2026-11-13 with checksum-verified unsigned
