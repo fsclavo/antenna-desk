@@ -125,7 +125,7 @@ external service and must not be invented or simulated into existence.
 | ~~EF1~~ | ~~Preserve shortened-EFHW structural segmentation in optimizer candidates~~ | S–M | none | **Done 2026-11-13:** the optimizer descriptor can declare model-defined wire partitions. Only the shortened EFHW presets opt in, preserving the fixed three-segment feed and loading-coil sections while the radiator counts are recalculated. Unit tests cover 80-10 and 40-10; other families keep a `None` hook and the previous segmentation path. No solver, schema, or UI change. |
 | ~~EF2~~ | ~~Diagnose input-shunt matching-network topology limits~~ | S | EF1 optional | **Done 2026-11-13:** added `MatchingNetworkOrigin` as runtime-only simulation context, a domain `input_shunt_l_network_swr_floor()` predicate, a `LinkBudget` floor field, and a `matching_network.topology_limit` warning. The warning appears only when the effective network is the internal EFHW input-shunt unit; project networks and other families stay unchanged. The origin is excluded from the model fingerprint and is not persisted. EN/ES diagnostic text, domain, link, fingerprint, resolution, and real NEC2C tests cover the path. |
 | ~~EF3~~ | ~~Warn about the installation-return proxy and SWR confidence~~ | S | none | **Done 2026-11-13:** shortened EFHW editors now add an `endfed.warning.return_proxy` warning when the 0.1 m installation-return proxy is active. The results confidence card and exported reports add a **Model confidence** row that marks absolute SWR as informational and states that the installation return is a proxy, not a physical counterpoise. Standard end-fed, sloper, random wire, and every other family are unchanged. No solver or numerical change. |
-| EF4 | Clarify the optimizer objective and expose best-SWR selection | S–M | none | **Queued 2026-11-13.** The shortened presets currently default to **Target impedance** (`|Z−50|`), not SWR. Add a concise warning when the selected candidate's SWR is high, and add an explicit **Apply best SWR** action independent of the objective. Keep every other family's default objective and scoring unchanged. A new `MIN_MISMATCH` objective based on `|Γ|` is a separate ADR, not part of this item. |
+| ~~EF4~~ | ~~Clarify the optimizer objective and expose best-SWR selection~~ | S–M | none | **Done 2026-11-13:** shortened EFHW descriptors now default to **Minimum SWR** while every other family keeps **Target impedance**. The dialog shows a hint when the selected candidate is worse than another feasible candidate's SWR, and adds **Apply Best SWR** independent of the objective. Objective help now states that target impedance minimizes `|Z−Z0|`, not SWR. No scoring, schema, or solver change; a `MIN_MISMATCH` objective remains a separate ADR. |
 | EF5 | Recommend action when the optimizer optimum hits a search bound | S | EF1 | **Queued 2026-11-13.** For descriptors that opt in, report which continuous variables are at their bounds and add a recommendation to widen the range only when the resulting geometry is buildable. No automatic bound expansion and no change for families that do not opt in. |
 | EF6 | Investigate 40-10 shortened-EFHW convergence | M | EF1, EF3 | **Queued 2026-11-13.** The 40-10 preset remains R/X-sensitive at 10/21/51 radiator segments. Sweep radiator and coil-section counts, inspect the lumped-load placement in the 0.10 m section, and decide between a model/segmentation fix or a permanent informational-SWR warning. Do not relax the convergence thresholds to make the preset pass. |
 | EF7 | Measured transformer model for shortened EFHW | L | EF6; measured transformer data | **Blocked/deferred.** Add ratio, leakage, winding capacitance, core loss, and frequency dependence only from a measured or traceable transformer model. Until then the internal 100 pF/198 nH stay fixed context and must not become free optimizer variables. Requires schema, UI, evidence, and ADR work. |
@@ -146,7 +146,7 @@ same day. UX25 and UX26 were queued on 2026-11-13. UX27 and UX28 were added the
 same day from terminology feedback; UX27 and UX28 were completed on 2026-11-13.
 UX29 was added and completed the same day from feed-connection feedback.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
-EF1–EF3 are implemented and EF4 is the next active item.
+EF1–EF4 are implemented and EF5 is the next active item.
 
 The first slice accepts these constraints:
 
@@ -1077,7 +1077,7 @@ scaling QA remains manual.
 
 ## EF1–EF9 — Shortened-EFHW optimizer and model-confidence queue (2026-11-13)
 
-**EF1–EF3 are implemented on 2026-11-13.** EF4–EF6 are queued. EF7–EF9 are
+**EF1–EF4 are implemented on 2026-11-13.** EF5–EF6 are queued. EF7–EF9 are
 blocked/deferred until a measured transformer, a common-mode return model, or a
 design-specific matching-network ADR exists. The ordered plan is:
 
@@ -1175,15 +1175,29 @@ Implementation contract:
 - No solver, impedance, SWR, gain, schema, or fingerprint change. Standard
   end-fed, sloper, random wire, and every other family are unchanged.
 
-### EF4 — Objective clarity and best-SWR action (next)
+### EF4 — Objective clarity and best-SWR action (implemented)
 
-`TARGET_IMPEDANCE` minimizes `|Z−50|`, not SWR. Add a warning when the selected
-candidate has high SWR and a better-SWR candidate exists, and add an explicit
-**Apply best SWR** action independent of the objective. Do not change the
-default objective or scoring for other families. A new `MIN_MISMATCH` objective
-based on `|Γ|` is a separate ADR.
+`TARGET_IMPEDANCE` minimizes `|Z−50|`, not SWR. The shortened EFHW descriptors
+now open in **Minimum SWR**; standard end-fed, sloper, random wire, and every
+other family keep their previous default. The dialog shows a hint when the
+selected objective candidate has a higher SWR than another feasible candidate,
+and adds **Apply Best SWR** independent of the objective. The objective help
+states the difference explicitly.
 
-### EF5 — Bound-hit recommendation
+Implementation contract:
+
+- `endfed_descriptor()` selects `MIN_SWR` only when the preset is
+  `SHORTENED_80_10` or `SHORTENED_40_10`.
+- The dialog selects the feasible candidate with the lowest `metrics["swr"]`,
+  builds its parameters through the descriptor, and accepts it. It does not
+  change the objective, scoring, or stored result.
+- The hint compares the selected candidate's `best_metrics["swr"]` with the
+  lowest feasible candidate and appears only when the difference exceeds 0.05.
+- The new action has EN/ES text and accessible help.
+- No solver, schema, fingerprint, or other-family default changes. A new
+  `MIN_MISMATCH` objective based on `|Γ|` remains a separate ADR.
+
+### EF5 — Bound-hit recommendation (next)
 
 When the best candidate is at a continuous-variable bound, report it and add a
 recommendation to widen the range only if the result is buildable. Do not
@@ -1419,12 +1433,13 @@ model and solver contract must land first.
 12. **UX29 is complete.** The read-only constructive feed connection is closed.
     Do not change `FeedPoint`, the NEC deck, the solver, or the schema without a
     new ADR.
-13. **EF1–EF3 are complete.** The shortened-EFHW optimizer keeps the fixed feed
+13. **EF1–EF4 are complete.** The shortened-EFHW optimizer keeps the fixed feed
     and loading-coil partitions, results report the input-shunt matching-topology
-    floor only for the internal end-fed unit, and the confidence card marks
-    absolute SWR as informational with the proxy-return limitation. **EF4** is
-    next: clarify the objective and add best-SWR selection. Then EF5–EF6 in
-    order; EF7–EF9 remain blocked/deferred.
+    floor only for the internal end-fed unit, the confidence card marks absolute
+    SWR as informational with the proxy-return limitation, and the optimizer
+    defaults to Minimum SWR with an Apply Best SWR action. **EF5** is next:
+    report when the optimum hits a search bound. Then EF6; EF7–EF9 remain
+    blocked/deferred.
 14. Product priorities and new antenna candidates live in
     [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
@@ -1457,7 +1472,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **45**.
-- Full gate: **3,022 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **3,023 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.6.0** published on 2026-11-13 with checksum-verified unsigned

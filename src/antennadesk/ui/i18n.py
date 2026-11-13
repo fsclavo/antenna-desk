@@ -3710,8 +3710,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Límite superior de la variable de síntesis seleccionada.",
     },
     "help.optimize.objective": {
-        Language.ENGLISH: "Objective used to rank optimization candidates.",
-        Language.SPANISH: "Objetivo usado para ordenar los candidatos de optimización.",
+        Language.ENGLISH: (
+            "Objective used to rank candidates. Target impedance minimizes "
+            "|Z - Z0|, not SWR; choose Minimum SWR for a return-loss goal."
+        ),
+        Language.SPANISH: (
+            "Objetivo para ordenar candidatos. Impedancia objetivo minimiza "
+            "|Z - Z0|, no la ROE; elegí ROE mínima para optimizar la ROE."
+        ),
     },
     "help.optimize.min_length": {
         Language.ENGLISH: "Lower bound for the optimized dimension.",
@@ -4860,6 +4866,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.action.optimize": {
         Language.ENGLISH: "Open the family optimizer for the current design.",
         Language.SPANISH: "Abrí el optimizador de familia para el diseño actual.",
+    },
+    "help.action.optimize_apply_best_swr": {
+        Language.ENGLISH: "Apply the feasible candidate with the lowest modeled SWR.",
+        Language.SPANISH: "Aplicá el candidato factible con la ROE modelada más baja.",
     },
     "help.tab.design": {
         Language.ENGLISH: (
@@ -13688,6 +13698,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize.apply_best": {
         Language.ENGLISH: "Apply Best...",
         Language.SPANISH: "Aplicar mejor...",
+    },
+    "optimize.apply_best_swr": {
+        Language.ENGLISH: "Apply Best SWR...",
+        Language.SPANISH: "Aplicar mejor ROE...",
+    },
+    "optimize.better_swr_available": {
+        Language.ENGLISH: (
+            "The selected candidate has SWR {selected}:1, but another feasible "
+            "candidate has {best}:1. Use Apply Best SWR if SWR is your objective."
+        ),
+        Language.SPANISH: (
+            "El candidato seleccionado tiene ROE {selected}:1, pero otro candidato "
+            "factible tiene {best}:1. Usá Aplicar mejor ROE si tu objetivo es la ROE."
+        ),
     },
     "optimize.locked_partial": {
         Language.ENGLISH: "Partial optimization: some variables are locked.",

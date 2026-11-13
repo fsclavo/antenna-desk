@@ -689,10 +689,14 @@ def test_shortened_endfed_optimizer_marks_the_matching_network_as_context() -> N
     shortened = optimizer_availability(shortened_efhw_80_10_parameters())
     standard = optimizer_availability(EndFedParameters(frequency_hz=7_100_000.0, length_m=20.0))
 
+    from antennadesk.domain.optimization.descriptor import FamilyOptimizationObjective
+
     assert shortened.descriptor is not None
     assert shortened.descriptor.context_note_key == "optimize.endfed.matching_context"
+    assert shortened.descriptor.default_objective is FamilyOptimizationObjective.MIN_SWR
     assert standard.descriptor is not None
     assert standard.descriptor.context_note_key is None
+    assert standard.descriptor.default_objective is FamilyOptimizationObjective.TARGET_IMPEDANCE
 
 
 def test_bent_endfed_optimizer_searches_the_bend_instead_of_the_end_height() -> None:

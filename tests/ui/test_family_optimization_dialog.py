@@ -124,6 +124,60 @@ def test_family_dialog_runs_and_applies_best(qtbot: QtBot) -> None:
     assert dialog.result() == QDialog.DialogCode.Accepted
 
 
+def test_family_dialog_can_apply_the_lowest_swr_candidate(qtbot: QtBot) -> None:
+    from antennadesk.application.use_cases.optimize_antenna import OptimizeAntennaResult
+    from antennadesk.domain.optimization.engine import (
+        CandidateEvaluation,
+        OptimizationBudget,
+        OptimizationStatus,
+    )
+
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    initial = dict(dialog._descriptor.initial_values)
+    low_swr_values = {**initial, "total_length_m": 21.0}
+    high_swr_values = {**initial, "total_length_m": 20.0}
+    low_swr = CandidateEvaluation(
+        index=0,
+        values=low_swr_values,
+        score=2.0,
+        feasible=True,
+        metrics={"swr": 1.2, "resistance_ohm": 50.0, "reactance_ohm": 0.0},
+    )
+    high_swr = CandidateEvaluation(
+        index=1,
+        values=high_swr_values,
+        score=1.0,
+        feasible=True,
+        metrics={"swr": 3.0, "resistance_ohm": 25.0, "reactance_ohm": 10.0},
+    )
+    best_parameters = dialog._descriptor.build_parameters(high_swr_values)
+    dialog._result = OptimizeAntennaResult(
+        status=OptimizationStatus.CONVERGED,
+        best_parameters=best_parameters,
+        best_values=high_swr_values,
+        best_score=1.0,
+        best_metrics={"swr": 3.0},
+        evaluations=(low_swr, high_swr),
+        sensitivity=(),
+        budget=OptimizationBudget(4, 4, patience=2),
+        seed=1,
+    )
+    dialog._selected_parameters = best_parameters
+
+    hint = dialog._swr_hint_text(dialog._result)
+    assert "3.00:1" in hint
+    assert "1.20:1" in hint
+    selected = dialog._best_swr_parameters()
+    assert selected is not None
+    assert selected.total_length_m == pytest.approx(21.0)
+
+    dialog._apply_best_swr_result()
+    assert dialog.result() == QDialog.DialogCode.Accepted
+    assert dialog.selected_parameters() is not None
+    assert dialog.selected_parameters().total_length_m == pytest.approx(21.0)
+
+
 def test_family_dialog_reports_estimated_evaluations(qtbot: QtBot) -> None:
     dialog = _dialog()
     qtbot.addWidget(dialog)

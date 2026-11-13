@@ -1872,6 +1872,11 @@ Gain and front-to-back require a far-field request. Bandwidth requires a
 frequency sweep. The optional **Maximum SWR** field adds a soft constraint; the
 hard constraints are the family geometry rules, minimum conductor spacing,
 element ordering, feed limits, and positive dimensions.
+The shortened EFHW presets start with **Minimum SWR**; other families keep their
+previous default. If the selected objective is not SWR, the dialog warns when
+another feasible candidate has a lower SWR and offers **Apply Best SWR**. Target
+impedance minimizes `|Z−Z0|`, not SWR, so use the SWR objective when return loss
+is the goal.
 
 ### Operating modes
 

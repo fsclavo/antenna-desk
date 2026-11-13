@@ -848,6 +848,11 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
         initial,
         build,
         validate,
+        default_objective=(
+            FamilyOptimizationObjective.MIN_SWR
+            if shortened
+            else FamilyOptimizationObjective.TARGET_IMPEDANCE
+        ),
         context_note_key="optimize.endfed.matching_context" if shortened else None,
         structural_segmentation=structural_segmentation if shortened else None,
     )

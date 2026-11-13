@@ -54,6 +54,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   confidence** row that marks absolute SWR as informational. Standard end-fed,
   sloper, random wire, and every other family are unchanged. No solver,
   numerical, schema, or fingerprint change.
+- **Shortened-EFHW optimizer objective.** The shortened presets now open with
+  **Minimum SWR** instead of **Target impedance**; other families keep their
+  previous default. The optimizer dialog warns when another feasible candidate
+  has a better SWR and adds **Apply Best SWR**, independent of the selected
+  objective. Objective help now explains that target impedance minimizes
+  `|Z−Z0|`, not SWR. No scoring, schema, or solver change.
 
 ## [0.6.0] - 2026-11-12
 

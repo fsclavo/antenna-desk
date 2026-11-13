@@ -42,7 +42,12 @@ from ...domain.optimization.descriptor import (
     FamilyOptimizationObjective,
     OptimizationWeights,
 )
-from ...domain.optimization.engine import BudgetProfile, OptimizationStatus, budget_for
+from ...domain.optimization.engine import (
+    BudgetProfile,
+    CandidateEvaluation,
+    OptimizationStatus,
+    budget_for,
+)
 from ...domain.optimization.summary import (
     OptimizationMode,
     OptimizationRecommendation,
@@ -258,6 +263,10 @@ class FamilyOptimizationDialog(QDialog):
 
         self._summary = QLabel(self)
         self._summary.setWordWrap(True)
+        self._swr_hint = QLabel(self)
+        self._swr_hint.setWordWrap(True)
+        self._swr_hint.setStyleSheet("font-style: italic;")
+        self._swr_hint.setVisible(False)
         self._task_progress = TaskProgressBar(translator, self)
         self._verification = QLabel(self)
         self._verification.setWordWrap(True)
@@ -283,15 +292,19 @@ class FamilyOptimizationDialog(QDialog):
         self._cancel = QPushButton(translator.t("optimize.cancel_run"), self)
         self._export = QPushButton(translator.t("optimize.export_csv"), self)
         self._apply = QPushButton(translator.t("optimize.apply_best"), self)
+        self._apply_best_swr = QPushButton(translator.t("optimize.apply_best_swr"), self)
         self._close = QPushButton(translator.t("action.close"), self)
         self._cancel.setEnabled(False)
         self._export.setEnabled(False)
         self._apply.setEnabled(False)
+        self._apply_best_swr.setEnabled(False)
         self._run.clicked.connect(self._start)
         self._cancel.clicked.connect(self._cancel_run)
         self._export.clicked.connect(self._export_csv)
         self._apply.clicked.connect(self._apply_result)
+        self._apply_best_swr.clicked.connect(self._apply_best_swr_result)
         self._close.clicked.connect(self.reject)
+        apply_help(self._apply_best_swr, translator, "action.optimize_apply_best_swr")
 
         self._target_r_label = QLabel(translator.t("synthesis.target_resistance"), self)
         self._target_x_label = QLabel(translator.t("synthesis.target_reactance"), self)
@@ -385,6 +398,7 @@ class FamilyOptimizationDialog(QDialog):
         buttons.addWidget(self._export)
         buttons.addStretch(1)
         buttons.addWidget(self._apply)
+        buttons.addWidget(self._apply_best_swr)
         buttons.addWidget(self._close)
 
         layout = QVBoxLayout(self)
@@ -398,6 +412,7 @@ class FamilyOptimizationDialog(QDialog):
         layout.addWidget(self._pareto_label)
         layout.addWidget(self._pareto, 1)
         layout.addWidget(self._summary)
+        layout.addWidget(self._swr_hint)
         layout.addWidget(self._verification)
         layout.addWidget(self._sensitivity)
         layout.addWidget(self._recommendations)
@@ -728,6 +743,7 @@ class FamilyOptimizationDialog(QDialog):
         self._cancel.setEnabled(running)
         self._export.setEnabled(not running and self._result is not None)
         self._apply.setEnabled(not running and self._selected_parameters is not None)
+        self._apply_best_swr.setEnabled(not running and self._best_swr_evaluation() is not None)
         for widget in (
             self._objective,
             self._mode,
@@ -857,11 +873,14 @@ class FamilyOptimizationDialog(QDialog):
         self._pareto_label.setVisible(False)
         self._pareto.setVisible(False)
         self._summary.setText(self._translator.t("optimize.running"))
+        self._swr_hint.clear()
+        self._swr_hint.setVisible(False)
         self._verification.setText("")
         self._sensitivity.setText("")
         self._recommendations.setText("")
         self._export.setEnabled(False)
         self._apply.setEnabled(False)
+        self._apply_best_swr.setEnabled(False)
         self._run_estimated_evaluations = self._estimated_evaluations()
         self._last_progress_emit = 0.0
         self._task_progress.begin_determinate(
@@ -909,6 +928,9 @@ class FamilyOptimizationDialog(QDialog):
         self._populate_evaluations(result)
         self._populate_pareto(result)
         self._summary.setText(self._summary_text(result))
+        hint = self._swr_hint_text(result)
+        self._swr_hint.setText(hint)
+        self._swr_hint.setVisible(bool(hint))
         self._verification.setText(self._verification_text(result))
         self._sensitivity.setText(self._sensitivity_text(result))
         if result.summary is not None:
@@ -919,6 +941,8 @@ class FamilyOptimizationDialog(QDialog):
 
     def _on_failed(self, message: str) -> None:
         self._task_progress.fail("progress.failed")
+        self._swr_hint.clear()
+        self._swr_hint.setVisible(False)
         self._summary.setText(self._translator.t("error.optimize", message=message))
         QMessageBox.critical(
             self,
@@ -1048,6 +1072,56 @@ class FamilyOptimizationDialog(QDialog):
                 self.windowTitle(),
                 self._translator.t("error.optimize", message=str(exc)),
             )
+
+    def _best_swr_evaluation(self) -> CandidateEvaluation | None:
+        if self._result is None:
+            return None
+        candidates = [
+            evaluation
+            for evaluation in self._result.evaluations
+            if evaluation.feasible and math.isfinite(evaluation.metrics.get("swr", math.inf))
+        ]
+        if not candidates:
+            return None
+        return min(
+            candidates,
+            key=lambda evaluation: (
+                evaluation.metrics["swr"],
+                evaluation.score if evaluation.score is not None else math.inf,
+            ),
+        )
+
+    def _best_swr_parameters(self) -> AntennaDesignParameters | None:
+        evaluation = self._best_swr_evaluation()
+        if evaluation is None:
+            return None
+        try:
+            return self._descriptor.build_parameters(evaluation.values)
+        except (TypeError, ValueError):
+            return None
+
+    def _swr_hint_text(self, result: OptimizeAntennaResult) -> str:
+        selected = result.best_metrics.get("swr")
+        best = self._best_swr_evaluation()
+        if (
+            selected is None
+            or not math.isfinite(selected)
+            or best is None
+            or best.metrics["swr"] >= selected - 0.05
+        ):
+            return ""
+        return self._translator.t(
+            "optimize.better_swr_available",
+            selected=f"{selected:.2f}",
+            best=f"{best.metrics['swr']:.2f}",
+        )
+
+    def _apply_best_swr_result(self) -> None:
+        parameters = self._best_swr_parameters()
+        if parameters is None:
+            return
+        self._selected_parameters = parameters
+        self.accept()
 
     def _apply_result(self) -> None:
         if self._selected_parameters is None:
