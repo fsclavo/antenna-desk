@@ -2139,7 +2139,10 @@ band when a band analysis is active. **File → Export → Geometry PNG...**,
 current geometry view, **File → Export → HTML Report...** for a self-contained
 HTML report, or **File → Export → PDF Report...** for a native PDF with design
 parameters, configuration, solver metadata, fingerprint, diagnostics,
-impedance, resonance, and charts.
+impedance, resonance, charts, one canonical geometry figure, and azimuth plus
+elevation pattern cuts. Band analysis adds one pattern section per band. When
+far-field data is disabled or unavailable, the report states that explicitly
+instead of leaving an empty chart.
 Simulation runs are stored when you save the project, including raw solver
 text. Project files are losslessly gzip-compressed JSON; the 64 MB limit applies
 to the compressed file. Saving above 32 MB compressed shows a warning, and

@@ -147,8 +147,12 @@ Selected DesignVariant ──► RunSimulation ──► SimulationResult
 ```
 
 Reports are generated from the immutable result and the project snapshot. The
-HTML report includes the fingerprint, solver version, specification,
-diagnostics, impedance table, resonance points, and SVG charts.
+HTML and native PDF reports include the fingerprint, solver version,
+specification, diagnostics, impedance table, resonance points, SVG charts, a
+canonical geometry figure, and azimuth/elevation pattern cuts. The geometry
+figure is rendered offscreen from the design snapshot with a fixed size and
+light theme; report rendering does not read live widgets. Band analysis adds a
+pattern section per band. See UX26 in `AUTONOMOUS_BACKLOG.md`.
 
 ## Family optimizer flow
 

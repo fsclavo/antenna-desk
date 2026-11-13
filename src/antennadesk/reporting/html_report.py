@@ -12,7 +12,7 @@ from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.band_result import BandAnalysisResult
 from ..domain.simulation.band_summary import summarize_band
 from ..domain.simulation.resonance import find_resonances
-from ..domain.simulation.result import SimulationResult
+from ..domain.simulation.result import FrequencyResult, SimulationResult
 from .design_summary import (
     design_provenance_rows,
     design_summary_rows,
@@ -29,6 +29,7 @@ from .localization import (
     localize_html_labels,
     localize_rows,
 )
+from .pattern_cuts import pattern_cuts
 from .result_summary import gain_metric_rows
 from .svg_chart import SvgSeries, line_chart_svg
 
@@ -46,6 +47,8 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .error { color: #b00020; }
 .notice { background: #f7f7f7; border-left: 4px solid #999; padding: 10px 14px; margin: 16px 0; }
 .chart { margin: 16px 0; }
+.geometry { margin: 16px 0; border: 1px solid #ddd; }
+.geometry svg { display: block; width: 100%; height: auto; }
 footer { margin-top: 32px; color: #777; font-size: 11px; }
 """
 
@@ -83,29 +86,53 @@ def _swr_series(result: SimulationResult, tr: Labeler) -> tuple[SvgSeries, ...]:
     return (SvgSeries(tr("SWR"), "#2e8b57", points),) if points else ()
 
 
-def _pattern_series(
+def _pattern_frequency(
     result: SimulationResult,
     design: DesignVariant,
-    tr: Labeler,
-) -> tuple[tuple[SvgSeries, ...], float | None]:
+    *,
+    target_hz: float | None = None,
+) -> FrequencyResult | None:
     if not result.frequencies:
-        return (), None
-    target = design.parameters.frequency_hz
+        return None
+    target = design.parameters.frequency_hz if target_hz is None else target_hz
     candidates = [item for item in result.frequencies if item.far_field]
     if not candidates:
-        return (), None
-    frequency = min(
-        candidates,
-        key=lambda item: abs(item.frequency_hz - target),
-    )
-    points = tuple(
-        (point.theta_deg, point.gain_total_db)
-        for point in frequency.far_field
-        if point.gain_total_db is not None
-    )
-    if not points:
-        return (), frequency.frequency_hz
-    return (SvgSeries(tr("Total gain"), "#7b4ea3", points),), frequency.frequency_hz
+        return None
+    return min(candidates, key=lambda item: abs(item.frequency_hz - target))
+
+
+def _pattern_cut_charts(frequency: FrequencyResult | None, tr: Labeler) -> str:
+    if frequency is None:
+        return f'<p class="muted">{_escape(tr("No far-field pattern available."))}</p>'
+    azimuth, elevation = pattern_cuts(frequency, tr)
+    charts = []
+    if azimuth is not None:
+        charts.append(
+            '<div class="chart">'
+            + line_chart_svg(
+                title=azimuth.title,
+                x_label=azimuth.x_label,
+                y_label=tr("Power gain (dBi)"),
+                series=azimuth.series,
+            )
+            + "</div>"
+        )
+    else:
+        charts.append(f'<p class="muted">{_escape(tr("No azimuth cut available."))}</p>')
+    if elevation is not None:
+        charts.append(
+            '<div class="chart">'
+            + line_chart_svg(
+                title=elevation.title,
+                x_label=elevation.x_label,
+                y_label=tr("Power gain (dBi)"),
+                series=elevation.series,
+            )
+            + "</div>"
+        )
+    else:
+        charts.append(f'<p class="muted">{_escape(tr("No elevation cut available."))}</p>')
+    return "".join(charts)
 
 
 def _diagnostics_table(result: SimulationResult, tr: Labeler) -> str:
@@ -161,28 +188,18 @@ def _band_patterns(
     design: DesignVariant,
     tr: Labeler,
 ) -> str:
-    charts = []
+    sections = []
     for band_result in analysis.bands:
-        series, frequency = _pattern_series(band_result.result, design, tr)
-        if not series or frequency is None:
-            continue
-        charts.append(
-            '<div class="chart">'
-            + line_chart_svg(
-                title=tr(
-                    "{band} power gain at {frequency:g} MHz",
-                    band=band_result.band.name,
-                    frequency=frequency / 1e6,
-                ),
-                x_label=tr("Elevation θ (°)"),
-                y_label=tr("Power gain (dBi)"),
-                series=series,
-            )
-            + "</div>"
+        frequency = _pattern_frequency(
+            band_result.result,
+            design,
+            target_hz=band_result.band.center_hz,
         )
+        title = f"<h3>{_escape(tr('{band} pattern', band=band_result.band.name))}</h3>"
+        sections.append(title + _pattern_cut_charts(frequency, tr))
     return (
-        "".join(charts)
-        if charts
+        "".join(sections)
+        if sections
         else f'<p class="muted">{_escape(tr("No band patterns available."))}</p>'
     )
 
@@ -195,6 +212,7 @@ def render_html_report(
     band_analysis: BandAnalysisResult | None = None,
     labeler: Labeler | None = None,
     language: str = "en",
+    geometry_svg: str | None = None,
 ) -> str:
     tr = labeler or identity_labeler
     parameters = design.parameters
@@ -323,18 +341,8 @@ def render_html_report(
         y_label=tr("SWR"),
         series=_swr_series(result, tr),
     )
-    pattern_series, pattern_frequency = _pattern_series(result, design, tr)
-    pattern_chart = ""
-    if pattern_series and pattern_frequency is not None:
-        pattern_chart = line_chart_svg(
-            title=tr(
-                "Power gain pattern at {frequency:g} MHz",
-                frequency=pattern_frequency / 1e6,
-            ),
-            x_label=tr("Elevation θ (°)"),
-            y_label=tr("Power gain (dBi)"),
-            series=pattern_series,
-        )
+    pattern_frequency = _pattern_frequency(result, design)
+    pattern_section = _pattern_cut_charts(pattern_frequency, tr)
 
     finished = (
         result.finished_at.isoformat(timespec="seconds")
@@ -342,11 +350,6 @@ def render_html_report(
         else tr("not recorded")
     )
     diagnostics = _diagnostics_table(result, tr)
-    pattern_section = (
-        f'<div class="chart">{pattern_chart}</div>'
-        if pattern_chart
-        else f'<p class="muted">{_escape(tr("No far-field pattern available."))}</p>'
-    )
     band_section = ""
     if band_analysis is not None:
         band_section = (
@@ -355,6 +358,11 @@ def render_html_report(
             "<h2>Band patterns</h2>"
             f"{_band_patterns(band_analysis, design, tr)}"
         )
+    geometry_section = (
+        f'<div class="geometry">{geometry_svg}</div>'
+        if geometry_svg
+        else f'<p class="muted">{_escape(tr("No geometry figure available."))}</p>'
+    )
 
     status = tr(result.status.value)
     reproducibility = tr(
@@ -381,6 +389,9 @@ def render_html_report(
 <div class="notice">
 {reproducibility}
 </div>
+
+<h2>Geometry</h2>
+{geometry_section}
 
 <h2>Design</h2>
 <table>
@@ -443,6 +454,7 @@ def write_html_report(
     band_analysis: BandAnalysisResult | None = None,
     labeler: Labeler | None = None,
     language: str = "en",
+    geometry_svg: str | None = None,
 ) -> None:
     path.write_text(
         render_html_report(
@@ -452,6 +464,7 @@ def write_html_report(
             band_analysis=band_analysis,
             labeler=labeler,
             language=language,
+            geometry_svg=geometry_svg,
         ),
         encoding="utf-8",
         newline="\n",

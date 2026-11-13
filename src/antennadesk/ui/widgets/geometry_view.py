@@ -36,6 +36,7 @@ from PySide6.QtGui import (
     QPageSize,
     QPainter,
     QPaintEvent,
+    QPalette,
     QPdfWriter,
     QPen,
     QPolygonF,
@@ -258,6 +259,18 @@ class GeometryView(QWidget):
         finally:
             buffer.close()
         return bytes(data.data())
+
+    def set_export_theme(self) -> None:
+        """Use a fixed light theme for deterministic report and sheet exports."""
+
+        palette = QPalette(self.palette())
+        palette.setColor(QPalette.ColorRole.Window, QColor("#ffffff"))
+        palette.setColor(QPalette.ColorRole.WindowText, QColor("#000000"))
+        palette.setColor(QPalette.ColorRole.Base, QColor("#ffffff"))
+        palette.setColor(QPalette.ColorRole.Text, QColor("#000000"))
+        self.setPalette(palette)
+        self._colors = theme_colors(palette)
+        self.update()
 
     def construction_image(self, width: int = 1200, height: int = 650) -> QImage:
         """Render the construction view to an image for a construction sheet."""

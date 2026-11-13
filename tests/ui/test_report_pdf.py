@@ -9,6 +9,7 @@ from pytestqt.qtbot import QtBot
 from antennadesk.domain.projects.project import Project
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.result import (
+    FarFieldPoint,
     FrequencyResult,
     SimulationResult,
     SimulationStatus,
@@ -32,6 +33,58 @@ def _result() -> SimulationResult:
             FrequencyResult(7_100_000.0, 1, 11, complex(70.0, 10.0), 2.0, 0.001),
         ),
     )
+
+
+def _pattern_result() -> SimulationResult:
+    points = (
+        FarFieldPoint(0.0, 0.0, 2.1, None, 2.1, 0.0, 0.0, "LINEAR", None, None, None, None),
+        FarFieldPoint(0.0, 90.0, 1.8, None, 1.8, 0.0, 0.0, "LINEAR", None, None, None, None),
+        FarFieldPoint(90.0, 0.0, -4.0, None, -4.0, 0.0, 0.0, None, None, None, None, None),
+        FarFieldPoint(90.0, 90.0, -6.0, None, -6.0, 0.0, 0.0, None, None, None, None, None),
+    )
+    spec = SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0))
+    return SimulationResult(
+        status=SimulationStatus.COMPLETED,
+        spec=spec,
+        model_fingerprint="a" * 64,
+        solver=SolverMetadata(name="nec2c", version="1.3.3"),
+        frequencies=(
+            FrequencyResult(
+                7_100_000.0,
+                1,
+                11,
+                complex(70.0, 10.0),
+                2.0,
+                0.001,
+                far_field=points,
+            ),
+        ),
+    )
+
+
+def test_report_pdf_includes_geometry_and_pattern_cuts(
+    qtbot: QtBot,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "pattern-report.pdf"
+    geometry_svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">'
+        '<line x1="0" y1="0" x2="10" y2="10"/></svg>'
+    )
+
+    write_report_pdf(
+        Translator(Language.ENGLISH),
+        sample_project,
+        sample_project.designs[0],
+        _pattern_result(),
+        path,
+        geometry_svg=geometry_svg,
+    )
+
+    data = path.read_bytes()
+    assert data.startswith(b"%PDF")
+    assert b"/Subtype /Image" not in data
 
 
 def test_report_pdf_is_written(

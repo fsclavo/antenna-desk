@@ -626,6 +626,9 @@ REPORT_SPANISH: dict[str, str] = {
     "No band patterns available.": "No hay patrones por banda disponibles.",
     "No diagnostics.": "Sin diagnósticos.",
     "No far-field pattern available.": "No hay patrón de campo lejano disponible.",
+    "No geometry figure available.": "No hay figura de geometría disponible.",
+    "No azimuth cut available.": "No hay corte de azimut disponible.",
+    "No elevation cut available.": "No hay corte de elevación disponible.",
     "No resonance in the sweep.": "No hay resonancia en el barrido.",
     "No result yet.": "Todavía no hay resultado.",
     "disabled": "deshabilitado",
@@ -634,7 +637,11 @@ REPORT_SPANISH: dict[str, str] = {
     "unknown": "desconocido",
     # Chart axis labels.
     "Elevation θ (°)": "Elevación θ (°)",
+    "Azimuth φ (°)": "Azimut φ (°)",
     "Power gain (dBi)": "Ganancia de potencia (dBi)",
+    "Azimuth cut at θ = {angle:.0f}°": "Corte de azimut en θ = {angle:.0f}°",
+    "Elevation cut at φ = {angle:.0f}°": "Corte de elevación en φ = {angle:.0f}°",
+    "{band} pattern": "Patrón de {band}",
     # Construction-note templates.
     " A beta/hairpin stub is connected across the {spacing:.4f} m driven-element gap and shorted {length:.4f} m along the boom.": (  # noqa: E501
         " Un stub beta/hairpin se conecta a través de la separación de "

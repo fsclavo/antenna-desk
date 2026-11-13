@@ -8881,6 +8881,22 @@ class MainWindow(QMainWindow):
         self._last_status_key = "status.exported"
         self._update_status_text()
 
+    def _report_geometry_svg(self, design: DesignVariant) -> str | None:
+        view = GeometryView(self._translator, self._unit_system)
+        view.set_export_theme()
+        view.set_model(
+            design.antenna,
+            antenna_type=design.antenna_type,
+            display_name=design.name,
+            parameters=design.parameters,
+        )
+        try:
+            return view.construction_svg(1200, 650).decode("utf-8")
+        except Exception:
+            return None
+        finally:
+            view.deleteLater()
+
     def export_html_report(self) -> None:
         data = self._current_export_data()
         if data is None:
@@ -8912,6 +8928,7 @@ class MainWindow(QMainWindow):
                 band_analysis=analysis,
                 labeler=self._translator.report,
                 language=self._translator.language.value,
+                geometry_svg=self._report_geometry_svg(design),
             )
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))
@@ -8986,6 +9003,7 @@ class MainWindow(QMainWindow):
                 result,
                 path,
                 band_analysis=analysis,
+                geometry_svg=self._report_geometry_svg(design),
             )
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))

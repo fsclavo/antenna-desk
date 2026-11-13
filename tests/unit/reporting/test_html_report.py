@@ -30,7 +30,9 @@ def make_result(project: Project) -> SimulationResult:
     )
     far_field = (
         FarFieldPoint(0.0, 0.0, 2.14, None, 2.14, 0.0, 0.0, "LINEAR", None, None, None, None),
-        FarFieldPoint(90.0, 0.0, -999.99, None, -999.99, 0.0, 0.0, None, None, None, None, None),
+        FarFieldPoint(0.0, 90.0, 1.8, None, 1.8, 0.0, 0.0, "LINEAR", None, None, None, None),
+        FarFieldPoint(90.0, 0.0, -4.0, None, -4.0, 0.0, 0.0, None, None, None, None, None),
+        FarFieldPoint(90.0, 90.0, -6.0, None, -6.0, 0.0, 0.0, None, None, None, None, None),
     )
     frequencies = (
         FrequencyResult(
@@ -82,6 +84,44 @@ def test_html_report_contains_design_results_and_charts(sample_project: Project)
     assert "Gain and efficiency" in report
     assert "Max realized gain" in report
     assert "1.85 dBi" in report
+
+
+def test_html_report_includes_geometry_and_both_pattern_cuts(
+    sample_project: Project,
+) -> None:
+    design = sample_project.designs[0]
+    geometry_svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">'
+        '<line x1="0" y1="0" x2="10" y2="10"/></svg>'
+    )
+    report = render_html_report(
+        sample_project,
+        design,
+        make_result(sample_project),
+        geometry_svg=geometry_svg,
+    )
+
+    assert "Geometry" in report
+    assert geometry_svg in report
+    assert "Azimuth cut at" in report
+    assert "Elevation cut at" in report
+    assert "No azimuth cut available." not in report
+    assert "No elevation cut available." not in report
+
+
+def test_html_report_explains_missing_geometry_and_patterns(
+    sample_project: Project,
+) -> None:
+    result = make_result(sample_project)
+    frequencies = tuple(replace(frequency, far_field=()) for frequency in result.frequencies)
+    report = render_html_report(
+        sample_project,
+        sample_project.designs[0],
+        replace(result, frequencies=frequencies),
+    )
+
+    assert "No geometry figure available." in report
+    assert "No far-field pattern available." in report
 
 
 def test_html_report_lists_driven_sources(sample_project: Project) -> None:
@@ -227,6 +267,8 @@ def test_html_report_includes_a_band_summary(sample_project: Project) -> None:
     assert "Band summary" in report
     assert "Band patterns" in report
     assert "40m" in report
+    assert "Azimuth cut at" in report
+    assert "Elevation cut at" in report
 
 
 def test_spanish_report_uses_roe_not_swr(sample_project: Project) -> None:
@@ -240,3 +282,22 @@ def test_spanish_report_uses_roe_not_swr(sample_project: Project) -> None:
 
     assert "ROE" in report
     assert "SWR" not in report
+    assert "Geometría" in report
+    assert "No hay figura de geometría disponible." in report
+
+
+def test_spanish_report_translates_geometry_and_pattern_headings(
+    sample_project: Project,
+) -> None:
+    report = render_html_report(
+        sample_project,
+        sample_project.designs[0],
+        make_result(sample_project),
+        labeler=Translator(Language.SPANISH).report,
+        language="es",
+        geometry_svg='<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+    )
+
+    assert "Geometría" in report
+    assert "Corte de azimut" in report
+    assert "Corte de elevación" in report

@@ -21,7 +21,7 @@ from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.band_result import BandAnalysisResult
 from ..domain.simulation.band_summary import summarize_band
 from ..domain.simulation.resonance import find_resonances
-from ..domain.simulation.result import SimulationResult
+from ..domain.simulation.result import FrequencyResult, SimulationResult
 from ..reporting.design_summary import (
     design_provenance_rows,
     design_summary_rows,
@@ -32,6 +32,7 @@ from ..reporting.design_summary import (
     transmission_line_summary_rows,
 )
 from ..reporting.localization import localize_diagnostic, localize_rows
+from ..reporting.pattern_cuts import pattern_cuts
 from ..reporting.result_summary import gain_metric_rows
 from ..reporting.svg_chart import SvgSeries, line_chart_svg
 from .i18n import Translator
@@ -71,6 +72,49 @@ def _chart_series(
     return impedance, swr
 
 
+def _pattern_frequency(
+    result: SimulationResult,
+    design: DesignVariant,
+    *,
+    target_hz: float | None = None,
+) -> FrequencyResult | None:
+    candidates = [frequency for frequency in result.frequencies if frequency.far_field]
+    if not candidates:
+        return None
+    target = design.parameters.frequency_hz if target_hz is None else target_hz
+    return min(candidates, key=lambda frequency: abs(frequency.frequency_hz - target))
+
+
+def _pattern_charts(
+    result: SimulationResult,
+    design: DesignVariant,
+    translator: Translator,
+    *,
+    target_hz: float | None = None,
+) -> tuple[str | None, str | None]:
+    frequency = _pattern_frequency(result, design, target_hz=target_hz)
+    if frequency is None:
+        return None, None
+    azimuth, elevation = pattern_cuts(frequency, translator.report)
+    azimuth_svg = None
+    if azimuth is not None:
+        azimuth_svg = line_chart_svg(
+            title=azimuth.title,
+            x_label=azimuth.x_label,
+            y_label=translator.report("Power gain (dBi)"),
+            series=azimuth.series,
+        )
+    elevation_svg = None
+    if elevation is not None:
+        elevation_svg = line_chart_svg(
+            title=elevation.title,
+            x_label=elevation.x_label,
+            y_label=translator.report("Power gain (dBi)"),
+            series=elevation.series,
+        )
+    return azimuth_svg, elevation_svg
+
+
 def _band_summary_rows(
     analysis: BandAnalysisResult,
     translator: Translator,
@@ -100,6 +144,7 @@ def write_report_pdf(
     path: Path,
     *,
     band_analysis: BandAnalysisResult | None = None,
+    geometry_svg: str | None = None,
 ) -> None:
     writer = QPdfWriter(str(path))
     writer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
@@ -235,6 +280,12 @@ def write_report_pdf(
     row(translator.t("results.solver"), f"{result.solver.name} {result.solver.version}")
     row(translator.t("results.status"), translator.t(f"status_value.{result.status.value}"))
 
+    section(translator.t("panel.geometry"))
+    if geometry_svg:
+        chart(geometry_svg)
+    else:
+        paragraph(translator.report("No geometry figure available."))
+
     section(translator.t("panel.design"))
     for label, value in localize_rows(
         (
@@ -353,6 +404,37 @@ def write_report_pdf(
     impedance_svg, swr_svg = _chart_series(result, translator)
     chart(impedance_svg)
     chart(swr_svg)
+
+    section(translator.t("tab.pattern"))
+    azimuth_svg, elevation_svg = _pattern_charts(result, design, translator)
+    if azimuth_svg:
+        chart(azimuth_svg)
+    else:
+        paragraph(translator.report("No azimuth cut available."))
+    if elevation_svg:
+        chart(elevation_svg)
+    else:
+        paragraph(translator.report("No elevation cut available."))
+
+    if band_analysis is not None:
+        section(translator.report("Band patterns"))
+        for band_result in band_analysis.bands:
+            paragraph(
+                translator.report(
+                    "{band} pattern",
+                    band=band_result.band.name,
+                )
+            )
+            azimuth_svg, elevation_svg = _pattern_charts(
+                band_result.result,
+                design,
+                translator,
+                target_hz=band_result.band.center_hz,
+            )
+            if azimuth_svg:
+                chart(azimuth_svg)
+            if elevation_svg:
+                chart(elevation_svg)
 
     section(translator.t("tab.diagnostics"))
     if result.diagnostics:

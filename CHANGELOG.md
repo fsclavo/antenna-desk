@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   corrosion-resistant use case; the solver emits conductivity through `LD 5`
   and does not trigger the permeability warning. Copper remains the default and
   the project schema is unchanged.
+- **Geometry and pattern in simulation reports.** The HTML and native PDF
+  simulation reports now include a canonical geometry figure and azimuth plus
+  elevation pattern cuts at the maximum-gain direction. The figure is rendered
+  from the design snapshot at a fixed size and light theme; band analysis adds
+  one pattern section per band using the band center. Far-field-disabled and
+  missing-row states are explicit, and the new headings/axes are EN/ES. No
+  schema or solver change.
 
 ### Changed
 
