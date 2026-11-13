@@ -52,6 +52,8 @@ of truth before adding another planning document.
 - [`PROJECT_BUNDLE.md`](PROJECT_BUNDLE.md) — portable project bundle format,
   limits, and import validation.
 - [`QA_STRATEGY.md`](QA_STRATEGY.md) — test lanes and quality gate.
+- [`QA_PASS_2026-11-13.md`](QA_PASS_2026-11-13.md) — post-0.6.0 QA pass,
+  coverage gates, and residual debt.
 - [`EXPERIMENTAL_VALIDATION_PROTOCOL.md`](EXPERIMENTAL_VALIDATION_PROTOCOL.md) —
   how experimental templates are validated.
 - [`RELEASE.md`](RELEASE.md) — packaging, signing, and release checklist.

@@ -57,7 +57,7 @@ def parse_nec2_deck(text: str) -> NecImportResult:
 
     for line_number, raw_line in enumerate(text.splitlines(), start=1):
         line = raw_line.strip()
-        if not line or line.startswith("CM") or line.startswith("CE"):
+        if not line or line.startswith(("CM", "CE")):
             continue
         parts = line.replace(",", " ").split()
         if not parts:

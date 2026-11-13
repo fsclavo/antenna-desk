@@ -82,7 +82,7 @@ target-version = "py311"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "S", "PT", "T20", "ANN"]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "S", "PT", "T20", "ANN", "PIE"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["antennadesk"]

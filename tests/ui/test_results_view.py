@@ -372,7 +372,7 @@ def test_pattern_3d_uses_a_coarser_mesh_during_interaction(qtbot: QtBot) -> None
             float(phi),
             5.0 + 3.0 * math.sin(math.radians(theta)),
         )
-        for theta in range(0, 91)
+        for theta in range(91)
         for phi in range(0, 361, 2)
     )
 
@@ -402,7 +402,7 @@ def test_pattern_3d_reduces_the_full_mesh_resolution_by_40_percent(qtbot: QtBot)
             float(phi),
             5.0 + 3.0 * math.sin(math.radians(theta)),
         )
-        for theta in range(0, 91)
+        for theta in range(91)
         for phi in range(0, 361, 2)
     )
 

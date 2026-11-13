@@ -165,11 +165,13 @@ jobs:
       # PySide6 6.9.3/Qt can abort or hang when the complete UI suite runs in
       # one process. Run the heavy UI files in separate processes on every
       # platform, then the rest of the UI and non-UI suites.
+      # The Windows startup cost for `uv` plus PySide6 imports is material;
+      # keep the test timeout above the observed ~142 s full main-window run.
       - name: pytest
         shell: bash
         run: |
           uv run pytest tests/ui/test_results_view.py -q
-          timeout 120s uv run pytest tests/ui/test_main_window_*.py -vv
+          timeout 300s uv run pytest tests/ui/test_main_window_*.py -vv
           uv run pytest tests/ui --ignore=tests/ui/test_results_view.py --ignore-glob='*test_main_window_*.py' -q
           uv run pytest tests/acceptance tests/integration tests/unit -q
 

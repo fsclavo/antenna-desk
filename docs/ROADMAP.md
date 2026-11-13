@@ -205,7 +205,8 @@ Deferred:
 - Optional GPG detached signatures and Windows Authenticode signing hooks
   (completed, deferred for the initial release).
 - Published `v0.1.0`, `v0.2.0`, `v0.3.0`, `v0.3.1`, `v0.4.0`, `v0.4.1`,
-  `v0.4.2`, and `v0.5.0` with unsigned, SHA-256-verified artifacts (completed).
+  `v0.4.2`, `v0.5.0`, and `v0.6.0` with unsigned, SHA-256-verified artifacts
+  (completed).
 - Keep the wheel/sdist smoke test as the fallback distribution path
   (completed).
 
@@ -375,7 +376,7 @@ Rules for this track:
 | post-0.9 | UX24 | Retune catalog starting frequencies | Common operating-band defaults with coherent starting geometry | S–M | B | done 2026-11-12 |
 
 UX24 was added from direct user feedback after the 0.9 slice closed and was
-implemented the same day. It is not part of a published release.
+implemented the same day. It is part of the 0.6.0 release.
 
 Release sequence: **0.5 Decide** is the first slice because it has the highest
 user value and the lowest modeling risk. **0.6 Build** converts a simulation into

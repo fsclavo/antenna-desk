@@ -37,7 +37,7 @@ manifest has this shape:
 {
   "format": "antennadesk.project_bundle",
   "format_version": 1,
-  "application_version": "0.5.0",
+  "application_version": "0.6.0",
   "created_at": "2026-11-12T12:00:00+00:00",
   "project_file": "project.antennadesk",
   "project_name": "40 m dipole",
