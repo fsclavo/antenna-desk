@@ -117,7 +117,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX22~~ | ~~Make the pattern metric selector visibly meaningful~~ | S–M | none (coordinate with UX21) | **Done 2026-11-12:** the pattern chart titles and polar footers name the selected metric; the left axis, cursor readout, 3D label, and summary reflect the selection. A compact summary shows power gain, directivity, and realized gain for the selected frequency, with an explicit localized unavailable value instead of a silent omission. The metric definitions and lobe shape are unchanged. Tests cover titles, summary, cursor, unavailable values, retranslation, and independent cuts. EN/ES help, user guide, and changelog updated. No solver or schema changes. |
 | ~~UX23~~ | ~~Expand the common coax catalog and add feed-line presets~~ | M | UX18; G27 only if frequency-dependent loss is included | **Done 2026-11-12:** expanded the shared source-backed coax catalog to 16 cables: RG-58A/U, RG-8X, RG-8/U, RG-213/U, RG-214/U, RG-174/U, RG-316/U, RG-400/U, RG-6/U, RG-11/U, LMR-240, LMR-400, LMR-600, Belden 9913, LDF4-50A, and Ultraflex 7. Each entry has impedance, velocity factor, matched loss at a documented reference frequency, source URL, revision, and visible limitations. The feed-line editor has a **Catalog** selector that fills the three electrical fields while keeping length editable; manual edits switch to **Custom**. The catalog key is not persisted; on reopen, a unique electrical match is preselected and ambiguous matches show **Custom**. The materials-reference dialog uses the same catalog. The simulation keeps the scalar matched-loss model; frequency interpolation remains G27. Tests cover catalog invariants, source/revision coverage, auto-fill, custom override, duplicate-value handling, dialog restoration, dialog behavior, and EN/ES labels/help. No schema change. |
 | ~~UX24~~ | ~~Retune Moxon and Yagi catalog starting frequencies~~ | S | none | **Done 2026-11-12:** new Moxon editors start at 28.500 MHz with the Cebik 20 m wire reference scaled to that frequency, and new Yagi editors start at 145.000 MHz with the NBS five-element preset scaled from its published 50.1 MHz reference. The default field and starting geometry are generated together; a requested frequency passed to the Moxon dialog regenerates the scaled reference as well. Moxon and Yagi evidence/help state that the scaled defaults are heuristic starting points, while the exact Cebik 14.17 MHz and NBS 50.1 MHz references remain the source-backed cases. The Cebik and NBS reference actions still rescale to the current frequency. Ringo (50.100 MHz) and loaded vertical/mobile whip (7.100 MHz) keep their current defaults and are out of scope. Tests cover both defaults, the Moxon frequency-scaled dialog path, Yagi scaling/clearance behavior, EN/ES help, and the existing reference actions. No schema change. |
-| UX25 | Add stainless steel 304 as a source-backed conductor material | S–M | none | **Queued 2026-11-13.** Add only 304, with the source-backed conductivity and a documented μr = 1.0 approximation; do not add carbon or galvanized steel, export permeability to NEC, or change the schema. See the **UX25 design note** below. Acceptance: 304 selectable in every family editor and the component calculator; source-backed reference row; EN/ES labels and report text; persistence, BOM, report, and NEC-deck tests; full gate green. |
+| ~~UX25~~ | ~~Add stainless steel 304 as a source-backed conductor material~~ | S–M | none | **Done 2026-11-13:** added `STAINLESS_STEEL_304` (1.389 MS/m, μr = 1.0), the ordered `CONDUCTOR_MATERIALS` tuple, and a shared material-combo helper used by all family editors and dialogs. The component calculator, materials reference, EN/ES labels, reports, BOM cost key, persistence round-trip, NEC `LD 5`, and no-permeability-warning tests are covered. Copper remains the default; no schema or solver-model change. |
 | UX26 | Include canonical geometry and far-field pattern in exported antenna reports | M–L | G17, UX21 | **Queued 2026-11-13.** The HTML and native PDF simulation reports must include a deterministic geometry figure and metric-aware azimuth/elevation pattern cuts generated from the immutable snapshot, not from live widgets. See the **UX26 design note** below. Acceptance: both formats show geometry plus pattern for single-band and band runs; far-field-disabled and missing-data states are explicit; EN/ES headings and help; reporting and PDF tests; full gate green; no schema change. |
 | ~~UX27~~ | ~~Use ROE consistently in the Spanish UI and reports~~ | S–M | none | **Done 2026-11-13:** all 18 Spanish UI keys that still said “SWR” now use “ROE” with feminine agreement; the first explanatory use expands “ROE (relación de ondas estacionarias)”. Hardcoded chart/table labels in the measurement comparison, parameter sweep, robustness, and end-fed dialogs use the shared localized label; the HTML report and construction-sheet bandwidth row are localized. A regression test scans every Spanish UI/report/evidence value for `\bSWR\b`; Spanish dialog and report tests cover the changed surfaces. English, internal identifiers, report keys, CSV columns, schema, and solver are unchanged. |
 | ~~UX28~~ | ~~Call the vertical radiator dimension “length”, not “height”~~ | S–M | none | **Done 2026-11-13:** vertical, J-Pole, Ringo, inverted-L, SCV, and phased-vertical editors and report rows now use “length”/“largo” for the physical radiating element; base, feed, top, ring, coil, apex, stack, boom, and available heights remain “height”/“altura”. The Zepp “Radiator height” and discone “Cone height” exceptions are preserved. EN/ES help and tests cover the changed labels and installation heights. Internal field names, optimizer variables, schema, CSV/JSON keys, and solver behavior are unchanged. |
@@ -142,8 +142,9 @@ UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**, and
 0.8 **Explore** releases are closed. UX18–UX20 and UX21–UX24 were implemented on
 2026-11-12; the 0.9 **Sustain** slice is complete. The next product slice is not
 selected yet. UX21–UX24 were added from direct user feedback and completed the
-same day. UX25 and UX26 were queued on 2026-11-13. UX27 and UX28 were added the
-same day from terminology feedback; UX27 and UX28 were completed on 2026-11-13.
+same day. UX25 and UX26 were queued on 2026-11-13; UX25 was completed the same
+day and UX26 remains queued. UX27 and UX28 were added the same day from
+terminology feedback; UX27 and UX28 were completed on 2026-11-13.
 UX29 was added and completed the same day from feed-connection feedback.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
 EF1–EF6 are implemented; EF7–EF9 remain blocked/deferred.
@@ -223,8 +224,8 @@ Data rules for every entry:
 
 ## UX25 — Stainless steel 304 conductor (design note, 2026-11-13)
 
-**Queued 2026-11-13. Not implemented.** This note is the implementation
-contract. Do not substitute a generic "steel" preset, carbon steel, galvanized
+**Implemented on 2026-11-13.** This note is retained as the implementation
+record. Do not substitute a generic "steel" preset, carbon steel, galvanized
 steel, 316, or a different permeability model.
 
 ### Decision
@@ -1452,10 +1453,10 @@ model and solver contract must land first.
 8. **UX1–UX24 are complete.** The 0.5 **Decide**, 0.6 **Build**, 0.7
    **Measure**, 0.8 **Explore**, and 0.9 **Sustain** releases are closed.
    UX21–UX24 were added from direct user feedback and completed on
-   2026-11-12. **UX25–UX29** are the queued product-experience items.
-9. **UX25** is an independent materials item. Implement it exactly as specified
-   in the UX25 design note; do not bundle solver-permeability work, carbon
-   steel, or a custom-material editor into it.
+   2026-11-12. UX25–UX29 are complete.
+9. **UX25 is complete.** The stainless 304 preset, shared material selector,
+   reference row, BOM/report text, and deck tests are closed. Do not bundle
+   solver-permeability work, carbon steel, or a custom-material editor into it.
 10. **UX26** adds geometry and pattern figures to the HTML and PDF simulation
     reports. Implement it as specified in the UX26 design note; keep rendering
     headless and deterministic, and do not reuse live-widget captures.
@@ -1505,7 +1506,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **45**.
-- Full gate: **3,026 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **3,034 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.6.0** published on 2026-11-13 with checksum-verified unsigned

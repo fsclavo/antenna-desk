@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 
-from antennadesk.domain.antennas.materials import COPPER
+from antennadesk.domain.antennas.materials import COPPER, STAINLESS_STEEL_304
 from antennadesk.domain.design.component_calculators import (
     capacitance_for_resonance_f,
     capacitive_reactance_ohm,
@@ -95,6 +95,24 @@ def test_skin_depth_and_wire_resistance() -> None:
     assert same_depth == pytest.approx(depth)
     assert dc > 0.0
     assert rf > dc
+
+
+def test_stainless_steel_304_has_higher_skin_depth_and_rf_resistance() -> None:
+    copper_depth = skin_depth_m(frequency_hz=7_100_000.0, material=COPPER)
+    stainless_depth = skin_depth_m(frequency_hz=7_100_000.0, material=STAINLESS_STEEL_304)
+    _dc, copper_rf, _same = round_wire_resistance_per_m(
+        frequency_hz=7_100_000.0,
+        diameter_m=0.002,
+        material=COPPER,
+    )
+    _dc, stainless_rf, _same = round_wire_resistance_per_m(
+        frequency_hz=7_100_000.0,
+        diameter_m=0.002,
+        material=STAINLESS_STEEL_304,
+    )
+
+    assert stainless_depth > copper_depth
+    assert 5.0 < stainless_rf / copper_rf < 8.0
 
 
 def test_invalid_frequency_is_rejected() -> None:

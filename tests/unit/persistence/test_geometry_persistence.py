@@ -202,6 +202,23 @@ def test_parallel_load_round_trips_with_kind() -> None:
     assert restored.designs[0].antenna.loads == (load,)
 
 
+def test_stainless_steel_304_round_trip() -> None:
+    from antennadesk.domain.antennas.dipole import DipoleParameters
+    from antennadesk.domain.antennas.materials import STAINLESS_STEEL_304
+
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        material=STAINLESS_STEEL_304,
+    )
+    original = _project(parameters, "Stainless 304")
+
+    restored = project_from_document(document_from_project(original))
+
+    assert restored.designs[0].parameters.material == STAINLESS_STEEL_304
+
+
 def test_custom_parameters_round_trip() -> None:
     from antennadesk.domain.antennas.custom import CustomAntennaParameters
     from antennadesk.domain.antennas.feed import FeedPoint

@@ -185,6 +185,23 @@ def test_conductor_loss_card_is_emitted() -> None:
     assert "LD 5 1 0 0 58000000.000000000" in deck.text
 
 
+def test_stainless_steel_304_conductivity_card_is_emitted() -> None:
+    from antennadesk.domain.antennas.materials import STAINLESS_STEEL_304
+
+    model = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        material=STAINLESS_STEEL_304,
+    ).to_antenna(name="Stainless 304")
+    deck = write_nec2_input(
+        model,
+        _spec(include_conductor_losses=True),
+    )
+
+    assert "LD 5 1 0 0 1389000.000000000" in deck.text
+
+
 def test_series_load_card_is_emitted_on_the_mapped_segment() -> None:
     from antennadesk.domain.antennas.load import SeriesLoad
 

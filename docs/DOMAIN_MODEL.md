@@ -31,8 +31,10 @@ finite.
 ### ConductorMaterial
 
 A homogeneous material with a name, conductivity in S/m, and relative
-permeability. The `COPPER` and `ALUMINUM` presets use nominal engineering
-values.
+permeability. The ordered `CONDUCTOR_MATERIALS` presets are `COPPER`,
+`ALUMINUM`, and `STAINLESS_STEEL_304`, using nominal engineering values.
+Stainless 304 is a higher-loss corrosion-resistant option; the solver models
+conductivity only, so its relative permeability is rounded to 1.0.
 
 ### Wire
 

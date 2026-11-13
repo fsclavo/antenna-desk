@@ -38,12 +38,21 @@ def test_every_reference_has_a_traceable_source() -> None:
 
 
 def test_wire_references_publish_solver_conductivity() -> None:
-    assert tuple(entry.key for entry in WIRE_REFERENCES) == ("copper", "aluminum")
+    assert tuple(entry.key for entry in WIRE_REFERENCES) == (
+        "copper",
+        "aluminum",
+        "stainless_steel_304",
+    )
     for entry in WIRE_REFERENCES:
         assert entry.material.conductivity_s_per_m > 0.0
         assert entry.conductivity_ms_per_m == pytest.approx(
             entry.material.conductivity_s_per_m / 1_000_000.0
         )
+    stainless = next(entry for entry in WIRE_REFERENCES if entry.key == "stainless_steel_304")
+    assert stainless.material.conductivity_s_per_m == pytest.approx(1.389e6)
+    assert stainless.source.url == (
+        "https://asm.matweb.com/search/specificmaterial.asp?bassnum=mq304a"
+    )
 
 
 def test_coax_preset_builds_the_feed_line() -> None:

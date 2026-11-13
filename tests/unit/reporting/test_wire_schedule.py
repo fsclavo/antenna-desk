@@ -116,6 +116,26 @@ def test_conductor_bom_covers_a_multi_wire_family() -> None:
     assert rows[0].total_length_m == pytest.approx(sum(wire.length_m for wire in model.wires))
 
 
+def test_conductor_bom_uses_the_stainless_steel_304_key_and_label() -> None:
+    from antennadesk.domain.antennas.dipole import DipoleParameters
+    from antennadesk.domain.antennas.materials import STAINLESS_STEEL_304
+    from antennadesk.ui.i18n import Language, Translator
+
+    model = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        material=STAINLESS_STEEL_304,
+    ).to_antenna()
+    rows = conductor_bom_rows(model)
+
+    assert rows[0].material == "stainless_steel_304"
+    assert rows[0].cost_key.startswith("conductor:stainless_steel_304:")
+    spanish = Translator(Language.SPANISH)
+    assert spanish.report("stainless_steel_304") == "acero inoxidable 304"
+    assert spanish.report("Stainless steel 304") == "Acero inoxidable 304"
+
+
 def test_conductor_bom_separates_materials() -> None:
     from antennadesk.domain.antennas.custom import CustomAntennaParameters
     from antennadesk.domain.antennas.feed import FeedPoint

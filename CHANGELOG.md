@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Stainless steel 304 conductor.** Added a source-backed 304 preset
+  (1.389 MS/m, μr = 1.0) to every antenna editor and the component calculator.
+  The materials reference now includes its ASM source and the higher-loss,
+  corrosion-resistant use case; the solver emits conductivity through `LD 5`
+  and does not trigger the permeability warning. Copper remains the default and
+  the project schema is unchanged.
+
 ### Changed
 
 - **Spanish ROE terminology.** Spanish UI and report text now use **ROE**

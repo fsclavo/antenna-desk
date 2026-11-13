@@ -30,3 +30,15 @@ class ConductorMaterial:
 
 COPPER = ConductorMaterial(name="copper", conductivity_s_per_m=5.8e7)
 ALUMINUM = ConductorMaterial(name="aluminum", conductivity_s_per_m=3.5e7)
+# ASM nominal annealed 304: 7.2e-7 ohm*m, i.e. 1.389 MS/m. The solver models
+# conductivity only, so the small ferromagnetic permeability is rounded to 1.0.
+STAINLESS_STEEL_304 = ConductorMaterial(
+    name="stainless_steel_304",
+    conductivity_s_per_m=1.389e6,
+    relative_permeability=1.0,
+)
+CONDUCTOR_MATERIALS: tuple[ConductorMaterial, ...] = (
+    COPPER,
+    ALUMINUM,
+    STAINLESS_STEEL_304,
+)

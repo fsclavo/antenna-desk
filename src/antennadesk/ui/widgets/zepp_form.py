@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
+from ...domain.antennas.materials import COPPER, ConductorMaterial
 from ...domain.antennas.zepp import (
     ZeppParameters,
     parallel_wire_impedance_ohm,
@@ -23,6 +23,10 @@ from ...domain.antennas.zepp import (
 )
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
+from ..material_combo import (
+    populate_material_combo,
+    retranslate_material_combo,
+)
 from ..units import (
     UnitSystem,
     height_bounds,
@@ -36,8 +40,6 @@ from ..units import (
 from .form_i18n import FormLabels, retranslate_combo
 from .form_units import apply_length_suffixes, apply_radius_units
 from .ground_presets import GroundPresetController
-
-MATERIALS = (COPPER, ALUMINUM)
 
 
 class ZeppForm(QWidget):
@@ -94,10 +96,7 @@ class ZeppForm(QWidget):
         apply_radius_units(translator, unit_system, self._radius)
 
         self._material = QComboBox(self)
-        for material in MATERIALS:
-            self._material.addItem(material.name, material)
-        self._material.setItemText(0, translator.t("material.copper"))
-        self._material.setItemText(1, translator.t("material.aluminum"))
+        populate_material_combo(self._material, translator)
 
         self._ground = QComboBox(self)
         self._ground.addItem("", GroundKind.FREE_SPACE.value)
@@ -179,11 +178,7 @@ class ZeppForm(QWidget):
         self._ground_presets.retranslate()
         self._labels.retranslate()
         self._starting.setText(self._translator.t("zepp.starting_dimensions"))
-        retranslate_combo(
-            self._material,
-            self._translator,
-            ("material.copper", "material.aluminum"),
-        )
+        retranslate_material_combo(self._material, self._translator)
         retranslate_combo(
             self._ground,
             self._translator,

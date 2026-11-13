@@ -37,7 +37,7 @@ from ...domain.antennas.loop import (
     LoopOrientation,
     LoopParameters,
 )
-from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
+from ...domain.antennas.materials import ConductorMaterial
 from ...domain.environment.ground import GroundKind, GroundModel
 from ...domain.simulation.frequency import FrequencyPlan
 from ...domain.simulation.segmentation import (
@@ -47,6 +47,10 @@ from ...domain.simulation.segmentation import (
 from ...domain.simulation.spec import SimulationSpec
 from ..help import apply_form_help, apply_help
 from ..i18n import Translator
+from ..material_combo import (
+    populate_material_combo,
+    retranslate_material_combo,
+)
 from ..pattern_resolution import DEFAULT_PATTERN_STEP_DEG, far_field_request
 from ..units import (
     UnitSystem,
@@ -61,8 +65,6 @@ from ..units import (
     length_unit_key,
 )
 from .ground_presets import GroundPresetController
-
-MATERIALS = (COPPER, ALUMINUM)
 
 
 class DipoleForm(QWidget):
@@ -121,8 +123,7 @@ class DipoleForm(QWidget):
         self._diameter = QDoubleSpinBox(self)
 
         self._material = QComboBox(self)
-        for material in MATERIALS:
-            self._material.addItem(material.name, material)
+        populate_material_combo(self._material, translator)
 
         self._ground = QComboBox(self)
         self._ground.addItem("", GroundKind.FREE_SPACE.value)
@@ -286,8 +287,7 @@ class DipoleForm(QWidget):
         for key, label in labels.items():
             label.setText(self._translator.t(key))
         apply_form_help(self._form_layout, self._translator, family="dipole")
-        self._material.setItemText(0, self._translator.t("material.copper"))
-        self._material.setItemText(1, self._translator.t("material.aluminum"))
+        retranslate_material_combo(self._material, self._translator)
         self._ground.setItemText(0, self._translator.t("ground.free_space"))
         self._ground.setItemText(1, self._translator.t("ground.perfect"))
         self._ground.setItemText(2, self._translator.t("ground.finite"))

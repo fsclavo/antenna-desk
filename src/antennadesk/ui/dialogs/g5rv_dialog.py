@@ -24,7 +24,7 @@ from ...domain.antennas.g5rv import (
     G5RVLineOption,
     g5rv_parameters,
 )
-from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
+from ...domain.antennas.materials import COPPER, ConductorMaterial
 from ...domain.antennas.transmission_line_doublet import (
     DoubletPreset,
     TransmissionLineDoubletParameters,
@@ -32,6 +32,9 @@ from ...domain.antennas.transmission_line_doublet import (
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..fonts import scaled_dialog_size
 from ..i18n import Translator
+from ..material_combo import (
+    populate_material_combo,
+)
 from ..units import (
     UnitSystem,
     length_from_m,
@@ -42,8 +45,6 @@ from ..units import (
 )
 from ..widgets.form_units import apply_radius_units
 from ..widgets.ground_presets import GroundPresetController
-
-MATERIALS = (COPPER, ALUMINUM)
 
 
 class G5RVDialog(QDialog):
@@ -100,10 +101,7 @@ class G5RVDialog(QDialog):
         self._velocity.setValue(1.0)
 
         self._material = QComboBox(self)
-        for material in MATERIALS:
-            self._material.addItem(material.name, material)
-        self._material.setItemText(0, translator.t("material.copper"))
-        self._material.setItemText(1, translator.t("material.aluminum"))
+        populate_material_combo(self._material, translator)
 
         self._ground = QComboBox(self)
         self._ground.addItem("", GroundKind.FREE_SPACE.value)

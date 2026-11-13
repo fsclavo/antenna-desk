@@ -7,7 +7,13 @@ import math
 import pytest
 
 from antennadesk.domain.antennas.geometry import Point3D
-from antennadesk.domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
+from antennadesk.domain.antennas.materials import (
+    ALUMINUM,
+    CONDUCTOR_MATERIALS,
+    COPPER,
+    STAINLESS_STEEL_304,
+    ConductorMaterial,
+)
 from antennadesk.domain.antennas.wire import Wire
 
 
@@ -69,7 +75,11 @@ def test_wire_rejects_empty_id() -> None:
 
 
 def test_material_presets() -> None:
+    assert CONDUCTOR_MATERIALS == (COPPER, ALUMINUM, STAINLESS_STEEL_304)
     assert COPPER.conductivity_s_per_m > ALUMINUM.conductivity_s_per_m
+    assert ALUMINUM.conductivity_s_per_m > STAINLESS_STEEL_304.conductivity_s_per_m
+    assert STAINLESS_STEEL_304.conductivity_s_per_m == pytest.approx(1.389e6)
+    assert STAINLESS_STEEL_304.relative_permeability == pytest.approx(1.0)
     assert COPPER.relative_permeability == pytest.approx(1.0)
 
 

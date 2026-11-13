@@ -12,7 +12,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ..antennas.feed_line import FeedLine
-from ..antennas.materials import ALUMINUM, COPPER, ConductorMaterial
+from ..antennas.materials import (
+    ALUMINUM,
+    COPPER,
+    STAINLESS_STEEL_304,
+    ConductorMaterial,
+)
 from ..common.units import ensure_positive
 
 
@@ -132,6 +137,10 @@ ASTM_ALUMINUM = ReferenceSource(
     url="https://www.astm.org/b0230-07r18.html",
     revision="ASTM B230-07 (2018)",
 )
+ASM_304 = ReferenceSource(
+    label="ASM Material Data Sheet, AISI Type 304 stainless steel",
+    url="https://asm.matweb.com/search/specificmaterial.asp?bassnum=mq304a",
+)
 BELDEN_RG58A = ReferenceSource(
     label="Belden 8219 RG-58A/U technical data sheet",
     url="https://objects.eanixter.com/PD319399.PDF",
@@ -241,6 +250,11 @@ ALUMINA_96 = ReferenceSource(
 WIRE_REFERENCES: tuple[WireReference, ...] = (
     WireReference(key="copper", material=COPPER, source=ASTM_COPPER),
     WireReference(key="aluminum", material=ALUMINUM, source=ASTM_ALUMINUM),
+    WireReference(
+        key="stainless_steel_304",
+        material=STAINLESS_STEEL_304,
+        source=ASM_304,
+    ),
 )
 
 

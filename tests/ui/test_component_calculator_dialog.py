@@ -75,6 +75,11 @@ def test_balun_and_conductor_calculators(qtbot: QtBot) -> None:
     dialog._conductor_button.click()
     assert "Ω/m" in dialog._conductor_result.text()
 
+    assert dialog._material.itemText(2) == "Stainless steel 304"
+    dialog._material.setCurrentIndex(2)
+    dialog._conductor_button.click()
+    assert "Ω/m" in dialog._conductor_result.text()
+
 
 def test_choke_tab_contains_reference_notes(qtbot: QtBot) -> None:
     dialog = _dialog(qtbot)

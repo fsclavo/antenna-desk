@@ -59,6 +59,16 @@ def _solver() -> Nec2cSolver:
     return Nec2cSolver(Path("unused"))
 
 
+def test_stainless_steel_304_does_not_trigger_the_permeability_warning() -> None:
+    from antennadesk.domain.antennas.materials import STAINLESS_STEEL_304
+
+    diagnostics = _solver().validate(_model(STAINLESS_STEEL_304), _spec())
+
+    assert not any(
+        diagnostic.code == "solver.permeability_unsupported" for diagnostic in diagnostics
+    )
+
+
 def test_permeability_warning() -> None:
     material = ConductorMaterial(
         name="iron",

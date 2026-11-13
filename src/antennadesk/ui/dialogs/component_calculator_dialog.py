@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
+from ...domain.antennas.materials import CONDUCTOR_MATERIALS, ConductorMaterial
 from ...domain.design.component_calculators import (
     capacitance_for_resonance_f,
     capacitive_reactance_ohm,
@@ -310,8 +310,11 @@ class ComponentCalculatorDialog(QDialog):
         tab = QWidget(self)
         form = QFormLayout()
         self._material = QComboBox(tab)
-        self._material.addItem(t("component_calculator.copper"), COPPER)
-        self._material.addItem(t("component_calculator.aluminum"), ALUMINUM)
+        for material in CONDUCTOR_MATERIALS:
+            self._material.addItem(
+                t(f"component_calculator.{material.name}"),
+                material,
+            )
         self._conductor_diameter = self._small_spin(f" {t(diameter_unit_key(self._unit_system))}")
         self._conductor_diameter.setValue(diameter_from_m(0.001, self._unit_system))
         self._conductor_frequency = self._small_spin(" MHz")

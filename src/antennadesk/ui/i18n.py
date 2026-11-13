@@ -2912,8 +2912,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         ),
     },
     "help.field.material": {
-        Language.ENGLISH: "Conductor material preset; it sets the conductivity used for losses.",
-        Language.SPANISH: "Material del conductor; ajusta la conductividad usada para las pérdidas.",
+        Language.ENGLISH: (
+            "Conductor preset; sets conductivity only. Stainless 304 has higher "
+            "RF loss and its permeability is rounded to 1.0."
+        ),
+        Language.SPANISH: (
+            "Preset de conductor; ajusta solo la conductividad. El acero 304 "
+            "tiene más pérdida de RF y su permeabilidad se redondea a 1,0."
+        ),
     },
     "help.field.orientation": {
         Language.ENGLISH: (
@@ -5953,6 +5959,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "field.sweep_points": {Language.ENGLISH: "Points", Language.SPANISH: "Puntos"},
     "material.copper": {Language.ENGLISH: "Copper", Language.SPANISH: "Cobre"},
     "material.aluminum": {Language.ENGLISH: "Aluminum", Language.SPANISH: "Aluminio"},
+    "material.stainless_steel_304": {
+        Language.ENGLISH: "Stainless steel 304",
+        Language.SPANISH: "Acero inoxidable 304",
+    },
     "ground.free_space": {Language.ENGLISH: "Free space", Language.SPANISH: "Espacio libre"},
     "ground.perfect": {Language.ENGLISH: "Perfect ground", Language.SPANISH: "Suelo perfecto"},
     "ground.finite": {Language.ENGLISH: "Finite ground", Language.SPANISH: "Suelo finito"},
@@ -12629,6 +12639,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Aluminum",
         Language.SPANISH: "Aluminio",
     },
+    "component_calculator.stainless_steel_304": {
+        Language.ENGLISH: "Stainless steel 304",
+        Language.SPANISH: "Acero inoxidable 304",
+    },
     "component_calculator.from_turns": {
         Language.ENGLISH: "Inductance from turns",
         Language.SPANISH: "Inductancia desde vueltas",
@@ -12903,6 +12917,27 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "Elementos livianos y vanos largos. Aluminio 1350 nominal (61 % IACS); la "
             "aleación, el temple y la calidad de las conexiones cambian la pérdida efectiva."
+        ),
+    },
+    "materials.wire.stainless_steel_304.name": {
+        Language.ENGLISH: "Stainless steel 304",
+        Language.SPANISH: "Acero inoxidable 304",
+    },
+    "materials.wire.stainless_steel_304.note": {
+        Language.ENGLISH: (
+            "Corrosion-resistant whips, portable/marine elements, and mechanical "
+            "conductors. Nominal annealed 304 (1.389 MS/m); about 6.5x the RF "
+            "resistance of copper for the same diameter at 7.1 MHz and 2 mm. Not "
+            "for coils, traps, or small loops. The solver uses conductivity only "
+            "with μr = 1.0; cold-worked 304 can be slightly magnetic. Evidence B."
+        ),
+        Language.SPANISH: (
+            "Látigos resistentes a la corrosión, elementos portátiles/marinos y "
+            "conductores mecánicos. 304 recocido nominal (1,389 MS/m); alrededor de "
+            "6,5 veces la resistencia de RF del cobre para el mismo diámetro a 7,1 MHz y "
+            "2 mm. No para bobinas, trampas ni loops pequeños. El solver usa solo "
+            "conductividad con μr = 1,0; el 304 trabajado en frío puede ser algo "
+            "magnético. Evidencia B."
         ),
     },
     "materials.coax.rg58a.name": {

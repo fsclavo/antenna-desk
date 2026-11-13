@@ -15,11 +15,17 @@ building.
 |---|---:|---:|---|
 | Copper | 58.0 MS/m | 1.0 | ASTM B3 / IEC 60028, annealed copper (100% IACS) |
 | Aluminum | 35.0 MS/m | 1.0 | ASTM B230/B231, 1350 aluminum (61% IACS) |
+| Stainless steel 304 | 1.389 MS/m | 1.0 | ASM Material Data Sheet, AISI Type 304 stainless steel |
 
 Copper is the default conductor for traps, coils, and general HF wire.
-Aluminum is a lightweight alternative for elements and long spans. The solver
-uses these homogeneous conductivity values; plating, stranding, insulation,
-connections, and temperature are not modeled.
+Aluminum is a lightweight alternative for elements and long spans. Stainless
+steel 304 is a corrosion-resistant option for whips, portable/marine elements,
+and mechanical conductors; it has about 6.5× the RF resistance of copper for the
+same diameter at 7.1 MHz and 2 mm and is not recommended for coils, traps, or
+small loops. The solver uses these homogeneous conductivity values; plating,
+stranding, insulation, connections, and temperature are not modeled. The 304
+entry rounds relative permeability to 1.0 because the solver models conductivity
+only; cold-worked 304 can be slightly magnetic.
 
 ## Coax
 
@@ -118,6 +124,8 @@ mounting are not designed by this table.
   <https://www.astm.org/b0003-13r22.html>
 - ASTM B230/B231, 1350 aluminum (61% IACS):
   <https://www.astm.org/b0230-07r18.html>
+- ASM Material Data Sheet, AISI Type 304 stainless steel:
+  <https://asm.matweb.com/search/specificmaterial.asp?bassnum=mq304a>
 - Belden 8219 RG-58A/U technical data sheet:
   <https://objects.eanixter.com/PD319399.PDF>
 - Belden 9258 RG-8X technical data sheet:

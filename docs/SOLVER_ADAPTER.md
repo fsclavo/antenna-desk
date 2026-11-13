@@ -114,7 +114,8 @@ impedance against the computed value `2.351965` at 50 Ω.
 - Conductor conductivity is emitted through `LD 5` when
   `SimulationSpec.include_conductor_losses` is true (the default). Set it to
   false to reproduce perfect-conductor reference cases. Relative permeability
-  is not emitted.
+  is not emitted; the stainless steel 304 preset uses 1.389 MS/m with μr = 1.0
+  and does not trigger the permeability warning.
 - Series and parallel RLC loads are emitted as `LD 0`/`LD 1` on one segment.
   L/Pi/T matching networks and the uniform feed line are post-processed outside
   NEC. General transmission-line geometry is not implemented. The vertical

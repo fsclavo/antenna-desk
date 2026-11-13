@@ -28,13 +28,16 @@ from ...domain.antennas.custom import CustomAntennaParameters, geometry_warnings
 from ...domain.antennas.feed import FeedPoint
 from ...domain.antennas.geometry import Point3D
 from ...domain.antennas.load import LumpedLoad
-from ...domain.antennas.materials import ALUMINUM, COPPER, ConductorMaterial
+from ...domain.antennas.materials import COPPER, ConductorMaterial
 from ...domain.antennas.wire import Wire
 from ...domain.common.validation import Diagnostic
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..fonts import scaled_dialog_size
 from ..help import apply_row_help
 from ..i18n import Translator
+from ..material_combo import (
+    populate_material_combo,
+)
 from ..units import (
     UnitSystem,
     length_from_m,
@@ -45,8 +48,6 @@ from ..units import (
     radius_unit_key,
 )
 from ..widgets.ground_presets import GroundPresetController
-
-MATERIALS = (COPPER, ALUMINUM)
 
 
 class CustomAntennaDialog(QDialog):
@@ -82,10 +83,7 @@ class CustomAntennaDialog(QDialog):
         self._frequency.setValue(initial_frequency_hz / 1e6)
 
         self._material = QComboBox(self)
-        for material in MATERIALS:
-            self._material.addItem(material.name, material)
-        self._material.setItemText(0, translator.t("material.copper"))
-        self._material.setItemText(1, translator.t("material.aluminum"))
+        populate_material_combo(self._material, translator)
 
         self._ground = QComboBox(self)
         self._ground.addItem("", GroundKind.FREE_SPACE.value)

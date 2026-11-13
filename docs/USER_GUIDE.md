@@ -1634,8 +1634,11 @@ are construction aids, not antenna models.
 Use **Tools → Materials Reference...** for a read-only, source-backed selection
 table:
 
-- **Wire**: nominal conductivity and relative permeability for copper and
-  aluminum. The solver uses the same homogeneous values; plating, stranding,
+- **Wire**: nominal conductivity and relative permeability for copper,
+  aluminum, and stainless steel 304. Stainless 304 is a higher-loss,
+  corrosion-resistant option for whips and portable/marine elements, not for
+  coils, traps, or small loops. The solver uses the same homogeneous
+  conductivity values and rounds 304 permeability to 1.0; plating, stranding,
   connections, and temperature are not modeled.
 - **Coax**: 16 source-backed cables with impedance, velocity factor, and
   matched loss at a stated datasheet frequency, from RG-58A/U and RG-213/U to

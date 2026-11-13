@@ -137,6 +137,16 @@ def test_vertical_installation_heights_stay_heights(
     assert spanish_height in [label.text() for label in form.findChildren(QLabel)]
 
 
+def test_family_forms_use_the_shared_material_presets(qtbot: QtBot) -> None:
+    for form_type, _label_key in FORMS:
+        form = form_type(Translator(Language.ENGLISH), UnitSystem.METRIC)
+        qtbot.addWidget(form)
+        assert form._material.count() == 3, form_type.__name__
+        assert form._material.itemText(0) == "Copper", form_type.__name__
+        assert form._material.itemText(1) == "Aluminum", form_type.__name__
+        assert form._material.itemText(2) == "Stainless steel 304", form_type.__name__
+
+
 def test_family_form_retranslates_options_and_buttons(qtbot: QtBot) -> None:
     translator = Translator(Language.ENGLISH)
     form = YagiForm(translator, UnitSystem.METRIC)
@@ -148,6 +158,7 @@ def test_family_form_retranslates_options_and_buttons(qtbot: QtBot) -> None:
     spanish = Translator(Language.SPANISH)
     assert form._table.horizontalHeaderItem(0).text() == spanish.t("yagi.element")
     assert form._material.itemText(0) == spanish.t("material.copper")
+    assert form._material.itemText(2) == spanish.t("material.stainless_steel_304")
     assert form._add.text() == spanish.t("yagi.add_element")
     assert form._polarization.toolTip() == spanish.t("yagi.polarization_hint")
 
