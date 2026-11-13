@@ -34,6 +34,12 @@ from .ground_presets import GroundPresetController
 
 MATERIALS = (COPPER, ALUMINUM)
 
+# The editor starts on the 10 m band.  The geometry is the published Cebik
+# 20 m wire reference scaled to this frequency; it is a heuristic starting
+# point, not a second independent reference.
+MOXON_DEFAULT_FREQUENCY_HZ = 28_500_000.0
+MOXON_DEFAULT_HEIGHT_M = 10.0
+
 
 class MoxonForm(QWidget):
     changed = Signal()
@@ -55,32 +61,37 @@ class MoxonForm(QWidget):
         self._frequency.setRange(0.1, 100_000.0)
         self._frequency.setDecimals(6)
         self._frequency.setSuffix(" MHz")
-        self._frequency.setValue(14.1)
+        self._frequency.setValue(MOXON_DEFAULT_FREQUENCY_HZ / 1_000_000.0)
+
+        default_geometry = moxon_20m_wire(
+            frequency_hz=MOXON_DEFAULT_FREQUENCY_HZ,
+            height_m=MOXON_DEFAULT_HEIGHT_M,
+        )
 
         self._width = QDoubleSpinBox(self)
         self._width.setDecimals(3)
         self._width.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
-        self._width.setValue(length_from_m(10.6, unit_system))
+        self._width.setValue(length_from_m(default_geometry.width_m, unit_system))
 
         self._depth = QDoubleSpinBox(self)
         self._depth.setDecimals(3)
         self._depth.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
-        self._depth.setValue(length_from_m(2.5, unit_system))
+        self._depth.setValue(length_from_m(default_geometry.depth_m, unit_system))
 
         self._reflector_tip = QDoubleSpinBox(self)
         self._reflector_tip.setDecimals(3)
         self._reflector_tip.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
-        self._reflector_tip.setValue(length_from_m(1.0, unit_system))
+        self._reflector_tip.setValue(length_from_m(default_geometry.reflector_tip_m, unit_system))
 
         self._driven_tip = QDoubleSpinBox(self)
         self._driven_tip.setDecimals(3)
         self._driven_tip.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
-        self._driven_tip.setValue(length_from_m(1.0, unit_system))
+        self._driven_tip.setValue(length_from_m(default_geometry.driven_tip_m, unit_system))
 
         self._height = QDoubleSpinBox(self)
         self._height.setDecimals(3)
         self._height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
-        self._height.setValue(length_from_m(10.0, unit_system))
+        self._height.setValue(length_from_m(MOXON_DEFAULT_HEIGHT_M, unit_system))
 
         self._azimuth = QDoubleSpinBox(self)
         self._azimuth.setRange(0.0, 360.0)
@@ -316,7 +327,10 @@ class MoxonForm(QWidget):
         self._update_geometry()
 
     def set_frequency_hz(self, frequency_hz: float) -> None:
+        """Set the starting frequency and regenerate the scaled reference."""
+
         self._frequency.setValue(frequency_hz / 1_000_000.0)
+        self._load_reference_preset()
 
     def _load_reference_preset(self) -> None:
         try:

@@ -11246,32 +11246,36 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "moxon.hint": {
         Language.ENGLISH: (
-            "The generator creates a reflector and driven element with bent tips. "
-            "Vertical polarization puts the whole rectangle in a vertical plane "
-            "with a horizontal boom. The reference preset scales the published "
-            "20 m wire dimensions to the current frequency and keeps the current "
-            "height, ground, wire radius, and polarization."
+            "The generator starts at 28.500 MHz with the published Cebik 20 m "
+            "wire dimensions scaled to that frequency. It creates a reflector and "
+            "driven element with bent tips. Vertical polarization puts the whole "
+            "rectangle in a vertical plane with a horizontal boom. The reference "
+            "preset rescales those dimensions to the current frequency and keeps the "
+            "current height, ground, wire radius, and polarization."
         ),
         Language.SPANISH: (
-            "El generador crea un reflector y un elemento alimentado con puntas "
-            "dobladas. La polarización vertical ubica todo el rectángulo en un "
-            "plano vertical con el boom horizontal. El preset de referencia escala "
-            "las dimensiones publicadas de alambre de 20 m a la frecuencia actual y "
-            "conserva la altura, el ground, el radio de hilo y la polarización "
-            "actuales."
+            "El generador empieza en 28,500 MHz con las dimensiones publicadas de "
+            "Cebik para alambre de 20 m escaladas a esa frecuencia. Crea un reflector "
+            "y un elemento alimentado con puntas dobladas. La polarización vertical "
+            "ubica todo el rectángulo en un plano vertical con el boom horizontal. El "
+            "preset de referencia vuelve a escalar esas dimensiones a la frecuencia "
+            "actual y conserva la altura, el ground, el radio de hilo y la "
+            "polarización actuales."
         ),
     },
     "moxon.evidence": {
         Language.ENGLISH: (
             "The exact 14.17 MHz Cebik 20 m wire dimensions are reference-backed. "
-            "Dimensions scaled to another frequency or edited are a heuristic "
-            "starting point, not an independent reference."
+            "The 28.500 MHz editor default is scaled from that reference and is a "
+            "heuristic starting point. Dimensions scaled to another frequency or "
+            "edited are also a heuristic, not an independent reference."
         ),
         Language.SPANISH: (
             "Las dimensiones exactas de Cebik para alambre de 20 m a 14,17 MHz "
-            "tienen referencia publicada. Las dimensiones escaladas a otra "
-            "frecuencia o editadas son un punto de partida heurístico, no una "
-            "referencia independiente."
+            "tienen referencia publicada. El valor inicial del editor a 28,500 MHz "
+            "está escalado desde esa referencia y es un punto de partida heurístico. "
+            "Las dimensiones escaladas a otra frecuencia o editadas también son "
+            "heurísticas, no una referencia independiente."
         ),
     },
     "ocfd.title": {
@@ -11746,14 +11750,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "yagi.hint": {
         Language.ENGLISH: (
-            "Positions and lengths are editable. Polarization rotates the "
-            "elements around a horizontal boom. The generated antenna is an "
-            "editable custom-wire design."
+            "The editor starts at 145.000 MHz with the NBS five-element preset "
+            "scaled from its published 50.1 MHz reference. Positions and lengths "
+            "are editable. Polarization rotates the elements around a horizontal "
+            "boom. The generated antenna is an editable custom-wire design."
         ),
         Language.SPANISH: (
-            "Las posiciones y longitudes son editables. La polarización gira "
-            "los elementos alrededor de un boom horizontal. La antena generada "
-            "es un diseño de hilos personalizado editable."
+            "El editor empieza en 145,000 MHz con el preset NBS de cinco elementos "
+            "escalado desde su referencia publicada de 50,1 MHz. Las posiciones y "
+            "longitudes son editables. La polarización gira los elementos alrededor "
+            "de un boom horizontal. La antena generada es un diseño de hilos "
+            "personalizado editable."
         ),
     },
     "element_optimize.loop_title": {
@@ -12145,16 +12152,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "yagi.evidence": {
         Language.ENGLISH: (
             "NBS TN-688 preset: 5 elements, 0.8 wavelength, 9.2 dBd reference "
-            "gain. Modified geometries are experimental and have no external "
-            "reference. The folded driven element changes feed impedance and "
-            "has no independent impedance reference."
+            "gain. The published reference is at 50.1 MHz; the 145.000 MHz editor "
+            "default is scaled from it and is a heuristic starting point. Modified "
+            "geometries are experimental and have no external reference. The folded "
+            "driven element changes feed impedance and has no independent impedance "
+            "reference."
         ),
         Language.SPANISH: (
             "Preset NBS TN-688: 5 elementos, 0.8 longitud de onda, ganancia de "
-            "referencia 9.2 dBd. Las geometrías modificadas son experimentales y "
-            "no tienen referencia externa. El elemento alimentado plegado cambia "
-            "la impedancia de alimentación y no tiene referencia independiente "
-            "de impedancia."
+            "referencia 9.2 dBd. La referencia publicada es a 50,1 MHz; el valor "
+            "inicial del editor a 145,000 MHz está escalado desde ella y es un punto "
+            "de partida heurístico. Las geometrías modificadas son experimentales y "
+            "no tienen referencia externa. El elemento alimentado plegado cambia la "
+            "impedancia de alimentación y no tiene referencia independiente de "
+            "impedancia."
         ),
     },
     "custom.metric_hint": {

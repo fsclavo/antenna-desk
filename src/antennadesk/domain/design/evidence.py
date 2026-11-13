@@ -138,7 +138,8 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         source="NBS TN-688 5-element preset, 9.2 dBd (11.35 dBi)",
         tolerance="0.5 dB",
         limitation=(
-            "Only the published preset; edited element geometry is experimental. "
+            "Only the published preset at 50.1 MHz; the 145 MHz editor default "
+            "is scaled and heuristic. Edited element geometry is experimental. "
             "The optional folded driven element and beta/hairpin match change "
             "feed impedance and have no independent impedance reference. "
             "Tapered tips are geometric only; boom-mounting correction is not "
@@ -151,8 +152,9 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         source="L. B. Cebik, W4RNL, 'The Moxon Rectangle: A Review', Table 1 and text",
         tolerance="1.5 Ω real; 5 Ω reactance; 0.3 dB gain; better than 30 dB F/B",
         limitation=(
-            "Reference-backed at 14.17 MHz only; dimensions scaled to another "
-            "frequency or edited are a heuristic starting point."
+            "Reference-backed at 14.17 MHz only; the 28.5 MHz editor default and "
+            "dimensions scaled to another frequency or edited are a heuristic "
+            "starting point."
         ),
     ),
     "ocfd": EvidenceEntry(

@@ -116,7 +116,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX21~~ | ~~Show azimuth and elevation pattern cuts side by side~~ | M | none | **Done 2026-11-12:** the **Cuts** tab shows four panes: azimuth line chart and polar lobes on the left, elevation line chart and polar lobes on the right. Frequency and metric stay shared; each plane has an independent cut selector (θ for azimuth, φ for elevation) defaulting to the maximum-gain direction and preserving selections across frequency and band changes. Each pane has its own title, axis labels, cursor readout, and a localized empty state when a cut is unavailable. The **3D lobe** tab is unchanged. The layout uses resizable splitters and remains usable at the minimum supported window size. Pattern PNG export saves the whole 2×2 Cuts view; the 3D tab saves the 3D view. No domain, solver, or persistence changes. Tests, EN/ES help, accessibility, user guide, and changelog updated. |
 | ~~UX22~~ | ~~Make the pattern metric selector visibly meaningful~~ | S–M | none (coordinate with UX21) | **Done 2026-11-12:** the pattern chart titles and polar footers name the selected metric; the left axis, cursor readout, 3D label, and summary reflect the selection. A compact summary shows power gain, directivity, and realized gain for the selected frequency, with an explicit localized unavailable value instead of a silent omission. The metric definitions and lobe shape are unchanged. Tests cover titles, summary, cursor, unavailable values, retranslation, and independent cuts. EN/ES help, user guide, and changelog updated. No solver or schema changes. |
 | ~~UX23~~ | ~~Expand the common coax catalog and add feed-line presets~~ | M | UX18; G27 only if frequency-dependent loss is included | **Done 2026-11-12:** expanded the shared source-backed coax catalog to 16 cables: RG-58A/U, RG-8X, RG-8/U, RG-213/U, RG-214/U, RG-174/U, RG-316/U, RG-400/U, RG-6/U, RG-11/U, LMR-240, LMR-400, LMR-600, Belden 9913, LDF4-50A, and Ultraflex 7. Each entry has impedance, velocity factor, matched loss at a documented reference frequency, source URL, revision, and visible limitations. The feed-line editor has a **Catalog** selector that fills the three electrical fields while keeping length editable; manual edits switch to **Custom**. The catalog key is not persisted; on reopen, a unique electrical match is preselected and ambiguous matches show **Custom**. The materials-reference dialog uses the same catalog. The simulation keeps the scalar matched-loss model; frequency interpolation remains G27. Tests cover catalog invariants, source/revision coverage, auto-fill, custom override, duplicate-value handling, dialog restoration, dialog behavior, and EN/ES labels/help. No schema change. |
-| UX24 | Retune Moxon and Yagi catalog starting frequencies | S | none | Requested 2026-11-12: Moxon starts at 28.500 MHz and Yagi at 145.000 MHz. Change the default field and the starting geometry together: Moxon generated from the Cebik 20 m reference at 28.5 MHz and Yagi from the frequency-scaled NBS five-element preset. The Cebik and NBS reference actions keep their documented behavior. Ringo (50.100 MHz) and loaded vertical/mobile whip (7.100 MHz) keep their current defaults and are out of scope. Update evidence/limitations and EN/ES help, and test both defaults; no schema change. |
+| ~~UX24~~ | ~~Retune Moxon and Yagi catalog starting frequencies~~ | S | none | **Done 2026-11-12:** new Moxon editors start at 28.500 MHz with the Cebik 20 m wire reference scaled to that frequency, and new Yagi editors start at 145.000 MHz with the NBS five-element preset scaled from its published 50.1 MHz reference. The default field and starting geometry are generated together; a requested frequency passed to the Moxon dialog regenerates the scaled reference as well. Moxon and Yagi evidence/help state that the scaled defaults are heuristic starting points, while the exact Cebik 14.17 MHz and NBS 50.1 MHz references remain the source-backed cases. The Cebik and NBS reference actions still rescale to the current frequency. Ringo (50.100 MHz) and loaded vertical/mobile whip (7.100 MHz) keep their current defaults and are out of scope. Tests cover both defaults, the Moxon frequency-scaled dialog path, Yagi scaling/clearance behavior, EN/ES help, and the existing reference actions. No schema change. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -125,11 +125,10 @@ external service and must not be invented or simulated into existence.
 ## Product experience queue (2026-11-11)
 
 UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**, and
-0.8 **Explore** releases are closed. UX18–UX20 and UX21–UX23 were implemented on
+0.8 **Explore** releases are closed. UX18–UX20 and UX21–UX24 were implemented on
 2026-11-12; the 0.9 **Sustain** slice is complete. The next product slice is not
-selected yet. UX21–UX23 were added from direct user feedback and completed the
-same day. UX24 was added from direct user feedback on 2026-11-12 and is
-pending.
+selected yet. UX21–UX24 were added from direct user feedback and completed the
+same day.
 
 The first slice accepts these constraints:
 
@@ -423,7 +422,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **45**.
-- Full gate: **2,928 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **2,932 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.5.0** published on 2026-11-12 with checksum-verified unsigned
@@ -432,10 +431,11 @@ model and solver contract must land first.
   CI; all six published checksums were verified. See
   [`RELEASE_QA_0.5.0.md`](RELEASE_QA_0.5.0.md). **0.4.2** remains the previous
   release.
-- Last commits: the editable BOM costs (UX20), the portable project bundle
-  (UX19), the common coax catalog (UX23), the materials reference (UX18), the
-  0.5.0 release publication and QA, the folded-dipole, full-wave loop, and Yagi
-  folded-driven feed transformers, the current-balun record,
+- Last commits: the Moxon/Yagi starting frequencies (UX24), the editable BOM
+  costs (UX20), the portable project bundle (UX19), the common coax catalog
+  (UX23), the materials reference (UX18), the 0.5.0 release publication and QA,
+  the folded-dipole, full-wave loop, and Yagi folded-driven feed transformers,
+  the current-balun record,
   the side-by-side pattern cuts and metric-aware views (UX21–UX22),
   the reference design library (UX17),
   the guided experiments (UX16),

@@ -5,10 +5,11 @@ from __future__ import annotations
 import pytest
 from pytestqt.qtbot import QtBot
 
-from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters, nbs_five_element
 from antennadesk.ui.dialogs.yagi_dialog import YagiDialog
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem, radius_from_m
+from antennadesk.ui.widgets.yagi_form import YAGI_DEFAULT_FREQUENCY_HZ
 
 
 def test_yagi_dialog_states_that_boom_correction_is_not_modeled(
@@ -34,6 +35,27 @@ def test_yagi_dialog_loads_the_nbs_preset(qtbot: QtBot) -> None:
     parameters = dialog.parameters()
     assert len(parameters.elements) == 5
     assert parameters.driven_index == 1
+    assert parameters.frequency_hz == pytest.approx(YAGI_DEFAULT_FREQUENCY_HZ)
+
+
+def test_yagi_dialog_starts_on_2m_with_scaled_nbs_geometry(qtbot: QtBot) -> None:
+    dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    reference = nbs_five_element(
+        frequency_hz=YAGI_DEFAULT_FREQUENCY_HZ,
+        height_m=12.0,
+        radius_m=0.00635,
+    )
+
+    parameters = dialog.parameters()
+
+    assert parameters.frequency_hz == pytest.approx(YAGI_DEFAULT_FREQUENCY_HZ)
+    assert parameters.height_m == pytest.approx(12.0)
+    assert len(parameters.elements) == len(reference.elements)
+    for element, expected in zip(parameters.elements, reference.elements, strict=True):
+        assert element.position_m == pytest.approx(expected.position_m, abs=1e-3)
+        assert element.length_m == pytest.approx(expected.length_m, abs=1e-3)
+        assert element.radius_m == pytest.approx(expected.radius_m, abs=1e-6)
 
 
 def test_yagi_dialog_can_add_and_remove_elements(qtbot: QtBot) -> None:
@@ -63,7 +85,7 @@ def test_yagi_dialog_rebuilds_geometry_from_edited_lengths(qtbot: QtBot) -> None
 def test_yagi_dialog_driven_element_mapping_survives_reordering(qtbot: QtBot) -> None:
     dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(dialog)
-    dialog._table.item(0, 1).setText("2.000")
+    dialog._table.item(0, 1).setText("0.100")
 
     parameters = dialog.parameters()
     yagi = YagiParameters(
@@ -80,7 +102,7 @@ def test_yagi_dialog_driven_element_mapping_survives_reordering(qtbot: QtBot) ->
         driven_index=1,
     )
 
-    assert yagi.elements[0].position_m == pytest.approx(2.0)
+    assert yagi.elements[0].position_m == pytest.approx(0.1)
     assert parameters.driven_index == 1
 
 
@@ -267,7 +289,7 @@ def test_yagi_dialog_warns_when_vertical_elements_reach_the_ground(qtbot: QtBot)
     dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(dialog)
     dialog.show()
-    dialog._form._height.setValue(1.0)
+    dialog._form._height.setValue(0.1)
     index = dialog._form._polarization.findData("vertical")
     dialog._form._polarization.setCurrentIndex(index)
 
@@ -280,17 +302,19 @@ def test_yagi_dialog_warns_when_vertical_elements_reach_the_ground(qtbot: QtBot)
 def test_yagi_dialog_scales_elements_when_frequency_changes(qtbot: QtBot) -> None:
     dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(dialog)
+    original_frequency_hz = dialog.parameters().frequency_hz
     original_length = float(dialog._table.item(1, 2).text())
     original_position = float(dialog._table.item(1, 1).text())
 
-    dialog._form._frequency.setValue(7.1)
+    target_frequency_hz = original_frequency_hz / 2.0
+    dialog._form._frequency.setValue(target_frequency_hz / 1_000_000.0)
 
     scaled_length = float(dialog._table.item(1, 2).text())
     scaled_position = float(dialog._table.item(1, 1).text())
     assert scaled_length == pytest.approx(original_length * 2.0, rel=0.02)
     assert scaled_position == pytest.approx(original_position * 2.0, rel=0.02)
     assert dialog._form._frequency_warning.isVisible() is False
-    assert dialog.parameters().frequency_hz == pytest.approx(7_100_000.0)
+    assert dialog.parameters().frequency_hz == pytest.approx(target_frequency_hz)
 
 
 def test_yagi_dialog_warns_about_a_frequency_mismatch(qtbot: QtBot) -> None:

@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   labor is included. The construction sheet, native PDF, construction package,
   and conductor BOM CSV show the costs and totals when present. Schema 45 adds
   the optional record; older projects migrate with no costs.
+- **Catalog starting frequencies.** New Moxon editors start at **28.500 MHz**
+  with the Cebik 20 m wire reference scaled to that frequency. New Yagi editors
+  start at **145.000 MHz** with the NBS five-element preset scaled from its
+  published **50.1 MHz** reference. The scaled defaults are heuristic starting
+  points; the Cebik and NBS reference actions still rescale to the current
+  frequency. Ringo (50.100 MHz) and loaded vertical/mobile whip (7.100 MHz)
+  defaults are unchanged. No schema change.
 
 ## [0.5.0] - 2026-11-12
 

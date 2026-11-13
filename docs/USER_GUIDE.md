@@ -492,7 +492,10 @@ frequency changes; tune it separately. Projects saved with undersized matching
 hardware are repaired on load by schema 15. A gamma match is not modeled because
 NEC-2 is unreliable for close-spaced gamma assemblies; use the Matching Network
 dialog for an equivalent. **Load NBS 5-element preset** fills
-the NBS TN-688 0.8λ starting geometry scaled to the selected frequency. Changing the frequency in the form rescales
+the NBS TN-688 0.8λ starting geometry scaled to the selected frequency. A new
+Yagi editor starts at **145.000 MHz** with that preset scaled from its published
+**50.1 MHz** reference; the scaled default is a starting point, not the
+published 50.1 MHz design. Changing the frequency in the form rescales
 the current element positions and lengths by the wavelength ratio. If the
 element dimensions do not look consistent with the current frequency, the form
 shows a warning; use **Design → Estimate Dimensions...** to rebuild a
@@ -527,12 +530,14 @@ and ground. Horizontal polarization places the rectangle in a horizontal
 plane. Vertical polarization places the complete rectangle in a vertical plane
 while the boom stays horizontal. Height is the boom centerline, so a vertical
 Moxon needs `height > width / 2` to keep the rectangle above ground. The dialog
-reports the remaining tip gap. Use **Load 20 m reference scaled to current
-frequency** to scale the published Cebik 20 m dimensions to the frequency in
-the editor; it preserves the current height, ground, wire radius, polarization,
-and material. The exact 14.17 MHz dimensions are reference-backed for
-impedance, gain, and front-to-back ratio; scaled or edited geometry is a
-heuristic starting point and has no independent reference.
+reports the remaining tip gap. A new Moxon editor starts at **28.500 MHz** with
+the published Cebik 20 m dimensions scaled to that frequency. Use **Load 20 m
+reference scaled to current frequency** to scale the published Cebik 20 m
+dimensions to the frequency in the editor; it preserves the current height,
+ground, wire radius, polarization, and material. The exact 14.17 MHz dimensions
+are reference-backed for impedance, gain, and front-to-back ratio; the 28.500
+MHz default and any scaled or edited geometry are heuristic starting points
+with no independent reference.
 
 ## Create an inverted-V
 

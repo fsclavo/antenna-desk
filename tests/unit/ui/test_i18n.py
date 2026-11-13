@@ -443,3 +443,17 @@ def test_materials_reference_rows_have_bilingual_names_and_notes() -> None:
                 translations = _TRANSLATIONS.get(key)
                 assert translations is not None, key
                 assert set(translations) == set(Language), key
+
+
+def test_moxon_and_yagi_default_help_names_the_catalog_frequencies() -> None:
+    english = Translator(Language.ENGLISH)
+    spanish = Translator(Language.SPANISH)
+
+    assert "28.500 MHz" in english.t("moxon.hint")
+    assert "14.17 MHz" in english.t("moxon.evidence")
+    assert "145.000 MHz" in english.t("yagi.hint")
+    assert "50.1 MHz" in english.t("yagi.evidence")
+    assert "28,500 MHz" in spanish.t("moxon.hint")
+    assert "14,17 MHz" in spanish.t("moxon.evidence")
+    assert "145,000 MHz" in spanish.t("yagi.hint")
+    assert "50,1 MHz" in spanish.t("yagi.evidence")

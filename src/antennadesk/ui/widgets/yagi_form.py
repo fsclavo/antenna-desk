@@ -48,6 +48,11 @@ from .ground_presets import GroundPresetController
 
 MATERIALS = (COPPER, ALUMINUM)
 
+# The editor starts on the 2 m band.  The geometry is the published NBS
+# TN-688 five-element design scaled to this frequency; the published
+# reference itself is at 50.1 MHz.
+YAGI_DEFAULT_FREQUENCY_HZ = 145_000_000.0
+
 
 class YagiForm(QWidget):
     changed = Signal()
@@ -69,8 +74,8 @@ class YagiForm(QWidget):
         self._frequency.setRange(0.1, 100_000.0)
         self._frequency.setDecimals(6)
         self._frequency.setSuffix(" MHz")
-        self._frequency.setValue(14.1)
-        self._last_frequency_mhz = 14.1
+        self._frequency.setValue(YAGI_DEFAULT_FREQUENCY_HZ / 1_000_000.0)
+        self._last_frequency_mhz = YAGI_DEFAULT_FREQUENCY_HZ / 1_000_000.0
 
         self._height = QDoubleSpinBox(self)
         self._height.setDecimals(3)

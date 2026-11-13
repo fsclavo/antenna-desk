@@ -5,10 +5,14 @@ from __future__ import annotations
 import pytest
 from pytestqt.qtbot import QtBot
 
-from antennadesk.domain.antennas.moxon import MoxonParameters
+from antennadesk.domain.antennas.moxon import MoxonParameters, moxon_20m_wire
 from antennadesk.ui.dialogs.moxon_dialog import MoxonDialog
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem
+from antennadesk.ui.widgets.moxon_form import (
+    MOXON_DEFAULT_FREQUENCY_HZ,
+    MOXON_DEFAULT_HEIGHT_M,
+)
 
 
 def test_moxon_dialog_builds_parameters(qtbot: QtBot) -> None:
@@ -22,6 +26,44 @@ def test_moxon_dialog_builds_parameters(qtbot: QtBot) -> None:
     assert dialog._form._ground.currentText() == "Finite ground"
     assert dialog._form._polarization.currentText() == "Horizontal"
     assert dialog._form._polarization.itemText(1) == "Vertical"
+
+
+def test_moxon_dialog_starts_on_10m_with_scaled_reference_geometry(
+    qtbot: QtBot,
+) -> None:
+    dialog = MoxonDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    reference = moxon_20m_wire(
+        frequency_hz=MOXON_DEFAULT_FREQUENCY_HZ,
+        height_m=MOXON_DEFAULT_HEIGHT_M,
+    )
+
+    parameters = dialog.parameters()
+
+    assert parameters.frequency_hz == pytest.approx(MOXON_DEFAULT_FREQUENCY_HZ)
+    assert parameters.width_m == pytest.approx(reference.width_m, abs=1e-3)
+    assert parameters.depth_m == pytest.approx(reference.depth_m, abs=1e-3)
+    assert parameters.reflector_tip_m == pytest.approx(reference.reflector_tip_m, abs=1e-3)
+    assert parameters.driven_tip_m == pytest.approx(reference.driven_tip_m, abs=1e-3)
+    assert parameters.height_m == pytest.approx(MOXON_DEFAULT_HEIGHT_M)
+
+
+def test_moxon_dialog_scales_the_starting_geometry_to_a_requested_frequency(
+    qtbot: QtBot,
+) -> None:
+    dialog = MoxonDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        frequency_hz=21_000_000.0,
+    )
+    qtbot.addWidget(dialog)
+    reference = moxon_20m_wire(frequency_hz=21_000_000.0, height_m=10.0)
+
+    parameters = dialog.parameters()
+
+    assert parameters.frequency_hz == pytest.approx(21_000_000.0)
+    assert parameters.width_m == pytest.approx(reference.width_m, abs=1e-3)
+    assert parameters.gap_m == pytest.approx(reference.gap_m, abs=1e-3)
 
 
 def test_moxon_dialog_scales_the_reference_to_the_current_frequency(
