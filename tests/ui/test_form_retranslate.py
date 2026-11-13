@@ -59,7 +59,7 @@ FORMS = (
     (BeverageForm, "beverage.termination_resistance"),
     (LoadedDipoleForm, "loaded_dipole.link_offset"),
     (DisconeForm, "discone.cone_radius"),
-    (PhasedVerticalForm, "phased_vertical.phase_step"),
+    (PhasedVerticalForm, "phased_vertical.height"),
     (QuadBeamForm, "quad_beam.reflector_spacing"),
     (TransmissionLineDoubletForm, "g5rv.line_impedance"),
     (ZeppForm, "zepp.radiator_length"),
@@ -83,6 +83,58 @@ def test_family_form_retranslates_its_labels(
     form.retranslate()
 
     assert spanish_text in [label.text() for label in form.findChildren(QLabel)]
+
+
+@pytest.mark.parametrize(
+    ("form_type", "english", "spanish"),
+    [
+        (VerticalForm, "Radiator length", "Largo del radiador"),
+        (JPoleForm, "Radiator length", "Largo del radiador"),
+        (RingoForm, "Radiator length", "Largo del radiador"),
+        (InvertedLForm, "Vertical length", "Largo vertical"),
+        (ScvForm, "Vertical length", "Largo vertical"),
+        (PhasedVerticalForm, "Element length", "Largo del elemento"),
+    ],
+)
+def test_vertical_radiator_labels_use_length(
+    qtbot: QtBot,
+    form_type: type[QWidget],
+    english: str,
+    spanish: str,
+) -> None:
+    translator = Translator(Language.ENGLISH)
+    form = form_type(translator, UnitSystem.METRIC)
+    qtbot.addWidget(form)
+
+    assert english in [label.text() for label in form.findChildren(QLabel)]
+
+    translator.set_language(Language.SPANISH)
+    form.retranslate()
+
+    assert spanish in [label.text() for label in form.findChildren(QLabel)]
+
+
+@pytest.mark.parametrize(
+    ("form_type", "spanish_height"),
+    [
+        (VerticalForm, "Altura de la base"),
+        (JPoleForm, "Altura de la base"),
+        (RingoForm, "Altura del anillo"),
+        (InvertedLForm, "Altura de base"),
+        (ScvForm, "Altura de base"),
+        (PhasedVerticalForm, "Altura de base"),
+    ],
+)
+def test_vertical_installation_heights_stay_heights(
+    qtbot: QtBot,
+    form_type: type[QWidget],
+    spanish_height: str,
+) -> None:
+    translator = Translator(Language.SPANISH)
+    form = form_type(translator, UnitSystem.METRIC)
+    qtbot.addWidget(form)
+
+    assert spanish_height in [label.text() for label in form.findChildren(QLabel)]
 
 
 def test_family_form_retranslates_options_and_buttons(qtbot: QtBot) -> None:

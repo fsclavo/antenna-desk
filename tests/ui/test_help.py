@@ -63,6 +63,20 @@ def test_family_specific_labels_resolve_help() -> None:
     )
 
 
+def test_vertical_length_help_distinguishes_installation_height() -> None:
+    translator = Translator(Language.ENGLISH)
+    vertical = help_text(translator, "vertical.height") or ""
+    ringo = help_text(translator, "ringo.radiator_height") or ""
+    scv = help_text(translator, "scv.vertical_height") or ""
+    phased = help_text(translator, "phased_vertical.height") or ""
+
+    assert "Physical length" in vertical
+    assert "top height" in vertical
+    assert "installation dimension" in ringo
+    assert "installation dimensions" in scv
+    assert "array pattern" in phased
+
+
 def test_apply_form_help_sets_and_retranslates_label_and_control(
     qtbot: QtBot,
 ) -> None:

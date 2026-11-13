@@ -333,6 +333,7 @@ def test_inverted_l_construction_sheet(sample_project: Project) -> None:
     sheet = render_construction_sheet(sample_project, inverted_l, None)
 
     assert "Vertical section" in sheet
+    assert "Vertical length" in sheet
     assert "Horizontal top run" in sheet
     assert "Total wire length" in sheet
     assert "30.0000 m" in sheet
@@ -669,6 +670,7 @@ def test_phased_vertical_construction_sheet_lists_the_array(
     sheet = render_construction_sheet(sample_project, phased, None)
 
     assert "Phased vertical array" in sheet
+    assert "Vertical element length" in sheet
     assert "Phase step" in sheet
     assert "120.0°" in sheet
     assert "Build 3 vertical" in sheet
@@ -1008,6 +1010,7 @@ def test_zepp_construction_sheet_lists_the_stub_and_choke(sample_project: Projec
     sheet = render_construction_sheet(project, design, None)
 
     assert "Radiator length" in sheet
+    assert "Radiator height" in sheet
     assert "Matching stub length" in sheet
     assert "Conductor spacing" in sheet
     assert "Estimated stub impedance" in sheet

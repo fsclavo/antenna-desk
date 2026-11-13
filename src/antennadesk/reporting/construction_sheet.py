@@ -613,7 +613,7 @@ def render_construction_sheet(
 <tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
 <tr><th>Horizontal length</th><td>{parameters.horizontal_length_m:.4f} m</td></tr>
 <tr><th>Horizontal segment</th><td>{_escape(tr("{length:.4f} m each", length=parameters.horizontal_segment_m))}</td></tr>
-<tr><th>Vertical height</th><td>{parameters.vertical_height_m:.4f} m</td></tr>
+<tr><th>Vertical length</th><td>{parameters.vertical_height_m:.4f} m</td></tr>
 <tr><th>Vertical elements</th><td>{parameters.vertical_count}</td></tr>
 <tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
 <tr><th>Top height</th><td>{parameters.top_height_m:.4f} m</td></tr>
@@ -782,7 +782,7 @@ def render_construction_sheet(
 <tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
 <tr><th>Verticals</th><td>{parameters.element_count}</td></tr>
 <tr><th>Element spacing</th><td>{parameters.spacing_m:.4f} m</td></tr>
-<tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
+<tr><th>Vertical element length</th><td>{parameters.height_m:.4f} m</td></tr>
 <tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
 <tr><th>Phase step</th><td>{parameters.phase_step_deg:.1f}°</td></tr>
 <tr><th>Amplitude taper</th><td>{parameters.amplitude_taper * 100.0:.0f}%</td></tr>
@@ -793,14 +793,14 @@ def render_construction_sheet(
 """
         construction_note = _note(
             tr,
-            "Build {count} vertical radiators of {height} m, spaced {spacing} m "
+            "Build {count} vertical radiators of {length} m, spaced {spacing} m "
             "along one line, with their bases at {base} m above ground. Fit "
             "{radials} radials of {radial_length} m to each base. Drive the first "
             "vertical as the primary feed and the remaining verticals with the "
             "listed phase and amplitude steps. The combining network is ideal and "
             "is not included; use an explicit feed network and verify the match.",
             count=parameters.element_count,
-            height=f"{parameters.height_m:.4f}",
+            length=f"{parameters.height_m:.4f}",
             spacing=f"{parameters.spacing_m:.4f}",
             base=f"{parameters.base_height_m:.4f}",
             radials=parameters.radial_count,
@@ -877,23 +877,23 @@ def render_construction_sheet(
         )
     elif isinstance(parameters, RingoParameters):
         feed_rows = f"""
-<tr><th>Radiator height</th><td>{parameters.radiator_height_m:.4f} m</td></tr>
+<tr><th>Radiator length</th><td>{parameters.radiator_height_m:.4f} m</td></tr>
 <tr><th>Ring diameter</th><td>{parameters.ring_diameter_m:.4f} m</td></tr>
 <tr><th>Ring height</th><td>{parameters.ring_height_m:.4f} m</td></tr>
 <tr><th>Ring sides</th><td>{parameters.ring_sides}</td></tr>
 """
         construction_note = _note(
             tr,
-            "Build a {height} m vertical radiator with a {diameter} m matching "
+            "Build a {length} m vertical radiator with a {diameter} m matching "
             "ring at {ring_height} m above ground.",
-            height=f"{parameters.radiator_height_m:.4f}",
+            length=f"{parameters.radiator_height_m:.4f}",
             diameter=f"{parameters.ring_diameter_m:.4f}",
             ring_height=f"{parameters.ring_height_m:.4f}",
         )
     elif isinstance(parameters, JPoleParameters):
         feed_rows = f"""
 <tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
-<tr><th>Radiator height</th><td>{parameters.radiator_height_m:.4f} m</td></tr>
+<tr><th>Radiator length</th><td>{parameters.radiator_height_m:.4f} m</td></tr>
 <tr><th>Stub length</th><td>{parameters.stub_length_m:.4f} m</td></tr>
 <tr><th>Stub spacing</th><td>{parameters.spacing_m:.4f} m</td></tr>
 <tr><th>Feed offset</th><td>{parameters.feed_offset_m:.4f} m</td></tr>
@@ -1224,7 +1224,7 @@ def render_construction_sheet(
                 radius=parameters.top_hat_radius_m,
             )
         feed_rows = f"""
-<tr><th>Radiator height</th><td>{parameters.height_m:.4f} m</td></tr>
+<tr><th>Radiator length</th><td>{parameters.height_m:.4f} m</td></tr>
 <tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
 <tr><th>Radials</th><td>{parameters.radial_count}</td></tr>
 <tr><th>Radial length</th><td>{parameters.radial_length_m:.4f} m</td></tr>
@@ -1233,10 +1233,10 @@ def render_construction_sheet(
 """
         construction_note = _note(
             tr,
-            "Install a {height} m vertical radiator with its base {base} m above "
+            "Install a {length} m vertical radiator with its base {base} m above "
             "ground. Add {radials} radials of {radial_length} m in the base "
             "plane.{top_hat_note}",
-            height=f"{parameters.height_m:.4f}",
+            length=f"{parameters.height_m:.4f}",
             base=f"{parameters.base_height_m:.4f}",
             radials=parameters.radial_count,
             radial_length=f"{parameters.radial_length_m:.4f}",

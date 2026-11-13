@@ -201,7 +201,7 @@ REPORT_SPANISH: dict[str, str] = {
     "Radials": "Radiales",
     "Radials per element": "Radiales por elemento",
     "Radiator height": "Altura del radiador",
-    "Radiator length": "Longitud del radiador",
+    "Radiator length": "Largo del radiador",
     "Reference impedance": "Impedancia de referencia",
     "Reflector": "Reflector",
     "Reflector element": "Elemento reflector",
@@ -352,8 +352,10 @@ REPORT_SPANISH: dict[str, str] = {
     "Type": "Tipo",
     "Units": "Unidades",
     "Updated": "Actualizado",
+    "Vertical element length": "Largo del elemento",
     "Vertical elements": "Elementos verticales",
     "Vertical height": "Altura vertical",
+    "Vertical length": "Largo vertical",
     "Vertical section": "Sección vertical",
     "Verticals": "Verticales",
     "Wire": "Hilo",
@@ -477,8 +479,8 @@ REPORT_SPANISH: dict[str, str] = {
         "separadores, el balun de alimentación y el anidamiento multibanda no "
         "están modelados."
     ),
-    "Build a {height} m vertical radiator with a {diameter} m matching ring at {ring_height} m above ground.": (  # noqa: E501
-        "Construí un radiador vertical de {height} m con un anillo de adaptación "
+    "Build a {length} m vertical radiator with a {diameter} m matching ring at {ring_height} m above ground.": (  # noqa: E501
+        "Construí un radiador vertical de {length} m con un anillo de adaptación "
         "de {diameter} m a {ring_height} m sobre el suelo."
     ),
     "Build a {kind} with a {radiator} m radiator and a {stub} m stub spaced {spacing} m.": (
@@ -527,8 +529,8 @@ REPORT_SPANISH: dict[str, str] = {
         "de octavo de onda son dimensiones de partida; ajustalos para la "
         "instalación."
     ),
-    "Build {count} vertical radiators of {height} m, spaced {spacing} m along one line, with their bases at {base} m above ground. Fit {radials} radials of {radial_length} m to each base. Drive the first vertical as the primary feed and the remaining verticals with the listed phase and amplitude steps. The combining network is ideal and is not included; use an explicit feed network and verify the match.": (  # noqa: E501
-        "Construí {count} radiadores verticales de {height} m, separados "
+    "Build {count} vertical radiators of {length} m, spaced {spacing} m along one line, with their bases at {base} m above ground. Fit {radials} radials of {radial_length} m to each base. Drive the first vertical as the primary feed and the remaining verticals with the listed phase and amplitude steps. The combining network is ideal and is not included; use an explicit feed network and verify the match.": (  # noqa: E501
+        "Construí {count} radiadores verticales de {length} m, separados "
         "{spacing} m a lo largo de una línea, con sus bases a {base} m sobre el "
         "suelo. Colocá {radials} radiales de {radial_length} m en cada base. "
         "Alimentá la primera vertical como alimentación principal y las verticales "
@@ -681,8 +683,8 @@ REPORT_SPANISH: dict[str, str] = {
         "hilo seleccionados; un lazo de acoplamiento y la tensión del capacitor no "
         "están modelados."
     ),
-    "Install a {height} m vertical radiator with its base {base} m above ground. Add {radials} radials of {radial_length} m in the base plane.{top_hat_note}": (  # noqa: E501
-        "Instalá un radiador vertical de {height} m con su base a {base} m sobre "
+    "Install a {length} m vertical radiator with its base {base} m above ground. Add {radials} radials of {radial_length} m in the base plane.{top_hat_note}": (  # noqa: E501
+        "Instalá un radiador vertical de {length} m con su base a {base} m sobre "
         "el suelo. Agregá {radials} radiales de {radial_length} m en el plano de "
         "base.{top_hat_note}"
     ),

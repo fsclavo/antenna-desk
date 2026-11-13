@@ -266,7 +266,7 @@ def _cases() -> tuple[FamilyCase, ...]:
             "inverted_l",
             2,
             GeometryViewMode.ELEVATION,
-            ("Inverted L", "vertical height", "horizontal length"),
+            ("Inverted L", "vertical length", "horizontal length"),
         ),
         FamilyCase(
             "yagi",
@@ -474,7 +474,7 @@ def _cases() -> tuple[FamilyCase, ...]:
             (
                 "Half square",
                 "overall horizontal length",
-                "vertical height",
+                "vertical length",
                 "vertical elements 2",
             ),
         ),

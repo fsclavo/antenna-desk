@@ -561,7 +561,7 @@ construction view is the front elevation, so the included angle is visible.
 ## Create an inverted-L
 
 Choose **File → New Antenna... → Inverted L** to generate a bent end-fed wire
-with a vertical section and a horizontal top run. Set the vertical height, the
+with a vertical section and a horizontal top run. Set the vertical length, the
 horizontal length, the base height, azimuth, wire radius, material, and ground.
 The feed is at the base of the vertical section; the azimuth is the direction
 of the horizontal run. Base height keeps the feedpoint and the top corner above
@@ -570,14 +570,14 @@ ground.
 The generator is experimental: the bent-wire geometry is tested, but there is
 no independent numerical reference for gain, impedance, or the matching
 network. **Estimate Dimensions...** is disabled until a source-backed estimator
-exists; **Optimize...** searches the vertical height, horizontal run, base
+exists; **Optimize...** searches the vertical length, horizontal run, base
 height, and conductor radius jointly. The construction view is the front
 elevation, which shows the vertical section and the horizontal top run.
 
 ## Create a Ringo
 
 Choose **File → New Antenna... → Ringo** to generate a half-wave vertical with
-a horizontal matching ring at its base. Set radiator height, ring diameter,
+a horizontal matching ring at its base. Set radiator length, ring diameter,
 ring height, ring side count, radius, material, and ground. The ring height
 must be positive when using a ground model; the default is 0.25 m. Ringo is a
 first-class experimental template with an inline editor.
@@ -594,7 +594,7 @@ vertically polarized:
   half-wave top wires. It is fed at the top junction of the center vertical.
 
 The shared editor selects the array type and sets the overall horizontal span,
-vertical height, base height, feed offset, azimuth, wire radius, material, and
+vertical length, base height, feed offset, azimuth, wire radius, material, and
 ground. The **feed offset below top junction** moves the feed down the fed
 vertical as a matching adjustment; zero is the published current-feed point.
 Do not feed either array at a bottom corner: that is a high-voltage point and
@@ -607,13 +607,13 @@ validated for gain, impedance, or a specific site.
 The construction sheet lists the individual vertical and top-wire cuts. The
 construction view is the front elevation. Neither template has a
 frequency-first estimator; **Optimize...**
-searches the horizontal span, vertical height, base height, feed offset, and
+searches the horizontal span, vertical length, base height, feed offset, and
 conductor radius jointly.
 
 ## Create a J Pole or Slim Jim
 
 Choose **File → New Antenna... → J Pole** or **Slim Jim** to generate a vertical
-radiator with a parallel matching stub. Set radiator height, stub length,
+radiator with a parallel matching stub. Set radiator length, stub length,
 spacing, feed offset, base height, radius, material, and ground. The base
 height must be positive when using a ground model; the default is 0.25 m to keep
 the base connector out of the NEC ground plane. Slim Jim adds the top connector
@@ -947,15 +947,16 @@ measurement.
 
 Choose **File → New Antenna... → Phased vertical array** for two to four
 vertical radiators spaced along one line. The editor sets the frequency,
-element count, spacing, height, base height, phase step, amplitude taper,
+element count, spacing, element length, base height, phase step, amplitude taper,
 radial screen, array azimuth, radius, material, and ground.
 
 The first vertical is the primary feed with unit amplitude and zero phase.
 Later verticals use `index × phase step` and a linear amplitude taper from 1 to
-`1 - taper`. **Load quarter-wave starting dimensions** sets the radiator height,
+`1 - taper`. **Load quarter-wave starting dimensions** sets the element length,
 spacing, and radial length to a quarter wave at the current frequency.
-**Optimize...** searches height, spacing, base height, phase step, amplitude
-taper, radial length when radials are enabled, and conductor radius jointly.
+**Optimize...** searches element length, spacing, base height, phase step,
+amplitude taper, radial length when radials are enabled, and conductor radius
+jointly.
 The element count, radial count, azimuth, ground, and material remain user
 context.
 
@@ -1089,7 +1090,7 @@ feedpoint measurement. Do not tune a loading coil around a single on-ground
 run.
 
 Choose **File → New Antenna... → Vertical + radials** to generate a first-class
-vertical radiator with an optional radial plane. Set the radiator height, base
+vertical radiator with an optional radial plane. Set the radiator length, base
 height, radial count, radial length, first radial angle, wire radius, material,
 and ground. The base height is also the radial-plane height. The default is
 0.25 m. For a numerically stable model over finite ground, raise the radial

@@ -436,7 +436,7 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", type_name),
-                ("Radiator height", f"{parameters.height_m:.4f} m"),
+                ("Radiator length", f"{parameters.height_m:.4f} m"),
                 ("Base height", f"{parameters.base_height_m:.4f} m"),
                 ("Top height", f"{parameters.top_height_m:.4f} m"),
                 ("Radials", str(parameters.radial_count)),
@@ -463,7 +463,7 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", "inverted L"),
-                ("Vertical height", f"{parameters.vertical_height_m:.4f} m"),
+                ("Vertical length", f"{parameters.vertical_height_m:.4f} m"),
                 ("Horizontal length", f"{parameters.horizontal_length_m:.4f} m"),
                 ("Total wire length", f"{parameters.total_length_m:.4f} m"),
                 ("Base height", f"{parameters.base_height_m:.4f} m"),
@@ -578,7 +578,7 @@ def design_summary_rows(
             [
                 ("Type", parameters.template_name.lower()),
                 ("Horizontal length", f"{parameters.horizontal_length_m:.4f} m"),
-                ("Vertical height", f"{parameters.vertical_height_m:.4f} m"),
+                ("Vertical length", f"{parameters.vertical_height_m:.4f} m"),
                 ("Vertical elements", str(parameters.vertical_count)),
                 (
                     "Horizontal segment",
@@ -719,7 +719,7 @@ def design_summary_rows(
                 ("Type", parameters.template_name),
                 ("Verticals", str(parameters.element_count)),
                 ("Element spacing", f"{parameters.spacing_m:.4f} m"),
-                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Vertical element length", f"{parameters.height_m:.4f} m"),
                 ("Base height", f"{parameters.base_height_m:.4f} m"),
                 ("Phase step", f"{parameters.phase_step_deg:.1f}°"),
                 ("Amplitude taper", f"{parameters.amplitude_taper * 100.0:.0f}%"),
@@ -787,7 +787,7 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", "Ringo"),
-                ("Radiator height", f"{parameters.radiator_height_m:.4f} m"),
+                ("Radiator length", f"{parameters.radiator_height_m:.4f} m"),
                 ("Ring diameter", f"{parameters.ring_diameter_m:.4f} m"),
                 ("Ring height", f"{parameters.ring_height_m:.4f} m"),
                 ("Ring sides", str(parameters.ring_sides)),
@@ -799,7 +799,7 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", parameters.template_name),
-                ("Radiator height", f"{parameters.radiator_height_m:.4f} m"),
+                ("Radiator length", f"{parameters.radiator_height_m:.4f} m"),
                 ("Stub length", f"{parameters.stub_length_m:.4f} m"),
                 ("Stub spacing", f"{parameters.spacing_m:.4f} m"),
                 ("Feed offset", f"{parameters.feed_offset_m:.4f} m"),

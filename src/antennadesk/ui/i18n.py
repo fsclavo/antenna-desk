@@ -3092,13 +3092,13 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "trampas mantienen su separación publicada alrededor de ella."
         ),
     },
-    "help.phased_vertical.field.height": {
+    "help.phased_vertical.height": {
         Language.ENGLISH: (
-            "Common vertical-element height above the base; spacing and phase set the "
-            "array pattern."
+            "Physical length of each vertical element above its base; spacing and "
+            "phase set the array pattern."
         ),
         Language.SPANISH: (
-            "Altura común de los elementos verticales sobre la base; la separación y "
+            "Largo físico de cada elemento vertical sobre su base; la separación y "
             "la fase definen el patrón del arreglo."
         ),
     },
@@ -3268,6 +3268,26 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Tip-to-boom turning radius used by the space constraint.",
         Language.SPANISH: "Radio de giro desde la punta al boom usado por la restricción de espacio.",
     },
+    "help.inverted_l.vertical_height": {
+        Language.ENGLISH: (
+            "Physical length of the vertical section; base and top heights are "
+            "installation dimensions."
+        ),
+        Language.SPANISH: (
+            "Largo físico de la sección vertical; las alturas de base y superior "
+            "son dimensiones de instalación."
+        ),
+    },
+    "help.j_pole.radiator_height": {
+        Language.ENGLISH: (
+            "Physical length of the vertical radiator; base height and feed offset "
+            "are installation dimensions."
+        ),
+        Language.SPANISH: (
+            "Largo físico del radiador vertical; la altura de base y el offset de "
+            "alimentación son dimensiones de instalación."
+        ),
+    },
     "help.j_pole.feed_offset": {
         Language.ENGLISH: "Feed-point distance above the stub.",
         Language.SPANISH: "Distancia del punto de alimentación por encima del stub.",
@@ -3368,6 +3388,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Boom-axis spacing from the reflector to the driven loop.",
         Language.SPANISH: "Separación sobre el boom desde el reflector hasta el lazo alimentado.",
     },
+    "help.ringo.radiator_height": {
+        Language.ENGLISH: (
+            "Physical length of the vertical radiator above the matching ring; ring "
+            "height is an installation dimension."
+        ),
+        Language.SPANISH: (
+            "Largo físico del radiador vertical sobre el anillo de adaptación; la "
+            "altura del anillo es una dimensión de instalación."
+        ),
+    },
     "help.ringo.ring_diameter": {
         Language.ENGLISH: "Diameter of the matching ring.",
         Language.SPANISH: "Diámetro del anillo de adaptación.",
@@ -3375,6 +3405,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.ringo.ring_height": {
         Language.ENGLISH: "Height of the matching ring above ground.",
         Language.SPANISH: "Altura del anillo de adaptación sobre el suelo.",
+    },
+    "help.scv.vertical_height": {
+        Language.ENGLISH: (
+            "Physical length of each vertical element; base and top heights are "
+            "installation dimensions."
+        ),
+        Language.SPANISH: (
+            "Largo físico de cada elemento vertical; las alturas de base y superior "
+            "son dimensiones de instalación."
+        ),
     },
     "help.scv.kind": {
         Language.ENGLISH: "Self-contained vertical variant: half square or bobtail curtain.",
@@ -3428,6 +3468,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.trap_yagi.trap_inset": {
         Language.ENGLISH: "Distance from the element center to each trap.",
         Language.SPANISH: "Distancia desde el centro del elemento hasta cada trampa.",
+    },
+    "help.vertical.height": {
+        Language.ENGLISH: (
+            "Physical length of the vertical radiator, not its top height above "
+            "ground. A loading coil or top hat can make the total conductor longer."
+        ),
+        Language.SPANISH: (
+            "Largo físico del radiador vertical, no su altura superior sobre el "
+            "suelo. Una bobina de carga o un sombrero capacitivo pueden alargar el "
+            "conductor total."
+        ),
     },
     "help.vertical.radial_system": {
         Language.ENGLISH: ("Radial model; it changes the ground return and the modeled pattern."),
@@ -9350,8 +9401,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Generador de L invertida",
     },
     "inverted_l.vertical_height": {
-        Language.ENGLISH: "Vertical height",
-        Language.SPANISH: "Altura vertical",
+        Language.ENGLISH: "Vertical length",
+        Language.SPANISH: "Largo vertical",
     },
     "inverted_l.horizontal_length": {
         Language.ENGLISH: "Horizontal length",
@@ -9499,8 +9550,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Longitud horizontal total",
     },
     "scv.vertical_height": {
-        Language.ENGLISH: "Vertical height",
-        Language.SPANISH: "Altura vertical",
+        Language.ENGLISH: "Vertical length",
+        Language.SPANISH: "Largo vertical",
     },
     "scv.vertical_elements": {
         Language.ENGLISH: "Vertical elements",
@@ -9862,13 +9913,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Amplitude taper",
         Language.SPANISH: "Atenuación de amplitud",
     },
+    "phased_vertical.height": {
+        Language.ENGLISH: "Element length",
+        Language.SPANISH: "Largo del elemento",
+    },
     "phased_vertical.geometry": {
         Language.ENGLISH: (
-            "{count} verticals · spacing {spacing} {unit} · height {height} {unit} · "
+            "{count} verticals · spacing {spacing} {unit} · length {height} {unit} · "
             "phase step {phase}° · taper {taper:.0f}% · {radials} radials each"
         ),
         Language.SPANISH: (
-            "{count} verticales · separación {spacing} {unit} · altura {height} {unit} · "
+            "{count} verticales · separación {spacing} {unit} · largo {height} {unit} · "
             "escalón de fase {phase}° · atenuación {taper:.0f}% · {radials} radiales cada una"
         ),
     },
@@ -10320,8 +10375,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Generador Ringo",
     },
     "ringo.radiator_height": {
-        Language.ENGLISH: "Radiator height",
-        Language.SPANISH: "Altura del radiador",
+        Language.ENGLISH: "Radiator length",
+        Language.SPANISH: "Largo del radiador",
     },
     "ringo.ring_diameter": {
         Language.ENGLISH: "Ring diameter",
@@ -10340,8 +10395,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Radio del hilo (mm)",
     },
     "ringo.geometry": {
-        Language.ENGLISH: "Height {height} {unit} · ring {ring} {unit}",
-        Language.SPANISH: "Altura {height} {unit} · anillo {ring} {unit}",
+        Language.ENGLISH: "Length {height} {unit} · ring {ring} {unit}",
+        Language.SPANISH: "Largo {height} {unit} · anillo {ring} {unit}",
     },
     "ringo.hint": {
         Language.ENGLISH: (
@@ -10371,11 +10426,11 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "ringo.ar6_example_hint": {
         Language.ENGLISH: (
-            "Sets 52 MHz, 3.1 m overall height, and a 0.33 m ring. The ring is "
+            "Sets 52 MHz, 3.1 m overall length, and a 0.33 m ring. The ring is "
             "modeled at 0.05 m above the base, so the radiator is 3.05 m."
         ),
         Language.SPANISH: (
-            "Configura 52 MHz, 3.1 m de altura total y un anillo de 0.33 m. El "
+            "Configura 52 MHz, 3,1 m de largo total y un anillo de 0.33 m. El "
             "anillo se modela a 0.05 m de la base, por lo que el radiador mide "
             "3.05 m."
         ),
@@ -10385,8 +10440,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Generador J Pole / Slim Jim",
     },
     "j_pole.radiator_height": {
-        Language.ENGLISH: "Radiator height",
-        Language.SPANISH: "Altura del radiador",
+        Language.ENGLISH: "Radiator length",
+        Language.SPANISH: "Largo del radiador",
     },
     "j_pole.stub_length": {
         Language.ENGLISH: "Stub length",
@@ -10417,8 +10472,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Radio del hilo (mm)",
     },
     "j_pole.geometry": {
-        Language.ENGLISH: "{template} · height {height} {unit}",
-        Language.SPANISH: "{template} · altura {height} {unit}",
+        Language.ENGLISH: "{template} · length {height} {unit}",
+        Language.SPANISH: "{template} · largo {height} {unit}",
     },
     "j_pole.hint": {
         Language.ENGLISH: (
@@ -11334,8 +11389,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Generador de vertical",
     },
     "vertical.height": {
-        Language.ENGLISH: "Radiator height",
-        Language.SPANISH: "Altura del radiador",
+        Language.ENGLISH: "Radiator length",
+        Language.SPANISH: "Largo del radiador",
     },
     "vertical.base_height": {
         Language.ENGLISH: "Base height",
@@ -13816,12 +13871,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "error.optimize_inverted_l": {
         Language.ENGLISH: (
             "The inverted-L generator has no generic optimizer yet. Adjust the "
-            "vertical height and horizontal run directly, or optimize a related "
+            "vertical length and horizontal run directly, or optimize a related "
             "wire design."
         ),
         Language.SPANISH: (
             "El generador de L invertida todavía no tiene un optimizador "
-            "genérico. Ajustá la altura vertical y el tramo horizontal "
+            "genérico. Ajustá el largo vertical y el tramo horizontal "
             "directamente, u optimizá un diseño de hilo relacionado."
         ),
     },

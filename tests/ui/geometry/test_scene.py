@@ -295,7 +295,7 @@ def test_inverted_l_elevation_shows_the_vertical_and_horizontal_runs() -> None:
     assert recommended_view(parameters.to_antenna()) is GeometryViewMode.ELEVATION
     assert len(scene.polylines) == 2
     assert scene.summary.startswith("Inverted L")
-    assert "vertical height 10.00 m" in scene.summary
+    assert "vertical length 10.00 m" in scene.summary
     assert "horizontal length 20.00 m" in scene.summary
     assert "vertical plane is edge-on" in plan.summary
     assert all(dimension.start.distance_to(dimension.end) > 0.0 for dimension in scene.dimensions)

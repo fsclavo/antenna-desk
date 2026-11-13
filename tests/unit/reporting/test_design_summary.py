@@ -120,6 +120,7 @@ def test_phased_vertical_summary_reports_the_excitation_and_radials() -> None:
     assert rows["Type"] == "Phased vertical array"
     assert rows["Verticals"] == "3"
     assert rows["Element spacing"] == "5.5000 m"
+    assert rows["Vertical element length"] == "5.0000 m"
     assert rows["Phase step"] == "120.0°"
     assert rows["Amplitude taper"] == "25%"
     assert rows["Radials per element"] == "8"
@@ -237,6 +238,7 @@ def test_loaded_vertical_summary_reports_the_template_and_coil() -> None:
     rows = dict(design_summary_rows(parameters))
 
     assert rows["Type"] == "loaded vertical"
+    assert rows["Radiator length"] == "2.0000 m"
     assert "12.0000 µH" in rows["Loading coil"]
     assert "1.0000 m" in rows["Loading coil"]
     assert "0.5 Ω" in rows["Loading coil"]
@@ -493,7 +495,7 @@ def test_scv_summary_reports_the_published_array_geometry() -> None:
 
     assert rows["Type"] == "bobtail curtain"
     assert rows["Horizontal length"] == "38.1000 m"
-    assert rows["Vertical height"] == "11.5824 m"
+    assert rows["Vertical length"] == "11.5824 m"
     assert rows["Vertical elements"] == "3"
     assert rows["Horizontal segment"] == "19.0500 m each"
     assert rows["Total conductor"] == "72.8472 m"

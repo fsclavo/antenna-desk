@@ -148,7 +148,7 @@ EVIDENCE_SPANISH: dict[str, dict[str, str]] = {
         ),
         "tolerance": "No aplicable (estructural)",
         "limitation": (
-            "La altura vertical, el tramo horizontal, el suelo y la adaptación "
+            "El largo vertical, el tramo horizontal, el suelo y la adaptación "
             "determinan el resultado; sintonizalos con el solver o una medición."
         ),
     },

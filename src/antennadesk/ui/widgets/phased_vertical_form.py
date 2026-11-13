@@ -160,7 +160,7 @@ class PhasedVerticalForm(QWidget):
         form.addRow(self._labels.label("field.frequency"), self._frequency)
         form.addRow(self._labels.label("phased_vertical.element_count"), self._element_count)
         form.addRow(self._labels.label("phased_vertical.spacing"), self._spacing)
-        form.addRow(self._labels.label("field.height"), self._height)
+        form.addRow(self._labels.label("phased_vertical.height"), self._height)
         form.addRow(self._labels.label("field.base_height"), self._base_height)
         form.addRow(self._labels.label("phased_vertical.phase_step"), self._phase_step)
         form.addRow(

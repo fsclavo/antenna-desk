@@ -213,14 +213,14 @@ designs are experimental.
 
 ### RingoParameters
 
-A first-class Ringo-style vertical with radiator height, base matching ring
+A first-class Ringo-style vertical with radiator length, base matching ring
 diameter/height/side count, radius, material, and ground. `to_antenna()` creates
 the vertical radiator, a ring connector, and the ring polygon. The generator is
 experimental.
 
 ### JPoleParameters
 
-A first-class J Pole/Slim Jim with radiator height, stub length, spacing, feed
+A first-class J Pole/Slim Jim with radiator length, stub length, spacing, feed
 offset, base height, folded flag, radius, material, and ground. `to_antenna()`
 creates the J Pole radiator, stub, and base connector. `folded=True` creates a
 Slim Jim folded rectangle with top and bottom connectors and a gap in one
@@ -299,7 +299,7 @@ scaling are tested, but it has no independent numerical performance reference.
 ### InvertedLParameters
 
 A first-class bent end-fed wire with a vertical section fed at the base and a
-horizontal top run. Parameters are frequency, vertical height, horizontal
+horizontal top run. Parameters are frequency, vertical length, horizontal
 length, base height, azimuth, wire radius, material, and ground. `to_antenna()`
 creates a vertical wire, a horizontal wire meeting at the top corner, and a feed
 at the base of the vertical section. `base_height_m` keeps the feedpoint and
@@ -419,7 +419,7 @@ model does not include core loss, self-capacitance, or link contact resistance.
 ### PhasedVerticalParameters
 
 `PhasedVerticalParameters` stores the design frequency, element count (2–4),
-radiator height, element spacing, base height, phase step, amplitude taper,
+element length, element spacing, base height, phase step, amplitude taper,
 radial count and length, first-radial angle, array azimuth, radius, material,
 and ground. `to_antenna()` builds one vertical per element with its own radial
 screen. The first vertical is the primary feed; the rest become additional

@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   localized, and the construction-sheet bandwidth row is translated. Internal
   identifiers, report keys, CSV columns, solver messages, and domain names are
   unchanged. No schema or solver change.
+- **Vertical length terminology.** English and Spanish labels now call the
+  physical vertical radiator dimension **length**/**largo** while base, feed,
+  top, ring, coil, apex, stack, boom, and available heights remain
+  **height**/**altura**. Internal field names, schema, optimizer variables, and
+  CSV/JSON keys are unchanged. The Zepp “Radiator height” and discone “Cone
+  height” exceptions remain.
 
 ## [0.6.0] - 2026-11-12
 
