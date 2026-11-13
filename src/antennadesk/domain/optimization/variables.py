@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from enum import StrEnum
 
@@ -94,6 +94,30 @@ class OptimizationVariable:
                 min(max(index + (1 if direction > 0 else -1), 0), len(self.choices) - 1)
             ]
         return self.clamp(value + direction * self.step)
+
+
+def variables_at_bounds(
+    variables: Sequence[OptimizationVariable],
+    values: Mapping[str, float],
+    *,
+    locked: frozenset[str] = frozenset(),
+    fraction: float = 0.01,
+) -> tuple[str, ...]:
+    """Return continuous, unlocked variables within ``fraction`` of a bound."""
+
+    if not math.isfinite(fraction) or fraction < 0.0 or fraction >= 0.5:
+        raise ValueError("bound fraction must be finite and between 0 and 0.5")
+    hits: list[str] = []
+    for variable in variables:
+        if variable.kind is not VariableKind.CONTINUOUS or variable.name in locked:
+            continue
+        value = values.get(variable.name)
+        if value is None or not math.isfinite(value):
+            continue
+        margin = (variable.maximum - variable.minimum) * fraction
+        if value <= variable.minimum + margin or value >= variable.maximum - margin:
+            hits.append(variable.name)
+    return tuple(hits)
 
 
 # Installation context, feed placement, and conductor radius are editable but

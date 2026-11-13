@@ -106,6 +106,7 @@ def _descriptor(
     supports_boom_constraint: bool = False,
     context_note_key: str | None = None,
     structural_segmentation: StructuralSegmentation | None = None,
+    recommends_bound_hits: bool = False,
 ) -> AntennaOptimizerDescriptor:
     return AntennaOptimizerDescriptor(
         key=key,
@@ -118,6 +119,7 @@ def _descriptor(
         supports_boom_constraint=supports_boom_constraint,
         context_note_key=context_note_key,
         structural_segmentation=structural_segmentation,
+        recommends_bound_hits=recommends_bound_hits,
     )
 
 
@@ -855,6 +857,7 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
         ),
         context_note_key="optimize.endfed.matching_context" if shortened else None,
         structural_segmentation=structural_segmentation if shortened else None,
+        recommends_bound_hits=shortened,
     )
 
 

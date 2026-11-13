@@ -13543,6 +13543,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Some variables were locked, so this is a partial optimization. Unlock them to search the full design.",
         Language.SPANISH: "Algunas variables estaban bloqueadas, así que esta es una optimización parcial. Desbloquéalas para buscar el diseño completo.",
     },
+    "optimize.recommend.bound": {
+        Language.ENGLISH: "The best candidate is at a search bound for {variables}. Widen the range only if the resulting geometry is buildable.",
+        Language.SPANISH: "El mejor candidato está en un límite de búsqueda para {variables}. Ampliá el rango solo si la geometría resultante es construible.",
+    },
     "optimize.recommend.high_swr": {
         Language.ENGLISH: "The best design still has high SWR at the evaluated points. Consider a matching network or a different topology.",
         Language.SPANISH: "El mejor diseño aún tiene una ROE alta en los puntos evaluados. Considera una red de adaptación u otra topología.",

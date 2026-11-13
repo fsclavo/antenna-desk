@@ -1849,6 +1849,9 @@ For the shortened EFHW presets, the optimizer keeps the fixed three-segment feed
 section and loading-coil section so the series coil stays on the same part of
 the wire as the applied design; the radiator segments still follow the target
 frequency. Other families use the normal target-based segmentation.
+Those presets also report when the best candidate is within 1 % of a search
+bound and name the limiting variables. Widen the range only if the resulting
+geometry is physically buildable; the app never expands bounds automatically.
 
 ### Objectives and constraints
 

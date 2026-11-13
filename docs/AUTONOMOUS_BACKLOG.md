@@ -126,7 +126,7 @@ external service and must not be invented or simulated into existence.
 | ~~EF2~~ | ~~Diagnose input-shunt matching-network topology limits~~ | S | EF1 optional | **Done 2026-11-13:** added `MatchingNetworkOrigin` as runtime-only simulation context, a domain `input_shunt_l_network_swr_floor()` predicate, a `LinkBudget` floor field, and a `matching_network.topology_limit` warning. The warning appears only when the effective network is the internal EFHW input-shunt unit; project networks and other families stay unchanged. The origin is excluded from the model fingerprint and is not persisted. EN/ES diagnostic text, domain, link, fingerprint, resolution, and real NEC2C tests cover the path. |
 | ~~EF3~~ | ~~Warn about the installation-return proxy and SWR confidence~~ | S | none | **Done 2026-11-13:** shortened EFHW editors now add an `endfed.warning.return_proxy` warning when the 0.1 m installation-return proxy is active. The results confidence card and exported reports add a **Model confidence** row that marks absolute SWR as informational and states that the installation return is a proxy, not a physical counterpoise. Standard end-fed, sloper, random wire, and every other family are unchanged. No solver or numerical change. |
 | ~~EF4~~ | ~~Clarify the optimizer objective and expose best-SWR selection~~ | S–M | none | **Done 2026-11-13:** shortened EFHW descriptors now default to **Minimum SWR** while every other family keeps **Target impedance**. The dialog shows a hint when the selected candidate is worse than another feasible candidate's SWR, and adds **Apply Best SWR** independent of the objective. Objective help now states that target impedance minimizes `|Z−Z0|`, not SWR. No scoring, schema, or solver change; a `MIN_MISMATCH` objective remains a separate ADR. |
-| EF5 | Recommend action when the optimizer optimum hits a search bound | S | EF1 | **Queued 2026-11-13.** For descriptors that opt in, report which continuous variables are at their bounds and add a recommendation to widen the range only when the resulting geometry is buildable. No automatic bound expansion and no change for families that do not opt in. |
+| ~~EF5~~ | ~~Recommend action when the optimizer optimum hits a search bound~~ | S | EF1 | **Done 2026-11-13:** added `variables_at_bounds()` in the optimizer variable module and a descriptor opt-in flag. The shortened EFHW descriptors set the flag; their summaries name the continuous unlocked variables within 1 % of a bound and recommend widening the range only when buildable. No automatic bound expansion; other families keep the previous recommendation set. |
 | EF6 | Investigate 40-10 shortened-EFHW convergence | M | EF1, EF3 | **Queued 2026-11-13.** The 40-10 preset remains R/X-sensitive at 10/21/51 radiator segments. Sweep radiator and coil-section counts, inspect the lumped-load placement in the 0.10 m section, and decide between a model/segmentation fix or a permanent informational-SWR warning. Do not relax the convergence thresholds to make the preset pass. |
 | EF7 | Measured transformer model for shortened EFHW | L | EF6; measured transformer data | **Blocked/deferred.** Add ratio, leakage, winding capacitance, core loss, and frequency dependence only from a measured or traceable transformer model. Until then the internal 100 pF/198 nH stay fixed context and must not become free optimizer variables. Requires schema, UI, evidence, and ADR work. |
 | EF8 | Common-mode return / coax-shield model for end-fed antennas | L | measurement or validated common-mode model | **Blocked/deferred.** Replace the 0.1 m installation-return proxy with an optional common-mode return model only when a traceable source or measurement exists. Do not optimize the proxy as if it were a physical radial. Requires an ADR and validation. |
@@ -146,7 +146,7 @@ same day. UX25 and UX26 were queued on 2026-11-13. UX27 and UX28 were added the
 same day from terminology feedback; UX27 and UX28 were completed on 2026-11-13.
 UX29 was added and completed the same day from feed-connection feedback.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
-EF1–EF4 are implemented and EF5 is the next active item.
+EF1–EF5 are implemented and EF6 is the next active item.
 
 The first slice accepts these constraints:
 
@@ -1077,7 +1077,7 @@ scaling QA remains manual.
 
 ## EF1–EF9 — Shortened-EFHW optimizer and model-confidence queue (2026-11-13)
 
-**EF1–EF4 are implemented on 2026-11-13.** EF5–EF6 are queued. EF7–EF9 are
+**EF1–EF5 are implemented on 2026-11-13.** EF6 is queued. EF7–EF9 are
 blocked/deferred until a measured transformer, a common-mode return model, or a
 design-specific matching-network ADR exists. The ordered plan is:
 
@@ -1197,14 +1197,24 @@ Implementation contract:
 - No solver, schema, fingerprint, or other-family default changes. A new
   `MIN_MISMATCH` objective based on `|Γ|` remains a separate ADR.
 
-### EF5 — Bound-hit recommendation (next)
+### EF5 — Bound-hit recommendation (implemented)
 
 When the best candidate is at a continuous-variable bound, report it and add a
-recommendation to widen the range only if the result is buildable. Do not
-auto-expand bounds. The recommendation must be gated by the descriptor so other
-families' result text is unchanged.
+recommendation to widen the range only if the result is buildable.
 
-### EF6 — 40-10 convergence investigation
+Implementation contract:
+
+- `variables_at_bounds()` reports unlocked continuous variables within 1 % of
+  their search interval. Integer and choice variables are not reported.
+- `AntennaOptimizerDescriptor.recommends_bound_hits` is opt-in and is set only
+  by the shortened EFHW descriptors.
+- `RecommendationContext.at_bounds` feeds the new
+  `optimize.recommend.bound` warning; the dialog already maps variable names to
+  localized labels.
+- No automatic bound expansion. Other families produce the same recommendations
+  as before.
+
+### EF6 — 40-10 convergence investigation (next)
 
 The 40-10 preset remains R/X-sensitive at 10/21/51 radiator segments. Sweep
 radiator and coil-section counts, inspect the lumped-load placement in the
@@ -1433,13 +1443,13 @@ model and solver contract must land first.
 12. **UX29 is complete.** The read-only constructive feed connection is closed.
     Do not change `FeedPoint`, the NEC deck, the solver, or the schema without a
     new ADR.
-13. **EF1–EF4 are complete.** The shortened-EFHW optimizer keeps the fixed feed
+13. **EF1–EF5 are complete.** The shortened-EFHW optimizer keeps the fixed feed
     and loading-coil partitions, results report the input-shunt matching-topology
     floor only for the internal end-fed unit, the confidence card marks absolute
-    SWR as informational with the proxy-return limitation, and the optimizer
-    defaults to Minimum SWR with an Apply Best SWR action. **EF5** is next:
-    report when the optimum hits a search bound. Then EF6; EF7–EF9 remain
-    blocked/deferred.
+    SWR as informational with the proxy-return limitation, the optimizer
+    defaults to Minimum SWR with an Apply Best SWR action, and a bound-hit
+    warning names the limiting variables. **EF6** is next: investigate 40-10
+    convergence; EF7–EF9 remain blocked/deferred.
 14. Product priorities and new antenna candidates live in
     [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
@@ -1472,7 +1482,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **45**.
-- Full gate: **3,023 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **3,026 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.6.0** published on 2026-11-13 with checksum-verified unsigned

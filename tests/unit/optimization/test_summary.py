@@ -105,6 +105,16 @@ def test_high_swr_and_locked_variables_are_reported() -> None:
     assert "optimize.recommend.high_swr" in keys
 
 
+def test_bound_hit_recommendation_names_the_variables() -> None:
+    recommendations = build_recommendations(
+        _context(at_bounds=("length_m", "loading_coil_inductance_h"))
+    )
+
+    bound = next(item for item in recommendations if item.key == "optimize.recommend.bound")
+    assert bound.variables == ("length_m", "loading_coil_inductance_h")
+    assert bound.severity is RecommendationSeverity.WARNING
+
+
 def test_swr_constraint_violation_uses_the_constraint_message() -> None:
     recommendations = build_recommendations(
         _context(

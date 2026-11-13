@@ -36,6 +36,7 @@ class RecommendationContext:
     best_metrics: Mapping[str, float]
     sensitivity: tuple[SensitivityPoint, ...]
     locked_variables: int
+    at_bounds: tuple[str, ...] = ()
     max_swr_constraint: float | None = None
     tolerance: float = 0.0
 
@@ -78,6 +79,15 @@ def build_recommendations(
 
     if context.locked_variables > 0:
         recommendations.append(OptimizationRecommendation("optimize.recommend.locked"))
+
+    if context.at_bounds:
+        recommendations.append(
+            OptimizationRecommendation(
+                "optimize.recommend.bound",
+                RecommendationSeverity.WARNING,
+                variables=context.at_bounds,
+            )
+        )
 
     seed_count = _finite(context.best_metrics, "seed_count")
     seed_converged = _finite(context.best_metrics, "seed_converged")

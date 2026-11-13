@@ -60,6 +60,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   has a better SWR and adds **Apply Best SWR**, independent of the selected
   objective. Objective help now explains that target impedance minimizes
   `|Z−Z0|`, not SWR. No scoring, schema, or solver change.
+- **Shortened-EFHW bound-hit guidance.** When the best candidate is within 1 %
+  of a continuous search bound, the optimizer summary names the limiting
+  variables and recommends widening the range only if the result is buildable.
+  The advice is opt-in for the shortened EFHW presets; other families keep the
+  previous recommendations. No automatic bound expansion, schema, or solver
+  change.
 
 ## [0.6.0] - 2026-11-12
 

@@ -694,8 +694,10 @@ def test_shortened_endfed_optimizer_marks_the_matching_network_as_context() -> N
     assert shortened.descriptor is not None
     assert shortened.descriptor.context_note_key == "optimize.endfed.matching_context"
     assert shortened.descriptor.default_objective is FamilyOptimizationObjective.MIN_SWR
+    assert shortened.descriptor.recommends_bound_hits is True
     assert standard.descriptor is not None
     assert standard.descriptor.context_note_key is None
+    assert standard.descriptor.recommends_bound_hits is False
     assert standard.descriptor.default_objective is FamilyOptimizationObjective.TARGET_IMPEDANCE
 
 

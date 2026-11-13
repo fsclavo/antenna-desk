@@ -38,7 +38,11 @@ from ...domain.optimization.recommendations import (
 )
 from ...domain.optimization.summary import OptimizationMode, OptimizationSummary
 from ...domain.optimization.synthesis import swr_for_resistance
-from ...domain.optimization.variables import OptimizationVariable, VariableKind
+from ...domain.optimization.variables import (
+    OptimizationVariable,
+    VariableKind,
+    variables_at_bounds,
+)
 from ...domain.simulation.far_field import FarFieldRequest
 from ...domain.simulation.frequency import FrequencyPlan
 from ...domain.simulation.pattern import front_to_back_db, max_power_gain_db
@@ -911,6 +915,15 @@ def _summary_for(
     result: OptimizerRunResult,
     band_edges: tuple[float, ...],
 ) -> OptimizationSummary:
+    at_bounds = (
+        variables_at_bounds(
+            command.descriptor.variables,
+            result.best_values,
+            locked=command.locked_variables,
+        )
+        if command.descriptor.recommends_bound_hits and result.best_values is not None
+        else ()
+    )
     recommendations = build_recommendations(
         RecommendationContext(
             status=result.status,
@@ -920,6 +933,7 @@ def _summary_for(
             best_metrics=result.best_metrics,
             sensitivity=result.sensitivity,
             locked_variables=len(command.locked_variables),
+            at_bounds=at_bounds,
             max_swr_constraint=_max_swr_constraint(command.soft_constraints),
             tolerance=command.robust_tolerance,
         )
