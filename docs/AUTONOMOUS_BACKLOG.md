@@ -127,7 +127,7 @@ external service and must not be invented or simulated into existence.
 | ~~EF3~~ | ~~Warn about the installation-return proxy and SWR confidence~~ | S | none | **Done 2026-11-13:** shortened EFHW editors now add an `endfed.warning.return_proxy` warning when the 0.1 m installation-return proxy is active. The results confidence card and exported reports add a **Model confidence** row that marks absolute SWR as informational and states that the installation return is a proxy, not a physical counterpoise. Standard end-fed, sloper, random wire, and every other family are unchanged. No solver or numerical change. |
 | ~~EF4~~ | ~~Clarify the optimizer objective and expose best-SWR selection~~ | S–M | none | **Done 2026-11-13:** shortened EFHW descriptors now default to **Minimum SWR** while every other family keeps **Target impedance**. The dialog shows a hint when the selected candidate is worse than another feasible candidate's SWR, and adds **Apply Best SWR** independent of the objective. Objective help now states that target impedance minimizes `|Z−Z0|`, not SWR. No scoring, schema, or solver change; a `MIN_MISMATCH` objective remains a separate ADR. |
 | ~~EF5~~ | ~~Recommend action when the optimizer optimum hits a search bound~~ | S | EF1 | **Done 2026-11-13:** added `variables_at_bounds()` in the optimizer variable module and a descriptor opt-in flag. The shortened EFHW descriptors set the flag; their summaries name the continuous unlocked variables within 1 % of a bound and recommend widening the range only when buildable. No automatic bound expansion; other families keep the previous recommendation set. |
-| EF6 | Investigate 40-10 shortened-EFHW convergence | M | EF1, EF3 | **Queued 2026-11-13.** The 40-10 preset remains R/X-sensitive at 10/21/51 radiator segments. Sweep radiator and coil-section counts, inspect the lumped-load placement in the 0.10 m section, and decide between a model/segmentation fix or a permanent informational-SWR warning. Do not relax the convergence thresholds to make the preset pass. |
+| ~~EF6~~ | ~~Investigate 40-10 shortened-EFHW convergence~~ | M | EF1, EF3 | **Done 2026-11-13:** spike completed; no model change is justified without a traceable reference. Coil segment count 1–5 at the 0.10 m section does not remove the R/X sensitivity. A wider 0.20–0.50 m section makes 40-10 converge but makes 80-10 substantially worse, so there is no single section length that improves both. The preset keeps its R/X convergence check and gains an explicit editor warning that absolute SWR is informational. Thresholds were not relaxed. |
 | EF7 | Measured transformer model for shortened EFHW | L | EF6; measured transformer data | **Blocked/deferred.** Add ratio, leakage, winding capacitance, core loss, and frequency dependence only from a measured or traceable transformer model. Until then the internal 100 pF/198 nH stay fixed context and must not become free optimizer variables. Requires schema, UI, evidence, and ADR work. |
 | EF8 | Common-mode return / coax-shield model for end-fed antennas | L | measurement or validated common-mode model | **Blocked/deferred.** Replace the 0.1 m installation-return proxy with an optional common-mode return model only when a traceable source or measurement exists. Do not optimize the proxy as if it were a physical radial. Requires an ADR and validation. |
 | EF9 | Design-specific matching-network optimization | L | EF7, EF8, ADR | **Blocked/deferred.** The current project matching network is global and replaces the internal EFHW unit (ADR-0028). A design-specific L/Pi/T network with optimizer variables is the only coherent way to let the optimizer tune a match; it requires an ADR, schema, UI, and regression coverage. Do not add loose C/L variables to the fixed input-shunt network. |
@@ -146,7 +146,7 @@ same day. UX25 and UX26 were queued on 2026-11-13. UX27 and UX28 were added the
 same day from terminology feedback; UX27 and UX28 were completed on 2026-11-13.
 UX29 was added and completed the same day from feed-connection feedback.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
-EF1–EF5 are implemented and EF6 is the next active item.
+EF1–EF6 are implemented; EF7–EF9 remain blocked/deferred.
 
 The first slice accepts these constraints:
 
@@ -1077,9 +1077,9 @@ scaling QA remains manual.
 
 ## EF1–EF9 — Shortened-EFHW optimizer and model-confidence queue (2026-11-13)
 
-**EF1–EF5 are implemented on 2026-11-13.** EF6 is queued. EF7–EF9 are
-blocked/deferred until a measured transformer, a common-mode return model, or a
-design-specific matching-network ADR exists. The ordered plan is:
+**EF1–EF6 are implemented on 2026-11-13.** EF7–EF9 are blocked/deferred until
+a measured transformer, a common-mode return model, or a design-specific
+matching-network ADR exists. The ordered plan is:
 
 | ID | Scope | Why it is separate |
 |---|---|---|
@@ -1214,13 +1214,34 @@ Implementation contract:
 - No automatic bound expansion. Other families produce the same recommendations
   as before.
 
-### EF6 — 40-10 convergence investigation (next)
+### EF6 — 40-10 convergence investigation (implemented as a documented spike)
 
-The 40-10 preset remains R/X-sensitive at 10/21/51 radiator segments. Sweep
-radiator and coil-section counts, inspect the lumped-load placement in the
-0.10 m section, and decide between a model/segmentation fix or a permanent
-informational-SWR warning. Do not relax the convergence thresholds to make the
-preset pass. A fix must include a regression test with a real NEC2C run.
+The 40-10 preset remains R/X-sensitive at 10/21/51 radiator segments. The spike
+tested the two plausible model fixes:
+
+| Coil-section change | 40-10 result | 80-10 result |
+|---|---|---|
+| 0.10 m, 1–5 segments | no meaningful improvement | — |
+| 0.15 m, 3 segments | R spread 1.16 Ω, X spread 4.38 Ω | not tested |
+| 0.20 m, 3 segments | R spread 0.71 Ω, X spread 2.85 Ω | not tested |
+| 0.30 m, 3 segments | R spread 0.36 Ω, X spread 1.54 Ω | not tested |
+| 0.50 m, 3 segments | R spread 0.13 Ω, X spread 0.63 Ω | R/X degrades strongly and does not converge |
+
+A wider section makes 40-10 converge but changes the 80-10 model for the worse,
+so there is no single section length that improves both presets. The section
+length is a numerical partition, not a measured coil dimension; changing it to
+pass the check would be tuning the mesh without a traceable reference. The
+decision is therefore:
+
+- keep the 0.10 m section and the R/X convergence policy;
+- keep absolute SWR informational for 40-10;
+- add a static editor warning `endfed.warning.convergence_40_10` for the
+  40-10 preset;
+- do not relax the convergence thresholds;
+- leave any future model change to a measured transformer/coil reference.
+
+The existing NEC2C integration test continues to assert that 80-10 converges and
+40-10 does not. No solver, schema, or numerical change was made.
 
 ### EF7–EF9 — Blocked/deferred
 
@@ -1443,13 +1464,15 @@ model and solver contract must land first.
 12. **UX29 is complete.** The read-only constructive feed connection is closed.
     Do not change `FeedPoint`, the NEC deck, the solver, or the schema without a
     new ADR.
-13. **EF1–EF5 are complete.** The shortened-EFHW optimizer keeps the fixed feed
+13. **EF1–EF6 are complete.** The shortened-EFHW optimizer keeps the fixed feed
     and loading-coil partitions, results report the input-shunt matching-topology
     floor only for the internal end-fed unit, the confidence card marks absolute
     SWR as informational with the proxy-return limitation, the optimizer
-    defaults to Minimum SWR with an Apply Best SWR action, and a bound-hit
-    warning names the limiting variables. **EF6** is next: investigate 40-10
-    convergence; EF7–EF9 remain blocked/deferred.
+    defaults to Minimum SWR with an Apply Best SWR action, a bound-hit warning
+    names the limiting variables, and the 40-10 convergence spike keeps the
+    model unchanged with an explicit informational-SWR warning. EF7–EF9 remain
+    blocked/deferred until measured transformer, return, or matching-network
+    data exists.
 14. Product priorities and new antenna candidates live in
     [`ROADMAP.md`](ROADMAP.md), not in this queue.
 

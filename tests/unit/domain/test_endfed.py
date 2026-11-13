@@ -284,7 +284,10 @@ def test_endfed_model_warning_keys_flag_legacy_and_missing_return() -> None:
             preset=EndFedPreset.SHORTENED_40_10,
         )
     )
-    assert shortened == ("endfed.warning.return_proxy",)
+    assert shortened == (
+        "endfed.warning.return_proxy",
+        "endfed.warning.convergence_40_10",
+    )
 
 
 def test_endfed_counterpoise_adds_a_drop_and_horizontal_wire() -> None:

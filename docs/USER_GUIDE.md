@@ -706,7 +706,11 @@ confidence card and in reports. It states that absolute SWR is informational and
 that the 0.10 m installation return is a model proxy, not a physical
 counterpoise; the real coax, mast, or earth path dominates the measured SWR.
 Use **Check convergence** and the R/X spread, then verify the installed antenna
-with a VNA.
+with a VNA. The 40-20-10 m preset carries an additional editor warning because
+its standard 10/21/51-segment convergence check remains R/X-sensitive; a
+segmentation spike found no single coil-section length that improves both
+shortened presets without degrading the other, so the model is unchanged and
+absolute SWR stays informational.
 Enable **Inverted-L bend** to model the published installation: the
 **Vertical section** is measured from the feed, the horizontal run is the
 remaining wire length, and the form shows the resulting top height. The G0KYA

@@ -11214,6 +11214,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "depende del camino del coaxil/mástil/tierra."
         ),
     },
+    "endfed.warning.convergence_40_10": {
+        Language.ENGLISH: (
+            "The 40-20-10 m preset remains R/X-sensitive at the standard "
+            "convergence check. Treat absolute SWR as informational and verify "
+            "the installed antenna with a VNA."
+        ),
+        Language.SPANISH: (
+            "El preset 40-20-10 m sigue siendo sensible a R/X en la verificación "
+            "de convergencia estándar. Tratá la ROE absoluta como informativa y "
+            "verificá la antena instalada con un VNA."
+        ),
+    },
     "endfed.warning.return_proxy": {
         Language.ENGLISH: (
             "The shortened EFHW uses a 0.10 m installation-return proxy, not a "

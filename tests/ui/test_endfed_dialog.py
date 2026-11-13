@@ -89,6 +89,7 @@ def test_shortened_endfed_warns_about_the_installation_return_proxy(
     warning = dialog._form._model_warning.text()
     assert "installation-return proxy" in warning
     assert "Absolute SWR is informational" in warning
+    assert "R/X-sensitive" in warning
 
 
 def test_endfed_dialog_checks_segment_convergence(qtbot: QtBot) -> None:

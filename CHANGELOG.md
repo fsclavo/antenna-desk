@@ -66,6 +66,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   The advice is opt-in for the shortened EFHW presets; other families keep the
   previous recommendations. No automatic bound expansion, schema, or solver
   change.
+- **40-20-10 shortened-EFHW convergence note.** A segmentation spike found no
+  single coil-section length that improves both shortened presets; widening it
+  makes 40-10 converge but degrades 80-10. The model stays unchanged, the R/X
+  convergence check and informational SWR policy remain, and the 40-10 editor
+  now carries an explicit warning to verify the installed antenna with a VNA.
+  Thresholds were not relaxed. No solver or numerical change.
 
 ## [0.6.0] - 2026-11-12
 

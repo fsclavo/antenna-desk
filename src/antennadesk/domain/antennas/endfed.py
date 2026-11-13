@@ -551,6 +551,8 @@ def endfed_model_warning_keys(parameters: EndFedParameters) -> tuple[str, ...]:
         EndFedPreset.SHORTENED_40_10,
     }:
         keys.append("endfed.warning.return_proxy")
+    if parameters.preset is EndFedPreset.SHORTENED_40_10:
+        keys.append("endfed.warning.convergence_40_10")
     if (
         parameters.matching_capacitance_f > 0.0
         and parameters.transformer_leakage_inductance_h <= 0.0
