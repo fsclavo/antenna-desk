@@ -74,6 +74,19 @@ def test_endfed_dialog_builds_parameters(qtbot: QtBot) -> None:
     assert dialog._form._ground.currentText() == "Finite ground"
 
 
+def test_endfed_matching_hints_name_the_preset_defaults(qtbot: QtBot) -> None:
+    dialog = EndFedDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+
+    capacitance_hint = dialog._form._matching_capacitance.toolTip()
+    leakage_hint = dialog._form._transformer_leakage.toolTip()
+
+    assert "shortened presets start at 100 pF" in capacitance_hint
+    assert "standard EFHW starts at 0 pF" in capacitance_hint
+    assert "0.198" in leakage_hint
+    assert "standard EFHW starts at 0" in leakage_hint
+
+
 def test_shortened_endfed_warns_about_the_installation_return_proxy(
     qtbot: QtBot,
 ) -> None:

@@ -11131,14 +11131,13 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "endfed.matching_capacitance_hint": {
         Language.ENGLISH: (
-            "Ideal shunt capacitor across the 49:1 transformer primary. "
-            "100 pF is the published starting value; it compensates the "
-            "transformer leakage inductance."
+            "Ideal shunt across the 49:1 primary. The shortened presets start at "
+            "100 pF with 0.198 µH leakage; the standard EFHW starts at 0 pF and "
+            "0 µH."
         ),
         Language.SPANISH: (
-            "Capacitor shunt ideal en el primario del transformador 49:1. "
-            "100 pF es el valor inicial publicado; compensa la inductancia de "
-            "fuga del transformador."
+            "Shunt ideal en el primario 49:1. Los presets acortados arrancan con "
+            "100 pF y 0,198 µH de fuga; el EFHW estándar arranca con 0 pF y 0 µH."
         ),
     },
     "endfed.transformer_leakage": {
@@ -11147,15 +11146,15 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "endfed.transformer_leakage_hint": {
         Language.ENGLISH: (
-            "Primary leakage inductance. The 0.198 µH default is a starting "
-            "estimate from Squash Practice's measured 49:1 transformer, not this "
-            "exact build; "
-            "edit it or set 0 for an ideal transformer."
+            "Primary leakage inductance. Shortened presets start at 0.198 µH, an "
+            "estimate from a measured 49:1 transformer, not this exact build; the "
+            "standard EFHW starts at 0. Edit it or use 0 for an ideal transformer."
         ),
         Language.SPANISH: (
-            "Inductancia de fuga del primario. El valor inicial de 0,198 µH "
-            "es una estimación de un transformador 49:1 medido, no de esta "
-            "construcción exacta; editalo o usá 0 para un transformador ideal."
+            "Inductancia de fuga del primario. Los presets acortados arrancan con "
+            "0,198 µH, una estimación de un transformador 49:1 medido, no de esta "
+            "construcción; el EFHW estándar arranca en 0. Editalo o usá 0 para un "
+            "transformador ideal."
         ),
     },
     "endfed.matching_summary": {

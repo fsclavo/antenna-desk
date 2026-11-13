@@ -52,6 +52,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **End-fed matching tooltips.** The primary capacitor and leakage hints now
+  state that the shortened presets start at 100 pF and 0.198 µH while the
+  standard EFHW starts at 0 pF and 0 µH. This removes the misleading “100 pF
+  starting value” wording from the standard preset.
 - **Apply Best SWR with locked variables.** The optimizer stores candidate
   values for active variables only; **Apply Best SWR** now merges the
   descriptor's initial values before building the parameters. This fixes the

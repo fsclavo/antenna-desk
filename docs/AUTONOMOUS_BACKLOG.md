@@ -1506,7 +1506,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **45**.
-- Full gate: **3,041 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **3,042 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.6.0** published on 2026-11-13 with checksum-verified unsigned
