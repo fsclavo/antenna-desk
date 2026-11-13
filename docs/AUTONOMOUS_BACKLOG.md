@@ -1,6 +1,6 @@
 # Autonomous execution backlog
 
-**Date:** 2026-11-12
+**Date:** 2026-11-13
 **Status:** active execution queue.
 
 This is the only active execution queue. It contains shippable items,
@@ -117,6 +117,11 @@ external service and must not be invented or simulated into existence.
 | ~~UX22~~ | ~~Make the pattern metric selector visibly meaningful~~ | S–M | none (coordinate with UX21) | **Done 2026-11-12:** the pattern chart titles and polar footers name the selected metric; the left axis, cursor readout, 3D label, and summary reflect the selection. A compact summary shows power gain, directivity, and realized gain for the selected frequency, with an explicit localized unavailable value instead of a silent omission. The metric definitions and lobe shape are unchanged. Tests cover titles, summary, cursor, unavailable values, retranslation, and independent cuts. EN/ES help, user guide, and changelog updated. No solver or schema changes. |
 | ~~UX23~~ | ~~Expand the common coax catalog and add feed-line presets~~ | M | UX18; G27 only if frequency-dependent loss is included | **Done 2026-11-12:** expanded the shared source-backed coax catalog to 16 cables: RG-58A/U, RG-8X, RG-8/U, RG-213/U, RG-214/U, RG-174/U, RG-316/U, RG-400/U, RG-6/U, RG-11/U, LMR-240, LMR-400, LMR-600, Belden 9913, LDF4-50A, and Ultraflex 7. Each entry has impedance, velocity factor, matched loss at a documented reference frequency, source URL, revision, and visible limitations. The feed-line editor has a **Catalog** selector that fills the three electrical fields while keeping length editable; manual edits switch to **Custom**. The catalog key is not persisted; on reopen, a unique electrical match is preselected and ambiguous matches show **Custom**. The materials-reference dialog uses the same catalog. The simulation keeps the scalar matched-loss model; frequency interpolation remains G27. Tests cover catalog invariants, source/revision coverage, auto-fill, custom override, duplicate-value handling, dialog restoration, dialog behavior, and EN/ES labels/help. No schema change. |
 | ~~UX24~~ | ~~Retune Moxon and Yagi catalog starting frequencies~~ | S | none | **Done 2026-11-12:** new Moxon editors start at 28.500 MHz with the Cebik 20 m wire reference scaled to that frequency, and new Yagi editors start at 145.000 MHz with the NBS five-element preset scaled from its published 50.1 MHz reference. The default field and starting geometry are generated together; a requested frequency passed to the Moxon dialog regenerates the scaled reference as well. Moxon and Yagi evidence/help state that the scaled defaults are heuristic starting points, while the exact Cebik 14.17 MHz and NBS 50.1 MHz references remain the source-backed cases. The Cebik and NBS reference actions still rescale to the current frequency. Ringo (50.100 MHz) and loaded vertical/mobile whip (7.100 MHz) keep their current defaults and are out of scope. Tests cover both defaults, the Moxon frequency-scaled dialog path, Yagi scaling/clearance behavior, EN/ES help, and the existing reference actions. No schema change. |
+| UX25 | Add stainless steel 304 as a source-backed conductor material | S–M | none | **Queued 2026-11-13.** Add only 304, with the source-backed conductivity and a documented μr = 1.0 approximation; do not add carbon or galvanized steel, export permeability to NEC, or change the schema. See the **UX25 design note** below. Acceptance: 304 selectable in every family editor and the component calculator; source-backed reference row; EN/ES labels and report text; persistence, BOM, report, and NEC-deck tests; full gate green. |
+| UX26 | Include canonical geometry and far-field pattern in exported antenna reports | M–L | G17, UX21 | **Queued 2026-11-13.** The HTML and native PDF simulation reports must include a deterministic geometry figure and metric-aware azimuth/elevation pattern cuts generated from the immutable snapshot, not from live widgets. See the **UX26 design note** below. Acceptance: both formats show geometry plus pattern for single-band and band runs; far-field-disabled and missing-data states are explicit; EN/ES headings and help; reporting and PDF tests; full gate green; no schema change. |
+| UX27 | Use ROE consistently in the Spanish UI and reports | S–M | none | **Queued 2026-11-13.** Replace every user-visible Spanish “SWR” with “ROE”, fix articles and agreement, localize the hardcoded chart/table labels, and keep English and internal identifiers unchanged. See the **UX27 design note** below. Acceptance: no Spanish UI/report string contains “SWR”; EN/ES tests and the help manifest pass; full gate green; no schema or domain change. |
+| UX28 | Call the vertical radiator dimension “length”, not “height” | S–M | none | **Queued 2026-11-13.** Rename only the physical vertical radiator and element dimensions in English and Spanish; keep base, feed, top, ring, coil, apex, stack, and boom heights as installation dimensions. See the **UX28 design note** below. Acceptance: vertical, J-Pole, Ringo, inverted-L, SCV, and phased-vertical editors and reports use length; the Zepp and discone exceptions are preserved; EN/ES help and tests pass; full gate green; no schema or domain change. |
+| UX29 | Show the constructive feed connection at the feedpoint | M–L | UX6, UX7, UX9, ADR-0031, ADR-0033, ADR-0034 | **Queued 2026-11-13.** Add a read-only feed-connection detail with a schematic, terminal table, and separate modeled/recorded/recommended/not-modeled states. See the **UX29 design note** below. Acceptance: the Yagi straight, folded, and beta/hairpin cases are explicit; every family has a descriptor or an explicit unknown; the construction sheet, PDF, and ZIP show the feedpoint assembly; EN/ES help and tests pass; no solver or schema change; full gate green. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -128,7 +133,9 @@ UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**, and
 0.8 **Explore** releases are closed. UX18–UX20 and UX21–UX24 were implemented on
 2026-11-12; the 0.9 **Sustain** slice is complete. The next product slice is not
 selected yet. UX21–UX24 were added from direct user feedback and completed the
-same day.
+same day. UX25 and UX26 were queued on 2026-11-13. UX27 and UX28 were added the
+same day from terminology feedback. UX29 was added the same day from
+feed-connection feedback.
 
 The first slice accepts these constraints:
 
@@ -202,6 +209,860 @@ Data rules for every entry:
 - Any multi-point attenuation table or interpolation belongs to G27 and must
   interpolate only inside the documented frequency range. Do not silently
   extrapolate or claim accuracy outside it.
+
+## UX25 — Stainless steel 304 conductor (design note, 2026-11-13)
+
+**Queued 2026-11-13. Not implemented.** This note is the implementation
+contract. Do not substitute a generic "steel" preset, carbon steel, galvanized
+steel, 316, or a different permeability model.
+
+### Decision
+
+Add **only** austenitic stainless steel 304 as a selectable conductor material.
+Do not add carbon steel, galvanized steel, 316, or a custom-material editor in
+this item. In amateur practice, carbon steel is marginal for radiating
+elements; 304 is the useful corrosion-resistant option for whips, portable and
+marine elements, and mechanical conductors.
+
+### Material data
+
+- Nominal annealed 304: resistivity **7.2×10⁻⁵ Ω·cm** (7.2×10⁻⁷ Ω·m), therefore
+  conductivity **1.389×10⁶ S/m**.
+- Primary source: **ASM Material Data Sheet, AISI Type 304 stainless steel**,
+  <https://asm.matweb.com/search/specificmaterial.asp?bassnum=mq304a>. Record
+  the exact label and URL in `WIRE_REFERENCES`; do not copy a generic steel
+  table or a distributor summary.
+- Published values for annealed 304 give a relative permeability of
+  approximately **1.003–1.02**. Cold work can raise it slightly and also raises
+  resistivity.
+- Store **μr = 1.0** in `ConductorMaterial` and explain the approximation in
+  the reference note. Do not store 1.008 and do not change the
+  `solver.permeability_unsupported` threshold in this item. The solver models
+  conductivity only; the error from this rounding is about 1 % or less for
+  this grade.
+- The visible note must state: higher RF loss than copper (about **6.5×** the
+  RF resistance of copper for the same diameter at 7.1 MHz and 2 mm), suitable
+  for whips, portable/marine elements, and mechanical conductors; not for
+  coils, traps, or small loops. Cold-worked 304 can be slightly magnetic.
+- Evidence level **B**: nominal source-backed data, not a measurement of a
+  specific wire. Verify the actual product datasheet before buying or building.
+
+### Implementation constraints
+
+- `domain/antennas/materials.py`: add `STAINLESS_STEEL_304`; keep `COPPER` and
+  `ALUMINUM` unchanged. Add one ordered `CONDUCTOR_MATERIALS` tuple
+  `(COPPER, ALUMINUM, STAINLESS_STEEL_304)` and use it everywhere. Do not keep
+  duplicating per-form material lists.
+- UI: replace every local `MATERIALS = (COPPER, ALUMINUM)` definition (currently
+  30 modules) with the shared tuple. The order must remain copper, aluminum,
+  304; append 304 last so existing defaults and tests do not shift.
+- Add a shared helper to populate and retranslate the material combo from
+  `material.name` (`material.<name>`). Remove fixed `setItemText(0/1)` calls and
+  per-form key tuples. This is required so a future material does not repeat the
+  same edit in 30 files.
+- `ui/dialogs/component_calculator_dialog.py`: use the same presets. The
+  calculator already uses μr in its skin-depth and RF-resistance formulas, so
+  μr = 1.0 keeps it consistent with the solver.
+- `ui/i18n.py`: add `material.stainless_steel_304`,
+  `materials.wire.stainless_steel_304.name`,
+  `materials.wire.stainless_steel_304.note`, and
+  `component_calculator.stainless_steel_304`. Keep English and Spanish in sync.
+- `ui/report_i18n.py`: add **"Stainless steel 304"** and
+  **"stainless_steel_304"** so construction sheets, HTML/PDF reports, and BOM
+  values translate correctly.
+- `domain/design/materials_reference.py`: add one `WireReference` with key
+  `stainless_steel_304`, the source above, and a note containing the
+  limitations. It must reference the same `STAINLESS_STEEL_304` object used by
+  the selectors, so the reference table and solver cannot diverge.
+  `MATERIALS_REFERENCE.md` gets the matching row and source link. Do not add a
+  generic "steel" row.
+- `help.field.material`: mention that the solver uses conductivity only and
+  that 304 is a higher-loss conductor. Keep the existing 240-character help
+  limit and both languages.
+- Keep **copper** as the default material in every editor and in the
+  frequency-first designer. The designer-from-frequency dialog keeps its
+  current behavior: it preserves an existing material and otherwise starts at
+  copper; do not add a material selector there in this item.
+
+### Do not
+
+- Do not add carbon steel, galvanized steel, 316, or a generic "steel".
+- Do not use 316, generic stainless, or carbon-steel values as substitutes for
+  the 304 source.
+- Do not change `ConductorMaterial`, `MaterialPayload`, the project schema, or
+  add a migration.
+- Do not change `write_nec2_input`, `validate_nec2_assumptions`, or the
+  permeability warning threshold.
+- Do not emit relative permeability to NEC and do not use the `σ/μr` effective
+  conductivity workaround. That is a separate solver item.
+- Do not add a material capability flag, per-family exclusion, structural
+  material field, or custom-material editor.
+- Do not make 304 the default, reorder copper/aluminum, or change existing
+  project materials.
+- Do not change the NEC importer. Imported decks still become copper and
+  `LD 5` is still ignored; document that pre-existing limitation if it becomes
+  relevant.
+- Do not claim mechanical strength, corrosion validation, temperature
+  behavior, weld/connection quality, or structural modeling.
+
+### Tests and documentation
+
+- Update the preset test in `tests/unit/domain/test_geometry.py`.
+- Update the exact wire-reference tuple in
+  `tests/unit/domain/design/test_materials_reference.py` to
+  `("copper", "aluminum", "stainless_steel_304")`, and assert the source URL and
+  conductivity.
+- The existing materials-reference i18n test must pass with the new EN/ES name
+  and note.
+- Extend the form retranslation test for the 304 label; cover at least one form
+  per UI pattern and rely on the shared helper for the rest.
+- Add persistence round-trip coverage for a design using 304; there is no
+  migration.
+- Add BOM, conductor-cost key, and report-text coverage:
+  `conductor:stainless_steel_304:<diameter>` and localized "Stainless steel
+  304".
+- Add component-calculator coverage for 304 skin depth and RF resistance.
+- Add a deck test asserting `LD 5` uses **1.389×10⁶ S/m** and that 304 does
+  **not** produce `solver.permeability_unsupported`; copper and aluminum decks
+  must remain unchanged.
+- Update `MATERIALS_REFERENCE.md`, `DOMAIN_MODEL.md`, `SOLVER_ADAPTER.md`,
+  `USER_GUIDE.md`, and `CHANGELOG.md`.
+- No ADR is required because this item changes neither solver behavior nor
+  schema. The μr = 1.0 approximation and the conductivity-only model must be
+  visible in the materials reference and user guide.
+
+### Acceptance
+
+- 304 is selectable in every family editor and in the component calculator.
+- Copper remains the default; existing copper/aluminum projects and tests are
+  unchanged.
+- The Materials Reference wire tab shows 304 with its source and limitation.
+- Reports and the UI show the localized "Stainless steel 304"; machine-readable
+  CSV and cost keys keep the stable internal name `stainless_steel_304`.
+- The NEC deck uses 1.389×10⁶ S/m and emits no permeability warning.
+- The full gate in the Rules section passes; no schema or migration change.
+
+### Out of scope
+
+- Carbon steel or galvanized steel: require a separate solver decision
+  (`σ/μr` mapping or a loss correction) and must not be smuggled in as another
+  preset.
+- 316: a separate source-backed preset if requested.
+- Structural steel, towers, masts, booms, and mechanical design: a separate
+  feature, not a conductor material.
+- Temperature, cold-work, plating, and connection resistance: visible
+  limitations only; do not model them in this item.
+
+## UX26 — Geometry and pattern in exported reports (design note, 2026-11-13)
+
+**Queued 2026-11-13. Not implemented.** This note is the implementation
+contract.
+
+### Problem
+
+The HTML simulation report currently contains impedance, SWR, and an
+elevation-only power-gain chart; it has no antenna geometry. The native PDF
+report contains impedance and SWR charts only. Geometry and pattern already
+exist as separate exports, but those exports capture live widgets, so they
+depend on window size, zoom, theme, and DPI and are not reproducible from the
+immutable result snapshot.
+
+### Decision
+
+- Add to both reports:
+  - one canonical antenna geometry figure, using the same principal-projection
+    policy as the construction sheet (ADR-0027) and the existing scene contract;
+  - azimuth and elevation pattern cuts at the report frequency, following the
+    UX21 cut semantics and showing the selected metric consistently.
+- Keep the construction sheet as the dimensioned artifact. The simulation
+  report geometry figure identifies the antenna and its orientation; do not
+  duplicate dimension-placement logic in this item.
+- Use total gain as the default report metric. A report-specific metric
+  selector remains deferred product work and is not part of UX26.
+- Do not add the 3D pattern view to reports. Keep figures 2D and vector.
+- Handle band analysis explicitly: one geometry figure for the design plus a
+  pattern section per band, consistent with the existing band-pattern section.
+- When far-field data is disabled or unavailable, show a localized explanation
+  instead of an empty chart or a silent omission.
+
+### Rendering constraints
+
+- Figures must be deterministic and headless. Prefer pure SVG builders in
+  `reporting/`; the HTML report must stay Qt-free.
+- Do not call `QWidget.grab()` or `save_pattern_image()`/`save_image()` from
+  the reporting path. If the existing construction renderer requires Qt,
+  render it offscreen at a fixed size, theme, and DPI, and keep that adapter in
+  the UI layer.
+- HTML inlines SVG so the file stays self-contained. The native PDF draws the
+  same SVG as vector content. Do not embed PNG screenshots or the 3D view.
+- Reuse the canonical scene/model and wires; do not synthesize a replacement
+  shape or infer the family from wire counts.
+- Keep output size bounded: no image per frequency, and no duplicated geometry
+  per band.
+
+### Tests and documentation
+
+- HTML and PDF tests for single-band and band-analysis output, including
+  geometry presence, both pattern cuts, and vector content.
+- Tests for far-field disabled, missing pattern points, and multiple bands.
+- Determinism test: identical snapshot and language produce identical report
+  figures.
+- EN/ES report headings and help, with the coverage manifest passing.
+- Update `USER_GUIDE.md`, `ARCHITECTURE.md` (report contents), and
+  `CHANGELOG.md`.
+- No schema, solver, or domain changes.
+
+### Out of scope
+
+- 3D pattern rendering in reports.
+- A report-specific gain/directivity/realized-gain selector.
+- Interactive or animated HTML output.
+- Replacing the construction sheet or duplicating its dimension layout.
+
+## UX27 — Spanish ROE terminology (design note, 2026-11-13)
+
+**Queued 2026-11-13. Not implemented.** This note is the implementation
+contract.
+
+### Decision
+
+- Spanish UI and Spanish report text must use **ROE** (*relación de ondas
+  estacionarias*), not **SWR**.
+- English remains **SWR**.
+- The first explanatory use should expand the acronym as **“ROE (relación de
+  ondas estacionarias)”**; later uses stay “ROE”.
+- This is a presentation-only change. Do not rename `SweepMetric.SWR`,
+  `OptimizationMetric.SWR`, report keys such as `table.swr`, CSV columns, solver
+  messages, or any domain identifier.
+
+### Spanish grammar
+
+- ROE is feminine: “la ROE”, “una ROE alta”, “ROE absoluta”, “ROE residual”.
+- Replace “el SWR” with “la ROE”; “del SWR” with “de la ROE”; “SWR alto” with
+  “ROE alta”; “SWR absoluto” with “ROE absoluta”.
+- Do not leave hybrid text such as “la SWR” or “ROE (SWR)” unless it is an
+  explicit bilingual equipment note. Prefer no parenthetical SWR in Spanish.
+
+### Translation gaps to close
+
+The following 18 keys in `src/antennadesk/ui/i18n.py` still contain “SWR” in
+their Spanish value:
+
+- `feed_line.hint`
+- `matching_network.hint`
+- `endfed.installation_return_hint`
+- `endfed.convergence_converged`
+- `endfed.convergence_unresolved`
+- `endfed.convergence_result`
+- `endfed.convergence_result_impedance`
+- `endfed.convergence_matching_note`
+- `optimize.min_swr_objective`
+- `optimize.min_swr_edges_objective`
+- `optimize.min_swr_operating_objective`
+- `optimize.max_bandwidth_objective`
+- `optimize.balanced_objective`
+- `optimize.swr_tolerance`
+- `optimize.swr_limit`
+- `optimize.swr_weight`
+- `optimize.max_swr_constraint`
+- `element_optimize.objective.min_swr`
+
+Also inspect the Spanish values in `src/antennadesk/ui/evidence_i18n.py` and
+`src/antennadesk/ui/report_i18n.py`; they already use ROE, but add a guard so
+they cannot regress.
+
+### Hardcoded labels
+
+Replace the literal “SWR” with a translated short label in:
+
+- `ui/dialogs/endfed_dialog.py:226` (cursor/readout)
+- `ui/dialogs/measurement_comparison_dialog.py:130,317` (axis labels)
+- `ui/dialogs/parameter_sweep_dialog.py:721,726,764` (axis, series name, table
+  header)
+- `ui/dialogs/robustness_dialog.py:443,478` (axis and table header)
+
+Use the existing `table.swr` key (`SWR`/`ROE`) for the short label, or add one
+shared `chart.swr` key and use it everywhere. Do not create per-dialog
+duplicates.
+
+### Reports
+
+- `src/antennadesk/reporting/construction_sheet.py:1460` hardcodes
+  `SWR ≤ 2 bandwidth`; route it through `tr(...)` and add the Spanish mapping
+  “Ancho de banda ROE ≤ 2” to `report_i18n.py`.
+- Check all report paths for raw `SWR` literals. `html_report.py`,
+  `report_pdf.py`, and the localized design-summary rows already use
+  `Translator.report`.
+- The acronym definition belongs in the user-facing help/glossary, for example
+  `confidence.explain.swr` or the SWR chart help. Keep it short and within the
+  240-character help limit.
+
+### Tests and documentation
+
+- Add a regression test that scans every Spanish value in `ui/i18n.py`,
+  `ui/report_i18n.py`, and `ui/evidence_i18n.py` for `\bSWR\b` and fails on a
+  match. If a deliberate exception is ever needed, require an explicit allowlist
+  with a reason.
+- Add Spanish-locale tests for the four dialogs above and for the
+  construction-sheet bandwidth row.
+- Keep English assertions unchanged; English still says SWR.
+- Review the existing Spanish strings for article/agreement by hand; a regex
+  cannot validate grammar.
+- Update `CHANGELOG.md` under the Spanish UI/localization change. No ADR,
+  schema, migration, solver, or domain change.
+
+### Acceptance
+
+- No Spanish UI or report string contains “SWR”.
+- Spanish uses “ROE” with feminine articles and agreement.
+- English remains “SWR”; internal keys, enums, and CSV columns are unchanged.
+- The first explanatory use expands “ROE”.
+- EN/ES tests, the help coverage manifest, and the full gate pass.
+
+### Out of scope
+
+- Renaming `SWR` identifiers, report keys, CSV columns, or solver output.
+- Translating equipment displays or third-party VNA terminology.
+- Changing English text to ROE.
+
+## UX28 — Vertical radiator length terminology (design note, 2026-11-13)
+
+**Queued 2026-11-13. Not implemented.** This note is the implementation
+contract.
+
+### Decision
+
+- In English, use **length** for the physical vertical radiating element:
+  “Radiator length”, “Vertical length”, “Element length”.
+- In Spanish, use **largo** as requested: “Largo del radiador”, “Largo
+  vertical”, “Largo del elemento”. Do not change existing “Longitud horizontal”
+  or “Longitud del stub” in this item; the mixed style is deliberate and
+  documented.
+- Keep **height** for installation/position dimensions: base height, feed
+  height, height above ground, top height, ring height, coil height above base,
+  apex height, stack height, boom centerline height, available height.
+- Keep internal field names (`height_m`, `radiator_height_m`,
+  `vertical_height_m`), optimizer variable names, project schema, and CSV/JSON
+  keys unchanged. No migration.
+
+### Label mapping
+
+| Key | English now | English after | Spanish after |
+|---|---|---|---|
+| `vertical.height` | Radiator height | Radiator length | Largo del radiador |
+| `j_pole.radiator_height` | Radiator height | Radiator length | Largo del radiador |
+| `ringo.radiator_height` | Radiator height | Radiator length | Largo del radiador |
+| `inverted_l.vertical_height` | Vertical height | Vertical length | Largo vertical |
+| `scv.vertical_height` | Vertical height | Vertical length | Largo vertical |
+| new `phased_vertical.height` | `field.height` = Height | Element length | Largo del elemento |
+
+- `phased_vertical` currently uses the generic `field.height`; give it a family
+  key so Yagi/dipole installation heights are unaffected.
+- Change summary text in `ringo.geometry`, `j_pole.geometry`, and
+  `phased_vertical.geometry` (“height” → “length”; “altura” → “largo”).
+- Change `ringo.ar6_example_hint` “3.1 m overall height” → “3.1 m overall
+  length” and “3,1 m de altura total” → “3,1 m de largo total”. The follow-up
+  “el radiador mide 3.05 m” stays.
+- `vertical.geometry` (“Top height”) remains a height because it is base height +
+  radiator length, i.e. the installation top.
+
+### Reports
+
+- `reporting/design_summary.py`:
+  - Vertical, Ringo, J-Pole: “Radiator height” → “Radiator length”.
+  - Inverted-L, SCV: “Vertical height” → “Vertical length”.
+  - Zepp: keep “Radiator height”. That row is
+    `base_height_m + matching_section_length_m`, the radiator’s top above
+    ground, not its length. Optionally rename it “Radiator top height” for
+    clarity, but do not call it “length”.
+- `reporting/construction_sheet.py`: same mapping for SCV, Ringo, J-Pole, and
+  Vertical. Keep the Zepp rows at lines 1357 and 1403 as heights.
+- `ui/report_i18n.py`: add “Radiator length” → “Largo del radiador” and
+  “Vertical length” → “Largo vertical”; keep “Radiator height” → “Altura del
+  radiador” for Zepp.
+
+### Help
+
+Add or update family help for each renamed label. The help must say that this
+is the physical vertical extent of the radiating element, not the total
+conductor length when a loading coil or top hat is fitted, and not the
+installation height. Keep EN/ES in sync and within the 240-character limit.
+
+- `help.vertical.height`
+- `help.j_pole.radiator_height`
+- `help.ringo.radiator_height`
+- `help.inverted_l.vertical_height`
+- `help.scv.vertical_height`
+- `help.phased_vertical.height` (replace the stale
+  `help.phased_vertical.field.height`)
+
+### Do not
+
+- Do not rename `height_m`, `radiator_height_m`, `vertical_height_m`, optimizer
+  variables, schema fields, or CSV/JSON columns.
+- Do not change `field.height` globally; it is also the installation height for
+  horizontal antennas.
+- Do not rename base, feed, top, ring, coil, apex, stack, or boom heights.
+- Do not rename `discone.cone_height`. The cone height is the vertical distance
+  from the apex to the base plane, not the slant wire length.
+- Do not rename the Zepp “Radiator height” report row.
+- Do not change any numerical value, geometry, solver behavior, or default.
+- Do not add a migration or bump the schema.
+
+### Tests and documentation
+
+- Update `tests/ui/geometry/test_scene.py:298` and
+  `tests/ui/geometry/test_contract.py:269,477` for the new summary wording.
+- Update `tests/unit/reporting/test_design_summary.py:496`.
+- Update `tests/ui/test_form_retranslate.py` for the new phased-vertical key and
+  keep the other label keys.
+- Update `tests/ui/test_help.py` if help keys are added or renamed.
+- Add assertions that the English and Spanish labels are correct in every
+  affected editor, that the report rows use the new labels, and that
+  installation-height labels did not change.
+- Add a regression test that the Zepp report row stays “Radiator height” and
+  that the discone cone label stays “Cone height”.
+- Update `USER_GUIDE.md` where it names the vertical dimension, plus
+  `CHANGELOG.md`. No ADR is required because there is no numerical, solver, or
+  schema change.
+- Full gate: `ruff check`, `ruff format --check`, both `mypy` passes, and
+  `pytest`.
+
+### Acceptance
+
+- Vertical, J-Pole, Ringo, inverted-L, SCV, and phased-vertical editors use
+  “length”/“largo” for the radiating element.
+- Base, feed, top, ring, coil, apex, stack, boom, and available heights still
+  use “height”/“altura”.
+- Zepp “Radiator height” and discone “Cone height” are unchanged and documented
+  as exceptions.
+- Reports, construction sheet, EN/ES help, and tests are consistent.
+- No schema, domain, solver, or numerical change.
+
+### Out of scope
+
+- Renaming the Spanish “radiador” to “irradiante”.
+- Changing “Longitud horizontal” or “Longitud del stub” to “Largo”.
+- Renaming discone cone height, Zepp radiator height, or any installation
+  height.
+- Adding new geometry or changing any simulated dimension.
+
+## UX29 — Constructive feed connection detail (design note, 2026-11-13)
+
+**Queued 2026-11-13. Not implemented.** This note is the implementation
+contract.
+
+### Context
+
+`AntennaModel.feed` is a single `FeedPoint(wire_id, offset_m)`. The NEC deck
+applies an ideal source across the segment at that point. The model has no
+two-terminal port, no center/shield assignment, no balun topology, and no
+common-mode current. The construction sheet can therefore describe dimensions
+and give prose notes, but it cannot show the physical connection.
+
+The Yagi is the clearest example:
+
+- A straight driven element without a balun is a center-fed dipole: one half
+  goes to the coax center and the other to the shield. That is a direct but
+  unbalanced feed of a balanced antenna; the shield carries common-mode current
+  unless a current balun/choke is installed.
+- A folded driven element is not a simple dipole. It has two parallel
+  conductors joined at both ends. The feed is a gap in one conductor; the other
+  conductor is continuous and carries current. It is not a parasitic element.
+  A 4:1 current balun/transformer is a common starting point, but the actual
+  ratio depends on the element.
+- A beta/hairpin is a shorted matching stub across the driven-element gap. It
+  changes the feed impedance; it is not a balun and does not replace the
+  balanced-to-unbalanced transition.
+- A gamma match is not modeled because NEC-2 is unreliable for close-spaced
+  gamma assemblies. The app already points the user to an equivalent matching
+  network.
+
+Today the UI shows a **Feed** marker on the sketch, a Feed & matching summary
+with the feed line, balun/unun loss, balance note, and current-balun checkbox,
+and prose construction notes. The Yagi note says "Feed the center of element
+N"; the folded note says "the second conductor remains passive", which is
+ambiguous and can be read as "parasitic". There is no connection table, no
+center/shield assignment, and no schematic.
+
+Two existing inconsistencies should be fixed in this item:
+
+1. The hardware BOM `Balun / unun` quantity uses `project.balun_loss` and the
+   ideal transformer ratio, but ignores `project.current_balun`.
+2. A balanced design without a recorded current balun is visible in the Feed &
+   matching summary and the construction sheet, but not in pre-flight.
+
+### Decision
+
+1. Add a **read-only, derived** `FeedConnectionDetail` per design. It describes
+   the physical connection at the feedpoint. It is not a solver input and does
+   not change the canonical model.
+2. Resolve it from `AntennaDesignParameters`, the generated `AntennaModel`, and
+   existing project feed state (`current_balun`, `transformer_ratio`,
+   `balun_loss`, `feed_line`, matching network). No new schema in phase 1.
+3. Keep four states separate and visible:
+   - **Modeled:** what the solver actually uses.
+   - **Recorded:** what the user says is installed.
+   - **Recommended:** what the topology normally needs.
+   - **Not modeled:** what the app cannot predict.
+4. Expose it in three places:
+   - a compact connection row and **View feed connection...** button in the
+     existing Feed & matching summary;
+   - a `FeedConnectionDialog` with a schematic, connection table, state matrix,
+     parts, steps, and limitations;
+   - a **Feedpoint assembly** section in the HTML construction sheet, native
+     PDF, and ZIP package.
+5. Add one family-owned descriptor for every `AntennaDesignParameters` type. A
+   central registry only dispatches. If a family cannot state the physical
+   mapping reliably, return `UNKNOWN` with an explicit reason; never guess.
+6. Add a deterministic, renderer-neutral schematic. The UI paints it with
+   QPainter; reporting exports SVG. It is marked **not to scale** and is
+   separate from the canonical geometry scene.
+7. Do not change `FeedPoint`, the NEC deck, the solver, or simulation results in
+   phase 1.
+8. No schema change in phase 1. Phase 2 may add a per-design
+   `FeedInstallation` record; that requires a separate ADR and migration.
+
+### File plan
+
+- `domain/antennas/feed_connection.py`: enums, terminal/connection/detail
+  dataclasses, and validation helpers.
+- `domain/antennas/feed_balance.py`: neutral `FeedBalance` enum; re-export from
+  `domain/design/feed_balance.py`.
+- `domain/design/feed_connection_registry.py`: type-to-descriptor registry and
+  coverage guard.
+- Each family module: one `*_feed_connection(...)` function; wire IDs stay in
+  the family module.
+- `reporting/feed_schematic.py`: renderer-neutral schematic and SVG.
+- `ui/widgets/feed_matching_summary.py`: summary row and button.
+- `ui/dialogs/feed_connection_dialog.py`: schematic, table, state matrix,
+  steps, and limits.
+- `ui/main_window.py`: action, state, and retranslation.
+- `reporting/construction_sheet.py`: feedpoint assembly section.
+- `reporting/design_summary.py`: feed connection rows.
+- `reporting/construction_package.py`: BOM fix.
+- `ui/construction_pdf.py`: vector feed schematic and section.
+- `ui/construction_package.py`: pass the schematic to HTML and PDF.
+- `domain/design/preflight.py`: feed-connection warnings.
+- `ui/i18n.py`: English/Spanish labels and help keys.
+- Tests under `tests/unit/domain/`, `tests/unit/reporting/`, and `tests/ui/`.
+- Docs: new ADR, `DOMAIN_MODEL.md`, `USER_GUIDE.md`, and `CHANGELOG.md`.
+
+### Data model
+
+Proposed types live in `domain/antennas/feed_connection.py`; the registry lives
+in `domain/design/feed_connection_registry.py`. Names may change during
+implementation, but the information must remain.
+
+```python
+class FeedTopology(StrEnum):
+    CENTER_FED_DIPOLE = "center_fed_dipole"
+    OFF_CENTER_FED_DIPOLE = "off_center_fed_dipole"
+    FOLDED_DIPOLE = "folded_dipole"
+    BETA_HAIRPIN = "beta_hairpin"
+    LOOP_GAP = "loop_gap"
+    BASE_FED_VERTICAL = "base_fed_vertical"
+    TOP_JUNCTION_FEED = "top_junction_feed"
+    END_FED = "end_fed"
+    END_FED_STUB = "end_fed_stub"
+    APEX_GAP = "apex_gap"
+    MULTI_PORT = "multi_port"
+    UNKNOWN = "unknown"
+
+
+class FeedInterface(StrEnum):
+    DIRECT_COAX = "direct_coax"
+    CURRENT_BALUN = "current_balun"
+    TRANSFORMER = "transformer"
+    BALANCED_LINE = "balanced_line"
+    MULTI_PORT = "multi_port"
+    UNKNOWN = "unknown"
+
+
+class BalunRequirement(StrEnum):
+    REQUIRED = "required"
+    RECOMMENDED = "recommended"
+    NOT_REQUIRED = "not_required"
+    UNKNOWN = "unknown"
+
+
+@dataclass(frozen=True)
+class FeedTerminal:
+    role_key: str
+    wire_id: str | None
+    offset_m: float | None
+    side: str | None  # "start", "end", "before", "after", "ground", ...
+
+
+@dataclass(frozen=True)
+class FeedConnection:
+    source_key: str
+    target_key: str
+    note_key: str | None = None
+
+
+@dataclass(frozen=True)
+class FeedConnectionDetail:
+    topology: FeedTopology
+    terminals: tuple[FeedTerminal, FeedTerminal]
+    balance: FeedBalance  # enum moved to a neutral antennas module
+    balun_requirement: BalunRequirement
+    interface: FeedInterface
+    transformer_ratio: float | None
+    match_hardware_key: str | None
+    connections: tuple[FeedConnection, ...]
+    gap_m: float | None
+    gap_source_key: str | None
+    steps: tuple[str, ...]  # i18n keys, not localized text
+    limitations: tuple[str, ...]  # i18n keys, not localized text
+```
+
+`connections` is the ordered connection table. Use stable node keys such as
+`terminal.a`, `terminal.b`, `coax.center`, `coax.shield`,
+`balun.unbalanced.center`, `balun.balanced.a`,
+`transformer.primary.center`, `transformer.secondary.a`, `ground`, `radials`,
+and `counterpoise`. This represents a balun or transformer as an explicit node
+instead of pretending the coax reaches the antenna terminals directly.
+
+`FeedBalance` currently lives in `domain/design/feed_balance.py`, which imports
+every family module. Do not import that module from
+`domain/antennas/feed_connection.py`: it would create a cycle once family
+modules import the detail types. Move the enum to a neutral module such as
+`domain/antennas/feed_balance.py` and re-export it from
+`domain/design/feed_balance.py`; keep the classifier functions in the design
+layer.
+
+The state matrix should be built by a separate pure function, for example
+`feed_connection_facts(detail, parameters, project)`, returning ordered
+`(state, key, value)` facts. This keeps the descriptor independent from the
+project record and makes the modeled/recorded/recommended/not-modeled boundary
+testable.
+
+### Topology inventory
+
+The first implementation must cover every type in `AntennaDesignParameters`.
+The following table is the starting inventory; phase 0 confirms each family's
+actual feed geometry and marks `UNKNOWN` where the canonical model does not
+encode it.
+
+| Group | Families | Topology | Balance | Notes |
+|---|---|---|---|---|
+| Center-fed dipole | dipole, fan dipole, loaded dipole, trap dipole, inverted V, Moxon, straight Yagi, trap Yagi, hexbeam | `CENTER_FED_DIPOLE` | balanced | Current balun/choke normally required; hexbeam has `feed_gap_m` |
+| Folded/loop | folded dipole, folded Yagi, full-wave loop, T2FD, quad beam, biquad | `FOLDED_DIPOLE` or `LOOP_GAP` | balanced | Transformer or current balun; loop feed at a gap |
+| Off-center | OCFD | `OFF_CENTER_FED_DIPOLE` | balanced | Typical 4:1 current balun; verify the actual ratio |
+| Base-fed vertical | vertical, inverted L, Ringo | `BASE_FED_VERTICAL` | unbalanced | Center to radiator; shield to radials/ground/counterpoise |
+| Top-junction array | SCV half-square/bobtail | `TOP_JUNCTION_FEED` | unbalanced | Feed on the vertical below the top junction; matching and ground return are not modeled |
+| End-fed | end-fed, Beverage | `END_FED` | unbalanced | Transformer/unun at the feed; counterpoise/ground return |
+| End-fed stub | Zepp, J-pole | `END_FED_STUB` | balanced/unbalanced | Stub is a matching section, not a balun |
+| Apex/loop gap | discone, magnetic loop | `APEX_GAP` or `LOOP_GAP` | unknown | Coax/mast/coupling transition is not modeled |
+| Multi-port | phased vertical | `MULTI_PORT` | unbalanced | Primary port plus sources; combining network is ideal |
+| Transmission line | G5RV, ZS6BKW, doublet | `CENTER_FED_DIPOLE` | balanced | Feed line may be balanced; do not assume coax |
+| Custom/imported | custom wires, imported decks | `UNKNOWN` | unknown | Show the feed point; do not guess center/shield |
+
+Do not infer the topology from the wire count. Use the parameter type and the
+family-owned descriptor, as required by the geometry presentation contract.
+
+### Family descriptor rules
+
+Each family module exposes a small pure function, for example
+`yagi_feed_connection(parameters, model) -> FeedConnectionDetail`. The registry
+maps each parameter type to that function.
+
+The descriptor must:
+
+- identify both terminals with `wire_id`, `offset_m`, and `side`, and validate
+  them against `to_antenna()`;
+- state the balance and the balun requirement;
+- state the interface (`DIRECT_COAX`, `CURRENT_BALUN`, `TRANSFORMER`,
+  `BALANCED_LINE`, `MULTI_PORT`, or `UNKNOWN`);
+- include the ideal transformer ratio only when the family models one;
+- include matching hardware only when the family models it;
+- return i18n keys, never localized text;
+- list explicit limitations for every unmodeled physical item;
+- return `UNKNOWN` with a reason rather than a plausible guess.
+
+A coverage test iterates every `AntennaDesignParameters` type and fails if a
+descriptor is missing, returns an invalid terminal, or uses a wire/offset that
+does not exist in the generated model. A second test compares `balance` with
+`feed_balance()` and `balun_requirement` with `requires_current_balun()`;
+documented refinements need an explicit reason and a test.
+
+### Yagi contract
+
+This is the acceptance-defining case.
+
+| Case | Terminals | Interface | Balance / balun | Modeled scope | Limitations |
+|---|---|---|---|---|---|
+| Straight, no match | `element-N` at center, `side="before"` and `side="after"`; tapered uses `element-N-center` | `DIRECT_COAX` when no balun is recorded, otherwise `CURRENT_BALUN` | balanced; current balun required | Ideal source at the center segment; no gap parameter | Common-mode current, shield radiation, balun balance, coax loss |
+| Folded | `element-N-a` at center, `side="before"` and `side="after"`; `element-N-b` is continuous and joined at both ends | `TRANSFORMER` | balanced; current balun/transformer required | Ideal ratio from `transformer_ratio`; two conductors plus end connectors | Ideal transformer; balun frequency response, power handling, common-mode |
+| Beta/hairpin | `element-N-feed` `start` and `end`; hairpin length/spacing from parameters | `CURRENT_BALUN` | balanced; current balun required | Hairpin in NEC; ratio forced to 1.0 | Hairpin tune, common-mode, no gamma |
+| Gamma | none | `UNKNOWN` | unknown | Not modeled | NEC-2 close-spaced gamma unreliability; use an equivalent network |
+
+Required Yagi wording:
+
+- Straight: "One half to the coax center and the other to the shield is the
+  direct connection, but the shield then carries common-mode current. A 1:1
+  current balun/choke is normally required."
+- Folded: "The second conductor is not cut; it is continuous, connected at both
+  ends, and carries part of the current. It is not a parasitic element."
+- Beta/hairpin: "The hairpin is a matching stub, not a balun."
+- Gamma: "Not modeled; use an equivalent matching network."
+- Polarity: "On a balanced load, A and B are interchangeable in the ideal model.
+  With a balun, follow its marked output terminals. Without a balun, the choice
+  changes the shield reference and common-mode behavior, not the ideal pattern."
+
+For a straight Yagi the model has no `feed_gap_m`. Do not invent one. The
+schematic may show a gap as a physical connection detail, but it must be marked
+**not to scale** and must not be added to the canonical geometry. If the user
+records a gap, store it as an as-built dimension, not as a solver parameter.
+
+### UI contract
+
+`FeedMatchingSummary` (`ui/widgets/feed_matching_summary.py`) adds:
+
+- a **Connection** row with a one-line summary from the descriptor;
+- a **View feed connection...** button;
+- a compact state line when the recommended and recorded states differ.
+
+`FeedConnectionDialog` (`ui/dialogs/feed_connection_dialog.py`) shows:
+
+- the schematic at the top, marked **not to scale**;
+- the ordered connection table (`source_key` → `target_key`) with notes;
+- an interface summary (direct coax, current balun, transformer, balanced line,
+  or multi-port);
+- the four-state matrix (modeled, recorded, recommended, not modeled);
+- parts, assembly steps, and a safety/weatherproofing note;
+- limitations and the explicit "not a solver result" statement.
+
+Add `Design → Feed Connection Detail...` and the summary button. The action is
+enabled only with a design and disabled with an explicit reason otherwise. No
+editing in phase 1.
+
+Help keys must be added to `HELP_MANIFEST` and kept within the 240-character
+limit, for example:
+
+- `help.section.feed_connection`
+- `help.action.feed_connection`
+- `help.feed_connection.summary`
+- `help.feed_connection.schematic`
+- `help.feed_connection.table`
+- `help.feed_connection.states`
+- `help.feed_connection.limitations`
+
+Every label, step, and limitation needs English and Spanish. The schematic must
+not rely on color alone; use text labels and line styles. Visual light/dark and
+scaling QA remains manual.
+
+### Reporting contract
+
+- `reporting/construction_sheet.py`: add a **Feedpoint assembly** section
+  before **Construction notes**, with the schematic, connection table, state
+  matrix, steps, and limitations. Use `tr(...)` for every heading and label.
+- `ui/construction_pdf.py`: accept an optional `feed_schematic_svg` (and a
+  raster fallback if needed), draw it as a vector figure, and repeat the table,
+  steps, and limitations with page-break safety.
+- `ui/construction_package.py`: pass the feed schematic to the HTML and PDF.
+  Keep the ZIP contents to the existing HTML, PDF, CSVs, build notes, and
+  optional pre-flight; a separate feed CSV is optional.
+- `reporting/design_summary.py`: add `feed_connection_rows(detail)` so the
+  HTML report and PDF can show the physical connection separately from
+  `feed_matching_rows`, which remains the electrical chain.
+- `reporting/construction_package.py`: fix the `Balun / unun` hardware row so
+  `project.current_balun` contributes to the quantity and the note; do not
+  double-count the loss model. Add generic feed hardware rows only where they
+  are real parts, not as invented ratings.
+- `domain/design/preflight.py`: add warnings for a balanced antenna without a
+  recorded current balun, a folded Yagi with ratio 1.0, and a beta/hairpin with
+  a ratio other than 1.0. Add an information finding when the feed gap is not
+  modeled. These are warnings/information, not errors.
+
+### Schematic contract
+
+- Renderer-neutral and deterministic; no Qt imports in domain or reporting.
+- Fixed layout per topology; no automatic graph layout.
+- Nodes, edges, and symbols with text labels: A, B, center, shield, balun
+  ratio, match hardware, ground/radials/counterpoise, feed line.
+- Marked **not to scale**; never used as a dimension source.
+- UI uses the theme palette; reporting uses black/white-friendly strokes.
+- SVG for HTML and PDF; QPainter for the dialog; raster fallback only when SVG
+  is unavailable.
+- Do not export the schematic to DXF; the construction DXF remains geometry.
+- Snapshot tests assert structure and labels, not pixels.
+
+### Wording rules
+
+- Never say the app simulates the balun, the choke, or common-mode current.
+- Use **modeled**, **recorded**, **recommended**, and **not modeled** exactly.
+- A balun is not a tuner; a 1:1 balun does not fix SWR.
+- An unun is not a balun; a 49:1 end-fed transformer still needs a
+  counterpoise/return and normally a choke on the coax.
+- A beta/hairpin is not a balun; a gamma is not modeled.
+- A folded element's second conductor is not a parasitic.
+- Do not claim a unique polarity for a balanced load.
+- Do not invent a feed gap, power rating, or choke impedance. Use family
+  parameters or report the limitation.
+
+### Tests
+
+- Domain: Yagi straight, folded, beta/hairpin, gamma, and tapered; every family
+  descriptor; coverage manifest; terminal validation; consistency with
+  `feed_balance`; no localized text in the domain.
+- Reporting: construction sheet section, connection table, state matrix,
+  limitations, deterministic SVG, PDF section, ZIP contents, BOM balun quantity,
+  pre-flight warnings.
+- UI: summary row and button, dialog content, Yagi cases, no-design state,
+  retranslation, help manifest, enabled/disabled action, accessibility labels.
+- Regression: simulation fingerprint and a sample result are unchanged; schema
+  stays 45 in phase 1.
+- Full gate: `ruff check`, `ruff format --check`, both `mypy` passes, and
+  `pytest` with `NEC2C` where available.
+
+### Acceptance
+
+- A user can see, for a Yagi, whether the connection is direct coax, a current
+  balun, a folded transformer, or a beta/hairpin, and which conductor goes to
+  which terminal.
+- Every family has a descriptor or an explicit `UNKNOWN` with a reason.
+- The construction sheet, PDF, and ZIP contain a feedpoint assembly with the
+  schematic, connection table, steps, and limitations.
+- The UI keeps modeled, recorded, recommended, and not-modeled states separate.
+- No solver, schema, or numerical change.
+- EN/ES, help coverage, and the full gate pass.
+
+### Out of scope
+
+- Modeling common-mode current, balun balance, frequency response, power
+  handling, or coax shield radiation.
+- Real connector loss, weatherproofing physics, or mechanical drawings.
+- Gamma/delta match modeling.
+- Replacing `FeedPoint` with a two-terminal `FeedPort`.
+- A per-design `FeedInstallation` record (phase 2, separate ADR and migration).
+- Drawing a synthetic gap in the canonical geometry or exporting the schematic
+  to DXF.
+- Auto-selecting a balun or changing the design.
+
+### Phases
+
+- **Phase 0, taxonomy and family inventory:** 0.5–1 day. Confirm the table above
+  against the family builders and mark unknown cases.
+- **Phase 1, read-only detail:** 5–8 days. Types, descriptors, registry, UI,
+  sheet/PDF/ZIP, tests, docs. This is the shippable slice.
+- **Phase 2, installation record:** 3–5 days, only if users need structured
+  connector/balun/weatherproofing metadata. Requires an ADR and schema 46.
+- **Phase 3, real electrical models:** blocked by G27 and traceable data.
+
+### Risks
+
+- A schematic can be read as a solver result. Mitigate with the four-state
+  matrix and the "not to scale / not a solver result" label.
+- Family coverage can drift. Mitigate with a coverage test that fails on every
+  missing descriptor.
+- The i18n/help surface is large. Mitigate with keys, the help manifest, and
+  EN/ES tests.
+- `current_balun` is project-global. Document the limitation and do not change
+  it in phase 1; a per-design record is a phase 2 decision.
+- Balanced feed lines and multi-port arrays do not fit a single coax schematic.
+  Use `BALANCED_LINE`/`MULTI_PORT` and explicit limitations; do not guess.
 
 ## Matching-network precedence (2026-11-10 analysis)
 
@@ -384,14 +1245,24 @@ model and solver contract must land first.
 7. **R1** is closed as superseded: `v0.4.1` was published with CI-built Linux
    and Windows artifacts, so rerunning the older `v0.4.0` tag is no longer
    required.
-8. **UX1–UX17 are complete.** The 0.5 **Decide**, 0.6 **Build**, 0.7
-   **Measure**, and 0.8 **Explore** releases are closed, and 0.9 **Sustain** is
-   in progress. UX18–UX20 remain product scope in [`ROADMAP.md`](ROADMAP.md).
-   **UX21–UX22** were added from direct user feedback and completed on
-   2026-11-12; **UX23** remains queued from the same feedback. These
-   request-driven items do not promote UX18–UX20.
-9. Product priorities and new antenna candidates live in
-   [`ROADMAP.md`](ROADMAP.md), not in this queue.
+8. **UX1–UX24 are complete.** The 0.5 **Decide**, 0.6 **Build**, 0.7
+   **Measure**, 0.8 **Explore**, and 0.9 **Sustain** releases are closed.
+   UX21–UX24 were added from direct user feedback and completed on
+   2026-11-12. **UX25–UX29** are the queued product-experience items.
+9. **UX25** is an independent materials item. Implement it exactly as specified
+   in the UX25 design note; do not bundle solver-permeability work, carbon
+   steel, or a custom-material editor into it.
+10. **UX26** adds geometry and pattern figures to the HTML and PDF simulation
+    reports. Implement it as specified in the UX26 design note; keep rendering
+    headless and deterministic, and do not reuse live-widget captures.
+11. **UX27 and UX28** are presentation-only terminology changes. Implement them
+    as specified in their design notes; do not rename domain fields, schema
+    keys, or solver identifiers.
+12. **UX29** adds the read-only constructive feed connection. Implement it as
+    specified in the UX29 design note; do not change `FeedPoint`, the NEC deck,
+    the solver, or the schema in phase 1.
+13. Product priorities and new antenna candidates live in
+    [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
 ## Technical debt pass (2026-11-08)
 
