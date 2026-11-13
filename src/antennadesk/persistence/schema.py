@@ -127,6 +127,11 @@ from ..domain.optimization.summary import (
     OptimizationSummary,
     RecommendationSeverity,
 )
+from ..domain.projects.bom_costs import (
+    MAX_BOM_CURRENCY_LENGTH,
+    BomCostLine,
+    BomCostRecord,
+)
 from ..domain.projects.construction import (
     MAX_CONSTRUCTION_LABEL_LENGTH,
     MAX_CONSTRUCTION_NOTES_LENGTH,
@@ -257,6 +262,23 @@ class ConstructionRecordPayload(StrictModel):
     as_built_notes: str = Field(default="", max_length=MAX_CONSTRUCTION_NOTES_LENGTH)
     dimensions: list[AsBuiltDimensionPayload] = Field(default_factory=list)
     checklist: list[ConstructionChecklistItemPayload] = Field(default_factory=list)
+
+
+class BomCostLinePayload(StrictModel):
+    key: str = Field(min_length=1)
+    unit_cost: float = Field(ge=0.0)
+
+
+class BomCostPayload(StrictModel):
+    currency: str = Field(default="", max_length=MAX_BOM_CURRENCY_LENGTH)
+    lines: list[BomCostLinePayload] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _validate_keys(self) -> Self:
+        keys = [line.key for line in self.lines]
+        if len(keys) != len(set(keys)):
+            raise ValueError("duplicate BOM cost key")
+        return self
 
 
 class LoadPayload(StrictModel):
@@ -1216,6 +1238,7 @@ class ProjectPayload(StrictModel):
     installation_profiles: list[InstallationProfilePayload] = Field(default_factory=list)
     active_installation_profile_id: UUID | None = None
     construction_record: ConstructionRecordPayload | None = None
+    bom_costs: BomCostPayload | None = None
 
     @model_validator(mode="after")
     def _validate_installation_profiles(self) -> Self:
@@ -2444,6 +2467,13 @@ def _construction_record_from_domain(
     )
 
 
+def _bom_costs_from_domain(value: BomCostRecord) -> BomCostPayload:
+    return BomCostPayload(
+        currency=value.currency,
+        lines=[BomCostLinePayload(key=line.key, unit_cost=line.unit_cost) for line in value.lines],
+    )
+
+
 def _project_from_domain(value: Project) -> ProjectPayload:
     return ProjectPayload(
         id=value.id,
@@ -2481,6 +2511,7 @@ def _project_from_domain(value: Project) -> ProjectPayload:
             if value.construction_record is not None
             else None
         ),
+        bom_costs=(_bom_costs_from_domain(value.bom_costs) if value.bom_costs else None),
     )
 
 
@@ -3551,6 +3582,13 @@ def _construction_record_to_domain(
     )
 
 
+def _bom_costs_to_domain(value: BomCostPayload) -> BomCostRecord:
+    return BomCostRecord(
+        currency=value.currency,
+        lines=tuple(BomCostLine(key=line.key, unit_cost=line.unit_cost) for line in value.lines),
+    )
+
+
 def project_from_document(document: ProjectDocument) -> Project:
     return Project(
         id=document.project.id,
@@ -3600,6 +3638,11 @@ def project_from_document(document: ProjectDocument) -> Project:
         construction_record=(
             _construction_record_to_domain(document.project.construction_record)
             if document.project.construction_record is not None
+            else None
+        ),
+        bom_costs=(
+            _bom_costs_to_domain(document.project.bom_costs)
+            if document.project.bom_costs is not None
             else None
         ),
     )

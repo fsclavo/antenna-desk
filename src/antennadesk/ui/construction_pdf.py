@@ -15,11 +15,17 @@ from ..domain.design.preflight import PreflightReport, PreflightStatus
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import SimulationResult
+from ..reporting.bom_costs import (
+    bom_cost_entries,
+    bom_cost_total,
+    format_cost,
+    hardware_cost_key,
+)
 from ..reporting.construction_package import (
     as_built_rows,
     checklist_rows,
     coil_trap_rows,
-    hardware_bom_rows,
+    hardware_bom_items,
 )
 from ..reporting.design_summary import (
     design_evidence_rows,
@@ -338,18 +344,30 @@ def write_construction_pdf(
         y += 12.0
 
     section(translator.t("construction.bom"))
+    cost_entries = {
+        entry.key: entry for entry in bom_cost_entries(project, design, translator.report)
+    }
+    costs = project.bom_costs
+    currency = costs.currency if costs is not None else ""
     for row_item in conductor_bom_rows(design.antenna):
+        value = translator.report(
+            "{count} wires · {length:.4f} m",
+            count=row_item.wire_count,
+            length=row_item.total_length_m,
+        )
+        if costs is not None:
+            entry = cost_entries.get(row_item.cost_key)
+            value += (
+                f" · {format_cost(entry.unit_cost if entry else None, currency)} / m"
+                f" · {format_cost(entry.line_total if entry else None, currency)}"
+            )
         row(
             translator.report(
                 "{material} Ø{diameter:.3f} mm",
                 material=translator.report(row_item.material),
                 diameter=row_item.diameter_mm,
             ),
-            translator.report(
-                "{count} wires · {length:.4f} m",
-                count=row_item.wire_count,
-                length=row_item.total_length_m,
-            ),
+            value,
         )
     for label, value in localize_rows(
         bom_summary_rows(design.antenna),
@@ -359,12 +377,21 @@ def write_construction_pdf(
     y += 12.0
 
     section(translator.t("construction.hardware_bom"))
-    for item, quantity, unit, note in hardware_bom_rows(
-        project,
-        design,
-        translator.report,
-    ):
-        row(item, f"{quantity} {unit} · {note}")
+    for hardware in hardware_bom_items(project, design):
+        value = f"{hardware.quantity} {hardware.unit} · {translator.report(hardware.note)}"
+        if costs is not None:
+            entry = cost_entries.get(hardware_cost_key(hardware.key))
+            value += (
+                f" · {format_cost(entry.unit_cost if entry else None, currency)}"
+                f" / {hardware.unit}"
+                f" · {format_cost(entry.line_total if entry else None, currency)}"
+            )
+        row(translator.report(hardware.label), value)
+    if costs is not None:
+        row(
+            translator.report("BOM total"),
+            format_cost(bom_cost_total(tuple(cost_entries.values())), currency),
+        )
     y += 12.0
 
     coil_rows = coil_trap_rows(design, translator.report)

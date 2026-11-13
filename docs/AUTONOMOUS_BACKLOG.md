@@ -112,9 +112,11 @@ external service and must not be invented or simulated into existence.
 | ~~UX17~~ | ~~Curated reference design library~~ | M + content | UX16 | **Done 2026-11-12:** added **File → Reference Design Library...** with twelve source-backed starting designs: ARRL 40 m dipole, Cebik 20 m Moxon, NBS 6 m Yagi, W3DZZ trap dipole, G3TXQ 20 m hexbeam, G5RV, ZS6BKW, Cebik half square, Cebik bobtail curtain, ARRL 40 m EFHW, Chameleon LEFS sloper, and ARRL 120° inverted V. Search filters by design, band, family, or source term; details show published reference, modeled scope, evidence level, source, tolerance, and limitations. **Open design** creates a normal project through the existing creation path and optionally runs the normal simulation. The library does not pre-run simulations or claim that published values were reproduced. Tests cover source-backed dimensions, unique keys, evidence levels, consistent design variants, filtering, details, retranslation, open/cancel behavior, and main-window project creation/simulation. No schema change. |
 | ~~UX18~~ | ~~Minimal materials reference~~ | S–M | none | **Done 2026-11-12:** added **Tools → Materials Reference...** with four source-backed tabs. Wire lists copper and aluminum nominal conductivity/permeability; coax lists RG-58A/U, RG-213/U, and LMR-400 with impedance, velocity factor, matched loss, and reference frequency; ferrite lists Fair-Rite 31/43/61; insulators lists PTFE, Delrin, and 96% alumina. Each row shows its source, note, and limitations. The coax tab can apply the selected datasheet point to the project feed line while preserving its length; the simulation keeps a constant matched loss. Wire, ferrite, and insulator rows are reference only. Tests cover catalog invariants, sources, dialog tabs/selection, EN/ES labels/help, feed-line apply, main-window undo, and no-project behavior. No schema change. |
 | ~~UX19~~ | ~~Portable project bundle~~ | S–M | none | **Done 2026-11-12:** added **File → Export Project Bundle...** and **Import Project Bundle...**. A bundle is a `.antennadesk-bundle` ZIP with `manifest.json`, the native `project.antennadesk` payload, and up to 100 referenced installation/journal images under `assets/`. Export rewrites only the bundled project's image references, records missing files, verifies asset sizes/hashes, and writes atomically in a worker thread. Import rejects traversal, absolute paths, symlinks, encrypted or duplicate entries, unknown entries, unlisted assets, size/hash mismatches, and invalid manifests; it extracts into a unique local folder, rewrites image references to local files, saves the project, and reports missing images. Tests cover round-trip, duplicate/missing assets, traversal, unlisted assets, corrupt hashes, unsupported manifests, oversized assets, unique destinations, main-window actions/errors, and EN/ES help. No schema change. |
+| ~~UX20~~ | ~~Editable BOM costs~~ | S | none | **Done 2026-11-12:** added a project-level `BomCostRecord` (currency label plus stable `BomCostLine` keys) and **Design → BOM Costs...**. The dialog lists the current design's grouped conductor rows (per metre) and hardware rows (pieces, wires, or set), supports manual unit costs, shows line totals and a BOM total, and preserves cost lines for rows not present in the current design. Costs enter undo/redo and schema 45; older projects migrate with no costs. The construction sheet, native PDF, package notes, and conductor BOM CSV show cost columns/totals when present. The hardware `Antenna conductor` row is excluded from costs because the conductor BOM already carries it. No price catalog, currency conversion, tax, shipping, or labor. Tests cover domain validation, persistence/migration, entries/totals, CSV/HTML/PDF/package output, the dialog, main-window undo, and EN/ES help. |
 | ~~UX21~~ | ~~Show azimuth and elevation pattern cuts side by side~~ | M | none | **Done 2026-11-12:** the **Cuts** tab shows four panes: azimuth line chart and polar lobes on the left, elevation line chart and polar lobes on the right. Frequency and metric stay shared; each plane has an independent cut selector (θ for azimuth, φ for elevation) defaulting to the maximum-gain direction and preserving selections across frequency and band changes. Each pane has its own title, axis labels, cursor readout, and a localized empty state when a cut is unavailable. The **3D lobe** tab is unchanged. The layout uses resizable splitters and remains usable at the minimum supported window size. Pattern PNG export saves the whole 2×2 Cuts view; the 3D tab saves the 3D view. No domain, solver, or persistence changes. Tests, EN/ES help, accessibility, user guide, and changelog updated. |
 | ~~UX22~~ | ~~Make the pattern metric selector visibly meaningful~~ | S–M | none (coordinate with UX21) | **Done 2026-11-12:** the pattern chart titles and polar footers name the selected metric; the left axis, cursor readout, 3D label, and summary reflect the selection. A compact summary shows power gain, directivity, and realized gain for the selected frequency, with an explicit localized unavailable value instead of a silent omission. The metric definitions and lobe shape are unchanged. Tests cover titles, summary, cursor, unavailable values, retranslation, and independent cuts. EN/ES help, user guide, and changelog updated. No solver or schema changes. |
 | ~~UX23~~ | ~~Expand the common coax catalog and add feed-line presets~~ | M | UX18; G27 only if frequency-dependent loss is included | **Done 2026-11-12:** expanded the shared source-backed coax catalog to 16 cables: RG-58A/U, RG-8X, RG-8/U, RG-213/U, RG-214/U, RG-174/U, RG-316/U, RG-400/U, RG-6/U, RG-11/U, LMR-240, LMR-400, LMR-600, Belden 9913, LDF4-50A, and Ultraflex 7. Each entry has impedance, velocity factor, matched loss at a documented reference frequency, source URL, revision, and visible limitations. The feed-line editor has a **Catalog** selector that fills the three electrical fields while keeping length editable; manual edits switch to **Custom**. The catalog key is not persisted; on reopen, a unique electrical match is preselected and ambiguous matches show **Custom**. The materials-reference dialog uses the same catalog. The simulation keeps the scalar matched-loss model; frequency interpolation remains G27. Tests cover catalog invariants, source/revision coverage, auto-fill, custom override, duplicate-value handling, dialog restoration, dialog behavior, and EN/ES labels/help. No schema change. |
+| UX24 | Retune Moxon and Yagi catalog starting frequencies | S | none | Requested 2026-11-12: Moxon starts at 28.500 MHz and Yagi at 145.000 MHz. Change the default field and the starting geometry together: Moxon generated from the Cebik 20 m reference at 28.5 MHz and Yagi from the frequency-scaled NBS five-element preset. The Cebik and NBS reference actions keep their documented behavior. Ringo (50.100 MHz) and loaded vertical/mobile whip (7.100 MHz) keep their current defaults and are out of scope. Update evidence/limitations and EN/ES help, and test both defaults; no schema change. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -123,13 +125,11 @@ external service and must not be invented or simulated into existence.
 ## Product experience queue (2026-11-11)
 
 UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**, and
-0.8 **Explore** releases are closed, and 0.9 **Sustain** is in progress. UX18
-and UX19 were implemented on 2026-11-12; UX20 remains product scope in
-[`ROADMAP.md`](ROADMAP.md#product-experience-backlog-proposed-2026-11-11). Do
-not promote that item into this queue until the next slice is selected and the
-full gate is green. UX21–UX23 were added on 2026-11-12 from direct user feedback
-and completed the same day. These request-driven items do not promote the
-proposed UX20 roadmap entry.
+0.8 **Explore** releases are closed. UX18–UX20 and UX21–UX23 were implemented on
+2026-11-12; the 0.9 **Sustain** slice is complete. The next product slice is not
+selected yet. UX21–UX23 were added from direct user feedback and completed the
+same day. UX24 was added from direct user feedback on 2026-11-12 and is
+pending.
 
 The first slice accepts these constraints:
 
@@ -422,8 +422,8 @@ model and solver contract must land first.
 
 ## Current baseline
 
-- Schema: **44**.
-- Full gate: **2,906 passed, 1 skipped** with `NEC2C` and the optional
+- Schema: **45**.
+- Full gate: **2,928 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.5.0** published on 2026-11-12 with checksum-verified unsigned
@@ -432,10 +432,10 @@ model and solver contract must land first.
   CI; all six published checksums were verified. See
   [`RELEASE_QA_0.5.0.md`](RELEASE_QA_0.5.0.md). **0.4.2** remains the previous
   release.
-- Last commits: the portable project bundle (UX19), the common coax catalog
-  (UX23), the materials reference (UX18), the 0.5.0 release publication and QA,
-  the folded-dipole, full-wave loop, and Yagi folded-driven feed transformers,
-  the current-balun record,
+- Last commits: the editable BOM costs (UX20), the portable project bundle
+  (UX19), the common coax catalog (UX23), the materials reference (UX18), the
+  0.5.0 release publication and QA, the folded-dipole, full-wave loop, and Yagi
+  folded-driven feed transformers, the current-balun record,
   the side-by-side pattern cuts and metric-aware views (UX21–UX22),
   the reference design library (UX17),
   the guided experiments (UX16),

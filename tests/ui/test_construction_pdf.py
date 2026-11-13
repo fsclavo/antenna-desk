@@ -211,3 +211,35 @@ def test_construction_sheet_pdf_embeds_the_figure(
     assert data.startswith(b"%PDF")
     assert len(data) > 1_000
     assert b"/Subtype /Image" in data
+
+
+def test_construction_pdf_accepts_bom_costs(
+    qtbot: QtBot,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    from antennadesk.domain.projects.bom_costs import BomCostLine, BomCostRecord
+    from antennadesk.reporting.bom_costs import hardware_cost_key
+    from antennadesk.reporting.wire_schedule import conductor_bom_rows
+
+    design = sample_project.designs[0]
+    conductor = conductor_bom_rows(design.antenna)[0]
+    record = BomCostRecord(
+        currency="USD",
+        lines=(
+            BomCostLine(conductor.cost_key, 2.5),
+            BomCostLine(hardware_cost_key("end_insulators"), 1.0),
+        ),
+    )
+    project = sample_project.with_bom_costs(record, updated_at=sample_project.updated_at)
+    path = tmp_path / "sheet-costs.pdf"
+
+    write_construction_pdf(
+        Translator(Language.ENGLISH),
+        project,
+        design,
+        None,
+        path,
+    )
+
+    assert path.read_bytes().startswith(b"%PDF")

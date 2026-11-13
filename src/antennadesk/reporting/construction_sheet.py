@@ -49,11 +49,12 @@ from ..domain.optimization.length import measure_bandwidth_hz
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import FrequencyResult, SimulationResult
+from .bom_costs import bom_cost_entries, bom_cost_total, format_cost, hardware_cost_key
 from .construction_package import (
     as_built_rows,
     checklist_rows,
     coil_trap_rows,
-    hardware_bom_rows,
+    hardware_bom_items,
 )
 from .design_summary import (
     design_evidence_rows,
@@ -267,12 +268,32 @@ def render_construction_sheet(
 """
     schedule_rows = "".join(wire_schedule_html_rows(design))
     feed = feed_schedule_row(antenna)
+    cost_entries = {entry.key: entry for entry in bom_cost_entries(project, design, tr)}
+    costs = project.bom_costs
+    currency = costs.currency if costs is not None else ""
+    conductor_cost_headers = (
+        "<th>Unit cost / m</th><th>Line total</th>" if costs is not None else ""
+    )
+    hardware_cost_headers = "<th>Unit cost</th><th>Line total</th>" if costs is not None else ""
+
+    def _cost_cells(entry_key: str) -> str:
+        if costs is None:
+            return ""
+        entry = cost_entries.get(entry_key)
+        if entry is None:
+            return '<td class="num">—</td><td class="num">—</td>'
+        return (
+            f'<td class="num">{_escape(format_cost(entry.unit_cost, currency))}</td>'
+            f'<td class="num">{_escape(format_cost(entry.line_total, currency))}</td>'
+        )
+
     bom_conductor_rows = "".join(
         "<tr>"
         f"<td>{_escape(tr(row.material))}</td>"
         f'<td class="num">Ø{row.diameter_mm:.3f} mm</td>'
         f'<td class="num">{row.wire_count}</td>'
         f'<td class="num">{row.total_length_m:.4f} m</td>'
+        f"{_cost_cells(row.cost_key)}"
         "</tr>"
         for row in conductor_bom_rows(antenna)
     )
@@ -284,7 +305,7 @@ def render_construction_sheet(
 <h2>Bill of materials</h2>
 <table class="schedule">
 <thead>
-<tr><th>Material</th><th>Diameter</th><th>Wires</th><th>Total length</th></tr>
+<tr><th>Material</th><th>Diameter</th><th>Wires</th><th>Total length</th>{conductor_cost_headers}</tr>
 </thead>
 <tbody>
 {bom_conductor_rows}
@@ -330,24 +351,32 @@ def render_construction_sheet(
 """
     hardware_values = "".join(
         "<tr>"
-        f"<td>{_escape(item)}</td>"
-        f"<td>{_escape(quantity)}</td>"
-        f"<td>{_escape(unit)}</td>"
-        f"<td>{_escape(note)}</td>"
+        f"<td>{_escape(tr(row.label))}</td>"
+        f"<td>{_escape(row.quantity)}</td>"
+        f"<td>{_escape(row.unit)}</td>"
+        f"<td>{_escape(tr(row.note))}</td>"
+        f"{_cost_cells(hardware_cost_key(row.key))}"
         "</tr>"
-        for item, quantity, unit, note in hardware_bom_rows(project, design, tr)
+        for row in hardware_bom_items(project, design)
     )
     hardware_section = f"""
 <h2>Hardware BOM</h2>
 <table class="schedule">
 <thead>
-<tr><th>Item</th><th>Qty</th><th>Unit</th><th>Notes</th></tr>
+<tr><th>Item</th><th>Qty</th><th>Unit</th><th>Notes</th>{hardware_cost_headers}</tr>
 </thead>
 <tbody>
 {hardware_values}
 </tbody>
 </table>
 """
+    bom_total = bom_cost_total(tuple(cost_entries.values()))
+    bom_total_section = (
+        f"<p><strong>{_escape(tr('BOM total'))}:</strong> "
+        f"{_escape(format_cost(bom_total, currency))}</p>"
+        if costs is not None
+        else ""
+    )
     coil_values = "".join(
         "<tr>"
         f"<td>{_escape(kind)}</td>"
@@ -1468,6 +1497,7 @@ def render_construction_sheet(
 {schedule_section}
 {bom_section}
 {hardware_section}
+{bom_total_section}
 {coil_section}
 {checklist_section}
 {_preflight_section(preflight, tr)}

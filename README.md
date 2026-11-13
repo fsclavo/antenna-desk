@@ -26,7 +26,8 @@ compression, and explicit migrations. VNA CSV import
 and measured/simulated comparison are available. A source-backed materials
 reference covers wire, coax, ferrite, and insulators, and coax presets can
 initialize the project feed line. Portable project bundles move a project and
-its referenced images between machines as one ZIP file.
+its referenced images between machines as one ZIP file. Manual BOM costs and
+totals can be stored with the project.
 
 ## Launch the GUI
 

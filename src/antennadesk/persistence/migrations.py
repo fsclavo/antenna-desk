@@ -685,6 +685,16 @@ def _migrate_v43_to_v44(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v44_to_v45(document: dict[str, Any]) -> dict[str, Any]:
+    """Add optional manual BOM costs to the project."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if isinstance(project, dict):
+        project.setdefault("bom_costs", None)
+    return migrated
+
+
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
@@ -729,6 +739,7 @@ MIGRATIONS: dict[int, Migration] = {
     41: _migrate_v41_to_v42,
     42: _migrate_v42_to_v43,
     43: _migrate_v43_to_v44,
+    44: _migrate_v44_to_v45,
 }
 
 

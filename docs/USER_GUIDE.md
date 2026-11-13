@@ -2045,6 +2045,18 @@ feed side.
 **Save HTML...** writes the sheet and **Save PDF...** writes a native PDF.
 **Save Package...** writes one ZIP with the HTML sheet, the native PDF, the
 wire-schedule CSV, the conductor BOM CSV, and a plain-text build-notes file.
+When BOM costs are entered, the sheet and PDF include unit-cost and line-total
+columns plus a BOM total; the conductor BOM CSV includes currency, unit-cost,
+and line-total columns; and the package's build notes include the BOM total.
+
+Use **Design → BOM Costs...** to enter manual unit costs for the current design's
+conductor and hardware rows. Conductor rows are costed per metre; hardware rows
+use their displayed unit (pieces, wires, or set). Set a free-form currency label,
+enter a unit cost, and the dialog shows each line total and the BOM total. A
+blank/zero cost means no cost. The record is saved with the project and enters
+undo/redo. AntennaDesk does not fetch prices, convert currencies, or include tax,
+shipping, or labor. The hardware `Antenna conductor` row is not costed separately
+because the conductor BOM already covers the material and diameter.
 
 Use **Design → As-Built / Checklist...** to record what was actually built:
 measured dimensions with their design values and differences, free notes, and

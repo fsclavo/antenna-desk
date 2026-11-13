@@ -9,7 +9,9 @@ its endpoints, length, diameter, and material, plus the feed point.
 
 from __future__ import annotations
 
+import csv
 import html
+import io
 import math
 from dataclasses import dataclass
 from pathlib import Path
@@ -26,6 +28,7 @@ from ..domain.antennas.endfed import (
 )
 from ..domain.antennas.geometry import Point3D
 from ..domain.antennas.wire import Wire
+from ..domain.projects.bom_costs import BomCostRecord
 from ..domain.projects.project import DesignVariant
 from .localization import Labeler, identity_labeler
 
@@ -104,6 +107,11 @@ class ConductorBomRow:
     diameter_mm: float
     wire_count: int
     total_length_m: float
+
+    @property
+    def cost_key(self) -> str:
+        material = self.material.strip().lower().replace(" ", "_")
+        return f"conductor:{material}:{self.diameter_mm:.3f}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -264,21 +272,57 @@ def write_wire_schedule_csv(design: DesignVariant, path: Path) -> None:
 
 
 BOM_HEADER = ("material", "diameter_mm", "wire_count", "total_length_m")
+BOM_COST_HEADER = (*BOM_HEADER, "currency", "unit_cost_per_m", "line_total")
 
 
-def bom_to_csv(design: DesignVariant) -> str:
-    """Return the conductor bill of materials as CSV."""
+def bom_to_csv(
+    design: DesignVariant,
+    *,
+    costs: BomCostRecord | None = None,
+) -> str:
+    """Return the conductor bill of materials as CSV.
 
-    lines = [",".join(BOM_HEADER)]
+    Without ``costs`` the historical four-column format is preserved.  With a
+    cost record, three optional columns carry the project currency, the manual
+    unit cost per metre, and the line total.
+    """
+
+    buffer = io.StringIO()
+    writer = csv.writer(buffer, lineterminator="\n")
+    writer.writerow(BOM_COST_HEADER if costs is not None else BOM_HEADER)
     for row in conductor_bom_rows(design.antenna):
-        lines.append(
-            f"{row.material},{row.diameter_mm:.6f},{row.wire_count},{row.total_length_m:.6f}"
+        if costs is None:
+            writer.writerow(
+                (
+                    row.material,
+                    f"{row.diameter_mm:.6f}",
+                    row.wire_count,
+                    f"{row.total_length_m:.6f}",
+                )
+            )
+            continue
+        unit_cost = costs.cost_for(row.cost_key)
+        writer.writerow(
+            (
+                row.material,
+                f"{row.diameter_mm:.6f}",
+                row.wire_count,
+                f"{row.total_length_m:.6f}",
+                costs.currency,
+                "" if unit_cost is None else f"{unit_cost:.6f}",
+                "" if unit_cost is None else f"{row.total_length_m * unit_cost:.6f}",
+            )
         )
-    return "\n".join(lines) + "\n"
+    return buffer.getvalue()
 
 
-def write_bom_csv(design: DesignVariant, path: Path) -> None:
-    path.write_text(bom_to_csv(design), encoding="utf-8", newline="\n")
+def write_bom_csv(
+    design: DesignVariant,
+    path: Path,
+    *,
+    costs: BomCostRecord | None = None,
+) -> None:
+    path.write_text(bom_to_csv(design, costs=costs), encoding="utf-8", newline="\n")
 
 
 def wire_schedule_html_rows(design: DesignVariant) -> tuple[str, ...]:

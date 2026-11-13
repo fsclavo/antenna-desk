@@ -14,6 +14,11 @@ from PySide6.QtGui import QImage
 from ..domain.design.preflight import PreflightReport, PreflightStatus
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.result import SimulationResult
+from ..reporting.bom_costs import (
+    bom_cost_entries,
+    bom_cost_total,
+    format_cost,
+)
 from ..reporting.construction_package import (
     as_built_rows,
     checklist_rows,
@@ -64,6 +69,11 @@ def _notes_text(
     lines.extend(("", translator.t("construction.hardware_bom")))
     for item, quantity, unit, note in hardware_bom_rows(project, design, translator.report):
         lines.append(f"- {item}: {quantity} {unit} · {note}")
+    if project.bom_costs is not None:
+        total = bom_cost_total(bom_cost_entries(project, design, translator.report))
+        lines.append(
+            f"- {translator.report('BOM total')}: {format_cost(total, project.bom_costs.currency)}"
+        )
     coil_rows = coil_trap_rows(design, translator.report)
     if coil_rows:
         lines.extend(("", translator.t("construction.coils_traps")))
@@ -154,7 +164,7 @@ def write_construction_package(
             preflight=preflight,
         )
         write_wire_schedule_csv(design, root / "wire-schedule.csv")
-        write_bom_csv(design, root / "bom.csv")
+        write_bom_csv(design, root / "bom.csv", costs=project.bom_costs)
         notes_path.write_text(
             _notes_text(project, design, translator),
             encoding="utf-8",

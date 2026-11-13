@@ -4425,6 +4425,51 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Record as-built dimensions, notes, and the construction checklist.",
         Language.SPANISH: "Registrá dimensiones as-built, notas y la lista de control.",
     },
+    "help.action.bom_costs": {
+        Language.ENGLISH: (
+            "Enter manual unit costs for the conductor and hardware BOM rows; "
+            "the total is shown in the construction sheet and PDF."
+        ),
+        Language.SPANISH: (
+            "Ingresá costos unitarios manuales para las filas de conductores y "
+            "herrajes; el total se muestra en la hoja de construcción y el PDF."
+        ),
+    },
+    "help.bom_costs.currency": {
+        Language.ENGLISH: "Free-form currency label shown with the BOM costs.",
+        Language.SPANISH: "Etiqueta de moneda libre que se muestra con los costos del BOM.",
+    },
+    "help.bom_costs.table": {
+        Language.ENGLISH: ("BOM rows and their quantities. Enter a unit cost in the cost column."),
+        Language.SPANISH: (
+            "Filas del BOM y sus cantidades. Ingresá un costo unitario en la columna de costo."
+        ),
+    },
+    "help.bom_costs.unit_cost": {
+        Language.ENGLISH: (
+            "Manual cost per displayed unit (metre, piece, wire, or set). A dash means no cost."
+        ),
+        Language.SPANISH: (
+            "Costo manual por unidad mostrada (metro, pieza, hilo o juego). "
+            "Un guion significa sin costo."
+        ),
+    },
+    "help.bom_costs.total": {
+        Language.ENGLISH: "Sum of the entered line costs; it does not include blank rows.",
+        Language.SPANISH: "Suma de los costos ingresados; no incluye las filas vacías.",
+    },
+    "help.bom_costs.hint": {
+        Language.ENGLISH: (
+            "Costs are manual and saved with the project; no price catalog or currency "
+            "conversion. Conductor rows already cover the antenna conductor, so the "
+            "hardware summary line is not costed separately."
+        ),
+        Language.SPANISH: (
+            "Los costos son manuales y se guardan con el proyecto; no hay catálogo de "
+            "precios ni conversión de moneda. Las filas de conductores cubren el "
+            "conductor de antena; la línea resumen de herrajes no se costea aparte."
+        ),
+    },
     "help.construction_record.notes": {
         Language.ENGLISH: "Free notes about the actual build and any deviations from the design.",
         Language.SPANISH: "Notas libres sobre la construcción real y desvíos del diseño.",
@@ -5817,6 +5862,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "status.construction_record": {
         Language.ENGLISH: "As-built record updated.",
         Language.SPANISH: "Registro as-built actualizado.",
+    },
+    "status.bom_costs_saved": {
+        Language.ENGLISH: "BOM costs saved.",
+        Language.SPANISH: "Costos del BOM guardados.",
     },
     "status.design_changed": {
         Language.ENGLISH: "Design changed. Simulate again.",
@@ -8614,6 +8663,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "as-built record",
         Language.SPANISH: "registro as-built",
     },
+    "history.bom_costs": {
+        Language.ENGLISH: "BOM costs",
+        Language.SPANISH: "costos del BOM",
+    },
     "history.balun_loss": {
         Language.ENGLISH: "Balun/unun loss",
         Language.SPANISH: "Pérdida de balun/unun",
@@ -8721,6 +8774,62 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "action.construction_record": {
         Language.ENGLISH: "As-Built / Checklist...",
         Language.SPANISH: "As-built / lista de control...",
+    },
+    "action.bom_costs": {
+        Language.ENGLISH: "BOM Costs...",
+        Language.SPANISH: "Costos del BOM...",
+    },
+    "bom_costs.title": {
+        Language.ENGLISH: "BOM Costs",
+        Language.SPANISH: "Costos del BOM",
+    },
+    "bom_costs.currency": {
+        Language.ENGLISH: "Currency",
+        Language.SPANISH: "Moneda",
+    },
+    "bom_costs.item": {
+        Language.ENGLISH: "Item",
+        Language.SPANISH: "Ítem",
+    },
+    "bom_costs.quantity": {
+        Language.ENGLISH: "Quantity",
+        Language.SPANISH: "Cantidad",
+    },
+    "bom_costs.unit": {
+        Language.ENGLISH: "Unit",
+        Language.SPANISH: "Unidad",
+    },
+    "bom_costs.unit_cost": {
+        Language.ENGLISH: "Unit cost",
+        Language.SPANISH: "Costo unitario",
+    },
+    "bom_costs.line_total": {
+        Language.ENGLISH: "Line total",
+        Language.SPANISH: "Total de la línea",
+    },
+    "bom_costs.total_value": {
+        Language.ENGLISH: "Total: {total}",
+        Language.SPANISH: "Total: {total}",
+    },
+    "bom_costs.no_cost": {
+        Language.ENGLISH: "—",
+        Language.SPANISH: "—",
+    },
+    "bom_costs.hint": {
+        Language.ENGLISH: (
+            "Costs are manual and stored with the project. Enter a unit cost per "
+            "displayed unit; a dash means no cost. The total sums the entered lines; "
+            "no price catalog or currency conversion is used. The conductor rows already "
+            "cover the antenna conductor, so the hardware summary line is not costed "
+            "separately."
+        ),
+        Language.SPANISH: (
+            "Los costos son manuales y se guardan con el proyecto. Ingresá un costo "
+            "unitario por unidad mostrada; un guion significa sin costo. El total suma "
+            "las líneas ingresadas; no se usa un catálogo de precios ni conversión de "
+            "moneda. Las filas de conductores ya cubren el conductor de antena, por lo "
+            "que la línea resumen de herrajes no se costea por separado."
+        ),
     },
     "construction_record.title": {
         Language.ENGLISH: "As-built record and checklist",

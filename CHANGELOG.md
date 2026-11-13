@@ -31,6 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   extracts into a new local folder and opens the project. Missing images are
   recorded and reported; import rejects traversal, symlinks, encrypted or
   unknown entries, unlisted assets, and checksum mismatches. No schema change.
+- **Editable BOM costs.** **Design → BOM Costs...** records manual unit costs
+  for the current design's conductor and hardware BOM rows, with a free-form
+  currency label, line totals, and a BOM total. Costs are saved with the project
+  and enter undo/redo; no price catalog, currency conversion, tax, shipping, or
+  labor is included. The construction sheet, native PDF, construction package,
+  and conductor BOM CSV show the costs and totals when present. Schema 45 adds
+  the optional record; older projects migrate with no costs.
 
 ## [0.5.0] - 2026-11-12
 

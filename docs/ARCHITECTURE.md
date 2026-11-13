@@ -329,7 +329,8 @@ design type, version 39 adds measurement sessions, version 40 adds the project
 journal, version 41 adds the folded-dipole feed transformer ratio, version 42
 adds the full-wave loop feed transformer ratio, version 43 adds the Yagi
 folded-driven transformer ratio, version 44 adds the project current-balun
-record, and older documents are migrated explicitly.
+record, version 45 adds optional manual BOM costs, and older documents are
+migrated explicitly.
 
 Simulation runs are persisted in schema version 30. Raw solver text is stored
 with the normalized result. Project files are compact JSON compressed with

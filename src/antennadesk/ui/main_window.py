@@ -266,6 +266,7 @@ from .dialogs.band_analysis_dialog import BandAnalysisDialog
 from .dialogs.basic_antenna_dialog import BasicAntennaDialog
 from .dialogs.beverage_dialog import BeverageDialog
 from .dialogs.biquad_dialog import BiquadDialog
+from .dialogs.bom_costs_dialog import BomCostsDialog
 from .dialogs.comparison_dialog import ComparisonDialog
 from .dialogs.component_calculator_dialog import (
     CalculatorSeed,
@@ -598,6 +599,8 @@ class MainWindow(QMainWindow):
         self._construction_action.triggered.connect(lambda: self.show_construction_sheet())
         self._construction_record_action = QAction(self)
         self._construction_record_action.triggered.connect(lambda: self.edit_construction_record())
+        self._bom_costs_action = QAction(self)
+        self._bom_costs_action.triggered.connect(lambda: self.edit_bom_costs())
         self._loads_action = QAction(self)
         self._loads_action.triggered.connect(lambda: self.edit_loads())
         self._transmission_lines_action = QAction(self)
@@ -1369,6 +1372,7 @@ class MainWindow(QMainWindow):
         self._design_menu.addAction(self._preflight_action)
         self._design_menu.addAction(self._construction_action)
         self._design_menu.addAction(self._construction_record_action)
+        self._design_menu.addAction(self._bom_costs_action)
         self._design_menu.addAction(self._loads_action)
         self._design_menu.addAction(self._transmission_lines_action)
         self._custom_menu = self._design_menu.addMenu("")
@@ -1560,6 +1564,9 @@ class MainWindow(QMainWindow):
         self._construction_record_action.setWhatsThis(
             self._translator.t("help.action.construction_record")
         )
+        self._bom_costs_action.setText(self._translator.t("action.bom_costs"))
+        self._bom_costs_action.setToolTip(self._translator.t("help.action.bom_costs"))
+        self._bom_costs_action.setWhatsThis(self._translator.t("help.action.bom_costs"))
         self._loads_action.setText(self._translator.t("action.loads"))
         self._transmission_lines_action.setText(self._translator.t("action.transmission_lines"))
         self._edit_custom_action.setText(self._translator.t("action.edit_custom"))
@@ -1984,6 +1991,7 @@ class MainWindow(QMainWindow):
         self._preflight_action.setEnabled(idle and has_project)
         self._construction_action.setEnabled(idle and has_project)
         self._construction_record_action.setEnabled(idle and has_project)
+        self._bom_costs_action.setEnabled(idle and has_project)
         self._loads_action.setEnabled(idle and has_project)
         self._transmission_lines_action.setEnabled(idle and has_project)
         self._edit_custom_action.setEnabled(idle and has_project and is_custom)
@@ -8207,6 +8215,39 @@ class MainWindow(QMainWindow):
         self._update_actions()
         self._update_status_text()
 
+    @history_action("history.bom_costs")
+    def edit_bom_costs(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        design = self._project.design_by_id(self._design_id)
+        dialog = BomCostsDialog(
+            self._translator,
+            self._project,
+            design,
+            self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        record = dialog.result_bom_costs()
+        if record == self._project.bom_costs:
+            return
+        self._project = self._project.with_bom_costs(
+            record,
+            updated_at=utc_now(),
+        )
+        self._dirty = True
+        self._last_status_key = "status.bom_costs_saved"
+        self._update_title()
+        self._update_actions()
+        self._update_status_text()
+
     def show_construction_sheet(self) -> None:
         if self._project is None or self._design_id is None:
             self._show_error(self._translator.t("error.no_project"))
@@ -8585,7 +8626,7 @@ class MainWindow(QMainWindow):
         if path.suffix.lower() != ".csv":
             path = path.with_suffix(".csv")
         try:
-            write_bom_csv(design, path)
+            write_bom_csv(design, path, costs=self._project.bom_costs)
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))
             return

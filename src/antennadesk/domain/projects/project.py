@@ -24,6 +24,7 @@ from ..measurement import Measurement, MeasurementSession
 from ..optimization.summary import OptimizationSummary
 from ..simulation.band_result import BandAnalysisResult
 from ..simulation.run import SimulationRun
+from .bom_costs import BomCostRecord
 from .construction import ConstructionRecord
 from .installation import InstallationProfile
 from .journal import JournalEntry
@@ -172,6 +173,7 @@ class Project:
     installation_profiles: tuple[InstallationProfile, ...] = field(default_factory=tuple)
     active_installation_profile_id: UUID | None = None
     construction_record: ConstructionRecord | None = None
+    bom_costs: BomCostRecord | None = None
     measurement_sessions: tuple[MeasurementSession, ...] = field(default_factory=tuple)
     journal_entries: tuple[JournalEntry, ...] = field(default_factory=tuple)
 
@@ -769,6 +771,14 @@ class Project:
         updated_at: datetime,
     ) -> Project:
         return replace(self, current_balun=bool(current_balun), updated_at=updated_at)
+
+    def with_bom_costs(
+        self,
+        bom_costs: BomCostRecord | None,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        return replace(self, bom_costs=bom_costs, updated_at=updated_at)
 
     def _retained_simulation_runs(self) -> tuple[SimulationRun, ...]:
         retained_ids: set[UUID] = set()

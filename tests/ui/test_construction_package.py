@@ -95,3 +95,40 @@ def test_construction_package_adds_a_preflight_file(
     assert "the design is too tall" in preflight
     assert "Construction pre-flight" in html
     assert "the design is too tall" in html
+
+
+def test_construction_package_includes_bom_costs(
+    qtbot: QtBot,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    from antennadesk.domain.projects.bom_costs import BomCostLine, BomCostRecord
+    from antennadesk.reporting.bom_costs import hardware_cost_key
+    from antennadesk.reporting.wire_schedule import conductor_bom_rows
+
+    design = sample_project.designs[0]
+    conductor = conductor_bom_rows(design.antenna)[0]
+    record = BomCostRecord(
+        currency="USD",
+        lines=(
+            BomCostLine(conductor.cost_key, 2.5),
+            BomCostLine(hardware_cost_key("end_insulators"), 1.0),
+        ),
+    )
+    project = sample_project.with_bom_costs(record, updated_at=sample_project.updated_at)
+    path = tmp_path / "package-costs.zip"
+
+    write_construction_package(
+        Translator(Language.ENGLISH),
+        project,
+        design,
+        None,
+        path,
+    )
+
+    with ZipFile(path) as archive:
+        bom = archive.read("bom.csv").decode("utf-8")
+        notes = archive.read("build-notes.txt").decode("utf-8")
+    assert "currency,unit_cost_per_m,line_total" in bom
+    assert "USD" in bom
+    assert "BOM total: 52.00 USD" in notes

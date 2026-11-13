@@ -14,6 +14,11 @@ from __future__ import annotations
 REPORT_SPANISH: dict[str, str] = {
     # Structural headings and captions.
     "Bill of materials": "Lista de materiales",
+    "{material} Ø{diameter:.3f} mm": "{material} Ø{diameter:.3f} mm",
+    "Unit cost": "Costo unitario",
+    "Unit cost / m": "Costo unitario / m",
+    "Line total": "Total de la línea",
+    "BOM total": "Total del BOM",
     "Construction notes": "Notas de construcción",
     "Construction pre-flight": "Pre-flight de construcción",
     "Ready to build.": "Listo para construir.",

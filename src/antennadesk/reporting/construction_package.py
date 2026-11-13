@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from ..domain.antennas.load import ParallelLoad, SeriesLoad
 from ..domain.environment.ground import GroundKind
 from ..domain.projects.construction import (
@@ -27,6 +29,17 @@ CHECKLIST_LABELS_EN: dict[str, str] = {
     "record_measurement": "Record the measurement session in the project.",
     "update_as_built": "Update the as-built dimensions and notes.",
 }
+
+
+@dataclass(frozen=True, slots=True)
+class HardwareBomRow:
+    """One practical hardware line with a stable cost key."""
+
+    key: str
+    label: str
+    quantity: str
+    unit: str
+    note: str
 
 
 def as_built_rows(
@@ -61,14 +74,12 @@ def as_built_rows(
     return tuple(rows)
 
 
-def hardware_bom_rows(
+def hardware_bom_items(
     project: Project,
     design: DesignVariant,
-    labeler: Labeler | None = None,
-) -> tuple[tuple[str, str, str, str], ...]:
-    """Return a practical starting hardware BOM for the design."""
+) -> tuple[HardwareBomRow, ...]:
+    """Return the practical hardware BOM with stable cost keys."""
 
-    tr = labeler or identity_labeler
     parameters = design.parameters
     beam = design.antenna_type in BEAM_TYPES
     wires = design.antenna.wires
@@ -78,49 +89,112 @@ def hardware_bom_rows(
     radial_count = int(getattr(parameters, "radial_count", 0) or 0)
     ground = getattr(parameters, "ground", None)
     ground_rod = "1" if ground is not None and ground.kind is GroundKind.FINITE else "0"
-    rows: list[tuple[str, str, str, str]] = [
-        (
-            "Antenna conductor",
-            f"{sum(w.length_m for w in wires):.2f}",
-            "m",
-            "From the conductor BOM",
+    rows: list[HardwareBomRow] = [
+        HardwareBomRow(
+            key="antenna_conductor",
+            label="Antenna conductor",
+            quantity=f"{sum(w.length_m for w in wires):.2f}",
+            unit="m",
+            note="From the conductor BOM",
         ),
-        (
-            "Element clamps" if beam else "End insulators",
-            str(len(wires)) if beam else "2",
-            "pcs",
-            "Starting estimate",
+        HardwareBomRow(
+            key="element_clamps" if beam else "end_insulators",
+            label="Element clamps" if beam else "End insulators",
+            quantity=str(len(wires)) if beam else "2",
+            unit="pcs",
+            note="Starting estimate",
         ),
-        ("Boom", "1" if beam else "0", "pcs", "Starting estimate" if beam else "—"),
-        ("Feedpoint support / insulator", "1", "pcs", "—"),
-        ("Mast or support", "1", "pcs", "—"),
-        ("Coaxial connector", "2", "pcs", "—"),
-        (
-            "Balun / unun",
-            "1"
-            if project.balun_loss is not None
-            or float(getattr(parameters, "transformer_ratio", 1.0)) != 1.0
-            else "0",
-            "pcs",
-            "Use the transformer or balun in the design",
+        HardwareBomRow(
+            key="boom",
+            label="Boom",
+            quantity="1" if beam else "0",
+            unit="pcs",
+            note="Starting estimate" if beam else "—",
         ),
-        (
-            "Radial wire",
-            str(radial_count),
-            "wires",
-            "Radial system" if radial_count else "—",
+        HardwareBomRow(
+            key="feedpoint_support",
+            label="Feedpoint support / insulator",
+            quantity="1",
+            unit="pcs",
+            note="—",
         ),
-        (
-            "Ground rod",
-            ground_rod,
-            "pcs",
-            "Verify the local grounding requirement",
+        HardwareBomRow(
+            key="mast",
+            label="Mast or support",
+            quantity="1",
+            unit="pcs",
+            note="—",
         ),
-        ("Trap", str(trap_count), "pcs", "From the load table"),
-        ("Loading coil", str(coil_count), "pcs", "From the load table"),
-        ("Guy line / support rope", "1", "set", "Starting estimate"),
+        HardwareBomRow(
+            key="coax_connector",
+            label="Coaxial connector",
+            quantity="2",
+            unit="pcs",
+            note="—",
+        ),
+        HardwareBomRow(
+            key="balun",
+            label="Balun / unun",
+            quantity=(
+                "1"
+                if project.balun_loss is not None
+                or float(getattr(parameters, "transformer_ratio", 1.0)) != 1.0
+                else "0"
+            ),
+            unit="pcs",
+            note="Use the transformer or balun in the design",
+        ),
+        HardwareBomRow(
+            key="radial_wire",
+            label="Radial wire",
+            quantity=str(radial_count),
+            unit="wires",
+            note="Radial system" if radial_count else "—",
+        ),
+        HardwareBomRow(
+            key="ground_rod",
+            label="Ground rod",
+            quantity=ground_rod,
+            unit="pcs",
+            note="Verify the local grounding requirement",
+        ),
+        HardwareBomRow(
+            key="trap",
+            label="Trap",
+            quantity=str(trap_count),
+            unit="pcs",
+            note="From the load table",
+        ),
+        HardwareBomRow(
+            key="loading_coil",
+            label="Loading coil",
+            quantity=str(coil_count),
+            unit="pcs",
+            note="From the load table",
+        ),
+        HardwareBomRow(
+            key="guy_line",
+            label="Guy line / support rope",
+            quantity="1",
+            unit="set",
+            note="Starting estimate",
+        ),
     ]
-    return tuple((tr(item), quantity, unit, tr(note)) for item, quantity, unit, note in rows)
+    return tuple(rows)
+
+
+def hardware_bom_rows(
+    project: Project,
+    design: DesignVariant,
+    labeler: Labeler | None = None,
+) -> tuple[tuple[str, str, str, str], ...]:
+    """Return the translated practical hardware BOM for the design."""
+
+    tr = labeler or identity_labeler
+    return tuple(
+        (tr(row.label), row.quantity, row.unit, tr(row.note))
+        for row in hardware_bom_items(project, design)
+    )
 
 
 def coil_trap_rows(

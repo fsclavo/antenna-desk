@@ -325,11 +325,11 @@ The 2026-11-11 review of the desired-backlog proposal keeps the product focus on
 the decision-to-measurement workflow instead of adding more antenna families.
 The catalog is broad enough; the next value is helping the operator choose,
 understand, build, and improve a design. This is product scope, not a second
-execution queue. UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**, and
-0.8 **Explore** releases are closed, and the 0.9 **Sustain** release is in
-progress. UX18 was implemented on 2026-11-12; UX19–UX20 stay here until the next
-product slice is selected and they are ready to execute. UX21–UX22 were added
-from direct user feedback and implemented on 2026-11-12. UX23 is queued from the same feedback.
+execution queue. UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7
+**Measure**, and 0.8 **Explore** releases are closed, and the 0.9 **Sustain**
+slice is complete. UX18–UX20 were implemented on 2026-11-12. UX21–UX23 were
+added from direct user feedback and implemented the same day. UX24 was added
+from the same feedback and remains pending in the active backlog.
 
 Rules for this track:
 
@@ -365,10 +365,14 @@ Rules for this track:
 | 0.9 Sustain | UX17 | Curated reference design library | 10–20 sourced designs; published versus simulated | M + content | A/B | done 2026-11-12 |
 | 0.9 Sustain | UX18 | Minimal materials reference | Source-backed four-tab table with coax feed-line apply | S–M | B | done 2026-11-12 |
 | 0.9 Sustain | UX19 | Portable project bundle | ZIP project + assets with safe import | S–M | n/a | done 2026-11-12 |
-| 0.9 Sustain | UX20 | Editable BOM costs | Manual cost column and totals | S | n/a | proposed |
+| 0.9 Sustain | UX20 | Editable BOM costs | Manual cost column and totals | S | n/a | done 2026-11-12 |
 | 0.9 Sustain | UX21 | Side-by-side azimuth/elevation pattern cuts | Four-pane Cuts view with independent cuts | M | n/a | done 2026-11-12 |
 | 0.9 Sustain | UX22 | Pattern metric visibility | Metric-aware titles and a three-metric summary | S–M | n/a | done 2026-11-12 |
 | 0.9 Sustain | UX23 | Common coax catalog and feed-line presets | 16 source-backed cables with a shared feed-line selector | M | B | done 2026-11-12 |
+| post-0.9 | UX24 | Retune catalog starting frequencies | Common operating-band defaults with coherent starting geometry | S–M | B | pending 2026-11-12 |
+
+UX24 was added from direct user feedback after the 0.9 slice closed. It is
+tracked in the active execution backlog and is not part of a published release.
 
 Release sequence: **0.5 Decide** is the first slice because it has the highest
 user value and the lowest modeling risk. **0.6 Build** converts a simulation into
@@ -393,10 +397,9 @@ kept at
 Product track:
 
 1. UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**,
-   and 0.8 **Explore** releases are closed, and 0.9 **Sustain** is in progress.
-   UX18–UX19 were implemented on 2026-11-12. UX21–UX23 were implemented from
-   direct user feedback. UX20 remains product scope in the backlog above and is
-   the next proposed candidate.
+   and 0.8 **Explore** releases are closed. UX18–UX20 and UX21–UX23 are
+   implemented; the 0.9 **Sustain** slice is complete. UX24 is pending in the
+   active backlog. The next product slice is not selected yet.
 
 Modeling track:
 

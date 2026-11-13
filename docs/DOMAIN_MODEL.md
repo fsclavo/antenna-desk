@@ -525,8 +525,8 @@ the summary is compact enough to keep with every design.
 An immutable project with an identifier, name, description, timestamps, and a
 tuple of design variants. It also stores the project-level feed line, matching
 network, matching-network position, matching-network design target, balun loss,
-installation profiles, the active installation-profile identifier, and an
-optional construction record. Invariants:
+installation profiles, the active installation-profile identifier, an optional
+construction record, and an optional manual BOM cost record. Invariants:
 
 - Non-empty project name.
 - Timezone-aware timestamps.
@@ -567,6 +567,17 @@ records (label, design value, actual value, notes), and a
 construction sheet and PDF include it when present. The hardware BOM, coil/trap
 targets, and checklist rendering are reporting helpers, not a new
 electromagnetic model.
+
+## BOM costs
+
+`BomCostRecord` stores a free-form currency label and a tuple of `BomCostLine`
+records. Each line has a stable key and a non-negative manual unit cost:
+conductor rows use `conductor:<material>:<diameter_mm>`, and hardware rows use
+`hardware:<row_key>`. The record does not fetch prices, convert currencies, or
+affect the solver. The construction sheet, native PDF, package, and conductor
+BOM CSV show the entered costs and totals when the record is present. The
+hardware `Antenna conductor` row is excluded from cost entries because the
+conductor BOM already carries the material/diameter cost.
 
 ## Feed chain
 
@@ -749,11 +760,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 44.
+the application writes version 45.
 
 ## Schema policy
 
-- Current version: `44`.
+- Current version: `45`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -841,6 +852,9 @@ the application writes version 44.
   start at 4:1 in the editor and NBS preset.
 - Version 44 adds the project-level `current_balun` record. The migration writes
   `False`; it is a construction note and does not affect simulation results.
+- Version 45 adds the optional manual `bom_costs` record. The migration writes
+  `None`; it does not affect simulation results or reporting unless the user
+  enters costs.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
