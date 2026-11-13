@@ -86,9 +86,11 @@ connectors and matching before using them on a 50 Ω transmitter.
 | Fair-Rite 61 | NiZn | 125 | 200–2000 MHz | Fair-Rite 61 Material data sheet |
 
 Ferrite data is reference only. AntennaDesk does not model a ferrite core,
-complex permeability, core geometry, winding, or common-mode impedance
-`Zcm(f)`. The table is not counted as feed-line loss. Use the manufacturer's
-`Zcm(f)` data or a measurement for a common-mode choke.
+complex permeability, core geometry, winding, or a frequency-interpolated
+common-mode impedance `Zcm(f)`. It can apply a user-measured series R/X at one
+frequency as a feedpoint NEC load on the coax shield; see
+[ADR-0037](ADR/0037-common-mode-return-model.md). The table is not counted as
+feed-line loss. Use the manufacturer's `Zcm(f)` data or your own measurement.
 
 Fair-Rite also lists 61 material for inductive applications up to 25 MHz; the
 range in the table is the suppression range.

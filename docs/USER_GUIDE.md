@@ -652,8 +652,17 @@ routing dominates the SWR. The **Return path** selector makes the model explicit
 physical counterpoise, and **Coax shield** models the shield as a straight wire
 return. The coax-shield option is an approximation: it does not model
 common-mode choking, shield transfer impedance, or the real cable route, so its
-absolute SWR is informational. The editor warns when either the fixed feed
-section or the return/counterpoise is missing. **Check convergence** runs the same
+absolute SWR is informational. When the coax-shield path is selected, an
+optional **Feedpoint common-mode choke** section accepts measured series R and
+X at the measurement frequency plus a source description. The choke is placed
+at the feedpoint in series with the shield. Positive X becomes a series
+inductance and negative X a series capacitance; R is held constant. This is a
+bounded feedpoint model, not a shack-end choke or a shield-transfer-impedance
+model. The editor warns if the measurement frequency differs from the design
+frequency or if the choke is predominantly reactive. See
+[ADR-0037](ADR/0037-common-mode-return-model.md). The editor warns when either
+the fixed feed section or the return/counterpoise is missing. **Check
+convergence** runs the same
 design with 10, 21, and 51 radiator segments and reports the R, X, and SWR
 spread. For the shortened presets the verdict uses **R and X only** (absolute R
 spread up to 1 Ω and X spread up to 10 Ω); the SWR is informational because the

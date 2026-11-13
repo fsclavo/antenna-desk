@@ -650,6 +650,32 @@ def test_endfed_summary_reports_the_optional_transformer_loss_model() -> None:
     assert rows["Transformer loss"] == "measured 49:1 (Squash Practice)"
 
 
+def test_endfed_summary_reports_a_measured_feedpoint_choke() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.common_mode import CommonModeChoke
+    from antennadesk.domain.antennas.endfed import (
+        EndFedReturnPath,
+        shortened_efhw_40_10_parameters,
+    )
+
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        return_path=EndFedReturnPath.COAX_SHIELD,
+        counterpoise_length_m=5.0,
+        common_mode_choke=CommonModeChoke(
+            enabled=True,
+            measurement_frequency_hz=7_100_000.0,
+            resistance_ohm=120.0,
+            reactance_ohm=300.0,
+            source="VNA measurement",
+        ),
+    )
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Common-mode choke"] == "120 + j300 Ω at 7.1 MHz"
+
+
 def test_endfed_coax_shield_summary_reports_the_return_path() -> None:
     from dataclasses import replace
 

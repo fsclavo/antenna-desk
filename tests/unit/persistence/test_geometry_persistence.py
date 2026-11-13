@@ -1292,6 +1292,38 @@ def test_endfed_transformer_loss_model_round_trips() -> None:
     assert restored_parameters.transformer_loss.loss_db(14_175_000.0) == pytest.approx(0.30)
 
 
+def test_endfed_common_mode_choke_round_trips() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.common_mode import CommonModeChoke
+    from antennadesk.domain.antennas.endfed import (
+        EndFedReturnPath,
+        shortened_efhw_40_10_parameters,
+    )
+
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        return_path=EndFedReturnPath.COAX_SHIELD,
+        counterpoise_length_m=5.0,
+        common_mode_choke=CommonModeChoke(
+            enabled=True,
+            measurement_frequency_hz=7_100_000.0,
+            resistance_ohm=120.0,
+            reactance_ohm=300.0,
+            source="VNA measurement",
+        ),
+    )
+    original = _project(parameters, "Feedpoint choke")
+
+    restored = project_from_document(document_from_project(original))
+
+    restored_parameters = restored.designs[0].parameters
+    assert restored_parameters.common_mode_choke is not None
+    assert restored_parameters.common_mode_choke.resistance_ohm == pytest.approx(120.0)
+    assert restored_parameters.common_mode_choke.reactance_ohm == pytest.approx(300.0)
+    assert restored_parameters.common_mode_choke.source == "VNA measurement"
+
+
 def test_endfed_coax_shield_return_path_round_trips() -> None:
     from dataclasses import replace
 

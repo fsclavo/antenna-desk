@@ -227,10 +227,12 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         tolerance="5% on the half-wave wire length; 0.05λ counterpoise; 49:1 ratio",
         limitation=(
             "The 49:1 transformer is an ideal ratio; the counterpoise is a "
-            "straight wire; height, ground, and the common-mode choke are not "
-            "modeled. The fixed feed section and installation return reduce "
-            "NEC end-source sensitivity, but absolute SWR remains "
-            "segmentation-sensitive and must be verified with a VNA."
+            "straight wire; height and ground are not modeled. An optional "
+            "feedpoint common-mode choke accepts measured series R/X at one "
+            "frequency, but shack-end placement, shield transfer impedance, and "
+            "the real cable route are not modeled. The fixed feed section and "
+            "installation return reduce NEC end-source sensitivity, but absolute "
+            "SWR remains segmentation-sensitive and must be verified with a VNA."
         ),
     ),
     "shortened_endfed_80_10": EvidenceEntry(
@@ -257,11 +259,14 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "estimate; an optional measured loss table from Squash Practice/AF7NX "
             "is available (0.43/0.33/0.30/0.32 dB at the 80/40/20/10 m band "
             "centers, log-frequency interpolation between 3.75 and 28.5 MHz, "
-            "clamped outside). Winding capacitance, capacitor ESR, common-mode "
-            "choke, ground, and matching losses are not modeled. The leakage and "
-            "loss values are from Squash Practice's measured 49:1 transformer, not "
-            "this exact build. The cited comparison is 8-12 dB below a dipole on "
-            "80 m. Convergence is judged on R/X stability; SWR remains "
+            "clamped outside). Winding capacitance, capacitor ESR, ground, and "
+            "matching losses are not modeled. An optional feedpoint common-mode "
+            "choke accepts measured series R/X at one frequency; shack-end "
+            "placement, shield transfer impedance, and the real cable route are "
+            "not modeled. The leakage and loss values are from Squash Practice's "
+            "measured 49:1 transformer, not this exact build. The cited comparison "
+            "is 8-12 dB below a dipole on 80 m. Convergence is judged on R/X "
+            "stability; SWR remains "
             "informational. Scaled or edited geometry is experimental."
         ),
     ),
@@ -280,9 +285,12 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "measured loss table from Squash Practice/AF7NX is available "
             "(0.43/0.33/0.30/0.32 dB at the 80/40/20/10 m band centers, "
             "log-frequency interpolation between 3.75 and 28.5 MHz, clamped "
-            "outside). Winding capacitance, capacitor ESR, choke, ground, "
-            "installation, and matching losses are not modeled. The optional "
-            "inverted-L bend uses a sharp 90° corner and the same remaining-length "
+            "outside). Winding capacitance, capacitor ESR, ground, installation, "
+            "and matching losses are not modeled. An optional feedpoint "
+            "common-mode choke accepts measured series R/X at one frequency; "
+            "shack-end placement, shield transfer impedance, and the real cable "
+            "route are not modeled. The optional inverted-L bend uses a sharp 90° "
+            "corner and the same remaining-length "
             "rule, but has no independent reference for this preset. The leakage "
             "and loss values are from Squash Practice's measured 49:1 transformer, "
             "not this exact build. CA4EMT documents a different 40-20-10 variant "

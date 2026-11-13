@@ -19,6 +19,7 @@ REPORT_SPANISH: dict[str, str] = {
     "Antenna terminal B": "Terminal B de la antena",
     "Coax center": "Centro del coaxil",
     "Coax shield": "Malla del coaxil",
+    "Common-mode choke": "Choke de modo común",
     "Direct coax": "Coaxil directo",
     "1:1 current balun": "Balún de corriente 1:1",
     "Transformer / balun": "Transformador / balún",

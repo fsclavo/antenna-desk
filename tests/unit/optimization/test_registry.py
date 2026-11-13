@@ -432,6 +432,7 @@ _CONTEXT_FIELDS = {
     "transformer_model",
     "transformer_loss_model",
     "return_path",
+    "common_mode_choke",
     "element_count",
     "radial_count",
     "radial_angle_deg",

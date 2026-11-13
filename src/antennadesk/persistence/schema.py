@@ -20,6 +20,7 @@ from ..domain.antennas.biquad import (
     BiquadKind,
     BiquadParameters,
 )
+from ..domain.antennas.common_mode import CommonModeChoke
 from ..domain.antennas.custom import ANTENNA_TYPE_CUSTOM, CustomAntennaParameters
 from ..domain.antennas.design import AntennaDesignParameters
 from ..domain.antennas.dipole import (
@@ -643,12 +644,21 @@ class VerticalParametersPayload(StrictModel):
     top_hat_wire_count: int = Field(default=0, ge=0, le=32)
 
 
+class CommonModeChokePayload(StrictModel):
+    enabled: bool = False
+    measurement_frequency_hz: float = Field(default=7_100_000.0, gt=0.0)
+    resistance_ohm: float = Field(default=0.0, ge=0.0)
+    reactance_ohm: float = 0.0
+    source: str = ""
+
+
 class EndFedParametersPayload(StrictModel):
     frequency_hz: float = Field(gt=0.0)
     length_m: float = Field(gt=0.0)
     feed_section_length_m: float = Field(default=0.0, ge=0.0)
     installation_return_length_m: float = Field(default=0.0, ge=0.0)
     return_path: EndFedReturnPath = EndFedReturnPath.AUTO
+    common_mode_choke: CommonModeChokePayload | None = None
     bend_enabled: bool = False
     bend_vertical_length_m: float = Field(default=0.0, ge=0.0)
     feed_height_m: float = Field(default=10.0, ge=0.0)
@@ -1905,6 +1915,17 @@ def _endfed_parameters_from_domain(value: EndFedParameters) -> EndFedParametersP
         feed_section_length_m=value.feed_section_length_m,
         installation_return_length_m=value.installation_return_length_m,
         return_path=value.return_path,
+        common_mode_choke=(
+            CommonModeChokePayload(
+                enabled=value.common_mode_choke.enabled,
+                measurement_frequency_hz=(value.common_mode_choke.measurement_frequency_hz),
+                resistance_ohm=value.common_mode_choke.resistance_ohm,
+                reactance_ohm=value.common_mode_choke.reactance_ohm,
+                source=value.common_mode_choke.source,
+            )
+            if value.common_mode_choke is not None
+            else None
+        ),
         bend_enabled=value.bend_enabled,
         bend_vertical_length_m=value.bend_vertical_length_m,
         feed_height_m=value.feed_height_m,
@@ -3179,6 +3200,17 @@ def _endfed_parameters_to_domain(value: EndFedParametersPayload) -> EndFedParame
         feed_section_length_m=value.feed_section_length_m,
         installation_return_length_m=value.installation_return_length_m,
         return_path=value.return_path,
+        common_mode_choke=(
+            CommonModeChoke(
+                enabled=value.common_mode_choke.enabled,
+                measurement_frequency_hz=(value.common_mode_choke.measurement_frequency_hz),
+                resistance_ohm=value.common_mode_choke.resistance_ohm,
+                reactance_ohm=value.common_mode_choke.reactance_ohm,
+                source=value.common_mode_choke.source,
+            )
+            if value.common_mode_choke is not None
+            else None
+        ),
         bend_enabled=value.bend_enabled,
         bend_vertical_length_m=value.bend_vertical_length_m,
         feed_height_m=value.feed_height_m,

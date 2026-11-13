@@ -185,8 +185,10 @@ transformer, not this exact build. An optional measured 49:1 loss table is
 available from Squash Practice/AF7NX (0.43/0.33/0.30/0.32 dB at the 80/40/20/10 m
 band centers, log-frequency interpolation between 3.75 and 28.5 MHz, clamped
 outside); it is a reference build, not a universal loss model. Capacitor ESR,
-winding capacitance, the common-mode choke, and ground are not modeled. An
-optional inverted-L bend is
+winding capacitance and ground are not modeled. An optional feedpoint
+common-mode choke accepts measured series R/X at one frequency and models it as
+a NEC series load on the coax shield; it is not a shack-end choke or a
+shield-transfer-impedance model. An optional inverted-L bend is
 available: the vertical section is measured from the feed, and the horizontal
 run is the remaining wire length. The G0KYA starting installation is about 8 m
 vertical and 15 m horizontal, but the bend is modeled as a sharp 90° corner and

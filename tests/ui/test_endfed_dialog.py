@@ -163,6 +163,60 @@ def test_endfed_dialog_clears_the_measured_loss_when_the_ratio_changes(
     assert dialog.parameters().transformer_loss is None
 
 
+def test_endfed_dialog_sets_the_measured_feedpoint_choke(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.endfed import (
+        EndFedReturnPath,
+        shortened_efhw_40_10_parameters,
+    )
+
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=shortened_efhw_40_10_parameters(),
+    )
+    qtbot.addWidget(dialog)
+    index = dialog._form._return_path.findData(EndFedReturnPath.COAX_SHIELD.value)
+    dialog._form._return_path.setCurrentIndex(index)
+    dialog._form._counterpoise_length.setValue(5.0)
+
+    assert not dialog._form._common_mode_choke_group.isHidden()
+
+    dialog._form._common_mode_choke_group.setChecked(True)
+    dialog._form._choke_resistance.setValue(120.0)
+    dialog._form._choke_reactance.setValue(300.0)
+    dialog._form._choke_frequency.setValue(7.1)
+    dialog._form._choke_source.setText("VNA measurement")
+
+    parameters = dialog.parameters()
+    assert parameters.common_mode_choke is not None
+    assert parameters.common_mode_choke.resistance_ohm == pytest.approx(120.0)
+    assert parameters.common_mode_choke.reactance_ohm == pytest.approx(300.0)
+    assert parameters.common_mode_choke.source == "VNA measurement"
+
+
+def test_endfed_dialog_hides_the_choke_outside_the_coax_shield_path(
+    qtbot: QtBot,
+) -> None:
+    from antennadesk.domain.antennas.endfed import (
+        EndFedReturnPath,
+        shortened_efhw_40_10_parameters,
+    )
+
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=shortened_efhw_40_10_parameters(),
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._form._common_mode_choke_group.isHidden()
+
+    index = dialog._form._return_path.findData(EndFedReturnPath.COUNTERPOISE.value)
+    dialog._form._return_path.setCurrentIndex(index)
+    assert dialog._form._common_mode_choke_group.isHidden()
+    assert dialog.parameters().common_mode_choke is None
+
+
 def test_endfed_dialog_selects_a_coax_shield_return_path(qtbot: QtBot) -> None:
     from antennadesk.domain.antennas.endfed import (
         EndFedReturnPath,

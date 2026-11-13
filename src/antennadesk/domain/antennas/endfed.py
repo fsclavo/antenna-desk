@@ -14,6 +14,7 @@ from ..common.units import ensure_non_negative, ensure_positive
 from ..environment.ground import FREE_SPACE, GroundModel
 from .antenna import AntennaModel
 from .balun import SQUASH_PRACTICE_49_1_LOSS, BalunLoss
+from .common_mode import CommonModeChoke
 from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
@@ -116,6 +117,7 @@ INSTALLATION_RETURN_DROP_ID = "endfed-installation-return-drop"
 # modeled until a traceable measurement or validated model exists.
 COAX_SHIELD_ID = "endfed-coax-shield"
 COAX_SHIELD_DROP_ID = "endfed-coax-shield-drop"
+COMMON_MODE_CHOKE_LOAD_ID = "endfed-common-mode-choke"
 DEFAULT_FEED_SECTION_LENGTH_M = 0.5
 DEFAULT_INSTALLATION_RETURN_LENGTH_M = 0.10
 DEFAULT_BEND_VERTICAL_LENGTH_M = 8.0
@@ -147,6 +149,7 @@ class EndFedParameters:
     feed_section_length_m: float = 0.0
     installation_return_length_m: float = 0.0
     return_path: EndFedReturnPath = EndFedReturnPath.AUTO
+    common_mode_choke: CommonModeChoke | None = None
     bend_enabled: bool = False
     bend_vertical_length_m: float = 0.0
     feed_height_m: float = 10.0
@@ -185,6 +188,12 @@ class EndFedParameters:
             raise ValueError(
                 "counterpoise/coax-shield return paths require a positive counterpoise_length_m"
             )
+        if (
+            self.common_mode_choke is not None
+            and self.common_mode_choke.is_active
+            and self.return_path is not EndFedReturnPath.COAX_SHIELD
+        ):
+            raise ValueError("a common-mode choke requires the coax_shield return path")
         if self.feed_section_length_m >= self.length_m:
             raise ValueError("feed_section_length_m must be shorter than length_m")
         ensure_non_negative(self.feed_height_m, name="feed_height_m")
@@ -371,6 +380,10 @@ class EndFedParameters:
         return self.return_path is EndFedReturnPath.COAX_SHIELD
 
     @property
+    def common_mode_choke_active(self) -> bool:
+        return self.common_mode_choke is not None and self.common_mode_choke.is_active
+
+    @property
     def installation_return_active(self) -> bool:
         if self.return_path is EndFedReturnPath.INSTALLATION_PROXY:
             return self.installation_return_length_m > 0.0
@@ -397,9 +410,12 @@ class EndFedParameters:
 
     @property
     def managed_load_ids(self) -> frozenset[str]:
-        if not self.coil_active:
-            return frozenset()
-        return frozenset({ENDFED_LOADING_COIL_ID})
+        ids: set[str] = set()
+        if self.coil_active:
+            ids.add(ENDFED_LOADING_COIL_ID)
+        if self.common_mode_choke_active:
+            ids.add(COMMON_MODE_CHOKE_LOAD_ID)
+        return frozenset(ids)
 
     @property
     def loading_coil_q(self) -> float | None:
@@ -585,7 +601,7 @@ class EndFedParameters:
                 )
             )
 
-        loads: tuple[SeriesLoad, ...] = ()
+        loads: list[SeriesLoad] = []
         if self.coil_active:
             coil_wire_id = RADIATOR_ID
             coil_offset_m = self.loading_coil_offset_m - (
@@ -596,14 +612,26 @@ class EndFedParameters:
                     coil_wire_id = wire_id
                     coil_offset_m = self.loading_coil_offset_m - start_m
                     break
-            loads = (
+            loads.append(
                 SeriesLoad(
                     id=ENDFED_LOADING_COIL_ID,
                     wire_id=coil_wire_id,
                     offset_m=coil_offset_m,
                     inductance_h=self.loading_coil_inductance_h,
                     resistance_ohm=self.loading_coil_resistance_ohm,
-                ),
+                )
+            )
+        if self.common_mode_choke_active and self.common_mode_choke is not None:
+            choke = self.common_mode_choke
+            loads.append(
+                SeriesLoad(
+                    id=COMMON_MODE_CHOKE_LOAD_ID,
+                    wire_id=COAX_SHIELD_ID,
+                    offset_m=0.0,
+                    resistance_ohm=choke.resistance_ohm,
+                    inductance_h=choke.series_inductance_h,
+                    capacitance_f=choke.series_capacitance_f,
+                )
             )
 
         return CustomAntennaParameters(
@@ -611,7 +639,7 @@ class EndFedParameters:
             wires=tuple(wires),
             feed=FeedPoint(feed_wire_id, 0.0),
             ground=self.ground,
-            loads=loads,
+            loads=tuple(loads),
             generator_id="endfed",
             generator_name=self.template_name,
         )
@@ -665,6 +693,15 @@ def endfed_model_warning_keys(parameters: EndFedParameters) -> tuple[str, ...]:
         keys.append("endfed.warning.return_proxy")
     if parameters.coax_shield_active:
         keys.append("endfed.warning.return_coax_shield")
+    if parameters.common_mode_choke_active and parameters.common_mode_choke is not None:
+        if not math.isclose(
+            parameters.common_mode_choke.measurement_frequency_hz,
+            parameters.frequency_hz,
+            rel_tol=0.01,
+        ):
+            keys.append("endfed.warning.choke_frequency")
+        if parameters.common_mode_choke.is_predominantly_reactive:
+            keys.append("endfed.warning.choke_reactive")
     if parameters.preset is EndFedPreset.SHORTENED_40_10:
         keys.append("endfed.warning.convergence_40_10")
     if (

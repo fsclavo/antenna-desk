@@ -3189,6 +3189,52 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Number of radial wires used to approximate the cone and disc.",
         Language.SPANISH: "Cantidad de hilos radiales usados para aproximar el cono y el disco.",
     },
+    "help.endfed.common_mode_choke": {
+        Language.ENGLISH: (
+            "Optional measured feedpoint choke in series with the coax shield. "
+            "The model holds R constant and realizes X as L or C; it is not a "
+            "shack-end choke or a shield-transfer-impedance model."
+        ),
+        Language.SPANISH: (
+            "Choke opcional medido en el punto de alimentación, en serie con la "
+            "malla del coaxil. El modelo mantiene R constante y realiza X como L o "
+            "C; no es un choke en el extremo del shack ni un modelo de impedancia "
+            "de transferencia de la malla."
+        ),
+    },
+    "help.endfed.common_mode_choke_resistance": {
+        Language.ENGLISH: ("Measured series resistance of the choke at the measurement frequency."),
+        Language.SPANISH: ("Resistencia serie medida del choke en la frecuencia de medición."),
+    },
+    "help.endfed.common_mode_choke_reactance": {
+        Language.ENGLISH: (
+            "Measured series reactance of the choke; positive is inductive and "
+            "negative is capacitive."
+        ),
+        Language.SPANISH: (
+            "Reactancia serie medida del choke; positiva es inductiva y negativa es capacitiva."
+        ),
+    },
+    "help.endfed.common_mode_choke_frequency": {
+        Language.ENGLISH: (
+            "Frequency at which R and X were measured. Re-measure at the design "
+            "frequency for the least extrapolation."
+        ),
+        Language.SPANISH: (
+            "Frecuencia a la que se midieron R y X. Volvé a medir en la frecuencia "
+            "de diseño para minimizar la extrapolación."
+        ),
+    },
+    "help.endfed.common_mode_choke_source": {
+        Language.ENGLISH: (
+            "Traceable source or description of the choke measurement; required "
+            "when the choke is enabled."
+        ),
+        Language.SPANISH: (
+            "Fuente trazable o descripción de la medición del choke; obligatoria "
+            "cuando el choke está habilitado."
+        ),
+    },
     "help.endfed.transformer_loss_model": {
         Language.ENGLISH: (
             "Optional measured 49:1 transformer loss table from Squash Practice; "
@@ -11312,6 +11358,43 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Return path length",
         Language.SPANISH: "Longitud del camino de retorno",
     },
+    "endfed.common_mode_choke": {
+        Language.ENGLISH: "Feedpoint common-mode choke",
+        Language.SPANISH: "Choke de modo común en el punto de alimentación",
+    },
+    "endfed.common_mode_choke_hint": {
+        Language.ENGLISH: (
+            "Optional measured series R/X of a choke installed at the feedpoint, "
+            "in series with the coax shield. This is not a shack-end choke or a "
+            "shield-transfer-impedance model. Enter the source of the measurement."
+        ),
+        Language.SPANISH: (
+            "R/X en serie medidas opcionalmente para un choke instalado en el punto "
+            "de alimentación, en serie con la malla del coaxil. No es un choke en el "
+            "extremo del shack ni un modelo de impedancia de transferencia de la "
+            "malla. Indicá la fuente de la medición."
+        ),
+    },
+    "endfed.common_mode_choke_resistance": {
+        Language.ENGLISH: "Series R",
+        Language.SPANISH: "R en serie",
+    },
+    "endfed.common_mode_choke_reactance": {
+        Language.ENGLISH: "Series X",
+        Language.SPANISH: "X en serie",
+    },
+    "endfed.common_mode_choke_frequency": {
+        Language.ENGLISH: "Measured at",
+        Language.SPANISH: "Medida en",
+    },
+    "endfed.common_mode_choke_source": {
+        Language.ENGLISH: "Measurement source",
+        Language.SPANISH: "Fuente de la medición",
+    },
+    "endfed.common_mode_choke_source_placeholder": {
+        Language.ENGLISH: "e.g. VNA measurement of my choke",
+        Language.SPANISH: "p. ej. medición con VNA de mi choke",
+    },
     "endfed.counterpoise_enabled": {
         Language.ENGLISH: "Use counterpoise",
         Language.SPANISH: "Usar contrapeso",
@@ -11389,15 +11472,42 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "endfed.warning.return_coax_shield": {
         Language.ENGLISH: (
-            "The coax shield is modeled as a straight wire return. Common-mode "
-            "choking, shield transfer impedance, and the real cable route are not "
-            "included; absolute SWR is informational."
+            "The coax shield is modeled as a straight wire return. A feedpoint "
+            "choke can be added as a measured series R/X, but shack-end placement, "
+            "shield transfer impedance, and the real cable route are not included; "
+            "absolute SWR is informational."
         ),
         Language.SPANISH: (
-            "La malla del coaxil se modela como un hilo recto de retorno. No se "
-            "incluyen el choke de modo común, la impedancia de transferencia de "
-            "la malla ni el recorrido real del cable; la ROE absoluta es "
-            "informativa."
+            "La malla del coaxil se modela como un hilo recto de retorno. Se puede "
+            "agregar un choke en el punto de alimentación como R/X medidas en "
+            "serie, pero no se incluyen su ubicación en el extremo del shack, la "
+            "impedancia de transferencia de la malla ni el recorrido real del "
+            "cable; la ROE absoluta es informativa."
+        ),
+    },
+    "endfed.warning.choke_frequency": {
+        Language.ENGLISH: (
+            "The common-mode choke R/X were measured at a different frequency than "
+            "the design. Re-measure at the design frequency or treat the result as "
+            "an extrapolation."
+        ),
+        Language.SPANISH: (
+            "La R/X del choke de modo común se midieron a una frecuencia distinta "
+            "de la de diseño. Volvé a medir en la frecuencia de diseño o tratá el "
+            "resultado como extrapolación."
+        ),
+    },
+    "endfed.warning.choke_reactive": {
+        Language.ENGLISH: (
+            "The common-mode choke is predominantly reactive. Its reactance can "
+            "cancel the shield reactance and increase common-mode current; a "
+            "resistive choke is safer. This is a model warning, not a measurement."
+        ),
+        Language.SPANISH: (
+            "El choke de modo común es predominantemente reactivo. Su reactancia "
+            "puede cancelar la reactancia de la malla y aumentar la corriente de "
+            "modo común; un choke resistivo es más seguro. Es una advertencia del "
+            "modelo, no una medición."
         ),
     },
     "endfed.warning.matching_leakage": {

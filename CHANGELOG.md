@@ -15,6 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   corrosion-resistant use case; the solver emits conductivity through `LD 5`
   and does not trigger the permeability warning. Copper remains the default and
   the project schema is unchanged.
+- **Feedpoint common-mode choke model.** The End-fed editor can add an optional
+  measured series R/X choke at the feedpoint of the coax-shield return path,
+  with a required measurement source. Positive X becomes a series inductance and
+  negative X a series capacitance; R is held constant. The model warns when the
+  measurement frequency differs from the design or when the choke is
+  predominantly reactive. It is a bounded feedpoint model, not a shack-end
+  choke, a frequency-interpolated `Zcm(f)` table, or a shield-transfer-impedance
+  model. Schema 49 persists it; reports, the construction sheet, and EN/ES help
+  expose the R/X, frequency, source, and limitations. See
+  [ADR-0037](docs/ADR/0037-common-mode-return-model.md).
 - **Optional measured 49:1 transformer loss.** The End-fed editor can apply
   Squash Practice/AF7NX's measured loss table for the 2xFT114-43, 5T/30T
   reference: 0.43/0.33/0.30/0.32 dB at the 80/40/20/10 m band centers. Values

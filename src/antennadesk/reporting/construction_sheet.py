@@ -940,6 +940,14 @@ def render_construction_sheet(
             "none": tr("none"),
             "squash_practice_49_1": tr("measured 49:1 (Squash Practice)"),
         }[parameters.transformer_loss_model.value]
+        choke = tr("none")
+        if parameters.common_mode_choke_active and parameters.common_mode_choke is not None:
+            value = parameters.common_mode_choke
+            sign = "+" if value.reactance_ohm >= 0.0 else "-"
+            choke = (
+                f"{value.resistance_ohm:g} {sign} j{abs(value.reactance_ohm):g} Ω "
+                f"at {value.measurement_frequency_hz / 1e6:g} MHz"
+            )
         return_path_row = f"<tr><th>Return path</th><td>{_escape(return_path_label)}</td></tr>\n"
         coax_shield_row = (
             f"<tr><th>Coax shield</th><td>{parameters.effective_return_length_m:.4f} m</td></tr>\n"
@@ -975,6 +983,7 @@ def render_construction_sheet(
 {height_rows}<tr><th>Transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
 <tr><th>Transformer loss</th><td>{_escape(transformer_loss_label)}</td></tr>
 {matching_rows}{return_path_row}<tr><th>Counterpoise</th><td>{counterpoise}</td></tr>
+<tr><th>Common-mode choke</th><td>{_escape(choke)}</td></tr>
 {coax_shield_row}{installation_return_row}"""
         if parameters.bend_active and parameters.coil_active:
             construction_note = _note(

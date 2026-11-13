@@ -853,6 +853,14 @@ def design_summary_rows(
             "none": "none",
             "squash_practice_49_1": "measured 49:1 (Squash Practice)",
         }[parameters.transformer_loss_model.value]
+        choke = "none"
+        if parameters.common_mode_choke_active and parameters.common_mode_choke is not None:
+            value = parameters.common_mode_choke
+            sign = "+" if value.reactance_ohm >= 0.0 else "-"
+            choke = (
+                f"{value.resistance_ohm:g} {sign} j{abs(value.reactance_ohm):g} Ω "
+                f"at {value.measurement_frequency_hz / 1e6:g} MHz"
+            )
         type_label = {
             EndFedPreset.STANDARD: "end-fed wire",
             EndFedPreset.SLOPER: "sloper",
@@ -879,6 +887,7 @@ def design_summary_rows(
                 ("Transformer loss", transformer_loss_label),
                 ("Return path", return_path_label),
                 ("Return length", f"{parameters.effective_return_length_m:.4f} m"),
+                ("Common-mode choke", choke),
                 ("Counterpoise", counterpoise),
                 (
                     "Installation return",

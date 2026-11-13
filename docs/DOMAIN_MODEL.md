@@ -264,6 +264,14 @@ project-level matching network overrides this internal unit; the two networks
 are not cascaded. See
 [ADR-0028](ADR/0028-matching-network-precedence.md).
 
+`common_mode_choke` is an optional measured feedpoint choke. It is a series
+`R + jX` at `measurement_frequency_hz`, placed at the start of the coax-shield
+return wire. `R` is held constant; positive `X` becomes a series inductance and
+negative `X` a series capacitance. It requires the `coax_shield` return path and
+a non-empty source. This is not a shack-end choke, a `Zcm(f)` table, or a
+shield-transfer-impedance model; see
+[ADR-0037](ADR/0037-common-mode-return-model.md).
+
 `transformer_loss_model` is an optional, separate post-processing loss model.
 `none` is the default. `squash_practice_49_1` applies the measured
 2xFT114-43, 5T/30T loss table at the 80/40/20/10 m band centers (0.43, 0.33,

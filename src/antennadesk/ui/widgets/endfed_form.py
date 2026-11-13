@@ -16,11 +16,13 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QPushButton,
     QVBoxLayout,
     QWidget,
 )
 
+from ...domain.antennas.common_mode import CommonModeChoke
 from ...domain.antennas.endfed import (
     DEFAULT_BEND_VERTICAL_LENGTH_M,
     DEFAULT_FEED_SECTION_LENGTH_M,
@@ -259,6 +261,57 @@ class EndFedForm(QWidget):
         self._return_path.setToolTip(translator.t("endfed.return_path_hint"))
         self._return_path.currentIndexChanged.connect(self._return_path_changed)
 
+        self._common_mode_choke_group = QGroupBox(
+            translator.t("endfed.common_mode_choke"),
+            self,
+        )
+        self._common_mode_choke_group.setCheckable(True)
+        self._common_mode_choke_group.setChecked(False)
+        self._common_mode_choke_group.setToolTip(translator.t("endfed.common_mode_choke_hint"))
+        self._choke_resistance = QDoubleSpinBox(self)
+        self._choke_resistance.setRange(0.0, 100_000.0)
+        self._choke_resistance.setDecimals(1)
+        self._choke_resistance.setSuffix(" Ω")
+        self._choke_reactance = QDoubleSpinBox(self)
+        self._choke_reactance.setRange(-100_000.0, 100_000.0)
+        self._choke_reactance.setDecimals(1)
+        self._choke_reactance.setSuffix(" Ω")
+        self._choke_frequency = QDoubleSpinBox(self)
+        self._choke_frequency.setRange(0.1, 1_000.0)
+        self._choke_frequency.setDecimals(3)
+        self._choke_frequency.setSuffix(" MHz")
+        self._choke_frequency.setValue(7.1)
+        self._choke_source = QLineEdit(self)
+        self._choke_source.setPlaceholderText(
+            translator.t("endfed.common_mode_choke_source_placeholder")
+        )
+        choke_form = QFormLayout(self._common_mode_choke_group)
+        choke_form.addRow(
+            self._labels.label("endfed.common_mode_choke_resistance", self._choke_resistance),
+            self._choke_resistance,
+        )
+        choke_form.addRow(
+            self._labels.label("endfed.common_mode_choke_reactance", self._choke_reactance),
+            self._choke_reactance,
+        )
+        choke_form.addRow(
+            self._labels.label(
+                "endfed.common_mode_choke_frequency",
+                self._choke_frequency,
+            ),
+            self._choke_frequency,
+        )
+        choke_form.addRow(
+            self._labels.label("endfed.common_mode_choke_source", self._choke_source),
+            self._choke_source,
+        )
+        apply_help(
+            self._choke_source,
+            translator,
+            "endfed.common_mode_choke_source",
+        )
+        self._common_mode_choke_group.toggled.connect(self._common_mode_choke_toggled)
+
         self._azimuth = QDoubleSpinBox(self)
         self._azimuth.setRange(0.0, 360.0)
         self._azimuth.setDecimals(1)
@@ -374,6 +427,7 @@ class EndFedForm(QWidget):
         form.addRow(self._matching_override_widget)
         form.addRow(self._loading_coil_group)
         form.addRow(self._labels.label("endfed.return_path"), self._return_path)
+        form.addRow(self._common_mode_choke_group)
         form.addRow(self._counterpoise_enabled)
         form.addRow(self._labels.label("endfed.counterpoise_length"), self._counterpoise_length)
         form.addRow(self._labels.label("endfed.counterpoise_height"), self._counterpoise_height)
@@ -417,6 +471,9 @@ class EndFedForm(QWidget):
             self._counterpoise_height,
             self._counterpoise_azimuth,
             self._installation_return,
+            self._choke_resistance,
+            self._choke_reactance,
+            self._choke_frequency,
             self._azimuth,
             self._radius,
             self._permittivity,
@@ -427,6 +484,7 @@ class EndFedForm(QWidget):
         self._bend_enabled.toggled.connect(self._bend_toggled)
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._ground_changed)
+        self._choke_source.textChanged.connect(self._emit_changed)
         self._counterpoise_length.valueChanged.connect(self._counterpoise_changed)
         self._counterpoise_enabled.toggled.connect(self._counterpoise_toggled)
         if parameters is not None:
@@ -450,6 +508,13 @@ class EndFedForm(QWidget):
                 self._translator.t(f"endfed.return_path.{path.value}"),
             )
         self._return_path.setToolTip(self._translator.t("endfed.return_path_hint"))
+        self._common_mode_choke_group.setTitle(self._translator.t("endfed.common_mode_choke"))
+        self._common_mode_choke_group.setToolTip(
+            self._translator.t("endfed.common_mode_choke_hint")
+        )
+        self._choke_source.setPlaceholderText(
+            self._translator.t("endfed.common_mode_choke_source_placeholder")
+        )
         self._installation_return_hint.setText(
             self._translator.t("endfed.installation_return_hint")
         )
@@ -669,6 +734,13 @@ class EndFedForm(QWidget):
             self._update_geometry()
             self.changed.emit()
 
+    def _common_mode_choke_toggled(self, checked: bool) -> None:
+        if checked and not self._updating:
+            self._choke_frequency.setValue(self._frequency.value())
+        if not self._updating:
+            self._update_geometry()
+            self.changed.emit()
+
     def _loading_coil_toggled(self, _checked: bool) -> None:
         self._update_loading_coil_controls()
         if not self._updating:
@@ -753,6 +825,7 @@ class EndFedForm(QWidget):
         self._counterpoise_length.setEnabled(counterpoise or coax)
         self._counterpoise_height.setEnabled(counterpoise)
         self._counterpoise_azimuth.setEnabled(counterpoise or coax)
+        self._common_mode_choke_group.setVisible(coax)
         installation = path is EndFedReturnPath.INSTALLATION_PROXY or (auto and not counterpoise)
         self._installation_return.setEnabled(installation)
         self._installation_return_hint.setVisible(installation)
@@ -818,6 +891,13 @@ class EndFedForm(QWidget):
             return_index = self._return_path.findData(parameters.return_path.value)
             if return_index >= 0:
                 self._return_path.setCurrentIndex(return_index)
+            choke = parameters.common_mode_choke
+            self._common_mode_choke_group.setChecked(choke is not None and choke.enabled)
+            if choke is not None:
+                self._choke_resistance.setValue(choke.resistance_ohm)
+                self._choke_reactance.setValue(choke.reactance_ohm)
+                self._choke_frequency.setValue(choke.measurement_frequency_hz / 1_000_000.0)
+                self._choke_source.setText(choke.source)
             self._bend_enabled.setChecked(parameters.bend_enabled)
             self._bend_vertical.setValue(
                 length_from_m(parameters.bend_vertical_length_m, self._unit_system)
@@ -1031,6 +1111,20 @@ class EndFedForm(QWidget):
     def _selected_return_path(self) -> EndFedReturnPath:
         return EndFedReturnPath(str(self._return_path.currentData()))
 
+    def _selected_common_mode_choke(self) -> CommonModeChoke | None:
+        if (
+            not self._common_mode_choke_group.isChecked()
+            or self._selected_return_path() is not EndFedReturnPath.COAX_SHIELD
+        ):
+            return None
+        return CommonModeChoke(
+            enabled=True,
+            measurement_frequency_hz=self._choke_frequency.value() * 1_000_000.0,
+            resistance_ohm=self._choke_resistance.value(),
+            reactance_ohm=self._choke_reactance.value(),
+            source=self._choke_source.text(),
+        )
+
     def _return_path_changed(self, *_args: object) -> None:
         if self._updating:
             return
@@ -1103,6 +1197,7 @@ class EndFedForm(QWidget):
             matching_capacitance_f=self._matching_capacitance.value() * 1e-12,
             transformer_leakage_inductance_h=(self._transformer_leakage.value() * 1e-6),
             return_path=self._selected_return_path(),
+            common_mode_choke=self._selected_common_mode_choke(),
             counterpoise_length_m=(
                 length_to_m(self._counterpoise_length.value(), self._unit_system)
                 if (

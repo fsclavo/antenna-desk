@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import math
 from dataclasses import replace
 
 import pytest
@@ -643,6 +644,114 @@ def test_coax_shield_return_path_uses_a_model_only_wire() -> None:
     assert shield.length_m == pytest.approx(5.0)
     assert shield.start.z_m == pytest.approx(0.0)
     assert shield.end.z_m == pytest.approx(0.0)
+
+
+def test_common_mode_choke_is_a_series_load_on_the_coax_shield() -> None:
+    from antennadesk.domain.antennas.common_mode import CommonModeChoke
+    from antennadesk.domain.antennas.endfed import (
+        COAX_SHIELD_ID,
+        COMMON_MODE_CHOKE_LOAD_ID,
+        EndFedReturnPath,
+    )
+
+    choke = CommonModeChoke(
+        enabled=True,
+        measurement_frequency_hz=7_100_000.0,
+        resistance_ohm=120.0,
+        reactance_ohm=300.0,
+        source="VNA measurement",
+    )
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        return_path=EndFedReturnPath.COAX_SHIELD,
+        counterpoise_length_m=5.0,
+        common_mode_choke=choke,
+    )
+    custom = parameters.to_custom_parameters()
+
+    assert COMMON_MODE_CHOKE_LOAD_ID in parameters.managed_load_ids
+    load = next(load for load in custom.loads if load.id == COMMON_MODE_CHOKE_LOAD_ID)
+    assert load.wire_id == COAX_SHIELD_ID
+    assert load.offset_m == pytest.approx(0.0)
+    assert load.resistance_ohm == pytest.approx(120.0)
+    assert load.inductance_h == pytest.approx(300.0 / (2.0 * math.pi * 7_100_000.0))
+    assert load.capacitance_f == pytest.approx(0.0)
+
+
+def test_common_mode_choke_capacitive_reactance_uses_a_series_capacitor() -> None:
+    from antennadesk.domain.antennas.common_mode import CommonModeChoke
+    from antennadesk.domain.antennas.endfed import (
+        COMMON_MODE_CHOKE_LOAD_ID,
+        EndFedReturnPath,
+    )
+
+    choke = CommonModeChoke(
+        enabled=True,
+        measurement_frequency_hz=7_100_000.0,
+        resistance_ohm=40.0,
+        reactance_ohm=-250.0,
+        source="VNA measurement",
+    )
+    parameters = EndFedParameters(
+        frequency_hz=7_100_000.0,
+        length_m=20.0,
+        return_path=EndFedReturnPath.COAX_SHIELD,
+        counterpoise_length_m=5.0,
+        common_mode_choke=choke,
+    )
+    load = next(
+        load
+        for load in parameters.to_custom_parameters().loads
+        if load.id == COMMON_MODE_CHOKE_LOAD_ID
+    )
+
+    assert load.inductance_h == pytest.approx(0.0)
+    assert load.capacitance_f == pytest.approx(1.0 / (2.0 * math.pi * 7_100_000.0 * 250.0))
+
+
+def test_common_mode_choke_requires_the_coax_shield_return_path() -> None:
+    from antennadesk.domain.antennas.common_mode import CommonModeChoke
+
+    with pytest.raises(ValueError, match="coax_shield"):
+        EndFedParameters(
+            frequency_hz=7_100_000.0,
+            length_m=20.0,
+            common_mode_choke=CommonModeChoke(
+                enabled=True,
+                resistance_ohm=100.0,
+                source="VNA measurement",
+            ),
+        )
+
+
+def test_common_mode_choke_warns_when_measurement_is_off_frequency_or_reactive() -> None:
+    from antennadesk.domain.antennas.common_mode import CommonModeChoke
+    from antennadesk.domain.antennas.endfed import (
+        EndFedReturnPath,
+        endfed_model_warning_keys,
+    )
+
+    parameters = EndFedParameters(
+        frequency_hz=14_100_000.0,
+        length_m=10.0,
+        feed_section_length_m=0.5,
+        return_path=EndFedReturnPath.COAX_SHIELD,
+        counterpoise_length_m=5.0,
+        common_mode_choke=CommonModeChoke(
+            enabled=True,
+            measurement_frequency_hz=7_100_000.0,
+            resistance_ohm=50.0,
+            reactance_ohm=500.0,
+            source="VNA measurement",
+        ),
+    )
+
+    assert endfed_model_warning_keys(parameters) == (
+        "endfed.warning.return_coax_shield",
+        "endfed.warning.choke_frequency",
+        "endfed.warning.choke_reactive",
+    )
 
 
 def test_counterpoise_and_coax_return_paths_require_a_length() -> None:
