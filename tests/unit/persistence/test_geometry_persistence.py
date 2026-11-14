@@ -1292,6 +1292,29 @@ def test_endfed_transformer_loss_model_round_trips() -> None:
     assert restored_parameters.transformer_loss.loss_db(14_175_000.0) == pytest.approx(0.30)
 
 
+def test_endfed_design_matching_network_round_trips() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+    from antennadesk.domain.antennas.matching_network import LNetwork
+
+    network = LNetwork(
+        series_inductance_h=1.2e-6,
+        shunt_capacitance_f=82e-12,
+        shunt_at_input=True,
+    )
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        design_matching_network=network,
+    )
+    original = _project(parameters, "Design L network")
+
+    restored = project_from_document(document_from_project(original))
+
+    restored_network = restored.designs[0].parameters.design_matching_network
+    assert restored_network == network
+
+
 def test_endfed_common_mode_choke_round_trips() -> None:
     from dataclasses import replace
 

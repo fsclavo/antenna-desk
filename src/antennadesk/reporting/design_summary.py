@@ -910,10 +910,13 @@ def design_summary_rows(
             ]
         )
         if parameters.matching_network_active:
-            override_active = resolve_matching_network(parameters, project_network).override_active
-            matching_status = (
-                tr("retained; project network overrides") if override_active else tr("active")
-            )
+            resolution = resolve_matching_network(parameters, project_network)
+            if resolution.project_active:
+                matching_status = tr("retained; project network overrides")
+            elif resolution.design_active:
+                matching_status = tr("retained; design network overrides")
+            else:
+                matching_status = tr("active")
             rows.extend(
                 [
                     (
@@ -930,6 +933,46 @@ def design_summary_rows(
                             "{value:.4f} µH ({status})",
                             value=parameters.transformer_leakage_inductance_h * 1e6,
                             status=matching_status,
+                        ),
+                    ),
+                ]
+            )
+        if (
+            parameters.design_matching_network_active
+            and parameters.design_matching_network is not None
+        ):
+            resolution = resolve_matching_network(parameters, project_network)
+            design_status = (
+                tr("retained; project network overrides")
+                if resolution.project_active
+                else tr("active")
+            )
+            network = parameters.design_matching_network
+            rows.extend(
+                [
+                    ("Design matching network", tr("L network (primary side)")),
+                    (
+                        "Design series",
+                        tr(
+                            "{value} ({status})",
+                            value=_branch_text(
+                                network.series_inductance_h,
+                                network.series_capacitance_f,
+                                labeler,
+                            ),
+                            status=design_status,
+                        ),
+                    ),
+                    (
+                        "Design shunt",
+                        tr(
+                            "{value} ({status})",
+                            value=_branch_text(
+                                network.shunt_inductance_h,
+                                network.shunt_capacitance_f,
+                                labeler,
+                            ),
+                            status=design_status,
                         ),
                     ),
                 ]

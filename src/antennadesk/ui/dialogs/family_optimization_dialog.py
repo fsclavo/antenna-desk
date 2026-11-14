@@ -614,6 +614,8 @@ class FamilyOptimizationDialog(QDialog):
             return f"{value:.1f}°"
         if variable.unit == "H":
             return f"{value * 1e6:.3f} µH"
+        if variable.unit == "F":
+            return f"{value * 1e12:.3f} pF"
         if variable.unit == "Hz":
             return f"{value / 1e6:.6f} MHz"
         if variable.unit == "ratio":

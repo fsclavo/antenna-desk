@@ -137,6 +137,14 @@ def _swr_text(frequency: FrequencyResult | None) -> str:
     return "∞" if math.isinf(frequency.swr) else f"{frequency.swr:.3f}"
 
 
+def _network_branch_text(inductance_h: float, capacitance_f: float) -> str:
+    if inductance_h > 0.0:
+        return f"{inductance_h * 1e6:g} µH"
+    if capacitance_f > 0.0:
+        return f"{capacitance_f * 1e12:g} pF"
+    return "—"
+
+
 def _note(labeler: Labeler, template: str, **values: object) -> str:
     """Render one localized construction paragraph."""
 
@@ -918,11 +926,15 @@ def render_construction_sheet(
             spacing=f"{parameters.spacing_m:.4f}",
         )
     elif isinstance(parameters, EndFedParameters):
-        override_active = resolve_matching_network(
-            parameters, project.matching_network
-        ).override_active
-        matching_status = (
-            tr("retained; project network overrides") if override_active else tr("active")
+        resolution = resolve_matching_network(parameters, project.matching_network)
+        if resolution.project_active:
+            matching_status = tr("retained; project network overrides")
+        elif resolution.design_active:
+            matching_status = tr("retained; design network overrides")
+        else:
+            matching_status = tr("active")
+        design_status = (
+            tr("retained; project network overrides") if resolution.project_active else tr("active")
         )
         counterpoise = (
             f"{parameters.counterpoise_length_m:.4f} m at "
@@ -970,6 +982,22 @@ def render_construction_sheet(
             if parameters.matching_network_active
             else ""
         )
+        design_matching_rows = ""
+        if (
+            parameters.design_matching_network_active
+            and parameters.design_matching_network is not None
+        ):
+            network = parameters.design_matching_network
+            design_matching_rows = (
+                "<tr><th>Design matching network</th><td>"
+                f"{_escape(tr('L network (primary side)'))}</td></tr>\n"
+                "<tr><th>Design series</th><td>"
+                f"{_escape(_network_branch_text(network.series_inductance_h, network.series_capacitance_f))} "
+                f"({_escape(design_status)})</td></tr>\n"
+                "<tr><th>Design shunt</th><td>"
+                f"{_escape(_network_branch_text(network.shunt_inductance_h, network.shunt_capacitance_f))} "
+                f"({_escape(design_status)})</td></tr>\n"
+            )
         height_rows = (
             f"<tr><th>Vertical section</th><td>{parameters.bend_vertical_length_m:.4f} m</td></tr>\n"
             f"<tr><th>Horizontal run</th><td>{parameters.bend_horizontal_length_m:.4f} m</td></tr>\n"
@@ -982,7 +1010,7 @@ def render_construction_sheet(
 {feed_section_row}<tr><th>Feed height</th><td>{parameters.feed_height_m:.4f} m</td></tr>
 {height_rows}<tr><th>Transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
 <tr><th>Transformer loss</th><td>{_escape(transformer_loss_label)}</td></tr>
-{matching_rows}{return_path_row}<tr><th>Counterpoise</th><td>{counterpoise}</td></tr>
+{matching_rows}{design_matching_rows}{return_path_row}<tr><th>Counterpoise</th><td>{counterpoise}</td></tr>
 <tr><th>Common-mode choke</th><td>{_escape(choke)}</td></tr>
 {coax_shield_row}{installation_return_row}"""
         if parameters.bend_active and parameters.coil_active:
@@ -1080,7 +1108,7 @@ def render_construction_sheet(
                 + "</p>"
             )
         if parameters.matching_network_active:
-            if override_active:
+            if resolution.project_active:
                 construction_note += (
                     "<p>"
                     + _escape(

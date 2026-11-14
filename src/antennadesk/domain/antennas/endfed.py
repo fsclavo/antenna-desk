@@ -19,7 +19,7 @@ from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
 from .load import SeriesLoad
-from .matching_network import MatchingNetwork, PiNetwork, TransformerNetwork
+from .matching_network import LNetwork, MatchingNetwork, PiNetwork, TransformerNetwork
 from .materials import COPPER, ConductorMaterial
 from .wire import Wire
 
@@ -161,6 +161,7 @@ class EndFedParameters:
     transformer_ratio: float = 1.0
     transformer_model: EndFedTransformerModel = EndFedTransformerModel.IDEAL
     transformer_loss_model: EndFedTransformerLossModel = EndFedTransformerLossModel.NONE
+    design_matching_network: LNetwork | None = None
     matching_capacitance_f: float = 0.0
     transformer_leakage_inductance_h: float = 0.0
     counterpoise_length_m: float = 0.0
@@ -220,6 +221,11 @@ class EndFedParameters:
             and not math.isclose(self.transformer_ratio, 49.0, rel_tol=1e-9)
         ):
             raise ValueError("the Squash Practice loss model requires a 49:1 ratio")
+        if self.design_matching_network is not None:
+            if not isinstance(self.design_matching_network, LNetwork):
+                raise ValueError("design_matching_network must be an L-network")
+            if not self.design_matching_network.is_active:
+                raise ValueError("design_matching_network must have active elements")
         ensure_non_negative(self.matching_capacitance_f, name="matching_capacitance_f")
         ensure_non_negative(
             self.transformer_leakage_inductance_h,
@@ -315,6 +321,10 @@ class EndFedParameters:
             or self.matching_capacitance_f > 0.0
             or self.transformer_leakage_inductance_h > 0.0
         )
+
+    @property
+    def design_matching_network_active(self) -> bool:
+        return self.design_matching_network is not None and self.design_matching_network.is_active
 
     @property
     def transformer_loss(self) -> BalunLoss | None:
@@ -658,8 +668,8 @@ def endfed_segmentation_overrides(
     return tuple(overrides)
 
 
-def endfed_matching_network(parameters: EndFedParameters) -> MatchingNetwork | None:
-    """Return the primary-side matching network for an end-fed design."""
+def endfed_internal_matching_network(parameters: EndFedParameters) -> MatchingNetwork | None:
+    """Return the fixed reference matching network for an end-fed design."""
 
     if not parameters.matching_network_active:
         return None
@@ -676,6 +686,27 @@ def endfed_matching_network(parameters: EndFedParameters) -> MatchingNetwork | N
         series_inductance_h=parameters.transformer_leakage_inductance_h,
         input_shunt_capacitance_f=parameters.matching_capacitance_f,
     )
+
+
+def endfed_design_matching_network(parameters: EndFedParameters) -> LNetwork | None:
+    """Return the optional design-specific L-network, if active."""
+
+    if not parameters.design_matching_network_active:
+        return None
+    return parameters.design_matching_network
+
+
+def endfed_matching_network(parameters: EndFedParameters) -> MatchingNetwork | None:
+    """Return the effective family matching network for an end-fed design.
+
+    A design-specific L-network replaces the fixed internal reference unit.
+    The project network is applied later by ``resolve_matching_network``.
+    """
+
+    design = endfed_design_matching_network(parameters)
+    if design is not None:
+        return design
+    return endfed_internal_matching_network(parameters)
 
 
 def endfed_model_warning_keys(parameters: EndFedParameters) -> tuple[str, ...]:

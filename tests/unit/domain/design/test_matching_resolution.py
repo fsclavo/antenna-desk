@@ -10,12 +10,13 @@ from antennadesk.domain.antennas.matching_network import LNetwork, MatchingNetwo
 from antennadesk.domain.design.matching_resolution import resolve_matching_network
 
 
-def _endfed(*, internal: bool) -> EndFedParameters:
+def _endfed(*, internal: bool, design: LNetwork | None = None) -> EndFedParameters:
     return EndFedParameters(
         frequency_hz=7_100_000.0,
         length_m=20.0,
         matching_capacitance_f=100e-12 if internal else 0.0,
         transformer_leakage_inductance_h=0.198e-6 if internal else 0.0,
+        design_matching_network=design,
     )
 
 
@@ -35,6 +36,37 @@ def test_internal_matching_is_effective_without_a_project_network() -> None:
     assert resolution.override_active is False
     assert resolution.project_active is False
     assert resolution.origin is MatchingNetworkOrigin.INTERNAL_ENDFED
+
+
+def test_design_network_overrides_the_internal_unit() -> None:
+    design = LNetwork(
+        series_inductance_h=2e-6,
+        shunt_capacitance_f=150e-12,
+    )
+    resolution = resolve_matching_network(_endfed(internal=True, design=design), None)
+
+    assert resolution.internal is not None
+    assert resolution.design is design
+    assert resolution.effective is design
+    assert resolution.override_active is False
+    assert resolution.design_active is True
+    assert resolution.origin is MatchingNetworkOrigin.DESIGN_ENDFED
+
+
+def test_project_network_overrides_the_design_network() -> None:
+    design = LNetwork(
+        series_inductance_h=2e-6,
+        shunt_capacitance_f=150e-12,
+    )
+    project = _project()
+
+    resolution = resolve_matching_network(_endfed(internal=True, design=design), project)
+
+    assert resolution.design is design
+    assert resolution.effective is project
+    assert resolution.override_active is True
+    assert resolution.project_active is True
+    assert resolution.origin is MatchingNetworkOrigin.PROJECT
 
 
 def test_project_network_overrides_active_internal_matching() -> None:

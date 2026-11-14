@@ -3189,6 +3189,40 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Number of radial wires used to approximate the cone and disc.",
         Language.SPANISH: "Cantidad de hilos radiales usados para aproximar el cono y el disco.",
     },
+    "help.endfed.design_matching_network": {
+        Language.ENGLISH: (
+            "Optional design-specific L-network on the primary side. The project "
+            "network overrides it; the fixed internal unit is retained as fallback."
+        ),
+        Language.SPANISH: (
+            "Red L opcional específica del diseño en el primario. La red de "
+            "proyecto la anula; la unidad interna fija queda como respaldo."
+        ),
+    },
+    "help.endfed.design_matching_series_l": {
+        Language.ENGLISH: "Series inductance of the design-specific L-network.",
+        Language.SPANISH: "Inductancia serie de la red L específica del diseño.",
+    },
+    "help.endfed.design_matching_series_c": {
+        Language.ENGLISH: "Series capacitance of the design-specific L-network.",
+        Language.SPANISH: "Capacidad serie de la red L específica del diseño.",
+    },
+    "help.endfed.design_matching_shunt_l": {
+        Language.ENGLISH: "Shunt inductance of the design-specific L-network.",
+        Language.SPANISH: "Inductancia paralelo de la red L específica del diseño.",
+    },
+    "help.endfed.design_matching_shunt_c": {
+        Language.ENGLISH: "Shunt capacitance of the design-specific L-network.",
+        Language.SPANISH: "Capacidad paralelo de la red L específica del diseño.",
+    },
+    "help.endfed.design_matching_shunt_at_input": {
+        Language.ENGLISH: (
+            "Place the shunt element on the input side instead of the antenna side."
+        ),
+        Language.SPANISH: (
+            "Ubica el elemento paralelo del lado de entrada en lugar del lado de la antena."
+        ),
+    },
     "help.endfed.common_mode_choke": {
         Language.ENGLISH: (
             "Optional measured feedpoint choke in series with the coax shield. "
@@ -11357,6 +11391,46 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "endfed.return_path_length": {
         Language.ENGLISH: "Return path length",
         Language.SPANISH: "Longitud del camino de retorno",
+    },
+    "feed_matching.design_network_value": {
+        Language.ENGLISH: ("L network · series {series} · shunt {shunt} ({status})"),
+        Language.SPANISH: ("Red L · serie {series} · paralelo {shunt} ({status})"),
+    },
+    "endfed.design_matching_network": {
+        Language.ENGLISH: "Design-specific L-network",
+        Language.SPANISH: "Red L específica del diseño",
+    },
+    "endfed.design_matching_network_hint": {
+        Language.ENGLISH: (
+            "Optional L-network on the primary side of the ideal transformer. "
+            "A project matching network overrides it; the fixed internal unit is "
+            "retained but not applied. Use either L or C in each branch."
+        ),
+        Language.SPANISH: (
+            "Red L opcional en el primario del transformador ideal. Una red de "
+            "proyecto la anula; la unidad interna fija se conserva pero no se "
+            "aplica. Usá L o C en cada rama, no ambas."
+        ),
+    },
+    "endfed.design_matching_shunt_at_input": {
+        Language.ENGLISH: "Shunt element on the input side",
+        Language.SPANISH: "Elemento paralelo del lado de entrada",
+    },
+    "endfed.design_matching_series_l": {
+        Language.ENGLISH: "Series inductance",
+        Language.SPANISH: "Inductancia serie",
+    },
+    "endfed.design_matching_series_c": {
+        Language.ENGLISH: "Series capacitance",
+        Language.SPANISH: "Capacidad serie",
+    },
+    "endfed.design_matching_shunt_l": {
+        Language.ENGLISH: "Shunt inductance",
+        Language.SPANISH: "Inductancia paralelo",
+    },
+    "endfed.design_matching_shunt_c": {
+        Language.ENGLISH: "Shunt capacitance",
+        Language.SPANISH: "Capacidad paralelo",
     },
     "endfed.common_mode_choke": {
         Language.ENGLISH: "Feedpoint common-mode choke",

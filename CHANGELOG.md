@@ -15,6 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   corrosion-resistant use case; the solver emits conductivity through `LD 5`
   and does not trigger the permeability warning. Copper remains the default and
   the project schema is unchanged.
+- **Design-specific L-network for end-fed designs.** The End-fed editor can add
+  an optional primary-side L-network owned by the design, with editable series
+  and shunt L/C values and an input/antenna-side shunt choice. Precedence is
+  **project network > design-specific network > internal fixed unit**; the
+  design network is retained but not applied when a project network overrides
+  it, and networks are never cascaded. The optimizer exposes only the active
+  L/C components as bounded variables. Schema 50 persists the network; reports,
+  the feed-matching summary, construction sheet, and EN/ES help distinguish the
+  three layers. See [ADR-0038](docs/ADR/0038-design-specific-matching-network.md).
 - **Feedpoint common-mode choke model.** The End-fed editor can add an optional
   measured series R/X choke at the feedpoint of the coax-shield return path,
   with a required measurement source. Positive X becomes a series inductance and

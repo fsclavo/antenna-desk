@@ -670,6 +670,15 @@ matching unit is not fully modeled. The 80-10 preset is impedance-converged
 with the current model; the 40-20-10 preset remains R/X-sensitive. Verify the
 installed SWR with a VNA.
 
+The **Design-specific L-network** section adds an optional primary-side matching
+network owned by the design. It has editable series and shunt L/C values and an
+input/antenna-side shunt choice. When active, it replaces the fixed internal
+unit and the family optimizer can tune its active components. A project-level
+matching network still takes precedence: the design network is retained but not
+applied, and the two are never cascaded. Disable the section to return to the
+fixed internal unit. See
+[ADR-0038](ADR/0038-design-specific-matching-network.md).
+
 The design panel's **Feed & matching** summary shows the internal EFHW matching
 state, the project matching network, the feed line, and the balun loss as
 separate rows. When both an active project network and an active internal EFHW

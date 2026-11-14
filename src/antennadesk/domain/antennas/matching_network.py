@@ -34,6 +34,7 @@ class MatchingNetworkOrigin(StrEnum):
 
     NONE = "none"
     INTERNAL_ENDFED = "internal_endfed"
+    DESIGN_ENDFED = "design_endfed"
     PROJECT = "project"
 
 

@@ -56,6 +56,28 @@ def test_summary_hides_the_override_warning_without_an_override(qtbot: QtBot) ->
     assert summary._warning_container.isHidden() is True
 
 
+def test_summary_shows_the_design_specific_l_network(qtbot: QtBot) -> None:
+    from dataclasses import replace
+
+    summary = FeedMatchingSummary(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(summary)
+    parameters = replace(
+        shortened_efhw_80_10_parameters(),
+        design_matching_network=LNetwork(
+            series_inductance_h=1.2e-6,
+            shunt_capacitance_f=82e-12,
+        ),
+    )
+
+    summary.set_state(parameters, None, None, None)
+
+    text = summary._endfed_value.text()
+    assert "L network" in text
+    assert "1.2 µH" in text
+    assert "82 pF" in text
+    assert "active" in text
+
+
 def test_summary_reports_not_applicable_for_non_endfed_designs(qtbot: QtBot) -> None:
     summary = FeedMatchingSummary(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(summary)

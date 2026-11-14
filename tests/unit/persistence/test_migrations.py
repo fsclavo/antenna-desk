@@ -1177,6 +1177,32 @@ def test_v46_migration_adds_the_endfed_return_path() -> None:
     assert "return_path" not in document["project"]["designs"][0]["parameters"]
 
 
+def test_v49_migration_adds_the_endfed_design_matching_network() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 49,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "endfed",
+                    "parameters": {
+                        "frequency_hz": 7_100_000.0,
+                        "length_m": 20.0,
+                        "transformer_ratio": 49.0,
+                    },
+                }
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    parameters = migrated["project"]["designs"][0]["parameters"]
+    assert parameters["design_matching_network"] is None
+    assert "design_matching_network" not in document["project"]["designs"][0]["parameters"]
+
+
 def test_v48_migration_adds_the_endfed_common_mode_choke() -> None:
     document = {
         "format": "antennadesk-project",

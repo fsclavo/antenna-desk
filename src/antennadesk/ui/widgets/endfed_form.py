@@ -38,7 +38,7 @@ from ...domain.antennas.endfed import (
     shortened_efhw_40_10_parameters,
     shortened_efhw_80_10_parameters,
 )
-from ...domain.antennas.matching_network import MatchingNetwork
+from ...domain.antennas.matching_network import LNetwork, MatchingNetwork
 from ...domain.antennas.materials import COPPER, ConductorMaterial
 from ...domain.common import units
 from ...domain.design.formulas import half_wave_length_m
@@ -222,6 +222,63 @@ class EndFedForm(QWidget):
             self._loading_coil_q,
         )
 
+        self._design_network_group = QGroupBox(
+            translator.t("endfed.design_matching_network"),
+            self,
+        )
+        self._design_network_group.setCheckable(True)
+        self._design_network_group.setChecked(False)
+        self._design_network_group.setToolTip(translator.t("endfed.design_matching_network_hint"))
+        apply_help(
+            self._design_network_group,
+            translator,
+            "endfed.design_matching_network",
+        )
+        design_form = QFormLayout(self._design_network_group)
+        self._design_series_l = QDoubleSpinBox(self._design_network_group)
+        self._design_series_l.setRange(0.0, 1_000_000.0)
+        self._design_series_l.setDecimals(3)
+        self._design_series_l.setSuffix(" µH")
+        self._design_series_c = QDoubleSpinBox(self._design_network_group)
+        self._design_series_c.setRange(0.0, 1_000_000.0)
+        self._design_series_c.setDecimals(3)
+        self._design_series_c.setSuffix(" pF")
+        self._design_shunt_l = QDoubleSpinBox(self._design_network_group)
+        self._design_shunt_l.setRange(0.0, 1_000_000.0)
+        self._design_shunt_l.setDecimals(3)
+        self._design_shunt_l.setSuffix(" µH")
+        self._design_shunt_c = QDoubleSpinBox(self._design_network_group)
+        self._design_shunt_c.setRange(0.0, 1_000_000.0)
+        self._design_shunt_c.setDecimals(3)
+        self._design_shunt_c.setSuffix(" pF")
+        self._design_shunt_at_input = QCheckBox(
+            translator.t("endfed.design_matching_shunt_at_input"),
+            self._design_network_group,
+        )
+        apply_help(
+            self._design_shunt_at_input,
+            translator,
+            "endfed.design_matching_shunt_at_input",
+        )
+        design_form.addRow(
+            self._labels.label("endfed.design_matching_series_l", self._design_series_l),
+            self._design_series_l,
+        )
+        design_form.addRow(
+            self._labels.label("endfed.design_matching_series_c", self._design_series_c),
+            self._design_series_c,
+        )
+        design_form.addRow(
+            self._labels.label("endfed.design_matching_shunt_l", self._design_shunt_l),
+            self._design_shunt_l,
+        )
+        design_form.addRow(
+            self._labels.label("endfed.design_matching_shunt_c", self._design_shunt_c),
+            self._design_shunt_c,
+        )
+        design_form.addRow(self._design_shunt_at_input)
+        self._design_network_group.toggled.connect(self._design_network_toggled)
+
         self._counterpoise_enabled = QCheckBox(translator.t("endfed.counterpoise_enabled"), self)
         self._counterpoise_enabled.setChecked(False)
 
@@ -268,6 +325,11 @@ class EndFedForm(QWidget):
         self._common_mode_choke_group.setCheckable(True)
         self._common_mode_choke_group.setChecked(False)
         self._common_mode_choke_group.setToolTip(translator.t("endfed.common_mode_choke_hint"))
+        apply_help(
+            self._common_mode_choke_group,
+            translator,
+            "endfed.common_mode_choke",
+        )
         self._choke_resistance = QDoubleSpinBox(self)
         self._choke_resistance.setRange(0.0, 100_000.0)
         self._choke_resistance.setDecimals(1)
@@ -425,6 +487,7 @@ class EndFedForm(QWidget):
             self._transformer_leakage,
         )
         form.addRow(self._matching_override_widget)
+        form.addRow(self._design_network_group)
         form.addRow(self._loading_coil_group)
         form.addRow(self._labels.label("endfed.return_path"), self._return_path)
         form.addRow(self._common_mode_choke_group)
@@ -464,6 +527,10 @@ class EndFedForm(QWidget):
             self._transformer,
             self._matching_capacitance,
             self._transformer_leakage,
+            self._design_series_l,
+            self._design_series_c,
+            self._design_shunt_l,
+            self._design_shunt_c,
             self._loading_coil_offset,
             self._loading_coil_inductance,
             self._loading_coil_resistance,
@@ -481,6 +548,7 @@ class EndFedForm(QWidget):
         ):
             widget.valueChanged.connect(self._emit_changed)
         self._loading_coil_group.toggled.connect(self._loading_coil_toggled)
+        self._design_shunt_at_input.toggled.connect(self._emit_changed)
         self._bend_enabled.toggled.connect(self._bend_toggled)
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._ground_changed)
@@ -508,9 +576,26 @@ class EndFedForm(QWidget):
                 self._translator.t(f"endfed.return_path.{path.value}"),
             )
         self._return_path.setToolTip(self._translator.t("endfed.return_path_hint"))
+        self._design_network_group.setTitle(self._translator.t("endfed.design_matching_network"))
+        self._design_network_group.setToolTip(
+            self._translator.t("endfed.design_matching_network_hint")
+        )
+        apply_help(
+            self._design_network_group,
+            self._translator,
+            "endfed.design_matching_network",
+        )
+        self._design_shunt_at_input.setText(
+            self._translator.t("endfed.design_matching_shunt_at_input")
+        )
         self._common_mode_choke_group.setTitle(self._translator.t("endfed.common_mode_choke"))
         self._common_mode_choke_group.setToolTip(
             self._translator.t("endfed.common_mode_choke_hint")
+        )
+        apply_help(
+            self._common_mode_choke_group,
+            self._translator,
+            "endfed.common_mode_choke",
         )
         self._choke_source.setPlaceholderText(
             self._translator.t("endfed.common_mode_choke_source_placeholder")
@@ -734,6 +819,22 @@ class EndFedForm(QWidget):
             self._update_geometry()
             self.changed.emit()
 
+    def _design_network_toggled(self, checked: bool) -> None:
+        if checked and all(
+            value <= 0.0
+            for value in (
+                self._design_series_l.value(),
+                self._design_series_c.value(),
+                self._design_shunt_l.value(),
+                self._design_shunt_c.value(),
+            )
+        ):
+            self._design_series_l.setValue(1.0)
+            self._design_shunt_c.setValue(100.0)
+        if not self._updating:
+            self._update_geometry()
+            self.changed.emit()
+
     def _common_mode_choke_toggled(self, checked: bool) -> None:
         if checked and not self._updating:
             self._choke_frequency.setValue(self._frequency.value())
@@ -913,6 +1014,14 @@ class EndFedForm(QWidget):
             )
             if loss_model_index >= 0:
                 self._transformer_loss_model.setCurrentIndex(loss_model_index)
+            network = parameters.design_matching_network
+            self._design_network_group.setChecked(network is not None)
+            if network is not None:
+                self._design_series_l.setValue(network.series_inductance_h * 1e6)
+                self._design_series_c.setValue(network.series_capacitance_f * 1e12)
+                self._design_shunt_l.setValue(network.shunt_inductance_h * 1e6)
+                self._design_shunt_c.setValue(network.shunt_capacitance_f * 1e12)
+                self._design_shunt_at_input.setChecked(network.shunt_at_input)
             self._matching_capacitance.setValue(parameters.matching_capacitance_f * 1e12)
             self._transformer_leakage.setValue(parameters.transformer_leakage_inductance_h * 1e6)
             self._loading_coil_group.setChecked(parameters.loading_coil_enabled)
@@ -976,16 +1085,21 @@ class EndFedForm(QWidget):
             parameters = self.parameters()
         except (ValueError, TypeError):
             override_active = False
+            design_active = False
         else:
-            override_active = resolve_matching_network(
+            resolution = resolve_matching_network(
                 parameters,
                 self._project_matching_network,
-            ).override_active
+            )
+            override_active = resolution.override_active
+            design_active = resolution.design_active
         self._matching_override_widget.setVisible(override_active)
         self._matching_override_actions.setVisible(override_active and self._show_override_actions)
         measured = self._selected_transformer_model() is EndFedTransformerModel.SQUASH_PRACTICE_49_1
-        self._matching_capacitance.setEnabled(not override_active)
-        self._transformer_leakage.setEnabled(not override_active and not measured)
+        self._matching_capacitance.setEnabled(not override_active and not design_active)
+        self._transformer_leakage.setEnabled(
+            not override_active and not design_active and not measured
+        )
 
     def _update_geometry(self) -> None:
         self._update_loading_coil_controls()
@@ -1111,6 +1225,17 @@ class EndFedForm(QWidget):
     def _selected_return_path(self) -> EndFedReturnPath:
         return EndFedReturnPath(str(self._return_path.currentData()))
 
+    def _selected_design_matching_network(self) -> LNetwork | None:
+        if not self._design_network_group.isChecked():
+            return None
+        return LNetwork(
+            series_inductance_h=self._design_series_l.value() * 1e-6,
+            series_capacitance_f=self._design_series_c.value() * 1e-12,
+            shunt_inductance_h=self._design_shunt_l.value() * 1e-6,
+            shunt_capacitance_f=self._design_shunt_c.value() * 1e-12,
+            shunt_at_input=self._design_shunt_at_input.isChecked(),
+        )
+
     def _selected_common_mode_choke(self) -> CommonModeChoke | None:
         if (
             not self._common_mode_choke_group.isChecked()
@@ -1194,6 +1319,7 @@ class EndFedForm(QWidget):
             transformer_ratio=self._transformer.value(),
             transformer_model=self._selected_transformer_model(),
             transformer_loss_model=self._selected_transformer_loss_model(),
+            design_matching_network=self._selected_design_matching_network(),
             matching_capacitance_f=self._matching_capacitance.value() * 1e-12,
             transformer_leakage_inductance_h=(self._transformer_leakage.value() * 1e-6),
             return_path=self._selected_return_path(),

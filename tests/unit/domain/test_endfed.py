@@ -851,6 +851,53 @@ def test_measured_transformer_loss_requires_the_49_to_1_ratio() -> None:
         )
 
 
+def test_design_specific_l_network_overrides_the_internal_unit() -> None:
+    from antennadesk.domain.antennas.endfed import (
+        endfed_design_matching_network,
+        endfed_internal_matching_network,
+        endfed_matching_network,
+        shortened_efhw_40_10_parameters,
+    )
+    from antennadesk.domain.antennas.matching_network import LNetwork
+
+    network = LNetwork(
+        series_inductance_h=1e-6,
+        shunt_capacitance_f=100e-12,
+    )
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        design_matching_network=network,
+    )
+
+    assert parameters.design_matching_network_active
+    assert endfed_design_matching_network(parameters) is network
+    assert endfed_matching_network(parameters) is network
+    assert endfed_internal_matching_network(parameters) is not None
+    assert endfed_internal_matching_network(parameters) is not network
+
+
+def test_design_specific_network_must_be_an_active_l_network() -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+    from antennadesk.domain.antennas.matching_network import LNetwork, PiNetwork
+
+    with pytest.raises(ValueError, match="L-network"):
+        replace(
+            shortened_efhw_40_10_parameters(),
+            design_matching_network=PiNetwork(
+                series_inductance_h=1e-6,
+                input_shunt_capacitance_f=100e-12,
+            ),
+        )
+    with pytest.raises(ValueError, match="active elements"):
+        replace(
+            shortened_efhw_40_10_parameters(),
+            design_matching_network=LNetwork(
+                series_inductance_h=0.0,
+                shunt_capacitance_f=0.0,
+            ),
+        )
+
+
 def test_standard_endfed_has_no_matching_network_by_default() -> None:
     from antennadesk.domain.antennas.endfed import endfed_matching_network
 

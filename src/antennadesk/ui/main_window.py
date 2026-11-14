@@ -112,6 +112,7 @@ from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import (
     EndFedParameters,
     EndFedPreset,
+    endfed_design_matching_network,
     endfed_matching_network,
     endfed_segmentation_overrides,
 )
@@ -4583,6 +4584,7 @@ class MainWindow(QMainWindow):
         model = parameters.to_antenna(name="End-fed")
         frequency_hz = parameters.frequency_hz
         matching_network = endfed_matching_network(parameters)
+        design_matching = endfed_design_matching_network(parameters)
         return SimulationSpec(
             frequency_plan=FrequencyPlan.sweep(
                 frequency_hz * 0.95,
@@ -4602,9 +4604,13 @@ class MainWindow(QMainWindow):
             transformer_loss=parameters.transformer_loss,
             matching_network=matching_network,
             matching_network_origin=(
-                MatchingNetworkOrigin.INTERNAL_ENDFED
-                if matching_network is not None
-                else MatchingNetworkOrigin.NONE
+                MatchingNetworkOrigin.DESIGN_ENDFED
+                if design_matching is not None
+                else (
+                    MatchingNetworkOrigin.INTERNAL_ENDFED
+                    if matching_network is not None
+                    else MatchingNetworkOrigin.NONE
+                )
             ),
         )
 

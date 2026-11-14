@@ -733,6 +733,25 @@ def _migrate_v46_to_v47(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v49_to_v50(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the optional design-specific end-fed L-network."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if not isinstance(project, dict):
+        return migrated
+    designs = project.get("designs")
+    if not isinstance(designs, list):
+        return migrated
+    for design in designs:
+        if not isinstance(design, dict) or design.get("antenna_type") != "endfed":
+            continue
+        parameters = design.get("parameters")
+        if isinstance(parameters, dict):
+            parameters.setdefault("design_matching_network", None)
+    return migrated
+
+
 def _migrate_v48_to_v49(document: dict[str, Any]) -> dict[str, Any]:
     """Add the optional end-fed feedpoint common-mode choke."""
 
@@ -832,6 +851,7 @@ MIGRATIONS: dict[int, Migration] = {
     46: _migrate_v46_to_v47,
     47: _migrate_v47_to_v48,
     48: _migrate_v48_to_v49,
+    49: _migrate_v49_to_v50,
 }
 
 

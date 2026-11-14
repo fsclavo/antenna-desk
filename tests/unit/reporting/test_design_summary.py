@@ -650,6 +650,27 @@ def test_endfed_summary_reports_the_optional_transformer_loss_model() -> None:
     assert rows["Transformer loss"] == "measured 49:1 (Squash Practice)"
 
 
+def test_endfed_summary_reports_the_design_specific_l_network() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+    from antennadesk.domain.antennas.matching_network import LNetwork
+
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        design_matching_network=LNetwork(
+            series_inductance_h=1.2e-6,
+            shunt_capacitance_f=82e-12,
+        ),
+    )
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Design matching network"] == "L network (primary side)"
+    assert rows["Design series"] == "1.2 µH (active)"
+    assert rows["Design shunt"] == "82 pF (active)"
+    assert "retained; design network overrides" in rows["Matching capacitor"]
+
+
 def test_endfed_summary_reports_a_measured_feedpoint_choke() -> None:
     from dataclasses import replace
 

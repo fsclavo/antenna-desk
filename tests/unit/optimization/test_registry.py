@@ -431,6 +431,7 @@ _CONTEXT_FIELDS = {
     "transformer_ratio",
     "transformer_model",
     "transformer_loss_model",
+    "design_matching_network",
     "return_path",
     "common_mode_choke",
     "element_count",
@@ -703,6 +704,34 @@ def test_shortened_endfed_optimizer_marks_the_matching_network_as_context() -> N
     assert standard.descriptor.context_note_key is None
     assert standard.descriptor.recommends_bound_hits is False
     assert standard.descriptor.default_objective is FamilyOptimizationObjective.TARGET_IMPEDANCE
+
+
+def test_design_specific_l_network_adds_bounded_optimizer_variables() -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+    from antennadesk.domain.antennas.matching_network import LNetwork
+    from antennadesk.domain.optimization.registry import optimizer_availability
+
+    network = LNetwork(
+        series_inductance_h=1.2e-6,
+        shunt_capacitance_f=82e-12,
+    )
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        design_matching_network=network,
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    descriptor = availability.descriptor
+    names = {variable.name for variable in descriptor.variables}
+    assert "design_series_inductance_h" in names
+    assert "design_shunt_capacitance_f" in names
+    assert "design_series_capacitance_f" not in names
+    assert "design_shunt_inductance_h" not in names
+
+    rebuilt = descriptor.build_parameters(descriptor.initial_values)
+    assert rebuilt.design_matching_network is not None
+    assert rebuilt.design_matching_network.series_inductance_h == pytest.approx(1.2e-6)
+    assert rebuilt.design_matching_network.shunt_capacitance_f == pytest.approx(82e-12)
 
 
 def test_coax_shield_endfed_optimizer_searches_the_return_length() -> None:

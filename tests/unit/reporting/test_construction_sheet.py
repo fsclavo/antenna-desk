@@ -1124,6 +1124,34 @@ def test_endfed_construction_sheet_lists_the_optional_transformer_loss(
     assert "measured 49:1 (Squash Practice)" in sheet
 
 
+def test_endfed_construction_sheet_lists_the_design_l_network(
+    sample_project: Project,
+) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+    from antennadesk.domain.antennas.matching_network import LNetwork
+
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        design_matching_network=LNetwork(
+            series_inductance_h=1.2e-6,
+            shunt_capacitance_f=82e-12,
+        ),
+    )
+    design = sample_project.designs[0].with_parameters(parameters)
+    project = sample_project.with_design(design, updated_at=sample_project.updated_at)
+
+    sheet = render_construction_sheet(project, design, None)
+
+    assert "Design matching network" in sheet
+    assert "L network (primary side)" in sheet
+    assert "Design series" in sheet
+    assert "1.2 µH" in sheet
+    assert "Design shunt" in sheet
+    assert "82 pF" in sheet
+
+
 def test_endfed_construction_sheet_lists_the_feedpoint_choke(
     sample_project: Project,
 ) -> None:

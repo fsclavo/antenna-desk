@@ -188,7 +188,9 @@ outside); it is a reference build, not a universal loss model. Capacitor ESR,
 winding capacitance and ground are not modeled. An optional feedpoint
 common-mode choke accepts measured series R/X at one frequency and models it as
 a NEC series load on the coax shield; it is not a shack-end choke or a
-shield-transfer-impedance model. An optional inverted-L bend is
+shield-transfer-impedance model. An optional design-specific L-network can
+replace the fixed internal unit when the published match is not adequate; a
+project network still takes precedence. An optional inverted-L bend is
 available: the vertical section is measured from the feed, and the horizontal
 run is the remaining wire length. The G0KYA starting installation is about 8 m
 vertical and 15 m horizontal, but the bend is modeled as a sharp 90° corner and

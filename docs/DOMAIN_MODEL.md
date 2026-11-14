@@ -264,6 +264,13 @@ project-level matching network overrides this internal unit; the two networks
 are not cascaded. See
 [ADR-0028](ADR/0028-matching-network-precedence.md).
 
+`design_matching_network` is an optional design-specific `LNetwork` on the
+primary side of the ideal transformer. It replaces the fixed internal unit when
+active; it is retained but not applied when a project-level matching network is
+active. Networks are never cascaded. The family optimizer exposes the active
+series and shunt L/C values as bounded variables. See
+[ADR-0038](ADR/0038-design-specific-matching-network.md).
+
 `common_mode_choke` is an optional measured feedpoint choke. It is a series
 `R + jX` at `measurement_frequency_hz`, placed at the start of the coax-shield
 return wire. `R` is held constant; positive `X` becomes a series inductance and

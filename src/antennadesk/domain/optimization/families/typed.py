@@ -677,6 +677,57 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
                 )
             )
             initial["loading_coil_resistance_ohm"] = parameters.loading_coil_resistance_ohm
+    design_network = parameters.design_matching_network
+    if design_network is not None:
+        for name, value, label_key, unit, step, minimum in (
+            (
+                "design_series_inductance_h",
+                design_network.series_inductance_h,
+                "endfed.design_matching_series_l",
+                "H",
+                1e-9,
+                1e-12,
+            ),
+            (
+                "design_series_capacitance_f",
+                design_network.series_capacitance_f,
+                "endfed.design_matching_series_c",
+                "F",
+                1e-12,
+                1e-15,
+            ),
+            (
+                "design_shunt_inductance_h",
+                design_network.shunt_inductance_h,
+                "endfed.design_matching_shunt_l",
+                "H",
+                1e-9,
+                1e-12,
+            ),
+            (
+                "design_shunt_capacitance_f",
+                design_network.shunt_capacitance_f,
+                "endfed.design_matching_shunt_c",
+                "F",
+                1e-12,
+                1e-15,
+            ),
+        ):
+            if value <= 0.0:
+                continue
+            low, high = around(value, 0.5, minimum=minimum)
+            variables.append(
+                OptimizationVariable(
+                    name,
+                    label_key,
+                    "optimize.group.loads",
+                    low,
+                    high,
+                    unit=unit,
+                    step=step,
+                )
+            )
+            initial[name] = value
     if parameters.counterpoise_active or parameters.coax_shield_active:
         low, high = around(parameters.counterpoise_length_m, 0.3, minimum=0.1)
         variables.append(
@@ -722,6 +773,27 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
             initial["counterpoise_azimuth_deg"] = parameters.counterpoise_azimuth_deg
 
     def build(values: Mapping[str, float]) -> EndFedParameters:
+        design_network = parameters.design_matching_network
+        if design_network is not None:
+            design_network = replace(
+                design_network,
+                series_inductance_h=values.get(
+                    "design_series_inductance_h",
+                    design_network.series_inductance_h,
+                ),
+                series_capacitance_f=values.get(
+                    "design_series_capacitance_f",
+                    design_network.series_capacitance_f,
+                ),
+                shunt_inductance_h=values.get(
+                    "design_shunt_inductance_h",
+                    design_network.shunt_inductance_h,
+                ),
+                shunt_capacitance_f=values.get(
+                    "design_shunt_capacitance_f",
+                    design_network.shunt_capacitance_f,
+                ),
+            )
         return replace(
             parameters,
             length_m=values["length_m"],
@@ -732,6 +804,7 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
             ),
             wire_radius_m=values["wire_radius_m"],
             transformer_ratio=values["transformer_ratio"],
+            design_matching_network=design_network,
             counterpoise_length_m=values.get(
                 "counterpoise_length_m", parameters.counterpoise_length_m
             ),
@@ -800,6 +873,14 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
                             "optimize.constraint.endfed_bend_coil",
                         )
                     )
+        for name in (
+            "design_series_inductance_h",
+            "design_series_capacitance_f",
+            "design_shunt_inductance_h",
+            "design_shunt_capacitance_f",
+        ):
+            if name in values:
+                issues.append(positive_violation(name, values[name]))
         if "counterpoise_length_m" in values:
             issues.append(
                 non_negative_violation("counterpoise_length_m", values["counterpoise_length_m"])

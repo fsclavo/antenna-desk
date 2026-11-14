@@ -7,7 +7,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ..antennas.design import AntennaDesignParameters
-from ..antennas.endfed import EndFedParameters, endfed_matching_network
+from ..antennas.endfed import (
+    EndFedParameters,
+    endfed_design_matching_network,
+    endfed_internal_matching_network,
+)
 from ..antennas.matching_network import MatchingNetwork, MatchingNetworkOrigin
 
 
@@ -20,15 +24,22 @@ class MatchingNetworkResolution:
     """
 
     internal: MatchingNetwork | None
+    design: MatchingNetwork | None
     project: MatchingNetwork | None
     effective: MatchingNetwork | None
     override_active: bool
     project_active: bool
 
     @property
+    def design_active(self) -> bool:
+        return self.design is not None
+
+    @property
     def origin(self) -> MatchingNetworkOrigin:
         if self.project_active:
             return MatchingNetworkOrigin.PROJECT
+        if self.design is not None:
+            return MatchingNetworkOrigin.DESIGN_ENDFED
         if self.internal is not None:
             return MatchingNetworkOrigin.INTERNAL_ENDFED
         return MatchingNetworkOrigin.NONE
@@ -46,13 +57,22 @@ def resolve_matching_network(
     """
 
     internal = (
-        endfed_matching_network(parameters) if isinstance(parameters, EndFedParameters) else None
+        endfed_internal_matching_network(parameters)
+        if isinstance(parameters, EndFedParameters)
+        else None
     )
+    design = (
+        endfed_design_matching_network(parameters)
+        if isinstance(parameters, EndFedParameters)
+        else None
+    )
+    family = design if design is not None else internal
     project_active = project_network is not None and project_network.is_active
-    override_active = internal is not None and project_active
-    effective = project_network if project_active else internal
+    override_active = family is not None and project_active
+    effective = project_network if project_active else family
     return MatchingNetworkResolution(
         internal=internal,
+        design=design,
         project=project_network,
         effective=effective,
         override_active=override_active,

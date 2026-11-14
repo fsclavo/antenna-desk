@@ -224,17 +224,42 @@ class FeedMatchingSummary(QGroupBox):
     def _endfed_text(self, parameters: AntennaDesignParameters, override_active: bool) -> str:
         if not isinstance(parameters, EndFedParameters):
             return self._translator.t("feed_matching.not_applicable")
-        if not parameters.matching_network_active:
+        if not parameters.matching_network_active and not parameters.design_matching_network_active:
             return self._translator.t("feed_matching.none")
         status = self._translator.t(
             "feed_matching.retained" if override_active else "feed_matching.active"
         )
+        if (
+            parameters.design_matching_network_active
+            and parameters.design_matching_network is not None
+        ):
+            network = parameters.design_matching_network
+            return self._translator.t(
+                "feed_matching.design_network_value",
+                series=self._branch_text(
+                    network.series_inductance_h,
+                    network.series_capacitance_f,
+                ),
+                shunt=self._branch_text(
+                    network.shunt_inductance_h,
+                    network.shunt_capacitance_f,
+                ),
+                status=status,
+            )
         return self._translator.t(
             "feed_matching.internal_value",
             capacitance=f"{parameters.matching_capacitance_f * 1e12:g}",
             leakage=f"{parameters.transformer_leakage_inductance_h * 1e6:g}",
             status=status,
         )
+
+    @staticmethod
+    def _branch_text(inductance_h: float, capacitance_f: float) -> str:
+        if inductance_h > 0.0:
+            return f"{inductance_h * 1e6:g} µH"
+        if capacitance_f > 0.0:
+            return f"{capacitance_f * 1e12:g} pF"
+        return "—"
 
     def _project_network_text(self) -> str:
         network = self._project_network

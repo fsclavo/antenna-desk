@@ -670,6 +670,7 @@ class EndFedParametersPayload(StrictModel):
     transformer_ratio: float = Field(default=1.0, gt=0.0)
     transformer_model: EndFedTransformerModel = EndFedTransformerModel.IDEAL
     transformer_loss_model: EndFedTransformerLossModel = EndFedTransformerLossModel.NONE
+    design_matching_network: LNetworkPayload | None = None
     matching_capacitance_f: float = Field(default=0.0, ge=0.0)
     transformer_leakage_inductance_h: float = Field(default=0.0, ge=0.0)
     counterpoise_length_m: float = Field(default=0.0, ge=0.0)
@@ -1937,6 +1938,11 @@ def _endfed_parameters_from_domain(value: EndFedParameters) -> EndFedParametersP
         transformer_ratio=value.transformer_ratio,
         transformer_model=value.transformer_model,
         transformer_loss_model=value.transformer_loss_model,
+        design_matching_network=(
+            _matching_network_from_domain(value.design_matching_network)
+            if value.design_matching_network is not None
+            else None
+        ),
         matching_capacitance_f=value.matching_capacitance_f,
         transformer_leakage_inductance_h=value.transformer_leakage_inductance_h,
         counterpoise_length_m=value.counterpoise_length_m,
@@ -3222,6 +3228,11 @@ def _endfed_parameters_to_domain(value: EndFedParametersPayload) -> EndFedParame
         transformer_ratio=value.transformer_ratio,
         transformer_model=value.transformer_model,
         transformer_loss_model=value.transformer_loss_model,
+        design_matching_network=(
+            _l_network_to_domain(value.design_matching_network)
+            if value.design_matching_network is not None
+            else None
+        ),
         matching_capacitance_f=value.matching_capacitance_f,
         transformer_leakage_inductance_h=value.transformer_leakage_inductance_h,
         counterpoise_length_m=value.counterpoise_length_m,
@@ -3356,6 +3367,13 @@ def _balun_loss_to_domain(value: BalunLossPayload) -> BalunLoss:
         ),
         source=value.source,
     )
+
+
+def _l_network_to_domain(value: LNetworkPayload) -> LNetwork:
+    network = _matching_network_to_domain(value)
+    if not isinstance(network, LNetwork):
+        raise ValueError("a design-specific matching network must be an L-network")
+    return network
 
 
 def _matching_network_to_domain(value: LNetworkPayload) -> MatchingNetwork:
