@@ -734,6 +734,34 @@ def test_design_specific_l_network_adds_bounded_optimizer_variables() -> None:
     assert rebuilt.design_matching_network.shunt_capacitance_f == pytest.approx(82e-12)
 
 
+def test_design_pi_network_adds_its_active_component_variables() -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+    from antennadesk.domain.antennas.matching_network import PiNetwork
+    from antennadesk.domain.optimization.registry import optimizer_availability
+
+    network = PiNetwork(
+        input_shunt_capacitance_f=120e-12,
+        series_inductance_h=1.1e-6,
+        output_shunt_capacitance_f=68e-12,
+    )
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        design_matching_network=network,
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    descriptor = availability.descriptor
+    names = {variable.name for variable in descriptor.variables}
+    assert "design_input_shunt_capacitance_f" in names
+    assert "design_series_inductance_h" in names
+    assert "design_output_shunt_capacitance_f" in names
+    assert "design_shunt_capacitance_f" not in names
+
+    rebuilt = descriptor.build_parameters(descriptor.initial_values)
+    assert isinstance(rebuilt.design_matching_network, PiNetwork)
+    assert rebuilt.design_matching_network == network
+
+
 def test_coax_shield_endfed_optimizer_searches_the_return_length() -> None:
     from antennadesk.domain.antennas.endfed import (
         EndFedReturnPath,

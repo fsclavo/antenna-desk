@@ -78,6 +78,32 @@ def test_summary_shows_the_design_specific_l_network(qtbot: QtBot) -> None:
     assert "active" in text
 
 
+def test_summary_shows_a_pi_design_network(qtbot: QtBot) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.matching_network import PiNetwork
+
+    summary = FeedMatchingSummary(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(summary)
+    parameters = replace(
+        shortened_efhw_80_10_parameters(),
+        design_matching_network=PiNetwork(
+            input_shunt_capacitance_f=120e-12,
+            series_inductance_h=1.1e-6,
+            output_shunt_capacitance_f=68e-12,
+        ),
+    )
+
+    summary.set_state(parameters, None, None, None)
+
+    text = summary._endfed_value.text()
+    assert "Pi network" in text
+    assert "120 pF" in text
+    assert "1.1 µH" in text
+    assert "68 pF" in text
+    assert "active" in text
+
+
 def test_summary_reports_not_applicable_for_non_endfed_designs(qtbot: QtBot) -> None:
     summary = FeedMatchingSummary(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(summary)

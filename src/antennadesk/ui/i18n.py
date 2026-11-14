@@ -3211,6 +3211,48 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "revisalos y aplicalos explícitamente."
         ),
     },
+    "help.endfed.design_matching_topology": {
+        Language.ENGLISH: (
+            "Choose an L, Pi, or T network. The visible component fields follow "
+            "the selected topology."
+        ),
+        Language.SPANISH: (
+            "Elegí una red L, Pi o T. Los campos de componentes visibles siguen "
+            "la topología seleccionada."
+        ),
+    },
+    "help.endfed.design_matching_input_shunt_l": {
+        Language.ENGLISH: "Input-side shunt inductance of the Pi network.",
+        Language.SPANISH: "Inductancia paralelo del lado de entrada de la red Pi.",
+    },
+    "help.endfed.design_matching_input_shunt_c": {
+        Language.ENGLISH: "Input-side shunt capacitance of the Pi network.",
+        Language.SPANISH: "Capacidad paralelo del lado de entrada de la red Pi.",
+    },
+    "help.endfed.design_matching_output_shunt_l": {
+        Language.ENGLISH: "Output-side shunt inductance of the Pi network.",
+        Language.SPANISH: "Inductancia paralelo del lado de salida de la red Pi.",
+    },
+    "help.endfed.design_matching_output_shunt_c": {
+        Language.ENGLISH: "Output-side shunt capacitance of the Pi network.",
+        Language.SPANISH: "Capacidad paralelo del lado de salida de la red Pi.",
+    },
+    "help.endfed.design_matching_input_series_l": {
+        Language.ENGLISH: "Input-side series inductance of the T network.",
+        Language.SPANISH: "Inductancia serie del lado de entrada de la red T.",
+    },
+    "help.endfed.design_matching_input_series_c": {
+        Language.ENGLISH: "Input-side series capacitance of the T network.",
+        Language.SPANISH: "Capacidad serie del lado de entrada de la red T.",
+    },
+    "help.endfed.design_matching_output_series_l": {
+        Language.ENGLISH: "Output-side series inductance of the T network.",
+        Language.SPANISH: "Inductancia serie del lado de salida de la red T.",
+    },
+    "help.endfed.design_matching_output_series_c": {
+        Language.ENGLISH: "Output-side series capacitance of the T network.",
+        Language.SPANISH: "Capacidad serie del lado de salida de la red T.",
+    },
     "help.endfed.design_matching_series_l": {
         Language.ENGLISH: "Series inductance of the design-specific L-network.",
         Language.SPANISH: "Inductancia serie de la red L específica del diseño.",
@@ -11418,8 +11460,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Longitud del camino de retorno",
     },
     "feed_matching.design_network_value": {
-        Language.ENGLISH: ("L network · series {series} · shunt {shunt} ({status})"),
-        Language.SPANISH: ("Red L · serie {series} · paralelo {shunt} ({status})"),
+        Language.ENGLISH: "{network} ({status})",
+        Language.SPANISH: "{network} ({status})",
     },
     "endfed.design_matching_network": {
         Language.ENGLISH: "Design-specific L-network",
@@ -11489,6 +11531,54 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "endfed.design_matching_shunt_c": {
         Language.ENGLISH: "Shunt capacitance",
         Language.SPANISH: "Capacidad paralelo",
+    },
+    "endfed.design_matching_input_shunt_l": {
+        Language.ENGLISH: "Input shunt inductance",
+        Language.SPANISH: "Inductancia paralelo de entrada",
+    },
+    "endfed.design_matching_input_shunt_c": {
+        Language.ENGLISH: "Input shunt capacitance",
+        Language.SPANISH: "Capacidad paralelo de entrada",
+    },
+    "endfed.design_matching_output_shunt_l": {
+        Language.ENGLISH: "Output shunt inductance",
+        Language.SPANISH: "Inductancia paralelo de salida",
+    },
+    "endfed.design_matching_output_shunt_c": {
+        Language.ENGLISH: "Output shunt capacitance",
+        Language.SPANISH: "Capacidad paralelo de salida",
+    },
+    "endfed.design_matching_input_series_l": {
+        Language.ENGLISH: "Input series inductance",
+        Language.SPANISH: "Inductancia serie de entrada",
+    },
+    "endfed.design_matching_input_series_c": {
+        Language.ENGLISH: "Input series capacitance",
+        Language.SPANISH: "Capacidad serie de entrada",
+    },
+    "endfed.design_matching_output_series_l": {
+        Language.ENGLISH: "Output series inductance",
+        Language.SPANISH: "Inductancia serie de salida",
+    },
+    "endfed.design_matching_output_series_c": {
+        Language.ENGLISH: "Output series capacitance",
+        Language.SPANISH: "Capacidad serie de salida",
+    },
+    "endfed.design_matching_topology": {
+        Language.ENGLISH: "Topology",
+        Language.SPANISH: "Topología",
+    },
+    "endfed.design_matching_topology.l": {
+        Language.ENGLISH: "L",
+        Language.SPANISH: "L",
+    },
+    "endfed.design_matching_topology.pi": {
+        Language.ENGLISH: "Pi",
+        Language.SPANISH: "Pi",
+    },
+    "endfed.design_matching_topology.t": {
+        Language.ENGLISH: "T",
+        Language.SPANISH: "T",
     },
     "endfed.common_mode_choke": {
         Language.ENGLISH: "Feedpoint common-mode choke",

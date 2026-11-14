@@ -35,13 +35,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   calculation. It only populates the editor for review; it does not apply the
   design automatically. If no solution exists or no simulation result is
   available, the UI says so explicitly. See the ADR-0038 amendment.
-- **Design-specific L-network for end-fed designs.** The End-fed editor can add
-  an optional primary-side L-network owned by the design, with editable series
-  and shunt L/C values and an input/antenna-side shunt choice. Precedence is
+- **Design-specific L/Pi/T network for end-fed designs.** The End-fed editor can
+  add an optional primary-side L, Pi, or T network owned by the design, with
+  editable component L/C values and an input/antenna-side shunt choice for the
+  L topology. Precedence is
   **project network > design-specific network > internal fixed unit**; the
   design network is retained but not applied when a project network overrides
   it, and networks are never cascaded. The optimizer exposes only the active
-  L/C components as bounded variables. Schema 50 persists the network; reports,
+  L/C components as bounded variables; automatic synthesis remains L-only.
+  Schema 50 persists the network; reports,
   the feed-matching summary, construction sheet, and EN/ES help distinguish the
   three layers. See [ADR-0038](docs/ADR/0038-design-specific-matching-network.md).
 - **Feedpoint common-mode choke model.** The End-fed editor can add an optional

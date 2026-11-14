@@ -26,6 +26,7 @@ from ...antennas.inverted_v import InvertedVParameters
 from ...antennas.j_pole import JPoleParameters
 from ...antennas.loaded_dipole import LoadedDipoleParameters
 from ...antennas.loop import LoopParameters
+from ...antennas.matching_network import LNetwork, MatchingNetwork, PiNetwork, TNetwork
 from ...antennas.moxon import MoxonParameters
 from ...antennas.ocfd import OCFDParameters
 from ...antennas.phased_vertical import PhasedVerticalParameters
@@ -93,6 +94,111 @@ def _choice_ratio(name: str, label_key: str, value: float) -> OptimizationVariab
         unit="ratio",
         choices=choices,
     )
+
+
+_DESIGN_NETWORK_COMPONENT_META: dict[str, tuple[str, str, float, float]] = {
+    "series_inductance_h": (
+        "endfed.design_matching_series_l",
+        "H",
+        1e-9,
+        1e-12,
+    ),
+    "series_capacitance_f": (
+        "endfed.design_matching_series_c",
+        "F",
+        1e-12,
+        1e-15,
+    ),
+    "shunt_inductance_h": (
+        "endfed.design_matching_shunt_l",
+        "H",
+        1e-9,
+        1e-12,
+    ),
+    "shunt_capacitance_f": (
+        "endfed.design_matching_shunt_c",
+        "F",
+        1e-12,
+        1e-15,
+    ),
+    "input_shunt_inductance_h": (
+        "endfed.design_matching_input_shunt_l",
+        "H",
+        1e-9,
+        1e-12,
+    ),
+    "input_shunt_capacitance_f": (
+        "endfed.design_matching_input_shunt_c",
+        "F",
+        1e-12,
+        1e-15,
+    ),
+    "output_shunt_inductance_h": (
+        "endfed.design_matching_output_shunt_l",
+        "H",
+        1e-9,
+        1e-12,
+    ),
+    "output_shunt_capacitance_f": (
+        "endfed.design_matching_output_shunt_c",
+        "F",
+        1e-12,
+        1e-15,
+    ),
+    "input_series_inductance_h": (
+        "endfed.design_matching_input_series_l",
+        "H",
+        1e-9,
+        1e-12,
+    ),
+    "input_series_capacitance_f": (
+        "endfed.design_matching_input_series_c",
+        "F",
+        1e-12,
+        1e-15,
+    ),
+    "output_series_inductance_h": (
+        "endfed.design_matching_output_series_l",
+        "H",
+        1e-9,
+        1e-12,
+    ),
+    "output_series_capacitance_f": (
+        "endfed.design_matching_output_series_c",
+        "F",
+        1e-12,
+        1e-15,
+    ),
+}
+
+
+def _design_network_fields(network: MatchingNetwork) -> tuple[str, ...]:
+    if isinstance(network, LNetwork):
+        return (
+            "series_inductance_h",
+            "series_capacitance_f",
+            "shunt_inductance_h",
+            "shunt_capacitance_f",
+        )
+    if isinstance(network, PiNetwork):
+        return (
+            "input_shunt_inductance_h",
+            "input_shunt_capacitance_f",
+            "series_inductance_h",
+            "series_capacitance_f",
+            "output_shunt_inductance_h",
+            "output_shunt_capacitance_f",
+        )
+    if isinstance(network, TNetwork):
+        return (
+            "input_series_inductance_h",
+            "input_series_capacitance_f",
+            "shunt_inductance_h",
+            "shunt_capacitance_f",
+            "output_series_inductance_h",
+            "output_series_capacitance_f",
+        )
+    return ()
 
 
 def _descriptor(
@@ -679,42 +785,12 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
             initial["loading_coil_resistance_ohm"] = parameters.loading_coil_resistance_ohm
     design_network = parameters.design_matching_network
     if design_network is not None:
-        for name, value, label_key, unit, step, minimum in (
-            (
-                "design_series_inductance_h",
-                design_network.series_inductance_h,
-                "endfed.design_matching_series_l",
-                "H",
-                1e-9,
-                1e-12,
-            ),
-            (
-                "design_series_capacitance_f",
-                design_network.series_capacitance_f,
-                "endfed.design_matching_series_c",
-                "F",
-                1e-12,
-                1e-15,
-            ),
-            (
-                "design_shunt_inductance_h",
-                design_network.shunt_inductance_h,
-                "endfed.design_matching_shunt_l",
-                "H",
-                1e-9,
-                1e-12,
-            ),
-            (
-                "design_shunt_capacitance_f",
-                design_network.shunt_capacitance_f,
-                "endfed.design_matching_shunt_c",
-                "F",
-                1e-12,
-                1e-15,
-            ),
-        ):
+        for field in _design_network_fields(design_network):
+            value = float(getattr(design_network, field))
             if value <= 0.0:
                 continue
+            label_key, unit, step, minimum = _DESIGN_NETWORK_COMPONENT_META[field]
+            name = f"design_{field}"
             low, high = around(value, 0.5, minimum=minimum)
             variables.append(
                 OptimizationVariable(
@@ -775,25 +851,83 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
     def build(values: Mapping[str, float]) -> EndFedParameters:
         design_network = parameters.design_matching_network
         if design_network is not None:
-            design_network = replace(
-                design_network,
-                series_inductance_h=values.get(
-                    "design_series_inductance_h",
-                    design_network.series_inductance_h,
-                ),
-                series_capacitance_f=values.get(
-                    "design_series_capacitance_f",
-                    design_network.series_capacitance_f,
-                ),
-                shunt_inductance_h=values.get(
-                    "design_shunt_inductance_h",
-                    design_network.shunt_inductance_h,
-                ),
-                shunt_capacitance_f=values.get(
-                    "design_shunt_capacitance_f",
-                    design_network.shunt_capacitance_f,
-                ),
-            )
+            if isinstance(design_network, PiNetwork):
+                design_network = PiNetwork(
+                    input_shunt_inductance_h=values.get(
+                        "design_input_shunt_inductance_h",
+                        design_network.input_shunt_inductance_h,
+                    ),
+                    input_shunt_capacitance_f=values.get(
+                        "design_input_shunt_capacitance_f",
+                        design_network.input_shunt_capacitance_f,
+                    ),
+                    series_inductance_h=values.get(
+                        "design_series_inductance_h",
+                        design_network.series_inductance_h,
+                    ),
+                    series_capacitance_f=values.get(
+                        "design_series_capacitance_f",
+                        design_network.series_capacitance_f,
+                    ),
+                    output_shunt_inductance_h=values.get(
+                        "design_output_shunt_inductance_h",
+                        design_network.output_shunt_inductance_h,
+                    ),
+                    output_shunt_capacitance_f=values.get(
+                        "design_output_shunt_capacitance_f",
+                        design_network.output_shunt_capacitance_f,
+                    ),
+                    q_factor=design_network.q_factor,
+                )
+            elif isinstance(design_network, TNetwork):
+                design_network = TNetwork(
+                    input_series_inductance_h=values.get(
+                        "design_input_series_inductance_h",
+                        design_network.input_series_inductance_h,
+                    ),
+                    input_series_capacitance_f=values.get(
+                        "design_input_series_capacitance_f",
+                        design_network.input_series_capacitance_f,
+                    ),
+                    shunt_inductance_h=values.get(
+                        "design_shunt_inductance_h",
+                        design_network.shunt_inductance_h,
+                    ),
+                    shunt_capacitance_f=values.get(
+                        "design_shunt_capacitance_f",
+                        design_network.shunt_capacitance_f,
+                    ),
+                    output_series_inductance_h=values.get(
+                        "design_output_series_inductance_h",
+                        design_network.output_series_inductance_h,
+                    ),
+                    output_series_capacitance_f=values.get(
+                        "design_output_series_capacitance_f",
+                        design_network.output_series_capacitance_f,
+                    ),
+                    q_factor=design_network.q_factor,
+                )
+            elif isinstance(design_network, LNetwork):
+                design_network = LNetwork(
+                    series_inductance_h=values.get(
+                        "design_series_inductance_h",
+                        design_network.series_inductance_h,
+                    ),
+                    series_capacitance_f=values.get(
+                        "design_series_capacitance_f",
+                        design_network.series_capacitance_f,
+                    ),
+                    shunt_inductance_h=values.get(
+                        "design_shunt_inductance_h",
+                        design_network.shunt_inductance_h,
+                    ),
+                    shunt_capacitance_f=values.get(
+                        "design_shunt_capacitance_f",
+                        design_network.shunt_capacitance_f,
+                    ),
+                    shunt_at_input=design_network.shunt_at_input,
+                    q_factor=design_network.q_factor,
+                )
         return replace(
             parameters,
             length_m=values["length_m"],
@@ -873,14 +1007,12 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
                             "optimize.constraint.endfed_bend_coil",
                         )
                     )
-        for name in (
-            "design_series_inductance_h",
-            "design_series_capacitance_f",
-            "design_shunt_inductance_h",
-            "design_shunt_capacitance_f",
-        ):
-            if name in values:
-                issues.append(positive_violation(name, values[name]))
+        design_network = parameters.design_matching_network
+        if design_network is not None:
+            for field in _design_network_fields(design_network):
+                name = f"design_{field}"
+                if name in values:
+                    issues.append(positive_violation(name, values[name]))
         if "counterpoise_length_m" in values:
             issues.append(
                 non_negative_violation("counterpoise_length_m", values["counterpoise_length_m"])

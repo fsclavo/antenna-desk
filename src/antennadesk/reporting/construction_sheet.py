@@ -23,6 +23,12 @@ from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.loaded_dipole import LoadedDipoleParameters
 from ..domain.antennas.loop import LoopOrientation, LoopParameters
 from ..domain.antennas.magnetic_loop import MagneticLoopParameters
+from ..domain.antennas.matching_network import (
+    LNetwork,
+    MatchingNetwork,
+    PiNetwork,
+    TNetwork,
+)
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.phased_vertical import PhasedVerticalParameters
@@ -135,6 +141,53 @@ def _swr_text(frequency: FrequencyResult | None) -> str:
     if frequency is None:
         return "—"
     return "∞" if math.isinf(frequency.swr) else f"{frequency.swr:.3f}"
+
+
+def _design_topology_label(network: MatchingNetwork) -> str:
+    if isinstance(network, PiNetwork):
+        return "Pi network (primary side)"
+    if isinstance(network, TNetwork):
+        return "T network (primary side)"
+    return "L network (primary side)"
+
+
+def _design_component_rows(
+    network: MatchingNetwork,
+) -> tuple[tuple[str, float, float], ...]:
+    if isinstance(network, PiNetwork):
+        return (
+            (
+                "Input shunt",
+                network.input_shunt_inductance_h,
+                network.input_shunt_capacitance_f,
+            ),
+            ("Design series", network.series_inductance_h, network.series_capacitance_f),
+            (
+                "Output shunt",
+                network.output_shunt_inductance_h,
+                network.output_shunt_capacitance_f,
+            ),
+        )
+    if isinstance(network, TNetwork):
+        return (
+            (
+                "Input series",
+                network.input_series_inductance_h,
+                network.input_series_capacitance_f,
+            ),
+            ("Design shunt", network.shunt_inductance_h, network.shunt_capacitance_f),
+            (
+                "Output series",
+                network.output_series_inductance_h,
+                network.output_series_capacitance_f,
+            ),
+        )
+    if not isinstance(network, LNetwork):
+        raise TypeError(f"unsupported design matching network: {type(network)!r}")
+    return (
+        ("Design series", network.series_inductance_h, network.series_capacitance_f),
+        ("Design shunt", network.shunt_inductance_h, network.shunt_capacitance_f),
+    )
 
 
 def _network_branch_text(inductance_h: float, capacitance_f: float) -> str:
@@ -990,14 +1043,14 @@ def render_construction_sheet(
             network = parameters.design_matching_network
             design_matching_rows = (
                 "<tr><th>Design matching network</th><td>"
-                f"{_escape(tr('L network (primary side)'))}</td></tr>\n"
-                "<tr><th>Design series</th><td>"
-                f"{_escape(_network_branch_text(network.series_inductance_h, network.series_capacitance_f))} "
-                f"({_escape(design_status)})</td></tr>\n"
-                "<tr><th>Design shunt</th><td>"
-                f"{_escape(_network_branch_text(network.shunt_inductance_h, network.shunt_capacitance_f))} "
-                f"({_escape(design_status)})</td></tr>\n"
+                f"{_escape(tr(_design_topology_label(network)))}</td></tr>\n"
             )
+            for label, inductance_h, capacitance_f in _design_component_rows(network):
+                design_matching_rows += (
+                    f"<tr><th>{_escape(tr(label))}</th><td>"
+                    f"{_escape(_network_branch_text(inductance_h, capacitance_f))} "
+                    f"({_escape(design_status)})</td></tr>\n"
+                )
         height_rows = (
             f"<tr><th>Vertical section</th><td>{parameters.bend_vertical_length_m:.4f} m</td></tr>\n"
             f"<tr><th>Horizontal run</th><td>{parameters.bend_horizontal_length_m:.4f} m</td></tr>\n"

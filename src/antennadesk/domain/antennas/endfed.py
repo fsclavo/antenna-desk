@@ -19,7 +19,13 @@ from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
 from .load import SeriesLoad
-from .matching_network import LNetwork, MatchingNetwork, PiNetwork, TransformerNetwork
+from .matching_network import (
+    LNetwork,
+    MatchingNetwork,
+    PiNetwork,
+    TNetwork,
+    TransformerNetwork,
+)
 from .materials import COPPER, ConductorMaterial
 from .wire import Wire
 
@@ -161,7 +167,7 @@ class EndFedParameters:
     transformer_ratio: float = 1.0
     transformer_model: EndFedTransformerModel = EndFedTransformerModel.IDEAL
     transformer_loss_model: EndFedTransformerLossModel = EndFedTransformerLossModel.NONE
-    design_matching_network: LNetwork | None = None
+    design_matching_network: MatchingNetwork | None = None
     matching_capacitance_f: float = 0.0
     transformer_leakage_inductance_h: float = 0.0
     counterpoise_length_m: float = 0.0
@@ -222,8 +228,11 @@ class EndFedParameters:
         ):
             raise ValueError("the Squash Practice loss model requires a 49:1 ratio")
         if self.design_matching_network is not None:
-            if not isinstance(self.design_matching_network, LNetwork):
-                raise ValueError("design_matching_network must be an L-network")
+            if not isinstance(
+                self.design_matching_network,
+                (LNetwork, PiNetwork, TNetwork),
+            ):
+                raise ValueError("design_matching_network must be an L, Pi, or T network")
             if not self.design_matching_network.is_active:
                 raise ValueError("design_matching_network must have active elements")
         ensure_non_negative(self.matching_capacitance_f, name="matching_capacitance_f")
@@ -688,8 +697,10 @@ def endfed_internal_matching_network(parameters: EndFedParameters) -> MatchingNe
     )
 
 
-def endfed_design_matching_network(parameters: EndFedParameters) -> LNetwork | None:
-    """Return the optional design-specific L-network, if active."""
+def endfed_design_matching_network(
+    parameters: EndFedParameters,
+) -> MatchingNetwork | None:
+    """Return the optional design-specific matching network, if active."""
 
     if not parameters.design_matching_network_active:
         return None

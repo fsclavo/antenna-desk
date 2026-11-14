@@ -140,6 +140,22 @@ result**:
 6. The action is available only for the design-specific L-network, not for the
    fixed internal unit or the global project network.
 
+## Amendment 2 — Pi/T topologies (2026-11-14)
+
+**Status:** Accepted. The design-specific network now supports L, Pi, and T
+topologies without changing the precedence or persistence rules.
+
+1. The persisted payload reuses the existing topology-tagged matching-network
+   schema; no new schema version is required for this expansion.
+2. The UI exposes a topology selector. Only the fields belonging to the selected
+   topology are visible.
+3. The optimizer exposes only the active component values of the selected
+   topology, using the same `design_*` variable names and bounded search.
+4. Reports and the feed-matching summary use the topology-specific description;
+   an L network remains the default and its results are unchanged.
+5. Automatic synthesis remains L-only. Pi/T are manual topologies until a
+   synthesis method and validation exist.
+
 ## Open questions
 
 - Should the first UI expose a topology selector with only L enabled, or a

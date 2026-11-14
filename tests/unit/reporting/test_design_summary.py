@@ -671,6 +671,28 @@ def test_endfed_summary_reports_the_design_specific_l_network() -> None:
     assert "retained; design network overrides" in rows["Matching capacitor"]
 
 
+def test_endfed_summary_reports_a_pi_design_network() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+    from antennadesk.domain.antennas.matching_network import PiNetwork
+
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        design_matching_network=PiNetwork(
+            input_shunt_capacitance_f=120e-12,
+            series_inductance_h=1.1e-6,
+            output_shunt_capacitance_f=68e-12,
+        ),
+    )
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Design matching network"] == "Pi network (primary side)"
+    assert rows["Input shunt"] == "120 pF (active)"
+    assert rows["Design series"] == "1.1 µH (active)"
+    assert rows["Output shunt"] == "68 pF (active)"
+
+
 def test_endfed_summary_reports_a_measured_feedpoint_choke() -> None:
     from dataclasses import replace
 

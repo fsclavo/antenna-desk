@@ -3236,7 +3236,7 @@ def _endfed_parameters_to_domain(value: EndFedParametersPayload) -> EndFedParame
         transformer_model=value.transformer_model,
         transformer_loss_model=value.transformer_loss_model,
         design_matching_network=(
-            _l_network_to_domain(value.design_matching_network)
+            _matching_network_to_domain(value.design_matching_network)
             if value.design_matching_network is not None
             else None
         ),
@@ -3379,13 +3379,6 @@ def _balun_loss_to_domain(value: BalunLossPayload) -> BalunLoss:
         ),
         source=value.source,
     )
-
-
-def _l_network_to_domain(value: LNetworkPayload) -> LNetwork:
-    network = _matching_network_to_domain(value)
-    if not isinstance(network, LNetwork):
-        raise ValueError("a design-specific matching network must be an L-network")
-    return network
 
 
 def _matching_network_to_domain(value: LNetworkPayload) -> MatchingNetwork:

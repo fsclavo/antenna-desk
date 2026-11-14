@@ -233,16 +233,11 @@ class FeedMatchingSummary(QGroupBox):
             parameters.design_matching_network_active
             and parameters.design_matching_network is not None
         ):
-            network = parameters.design_matching_network
             return self._translator.t(
                 "feed_matching.design_network_value",
-                series=self._branch_text(
-                    network.series_inductance_h,
-                    network.series_capacitance_f,
-                ),
-                shunt=self._branch_text(
-                    network.shunt_inductance_h,
-                    network.shunt_capacitance_f,
+                network=matching_network_description(
+                    parameters.design_matching_network,
+                    self._translator.report,
                 ),
                 status=status,
             )
@@ -252,14 +247,6 @@ class FeedMatchingSummary(QGroupBox):
             leakage=f"{parameters.transformer_leakage_inductance_h * 1e6:g}",
             status=status,
         )
-
-    @staticmethod
-    def _branch_text(inductance_h: float, capacitance_f: float) -> str:
-        if inductance_h > 0.0:
-            return f"{inductance_h * 1e6:g} µH"
-        if capacitance_f > 0.0:
-            return f"{capacitance_f * 1e12:g} pF"
-        return "—"
 
     def _project_network_text(self) -> str:
         network = self._project_network

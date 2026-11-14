@@ -132,7 +132,7 @@ external service and must not be invented or simulated into existence.
 | ~~EF7b~~ | ~~Measured transformer loss and frequency dependence~~ | L | EF7a; measured loss data | **Done 2026-11-13:** added the optional `EndFedTransformerLossModel` selector with the Squash Practice/AF7NX 2xFT114-43, 5T/30T table: 0.43/0.33/0.30/0.32 dB at the 80/40/20/10 m band centers. Values are interpolated linearly in log frequency between 3.75 and 28.5 MHz and clamped outside; the source measured one reference build at 50 W FT8, so this is not a universal loss model. The loss is off by default, requires a 49:1 ratio, and is reported as `transformer_loss_db`, separate from mismatch loss and the project `BalunLoss`. Schema 48 persists the selector and the per-frequency loss; CSV, feed-chain, results, construction sheet, and EN/ES help expose it. KN5L's ~0.3 dB core-loss data is cited as corroboration, not used to invent extra frequency points. |
 | ~~EF8a~~ | ~~User-selectable end-fed return path~~ | M | EF3 | **Done 2026-11-13:** added `EndFedReturnPath` (`auto`, `installation_proxy`, `counterpoise`, `coax_shield`) and persisted it in schema 47. `auto` preserves the legacy counterpoise-or-proxy behavior; counterpoise and coax shield use the existing return length/height/azimuth fields, with the shield as a model-only straight-wire approximation. The optimizer searches the return length for counterpoise/coax and keeps the height variable only for a physical counterpoise. The editor, reports, construction sheet, scene note, and EN/ES help state that the shield is a wire approximation. EF8 later added an optional feedpoint choke; shack-end placement and shield transfer impedance remain unmodeled. No solver change for other families at EF8a. |
 | ~~EF8~~ | ~~Common-mode return / coax-shield model for end-fed antennas~~ | L | measurement or validated common-mode model | **Done 2026-11-13 with explicit limits:** EF8a added the selectable return path and the coax-shield wire approximation. EF8 adds an optional **feedpoint** common-mode choke as a measured series R/X load on the shield, with a required source, a 49:1-compatible coax-shield return, a frequency-mismatch warning, and a predominantly-reactive warning. Positive X becomes a series L and negative X a series C; R is held constant. ADR-0037 records the model. Shack-end choke placement, frequency-interpolated `Zcm(f)`, shield transfer impedance, the real cable route, and absolute common-mode-current prediction remain unmodeled; no universal choke preset was invented. Do not optimize the installation proxy as a physical radial. |
-| EF9 | Design-specific matching-network optimization | L | EF7b, EF8, ADR | **Phase A done 2026-11-14; auto-design amendment done 2026-11-14.** ADR-0038 implements an optional design-specific L-network owned by `EndFedParameters`, with precedence **project network > design-specific network > internal fixed unit**, schema 50, bounded optimizer variables, UI, reports, and regression coverage. A **Design L-network from current result** action synthesizes a lossless L-network from the current primary-side feed impedance, fills the editor, and waits for explicit user review; no-solution and no-result states are explicit. Pi/T topologies remain a follow-up. Do not add loose C/L variables to the fixed input-shunt network. |
+| EF9 | Design-specific matching-network optimization | L | EF7b, EF8, ADR | **Done 2026-11-14.** ADR-0038 implements an optional design-specific L/Pi/T network owned by `EndFedParameters`, with precedence **project network > design-specific network > internal fixed unit**, schema 50, bounded optimizer variables, UI, reports, and regression coverage. A **Design L-network from current result** action synthesizes a lossless L-network from the current primary-side feed impedance, fills the editor, and waits for explicit user review; no-solution and no-result states are explicit. Pi/T are manual topologies; automatic synthesis remains L-only. Do not add loose C/L variables to the fixed input-shunt network. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -150,8 +150,7 @@ were completed on 2026-11-13.
 UX29 was added and completed the same day from feed-connection feedback.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
 EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
-Phase A are implemented; Pi/T matching and automatic synthesis remain
-follow-ups.
+L/Pi/T matching are implemented; automatic synthesis remains L-only.
 
 The first slice accepts these constraints:
 
@@ -1084,8 +1083,8 @@ scaling QA remains manual.
 ## EF1–EF9 — Shortened-EFHW optimizer and model-confidence queue (2026-11-13)
 
 **EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
-Phase A are implemented.** Pi/T matching and automatic synthesis remain
-deferred. The ordered plan is:
+L/Pi/T matching are implemented.** Automatic synthesis remains L-only. The
+ordered plan is:
 
 | ID | Scope | Why it is separate |
 |---|---|---|
@@ -1099,7 +1098,7 @@ deferred. The ordered plan is:
 | EF7b | Measured transformer loss and frequency dependence | Implemented from the Squash Practice band-loss table |
 | EF8a | User-selectable end-fed return path | Implemented; `auto` preserves legacy behavior |
 | EF8 | Common-mode return / coax-shield model | Bounded feedpoint choke model implemented; shack-end/shield-transfer model remains deferred |
-| EF9 | Design-specific matching-network optimization | Phase A (L-network) implemented; Pi/T and synthesis deferred |
+| EF9 | Design-specific matching-network optimization | L/Pi/T implemented; automatic synthesis is L-only |
 
 ### EF1 — Optimizer structural segmentation (implemented)
 
@@ -1483,7 +1482,7 @@ model and solver contract must land first.
 12. **UX29 is complete.** The read-only constructive feed connection is closed.
     Do not change `FeedPoint`, the NEC deck, the solver, or the schema without a
     new ADR.
-13. **EF1–EF6, EF7a, EF7b, EF8a, EF8, and EF9 Phase A are complete.** The shortened-EFHW optimizer keeps
+13. **EF1–EF6, EF7a, EF7b, EF8a, EF8, and EF9 are complete.** The shortened-EFHW optimizer keeps
     the fixed feed and loading-coil partitions, results report the input-shunt
     matching-topology floor only for the internal end-fed unit, the confidence
     card marks absolute SWR as informational with the proxy-return limitation,
@@ -1492,9 +1491,9 @@ model and solver contract must land first.
     spike keeps the model unchanged with an explicit informational-SWR warning.
     The optional measured 49:1 transformer preset, its optional measured loss
     table, the selectable end-fed return path, the bounded feedpoint
-    common-mode choke, and the design-specific L-network are available and
-    persisted in schema 50; `auto` preserves the legacy behavior. Pi/T
-    topologies and automatic matching synthesis remain follow-ups.
+    common-mode choke, and the design-specific L/Pi/T network are available and
+    persisted in schema 50; `auto` preserves the legacy behavior. Automatic
+    matching synthesis remains L-only.
 14. Product priorities and new antenna candidates live in
     [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
@@ -1527,7 +1526,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **51**.
-- Full gate: **3,109 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **3,115 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.6.0** published on 2026-11-13 with checksum-verified unsigned

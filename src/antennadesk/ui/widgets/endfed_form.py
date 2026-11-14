@@ -38,7 +38,12 @@ from ...domain.antennas.endfed import (
     shortened_efhw_40_10_parameters,
     shortened_efhw_80_10_parameters,
 )
-from ...domain.antennas.matching_network import LNetwork, MatchingNetwork
+from ...domain.antennas.matching_network import (
+    LNetwork,
+    MatchingNetwork,
+    PiNetwork,
+    TNetwork,
+)
 from ...domain.antennas.materials import COPPER, ConductorMaterial
 from ...domain.common import units
 from ...domain.design.formulas import half_wave_length_m
@@ -236,22 +241,36 @@ class EndFedForm(QWidget):
             "endfed.design_matching_network",
         )
         design_form = QFormLayout(self._design_network_group)
-        self._design_series_l = QDoubleSpinBox(self._design_network_group)
-        self._design_series_l.setRange(0.0, 1_000_000.0)
-        self._design_series_l.setDecimals(3)
-        self._design_series_l.setSuffix(" µH")
-        self._design_series_c = QDoubleSpinBox(self._design_network_group)
-        self._design_series_c.setRange(0.0, 1_000_000.0)
-        self._design_series_c.setDecimals(3)
-        self._design_series_c.setSuffix(" pF")
-        self._design_shunt_l = QDoubleSpinBox(self._design_network_group)
-        self._design_shunt_l.setRange(0.0, 1_000_000.0)
-        self._design_shunt_l.setDecimals(3)
-        self._design_shunt_l.setSuffix(" µH")
-        self._design_shunt_c = QDoubleSpinBox(self._design_network_group)
-        self._design_shunt_c.setRange(0.0, 1_000_000.0)
-        self._design_shunt_c.setDecimals(3)
-        self._design_shunt_c.setSuffix(" pF")
+        self._design_topology = QComboBox(self._design_network_group)
+        for topology in ("l", "pi", "t"):
+            self._design_topology.addItem(
+                translator.t(f"endfed.design_matching_topology.{topology}"),
+                topology,
+            )
+        design_form.addRow(
+            self._labels.label("endfed.design_matching_topology", self._design_topology),
+            self._design_topology,
+        )
+
+        def network_spin(suffix: str) -> QDoubleSpinBox:
+            box = QDoubleSpinBox(self._design_network_group)
+            box.setRange(0.0, 1_000_000.0)
+            box.setDecimals(3)
+            box.setSuffix(suffix)
+            return box
+
+        self._design_series_l = network_spin(" µH")
+        self._design_series_c = network_spin(" pF")
+        self._design_shunt_l = network_spin(" µH")
+        self._design_shunt_c = network_spin(" pF")
+        self._design_input_shunt_l = network_spin(" µH")
+        self._design_input_shunt_c = network_spin(" pF")
+        self._design_output_shunt_l = network_spin(" µH")
+        self._design_output_shunt_c = network_spin(" pF")
+        self._design_input_series_l = network_spin(" µH")
+        self._design_input_series_c = network_spin(" pF")
+        self._design_output_series_l = network_spin(" µH")
+        self._design_output_series_c = network_spin(" pF")
         self._design_shunt_at_input = QCheckBox(
             translator.t("endfed.design_matching_shunt_at_input"),
             self._design_network_group,
@@ -261,23 +280,100 @@ class EndFedForm(QWidget):
             translator,
             "endfed.design_matching_shunt_at_input",
         )
-        design_form.addRow(
+
+        self._design_series_widget = QWidget(self._design_network_group)
+        series_form = QFormLayout(self._design_series_widget)
+        series_form.setContentsMargins(0, 0, 0, 0)
+        series_form.addRow(
             self._labels.label("endfed.design_matching_series_l", self._design_series_l),
             self._design_series_l,
         )
-        design_form.addRow(
+        series_form.addRow(
             self._labels.label("endfed.design_matching_series_c", self._design_series_c),
             self._design_series_c,
         )
-        design_form.addRow(
+
+        self._design_shunt_widget = QWidget(self._design_network_group)
+        shunt_form = QFormLayout(self._design_shunt_widget)
+        shunt_form.setContentsMargins(0, 0, 0, 0)
+        shunt_form.addRow(
             self._labels.label("endfed.design_matching_shunt_l", self._design_shunt_l),
             self._design_shunt_l,
         )
-        design_form.addRow(
+        shunt_form.addRow(
             self._labels.label("endfed.design_matching_shunt_c", self._design_shunt_c),
             self._design_shunt_c,
         )
-        design_form.addRow(self._design_shunt_at_input)
+        shunt_form.addRow(self._design_shunt_at_input)
+
+        self._design_pi_widget = QWidget(self._design_network_group)
+        pi_form = QFormLayout(self._design_pi_widget)
+        pi_form.setContentsMargins(0, 0, 0, 0)
+        pi_form.addRow(
+            self._labels.label(
+                "endfed.design_matching_input_shunt_l",
+                self._design_input_shunt_l,
+            ),
+            self._design_input_shunt_l,
+        )
+        pi_form.addRow(
+            self._labels.label(
+                "endfed.design_matching_input_shunt_c",
+                self._design_input_shunt_c,
+            ),
+            self._design_input_shunt_c,
+        )
+        pi_form.addRow(
+            self._labels.label(
+                "endfed.design_matching_output_shunt_l",
+                self._design_output_shunt_l,
+            ),
+            self._design_output_shunt_l,
+        )
+        pi_form.addRow(
+            self._labels.label(
+                "endfed.design_matching_output_shunt_c",
+                self._design_output_shunt_c,
+            ),
+            self._design_output_shunt_c,
+        )
+
+        self._design_t_widget = QWidget(self._design_network_group)
+        t_form = QFormLayout(self._design_t_widget)
+        t_form.setContentsMargins(0, 0, 0, 0)
+        t_form.addRow(
+            self._labels.label(
+                "endfed.design_matching_input_series_l",
+                self._design_input_series_l,
+            ),
+            self._design_input_series_l,
+        )
+        t_form.addRow(
+            self._labels.label(
+                "endfed.design_matching_input_series_c",
+                self._design_input_series_c,
+            ),
+            self._design_input_series_c,
+        )
+        t_form.addRow(
+            self._labels.label(
+                "endfed.design_matching_output_series_l",
+                self._design_output_series_l,
+            ),
+            self._design_output_series_l,
+        )
+        t_form.addRow(
+            self._labels.label(
+                "endfed.design_matching_output_series_c",
+                self._design_output_series_c,
+            ),
+            self._design_output_series_c,
+        )
+
+        design_form.addRow(self._design_series_widget)
+        design_form.addRow(self._design_shunt_widget)
+        design_form.addRow(self._design_pi_widget)
+        design_form.addRow(self._design_t_widget)
         self._design_network_auto = QPushButton(
             translator.t("endfed.design_matching_auto"),
             self._design_network_group,
@@ -290,6 +386,8 @@ class EndFedForm(QWidget):
         )
         design_form.addRow(self._design_network_auto)
         self._design_network_group.toggled.connect(self._design_network_toggled)
+        self._design_topology.currentIndexChanged.connect(self._design_topology_changed)
+        self._update_design_topology_visibility()
 
         self._counterpoise_enabled = QCheckBox(translator.t("endfed.counterpoise_enabled"), self)
         self._counterpoise_enabled.setChecked(False)
@@ -543,6 +641,14 @@ class EndFedForm(QWidget):
             self._design_series_c,
             self._design_shunt_l,
             self._design_shunt_c,
+            self._design_input_shunt_l,
+            self._design_input_shunt_c,
+            self._design_output_shunt_l,
+            self._design_output_shunt_c,
+            self._design_input_series_l,
+            self._design_input_series_c,
+            self._design_output_series_l,
+            self._design_output_series_c,
             self._loading_coil_offset,
             self._loading_coil_inductance,
             self._loading_coil_resistance,
@@ -600,6 +706,12 @@ class EndFedForm(QWidget):
         self._design_shunt_at_input.setText(
             self._translator.t("endfed.design_matching_shunt_at_input")
         )
+        for index in range(self._design_topology.count()):
+            topology = str(self._design_topology.itemData(index))
+            self._design_topology.setItemText(
+                index,
+                self._translator.t(f"endfed.design_matching_topology.{topology}"),
+            )
         self._design_network_auto.setText(self._translator.t("endfed.design_matching_auto"))
         self._common_mode_choke_group.setTitle(self._translator.t("endfed.common_mode_choke"))
         self._common_mode_choke_group.setToolTip(
@@ -832,21 +944,44 @@ class EndFedForm(QWidget):
             self._update_geometry()
             self.changed.emit()
 
+    def _design_topology_key(self) -> str:
+        return str(self._design_topology.currentData())
+
+    def _update_design_topology_visibility(self) -> None:
+        topology = self._design_topology_key()
+        self._design_series_widget.setVisible(topology in {"l", "pi"})
+        self._design_shunt_widget.setVisible(topology in {"l", "t"})
+        self._design_pi_widget.setVisible(topology == "pi")
+        self._design_t_widget.setVisible(topology == "t")
+
     def _design_network_toggled(self, checked: bool) -> None:
-        if checked and all(
-            value <= 0.0
-            for value in (
-                self._design_series_l.value(),
-                self._design_series_c.value(),
-                self._design_shunt_l.value(),
-                self._design_shunt_c.value(),
-            )
-        ):
-            self._design_series_l.setValue(1.0)
-            self._design_shunt_c.setValue(100.0)
+        if checked and not self._updating:
+            topology = self._design_topology_key()
+            if topology == "pi":
+                if self._design_series_l.value() <= 0.0:
+                    self._design_series_l.setValue(1.0)
+                if self._design_input_shunt_c.value() <= 0.0:
+                    self._design_input_shunt_c.setValue(100.0)
+                if self._design_output_shunt_c.value() <= 0.0:
+                    self._design_output_shunt_c.setValue(100.0)
+            elif topology == "t":
+                if self._design_input_series_l.value() <= 0.0:
+                    self._design_input_series_l.setValue(1.0)
+                if self._design_shunt_c.value() <= 0.0:
+                    self._design_shunt_c.setValue(100.0)
+                if self._design_output_series_l.value() <= 0.0:
+                    self._design_output_series_l.setValue(1.0)
+            elif self._design_series_l.value() <= 0.0 and self._design_shunt_c.value() <= 0.0:
+                self._design_series_l.setValue(1.0)
+                self._design_shunt_c.setValue(100.0)
         if not self._updating:
             self._update_geometry()
             self.changed.emit()
+
+    def _design_topology_changed(self, *_args: object) -> None:
+        self._update_design_topology_visibility()
+        if not self._updating:
+            self._design_network_toggled(self._design_network_group.isChecked())
 
     def _common_mode_choke_toggled(self, checked: bool) -> None:
         if checked and not self._updating:
@@ -1030,11 +1165,7 @@ class EndFedForm(QWidget):
             network = parameters.design_matching_network
             self._design_network_group.setChecked(network is not None)
             if network is not None:
-                self._design_series_l.setValue(network.series_inductance_h * 1e6)
-                self._design_series_c.setValue(network.series_capacitance_f * 1e12)
-                self._design_shunt_l.setValue(network.shunt_inductance_h * 1e6)
-                self._design_shunt_c.setValue(network.shunt_capacitance_f * 1e12)
-                self._design_shunt_at_input.setChecked(network.shunt_at_input)
+                self._apply_design_matching_network(network)
             self._matching_capacitance.setValue(parameters.matching_capacitance_f * 1e12)
             self._transformer_leakage.setValue(parameters.transformer_leakage_inductance_h * 1e6)
             self._loading_coil_group.setChecked(parameters.loading_coil_enabled)
@@ -1076,21 +1207,66 @@ class EndFedForm(QWidget):
         self._update_matching_override()
         self._update_geometry()
 
-    def set_design_matching_network(self, network: LNetwork) -> None:
-        """Populate the design-specific L-network without applying it."""
+    def set_design_matching_network(self, network: MatchingNetwork) -> None:
+        """Populate the design-specific matching network without applying it."""
 
         self._updating = True
         try:
             self._design_network_group.setChecked(True)
+            self._apply_design_matching_network(network)
+        finally:
+            self._updating = False
+        self._update_design_topology_visibility()
+        self._update_geometry()
+        self.changed.emit()
+
+    def _apply_design_matching_network(self, network: MatchingNetwork) -> None:
+        if isinstance(network, PiNetwork):
+            topology = "pi"
+        elif isinstance(network, TNetwork):
+            topology = "t"
+        else:
+            topology = "l"
+        index = self._design_topology.findData(topology)
+        if index >= 0:
+            self._design_topology.setCurrentIndex(index)
+        for box in (
+            self._design_series_l,
+            self._design_series_c,
+            self._design_shunt_l,
+            self._design_shunt_c,
+            self._design_input_shunt_l,
+            self._design_input_shunt_c,
+            self._design_output_shunt_l,
+            self._design_output_shunt_c,
+            self._design_input_series_l,
+            self._design_input_series_c,
+            self._design_output_series_l,
+            self._design_output_series_c,
+        ):
+            box.setValue(0.0)
+        if isinstance(network, PiNetwork):
+            self._design_input_shunt_l.setValue(network.input_shunt_inductance_h * 1e6)
+            self._design_input_shunt_c.setValue(network.input_shunt_capacitance_f * 1e12)
+            self._design_series_l.setValue(network.series_inductance_h * 1e6)
+            self._design_series_c.setValue(network.series_capacitance_f * 1e12)
+            self._design_output_shunt_l.setValue(network.output_shunt_inductance_h * 1e6)
+            self._design_output_shunt_c.setValue(network.output_shunt_capacitance_f * 1e12)
+        elif isinstance(network, TNetwork):
+            self._design_input_series_l.setValue(network.input_series_inductance_h * 1e6)
+            self._design_input_series_c.setValue(network.input_series_capacitance_f * 1e12)
+            self._design_shunt_l.setValue(network.shunt_inductance_h * 1e6)
+            self._design_shunt_c.setValue(network.shunt_capacitance_f * 1e12)
+            self._design_output_series_l.setValue(network.output_series_inductance_h * 1e6)
+            self._design_output_series_c.setValue(network.output_series_capacitance_f * 1e12)
+        elif isinstance(network, LNetwork):
             self._design_series_l.setValue(network.series_inductance_h * 1e6)
             self._design_series_c.setValue(network.series_capacitance_f * 1e12)
             self._design_shunt_l.setValue(network.shunt_inductance_h * 1e6)
             self._design_shunt_c.setValue(network.shunt_capacitance_f * 1e12)
             self._design_shunt_at_input.setChecked(network.shunt_at_input)
-        finally:
-            self._updating = False
-        self._update_geometry()
-        self.changed.emit()
+        else:
+            raise TypeError(f"unsupported design matching network: {type(network)!r}")
 
     def set_frequency_hz(self, frequency_hz: float) -> None:
         self._frequency.setValue(frequency_hz / 1_000_000.0)
@@ -1254,9 +1430,28 @@ class EndFedForm(QWidget):
     def _selected_return_path(self) -> EndFedReturnPath:
         return EndFedReturnPath(str(self._return_path.currentData()))
 
-    def _selected_design_matching_network(self) -> LNetwork | None:
+    def _selected_design_matching_network(self) -> MatchingNetwork | None:
         if not self._design_network_group.isChecked():
             return None
+        topology = self._design_topology_key()
+        if topology == "pi":
+            return PiNetwork(
+                input_shunt_inductance_h=self._design_input_shunt_l.value() * 1e-6,
+                input_shunt_capacitance_f=self._design_input_shunt_c.value() * 1e-12,
+                series_inductance_h=self._design_series_l.value() * 1e-6,
+                series_capacitance_f=self._design_series_c.value() * 1e-12,
+                output_shunt_inductance_h=self._design_output_shunt_l.value() * 1e-6,
+                output_shunt_capacitance_f=self._design_output_shunt_c.value() * 1e-12,
+            )
+        if topology == "t":
+            return TNetwork(
+                input_series_inductance_h=self._design_input_series_l.value() * 1e-6,
+                input_series_capacitance_f=self._design_input_series_c.value() * 1e-12,
+                shunt_inductance_h=self._design_shunt_l.value() * 1e-6,
+                shunt_capacitance_f=self._design_shunt_c.value() * 1e-12,
+                output_series_inductance_h=self._design_output_series_l.value() * 1e-6,
+                output_series_capacitance_f=self._design_output_series_c.value() * 1e-12,
+            )
         return LNetwork(
             series_inductance_h=self._design_series_l.value() * 1e-6,
             series_capacitance_f=self._design_series_c.value() * 1e-12,

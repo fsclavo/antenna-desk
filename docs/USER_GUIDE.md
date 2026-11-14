@@ -670,8 +670,9 @@ matching unit is not fully modeled. The 80-10 preset is impedance-converged
 with the current model; the 40-20-10 preset remains R/X-sensitive. Verify the
 installed SWR with a VNA.
 
-The **Design-specific L-network** section adds an optional primary-side matching
-network owned by the design. It has editable series and shunt L/C values and an
+The **Design-specific matching network** section adds an optional primary-side
+matching network owned by the design. It supports **L**, **Pi**, and **T**
+topologies with editable L/C values and, for the L network, an
 input/antenna-side shunt choice. When active, it replaces the fixed internal
 unit and the family optimizer can tune its active components. A project-level
 matching network still takes precedence: the design network is retained but not

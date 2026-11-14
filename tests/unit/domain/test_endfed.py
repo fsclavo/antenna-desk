@@ -876,24 +876,54 @@ def test_design_specific_l_network_overrides_the_internal_unit() -> None:
     assert endfed_internal_matching_network(parameters) is not network
 
 
-def test_design_specific_network_must_be_an_active_l_network() -> None:
+def test_design_specific_network_accepts_l_pi_and_t_topologies() -> None:
     from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
-    from antennadesk.domain.antennas.matching_network import LNetwork, PiNetwork
+    from antennadesk.domain.antennas.matching_network import (
+        LNetwork,
+        PiNetwork,
+        TNetwork,
+        TransformerNetwork,
+    )
 
-    with pytest.raises(ValueError, match="L-network"):
+    pi = PiNetwork(
+        input_shunt_capacitance_f=100e-12,
+        series_inductance_h=1e-6,
+        output_shunt_capacitance_f=100e-12,
+    )
+    t = TNetwork(
+        input_series_inductance_h=1e-6,
+        shunt_capacitance_f=100e-12,
+        output_series_inductance_h=1e-6,
+    )
+    assert (
         replace(
             shortened_efhw_40_10_parameters(),
-            design_matching_network=PiNetwork(
-                series_inductance_h=1e-6,
-                input_shunt_capacitance_f=100e-12,
-            ),
-        )
+            design_matching_network=pi,
+        ).design_matching_network
+        is pi
+    )
+    assert (
+        replace(
+            shortened_efhw_40_10_parameters(),
+            design_matching_network=t,
+        ).design_matching_network
+        is t
+    )
+
     with pytest.raises(ValueError, match="active elements"):
         replace(
             shortened_efhw_40_10_parameters(),
             design_matching_network=LNetwork(
                 series_inductance_h=0.0,
                 shunt_capacitance_f=0.0,
+            ),
+        )
+    with pytest.raises(ValueError, match="L, Pi, or T"):
+        replace(
+            shortened_efhw_40_10_parameters(),
+            design_matching_network=TransformerNetwork(
+                series_inductance_h=1e-6,
+                input_shunt_capacitance_f=100e-12,
             ),
         )
 

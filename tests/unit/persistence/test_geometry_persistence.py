@@ -1315,6 +1315,28 @@ def test_endfed_design_matching_network_round_trips() -> None:
     assert restored_network == network
 
 
+def test_endfed_pi_design_matching_network_round_trips() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+    from antennadesk.domain.antennas.matching_network import PiNetwork
+
+    network = PiNetwork(
+        input_shunt_capacitance_f=120e-12,
+        series_inductance_h=1.1e-6,
+        output_shunt_capacitance_f=68e-12,
+    )
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        design_matching_network=network,
+    )
+    original = _project(parameters, "Design Pi network")
+
+    restored = project_from_document(document_from_project(original))
+
+    assert restored.designs[0].parameters.design_matching_network == network
+
+
 def test_endfed_common_mode_choke_round_trips() -> None:
     from dataclasses import replace
 

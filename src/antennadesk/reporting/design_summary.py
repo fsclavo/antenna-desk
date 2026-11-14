@@ -169,6 +169,94 @@ def _branch_text(
     return " + ".join(parts)
 
 
+def _design_network_topology_label(network: MatchingNetwork) -> str:
+    if isinstance(network, PiNetwork):
+        return "Pi network (primary side)"
+    if isinstance(network, TNetwork):
+        return "T network (primary side)"
+    return "L network (primary side)"
+
+
+def _design_network_component_rows(
+    network: MatchingNetwork,
+    labeler: Labeler | None = None,
+) -> tuple[tuple[str, str], ...]:
+    if isinstance(network, PiNetwork):
+        return (
+            (
+                "Input shunt",
+                _branch_text(
+                    network.input_shunt_inductance_h,
+                    network.input_shunt_capacitance_f,
+                    labeler,
+                ),
+            ),
+            (
+                "Design series",
+                _branch_text(
+                    network.series_inductance_h,
+                    network.series_capacitance_f,
+                    labeler,
+                ),
+            ),
+            (
+                "Output shunt",
+                _branch_text(
+                    network.output_shunt_inductance_h,
+                    network.output_shunt_capacitance_f,
+                    labeler,
+                ),
+            ),
+        )
+    if isinstance(network, TNetwork):
+        return (
+            (
+                "Input series",
+                _branch_text(
+                    network.input_series_inductance_h,
+                    network.input_series_capacitance_f,
+                    labeler,
+                ),
+            ),
+            (
+                "Design shunt",
+                _branch_text(
+                    network.shunt_inductance_h,
+                    network.shunt_capacitance_f,
+                    labeler,
+                ),
+            ),
+            (
+                "Output series",
+                _branch_text(
+                    network.output_series_inductance_h,
+                    network.output_series_capacitance_f,
+                    labeler,
+                ),
+            ),
+        )
+    if not isinstance(network, LNetwork):
+        raise TypeError(f"unsupported design matching network: {type(network)!r}")
+    return (
+        (
+            "Design series",
+            _branch_text(
+                network.series_inductance_h,
+                network.series_capacitance_f,
+                labeler,
+            ),
+        ),
+        (
+            "Design shunt",
+            _branch_text(
+                network.shunt_inductance_h,
+                network.shunt_capacitance_f,
+                labeler,
+            ),
+        ),
+    )
+
+
 def matching_network_description(
     network: MatchingNetwork,
     labeler: Labeler | None = None,
@@ -948,35 +1036,23 @@ def design_summary_rows(
                 else tr("active")
             )
             network = parameters.design_matching_network
-            rows.extend(
-                [
-                    ("Design matching network", tr("L network (primary side)")),
-                    (
-                        "Design series",
-                        tr(
-                            "{value} ({status})",
-                            value=_branch_text(
-                                network.series_inductance_h,
-                                network.series_capacitance_f,
-                                labeler,
-                            ),
-                            status=design_status,
-                        ),
-                    ),
-                    (
-                        "Design shunt",
-                        tr(
-                            "{value} ({status})",
-                            value=_branch_text(
-                                network.shunt_inductance_h,
-                                network.shunt_capacitance_f,
-                                labeler,
-                            ),
-                            status=design_status,
-                        ),
-                    ),
-                ]
+            rows.append(
+                (
+                    "Design matching network",
+                    tr(_design_network_topology_label(network)),
+                )
             )
+            for label, branch_value in _design_network_component_rows(network, labeler):
+                rows.append(
+                    (
+                        label,
+                        tr(
+                            "{value} ({status})",
+                            value=branch_value,
+                            status=design_status,
+                        ),
+                    )
+                )
         if parameters.coil_active:
             rows.extend(
                 [

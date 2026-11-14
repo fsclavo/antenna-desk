@@ -1152,6 +1152,34 @@ def test_endfed_construction_sheet_lists_the_design_l_network(
     assert "82 pF" in sheet
 
 
+def test_endfed_construction_sheet_lists_a_pi_design_network(
+    sample_project: Project,
+) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+    from antennadesk.domain.antennas.matching_network import PiNetwork
+
+    parameters = replace(
+        shortened_efhw_40_10_parameters(),
+        design_matching_network=PiNetwork(
+            input_shunt_capacitance_f=120e-12,
+            series_inductance_h=1.1e-6,
+            output_shunt_capacitance_f=68e-12,
+        ),
+    )
+    design = sample_project.designs[0].with_parameters(parameters)
+    project = sample_project.with_design(design, updated_at=sample_project.updated_at)
+
+    sheet = render_construction_sheet(project, design, None)
+
+    assert "Pi network (primary side)" in sheet
+    assert "Input shunt" in sheet
+    assert "120 pF" in sheet
+    assert "Output shunt" in sheet
+    assert "68 pF" in sheet
+
+
 def test_endfed_construction_sheet_lists_the_feedpoint_choke(
     sample_project: Project,
 ) -> None:

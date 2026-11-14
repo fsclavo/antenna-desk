@@ -163,6 +163,42 @@ def test_endfed_dialog_clears_the_measured_loss_when_the_ratio_changes(
     assert dialog.parameters().transformer_loss is None
 
 
+def test_endfed_dialog_sets_pi_and_t_design_networks(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+    from antennadesk.domain.antennas.matching_network import PiNetwork, TNetwork
+
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=shortened_efhw_40_10_parameters(),
+    )
+    qtbot.addWidget(dialog)
+    dialog._form._design_network_group.setChecked(True)
+    pi_index = dialog._form._design_topology.findData("pi")
+    dialog._form._design_topology.setCurrentIndex(pi_index)
+    dialog._form._design_input_shunt_c.setValue(120.0)
+    dialog._form._design_series_l.setValue(1.1)
+    dialog._form._design_output_shunt_c.setValue(68.0)
+
+    pi = dialog.parameters().design_matching_network
+    assert isinstance(pi, PiNetwork)
+    assert pi.input_shunt_capacitance_f == pytest.approx(120e-12)
+    assert pi.series_inductance_h == pytest.approx(1.1e-6)
+    assert pi.output_shunt_capacitance_f == pytest.approx(68e-12)
+
+    t_index = dialog._form._design_topology.findData("t")
+    dialog._form._design_topology.setCurrentIndex(t_index)
+    dialog._form._design_input_series_l.setValue(1.0)
+    dialog._form._design_shunt_c.setValue(100.0)
+    dialog._form._design_output_series_l.setValue(1.0)
+
+    t = dialog.parameters().design_matching_network
+    assert isinstance(t, TNetwork)
+    assert t.input_series_inductance_h == pytest.approx(1e-6)
+    assert t.shunt_capacitance_f == pytest.approx(100e-12)
+    assert t.output_series_inductance_h == pytest.approx(1e-6)
+
+
 def test_endfed_form_populates_a_synthesized_design_network(qtbot: QtBot) -> None:
     from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
     from antennadesk.domain.antennas.matching_network import design_l_network
