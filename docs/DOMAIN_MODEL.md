@@ -648,6 +648,11 @@ the antenna feedpoint (after the feed line) or in the shack (before it). The
 ideal family transformer remains at the antenna. `link_budget()` evaluates the
 selected order and reports actual dissipative line and network losses from the
 two-port power balance; the balun loss remains a matched scalar attenuation.
+`LinkBudget.total_loss_db` is an audit sum of mismatch, feed-line, network,
+balun, and transformer losses; for a finite transducer gain it must equal
+`-transducer_gain_db`. NEC conductor and load losses, including the feedpoint
+common-mode choke, stay in the antenna power budget and are not subtracted a
+second time. See [ADR-0040](ADR/0040-loss-accounting.md).
 The project also stores a `current_balun` record: it states that a physical
 current balun/choke is installed. It is a construction note only and does not
 change impedance, SWR, gain, or the ideal feed transformer. Balanced families

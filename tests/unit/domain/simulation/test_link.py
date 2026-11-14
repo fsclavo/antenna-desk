@@ -104,6 +104,81 @@ def test_transformer_loss_is_separate_from_mismatch_and_balun_loss() -> None:
     assert budget.transducer_gain_db == pytest.approx(-0.8115, abs=0.001)
 
 
+def test_loss_components_sum_to_the_transducer_gain() -> None:
+    from antennadesk.domain.antennas.balun import (
+        SQUASH_PRACTICE_49_1_LOSS,
+        BalunLoss,
+    )
+    from antennadesk.domain.antennas.feed_line import FeedLine
+
+    scenarios = (
+        (complex(50.0, 0.0), _spec()),
+        (complex(100.0, 0.0), _spec()),
+        (
+            complex(75.0, -20.0),
+            _spec(
+                feed_line=FeedLine(
+                    characteristic_impedance_ohm=50.0,
+                    length_m=30.0,
+                    velocity_factor=0.66,
+                    matched_loss_db_per_100m=2.0,
+                )
+            ),
+        ),
+        (
+            complex(100.0, -20.0),
+            _spec(matching_network=design_l_network(complex(100.0, -20.0), FREQUENCY_HZ)),
+        ),
+        (
+            complex(100.0, 0.0),
+            _spec(
+                balun_loss=BalunLoss(
+                    reference_frequency_hz=FREQUENCY_HZ,
+                    reference_loss_db=0.5,
+                ),
+                transformer_loss=SQUASH_PRACTICE_49_1_LOSS,
+            ),
+        ),
+        (
+            complex(75.0, -20.0),
+            _spec(
+                feed_line=FeedLine(
+                    characteristic_impedance_ohm=50.0,
+                    length_m=30.0,
+                    velocity_factor=0.66,
+                    matched_loss_db_per_100m=2.0,
+                ),
+                matching_network=design_l_network(complex(100.0, -20.0), FREQUENCY_HZ),
+                balun_loss=BalunLoss(
+                    reference_frequency_hz=FREQUENCY_HZ,
+                    reference_loss_db=0.5,
+                ),
+                transformer_loss=SQUASH_PRACTICE_49_1_LOSS,
+            ),
+        ),
+    )
+
+    for antenna_impedance, spec in scenarios:
+        budget = link_budget(
+            antenna_impedance_ohm=antenna_impedance,
+            frequency_hz=FREQUENCY_HZ,
+            spec=spec,
+        )
+        assert budget.loss_balance_db == pytest.approx(0.0, abs=1e-9)
+        assert budget.total_loss_db == pytest.approx(-budget.transducer_gain_db, abs=1e-9)
+
+
+def test_all_optional_losses_disabled_keep_a_matched_link_ideal() -> None:
+    budget = link_budget(
+        antenna_impedance_ohm=complex(50.0, 0.0),
+        frequency_hz=FREQUENCY_HZ,
+        spec=_spec(),
+    )
+
+    assert budget.total_loss_db == pytest.approx(0.0)
+    assert budget.transducer_gain_db == pytest.approx(0.0)
+
+
 def test_matched_feed_line_reports_its_matched_loss() -> None:
     line = FeedLine(
         characteristic_impedance_ohm=50.0,

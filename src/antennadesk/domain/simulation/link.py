@@ -32,6 +32,30 @@ class LinkBudget:
     transformer_loss_db: float = 0.0
     matching_network_topology_floor_swr: float | None = None
 
+    @property
+    def total_loss_db(self) -> float:
+        """Return the sum of the modeled feed-chain losses.
+
+        This is an audit value, not a second physical model. It must match
+        ``-transducer_gain_db`` when the transducer gain is finite. NEC
+        conductor/load losses remain in the antenna power budget and are not
+        part of this sum.
+        """
+
+        return (
+            self.mismatch_loss_db
+            + self.feed_line_loss_db
+            + self.network_loss_db
+            + self.balun_loss_db
+            + self.transformer_loss_db
+        )
+
+    @property
+    def loss_balance_db(self) -> float:
+        """Return the residual between the loss sum and the transducer gain."""
+
+        return self.total_loss_db + self.transducer_gain_db
+
 
 def link_budget(
     *,

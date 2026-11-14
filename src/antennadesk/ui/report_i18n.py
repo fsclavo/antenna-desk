@@ -451,6 +451,7 @@ REPORT_SPANISH: dict[str, str] = {
     "Total wire length": "Longitud total del hilo",
     "Transformer": "Transformador",
     "Transformer loss": "Pérdida del transformador",
+    "Total feed-chain loss": "Pérdida total de la cadena de alimentación",
     "measured 49:1 (Squash Practice)": "49:1 medido (Squash Practice)",
     "retained; design network overrides": "retenida; la red de diseño la anula",
     "Design matching network": "Red de adaptación del diseño",

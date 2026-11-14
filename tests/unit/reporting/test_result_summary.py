@@ -68,6 +68,7 @@ def test_gain_metrics_report_power_directivity_and_realized_gain() -> None:
     assert rows["Network loss"] == "0.050 dB"
     assert rows["Balun/unun loss"] == "0.030 dB"
     assert rows["Transformer loss"] == "0.300 dB"
+    assert rows["Total feed-chain loss"] == "0.680 dB"
     assert rows["Link metrics at"] == "7.100000 MHz"
 
 

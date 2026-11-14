@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   corrosion-resistant use case; the solver emits conductivity through `LD 5`
   and does not trigger the permeability warning. Copper remains the default and
   the project schema is unchanged.
+- **Feed-chain loss audit.** `LinkBudget.total_loss_db` now sums mismatch,
+  feed-line, network, balun, and transformer losses, with
+  `loss_balance_db = total_loss_db + transducer_gain_db` expected to be zero for
+  finite results. The reports add a **Total feed-chain loss** row. NEC conductor
+  and load losses, including the feedpoint common-mode choke, remain in the
+  antenna power budget and are not subtracted again. See
+  [ADR-0040](docs/ADR/0040-loss-accounting.md).
 - **Frequency-dependent coax attenuation.** `FeedLine` can carry a source-backed
   attenuation table. RG-58A/U (Belden 8219) and RG-213/U (Belden 8267) catalog
   entries now fill 1–1000 MHz and 1–4000 MHz tables. Values are interpolated in

@@ -70,4 +70,17 @@ def gain_metric_rows(result: SimulationResult | None) -> tuple[tuple[str, str], 
             rows.append(("Balun/unun loss", f"{frequency.balun_loss_db:.3f} dB"))
         if frequency.transformer_loss_db is not None:
             rows.append(("Transformer loss", f"{frequency.transformer_loss_db:.3f} dB"))
+        losses = [
+            value
+            for value in (
+                frequency.mismatch_loss_db,
+                frequency.feed_line_loss_db,
+                frequency.network_loss_db,
+                frequency.balun_loss_db,
+                frequency.transformer_loss_db,
+            )
+            if value is not None
+        ]
+        if losses:
+            rows.append(("Total feed-chain loss", f"{sum(losses):.3f} dB"))
     return tuple(rows)
