@@ -132,7 +132,7 @@ external service and must not be invented or simulated into existence.
 | ~~EF7b~~ | ~~Measured transformer loss and frequency dependence~~ | L | EF7a; measured loss data | **Done 2026-11-13:** added the optional `EndFedTransformerLossModel` selector with the Squash Practice/AF7NX 2xFT114-43, 5T/30T table: 0.43/0.33/0.30/0.32 dB at the 80/40/20/10 m band centers. Values are interpolated linearly in log frequency between 3.75 and 28.5 MHz and clamped outside; the source measured one reference build at 50 W FT8, so this is not a universal loss model. The loss is off by default, requires a 49:1 ratio, and is reported as `transformer_loss_db`, separate from mismatch loss and the project `BalunLoss`. Schema 48 persists the selector and the per-frequency loss; CSV, feed-chain, results, construction sheet, and EN/ES help expose it. KN5L's ~0.3 dB core-loss data is cited as corroboration, not used to invent extra frequency points. |
 | ~~EF8a~~ | ~~User-selectable end-fed return path~~ | M | EF3 | **Done 2026-11-13:** added `EndFedReturnPath` (`auto`, `installation_proxy`, `counterpoise`, `coax_shield`) and persisted it in schema 47. `auto` preserves the legacy counterpoise-or-proxy behavior; counterpoise and coax shield use the existing return length/height/azimuth fields, with the shield as a model-only straight-wire approximation. The optimizer searches the return length for counterpoise/coax and keeps the height variable only for a physical counterpoise. The editor, reports, construction sheet, scene note, and EN/ES help state that the shield is a wire approximation. EF8 later added an optional feedpoint choke; shack-end placement and shield transfer impedance remain unmodeled. No solver change for other families at EF8a. |
 | ~~EF8~~ | ~~Common-mode return / coax-shield model for end-fed antennas~~ | L | measurement or validated common-mode model | **Done 2026-11-13 with explicit limits:** EF8a added the selectable return path and the coax-shield wire approximation. EF8 adds an optional **feedpoint** common-mode choke as a measured series R/X load on the shield, with a required source, a 49:1-compatible coax-shield return, a frequency-mismatch warning, and a predominantly-reactive warning. Positive X becomes a series L and negative X a series C; R is held constant. ADR-0037 records the model. Shack-end choke placement, frequency-interpolated `Zcm(f)`, shield transfer impedance, the real cable route, and absolute common-mode-current prediction remain unmodeled; no universal choke preset was invented. Do not optimize the installation proxy as a physical radial. |
-| EF9 | Design-specific matching-network optimization | L | EF7b, EF8, ADR | **Blocked/deferred.** The current project matching network is global and replaces the internal EFHW unit (ADR-0028). A design-specific L/Pi/T network with optimizer variables is the only coherent way to let the optimizer tune a match; it requires an ADR, schema, UI, and regression coverage. Do not add loose C/L variables to the fixed input-shunt network. |
+| EF9 | Design-specific matching-network optimization | L | EF7b, EF8, ADR | **Phase A started 2026-11-14.** ADR-0038 is accepted: an optional design-specific L-network owned by `EndFedParameters`, with precedence **project network > design-specific network > internal fixed unit**, schema 50, optimizer variables, UI, and regression coverage. Phase A is limited to the L-network; Pi/T and automatic synthesis are follow-ups. Do not add loose C/L variables to the fixed input-shunt network. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -1098,7 +1098,7 @@ matching-network ADR exists. The ordered plan is:
 | EF7b | Measured transformer loss and frequency dependence | Implemented from the Squash Practice band-loss table |
 | EF8a | User-selectable end-fed return path | Implemented; `auto` preserves legacy behavior |
 | EF8 | Common-mode return / coax-shield model | Bounded feedpoint choke model implemented; shack-end/shield-transfer model remains deferred |
-| EF9 | Design-specific matching-network optimization | Follow-up to ADR-0028; needs EF7/EF8 |
+| EF9 | Design-specific matching-network optimization | ADR-0038 accepted; Phase A implementation in progress |
 
 ### EF1 — Optimizer structural segmentation (implemented)
 
@@ -1270,11 +1270,10 @@ The existing NEC2C integration test continues to assert that 80-10 converges and
   `Zcm(f)`, shield transfer impedance, and absolute common-mode-current
   prediction still require a measurement or a validated model. Do not optimize
   the installation proxy as a physical radial.
-- **EF9:** design-specific matching-network optimization. The project network is
-  global and replaces the internal EFHW unit (ADR-0028). A design-specific
-  L/Pi/T network with optimizer variables is the coherent path; it needs an ADR,
-  schema, UI, and regression coverage. Do not add loose C/L variables to the
-  fixed input-shunt network.
+- **EF9:** design-specific matching-network optimization. ADR-0038 proposes an
+  optional design-specific L-network with precedence project > design-specific >
+  internal. It needs schema 50, UI, optimizer variables, and regression
+  coverage. Do not add loose C/L variables to the fixed input-shunt network.
 
 ### No-impact contract for EF1–EF6
 
