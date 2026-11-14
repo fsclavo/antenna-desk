@@ -65,6 +65,11 @@ def test_coax_preset_builds_the_feed_line() -> None:
         assert line.length_m == pytest.approx(12.5)
         assert line.velocity_factor == pytest.approx(entry.velocity_factor)
         assert line.matched_loss_db_per_100m == pytest.approx(entry.matched_loss_db_per_100m)
+        assert line.attenuation_points == entry.attenuation_points
+        if entry.attenuation_points:
+            assert line.attenuation_source == entry.source.label
+        else:
+            assert line.attenuation_source == ""
         assert entry.reference_frequency_hz > 0.0
         assert 0.0 < entry.velocity_factor <= 1.0
 

@@ -85,6 +85,12 @@ connectors and matching before using them on a 50 Ω transmitter.
 | Fair-Rite 43 | NiZn | 800 | 20–250 MHz | Fair-Rite 43 Material data sheet |
 | Fair-Rite 61 | NiZn | 125 | 200–2000 MHz | Fair-Rite 61 Material data sheet |
 
+Coax attenuation data is stored per cable. RG-58A/U and RG-213/U include
+source-backed multi-point tables used by the feed-line model; other cables keep
+their documented reference-frequency point. The table is interpolated in log
+frequency and does not claim accuracy outside its documented range. See
+[ADR-0039](ADR/0039-frequency-dependent-coax-attenuation.md).
+
 Ferrite data is reference only. AntennaDesk does not model a ferrite core,
 complex permeability, core geometry, winding, or a frequency-interpolated
 common-mode impedance `Zcm(f)`. It can apply a user-measured series R/X at one

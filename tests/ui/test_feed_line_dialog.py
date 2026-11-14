@@ -78,10 +78,14 @@ def test_feed_line_dialog_catalog_fills_values(qtbot: QtBot) -> None:
     assert dialog._velocity_factor.value() == pytest.approx(0.66)
     assert dialog._loss.value() == pytest.approx(6.23)
     assert dialog._length.value() == pytest.approx(10.0)
-    assert "100 MHz" in dialog._catalog_hint.text()
+    assert "1-4000 MHz" in dialog._catalog_hint.text()
+    assert "Belden 8267" in dialog._catalog_hint.text()
     assert dialog._catalog.toolTip()
     assert dialog._catalog_hint.toolTip()
-    assert dialog.feed_line() is not None
+    line = dialog.feed_line()
+    assert line is not None
+    assert line.is_frequency_dependent
+    assert line.attenuation_source == "Belden 8267 RG-213/U technical data sheet"
 
 
 def test_feed_line_dialog_manual_edit_switches_to_custom(qtbot: QtBot) -> None:
@@ -93,6 +97,10 @@ def test_feed_line_dialog_manual_edit_switches_to_custom(qtbot: QtBot) -> None:
 
     assert dialog._catalog.currentData() is None
     assert "Custom values" in dialog._catalog_hint.text()
+    line = dialog.feed_line()
+    assert line is not None
+    assert line.attenuation_points == ()
+    assert line.attenuation_source == ""
 
 
 def test_feed_line_dialog_restores_a_unique_catalog_entry(qtbot: QtBot) -> None:
@@ -154,4 +162,4 @@ def test_feed_line_dialog_catalog_is_translated(qtbot: QtBot) -> None:
 
     assert dialog._catalog.itemText(0) == "Personalizado"
     assert dialog._catalog.currentText() == "RG-213/U"
-    assert "Punto de hoja de datos" in dialog._catalog_hint.text()
+    assert "Atenuación de hoja de datos" in dialog._catalog_hint.text()

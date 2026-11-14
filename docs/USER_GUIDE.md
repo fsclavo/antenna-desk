@@ -1591,9 +1591,11 @@ impedance, velocity factor, and matched loss from the same 16 cables as the
 materials reference; the length stays editable, and manual edits to impedance,
 velocity factor, or loss switch the selector back to **Custom**. The selected
 catalog key is not persisted: on reopen, a unique electrical match is
-preselected and ambiguous matches show **Custom**. The hint shows the datasheet
-reference frequency and states that the simulation uses a constant matched
-loss. When enabled, the Impedance / SWR tab
+preselected and ambiguous matches show **Custom**. RG-58A/U and RG-213/U also
+include source-backed frequency-dependent attenuation tables. Their values are
+interpolated in log frequency; outside the documented range the endpoint values
+are used and preflight warns. The hint shows the datasheet source, range, or
+reference frequency. When enabled, the Impedance / SWR tab
 reports the impedance and SWR at the **transmitter end**; the Pattern tab still
 reports antenna power gain, because the line does not change the radiation
 pattern. Realized gain in the results summary includes the line loss and

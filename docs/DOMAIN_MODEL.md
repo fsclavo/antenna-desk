@@ -634,6 +634,15 @@ balanced/unbalanced interface, the modeled and recorded hardware, and the
 unmodeled limits. It is a construction aid only: it does not change
 `AntennaModel.feed`, the NEC deck, the solver, or the project schema.
 
+`FeedLine` stores characteristic impedance, length, velocity factor, and a
+constant matched loss per 100 m. It can also carry an optional ordered
+`LossPoint` attenuation table with a required source. Table values are
+interpolated linearly in log frequency; outside the documented range the
+endpoint values are used and preflight reports a warning. RG-58A/U and RG-213/U
+catalog entries include source-backed tables; manual edits clear the table and
+return to the constant-loss behavior. See
+[ADR-0039](ADR/0039-frequency-dependent-coax-attenuation.md).
+
 `MatchingNetworkPosition` selects whether the project matching network is at
 the antenna feedpoint (after the feed line) or in the shack (before it). The
 ideal family transformer remains at the antenna. `link_budget()` evaluates the

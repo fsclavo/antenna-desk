@@ -83,6 +83,8 @@ def test_dialog_applies_a_coax_preset_and_preserves_length(qtbot: QtBot) -> None
     assert result.characteristic_impedance_ohm == pytest.approx(50.0)
     assert result.velocity_factor == pytest.approx(0.66)
     assert result.matched_loss_db_per_100m == pytest.approx(6.23)
+    assert result.is_frequency_dependent
+    assert result.attenuation_source == "Belden 8267 RG-213/U technical data sheet"
 
 
 def test_dialog_apply_is_disabled_without_a_project(qtbot: QtBot) -> None:

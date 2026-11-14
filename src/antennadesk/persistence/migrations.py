@@ -733,6 +733,35 @@ def _migrate_v46_to_v47(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v50_to_v51(document: dict[str, Any]) -> dict[str, Any]:
+    """Add optional frequency-dependent feed-line attenuation."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if not isinstance(project, dict):
+        return migrated
+    feed_line = project.get("feed_line")
+    if isinstance(feed_line, dict):
+        feed_line.setdefault("attenuation_points", [])
+        feed_line.setdefault("attenuation_source", "")
+    runs = project.get("simulation_runs")
+    if isinstance(runs, list):
+        for run in runs:
+            if not isinstance(run, dict):
+                continue
+            result = run.get("result")
+            if not isinstance(result, dict):
+                continue
+            spec = result.get("spec")
+            if not isinstance(spec, dict):
+                continue
+            run_feed_line = spec.get("feed_line")
+            if isinstance(run_feed_line, dict):
+                run_feed_line.setdefault("attenuation_points", [])
+                run_feed_line.setdefault("attenuation_source", "")
+    return migrated
+
+
 def _migrate_v49_to_v50(document: dict[str, Any]) -> dict[str, Any]:
     """Add the optional design-specific end-fed L-network."""
 
@@ -852,6 +881,7 @@ MIGRATIONS: dict[int, Migration] = {
     47: _migrate_v47_to_v48,
     48: _migrate_v48_to_v49,
     49: _migrate_v49_to_v50,
+    50: _migrate_v50_to_v51,
 }
 
 

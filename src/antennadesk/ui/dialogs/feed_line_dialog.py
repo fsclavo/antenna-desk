@@ -40,6 +40,8 @@ class FeedLineDialog(QDialog):
         self._unit_system = unit_system
         self._feed_line = feed_line
         self._catalog_updating = False
+        self._attenuation_points = feed_line.attenuation_points if feed_line else ()
+        self._attenuation_source = feed_line.attenuation_source if feed_line else ""
 
         self.setWindowTitle(translator.t("feed_line.title"))
         self.resize(*scaled_dialog_size(520, 340))
@@ -189,6 +191,8 @@ class FeedLineDialog(QDialog):
             self._impedance.setValue(entry.characteristic_impedance_ohm)
             self._velocity_factor.setValue(entry.velocity_factor)
             self._loss.setValue(entry.matched_loss_db_per_100m)
+            self._attenuation_points = entry.attenuation_points
+            self._attenuation_source = entry.source.label if entry.attenuation_points else ""
         finally:
             self._catalog_updating = False
         self._update_catalog_hint(entry)
@@ -197,12 +201,24 @@ class FeedLineDialog(QDialog):
     def _on_manual_change(self, _value: float) -> None:
         if self._catalog_updating or self._catalog.currentData() is None:
             return
+        self._attenuation_points = ()
+        self._attenuation_source = ""
         self._set_catalog_index(0)
         self._update_catalog_hint(None)
 
     def _update_catalog_hint(self, entry: CoaxReference | None) -> None:
         if entry is None:
             self._catalog_hint.setText(self._translator.t("feed_line.catalog_custom_hint"))
+            return
+        if entry.attenuation_points:
+            self._catalog_hint.setText(
+                self._translator.t(
+                    "feed_line.catalog_table_hint",
+                    source=entry.source.label,
+                    minimum=f"{entry.attenuation_points[0].frequency_hz / 1e6:g}",
+                    maximum=f"{entry.attenuation_points[-1].frequency_hz / 1e6:g}",
+                )
+            )
             return
         self._catalog_hint.setText(
             self._translator.t(
@@ -233,6 +249,8 @@ class FeedLineDialog(QDialog):
             length_m=length_to_m(self._length.value(), self._unit_system),
             velocity_factor=self._velocity_factor.value(),
             matched_loss_db_per_100m=self._loss.value(),
+            attenuation_points=self._attenuation_points,
+            attenuation_source=self._attenuation_source,
         )
 
     def result_feed_line(self) -> FeedLine | None:

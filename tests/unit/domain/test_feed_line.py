@@ -59,6 +59,47 @@ def test_rejects_invalid_parameters(kwargs: dict[str, float]) -> None:
         FeedLine(**kwargs)
 
 
+def test_frequency_dependent_attenuation_interpolates_in_log_frequency() -> None:
+    from antennadesk.domain.antennas.balun import LossPoint
+
+    line = FeedLine(
+        length_m=10.0,
+        attenuation_points=(
+            LossPoint(1_000_000.0, 1.0),
+            LossPoint(100_000_000.0, 3.0),
+        ),
+        attenuation_source="test",
+    )
+
+    assert line.is_frequency_dependent
+    assert line.attenuation_range_hz == pytest.approx((1_000_000.0, 100_000_000.0))
+    assert line.matched_loss_db_per_100m_at(10_000_000.0) == pytest.approx(2.0)
+    assert line.matched_loss_db_per_100m_at(500_000.0) == pytest.approx(1.0)
+    assert line.matched_loss_db_per_100m_at(200_000_000.0) == pytest.approx(3.0)
+    assert line.is_within_attenuation_range(10_000_000.0)
+    assert not line.is_within_attenuation_range(500_000.0)
+
+
+def test_feed_line_table_requires_a_source_and_increasing_frequencies() -> None:
+    from antennadesk.domain.antennas.balun import LossPoint
+
+    with pytest.raises(ValueError, match="source"):
+        FeedLine(
+            attenuation_points=(
+                LossPoint(1_000_000.0, 1.0),
+                LossPoint(10_000_000.0, 2.0),
+            ),
+        )
+    with pytest.raises(ValueError, match="strictly increasing"):
+        FeedLine(
+            attenuation_points=(
+                LossPoint(10_000_000.0, 1.0),
+                LossPoint(1_000_000.0, 2.0),
+            ),
+            attenuation_source="test",
+        )
+
+
 def test_abcd_input_impedance_matches_the_closed_form() -> None:
     frequency_hz = 14_100_000.0
     load = complex(75.0, -20.0)

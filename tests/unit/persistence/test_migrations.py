@@ -1177,6 +1177,46 @@ def test_v46_migration_adds_the_endfed_return_path() -> None:
     assert "return_path" not in document["project"]["designs"][0]["parameters"]
 
 
+def test_v50_migration_adds_feed_line_attenuation_fields() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 50,
+        "project": {
+            "feed_line": {
+                "characteristic_impedance_ohm": 50.0,
+                "length_m": 10.0,
+                "velocity_factor": 0.66,
+                "matched_loss_db_per_100m": 6.23,
+            },
+            "simulation_runs": [
+                {
+                    "result": {
+                        "spec": {
+                            "feed_line": {
+                                "characteristic_impedance_ohm": 50.0,
+                                "length_m": 10.0,
+                                "velocity_factor": 0.66,
+                                "matched_loss_db_per_100m": 6.23,
+                            }
+                        }
+                    }
+                }
+            ],
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    project_line = migrated["project"]["feed_line"]
+    assert project_line["attenuation_points"] == []
+    assert project_line["attenuation_source"] == ""
+    run_line = migrated["project"]["simulation_runs"][0]["result"]["spec"]["feed_line"]
+    assert run_line["attenuation_points"] == []
+    assert run_line["attenuation_source"] == ""
+    assert "attenuation_points" not in document["project"]["feed_line"]
+
+
 def test_v49_migration_adds_the_endfed_design_matching_network() -> None:
     document = {
         "format": "antennadesk-project",

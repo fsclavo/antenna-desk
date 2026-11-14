@@ -5507,6 +5507,19 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "alimentación."
         ),
     },
+    "feed_line.catalog_table_hint": {
+        Language.ENGLISH: (
+            "Frequency-dependent datasheet attenuation from {source}, "
+            "{minimum}-{maximum} MHz. Values are interpolated in log frequency; "
+            "endpoint values are used outside the range and preflight warns."
+        ),
+        Language.SPANISH: (
+            "Atenuación de hoja de datos dependiente de la frecuencia de {source}, "
+            "{minimum}-{maximum} MHz. Los valores se interpolan en frecuencia "
+            "logarítmica; fuera del rango se usan los extremos y la verificación "
+            "previa lo advierte."
+        ),
+    },
     "feed_line.catalog_hint": {
         Language.ENGLISH: (
             "Datasheet point: {loss} at {frequency}. The simulation uses this constant "
@@ -14882,6 +14895,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "La impedancia y la ROE excluyen la pérdida adaptada del balun/unun; "
             "la ganancia realizada la incluye."
+        ),
+    },
+    "diagnostic.feed_line.attenuation_range": {
+        Language.ENGLISH: (
+            "The feed-line attenuation table covers {minimum}-{maximum} MHz. The "
+            "simulation plan extends outside that range and uses endpoint values."
+        ),
+        Language.SPANISH: (
+            "La tabla de atenuación de la línea cubre {minimum}-{maximum} MHz. El "
+            "plan de simulación sale de ese rango y usa los valores extremos."
         ),
     },
     "diagnostic.feed_line.applied": {

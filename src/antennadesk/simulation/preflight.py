@@ -59,6 +59,36 @@ def _assumption_findings(
     return tuple(diagnostic_finding(diagnostic) for diagnostic in diagnostics)
 
 
+def _feed_line_findings(spec: SimulationSpec) -> tuple[PreflightFinding, ...]:
+    line = spec.feed_line
+    if line is None or line.attenuation_range_hz is None:
+        return ()
+    minimum_hz, maximum_hz = line.attenuation_range_hz
+    plan = spec.frequency_plan
+    last_hz = plan.start_hz + plan.step_hz * (plan.count - 1)
+    if plan.start_hz >= minimum_hz and last_hz <= maximum_hz:
+        return ()
+    return (
+        PreflightFinding(
+            code="feed_line.attenuation_range",
+            category=PreflightCategory.FEED,
+            severity=Severity.WARNING,
+            message=(
+                "the feed-line attenuation table covers "
+                f"{minimum_hz / 1e6:g}-{maximum_hz / 1e6:g} MHz; the simulation "
+                "frequency plan extends outside that range and uses endpoint values"
+            ),
+            field="feed_line",
+            subject="feed_line",
+            action=PreflightAction.EDIT_LINES,
+            values=(
+                ("minimum", f"{minimum_hz / 1e6:g}"),
+                ("maximum", f"{maximum_hz / 1e6:g}"),
+            ),
+        ),
+    )
+
+
 def _latest_result(
     project: Project,
     design: DesignVariant,
@@ -185,5 +215,6 @@ def run_preflight(
     findings = list(run_model_preflight(project, design))
     findings.extend(_segmentation_findings(design.antenna, spec))
     findings.extend(_assumption_findings(design.antenna, spec))
+    findings.extend(_feed_line_findings(spec))
     findings.extend(_simulation_findings(design, result or _latest_result(project, design)))
     return PreflightReport(tuple(findings))

@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   corrosion-resistant use case; the solver emits conductivity through `LD 5`
   and does not trigger the permeability warning. Copper remains the default and
   the project schema is unchanged.
+- **Frequency-dependent coax attenuation.** `FeedLine` can carry a source-backed
+  attenuation table. RG-58A/U (Belden 8219) and RG-213/U (Belden 8267) catalog
+  entries now fill 1–1000 MHz and 1–4000 MHz tables. Values are interpolated in
+  log frequency; outside the range the endpoint values are used and preflight
+  warns. Manual edits clear the table and return to constant loss. Schema 51
+  persists the table and source; older projects migrate with an empty table.
+  See [ADR-0039](docs/ADR/0039-frequency-dependent-coax-attenuation.md).
 - **Design L-network from the current result.** The design-specific L-network
   section can synthesize a lossless L-network from the current feedpoint
   impedance, using the primary-side load and the existing `design_l_network`

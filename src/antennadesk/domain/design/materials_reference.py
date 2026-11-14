@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from ..antennas.balun import LossPoint
 from ..antennas.feed_line import FeedLine
 from ..antennas.materials import (
     ALUMINUM,
@@ -59,6 +60,7 @@ class CoaxReference:
     matched_loss_db_per_100m: float
     reference_frequency_hz: float
     source: ReferenceSource
+    attenuation_points: tuple[LossPoint, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.key.strip():
@@ -75,6 +77,7 @@ class CoaxReference:
             name="matched_loss_db_per_100m",
         )
         ensure_positive(self.reference_frequency_hz, name="reference_frequency_hz")
+        object.__setattr__(self, "attenuation_points", tuple(self.attenuation_points))
 
     def feed_line(self, length_m: float) -> FeedLine:
         """Return a feed line initialized from this datasheet point."""
@@ -84,6 +87,8 @@ class CoaxReference:
             length_m=length_m,
             velocity_factor=self.velocity_factor,
             matched_loss_db_per_100m=self.matched_loss_db_per_100m,
+            attenuation_points=self.attenuation_points,
+            attenuation_source=self.source.label if self.attenuation_points else "",
         )
 
 
@@ -266,6 +271,17 @@ COAX_REFERENCES: tuple[CoaxReference, ...] = (
         matched_loss_db_per_100m=14.76,
         reference_frequency_hz=100_000_000.0,
         source=BELDEN_RG58A,
+        attenuation_points=(
+            LossPoint(1_000_000.0, 1.3123),
+            LossPoint(10_000_000.0, 4.2651),
+            LossPoint(50_000_000.0, 10.1706),
+            LossPoint(100_000_000.0, 14.7638),
+            LossPoint(200_000_000.0, 21.6535),
+            LossPoint(400_000_000.0, 32.8084),
+            LossPoint(700_000_000.0, 46.5879),
+            LossPoint(900_000_000.0, 54.4619),
+            LossPoint(1_000_000_000.0, 59.3832),
+        ),
     ),
     CoaxReference(
         key="rg8x",
@@ -290,6 +306,18 @@ COAX_REFERENCES: tuple[CoaxReference, ...] = (
         matched_loss_db_per_100m=6.23,
         reference_frequency_hz=100_000_000.0,
         source=BELDEN_RG213,
+        attenuation_points=(
+            LossPoint(1_000_000.0, 0.88587),
+            LossPoint(10_000_000.0, 1.80455),
+            LossPoint(50_000_000.0, 4.2653),
+            LossPoint(100_000_000.0, 6.2339),
+            LossPoint(200_000_000.0, 8.8587),
+            LossPoint(400_000_000.0, 13.4521),
+            LossPoint(700_000_000.0, 21.3265),
+            LossPoint(900_000_000.0, 24.9356),
+            LossPoint(1_000_000_000.0, 26.248),
+            LossPoint(4_000_000_000.0, 70.5415),
+        ),
     ),
     CoaxReference(
         key="rg214",

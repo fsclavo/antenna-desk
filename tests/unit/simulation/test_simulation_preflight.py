@@ -76,6 +76,51 @@ def _below_ground_project() -> Project:
     )
 
 
+def test_preflight_warns_when_the_feed_line_table_exceeds_the_plan() -> None:
+    from antennadesk.domain.antennas.balun import LossPoint
+    from antennadesk.domain.antennas.feed_line import FeedLine
+
+    wire = Wire(
+        id="radiator",
+        start=Point3D(-5.0, 0.0, 8.0),
+        end=Point3D(5.0, 0.0, 8.0),
+        radius_m=0.001,
+        material=COPPER,
+    )
+    parameters = CustomAntennaParameters(
+        frequency_hz=7_100_000.0,
+        wires=(wire,),
+        feed=FeedPoint("radiator", 5.0),
+    )
+    project = CreateDipoleProject().execute(
+        CreateDipoleProjectCommand(
+            project_name="feed line range",
+            variant_name="feed line range",
+            parameters=parameters,
+        )
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(7_100_000.0),
+        feed_line=FeedLine(
+            length_m=10.0,
+            attenuation_points=(
+                LossPoint(10_000_000.0, 1.0),
+                LossPoint(20_000_000.0, 2.0),
+            ),
+            attenuation_source="test",
+        ),
+    )
+
+    report = run_preflight(project, project.designs[0], spec)
+
+    finding = next(
+        finding for finding in report.findings if finding.code == "feed_line.attenuation_range"
+    )
+    assert finding.severity is Severity.WARNING
+    assert dict(finding.values)["minimum"] == "10"
+    assert dict(finding.values)["maximum"] == "20"
+
+
 def _permeable_project() -> Project:
     steel = ConductorMaterial(
         name="steel",

@@ -409,7 +409,10 @@ def test_invalid_ground_is_rejected(
 def _rich_result() -> SimulationResult:
     from datetime import UTC, datetime
 
-    from antennadesk.domain.antennas.balun import SQUASH_PRACTICE_49_1_LOSS
+    from antennadesk.domain.antennas.balun import (
+        SQUASH_PRACTICE_49_1_LOSS,
+        LossPoint,
+    )
     from antennadesk.domain.common.validation import Diagnostic, Severity
     from antennadesk.domain.simulation.far_field import FarFieldRequest
     from antennadesk.domain.simulation.frequency import FrequencyPlan
@@ -437,6 +440,11 @@ def _rich_result() -> SimulationResult:
             length_m=30.0,
             velocity_factor=0.8,
             matched_loss_db_per_100m=1.5,
+            attenuation_points=(
+                LossPoint(1_000_000.0, 1.0),
+                LossPoint(100_000_000.0, 5.0),
+            ),
+            attenuation_source="test datasheet",
         ),
         transformer_loss=SQUASH_PRACTICE_49_1_LOSS,
         feed_transformer_ratio=4.0,
@@ -540,7 +548,10 @@ def test_round_trip_with_a_simulation_run(
         RecordSimulationRun,
         RecordSimulationRunCommand,
     )
-    from antennadesk.domain.antennas.balun import SQUASH_PRACTICE_49_1_LOSS
+    from antennadesk.domain.antennas.balun import (
+        SQUASH_PRACTICE_49_1_LOSS,
+        LossPoint,
+    )
 
     project = RecordSimulationRun().execute(
         RecordSimulationRunCommand(
@@ -569,6 +580,12 @@ def test_round_trip_with_a_simulation_run(
     assert run.result.frequencies[0].balun_loss_db == pytest.approx(0.03)
     assert run.result.frequencies[0].transformer_loss_db == pytest.approx(0.30)
     assert run.result.spec.transformer_loss == SQUASH_PRACTICE_49_1_LOSS
+    assert run.result.spec.feed_line is not None
+    assert run.result.spec.feed_line.attenuation_points == (
+        LossPoint(1_000_000.0, 1.0),
+        LossPoint(100_000_000.0, 5.0),
+    )
+    assert run.result.spec.feed_line.attenuation_source == "test datasheet"
     assert run.result.frequencies[0].source_results[0].wire_id == "radiator"
     assert run.result.frequencies[0].source_results[0].impedance_ohm == complex(60.0, -10.0)
     assert run.result.frequencies[0].source_results[0].power_w == pytest.approx(0.001)
@@ -579,6 +596,11 @@ def test_round_trip_with_a_simulation_run(
         length_m=30.0,
         velocity_factor=0.8,
         matched_loss_db_per_100m=1.5,
+        attenuation_points=(
+            LossPoint(1_000_000.0, 1.0),
+            LossPoint(100_000_000.0, 5.0),
+        ),
+        attenuation_source="test datasheet",
     )
     assert run.result.spec.feed_transformer_ratio == 4.0
     assert run.result.spec.pattern_frequencies_hz == (6_900_000.0,)

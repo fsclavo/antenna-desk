@@ -71,7 +71,7 @@ external service and must not be invented or simulated into existence.
 | ~~G24~~ | ~~Fixed loading-coil node for the shortened EFHW~~ | M | G22, G23 | **Done 2026-11-10:** the radiator is split at the published coil offset into lower, coil, and top sections. The coil section is a fixed 0.10 m partition with three segments and the series load at its center, so changing the radiator segmentation no longer moves the coil. The convergence check distributes its 10/21/51 radiator counts between the lower and top sections while keeping the coil node fixed. The wire schedule and BOM merge the feed/coil/top partitions into one physical conductor, and the scene keeps a load marker at the coil. Tests cover the geometry, segmentation split, fallback when the coil is inside the feed section, wire schedule/BOM, persistence, scene contracts, and NEC2C convergence. |
 | ~~G25~~ | ~~Model the 49:1 matching unit and primary 100 pF capacitor~~ | L | G24; traceable transformer data/measurement; 40-20-10 schematic | **Done 2026-11-10 with limitations:** the 100 pF capacitor is confirmed as a shunt across the transformer primary (G0KYA; K1RF; G4AON; PA0EJH/PA3HHO describe the input side) and is modeled through `PiNetwork` as an input shunt plus series leakage, never as a series load in the radiator. Schema 33 adds `matching_capacitance_f` and `transformer_leakage_inductance_h`; older projects migrate with both at zero, and new shortened presets start at 100 pF and 0.198 µH. The leakage value is a starting estimate from Squash Practice's measured 49:1 transformer, not the exact preset build; capacitor ESR, winding capacitance, the choke, ground, and the inverted-L bend remain unmodeled. Core loss is now available as an optional measured table in EF7b. UI hints, summaries, construction notes, evidence, and tests are updated; the published SWR remains a trend, not a hard reference. |
 | ~~G26~~ | ~~Inverted-L option for the shortened EFHW~~ | M | G24 | **Done 2026-11-11:** added optional `bend_enabled`/`bend_vertical_length_m` fields with schema 35. The End-fed editor offers **Inverted-L bend**, a vertical section measured from the feed, and a derived horizontal run that preserves the total wire length; the straight horizontal installation remains the default. The G0KYA starting installation is about 8 m vertical and 15 m horizontal, and the model uses a sharp 90° corner. The scene, dimensions, wire schedule/BOM, design summary, construction sheet, optimizer variable/constraints, evidence, and validation notes are updated. Tests cover geometry, validation, persistence/migration, scene, schedule, reports, optimizer, and editor behavior. |
-| G27 | Optional transformer, common-mode choke, and coaxial loss models | L | G25; measured transformer insertion loss/core data; common-mode current model or measurement; manufacturer coax attenuation data | **Partially delivered as EF7b.** The transformer insertion-loss table now reuses `BalunLoss` with provenance, log-frequency interpolation, endpoint clamping, and a separate `transformer_loss_db` result field. Still blocked/deferred: (1) frequency-dependent coax attenuation with manufacturer data, reusing `FeedLine`; (2) analytical ferrite core loss only with complex permeability, core geometry, winding, load, and excitation data; (3) common-mode choke characterization (G3TXQ-style `Zcm(f)`) without counting `Rcm` as differential loss; (4) the remaining power-budget and evidence audit for coax/choke losses. All loss fields stay optional and off/zero by default; no invented loss numbers. |
+| G27 | Optional transformer, common-mode choke, and coaxial loss models | L | G25; measured transformer insertion loss/core data; common-mode current model or measurement; manufacturer coax attenuation data | **Partially delivered.** EF7b added the measured transformer-loss table (`BalunLoss`); EF8 added the bounded feedpoint common-mode choke; ADR-0039 adds frequency-dependent feed-line attenuation with source-backed RG-58A/RG-213 tables, log-frequency interpolation, endpoint clamping, and a preflight range warning. Still deferred: analytical ferrite core loss with complex permeability/core geometry/winding/load data; frequency-interpolated `Zcm(f)` and shack-end choke placement; the remaining coax/choke power-budget and evidence audit. All loss fields stay optional and off/zero by default; no invented loss numbers. |
 | ~~G28~~ | ~~Shortened EFHW convergence and optimizer policy~~ | M | G24, G25 | **Done 2026-11-10:** shortened presets use an impedance-only convergence verdict: absolute R spread up to 1 Ω and X spread up to 10 Ω; SWR is shown as informational because the matching unit is not fully modeled. With the current model the 80-10 preset is impedance-converged and the 40-20-10 preset remains R/X-sensitive. The matching capacitor and transformer leakage stay as optimizer context values; the optimizer dialog states that they are not optimized until a measured transformer model is available. Unit, UI, optimizer-registry, and NEC2C integration tests cover the policy; the published SWR remains a trend and the evidence level is unchanged. |
 | ~~E4~~ | ~~Diagnose high-radial phased-array runtime and numerical validity~~ | S–M | C1 | **Done 2026-11-08:** 4×36 quarter-wave radial screens produced 267 wire crossings, 890 segments, 25.3 s, and negative primary resistance. Halving the radial length or using 2 m radials removed the crossings and completed. The editor now warns when `2 × radial length > element spacing`; ideal-source power absorption remains documented separately. |
 | ~~E5~~ | ~~Diagnose low CPU during family optimization~~ | S | none | **Done 2026-11-10:** the nec2c adapter slept 50 ms per solver run even when `nec2c` finished in about 1 ms. It now uses `Popen.wait(timeout=...)`, which returns as soon as the child exits and keeps the interval only for cancellation checks. A 226-evaluation dipole optimization went from 11.8 s to 0.47 s on one worker and from 5.2 s to 0.30 s on four. Local-search batching was measured and reverted: it did not reduce wall time and changed evaluation counts. |
@@ -219,12 +219,12 @@ Data rules for every entry:
   table, a distributor summary, or another cable family.
 - Keep variants separate: RG-58A/U and RG-58C/U are not interchangeable;
   standard, foam, and double-shielded constructions can differ.
-- Show the reference frequency in the UI. The current `FeedLine` model uses one
-  scalar matched-loss value, so a datasheet point is not a frequency-dependent
-  attenuation model.
-- Any multi-point attenuation table or interpolation belongs to G27 and must
-  interpolate only inside the documented frequency range. Do not silently
-  extrapolate or claim accuracy outside it.
+- Show the reference frequency in the UI. A single datasheet point remains a
+  constant-loss initialization; frequency-dependent attenuation is a separate
+  optional table (ADR-0039).
+- Multi-point attenuation tables interpolate only inside the documented
+  frequency range. Outside it, endpoint values are used and preflight warns; do
+  not claim accuracy outside the source range.
 
 ## UX25 — Stainless steel 304 conductor (design note, 2026-11-13)
 
@@ -1449,9 +1449,10 @@ model and solver contract must land first.
 ## Recommended order
 
 1. The shortened-EFHW correctness work (G24, G25, G26, G28) is done.
-   **G27** stays blocked/deferred as a whole until measurements or
-   traceable datasets exist; do not implement only one loss category in the
-   meantime.
+   **G27** is split: transformer loss (EF7b), feedpoint choke (EF8), and
+   frequency-dependent coax attenuation (ADR-0039) are done. Remaining pieces
+   are analytical ferrite core loss, interpolated shack-end `Zcm(f)`, and the
+   coax/choke power-budget audit; each needs traceable data.
 2. **H1–H4 are complete.** The help/accessibility queue is closed.
 3. **M1–M5 are complete.** The matching-network correctness queue is closed;
    future matching work starts from ADR-0028 and the shared resolver.
@@ -1525,8 +1526,8 @@ model and solver contract must land first.
 
 ## Current baseline
 
-- Schema: **50**.
-- Full gate: **3,103 passed, 1 skipped** with `NEC2C` and the optional
+- Schema: **51**.
+- Full gate: **3,107 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.6.0** published on 2026-11-13 with checksum-verified unsigned

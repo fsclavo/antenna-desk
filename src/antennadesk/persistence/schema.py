@@ -768,16 +768,18 @@ class SegmentationPolicyPayload(StrictModel):
     wire_segments: list[WireSegmentsPayload] = Field(default_factory=list)
 
 
+class LossPointPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    loss_db: float = Field(ge=0.0)
+
+
 class FeedLinePayload(StrictModel):
     characteristic_impedance_ohm: float = Field(default=50.0, gt=0.0)
     length_m: float = Field(default=0.0, ge=0.0)
     velocity_factor: float = Field(default=1.0, gt=0.0, le=1.0)
     matched_loss_db_per_100m: float = Field(default=0.0, ge=0.0)
-
-
-class LossPointPayload(StrictModel):
-    frequency_hz: float = Field(gt=0.0)
-    loss_db: float = Field(ge=0.0)
+    attenuation_points: list[LossPointPayload] = Field(default_factory=list)
+    attenuation_source: str = ""
 
 
 class BalunLossPayload(StrictModel):
@@ -2067,6 +2069,11 @@ def _feed_line_from_domain(value: FeedLine) -> FeedLinePayload:
         length_m=value.length_m,
         velocity_factor=value.velocity_factor,
         matched_loss_db_per_100m=value.matched_loss_db_per_100m,
+        attenuation_points=[
+            LossPointPayload(frequency_hz=point.frequency_hz, loss_db=point.loss_db)
+            for point in value.attenuation_points
+        ],
+        attenuation_source=value.attenuation_source,
     )
 
 
@@ -3352,6 +3359,11 @@ def _feed_line_to_domain(value: FeedLinePayload) -> FeedLine:
         length_m=value.length_m,
         velocity_factor=value.velocity_factor,
         matched_loss_db_per_100m=value.matched_loss_db_per_100m,
+        attenuation_points=tuple(
+            LossPoint(frequency_hz=point.frequency_hz, loss_db=point.loss_db)
+            for point in value.attenuation_points
+        ),
+        attenuation_source=value.attenuation_source,
     )
 
 
