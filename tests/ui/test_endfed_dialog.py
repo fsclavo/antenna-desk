@@ -163,6 +163,34 @@ def test_endfed_dialog_clears_the_measured_loss_when_the_ratio_changes(
     assert dialog.parameters().transformer_loss is None
 
 
+def test_endfed_form_populates_a_synthesized_design_network(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+    from antennadesk.domain.antennas.matching_network import design_l_network
+
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=shortened_efhw_40_10_parameters(),
+    )
+    qtbot.addWidget(dialog)
+    network = design_l_network(complex(100.0, 0.0), 7_100_000.0)
+    assert network is not None
+
+    dialog._form.set_design_matching_network(network)
+
+    parameters = dialog.parameters()
+    assert parameters.design_matching_network is not None
+    assert parameters.design_matching_network.series_inductance_h == pytest.approx(
+        network.series_inductance_h,
+        rel=1e-3,
+    )
+    assert parameters.design_matching_network.shunt_capacitance_f == pytest.approx(
+        network.shunt_capacitance_f,
+        rel=1e-3,
+    )
+    assert parameters.design_matching_network.shunt_at_input is network.shunt_at_input
+
+
 def test_endfed_dialog_sets_the_design_specific_l_network(qtbot: QtBot) -> None:
     from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
 

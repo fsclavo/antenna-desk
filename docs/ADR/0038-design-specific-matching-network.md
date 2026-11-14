@@ -117,6 +117,29 @@ require their own ADR or an amendment to this one.
 6. Test the UI state, help, and retained/overridden reporting.
 7. Run the full gate, including NEC2C integration tests.
 
+## Amendment 1 — Automatic L-network design (2026-11-14)
+
+**Status:** Accepted. This amendment authorizes the first automatic-synthesis
+slice without changing the Phase A schema.
+
+The design-specific L-network can be populated from the **current simulation
+result**:
+
+1. The source point is the antenna-side feed impedance divided by the ideal
+   transformer ratio, exactly as `matching_network_design_from_frequency()`
+   already does. The raw `FrequencyResult.impedance_ohm` is not used because it
+   already includes the matching network and feed line.
+2. The network is synthesized with the existing `design_l_network()` function
+   at that frequency and source impedance.
+3. The result only **populates the editor fields**. It is not applied, saved, or
+   simulated until the user confirms the design change.
+4. If no L-network solution exists, the UI reports that explicitly; it does not
+   fall back to an invented network or a different topology.
+5. No new persisted origin field is added. The persisted values are the network
+   itself; provenance remains the simulation the user reviewed.
+6. The action is available only for the design-specific L-network, not for the
+   fixed internal unit or the global project network.
+
 ## Open questions
 
 - Should the first UI expose a topology selector with only L enabled, or a

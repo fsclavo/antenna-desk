@@ -3199,6 +3199,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "proyecto la anula; la unidad interna fija queda como respaldo."
         ),
     },
+    "help.endfed.design_matching_auto": {
+        Language.ENGLISH: (
+            "Synthesize a lossless L-network from the current feedpoint impedance "
+            "on the primary side. The values only populate the editor; review and "
+            "apply them explicitly."
+        ),
+        Language.SPANISH: (
+            "Sintetiza una red L sin pérdidas desde la impedancia actual del punto "
+            "de alimentación en el primario. Los valores solo cargan el editor; "
+            "revisalos y aplicalos explícitamente."
+        ),
+    },
     "help.endfed.design_matching_series_l": {
         Language.ENGLISH: "Series inductance of the design-specific L-network.",
         Language.SPANISH: "Inductancia serie de la red L específica del diseño.",
@@ -11410,6 +11422,39 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Red L opcional en el primario del transformador ideal. Una red de "
             "proyecto la anula; la unidad interna fija se conserva pero no se "
             "aplica. Usá L o C en cada rama, no ambas."
+        ),
+    },
+    "endfed.design_matching_auto": {
+        Language.ENGLISH: "Design L-network from current result",
+        Language.SPANISH: "Diseñar red L desde el resultado actual",
+    },
+    "endfed.design_matching_no_result": {
+        Language.ENGLISH: (
+            "Run a simulation first so the current feedpoint impedance is available."
+        ),
+        Language.SPANISH: (
+            "Ejecutá una simulación primero para tener disponible la impedancia "
+            "actual del punto de alimentación."
+        ),
+    },
+    "endfed.design_matching_no_solution": {
+        Language.ENGLISH: (
+            "No lossless L-network solution exists for this load at the current "
+            "frequency. Check the load and transformer ratio."
+        ),
+        Language.SPANISH: (
+            "No existe una solución de red L sin pérdidas para esta carga en la "
+            "frecuencia actual. Revisá la carga y la relación del transformador."
+        ),
+    },
+    "endfed.design_matching_populated": {
+        Language.ENGLISH: (
+            "L-network values populated from the current result. Review them "
+            "before applying the design."
+        ),
+        Language.SPANISH: (
+            "Valores de la red L cargados desde el resultado actual. Revisalos "
+            "antes de aplicar el diseño."
         ),
     },
     "endfed.design_matching_shunt_at_input": {

@@ -162,6 +162,7 @@ HELP_MANIFEST = frozenset(
         "help.endfed.return_path",
         "help.endfed.transformer_loss_model",
         "help.endfed.design_matching_network",
+        "help.endfed.design_matching_auto",
         "help.endfed.design_matching_series_l",
         "help.endfed.design_matching_series_c",
         "help.endfed.design_matching_shunt_l",

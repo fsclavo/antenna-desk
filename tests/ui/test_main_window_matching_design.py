@@ -89,6 +89,138 @@ def test_current_matching_point_uses_the_raw_feed_impedance(window: MainWindow) 
     window._last_result = None
 
 
+def test_design_endfed_matching_network_populates_from_the_current_result(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+
+    use_parameters(window, shortened_efhw_40_10_parameters())
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(7_100_000.0),
+        feed_transformer_ratio=49.0,
+        reference_impedance_ohm=50.0,
+    )
+    frequency = FrequencyResult(
+        frequency_hz=7_100_000.0,
+        feed_tag=1,
+        feed_segment=11,
+        impedance_ohm=complex(50.0, 0.0),
+        swr=1.0,
+        input_power_w=0.001,
+        source_results=(
+            SourceResult(
+                wire_id="radiator",
+                offset_m=0.0,
+                tag=1,
+                segment=11,
+                amplitude=1.0,
+                phase_deg=0.0,
+                voltage_v=complex(1.0, 0.0),
+                current_a=complex(0.005, 0.0),
+                impedance_ohm=complex(2450.0, 200.0),
+                power_w=0.001,
+            ),
+        ),
+    )
+    window._last_result = SimulationResult(
+        status=SimulationStatus.COMPLETED,
+        spec=spec,
+        model_fingerprint="a" * 64,
+        solver=SolverMetadata(name="fake", version="1.0"),
+        frequencies=(frequency,),
+    )
+    messages: list[str] = []
+    monkeypatch.setattr(
+        QMessageBox,
+        "information",
+        lambda *_args, **_kwargs: messages.append("shown"),
+    )
+
+    window._design_endfed_matching_network()
+
+    assert window._endfed_form._design_network_group.isChecked()
+    parameters = window._endfed_form.parameters()
+    assert parameters.design_matching_network is not None
+    assert messages == ["shown"]
+    window._last_result = None
+    window._dirty = False
+    window._form_dirty = False
+
+
+def test_design_endfed_matching_network_requires_a_result(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    messages: list[str] = []
+    monkeypatch.setattr(
+        QMessageBox,
+        "information",
+        lambda *_args: messages.append(str(_args[2])),
+    )
+    window._last_result = None
+
+    window._design_endfed_matching_network()
+
+    assert len(messages) == 1
+    assert "Run a simulation first" in messages[0]
+
+
+def test_design_endfed_matching_network_reports_no_solution(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+
+    use_parameters(window, shortened_efhw_40_10_parameters())
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(7_100_000.0),
+        feed_transformer_ratio=1.0,
+        reference_impedance_ohm=50.0,
+    )
+    frequency = FrequencyResult(
+        frequency_hz=7_100_000.0,
+        feed_tag=1,
+        feed_segment=11,
+        impedance_ohm=complex(50.0, 0.0),
+        swr=1.0,
+        input_power_w=0.001,
+        source_results=(
+            SourceResult(
+                wire_id="radiator",
+                offset_m=0.0,
+                tag=1,
+                segment=11,
+                amplitude=1.0,
+                phase_deg=0.0,
+                voltage_v=complex(1.0, 0.0),
+                current_a=complex(0.005, 0.0),
+                impedance_ohm=complex(50.0, 0.0),
+                power_w=0.001,
+            ),
+        ),
+    )
+    window._last_result = SimulationResult(
+        status=SimulationStatus.COMPLETED,
+        spec=spec,
+        model_fingerprint="a" * 64,
+        solver=SolverMetadata(name="fake", version="1.0"),
+        frequencies=(frequency,),
+    )
+    messages: list[str] = []
+    monkeypatch.setattr(
+        QMessageBox,
+        "information",
+        lambda *_args: messages.append(str(_args[2])),
+    )
+
+    window._design_endfed_matching_network()
+
+    assert len(messages) == 1
+    assert "No lossless L-network solution" in messages[0]
+    window._last_result = None
+
+
 def test_current_matching_point_is_unavailable_without_source_results(
     window: MainWindow,
 ) -> None:

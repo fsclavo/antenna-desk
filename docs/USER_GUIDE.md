@@ -676,7 +676,9 @@ input/antenna-side shunt choice. When active, it replaces the fixed internal
 unit and the family optimizer can tune its active components. A project-level
 matching network still takes precedence: the design network is retained but not
 applied, and the two are never cascaded. Disable the section to return to the
-fixed internal unit. See
+fixed internal unit. **Design L-network from current result** synthesizes a
+lossless L-network from the current simulated primary-side impedance and fills
+the fields for review; it does not apply the design automatically. See
 [ADR-0038](ADR/0038-design-specific-matching-network.md).
 
 The design panel's **Feed & matching** summary shows the internal EFHW matching

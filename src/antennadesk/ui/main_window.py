@@ -133,6 +133,7 @@ from ..domain.antennas.matching_network import (
     MatchingNetwork,
     MatchingNetworkOrigin,
     MatchingNetworkPosition,
+    design_l_network,
 )
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
@@ -785,6 +786,9 @@ class MainWindow(QMainWindow):
         self._endfed_form.changed.connect(self._on_form_changed)
         self._endfed_form.matching_network_edit_requested.connect(self.configure_matching_network)
         self._endfed_form.matching_network_remove_requested.connect(self.remove_matching_network)
+        self._endfed_form.design_matching_network_requested.connect(
+            self._design_endfed_matching_network
+        )
         self._endfed_scroll = QScrollArea(self)
         self._endfed_scroll.setWidgetResizable(True)
         self._endfed_scroll.setWidget(self._endfed_form)
@@ -3331,6 +3335,34 @@ class MainWindow(QMainWindow):
             key=lambda item: abs(item.frequency_hz - target_hz),
         )
         return matching_network_design_from_frequency(frequency, result.spec)
+
+    def _design_endfed_matching_network(self) -> None:
+        point = self._current_matching_network_point()
+        if point is None:
+            QMessageBox.information(
+                self,
+                self._translator.t("app.title"),
+                self._translator.t("endfed.design_matching_no_result"),
+            )
+            return
+        network = design_l_network(
+            point.load_impedance_ohm,
+            point.frequency_hz,
+            source_impedance_ohm=point.source_impedance_ohm,
+        )
+        if network is None:
+            QMessageBox.information(
+                self,
+                self._translator.t("app.title"),
+                self._translator.t("endfed.design_matching_no_solution"),
+            )
+            return
+        self._endfed_form.set_design_matching_network(network)
+        QMessageBox.information(
+            self,
+            self._translator.t("app.title"),
+            self._translator.t("endfed.design_matching_populated"),
+        )
 
     @history_action("history.matching_network")
     def configure_matching_network(self) -> None:

@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   corrosion-resistant use case; the solver emits conductivity through `LD 5`
   and does not trigger the permeability warning. Copper remains the default and
   the project schema is unchanged.
+- **Design L-network from the current result.** The design-specific L-network
+  section can synthesize a lossless L-network from the current feedpoint
+  impedance, using the primary-side load and the existing `design_l_network`
+  calculation. It only populates the editor for review; it does not apply the
+  design automatically. If no solution exists or no simulation result is
+  available, the UI says so explicitly. See the ADR-0038 amendment.
 - **Design-specific L-network for end-fed designs.** The End-fed editor can add
   an optional primary-side L-network owned by the design, with editable series
   and shunt L/C values and an input/antenna-side shunt choice. Precedence is

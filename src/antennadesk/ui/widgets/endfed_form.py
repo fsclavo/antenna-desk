@@ -67,6 +67,7 @@ class EndFedForm(QWidget):
     changed = Signal()
     matching_network_edit_requested = Signal()
     matching_network_remove_requested = Signal()
+    design_matching_network_requested = Signal()
 
     def __init__(
         self,
@@ -277,6 +278,17 @@ class EndFedForm(QWidget):
             self._design_shunt_c,
         )
         design_form.addRow(self._design_shunt_at_input)
+        self._design_network_auto = QPushButton(
+            translator.t("endfed.design_matching_auto"),
+            self._design_network_group,
+        )
+        self._design_network_auto.clicked.connect(self.design_matching_network_requested.emit)
+        apply_help(
+            self._design_network_auto,
+            translator,
+            "endfed.design_matching_auto",
+        )
+        design_form.addRow(self._design_network_auto)
         self._design_network_group.toggled.connect(self._design_network_toggled)
 
         self._counterpoise_enabled = QCheckBox(translator.t("endfed.counterpoise_enabled"), self)
@@ -588,6 +600,7 @@ class EndFedForm(QWidget):
         self._design_shunt_at_input.setText(
             self._translator.t("endfed.design_matching_shunt_at_input")
         )
+        self._design_network_auto.setText(self._translator.t("endfed.design_matching_auto"))
         self._common_mode_choke_group.setTitle(self._translator.t("endfed.common_mode_choke"))
         self._common_mode_choke_group.setToolTip(
             self._translator.t("endfed.common_mode_choke_hint")
@@ -1062,6 +1075,22 @@ class EndFedForm(QWidget):
         self._update_efhw_visibility()
         self._update_matching_override()
         self._update_geometry()
+
+    def set_design_matching_network(self, network: LNetwork) -> None:
+        """Populate the design-specific L-network without applying it."""
+
+        self._updating = True
+        try:
+            self._design_network_group.setChecked(True)
+            self._design_series_l.setValue(network.series_inductance_h * 1e6)
+            self._design_series_c.setValue(network.series_capacitance_f * 1e12)
+            self._design_shunt_l.setValue(network.shunt_inductance_h * 1e6)
+            self._design_shunt_c.setValue(network.shunt_capacitance_f * 1e12)
+            self._design_shunt_at_input.setChecked(network.shunt_at_input)
+        finally:
+            self._updating = False
+        self._update_geometry()
+        self.changed.emit()
 
     def set_frequency_hz(self, frequency_hz: float) -> None:
         self._frequency.setValue(frequency_hz / 1_000_000.0)
