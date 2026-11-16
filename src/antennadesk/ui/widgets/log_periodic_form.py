@@ -53,6 +53,7 @@ from ..units import (
 from .form_i18n import FormLabels, retranslate_combo
 from .form_units import apply_length_suffixes, apply_radius_units
 from .ground_presets import GroundPresetController
+from .table_headers import fit_header_sections
 
 
 class LogPeriodicForm(QWidget):
@@ -349,6 +350,7 @@ class LogPeriodicForm(QWidget):
                 self._translator.t("log_periodic.position"),
             ]
         )
+        fit_header_sections(self._table)
 
     def _select_material(self, material: ConductorMaterial) -> None:
         index = self._material.findData(material)

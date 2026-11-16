@@ -49,6 +49,7 @@ from ..units import (
 from .form_i18n import FormLabels, retranslate_combo
 from .form_units import apply_length_suffixes, apply_radius_units
 from .ground_presets import GroundPresetController
+from .table_headers import fit_header_sections
 
 # The editor starts on the 2 m band.  The geometry is the published NBS
 # TN-688 five-element design scaled to this frequency; the published
@@ -152,6 +153,7 @@ class YagiForm(QWidget):
         self._table.setMinimumHeight(140)
         header = self._table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        fit_header_sections(self._table)
         self._table.itemChanged.connect(self._refresh_driven_values)
 
         self._add = QPushButton(translator.t("yagi.add_element"), self)
@@ -356,6 +358,7 @@ class YagiForm(QWidget):
                 self._translator.t("yagi.radius"),
             ]
         )
+        fit_header_sections(self._table)
         self._add.setText(self._translator.t("yagi.add_element"))
         self._remove.setText(self._translator.t("yagi.remove_element"))
         self._preset.setText(self._translator.t("yagi.nbs_preset"))

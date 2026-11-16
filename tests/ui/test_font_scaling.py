@@ -175,6 +175,23 @@ def test_element_tables_fit_their_headers_at_large(qtbot: QtBot) -> None:
                 )
 
 
+def test_element_table_headers_stay_readable_in_a_narrow_dialog(qtbot: QtBot) -> None:
+    controller = _controller()
+    controller.apply(FontSize.LARGE)
+    dialog = YagiDialog(Translator(Language.SPANISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    dialog.resize(520, 520)
+    dialog.show()
+    qtbot.wait(10)
+    table = dialog.findChild(QTableWidget)
+    assert table is not None
+    header = table.horizontalHeader()
+    for column in range(header.count()):
+        item = table.horizontalHeaderItem(column)
+        assert item is not None
+        assert header.sectionSize(column) >= header.fontMetrics().horizontalAdvance(item.text())
+
+
 def test_start_page_title_tracks_the_preset(qtbot: QtBot) -> None:
     controller = _controller()
     controller.apply(FontSize.LARGE)

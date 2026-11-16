@@ -1531,24 +1531,25 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **52**.
-- Full gate: **3,221 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **3,222 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
-- Release: **0.8.1** published on 2026-11-16 with the LPDA feed-classification
-  and dialog-scale fixes. The tag-triggered CI run
+- Release: **0.8.2** candidate prepared on 2026-11-16 with the element-table
+  header sizing fix; local artifacts and publication are pending. See
+  [`RELEASE_QA_0.8.2.md`](RELEASE_QA_0.8.2.md). **0.8.1** was published on
+  2026-11-16 with the LPDA feed-classification and dialog-scale fixes; the
+  tag-triggered CI run
   [`43946980265`](https://github.com/fsclavo/antenna-desk/actions/runs/43946980265)
-  completed the wheel/sdist, Linux, Windows, and publish jobs; all six published
-  assets and checksums were verified. See
-  [`RELEASE_QA_0.8.1.md`](RELEASE_QA_0.8.1.md). **0.8.0** was published on
-  2026-11-16 with the log-periodic family and automatic Pi/T matching synthesis;
-  all six published assets and checksums were verified. See
-  [`RELEASE_QA_0.8.0.md`](RELEASE_QA_0.8.0.md). **0.8.0** remains the previous
-  release.
-- Last commits: the post-0.8.0 stabilization and visual QA, the LPDA feed
-  classification fix, the scaled-dialog screen cap, the P7/D4 benchmark
-  decision, the 0.8.0 release publication and QA, the log-periodic family (C3),
-  the automatic Pi/T matching synthesis (EF9), the post-0.6.0 QA pass, the 0.6.0
-  release publication and QA, the
+  completed the wheel/sdist, Linux, Windows, and publish jobs, and all six
+  published assets and checksums were verified. See
+  [`RELEASE_QA_0.8.1.md`](RELEASE_QA_0.8.1.md). **0.8.1** remains the latest
+  published release.
+- Last commits: the element-table header sizing fix, the post-0.8.0
+  stabilization and visual QA, the LPDA feed classification fix, the
+  scaled-dialog screen cap, the P7/D4 benchmark decision, the 0.8.0 release
+  publication and QA, the log-periodic family (C3), the automatic Pi/T matching
+  synthesis (EF9), the post-0.6.0 QA pass, the 0.6.0 release publication and QA,
+  the
   Moxon/Yagi starting frequencies (UX24), the editable BOM costs (UX20), the
   portable project bundle (UX19), the common coax catalog (UX23), the materials
   reference (UX18), the 0.5.0 release publication and QA, the folded-dipole,

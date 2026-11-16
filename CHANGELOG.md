@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-11-16
+
+### Fixed
+
+- **Element-table header clipping at narrow sizes.** The Yagi and log-periodic
+  element tables now keep a minimum column width based on the widest header
+  label, so a capped dialog or a large font scale cannot clip labels such as
+  “Posición en el boom”. The tables scroll horizontally when the columns do not
+  fit. This also restores the font-scaling CI check on Linux and Windows.
+
 ## [0.8.1] - 2026-11-16
 
 ### Fixed
