@@ -1,8 +1,10 @@
 # AntennaDesk 0.7.0 release QA
 
 - **Version:** `0.7.0`
-- **Date:** 2026-11-15
-- **Status:** release candidate prepared; **not tagged or published**
+- **Date:** 2026-11-16
+- **Tag:** `v0.7.0` at `c3dc3a6`
+- **Release:** <https://github.com/fsclavo/antenna-desk/releases/tag/v0.7.0>
+- **Status:** published with unsigned, checksum-verified artifacts
 - **Schema:** 51
 - **Previous release:** `0.6.0` (2026-11-13)
 
@@ -52,20 +54,28 @@ scaling. The pass was reported successful with no blocking issue. Details are in
 [`QA_PASS_2026-11-15.md`](QA_PASS_2026-11-15.md).
 
 A real-display Windows pass and a second Linux display-scaling pass remain
-recommended before publication.
+recommended as follow-up QA; they did not block publication.
 
-## Local artifacts
+## Local candidate artifacts
 
 Artifacts were built outside the repository under
-`/tmp/user/1000/opencode/antennadesk-0.7.0`. Native builds run the bundle
-license audit.
+`/tmp/user/1000/opencode/antennadesk-0.7.0`. Native builds ran the bundle
+license audit and passed the local smoke tests below. The published CI artifacts
+were rebuilt independently; their hashes are in the next section.
 
-| Artifact | Size | SHA-256 |
+## Published assets
+
+Every asset has a companion `.sha256` file. All six published checksums were
+verified with `sha256sum -c` after downloading the release assets.
+
+| Asset | Size | SHA-256 |
 |---|---:|---|
 | `antennadesk-0.7.0-py3-none-any.whl` | 990 K | `49b142c216d3f99cea82f3aac8612082bd9a46053c8a828ba1619a7c10867fe9` |
-| `antennadesk-0.7.0.tar.gz` | 1.4 M | `2e4d1507c5a28f336c6509d201fdbbae01ce5f81ec4a7b3381aaca4859487774` |
-| `AntennaDesk-0.7.0-x86_64.AppImage` | 121 M | `af5e8cb24538ee6dc9a2d92278efc9482305e8f13d6f721dde690b4791a4ae2f` |
-| `antennadesk_0.7.0_amd64.deb` | 103 M | `68784de082049a7d5a3a72d06d02ae52cd397dc92998fb30cd70157961dd5e0f` |
+| `antennadesk-0.7.0.tar.gz` | 1.4 M | `58d4eefbfcdd1d361b44dd69f3d752db3ee48ba0d8186cc9700cd6ef620abe85` |
+| `AntennaDesk-0.7.0-x86_64.AppImage` | 129 M | `838467025eba76272beecd9a2c5627ed45c28b5fa69c14c402c6cf635d11ae22` |
+| `antennadesk_0.7.0_amd64.deb` | 110 M | `a74f328ee0af9d57433d3f6e3f73e8195f9d7633fa359fcfd1437ada8a85b2e8` |
+| `AntennaDesk-0.7.0-windows-x86_64.zip` | 103 M | `91381478382e077c919f5cee28a223f57409caec8963b514063490afceb9cf85` |
+| `AntennaDesk-0.7.0-windows-x86_64-setup.exe` | 71 M | `99723a4b14ed17c06a9192d0161763a1510f4ed3bd95dd3e7159ea10e4541ac8` |
 
 ### Wheel and sdist
 
@@ -99,16 +109,17 @@ license audit.
 
 ## Windows
 
-The Windows portable zip and NSIS installer were not built locally because this
-machine does not provide MSYS2/UCRT64 and `makensis`. The release workflow must
-build and smoke-test them in CI, including install, shortcut, installed-app
-version/solver check, and silent uninstall.
+The Windows portable zip and NSIS installer were built in GitHub Actions on
+`windows-latest`. The workflow ran the frozen executable version/solver checks,
+installed the NSIS package silently, checked the desktop shortcut and installed
+executable, and completed the silent uninstall. See CI run
+[`43787804618`](https://github.com/fsclavo/antenna-desk/actions/runs/43787804618).
 
 ## Signing
 
 Signing remains deferred. No GPG key or Windows Authenticode certificate is
-configured for this candidate. The local Linux artifacts are unsigned and
-verified by SHA-256.
+configured for this release. The published artifacts are unsigned and verified
+by SHA-256.
 
 ## Known limitations
 
@@ -129,5 +140,8 @@ verified by SHA-256.
 
 ## Release decision
 
-The `0.7.0` release candidate is ready for a tag-triggered CI build and
-publication review. It is **not** tagged, pushed, or published by this QA pass.
+Published as `v0.7.0` on 2026-11-16. The tag-triggered CI run
+[`43787804618`](https://github.com/fsclavo/antenna-desk/actions/runs/43787804618)
+completed the wheel/sdist, Linux, Windows, and publish jobs successfully. All
+six published assets and their companion `.sha256` files were downloaded and
+verified after publication.
