@@ -56,8 +56,10 @@ of truth before adding another planning document.
   coverage gates, and residual debt.
 - [`QA_PASS_2026-11-15.md`](QA_PASS_2026-11-15.md) — manual QA for the 0.7.0
   candidate.
-- [`RELEASE_QA_0.7.0.md`](RELEASE_QA_0.7.0.md) — 0.7.0 candidate checks,
+- [`RELEASE_QA_0.7.0.md`](RELEASE_QA_0.7.0.md) — 0.7.0 release checks,
   artifacts, and known limitations.
+- [`RELEASE_QA_0.7.1.md`](RELEASE_QA_0.7.1.md) — 0.7.1 Yagi table patch
+  candidate checks and local artifacts.
 - [`EXPERIMENTAL_VALIDATION_PROTOCOL.md`](EXPERIMENTAL_VALIDATION_PROTOCOL.md) —
   how experimental templates are validated.
 - [`RELEASE.md`](RELEASE.md) — packaging, signing, and release checklist.

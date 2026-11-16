@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-11-16
+
+### Fixed
+
+- **Yagi element table layout.** The element table now stretches its columns to
+  the full section width and keeps a minimum height that shows four rows
+  completely instead of two clipped rows. The Yagi generator looks consistent on
+  Windows and Linux without changing the antenna model, schema, optimizer, or
+  solver.
+
 ## [0.7.0] - 2026-11-15
 
 ### Added
