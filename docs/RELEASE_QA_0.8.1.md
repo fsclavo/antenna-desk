@@ -2,7 +2,9 @@
 
 - **Version:** `0.8.1`
 - **Date:** 2026-11-16
-- **Status:** release candidate prepared; **not tagged or published**
+- **Tag:** `v0.8.1` at `3ef4d27`
+- **Release:** <https://github.com/fsclavo/antenna-desk/releases/tag/v0.8.1>
+- **Status:** published with unsigned, checksum-verified artifacts
 - **Schema:** 52 (unchanged from 0.8.0)
 - **Previous release:** `0.8.0` (2026-11-16)
 
@@ -65,6 +67,23 @@ Both native artifacts have companion `.sha256` files, verified with
 `sha256sum -c`. The wheel and sdist checksums were computed directly from the
 built artifacts.
 
+## Published assets
+
+Every asset has a companion `.sha256` file. All six published checksums were
+verified with `sha256sum -c` after downloading the release assets.
+
+| Asset | Size | SHA-256 |
+|---|---:|---|
+| `antennadesk-0.8.1-py3-none-any.whl` | 1008 K | `a3d5ccadf8a581ad9a0cd29896063da6ef5972e0dbc60da0d91186f639a3a05e` |
+| `antennadesk-0.8.1.tar.gz` | 1.5 M | `a0ae3ff0a82a28063c27c3e1a1376e39115a56731f495ec5688d374ff027be02` |
+| `AntennaDesk-0.8.1-x86_64.AppImage` | 129 M | `3683b6cdbedae57f0df71a610336226c76393c66718ca37340efc268e1cc1093` |
+| `antennadesk_0.8.1_amd64.deb` | 110 M | `60c689acfeba0f7e5bf21893d09b271f986cc70c3f740a643bf196adee7e1123` |
+| `AntennaDesk-0.8.1-windows-x86_64.zip` | 103 M | `f544a94f0175868c78742f7f207879c140d49a4f4f2b58270bdfd15c47b21881` |
+| `AntennaDesk-0.8.1-windows-x86_64-setup.exe` | 71 M | `aebefdf28916851b2e50026e952305386193b30e340e78985ae6899505ce7da2` |
+
+The published wheel checksum matches the local candidate; the sdist and native
+artifacts were rebuilt independently by CI.
+
 ## Smoke tests
 
 ### Wheel
@@ -97,9 +116,11 @@ built artifacts.
 
 ## Windows
 
-The Windows portable zip and NSIS installer are not built locally. The
-tag-triggered CI workflow builds them on `windows-latest` and runs the frozen
-version/solver, installer, shortcut, and uninstall checks before publishing.
+The Windows portable zip and NSIS installer were built in GitHub Actions on
+`windows-latest`. The workflow ran the frozen executable version/solver checks,
+installed the NSIS package silently, checked the desktop shortcut and installed
+executable, and completed the silent uninstall. See CI run
+[`43946980265`](https://github.com/fsclavo/antenna-desk/actions/runs/43946980265).
 
 ## Known limitations
 
@@ -112,5 +133,8 @@ version/solver, installer, shortcut, and uninstall checks before publishing.
 
 ## Release decision
 
-Pending. Tag `v0.8.1` after publishing this candidate is approved, then verify
-that the release workflow attached all six assets and their `.sha256` files.
+Published as `v0.8.1` on 2026-11-16. The tag-triggered CI run
+[`43946980265`](https://github.com/fsclavo/antenna-desk/actions/runs/43946980265)
+completed the wheel/sdist, Linux, Windows, and publish jobs successfully. All
+six published assets and their companion `.sha256` files were downloaded and
+verified after publication.

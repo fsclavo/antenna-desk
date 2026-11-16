@@ -1534,15 +1534,15 @@ model and solver contract must land first.
 - Full gate: **3,221 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
-- Release: **0.8.1** candidate prepared on 2026-11-16 with the LPDA feed
-  classification and dialog-scale fixes; local artifacts and publication are
-  pending. See [`RELEASE_QA_0.8.1.md`](RELEASE_QA_0.8.1.md). **0.8.0** was
-  published on 2026-11-16 with the log-periodic family and automatic Pi/T
-  matching synthesis; the tag-triggered CI run
-  [`43931919975`](https://github.com/fsclavo/antenna-desk/actions/runs/43931919975)
+- Release: **0.8.1** published on 2026-11-16 with the LPDA feed-classification
+  and dialog-scale fixes. The tag-triggered CI run
+  [`43946980265`](https://github.com/fsclavo/antenna-desk/actions/runs/43946980265)
   completed the wheel/sdist, Linux, Windows, and publish jobs; all six published
   assets and checksums were verified. See
-  [`RELEASE_QA_0.8.0.md`](RELEASE_QA_0.8.0.md). **0.7.1** remains the previous
+  [`RELEASE_QA_0.8.1.md`](RELEASE_QA_0.8.1.md). **0.8.0** was published on
+  2026-11-16 with the log-periodic family and automatic Pi/T matching synthesis;
+  all six published assets and checksums were verified. See
+  [`RELEASE_QA_0.8.0.md`](RELEASE_QA_0.8.0.md). **0.8.0** remains the previous
   release.
 - Last commits: the post-0.8.0 stabilization and visual QA, the LPDA feed
   classification fix, the scaled-dialog screen cap, the P7/D4 benchmark

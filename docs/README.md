@@ -68,7 +68,7 @@ of truth before adding another planning document.
 - [`RELEASE_QA_0.8.0.md`](RELEASE_QA_0.8.0.md) — 0.8.0 LPDA and automatic
   Pi/T matching release checks and published artifacts.
 - [`RELEASE_QA_0.8.1.md`](RELEASE_QA_0.8.1.md) — 0.8.1 LPDA feed
-  classification and dialog-scale patch candidate checks.
+  classification and dialog-scale patch release checks and published assets.
 - [`EXPERIMENTAL_VALIDATION_PROTOCOL.md`](EXPERIMENTAL_VALIDATION_PROTOCOL.md) —
   how experimental templates are validated.
 - [`RELEASE.md`](RELEASE.md) — packaging, signing, and release checklist.
