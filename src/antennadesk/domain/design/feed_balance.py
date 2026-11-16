@@ -19,6 +19,7 @@ from ..antennas.folded_dipole import FoldedDipoleParameters
 from ..antennas.hexbeam import HexbeamParameters
 from ..antennas.inverted_v import InvertedVParameters
 from ..antennas.loaded_dipole import LoadedDipoleParameters
+from ..antennas.log_periodic import LogPeriodicParameters
 from ..antennas.loop import LoopParameters
 from ..antennas.magnetic_loop import MagneticLoopParameters
 from ..antennas.moxon import MoxonParameters
@@ -39,6 +40,7 @@ _BALANCED_TYPES = (
     HexbeamParameters,
     InvertedVParameters,
     LoadedDipoleParameters,
+    LogPeriodicParameters,
     LoopParameters,
     MoxonParameters,
     OCFDParameters,

@@ -33,6 +33,7 @@ from ..antennas.inverted_l import InvertedLParameters
 from ..antennas.inverted_v import InvertedVParameters
 from ..antennas.j_pole import JPoleParameters
 from ..antennas.loaded_dipole import LoadedDipoleParameters
+from ..antennas.log_periodic import LogPeriodicParameters
 from ..antennas.loop import LoopParameters
 from ..antennas.magnetic_loop import MagneticLoopParameters
 from ..antennas.moxon import MoxonParameters
@@ -128,7 +129,11 @@ def _connections(
 
 
 def _ratio(parameters: AntennaDesignParameters) -> float | None:
-    value = getattr(parameters, "transformer_ratio", None)
+    value = (
+        parameters.feed_transformer_ratio
+        if isinstance(parameters, LogPeriodicParameters)
+        else getattr(parameters, "transformer_ratio", None)
+    )
     if value is None or float(value) == 1.0:
         return None
     return float(value)
@@ -299,6 +304,22 @@ def _classify(
             FeedInterface.CURRENT_BALUN if current_balun else FeedInterface.DIRECT_COAX,
             _center_terminals(model),
             "Tapered driven element" if parameters.is_tapered else None,
+            ratio,
+            None,
+        )
+
+    if isinstance(parameters, LogPeriodicParameters):
+        return (
+            FeedTopology.CENTER_FED_DIPOLE,
+            (
+                FeedInterface.TRANSFORMER
+                if ratio is not None
+                else FeedInterface.CURRENT_BALUN
+                if current_balun
+                else FeedInterface.DIRECT_COAX
+            ),
+            _center_terminals(model),
+            "Transposed phase line; the rear element terminates the line",
             ratio,
             None,
         )

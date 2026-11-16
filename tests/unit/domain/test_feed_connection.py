@@ -97,6 +97,31 @@ def test_yagi_beta_hairpin_is_matching_hardware_not_a_balun() -> None:
     assert "The hairpin is a matching stub, not a balun." in detail.limitations
 
 
+def test_log_periodic_reports_a_balanced_center_feed_and_phase_line() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.log_periodic import (
+        cebik_10m_log_periodic_parameters,
+    )
+
+    parameters = cebik_10m_log_periodic_parameters()
+    detail = feed_connection_detail(parameters, parameters.to_antenna())
+
+    assert detail.topology is FeedTopology.CENTER_FED_DIPOLE
+    assert detail.interface is FeedInterface.DIRECT_COAX
+    assert detail.balance is FeedBalance.BALANCED
+    assert detail.balun_requirement is BalunRequirement.REQUIRED
+    assert detail.match_hardware is not None
+    assert "transposed phase line" in detail.match_hardware.lower()
+    assert "1:1 current balun" in " ".join(detail.recommended)
+
+    transformer = replace(parameters, feed_transformer_ratio=4.0)
+    transformed = feed_connection_detail(transformer, transformer.to_antenna())
+    assert transformed.interface is FeedInterface.TRANSFORMER
+    assert transformed.transformer_ratio == 4.0
+    assert "Ideal feed transformer" in transformed.modeled
+
+
 def test_vertical_base_feed_uses_the_ground_return() -> None:
     parameters = VerticalParameters(
         frequency_hz=7_100_000.0,

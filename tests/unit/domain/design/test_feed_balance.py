@@ -11,6 +11,7 @@ from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
+from antennadesk.domain.antennas.log_periodic import cebik_10m_log_periodic_parameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
 from antennadesk.domain.antennas.materials import COPPER
@@ -57,6 +58,7 @@ def test_balanced_families_require_a_current_balun() -> None:
         ),
         zepp_starting_parameters(),
         doublet_starting_parameters(DoubletPreset.G5RV),
+        cebik_10m_log_periodic_parameters(),
     )
 
     for parameters in balanced:

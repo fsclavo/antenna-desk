@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Log-periodic feed connection classification.** The LPDA design panel now
+  reports a balanced center-fed connection with the transposed phase-line note,
+  recommends a 1:1 current balun/choke for a direct coax feed, and shows the
+  ideal feed transformer when a ratio other than 1:1 is configured. Previously
+  the new family appeared as an unclassified, unbalanced feed.
+
 ## [0.8.0] - 2026-11-16
 
 ### Added
