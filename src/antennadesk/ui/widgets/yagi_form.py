@@ -149,7 +149,9 @@ class YagiForm(QWidget):
         )
         self._table.verticalHeader().setVisible(False)
         self._table.setAlternatingRowColors(True)
-        self._table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self._table.setMinimumHeight(140)
+        header = self._table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self._table.itemChanged.connect(self._refresh_driven_values)
 
         self._add = QPushButton(translator.t("yagi.add_element"), self)

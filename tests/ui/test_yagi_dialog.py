@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from PySide6.QtWidgets import QHeaderView
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters, nbs_five_element
@@ -20,6 +21,17 @@ def test_yagi_dialog_states_that_boom_correction_is_not_modeled(
 
     assert "boom" in dialog._boom_note.text().lower()
     assert "not modeled" in dialog._boom_note.text().lower()
+
+
+def test_yagi_element_table_fills_the_available_width(qtbot: QtBot) -> None:
+    dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+
+    header = dialog._table.horizontalHeader()
+
+    for column in range(dialog._table.columnCount()):
+        assert header.sectionResizeMode(column) is QHeaderView.ResizeMode.Stretch
+    assert dialog._table.minimumHeight() == 140
 
 
 def test_yagi_dialog_loads_the_nbs_preset(qtbot: QtBot) -> None:
