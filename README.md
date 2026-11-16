@@ -11,8 +11,9 @@ electromagnetic engine.
 
 **Status:** pre-alpha. The antenna catalog, estimators, simulation,
 measurements, optimization, matching, and reporting flows are implemented.
-Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.7.1`
-is published; signing is optional and deferred for later releases. Center-fed
+Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.8.0`
+is the current release candidate; signing is optional and deferred for later
+releases. Center-fed
 dipoles, folded dipoles, trap dipoles, T2FDs, vertical and horizontal loops,
 magnetic loops, custom wires, Yagis, Moxon, log-periodic arrays, fan dipoles,
 inverted-Vs, inverted-Ls, OCFDs, end-fed wires, slopers, random wires, doublets,
@@ -196,9 +197,10 @@ truth for each topic, every ADR, and the archived plans.
   import, plus series/parallel RLC loads, load markers, and report rows.
 - Optional transmitter-side feed line with characteristic impedance, length,
   velocity factor, matched loss, and transformed impedance/SWR.
-- Optional L/Pi/T matching networks at the feedpoint, with automatic L design
-  from a load R/X, optional component Q/loss, evaluation before the feed line,
-  and a parallel-trap helper in the load editor.
+- Optional L/Pi/T matching networks at the feedpoint, with automatic L/Pi/T
+  design from a load R/X and a visible design Q, optional component Q/loss,
+  evaluation before the feed line, and a parallel-trap helper in the load
+  editor.
 - Vertical radial-system presets for ground radials, elevated radials, and a
   dense ground-screen approximation, with editable numeric fields.
 - Top-loaded vertical geometry with a capacitive hat and loading coil, including
