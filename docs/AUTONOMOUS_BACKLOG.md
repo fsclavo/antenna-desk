@@ -91,7 +91,7 @@ external service and must not be invented or simulated into existence.
 | ~~P4~~ | ~~Family optimizer progress bar~~ | S–M | P1 | **Done 2026-11-10:** `FamilyOptimizationWorker` forwards the existing command progress callback as a Qt signal; the dialog shows a determinate bar with completed/estimated evaluations and the best score, throttles updates, caps running progress below 100%, and completes, cancels, or fails with the result. Tests cover forwarding, estimation text, cancellation, and terminal states. |
 | ~~P5~~ | ~~Length optimizer progress bar~~ | S–M | P1 | **Done 2026-11-10:** `OptimizeDipoleLengthCommand` now reports evaluation progress; `OptimizationWorker` forwards it and the dialog shows a determinate bar using `max_evaluations + 2 * len(sensitivity_offsets_m)` as the estimated denominator. Finish, cancellation, and failure set terminal states; tests cover monotonic counts and the dialog progress lifecycle. |
 | ~~P6~~ | ~~Element and synthesis optimizer progress bars~~ | M | P1, P4, P5 | **Done 2026-11-10:** `OptimizeElementsCommand` and `SynthesizeAntennaCommand` report evaluation progress; their workers forward it and both dialogs show the shared determinate bar with the maximum-evaluation budget as the estimated denominator. Finish, cancellation, and failure set terminal states; tests cover monotonic counts, worker forwarding, dialog completion, and cancellation. |
-| P7 | True per-frequency simulation progress | L | P2; ADR; benchmark; D4 decision | **Deferred until a benchmark shows a practical need.** Choose between chunked frequency-plan execution and version-tolerant incremental output parsing. Chunking must aggregate `SimulationResult` safely and preserve source, pattern, feed-line, matching-network, and cancellation semantics; parsing must handle partial writes. Add an ADR and benchmark before implementation. Do not use `timeout_s` or elapsed time as a fake percentage. |
+| ~~P7~~ | ~~True per-frequency simulation progress~~ | L | P2; ADR; benchmark; D4 decision | **Closed 2026-11-16:** ADR-0042 re-ran the multiband benchmark with a denser 101-point/band sweep and a solver-only single-deck comparison. The per-band path updates progress every 0.13–0.18 s at that density; the four-worker path is 2.7× faster than sequential and faster than a sequential single deck. True per-frequency progress would require incremental parsing for no demonstrated benefit. Keep per-band progress; revisit only under the ADR triggers. |
 | ~~R1~~ | ~~Re-run the `v0.4.0` release workflow and replace manual assets~~ | S | GitHub Actions runner DNS/mirror; tag `v0.4.0` | **Superseded 2026-11-11:** the `v0.4.1` release workflow completed all jobs and published CI-built Linux, Windows installer/zip, and wheel/sdist artifacts. The manual `v0.4.0` assets remain as published; rerunning that older tag is no longer required. |
 | ~~UX1~~ | ~~Guided mode and next-step coach~~ | S–M | none | **Done 2026-11-11:** added persistent Guided, Standard, and Advanced modes in **View → Workflow mode**, the toolbar **Mode** selector, and **Preferences**. Guided hides advanced actions and shows a state-derived next-step panel; Standard keeps the full editor with advanced simulation collapsed; Advanced expands it. The pure workflow state machine covers project, solver, simulation, diagnostics, high-SWR review, construction, measurement, comparison, and completion states; tests cover the transitions, action visibility, persistence, and EN/ES retranslation. |
 | ~~UX2~~ | ~~Installation profile~~ | S–M | none | **Done 2026-11-11:** added project-level installation profiles with name, available height and horizontal space, orientation, support type, ground preset, notes, and optional local image reference. The dialog supports add, duplicate, remove, and active selection; the active profile appears in the design panel and in construction sheets and HTML/PDF reports. Schema 36 persists the profile list and active identifier, older projects migrate with no profiles, and the editor is covered by domain, persistence, reporting, dialog, main-window, undo/redo, and EN/ES retranslation tests. Profiles are metadata and do not apply their ground automatically. |
@@ -136,7 +136,7 @@ external service and must not be invented or simulated into existence.
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
-| D4 | Segmented frequency plan in one NEC deck | M | solver benchmark | Deferred; current per-band batching is intentional |
+| ~~D4~~ | ~~Segmented frequency plan in one NEC deck~~ | M | solver benchmark | **Closed 2026-11-16 by ADR-0042:** the solver-only single deck saves about 0.95 s on 808 frequencies, while the four-worker per-band path is faster than a sequential single deck and preserves the existing result, pattern, project-size, and cancellation contracts. Keep per-band batching; revisit only under the ADR triggers. |
 
 ## Product experience queue (2026-11-11)
 
@@ -1358,7 +1358,7 @@ decision:
 | General radial-screen and transmission-line geometry beyond the current subset | Architectural change with a larger test surface | [`ROADMAP.md`](ROADMAP.md), [`PROJECT_DECISIONS.md`](PROJECT_DECISIONS.md) |
 | Custom/imported geometry optimization | Deliberately unavailable because arbitrary geometry has no parameterized topology | [`ADR/0026-family-optimizer-architecture.md`](ADR/0026-family-optimizer-architecture.md) |
 | Physical antenna validation | Blocked on measurements; tracked as B4 above | [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
-| Segmented frequency plan in one NEC deck | Deferred until a benchmark shows a practical need | [`MULTIBAND_PERFORMANCE.md`](MULTIBAND_PERFORMANCE.md), D4 above |
+| Segmented frequency plan in one NEC deck | Closed by ADR-0042; per-band batching retained | [`MULTIBAND_PERFORMANCE.md`](MULTIBAND_PERFORMANCE.md), [ADR-0042](ADR/0042-per-band-frequency-plan.md) |
 | True per-frequency simulation progress | Needs an ADR and benchmark to choose between chunked execution and incremental parsing; not justified until simulations are long enough | P7 above, D4 above |
 | Live VNA control, additional full-wave engines, and release signing | Need hardware, an engine decision, or release credentials | D1–D3 above, [`ROADMAP.md`](ROADMAP.md) |
 
@@ -1457,8 +1457,9 @@ model and solver contract must land first.
 2. **H1–H4 are complete.** The help/accessibility queue is closed.
 3. **M1–M5 are complete.** The matching-network correctness queue is closed;
    future matching work starts from ADR-0028 and the shared resolver.
-4. **P1–P6 are complete.** **P7** remains deferred until an ADR and benchmark
-   show a practical need.
+4. **P1–P7 are complete.** **P7** and **D4** are closed by ADR-0042: the
+   per-band path remains, with bounded parallel workers and the existing
+   pattern budget.
 5. **B4** waits for a coupled-fan measurement. **C3** is complete for the
    straight-element family with a published NEC-4 reference. Its remaining
    optional work is the ARRL/Cebik 7 MHz swept-element wire variant, which
@@ -1466,8 +1467,8 @@ model and solver contract must land first.
    evidence. Do not substitute independent ideal sources for the transposed
    feed; the validated model uses `TransmissionLine` phase reversal.
 6. **D1–D3** remain deferred until the required hardware, engine, or release
-   decision exists. **D4** stays deferred; coordinate it with P7 before
-   changing the frequency-plan execution model.
+   decision exists. **D4** is closed with P7 by ADR-0042; do not change the
+   frequency-plan execution model without the ADR revisit triggers.
 7. **R1** is closed as superseded: `v0.4.1` was published with CI-built Linux
    and Windows artifacts, so rerunning the older `v0.4.0` tag is no longer
    required.
@@ -1530,7 +1531,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **52**.
-- Full gate: **3,219 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **3,220 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.8.0** published on 2026-11-16 with the log-periodic family and

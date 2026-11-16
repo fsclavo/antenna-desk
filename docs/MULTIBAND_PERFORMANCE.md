@@ -138,3 +138,55 @@ uv run python scripts/benchmark_multiband.py \
 
 Use `--case g5rv-8` or `--case fan-8` for the isolated cases used in the
 per-solver memory measurement.
+
+## P7/D4 review (2026-11-16)
+
+The per-band decision was re-checked after 0.8.0 with a denser representative
+sweep: 101 impedance/SWR points per band and five pattern frequencies per band
+at a 5° step. The benchmark script now accepts `--sweep-points`,
+`--pattern-frequencies`, and `--pattern-step` so the density is reproducible.
+
+| Design | Bands | Sequential s | 4 workers s | Compressed MB | Peak RSS MiB |
+|---|---:|---:|---:|---:|---:|
+| G5RV | 8 | 3.18 | 1.18 | 7.05 | 129 / 139 |
+| Fan dipole wide | 8 | 1.80 | 1.15 | 8.53 | 129 / 139 |
+
+Reproduce with:
+
+```bash
+uv run python scripts/benchmark_multiband.py \
+  --nec2c spikes/phase0/build/nec2c --case g5rv-8 --workers 1 \
+  --sweep-points 101 --pattern-frequencies 5 --pattern-step 5
+uv run python scripts/benchmark_multiband.py \
+  --nec2c spikes/phase0/build/nec2c --case g5rv-8 --workers 4 \
+  --sweep-points 101 --pattern-frequencies 5 --pattern-step 5
+uv run python scripts/benchmark_multiband.py \
+  --nec2c spikes/phase0/build/nec2c --case fan-8 --workers 1 \
+  --sweep-points 101 --pattern-frequencies 5 --pattern-step 5
+uv run python scripts/benchmark_multiband.py \
+  --nec2c spikes/phase0/build/nec2c --case fan-8 --workers 4 \
+  --sweep-points 101 --pattern-frequencies 5 --pattern-step 5
+```
+
+The four-worker path is 2.7× faster than sequential for the G5RV case and 1.6×
+faster for the fan dipole. Both projects remain below the 32 MB warning limit.
+
+Solver-only comparison, G5RV, patterns disabled, 808 total frequencies:
+
+| Execution | Median wall time |
+|---|---:|
+| 8 bands × 101-point decks | 2.43 s |
+| 1 uniform 3.5–30 MHz × 808-point deck | 1.48 s |
+
+The single deck saves about 0.95 s, but the per-band path already updates
+progress every 0.13–0.18 s per band at this density. A multi-`FR` segmented deck
+would add a cross-cutting result-aggregation and pattern contract for a small
+wall-time gain, and per-frequency progress would require incremental parsing.
+The decision remains **one solver process per band**, with bounded parallel
+workers and the existing pattern budget. See
+[ADR-0042](ADR/0042-per-band-frequency-plan.md).
+
+A stress run with ten pattern frequencies at a 1° step produced an unbudgeted
+70 MB project. The UI pattern budget reduces the step or disables patterns
+before recording such a result; the benchmark script is intentionally
+unbudgeted.

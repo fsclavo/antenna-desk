@@ -59,6 +59,21 @@ DEFAULT_PATTERN_STEP_DEG = 5.0
 
 
 @dataclass(frozen=True, slots=True)
+class BenchmarkDensity:
+    sweep_points: int = DEFAULT_SWEEP_POINTS
+    pattern_frequencies: int = DEFAULT_PATTERN_FREQUENCIES
+    pattern_step_deg: float = DEFAULT_PATTERN_STEP_DEG
+
+    def __post_init__(self) -> None:
+        if self.sweep_points < 2:
+            raise ValueError("sweep_points must be at least 2")
+        if self.pattern_frequencies < 0:
+            raise ValueError("pattern_frequencies must not be negative")
+        if not 0.1 <= self.pattern_step_deg <= 30.0:
+            raise ValueError("pattern_step_deg must be between 0.1 and 30")
+
+
+@dataclass(frozen=True, slots=True)
 class BenchmarkCase:
     key: str
     name: str
@@ -105,19 +120,20 @@ def _cases() -> tuple[BenchmarkCase, ...]:
     )
 
 
-def _band_plan(case: BenchmarkCase) -> BandPlan:
+def _band_plan(case: BenchmarkCase, density: BenchmarkDensity) -> BandPlan:
     selections = []
     for band_id in case.band_ids:
         band = amateur_band_by_id(band_id)
         if band is None:
             raise ValueError(f"unknown band: {band_id}")
-        selections.append(BandSelection(band, points=DEFAULT_SWEEP_POINTS))
+        selections.append(BandSelection(band, points=density.sweep_points))
     return BandPlan(tuple(selections))
 
 
 def _requests(
     case: BenchmarkCase,
     plan: BandPlan,
+    density: BenchmarkDensity,
 ) -> tuple[BandSimulationRequest, ...]:
     model = case.parameters.to_antenna(name=case.name)
     requests = []
@@ -129,14 +145,14 @@ def _requests(
             SegmentationPolicy(min_segments_per_wire=3),
         )
         pattern_frequencies = frequency_plan.snapshot_frequencies(
-            DEFAULT_PATTERN_FREQUENCIES,
+            density.pattern_frequencies,
             preferred_frequency_hz=case.parameters.frequency_hz,
         )
         spec = SimulationSpec(
             frequency_plan=frequency_plan,
             segmentation=segmentation,
             far_field=far_field_request(
-                DEFAULT_PATTERN_STEP_DEG,
+                density.pattern_step_deg,
                 model.environment.ground,
             ),
             pattern_frequencies_hz=pattern_frequencies,
@@ -156,8 +172,9 @@ def _run_case(
     repository: JsonProjectRepository,
     case: BenchmarkCase,
     workers: int,
+    density: BenchmarkDensity,
 ) -> BenchmarkResult:
-    plan = _band_plan(case)
+    plan = _band_plan(case, density)
     project = CreateDipoleProject().execute(
         CreateDipoleProjectCommand(
             project_name=f"Benchmark {case.name}",
@@ -167,7 +184,7 @@ def _run_case(
         )
     )
     design = project.designs[0]
-    requests = _requests(case, plan)
+    requests = _requests(case, plan, density)
     peak_before = _peak_rss_kib()
     started = time.perf_counter()
     analysis = AnalyzeBands(solver).execute(
@@ -205,18 +222,22 @@ def _run_case(
     )
 
 
-def _print_markdown(results: tuple[BenchmarkResult, ...]) -> None:
+def _print_markdown(
+    results: tuple[BenchmarkResult, ...],
+    density: BenchmarkDensity,
+) -> None:
     print(
         "| Design | Bands | Sweep points/band | Pattern freqs/band | "
-        "Seconds | Compressed MB | Peak RSS MiB | Status |"
+        "Pattern step | Seconds | Compressed MB | Peak RSS MiB | Status |"
     )
-    print("|---|---:|---:|---:|---:|---:|---:|---|")
+    print("|---|---:|---:|---:|---:|---:|---:|---:|---|")
     for result in results:
         status = "ok" if set(result.statuses) == {"completed"} else ", ".join(result.statuses)
         rss = "n/a" if result.peak_rss_kib == 0 else f"{result.peak_rss_kib / 1024:.0f}"
         print(
-            f"| {result.name} | {result.bands} | {DEFAULT_SWEEP_POINTS} | "
-            f"{DEFAULT_PATTERN_FREQUENCIES} | {result.seconds:.2f} | "
+            f"| {result.name} | {result.bands} | {density.sweep_points} | "
+            f"{density.pattern_frequencies} | {density.pattern_step_deg:g}° | "
+            f"{result.seconds:.2f} | "
             f"{result.compressed_bytes / (1024 * 1024):.2f} | {rss} | {status} |"
         )
 
@@ -240,18 +261,44 @@ def main() -> int:
         choices=tuple(case.key for case in _cases()),
         help="run only one benchmark case",
     )
+    parser.add_argument(
+        "--sweep-points",
+        type=int,
+        default=DEFAULT_SWEEP_POINTS,
+        help=f"impedance/SWR points per band (default {DEFAULT_SWEEP_POINTS})",
+    )
+    parser.add_argument(
+        "--pattern-frequencies",
+        type=int,
+        default=DEFAULT_PATTERN_FREQUENCIES,
+        help=f"pattern frequencies per band (default {DEFAULT_PATTERN_FREQUENCIES})",
+    )
+    parser.add_argument(
+        "--pattern-step",
+        type=float,
+        default=DEFAULT_PATTERN_STEP_DEG,
+        help=f"pattern step in degrees (default {DEFAULT_PATTERN_STEP_DEG:g})",
+    )
     args = parser.parse_args()
     if args.nec2c is None:
         parser.error("--nec2c is required (or set the NEC2C environment variable)")
     if not 1 <= args.workers <= 8:
         parser.error("--workers must be between 1 and 8")
+    try:
+        density = BenchmarkDensity(
+            sweep_points=args.sweep_points,
+            pattern_frequencies=args.pattern_frequencies,
+            pattern_step_deg=args.pattern_step,
+        )
+    except ValueError as exc:
+        parser.error(str(exc))
 
     solver = Nec2cSolver(args.nec2c)
     repository = JsonProjectRepository()
     cases = tuple(case for case in _cases() if args.case is None or case.key == args.case)
     print(f"Workers: {args.workers}")
-    results = tuple(_run_case(solver, repository, case, args.workers) for case in cases)
-    _print_markdown(results)
+    results = tuple(_run_case(solver, repository, case, args.workers, density) for case in cases)
+    _print_markdown(results, density)
     parent_peak = max(result.peak_rss_kib for result in results)
     print(f"Parent process peak RSS: {parent_peak / 1024:.0f} MiB")
     return 0 if all(set(result.statuses) == {"completed"} for result in results) else 1
