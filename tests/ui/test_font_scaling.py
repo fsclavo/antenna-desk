@@ -82,6 +82,21 @@ def test_scaled_dialog_size_follows_the_preset() -> None:
     assert scaled_dialog_size(440, 260) == (440, 260)
 
 
+def test_scaled_dialog_size_caps_to_the_available_screen() -> None:
+    controller = _controller()
+    controller.apply(FontSize.MEDIUM)
+    screen = _application().primaryScreen()
+    assert screen is not None
+    available = screen.availableGeometry()
+
+    width, height = scaled_dialog_size(2_000, 2_000)
+
+    assert width <= max(320, round(available.width() * 0.9))
+    assert height <= max(240, round(available.height() * 0.9))
+    assert width >= 320
+    assert height >= 240
+
+
 def test_feed_line_dialog_uses_the_scaled_initial_size(qtbot: QtBot) -> None:
     controller = _controller()
     controller.apply(FontSize.LARGE)

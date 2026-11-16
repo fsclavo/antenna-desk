@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   recommends a 1:1 current balun/choke for a direct coax feed, and shows the
   ideal feed transformer when a ratio other than 1:1 is configured. Previously
   the new family appeared as an unclassified, unbalanced feed.
+- **Scaled dialog size cap.** Dialog initial sizes are now capped to 90 % of the
+  available screen, so a large font scale cannot place the title bar or buttons
+  off-screen. The content remains scrollable and the dialog is still resizable.
 
 ## [0.8.0] - 2026-11-16
 

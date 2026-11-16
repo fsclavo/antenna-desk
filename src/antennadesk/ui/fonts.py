@@ -71,10 +71,27 @@ def scaled_font_copy(font: QFont) -> QFont:
 
 
 def scaled_dialog_size(width: int, height: int) -> tuple[int, int]:
-    """Scale a dialog's preferred size with the active font preset."""
+    """Scale a dialog's preferred size and cap it to the available screen.
+
+    A tall dialog at a large font scale can exceed the screen height even though
+    its content is inside a scroll area. Capping the initial size keeps the
+    title bar, buttons, and scroll area reachable; the user can still resize the
+    dialog larger.
+    """
 
     scale = current_font_scale()
-    return max(320, round(width * scale)), max(240, round(height * scale))
+    scaled_width = max(320, round(width * scale))
+    scaled_height = max(240, round(height * scale))
+    app = QApplication.instance()
+    if isinstance(app, QApplication):
+        screen = app.primaryScreen()
+        if screen is not None:
+            available = screen.availableGeometry()
+            max_width = max(320, round(available.width() * 0.9))
+            max_height = max(240, round(available.height() * 0.9))
+            scaled_width = min(scaled_width, max_width)
+            scaled_height = min(scaled_height, max_height)
+    return scaled_width, scaled_height
 
 
 def apply_plot_fonts(plots: Iterable[pg.PlotWidget]) -> None:
