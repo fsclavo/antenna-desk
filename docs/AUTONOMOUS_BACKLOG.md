@@ -1533,11 +1533,13 @@ model and solver contract must land first.
 - Full gate: **3,219 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
-- Release: **0.8.0** candidate prepared on 2026-11-16 with the log-periodic
-  family and automatic Pi/T matching synthesis; local artifacts and publication
-  are pending. See [`RELEASE_QA_0.8.0.md`](RELEASE_QA_0.8.0.md). **0.7.1**
-  remains the previous published release with the Yagi element-table layout fix
-  and checksum-verified unsigned artifacts.
+- Release: **0.8.0** published on 2026-11-16 with the log-periodic family and
+  automatic Pi/T matching synthesis. The tag-triggered CI run
+  [`43931919975`](https://github.com/fsclavo/antenna-desk/actions/runs/43931919975)
+  completed the wheel/sdist, Linux, Windows, and publish jobs; all six published
+  assets and checksums were verified. See
+  [`RELEASE_QA_0.8.0.md`](RELEASE_QA_0.8.0.md). **0.7.1** remains the previous
+  release.
 - Last commits: the post-0.6.0 QA pass, the 0.6.0 release publication and QA, the
   Moxon/Yagi starting frequencies (UX24), the editable BOM costs (UX20), the
   portable project bundle (UX19), the common coax catalog (UX23), the materials

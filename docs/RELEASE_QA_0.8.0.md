@@ -2,7 +2,9 @@
 
 - **Version:** `0.8.0`
 - **Date:** 2026-11-16
-- **Status:** release candidate prepared; **not tagged or published**
+- **Tag:** `v0.8.0` at `c400c4f`
+- **Release:** <https://github.com/fsclavo/antenna-desk/releases/tag/v0.8.0>
+- **Status:** published with unsigned, checksum-verified artifacts
 - **Schema:** 52 (from 51)
 - **Previous release:** `0.7.1` (2026-11-16)
 
@@ -60,18 +62,21 @@
 - Pi/T synthesis is lossless. Component loss remains the separate
   `q_factor` model.
 
-## Local candidate artifacts
+## Published assets
 
-Artifacts are built outside the repository under
-`/tmp/user/1000/opencode/antennadesk-0.8.0`. Native builds run the bundle
-license audit.
+Every asset has a companion `.sha256` file. All six published checksums were
+verified with `sha256sum -c` after downloading the release assets. The local
+candidate builds were verified before tagging; CI rebuilt the artifacts
+independently.
 
-| Artifact | Size | SHA-256 |
+| Asset | Size | SHA-256 |
 |---|---:|---|
-| `antennadesk-0.8.0-py3-none-any.whl` | 1007 K | `82d2888c930620c0bfb3eeff54e5527b8f3af233eb4c34a29e5837bd03a47928` |
-| `antennadesk-0.8.0.tar.gz` | 1.5 M | `1d99b478d73cfe214e3d2342faa0e4cd75308c99f7e48c44a88cb94396e29451` |
-| `AntennaDesk-0.8.0-x86_64.AppImage` | 121 M | `b3d1a26983ee3889d60645d1bc1f115cca5a91406380aa9eed6441ba1d4e2e7c` |
-| `antennadesk_0.8.0_amd64.deb` | 103 M | `dc6bc390b5f0d34f261376170f25aae4c1a81bb81e7d51efd9d14839da4d9399` |
+| `antennadesk-0.8.0-py3-none-any.whl` | 1006 K | `82d2888c930620c0bfb3eeff54e5527b8f3af233eb4c34a29e5837bd03a47928` |
+| `antennadesk-0.8.0.tar.gz` | 1.4 M | `ec3d54717f999740eff6d7a9df61387f4131f97b6b1087a5304622156dd2f99b` |
+| `AntennaDesk-0.8.0-x86_64.AppImage` | 129 M | `afe5578f9a5dcca76bcef146b47155c218ce22aa4910b8edff9f4cba06af2a91` |
+| `antennadesk_0.8.0_amd64.deb` | 109 M | `8fdd9bf3e1daf0c2af8335918ff17f9a49362aa1da4c12720d1db98ff002253a` |
+| `AntennaDesk-0.8.0-windows-x86_64.zip` | 103 M | `be1b7151c819b9afc64eb3fb068b98d362f076d050f2b00eada8a1792ab90caa` |
+| `AntennaDesk-0.8.0-windows-x86_64-setup.exe` | 71 M | `aae32bce458c187df7f1507c8438b8b09a11c426b9510f6cf1b3738e9debb375` |
 
 ## Smoke tests
 
@@ -97,6 +102,14 @@ license audit.
   **0.8.0** and found its bundled `nec2c`.
 - `sha256sum -c` passed for the wheel, sdist, AppImage, and Debian package.
 
+## Windows
+
+The Windows portable zip and NSIS installer were built in GitHub Actions on
+`windows-latest`. The workflow ran the frozen executable version/solver checks,
+installed the NSIS package silently, checked the desktop shortcut and installed
+executable, and completed the silent uninstall. See CI run
+[`43931919975`](https://github.com/fsclavo/antenna-desk/actions/runs/43931919975).
+
 ## Known limitations
 
 - LPDA evidence is **B**: the reference is a published NEC-4 model, not a
@@ -114,5 +127,8 @@ license audit.
 
 ## Release decision
 
-The `0.8.0` candidate is ready for a tag-triggered CI build and publication
-review. It is **not** tagged, pushed, or published by this QA pass.
+Published as `v0.8.0` on 2026-11-16. The tag-triggered CI run
+[`43931919975`](https://github.com/fsclavo/antenna-desk/actions/runs/43931919975)
+completed the wheel/sdist, Linux, Windows, and publish jobs successfully. All
+six published assets and their companion `.sha256` files were downloaded and
+verified after publication.

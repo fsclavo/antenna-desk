@@ -12,8 +12,7 @@ electromagnetic engine.
 **Status:** pre-alpha. The antenna catalog, estimators, simulation,
 measurements, optimization, matching, and reporting flows are implemented.
 Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.8.0`
-is the current release candidate; signing is optional and deferred for later
-releases. Center-fed
+is published; signing is optional and deferred for later releases. Center-fed
 dipoles, folded dipoles, trap dipoles, T2FDs, vertical and horizontal loops,
 magnetic loops, custom wires, Yagis, Moxon, log-periodic arrays, fan dipoles,
 inverted-Vs, inverted-Ls, OCFDs, end-fed wires, slopers, random wires, doublets,
