@@ -146,6 +146,29 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "modeled. Gamma matches are not modeled by NEC-2 here."
         ),
     ),
+    "log_periodic": EvidenceEntry(
+        template="log_periodic",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "L. B. Cebik, W4RNL, 'A 10-Meter LPDA', Phase 3 (28-30 MHz, "
+            "1.0 in elements, 75 ohm phase line); ARRL Antenna Book, 21st ed., "
+            "Ch. 10, Table 2 (tau/sigma geometry)"
+        ),
+        tolerance=(
+            "Published Cebik 10 m NEC-4 reference: 0.05 dB gain and 0.5 dB "
+            "front-to-back at 29 MHz; 1% on the generated element lengths and "
+            "spacings"
+        ),
+        limitation=(
+            "Performance is compared with a published NEC-4 model, not a "
+            "measurement. The reference is a free-space 28-30 MHz design at "
+            "29 MHz; scaled or edited geometry is a starting point. The model "
+            "is lossless, has no balun or feed-line loss, and does not include "
+            "a rear stub or boom/mast interaction. The ARRL 7 MHz wire design "
+            "is a swept-element V array and is not reproduced by this "
+            "straight-element family."
+        ),
+    ),
     "moxon": EvidenceEntry(
         template="moxon",
         level=EvidenceLevel.REFERENCE,

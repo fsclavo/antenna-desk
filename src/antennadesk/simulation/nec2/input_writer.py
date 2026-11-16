@@ -147,10 +147,13 @@ def write_nec2_input(model: AntennaModel, spec: SimulationSpec) -> Nec2Deck:
         end = layout.wire_segmentation(transmission_line.end_wire_id)
         start_segment = _local_segment_for_offset(start, transmission_line.start_offset_m)
         end_segment = _local_segment_for_offset(end, transmission_line.end_offset_m)
+        impedance = transmission_line.characteristic_impedance_ohm
+        if transmission_line.phase_reversal:
+            impedance = -impedance
         lines.append(
             "TL "
             f"{start.tag} {start_segment} {end.tag} {end_segment} "
-            f"{_format(transmission_line.characteristic_impedance_ohm)} "
+            f"{_format(impedance)} "
             f"{_format(transmission_line.electrical_length_m)} "
             "0.000000000 0.000000000 0.000000000 0.000000000"
         )

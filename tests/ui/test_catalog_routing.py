@@ -32,6 +32,7 @@ from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
 from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
+from antennadesk.domain.antennas.log_periodic import log_periodic_parameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
 from antennadesk.domain.antennas.materials import COPPER
@@ -238,6 +239,7 @@ def _parameters_for(key: str) -> object:
         "double_biquad": biquad_parameters(BiquadKind.DOUBLE),
         "beverage": beverage_parameters(),
         "loaded_dipole": loaded_dipole_parameters(),
+        "log_periodic": log_periodic_parameters(),
         "discone": discone_parameters(),
         "trap_yagi": trap_yagi_parameters(),
         "hexbeam": published_hexbeam_parameters(),
@@ -313,6 +315,7 @@ def test_every_catalog_entry_has_a_change_template_route(
             "BiquadDialog",
             "BeverageDialog",
             "LoadedDipoleDialog",
+            "LogPeriodicDialog",
             "DisconeDialog",
             "TrapYagiDialog",
             "HexbeamDialog",
@@ -370,6 +373,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         "double_biquad": ("double_biquad",),
         "beverage": ("beverage",),
         "loaded_dipole": ("loaded_dipole",),
+        "log_periodic": ("log_periodic",),
         "discone": ("discone",),
         "trap_yagi": ("trap_yagi",),
         "hexbeam": ("hexbeam",),
@@ -437,6 +441,7 @@ def test_every_catalog_entry_has_a_new_antenna_route(
         new_double_biquad_antenna=record("double_biquad"),
         new_beverage_antenna=record("beverage"),
         new_loaded_dipole_antenna=record("loaded_dipole"),
+        new_log_periodic_antenna=record("log_periodic"),
         new_discone_antenna=record("discone"),
         new_trap_yagi_antenna=record("trap_yagi"),
         new_hexbeam_antenna=record("hexbeam"),
@@ -506,6 +511,7 @@ ESTIMATORLESS_CATALOG_KEYS = frozenset(
         "double_biquad",
         "beverage",
         "loaded_dipole",
+        "log_periodic",
         "discone",
         "trap_yagi",
         "hexbeam",

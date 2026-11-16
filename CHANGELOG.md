@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Log-periodic dipole array (LPDA).** Added a straight-element LPDA family
+  with τ/σ geometry, a front-element feed, a common-boom element table, and a
+  transposed phase line built from the existing `TransmissionLine` primitive.
+  The generic `phase_reversal` flag maps to the NEC negative-characteristic-
+  impedance convention; no separate solver or model type was added. The Cebik
+  10 m 1.0 in, 75 Ω reference reproduces the published NEC-4 gain (7.37 vs
+  7.36 dBi), front-to-back ratio (22.01 dB), and element-center phases (within
+  1.6°) at 29 MHz, with segmentation-stable results. Evidence is **B**: a
+  published-model comparison, not a measurement. Schema 52 persists the family
+  and the phase-reversal flag. See
+  [ADR-0041](docs/ADR/0041-log-periodic-transposed-feed.md) and the
+  [spike record](docs/spikes/c3-log-periodic-spike.md).
+
+### Changed
+
+- **Schema 52.** Existing projects migrate transmission lines with
+  `phase_reversal: false`, preserving their previous behavior.
+
 ## [0.7.1] - 2026-11-16
 
 ### Fixed

@@ -22,6 +22,10 @@ class TransmissionLine:
     The line is a mathematical two-port, not a radiating wire.  NEC-2's TL card
     does not model distributed loss; use a separate feed-line post-processing
     model when line loss matters.
+
+    ``phase_reversal`` swaps the polarity of the two-port.  It is a generic
+    line property, not a log-periodic-specific one: the NEC adapter maps it to
+    the negative-characteristic-impedance convention.
     """
 
     id: str
@@ -32,6 +36,7 @@ class TransmissionLine:
     characteristic_impedance_ohm: float
     length_m: float
     velocity_factor: float = 1.0
+    phase_reversal: bool = False
 
     def __post_init__(self) -> None:
         if not self.id.strip():

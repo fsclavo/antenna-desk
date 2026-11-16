@@ -21,6 +21,7 @@ from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.load import LumpedLoad, ParallelLoad
 from ..domain.antennas.loaded_dipole import LoadedDipoleParameters
+from ..domain.antennas.log_periodic import LogPeriodicParameters
 from ..domain.antennas.loop import LoopOrientation, LoopParameters
 from ..domain.antennas.magnetic_loop import MagneticLoopParameters
 from ..domain.antennas.matching_network import (
@@ -796,6 +797,35 @@ def design_summary_rows(
                 ("Feed gap", f"{parameters.disc_gap_m:.4f} m"),
                 ("Top height", f"{parameters.top_height_m:.4f} m"),
                 ("Feed", "across the apex gap"),
+                ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
+                ("Ground", ground_text(parameters.ground, labeler)),
+            ]
+        )
+        return tuple(rows)
+    if isinstance(parameters, LogPeriodicParameters):
+        rows.extend(
+            [
+                ("Type", parameters.template_name),
+                ("Elements", str(parameters.element_count)),
+                (
+                    "Band",
+                    f"{parameters.frequency_low_hz / 1e6:.3f}-"
+                    f"{parameters.frequency_high_hz / 1e6:.3f} MHz",
+                ),
+                ("Longest element", f"{parameters.longest_element_length_m:.4f} m"),
+                ("Shortest element", f"{parameters.shortest_element_length_m:.4f} m"),
+                ("Tau", f"{parameters.tau:.4f}"),
+                ("Sigma", f"{parameters.sigma:.4f}"),
+                ("Boom length", f"{parameters.boom_length_m:.4f} m"),
+                ("Phase line Z0", f"{parameters.phase_line_impedance_ohm:.1f} Ω"),
+                (
+                    "Phase line velocity factor",
+                    f"{parameters.phase_line_velocity_factor:.3f}",
+                ),
+                ("Feed transformer", f"{parameters.feed_transformer_ratio:.1f}:1"),
+                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Feed", "front element center"),
                 ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground, labeler)),

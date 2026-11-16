@@ -15,7 +15,7 @@ from ..domain.projects.construction import (
 from ..domain.projects.project import DesignVariant, Project
 from .localization import Labeler, identity_labeler
 
-BEAM_TYPES = frozenset({"yagi", "moxon", "hexbeam", "trap_yagi", "quad_beam"})
+BEAM_TYPES = frozenset({"yagi", "moxon", "log_periodic", "hexbeam", "trap_yagi", "quad_beam"})
 
 CHECKLIST_LABELS_EN: dict[str, str] = {
     "prepare_drawings": "Prepare the construction drawing and wire schedule.",

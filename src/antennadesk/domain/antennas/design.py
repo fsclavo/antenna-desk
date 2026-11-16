@@ -24,6 +24,7 @@ from .inverted_l import ANTENNA_TYPE_INVERTED_L, InvertedLParameters
 from .inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
 from .j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
 from .loaded_dipole import ANTENNA_TYPE_LOADED_DIPOLE, LoadedDipoleParameters
+from .log_periodic import ANTENNA_TYPE_LOG_PERIODIC, LogPeriodicParameters
 from .loop import ANTENNA_TYPE_LOOP, LoopParameters
 from .magnetic_loop import ANTENNA_TYPE_MAGNETIC_LOOP, MagneticLoopParameters
 from .moxon import ANTENNA_TYPE_MOXON, MoxonParameters
@@ -56,6 +57,7 @@ from .zepp import ANTENNA_TYPE_ZEPP, ZeppParameters
 AntennaDesignParameters = (
     DipoleParameters
     | FoldedDipoleParameters
+    | LogPeriodicParameters
     | LoopParameters
     | MagneticLoopParameters
     | OCFDParameters
@@ -110,6 +112,8 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_HEXBEAM
     if isinstance(parameters, FoldedDipoleParameters):
         return ANTENNA_TYPE_FOLDED_DIPOLE
+    if isinstance(parameters, LogPeriodicParameters):
+        return ANTENNA_TYPE_LOG_PERIODIC
     if isinstance(parameters, LoopParameters):
         return ANTENNA_TYPE_LOOP
     if isinstance(parameters, MagneticLoopParameters):
@@ -178,6 +182,8 @@ def primary_dimension_m(parameters: AntennaDesignParameters) -> float:
         return parameters.driver_half_length_m
     if isinstance(parameters, FoldedDipoleParameters):
         return parameters.total_length_m
+    if isinstance(parameters, LogPeriodicParameters):
+        return parameters.longest_element_length_m
     if isinstance(parameters, LoopParameters):
         return parameters.circumference_m
     if isinstance(parameters, OCFDParameters):
@@ -240,6 +246,8 @@ def with_primary_dimension(
         )
     if isinstance(parameters, FoldedDipoleParameters):
         return replace(parameters, total_length_m=dimension_m)
+    if isinstance(parameters, LogPeriodicParameters):
+        return replace(parameters, longest_element_length_m=dimension_m)
     if isinstance(parameters, LoopParameters):
         return replace(parameters, circumference_m=dimension_m)
     if isinstance(parameters, OCFDParameters):

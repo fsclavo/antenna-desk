@@ -1018,6 +1018,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Yagi",
         Language.SPANISH: "Yagi",
     },
+    "catalog.family.log_periodic": {
+        Language.ENGLISH: "Log-periodic",
+        Language.SPANISH: "Log-periódica",
+    },
     "catalog.family.vertical": {
         Language.ENGLISH: "Vertical",
         Language.SPANISH: "Vertical",
@@ -1051,6 +1055,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "Yagi editable de múltiples elementos con polarización horizontal "
             "o vertical y preset inicial NBS."
+        ),
+    },
+    "catalog.log_periodic": {
+        Language.ENGLISH: "Log-periodic (LPDA)",
+        Language.SPANISH: "Log-periódica (LPDA)",
+    },
+    "catalog.log_periodic.description": {
+        Language.ENGLISH: (
+            "Straight-element log-periodic dipole array with a transposed phase "
+            "line. The Cebik 10 m reference is the starting design; edited or "
+            "scaled geometry is a starting point."
+        ),
+        Language.SPANISH: (
+            "Agrupación log-periódica de dipolos con elementos rectos y línea de "
+            "fase transpuesta. El diseño de referencia de Cebik para 10 m es el "
+            "punto de partida; la geometría editada o escalada es orientativa."
         ),
     },
     "catalog.inverted_v": {
@@ -3570,6 +3590,132 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Boom-axis spacing from the reflector to the driven loop.",
         Language.SPANISH: "Separación sobre el boom desde el reflector hasta el lazo alimentado.",
     },
+    "help.log_periodic.frequency_low": {
+        Language.ENGLISH: (
+            "Lowest design frequency. Changing it scales the element lengths and "
+            "keeps the band ratio."
+        ),
+        Language.SPANISH: (
+            "Frecuencia de diseño más baja. Al cambiarla se escalan los elementos "
+            "y se mantiene la relación de banda."
+        ),
+    },
+    "help.log_periodic.frequency_high": {
+        Language.ENGLISH: "Highest design frequency. The reference 10 m array covers 28-30 MHz.",
+        Language.SPANISH: "Frecuencia de diseño más alta. La referencia de 10 m cubre 28-30 MHz.",
+    },
+    "help.log_periodic.longest_element": {
+        Language.ENGLISH: (
+            "Physical tip-to-tip length of the rear element. The other lengths "
+            "and spacings follow tau and sigma."
+        ),
+        Language.SPANISH: (
+            "Largo físico punta a punta del elemento trasero. Los demás largos y "
+            "separaciones siguen tau y sigma."
+        ),
+    },
+    "help.log_periodic.tau": {
+        Language.ENGLISH: (
+            "Ratio between adjacent element lengths and spacings (0.50-0.98). "
+            "Higher tau increases gain and the number of elements."
+        ),
+        Language.SPANISH: (
+            "Relación entre largos y separaciones de elementos adyacentes "
+            "(0,50-0,98). Mayor tau aumenta la ganancia y la cantidad de elementos."
+        ),
+    },
+    "help.log_periodic.sigma": {
+        Language.ENGLISH: (
+            "First spacing divided by twice the longest element (0.02-0.20). "
+            "Higher sigma lengthens the boom."
+        ),
+        Language.SPANISH: (
+            "Primera separación dividida por el doble del elemento más largo "
+            "(0,02-0,20). Mayor sigma alarga el boom."
+        ),
+    },
+    "help.log_periodic.element_count": {
+        Language.ENGLISH: (
+            "Number of straight dipole elements. The rear element is the longest "
+            "and the front element is fed."
+        ),
+        Language.SPANISH: (
+            "Cantidad de dipolos rectos. El elemento trasero es el más largo y el "
+            "frontal es el alimentado."
+        ),
+    },
+    "help.log_periodic.phase_line_impedance": {
+        Language.ENGLISH: (
+            "Characteristic impedance of the transposed phase line. NEC models it "
+            "as an ideal lossless two-port."
+        ),
+        Language.SPANISH: (
+            "Impedancia característica de la línea de fase transpuesta. NEC la "
+            "modela como un cuadripolo ideal sin pérdidas."
+        ),
+    },
+    "help.log_periodic.phase_line_velocity_factor": {
+        Language.ENGLISH: (
+            "Velocity factor of the phase line; the electrical length is the "
+            "physical spacing divided by this value."
+        ),
+        Language.SPANISH: (
+            "Factor de velocidad de la línea de fase; el largo eléctrico es la "
+            "separación física dividida por este valor."
+        ),
+    },
+    "help.log_periodic.feed_transformer_ratio": {
+        Language.ENGLISH: (
+            "Ideal transformer ratio at the feed. It is applied in post-processing, "
+            "not as a wire or a solver load."
+        ),
+        Language.SPANISH: (
+            "Relación de transformación ideal en la alimentación. Se aplica en "
+            "post-proceso, no como hilo ni carga del solver."
+        ),
+    },
+    "help.log_periodic.reference_preset": {
+        Language.ENGLISH: (
+            "Reset tau, sigma, element count, diameter, phase line, and feed to "
+            "the published Cebik 10 m reference at the current low frequency."
+        ),
+        Language.SPANISH: (
+            "Restablece tau, sigma, cantidad de elementos, diámetro, línea de fase "
+            "y alimentación a la referencia publicada de Cebik para 10 m en la "
+            "frecuencia baja actual."
+        ),
+    },
+    "help.log_periodic.table": {
+        Language.ENGLISH: (
+            "Read-only element schedule. Lengths and spacings are generated from "
+            "the longest element, tau, and sigma."
+        ),
+        Language.SPANISH: (
+            "Tabla de elementos de solo lectura. Los largos y separaciones se "
+            "generan desde el elemento más largo, tau y sigma."
+        ),
+    },
+    "help.log_periodic.evidence": {
+        Language.ENGLISH: (
+            "Level B evidence: a published NEC-4 comparison, not a measurement. "
+            "The model omits the balun, feed-line loss, rear stub, boom, and mast."
+        ),
+        Language.SPANISH: (
+            "Evidencia nivel B: comparación con un modelo NEC-4 publicado, no una "
+            "medición. El modelo omite balun, pérdida de línea, stub trasero, boom "
+            "y mástil."
+        ),
+    },
+    "help.log_periodic.geometry_summary": {
+        Language.ENGLISH: (
+            "Boom length, extreme element lengths, and phase-line impedance of the "
+            "current geometry."
+        ),
+        Language.SPANISH: (
+            "Largo del boom, elementos extremos e impedancia de la línea de fase "
+            "de la geometría actual."
+        ),
+    },
     "help.ringo.radiator_height": {
         Language.ENGLISH: (
             "Physical length of the vertical radiator above the matching ring; ring "
@@ -5140,6 +5286,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Dipolo",
     },
     "family.yagi": {Language.ENGLISH: "Yagi", Language.SPANISH: "Yagi"},
+    "family.log_periodic": {
+        Language.ENGLISH: "Log-periodic",
+        Language.SPANISH: "Log-periódica",
+    },
     "family.loop": {Language.ENGLISH: "Loop", Language.SPANISH: "Lazo"},
     "family.vertical": {
         Language.ENGLISH: "Vertical",
@@ -10711,6 +10861,121 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "The director length factor must stay between 0.8 and 1.0.",
         Language.SPANISH: "El factor de longitud del director debe quedar entre 0,8 y 1,0.",
     },
+    "log_periodic.title": {
+        Language.ENGLISH: "Log-Periodic Dipole Array",
+        Language.SPANISH: "Agrupación log-periódica de dipolos",
+    },
+    "log_periodic.frequency_low": {
+        Language.ENGLISH: "Low frequency",
+        Language.SPANISH: "Frecuencia baja",
+    },
+    "log_periodic.frequency_high": {
+        Language.ENGLISH: "High frequency",
+        Language.SPANISH: "Frecuencia alta",
+    },
+    "log_periodic.longest_element": {
+        Language.ENGLISH: "Longest element",
+        Language.SPANISH: "Elemento más largo",
+    },
+    "log_periodic.tau": {
+        Language.ENGLISH: "Tau (τ)",
+        Language.SPANISH: "Tau (τ)",
+    },
+    "log_periodic.sigma": {
+        Language.ENGLISH: "Sigma",
+        Language.SPANISH: "Sigma",
+    },
+    "log_periodic.element_count": {
+        Language.ENGLISH: "Elements",
+        Language.SPANISH: "Elementos",
+    },
+    "log_periodic.phase_line_impedance": {
+        Language.ENGLISH: "Phase-line Z0",
+        Language.SPANISH: "Z0 de la línea de fase",
+    },
+    "log_periodic.phase_line_velocity_factor": {
+        Language.ENGLISH: "Phase-line velocity factor",
+        Language.SPANISH: "Factor de velocidad de la línea de fase",
+    },
+    "log_periodic.feed_transformer_ratio": {
+        Language.ENGLISH: "Feed transformer",
+        Language.SPANISH: "Transformador de alimentación",
+    },
+    "log_periodic.reference_preset": {
+        Language.ENGLISH: "Load Cebik 10 m reference",
+        Language.SPANISH: "Cargar referencia Cebik de 10 m",
+    },
+    "log_periodic.element": {
+        Language.ENGLISH: "Element",
+        Language.SPANISH: "Elemento",
+    },
+    "log_periodic.length": {
+        Language.ENGLISH: "Length",
+        Language.SPANISH: "Largo",
+    },
+    "log_periodic.spacing": {
+        Language.ENGLISH: "Spacing",
+        Language.SPANISH: "Separación",
+    },
+    "log_periodic.position": {
+        Language.ENGLISH: "Position",
+        Language.SPANISH: "Posición",
+    },
+    "log_periodic.geometry_summary": {
+        Language.ENGLISH: (
+            "{elements} elements · boom {boom} · longest {longest} · "
+            "shortest {shortest} · phase line {z0} Ω"
+        ),
+        Language.SPANISH: (
+            "{elements} elementos · boom {boom} · más largo {longest} · "
+            "más corto {shortest} · línea de fase {z0} Ω"
+        ),
+    },
+    "log_periodic.hint": {
+        Language.ENGLISH: (
+            "The phase line connects adjacent element centers with a crossover "
+            "between each pair; the rear element short-terminates the line and the "
+            "front element is the feed point. The reference is the published Cebik "
+            "10 m design. Use tau and sigma to scale the element sequence, or edit "
+            "the longest element directly."
+        ),
+        Language.SPANISH: (
+            "La línea de fase conecta los centros de elementos adyacentes con un "
+            "cruce entre cada par; el elemento trasero corta la línea y el frontal "
+            "es el punto de alimentación. La referencia es el diseño publicado de "
+            "Cebik para 10 m. Usá tau y sigma para escalar la secuencia, o editá "
+            "directamente el elemento más largo."
+        ),
+    },
+    "log_periodic.evidence": {
+        Language.ENGLISH: (
+            "Level B: the straight-element Cebik 10 m geometry and transposed "
+            "phase line reproduce the published NEC-4 gain and front-to-back ratio "
+            "at 29 MHz. This is a published-model comparison, not a measurement. "
+            "The model is lossless and does not include a balun, feed-line loss, "
+            "rear stub, boom, mast, or construction tolerances."
+        ),
+        Language.SPANISH: (
+            "Nivel B: la geometría de elementos rectos de Cebik para 10 m y la "
+            "línea de fase transpuesta reproducen la ganancia y la relación "
+            "delante/atrás publicadas en NEC-4 a 29 MHz. Es una comparación con un "
+            "modelo publicado, no una medición. El modelo es sin pérdidas y no "
+            "incluye balun, pérdida de línea, stub trasero, boom, mástil ni "
+            "tolerancias de construcción."
+        ),
+    },
+    "log_periodic.geometry_note": {
+        Language.ENGLISH: (
+            "Straight elements on a common boom; the dashed line is the transposed "
+            "phase line. The rear element terminates the line and the front element "
+            "is fed."
+        ),
+        Language.SPANISH: (
+            "Elementos rectos sobre un boom común; la línea de trazos es la línea "
+            "de fase transpuesta. El elemento trasero termina la línea y el frontal "
+            "es la alimentación."
+        ),
+    },
     "ringo.title": {
         Language.ENGLISH: "Ringo Generator",
         Language.SPANISH: "Generador Ringo",
@@ -14502,6 +14767,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize.unavailable.magnetic_loop": {
         Language.ENGLISH: "The magnetic-loop capacitor and loss model are not accurate enough for an optimizer.",
         Language.SPANISH: "El modelo de capacitor y pérdidas del lazo magnético no es suficientemente preciso para un optimizador.",
+    },
+    "optimize.unavailable.log_periodic": {
+        Language.ENGLISH: (
+            "The log-periodic reference is a single published 10 m design. "
+            "There is no independent tolerance for an automated tau, sigma, or "
+            "element search; use the design table or a solver sweep."
+        ),
+        Language.SPANISH: (
+            "La referencia log-periódica es un único diseño publicado para 10 m. "
+            "No hay una tolerancia independiente para una búsqueda automática de "
+            "tau, sigma o elementos; usá la tabla de diseño o un barrido del solver."
+        ),
     },
     "optimize.unavailable.random_wire": {
         Language.ENGLISH: "A random wire is deliberately non-resonant and tuner-assisted; it has no stable optimum.",

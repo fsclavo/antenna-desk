@@ -127,6 +127,7 @@ from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.load import LumpedLoad, ParallelLoad
 from ..domain.antennas.loaded_dipole import LoadedDipoleParameters
+from ..domain.antennas.log_periodic import LogPeriodicParameters
 from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.magnetic_loop import MagneticLoopParameters
 from ..domain.antennas.matching_network import (
@@ -205,6 +206,7 @@ from ..domain.simulation.result import SimulationResult, SimulationStatus
 from ..domain.simulation.segmentation import (
     SegmentationPolicy,
     aligned_policy_for_model,
+    aligned_policy_for_wire_centers,
 )
 from ..domain.simulation.spec import DEFAULT_TIMEOUT_S, MAX_TIMEOUT_S, SimulationSpec
 from ..importers.mmana import parse_mmana_file
@@ -245,6 +247,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_J_POLE,
     CATALOG_TYPE_LOADED_DIPOLE,
     CATALOG_TYPE_LOADED_VERTICAL,
+    CATALOG_TYPE_LOG_PERIODIC,
     CATALOG_TYPE_LOOP,
     CATALOG_TYPE_MAGNETIC_LOOP,
     CATALOG_TYPE_MOXON,
@@ -306,6 +309,7 @@ from .dialogs.j_pole_dialog import JPoleDialog
 from .dialogs.journal_dialog import JournalDialog
 from .dialogs.loaded_dipole_dialog import LoadedDipoleDialog
 from .dialogs.loads_dialog import LoadsDialog
+from .dialogs.log_periodic_dialog import LogPeriodicDialog
 from .dialogs.magnetic_loop_dialog import MagneticLoopDialog
 from .dialogs.matching_network_dialog import MatchingNetworkDialog
 from .dialogs.materials_reference_dialog import MaterialsReferenceDialog
@@ -371,6 +375,7 @@ from .widgets.inverted_l_form import InvertedLForm
 from .widgets.inverted_v_form import InvertedVForm
 from .widgets.j_pole_form import JPoleForm
 from .widgets.loaded_dipole_form import LoadedDipoleForm
+from .widgets.log_periodic_form import LogPeriodicForm
 from .widgets.magnetic_loop_form import MagneticLoopForm
 from .widgets.moxon_form import MoxonForm
 from .widgets.ocfd_form import OCFDForm
@@ -875,6 +880,18 @@ class MainWindow(QMainWindow):
         self._quad_beam_scroll.setMinimumWidth(340)
         self._quad_beam_scroll.setMaximumWidth(480)
 
+        self._log_periodic_form = LogPeriodicForm(
+            self._translator,
+            self._unit_system,
+            parent=self,
+        )
+        self._log_periodic_form.changed.connect(self._on_form_changed)
+        self._log_periodic_scroll = QScrollArea(self)
+        self._log_periodic_scroll.setWidgetResizable(True)
+        self._log_periodic_scroll.setWidget(self._log_periodic_form)
+        self._log_periodic_scroll.setMinimumWidth(340)
+        self._log_periodic_scroll.setMaximumWidth(520)
+
         self._discone_form = DisconeForm(
             self._translator,
             self._unit_system,
@@ -953,6 +970,7 @@ class MainWindow(QMainWindow):
             (self._loaded_dipole_form, self._loaded_dipole_scroll, 480),
             (self._phased_vertical_form, self._phased_vertical_scroll, 480),
             (self._quad_beam_form, self._quad_beam_scroll, 480),
+            (self._log_periodic_form, self._log_periodic_scroll, 520),
             (self._discone_form, self._discone_scroll, 480),
             (self._trap_yagi_form, self._trap_yagi_scroll, 520),
             (self._hexbeam_form, self._hexbeam_scroll, 520),
@@ -1140,6 +1158,7 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._loaded_dipole_scroll)
         self._design_stack.addWidget(self._phased_vertical_scroll)
         self._design_stack.addWidget(self._quad_beam_scroll)
+        self._design_stack.addWidget(self._log_periodic_scroll)
         self._design_stack.addWidget(self._discone_scroll)
         self._design_stack.addWidget(self._trap_yagi_scroll)
         self._design_stack.addWidget(self._hexbeam_scroll)
@@ -1743,6 +1762,7 @@ class MainWindow(QMainWindow):
         self._loaded_dipole_form.retranslate()
         self._phased_vertical_form.retranslate()
         self._quad_beam_form.retranslate()
+        self._log_periodic_form.retranslate()
         self._discone_form.retranslate()
         self._trap_yagi_form.retranslate()
         self._hexbeam_form.retranslate()
@@ -2532,6 +2552,9 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, QuadBeamParameters):
             self._design_stack.setCurrentWidget(self._quad_beam_scroll)
             self._quad_beam_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, LogPeriodicParameters):
+            self._design_stack.setCurrentWidget(self._log_periodic_scroll)
+            self._log_periodic_form.set_parameters(design.parameters)
         elif isinstance(design.parameters, DisconeParameters):
             self._design_stack.setCurrentWidget(self._discone_scroll)
             self._discone_form.set_parameters(design.parameters)
@@ -3180,6 +3203,7 @@ class MainWindow(QMainWindow):
                 TrapYagiParameters,
                 HexbeamParameters,
                 QuadBeamParameters,
+                LogPeriodicParameters,
                 TransmissionLineDoubletParameters,
                 ZeppParameters,
             ),
@@ -3194,6 +3218,8 @@ class MainWindow(QMainWindow):
                 parameters = self._phased_vertical_form.parameters()
             elif isinstance(previous_design.parameters, QuadBeamParameters):
                 parameters = self._quad_beam_form.parameters()
+            elif isinstance(previous_design.parameters, LogPeriodicParameters):
+                parameters = self._log_periodic_form.parameters()
             elif isinstance(previous_design.parameters, DisconeParameters):
                 parameters = self._discone_form.parameters()
             elif isinstance(previous_design.parameters, TrapYagiParameters):
@@ -3750,6 +3776,8 @@ class MainWindow(QMainWindow):
             return self._phased_vertical_simulation_spec(parameters)
         if isinstance(parameters, QuadBeamParameters):
             return self._quad_beam_simulation_spec(parameters)
+        if isinstance(parameters, LogPeriodicParameters):
+            return self._log_periodic_simulation_spec(parameters)
         if isinstance(parameters, DisconeParameters):
             return self._discone_simulation_spec(parameters)
         if isinstance(parameters, TrapYagiParameters):
@@ -3824,11 +3852,18 @@ class MainWindow(QMainWindow):
                     for wire in model.wires
                 ),
             )
-        segmentation = aligned_policy_for_model(
-            model,
-            frequency_plan.stop_hz,
-            segmentation,
-        )
+        if isinstance(design.parameters, LogPeriodicParameters):
+            segmentation = aligned_policy_for_wire_centers(
+                model,
+                frequency_plan.stop_hz,
+                segmentation,
+            )
+        else:
+            segmentation = aligned_policy_for_model(
+                model,
+                frequency_plan.stop_hz,
+                segmentation,
+            )
         return replace(
             spec,
             frequency_plan=frequency_plan,
@@ -4794,6 +4829,26 @@ class MainWindow(QMainWindow):
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
         )
 
+    def _log_periodic_simulation_spec(
+        self,
+        parameters: LogPeriodicParameters,
+    ) -> SimulationSpec:
+        model = parameters.to_antenna()
+        return SimulationSpec(
+            frequency_plan=FrequencyPlan.sweep(
+                parameters.frequency_low_hz,
+                parameters.frequency_high_hz,
+                DEFAULT_GENERATED_SWEEP_POINTS,
+            ),
+            segmentation=aligned_policy_for_wire_centers(
+                model,
+                parameters.frequency_high_hz,
+                SegmentationPolicy(min_segments_per_wire=3),
+            ),
+            feed_transformer_ratio=parameters.feed_transformer_ratio,
+            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
+        )
+
     def _discone_simulation_spec(
         self,
         parameters: DisconeParameters,
@@ -5102,6 +5157,17 @@ class MainWindow(QMainWindow):
         if not self._maybe_save_changes():
             return
         dialog = QuadBeamDialog(self._translator, self._unit_system, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._create_project_from_parameters(
+            dialog.result_parameters(),
+            default_name=dialog.result_parameters().template_name,
+        )
+
+    def new_log_periodic_antenna(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        dialog = LogPeriodicDialog(self._translator, self._unit_system, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         self._create_project_from_parameters(
@@ -6110,6 +6176,16 @@ class MainWindow(QMainWindow):
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 return None
             return dialog.result_parameters()
+        if selected == CATALOG_TYPE_LOG_PERIODIC:
+            dialog = LogPeriodicDialog(
+                self._translator,
+                self._unit_system,
+                self,
+                frequency_hz=frequency_hz,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return None
+            return dialog.result_parameters()
         if selected == CATALOG_TYPE_DISCONE:
             dialog = DisconeDialog(
                 self._translator,
@@ -6569,6 +6645,8 @@ class MainWindow(QMainWindow):
             self.new_phased_vertical_antenna()
         elif selected == CATALOG_TYPE_QUAD_BEAM:
             self.new_quad_beam_antenna()
+        elif selected == CATALOG_TYPE_LOG_PERIODIC:
+            self.new_log_periodic_antenna()
         elif selected == CATALOG_TYPE_DISCONE:
             self.new_discone_antenna()
         elif selected == CATALOG_TYPE_TRAP_YAGI:
@@ -7413,6 +7491,8 @@ class MainWindow(QMainWindow):
             base_spec = self._phased_vertical_simulation_spec(design.parameters)
         elif isinstance(design.parameters, QuadBeamParameters):
             base_spec = self._quad_beam_simulation_spec(design.parameters)
+        elif isinstance(design.parameters, LogPeriodicParameters):
+            base_spec = self._log_periodic_simulation_spec(design.parameters)
         elif isinstance(design.parameters, DisconeParameters):
             base_spec = self._discone_simulation_spec(design.parameters)
         elif isinstance(design.parameters, TrapYagiParameters):
@@ -7462,6 +7542,8 @@ class MainWindow(QMainWindow):
                 self._phased_vertical_form.set_parameters(parameters)
             elif isinstance(parameters, QuadBeamParameters):
                 self._quad_beam_form.set_parameters(parameters)
+            elif isinstance(parameters, LogPeriodicParameters):
+                self._log_periodic_form.set_parameters(parameters)
             elif isinstance(parameters, DisconeParameters):
                 self._discone_form.set_parameters(parameters)
             elif isinstance(parameters, TrapYagiParameters):
@@ -9170,6 +9252,7 @@ class MainWindow(QMainWindow):
             self._loaded_dipole_form,
             self._phased_vertical_form,
             self._quad_beam_form,
+            self._log_periodic_form,
             self._discone_form,
             self._trap_yagi_form,
             self._hexbeam_form,

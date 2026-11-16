@@ -208,7 +208,7 @@ The second slice adds two multi-wire templates:
 `AntennaDesignParameters` is the union of the supported parameter types.
 `DesignVariant` stores the union and validates that `antenna_type` matches the
 parameters. The canonical model remains the shared `AntennaModel`, so the
-solver adapter does not need geometry-specific branches. Schema version 31 is
+solver adapter does not need geometry-specific branches. Schema version 52 is
 current: parameter payloads are additive, and old `wire_dipole` documents are
 unchanged. A design may also store an optional analysis band plan; it is
 intent metadata and never changes the canonical geometry. Series RLC loads are
@@ -218,7 +218,11 @@ amplitude and phase; the NEC adapter emits one `EX` card per effective source
 while the primary feed remains the impedance/SWR reference port. The phased
 vertical array family uses that multi-source model with an ideal linear phase
 and amplitude progression. The quad beam uses a reflector loop, a driven loop,
-and an optional director loop on a single feed.
+and an optional director loop on a single feed. The log-periodic family uses
+one `TransmissionLine` between adjacent element centers with the generic
+`phase_reversal` flag; the rear element terminates the line and the front
+element is fed. The NEC adapter maps that flag to a negative TL characteristic
+impedance.
 
 The form exposes an antenna-type selector with conditional spacing/sides
 fields. The geometry view is renderer-neutral: `ui/geometry/builder.py`
@@ -333,8 +337,9 @@ design type, version 39 adds measurement sessions, version 40 adds the project
 journal, version 41 adds the folded-dipole feed transformer ratio, version 42
 adds the full-wave loop feed transformer ratio, version 43 adds the Yagi
 folded-driven transformer ratio, version 44 adds the project current-balun
-record, version 45 adds optional manual BOM costs, and older documents are
-migrated explicitly.
+record, version 45 adds optional manual BOM costs, version 52 adds the
+log-periodic design type and the generic transmission-line phase-reversal flag,
+and older documents are migrated explicitly.
 
 Simulation runs are persisted in schema version 30. Raw solver text is stored
 with the normalized result. Project files are compact JSON compressed with
@@ -386,8 +391,9 @@ prerequisite for the user workflow.
 - The end-fed feed transformer is an ideal impedance ratio; it is not a
   physical unun model. The counterpoise is ordinary wire geometry.
 - Relative permeability is not emitted to NEC.
-- Custom and imported designs, magnetic loops, and random wires have an
-  explicit unavailable optimizer reason. Typed G5RV, ZS6BKW, Zepp, biquad,
+- Custom and imported designs, magnetic loops, random wires, and
+  log-periodic arrays have an explicit unavailable optimizer reason. Typed
+  G5RV, ZS6BKW, Zepp, biquad,
   double biquad, Beverage, and loaded/linked dipole have family optimizers; the
   doublet radiator uses the dipole
   optimizer. Space

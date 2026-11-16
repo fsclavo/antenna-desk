@@ -440,6 +440,27 @@ EVIDENCE_SPANISH: dict[str, dict[str, str]] = {
             "la adaptación con el solver o una medición."
         ),
     },
+    "log_periodic": {
+        "source": (
+            "L. B. Cebik, W4RNL, 'A 10-Meter LPDA', fase 3 (28-30 MHz, "
+            "elementos de 1,0 pulg, línea de fase de 75 Ω); ARRL Antenna Book, "
+            "21.ª ed., cap. 10, tabla 2 (geometría tau/sigma)"
+        ),
+        "tolerance": (
+            "Referencia publicada de Cebik para 10 m en NEC-4: 0,05 dB de "
+            "ganancia y 0,5 dB de relación delante/atrás a 29 MHz; 1 % en los "
+            "largos y separaciones generados"
+        ),
+        "limitation": (
+            "El rendimiento se compara con un modelo NEC-4 publicado, no con una "
+            "medición. La referencia es un diseño de 28-30 MHz en espacio libre a "
+            "29 MHz; la geometría escalada o editada es un punto de partida. El "
+            "modelo es sin pérdidas, no incluye balun ni pérdida de línea, y no "
+            "incluye stub trasero ni interacción con boom o mástil. El diseño de "
+            "hilo ARRL de 7 MHz es una agrupación en V con elementos inclinados y "
+            "no se reproduce con esta familia de elementos rectos."
+        ),
+    },
     "quad_beam": {
         "source": (
             "Lazos cuadrados de lado cuarto de onda con reflector escalado y "

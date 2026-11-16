@@ -51,6 +51,10 @@ from ...domain.antennas.loaded_dipole import (
     ANTENNA_TYPE_LOADED_DIPOLE,
     LoadedDipoleParameters,
 )
+from ...domain.antennas.log_periodic import (
+    ANTENNA_TYPE_LOG_PERIODIC,
+    LogPeriodicParameters,
+)
 from ...domain.antennas.loop import (
     ANTENNA_TYPE_LOOP,
     LoopOrientation,
@@ -135,6 +139,7 @@ _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_MAGNETIC_LOOP: "catalog.magnetic_loop",
     ANTENNA_TYPE_YAGI: "catalog.yagi",
     ANTENNA_TYPE_MOXON: "catalog.moxon",
+    ANTENNA_TYPE_LOG_PERIODIC: "catalog.log_periodic",
     ANTENNA_TYPE_FAN_DIPOLE: "catalog.fan_dipole",
     ANTENNA_TYPE_ENDFED: "catalog.endfed",
     ANTENNA_TYPE_J_POLE: "catalog.j_pole",
@@ -2049,6 +2054,67 @@ def _add_quad_beam_dimensions(
     notes.append(translator.t("quad_beam.geometry_note"))
 
 
+def _add_log_periodic_dimensions(
+    model: AntennaModel,
+    parameters: LogPeriodicParameters | None,
+    factory: _Factory,
+    dimensions: list[Dimension],
+    notes: list[str],
+    translator: Translator,
+) -> None:
+    if parameters is None:
+        return
+    wires = {wire.id: wire for wire in model.wires}
+    rear = wires.get(parameters.element_wire_id(1))
+    front = wires.get(parameters.element_wire_id(parameters.element_count))
+    second = wires.get(parameters.element_wire_id(2))
+    if rear is not None:
+        dimensions.append(
+            factory.dimension(
+                rear.start,
+                rear.end,
+                parameters.longest_element_length_m,
+                side="left",
+                priority=95,
+                label=translator.t("log_periodic.longest_element"),
+            )
+        )
+    if front is not None:
+        dimensions.append(
+            factory.dimension(
+                front.start,
+                front.end,
+                parameters.shortest_element_length_m,
+                side="right",
+                priority=95,
+                label=translator.t("geometry.driven_element"),
+            )
+        )
+    if rear is not None and front is not None:
+        dimensions.append(
+            factory.dimension(
+                _wire_point(rear, 0.5),
+                _wire_point(front, 0.5),
+                parameters.boom_length_m,
+                side="below",
+                priority=90,
+                label=translator.t("geometry.boom_length"),
+            )
+        )
+    if rear is not None and second is not None and len(parameters.element_spacings_m) > 0:
+        dimensions.append(
+            factory.dimension(
+                _wire_point(rear, 0.5),
+                _wire_point(second, 0.5),
+                parameters.first_spacing_m,
+                side="above",
+                priority=80,
+                label=translator.t("log_periodic.spacing"),
+            )
+        )
+    notes.append(translator.t("log_periodic.geometry_note"))
+
+
 def _add_ringo_dimensions(
     model: AntennaModel,
     factory: _Factory,
@@ -3568,6 +3634,38 @@ def _summary(
             f"{translator.t('quad_beam.reflector_scale').lower()} "
             f"{reflector_side / driven_side:.3f}"
         )
+    elif isinstance(parameters, LogPeriodicParameters) or (
+        antenna_type == ANTENNA_TYPE_LOG_PERIODIC
+    ):
+        if isinstance(parameters, LogPeriodicParameters):
+            element_count = parameters.element_count
+            boom_m = parameters.boom_length_m
+            longest_m = parameters.longest_element_length_m
+            shortest_m = parameters.shortest_element_length_m
+            phase_line_z0 = parameters.phase_line_impedance_ohm
+        else:
+            element_count = len(model.wires)
+            centers = [_wire_point(wire, 0.5) for wire in model.wires]
+            boom_m = (
+                max(center.x_m for center in centers) - min(center.x_m for center in centers)
+                if centers
+                else 0.0
+            )
+            longest_m = max((wire.length_m for wire in model.wires), default=0.0)
+            shortest_m = min((wire.length_m for wire in model.wires), default=0.0)
+            phase_line_z0 = 0.0
+        parts.extend(
+            [
+                f"{translator.t('geometry.elements').lower()} {element_count}",
+                f"{translator.t('geometry.boom_length').lower()} "
+                f"{_format_length(boom_m, translator, unit_system)}",
+                f"{translator.t('log_periodic.length').lower()} "
+                f"{_format_length(longest_m, translator, unit_system)}"
+                f"/{_format_length(shortest_m, translator, unit_system)}",
+                f"{translator.t('log_periodic.phase_line_impedance').lower()} "
+                f"{phase_line_z0:.1f} Ω",
+            ]
+        )
     elif isinstance(parameters, YagiParameters) or antenna_type == ANTENNA_TYPE_YAGI:
         if isinstance(parameters, YagiParameters):
             positions = [element.position_m for element in parameters.elements]
@@ -4094,6 +4192,15 @@ def build_scene(
         _add_phased_vertical_dimensions(
             model,
             parameters if isinstance(parameters, PhasedVerticalParameters) else None,
+            factory,
+            dimensions,
+            notes,
+            translator,
+        )
+    elif effective_type == ANTENNA_TYPE_LOG_PERIODIC:
+        _add_log_periodic_dimensions(
+            model,
+            parameters if isinstance(parameters, LogPeriodicParameters) else None,
             factory,
             dimensions,
             notes,

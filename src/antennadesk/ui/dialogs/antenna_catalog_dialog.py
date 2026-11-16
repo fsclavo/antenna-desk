@@ -38,6 +38,7 @@ CATALOG_TYPE_LOADED_VERTICAL = "loaded_vertical"
 CATALOG_TYPE_DISCONE = "discone"
 CATALOG_TYPE_YAGI = "yagi"
 CATALOG_TYPE_MOXON = "moxon"
+CATALOG_TYPE_LOG_PERIODIC = "log_periodic"
 CATALOG_TYPE_FAN_DIPOLE = "fan_dipole"
 CATALOG_TYPE_TRAP_DIPOLE = "trap_dipole"
 CATALOG_TYPE_TRAP_YAGI = "trap_yagi"
@@ -309,6 +310,13 @@ ENTRIES: tuple[CatalogEntry, ...] = (
         family_key="catalog.family.yagi",
         description_key="catalog.yagi.description",
         evidence_key="catalog.evidence.yagi",
+    ),
+    CatalogEntry(
+        key=CATALOG_TYPE_LOG_PERIODIC,
+        label_key="catalog.log_periodic",
+        family_key="catalog.family.log_periodic",
+        description_key="catalog.log_periodic.description",
+        evidence_key="catalog.evidence.published",
     ),
     CatalogEntry(
         key=CATALOG_TYPE_LOOP,

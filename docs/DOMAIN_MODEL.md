@@ -486,6 +486,21 @@ heuristics; boom, spreaders, mast, feed line, and matching network are not
 modeled. The family is experimental and makes no validated gain, front-to-back,
 or impedance claim.
 
+### LogPeriodicParameters
+
+`LogPeriodicParameters` stores the low and high design frequencies, the longest
+element length, τ and σ, the element count (3–12), radius, the phase-line
+characteristic impedance and velocity factor, the ideal feed-transformer ratio,
+height, azimuth, material, and ground. `to_antenna()` builds one straight wire
+per element and one `TransmissionLine` between adjacent element centers. Every
+line has `phase_reversal=True`; the rear element center terminates the line and
+the front element center is the feed point. The Cebik 10 m 1.0 in, 75 Ω design
+is the published reference; the family evidence is B because the comparison is
+against a published NEC-4 model, not a measurement. The model is lossless, has
+no balun, feed-line loss, rear stub, boom, mast, or construction tolerances,
+and does not reproduce the ARRL/Cebik 7 MHz swept-element V design. There is no
+full τ/σ optimizer; the registry returns an explicit unavailable reason.
+
 ### HexbeamParameters
 
 `HexbeamParameters` stores the design frequency, driver and reflector
@@ -540,8 +555,9 @@ reconstructs OCFD parameters from legacy custom designs.
 `FanDipoleParameters`, `EndFedParameters`,
 `JPoleParameters`, `RingoParameters`, `ScvParameters`, `BiquadParameters`,
 `BeverageParameters`, `LoadedDipoleParameters`, `PhasedVerticalParameters`,
-`QuadBeamParameters`, `DisconeParameters`, `TrapYagiParameters`,
-`HexbeamParameters`, `TransmissionLineDoubletParameters`, `TrapDipoleParameters`,
+`QuadBeamParameters`, `LogPeriodicParameters`, `DisconeParameters`,
+`TrapYagiParameters`, `HexbeamParameters`,
+`TransmissionLineDoubletParameters`, `TrapDipoleParameters`,
 `T2FDParameters`, `ZeppParameters`, and `CustomAntennaParameters`. `antenna_type_for()` maps a
 parameter object to its native type; `custom` remains the arbitrary-wire escape
 hatch.
@@ -922,6 +938,10 @@ the application writes version 45.
 - Version 45 adds the optional manual `bom_costs` record. The migration writes
   `None`; it does not affect simulation results or reporting unless the user
   enters costs.
+- Version 52 introduces the log-periodic parameter payload and the generic
+  transmission-line `phase_reversal` flag. The migration writes
+  `phase_reversal: false` to existing lines, so old designs keep their previous
+  behavior.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -942,12 +962,15 @@ the application writes version 45.
 - Series and parallel RLC loads are supported on one wire segment. L/Pi/T
   matching networks are post-processed at the feedpoint, and the vertical
   generator has a radial screen. Transmission-line two-ports between wire
-  points are modeled as geometry; arbitrary radial screens are not.
+  points are modeled as geometry, including the log-periodic transposed phase
+  line and generic phase reversal; physical feed-line geometry and arbitrary
+  radial screens are not modeled.
 - Optimization operates on typed generated parameters, including typed G5RV,
   ZS6BKW, Zepp, biquad, double biquad, Beverage, loaded/linked dipole,
   phased vertical arrays, quad beams, discones, trapped Yagis, and hexbeams.
-  Magnetic loops, random wires, and arbitrary custom/imported
-  geometry have explicit unavailable reasons. Band-aware and robust modes
+  Magnetic loops, random wires, log-periodic arrays, and arbitrary
+  custom/imported geometry have explicit unavailable reasons. Band-aware and
+  robust modes
   evaluate multiple operating points; the Pareto front is descriptive; and a
   compact `OptimizationSummary` is persisted with the design.
 - Measurements are imported from CSV; there is no live instrument-control

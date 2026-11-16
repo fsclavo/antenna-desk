@@ -21,6 +21,7 @@ from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
 from ..domain.antennas.loaded_dipole import LoadedDipoleParameters
+from ..domain.antennas.log_periodic import LogPeriodicParameters
 from ..domain.antennas.loop import LoopOrientation, LoopParameters
 from ..domain.antennas.magnetic_loop import MagneticLoopParameters
 from ..domain.antennas.matching_network import (
@@ -813,6 +814,36 @@ def render_construction_sheet(
             base=f"{parameters.base_height_m:.4f}",
             disc=f"{parameters.disc_radius_m:.4f}",
             gap=f"{parameters.disc_gap_m:.4f}",
+        )
+    elif isinstance(parameters, LogPeriodicParameters):
+        feed_rows = f"""
+<tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
+<tr><th>Elements</th><td>{parameters.element_count}</td></tr>
+<tr><th>Band</th><td>{parameters.frequency_low_hz / 1e6:.3f}-{parameters.frequency_high_hz / 1e6:.3f} MHz</td></tr>
+<tr><th>Longest element</th><td>{parameters.longest_element_length_m:.4f} m</td></tr>
+<tr><th>Shortest element</th><td>{parameters.shortest_element_length_m:.4f} m</td></tr>
+<tr><th>Tau</th><td>{parameters.tau:.4f}</td></tr>
+<tr><th>Sigma</th><td>{parameters.sigma:.4f}</td></tr>
+<tr><th>Boom length</th><td>{parameters.boom_length_m:.4f} m</td></tr>
+<tr><th>Phase-line Z0</th><td>{parameters.phase_line_impedance_ohm:.1f} Ω</td></tr>
+<tr><th>Phase-line velocity factor</th><td>{parameters.phase_line_velocity_factor:.3f}</td></tr>
+<tr><th>Feed transformer</th><td>{parameters.feed_transformer_ratio:.1f}:1</td></tr>
+<tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
+"""
+        construction_note = _note(
+            tr,
+            "Cut {count} straight elements with the longest at {longest} m and "
+            "the shortest at {shortest} m. Space them along the boom using the "
+            "generated schedule, with the rear element at the back. Run the "
+            "transposed phase line between adjacent element centers with a "
+            "crossover between each pair; short the rear element center and feed "
+            "the front element center through the {ratio}:1 transformer. The "
+            "phase line is an ideal lossless two-port; the balun, feed-line loss, "
+            "rear stub, boom, mast, and construction tolerances are not modeled.",
+            count=parameters.element_count,
+            longest=f"{parameters.longest_element_length_m:.4f}",
+            shortest=f"{parameters.shortest_element_length_m:.4f}",
+            ratio=f"{parameters.feed_transformer_ratio:.1f}",
         )
     elif isinstance(parameters, QuadBeamParameters):
         director_note = (

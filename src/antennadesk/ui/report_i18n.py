@@ -254,6 +254,14 @@ REPORT_SPANISH: dict[str, str] = {
     "Best SWR": "Mejor ROE",
     "Boom height": "Altura del boom",
     "Boom length": "Longitud del boom",
+    "Longest element": "Elemento más largo",
+    "Phase line Z0": "Z0 de la línea de fase",
+    "Phase line velocity factor": "Factor de velocidad de la línea de fase",
+    "Phase-line Z0": "Z0 de la línea de fase",
+    "Phase-line velocity factor": "Factor de velocidad de la línea de fase",
+    "Shortest element": "Elemento más corto",
+    "Sigma": "Sigma",
+    "Tau": "Tau",
     "Bottom height": "Altura inferior",
     "Capacitor ESR": "ESR del capacitor",
     "Capacitor reactance": "Reactancia del capacitor",
@@ -741,6 +749,17 @@ REPORT_SPANISH: dict[str, str] = {
     "Build {count} parallel elements on a {boom} m boom. Feed the center of element {driven}.{folded_note}{match_note}": (  # noqa: E501
         "Construí {count} elementos paralelos en un boom de {boom} m. Alimentá el "
         "centro del elemento {driven}.{folded_note}{match_note}"
+    ),
+    "Cut {count} straight elements with the longest at {longest} m and the shortest at {shortest} m. Space them along the boom using the generated schedule, with the rear element at the back. Run the transposed phase line between adjacent element centers with a crossover between each pair; short the rear element center and feed the front element center through the {ratio}:1 transformer. The phase line is an ideal lossless two-port; the balun, feed-line loss, rear stub, boom, mast, and construction tolerances are not modeled.": (  # noqa: E501
+        "Cortá {count} elementos rectos con el más largo en {longest} m y el más "
+        "corto en {shortest} m. Sepalos a lo largo del boom usando la tabla "
+        "generada, con el elemento trasero atrás. Tendé la línea de fase "
+        "transpuesta entre los centros de elementos adyacentes con un cruce "
+        "entre cada par; cortocircuitá el centro del elemento trasero y "
+        "alimentá el centro del elemento frontal a través del transformador "
+        "{ratio}:1. La línea de fase es un cuadripolo ideal sin pérdidas; no se "
+        "modelan el balun, la pérdida de línea, el stub trasero, el boom, el "
+        "mástil ni las tolerancias de construcción."
     ),
     "Build {count} square loops with the driven loop at {side} m per side and the reflector at {reflector} m per side. Set the reflector {spacing} m behind the driven loop.{director_note} Feed the midpoint of the driven loop's left vertical side and keep the loops square. The boom, spreaders, mast, and matching network are not modeled; tune the match for the installed antenna.": (  # noqa: E501
         "Construí {count} lazos cuadrados con el lazo alimentado de {side} m por "

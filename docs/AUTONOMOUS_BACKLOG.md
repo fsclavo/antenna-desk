@@ -39,7 +39,7 @@ external service and must not be invented or simulated into existence.
 | B4 | Fan-dipole coupling calibration | M | measurement | A coupled-fan measurement is reproduced; no scalar correction is invented |
 | ~~C1~~ | ~~**Phased verticals / arrays**~~ | XL | multi-source architecture | **Done 2026-11-08:** multi-source model and schema 24, then the 2–4 element phased vertical family with ideal phase/amplitude progression, radial screens, schema 25, editor, scene markers, reports, construction notes, and family optimizer. Evidence remains C pending a traceable reference. |
 | ~~C2~~ | ~~Quad beam / hexbeam~~ | L | C1 lessons optional | **Done 2026-11-08:** quad beam with 2–3 loops plus a single-band hexbeam with published G3TXQ dimensions, schema 26/30, editors, scene contracts, reports, construction notes, and family optimizers. Evidence: quad beam C; hexbeam B on published starting dimensions, with the bent-wire reconstruction and frame limits visible. |
-| C3 | Log-periodic | L | transposed feed-line model | **Blocked 2026-11-08:** independent ideal voltage sources with alternating polarity produced a negative primary-feed resistance in NEC2C. A real transposed boom feed line must be modeled before this family can ship; do not approximate it with independent sources. |
+| ~~C3~~ | ~~**Log-periodic**~~ | L | transposed feed-line model | **Done 2026-11-16:** added a straight-element log-periodic dipole array as a normal family over `AntennaModel`, `Wire`, `FeedPoint`, and `TransmissionLine`. The only cross-cutting change is a generic `phase_reversal` flag on `TransmissionLine`, emitted as a negative NEC TL characteristic impedance. The Cebik 10 m 1.0 in, 75 Ω reference reproduces the published NEC-4 gain (7.37 vs 7.36 dBi), front-to-back ratio (22.01 dB), element-center phases (within 1.6°), and segmentation stability. Evidence is **B**: a published-model comparison, not a measurement. The ARRL/Cebik 7 MHz wire design is a swept-element V array and is not reproduced by this straight-element family; it remains a future variant. See `docs/ADR/0041-log-periodic-transposed-feed.md` and `docs/spikes/c3-log-periodic-spike.md`. |
 | ~~C4~~ | ~~Discone~~ | L | none | **Done 2026-11-08:** radial-wire cone and disc with apex feed gap, schema 27, editor, scene, reports, construction notes, and optimizer. Evidence stays C because the wire approximation and feed transition are not validated. |
 | ~~C5~~ | ~~Trapped / multiband Yagi~~ | L | trap model reuse | **Done 2026-11-08:** two-band trapped Yagi with ideal parallel LC trap pairs on each element, schema 28, editor, scene, reports, construction notes, and optimizer. Evidence stays C because trap loss and boom mounting are not modeled. |
 | ~~E1~~ | ~~Raise the simulation timeout default to 180 s and expose an override~~ | S | none | **Done 2026-11-08:** `SimulationSpec.timeout_s` defaults to 180 s; **Advanced simulation → Solver** exposes a 10–3600 s override applied to single runs, band analysis, and family optimizations; tests cover the default and override. |
@@ -1457,10 +1457,12 @@ model and solver contract must land first.
    future matching work starts from ADR-0028 and the shared resolver.
 4. **P1–P6 are complete.** **P7** remains deferred until an ADR and benchmark
    show a practical need.
-5. **B4** waits for a coupled-fan measurement. **C3** is blocked on a
-   transposed boom feed-line model; do not substitute independent ideal
-   sources, because NEC2C reported negative primary-feed resistance in the
-   prototype.
+5. **B4** waits for a coupled-fan measurement. **C3** is complete for the
+   straight-element family with a published NEC-4 reference. Its remaining
+   optional work is the ARRL/Cebik 7 MHz swept-element wire variant, which
+   needs a separate V-array geometry and has only design-table performance
+   evidence. Do not substitute independent ideal sources for the transposed
+   feed; the validated model uses `TransmissionLine` phase reversal.
 6. **D1–D3** remain deferred until the required hardware, engine, or release
    decision exists. **D4** stays deferred; coordinate it with P7 before
    changing the frequency-plan execution model.
@@ -1525,8 +1527,8 @@ model and solver contract must land first.
 
 ## Current baseline
 
-- Schema: **51**.
-- Full gate: **3,116 passed, 1 skipped** with `NEC2C` and the optional
+- Schema: **52**.
+- Full gate: **3,163 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.7.1** published on 2026-11-16 with the Yagi element-table layout

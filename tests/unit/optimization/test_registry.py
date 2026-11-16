@@ -30,6 +30,7 @@ from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
 from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
+from antennadesk.domain.antennas.log_periodic import cebik_10m_log_periodic_parameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
 from antennadesk.domain.antennas.materials import COPPER
@@ -782,6 +783,13 @@ def test_coax_shield_endfed_optimizer_searches_the_return_length() -> None:
     assert "counterpoise_length_m" in names
     assert "counterpoise_height_m" not in names
     assert "counterpoise_azimuth_deg" in names
+
+
+def test_log_periodic_has_an_explicit_unavailable_reason() -> None:
+    availability = optimizer_availability(cebik_10m_log_periodic_parameters())
+
+    assert not availability.available
+    assert availability.reason_key == "optimize.unavailable.log_periodic"
 
 
 def test_bent_endfed_optimizer_searches_the_bend_instead_of_the_end_height() -> None:

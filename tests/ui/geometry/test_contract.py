@@ -37,6 +37,7 @@ from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
 from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
+from antennadesk.domain.antennas.log_periodic import log_periodic_parameters
 from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
 from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
 from antennadesk.domain.antennas.materials import COPPER
@@ -299,6 +300,14 @@ def _cases() -> tuple[FamilyCase, ...]:
             6,
             GeometryViewMode.PLAN,
             ("Yagi", "elements 2", "tips"),
+        ),
+        FamilyCase(
+            "log_periodic",
+            log_periodic_parameters(frequency_hz=28_000_000.0),
+            "log_periodic",
+            4,
+            GeometryViewMode.PLAN,
+            ("Log-periodic", "elements 4", "boom"),
         ),
         FamilyCase(
             "moxon",
@@ -696,7 +705,7 @@ def test_family_scene_preserves_wires_and_positive_dimensions(
     scene = _scene(case, mode)
     model_only = sum(1 for wire in model.wires if is_model_only_wire(wire.id))
 
-    assert len(scene.polylines) == case.wires
+    assert sum(1 for polyline in scene.polylines if polyline.role == "wire") == case.wires
     assert len(model.wires) - model_only == case.wires
     assert scene.summary
     assert any(marker.kind == "feed" for marker in scene.markers)
@@ -843,6 +852,7 @@ def test_every_domain_antenna_type_has_a_presentation_family() -> None:
         inverted_l,
         inverted_v,
         j_pole,
+        log_periodic,
         loop,
         magnetic_loop,
         moxon,
@@ -863,6 +873,7 @@ def test_every_domain_antenna_type_has_a_presentation_family() -> None:
         inverted_l,
         inverted_v,
         j_pole,
+        log_periodic,
         loop,
         magnetic_loop,
         moxon,

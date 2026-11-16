@@ -12,8 +12,8 @@ from antennadesk.persistence.constants import SCHEMA_VERSION
 from antennadesk.persistence.json_repository import JsonProjectRepository
 
 
-def test_schema_version_is_45() -> None:
-    assert SCHEMA_VERSION == 51
+def test_schema_version_is_current() -> None:
+    assert SCHEMA_VERSION == 52
 
 
 def test_bom_costs_round_trip(

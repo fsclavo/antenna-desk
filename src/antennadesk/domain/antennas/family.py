@@ -20,6 +20,7 @@ from .inverted_l import InvertedLParameters
 from .inverted_v import InvertedVParameters
 from .j_pole import JPoleParameters
 from .loaded_dipole import LoadedDipoleParameters
+from .log_periodic import LogPeriodicParameters
 from .loop import ANTENNA_TYPE_LOOP, LoopParameters
 from .magnetic_loop import MagneticLoopParameters
 from .moxon import MoxonParameters
@@ -40,6 +41,7 @@ from .zepp import ZeppParameters
 class AntennaFamily(StrEnum):
     DIPOLE = "dipole"
     YAGI = "yagi"
+    LOG_PERIODIC = "log_periodic"
     LOOP = "loop"
     VERTICAL = "vertical"
     WIRE = "wire"
@@ -81,6 +83,8 @@ _GENERATOR_FAMILIES: dict[str, AntennaFamily] = {
 def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
     if isinstance(parameters, (DipoleParameters, FoldedDipoleParameters)):
         return AntennaFamily.DIPOLE
+    if isinstance(parameters, LogPeriodicParameters):
+        return AntennaFamily.LOG_PERIODIC
     if isinstance(parameters, LoopParameters):
         return AntennaFamily.LOOP
     if isinstance(parameters, MagneticLoopParameters):
@@ -143,6 +147,8 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_WIRE_DIPOLE
     if isinstance(parameters, FoldedDipoleParameters):
         return ANTENNA_TYPE_FOLDED_DIPOLE
+    if isinstance(parameters, LogPeriodicParameters):
+        return "log_periodic"
     if isinstance(parameters, LoopParameters):
         return ANTENNA_TYPE_LOOP
     if isinstance(parameters, MagneticLoopParameters):

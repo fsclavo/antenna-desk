@@ -733,6 +733,30 @@ def _migrate_v46_to_v47(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v51_to_v52(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the transmission-line phase-reversal flag."""
+
+    migrated = copy.deepcopy(document)
+
+    def visit(value: object) -> None:
+        if isinstance(value, dict):
+            if {
+                "start_wire_id",
+                "end_wire_id",
+                "characteristic_impedance_ohm",
+                "length_m",
+            } <= value.keys():
+                value.setdefault("phase_reversal", False)
+            for nested in value.values():
+                visit(nested)
+        elif isinstance(value, list):
+            for nested in value:
+                visit(nested)
+
+    visit(migrated)
+    return migrated
+
+
 def _migrate_v50_to_v51(document: dict[str, Any]) -> dict[str, Any]:
     """Add optional frequency-dependent feed-line attenuation."""
 
@@ -882,6 +906,7 @@ MIGRATIONS: dict[int, Migration] = {
     48: _migrate_v48_to_v49,
     49: _migrate_v49_to_v50,
     50: _migrate_v50_to_v51,
+    51: _migrate_v51_to_v52,
 }
 
 

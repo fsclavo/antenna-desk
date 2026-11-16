@@ -45,6 +45,9 @@ of truth before adding another planning document.
 - [`SOLVER_ADAPTER.md`](SOLVER_ADAPTER.md) — NEC process adapter contract.
 - [`GEOMETRY_PRESENTATION.md`](GEOMETRY_PRESENTATION.md) — sketch and dimension
   contract.
+- [`spikes/c3-log-periodic-spike.md`](spikes/c3-log-periodic-spike.md) —
+  log-periodic transposed-feed validation against the published Cebik 10 m
+  NEC-4 reference.
 - [`ANTENNA_DESIGN_ESTIMATORS.md`](ANTENNA_DESIGN_ESTIMATORS.md) — estimator
   sources, assumptions, confidence, and tolerances.
 - [`MATERIALS_REFERENCE.md`](MATERIALS_REFERENCE.md) — source-backed wire,

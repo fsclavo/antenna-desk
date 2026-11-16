@@ -115,3 +115,26 @@ def aligned_policy_for_model(
             target = _aligned_feed_count(wire, model.feed.offset_m, target, policy)
         overrides.append((wire.id, target))
     return replace(policy, segments_per_wire=None, wire_segments=tuple(overrides))
+
+
+def aligned_policy_for_wire_centers(
+    model: AntennaModel,
+    frequency_hz: float,
+    base: SegmentationPolicy | None = None,
+) -> SegmentationPolicy:
+    """Return a policy whose wires have an odd segment count and a center segment.
+
+    Log-periodic and other center-connected families attach transmission-line
+    two-ports at each wire center. An odd count keeps that point at the center
+    of a segment instead of on a segment boundary.
+    """
+
+    policy = base if base is not None else SegmentationPolicy()
+    overrides: list[tuple[str, int]] = []
+    for wire in model.wires:
+        target = policy.segments_for(wire, frequency_hz)
+        if target % 2 == 0:
+            target += 1
+        target = min(max(target, policy.min_segments_per_wire), policy.max_segments_per_wire)
+        overrides.append((wire.id, target))
+    return replace(policy, segments_per_wire=None, wire_segments=tuple(overrides))

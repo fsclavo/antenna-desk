@@ -1,6 +1,6 @@
 # Evidence audit
 
-**Date:** 2026-11-05; updated 2026-11-09
+**Date:** 2026-11-05; updated 2026-11-16
 **Scope:** catalog templates classified as experimental in
 `src/antennadesk/domain/design/evidence.py`.
 
@@ -50,6 +50,7 @@ The corresponding tests are:
 - `tests/unit/domain/test_zepp.py::test_zepp_has_an_open_second_stub_conductor`
 - `tests/unit/domain/test_biquad.py::test_biquad_starting_side_is_a_quarter_wave_and_spacing_is_half_the_side`
 - `tests/unit/domain/test_beverage.py::test_beverage_starting_length_is_one_wavelength`
+- `tests/integration/simulation/test_nec2c_log_periodic.py::test_cebik_10m_reference_matches_published_nec4_values`
 
 The first three rows were added on 2026-11-04; the J Pole, Slim Jim, end-fed,
 trap-dipole, sloper, doublet, and Zepp rows were added on 2026-11-05. The loaded
@@ -200,13 +201,20 @@ published reference supplies a traceable numeric metric or measured impedance.
 ## Current summary
 
 - **A, reference-backed:** 5 templates.
-- **B, published/heuristic:** 23 templates.
+- **B, published/heuristic:** 24 templates.
 - **C, experimental:** 12 templates, all with a documented limitation.
 
 The `half_square` and `bobtail_curtain` templates entered the catalog at level B
 on 2026-11-07 from Cebik's published 7.15 MHz dimensions. They are new
 templates, not promotions from level C; the free-space starting geometry is
 published, while pattern, ground, and matching remain unvalidated.
+
+The `log_periodic` template entered the catalog at level B on 2026-11-16. Its
+Cebik 10 m straight-element geometry and transposed phase line reproduce the
+published NEC-4 gain, front-to-back ratio, and element-center current phases at
+29 MHz. This is a comparison with a published model, not a measurement; the
+free-space reference, lossless line, and absence of a balun, rear stub, boom,
+and mast remain explicit limitations.
 
 The machine-readable registry and the generated table in
 [`VALIDATION_PLAN.md`](VALIDATION_PLAN.md) remain the source of truth.

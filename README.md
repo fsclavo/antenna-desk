@@ -14,14 +14,16 @@ measurements, optimization, matching, and reporting flows are implemented.
 Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.7.1`
 is published; signing is optional and deferred for later releases. Center-fed
 dipoles, folded dipoles, trap dipoles, T2FDs, vertical and horizontal loops,
-magnetic loops, custom wires, Yagis, Moxon, fan dipoles, inverted-Vs,
-inverted-Ls, OCFDs,
-end-fed wires, slopers, random wires, doublets, J Poles, Slim Jims, Ringos,
-half squares, bobtail curtains, biquads, double biquads, Beverage receiving
-wires, loaded/linked dipoles, verticals, and loaded verticals are supported.
+magnetic loops, custom wires, Yagis, Moxon, log-periodic arrays, fan dipoles,
+inverted-Vs, inverted-Ls, OCFDs, end-fed wires, slopers, random wires, doublets,
+J Poles, Slim Jims, Ringos, half squares, bobtail curtains, biquads, double
+biquads, Beverage receiving wires, loaded/linked dipoles, verticals, and loaded
+verticals are supported.
 Yagi and Moxon arrays support horizontal or vertical polarization with a
 horizontal boom, plus optional folded driven elements and beta/hairpin
-matching stubs. Projects use versioned JSON persistence, lossless gzip
+matching stubs. The log-periodic array uses a straight-element τ/σ geometry and
+a transposed phase-line feed; its starting design is the published Cebik 10 m
+reference. Projects use versioned JSON persistence, lossless gzip
 compression, and explicit migrations. VNA CSV import
 and measured/simulated comparison are available. A source-backed materials
 reference covers wire, coax, ferrite, and insulators, and coax presets can
@@ -270,9 +272,11 @@ uv run python scripts/run_reference_simulation.py \
   measurement comparison are implemented; live instrument control is not.
 - Series and parallel RLC loads are supported on one wire segment. L/Pi/T
   matching networks are post-processed at the feedpoint, and the vertical
-  generator supports a radial screen. General transmission-line geometry and
-  arbitrary radial screens are not modeled. The feed line is a uniform
-  post-processing model; it does not change the antenna pattern or power gain.
+  generator supports a radial screen. Transmission-line two-ports are supported,
+  including the log-periodic transposed phase line and generic phase reversal;
+  physical feed-line geometry and arbitrary radial screens are not modeled. The
+  feed line is a uniform post-processing model; it does not change the antenna
+  pattern or power gain.
 - Optimization covers every first-class typed family through explicit
   descriptors and a joint hybrid search over geometry, feed, and family-load
   variables, including typed G5RV, ZS6BKW, Zepp, biquad, Beverage, and

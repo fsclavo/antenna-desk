@@ -59,6 +59,10 @@ from ..domain.antennas.loaded_dipole import (
     ANTENNA_TYPE_LOADED_DIPOLE,
     LoadedDipoleParameters,
 )
+from ..domain.antennas.log_periodic import (
+    ANTENNA_TYPE_LOG_PERIODIC,
+    LogPeriodicParameters,
+)
 from ..domain.antennas.loop import (
     ANTENNA_TYPE_LOOP,
     LOOP_REFERENCE_TRANSFORMER_RATIO,
@@ -305,6 +309,7 @@ class TransmissionLinePayload(StrictModel):
     characteristic_impedance_ohm: float = Field(gt=0.0)
     length_m: float = Field(gt=0.0)
     velocity_factor: float = Field(default=1.0, gt=0.0, le=1.0)
+    phase_reversal: bool = False
 
 
 class AntennaPayload(StrictModel):
@@ -569,6 +574,23 @@ class QuadBeamParametersPayload(StrictModel):
     director_scale: float = Field(default=0.95, ge=0.8, le=1.0)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class LogPeriodicParametersPayload(StrictModel):
+    frequency_low_hz: float = Field(gt=0.0)
+    frequency_high_hz: float = Field(gt=0.0)
+    longest_element_length_m: float = Field(gt=0.0)
+    tau: float = Field(gt=0.0, lt=1.0)
+    sigma: float = Field(gt=0.0)
+    element_count: int = Field(default=4, ge=3, le=12)
+    wire_radius_m: float = Field(default=0.0127, gt=0.0)
+    phase_line_impedance_ohm: float = Field(default=75.0, gt=0.0)
+    phase_line_velocity_factor: float = Field(default=1.0, gt=0.0, le=1.0)
+    feed_transformer_ratio: float = Field(default=1.0, gt=0.0)
+    height_m: float = Field(default=10.0, ge=0.0)
+    azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     material: MaterialPayload
     ground: GroundPayload
 
@@ -1019,6 +1041,7 @@ ParameterPayload = (
     | HexbeamParametersPayload
     | EndFedParametersPayload
     | LoadedDipoleParametersPayload
+    | LogPeriodicParametersPayload
     | PhasedVerticalParametersPayload
     | QuadBeamParametersPayload
     | JPoleParametersPayload
@@ -1040,6 +1063,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_WIRE_DIPOLE
     if isinstance(value, FoldedDipoleParametersPayload):
         return ANTENNA_TYPE_FOLDED_DIPOLE
+    if isinstance(value, LogPeriodicParametersPayload):
+        return ANTENNA_TYPE_LOG_PERIODIC
     if isinstance(value, OCFDParametersPayload):
         return ANTENNA_TYPE_OCFD
     if isinstance(value, VerticalParametersPayload):
@@ -1130,6 +1155,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return EndFedParametersPayload
     if antenna_type == ANTENNA_TYPE_LOADED_DIPOLE:
         return LoadedDipoleParametersPayload
+    if antenna_type == ANTENNA_TYPE_LOG_PERIODIC:
+        return LogPeriodicParametersPayload
     if antenna_type == ANTENNA_TYPE_PHASED_VERTICAL:
         return PhasedVerticalParametersPayload
     if antenna_type == ANTENNA_TYPE_QUAD_BEAM:
@@ -1416,6 +1443,7 @@ def _transmission_line_from_domain(
         characteristic_impedance_ohm=value.characteristic_impedance_ohm,
         length_m=value.length_m,
         velocity_factor=value.velocity_factor,
+        phase_reversal=value.phase_reversal,
     )
 
 
@@ -1429,6 +1457,7 @@ def _transmission_line_to_domain(value: TransmissionLinePayload) -> Transmission
         characteristic_impedance_ohm=value.characteristic_impedance_ohm,
         length_m=value.length_m,
         velocity_factor=value.velocity_factor,
+        phase_reversal=value.phase_reversal,
     )
 
 
@@ -1485,6 +1514,27 @@ def _folded_parameters_from_domain(
     )
 
 
+def _log_periodic_parameters_from_domain(
+    value: LogPeriodicParameters,
+) -> LogPeriodicParametersPayload:
+    return LogPeriodicParametersPayload(
+        frequency_low_hz=value.frequency_low_hz,
+        frequency_high_hz=value.frequency_high_hz,
+        longest_element_length_m=value.longest_element_length_m,
+        tau=value.tau,
+        sigma=value.sigma,
+        element_count=value.element_count,
+        wire_radius_m=value.wire_radius_m,
+        phase_line_impedance_ohm=value.phase_line_impedance_ohm,
+        phase_line_velocity_factor=value.phase_line_velocity_factor,
+        feed_transformer_ratio=value.feed_transformer_ratio,
+        height_m=value.height_m,
+        azimuth_deg=value.azimuth_deg,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
 def _loop_parameters_from_domain(value: LoopParameters) -> LoopParametersPayload:
     return LoopParametersPayload(
         frequency_hz=value.frequency_hz,
@@ -1523,6 +1573,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _dipole_parameters_from_domain(value)
     if isinstance(value, FoldedDipoleParameters):
         return _folded_parameters_from_domain(value)
+    if isinstance(value, LogPeriodicParameters):
+        return _log_periodic_parameters_from_domain(value)
     if isinstance(value, LoopParameters):
         return _loop_parameters_from_domain(value)
     if isinstance(value, MagneticLoopParameters):
@@ -2709,6 +2761,27 @@ def _folded_parameters_to_domain(
     )
 
 
+def _log_periodic_parameters_to_domain(
+    value: LogPeriodicParametersPayload,
+) -> LogPeriodicParameters:
+    return LogPeriodicParameters(
+        frequency_low_hz=value.frequency_low_hz,
+        frequency_high_hz=value.frequency_high_hz,
+        longest_element_length_m=value.longest_element_length_m,
+        tau=value.tau,
+        sigma=value.sigma,
+        element_count=value.element_count,
+        wire_radius_m=value.wire_radius_m,
+        phase_line_impedance_ohm=value.phase_line_impedance_ohm,
+        phase_line_velocity_factor=value.phase_line_velocity_factor,
+        feed_transformer_ratio=value.feed_transformer_ratio,
+        height_m=value.height_m,
+        azimuth_deg=value.azimuth_deg,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
 def _loop_parameters_to_domain(value: LoopParametersPayload) -> LoopParameters:
     return LoopParameters(
         frequency_hz=value.frequency_hz,
@@ -2733,6 +2806,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, FoldedDipoleParametersPayload):
             raise ValueError("folded dipole parameters have the wrong shape")
         return _folded_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_LOG_PERIODIC:
+        if not isinstance(value.parameters, LogPeriodicParametersPayload):
+            raise ValueError("log-periodic parameters have the wrong shape")
+        return _log_periodic_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_LOOP:
         if not isinstance(value.parameters, LoopParametersPayload):
             raise ValueError("loop parameters have the wrong shape")

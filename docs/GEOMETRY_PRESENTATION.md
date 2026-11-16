@@ -69,6 +69,13 @@ synthetic shape.
     within the drawing tolerance, unless it is explicitly a true-length
     callout for a feature that is not parallel to the projection plane. Do not
     draw a height in a plan view or a 3D length on a projected extent.
+14. **Transmission lines are overlays, not wires.**
+    Draw every `TransmissionLine` as a dashed overlay between its declared
+    connection points. Do not count a transmission-line overlay as a canonical
+    wire in the scene contract or the wire schedule. The log-periodic family is
+    the first multi-section case: its transposed phase line is an overlay
+    between adjacent element centers, while the elements remain the canonical
+    wires.
 
 ## Required tests for a new family
 

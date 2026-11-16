@@ -133,8 +133,8 @@ between:
   to pick an arbitrary projection:
   - vertical-plane antennas (J-Pole, Slim Jim, vertical loops, vertical
     Yagi/Moxon, half-square, bobtail, biquad, Ringo) use the front elevation;
-  - horizontal planar antennas and beams (Yagi, Moxon, hexbeam, trapped Yagi,
-    T2FD, folded dipole, horizontal loop) use the top view;
+  - horizontal planar antennas and beams (Yagi, Moxon, log-periodic, hexbeam,
+    trapped Yagi, T2FD, folded dipole, horizontal loop) use the top view;
   - a cubical quad uses the top boom layout;
   - non-planar antennas (vertical with radials, discone, phased vertical) use
     the front elevation with a top inset.
@@ -146,7 +146,9 @@ between:
   element and inter-element spacing, the Moxon shows a tip detail with both tip
   lengths and the gap, the hexbeam shows the spreader angle and a half-detail
   with the four segment lengths, the trapped Yagi shows a symmetric trap inset,
-  and the quad beam labels each loop and the director spacing. Single-wire
+  the log-periodic labels the longest and shortest elements, the boom, and the
+  first spacing while the editor table lists every element, and the quad beam
+  labels each loop and the director spacing. Single-wire
   families dimension the feed offset and every load position; verticals add the
   loading-coil height and top-hat radius; fan dipoles label each leg and the
   construction sheet lists the included angles and end heights. The discone
@@ -261,7 +263,9 @@ editor. The dialog supports wire and folded dipoles, loops (generic, quad,
 delta), verticals in 1/4λ, 1/2λ, and 5/8λ, inverted-V, fan dipoles, end-fed
 wires, OCFD, J Pole, Slim Jim, Ringo, Yagi, Moxon, and T2FD. The half-square
 and bobtail-curtain templates have no frequency-first estimator; set their
-dimensions from a published design or tune them with the solver. The estimator
+dimensions from a published design or tune them with the solver. The
+log-periodic editor starts from the published Cebik 10 m reference and scales
+its geometry with the low frequency. The estimator
 does not offer a family selector and never changes the antenna type. The T2FD
 path asks for the highest design frequency and applies the Cebik wide-long
 broadband rule.
@@ -357,11 +361,12 @@ and limitations belong to the design, not only to the last run.
 
 Use **File → New Antenna...** to open the antenna catalog. Search or filter by
 **Antenna Type** and choose the desired generator. The catalog is grouped by
-antenna family: Dipole, Yagi, Loop, Vertical, and Custom. The Dipole family
-contains the straight dipole, folded dipole, trap dipole, T2FD, end-fed wire,
-sloper, random wire, doublet, inverted-V, inverted-L, off-center-fed dipole,
-and fan dipole. The Yagi family includes the parametric Yagi and the Moxon
-rectangle. The Loop family includes the generic vertical/horizontal loop plus
+antenna family: Dipole, Yagi, Log-periodic, Loop, Vertical, and Custom. The
+Dipole family contains the straight dipole, folded dipole, trap dipole, T2FD,
+end-fed wire, sloper, random wire, doublet, inverted-V, inverted-L,
+off-center-fed dipole, and fan dipole. The Yagi family includes the parametric
+Yagi and the Moxon rectangle. The Log-periodic family contains the
+straight-element LPDA with its transposed phase line. The Loop family includes the generic vertical/horizontal loop plus
 delta-loop, quad-loop, and magnetic-loop presets; the loop editor switches the
 plane with the **Orientation** field. The Vertical family includes the generic vertical radiator,
 the inverted-L, the half square, the bobtail curtain, and the loaded
@@ -538,6 +543,33 @@ ground, wire radius, polarization, and material. The exact 14.17 MHz dimensions
 are reference-backed for impedance, gain, and front-to-back ratio; the 28.500
 MHz default and any scaled or edited geometry are heuristic starting points
 with no independent reference.
+
+## Create a log-periodic array
+
+Choose **File → New Antenna... → Log-periodic (LPDA)** to generate a
+straight-element log-periodic dipole array. The editor starts from the
+published Cebik 10 m reference: 28-30 MHz, four elements, 1.0 in diameter,
+a 75 Ω transposed phase line, and a direct 1:1 feed. The **Load Cebik 10 m
+reference** button restores those values at the current low frequency while
+keeping the height, azimuth, ground, and material controls.
+
+The main controls are the low and high design frequencies, the longest element
+length, τ and σ, the element count, the phase-line characteristic impedance and
+velocity factor, and the feed transformer ratio. The read-only element table
+shows the generated length, spacing, and position of every element. Changing the
+low frequency scales the longest element and the band ratio; the reference
+preset is the recommended starting point for a new band. The feed is at the
+front (shortest) element center. The rear element center short-terminates the
+phase line, and each line section is crossed relative to the previous one.
+
+The model is a normal wire and transmission-line model. The phase line is an
+ideal lossless two-port; the balun, feed-line loss, rear stub, boom, mast, and
+construction tolerances are not modeled. The family evidence is **B**: the
+straight-element Cebik geometry reproduces the published NEC-4 gain and
+front-to-back ratio at 29 MHz, but that is a published-model comparison, not a
+measurement. The ARRL/Cebik 7 MHz wire design sweeps its elements forward 60°
+and is not reproduced by this straight-element family. There is no full τ/σ
+optimizer; use the design table or a solver sweep.
 
 ## Create an inverted-V
 

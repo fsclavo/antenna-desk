@@ -25,6 +25,7 @@ from ..antennas.inverted_l import InvertedLParameters
 from ..antennas.inverted_v import InvertedVParameters
 from ..antennas.j_pole import JPoleParameters
 from ..antennas.loaded_dipole import LoadedDipoleParameters
+from ..antennas.log_periodic import LogPeriodicParameters
 from ..antennas.loop import LoopParameters
 from ..antennas.magnetic_loop import MagneticLoopParameters
 from ..antennas.moxon import MoxonParameters
@@ -72,6 +73,7 @@ from .families.yagi import yagi_descriptor
 
 _REASON_PENDING = "optimize.unavailable.pending_family"
 _REASON_MAGNETIC_LOOP = "optimize.unavailable.magnetic_loop"
+_REASON_LOG_PERIODIC = "optimize.unavailable.log_periodic"
 _REASON_RANDOM_WIRE = "optimize.unavailable.random_wire"
 _REASON_CUSTOM_GENERATOR = "optimize.unavailable.custom_generator"
 _REASON_CUSTOM_GEOMETRY = "optimize.unavailable.custom_geometry"
@@ -151,6 +153,8 @@ def optimizer_availability(
         return OptimizerAvailability(descriptor=zepp_descriptor(parameters))
     if isinstance(parameters, MagneticLoopParameters):
         return OptimizerAvailability(reason_key=_REASON_MAGNETIC_LOOP)
+    if isinstance(parameters, LogPeriodicParameters):
+        return OptimizerAvailability(reason_key=_REASON_LOG_PERIODIC)
     if isinstance(parameters, CustomAntennaParameters):
         if parameters.generator_id is not None:
             return OptimizerAvailability(reason_key=_REASON_CUSTOM_GENERATOR)
@@ -192,6 +196,7 @@ SUPPORTED_OPTIMIZER_TYPES = frozenset(
 KNOWN_UNAVAILABLE_TYPES = frozenset(
     {
         MagneticLoopParameters,
+        LogPeriodicParameters,
         CustomAntennaParameters,
     }
 )
@@ -203,6 +208,7 @@ OPTIMIZER_REASON_KEYS = frozenset(
     {
         _REASON_PENDING,
         _REASON_MAGNETIC_LOOP,
+        _REASON_LOG_PERIODIC,
         _REASON_RANDOM_WIRE,
         _REASON_CUSTOM_GENERATOR,
         _REASON_CUSTOM_GEOMETRY,

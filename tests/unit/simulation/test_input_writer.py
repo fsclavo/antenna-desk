@@ -378,6 +378,28 @@ def test_transmission_line_card_uses_electrical_length() -> None:
     ) in deck.text
 
 
+def test_transmission_line_card_uses_negative_z0_for_phase_reversal() -> None:
+    from antennadesk.domain.antennas.transmission_line import TransmissionLine
+
+    line = TransmissionLine(
+        id="line-1",
+        start_wire_id="radiator",
+        start_offset_m=0.1,
+        end_wire_id="radiator",
+        end_offset_m=0.4,
+        characteristic_impedance_ohm=50.0,
+        length_m=1.0,
+        velocity_factor=0.5,
+        phase_reversal=True,
+    )
+    model = _manual_model().with_transmission_lines((line,))
+    deck = write_nec2_input(model, _spec(segments=7))
+
+    assert (
+        "TL 1 2 1 6 -50.000000000 2.000000000 0.000000000 0.000000000 0.000000000 0.000000000"
+    ) in deck.text
+
+
 def test_load_card_uses_local_segment_number_for_later_wires() -> None:
     from antennadesk.domain.antennas.load import SeriesLoad
     from antennadesk.domain.antennas.materials import COPPER
