@@ -252,6 +252,30 @@ class EndFedForm(QWidget):
             self._design_topology,
         )
 
+        self._design_loaded_q = QDoubleSpinBox(self._design_network_group)
+        self._design_loaded_q.setRange(0.0, 100.0)
+        self._design_loaded_q.setDecimals(2)
+        self._design_loaded_q.setValue(0.0)
+        self._design_loaded_q.setSpecialValueText(
+            translator.t("endfed.design_matching_loaded_q_auto")
+        )
+        apply_help(
+            self._design_loaded_q,
+            translator,
+            "endfed.design_matching_loaded_q",
+        )
+        self._design_loaded_q_widget = QWidget(self._design_network_group)
+        loaded_q_form = QFormLayout(self._design_loaded_q_widget)
+        loaded_q_form.setContentsMargins(0, 0, 0, 0)
+        loaded_q_form.addRow(
+            self._labels.label(
+                "endfed.design_matching_loaded_q",
+                self._design_loaded_q,
+            ),
+            self._design_loaded_q,
+        )
+        design_form.addRow(self._design_loaded_q_widget)
+
         def network_spin(suffix: str) -> QDoubleSpinBox:
             box = QDoubleSpinBox(self._design_network_group)
             box.setRange(0.0, 1_000_000.0)
@@ -953,6 +977,7 @@ class EndFedForm(QWidget):
         self._design_shunt_widget.setVisible(topology in {"l", "t"})
         self._design_pi_widget.setVisible(topology == "pi")
         self._design_t_widget.setVisible(topology == "t")
+        self._design_loaded_q_widget.setVisible(topology in {"pi", "t"})
 
     def _design_network_toggled(self, checked: bool) -> None:
         if checked and not self._updating:
@@ -1206,6 +1231,16 @@ class EndFedForm(QWidget):
         self._update_efhw_visibility()
         self._update_matching_override()
         self._update_geometry()
+
+    def design_matching_topology(self) -> str:
+        """Return the selected design-specific network topology."""
+
+        return self._design_topology_key()
+
+    def design_matching_loaded_q(self) -> float:
+        """Return the requested loaded Q for a Pi or T design (0 = auto)."""
+
+        return self._design_loaded_q.value()
 
     def set_design_matching_network(self, network: MatchingNetwork) -> None:
         """Populate the design-specific matching network without applying it."""

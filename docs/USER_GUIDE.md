@@ -709,9 +709,12 @@ input/antenna-side shunt choice. When active, it replaces the fixed internal
 unit and the family optimizer can tune its active components. A project-level
 matching network still takes precedence: the design network is retained but not
 applied, and the two are never cascaded. Disable the section to return to the
-fixed internal unit. **Design L-network from current result** synthesizes a
-lossless L-network from the current simulated primary-side impedance and fills
-the fields for review; it does not apply the design automatically. See
+fixed internal unit. **Design network from current result** synthesizes a
+lossless L, Pi, or T network from the current simulated primary-side impedance
+and fills the fields for review; it does not apply the design automatically.
+For Pi and T, **Design Q (0 = auto)** controls the loaded Q; zero selects a
+value above the physical minimum, and a Q below that minimum reports no
+solution. The component-Q field remains a separate loss model. See
 [ADR-0038](ADR/0038-design-specific-matching-network.md).
 
 The design panel's **Feed & matching** summary shows the internal EFHW matching
@@ -1770,10 +1773,12 @@ the dialog opens, and cleared when the project network is removed.
 Choose **L**, **Pi**, or **T** topology and set the reactive elements in µH/pF.
 Only the component fields used by the selected topology are shown. For an L
 network, choose whether the shunt element is on the transmitter side. Use
-**Auto-design L network** to calculate one valid L section from the target and
-source impedance; the dialog reports when a single section cannot match the
-load. Pi/T are manual designs in this slice. Set a component Q to include loss
-in the input impedance (0 means lossless).
+**Auto-design network** to calculate one valid L, Pi, or T network from the
+target and source impedance. For Pi and T, **Design Q (0 = auto)** sets the
+total loaded Q; zero selects a value above the physical minimum, and a Q below
+that minimum reports no solution. The dialog reports when the selected
+topology cannot match the load. Set a component Q to include loss in the input
+impedance (0 means lossless); it is independent of the design Q.
 
 The project network is global: it applies to every design in the project. Its
 **Position** selects the chain order. **At the antenna feedpoint** evaluates

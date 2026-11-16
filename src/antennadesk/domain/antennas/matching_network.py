@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -511,3 +512,191 @@ def design_l_network(
         if network is not None:
             return network
     return None
+
+
+def _minimum_loaded_q(resistance_a_ohm: float, resistance_b_ohm: float) -> float:
+    high = max(resistance_a_ohm, resistance_b_ohm)
+    low = min(resistance_a_ohm, resistance_b_ohm)
+    if low <= 0.0:
+        return math.inf
+    return math.sqrt(max(high / low - 1.0, 0.0))
+
+
+def _bisect_virtual_resistance(
+    function: Callable[[float], float],
+    lower: float,
+    upper: float,
+) -> float:
+    """Find the single root of a monotonic loaded-Q equation."""
+
+    value_lower = function(lower)
+    value_upper = function(upper)
+    if value_lower == 0.0:
+        return lower
+    if value_upper == 0.0:
+        return upper
+    if value_lower * value_upper > 0.0:
+        raise ValueError("the loaded-Q equation has no root in the interval")
+    for _ in range(200):
+        midpoint = (lower + upper) / 2.0
+        value_midpoint = function(midpoint)
+        if abs(value_midpoint) < 1e-12 or upper - lower <= 1e-12 * max(1.0, abs(midpoint)):
+            return midpoint
+        if value_lower * value_midpoint <= 0.0:
+            upper = midpoint
+            value_upper = value_midpoint
+        else:
+            lower = midpoint
+            value_lower = value_midpoint
+    return (lower + upper) / 2.0
+
+
+def _loaded_q_for_design(
+    loaded_q: float | None,
+    minimum_loaded_q: float,
+) -> float | None:
+    if loaded_q is None or loaded_q <= 0.0:
+        return max(2.0, minimum_loaded_q * 1.5)
+    if loaded_q <= minimum_loaded_q + 1e-9:
+        return None
+    return loaded_q
+
+
+def design_pi_network(
+    load_impedance_ohm: complex,
+    frequency_hz: float,
+    *,
+    source_impedance_ohm: float = 50.0,
+    loaded_q: float | None = None,
+) -> PiNetwork | None:
+    """Return a lossless Pi network matching the load to a real source.
+
+    ``loaded_q`` is the total design Q (the sum of the input and output
+    L-section Q values). A value of ``None`` or ``0`` selects a starting Q of
+    ``max(2, 1.5 x Q_min)``. A requested Q below ``Q_min`` has no physical
+    solution and returns ``None``. The design uses the low-pass branch signs
+    (shunt capacitors and a series inductor) when the load permits them; a
+    complex load can move an individual branch to the opposite sign.
+    """
+
+    ensure_positive(frequency_hz, name="frequency_hz")
+    ensure_positive(source_impedance_ohm, name="source_impedance_ohm")
+    if loaded_q is not None:
+        ensure_non_negative(loaded_q, name="loaded_q")
+    resistance = load_impedance_ohm.real
+    if resistance <= 0.0:
+        return None
+    admittance = 1.0 / load_impedance_ohm
+    conductance = admittance.real
+    if conductance <= 0.0:
+        return None
+    effective_resistance = 1.0 / conductance
+    minimum_q = _minimum_loaded_q(source_impedance_ohm, effective_resistance)
+    selected_q = _loaded_q_for_design(loaded_q, minimum_q)
+    if selected_q is None:
+        return None
+
+    lower_resistance = min(source_impedance_ohm, effective_resistance)
+    lower = lower_resistance * 1e-12
+    upper = lower_resistance * (1.0 - 1e-12)
+
+    def equation(virtual_resistance: float) -> float:
+        return (
+            math.sqrt(source_impedance_ohm / virtual_resistance - 1.0)
+            + math.sqrt(effective_resistance / virtual_resistance - 1.0)
+            - selected_q
+        )
+
+    try:
+        virtual_resistance = _bisect_virtual_resistance(equation, lower, upper)
+    except ValueError:
+        return None
+    input_q = math.sqrt(source_impedance_ohm / virtual_resistance - 1.0)
+    input_susceptance = input_q / source_impedance_ohm
+    output_susceptance = math.sqrt(max(conductance * (1.0 / virtual_resistance - conductance), 0.0))
+    load_susceptance = admittance.imag
+    input_series_reactance = input_q * virtual_resistance
+    output_series_reactance = output_susceptance * virtual_resistance / conductance
+    series_reactance = input_series_reactance + output_series_reactance
+    output_shunt_susceptance = output_susceptance - load_susceptance
+    omega = 2.0 * math.pi * frequency_hz
+    network = PiNetwork(
+        input_shunt_inductance_h=max(-input_susceptance, 0.0) / omega,
+        input_shunt_capacitance_f=max(input_susceptance, 0.0) / omega,
+        series_inductance_h=max(series_reactance, 0.0) / omega,
+        series_capacitance_f=max(-series_reactance, 0.0) / omega,
+        output_shunt_inductance_h=max(-output_shunt_susceptance, 0.0) / omega,
+        output_shunt_capacitance_f=max(output_shunt_susceptance, 0.0) / omega,
+    )
+    matched = network.input_impedance(load_impedance_ohm, frequency_hz)
+    if abs(matched - source_impedance_ohm) > max(1e-6, source_impedance_ohm * 1e-6):
+        return None
+    return network
+
+
+def design_t_network(
+    load_impedance_ohm: complex,
+    frequency_hz: float,
+    *,
+    source_impedance_ohm: float = 50.0,
+    loaded_q: float | None = None,
+) -> TNetwork | None:
+    """Return a lossless T network matching the load to a real source.
+
+    ``loaded_q`` has the same meaning as in :func:`design_pi_network`. The
+    design uses series inductors and a shunt capacitor when the load permits
+    them; a complex load can move an individual branch to the opposite sign.
+    """
+
+    ensure_positive(frequency_hz, name="frequency_hz")
+    ensure_positive(source_impedance_ohm, name="source_impedance_ohm")
+    if loaded_q is not None:
+        ensure_non_negative(loaded_q, name="loaded_q")
+    resistance = load_impedance_ohm.real
+    reactance = load_impedance_ohm.imag
+    if resistance <= 0.0:
+        return None
+    minimum_q = _minimum_loaded_q(source_impedance_ohm, resistance)
+    selected_q = _loaded_q_for_design(loaded_q, minimum_q)
+    if selected_q is None:
+        return None
+
+    highest_resistance = max(source_impedance_ohm, resistance)
+
+    def equation(virtual_resistance: float) -> float:
+        return (
+            math.sqrt(virtual_resistance / source_impedance_ohm - 1.0)
+            + math.sqrt(virtual_resistance / resistance - 1.0)
+            - selected_q
+        )
+
+    lower = highest_resistance * (1.0 + 1e-12)
+    upper = highest_resistance * 2.0
+    while equation(upper) < 0.0 and upper < highest_resistance * 1e12:
+        upper *= 2.0
+    try:
+        virtual_resistance = _bisect_virtual_resistance(equation, lower, upper)
+    except ValueError:
+        return None
+    input_q = math.sqrt(virtual_resistance / source_impedance_ohm - 1.0)
+    input_series_reactance = input_q * source_impedance_ohm
+    output_series_reactance_base = math.sqrt(
+        max(resistance * virtual_resistance - resistance * resistance, 0.0)
+    )
+    output_series_reactance = output_series_reactance_base - reactance
+    output_shunt_susceptance = output_series_reactance_base / (resistance * virtual_resistance)
+    input_shunt_susceptance = input_q / virtual_resistance
+    shunt_susceptance = input_shunt_susceptance + output_shunt_susceptance
+    omega = 2.0 * math.pi * frequency_hz
+    network = TNetwork(
+        input_series_inductance_h=max(input_series_reactance, 0.0) / omega,
+        input_series_capacitance_f=max(-input_series_reactance, 0.0) / omega,
+        shunt_inductance_h=max(-shunt_susceptance, 0.0) / omega,
+        shunt_capacitance_f=max(shunt_susceptance, 0.0) / omega,
+        output_series_inductance_h=max(output_series_reactance, 0.0) / omega,
+        output_series_capacitance_f=max(-output_series_reactance, 0.0) / omega,
+    )
+    matched = network.input_impedance(load_impedance_ohm, frequency_hz)
+    if abs(matched - source_impedance_ohm) > max(1e-6, source_impedance_ohm * 1e-6):
+        return None
+    return network

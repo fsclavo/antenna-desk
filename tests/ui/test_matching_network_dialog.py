@@ -95,6 +95,81 @@ def test_matching_network_dialog_builds_pi_and_t_topologies(qtbot: QtBot) -> Non
     assert t.shunt_capacitance_f == pytest.approx(100e-12)
 
 
+def test_matching_network_dialog_auto_designs_a_pi_network(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.matching_network import PiNetwork
+
+    dialog = MatchingNetworkDialog(Translator(Language.ENGLISH))
+    qtbot.addWidget(dialog)
+    dialog._topology.setCurrentIndex(1)
+    dialog._load_r.setValue(100.0)
+    dialog._load_x.setValue(-20.0)
+    dialog._frequency.setValue(14.1)
+    dialog._design_q.setValue(3.0)
+
+    dialog._auto.click()
+    network = dialog.network()
+
+    assert isinstance(network, PiNetwork)
+    assert network.input_impedance(complex(100.0, -20.0), 14_100_000.0) == pytest.approx(
+        complex(50.0, 0.0),
+        abs=0.05,
+    )
+
+
+def test_matching_network_dialog_auto_designs_a_t_network(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.matching_network import TNetwork
+
+    dialog = MatchingNetworkDialog(Translator(Language.ENGLISH))
+    qtbot.addWidget(dialog)
+    dialog._topology.setCurrentIndex(2)
+    dialog._load_r.setValue(25.0)
+    dialog._load_x.setValue(10.0)
+    dialog._frequency.setValue(14.1)
+    dialog._design_q.setValue(3.0)
+
+    dialog._auto.click()
+    network = dialog.network()
+
+    assert isinstance(network, TNetwork)
+    assert network.input_impedance(complex(25.0, 10.0), 14_100_000.0) == pytest.approx(
+        complex(50.0, 0.0),
+        abs=0.05,
+    )
+
+
+def test_matching_network_dialog_design_q_changes_the_pi_components(
+    qtbot: QtBot,
+) -> None:
+    dialog = MatchingNetworkDialog(Translator(Language.ENGLISH))
+    qtbot.addWidget(dialog)
+    dialog._topology.setCurrentIndex(1)
+    dialog._load_r.setValue(100.0)
+    dialog._load_x.setValue(0.0)
+    dialog._frequency.setValue(14.1)
+    dialog._design_q.setValue(2.0)
+    dialog._auto.click()
+    low_q_series = dialog._series_l.value()
+
+    dialog._design_q.setValue(8.0)
+    dialog._auto.click()
+    high_q_series = dialog._series_l.value()
+
+    assert high_q_series < low_q_series
+
+
+def test_matching_network_dialog_shows_design_q_only_for_pi_and_t(
+    qtbot: QtBot,
+) -> None:
+    dialog = MatchingNetworkDialog(Translator(Language.ENGLISH))
+    qtbot.addWidget(dialog)
+
+    assert dialog._design_q.isHidden() is True
+    dialog._topology.setCurrentIndex(1)
+    assert dialog._design_q.isHidden() is False
+    dialog._topology.setCurrentIndex(2)
+    assert dialog._design_q.isHidden() is False
+
+
 def test_matching_network_dialog_warns_when_it_overrides_internal_matching(
     qtbot: QtBot,
 ) -> None:

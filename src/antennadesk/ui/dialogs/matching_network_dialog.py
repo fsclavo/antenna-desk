@@ -26,6 +26,8 @@ from ...domain.antennas.matching_network import (
     PiNetwork,
     TNetwork,
     design_l_network,
+    design_pi_network,
+    design_t_network,
 )
 from ...domain.design.matching_design import (
     MATCHING_DESIGN_ORIGIN_MANUAL,
@@ -99,6 +101,12 @@ class MatchingNetworkDialog(QDialog):
         self._source_impedance.setSuffix(" Ω")
         self._source_impedance.setValue(design.source_impedance_ohm if design is not None else 50.0)
 
+        self._design_q = QDoubleSpinBox(self)
+        self._design_q.setRange(0.0, 100.0)
+        self._design_q.setDecimals(2)
+        self._design_q.setValue(0.0)
+        self._design_q.setSpecialValueText(translator.t("matching_network.design_q_auto"))
+
         self._use_current_point = QPushButton(
             translator.t("matching_network.use_current_point"),
             self,
@@ -120,11 +128,13 @@ class MatchingNetworkDialog(QDialog):
         self._target_label_r = self._label("matching_network.load_r")
         self._target_label_x = self._label("matching_network.load_x")
         self._target_label_source = self._label("matching_network.source_impedance")
+        self._target_label_q = self._label("matching_network.design_q")
         self._target_label_origin = self._label("matching_network.design_origin")
         target_form.addRow(self._target_label_frequency, self._frequency)
         target_form.addRow(self._target_label_r, self._load_r)
         target_form.addRow(self._target_label_x, self._load_x)
         target_form.addRow(self._target_label_source, self._source_impedance)
+        target_form.addRow(self._target_label_q, self._design_q)
         target_form.addRow(self._target_label_origin, self._origin_value)
         target_form.addRow("", self._use_current_point)
         target_form.addRow("", self._auto)
@@ -332,8 +342,10 @@ class MatchingNetworkDialog(QDialog):
             "matching_network.output_series_c",
         ):
             self._set_row_visible(key, t_rows)
-        self._auto.setVisible(l_rows)
-        self._auto.setEnabled(l_rows)
+        self._design_q.setVisible(pi_rows or t_rows)
+        self._target_label_q.setVisible(pi_rows or t_rows)
+        self._auto.setVisible(True)
+        self._auto.setEnabled(True)
         self._update_controls()
 
     def _set_row_visible(self, key: str, visible: bool) -> None:
@@ -342,11 +354,32 @@ class MatchingNetworkDialog(QDialog):
         widget.setVisible(visible)
 
     def _auto_design(self) -> None:
-        network = design_l_network(
-            complex(self._load_r.value(), self._load_x.value()),
-            self._frequency.value() * 1_000_000.0,
-            source_impedance_ohm=self._source_impedance.value(),
-        )
+        load = complex(self._load_r.value(), self._load_x.value())
+        frequency = self._frequency.value() * 1_000_000.0
+        source = self._source_impedance.value()
+        loaded_q = self._design_q.value() or None
+        topology = self._topology.currentData()
+        network: MatchingNetwork | None
+        if topology == "pi":
+            network = design_pi_network(
+                load,
+                frequency,
+                source_impedance_ohm=source,
+                loaded_q=loaded_q,
+            )
+        elif topology == "t":
+            network = design_t_network(
+                load,
+                frequency,
+                source_impedance_ohm=source,
+                loaded_q=loaded_q,
+            )
+        else:
+            network = design_l_network(
+                load,
+                frequency,
+                source_impedance_ohm=source,
+            )
         if network is None:
             QMessageBox.information(
                 self,
@@ -355,11 +388,26 @@ class MatchingNetworkDialog(QDialog):
             )
             return
         self._enabled.setChecked(True)
-        self._series_l.setValue(network.series_inductance_h * 1e6)
-        self._series_c.setValue(network.series_capacitance_f * 1e12)
-        self._shunt_l.setValue(network.shunt_inductance_h * 1e6)
-        self._shunt_c.setValue(network.shunt_capacitance_f * 1e12)
-        self._shunt_at_input.setChecked(network.shunt_at_input)
+        if isinstance(network, PiNetwork):
+            self._input_shunt_l.setValue(network.input_shunt_inductance_h * 1e6)
+            self._input_shunt_c.setValue(network.input_shunt_capacitance_f * 1e12)
+            self._series_l.setValue(network.series_inductance_h * 1e6)
+            self._series_c.setValue(network.series_capacitance_f * 1e12)
+            self._output_shunt_l.setValue(network.output_shunt_inductance_h * 1e6)
+            self._output_shunt_c.setValue(network.output_shunt_capacitance_f * 1e12)
+        elif isinstance(network, TNetwork):
+            self._input_series_l.setValue(network.input_series_inductance_h * 1e6)
+            self._input_series_c.setValue(network.input_series_capacitance_f * 1e12)
+            self._shunt_l.setValue(network.shunt_inductance_h * 1e6)
+            self._shunt_c.setValue(network.shunt_capacitance_f * 1e12)
+            self._output_series_l.setValue(network.output_series_inductance_h * 1e6)
+            self._output_series_c.setValue(network.output_series_capacitance_f * 1e12)
+        else:
+            self._series_l.setValue(network.series_inductance_h * 1e6)
+            self._series_c.setValue(network.series_capacitance_f * 1e12)
+            self._shunt_l.setValue(network.shunt_inductance_h * 1e6)
+            self._shunt_c.setValue(network.shunt_capacitance_f * 1e12)
+            self._shunt_at_input.setChecked(network.shunt_at_input)
 
     def _update_controls(self) -> None:
         enabled = self._enabled.isChecked()
@@ -383,6 +431,9 @@ class MatchingNetworkDialog(QDialog):
             self._output_series_c,
         ):
             widget.setEnabled(enabled)
+        high_order = self._topology.currentData() in {"pi", "t"}
+        self._design_q.setEnabled(high_order)
+        self._auto.setEnabled(True)
         self._use_current_point.setEnabled(self._current_point is not None)
 
     def accept(self) -> None:

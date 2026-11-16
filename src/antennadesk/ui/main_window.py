@@ -135,6 +135,8 @@ from ..domain.antennas.matching_network import (
     MatchingNetworkOrigin,
     MatchingNetworkPosition,
     design_l_network,
+    design_pi_network,
+    design_t_network,
 )
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
@@ -3371,11 +3373,29 @@ class MainWindow(QMainWindow):
                 self._translator.t("endfed.design_matching_no_result"),
             )
             return
-        network = design_l_network(
-            point.load_impedance_ohm,
-            point.frequency_hz,
-            source_impedance_ohm=point.source_impedance_ohm,
-        )
+        topology = self._endfed_form.design_matching_topology()
+        loaded_q = self._endfed_form.design_matching_loaded_q() or None
+        network: MatchingNetwork | None
+        if topology == "pi":
+            network = design_pi_network(
+                point.load_impedance_ohm,
+                point.frequency_hz,
+                source_impedance_ohm=point.source_impedance_ohm,
+                loaded_q=loaded_q,
+            )
+        elif topology == "t":
+            network = design_t_network(
+                point.load_impedance_ohm,
+                point.frequency_hz,
+                source_impedance_ohm=point.source_impedance_ohm,
+                loaded_q=loaded_q,
+            )
+        else:
+            network = design_l_network(
+                point.load_impedance_ohm,
+                point.frequency_hz,
+                source_impedance_ohm=point.source_impedance_ohm,
+            )
         if network is None:
             QMessageBox.information(
                 self,

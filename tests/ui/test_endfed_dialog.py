@@ -227,6 +227,31 @@ def test_endfed_form_populates_a_synthesized_design_network(qtbot: QtBot) -> Non
     assert parameters.design_matching_network.shunt_at_input is network.shunt_at_input
 
 
+def test_endfed_form_exposes_the_design_loaded_q_for_pi_and_t(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+
+    dialog = EndFedDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=shortened_efhw_40_10_parameters(),
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._form._design_loaded_q_widget.isHidden() is True
+
+    pi_index = dialog._form._design_topology.findData("pi")
+    dialog._form._design_topology.setCurrentIndex(pi_index)
+    assert dialog._form._design_loaded_q_widget.isHidden() is False
+    dialog._form._design_loaded_q.setValue(4.0)
+    assert dialog._form.design_matching_topology() == "pi"
+    assert dialog._form.design_matching_loaded_q() == pytest.approx(4.0)
+
+    t_index = dialog._form._design_topology.findData("t")
+    dialog._form._design_topology.setCurrentIndex(t_index)
+    assert dialog._form._design_loaded_q_widget.isHidden() is False
+    assert dialog._form.design_matching_topology() == "t"
+
+
 def test_endfed_dialog_sets_the_design_specific_l_network(qtbot: QtBot) -> None:
     from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
 

@@ -190,7 +190,8 @@ common-mode choke accepts measured series R/X at one frequency and models it as
 a NEC series load on the coax shield; it is not a shack-end choke or a
 shield-transfer-impedance model. An optional design-specific L/Pi/T network can
 replace the fixed internal unit when the published match is not adequate; a
-project network still takes precedence. Automatic synthesis remains L-only. An
+project network still takes precedence. Automatic synthesis supports L, Pi, and
+T networks with a visible design Q. An
 optional inverted-L bend is
 available: the vertical section is measured from the feed, and the horizontal
 run is the remaining wire length. The G0KYA starting installation is about 8 m

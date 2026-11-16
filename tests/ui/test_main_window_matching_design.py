@@ -148,6 +148,72 @@ def test_design_endfed_matching_network_populates_from_the_current_result(
     window._form_dirty = False
 
 
+def test_design_endfed_matching_network_populates_a_pi_network(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.endfed import shortened_efhw_40_10_parameters
+    from antennadesk.domain.antennas.matching_network import PiNetwork
+
+    use_parameters(window, shortened_efhw_40_10_parameters())
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(7_100_000.0),
+        feed_transformer_ratio=49.0,
+        reference_impedance_ohm=50.0,
+    )
+    frequency = FrequencyResult(
+        frequency_hz=7_100_000.0,
+        feed_tag=1,
+        feed_segment=11,
+        impedance_ohm=complex(50.0, 0.0),
+        swr=1.0,
+        input_power_w=0.001,
+        source_results=(
+            SourceResult(
+                wire_id="radiator",
+                offset_m=0.0,
+                tag=1,
+                segment=11,
+                amplitude=1.0,
+                phase_deg=0.0,
+                voltage_v=complex(1.0, 0.0),
+                current_a=complex(0.005, 0.0),
+                impedance_ohm=complex(2450.0, 200.0),
+                power_w=0.001,
+            ),
+        ),
+    )
+    window._last_result = SimulationResult(
+        status=SimulationStatus.COMPLETED,
+        spec=spec,
+        model_fingerprint="a" * 64,
+        solver=SolverMetadata(name="fake", version="1.0"),
+        frequencies=(frequency,),
+    )
+    messages: list[str] = []
+    monkeypatch.setattr(
+        QMessageBox,
+        "information",
+        lambda *_args, **_kwargs: messages.append("shown"),
+    )
+    index = window._endfed_form._design_topology.findData("pi")
+    window._endfed_form._design_topology.setCurrentIndex(index)
+    window._endfed_form._design_loaded_q.setValue(3.0)
+
+    window._design_endfed_matching_network()
+
+    network = window._endfed_form.parameters().design_matching_network
+    assert isinstance(network, PiNetwork)
+    assert network.input_impedance(complex(50.0, 4.081632653061224), 7_100_000.0) == pytest.approx(
+        complex(50.0, 0.0),
+        abs=0.1,
+    )
+    assert messages == ["shown"]
+    window._last_result = None
+    window._dirty = False
+    window._form_dirty = False
+
+
 def test_design_endfed_matching_network_requires_a_result(
     window: MainWindow,
     monkeypatch: pytest.MonkeyPatch,
@@ -217,7 +283,7 @@ def test_design_endfed_matching_network_reports_no_solution(
     window._design_endfed_matching_network()
 
     assert len(messages) == 1
-    assert "No lossless L-network solution" in messages[0]
+    assert "No lossless matching-network solution" in messages[0]
     window._last_result = None
 
 

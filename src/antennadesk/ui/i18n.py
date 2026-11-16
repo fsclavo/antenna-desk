@@ -3233,12 +3233,23 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "help.endfed.design_matching_topology": {
         Language.ENGLISH: (
-            "Choose an L, Pi, or T network. The visible component fields follow "
-            "the selected topology."
+            "Choose an L, Pi, or T network. The visible component fields and the "
+            "automatic design follow the selected topology."
         ),
         Language.SPANISH: (
-            "Elegí una red L, Pi o T. Los campos de componentes visibles siguen "
-            "la topología seleccionada."
+            "Elegí una red L, Pi o T. Los campos de componentes visibles y el "
+            "diseño automático siguen la topología seleccionada."
+        ),
+    },
+    "help.endfed.design_matching_loaded_q": {
+        Language.ENGLISH: (
+            "Total loaded Q for a Pi or T automatic design. Zero selects an "
+            "automatic value above the minimum; higher Q narrows the bandwidth."
+        ),
+        Language.SPANISH: (
+            "Q total de diseño para un diseño automático Pi o T. Cero selecciona "
+            "un valor automático por encima del mínimo; un Q mayor reduce el "
+            "ancho de banda."
         ),
     },
     "help.endfed.design_matching_input_shunt_l": {
@@ -4172,8 +4183,27 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         ),
     },
     "help.matching_network.auto_design": {
-        Language.ENGLISH: "Compute a lossless L network for the current design target.",
-        Language.SPANISH: "Calcula una red L sin pérdidas para el objetivo de diseño actual.",
+        Language.ENGLISH: (
+            "Compute a lossless L, Pi, or T network for the current design target. "
+            "The selected topology and design Q control the result."
+        ),
+        Language.SPANISH: (
+            "Calcula una red L, Pi o T sin pérdidas para el objetivo de diseño "
+            "actual. La topología y el Q de diseño seleccionados controlan el "
+            "resultado."
+        ),
+    },
+    "help.matching_network.design_q": {
+        Language.ENGLISH: (
+            "Total loaded Q for a Pi or T design. Zero selects an automatic value "
+            "above the minimum; higher Q gives more selectivity and narrower "
+            "bandwidth."
+        ),
+        Language.SPANISH: (
+            "Q total de diseño para una red Pi o T. Cero selecciona un valor "
+            "automático por encima del mínimo; un Q mayor da más selectividad y "
+            "menor ancho de banda."
+        ),
     },
     "help.matching_network.shunt_at_input": {
         Language.ENGLISH: "Place the L-network shunt element on the transmitter side.",
@@ -6170,6 +6200,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Component Q (0 = lossless)",
         Language.SPANISH: "Q de componentes (0 = sin pérdidas)",
     },
+    "matching_network.design_q": {
+        Language.ENGLISH: "Design Q (0 = auto)",
+        Language.SPANISH: "Q de diseño (0 = automático)",
+    },
+    "matching_network.design_q_auto": {
+        Language.ENGLISH: "Auto",
+        Language.SPANISH: "Automático",
+    },
     "matching_network.lossless": {
         Language.ENGLISH: "Lossless",
         Language.SPANISH: "Sin pérdidas",
@@ -6259,12 +6297,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Frecuencia de diseño",
     },
     "matching_network.auto_design": {
-        Language.ENGLISH: "Auto-design L network",
-        Language.SPANISH: "Diseñar red L automáticamente",
+        Language.ENGLISH: "Auto-design network",
+        Language.SPANISH: "Diseñar red automáticamente",
     },
     "matching_network.auto_unavailable": {
-        Language.ENGLISH: "A single L section cannot match this load at the selected frequency.",
-        Language.SPANISH: "Una sola sección L no puede adaptar esta carga en la frecuencia elegida.",
+        Language.ENGLISH: (
+            "No matching network fits this load, frequency, and design Q. "
+            "Increase the design Q or choose another topology."
+        ),
+        Language.SPANISH: (
+            "Ninguna red de adaptación encaja con esta carga, frecuencia y Q de "
+            "diseño. Aumentá el Q de diseño o elegí otra topología."
+        ),
     },
     "matching_network.shunt_at_input": {
         Language.ENGLISH: "Shunt element on the transmitter side",
@@ -11745,8 +11789,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         ),
     },
     "endfed.design_matching_auto": {
-        Language.ENGLISH: "Design L-network from current result",
-        Language.SPANISH: "Diseñar red L desde el resultado actual",
+        Language.ENGLISH: "Design network from current result",
+        Language.SPANISH: "Diseñar red desde el resultado actual",
+    },
+    "endfed.design_matching_loaded_q": {
+        Language.ENGLISH: "Design Q (0 = auto)",
+        Language.SPANISH: "Q de diseño (0 = automático)",
+    },
+    "endfed.design_matching_loaded_q_auto": {
+        Language.ENGLISH: "Auto",
+        Language.SPANISH: "Automático",
     },
     "endfed.design_matching_no_result": {
         Language.ENGLISH: (
@@ -11759,22 +11811,24 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "endfed.design_matching_no_solution": {
         Language.ENGLISH: (
-            "No lossless L-network solution exists for this load at the current "
-            "frequency. Check the load and transformer ratio."
+            "No lossless matching-network solution exists for this load at the "
+            "current frequency and design Q. Check the load, transformer ratio, "
+            "and design Q."
         ),
         Language.SPANISH: (
-            "No existe una solución de red L sin pérdidas para esta carga en la "
-            "frecuencia actual. Revisá la carga y la relación del transformador."
+            "No existe una solución de red de adaptación sin pérdidas para esta "
+            "carga en la frecuencia y el Q de diseño actuales. Revisá la carga, "
+            "la relación del transformador y el Q de diseño."
         ),
     },
     "endfed.design_matching_populated": {
         Language.ENGLISH: (
-            "L-network values populated from the current result. Review them "
-            "before applying the design."
+            "Matching-network values populated from the current result. Review "
+            "them before applying the design."
         ),
         Language.SPANISH: (
-            "Valores de la red L cargados desde el resultado actual. Revisalos "
-            "antes de aplicar el diseño."
+            "Valores de la red de adaptación cargados desde el resultado actual. "
+            "Revisalos antes de aplicar el diseño."
         ),
     },
     "endfed.design_matching_shunt_at_input": {

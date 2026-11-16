@@ -9,6 +9,7 @@ import pytest
 from antennadesk.domain.antennas.matching_network import (
     LNetwork,
     PiNetwork,
+    TNetwork,
     TransformerNetwork,
     input_shunt_l_network_swr_floor,
 )
@@ -93,6 +94,105 @@ def test_auto_design_returns_none_for_an_already_matched_load() -> None:
     from antennadesk.domain.antennas.matching_network import design_l_network
 
     assert design_l_network(complex(50.0, 0.0), 14_100_000.0) is None
+
+
+@pytest.mark.parametrize(
+    "load",
+    [
+        complex(100.0, 0.0),
+        complex(25.0, 0.0),
+        complex(200.0, -50.0),
+        complex(10.0, 20.0),
+        complex(300.0, 80.0),
+        complex(50.0, 0.0),
+        complex(75.0, -30.0),
+        complex(1000.0, -500.0),
+    ],
+)
+@pytest.mark.parametrize("loaded_q", [None, 3.0, 10.0])
+def test_designs_a_pi_network_for_complex_loads(
+    load: complex,
+    loaded_q: float | None,
+) -> None:
+    from antennadesk.domain.antennas.matching_network import design_pi_network
+
+    frequency = 14_100_000.0
+    network = design_pi_network(load, frequency, loaded_q=loaded_q)
+
+    if loaded_q == 3.0 and load == complex(1000.0, -500.0):
+        assert network is None
+        return
+    assert isinstance(network, PiNetwork)
+    assert network.input_impedance(load, frequency) == pytest.approx(
+        complex(50.0, 0.0),
+        abs=1e-6,
+    )
+
+
+@pytest.mark.parametrize(
+    "load",
+    [
+        complex(100.0, 0.0),
+        complex(25.0, 0.0),
+        complex(200.0, -50.0),
+        complex(10.0, 20.0),
+        complex(300.0, 80.0),
+        complex(50.0, 0.0),
+        complex(75.0, -30.0),
+        complex(1000.0, -500.0),
+    ],
+)
+@pytest.mark.parametrize("loaded_q", [None, 3.0, 10.0])
+def test_designs_a_t_network_for_complex_loads(
+    load: complex,
+    loaded_q: float | None,
+) -> None:
+    from antennadesk.domain.antennas.matching_network import design_t_network
+
+    frequency = 14_100_000.0
+    network = design_t_network(load, frequency, loaded_q=loaded_q)
+
+    if loaded_q == 3.0 and load == complex(1000.0, -500.0):
+        assert network is None
+        return
+    assert isinstance(network, TNetwork)
+    assert network.input_impedance(load, frequency) == pytest.approx(
+        complex(50.0, 0.0),
+        abs=1e-6,
+    )
+
+
+def test_pi_and_t_loaded_q_below_the_minimum_returns_none() -> None:
+    from antennadesk.domain.antennas.matching_network import (
+        design_pi_network,
+        design_t_network,
+    )
+
+    load = complex(300.0, 80.0)
+    assert design_pi_network(load, 14_100_000.0, loaded_q=2.0) is None
+    assert design_t_network(load, 14_100_000.0, loaded_q=2.0) is None
+    assert design_pi_network(load, 14_100_000.0, loaded_q=10.0) is not None
+    assert design_t_network(load, 14_100_000.0, loaded_q=10.0) is not None
+
+
+def test_pi_and_t_loaded_q_changes_the_component_values() -> None:
+    from antennadesk.domain.antennas.matching_network import (
+        design_pi_network,
+        design_t_network,
+    )
+
+    load = complex(100.0, -20.0)
+    pi_low = design_pi_network(load, 14_100_000.0, loaded_q=2.0)
+    pi_high = design_pi_network(load, 14_100_000.0, loaded_q=8.0)
+    t_low = design_t_network(load, 14_100_000.0, loaded_q=2.0)
+    t_high = design_t_network(load, 14_100_000.0, loaded_q=8.0)
+
+    assert pi_low is not None
+    assert pi_high is not None
+    assert t_low is not None
+    assert t_high is not None
+    assert pi_low.series_inductance_h != pytest.approx(pi_high.series_inductance_h)
+    assert t_low.shunt_capacitance_f != pytest.approx(t_high.shunt_capacitance_f)
 
 
 def test_pi_network_with_only_a_series_element_is_a_series_reactance() -> None:

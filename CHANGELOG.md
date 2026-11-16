@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   and the phase-reversal flag. See
   [ADR-0041](docs/ADR/0041-log-periodic-transposed-feed.md) and the
   [spike record](docs/spikes/c3-log-periodic-spike.md).
+- **Automatic Pi/T matching-network synthesis.** The project matching-network
+  dialog and the design-specific end-fed network action now synthesize L, Pi,
+  or T networks from the current load. Pi/T use a user-visible total design Q
+  (0 selects an automatic value above the minimum); a Q below the physical
+  minimum is rejected instead of being silently changed. The synthesis remains
+  lossless; the separate component-Q field still models component loss.
+  See the [ADR-0038 amendment](docs/ADR/0038-design-specific-matching-network.md).
 
 ### Changed
 

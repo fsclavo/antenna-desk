@@ -156,6 +156,31 @@ topologies without changing the precedence or persistence rules.
 5. Automatic synthesis remains L-only. Pi/T are manual topologies until a
    synthesis method and validation exist.
 
+## Amendment 3 — Automatic Pi/T synthesis (2026-11-16)
+
+**Status:** Accepted. This amendment replaces the L-only restriction in
+Amendment 1 and Amendment 2.
+
+1. The project matching-network dialog and the design-specific end-fed network
+   action can synthesize **L, Pi, or T** from the current design target.
+2. L remains the default topology and its synthesis result is unchanged.
+3. Pi/T synthesis uses a **total loaded Q** as the extra design parameter. The
+   UI exposes **Design Q (0 = auto)**; zero selects `max(2, 1.5 × Q_min)`.
+   A requested Q at or below `Q_min` has no physical solution and returns no
+   network instead of silently changing the user's value.
+4. The synthesis is lossless. The existing **Component Q** field remains a
+   separate loss model and is not used as the design Q.
+5. The synthesized network is populated in the visible editor for review; it is
+   never persisted silently. The selected topology and component values remain
+   user-approved.
+6. The domain functions `design_pi_network()` and `design_t_network()` validate
+   the resulting input impedance against the source resistance before returning
+   a network. A residual above the numeric tolerance returns `None`.
+7. No schema change is required; the persisted Pi/T payload already exists.
+8. Tests cover real and complex loads, automatic and explicit Q, the minimum-Q
+   rejection, both UI dialogs, the design-specific end-fed action, and the
+   existing L-network regression.
+
 ## Open questions
 
 - Should the first UI expose a topology selector with only L enabled, or a
