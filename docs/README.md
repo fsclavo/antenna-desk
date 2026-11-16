@@ -54,6 +54,10 @@ of truth before adding another planning document.
 - [`QA_STRATEGY.md`](QA_STRATEGY.md) — test lanes and quality gate.
 - [`QA_PASS_2026-11-13.md`](QA_PASS_2026-11-13.md) — post-0.6.0 QA pass,
   coverage gates, and residual debt.
+- [`QA_PASS_2026-11-15.md`](QA_PASS_2026-11-15.md) — manual QA for the 0.7.0
+  candidate.
+- [`RELEASE_QA_0.7.0.md`](RELEASE_QA_0.7.0.md) — 0.7.0 candidate checks,
+  artifacts, and known limitations.
 - [`EXPERIMENTAL_VALIDATION_PROTOCOL.md`](EXPERIMENTAL_VALIDATION_PROTOCOL.md) —
   how experimental templates are validated.
 - [`RELEASE.md`](RELEASE.md) — packaging, signing, and release checklist.
