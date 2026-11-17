@@ -123,7 +123,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX28~~ | ~~Call the vertical radiator dimension “length”, not “height”~~ | S–M | none | **Done 2026-11-13:** vertical, J-Pole, Ringo, inverted-L, SCV, and phased-vertical editors and report rows now use “length”/“largo” for the physical radiating element; base, feed, top, ring, coil, apex, stack, boom, and available heights remain “height”/“altura”. The Zepp “Radiator height” and discone “Cone height” exceptions are preserved. EN/ES help and tests cover the changed labels and installation heights. Internal field names, optimizer variables, schema, CSV/JSON keys, and solver behavior are unchanged. |
 | ~~UX29~~ | ~~Show the constructive feed connection at the feedpoint~~ | M–L | UX6, UX7, UX9, ADR-0031, ADR-0033, ADR-0034 | **Done 2026-11-13:** added the read-only `FeedConnectionDetail` resolver, explicit Yagi straight/folded/beta/hairpin cases, a renderer-neutral SVG schematic, a **Connection** row and **View feed connection...** action, a read-only detail dialog, and a feedpoint assembly section in the construction sheet, native PDF, and ZIP. The four modeled/recorded/recommended/not-modeled states are separate; unclassified families return explicit unknown. ADR-0036, user guide, domain model, help, and tests are updated. No `FeedPoint`, solver, simulation, or schema change. |
 | UX30 | Per-template default conductor material | S–M | none | New Antenna and Change Template preselect the agreed material for every catalog template: aluminum for 15 templates, stainless 304 for the loaded vertical, and copper for the remaining 25; existing projects and reference designs keep their materials; no schema, solver-code, or migration change |
-| UX31 | Draw coax as coax in the feed-connection schematic | S–M | UX29 | A straight-Yagi direct-coax detail shows a real coaxial cable and cross-section, with no middle “Direct coax” box; A/B map to center/shield; balun, transformer, balanced line, multi-port, and unknown each get a distinct drawing; terminal labels honor ground/counterpoise; the drawing matches the connection table; EN/ES, dialog, HTML, PDF, and ZIP pass |
+| ~~UX31~~ | ~~Draw coax as coax in the feed-connection schematic~~ | S–M | UX29 | **Done 2026-11-17:** direct coax is drawn as a cable with a center conductor, outer shield, and cross-section; the middle device box is gone. Current balun, transformer, balanced line, multi-port, and unknown have distinct drawings; terminal labels honor ground/counterpoise/return; a recommended choke is dashed. EN/ES, dialog, HTML, PDF, ZIP, and tests pass; no domain, solver, or schema change. |
 | ~~EF1~~ | ~~Preserve shortened-EFHW structural segmentation in optimizer candidates~~ | S–M | none | **Done 2026-11-13:** the optimizer descriptor can declare model-defined wire partitions. Only the shortened EFHW presets opt in, preserving the fixed three-segment feed and loading-coil sections while the radiator counts are recalculated. Unit tests cover 80-10 and 40-10; other families keep a `None` hook and the previous segmentation path. No solver, schema, or UI change. |
 | ~~EF2~~ | ~~Diagnose input-shunt matching-network topology limits~~ | S | EF1 optional | **Done 2026-11-13:** added `MatchingNetworkOrigin` as runtime-only simulation context, a domain `input_shunt_l_network_swr_floor()` predicate, a `LinkBudget` floor field, and a `matching_network.topology_limit` warning. The warning appears only when the effective network is the internal EFHW input-shunt unit; project networks and other families stay unchanged. The origin is excluded from the model fingerprint and is not persisted. EN/ES diagnostic text, domain, link, fingerprint, resolution, and real NEC2C tests cover the path. |
 | ~~EF3~~ | ~~Warn about the installation-return proxy and SWR confidence~~ | S | none | **Done 2026-11-13:** shortened EFHW editors now add an `endfed.warning.return_proxy` warning when the 0.1 m installation-return proxy is active. The results confidence card and exported reports add a **Model confidence** row that marks absolute SWR as informational and states that the installation return is a proxy, not a physical counterpoise. Standard end-fed, sloper, random wire, and every other family are unchanged. No solver or numerical change. |
@@ -150,9 +150,9 @@ same day. UX25 and UX26 were queued on 2026-11-13 and completed the same day.
 UX27 and UX28 were added the same day from terminology feedback; UX27 and UX28
 were completed on 2026-11-13.
 UX29 was added and completed the same day from feed-connection feedback.
-UX30 was queued on 2026-11-17 from per-template material-default feedback; it is
-not implemented. UX31 was queued on 2026-11-17 from feed-schematic feedback; it
-is not implemented.
+UX30 was queued on 2026-11-17 from per-template material-default feedback; it
+remains queued. UX31 was queued on 2026-11-17 from feed-schematic feedback and
+was completed the same day.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
 EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
 L/Pi/T matching are implemented, including automatic L/Pi/T synthesis with a
@@ -1015,6 +1015,10 @@ scaling QA remains manual.
   is unavailable.
 - Do not export the schematic to DXF; the construction DXF remains geometry.
 - Snapshot tests assert structure and labels, not pixels.
+- **Refined by UX31 (2026-11-17):** the drawing is now per interface, coax is
+  drawn as a cable with a cross-section, and terminal labels come from
+  `FeedTerminal.side`. The QPainter path was not added; the same SVG is used by
+  the dialog, sheet, PDF, and ZIP.
 
 ### Wording rules
 
@@ -1521,7 +1525,9 @@ Update existing tests:
 
 ## UX31 — Draw coax as coax in the feed-connection schematic (design note, 2026-11-17)
 
-**Status:** queued; not implemented. This note is the execution contract.
+**Status:** implemented on 2026-11-17. This note is retained as the execution
+record. The direct-coax drawing, cross-section, per-interface layouts, terminal
+labels, and EN/ES coverage are in place.
 
 ### Problem
 
@@ -2331,11 +2337,10 @@ model and solver contract must land first.
 13. **UX30 is queued.** Per-template material defaults are defined in this
     file. It changes only new-design selectors; it does not change the material
     presets, solver, schema, or existing projects.
-14. **UX31 is queued.** The feed-connection schematic must draw coax as coax,
-    with no interface box for direct coax, distinct drawings for balun,
-    transformer, balanced line, multi-port, and unknown, and terminal labels
-    derived from `FeedTerminal.side`. It changes only reporting/UI; it does not
-    change the domain, solver, schema, or existing projects.
+14. **UX31 is complete.** The feed-connection schematic now draws coax as coax,
+    with per-interface drawings and terminal labels derived from
+    `FeedTerminal.side`. It changes only reporting/UI; it does not change the
+    domain, solver, schema, or existing projects.
 15. **EF1–EF6, EF7a, EF7b, EF8a, EF8, and EF9 are complete.** The shortened-EFHW optimizer keeps
     the fixed feed and loading-coil partitions, results report the input-shunt
     matching-topology floor only for the internal end-fed unit, the confidence
@@ -2380,7 +2385,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **52**.
-- Full gate: **3,222 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **3,265 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.8.2** published on 2026-11-16 with the element-table header
@@ -2398,13 +2403,14 @@ model and solver contract must land first.
   3.11–3.13 run the full UI suite. See
   [`ADR/0025`](ADR/0025-pyside6-version-pin.md). Do not weaken the remaining
   gates.
-- Last commits: the chart-cursor teardown guards, the font-scaling and
-  preference test isolation, the plotted-window teardown cleanup, the
-  element-table header sizing fix, the post-0.8.0 stabilization and visual QA,
-  the LPDA feed classification fix, the scaled-dialog screen cap, the P7/D4
-  benchmark decision, the 0.8.0 release publication and QA, the log-periodic
-  family (C3), the automatic Pi/T matching synthesis (EF9), the post-0.6.0 QA
-  pass, the 0.6.0 release publication and QA, the
+- Last commits: the Touchstone `.s1p` import/export, the chart-cursor teardown
+  guards, the font-scaling and preference test isolation, the plotted-window
+  teardown cleanup, the element-table header sizing fix, the post-0.8.0
+  stabilization and visual QA, the LPDA feed classification fix, the
+  scaled-dialog screen cap, the P7/D4 benchmark decision, the 0.8.0 release
+  publication and QA, the log-periodic family (C3), the automatic Pi/T matching
+  synthesis (EF9), the post-0.6.0 QA pass, the 0.6.0 release publication and QA,
+  the
   Moxon/Yagi starting frequencies (UX24), the editable BOM costs (UX20), the
   portable project bundle (UX19), the common coax catalog (UX23), the materials
   reference (UX18), the 0.5.0 release publication and QA, the folded-dipole,

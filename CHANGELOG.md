@@ -20,6 +20,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Feed schematic now draws coax as coax.** Direct coax no longer appears as a
+  middle device box or as two parallel lines. The drawing uses a cable with a
+  center conductor and an outer shield, a cross-section inset, interface-specific
+  drawings for a current balun, transformer, balanced line, multi-port, and
+  unknown wiring, and terminal labels derived from `ground`, `counterpoise`, or
+  `return`. A recommended but unrecorded choke is dashed and labeled. The
+  connection table, dialog, HTML construction sheet, native PDF, and ZIP still
+  use the same detail. No domain, solver, schema, or numerical change.
 - **Chart cursor teardown.** The reusable chart cursor now ignores pending
   hover and leave events after its plot or series has started tearing down,
   instead of raising from inside the Qt event loop.

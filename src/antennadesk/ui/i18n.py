@@ -6014,8 +6014,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Resumen del cableado físico; no es un resultado del solver.",
     },
     "help.feed_connection.schematic": {
-        Language.ENGLISH: "Schematic of the feed interface; not to scale.",
-        Language.SPANISH: "Esquema de la interfaz de alimentación; no a escala.",
+        Language.ENGLISH: (
+            "Physical wiring schematic: coax is shown with its center conductor "
+            "and shield. Not to scale."
+        ),
+        Language.SPANISH: (
+            "Esquema del cableado físico: el coaxil se muestra con su conductor "
+            "central y su malla. No a escala."
+        ),
     },
     "help.feed_connection.table": {
         Language.ENGLISH: "Ordered terminal-to-terminal connection table.",

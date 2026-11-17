@@ -838,6 +838,9 @@ def test_construction_sheet_includes_the_feed_connection(sample_project: Project
     assert "Feed connection" in sheet
     assert "Connection table" in sheet
     assert "Direct coax" in sheet
+    assert 'id="coax"' in sheet
+    assert 'id="coax-cross-section"' in sheet
+    assert 'id="interface-device"' not in sheet
     assert "1:1 current balun" in sheet
     assert "<svg" in sheet
 

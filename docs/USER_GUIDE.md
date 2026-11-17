@@ -1853,12 +1853,16 @@ modeled**.
 
 For a Yagi with a straight driven element and no recorded balun, the dialog
 shows a direct coax connection: one half to the center conductor and the other
-to the shield, with a current balun/choke recommended. With a recorded 1:1
-current balun, it shows the balanced output and the coax input. A folded driven
-element shows the transformer/balun secondary across the gap in one conductor;
-the second conductor is continuous, joined at both ends, and is not a
-parasitic. A beta/hairpin is labeled as a matching stub, not a balun. A gamma
-match is reported as not modeled.
+to the shield, with a current balun/choke recommended. The coax is drawn as a
+cable with a center conductor and an outer shield, plus a cross-section inset;
+it is not drawn as a middle device box or as two parallel wires. A recommended
+but unrecorded choke is dashed and labeled **Recommended, not recorded**. With a
+recorded 1:1 current balun, it shows the balanced output and the coax input. A
+folded driven element shows the transformer/balun secondary across the gap in
+one conductor; the second conductor is continuous, joined at both ends, and is
+not a parasitic. A beta/hairpin is labeled as a matching stub, not a balun. A
+gamma match is reported as not modeled. Ground and counterpoise returns use
+their own labels instead of a generic terminal B.
 
 The same content is included in the construction sheet, native PDF, and ZIP
 package. It is a construction aid, not a solver result: the app does not model

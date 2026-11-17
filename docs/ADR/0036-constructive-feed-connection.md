@@ -64,6 +64,10 @@ Limitations:
 - Multi-port arrays and balanced feed lines are represented only at a summary
   level.
 
+**Update 2026-11-17 (UX31):** the schematic now draws a real coax cable with a
+cross-section and uses a distinct drawing per interface. The data model,
+connection table, and the decision above are unchanged.
+
 ## Alternatives considered
 
 | Alternative | Reason for rejection |

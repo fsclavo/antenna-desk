@@ -44,7 +44,7 @@ class FeedConnectionDialog(QDialog):
         self._summary.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
 
         self._schematic = QSvgWidget(self)
-        self._schematic.setMinimumHeight(280)
+        self._schematic.setMinimumHeight(360)
 
         self._table = QTableWidget(0, 3, self)
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
