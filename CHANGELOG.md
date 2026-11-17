@@ -53,6 +53,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   instead of only changing the frequency field. Each editor exposes **Load
   starting dimensions** and preserves its installation and matching fields.
   No schema or solver change.
+- **Moxon height range.** The Moxon height field no longer inherits Qt's
+  `99.99` maximum, so tall installation heights can be entered.
+- **Hexbeam UHF small features.** The tip gap, feed gap, and element separation
+  fields now use a smaller minimum and four decimals, so the 435 MHz published
+  geometry can be entered without clamping.
 
 ### Changed
 

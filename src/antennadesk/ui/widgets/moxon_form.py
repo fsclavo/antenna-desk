@@ -26,6 +26,7 @@ from ..material_combo import (
 )
 from ..units import (
     UnitSystem,
+    height_bounds,
     length_from_m,
     length_to_m,
     length_unit_key,
@@ -91,6 +92,7 @@ class MoxonForm(QWidget):
         self._driven_tip.setValue(length_from_m(default_geometry.driven_tip_m, unit_system))
 
         self._height = QDoubleSpinBox(self)
+        self._height.setRange(*height_bounds(unit_system))
         self._height.setDecimals(3)
         self._height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._height.setValue(length_from_m(MOXON_DEFAULT_HEIGHT_M, unit_system))
@@ -287,6 +289,7 @@ class MoxonForm(QWidget):
             self._driven_tip,
             self._height,
         )
+        self._height.setRange(*height_bounds(unit_system))
         if parameters is not None:
             self.set_parameters(parameters)
 

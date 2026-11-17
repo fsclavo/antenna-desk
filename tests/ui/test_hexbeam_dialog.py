@@ -115,3 +115,26 @@ def test_hexbeam_form_preserves_lengths_when_switching_units(qtbot: QtBot) -> No
     assert parameters.driver_half_length_m == pytest.approx(5.5, rel=1e-3)
     assert parameters.turning_radius_m == pytest.approx(3.3, rel=1e-3)
     assert dialog._form._driver_half.suffix().strip() == "ft"
+
+
+def test_hexbeam_form_represents_uhf_tip_and_feed_gaps(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.hexbeam import published_hexbeam_parameters
+
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    parameters = published_hexbeam_parameters(
+        frequency_hz=435_000_000.0,
+        height_m=10.0,
+    )
+
+    dialog._form.set_parameters(parameters)
+
+    restored = dialog.parameters()
+    assert restored.tip_gap_m == pytest.approx(parameters.tip_gap_m, abs=5e-5)
+    assert restored.feed_gap_m == pytest.approx(parameters.feed_gap_m, abs=5e-5)
+    assert restored.element_separation_m == pytest.approx(
+        parameters.element_separation_m,
+        abs=5e-5,
+    )
+    assert dialog._form._tip_gap.value() > 0.0
+    assert dialog._form._feed_gap.value() > 0.0

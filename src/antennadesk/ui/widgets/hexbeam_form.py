@@ -44,6 +44,11 @@ from .ground_presets import GroundPresetController
 from .starting_dimensions import StartingDimensionsState
 
 
+def _small_length_minimum(unit_system: UnitSystem) -> float:
+    minimum_m = 0.0001
+    return minimum_m if unit_system is UnitSystem.METRIC else minimum_m / 0.3048
+
+
 class HexbeamForm(QWidget):
     changed = Signal()
 
@@ -83,8 +88,8 @@ class HexbeamForm(QWidget):
         self._turning_radius.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
 
         self._tip_gap = QDoubleSpinBox(self)
-        self._tip_gap.setRange(minimum_length, maximum_length)
-        self._tip_gap.setDecimals(3)
+        self._tip_gap.setRange(_small_length_minimum(unit_system), maximum_length)
+        self._tip_gap.setDecimals(4)
         self._tip_gap.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
 
         self._height = QDoubleSpinBox(self)
@@ -93,7 +98,7 @@ class HexbeamForm(QWidget):
         self._height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
 
         self._feed_gap = QDoubleSpinBox(self)
-        self._feed_gap.setRange(minimum_length, maximum_length)
+        self._feed_gap.setRange(_small_length_minimum(unit_system), maximum_length)
         self._feed_gap.setDecimals(4)
         self._feed_gap.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
 
@@ -331,10 +336,11 @@ class HexbeamForm(QWidget):
                 self._driver_half,
                 self._reflector_half,
                 self._turning_radius,
-                self._tip_gap,
-                self._feed_gap,
             ):
                 spin.setRange(minimum_length, maximum_length)
+            small_minimum = _small_length_minimum(unit_system)
+            self._tip_gap.setRange(small_minimum, maximum_length)
+            self._feed_gap.setRange(small_minimum, maximum_length)
             self._element_separation.setRange(0.0, maximum_length)
             self._height.setRange(minimum_height, maximum_height)
         finally:

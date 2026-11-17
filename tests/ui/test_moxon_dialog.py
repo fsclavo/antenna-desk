@@ -141,3 +141,12 @@ def test_moxon_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
     qtbot.addWidget(dialog)
 
     assert dialog.parameters() == original
+
+
+def test_moxon_form_allows_tall_installation_heights(qtbot: QtBot) -> None:
+    dialog = MoxonDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+
+    dialog._form._height.setValue(120.0)
+
+    assert dialog.parameters().height_m == pytest.approx(120.0)

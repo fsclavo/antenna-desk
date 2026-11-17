@@ -144,9 +144,11 @@ Negative:
 U0–U2 are implemented: the normative spec and ADR are accepted, the Qt-free
 `DisplayUnits`/`LengthPolicy` formatter plus the four-option Units preference
 and QSettings mapping are in place, and geometry scenes, dimension labels,
-summaries, detail insets, and the scale bar follow the policy. Forms, dialogs,
-and human-readable reports remain on the existing fixed presentation until
-U3–U5; legacy `unit_system=` scene callers keep their fixed strings.
+summaries, detail insets, and the scale bar follow the policy. U3 is partial:
+the Moxon height and hexbeam UHF range fixes landed, while the full family-form
+and table migration remains. Forms, dialogs, and human-readable reports remain
+on the existing fixed presentation until the U3 remainder–U5; legacy
+`unit_system=` scene callers keep their fixed strings.
 
 ## References
 
