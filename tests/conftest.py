@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
-import gc
 import os
 from pathlib import Path
 
@@ -42,7 +41,14 @@ FIXED_NOW = datetime(2026, 10, 29, 12, 0, 0, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
-def _collect_garbage_after_each_test(request):
+def _flush_ui_events_after_each_test(request):
+    """Dispatch deferred widget deletion at the end of each UI test.
+
+    Do not force ``gc.collect()`` here: pyqtgraph and PySide6 do not share
+    object lifetimes, and a full collection while Qt wrappers are being deleted
+    can corrupt the native heap on Windows.
+    """
+
     yield
     if "/ui/" not in str(request.node.path):
         return
@@ -58,7 +64,6 @@ def _collect_garbage_after_each_test(request):
         # and palette events.
         app.sendPostedEvents(None, QEvent.Type.DeferredDelete)
         app.processEvents()
-    gc.collect()
 
 
 @pytest.fixture

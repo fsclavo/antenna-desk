@@ -39,25 +39,6 @@ def _restore_application_appearance(qtbot: QtBot) -> Iterator[None]:
         set_current_font_scale(original_scale)
 
 
-@pytest.fixture(autouse=True)
-def _close_top_level_widgets(qtbot: QtBot) -> Iterator[None]:
-    """Close windows before pytest-qt schedules their deletion.
-
-    Pending paint and resize events on a hidden-but-alive window can outlive the
-    test and fire while a later test is processing events. On Windows that can
-    abort the process inside pyqtgraph. Closing every top-level widget at the end
-    of each UI test keeps Qt teardown inside the test that created it.
-    """
-
-    yield
-    app = QApplication.instance()
-    if isinstance(app, QApplication):
-        for widget in app.topLevelWidgets():
-            if widget.isVisible():
-                widget.close()
-        app.processEvents()
-
-
 @pytest.fixture
 def window(qtbot: QtBot, sample_project) -> Iterator[MainWindow]:
     main_window = MainWindow(
