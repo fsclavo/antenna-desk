@@ -133,6 +133,10 @@ jobs:
     name: Tests (${{ matrix.os }}, Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
+    env:
+      # Windows runners can corrupt the heap while Qt tears down GPU-backed
+      # views. Use Qt's bundled software OpenGL for the test process.
+      QT_OPENGL: software
     strategy:
       fail-fast: false
       matrix:
