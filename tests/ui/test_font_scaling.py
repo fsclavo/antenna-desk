@@ -129,6 +129,9 @@ def test_main_window_renders_large_spanish(qtbot: QtBot) -> None:
     for form, scroll, _base_max_width in window._form_panels:
         assert scroll.maximumWidth() >= form.minimumSizeHint().width() + 24
 
+    window.close()
+    qtbot.wait(10)
+
 
 def test_form_panels_widen_for_large_spanish_forms(qtbot: QtBot) -> None:
     controller = _controller()
@@ -173,6 +176,7 @@ def test_element_tables_fit_their_headers_at_large(qtbot: QtBot) -> None:
                 assert header.sectionSize(column) >= header.fontMetrics().horizontalAdvance(
                     item.text()
                 )
+        dialog.close()
 
 
 def test_element_table_headers_stay_readable_in_a_narrow_dialog(qtbot: QtBot) -> None:
@@ -190,6 +194,7 @@ def test_element_table_headers_stay_readable_in_a_narrow_dialog(qtbot: QtBot) ->
         item = table.horizontalHeaderItem(column)
         assert item is not None
         assert header.sectionSize(column) >= header.fontMetrics().horizontalAdvance(item.text())
+    dialog.close()
 
 
 def test_start_page_title_tracks_the_preset(qtbot: QtBot) -> None:
@@ -226,6 +231,7 @@ def test_results_view_plot_fonts_track_the_preset(qtbot: QtBot) -> None:
     assert axis.label.font().pointSizeF() == pytest.approx(8.1)
     assert view._impedance_plot.plotItem.titleLabel.opts["size"] == "9.9pt"
     assert view._impedance_plot.plotItem.legend.opts["labelTextSize"] == "8.1pt"
+    view.close()
 
 
 def test_comparison_dialog_plot_fonts_track_the_preset(
