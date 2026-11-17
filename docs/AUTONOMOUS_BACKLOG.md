@@ -1534,22 +1534,27 @@ model and solver contract must land first.
 - Full gate: **3,222 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
-- Release: **0.8.2** candidate prepared on 2026-11-16 with the element-table
-  header sizing fix; local artifacts and publication are pending. See
-  [`RELEASE_QA_0.8.2.md`](RELEASE_QA_0.8.2.md). **0.8.1** was published on
-  2026-11-16 with the LPDA feed-classification and dialog-scale fixes; the
-  tag-triggered CI run
-  [`43946980265`](https://github.com/fsclavo/antenna-desk/actions/runs/43946980265)
+- Release: **0.8.2** published on 2026-11-16 with the element-table header
+  sizing fix. The tag-triggered CI run
+  [`43981030614`](https://github.com/fsclavo/antenna-desk/actions/runs/43981030614)
   completed the wheel/sdist, Linux, Windows, and publish jobs, and all six
   published assets and checksums were verified. See
-  [`RELEASE_QA_0.8.1.md`](RELEASE_QA_0.8.1.md). **0.8.1** remains the latest
-  published release.
-- Last commits: the element-table header sizing fix, the post-0.8.0
-  stabilization and visual QA, the LPDA feed classification fix, the
-  scaled-dialog screen cap, the P7/D4 benchmark decision, the 0.8.0 release
-  publication and QA, the log-periodic family (C3), the automatic Pi/T matching
-  synthesis (EF9), the post-0.6.0 QA pass, the 0.6.0 release publication and QA,
-  the
+  [`RELEASE_QA_0.8.2.md`](RELEASE_QA_0.8.2.md). **0.8.1** was published on
+  2026-11-16 with the LPDA feed-classification and dialog-scale fixes. See
+  [`RELEASE_QA_0.8.1.md`](RELEASE_QA_0.8.1.md). **0.8.1** is the previous
+  release.
+- Known CI residue: the Windows Python 3.11 test job can abort inside
+  `tests/ui/test_results_view.py` without a Python traceback. Linux, Windows
+  3.12, and Windows 3.13 pass, and the Windows release build/installer smoke
+  tests pass. Track as Qt/pyqtgraph test-teardown debt; do not weaken the
+  product gate.
+- Last commits: the chart-cursor teardown guards, the font-scaling and
+  preference test isolation, the plotted-window teardown cleanup, the
+  element-table header sizing fix, the post-0.8.0 stabilization and visual QA,
+  the LPDA feed classification fix, the scaled-dialog screen cap, the P7/D4
+  benchmark decision, the 0.8.0 release publication and QA, the log-periodic
+  family (C3), the automatic Pi/T matching synthesis (EF9), the post-0.6.0 QA
+  pass, the 0.6.0 release publication and QA, the
   Moxon/Yagi starting frequencies (UX24), the editable BOM costs (UX20), the
   portable project bundle (UX19), the common coax catalog (UX23), the materials
   reference (UX18), the 0.5.0 release publication and QA, the folded-dipole,
