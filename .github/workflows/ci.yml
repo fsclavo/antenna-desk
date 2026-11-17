@@ -170,7 +170,7 @@ jobs:
       - name: pytest
         shell: bash
         run: |
-          uv run pytest tests/ui/test_results_view.py -vv
+          uv run pytest tests/ui/test_results_view.py -q
           timeout 300s uv run pytest tests/ui/test_main_window_*.py -vv
           uv run pytest tests/ui/test_font_scaling.py -q
           uv run pytest tests/ui/test_preferences.py -q
