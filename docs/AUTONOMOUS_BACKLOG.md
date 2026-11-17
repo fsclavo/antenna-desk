@@ -122,6 +122,8 @@ external service and must not be invented or simulated into existence.
 | ~~UX27~~ | ~~Use ROE consistently in the Spanish UI and reports~~ | S–M | none | **Done 2026-11-13:** all 18 Spanish UI keys that still said “SWR” now use “ROE” with feminine agreement; the first explanatory use expands “ROE (relación de ondas estacionarias)”. Hardcoded chart/table labels in the measurement comparison, parameter sweep, robustness, and end-fed dialogs use the shared localized label; the HTML report and construction-sheet bandwidth row are localized. A regression test scans every Spanish UI/report/evidence value for `\bSWR\b`; Spanish dialog and report tests cover the changed surfaces. English, internal identifiers, report keys, CSV columns, schema, and solver are unchanged. |
 | ~~UX28~~ | ~~Call the vertical radiator dimension “length”, not “height”~~ | S–M | none | **Done 2026-11-13:** vertical, J-Pole, Ringo, inverted-L, SCV, and phased-vertical editors and report rows now use “length”/“largo” for the physical radiating element; base, feed, top, ring, coil, apex, stack, boom, and available heights remain “height”/“altura”. The Zepp “Radiator height” and discone “Cone height” exceptions are preserved. EN/ES help and tests cover the changed labels and installation heights. Internal field names, optimizer variables, schema, CSV/JSON keys, and solver behavior are unchanged. |
 | ~~UX29~~ | ~~Show the constructive feed connection at the feedpoint~~ | M–L | UX6, UX7, UX9, ADR-0031, ADR-0033, ADR-0034 | **Done 2026-11-13:** added the read-only `FeedConnectionDetail` resolver, explicit Yagi straight/folded/beta/hairpin cases, a renderer-neutral SVG schematic, a **Connection** row and **View feed connection...** action, a read-only detail dialog, and a feedpoint assembly section in the construction sheet, native PDF, and ZIP. The four modeled/recorded/recommended/not-modeled states are separate; unclassified families return explicit unknown. ADR-0036, user guide, domain model, help, and tests are updated. No `FeedPoint`, solver, simulation, or schema change. |
+| UX30 | Per-template default conductor material | S–M | none | New Antenna and Change Template preselect the agreed material for every catalog template: aluminum for 15 templates, stainless 304 for the loaded vertical, and copper for the remaining 25; existing projects and reference designs keep their materials; no schema, solver-code, or migration change |
+| UX31 | Draw coax as coax in the feed-connection schematic | S–M | UX29 | A straight-Yagi direct-coax detail shows a real coaxial cable and cross-section, with no middle “Direct coax” box; A/B map to center/shield; balun, transformer, balanced line, multi-port, and unknown each get a distinct drawing; terminal labels honor ground/counterpoise; the drawing matches the connection table; EN/ES, dialog, HTML, PDF, and ZIP pass |
 | ~~EF1~~ | ~~Preserve shortened-EFHW structural segmentation in optimizer candidates~~ | S–M | none | **Done 2026-11-13:** the optimizer descriptor can declare model-defined wire partitions. Only the shortened EFHW presets opt in, preserving the fixed three-segment feed and loading-coil sections while the radiator counts are recalculated. Unit tests cover 80-10 and 40-10; other families keep a `None` hook and the previous segmentation path. No solver, schema, or UI change. |
 | ~~EF2~~ | ~~Diagnose input-shunt matching-network topology limits~~ | S | EF1 optional | **Done 2026-11-13:** added `MatchingNetworkOrigin` as runtime-only simulation context, a domain `input_shunt_l_network_swr_floor()` predicate, a `LinkBudget` floor field, and a `matching_network.topology_limit` warning. The warning appears only when the effective network is the internal EFHW input-shunt unit; project networks and other families stay unchanged. The origin is excluded from the model fingerprint and is not persisted. EN/ES diagnostic text, domain, link, fingerprint, resolution, and real NEC2C tests cover the path. |
 | ~~EF3~~ | ~~Warn about the installation-return proxy and SWR confidence~~ | S | none | **Done 2026-11-13:** shortened EFHW editors now add an `endfed.warning.return_proxy` warning when the 0.1 m installation-return proxy is active. The results confidence card and exported reports add a **Model confidence** row that marks absolute SWR as informational and states that the installation return is a proxy, not a physical counterpoise. Standard end-fed, sloper, random wire, and every other family are unchanged. No solver or numerical change. |
@@ -148,6 +150,9 @@ same day. UX25 and UX26 were queued on 2026-11-13 and completed the same day.
 UX27 and UX28 were added the same day from terminology feedback; UX27 and UX28
 were completed on 2026-11-13.
 UX29 was added and completed the same day from feed-connection feedback.
+UX30 was queued on 2026-11-17 from per-template material-default feedback; it is
+not implemented. UX31 was queued on 2026-11-17 from feed-schematic feedback; it
+is not implemented.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
 EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
 L/Pi/T matching are implemented, including automatic L/Pi/T synthesis with a
@@ -299,6 +304,9 @@ marine elements, and mechanical conductors.
   frequency-first designer. The designer-from-frequency dialog keeps its
   current behavior: it preserves an existing material and otherwise starts at
   copper; do not add a material selector there in this item.
+  **Superseded on 2026-11-17 by UX30** for new-design template defaults only.
+  The material presets, combo order, frequency-first preservation behavior, and
+  every existing project material remain unchanged.
 
 ### Do not
 
@@ -314,7 +322,9 @@ marine elements, and mechanical conductors.
 - Do not add a material capability flag, per-family exclusion, structural
   material field, or custom-material editor.
 - Do not make 304 the default, reorder copper/aluminum, or change existing
-  project materials.
+  project materials. **UX30 exception:** 304 is the default only for the
+  `loaded_vertical` template; the other 40 templates use the copper or aluminum
+  mapping in UX30.
 - Do not change the NEC importer. Imported decks still become copper and
   `LD 5` is still ignored; document that pre-existing limitation if it becomes
   relevant.
@@ -350,8 +360,9 @@ marine elements, and mechanical conductors.
 ### Acceptance
 
 - 304 is selectable in every family editor and in the component calculator.
-- Copper remains the default; existing copper/aluminum projects and tests are
-  unchanged.
+- Copper remains the default for this item's scope; existing copper/aluminum
+  projects and tests are unchanged. **Superseded by UX30** for new-design
+  template defaults only.
 - The Materials Reference wire tab shows 304 with its source and limitation.
 - Reports and the UI show the localized "Stainless steel 304"; machine-readable
   CSV and cost keys keep the stable internal name `stainless_steel_304`.
@@ -1081,6 +1092,836 @@ scaling QA remains manual.
 - Balanced feed lines and multi-port arrays do not fit a single coax schematic.
   Use `BALANCED_LINE`/`MULTI_PORT` and explicit limitations; do not guess.
 
+## UX30 — Per-template default conductor material (design note, 2026-11-17)
+
+**Status:** queued; not implemented. This note is the execution contract.
+
+### Problem
+
+`ConductorMaterial` is stored per wire, but every editor starts its material
+selector at the first preset, **Copper**. Only `LogPeriodicParameters` and
+`LogPeriodicForm` start at **Aluminum**. As a result, a new Yagi, vertical,
+J Pole, Slim Jim, discone, Ringo, or beam starts with copper even when the
+common amateur construction uses aluminum or stainless steel. The user asked
+for the material normally used to build each antenna to be preselected, while
+keeping the selector editable.
+
+This is a defaults change. It does not add a material, change the solver code,
+change the schema, or rewrite existing projects. New designs can produce a
+slightly different conductor loss because they start with a different material;
+that is the intended effect, not a solver change.
+
+### Decision
+
+- Add one pure **template → default material** resolver. Suggested location:
+  `src/antennadesk/domain/antennas/material_defaults.py`. Key it by the catalog
+  or template identifier, not by `AntennaFamily`.
+- The resolver belongs to the domain layer and must not import `ui/` or
+  PySide6. Keep the key strings stable in the resolver or move the catalog key
+  constants to a shared domain module; do not import the catalog dialog.
+- Suggested API: `default_material_for_template(template_id: str) ->
+  ConductorMaterial`. It owns the complete mapping and falls back to `COPPER`
+  only for an unknown/custom key; a coverage test must fail if a catalog key is
+  missing or an extra key is present.
+- Do not derive the default from `AntennaFamily`. `moxon`, `hexbeam`,
+  `quad_beam`, `biquad`, `double_biquad`, and `half_square` are wire models but
+  are explicitly assigned aluminum by this decision; `bobtail_curtain` and
+  `inverted_l` stay copper despite their catalog family.
+- Use the resolver in every new-design editor and in any new-design factory
+  wrapper that initializes a fresh template. Do not use it inside the published
+  reference factories, and do not scatter `ALUMINUM` or `STAINLESS_STEEL_304`
+  literals across forms.
+- Keep `CONDUCTOR_MATERIALS` in the order
+  `(COPPER, ALUMINUM, STAINLESS_STEEL_304)` and keep the shared combo helper.
+  Select by `findData(...)`, not by index.
+- The selector remains editable. The default is only the initial selection.
+- Existing designs keep their stored material when opened or edited; only a new
+  design gets the template default.
+- Material remains a conductor-loss input (`conductivity_s_per_m`,
+  `relative_permeability`), not a structural or tubing model.
+- Confirmed choices from the project owner on 2026-11-17: Moxon, Hexbeam, Quad
+  beam, Biquad (both variants), and Half square are aluminum; Bobtail curtain
+  and Inverted L remain copper; J Pole and Slim Jim are aluminum; Loaded
+  vertical is stainless steel 304.
+
+### Target mapping
+
+Use these exact catalog keys. The labels are the existing catalog labels.
+
+**Aluminum — 15 templates**
+
+| Key | Label |
+|---|---|
+| `yagi` | Yagi |
+| `trap_yagi` | Trapped Yagi |
+| `log_periodic` | Log-periodic (LPDA); already aluminum |
+| `vertical` | Vertical + radials |
+| `ringo` | Ringo |
+| `j_pole` | J Pole |
+| `slim_jim` | Slim Jim |
+| `discone` | Discone |
+| `phased_vertical` | Phased vertical array |
+| `moxon` | Moxon rectangle |
+| `hexbeam` | Hexbeam |
+| `quad_beam` | Quad beam |
+| `biquad` | Biquad |
+| `double_biquad` | Double biquad |
+| `half_square` | Half square |
+
+**Stainless steel 304 — 1 template**
+
+| Key | Label |
+|---|---|
+| `loaded_vertical` | Loaded vertical / mobile whip |
+
+**Copper — 25 templates**
+
+| Key | Label |
+|---|---|
+| `wire_dipole` | Wire dipole |
+| `folded_dipole` | Folded dipole |
+| `bobtail_curtain` | Bobtail curtain |
+| `beverage` | Beverage |
+| `loaded_dipole` | Loaded / linked dipole |
+| `endfed` | End-fed wire / EFHW |
+| `sloper` | Sloper |
+| `random_wire` | Random wire |
+| `shortened_endfed_80_10` | Shortened EFHW 80-10 m |
+| `shortened_endfed_40_10` | Shortened EFHW 40-20-10 m |
+| `g5rv` | G5RV |
+| `zs6bkw` | ZS6BKW |
+| `zepp` | Zepp |
+| `doublet` | Doublet |
+| `fan_dipole` | Fan dipole |
+| `trap_dipole` | Trap dipole |
+| `t2fd` | T2FD |
+| `inverted_v` | Inverted-V |
+| `inverted_l` | Inverted L |
+| `ocfd` | Off-center-fed dipole |
+| `loop` | Loop |
+| `delta_loop` | Delta loop |
+| `quad_loop` | Quad loop |
+| `magnetic_loop` | Magnetic loop |
+| `custom` | Custom wires |
+
+Counts: **15 aluminum + 1 stainless 304 + 25 copper = 41 catalog templates**.
+The 15 aluminum entries include the already-aluminum `log_periodic`; therefore
+**14 templates change from copper to aluminum** and **1 changes from copper to
+stainless 304**.
+
+### Current audit
+
+- `src/antennadesk/domain/antennas/materials.py` defines
+  `CONDUCTOR_MATERIALS = (COPPER, ALUMINUM, STAINLESS_STEEL_304)`.
+- `src/antennadesk/ui/material_combo.py` adds the presets in that order and does
+  not select a default.
+- `src/antennadesk/ui/widgets/log_periodic_form.py:137` is the only form that
+  explicitly selects aluminum; its `set_parameters` fallback also selects
+  aluminum when the material is unknown.
+- Every other family `*Parameters` with a material field defaults to `COPPER`,
+  except `LogPeriodicParameters`, which defaults to `ALUMINUM`.
+  `CustomAntennaParameters` has no single material field; its editor starts
+  each new wire at copper.
+- `src/antennadesk/ui/main_window.py` routes New Antenna through the `new_*`
+  dialog methods and Change Template through `_parameters_from_catalog`; both
+  use the same family dialogs. Do not add a second material map.
+- `src/antennadesk/ui/dialogs/design_from_frequency_dialog.py` preserves the
+  current design material. Do not add a material selector there.
+- `tests/ui/test_yagi_dialog.py:44` and
+  `tests/ui/test_vertical_dialog.py:22` assert `"Copper"` and must change.
+- `tests/ui/test_custom_dialog.py:25` and
+  `tests/ui/test_inverted_v_dialog.py:23` stay `"Copper"`.
+- `tests/ui/test_log_periodic_dialog.py` and
+  `tests/unit/domain/test_log_periodic.py:46` stay aluminum.
+- `docs/MATERIALS_REFERENCE.md:20` currently says copper is the default
+  conductor for general HF wire; update it to describe the per-template
+  defaults without changing the material data.
+- The UX25 note in this file says “Keep copper as the default material in every
+  editor” and “Do not make 304 the default.” The superseded note added there
+  makes UX30 authoritative for new-design template defaults only.
+
+### Domain and factory constraints
+
+- Set the dataclass default `material=ALUMINUM` for:
+  `YagiParameters`, `TrapYagiParameters`, `VerticalParameters`,
+  `RingoParameters`, `JPoleParameters`, `DisconeParameters`,
+  `PhasedVerticalParameters`, `MoxonParameters`, `HexbeamParameters`,
+  `QuadBeamParameters`, and `BiquadParameters`.
+- Keep `LogPeriodicParameters` at `ALUMINUM`.
+- Keep the published source-factory defaults `moxon_20m_wire(...,
+  material=COPPER)` and `published_hexbeam_parameters(..., material=COPPER)`.
+  They describe source-backed wire references, not the generic template
+  default. The new Moxon/Hexbeam editors select aluminum through the resolver.
+  If an implementation changes either factory default, every reference-library
+  call must pass explicit copper.
+- `ScvParameters` covers both variants. Keep the dataclass default `COPPER`, but
+  make `scv_parameters(kind, ..., material: ConductorMaterial | None = None)`
+  choose `ALUMINUM` for `HALF_SQUARE` and `COPPER` for `BOBTAIL_CURTAIN` when
+  the caller does not pass an explicit material. Preserve every explicit
+  material override, including the reference-library copper override. The form
+  must produce the same result. Add tests for both kinds.
+- `VerticalParameters` is shared by **Vertical + radials** and **Loaded
+  vertical / mobile whip**. Default it to `ALUMINUM`. The loaded-vertical dialog
+  path (`VerticalDialog(mobile=True)`) must pass or select
+  `STAINLESS_STEEL_304`. Do not infer 304 from `loading_coil_enabled` alone,
+  because a normal vertical can enable a loading coil.
+- Copper families keep their `COPPER` defaults:
+  `DipoleParameters`, `FoldedDipoleParameters`, `LoopParameters`,
+  `MagneticLoopParameters`, `OCFDParameters`, `InvertedVParameters`,
+  `InvertedLParameters`, `FanDipoleParameters`, `EndFedParameters`,
+  `LoadedDipoleParameters`, `TrapDipoleParameters`, `T2FDParameters`,
+  `BeverageParameters`, `ZeppParameters`,
+  `TransmissionLineDoubletParameters`, and `CustomAntennaParameters`.
+  The `g5rv_parameters`, `zs6bkw_parameters`, and `doublet_parameters`
+  factories also keep `material=COPPER`; G5RV and ZS6BKW return
+  `CustomAntennaParameters`, and the doublet returns `DipoleParameters`.
+- `DesignIntent.material` stays `COPPER`. The current UI paths that need a
+  template default must pass it explicitly; `DesignFromFrequencyDialog`
+  preserves the design material. Add a regression test. Do not add a hidden
+  sentinel or make `DesignIntent` guess from `antenna_type` in this item.
+- `moxon_20m_wire`, `published_hexbeam_parameters`, and `scv_parameters` are
+  also used by the source-backed reference library. Keep the published
+  reference material explicit (see below); do not let a template default
+  silently rewrite a published design.
+
+### UI constraints
+
+Affected forms:
+
+- `src/antennadesk/ui/widgets/yagi_form.py`
+- `src/antennadesk/ui/widgets/trap_yagi_form.py`
+- `src/antennadesk/ui/widgets/vertical_form.py`
+- `src/antennadesk/ui/widgets/ringo_form.py`
+- `src/antennadesk/ui/widgets/j_pole_form.py`
+- `src/antennadesk/ui/widgets/discone_form.py`
+- `src/antennadesk/ui/widgets/phased_vertical_form.py`
+- `src/antennadesk/ui/widgets/moxon_form.py`
+- `src/antennadesk/ui/widgets/hexbeam_form.py`
+- `src/antennadesk/ui/widgets/quad_beam_form.py`
+- `src/antennadesk/ui/widgets/biquad_form.py`
+- `src/antennadesk/ui/widgets/scv_form.py`
+
+Rules:
+
+- A **new** design selects the resolver material. An editor opened with
+  `parameters` must preserve `parameters.material`; never replace an existing
+  design's material with the template default.
+- Forms that load a starting factory in `__init__` (`HexbeamForm`, `ScvForm`,
+  and any similar pattern) must ensure the factory call uses the template
+  default or select the default after `set_parameters`, but only on the
+  no-existing-parameters path. Do not break the `parameters` path.
+- Dialogs delegate to their forms. Keep
+  `YagiDialog`, `TrapYagiDialog`, `VerticalDialog`, `RingoDialog`,
+  `JPoleDialog`, `DisconeDialog`, `PhasedVerticalDialog`, `MoxonDialog`,
+  `HexbeamDialog`, `QuadBeamDialog`, `BiquadDialog`, and `ScvDialog`
+  consistent. `JPoleDialog` must produce aluminum for both J Pole and Slim Jim.
+  `ScvDialog`/`ScvForm` must produce aluminum for Half square and copper for
+  Bobtail.
+- `Loaded vertical` is the existing `VerticalDialog(mobile=True)` path. It must
+  preselect 304; `VerticalDialog(mobile=False)` preselects aluminum.
+  `VerticalForm.load_mobile_example()` must not reset the material selector to
+  copper.
+- `log_periodic_form.py` keeps aluminum. The copper forms and
+  `custom_antenna_dialog.py` keep copper; do not add overrides to them.
+- Keep the material combo order and the shared `populate_material_combo` /
+  `retranslate_material_combo` behavior. Do not add a second material list.
+  Prefer one small helper to select the resolver default with `findData(...)`
+  instead of repeating the same three lines in twelve forms.
+- Do not add a new i18n key for this change; “Aluminum” and “Stainless steel
+  304” already exist. Optionally review `help.field.material` and add one short
+  sentence that the initial preset follows the template, if it fits the
+  240-character EN/ES limit.
+
+### Catalog routes
+
+- New Antenna uses `AntennaCatalogDialog` plus the `new_*` dialog methods;
+  Change Template uses the same catalog and `_parameters_from_catalog`. Both
+  must reach the same family dialogs. Do not add a separate material map in
+  `main_window.py`.
+- Change Template from an existing design to a different template gets the new
+  template default. Opening and editing an existing design keeps its stored
+  material. If Change Template resolves to the same catalog key as the current
+  design, preserve the current material instead of resetting it; add a
+  regression test for a copper Yagi re-accepting the Yagi template.
+- Doublet Change Template uses `DoubletDialog`; it stays copper.
+- `Design from frequency` preserves the current material; it does not reset it
+  to the template default.
+- Reports, the wire schedule, and the BOM already read the wire material; no
+  reporting/BOM code change is required. Update a report test only if it
+  asserts a default material for a changed template.
+
+### Reference library
+
+`src/antennadesk/domain/design/reference_library.py` must keep the material
+documented by each source, even when the new template default differs:
+
+- `_cebik_moxon()`: pass `material=COPPER` explicitly to `moxon_20m_wire`; the
+  Cebik 20 m reference is a #14 copper-wire Moxon.
+- `_g3txq_hexbeam()`: pass `material=COPPER` explicitly to
+  `published_hexbeam_parameters`; the reference is a wire-element hexbeam.
+- `_cebik_half_square()`: pass `material=COPPER` explicitly to
+  `scv_parameters`; the Cebik reference uses #12 copper wire.
+- `_cebik_bobtail_curtain()`: copper; explicit is fine.
+- `_nbs_yagi()`: audit the source. If the source does not state a conductor
+  material, keep the existing reference material and document the limitation.
+  Do not silently change a published reference.
+- Other reference designs keep their current material.
+
+Add tests that assert these source-backed reference materials. A template
+default must never mutate a `ReferenceDesign` constructor.
+
+### Tests
+
+Add `tests/ui/test_material_defaults.py` or extend the existing dialog tests.
+At minimum cover:
+
+- New Yagi: Aluminum.
+- New Trapped Yagi: Aluminum.
+- New Vertical: Aluminum.
+- New Loaded vertical: Stainless steel 304.
+- New Ringo: Aluminum.
+- New J Pole: Aluminum.
+- New Slim Jim: Aluminum.
+- New Discone: Aluminum.
+- New Phased vertical: Aluminum.
+- New Moxon: Aluminum.
+- New Hexbeam: Aluminum.
+- New Quad beam: Aluminum.
+- New Biquad: Aluminum.
+- New Double biquad: Aluminum.
+- New Half square: Aluminum.
+- New Bobtail curtain: Copper.
+- New Inverted L: Copper.
+- New Custom: Copper.
+- New Log-periodic: Aluminum (regression; already).
+- New wire dipole, folded dipole, loop/delta/quad loop, OCFD, all end-fed
+  presets, G5RV, ZS6BKW, Zepp, doublet, fan dipole, trap dipole, T2FD,
+  inverted V, Beverage, loaded dipole, and magnetic loop: Copper (regression).
+
+Additional coverage:
+
+- Resolver coverage: iterate `antenna_catalog_dialog.ENTRIES` and assert every
+  catalog key has exactly one mapped material; fail on missing or extra keys.
+- Existing-design preservation: open an affected dialog with `parameters`
+  whose material is `COPPER` or `STAINLESS_STEEL_304` and assert the dialog
+  keeps it.
+- Persistence regression: save/reopen a project with a copper Yagi or an
+  aluminum vertical and assert the wire materials are unchanged; no migration
+  is involved.
+- `Change Template`: at least one aluminum template and the loaded-vertical
+  304 path; assert the created design material. Also assert that a copper Yagi
+  re-accepting the same Yagi template keeps copper.
+- `Design from frequency`: assert it preserves the current design material.
+- `ScvKind`: `scv_parameters(HALF_SQUARE)` is aluminum and
+  `scv_parameters(BOBTAIL_CURTAIN)` is copper, with an explicit override still
+  respected.
+- `VerticalDialog(mobile=False)` is aluminum and `mobile=True` is 304.
+- Reference library: Cebik Moxon, G3TXQ Hexbeam, and Cebik half square remain
+  copper; Cebik bobtail remains copper; NBS Yagi matches its documented value.
+- Domain defaults for every changed `*Parameters` constructor.
+- `moxon_20m_wire`, `published_hexbeam_parameters`, and `scv_parameters`
+  source-factory behavior remains source-faithful.
+
+Update existing tests:
+
+- `tests/ui/test_yagi_dialog.py:44`: Copper → Aluminum.
+- `tests/ui/test_vertical_dialog.py:22`: Copper → Aluminum; add the mobile 304
+  assertion.
+- Keep `tests/ui/test_custom_dialog.py:25` and
+  `tests/ui/test_inverted_v_dialog.py:23` at Copper.
+- Keep `tests/ui/test_log_periodic_dialog.py` and
+  `tests/unit/domain/test_log_periodic.py:46` at Aluminum.
+- Keep `tests/ui/test_form_retranslate.py` material-order assertions.
+- Full gate: `uv run ruff check .`, `uv run ruff format --check .`,
+  `uv run mypy`, `uv run mypy --config-file mypy_ui.ini`, and
+  `uv run pytest` with `NEC2C` when available.
+
+### Documentation
+
+- `docs/MATERIALS_REFERENCE.md`: replace the sentence that copper is the
+  default for general HF wire with a short per-template default table or a
+  pointer to the resolver. Keep the material conductivity, source, and
+  limitation tables unchanged.
+- `docs/DOMAIN_MODEL.md`: add a short “Default material by template”
+  subsection or a pointer to the resolver. State that material is a conductor
+  preset, not a structural/tubing model. Keep the existing per-family text.
+- `docs/USER_GUIDE.md`: state that new designs preselect the common material,
+  the selector remains editable, and existing projects keep their material.
+- `CHANGELOG.md`: add the new defaults under the unreleased section.
+- Update the UX25 note and this item when implementation is complete. Do not
+  mark UX30 done before the full gate passes.
+- No ADR is required: no solver, schema, persistence, or architecture change.
+  If a formal product decision record is desired, add one line to
+  `PROJECT_DECISIONS.md`; do not create an ADR for a default selector.
+
+### Acceptance
+
+- Every new-design editor preselects the exact material in the mapping; the
+  selector remains editable.
+- Existing designs and reference designs keep their stored/source material.
+- 15 templates default to aluminum (including the already-aluminum
+  log-periodic), 1 to stainless 304, and 25 to copper.
+- J Pole and Slim Jim are aluminum; Half square is aluminum; Bobtail is copper;
+  Vertical is aluminum; Loaded vertical is 304.
+- `CONDUCTOR_MATERIALS` order and the shared combo helper are unchanged.
+- No schema or migration, no solver-code change, no importer change, and no
+  radius/geometry change.
+- Tests, documentation, and the full gate pass; EN/ES labels remain unchanged.
+
+### Do not
+
+- Do not derive the default from `AntennaFamily`.
+- Do not reorder `CONDUCTOR_MATERIALS` or add a new material.
+- Do not change existing project materials or add a migration.
+- Do not change wire radii or model aluminum tubing in this item. The wire
+  models stay wire models.
+- Do not add per-wire material mixing (for example aluminum radiator plus
+  copper radials); a family editor still applies one material to all generated
+  wires.
+- Do not change `DesignIntent.material` with a hidden sentinel or geometry
+  inference.
+- Do not change the NEC importer, `write_nec2_input`, `validate_nec2_assumptions`,
+  `LD 5`, the solver code, or the conductor-loss formulas.
+- Do not silently change a source-backed reference design.
+- Do not add a universal 304 default; 304 applies only to `loaded_vertical`.
+
+### Out of scope
+
+- Aluminum-tube geometry, radius presets, or structural modeling.
+- Per-wire material mixing and defaults for radials vs radiator.
+- Changing imported NEC/MMANA deck materials.
+- A custom-material editor or a new conductor preset.
+- Changing the material selector’s labels, order, or solver semantics.
+- Changing any existing project file, schema version, or migration.
+
+### Implementation order
+
+1. Add the resolver and the domain defaults; add unit tests.
+2. Apply the resolver to the affected forms and dialogs; keep the
+   existing-parameters path untouched.
+3. Update the reference library with explicit source materials and tests.
+4. Update existing tests and add per-template default coverage.
+5. Update documentation and `CHANGELOG.md`; run the full gate.
+
+### Risks
+
+- Split families (`ScvKind`, `VerticalDialog(mobile=...)`) can take the wrong
+  default; test both branches.
+- Forms that load a preset factory in `__init__` can overwrite the combo;
+  apply the default only for a new design.
+- Reference-library drift is the main correctness risk; explicit source
+  materials and tests are mandatory.
+- Changing a default material changes conductor loss. Audit tests and fixtures
+  that build a design without an explicit material; make unrelated fixtures
+  explicit instead of rewriting expected physics. Do not change source-backed
+  reference values to absorb a default change.
+- `Change Template` and `Design from frequency` are separate paths; test both.
+- The old UX25 “Copper remains the default” wording can confuse a reviewer;
+  the superseded note must remain visible.
+
+## UX31 — Draw coax as coax in the feed-connection schematic (design note, 2026-11-17)
+
+**Status:** queued; not implemented. This note is the execution contract.
+
+### Problem
+
+`reporting/feed_schematic.py::feed_schematic_svg()` always renders one generic
+four-terminal block diagram, regardless of `FeedInterface`:
+
+- two left lines with hardcoded `Antenna terminal A` and `Antenna terminal B`;
+- a rounded box in the middle labeled with the interface (`Direct coax`,
+  `1:1 current balun`, ...);
+- two right lines labeled `Coax center` and `Coax shield` for every coax-side
+  interface.
+
+The user reported that this looks like a box with two conductors entering and
+two leaving, not like a coaxial cable where one conductor is the center and the
+shield surrounds it. The concern is valid: the drawing is a block diagram, not
+a construction drawing, and for direct coax the block misrepresents the
+physical connection.
+
+For `DIRECT_COAX` this is physically wrong and contradicts the text:
+
+1. There is no device between the antenna and the coax; the box invents an
+   adapter or balun.
+2. Two parallel right-hand lines are the usual symbol for a balanced two-wire
+   line, not coaxial cable.
+3. The shield is not drawn around the center conductor, so the coaxial
+   construction and the shield's exterior/common-mode path are invisible.
+4. The four-terminal box looks like a balun in the one case where the text says
+   there is no balun.
+5. `Antenna terminal B` is hardcoded even when the terminal is `ground`
+   (vertical) or `counterpoise` (end-fed).
+6. `CURRENT_BALUN`, `TRANSFORMER`, `BALANCED_LINE`, `MULTI_PORT`, and `UNKNOWN`
+   reuse the same layout; only the center label changes.
+
+The summary and connection table are correct. A construction aid must not
+contradict them. A user can miswire the shield or add an unnecessary device
+based on the drawing.
+
+### Decision
+
+1. Keep the deterministic, renderer-neutral SVG builder in
+   `reporting/feed_schematic.py`; do not use AI-generated images, raster
+   assets, or ASCII in the app.
+2. Use a per-interface drawing. Keep a device block only where a real device
+   exists (`CURRENT_BALUN`, `TRANSFORMER`, `MULTI_PORT`). For `DIRECT_COAX`,
+   draw only the cable and the two connections. For `BALANCED_LINE`, draw a
+   two-conductor line with no coax. For `UNKNOWN`, use a dashed
+   “verify wiring” block.
+3. Draw coax as coax: center conductor inside an outer shield, a
+   cutaway/termination at the antenna end, and a small cross-section inset.
+   Never draw coax as two parallel lines.
+4. Derive the drawing from `FeedConnectionDetail` (`interface`, `topology`,
+   `terminals`, `connections`, `transformer_ratio`, `match_hardware`). Do not
+   add a second hardcoded mapping that can drift from the table.
+5. Derive left-side labels from `FeedTerminal.side`:
+   - `before`, `after`, or `start`/`end` on a wire: `Antenna terminal {role}`;
+   - `ground`: `Ground / radials`;
+   - `counterpoise`: `Counterpoise`;
+   - no wire / unknown: `Return`.
+6. Keep the four states visible: solid for the modeled/recorded path, dashed
+   for unknown or “recommended but not recorded”.
+7. Keep `Schematic · not to scale` and `Construction aid, not a solver result.`
+8. No domain, solver, schema, persistence, or numerical change.
+   `FeedConnectionDetail` already carries the needed information.
+
+UX29's schematic contract is refined, not replaced. The implemented path is one
+renderer-neutral SVG used by the dialog (`QSvgWidget`), the HTML construction
+sheet, the native PDF, and the ZIP. Do not add the QPainter path described in
+the original UX29 note. The theme-palette bullet is still unimplemented; UX31
+keeps the existing white background and fixes only the topology and coax
+depiction.
+
+### Visual contract
+
+The ASCII below is the topology specification, not the final rendering. The
+final output is SVG; do not put ASCII in a `QLabel`/`QTextEdit`.
+
+#### Direct coax
+
+```text
+DIRECT COAX - wiring view (not to scale)
+
+   antenna side                          coax side
+   A o--------------+
+                    |  center conductor
+                    +------------------>  @  center
+
+   B o--------------+
+                    |  shield braid
+                    +------------------>  O  shield
+                                             (surrounds the center)
+
+COAX CROSS-SECTION
+
+        +-----------------+
+        |    +-------+    |
+        |    |   @   |    |    @ = center conductor
+        |    +-------+    |    O = shield / braid
+        +-----------------+
+```
+
+Rules:
+
+- One cable, not two. The two right-hand arrows are the two conductors of the
+  same coax; in the SVG, draw a single cable body with a cutaway at the top
+  and a cross-section inset.
+- The shield is the outer conductor and also the outside of the cable. Draw it
+  as a tube/ring, not as a second wire beside the center.
+- In the balanced center-fed case, do not add a third wire or a separate ground
+  symbol for the shield; it is both the return conductor and the cable
+  exterior. In the base-fed/end-fed case, the shield/return connects to
+  ground/radials or the counterpoise and may use the corresponding symbol.
+- A → center, B → shield for a balanced center-fed load. Keep the order from
+  `detail.connections`.
+- Do not draw a middle box. A caption `Direct coax` is allowed above or below
+  the drawing; it must not look like a device.
+- If the recommended choke is shown, draw it dashed and label it
+  `Recommended, not recorded`; never solid, never on the modeled path.
+
+#### Current balun
+
+```text
+1:1 CURRENT BALUN / CHOKE (recorded)
+
+   A o--------------+     +----------------+
+                    |     | 1:1 current    |
+                    +-----+ balun / choke  |
+   B o--------------+     +----------------+
+                              |        |
+                           center    shield
+                              +----+---+
+                                   |
+                              +----+----+
+                              |  COAX   |
+                              |  @   O  |
+                              +----+----+
+                                   |
+                                to rig
+```
+
+- The block is legitimate here; label it `recorded` only when
+  `current_balun` is true.
+- Left side: balanced A/B. Right side: coax center/shield with the coax symbol.
+- Do not invent winding topology or a specific choke impedance.
+
+#### Transformer / balun
+
+- Draw a generic two-port transformer/balun block or an ideal transformer
+  symbol.
+- Show `{ratio}:1` from `detail.transformer_ratio` (for example `4:1`).
+- Label the antenna side `secondary A/B` and the coax side
+  `primary center/shield`.
+- Label the model `ideal`; do not imply a real core, winding, or power rating.
+- For a folded Yagi, the secondary is across A/B; the text still says conductor
+  B is continuous and not a parasitic.
+
+#### Balanced line
+
+- Two parallel conductors, no coax symbol.
+- Left A/B; right `Balanced line A/B`.
+- Note: `The balun location depends on the tuner; it is not modeled.`
+
+#### Multi-port
+
+- Keep a combining block; label `Primary port` and `Return`/`Additional
+  sources`.
+- State `Combining network not modeled.`
+
+#### Unknown
+
+- Dashed block with `?`; label `Verify the wiring`.
+- Do not guess center/shield or draw a coax.
+
+#### General
+
+- Draw an un-dimensioned feed gap only where the topology has one; never add a
+  numeric gap unless `detail.gap_m` is present and sourced.
+- Keep the existing labels `Direct coax`, `Coax center`, and `Coax shield` in
+  the SVG where they remain accurate; do not rename the canonical
+  connection-table targets in this item.
+- Do not show a balun, choke, or transformer as installed unless the project
+  record says so.
+
+### Terminal-label rules
+
+| `FeedTerminal.side` | Left label |
+|---|---|
+| `before`, `after` | `Antenna terminal {role}` |
+| `start`, `end` with `wire_id` | `Antenna terminal {role}` |
+| `ground` | `Ground / radials` |
+| `counterpoise` | `Counterpoise` |
+| `wire_id is None` or unknown | `Return` |
+
+For `wire_id is None` and a side other than `ground`/`counterpoise`, use
+`Return`; never label it `Antenna terminal B`.
+
+Right-side labels:
+
+| Interface | Right labels |
+|---|---|
+| `DIRECT_COAX`, `CURRENT_BALUN`, `TRANSFORMER` | `Coax center`, `Coax shield`, with coax symbol and cross-section |
+| `BALANCED_LINE` | `Balanced line A`, `Balanced line B` |
+| `MULTI_PORT` | `Primary port`, `Additional sources`/`Return` |
+| `UNKNOWN` | `Verify the wiring` |
+
+### File plan
+
+- `src/antennadesk/reporting/feed_schematic.py`: rewrite the renderer. Add
+  helpers such as `_terminal_label`, `_coax_cable`, `_coax_cross_section`,
+  `_device_block`, `_balanced_line`, and `_unknown_block`. Add semantic
+  `id` groups (`antenna-side`, `coax`, `coax-cross-section`,
+  `interface-device`, `balanced-line`, `unknown`) for tests.
+- `src/antennadesk/ui/report_i18n.py`: add the English/Spanish labels listed
+  below. Keep existing canonical table labels unchanged.
+- `src/antennadesk/ui/i18n.py`: update `help.feed_connection.schematic`
+  (EN/ES) to mention the physical wiring and coax cross-section; keep the help
+  coverage manifest green.
+- `src/antennadesk/ui/dialogs/feed_connection_dialog.py`: verify the
+  `QSvgWidget` size and minimum height accommodate the new drawing; no logic
+  change expected.
+- `src/antennadesk/ui/construction_pdf.py`: verify `_figure_size`/`draw_figure`
+  and page breaks with the new SVG height; no logic change expected.
+- `tests/unit/reporting/test_feed_schematic.py`: replace the two string-only
+  tests with semantic structure and mapping tests.
+- `tests/unit/reporting/test_construction_sheet.py`: update the feed section
+  assertions if the drawing changes; keep the section embedded.
+- `tests/ui/test_feed_connection_dialog.py`: update only if an assertion
+  depends on a removed drawing label; the connection-table expectations stay.
+- `docs/USER_GUIDE.md`: update the **Feed connection detail** section with the
+  new visual language and state meanings.
+- `CHANGELOG.md`: add a Fixed/Changed entry under Unreleased.
+- `docs/AUTONOMOUS_BACKLOG.md`: mark UX31 done and add a pointer from UX29
+  when implemented.
+- No domain, solver, persistence, schema, or migration files.
+
+### Data and architecture constraints
+
+- Do not change `domain/antennas/feed_connection.py`,
+  `domain/design/feed_connection.py`, `FeedPoint`, `AntennaModel`,
+  `write_nec2_input`, the solver, or the schema.
+- `feed_schematic_svg(detail, labeler)` stays pure and deterministic; no Qt
+  imports in `reporting` or `domain`.
+- Do not localize inside reporting; use the labeler. New labels must be in
+  `ui/report_i18n.py`, not in the domain.
+- `detail.connections` remains the authoritative connection table; the drawing
+  must not add or omit connections. If a connection is not drawable, show it
+  as text or an explicit unknown, not silently.
+- Keep the existing SVG width (720 px) if possible; height may grow for the
+  cross-section. Verify `construction_pdf.py` `_figure_size`/`draw_figure` and
+  page breaks.
+- Use standard SVG primitives (`rect`, `line`, `circle`, `path`, `text`); no
+  external fonts, images, markers, or CSS variables. `QSvgRenderer` must
+  render it.
+- No new dependency; use the existing SVG path (`QSvgWidget`/`QSvgRenderer`)
+  and the existing translation/reporting helpers.
+- Use unique `id` values if more than one schematic can appear in one HTML
+  document; currently one per sheet. Prefix if needed.
+- Keep the white background for print/HTML; theme-aware dark SVG is out of
+  scope. If the dialog's dark theme makes the white card jarring, record it as
+  a separate cosmetic item.
+
+### Labels and help
+
+Add English/Spanish pairs; keep the wording consistent with the existing
+`Coax center`/`Coax shield` table labels:
+
+- `Center conductor` / `Conductor central`
+- `Shield (braid)` / `Malla (trenza)`
+- `Coax cross-section` / `Sección del coaxil`
+- `Coax cable` / `Cable coaxil`
+- `Ground / radials` / `Tierra / radiales`
+- `Counterpoise` / `Contrapeso`
+- `Return` / `Retorno`
+- `Driven element` / `Elemento excitado` (only if the element is drawn)
+- `Recommended, not recorded` / `Recomendado, no registrado`
+- `Modeled as ideal` / `Modelado como ideal`
+- `Combining network not modeled` / `Red combinadora no modelada`
+- `Primary` / `Primario` and `Secondary` / `Secundario`
+- `Balanced output` / `Salida balanceada` and `Coax input` / `Entrada de
+  coaxil` where applicable
+
+Reuse existing translations where the string already exists (`Balanced
+output`, `Unbalanced input`, `Transformer secondary A/B`, etc.). Do not
+duplicate a key with different Spanish copy. Run the Spanish translator over
+the SVG in tests so no new English string leaks.
+
+### Tests
+
+- Direct coax:
+  - no `id="interface-device"` group;
+  - `id="coax"` and `id="coax-cross-section"` present;
+  - cross-section has an outer shield and an inner center (two concentric
+    circles or equivalent);
+  - `A` maps to center and `B` maps to shield, matching
+    `detail.connections`;
+  - no two-parallel-line coax on the right.
+- Vertical/base-fed: `Ground / radials` present; `Antenna terminal B` absent.
+- End-fed: `Counterpoise` present.
+- Current balun: `interface-device` present; balanced A/B on the left; coax
+  center/shield on the right; `recorded` only when the project flag is set.
+- Transformer: `4:1` and `ideal` present; primary/secondary sides distinct.
+- Balanced line: no `id="coax"`; `Balanced line A/B` present.
+- Multi-port: combining block present; explicit not-modeled text.
+- Unknown: dashed `unknown` group; `Verify the wiring` present; no coax.
+- Determinism: same detail and labeler produce identical SVG.
+- EN/ES: every new label translates; no raw keys.
+- Construction sheet/PDF/ZIP: the feed section still embeds the schematic and
+  the connection table; page breaks remain valid.
+- Regression: schema version, solver fingerprint, and a sample simulation
+  result are unchanged (no code path touched).
+- Full gate: `uv run ruff check .`, `uv run ruff format --check .`,
+  `uv run mypy`, `uv run mypy --config-file mypy_ui.ini`, `uv run pytest`.
+- Manual QA: dialog in light/dark, 100 %/150 % scaling, Spanish, HTML report,
+  native PDF, and ZIP.
+
+### Documentation
+
+- `docs/USER_GUIDE.md`: explain that direct coax is drawn as a cable with a
+  center conductor and shield, that a dashed choke means recommended but not
+  recorded, and that the schematic is not a solver result.
+- `CHANGELOG.md`: describe the corrected drawing under Unreleased.
+- `docs/AUTONOMOUS_BACKLOG.md`: mark UX31 done and update the UX29 note to
+  point to this item for the refined visual contract.
+- No new ADR: this keeps ADR-0036's renderer-neutral SVG decision and changes
+  only the drawing. If the implementation adds a new state or a data field,
+  stop and write an ADR instead.
+
+### Acceptance
+
+- A straight Yagi with direct coax shows a real coaxial cable and a
+  cross-section, with no middle “Direct coax” device box.
+- A/B map to center/shield exactly as the connection table says; the drawing
+  and table cannot disagree.
+- Every interface has a distinct, physically honest drawing: direct coax,
+  current balun, transformer, balanced line, multi-port, unknown.
+- Terminal labels honor `ground`, `counterpoise`, and `return`; no false
+  “Antenna terminal B”.
+- A recommended choke is dashed or textual, never drawn as installed.
+- The dialog, HTML construction sheet, native PDF, and ZIP show the same
+  schematic.
+- EN/ES labels, help coverage, and the full gate pass.
+- No domain, solver, schema, or numerical change.
+
+### Do not
+
+- Do not use AI-generated or raster images; no ASCII in the app.
+- Do not change `FeedPoint`, `FeedConnectionDetail`, the domain descriptors,
+  the solver, the schema, persistence, or migrations.
+- Do not infer the interface from wire count or geometry.
+- Do not draw a box for direct coax.
+- Do not draw coax as two parallel wires.
+- Do not draw a recommended choke as installed.
+- Do not invent balun windings, impedance, power rating, or connector type.
+- Do not rename the canonical table labels (`Coax center`, `Coax shield`)
+  without updating the domain, `report_i18n.py`, and tests together.
+- Do not add a synthetic gap to the canonical geometry scene.
+- Do not make `reporting` depend on Qt, the theme palette, or runtime fonts.
+- Do not use SVG markers or external CSS if `QSvgRenderer` support is
+  uncertain; use simple shapes.
+
+### Out of scope
+
+- 3D cable routing, connector drawings, weatherproofing, strain relief, and
+  drip-loop graphics.
+- Common-mode current prediction, shield radiation, and transfer impedance.
+- Real balun/choke electrical models or frequency response.
+- Topology-specific insets for OCFD, folded elements, loops, and hairpins
+  (possible second phase).
+- Dark-mode theme-aware SVG background.
+- ASCII rendering in the application.
+- Changing UX29's domain model or adding a per-design `FeedInstallation`
+  record.
+
+### Implementation order
+
+1. Add semantic `id` groups and helpers; keep the current labels where they
+   remain accurate.
+2. Implement direct coax and terminal labels; add the first semantic tests.
+3. Implement current balun, transformer, balanced line, multi-port, and
+   unknown; add their tests.
+4. Add EN/ES labels and update the schematic help text.
+5. Verify the dialog, construction sheet, native PDF, and ZIP; manual QA.
+6. Update the user guide, changelog, and this backlog note; run the full gate.
+
+### Risks
+
+- The drawing can still be read as a solver result; keep the four-state
+  wording and the “not a solver result” label.
+- A generic balun block can imply an invented topology; label it
+  `recorded`/`ideal` and keep the limitations visible.
+- Spanish labels are longer; use multi-line labels and test at the minimum
+  dialog width and 150 % scaling.
+- SVG test assertions can become brittle; assert semantic groups and labels,
+  not pixel snapshots.
+- `QSvgRenderer` compatibility is the main rendering risk; use standard
+  primitives and inspect the native PDF manually.
+- Duplicate `id` values if multiple schematics are embedded; prefix IDs if
+  that path is added.
+- The white SVG card in dark mode remains a cosmetic mismatch; do not hide it
+  by changing the drawing unless the theme work is explicitly in scope.
+
 ## EF1–EF9 — Shortened-EFHW optimizer and model-confidence queue (2026-11-13)
 
 **EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
@@ -1487,7 +2328,15 @@ model and solver contract must land first.
 12. **UX29 is complete.** The read-only constructive feed connection is closed.
     Do not change `FeedPoint`, the NEC deck, the solver, or the schema without a
     new ADR.
-13. **EF1–EF6, EF7a, EF7b, EF8a, EF8, and EF9 are complete.** The shortened-EFHW optimizer keeps
+13. **UX30 is queued.** Per-template material defaults are defined in this
+    file. It changes only new-design selectors; it does not change the material
+    presets, solver, schema, or existing projects.
+14. **UX31 is queued.** The feed-connection schematic must draw coax as coax,
+    with no interface box for direct coax, distinct drawings for balun,
+    transformer, balanced line, multi-port, and unknown, and terminal labels
+    derived from `FeedTerminal.side`. It changes only reporting/UI; it does not
+    change the domain, solver, schema, or existing projects.
+15. **EF1–EF6, EF7a, EF7b, EF8a, EF8, and EF9 are complete.** The shortened-EFHW optimizer keeps
     the fixed feed and loading-coil partitions, results report the input-shunt
     matching-topology floor only for the internal end-fed unit, the confidence
     card marks absolute SWR as informational with the proxy-return limitation,
@@ -1499,7 +2348,7 @@ model and solver contract must land first.
     common-mode choke, and the design-specific L/Pi/T network are available and
     persisted in schema 50; `auto` preserves the legacy behavior. Automatic
     L/Pi/T synthesis is available with a visible design Q.
-14. Product priorities and new antenna candidates live in
+16. Product priorities and new antenna candidates live in
     [`ROADMAP.md`](ROADMAP.md), not in this queue.
 
 ## Technical debt pass (2026-11-08)
