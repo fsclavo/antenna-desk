@@ -448,6 +448,7 @@ class MainWindow(QMainWindow):
         )
         loaded_preferences = self._preferences.load()
         self._theme_controller.apply(loaded_preferences.theme)
+        self._length_policy = loaded_preferences.length_policy
         self._workflow_mode = loaded_preferences.workflow_mode
         self._last_applied_workflow_mode: WorkflowMode | None = None
         if font_size_controller is None:
@@ -9336,6 +9337,7 @@ class MainWindow(QMainWindow):
             font_size=self._font_size_controller.size,
             language=self._language_preference,
             unit_system=self._unit_system,
+            length_policy=self._length_policy,
             workflow_mode=self._workflow_mode,
             theme=self._theme_controller.preference,
         )
@@ -9383,6 +9385,7 @@ class MainWindow(QMainWindow):
         self._translator.set_language(resolve_language(preferences.language))
         self._font_size_controller.apply(preferences.font_size)
         self._unit_system = preferences.unit_system
+        self._length_policy = preferences.length_policy
         self._workflow_mode = preferences.workflow_mode
         self._sync_workflow_controls()
         self._apply_workflow_mode()

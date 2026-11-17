@@ -134,7 +134,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX37~~ | ~~Explicit scale-to-frequency action for tuned designs~~ | M–L | UX34, UX35 | **Done 2026-11-17:** **Design → Scale Geometry to Frequency...** scales the allowlisted wire dipole, folded dipole, loop, quad beam, biquad, discone, and hexbeam by the old/new frequency ratio, with a target-frequency dialog and approximation warning. Installation, conductor, ground, feed line, and matching values are preserved; loaded, trapped, multiband, Yagi/Moxon, and fan designs are disabled with a reason. It enters undo history and is covered by domain/UI tests. No schema or solver change. |
 | ~~UX38~~ | ~~Select the Design tab after creating a new antenna~~ | S | none | **Done 2026-11-17:** after a successful New Antenna creation, `_create_project_from_parameters()` selects `_design_tab`; this covers catalog templates, Antenna Advisor, and Reference Design Library. Cancelled or failed creation leaves the current tab unchanged. Advanced mode still opens Simulation when the mode is selected; Change Template, Open Project, NEC/MMANA import, and New Variant are unchanged. Advanced-mode success, cancellation, and failure tests pass; user guide and changelog updated. No schema, solver, or i18n change. |
 | ~~U0~~ | ~~Close the adaptive length display-units spec~~ | S | none | **Done 2026-11-17:** [ADR-0044](ADR/0044-adaptive-length-display-units.md) and [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md) accepted; backlog, roadmap, docs index, architecture, geometry contract, and project decisions linked. No code change. |
-| U1 | Shared adaptive length formatter and Units preference | S–M | U0 | Add a Qt-free `DisplayUnits`/`LengthPolicy` formatter with metric auto (mm below 1 cm, cm below 1 m, m above), imperial auto (in below 1 ft, ft above), fixed meters/feet, precision, trimming, zero/negative handling, and table-unit selection. Add the four-option Units preference, QSettings mapping of existing metric/imperial to auto, and EN/ES help. Acceptance: boundary and round-trip tests; existing UI behavior unchanged until U2–U5 wire the formatter; no schema. |
+| ~~U1~~ | ~~Shared adaptive length formatter and Units preference~~ | S–M | U0 | **Done 2026-11-17:** added the Qt-free `DisplayUnits`/`LengthPolicy` formatter with metric auto (mm/cm/m), imperial auto (in/ft), fixed meters/feet, fixed per-unit precision, label trimming, zero/negative handling, scale hints, and table-unit selection. The four-option Units preference now stores the system and policy in QSettings, maps legacy metric/imperial values to automatic, and has EN/ES help. Boundary, negative, table, legacy-setting, and dialog tests pass. Scenes, forms, and reports remain unchanged until U2–U5; no schema change. |
 | U2 | Adaptive units in geometry scenes | M | U1 | Pass `DisplayUnits` through `build_scene`, `_Factory`, dimension labels, summaries, scale bar, and detail insets. Cover 28.5/144/435 MHz Moxon, 20 m dipole, and 435 MHz hexbeam; update the minimum-size layout and tighten the small-dimension anchor tolerance. Acceptance: exact auto/fixed examples from the spec, unit-aware scale bar, no hidden-dimension regression, existing fixed-unit scenes and goldens preserved. No forms or reports. |
 | U3 | Adaptive units in antenna-family forms and tables | M–L | U1 | Wire every family editor to `DisplayUnits`; add `LengthFieldSpec` ranges, steps, decimals, and suffixes; freeze a field or table unit while editing and re-evaluate on external loads. Editable tables use one unit per table with the unit in the header. Fix the Moxon height range and the hexbeam UHF gap minima, then audit every small-feature field. Acceptance: every form preserves physical values across metric/imperial and auto/fixed switches, no silent clamping, table headers and help updated, UI tests. |
 | U4 | Adaptive units in optimization, synthesis, and auxiliary dialogs | M | U1, U3 | Apply the same policy to optimization, family optimization, synthesis, parameter sweep, robustness, tolerance, design-from-frequency, feed-line, and related length surfaces. Audit `length_bounds` callers and per-field ranges; keep plot axes and budgets legible. Acceptance: dialog tests for auto/fixed and metric/imperial, no range regressions, EN/ES help, no solver change. |
@@ -204,9 +204,9 @@ against the published 0.61 m. C6 corrects the topology before C7 nests bands.
 
 ## Adaptive length display units (queued 2026-11-17)
 
-**Status:** spec closed; implementation queued. U0 is complete; U1–U6 are
-ready to start. The release plan decides whether the track lands in 0.10.0 or a
-later release.
+**Status:** spec closed; implementation started. U0 and U1 are complete;
+U2–U6 are ready to start. The release plan decides whether the track lands in
+0.10.0 or a later release.
 **Decision:** [ADR-0044](ADR/0044-adaptive-length-display-units.md).
 **Normative spec:** [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md).
 
@@ -316,8 +316,9 @@ UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**, and
 2026-11-12; the 0.9 **Sustain** slice is complete. UX32–UX38, the
 frequency-first starting-dimensions, semantics, pristine-recalculation,
 quad-beam-estimator, scale-to-frequency, and creation-tab work, were completed
-on 2026-11-17. The adaptive length display-units track (U0–U6) is now queued;
-U0 closed the spec and ADR, and U1–U6 are the next implementation slices.
+on 2026-11-17. The adaptive length display-units track (U0–U6) is now active;
+U0 closed the spec and ADR, U1 added the formatter and preference, and U2–U6
+are the next implementation slices.
 UX21–UX24 were added from direct user feedback and completed the
 same day. UX25 and UX26 were queued on 2026-11-13 and completed the same day.
 UX27 and UX28 were added the same day from terminology feedback; UX27 and UX28
@@ -2822,8 +2823,13 @@ model and solver contract must land first.
     `_create_project_from_parameters()` selects the Design tab. It covers
     catalog templates, Advisor, and Reference Design Library; Advanced-mode
     semantics, Change Template, imports, variants, schema, and solver are
-    unchanged. No new translation or help keys. The UX queue is now closed;
-    prepare the release and return to evidence/validation work.
+    unchanged. No new translation or help keys. The UX queue is now closed.
+19. **U1 is complete.** The shared `DisplayUnits` formatter, four-option Units
+    preference, QSettings migration, and EN/ES help are in place. Continue with
+    **U2** (geometry scenes) and **U3** (family forms and tables), then U4–U6.
+    The formatter is not wired into scenes/forms/reports yet; existing UI
+    behavior is unchanged until those slices land. Prepare the release after
+    the agreed display-units scope.
 
 ## Technical debt pass (2026-11-08)
 
@@ -2854,7 +2860,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **54**.
-- Full gate: **3,397 passed, 1 skipped** on 2026-11-17 after UX38, with
+- Full gate: **3,407 passed, 1 skipped** on 2026-11-17 after U1, with
   `NEC2C` and the optional `cross-engine` group; the skip is the Windows-only
   console-hiding test on Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`

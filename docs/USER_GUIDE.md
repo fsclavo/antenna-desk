@@ -2320,10 +2320,17 @@ rules.
 ## Language, units, font size, and theme
 
 Use **Edit → Preferences...** (`Ctrl+,`) to set the language (**System**,
-English, or Español), the display units (metric m/mm or imperial ft/in), the
-theme (**System**, **Light**, or **Dark**), and the font size (Small, Normal, or
-Large). **Restore Defaults** returns to System language, metric units, System
+English, or Español), the display units (**Metric — Auto**, **Metric —
+Meters**, **Imperial — Auto**, or **Imperial — Feet**), the theme (**System**,
+**Light**, or **Dark**), and the font size (Small, Normal, or Large).
+**Restore Defaults** returns to System language, metric automatic units, System
 theme, and Normal font size.
+
+Automatic length units follow each value: mm below 1 cm, cm below 1 m, and m at
+1 m or above in metric; inches below 1 ft and feet above in imperial. Fixed
+meters or feet apply one length unit everywhere. The shared policy is being
+rolled out across forms, scenes, and reports; until that wiring lands, some
+surfaces may still show the previous fixed meters/feet presentation.
 
 Preferences are saved and applied at startup. **System** follows the
 operating-system palette detected at startup; **Light** and **Dark** apply a

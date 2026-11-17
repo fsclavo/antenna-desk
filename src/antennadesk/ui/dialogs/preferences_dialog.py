@@ -19,7 +19,7 @@ from ..help import apply_row_help
 from ..i18n import Translator
 from ..preferences import FontSize, LanguagePreference, UiPreferences
 from ..theme import ThemePreference
-from ..units import UnitSystem
+from ..units import LengthPolicy, UnitSystem
 from ..workflow import WorkflowMode
 
 
@@ -54,9 +54,20 @@ class PreferencesDialog(QDialog):
         self._select(self._language, preferences.language.value)
 
         self._units = QComboBox(self)
-        self._units.addItem(translator.t("units.metric"), UnitSystem.METRIC.value)
-        self._units.addItem(translator.t("units.imperial"), UnitSystem.IMPERIAL.value)
-        self._select(self._units, preferences.unit_system.value)
+        for system, policy, key in (
+            (UnitSystem.METRIC, LengthPolicy.AUTO, "units.metric_auto"),
+            (UnitSystem.METRIC, LengthPolicy.FIXED, "units.metric_fixed"),
+            (UnitSystem.IMPERIAL, LengthPolicy.AUTO, "units.imperial_auto"),
+            (UnitSystem.IMPERIAL, LengthPolicy.FIXED, "units.imperial_fixed"),
+        ):
+            self._units.addItem(
+                translator.t(key),
+                f"{system.value}_{policy.value}",
+            )
+        self._select(
+            self._units,
+            f"{preferences.unit_system.value}_{preferences.length_policy.value}",
+        )
 
         self._font_size = QComboBox(self)
         self._font_size.addItem(translator.t("font_size.small"), FontSize.SMALL.value)
@@ -131,17 +142,29 @@ class PreferencesDialog(QDialog):
 
     def _restore_defaults(self) -> None:
         self._select(self._language, LanguagePreference.SYSTEM.value)
-        self._select(self._units, UnitSystem.METRIC.value)
+        self._select(
+            self._units,
+            f"{UnitSystem.METRIC.value}_{LengthPolicy.AUTO.value}",
+        )
         self._select(self._font_size, FontSize.MEDIUM.value)
         self._select(self._theme, ThemePreference.SYSTEM.value)
         self._select(self._workflow_mode, WorkflowMode.STANDARD.value)
 
     def preferences(self) -> UiPreferences:
         language = self._language.currentData()
-        unit_system = self._units.currentData()
+        units = self._units.currentData()
         font_size = self._font_size.currentData()
         theme = self._theme.currentData()
         workflow_mode = self._workflow_mode.currentData()
+        unit_system = self._initial.unit_system
+        length_policy = self._initial.length_policy
+        if isinstance(units, str):
+            system_value, _, policy_value = units.partition("_")
+            try:
+                unit_system = UnitSystem(system_value)
+                length_policy = LengthPolicy(policy_value)
+            except ValueError:
+                pass
         return UiPreferences(
             font_size=(
                 FontSize(font_size) if isinstance(font_size, str) else self._initial.font_size
@@ -151,11 +174,8 @@ class PreferencesDialog(QDialog):
                 if isinstance(language, str)
                 else self._initial.language
             ),
-            unit_system=(
-                UnitSystem(unit_system)
-                if isinstance(unit_system, str)
-                else self._initial.unit_system
-            ),
+            unit_system=unit_system,
+            length_policy=length_policy,
             workflow_mode=(
                 WorkflowMode(workflow_mode)
                 if isinstance(workflow_mode, str)

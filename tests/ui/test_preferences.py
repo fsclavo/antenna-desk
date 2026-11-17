@@ -20,6 +20,7 @@ from antennadesk.ui.main_window import MainWindow
 from antennadesk.ui.preferences import (
     FONT_SIZE_KEY,
     LANGUAGE_KEY,
+    LENGTH_POLICY_KEY,
     THEME_KEY,
     UNIT_SYSTEM_KEY,
     WORKFLOW_MODE_KEY,
@@ -36,7 +37,7 @@ from antennadesk.ui.theme import (
     ThemePreference,
     is_dark_palette,
 )
-from antennadesk.ui.units import UnitSystem
+from antennadesk.ui.units import LengthPolicy, UnitSystem
 from antennadesk.ui.workflow import WorkflowMode
 
 
@@ -105,6 +106,7 @@ def test_qsettings_store_round_trips_all_preferences(tmp_path: Path) -> None:
         font_size=FontSize.LARGE,
         language=LanguagePreference.SPANISH,
         unit_system=UnitSystem.IMPERIAL,
+        length_policy=LengthPolicy.FIXED,
         workflow_mode=WorkflowMode.GUIDED,
         theme=ThemePreference.DARK,
     )
@@ -131,8 +133,23 @@ def test_missing_preferences_use_the_startup_defaults(tmp_path: Path) -> None:
     assert preferences.font_size is FontSize.MEDIUM
     assert preferences.language is LanguagePreference.SPANISH
     assert preferences.unit_system is UnitSystem.IMPERIAL
+    assert preferences.length_policy is LengthPolicy.AUTO
     assert preferences.workflow_mode is WorkflowMode.STANDARD
     assert preferences.theme is ThemePreference.SYSTEM
+
+
+def test_existing_unit_setting_maps_to_the_automatic_policy(tmp_path: Path) -> None:
+    settings = QSettings(
+        str(tmp_path / "preferences.ini"),
+        QSettings.Format.IniFormat,
+    )
+    settings.setValue(UNIT_SYSTEM_KEY, "imperial")
+    store = QSettingsPreferencesStore(settings)
+
+    preferences = store.load()
+
+    assert preferences.unit_system is UnitSystem.IMPERIAL
+    assert preferences.length_policy is LengthPolicy.AUTO
 
 
 def test_invalid_stored_preferences_fall_back_to_defaults(tmp_path: Path) -> None:
@@ -143,6 +160,7 @@ def test_invalid_stored_preferences_fall_back_to_defaults(tmp_path: Path) -> Non
     settings.setValue(FONT_SIZE_KEY, "huge")
     settings.setValue(LANGUAGE_KEY, "fr")
     settings.setValue(UNIT_SYSTEM_KEY, "cubits")
+    settings.setValue(LENGTH_POLICY_KEY, "sometimes")
     settings.setValue(WORKFLOW_MODE_KEY, "expert")
     settings.setValue(THEME_KEY, "sepia")
     store = QSettingsPreferencesStore(settings)
@@ -155,6 +173,7 @@ def test_invalid_stored_preferences_fall_back_to_defaults(tmp_path: Path) -> Non
     assert preferences.font_size is FontSize.MEDIUM
     assert preferences.language is LanguagePreference.SPANISH
     assert preferences.unit_system is UnitSystem.IMPERIAL
+    assert preferences.length_policy is LengthPolicy.AUTO
     assert preferences.workflow_mode is WorkflowMode.STANDARD
     assert preferences.theme is ThemePreference.SYSTEM
 
@@ -167,6 +186,7 @@ def test_in_memory_store_round_trips_preferences() -> None:
     )
     assert defaults.language is LanguagePreference.SPANISH
     assert defaults.unit_system is UnitSystem.IMPERIAL
+    assert defaults.length_policy is LengthPolicy.AUTO
     assert defaults.workflow_mode is WorkflowMode.STANDARD
     assert defaults.theme is ThemePreference.SYSTEM
 
@@ -174,6 +194,7 @@ def test_in_memory_store_round_trips_preferences() -> None:
         font_size=FontSize.SMALL,
         language=LanguagePreference.ENGLISH,
         unit_system=UnitSystem.METRIC,
+        length_policy=LengthPolicy.FIXED,
         workflow_mode=WorkflowMode.GUIDED,
         theme=ThemePreference.LIGHT,
     )
@@ -312,6 +333,7 @@ def test_preferences_action_applies_accepted_values(
         font_size=FontSize.LARGE,
         language=LanguagePreference.SPANISH,
         unit_system=UnitSystem.IMPERIAL,
+        length_policy=LengthPolicy.FIXED,
         workflow_mode=WorkflowMode.GUIDED,
         theme=ThemePreference.DARK,
     )
@@ -328,6 +350,7 @@ def test_preferences_action_applies_accepted_values(
     assert window._language_preference is LanguagePreference.SPANISH
     assert window._font_size_controller.size is FontSize.LARGE
     assert window._unit_system is UnitSystem.IMPERIAL
+    assert window._length_policy is LengthPolicy.FIXED
     assert window._workflow_mode is WorkflowMode.GUIDED
     assert window._theme_controller.preference is ThemePreference.DARK
     assert is_dark_palette(_application().palette())
@@ -345,6 +368,7 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
             font_size=FontSize.SMALL,
             language=LanguagePreference.SPANISH,
             unit_system=UnitSystem.IMPERIAL,
+            length_policy=LengthPolicy.FIXED,
             workflow_mode=WorkflowMode.GUIDED,
             theme=ThemePreference.LIGHT,
         ),
@@ -352,14 +376,15 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
     qtbot.addWidget(dialog)
 
     assert dialog._language.currentData() == LanguagePreference.SPANISH.value
-    assert dialog._units.currentData() == UnitSystem.IMPERIAL.value
+    assert dialog._units.currentData() == "imperial_fixed"
     assert dialog._font_size.currentData() == FontSize.SMALL.value
     assert dialog._theme.currentData() == ThemePreference.LIGHT.value
     assert dialog._workflow_mode.currentData() == WorkflowMode.GUIDED.value
+    assert "Automatic length units" in dialog._units.toolTip()
     assert "palette" in dialog._theme.toolTip().lower()
 
     dialog._language.setCurrentIndex(dialog._language.findData(LanguagePreference.ENGLISH.value))
-    dialog._units.setCurrentIndex(dialog._units.findData(UnitSystem.METRIC.value))
+    dialog._units.setCurrentIndex(dialog._units.findData("metric_fixed"))
     dialog._font_size.setCurrentIndex(dialog._font_size.findData(FontSize.LARGE.value))
     dialog._theme.setCurrentIndex(dialog._theme.findData(ThemePreference.DARK.value))
     dialog._workflow_mode.setCurrentIndex(
@@ -370,6 +395,7 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
         font_size=FontSize.LARGE,
         language=LanguagePreference.ENGLISH,
         unit_system=UnitSystem.METRIC,
+        length_policy=LengthPolicy.FIXED,
         workflow_mode=WorkflowMode.ADVANCED,
         theme=ThemePreference.DARK,
     )

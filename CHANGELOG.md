@@ -69,6 +69,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   tab is normally opened. Cancelled or failed creations leave the current tab
   unchanged. Change Template, project open, imports, and new variants are
   unchanged. No schema or solver change.
+- **Adaptive length display foundation.** Added the Qt-free `DisplayUnits`
+  policy and a four-option Units preference: metric auto (mm/cm/m), metric
+  fixed in meters, imperial auto (in/ft), and imperial fixed in feet. Existing
+  form, scene, and report rendering remains on the current fixed presentation
+  until the U2–U5 slices wire the policy. Legacy metric/imperial settings map to
+  the automatic policy. No schema or solver change.
 
 ## [0.9.0] - 2026-11-17
 

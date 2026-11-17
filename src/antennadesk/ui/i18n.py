@@ -963,14 +963,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "preferences.hint": {
         Language.ENGLISH: (
             "Language, units, font size, theme, and workflow mode apply after you "
-            "accept. System follows the operating system language and palette at "
-            "startup. Project files always store metric SI units."
+            "accept. Automatic length units follow each value; fixed units use one "
+            "length unit everywhere. System follows the operating system language and "
+            "palette at startup. Project files always store metric SI units."
         ),
         Language.SPANISH: (
             "El idioma, las unidades, el tamaño de fuente, el tema y el modo de "
-            "trabajo se aplican al aceptar. Sistema sigue el idioma y la paleta del "
-            "sistema operativo al iniciar. Los archivos de proyecto siempre guardan "
-            "unidades SI métricas."
+            "trabajo se aplican al aceptar. Las unidades automáticas siguen cada "
+            "valor; las fijas usan una sola unidad de longitud en todas partes. "
+            "Sistema sigue el idioma y la paleta del sistema operativo al iniciar. "
+            "Los archivos de proyecto siempre guardan unidades SI métricas."
         ),
     },
     "action.preferences": {
@@ -5322,6 +5324,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Advanced expands the solver, sweep, pattern, and band-analysis controls.",
         Language.SPANISH: "Avanzado expande el solver, el barrido, el patrón y el análisis por banda.",
     },
+    "help.preferences.units": {
+        Language.ENGLISH: (
+            "Automatic length units follow each value: mm/cm/m in metric or in/ft "
+            "in imperial. Fixed meters or feet applies one unit to every length."
+        ),
+        Language.SPANISH: (
+            "Las unidades automáticas siguen cada valor: mm/cm/m en métrico o in/ft "
+            "en imperial. Metros o pies fijos aplican una sola unidad a cada largo."
+        ),
+    },
     "help.preferences.workflow_mode": {
         Language.ENGLISH: "Guided, Standard, or Advanced control how much of the editor is visible.",
         Language.SPANISH: "Guiado, Estándar o Avanzado controlan cuánto del editor se muestra.",
@@ -6557,10 +6569,21 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "ground.free_space": {Language.ENGLISH: "Free space", Language.SPANISH: "Espacio libre"},
     "ground.perfect": {Language.ENGLISH: "Perfect ground", Language.SPANISH: "Suelo perfecto"},
     "ground.finite": {Language.ENGLISH: "Finite ground", Language.SPANISH: "Suelo finito"},
-    "units.metric": {Language.ENGLISH: "Metric (m, mm)", Language.SPANISH: "Métrico (m, mm)"},
-    "units.imperial": {
-        Language.ENGLISH: "Imperial (ft, in)",
-        Language.SPANISH: "Imperial (ft, in)",
+    "units.metric_auto": {
+        Language.ENGLISH: "Metric — Auto (mm/cm/m)",
+        Language.SPANISH: "Métrico — Automático (mm/cm/m)",
+    },
+    "units.metric_fixed": {
+        Language.ENGLISH: "Metric — Meters (fixed)",
+        Language.SPANISH: "Métrico — Metros (fijo)",
+    },
+    "units.imperial_auto": {
+        Language.ENGLISH: "Imperial — Auto (in/ft)",
+        Language.SPANISH: "Imperial — Automático (in/ft)",
+    },
+    "units.imperial_fixed": {
+        Language.ENGLISH: "Imperial — Feet (fixed)",
+        Language.SPANISH: "Imperial — Pies (fijo)",
     },
     "status.ready": {Language.ENGLISH: "Ready", Language.SPANISH: "Listo"},
     "status.simulating": {Language.ENGLISH: "Simulating...", Language.SPANISH: "Simulando..."},

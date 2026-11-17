@@ -154,6 +154,7 @@ HELP_MANIFEST = frozenset(
         "help.mode.standard",
         "help.mode.advanced",
         "help.preferences.workflow_mode",
+        "help.preferences.units",
         "help.preferences.theme",
         "help.dipole.field.transformer_ratio",
         "help.biquad.transformer_ratio",

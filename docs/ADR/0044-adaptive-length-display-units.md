@@ -139,6 +139,13 @@ Negative:
 | Scale DXF to the display unit now | Mixing display text with meter coordinates is unsafe; a correct scaled DXF needs its own coordinate and `$INSUNITS` decision |
 | Add `UnitSystem.CM` | `UnitSystem` is a measurement system, not a unit; a separate `LengthPolicy` avoids combinatorial checks |
 
+## Implementation status
+
+U0 and U1 are implemented: the normative spec and ADR are accepted, and the
+Qt-free `DisplayUnits`/`LengthPolicy` formatter plus the four-option Units
+preference and QSettings mapping are in place. Scenes, forms, dialogs, and
+reports remain on the existing fixed presentation until U2–U5.
+
 ## References
 
 - [`../DISPLAY_UNITS_SPEC.md`](../DISPLAY_UNITS_SPEC.md) — normative rules,
