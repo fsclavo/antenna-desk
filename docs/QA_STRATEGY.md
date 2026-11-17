@@ -32,7 +32,7 @@ Measured on 2026-11-04:
 | Coverage enforcement | per-package gates in the `coverage` CI job, one point below the measured baseline |
 | Timing sensitivity | one UI failure appeared under coverage instrumentation at ~32 % while another pytest process ran concurrently. The polarization commit added deterministic posted-event processing in `tests/ui/helpers.py`; re-verify under coverage before treating it as open |
 | ADR files | 24, numbered 0001–0023 with a duplicated `0014` |
-| CI | 4 workflows, green; Linux + Windows, Python 3.11/3.12/3.13 |
+| CI | 4 workflows, green; Linux + Windows, Python 3.11/3.12/3.13. Windows 3.11 runs the non-UI suite only; see ADR-0025 |
 | Property-based tests | unit round trips, azimuth range, importer fuzzing, all 13 estimator families, and project/migration round trips with Hypothesis 6.170 |
 | Mutation testing | weekly `mutmut` on `formulas.py`, `intent.py`, and `dipole.py`: 240/304 killed, 64 message-only equivalents, behavioural score 100 % |
 | Benchmarks in CI | 3 report-only cases: NEC output parser, pattern metrics, compressed project save/load |

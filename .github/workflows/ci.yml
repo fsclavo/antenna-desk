@@ -138,6 +138,12 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         python-version: ["3.11", "3.12", "3.13"]
+        exclude:
+          # PySide6/pyqtgraph on Windows 3.11 can corrupt the native heap while
+          # tearing down UI test views. Keep non-UI coverage in the dedicated
+          # tests-windows-311-non-ui job instead of running the UI suite here.
+          - os: windows-latest
+            python-version: "3.11"
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -176,6 +182,34 @@ jobs:
           uv run pytest tests/ui/test_preferences.py -q
           uv run pytest tests/ui --ignore=tests/ui/test_results_view.py --ignore-glob='*test_main_window_*.py' --ignore=tests/ui/test_font_scaling.py --ignore=tests/ui/test_preferences.py -q
           uv run pytest tests/acceptance tests/integration tests/unit -q
+
+  tests-windows-311-non-ui:
+    name: Tests (windows-latest, Python 3.11, non-UI)
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+          prune-cache: true
+
+      - name: Sync locked environment
+        run: uv sync --locked --python 3.11
+
+      # Windows 3.11 keeps unit, integration, and acceptance coverage. The UI
+      # suite runs on Windows 3.12/3.13 and Linux 3.11-3.13 because
+      # PySide6/pyqtgraph can corrupt the native heap during UI view teardown.
+      - name: pytest (non-UI)
+        run: uv run pytest tests/acceptance tests/integration tests/unit -q
 
   solver-linux:
     name: Solver integration (Linux)

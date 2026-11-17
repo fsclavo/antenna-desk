@@ -68,6 +68,32 @@ original failure happened during interpreter finalization.
 - Patch releases inside 6.11.x may still arrive through Dependabot and use the
   normal CI gate; a new minor requires this procedure.
 
+## Windows 3.11 UI test exclusion (2026-11-17)
+
+The Windows Python 3.11 test job aborts while running the UI suite. The failure
+is a native process abort or heap corruption (`0xc0000374`), not a Python
+assertion, and it moves between files as teardown timing changes. Linux 3.11,
+Windows 3.12, and Windows 3.13 pass the same UI tests.
+
+Attempts that did not fix it:
+
+- isolating `test_results_view`, the main-window files, font scaling, and
+  preferences in separate processes;
+- closing top-level widgets and clearing chart-cursor markers before teardown;
+- software OpenGL (`QT_OPENGL=software`);
+- verbose per-test output, which only changed timing and masked the failure;
+- removing the forced `gc.collect()` from the UI teardown, which then produced a
+  shutdown crash on Linux 3.11.
+
+**Decision:** keep the full UI suite on Linux 3.11–3.13 and Windows 3.12/3.13,
+and run only acceptance, integration, and unit tests on Windows 3.11 in a
+dedicated job. Windows 3.11 remains a supported runtime; the frozen Windows
+build and installer smoke tests still run in the release workflow.
+
+Revisit this exclusion when PySide6 or pyqtgraph is upgraded, or when a minimal
+reproducer identifies the failing native object lifetime. Do not treat verbose
+output or a retry as a fix.
+
 ## Alternatives considered
 
 | Alternative | Reason for rejection |

@@ -1543,11 +1543,12 @@ model and solver contract must land first.
   2026-11-16 with the LPDA feed-classification and dialog-scale fixes. See
   [`RELEASE_QA_0.8.1.md`](RELEASE_QA_0.8.1.md). **0.8.1** is the previous
   release.
-- Known CI residue: the Windows Python 3.11 test job can abort inside
-  `tests/ui/test_results_view.py` without a Python traceback. Linux, Windows
-  3.12, and Windows 3.13 pass, and the Windows release build/installer smoke
-  tests pass. Track as Qt/pyqtgraph test-teardown debt; do not weaken the
-  product gate.
+- Known CI residue: Windows Python 3.11 runs acceptance, integration, and unit
+  tests only. Its UI suite is excluded because PySide6/pyqtgraph can corrupt
+  the native heap during view teardown; Windows 3.12/3.13 and Linux
+  3.11–3.13 run the full UI suite. See
+  [`ADR/0025`](ADR/0025-pyside6-version-pin.md). Do not weaken the remaining
+  gates.
 - Last commits: the chart-cursor teardown guards, the font-scaling and
   preference test isolation, the plotted-window teardown cleanup, the
   element-table header sizing fix, the post-0.8.0 stabilization and visual QA,
