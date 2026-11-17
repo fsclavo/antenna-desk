@@ -16,14 +16,36 @@ MAX_MEASUREMENT_SESSION_NAME_LENGTH = 200
 MAX_MEASUREMENT_SESSION_TEXT_LENGTH = 4_000
 
 
+def reflection_coefficient(impedance_ohm: complex, reference_impedance_ohm: float) -> complex:
+    """Return the voltage reflection coefficient for an impedance."""
+
+    ensure_positive(reference_impedance_ohm, name="reference_impedance_ohm")
+    if not math.isfinite(impedance_ohm.real) or not math.isfinite(impedance_ohm.imag):
+        raise ValueError("impedance must be finite")
+    denominator = impedance_ohm + reference_impedance_ohm
+    if denominator == 0:
+        raise ValueError("impedance plus reference impedance must be nonzero")
+    return (impedance_ohm - reference_impedance_ohm) / denominator
+
+
+def impedance_from_reflection(
+    reflection: complex,
+    reference_impedance_ohm: float,
+) -> complex:
+    """Return the impedance for a passive voltage reflection coefficient."""
+
+    ensure_positive(reference_impedance_ohm, name="reference_impedance_ohm")
+    if not math.isfinite(reflection.real) or not math.isfinite(reflection.imag):
+        raise ValueError("reflection coefficient must be finite")
+    if abs(reflection) >= 1.0:
+        raise ValueError("reflection coefficient magnitude must be less than 1")
+    return reference_impedance_ohm * (1.0 + reflection) / (1.0 - reflection)
+
+
 def swr_for_impedance(impedance_ohm: complex, reference_impedance_ohm: float) -> float:
     """Return the SWR for an impedance at a reference impedance."""
 
-    ensure_positive(reference_impedance_ohm, name="reference_impedance_ohm")
-    reflection = (impedance_ohm - reference_impedance_ohm) / (
-        impedance_ohm + reference_impedance_ohm
-    )
-    magnitude = abs(reflection)
+    magnitude = abs(reflection_coefficient(impedance_ohm, reference_impedance_ohm))
     if magnitude >= 1.0:
         return math.inf
     return (1.0 + magnitude) / (1.0 - magnitude)

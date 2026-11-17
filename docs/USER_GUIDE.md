@@ -1388,17 +1388,28 @@ for routine exploration.
 
 ## Import VNA measurements
 
-Use **File → Import → VNA CSV...** to add a measured sweep. The importer accepts
-frequency/R/X columns, S11 real/imaginary columns, or magnitude/phase columns.
-Before importing, a details dialog asks for the measurement name, calibration,
-reference plane, feed line/accessories, and optional notes. The measurement is
-stored in the project and appears in the **Measurements** tab. Use the
-**Plot** selector to compare measured and simulated SWR, R, X, or |Z|. The tab
-also reports the measured and simulated series resonances and their frequency
-difference. **Edit...** changes the measurement name, calibration, reference
-plane, feed line, and notes without touching the imported points. **Delete**
-removes the measurement after confirmation. Imported data is treated as
-untrusted input; invalid rows are skipped with warnings.
+Use **File → Import → VNA Data...** to add a measured sweep. The importer
+accepts CSV files with frequency/R/X columns, S11 real/imaginary columns, or
+magnitude/phase columns, and one-port Touchstone `.s1p` files with RI, MA, or DB
+data. Touchstone frequency units from Hz to GHz and the file's reference
+impedance are honored. Before importing, a details dialog asks for the
+measurement name, calibration, reference plane, feed line/accessories, and
+optional notes. The measurement is stored in the project and appears in the
+**Measurements** tab. Use the **Plot** selector to compare measured and
+simulated SWR, R, X, or |Z|. The tab also reports the measured and simulated
+series resonances and their frequency difference. **Edit...** changes the
+measurement name, calibration, reference plane, feed line, and notes without
+touching the imported points. **Delete** removes the measurement after
+confirmation. Imported data is treated as untrusted input; invalid rows are
+rejected or skipped with warnings.
+
+Use **File → Export → Export Touchstone (.s1p)...** to write the current
+simulated sweep as a one-port RI file. The exported S11 is derived from the
+impedance shown in the results table, so it includes the configured feed line,
+matching network, and transformer. The file keeps the simulation reference
+impedance and can be opened in external VNA or RF tools for comparison. To
+export the antenna-terminal impedance instead, disable the feed line and
+matching network before simulating.
 
 ## Measurement sessions and before/after comparison
 
@@ -2290,8 +2301,9 @@ always store canonical meters and hertz.
   published SHA-256 checksums before installing them.
 - All catalog families are implemented, but some remain experimental or
   heuristic. Folded dipoles still lack an independent impedance reference;
-  loops have the ARRL quad-loop resistance check. VNA CSV import and
-  measurement comparison are implemented; live instrument control is not.
+  loops have the ARRL quad-loop resistance check. VNA CSV and one-port
+  Touchstone import, simulated Touchstone export, and measurement comparison
+  are implemented; live instrument control is not.
 - Series and parallel RLC loads are supported on one wire segment. L/Pi/T
   matching networks are post-processed at the feedpoint, and the vertical
   generator supports a radial screen. General transmission-line geometry and

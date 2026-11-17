@@ -187,7 +187,7 @@ def test_import_vna_csv_assigns_the_selected_session(
         FakeDetailsDialog,
     )
 
-    window.import_vna_csv()
+    window.import_vna_data()
 
     assert window._project.measurements[0].session_id == session.id
     window._dirty = False

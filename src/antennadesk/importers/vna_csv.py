@@ -9,7 +9,7 @@ import io
 import math
 from dataclasses import dataclass
 
-from ..domain.measurement import MeasurementPoint
+from ..domain.measurement import MeasurementPoint, impedance_from_reflection
 
 DEFAULT_REFERENCE_IMPEDANCE_OHM = 50.0
 
@@ -145,7 +145,7 @@ def parse_vna_csv(text: str) -> ParsedVnaCsv:
             if abs(reflection) >= 1.0:
                 warnings.append("reflection coefficient magnitude >= 1 was skipped")
                 continue
-            impedance = reference * (1.0 + reflection) / (1.0 - reflection)
+            impedance = impedance_from_reflection(reflection, reference)
         else:
             reflection = first * complex(
                 math.cos(math.radians(second)),
@@ -154,7 +154,7 @@ def parse_vna_csv(text: str) -> ParsedVnaCsv:
             if abs(reflection) >= 1.0:
                 warnings.append("reflection coefficient magnitude >= 1 was skipped")
                 continue
-            impedance = reference * (1.0 + reflection) / (1.0 - reflection)
+            impedance = impedance_from_reflection(reflection, reference)
         points.append(
             MeasurementPoint(
                 frequency_hz=frequency * scale,

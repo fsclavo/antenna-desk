@@ -86,7 +86,8 @@ Store this in the measurement's `notes`, `calibration`, `reference_plane`, and
 2. Measure `S11` from 13.9 to 14.3 MHz with at least 401 points and a narrow IF
    bandwidth. Record the raw Touchstone file.
 3. Convert to impedance at the reference plane and find the series resonance
-   (minimum `|S11|`).
+   (minimum `|S11|`). AntennaDesk can import the raw one-port `.s1p` file
+   directly.
 4. Repeat the sweep three times, reconnecting the cable each time, to estimate
    connector repeatability.
 5. Compare resistance, reactance, and SWR at the measured resonance with the

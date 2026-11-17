@@ -183,7 +183,8 @@ Phase 5 adds tests for:
 - Moxon geometry, tip-gap validation, persistence, dialog restoration, and
   main-window creation are covered.
 - VNA CSV parsing for R/X, S11 real/imaginary, and magnitude/phase formats,
-  measurement persistence, import action, measurement-condition metadata, and
+  one-port Touchstone RI/MA/DB import, simulated Touchstone export, measurement
+  persistence, import action, measurement-condition metadata, and
   measured/simulated SWR rendering.
 - Fan-dipole pair geometry, below-ground rejection, persistence, dialog
   restoration, and main-window creation are covered.
@@ -506,7 +507,8 @@ Phase 6 adds tests for:
 - Multi-wire solver integration for folded dipole and loop with the real
   `nec2c` engine. The folded-dipole check is a sanity check; the quad-loop
   resistance has the ARRL reference described below.
-- VNA CSV import, measurement conditions/reference plane, project records, and
+- VNA CSV and one-port Touchstone import, Touchstone export of the simulated
+  sweep, measurement conditions/reference plane, project records, and
   measured/simulated R/X/|Z|/SWR comparison, including resonance differences.
 - Family optimizer descriptors and a joint differential-evolution plus local
   search for every first-class typed family, with an exhaustive registry,
@@ -588,8 +590,8 @@ and require `NEC2C`.
   still lack an independent impedance reference; loops have the ARRL quad-loop
   resistance check. End-fed, J Pole/Slim Jim, Ringo, fan dipole, and vertical
   radial models rely on structural tests and visible warnings.
-- VNA CSV import and measurement records are implemented; live instrument
-  control is not.
+- VNA CSV and one-port Touchstone import plus simulated Touchstone export are
+  implemented; live instrument control is not.
 - Optimization covers all first-class typed families through explicit
   descriptors and joint geometry/feed/load searches, including typed G5RV,
   ZS6BKW, Zepp, biquad, double biquad, Beverage, loaded/linked dipole, and the

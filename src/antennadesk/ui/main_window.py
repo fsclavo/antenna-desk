@@ -213,7 +213,7 @@ from ..domain.simulation.segmentation import (
 from ..domain.simulation.spec import DEFAULT_TIMEOUT_S, MAX_TIMEOUT_S, SimulationSpec
 from ..importers.mmana import parse_mmana_file
 from ..importers.nec2_deck import parse_nec2_deck
-from ..importers.vna_csv import parse_vna_csv
+from ..importers.vna import parse_vna_data
 from ..persistence.constants import MAX_PROJECT_SIZE_BYTES, PROJECT_SIZE_WARNING_BYTES
 from ..reporting.csv_export import (
     write_band_analysis_csv,
@@ -225,6 +225,7 @@ from ..reporting.csv_export import (
 )
 from ..reporting.design_summary import installation_profile_rows
 from ..reporting.html_report import write_html_report
+from ..reporting.touchstone import format_touchstone_s1p
 from ..reporting.wire_schedule import write_bom_csv, write_wire_schedule_csv
 from ..simulation.nec2.solver import Nec2cSolver
 from ..simulation.preflight import run_preflight
@@ -526,7 +527,7 @@ class MainWindow(QMainWindow):
         self._import_mmana_action = QAction(self)
         self._import_mmana_action.triggered.connect(lambda: self.import_mmana_file())
         self._import_vna_action = QAction(self)
-        self._import_vna_action.triggered.connect(lambda: self.import_vna_csv())
+        self._import_vna_action.triggered.connect(lambda: self.import_vna_data())
 
         self._open_action = QAction(self)
         self._open_action.setShortcut(QKeySequence.StandardKey.Open)
@@ -628,6 +629,8 @@ class MainWindow(QMainWindow):
         self._convert_custom_action.triggered.connect(lambda: self.convert_to_custom_wires())
         self._export_csv_action = QAction(self)
         self._export_csv_action.triggered.connect(lambda: self.export_csv())
+        self._export_touchstone_action = QAction(self)
+        self._export_touchstone_action.triggered.connect(lambda: self.export_touchstone())
         self._export_sources_csv_action = QAction(self)
         self._export_sources_csv_action.triggered.connect(lambda: self.export_sources_csv())
         self._export_wire_schedule_csv_action = QAction(self)
@@ -1364,6 +1367,7 @@ class MainWindow(QMainWindow):
         self._import_menu.addAction(self._import_vna_action)
         self._export_menu = self._file_menu.addMenu("")
         self._export_menu.addAction(self._export_csv_action)
+        self._export_menu.addAction(self._export_touchstone_action)
         self._export_menu.addAction(self._export_sources_csv_action)
         self._export_menu.addAction(self._export_wire_schedule_csv_action)
         self._export_menu.addAction(self._export_bom_csv_action)
@@ -1494,6 +1498,8 @@ class MainWindow(QMainWindow):
         self._import_nec_action.setText(self._translator.t("action.import_nec"))
         self._import_mmana_action.setText(self._translator.t("action.import_mmana"))
         self._import_vna_action.setText(self._translator.t("action.import_vna"))
+        self._import_vna_action.setToolTip(self._translator.t("help.action.import_vna"))
+        self._import_vna_action.setWhatsThis(self._translator.t("help.action.import_vna"))
         self._open_action.setText(self._translator.t("action.open"))
         self._save_action.setText(self._translator.t("action.save"))
         self._save_as_action.setText(self._translator.t("action.save_as"))
@@ -1688,6 +1694,7 @@ class MainWindow(QMainWindow):
             )
         self._update_custom_pattern_status()
         self._export_csv_action.setText(self._translator.t("action.export_csv"))
+        self._export_touchstone_action.setText(self._translator.t("action.export_touchstone"))
         self._export_sources_csv_action.setText(self._translator.t("action.export_sources_csv"))
         self._export_wire_schedule_csv_action.setText(
             self._translator.t("action.export_wire_schedule_csv")
@@ -1718,6 +1725,9 @@ class MainWindow(QMainWindow):
         ):
             action.setToolTip(export_help)
             action.setWhatsThis(export_help)
+        touchstone_help = self._translator.t("help.action.export_touchstone")
+        self._export_touchstone_action.setToolTip(touchstone_help)
+        self._export_touchstone_action.setWhatsThis(touchstone_help)
         self._compact_history_action.setText(self._translator.t("action.compact_history"))
         self._simulate_action.setText(self._translator.t("action.simulate"))
         self._simulate_action.setToolTip(self._translator.t("action.simulate.tooltip"))
@@ -2041,6 +2051,7 @@ class MainWindow(QMainWindow):
         self._import_mmana_action.setEnabled(idle)
         self._import_vna_action.setEnabled(idle and has_project)
         self._export_csv_action.setEnabled(idle and has_result)
+        self._export_touchstone_action.setEnabled(idle and has_result)
         self._export_sources_csv_action.setEnabled(idle and has_sources)
         self._export_wire_schedule_csv_action.setEnabled(idle and has_project)
         self._export_bom_csv_action.setEnabled(idle and has_project)
@@ -2196,7 +2207,7 @@ class MainWindow(QMainWindow):
         elif kind is NextStepKind.BUILD_SHEET:
             self.show_construction_sheet()
         elif kind is NextStepKind.MEASURE:
-            self.import_vna_csv()
+            self.import_vna_data()
         elif kind is NextStepKind.COMPARE_MEASUREMENT:
             if self._design_id is not None:
                 self._workflow_measurement_compared.add(self._design_id)
@@ -5775,7 +5786,7 @@ class MainWindow(QMainWindow):
         self._update_status_text()
 
     @history_action("history.measurement_import")
-    def import_vna_csv(self) -> None:
+    def import_vna_data(self) -> None:
         if self._project is None:
             self._show_error(self._translator.t("error.no_project"))
             return
@@ -5789,7 +5800,8 @@ class MainWindow(QMainWindow):
             return
         path = Path(filename)
         try:
-            parsed = parse_vna_csv(path.read_text(encoding="utf-8", errors="replace"))
+            text = path.read_text(encoding="utf-8", errors="replace")
+            parsed = parse_vna_data(text, suffix=path.suffix)
             details = MeasurementDetailsDialog(
                 self._translator,
                 path.stem,
@@ -8726,6 +8738,39 @@ class MainWindow(QMainWindow):
                 write_band_analysis_csv(analysis, path)
             else:
                 write_csv(result, path)
+        except Exception as exc:
+            self._show_error(self._translator.t("error.export", message=str(exc)))
+            return
+        self._last_status_key = "status.exported"
+        self._update_status_text()
+
+    def export_touchstone(self) -> None:
+        data = self._current_export_data()
+        if data is None:
+            return
+        project, design, result = data
+        suggested = f"{self._safe_file_name(project.name)}-{self._safe_file_name(design.name)}.s1p"
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            self._translator.t("dialog.touchstone_title"),
+            str(Path.home() / suggested),
+            self._translator.t("dialog.touchstone_filter"),
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.lower() != ".s1p":
+            path = path.with_suffix(".s1p")
+        try:
+            text = format_touchstone_s1p(
+                [
+                    (frequency.frequency_hz, frequency.impedance_ohm)
+                    for frequency in result.frequencies
+                ],
+                result.spec.reference_impedance_ohm,
+                comments=(f"Project: {project.name}", f"Design: {design.name}"),
+            )
+            path.write_text(text, encoding="utf-8")
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))
             return

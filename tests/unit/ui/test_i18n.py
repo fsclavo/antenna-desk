@@ -355,6 +355,8 @@ HELP_MANIFEST = frozenset(
         "help.action.optimize",
         "help.action.cancel",
         "help.action.export",
+        "help.action.export_touchstone",
+        "help.action.import_vna",
         "action.whats_this.tooltip",
         "help.tab.impedance",
         "help.tab.sources",

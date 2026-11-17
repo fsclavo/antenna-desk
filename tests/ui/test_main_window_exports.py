@@ -11,10 +11,12 @@ from helpers import wait_for_condition
 from PySide6.QtWidgets import QFileDialog
 from pytestqt.qtbot import QtBot
 
+from antennadesk.importers.touchstone import parse_touchstone_s1p
 from antennadesk.ui.main_window import MainWindow
 
 DATA_EXPORTS = (
     ("export_csv", ".csv"),
+    ("export_touchstone", ".s1p"),
     ("export_sources_csv", ".csv"),
     ("export_wire_schedule_csv", ".csv"),
     ("export_bom_csv", ".csv"),
@@ -62,6 +64,31 @@ def test_data_exports_write_the_requested_file(
 
     assert target.is_file()
     assert target.stat().st_size > 0
+    window._dirty = False
+
+
+def test_export_touchstone_writes_a_parseable_one_port_file(
+    window: MainWindow,
+    qtbot: QtBot,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _simulate(window, qtbot)
+    target = tmp_path / "antenna.s1p"
+    monkeypatch.setattr(
+        QFileDialog,
+        "getSaveFileName",
+        lambda *args, **kwargs: (str(target), ""),
+    )
+
+    window.export_touchstone()
+
+    assert target.is_file()
+    parsed = parse_touchstone_s1p(target.read_text(encoding="utf-8"))
+    result = window._simulation_results[window._design_id]
+    assert parsed.reference_impedance_ohm == pytest.approx(result.spec.reference_impedance_ohm)
+    assert len(parsed.points) == len(result.frequencies)
+    assert parsed.points[0].frequency_hz == pytest.approx(result.frequencies[0].frequency_hz)
     window._dirty = False
 
 

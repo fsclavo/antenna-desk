@@ -204,16 +204,31 @@ def test_edit_transmission_lines_applies_the_geometry(
     window._dirty = False
 
 
-def test_import_vna_csv_adds_a_measurement(
+@pytest.mark.parametrize(
+    ("filename", "content", "reference_impedance_ohm"),
+    [
+        (
+            "field.csv",
+            "frequency_hz,r_ohm,x_ohm\n7000000,50,0\n7100000,75,0\n",
+            50.0,
+        ),
+        (
+            "field.s1p",
+            "# MHz S RI R 75\n7.1 0.2 0\n7.2 0 0\n",
+            75.0,
+        ),
+    ],
+)
+def test_import_vna_data_adds_a_measurement(
     window: MainWindow,
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    filename: str,
+    content: str,
+    reference_impedance_ohm: float,
 ) -> None:
-    csv_path = tmp_path / "field.csv"
-    csv_path.write_text(
-        "frequency_hz,r_ohm,x_ohm\n7000000,50,0\n7100000,75,0\n",
-        encoding="utf-8",
-    )
+    vna_path = tmp_path / filename
+    vna_path.write_text(content, encoding="utf-8")
 
     class FakeDetailsDialog:
         def __init__(self, *args: object, **kwargs: object) -> None:
@@ -243,7 +258,7 @@ def test_import_vna_csv_adds_a_measurement(
     monkeypatch.setattr(
         QFileDialog,
         "getOpenFileName",
-        lambda *args, **kwargs: (str(csv_path), ""),
+        lambda *args, **kwargs: (str(vna_path), ""),
     )
     monkeypatch.setattr(
         main_window_module,
@@ -251,13 +266,14 @@ def test_import_vna_csv_adds_a_measurement(
         FakeDetailsDialog,
     )
 
-    window.import_vna_csv()
+    window.import_vna_data()
 
     assert window._project is not None
     assert len(window._project.measurements) == 1
     assert window._project.measurements[0].name == "Field measurement"
     assert window._project.measurements[0].calibration == "SOL"
     assert window._project.measurements[0].reference_plane == "antenna terminals"
+    assert window._project.measurements[0].reference_impedance_ohm == reference_impedance_ohm
     assert window._tabs_select_measurements() is None
     assert window._results._tabs.currentWidget() is window._results._measurements_tab
     assert window._dirty is True

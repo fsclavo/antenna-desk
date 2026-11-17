@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Touchstone `.s1p` measurement import and simulated export.** The VNA import
+  action accepts one-port Touchstone files with RI, MA, or DB data, Hz–GHz
+  frequency units, inline comments, and the file's reference impedance. The
+  Export menu writes the current simulated sweep as a one-port Touchstone file,
+  converting the impedance shown in the results table (including the configured
+  feed chain) to S11. Malformed rows are rejected or skipped with visible
+  warnings; the imported data remains untrusted project input. No schema or
+  solver change.
+
 ### Fixed
 
 - **Chart cursor teardown.** The reusable chart cursor now ignores pending

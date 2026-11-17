@@ -177,17 +177,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "workflow.next.measure.body": {
         Language.ENGLISH: (
-            "Import a NanoVNA CSV to compare the real antenna with the model. "
+            "Import a VNA CSV or Touchstone file to compare the real antenna with the model. "
             "This closes the design loop."
         ),
         Language.SPANISH: (
-            "Importá un CSV del NanoVNA para comparar la antena real con el modelo. "
-            "Así cerrás el ciclo de diseño."
+            "Importá un CSV de VNA o un archivo Touchstone para comparar la antena real "
+            "con el modelo. Así cerrás el ciclo de diseño."
         ),
     },
     "workflow.next.measure.action": {
-        Language.ENGLISH: "Import VNA CSV...",
-        Language.SPANISH: "Importar CSV de VNA...",
+        Language.ENGLISH: "Import VNA Data...",
+        Language.SPANISH: "Importar datos de VNA...",
     },
     "workflow.next.compare_measurement.title": {
         Language.ENGLISH: "Compare measured and simulated",
@@ -2142,9 +2142,21 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Stop the running simulation or analysis.",
         Language.SPANISH: "Detené la simulación o el análisis en curso.",
     },
+    "help.action.import_vna": {
+        Language.ENGLISH: ("Import a VNA CSV or one-port Touchstone file as a measured sweep."),
+        Language.SPANISH: (
+            "Importá un CSV de VNA o un Touchstone de un puerto como barrido medido."
+        ),
+    },
     "help.action.export": {
         Language.ENGLISH: "Export the current result, geometry, or construction data.",
         Language.SPANISH: "Exportá el resultado, la geometría o los datos de construcción actuales.",
+    },
+    "help.action.export_touchstone": {
+        Language.ENGLISH: ("Export the simulated impedance sweep as a one-port Touchstone file."),
+        Language.SPANISH: (
+            "Exportá el barrido de impedancia simulado como Touchstone de un puerto."
+        ),
     },
     "action.simulate": {Language.ENGLISH: "Simulate", Language.SPANISH: "Simular"},
     "action.ok": {Language.ENGLISH: "OK", Language.SPANISH: "Aceptar"},
@@ -8951,6 +8963,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Eliminar diseño",
     },
     "action.export_csv": {Language.ENGLISH: "Export CSV...", Language.SPANISH: "Exportar CSV..."},
+    "action.export_touchstone": {
+        Language.ENGLISH: "Export Touchstone (.s1p)...",
+        Language.SPANISH: "Exportar Touchstone (.s1p)...",
+    },
     "action.export_sources_csv": {
         Language.ENGLISH: "Export source results CSV...",
         Language.SPANISH: "Exportar resultados de fuentes CSV...",
@@ -9104,6 +9120,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "dialog.csv_title": {
         Language.ENGLISH: "Export simulation CSV",
         Language.SPANISH: "Exportar CSV de simulación",
+    },
+    "dialog.touchstone_title": {
+        Language.ENGLISH: "Export Touchstone S1P",
+        Language.SPANISH: "Exportar S1P de Touchstone",
+    },
+    "dialog.touchstone_filter": {
+        Language.ENGLISH: "Touchstone files (*.s1p);;All files (*)",
+        Language.SPANISH: "Archivos Touchstone (*.s1p);;Todos los archivos (*)",
     },
     "dialog.sources_csv_title": {
         Language.ENGLISH: "Export source results CSV",
@@ -13259,24 +13283,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Importar archivo NEC...",
     },
     "action.import_vna": {
-        Language.ENGLISH: "Import VNA CSV...",
-        Language.SPANISH: "Importar CSV de VNA...",
+        Language.ENGLISH: "Import VNA Data...",
+        Language.SPANISH: "Importar datos de VNA...",
     },
     "dialog.vna_title": {
-        Language.ENGLISH: "Import VNA CSV",
-        Language.SPANISH: "Importar CSV de VNA",
+        Language.ENGLISH: "Import VNA data",
+        Language.SPANISH: "Importar datos de VNA",
     },
     "dialog.vna_filter": {
-        Language.ENGLISH: "CSV files (*.csv *.txt);;All files (*)",
-        Language.SPANISH: "Archivos CSV (*.csv *.txt);;Todos los archivos (*)",
+        Language.ENGLISH: (
+            "VNA files (*.csv *.txt *.s1p);;"
+            "CSV files (*.csv *.txt);;Touchstone files (*.s1p);;All files (*)"
+        ),
+        Language.SPANISH: (
+            "Archivos de VNA (*.csv *.txt *.s1p);;"
+            "Archivos CSV (*.csv *.txt);;Archivos Touchstone (*.s1p);;Todos los archivos (*)"
+        ),
     },
     "dialog.vna_warnings": {
         Language.ENGLISH: "Imported with {count} warning(s):\n{details}",
         Language.SPANISH: "Importado con {count} advertencia(s):\n{details}",
     },
     "error.import_vna": {
-        Language.ENGLISH: "Could not import VNA CSV: {message}",
-        Language.SPANISH: "No se pudo importar el CSV de VNA: {message}",
+        Language.ENGLISH: "Could not import VNA data: {message}",
+        Language.SPANISH: "No se pudieron importar los datos de VNA: {message}",
     },
     "error.measurement": {
         Language.ENGLISH: "Could not update the measurement: {message}",

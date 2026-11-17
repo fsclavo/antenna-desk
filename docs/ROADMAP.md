@@ -62,8 +62,9 @@ Completed:
   fixed.
 - End-fed counterpoise geometry and an ideal feed transformer ratio, with
   estimator starting values.
-- VNA CSV import, measurement conditions/reference plane, measured/simulated
-  comparison, resonance differences, and project measurement records.
+- VNA CSV and one-port Touchstone import, simulated Touchstone export,
+  measurement conditions/reference plane, measured/simulated comparison,
+  resonance differences, and project measurement records.
 - Construction sheets, CSV/HTML/PDF reports, PNG/SVG/DXF exports, and
   project-level Undo/Redo with chart cursors.
 - Construction view and wire schedule: family-aware front/top/auxiliary views,
@@ -190,7 +191,8 @@ Deferred:
   custom/imported geometry.
 - Yagi element lengths and boom gaps are bounded variables; the element count,
   polarization, folded/match topology, and driven index remain user choices.
-- VNA CSV import and measured/simulated SWR, R, X, and |Z| comparison.
+- VNA CSV and one-port Touchstone import, simulated Touchstone export, and
+  measured/simulated SWR, R, X, and |Z| comparison.
 - Measurement conditions and reference-plane metadata.
 - Bounded impedance synthesis for OCFD, J Pole, and Slim Jim.
 

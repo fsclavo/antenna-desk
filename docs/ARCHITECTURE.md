@@ -366,8 +366,9 @@ prerequisite for the user workflow.
 - `nec2c` is bundled in the native AppImage, Debian package, and Windows zip,
   but remains an external runtime dependency for wheel installs. Native release
   artifacts are unsigned by default.
-- Measurement import is CSV-based. There is no live VNA or instrument-control
-  adapter.
+- Measurement import is file-based (CSV or one-port Touchstone `.s1p`), and the
+  simulated sweep can be exported as Touchstone. There is no live VNA or
+  instrument-control adapter.
 - Series and parallel RLC loads are supported on one wire segment. L/Pi/T
   matching networks are post-processed at the feedpoint. Horizontal wire
   dipoles support an optional sampled parabolic sag; other wire families remain
