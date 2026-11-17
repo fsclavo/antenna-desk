@@ -20,11 +20,12 @@ from ...domain.antennas.biquad import (
     BiquadParameters,
     biquad_parameters,
 )
+from ...domain.antennas.material_defaults import default_material_for_template
 from ...domain.antennas.materials import COPPER, ConductorMaterial
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..material_combo import (
-    populate_material_combo,
+    populate_template_material_combo,
     retranslate_material_combo,
 )
 from ..units import (
@@ -102,7 +103,7 @@ class BiquadForm(QWidget):
         apply_radius_units(translator, unit_system, self._radius)
 
         self._material = QComboBox(self)
-        populate_material_combo(self._material, translator)
+        populate_template_material_combo(self._material, translator, "biquad")
 
         self._ground = QComboBox(self)
         self._ground.addItem("", GroundKind.FREE_SPACE.value)
@@ -175,6 +176,7 @@ class BiquadForm(QWidget):
         initial = parameters or biquad_parameters(
             kind,
             frequency_hz=14_100_000.0,
+            material=default_material_for_template("biquad"),
             ground=GroundModel.finite(
                 relative_permittivity=13.0,
                 conductivity_s_per_m=0.005,
@@ -249,7 +251,10 @@ class BiquadForm(QWidget):
         try:
             current = self.parameters()
         except (ValueError, TypeError):
-            current = biquad_parameters(self._selected_kind())
+            current = biquad_parameters(
+                self._selected_kind(),
+                material=self._selected_material(),
+            )
         starting = biquad_parameters(
             current.kind,
             frequency_hz=current.frequency_hz,

@@ -19,7 +19,7 @@ def test_vertical_dialog_builds_radiator_and_radials(qtbot: QtBot) -> None:
     assert parameters.radial_count == 16
     assert parameters.height_m == pytest.approx(10.0)
     assert dialog._ground.currentText() == "Finite ground"
-    assert dialog._material.currentText() == "Copper"
+    assert dialog._material.currentText() == "Aluminum"
     assert dialog._base_height.value() == pytest.approx(0.25)
     assert "16 radials" in dialog._geometry.text()
 

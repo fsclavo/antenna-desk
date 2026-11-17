@@ -14,7 +14,7 @@ from .antenna import AntennaModel
 from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
-from .materials import COPPER, ConductorMaterial
+from .materials import ALUMINUM, COPPER, ConductorMaterial
 from .polarization import Polarization
 from .wire import Wire
 
@@ -36,7 +36,7 @@ class MoxonParameters:
     azimuth_deg: float = 0.0
     polarization: Polarization = Polarization.HORIZONTAL
     wire_radius_m: float = 0.001
-    material: ConductorMaterial = COPPER
+    material: ConductorMaterial = ALUMINUM
     ground: GroundModel = FREE_SPACE
 
     def __post_init__(self) -> None:

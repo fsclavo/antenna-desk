@@ -15,7 +15,7 @@ from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
 from .load import SeriesLoad
-from .materials import COPPER, ConductorMaterial
+from .materials import ALUMINUM, ConductorMaterial
 from .wire import Wire
 
 RADIATOR_ID = "radiator"
@@ -51,7 +51,7 @@ class VerticalParameters:
     radial_length_m: float = 0.0
     radial_angle_deg: float = 0.0
     wire_radius_m: float = 0.001
-    material: ConductorMaterial = COPPER
+    material: ConductorMaterial = ALUMINUM
     ground: GroundModel = FREE_SPACE
     loading_coil_enabled: bool = False
     loading_coil_offset_m: float = 0.0

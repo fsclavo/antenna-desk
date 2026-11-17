@@ -19,7 +19,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...domain.antennas.materials import COPPER, ConductorMaterial
+from ...domain.antennas.materials import (
+    ALUMINUM,
+    COPPER,
+    STAINLESS_STEEL_304,
+    ConductorMaterial,
+)
 from ...domain.antennas.vertical import (
     MAX_RADIALS,
     MAX_TOP_HAT_WIRES,
@@ -112,7 +117,11 @@ class VerticalForm(QWidget):
         self._radius.setValue(radius_from_m(0.001, unit_system))
 
         self._material = QComboBox(self)
-        populate_material_combo(self._material, translator)
+        populate_material_combo(
+            self._material,
+            translator,
+            selected=STAINLESS_STEEL_304 if mobile else ALUMINUM,
+        )
 
         self._ground = QComboBox(self)
         self._ground.addItem("", GroundKind.FREE_SPACE.value)

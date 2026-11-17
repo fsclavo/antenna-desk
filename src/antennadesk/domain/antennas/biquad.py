@@ -23,7 +23,7 @@ from .antenna import AntennaModel
 from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
-from .materials import COPPER, ConductorMaterial
+from .materials import ALUMINUM, COPPER, ConductorMaterial
 from .wire import Wire
 
 ANTENNA_TYPE_BIQUAD = "biquad"
@@ -117,7 +117,7 @@ class BiquadParameters:
     reflector_enabled: bool = True
     azimuth_deg: float = 0.0
     wire_radius_m: float = 0.001
-    material: ConductorMaterial = COPPER
+    material: ConductorMaterial = ALUMINUM
     ground: GroundModel = FREE_SPACE
 
     def __post_init__(self) -> None:

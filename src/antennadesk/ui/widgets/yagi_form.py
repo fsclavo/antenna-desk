@@ -34,7 +34,7 @@ from ...domain.antennas.yagi import (
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..material_combo import (
-    populate_material_combo,
+    populate_template_material_combo,
     retranslate_material_combo,
 )
 from ..units import (
@@ -109,7 +109,7 @@ class YagiForm(QWidget):
         self._taper_radius.setValue(0.0)
 
         self._material = QComboBox(self)
-        populate_material_combo(self._material, translator)
+        populate_template_material_combo(self._material, translator, "yagi")
 
         self._ground = QComboBox(self)
         self._ground.addItem("", GroundKind.FREE_SPACE.value)

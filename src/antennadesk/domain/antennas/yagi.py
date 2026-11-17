@@ -15,7 +15,7 @@ from .antenna import AntennaModel
 from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
-from .materials import COPPER, ConductorMaterial
+from .materials import ALUMINUM, COPPER, ConductorMaterial
 from .polarization import Polarization
 from .wire import Wire
 
@@ -72,7 +72,7 @@ class YagiParameters:
     match_spacing_m: float = 0.1
     azimuth_deg: float = 0.0
     polarization: Polarization = Polarization.HORIZONTAL
-    material: ConductorMaterial = COPPER
+    material: ConductorMaterial = ALUMINUM
     ground: GroundModel = FREE_SPACE
     transformer_ratio: float = 1.0
 

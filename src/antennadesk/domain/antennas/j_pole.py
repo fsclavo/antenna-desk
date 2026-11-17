@@ -12,7 +12,7 @@ from .antenna import AntennaModel
 from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
-from .materials import COPPER, ConductorMaterial
+from .materials import ALUMINUM, ConductorMaterial
 from .wire import Wire
 
 ANTENNA_TYPE_J_POLE = "j_pole"
@@ -35,7 +35,7 @@ class JPoleParameters:
     base_height_m: float = 0.25
     folded: bool = False
     wire_radius_m: float = 0.001
-    material: ConductorMaterial = COPPER
+    material: ConductorMaterial = ALUMINUM
     ground: GroundModel = FREE_SPACE
 
     def __post_init__(self) -> None:

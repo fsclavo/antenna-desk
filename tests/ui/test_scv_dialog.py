@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from pytestqt.qtbot import QtBot
 
+from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.scv import (
     BOBTAIL_REFERENCE_HORIZONTAL_LENGTH_M,
     BOBTAIL_REFERENCE_VERTICAL_HEIGHT_M,
@@ -28,6 +29,7 @@ def test_scv_dialog_builds_a_half_square_by_default(qtbot: QtBot) -> None:
     assert parameters.horizontal_length_m > 0.0
     assert parameters.vertical_height_m > 0.0
     assert dialog._form._ground.currentText() == "Finite ground"
+    assert dialog._form._material.currentText() == "Aluminum"
 
 
 def test_scv_dialog_can_start_with_the_bobtail_variant(qtbot: QtBot) -> None:
@@ -40,6 +42,7 @@ def test_scv_dialog_can_start_with_the_bobtail_variant(qtbot: QtBot) -> None:
 
     parameters = dialog.parameters()
     assert parameters.kind is ScvKind.BOBTAIL_CURTAIN
+    assert parameters.material is COPPER
     assert len(parameters.to_custom_parameters().wires) == 5
 
 

@@ -18,11 +18,12 @@ from ...domain.antennas.hexbeam import (
     HexbeamParameters,
     published_hexbeam_parameters,
 )
+from ...domain.antennas.material_defaults import default_material_for_template
 from ...domain.antennas.materials import COPPER, ConductorMaterial
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..material_combo import (
-    populate_material_combo,
+    populate_template_material_combo,
     retranslate_material_combo,
 )
 from ..units import (
@@ -107,7 +108,7 @@ class HexbeamForm(QWidget):
         apply_radius_units(translator, unit_system, self._radius)
 
         self._material = QComboBox(self)
-        populate_material_combo(self._material, translator)
+        populate_template_material_combo(self._material, translator, "hexbeam")
 
         self._ground = QComboBox(self)
         self._ground.addItem("", GroundKind.FREE_SPACE.value)
@@ -186,10 +187,11 @@ class HexbeamForm(QWidget):
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._ground_changed)
         initial = parameters or published_hexbeam_parameters(
+            material=default_material_for_template("hexbeam"),
             ground=GroundModel.finite(
                 relative_permittivity=13.0,
                 conductivity_s_per_m=0.005,
-            )
+            ),
         )
         self.set_parameters(initial)
         self._update_ground_controls()

@@ -138,6 +138,7 @@ from ..domain.antennas.matching_network import (
     design_pi_network,
     design_t_network,
 )
+from ..domain.antennas.material_defaults import default_material_for_template
 from ..domain.antennas.moxon import MoxonParameters
 from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.phased_vertical import PhasedVerticalParameters
@@ -6525,6 +6526,16 @@ class MainWindow(QMainWindow):
             return
         if parameters is None:
             return
+        if (
+            selected == catalog_key_for(design.parameters)
+            and type(parameters) is type(design.parameters)
+            and hasattr(parameters, "material")
+            and cast(Any, parameters).material == default_material_for_template(selected)
+        ):
+            parameters = replace(
+                parameters,
+                material=cast(Any, design.parameters).material,
+            )
         answer = QMessageBox.question(
             self,
             self._translator.t("dialog.change_template_title"),

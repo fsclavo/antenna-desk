@@ -18,6 +18,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   warnings; the imported data remains untrusted project input. No schema or
   solver change.
 
+### Changed
+
+- **Per-template conductor material defaults.** New designs preselect aluminum
+  for the Yagi, beam, vertical, and wire-beam templates, stainless 304 for the
+  loaded vertical, and copper for dipoles, loops, end-fed wires, and traps.
+  Existing projects and source-backed reference designs keep their stored
+  material, and the selector remains editable. This is a defaults change only;
+  the material presets, solver, schema, and existing projects are unchanged.
+
 ### Fixed
 
 - **Feed schematic now draws coax as coax.** Direct coax no longer appears as a

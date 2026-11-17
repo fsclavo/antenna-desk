@@ -17,6 +17,7 @@ from ..antennas.endfed import efhw_parameters, sloper_parameters
 from ..antennas.g5rv import g5rv_parameters
 from ..antennas.hexbeam import published_hexbeam_parameters
 from ..antennas.inverted_v import InvertedVParameters
+from ..antennas.materials import COPPER
 from ..antennas.moxon import moxon_20m_wire
 from ..antennas.scv import ScvKind, scv_parameters
 from ..antennas.trap_dipole import w3dzz_parameters
@@ -111,7 +112,7 @@ def _cebik_moxon() -> ReferenceDesign:
         published_key="reference.cebik_moxon_20m.published",
         modeled_key="reference.cebik_moxon_20m.modeled",
         evidence_template="moxon",
-        parameters=moxon_20m_wire(),
+        parameters=moxon_20m_wire(material=COPPER),
         search_terms=("moxon", "wire beam", "20m", "hf", "front to back"),
     )
 
@@ -125,9 +126,12 @@ def _nbs_yagi() -> ReferenceDesign:
         published_key="reference.nbs_yagi_6m.published",
         modeled_key="reference.nbs_yagi_6m.modeled",
         evidence_template="yagi",
+        # The NBS source does not state a conductor material; keep the existing
+        # copper wire reference and do not claim a specific material.
         parameters=nbs_five_element(
             frequency_hz=50_100_000.0,
             height_m=10.0,
+            material=COPPER,
             ground=GroundModel.free_space(),
         ),
         search_terms=("yagi", "beam", "6m", "vhf", "nbs", "5 element"),
@@ -157,7 +161,7 @@ def _g3txq_hexbeam() -> ReferenceDesign:
         published_key="reference.g3txq_hexbeam_20m.published",
         modeled_key="reference.g3txq_hexbeam_20m.modeled",
         evidence_template="hexbeam",
-        parameters=published_hexbeam_parameters(),
+        parameters=published_hexbeam_parameters(material=COPPER),
         search_terms=("hexbeam", "wire beam", "20m", "hf", "g3txq"),
     )
 
@@ -199,7 +203,7 @@ def _half_square() -> ReferenceDesign:
         published_key="reference.cebik_half_square.published",
         modeled_key="reference.cebik_half_square.modeled",
         evidence_template="half_square",
-        parameters=scv_parameters(ScvKind.HALF_SQUARE, 7_150_000.0),
+        parameters=scv_parameters(ScvKind.HALF_SQUARE, 7_150_000.0, material=COPPER),
         search_terms=("half square", "vertical array", "40m", "hf", "cebik"),
     )
 
@@ -213,7 +217,7 @@ def _bobtail_curtain() -> ReferenceDesign:
         published_key="reference.cebik_bobtail_curtain.published",
         modeled_key="reference.cebik_bobtail_curtain.modeled",
         evidence_template="bobtail_curtain",
-        parameters=scv_parameters(ScvKind.BOBTAIL_CURTAIN, 7_150_000.0),
+        parameters=scv_parameters(ScvKind.BOBTAIL_CURTAIN, 7_150_000.0, material=COPPER),
         search_terms=("bobtail curtain", "vertical array", "40m", "hf", "cebik"),
     )
 

@@ -28,7 +28,7 @@ from ...domain.antennas.ringo import (
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..material_combo import (
-    populate_material_combo,
+    populate_template_material_combo,
     retranslate_material_combo,
 )
 from ..units import (
@@ -90,7 +90,7 @@ class RingoForm(QWidget):
         self._radius.setValue(radius_from_m(0.001, unit_system))
 
         self._material = QComboBox(self)
-        populate_material_combo(self._material, translator)
+        populate_template_material_combo(self._material, translator, "ringo")
 
         self._ground = QComboBox(self)
         self._ground.addItem("", GroundKind.FREE_SPACE.value)

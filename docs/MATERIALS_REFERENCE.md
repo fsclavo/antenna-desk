@@ -17,7 +17,7 @@ building.
 | Aluminum | 35.0 MS/m | 1.0 | ASTM B230/B231, 1350 aluminum (61% IACS) |
 | Stainless steel 304 | 1.389 MS/m | 1.0 | ASM Material Data Sheet, AISI Type 304 stainless steel |
 
-Copper is the default conductor for traps, coils, and general HF wire.
+Copper remains the common choice for traps, coils, and general HF wire.
 Aluminum is a lightweight alternative for elements and long spans. Stainless
 steel 304 is a corrosion-resistant option for whips, portable/marine elements,
 and mechanical conductors; it has about 6.5× the RF resistance of copper for the
@@ -26,6 +26,12 @@ small loops. The solver uses these homogeneous conductivity values; plating,
 stranding, insulation, connections, and temperature are not modeled. The 304
 entry rounds relative permeability to 1.0 because the solver models conductivity
 only; cold-worked 304 can be slightly magnetic.
+
+New designs preselect a material that matches the template: aluminum for Yagi,
+beam, vertical, and wire-beam families; stainless 304 for the loaded vertical;
+and copper for dipoles, loops, end-fed wires, and traps. The selector remains
+editable. Existing projects keep their stored material; see
+`domain/antennas/material_defaults.py` for the complete mapping.
 
 ## Coax
 

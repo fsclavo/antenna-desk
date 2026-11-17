@@ -122,7 +122,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX27~~ | ~~Use ROE consistently in the Spanish UI and reports~~ | S–M | none | **Done 2026-11-13:** all 18 Spanish UI keys that still said “SWR” now use “ROE” with feminine agreement; the first explanatory use expands “ROE (relación de ondas estacionarias)”. Hardcoded chart/table labels in the measurement comparison, parameter sweep, robustness, and end-fed dialogs use the shared localized label; the HTML report and construction-sheet bandwidth row are localized. A regression test scans every Spanish UI/report/evidence value for `\bSWR\b`; Spanish dialog and report tests cover the changed surfaces. English, internal identifiers, report keys, CSV columns, schema, and solver are unchanged. |
 | ~~UX28~~ | ~~Call the vertical radiator dimension “length”, not “height”~~ | S–M | none | **Done 2026-11-13:** vertical, J-Pole, Ringo, inverted-L, SCV, and phased-vertical editors and report rows now use “length”/“largo” for the physical radiating element; base, feed, top, ring, coil, apex, stack, boom, and available heights remain “height”/“altura”. The Zepp “Radiator height” and discone “Cone height” exceptions are preserved. EN/ES help and tests cover the changed labels and installation heights. Internal field names, optimizer variables, schema, CSV/JSON keys, and solver behavior are unchanged. |
 | ~~UX29~~ | ~~Show the constructive feed connection at the feedpoint~~ | M–L | UX6, UX7, UX9, ADR-0031, ADR-0033, ADR-0034 | **Done 2026-11-13:** added the read-only `FeedConnectionDetail` resolver, explicit Yagi straight/folded/beta/hairpin cases, a renderer-neutral SVG schematic, a **Connection** row and **View feed connection...** action, a read-only detail dialog, and a feedpoint assembly section in the construction sheet, native PDF, and ZIP. The four modeled/recorded/recommended/not-modeled states are separate; unclassified families return explicit unknown. ADR-0036, user guide, domain model, help, and tests are updated. No `FeedPoint`, solver, simulation, or schema change. |
-| UX30 | Per-template default conductor material | S–M | none | New Antenna and Change Template preselect the agreed material for every catalog template: aluminum for 15 templates, stainless 304 for the loaded vertical, and copper for the remaining 25; existing projects and reference designs keep their materials; no schema, solver-code, or migration change |
+| ~~UX30~~ | ~~Per-template default conductor material~~ | S–M | none | **Done 2026-11-17:** New Antenna and Change Template preselect the agreed material for every catalog template: aluminum for 15 templates, stainless 304 for the loaded vertical, and copper for the remaining 25; existing projects and reference designs keep their materials; no schema, solver-code, or migration change. |
 | ~~UX31~~ | ~~Draw coax as coax in the feed-connection schematic~~ | S–M | UX29 | **Done 2026-11-17:** direct coax is drawn as a cable with a center conductor, outer shield, and cross-section; the middle device box is gone. Current balun, transformer, balanced line, multi-port, and unknown have distinct drawings; terminal labels honor ground/counterpoise/return; a recommended choke is dashed. EN/ES, dialog, HTML, PDF, ZIP, and tests pass; no domain, solver, or schema change. |
 | ~~EF1~~ | ~~Preserve shortened-EFHW structural segmentation in optimizer candidates~~ | S–M | none | **Done 2026-11-13:** the optimizer descriptor can declare model-defined wire partitions. Only the shortened EFHW presets opt in, preserving the fixed three-segment feed and loading-coil sections while the radiator counts are recalculated. Unit tests cover 80-10 and 40-10; other families keep a `None` hook and the previous segmentation path. No solver, schema, or UI change. |
 | ~~EF2~~ | ~~Diagnose input-shunt matching-network topology limits~~ | S | EF1 optional | **Done 2026-11-13:** added `MatchingNetworkOrigin` as runtime-only simulation context, a domain `input_shunt_l_network_swr_floor()` predicate, a `LinkBudget` floor field, and a `matching_network.topology_limit` warning. The warning appears only when the effective network is the internal EFHW input-shunt unit; project networks and other families stay unchanged. The origin is excluded from the model fingerprint and is not persisted. EN/ES diagnostic text, domain, link, fingerprint, resolution, and real NEC2C tests cover the path. |
@@ -150,9 +150,9 @@ same day. UX25 and UX26 were queued on 2026-11-13 and completed the same day.
 UX27 and UX28 were added the same day from terminology feedback; UX27 and UX28
 were completed on 2026-11-13.
 UX29 was added and completed the same day from feed-connection feedback.
-UX30 was queued on 2026-11-17 from per-template material-default feedback; it
-remains queued. UX31 was queued on 2026-11-17 from feed-schematic feedback and
-was completed the same day.
+UX30 was queued on 2026-11-17 from per-template material-default feedback and
+was completed the same day. UX31 was queued on 2026-11-17 from feed-schematic
+feedback and was completed the same day.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
 EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
 L/Pi/T matching are implemented, including automatic L/Pi/T synthesis with a
@@ -1098,7 +1098,9 @@ scaling QA remains manual.
 
 ## UX30 — Per-template default conductor material (design note, 2026-11-17)
 
-**Status:** queued; not implemented. This note is the execution contract.
+**Status:** implemented on 2026-11-17. This note is retained as the execution
+record. The resolver, domain defaults, form selectors, reference-library
+materials, tests, and documentation are in place.
 
 ### Problem
 
@@ -2334,9 +2336,10 @@ model and solver contract must land first.
 12. **UX29 is complete.** The read-only constructive feed connection is closed.
     Do not change `FeedPoint`, the NEC deck, the solver, or the schema without a
     new ADR.
-13. **UX30 is queued.** Per-template material defaults are defined in this
-    file. It changes only new-design selectors; it does not change the material
-    presets, solver, schema, or existing projects.
+13. **UX30 is complete.** Per-template material defaults are implemented for new
+    designs, while existing designs and source-backed references keep their
+    stored material. It changes only the new-design selector; it does not change
+    the material presets, solver, schema, or existing projects.
 14. **UX31 is complete.** The feed-connection schematic now draws coax as coax,
     with per-interface drawings and terminal labels derived from
     `FeedTerminal.side`. It changes only reporting/UI; it does not change the
@@ -2385,7 +2388,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **52**.
-- Full gate: **3,265 passed, 1 skipped** with `NEC2C` and the optional
+- Full gate: **3,327 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.8.2** published on 2026-11-16 with the element-table header

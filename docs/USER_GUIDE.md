@@ -68,7 +68,11 @@ to create a project from a template and **Open Project...** to load an existing
 project is open.
 
 Create a design from the catalog, review the generated template, and press
-**Simulate** (or F5). The design panel on the left shows antenna type, frequency,
+**Simulate** (or F5). New designs preselect the conductor material normally used
+for the template: aluminum for beam, Yagi, vertical, and wire-beam families,
+stainless 304 for the loaded vertical, and copper for dipoles, loops, end-fed
+wires, and traps. The selector remains editable, and existing projects keep their
+stored material. The design panel on the left shows antenna type, frequency,
 geometry, height, wire diameter, material, ground, reference impedance, and the
 frequency sweep. A single action bar above the panel has **Apply design**,
 **Estimate Dimensions...**, and **Optimize...**. **Apply design** saves the

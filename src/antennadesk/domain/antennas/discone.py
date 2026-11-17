@@ -14,7 +14,7 @@ from ..environment.ground import FREE_SPACE, GroundModel
 from .antenna import AntennaModel
 from .feed import FeedPoint
 from .geometry import Point3D
-from .materials import COPPER, ConductorMaterial
+from .materials import ALUMINUM, COPPER, ConductorMaterial
 from .wire import Wire
 
 ANTENNA_TYPE_DISCONE = "discone"
@@ -80,7 +80,7 @@ class DisconeParameters:
     wire_count: int = 12
     azimuth_deg: float = 0.0
     wire_radius_m: float = 0.001
-    material: ConductorMaterial = COPPER
+    material: ConductorMaterial = ALUMINUM
     ground: GroundModel = FREE_SPACE
 
     def __post_init__(self) -> None:

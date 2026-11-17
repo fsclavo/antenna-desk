@@ -15,7 +15,7 @@ from .antenna import AntennaModel
 from .custom import CustomAntennaParameters
 from .feed import FeedPoint
 from .geometry import Point3D
-from .materials import COPPER, ConductorMaterial
+from .materials import ALUMINUM, COPPER, ConductorMaterial
 from .wire import Wire
 
 ANTENNA_TYPE_HALF_SQUARE = "half_square"
@@ -86,11 +86,13 @@ def scv_parameters(
     feed_offset_m: float = 0.0,
     azimuth_deg: float = 0.0,
     wire_radius_m: float = 0.001,
-    material: ConductorMaterial = COPPER,
+    material: ConductorMaterial | None = None,
     ground: GroundModel = FREE_SPACE,
 ) -> ScvParameters:
     """Return the published Cebik starting geometry for a variant."""
 
+    if material is None:
+        material = ALUMINUM if kind is ScvKind.HALF_SQUARE else COPPER
     horizontal_m, vertical_m = scv_starting_dimensions(kind, frequency_hz)
     return ScvParameters(
         frequency_hz=frequency_hz,

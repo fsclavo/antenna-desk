@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ...domain.antennas.material_defaults import default_material_for_template
 from ...domain.antennas.materials import COPPER, ConductorMaterial
 from ...domain.antennas.quad_beam import (
     MAX_ELEMENTS,
@@ -25,7 +26,7 @@ from ...domain.antennas.quad_beam import (
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..material_combo import (
-    populate_material_combo,
+    populate_template_material_combo,
     retranslate_material_combo,
 )
 from ..units import (
@@ -108,7 +109,7 @@ class QuadBeamForm(QWidget):
         apply_radius_units(translator, unit_system, self._radius)
 
         self._material = QComboBox(self)
-        populate_material_combo(self._material, translator)
+        populate_template_material_combo(self._material, translator, "quad_beam")
 
         self._ground = QComboBox(self)
         self._ground.addItem("", GroundKind.FREE_SPACE.value)
@@ -198,6 +199,7 @@ class QuadBeamForm(QWidget):
         self._ground.currentIndexChanged.connect(self._ground_changed)
         initial = parameters or quad_beam_parameters(
             frequency_hz=14_100_000.0,
+            material=default_material_for_template("quad_beam"),
             ground=GroundModel.finite(
                 relative_permittivity=13.0,
                 conductivity_s_per_m=0.005,

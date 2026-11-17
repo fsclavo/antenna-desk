@@ -36,6 +36,13 @@ permeability. The ordered `CONDUCTOR_MATERIALS` presets are `COPPER`,
 Stainless 304 is a higher-loss corrosion-resistant option; the solver models
 conductivity only, so its relative permeability is rounded to 1.0.
 
+New-design editors preselect a template default through
+`domain/antennas/material_defaults.py`: aluminum for the Yagi, beam, vertical,
+and wire-beam families, stainless 304 for the loaded vertical, and copper for
+dipoles, loops, end-fed wires, and traps. This is only the initial selector
+value; material remains a conductor-loss preset, not a structural or tubing
+model. Existing designs keep their stored material.
+
 ### Wire
 
 A straight conductor with an identifier, start point, end point, radius, and

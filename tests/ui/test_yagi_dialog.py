@@ -41,7 +41,7 @@ def test_yagi_dialog_loads_the_nbs_preset(qtbot: QtBot) -> None:
     assert dialog._table.rowCount() == 5
     assert dialog._driven.currentData() == 1
     assert dialog._ground.currentText() == "Free space"
-    assert dialog._material.currentText() == "Copper"
+    assert dialog._material.currentText() == "Aluminum"
     assert dialog._form._polarization.currentText() == "Horizontal"
     assert dialog._form._polarization.itemText(1) == "Vertical"
     parameters = dialog.parameters()

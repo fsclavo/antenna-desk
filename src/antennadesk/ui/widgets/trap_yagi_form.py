@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ...domain.antennas.material_defaults import default_material_for_template
 from ...domain.antennas.materials import COPPER, ConductorMaterial
 from ...domain.antennas.trap_yagi import (
     MAX_ELEMENTS,
@@ -25,7 +26,7 @@ from ...domain.antennas.trap_yagi import (
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..material_combo import (
-    populate_material_combo,
+    populate_template_material_combo,
     retranslate_material_combo,
 )
 from ..units import (
@@ -128,7 +129,7 @@ class TrapYagiForm(QWidget):
         apply_radius_units(translator, unit_system, self._radius)
 
         self._material = QComboBox(self)
-        populate_material_combo(self._material, translator)
+        populate_template_material_combo(self._material, translator, "trap_yagi")
 
         self._ground = QComboBox(self)
         self._ground.addItem("", GroundKind.FREE_SPACE.value)
@@ -233,10 +234,11 @@ class TrapYagiForm(QWidget):
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._ground_changed)
         initial = parameters or trap_yagi_parameters(
+            material=default_material_for_template("trap_yagi"),
             ground=GroundModel.finite(
                 relative_permittivity=13.0,
                 conductivity_s_per_m=0.005,
-            )
+            ),
         )
         self.set_parameters(initial)
         self._update_ground_controls()
