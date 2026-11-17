@@ -231,6 +231,7 @@ def test_results_view_plot_fonts_track_the_preset(qtbot: QtBot) -> None:
     assert axis.label.font().pointSizeF() == pytest.approx(8.1)
     assert view._impedance_plot.plotItem.titleLabel.opts["size"] == "9.9pt"
     assert view._impedance_plot.plotItem.legend.opts["labelTextSize"] == "8.1pt"
+    view.set_result(None)
     view.close()
 
 
