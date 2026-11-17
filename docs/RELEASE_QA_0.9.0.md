@@ -2,7 +2,9 @@
 
 - **Version:** `0.9.0`
 - **Date:** 2026-11-17
-- **Status:** release candidate prepared; **not tagged or published**
+- **Tag:** `v0.9.0` at `075ff9b`
+- **Release:** <https://github.com/fsclavo/antenna-desk/releases/tag/v0.9.0>
+- **Status:** published with unsigned, checksum-verified artifacts
 - **Schema:** 52 (unchanged from 0.8.2)
 - **Previous release:** `0.8.2` (2026-11-16)
 
@@ -84,6 +86,23 @@ Both native artifacts have companion `.sha256` files, verified with
 `sha256sum -c`. The wheel and sdist checksums were computed directly from the
 built artifacts.
 
+## Published assets
+
+Every asset has a companion `.sha256` file. All six published checksums were
+verified with `sha256sum -c` after downloading the release assets.
+
+| Asset | Size | SHA-256 |
+|---|---:|---|
+| `antennadesk-0.9.0-py3-none-any.whl` | 1016 K | `5115d5926f685de0e5c97b3515c9317e982cc6708a744d4a928ff1226f54adc6` |
+| `antennadesk-0.9.0.tar.gz` | 1.5 M | `5fffdec656f2a66aaa0c1ff4d7a7ffb902d8b1320c2e25f602c7ebbabd83b942` |
+| `AntennaDesk-0.9.0-x86_64.AppImage` | 129 M | `be5397ca1ef2011d335bb85f43e600937f6c76b842e42ca3c35f0f6aa456cf45` |
+| `antennadesk_0.9.0_amd64.deb` | 110 M | `0f013506c01c93c710fe547acca90b57a2aa04effc8666f48fa128bb95bccb3f` |
+| `AntennaDesk-0.9.0-windows-x86_64.zip` | 103 M | `977eba31a2fd4db9e66a969be21625d0e6847d8e64f3dc4ab05843f528eca2e3` |
+| `AntennaDesk-0.9.0-windows-x86_64-setup.exe` | 71 M | `ac1cb712e885b56cfc7609af580ac1c0de96bb88c6d3ac6eed30de7e75fc3e88` |
+
+The published wheel checksum matches the local candidate; the sdist and native
+artifacts were rebuilt independently by CI.
+
 ## Smoke tests
 
 ### Wheel
@@ -118,7 +137,8 @@ built artifacts.
 
 The Windows portable zip and NSIS installer are built in GitHub Actions on
 `windows-latest`; the workflow runs the frozen version/solver, installer,
-shortcut, and uninstall checks before publishing.
+shortcut, and uninstall checks before publishing. See CI run
+[`44103244393`](https://github.com/fsclavo/antenna-desk/actions/runs/44103244393).
 
 ## Known limitations
 
@@ -138,5 +158,8 @@ shortcut, and uninstall checks before publishing.
 
 ## Release decision
 
-Pending. Tag `v0.9.0` after this candidate is approved, then verify that the
-release workflow attached all six assets and their `.sha256` files.
+Published as `v0.9.0` on 2026-11-17. The tag-triggered CI run
+[`44103244393`](https://github.com/fsclavo/antenna-desk/actions/runs/44103244393)
+completed the wheel/sdist, Linux, Windows, and publish jobs successfully. All
+six published assets and their companion `.sha256` files were downloaded and
+verified after publication.

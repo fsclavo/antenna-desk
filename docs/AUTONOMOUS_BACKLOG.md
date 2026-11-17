@@ -2391,13 +2391,14 @@ model and solver contract must land first.
 - Full gate: **3,327 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
-- Release: **0.9.0** candidate prepared on 2026-11-17 with the Touchstone
-  `.s1p` round-trip, coaxial feed schematic (UX31), per-template material
-  defaults (UX30), and the chart-cursor teardown fix. Local artifacts and smoke
-  tests pass; publication is pending. See
-  [`RELEASE_QA_0.9.0.md`](RELEASE_QA_0.9.0.md). **0.8.2** remains the latest
-  published release (2026-11-16, element-table header sizing fix); all six
+- Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
+  round-trip, coaxial feed schematic (UX31), per-template material defaults
+  (UX30), and the chart-cursor teardown fix. The tag-triggered CI run
+  [`44103244393`](https://github.com/fsclavo/antenna-desk/actions/runs/44103244393)
+  completed the wheel/sdist, Linux, Windows, and publish jobs; all six published
   assets and checksums were verified. See
+  [`RELEASE_QA_0.9.0.md`](RELEASE_QA_0.9.0.md). **0.8.2** remains the previous
+  release (2026-11-16, element-table header sizing fix). See
   [`RELEASE_QA_0.8.2.md`](RELEASE_QA_0.8.2.md).
 - Known CI residue: Windows Python 3.11 runs acceptance, integration, and unit
   tests only. Its UI suite is excluded because PySide6/pyqtgraph can corrupt

@@ -72,7 +72,7 @@ of truth before adding another planning document.
 - [`RELEASE_QA_0.8.2.md`](RELEASE_QA_0.8.2.md) — 0.8.2 element-table header
   sizing patch release checks and published assets.
 - [`RELEASE_QA_0.9.0.md`](RELEASE_QA_0.9.0.md) — 0.9.0 Touchstone, feed
-  schematic, and material-default release candidate checks.
+  schematic, and material-default release checks and published assets.
 - [`EXPERIMENTAL_VALIDATION_PROTOCOL.md`](EXPERIMENTAL_VALIDATION_PROTOCOL.md) —
   how experimental templates are validated.
 - [`RELEASE.md`](RELEASE.md) — packaging, signing, and release checklist.
