@@ -183,6 +183,8 @@ def test_quad_beam_form_applies_transformer_help(qtbot: QtBot) -> None:
 
     assert "Ideal feed transformer" in form._transformer.toolTip()
     assert "does not change the wire geometry" in form._transformer.toolTip()
+    assert "quarter wave" in form._starting.toolTip()
+    assert "installation height" in form._starting.toolTip()
 
 
 def test_apply_help_clears_a_missing_key_instead_of_showing_it(

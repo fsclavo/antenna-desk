@@ -43,7 +43,9 @@ def test_discone_dialog_updates_the_cone_and_disc(qtbot: QtBot) -> None:
     assert len(parameters.to_antenna().wires) == 17
 
 
-def test_discone_dialog_sets_the_requested_frequency(qtbot: QtBot) -> None:
+def test_discone_dialog_seeds_the_cone_at_the_requested_frequency(
+    qtbot: QtBot,
+) -> None:
     dialog = DisconeDialog(
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
@@ -51,7 +53,55 @@ def test_discone_dialog_sets_the_requested_frequency(qtbot: QtBot) -> None:
     )
     qtbot.addWidget(dialog)
 
-    assert dialog.parameters().frequency_hz == pytest.approx(50_000_000.0)
+    parameters = dialog.parameters()
+    assert parameters.frequency_hz == pytest.approx(50_000_000.0)
+    assert parameters.cone_height_m == pytest.approx(1.2332, abs=1e-3)
+    assert parameters.cone_radius_m == pytest.approx(0.7120, abs=1e-3)
+    assert parameters.disc_radius_m == pytest.approx(0.9968, abs=1e-3)
+
+
+def test_discone_form_load_starting_preserves_installation_fields(
+    qtbot: QtBot,
+) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+    form._frequency.setValue(50.0)
+    form._base_height.setValue(2.0)
+    form._disc_gap.setValue(0.2)
+    form._wire_count.setValue(8)
+    form._azimuth.setValue(45.0)
+
+    form._starting.click()
+
+    parameters = form.parameters()
+    assert parameters.cone_height_m == pytest.approx(1.2332, abs=1e-3)
+    assert parameters.base_height_m == pytest.approx(2.0)
+    assert parameters.disc_gap_m == pytest.approx(0.2)
+    assert parameters.wire_count == 8
+    assert parameters.azimuth_deg == pytest.approx(45.0)
+
+
+def test_discone_form_auto_resizes_pristine_geometry(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    form._frequency.setValue(50.0)
+
+    assert form.parameters().cone_height_m == pytest.approx(1.2332, abs=1e-3)
+
+    form._base_height.setValue(2.0)
+    form._frequency.setValue(100.0)
+
+    assert form.parameters().base_height_m == pytest.approx(2.0)
+    assert form.parameters().cone_height_m < 1.0
+
+    form._cone_height.setValue(0.9)
+    form._frequency.setValue(110.0)
+
+    assert form.parameters().cone_height_m == pytest.approx(0.9)
+    assert "not resized" in form._starting_note.text().lower()
 
 
 def test_discone_form_preserves_lengths_when_switching_units(qtbot: QtBot) -> None:

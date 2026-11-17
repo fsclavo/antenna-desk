@@ -46,7 +46,9 @@ def test_hexbeam_dialog_updates_the_wire_path(qtbot: QtBot) -> None:
     assert len(parameters.to_antenna().wires) == 9
 
 
-def test_hexbeam_dialog_sets_the_requested_frequency(qtbot: QtBot) -> None:
+def test_hexbeam_dialog_seeds_the_reference_at_the_requested_frequency(
+    qtbot: QtBot,
+) -> None:
     dialog = HexbeamDialog(
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
@@ -54,7 +56,51 @@ def test_hexbeam_dialog_sets_the_requested_frequency(qtbot: QtBot) -> None:
     )
     qtbot.addWidget(dialog)
 
-    assert dialog.parameters().frequency_hz == pytest.approx(21_200_000.0)
+    parameters = dialog.parameters()
+    assert parameters.frequency_hz == pytest.approx(21_200_000.0)
+    assert parameters.driver_half_length_m == pytest.approx(3.7217, abs=1e-3)
+    assert parameters.reflector_half_length_m == pytest.approx(3.5178, abs=1e-3)
+
+
+def test_hexbeam_form_load_starting_preserves_installation_fields(
+    qtbot: QtBot,
+) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+    form._frequency.setValue(21.2)
+    form._height.setValue(12.0)
+    form._azimuth.setValue(30.0)
+    form._driver_half.setValue(10.0)
+
+    form._starting.click()
+
+    parameters = form.parameters()
+    assert parameters.driver_half_length_m == pytest.approx(3.7217, abs=1e-3)
+    assert parameters.height_m == pytest.approx(12.0)
+    assert parameters.azimuth_deg == pytest.approx(30.0)
+
+
+def test_hexbeam_form_auto_resizes_pristine_geometry(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    form._frequency.setValue(21.2)
+
+    assert form.parameters().driver_half_length_m == pytest.approx(3.7217, abs=1e-3)
+
+    form._height.setValue(12.0)
+    form._frequency.setValue(28.4)
+
+    assert form.parameters().height_m == pytest.approx(12.0)
+    assert form.parameters().driver_half_length_m < 3.0
+
+    form._driver_half.setValue(4.0)
+    form._frequency.setValue(30.0)
+
+    assert form.parameters().driver_half_length_m == pytest.approx(4.0)
+    assert "not resized" in form._starting_note.text().lower()
 
 
 def test_hexbeam_form_preserves_lengths_when_switching_units(qtbot: QtBot) -> None:

@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
     QLabel,
+    QPushButton,
     QSpinBox,
     QVBoxLayout,
     QWidget,
@@ -27,6 +28,7 @@ from ...domain.antennas.quad_beam import (
     quad_beam_reference_transformer_ratio,
 )
 from ...domain.environment.ground import GroundKind, GroundModel
+from ..help import apply_help
 from ..i18n import Translator
 from ..material_combo import (
     populate_template_material_combo,
@@ -45,6 +47,7 @@ from ..units import (
 from .form_i18n import FormLabels, retranslate_combo
 from .form_units import apply_length_suffixes, apply_radius_units
 from .ground_presets import GroundPresetController
+from .starting_dimensions import StartingDimensionsState
 
 
 class QuadBeamForm(QWidget):
@@ -149,6 +152,15 @@ class QuadBeamForm(QWidget):
             translator,
         )
 
+        self._starting = QPushButton(translator.t("quad_beam.load_starting"), self)
+        self._starting.clicked.connect(self.load_starting_dimensions)
+        apply_help(self._starting, translator, "load_starting", family="quad_beam")
+        self._starting_note = QLabel(self)
+        self._starting_note.setWordWrap(True)
+        self._starting_note.setStyleSheet("font-style: italic;")
+        self._starting_note.setVisible(False)
+        self._starting_state = StartingDimensionsState(translator, self._starting_note)
+
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
         self._transformer_hint = QLabel(translator.t("quad_beam.transformer_hint"), self)
@@ -156,6 +168,7 @@ class QuadBeamForm(QWidget):
 
         form = QFormLayout()
         form.addRow(self._labels.label("field.frequency"), self._frequency)
+        form.addRow(self._starting)
         form.addRow(self._labels.label("quad_beam.element_count"), self._element_count)
         form.addRow(self._labels.label("quad_beam.loop_side"), self._loop_side)
         form.addRow(
@@ -190,12 +203,16 @@ class QuadBeamForm(QWidget):
         layout.addLayout(form)
         layout.addWidget(self._transformer_hint)
         layout.addWidget(self._geometry)
+        layout.addWidget(self._starting_note)
 
+        self._frequency.valueChanged.connect(self._frequency_changed)
         for widget in (
-            self._frequency,
             self._loop_side,
             self._reflector_spacing,
             self._director_spacing,
+        ):
+            widget.valueChanged.connect(self._managed_field_changed)
+        for widget in (
             self._height,
             self._reflector_scale,
             self._director_scale,
@@ -219,12 +236,17 @@ class QuadBeamForm(QWidget):
         )
         self._last_element_count = initial.element_count
         self.set_parameters(initial)
+        if parameters is None:
+            self.mark_starting_dimensions_pristine()
         self._update_ground_controls()
         self._update_geometry()
 
     def retranslate(self) -> None:
         self._ground_presets.retranslate()
         self._labels.retranslate()
+        self._starting.setText(self._translator.t("quad_beam.load_starting"))
+        apply_help(self._starting, self._translator, "load_starting", family="quad_beam")
+        self._starting_state.retranslate()
         self._transformer_hint.setText(self._translator.t("quad_beam.transformer_hint"))
         retranslate_material_combo(self._material, self._translator)
         retranslate_combo(
@@ -239,6 +261,28 @@ class QuadBeamForm(QWidget):
             self._update_element_controls()
             self._update_geometry()
             self.changed.emit()
+
+    def _frequency_changed(self, _value: float) -> None:
+        if self._updating:
+            return
+        if self._starting_state.pristine:
+            try:
+                self.load_starting_dimensions()
+            except (ValueError, TypeError):
+                self._starting_state.show_stale(self._frequency.value())
+                self._emit_changed()
+            return
+        self._starting_state.show_stale(self._frequency.value())
+        self._emit_changed()
+
+    def _managed_field_changed(self, *_args: object) -> None:
+        if self._updating:
+            return
+        self._starting_state.mark_non_pristine()
+        self._emit_changed()
+
+    def mark_starting_dimensions_pristine(self) -> None:
+        self._starting_state.mark_pristine()
 
     def _element_count_changed(self, value: int) -> None:
         if self._updating:
@@ -289,7 +333,21 @@ class QuadBeamForm(QWidget):
     def load_starting_dimensions(self) -> None:
         from ...domain.design.formulas import quarter_wave_length_m, wavelength_m
 
-        current = self.parameters()
+        try:
+            current = self.parameters()
+        except (ValueError, TypeError):
+            current = quad_beam_parameters(
+                frequency_hz=self._frequency.value() * 1_000_000.0,
+                element_count=self._element_count.value(),
+                height_m=length_to_m(self._height.value(), self._unit_system),
+                reflector_scale=self._reflector_scale.value(),
+                director_scale=self._director_scale.value(),
+                azimuth_deg=self._azimuth.value(),
+                wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
+                material=self._selected_material(),
+                ground=self._ground_model(),
+                transformer_ratio=self._transformer.value(),
+            )
         quarter = quarter_wave_length_m(current.frequency_hz)
         wavelength = wavelength_m(current.frequency_hz)
         self.set_parameters(
@@ -299,7 +357,7 @@ class QuadBeamForm(QWidget):
                 loop_side_m=quarter,
                 reflector_spacing_m=wavelength * 0.2,
                 director_spacing_m=wavelength * 0.2,
-                height_m=wavelength * 0.25,
+                height_m=current.height_m,
                 reflector_scale=current.reflector_scale,
                 director_scale=current.director_scale,
                 azimuth_deg=current.azimuth_deg,
@@ -309,11 +367,13 @@ class QuadBeamForm(QWidget):
                 transformer_ratio=current.transformer_ratio,
             )
         )
+        self._starting_state.mark_pristine(frequency_mhz=self._frequency.value())
         self.changed.emit()
 
     def set_unit_system(self, unit_system: UnitSystem) -> None:
         if unit_system is self._unit_system:
             return
+        was_pristine = self._starting_state.pristine
         try:
             parameters = self.parameters()
         except (ValueError, TypeError):
@@ -341,6 +401,8 @@ class QuadBeamForm(QWidget):
             self._updating = previous_updating
         if parameters is not None:
             self.set_parameters(parameters)
+            if was_pristine:
+                self.mark_starting_dimensions_pristine()
 
     def set_parameters(self, parameters: QuadBeamParameters) -> None:
         self._updating = True
@@ -373,6 +435,7 @@ class QuadBeamForm(QWidget):
         finally:
             self._updating = False
         self._last_element_count = parameters.element_count
+        self._starting_state.mark_non_pristine()
         self._update_ground_controls()
         self._update_element_controls()
         self._update_geometry()

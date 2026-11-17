@@ -38,6 +38,7 @@ from ...domain.antennas.materials import COPPER
 from ...domain.antennas.moxon import MoxonParameters
 from ...domain.antennas.ocfd import OCFDParameters
 from ...domain.antennas.polarization import Polarization
+from ...domain.antennas.quad_beam import QuadBeamParameters
 from ...domain.antennas.t2fd import T2FDParameters
 from ...domain.antennas.vertical import VerticalParameters
 from ...domain.antennas.yagi import YagiParameters
@@ -117,6 +118,7 @@ class DesignFromFrequencyDialog(QDialog):
         feed_offset_m: float | None = None
         gap_m = 0.01
         yagi_elements = 5
+        quad_beam_elements = 2
         azimuth_deg = 0.0
         wire_radius_m = 0.001
         material = COPPER
@@ -170,6 +172,9 @@ class DesignFromFrequencyDialog(QDialog):
             polarization = parameters.polarization
             if isinstance(parameters, YagiParameters):
                 yagi_elements = len(parameters.elements)
+        elif isinstance(parameters, QuadBeamParameters):
+            height_m = parameters.height_m
+            quad_beam_elements = parameters.element_count
         if hasattr(initial_parameters, "azimuth_deg"):
             azimuth_deg = initial_parameters.azimuth_deg
         if hasattr(initial_parameters, "wire_radius_m"):
@@ -280,6 +285,10 @@ class DesignFromFrequencyDialog(QDialog):
         self._yagi_elements.setRange(2, 32)
         self._yagi_elements.setValue(yagi_elements)
 
+        self._quad_beam_elements = QSpinBox(self)
+        self._quad_beam_elements.setRange(2, 3)
+        self._quad_beam_elements.setValue(quad_beam_elements)
+
         self._form = QFormLayout()
         self._rows: dict[str, tuple[QLabel, QWidget]] = {}
         self._add_row("template", "field.template", self._template_value)
@@ -301,6 +310,11 @@ class DesignFromFrequencyDialog(QDialog):
         self._add_row("fan_bands", "design_from_frequency.fan_bands", self._fan_bands)
         self._add_row("radial_count", "vertical.radial_count", self._radial_count)
         self._add_row("yagi_elements", "geometry.elements", self._yagi_elements)
+        self._add_row(
+            "quad_beam_elements",
+            "quad_beam.element_count",
+            self._quad_beam_elements,
+        )
 
         self._template_hint = QLabel(self)
         self._template_hint.setWordWrap(True)
@@ -369,6 +383,7 @@ class DesignFromFrequencyDialog(QDialog):
             self._fan_bands.textChanged,
             self._radial_count.valueChanged,
             self._yagi_elements.valueChanged,
+            self._quad_beam_elements.valueChanged,
         ):
             signal.connect(self._clear_estimate)
         self._update_rows()
@@ -390,6 +405,7 @@ class DesignFromFrequencyDialog(QDialog):
             "ocfd",
             "yagi",
             "moxon",
+            "quad_beam",
         }:
             visible.add("height")
         if family == "wire_dipole":
@@ -414,6 +430,8 @@ class DesignFromFrequencyDialog(QDialog):
             visible.add("polarization")
         if family == "yagi":
             visible.add("yagi_elements")
+        if family == "quad_beam":
+            visible.add("quad_beam_elements")
         height_label, _height_widget = self._rows["height"]
         height_label.setObjectName("endfed.feed_height" if family == "endfed" else "field.height")
         for key, (label, widget) in self._rows.items():
@@ -460,6 +478,7 @@ class DesignFromFrequencyDialog(QDialog):
             gap_m=self._gap_m,
             fan_bands_hz=fan_bands,
             yagi_elements=self._yagi_elements.value(),
+            quad_beam_elements=self._quad_beam_elements.value(),
             highest_frequency_hz=(
                 self._highest_frequency.value() * 1_000_000.0 if family == "t2fd" else None
             ),

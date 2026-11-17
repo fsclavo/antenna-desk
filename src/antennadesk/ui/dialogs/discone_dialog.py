@@ -37,6 +37,7 @@ class DisconeDialog(QDialog):
         self._form = DisconeForm(translator, unit_system, parameters, self)
         if frequency_hz is not None and parameters is None:
             self._form.set_frequency_hz(frequency_hz)
+            self._form.load_starting_dimensions()
         self.setWindowTitle(translator.t("discone.title"))
         self.resize(*scaled_dialog_size(560, 780))
 

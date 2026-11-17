@@ -15,6 +15,10 @@ from antennadesk.domain.antennas.dipole import (
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.moxon import MoxonParameters
+from antennadesk.domain.antennas.quad_beam import (
+    QuadBeamParameters,
+    quad_beam_parameters,
+)
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.yagi import YagiParameters
@@ -198,6 +202,27 @@ def test_dialog_preloads_the_yagi_element_count(qtbot: QtBot) -> None:
     assert len(parameters.elements) == len(initial.elements)
 
 
+def test_dialog_preloads_the_quad_beam_element_count(qtbot: QtBot) -> None:
+    initial = quad_beam_parameters(
+        frequency_hz=144_000_000.0,
+        element_count=3,
+        height_m=8.0,
+    )
+    dialog = _dialog(qtbot, initial)
+
+    assert dialog._quad_beam_elements.value() == 3
+    assert dialog._quad_beam_elements.isHidden() is False
+
+    dialog._run_estimate()
+
+    parameters = dialog.estimated_parameters()
+    assert isinstance(parameters, QuadBeamParameters)
+    assert parameters.element_count == 3
+    assert parameters.height_m == pytest.approx(8.0)
+    assert parameters.loop_side_m == pytest.approx(0.494, abs=0.002)
+    assert parameters.transformer_ratio == pytest.approx(2.0)
+
+
 def test_dialog_preloads_and_applies_yagi_polarization(qtbot: QtBot) -> None:
     from antennadesk.domain.antennas.polarization import Polarization
 
@@ -294,6 +319,7 @@ def test_changing_an_input_invalidates_the_estimate(qtbot: QtBot) -> None:
         "ocfd",
         "j_pole",
         "ringo",
+        "quad_beam",
         "yagi",
         "moxon",
         "t2fd",

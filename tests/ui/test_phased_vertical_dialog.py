@@ -56,7 +56,9 @@ def test_phased_vertical_dialog_updates_the_pattern_of_sources(qtbot: QtBot) -> 
     assert "3 verticals" in dialog._form._geometry.text()
 
 
-def test_phased_vertical_dialog_sets_the_requested_frequency(qtbot: QtBot) -> None:
+def test_phased_vertical_dialog_seeds_the_array_at_the_requested_frequency(
+    qtbot: QtBot,
+) -> None:
     dialog = PhasedVerticalDialog(
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
@@ -64,7 +66,61 @@ def test_phased_vertical_dialog_sets_the_requested_frequency(qtbot: QtBot) -> No
     )
     qtbot.addWidget(dialog)
 
-    assert dialog.parameters().frequency_hz == pytest.approx(3_500_000.0)
+    parameters = dialog.parameters()
+    assert parameters.frequency_hz == pytest.approx(3_500_000.0)
+    assert parameters.height_m == pytest.approx(20.3431, abs=1e-3)
+    assert parameters.spacing_m == pytest.approx(20.3431, abs=1e-3)
+    assert parameters.radial_length_m == pytest.approx(20.3431, abs=1e-3)
+
+
+def test_phased_vertical_form_load_starting_preserves_installation_fields(
+    qtbot: QtBot,
+) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+    form._frequency.setValue(3.5)
+    form._base_height.setValue(1.0)
+    form._phase_step.setValue(120.0)
+    form._amplitude_taper.setValue(0.3)
+    form._radial_count.setValue(8)
+    form._radial_angle.setValue(45.0)
+    form._azimuth.setValue(30.0)
+
+    form._starting.click()
+
+    parameters = form.parameters()
+    assert parameters.height_m == pytest.approx(20.3431, abs=1e-3)
+    assert parameters.spacing_m == pytest.approx(20.3431, abs=1e-3)
+    assert parameters.radial_length_m == pytest.approx(20.3431, abs=1e-3)
+    assert parameters.base_height_m == pytest.approx(1.0)
+    assert parameters.phase_step_deg == pytest.approx(120.0)
+    assert parameters.amplitude_taper == pytest.approx(0.3)
+    assert parameters.radial_count == 8
+    assert parameters.radial_angle_deg == pytest.approx(45.0)
+    assert parameters.azimuth_deg == pytest.approx(30.0)
+
+
+def test_phased_vertical_form_auto_resizes_pristine_geometry(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    form._frequency.setValue(3.5)
+
+    assert form.parameters().height_m == pytest.approx(20.3431, abs=1e-3)
+
+    form._base_height.setValue(1.0)
+    form._frequency.setValue(7.0)
+
+    assert form.parameters().base_height_m == pytest.approx(1.0)
+    assert form.parameters().height_m < 11.0
+
+    form._height.setValue(11.0)
+    form._frequency.setValue(14.1)
+
+    assert form.parameters().height_m == pytest.approx(11.0)
+    assert "not resized" in form._starting_note.text().lower()
 
 
 def test_phased_vertical_form_converts_units(qtbot: QtBot) -> None:

@@ -12,6 +12,7 @@ from antennadesk.domain.antennas.j_pole import JPoleParameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.moxon import MoxonParameters, moxon_20m_wire
 from antennadesk.domain.antennas.polarization import Polarization
+from antennadesk.domain.antennas.quad_beam import QuadBeamParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.yagi import YagiParameters
 from antennadesk.domain.design import (
@@ -77,6 +78,39 @@ def test_loop_estimate_uses_shape_side_count() -> None:
         loop_circumference_m(7_100_000.0, sides=4)
     )
     assert "estimator.warning.loop_matching" in delta.warnings
+
+
+def test_quad_beam_estimate_uses_quarter_wave_side_and_fifth_wave_spacing() -> None:
+    frequency = 144_000_000.0
+    estimate = estimate_intent(
+        _intent(
+            "quad_beam",
+            frequency_hz=frequency,
+            height_m=8.0,
+            quad_beam_elements=2,
+        )
+    )
+
+    assert isinstance(estimate.parameters, QuadBeamParameters)
+    assert estimate.parameters.loop_side_m == pytest.approx(quarter_wave_length_m(frequency))
+    assert estimate.parameters.reflector_spacing_m == pytest.approx(wavelength_m(frequency) * 0.2)
+    assert estimate.parameters.height_m == pytest.approx(8.0)
+    assert estimate.parameters.element_count == 2
+    assert estimate.parameters.transformer_ratio == pytest.approx(4.0)
+    assert estimate.confidence is Confidence.HEURISTIC
+    assert "estimator.warning.quad_beam_tuning" in estimate.warnings
+
+    three = estimate_intent(
+        _intent(
+            "quad_beam",
+            frequency_hz=frequency,
+            quad_beam_elements=3,
+        )
+    ).parameters
+
+    assert isinstance(three, QuadBeamParameters)
+    assert three.element_count == 3
+    assert three.transformer_ratio == pytest.approx(2.0)
 
 
 def test_vertical_estimate_supports_quarter_half_and_five_eighth() -> None:
@@ -389,6 +423,7 @@ def test_registry_covers_every_current_domain_antenna_type() -> None:
         loop,
         moxon,
         ocfd,
+        quad_beam,
         ringo,
         vertical,
         yagi,
@@ -404,6 +439,7 @@ def test_registry_covers_every_current_domain_antenna_type() -> None:
         loop,
         moxon,
         ocfd,
+        quad_beam,
         ringo,
         vertical,
         yagi,
@@ -433,6 +469,7 @@ def test_registry_covers_every_current_domain_antenna_type() -> None:
         ("j_pole", 146_000_000.0, {"folded": False}),
         ("j_pole", 146_000_000.0, {"folded": True}),
         ("ringo", 146_000_000.0, {}),
+        ("quad_beam", 144_000_000.0, {"quad_beam_elements": 3}),
         ("yagi", 146_000_000.0, {"yagi_elements": 5}),
         ("moxon", 14_170_000.0, {}),
         ("t2fd", 7_100_000.0, {"highest_frequency_hz": 30_000_000.0}),
@@ -565,10 +602,13 @@ def test_fan_estimate_uses_the_lowest_band_as_design_frequency() -> None:
 def test_estimator_type_for_the_current_template() -> None:
     ringo = estimate_intent(_intent("ringo")).parameters
     dipole = estimate_intent(_intent("wire_dipole")).parameters
+    quad_beam = estimate_intent(_intent("quad_beam")).parameters
 
     assert estimator_type_for(ringo) == "ringo"
     assert estimator_type_for(dipole) == "wire_dipole"
+    assert estimator_type_for(quad_beam) == "quad_beam"
     assert supports_estimation(ringo) is True
+    assert supports_estimation(quad_beam) is True
 
 
 def test_loaded_vertical_has_no_frequency_first_estimator() -> None:

@@ -53,8 +53,10 @@ consequences, it is documented in `docs/ADR/`.
   **+X toward +Y**, normalized to `[0, 360)`; the geometry compass labels the
   X/Y axes. Radiation-pattern cuts keep their own theta/phi convention with an
   explicit mapping to the model coordinates.
-- Units: **metric and imperial selectable in preferences**; the domain uses
-  canonical units (meters, Hz, ohms).
+- Units: **metric and imperial selectable in preferences**, with an adaptive
+  display policy (mm/cm/m or in/ft) and a fixed-unit escape hatch; the domain
+  uses canonical units (meters, Hz, ohms). See
+  [ADR-0044](ADR/0044-adaptive-length-display-units.md).
 - Python package: `antennadesk`.
 - Project format: `.antennadesk` (versioned JSON).
 - Bands: **HF, VHF, and UHF from the start**, without promising accuracy
@@ -67,6 +69,9 @@ consequences, it is documented in `docs/ADR/`.
 - i18n through `ui/i18n.py` in Phase 3; migrate to Qt Linguist `.ts`/`.qm`
   if the string catalog grows.
 - Local-first, with no accounts, cloud, or mandatory telemetry.
+- The frequency field is the **design frequency**; analysis uses sweeps or band
+  analysis. Edited or tuned geometry is never silently resized. See
+  [ADR-0043](ADR/0043-design-versus-analysis-frequency.md).
 
 ## Quality and workflow
 
@@ -90,7 +95,7 @@ consequences, it is documented in `docs/ADR/`.
 ## Decisions still requiring an ADR
 
 - Final architecture and boundaries.
-- Units and angular conventions (concrete implementation).
+- Angular conventions (concrete implementation).
 - Project format and migrations.
 - Simulation execution and cancellation.
 - 3D visualization strategy.

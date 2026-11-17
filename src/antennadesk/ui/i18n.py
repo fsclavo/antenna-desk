@@ -977,6 +977,63 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Preferences...",
         Language.SPANISH: "Preferencias...",
     },
+    "action.load_starting_dimensions": {
+        Language.ENGLISH: "Load starting dimensions",
+        Language.SPANISH: "Cargar dimensiones iniciales",
+    },
+    "starting_dimensions.updated": {
+        Language.ENGLISH: "Starting dimensions updated for {frequency} MHz.",
+        Language.SPANISH: "Dimensiones iniciales actualizadas para {frequency} MHz.",
+    },
+    "starting_dimensions.stale": {
+        Language.ENGLISH: (
+            "Frequency changed to {frequency} MHz; dimensions were not resized "
+            "because the geometry was edited. Use Load starting dimensions to rebuild "
+            "them."
+        ),
+        Language.SPANISH: (
+            "La frecuencia cambió a {frequency} MHz; no se redimensionaron las "
+            "dimensiones porque la geometría fue editada. Usá Cargar dimensiones "
+            "iniciales para reconstruirlas."
+        ),
+    },
+    "scale_frequency.title": {
+        Language.ENGLISH: "Scale Geometry to Frequency",
+        Language.SPANISH: "Escalar geometría a la frecuencia",
+    },
+    "scale_frequency.current": {
+        Language.ENGLISH: "Current design frequency: {frequency} MHz",
+        Language.SPANISH: "Frecuencia de diseño actual: {frequency} MHz",
+    },
+    "scale_frequency.target": {
+        Language.ENGLISH: "Target frequency (MHz)",
+        Language.SPANISH: "Frecuencia destino (MHz)",
+    },
+    "scale_frequency.warning": {
+        Language.ENGLISH: (
+            "This scales the electrical geometry by the frequency ratio. Installation "
+            "height, conductor, ground, material, feed line, and matching values are "
+            "preserved. It is an approximation, not an optimizer; verify with the "
+            "simulator."
+        ),
+        Language.SPANISH: (
+            "Escala la geometría eléctrica por la relación de frecuencias. Conserva la "
+            "altura de instalación, el conductor, el suelo, el material, la línea y los "
+            "valores de adaptación. Es una aproximación, no un optimizador; verificá con "
+            "el simulador."
+        ),
+    },
+    "scale_frequency.unsupported": {
+        Language.ENGLISH: (
+            "The current template has no reliable frequency-scaling rule. Use Load "
+            "starting dimensions or edit the geometry explicitly."
+        ),
+        Language.SPANISH: (
+            "La plantilla actual no tiene una regla confiable para escalar por "
+            "frecuencia. Usá Cargar dimensiones iniciales o editá la geometría "
+            "explícitamente."
+        ),
+    },
     "action.installation_profile": {
         Language.ENGLISH: "Installation profile...",
         Language.SPANISH: "Perfil de instalación...",
@@ -2162,6 +2219,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "action.ok": {Language.ENGLISH: "OK", Language.SPANISH: "Aceptar"},
     "action.cancel": {Language.ENGLISH: "Cancel", Language.SPANISH: "Cancelar"},
     "action.apply": {Language.ENGLISH: "Apply design", Language.SPANISH: "Aplicar diseño"},
+    "action.scale_frequency": {
+        Language.ENGLISH: "Scale Geometry to Frequency...",
+        Language.SPANISH: "Escalar geometría a la frecuencia...",
+    },
     "action.apply.tooltip": {
         Language.ENGLISH: "Save the current form values without running the solver.",
         Language.SPANISH: "Guardá los valores actuales del formulario sin ejecutar el solver.",
@@ -2796,6 +2857,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "de adaptación"
         ),
     },
+    "estimator.warning.quad_beam_tuning": {
+        Language.ENGLISH: (
+            "the quarter-wave side is a starting point and usually short/reactive; "
+            "tune the loop side before judging the match"
+        ),
+        Language.SPANISH: (
+            "el lado de cuarto de onda es un punto de partida y suele quedar "
+            "corto/reactivo; sintonizá el lado del lazo antes de juzgar la adaptación"
+        ),
+    },
     "estimator.warning.ocfd_matching": {
         Language.ENGLISH: "off-center feed impedance depends on the offset and height; the preset uses an ideal 4:1 transformer, so verify the real balun",
         Language.SPANISH: "la impedancia del feed descentrado depende del offset y la altura; el preset usa un transformador ideal 4:1, verificá el balún real",
@@ -2843,12 +2914,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "field.frequency": {Language.ENGLISH: "Frequency (MHz)", Language.SPANISH: "Frecuencia (MHz)"},
     "help.field.frequency": {
         Language.ENGLISH: (
-            "Design frequency in MHz. Changing it reloads the template's suggested "
-            "starting dimensions."
+            "Design frequency in MHz. It seeds the template's starting dimensions and "
+            "defines the default simulation band; use a sweep or band analysis for "
+            "other frequencies."
         ),
         Language.SPANISH: (
-            "Frecuencia de diseño en MHz. Al cambiarla se recargan las dimensiones "
-            "iniciales sugeridas por la plantilla."
+            "Frecuencia de diseño en MHz. Define las dimensiones iniciales de la "
+            "plantilla y la banda de simulación por defecto; usá un barrido o análisis "
+            "de bandas para otras frecuencias."
         ),
     },
     "help.field.height": {
@@ -3220,6 +3293,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "independientemente."
         ),
     },
+    "help.discone.load_starting": {
+        Language.ENGLISH: (
+            "Set the cone and disc to a quarter-wave slant at the current frequency; "
+            "keep the base height, feed gap, wire count, conductor, ground, and azimuth."
+        ),
+        Language.SPANISH: (
+            "Ajusta el cono y el disco a una inclinación de cuarto de onda en la "
+            "frecuencia actual; conserva la altura de base, la brecha, los hilos, el "
+            "conductor, el suelo y el azimut."
+        ),
+    },
     "help.discone.cone_radius": {
         Language.ENGLISH: ("Radius of the cone base; the wire cone approximates a solid skirt."),
         Language.SPANISH: (
@@ -3494,6 +3578,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Factor de velocidad de la línea; cambia la longitud eléctrica del tramo de adaptación."
         ),
     },
+    "help.hexbeam.load_starting": {
+        Language.ENGLISH: (
+            "Scale the published G3TXQ hexbeam to the current frequency; keep the "
+            "installation height, conductor, ground, and azimuth."
+        ),
+        Language.SPANISH: (
+            "Escala el hexbeam G3TXQ publicado a la frecuencia actual; conserva la "
+            "altura de instalación, el conductor, el suelo y el azimut."
+        ),
+    },
     "help.hexbeam.tip_gap": {
         Language.ENGLISH: "Gap between adjacent spreader tips at the element ends.",
         Language.SPANISH: "Separación entre puntas de separadores adyacentes en los extremos.",
@@ -3598,6 +3692,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "divide por este valor en los informes."
         ),
     },
+    "help.phased_vertical.load_starting": {
+        Language.ENGLISH: (
+            "Set the element length, spacing, and radial length to a quarter wave at "
+            "the current frequency; keep the base height, phase, taper, radial count, "
+            "conductor, ground, and azimuth."
+        ),
+        Language.SPANISH: (
+            "Ajusta el largo de los elementos, la separación y el largo de los radiales "
+            "a un cuarto de onda en la frecuencia actual; conserva la altura de base, la "
+            "fase, la taper, la cantidad de radiales, el conductor, el suelo y el azimut."
+        ),
+    },
     "help.phased_vertical.amplitude_taper": {
         Language.ENGLISH: "Relative amplitude applied across the vertical elements.",
         Language.SPANISH: "Amplitud relativa aplicada a los elementos verticales.",
@@ -3609,6 +3715,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.phased_vertical.spacing": {
         Language.ENGLISH: "Center-to-center spacing between adjacent vertical elements.",
         Language.SPANISH: "Separación entre centros de elementos verticales adyacentes.",
+    },
+    "help.quad_beam.load_starting": {
+        Language.ENGLISH: (
+            "Set the loop side to a quarter wave and the spacing to a fifth wave "
+            "at the current frequency; keep the installation height, conductor, "
+            "ground, scales, and transformer."
+        ),
+        Language.SPANISH: (
+            "Ajusta el lado del lazo a un cuarto de onda y la separación a un quinto "
+            "de onda en la frecuencia actual; conserva la altura de instalación, el "
+            "conductor, el suelo, los factores y el transformador."
+        ),
     },
     "help.quad_beam.director_scale": {
         Language.ENGLISH: "Scale factor applied to the director loop size.",
@@ -3828,6 +3946,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.trap_dipole.trap_capacitance": {
         Language.ENGLISH: "Trap capacitance derived from the trap frequency and inductance.",
         Language.SPANISH: "Capacitancia derivada de la frecuencia y la inductancia de la trampa.",
+    },
+    "help.trap_yagi.load_starting": {
+        Language.ENGLISH: (
+            "Set the driven element, spacing, and trap inset to the current low/high "
+            "band; keep the trap inductance, element count, scales, height, conductor, "
+            "ground, and azimuth."
+        ),
+        Language.SPANISH: (
+            "Ajusta el elemento excitado, la separación y la posición de las trampas a "
+            "la banda baja/alta actual; conserva la inductancia, la cantidad de "
+            "elementos, los factores, la altura, el conductor, el suelo y el azimut."
+        ),
     },
     "help.trap_yagi.high_band_frequency": {
         Language.ENGLISH: "High-band design frequency for the trapped elements.",
@@ -5264,6 +5394,35 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Open the family optimizer for the current design.",
         Language.SPANISH: "Abrí el optimizador de familia para el diseño actual.",
     },
+    "help.action.scale_frequency": {
+        Language.ENGLISH: (
+            "Scale the tuned electrical geometry to a new design frequency; installation "
+            "and matching values are preserved."
+        ),
+        Language.SPANISH: (
+            "Escalá la geometría eléctrica ajustada a una nueva frecuencia de diseño; se "
+            "conservan la instalación y los valores de adaptación."
+        ),
+    },
+    "help.scale_frequency.target": {
+        Language.ENGLISH: (
+            "Target design frequency in MHz. The geometry scales by the old/new frequency ratio."
+        ),
+        Language.SPANISH: (
+            "Frecuencia de diseño destino en MHz. La geometría se escala por la relación "
+            "entre la frecuencia vieja y la nueva."
+        ),
+    },
+    "help.scale_frequency.warning": {
+        Language.ENGLISH: (
+            "Approximate scaling of the current geometry; verify the result with the "
+            "simulator and do not treat it as an optimized design."
+        ),
+        Language.SPANISH: (
+            "Escalado aproximado de la geometría actual; verificá el resultado con el "
+            "simulador y no lo trates como un diseño optimizado."
+        ),
+    },
     "help.action.optimize_apply_best_swr": {
         Language.ENGLISH: "Apply the feasible candidate with the lowest modeled SWR.",
         Language.SPANISH: "Aplicá el candidato factible con la ROE modelada más baja.",
@@ -6501,6 +6660,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "status.design_estimated": {
         Language.ENGLISH: "Estimated dimensions applied. Review them and simulate.",
         Language.SPANISH: "Dimensiones estimadas aplicadas. Revisalas y simulá.",
+    },
+    "status.frequency_scaled": {
+        Language.ENGLISH: "Geometry scaled. Review the dimensions and simulate.",
+        Language.SPANISH: "Geometría escalada. Revisá las dimensiones y simulá.",
     },
     "status.estimate_apply_manual_refine": {
         Language.ENGLISH: "Estimated dimensions applied. Open the family optimizer to refine them when available.",
@@ -9243,6 +9406,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Estimate dimensions",
         Language.SPANISH: "Estimar dimensiones",
     },
+    "history.scale_frequency": {
+        Language.ENGLISH: "Scale geometry to frequency",
+        Language.SPANISH: "Escalar geometría a la frecuencia",
+    },
     "history.new_variant": {
         Language.ENGLISH: "New design in project",
         Language.SPANISH: "Nuevo diseño en el proyecto",
@@ -10900,6 +11067,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "quad_beam.element_count": {
         Language.ENGLISH: "Loops",
         Language.SPANISH: "Lazos",
+    },
+    "quad_beam.load_starting": {
+        Language.ENGLISH: "Load starting dimensions",
+        Language.SPANISH: "Cargar dimensiones iniciales",
     },
     "quad_beam.loop_side": {
         Language.ENGLISH: "Driven loop side",

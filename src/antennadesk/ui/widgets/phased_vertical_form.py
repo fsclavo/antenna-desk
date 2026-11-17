@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
     QLabel,
+    QPushButton,
     QSpinBox,
     QVBoxLayout,
     QWidget,
@@ -25,6 +26,7 @@ from ...domain.antennas.phased_vertical import (
     phased_vertical_parameters,
 )
 from ...domain.environment.ground import GroundKind, GroundModel
+from ..help import apply_help
 from ..i18n import Translator
 from ..material_combo import (
     populate_template_material_combo,
@@ -43,6 +45,7 @@ from ..units import (
 from .form_i18n import FormLabels, retranslate_combo
 from .form_units import apply_length_suffixes, apply_radius_units
 from .ground_presets import GroundPresetController
+from .starting_dimensions import StartingDimensionsState
 
 
 class PhasedVerticalForm(QWidget):
@@ -149,6 +152,18 @@ class PhasedVerticalForm(QWidget):
             translator,
         )
 
+        self._starting = QPushButton(
+            translator.t("action.load_starting_dimensions"),
+            self,
+        )
+        self._starting.clicked.connect(self.load_starting_dimensions)
+        apply_help(self._starting, translator, "load_starting", family="phased_vertical")
+        self._starting_note = QLabel(self)
+        self._starting_note.setWordWrap(True)
+        self._starting_note.setStyleSheet("font-style: italic;")
+        self._starting_note.setVisible(False)
+        self._starting_state = StartingDimensionsState(translator, self._starting_note)
+
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
         self._overlap_warning = QLabel(self)
@@ -158,6 +173,7 @@ class PhasedVerticalForm(QWidget):
 
         form = QFormLayout()
         form.addRow(self._labels.label("field.frequency"), self._frequency)
+        form.addRow(self._starting)
         form.addRow(self._labels.label("phased_vertical.element_count"), self._element_count)
         form.addRow(self._labels.label("phased_vertical.spacing"), self._spacing)
         form.addRow(self._labels.label("phased_vertical.height"), self._height)
@@ -184,15 +200,15 @@ class PhasedVerticalForm(QWidget):
         layout.addLayout(form)
         layout.addWidget(self._geometry)
         layout.addWidget(self._overlap_warning)
+        layout.addWidget(self._starting_note)
 
+        self._frequency.valueChanged.connect(self._frequency_changed)
+        for widget in (self._spacing, self._height, self._radial_length):
+            widget.valueChanged.connect(self._managed_field_changed)
         for widget in (
-            self._frequency,
-            self._spacing,
-            self._height,
             self._base_height,
             self._phase_step,
             self._amplitude_taper,
-            self._radial_length,
             self._radial_angle,
             self._azimuth,
             self._radius,
@@ -213,12 +229,17 @@ class PhasedVerticalForm(QWidget):
             ),
         )
         self.set_parameters(initial)
+        if parameters is None:
+            self.mark_starting_dimensions_pristine()
         self._update_ground_controls()
         self._update_geometry()
 
     def retranslate(self) -> None:
         self._ground_presets.retranslate()
         self._labels.retranslate()
+        self._starting.setText(self._translator.t("action.load_starting_dimensions"))
+        apply_help(self._starting, self._translator, "load_starting", family="phased_vertical")
+        self._starting_state.retranslate()
         retranslate_material_combo(self._material, self._translator)
         retranslate_combo(
             self._ground,
@@ -231,6 +252,28 @@ class PhasedVerticalForm(QWidget):
         if not self._updating:
             self._update_geometry()
             self.changed.emit()
+
+    def _frequency_changed(self, _value: float) -> None:
+        if self._updating:
+            return
+        if self._starting_state.pristine:
+            try:
+                self.load_starting_dimensions()
+            except (ValueError, TypeError):
+                self._starting_state.show_stale(self._frequency.value())
+                self._emit_changed()
+            return
+        self._starting_state.show_stale(self._frequency.value())
+        self._emit_changed()
+
+    def _managed_field_changed(self, *_args: object) -> None:
+        if self._updating:
+            return
+        self._starting_state.mark_non_pristine()
+        self._emit_changed()
+
+    def mark_starting_dimensions_pristine(self) -> None:
+        self._starting_state.mark_pristine()
 
     def _ground_changed(self, *_args: object) -> None:
         self._update_ground_controls()
@@ -281,11 +324,13 @@ class PhasedVerticalForm(QWidget):
                 ground=current.ground,
             )
         )
+        self._starting_state.mark_pristine(frequency_mhz=self._frequency.value())
         self.changed.emit()
 
     def set_unit_system(self, unit_system: UnitSystem) -> None:
         if unit_system is self._unit_system:
             return
+        was_pristine = self._starting_state.pristine
         try:
             parameters = self.parameters()
         except (ValueError, TypeError):
@@ -313,6 +358,8 @@ class PhasedVerticalForm(QWidget):
             self._updating = previous_updating
         if parameters is not None:
             self.set_parameters(parameters)
+            if was_pristine:
+                self.mark_starting_dimensions_pristine()
 
     def set_parameters(self, parameters: PhasedVerticalParameters) -> None:
         self._updating = True
@@ -343,6 +390,7 @@ class PhasedVerticalForm(QWidget):
                 self._conductivity.setValue(parameters.ground.conductivity_s_per_m)
         finally:
             self._updating = False
+        self._starting_state.mark_non_pristine()
         self._update_ground_controls()
         self._update_geometry()
 

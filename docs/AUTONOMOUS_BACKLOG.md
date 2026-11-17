@@ -1,6 +1,6 @@
 # Autonomous execution backlog
 
-**Date:** 2026-11-13
+**Date:** 2026-11-17
 **Status:** active execution queue.
 
 This is the only active execution queue. It contains shippable items,
@@ -42,6 +42,8 @@ external service and must not be invented or simulated into existence.
 | ~~C3~~ | ~~**Log-periodic**~~ | L | transposed feed-line model | **Done 2026-11-16:** added a straight-element log-periodic dipole array as a normal family over `AntennaModel`, `Wire`, `FeedPoint`, and `TransmissionLine`. The only cross-cutting change is a generic `phase_reversal` flag on `TransmissionLine`, emitted as a negative NEC TL characteristic impedance. The Cebik 10 m 1.0 in, 75 Ω reference reproduces the published NEC-4 gain (7.37 vs 7.36 dBi), front-to-back ratio (22.01 dB), element-center phases (within 1.6°), and segmentation stability. Evidence is **B**: a published-model comparison, not a measurement. The ARRL/Cebik 7 MHz wire design is a swept-element V array and is not reproduced by this straight-element family; it remains a future variant. See `docs/ADR/0041-log-periodic-transposed-feed.md` and `docs/spikes/c3-log-periodic-spike.md`. |
 | ~~C4~~ | ~~Discone~~ | L | none | **Done 2026-11-08:** radial-wire cone and disc with apex feed gap, schema 27, editor, scene, reports, construction notes, and optimizer. Evidence stays C because the wire approximation and feed transition are not validated. |
 | ~~C5~~ | ~~Trapped / multiband Yagi~~ | L | trap model reuse | **Done 2026-11-08:** two-band trapped Yagi with ideal parallel LC trap pairs on each element, schema 28, editor, scene, reports, construction notes, and optimizer. Evidence stays C because trap loss and boom mounting are not modeled. |
+| C6 | HexBeam geometry correctness | M | published G3TXQ/K4KIO drawing | Rebuild the single-band driver/reflector on the six-spreader frame: M driver at the front, U reflector around the rear three sides, 24 in tip spacers, every wire point at or inside the turning radius, and overall span ~2R. Replace the 9.03 m span and 0.67 m drawn tip gap; add semantic geometry/scene tests and update docs/evidence. Supersedes the geometry portion of C2; prerequisite for C7. |
+| C7 | Multi-band HexBeam (1-5 bands) | L | C6; feed-model decision; published 5-band table | Selectable band set and count (1-5) on a shared frame with nested G3TXQ 20/17/15/12/10 pairs, per-band tip gap and vertical offset, ideal equal-phase sources or a documented harness approximation, schema migration, per-band editor/scene/reports, semantic and NEC2C tests, and single-band optimizer scope. 6 m optional later; multi-band performance remains unvalidated. |
 | ~~E1~~ | ~~Raise the simulation timeout default to 180 s and expose an override~~ | S | none | **Done 2026-11-08:** `SimulationSpec.timeout_s` defaults to 180 s; **Advanced simulation → Solver** exposes a 10–3600 s override applied to single runs, band analysis, and family optimizations; tests cover the default and override. |
 | ~~E2~~ | ~~Parallelize independent optimizer evaluations with a bounded worker pool~~ | M–L | E1 | **Done 2026-11-08:** the engine accepts an optional batch evaluator and the command runs 1–8 bounded workers (dialog default `min(4, max(1, CPU − 1))`, sequential when 1). Candidate order and results are deterministic for a fixed configuration, cancellation reaches every in-flight solver process, and single-solve behavior is unchanged. |
 | ~~E3~~ | ~~Parallelize band analysis with the same bounded pool~~ | M | E2 | **Done 2026-11-08:** bands run in bounded batches (dialog 1–4, command 1–8, sequential default) with results and progress in selection order; cancellation reaches running bands and keeps completed results. The real `nec2c` benchmark measured **1.3–1.8×** speedup with four workers, +14 MiB parent peak RSS, and 2.4–2.8 MiB per solver child; see `docs/MULTIBAND_PERFORMANCE.md`. Re-measured after E5 on 2026-11-10: the sequential path is 10–20 % faster and the four-worker speedup is **1.2–1.5×**. |
@@ -124,6 +126,20 @@ external service and must not be invented or simulated into existence.
 | ~~UX29~~ | ~~Show the constructive feed connection at the feedpoint~~ | M–L | UX6, UX7, UX9, ADR-0031, ADR-0033, ADR-0034 | **Done 2026-11-13:** added the read-only `FeedConnectionDetail` resolver, explicit Yagi straight/folded/beta/hairpin cases, a renderer-neutral SVG schematic, a **Connection** row and **View feed connection...** action, a read-only detail dialog, and a feedpoint assembly section in the construction sheet, native PDF, and ZIP. The four modeled/recorded/recommended/not-modeled states are separate; unclassified families return explicit unknown. ADR-0036, user guide, domain model, help, and tests are updated. No `FeedPoint`, solver, simulation, or schema change. |
 | ~~UX30~~ | ~~Per-template default conductor material~~ | S–M | none | **Done 2026-11-17:** New Antenna and Change Template preselect the agreed material for every catalog template: aluminum for 15 templates, stainless 304 for the loaded vertical, and copper for the remaining 25; existing projects and reference designs keep their materials; no schema, solver-code, or migration change. |
 | ~~UX31~~ | ~~Draw coax as coax in the feed-connection schematic~~ | S–M | UX29 | **Done 2026-11-17:** direct coax is drawn as a cable with a center conductor, outer shield, and cross-section; the middle device box is gone. Current balun, transformer, balanced line, multi-port, and unknown have distinct drawings; terminal labels honor ground/counterpoise/return; a recommended choke is dashed. EN/ES, dialog, HTML, PDF, ZIP, and tests pass; no domain, solver, or schema change. |
+| ~~UX32~~ | ~~Quad beam frequency-first starting dimensions~~ | S | none | **Done 2026-11-17:** `QuadBeamDialog` now seeds the loop side and reflector/director spacing from the requested frequency, and `new_quad_beam_antenna()` reuses the active design frequency. **Load starting dimensions** is exposed in the shared form; it preserves the installation height, conductor, material, ground, azimuth, element count, reflector/director scales, and transformer. At 144 MHz the side is about 0.494 m and the spacing about 0.416 m. EN/ES, help, UI tests, user guide, and changelog are updated; no domain formula, schema, solver, or migration change. |
+| ~~UX33~~ | ~~Generalize frequency-first generator seeding~~ | S–M | UX32 | **Done 2026-11-17:** hexbeam, discone, trapped Yagi, and phased-vertical generators now call their existing `load_starting_dimensions()` when a frequency is supplied and expose **Load starting dimensions** in the shared form. Each preserves its installation and matching fields; tests cover the frequency path, action, preservation, and EN/ES retranslation. Formulas, schema, and solver are unchanged. |
+| ~~UX34~~ | ~~Decide design-frequency versus analysis-frequency semantics~~ | S | none | **Done 2026-11-17:** [ADR-0043](ADR/0043-design-versus-analysis-frequency.md) defines design versus analysis frequency, the pristine test, managed versus preserved fields per family, undo and modal-dialog behavior, user-facing wording, and the Yagi exception. No behavior change; UX35 implements the pristine-only automatic path. |
+| ~~UX35~~ | ~~Pristine-geometry frequency recalculation~~ | M | UX33, UX34 | **Done 2026-11-17:** the five generators track their managed geometry; a design-frequency change regenerates only pristine geometry, shows an updated note, preserves installation fields, and stops auto-resizing after a managed edit. Edited geometry shows a stale message and offers **Load starting dimensions**. Modal generators update locally; project-editor changes remain normal unsaved form edits. Tests cover pristine/edited paths, preserved fields, loaded parameters, and new-project state. No schema or solver change. |
+| ~~UX36~~ | ~~Quad beam frequency-first estimator~~ | M | UX32 | **Done 2026-11-17:** `quad_beam` is registered in the estimator registry; `DesignIntent` carries 2–3 elements; **Estimate Dimensions...** is enabled, preloads the current element count and height, and returns the documented quarter-wave-side/fifth-wave-spacing heuristic with confidence, source, assumptions, warnings, tolerance, and 144 MHz reference tests. Apply uses the dialog element count and height and preserves reflector/director scales, transformer, radius, material, ground, and azimuth. NEC smoke and UI/domain/registry tests pass; no schema change. |
+| ~~UX37~~ | ~~Explicit scale-to-frequency action for tuned designs~~ | M–L | UX34, UX35 | **Done 2026-11-17:** **Design → Scale Geometry to Frequency...** scales the allowlisted wire dipole, folded dipole, loop, quad beam, biquad, discone, and hexbeam by the old/new frequency ratio, with a target-frequency dialog and approximation warning. Installation, conductor, ground, feed line, and matching values are preserved; loaded, trapped, multiband, Yagi/Moxon, and fan designs are disabled with a reason. It enters undo history and is covered by domain/UI tests. No schema or solver change. |
+| ~~UX38~~ | ~~Select the Design tab after creating a new antenna~~ | S | none | **Done 2026-11-17:** after a successful New Antenna creation, `_create_project_from_parameters()` selects `_design_tab`; this covers catalog templates, Antenna Advisor, and Reference Design Library. Cancelled or failed creation leaves the current tab unchanged. Advanced mode still opens Simulation when the mode is selected; Change Template, Open Project, NEC/MMANA import, and New Variant are unchanged. Advanced-mode success, cancellation, and failure tests pass; user guide and changelog updated. No schema, solver, or i18n change. |
+| ~~U0~~ | ~~Close the adaptive length display-units spec~~ | S | none | **Done 2026-11-17:** [ADR-0044](ADR/0044-adaptive-length-display-units.md) and [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md) accepted; backlog, roadmap, docs index, architecture, geometry contract, and project decisions linked. No code change. |
+| U1 | Shared adaptive length formatter and Units preference | S–M | U0 | Add a Qt-free `DisplayUnits`/`LengthPolicy` formatter with metric auto (mm below 1 cm, cm below 1 m, m above), imperial auto (in below 1 ft, ft above), fixed meters/feet, precision, trimming, zero/negative handling, and table-unit selection. Add the four-option Units preference, QSettings mapping of existing metric/imperial to auto, and EN/ES help. Acceptance: boundary and round-trip tests; existing UI behavior unchanged until U2–U5 wire the formatter; no schema. |
+| U2 | Adaptive units in geometry scenes | M | U1 | Pass `DisplayUnits` through `build_scene`, `_Factory`, dimension labels, summaries, scale bar, and detail insets. Cover 28.5/144/435 MHz Moxon, 20 m dipole, and 435 MHz hexbeam; update the minimum-size layout and tighten the small-dimension anchor tolerance. Acceptance: exact auto/fixed examples from the spec, unit-aware scale bar, no hidden-dimension regression, existing fixed-unit scenes and goldens preserved. No forms or reports. |
+| U3 | Adaptive units in antenna-family forms and tables | M–L | U1 | Wire every family editor to `DisplayUnits`; add `LengthFieldSpec` ranges, steps, decimals, and suffixes; freeze a field or table unit while editing and re-evaluate on external loads. Editable tables use one unit per table with the unit in the header. Fix the Moxon height range and the hexbeam UHF gap minima, then audit every small-feature field. Acceptance: every form preserves physical values across metric/imperial and auto/fixed switches, no silent clamping, table headers and help updated, UI tests. |
+| U4 | Adaptive units in optimization, synthesis, and auxiliary dialogs | M | U1, U3 | Apply the same policy to optimization, family optimization, synthesis, parameter sweep, robustness, tolerance, design-from-frequency, feed-line, and related length surfaces. Audit `length_bounds` callers and per-field ranges; keep plot axes and budgets legible. Acceptance: dialog tests for auto/fixed and metric/imperial, no range regressions, EN/ES help, no solver change. |
+| U5 | Adaptive units in construction sheets and human-readable reports | M–L | U1, U2, U3 | Format design-summary rows, wire schedule, BOM, feed/matching rows, and report tables with `DisplayUnits`; update the title block to state auto/fixed metric or imperial. SVG/PNG/PDF figures follow the UI. CSV stays canonical meters/mm; DXF stays canonical meters with meter dimension text and `$INSUNITS=6`. Acceptance: HTML/PDF/package tests, table-header units, CSV/DXF canonical assertions, no schema. |
+| U6 | Units documentation, help audit, and visual QA | S–M | U2–U5 | Update the user guide and changelog; verify the EN/ES help manifest for the Units preference and table headers; run light/dark and font-scaling QA on the sketch, forms, and construction sheet; re-run the full gate. Acceptance: documentation links, help coverage, manual QA notes, full gate green. |
 | ~~EF1~~ | ~~Preserve shortened-EFHW structural segmentation in optimizer candidates~~ | S–M | none | **Done 2026-11-13:** the optimizer descriptor can declare model-defined wire partitions. Only the shortened EFHW presets opt in, preserving the fixed three-segment feed and loading-coil sections while the radiator counts are recalculated. Unit tests cover 80-10 and 40-10; other families keep a `None` hook and the previous segmentation path. No solver, schema, or UI change. |
 | ~~EF2~~ | ~~Diagnose input-shunt matching-network topology limits~~ | S | EF1 optional | **Done 2026-11-13:** added `MatchingNetworkOrigin` as runtime-only simulation context, a domain `input_shunt_l_network_swr_floor()` predicate, a `LinkBudget` floor field, and a `matching_network.topology_limit` warning. The warning appears only when the effective network is the internal EFHW input-shunt unit; project networks and other families stay unchanged. The origin is excluded from the model fingerprint and is not persisted. EN/ES diagnostic text, domain, link, fingerprint, resolution, and real NEC2C tests cover the path. |
 | ~~EF3~~ | ~~Warn about the installation-return proxy and SWR confidence~~ | S | none | **Done 2026-11-13:** shortened EFHW editors now add an `endfed.warning.return_proxy` warning when the 0.1 m installation-return proxy is active. The results confidence card and exported reports add a **Model confidence** row that marks absolute SWR as informational and states that the installation return is a proxy, not a physical counterpoise. Standard end-fed, sloper, random wire, and every other family are unchanged. No solver or numerical change. |
@@ -140,12 +156,169 @@ external service and must not be invented or simulated into existence.
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
 | ~~D4~~ | ~~Segmented frequency plan in one NEC deck~~ | M | solver benchmark | **Closed 2026-11-16 by ADR-0042:** the solver-only single deck saves about 0.95 s on 808 frequencies, while the four-worker per-band path is faster than a sequential single deck and preserves the existing result, pattern, project-size, and cancellation contracts. Keep per-band batching; revisit only under the ADR triggers. |
 
+## HexBeam follow-ups (queued 2026-11-17)
+
+C6 is the prerequisite. The current single-band model derives each tip from
+the published wire half-length and places it outside the 130 in frame; the
+result is a 9.03 m span on a 3.30 m turning radius and a 0.67 m drawn tip gap
+against the published 0.61 m. C6 corrects the topology before C7 nests bands.
+
+### C6 acceptance
+
+- Driver: two halves from the center feed to the front-side spreaders, then
+  along the hexagon sides to the lateral tips; M shape.
+- Reflector: one wire around the rear three sides, with its midpoint at the
+  rear; U shape.
+- Tip spacer: 24 in between the driver tip and reflector end, on the side.
+- Every wire point is inside the turning radius; overall span is 2R (~6.60 m).
+- Plan dimensions, notes, construction sheet, design summary, and evidence
+  agree with the geometry; no "published vs drawn gap" mismatch.
+- Tests assert the frame-fit invariant, reflector rear midpoint, exact tip gap,
+  and span; the golden scene is updated deliberately.
+- Docs/help that describe the W/U or 60-degree ray are corrected. The C2
+  family/editor/report scaffolding remains valid.
+
+### C7 acceptance
+
+- `HexbeamParameters` carries a shared frame plus 1-5 per-band records; schema
+  migration maps an existing single-band design to one band.
+- An ADR records the shared-frame/band model, the per-band feed approximation,
+  and the selected-band optimizer scope.
+- The standard preset is the published G3TXQ 20/17/15/12/10 table with its
+  vertical offsets; no invented per-band values. The 20 m row reconciles the
+  current 219/207/24/130 values with the published 218/412/24/130 table and
+  documents the chosen source instead of mixing them.
+- The editor selects the actual band set, and the count follows the selection;
+  it does not infer an arbitrary prefix of the published table.
+- Editor supports add/remove bands and **Load starting dimensions**; EN/ES help
+  and the help coverage manifest include every new field and action.
+- Scene draws all bands on the shared frame, highlights the selected band, and
+  dimensions per band; reports and construction sheet include a per-band table.
+- Feed model is explicit. Ideal equal-phase sources are the default
+  approximation; the real coax harness, coupling, and balun are limitations.
+- NEC2C integration covers multiple driven bands. The optimizer exposes the
+  selected band only; full multi-band optimization is unavailable with a reason.
+- Evidence stays B for published starting dimensions; performance is not
+  claimed. Update `VALIDATION_PLAN.md`, `EVIDENCE_AUDIT.md`, user guide, and
+  `CHANGELOG.md`.
+
+## Adaptive length display units (queued 2026-11-17)
+
+**Status:** spec closed; implementation queued. U0 is complete; U1–U6 are
+ready to start. The release plan decides whether the track lands in 0.10.0 or a
+later release.
+**Decision:** [ADR-0044](ADR/0044-adaptive-length-display-units.md).
+**Normative spec:** [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md).
+
+The current metric display uses meters for every length and millimeters for
+wire diameters. That is readable for HF but poor for VHF/UHF construction: a
+435 MHz Moxon gap shows `0.007 m`, and its 24.8 cm width rounds to `0.25 m`.
+Imperial has the same problem with `0.023 ft`. The fix is a presentation-only
+automatic policy, never a frequency-based or global-centimeter switch.
+
+The policy is:
+
+- Metric auto: mm below 1 cm, cm from 1 cm to below 1 m, m at 1 m and above.
+- Imperial auto: in below 1 ft, ft at 1 ft and above.
+- Scalar fields and dimension labels choose by value; editable and report
+  tables choose one unit per table from the largest value and show it in the
+  header.
+- mm/cm use two decimals, m/ft use three, inches use two. Labels trim trailing
+  zeros. Spin boxes keep fixed decimals.
+- A field or table unit is frozen while editing and re-evaluated on model,
+  preset, optimizer, undo/redo, or preference reload.
+- Human-readable construction sheets and reports follow the policy. CSV stays
+  canonical meters/mm. DXF stays canonical meters with `$INSUNITS=6` and
+  meter dimension text.
+- The Units preference keeps an escape hatch: metric auto (default), metric
+  fixed in meters, imperial auto (default), and imperial fixed in feet.
+
+Non-goals: per-project units, decimal-separator changes, inch fractions,
+automatic radius/diameter units, DXF scaling, and any solver, domain, or schema
+change.
+
+### U1 acceptance
+
+- `DisplayUnits`/`LengthPolicy` is a pure, Qt-free formatter with automatic and
+  fixed metric/imperial policies, boundary tests, zero/negative handling,
+  trimming, and table-unit selection.
+- The Units preference stores the system and policy, maps existing
+  `metric`/`imperial` values to automatic, and has EN/ES help.
+- No scene, form, or report changes yet; the full existing gate stays green.
+
+### U2 acceptance
+
+- `build_scene` and `_Factory` accept `DisplayUnits`; dimension labels,
+  summaries, scale bar, and insets use it.
+- 28.5/144/435 MHz Moxon, 20 m dipole, and 435 MHz hexbeam scenes cover the
+  automatic examples in the spec.
+- The scale bar uses unit-aware candidate steps; the minimum-size layout and
+  hidden-dimension strip still work; the small-dimension anchor tolerance is
+  tightened.
+- Existing fixed-unit tests and goldens remain stable; new auto tests are
+  focused rather than regenerating every golden.
+
+### U3 acceptance
+
+- Every antenna-family editor uses `LengthFieldSpec` for range, step, decimals,
+  suffix, and optional scale hint; no small feature inherits the global
+  `0.1 m` minimum.
+- Editable tables use one unit per table with the unit in the header; radius
+  columns stay mm/in.
+- Moxon height no longer inherits Qt's `99.99` maximum; 435 MHz hexbeam
+  tip/feed gaps and element separation can be represented.
+- Metric/imperial and auto/fixed switches preserve every physical value; field
+  suffixes do not change mid-edit.
+
+### U4 acceptance
+
+- Optimization, family optimization, synthesis, parameter sweep, robustness,
+  tolerance, design-from-frequency, feed-line, and related dialogs use the same
+  policy.
+- Every `length_bounds` caller is audited; per-field ranges replace global
+  small-feature minimums.
+- Plot axes, budgets, and table headers remain legible; EN/ES help covers the
+  new unit presentation.
+
+### U5 acceptance
+
+- Construction-sheet design summary, wire schedule, BOM, feed/matching rows,
+  and report tables use `DisplayUnits`; the title block states
+  `Metric auto (mm/cm/m)` or the selected fixed/imperial policy.
+- SVG/PNG/PDF figures follow the UI; CSV remains canonical meters/mm; DXF
+  remains canonical meters with `$INSUNITS=6` and meter dimension text.
+- HTML, native PDF, package, and CSV/DXF tests cover both automatic and fixed
+  policies.
+
+### U6 acceptance
+
+- User guide and `CHANGELOG.md` describe the automatic policy, the fixed
+  escape hatch, and the CSV/DXF canonical exception.
+- EN/ES help coverage includes the Units preference and unit-bearing table
+  headers.
+- Light/dark and font-scaling QA covers the sketch, forms, and construction
+  sheet; the full gate is green.
+
+### Dependencies and order
+
+U1 is the foundation. U2 and U3 may proceed in parallel after U1. U4 depends on
+U3 because it shares the form helpers. U5 depends on U2 and U3 because it
+embeds scenes and report rows. U6 closes the track after U2–U5.
+
+Do not start any slice by adding a global current-units singleton, a
+`UnitSystem.CM` value, frequency-based selection, or a per-cell table unit.
+Those alternatives are rejected in ADR-0044.
+
 ## Product experience queue (2026-11-11)
 
 UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**, and
 0.8 **Explore** releases are closed. UX18–UX20 and UX21–UX24 were implemented on
-2026-11-12; the 0.9 **Sustain** slice is complete. The next product slice is not
-selected yet. UX21–UX24 were added from direct user feedback and completed the
+2026-11-12; the 0.9 **Sustain** slice is complete. UX32–UX38, the
+frequency-first starting-dimensions, semantics, pristine-recalculation,
+quad-beam-estimator, scale-to-frequency, and creation-tab work, were completed
+on 2026-11-17. The adaptive length display-units track (U0–U6) is now queued;
+U0 closed the spec and ADR, and U1–U6 are the next implementation slices.
+UX21–UX24 were added from direct user feedback and completed the
 same day. UX25 and UX26 were queued on 2026-11-13 and completed the same day.
 UX27 and UX28 were added the same day from terminology feedback; UX27 and UX28
 were completed on 2026-11-13.
@@ -153,6 +326,9 @@ UX29 was added and completed the same day from feed-connection feedback.
 UX30 was queued on 2026-11-17 from per-template material-default feedback and
 was completed the same day. UX31 was queued on 2026-11-17 from feed-schematic
 feedback and was completed the same day.
+UX32–UX37 were queued on 2026-11-17 from frequency-first starting-dimension
+feedback. UX32–UX37 are complete. UX38 was queued on 2026-11-17 from
+new-antenna tab feedback and is also complete.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
 EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
 L/Pi/T matching are implemented, including automatic L/Pi/T synthesis with a
@@ -1930,6 +2106,286 @@ the SVG in tests so no new English string leaks.
 - The white SVG card in dark mode remains a cosmetic mismatch; do not hide it
   by changing the drawing unless the theme work is explicitly in scope.
 
+## UX32–UX37 — Frequency-first starting dimensions (queue note, 2026-11-17)
+
+### Context
+
+`quad_beam_parameters()` already derives the starting geometry from the design
+frequency:
+
+- loop side = `0.25 λ × 0.95`;
+- reflector/director spacing = `0.2 λ`;
+- height = `0.25 λ` (constructor default only; the editor should preserve
+  the installation height).
+
+At 144 MHz that is a side of about **0.494 m** and a spacing of about
+**0.416 m**. The problem is not the formula; it is the UI path:
+
+- `QuadBeamDialog` creates the form with the 14.1 MHz seed and then calls only
+  `set_frequency_hz()`, which changes the spinbox but not the geometry;
+- `QuadBeamForm.load_starting_dimensions()` exists but is neither invoked nor
+  exposed;
+- `quad_beam` is absent from `ESTIMATORS`, so **Estimate Dimensions...** is
+  disabled.
+
+The same gap exists in the hexbeam, discone, trap-Yagi, and phased-vertical
+generators: their forms already have `load_starting_dimensions()`, but their
+dialogs only set the frequency. Biquad and Beverage already call the helper
+after setting a requested frequency; Yagi already rescales the element table
+when the frequency changes. The goal of this queue is to make the starting
+dimensions consistent without silently resizing tuned designs.
+
+Do not solve this with a universal “multiply every length by
+`f_old / f_new`” operation. Height, base height, conductor radius, feed line,
+matching network, loading coils, traps, and multiband element sets are not
+simple wavelength-scaled dimensions. The family constructor or estimator knows
+the correct starting law; use it.
+
+### UX32 — First slice: quad beam (S)
+
+**Status:** implemented on 2026-11-17. The action, frequency seeding, field
+preservation, EN/ES help, and tests are in place. UX33–UX37 remain queued.
+
+**Goal:** a new or changed-template quad beam opens with geometry for the
+requested frequency, and the user can explicitly reload the starting dimensions
+after editing the frequency.
+
+Implementation:
+
+1. When `QuadBeamDialog` receives `frequency_hz` and no explicit `parameters`,
+   set the frequency and call `load_starting_dimensions()`, following the
+   Biquad/Beverage pattern.
+2. Change `QuadBeamForm.load_starting_dimensions()` to preserve
+   `current.height_m`. Do not reset height to `wavelength * 0.25`; at 144 MHz
+   that would put the antenna at 0.52 m.
+3. Preserve `wire_radius_m`, `material`, `ground`, `azimuth_deg`,
+   `element_count`, `reflector_scale`, `director_scale`, and
+   `transformer_ratio`.
+4. Expose the action as **Load starting dimensions** in the form/dialog, with
+   EN/ES text and help. Because the form is shared, the action is also
+   available in the inline editor.
+5. Pass the active design frequency from `new_quad_beam_antenna()` when a
+   project/design exists. `_parameters_from_catalog()` already passes the
+   frequency on the Change Template path.
+6. Keep `quad_beam_parameters()` domain defaults unchanged in this slice.
+
+Acceptance:
+
+- `QuadBeamDialog(frequency_hz=144_000_000.0)` returns loop side
+  `pytest.approx(0.494, abs=0.002)` and reflector spacing
+  `pytest.approx(0.416, abs=0.002)`, not the 14.1 MHz geometry.
+- A height of 3.2 m set by the user remains 3.2 m after changing frequency and
+  reloading; a custom 6:1 transformer and a 1.1 reflector scale also remain.
+- The 2-element default keeps 4:1; a 3-element design keeps 2:1 unless the user
+  edited the ratio.
+- The Change Template path at 144 MHz produces 144 MHz geometry.
+- The button retranslates in English and Spanish and is covered by a UI test.
+- No domain formula, schema, solver, or migration change.
+- Update the user guide and `CHANGELOG.md`; run the full gate.
+
+Do not in UX32:
+
+- register the quad-beam estimator;
+- auto-resize on every frequency keystroke;
+- change the constructor’s λ/4 height default;
+- touch Yagi, Moxon, fan, trap, loaded, or multiband scaling.
+
+### UX33 — Generalize the existing helper (S–M)
+
+**Status:** implemented on 2026-11-17. The four generators now seed at the
+requested frequency and expose the shared action. UX34–UX37 remain queued.
+
+Apply the UX32 pattern to the generators whose forms already implement
+`load_starting_dimensions()`:
+
+- hexbeam;
+- discone;
+- trap Yagi;
+- phased vertical.
+
+Each dialog must set the requested frequency before loading the starting
+dimensions. Each form must preserve its installation and matching fields:
+height/base height, azimuth, conductor radius, material, ground, element count,
+and any family-specific transformer or phase/amplitude values. Trap Yagi must
+keep the low/high/trap frequency relationship consistent. Expose the action
+with translated labels and help.
+
+Acceptance: one test per generator for the requested-frequency path, one test
+per generator for the action, preservation tests for the family-specific
+fields, and no formula or schema change. Biquad and Beverage are the reference
+implementations; do not copy their labels blindly because the families have
+different installation fields.
+
+### UX34 — Frequency semantics decision (S)
+
+**Status:** implemented on 2026-11-17 as
+[ADR-0043](ADR/0043-design-versus-analysis-frequency.md). No code or behavior
+change; UX35 remains the implementation slice.
+
+Write a short ADR/decision note before adding automatic recalculation. The
+recommended policy is:
+
+- **Design frequency** describes the intended antenna. Changing it may
+  regenerate starting dimensions only while the geometry is pristine, with
+  visible feedback.
+- **Analysis frequency** is the frequency at which an existing geometry is
+  evaluated. It must not resize the antenna. The existing sweeps, band
+  analysis, and measurement comparison remain the analysis paths.
+- Edited or solver-tuned geometry is never resized silently. The user must
+  choose **Load starting dimensions** or the explicit **Scale geometry to
+  frequency** action.
+- If the product does not add a separate analysis-frequency field, the guide
+  and help must say so explicitly.
+
+The ADR must define the pristine test, the undo behavior, the wording of the
+feedback, and which families are eligible. No code change in this item; update
+the ADR, user guide, and help plan.
+
+### UX35 — Pristine-geometry recalculation (M)
+
+**Status:** implemented on 2026-11-17. The five generators now use the shared
+`StartingDimensionsState`, preserve installation fields, and stop automatic
+resizing after a managed edit. UX36–UX37 remain queued.
+
+Implement the policy chosen in UX34 for the families covered by UX32 and UX33:
+
+- track whether the electrical geometry still matches the last generated
+  starting point;
+- when the design frequency changes and the geometry is pristine, regenerate
+  the starting dimensions and show a short, non-modal note;
+- after any electrical edit, never resize silently; show that the frequency
+  changed and offer the explicit action;
+- make **Load starting dimensions** available in the same place in every
+  covered editor;
+- preserve installation and matching fields exactly as in UX32/UX33;
+- recompute from the family formula on each frequency change; do not
+  accumulate a scale factor, so intermediate values cannot drift through
+  rounding.
+
+Acceptance: pristine and edited paths, undo/redo, EN/ES retranslation, help,
+and no silent changes to a tuned design. No schema or solver change. Do not
+include loaded, trapped, multiband, Yagi/Moxon, fan, or transmission-line
+families without a family-specific starting rule.
+
+### UX36 — Quad beam estimator (M)
+
+**Status:** implemented on 2026-11-17. The estimator, dialog element-count
+field, registry entry, preservation path, and tests are in place. UX37 remains
+queued.
+
+Register `quad_beam` in `domain/design/estimators.py` so **Estimate
+Dimensions...** works after project creation.
+
+Implementation requirements:
+
+- add `quad_beam_elements` (2–3, default 2) to `DesignIntent` and validate it;
+- add the field to `DesignFromFrequencyDialog` and pass it through
+  `_build_intent()`;
+- implement `estimate_quad_beam()` with the documented quarter-wave-side /
+  fifth-wave-spacing heuristic, `height_m=intent.height_m`, the current
+  material/ground/radius/azimuth, and the family transformer default;
+- return `Confidence.HEURISTIC`, the application-preset source, assumptions
+  about height/ground, warnings about the starting geometry and reactive feed,
+  a documented tolerance, and display rows for side, spacing, height, and
+  element count;
+- add a `QuadBeamParameters` branch to `_preserve_estimate_context()` that
+  keeps reflector/director scales and transformer ratio; the element count and
+  height come from the dialog, and the generic context preserves radius,
+  material, ground, and azimuth;
+- remove `quad_beam` from `ESTIMATORLESS_CATALOG_KEYS` and cover the registry,
+  parameterized NEC smoke test, domain, dialog, and Apply path;
+- update `ANTENNA_DESIGN_ESTIMATORS.md`, EN/ES help, user guide, and changelog.
+
+At 144 MHz the estimate must produce the same 0.494 m side and 0.416 m spacing
+as UX32. Do not claim validated gain or feedpoint impedance. No schema change;
+estimator provenance already exists.
+
+### UX37 — Explicit scale-to-frequency action (M–L)
+
+**Status:** implemented on 2026-11-17. The domain allowlist, target-frequency
+dialog, menu action, preservation rules, disabled reasons, undo path, and tests
+are in place. UX32–UX37 are complete.
+
+Add an explicit action for a design that is already tuned or edited. This is
+not automatic and must not reuse a universal “scale every length” rule.
+
+Recommended first allowlist, limited to families with a clean primary-dimension
+path:
+
+- wire dipole;
+- folded dipole;
+- loop;
+- quad beam;
+- biquad;
+- discone;
+- hexbeam.
+
+Use `primary_dimension_m()` and `with_primary_dimension()` for the allowlisted
+families, or a small family-specific rule where the primary dimension does not
+cover a derived dimension. Compute the target from the current primary
+dimension and `f_old / f_new`, preserve installation and matching fields, and
+show old/new frequency plus an explicit approximation warning. The action must
+enter undo history. Families with loads, traps, multiband elements, Yagi/Moxon
+tapering, fan elements, transmission lines, or no single primary dimension must
+be disabled with a reason.
+
+Acceptance: domain tests for the ratio and preservation, unsupported-family
+tests, UI confirmation/cancel tests, undo/redo, EN/ES help, and no schema or
+solver change. Do not include height, radius, feed line, matching network,
+coils, or traps in the scaled set.
+
+### Shared constraints
+
+- UX32 is the first slice and must ship alone; do not bundle UX33–UX37.
+- Use the documented family heuristic or constructor. Do not invent a new
+  numerical reference.
+- Do not change the project schema, solver, or persisted project format.
+- Keep the user guide, help manifest, translation catalog, and changelog in
+  sync with each item.
+- Run the full gate before declaring any item complete.
+
+## UX38 — Select the Design tab after antenna creation (queue note, 2026-11-17)
+
+**Status:** implemented on 2026-11-17. The creation funnel now selects the
+Design tab after success, with cancellation and failure covered by tests.
+
+### Problem
+
+The sidebar keeps its current tab when a project is created. In Advanced mode
+`_apply_workflow_mode()` deliberately opens the Simulation tab, and a user who
+manually selected Simulation keeps that tab after generating an antenna. The
+creation path `_create_project_from_parameters()` calls `_set_project()` and
+`_select_design()` but never changes `_sidebar_tabs`.
+
+The requested behavior is limited to creation: after generating a new antenna,
+the Design tab must be selected. This is not a change to the workflow-mode
+semantics.
+
+### Implementation contract
+
+- In `_create_project_from_parameters()`, after the successful `_set_project()`
+  call, select `_design_tab` with `_sidebar_tabs.setCurrentWidget()`.
+- Do not switch the tab before creation succeeds: a cancelled name dialog, an
+  invalid design, or a failed repository operation must leave the current tab
+  unchanged.
+- The creation funnel covers every New Antenna catalog template, the basic
+  templates, Antenna Advisor, and Reference Design Library.
+- Keep Advanced mode unchanged: selecting Advanced still opens Simulation, and
+  the user can return to Design manually. The new rule only overrides the tab
+  after a successful creation.
+- Out of scope: Change Template, Open Project, NEC/MMANA import, New Variant,
+  persisted preferences, and every schema, domain, or solver change.
+
+### Acceptance
+
+- UI regression test: enable Advanced mode, create an antenna, and assert that
+  `_sidebar_tabs.currentWidget()` is `_design_tab`; keep the existing
+  Advanced-mode test that asserts Simulation is selected immediately after the
+  mode change.
+- Verify cancellation and creation failure do not change the current tab.
+- Update `docs/USER_GUIDE.md` and `CHANGELOG.md`.
+- Run the full gate; no new translation or help keys are required.
+
 ## EF1–EF9 — Shortened-EFHW optimizer and model-confidence queue (2026-11-13)
 
 **EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
@@ -2358,6 +2814,16 @@ model and solver contract must land first.
     L/Pi/T synthesis is available with a visible design Q.
 16. Product priorities and new antenna candidates live in
     [`ROADMAP.md`](ROADMAP.md), not in this queue.
+17. **UX32–UX37 are complete.** The frequency-first starting-dimensions work,
+    the frequency-semantics ADR, pristine-only recalculation, the quad-beam
+    estimator, and the explicit scale action shipped on 2026-11-17 without
+    schema or solver changes.
+18. **UX38 is complete.** After a successful antenna creation,
+    `_create_project_from_parameters()` selects the Design tab. It covers
+    catalog templates, Advisor, and Reference Design Library; Advanced-mode
+    semantics, Change Template, imports, variants, schema, and solver are
+    unchanged. No new translation or help keys. The UX queue is now closed;
+    prepare the release and return to evidence/validation work.
 
 ## Technical debt pass (2026-11-08)
 
@@ -2387,10 +2853,10 @@ model and solver contract must land first.
 
 ## Current baseline
 
-- Schema: **52**.
-- Full gate: **3,327 passed, 1 skipped** with `NEC2C` and the optional
-  `cross-engine` group; the skip is the Windows-only console-hiding test on
-  Linux. Rerun without PyNEC if the environment lacks it.
+- Schema: **54**.
+- Full gate: **3,397 passed, 1 skipped** on 2026-11-17 after UX38, with
+  `NEC2C` and the optional `cross-engine` group; the skip is the Windows-only
+  console-hiding test on Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run

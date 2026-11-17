@@ -63,6 +63,7 @@ class DesignIntent:
     gap_m: float = 0.01
     fan_bands_hz: tuple[float, ...] = ()
     yagi_elements: int = 5
+    quad_beam_elements: int = 2
     end_height_m: float | None = None
     highest_frequency_hz: float | None = None
 
@@ -93,6 +94,8 @@ class DesignIntent:
                 ensure_positive(band, name="fan band")
         if self.yagi_elements < 2:
             raise ValueError("yagi_elements must be at least 2")
+        if not 2 <= self.quad_beam_elements <= 3:
+            raise ValueError("quad_beam_elements must be between 2 and 3")
         if self.end_height_m is not None:
             ensure_non_negative(self.end_height_m, name="end_height_m")
         if self.highest_frequency_hz is not None:

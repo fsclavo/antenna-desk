@@ -181,6 +181,11 @@ from ..domain.design.comparison import (
 from ..domain.design.estimators import supports_estimation
 from ..domain.design.feed_connection import feed_connection_detail
 from ..domain.design.formulas import frequency_for_half_wave_length
+from ..domain.design.frequency_scale import (
+    UnsupportedFrequencyScaleError,
+    scaled_to_frequency,
+    supports_frequency_scaling,
+)
 from ..domain.design.matching_design import (
     MatchingNetworkDesign,
     matching_network_design_from_frequency,
@@ -331,6 +336,7 @@ from .dialogs.quad_beam_dialog import QuadBeamDialog
 from .dialogs.reference_library_dialog import ReferenceLibraryDialog
 from .dialogs.ringo_dialog import RingoDialog
 from .dialogs.robustness_dialog import RobustnessDialog
+from .dialogs.scale_frequency_dialog import ScaleFrequencyDialog
 from .dialogs.scv_dialog import ScvDialog
 from .dialogs.synthesis_dialog import SynthesisDialog
 from .dialogs.t2fd_dialog import T2FDDialog
@@ -612,6 +618,8 @@ class MainWindow(QMainWindow):
         self._design_from_frequency_action = QAction(self)
         self._design_from_frequency_action.setShortcut(QKeySequence("Ctrl+Shift+E"))
         self._design_from_frequency_action.triggered.connect(lambda: self.design_from_frequency())
+        self._scale_frequency_action = QAction(self)
+        self._scale_frequency_action.triggered.connect(lambda: self.scale_geometry_to_frequency())
         self._preflight_action = QAction(self)
         self._preflight_action.triggered.connect(lambda: self.show_preflight())
         self._construction_action = QAction(self)
@@ -1407,6 +1415,7 @@ class MainWindow(QMainWindow):
         self._design_menu.addAction(self._change_template_action)
         self._design_menu.addAction(self._installation_profile_action)
         self._design_menu.addAction(self._design_from_frequency_action)
+        self._design_menu.addAction(self._scale_frequency_action)
         self._design_menu.addAction(self._optimize_action)
         self._design_menu.addSeparator()
         self._design_menu.addAction(self._preflight_action)
@@ -1596,6 +1605,10 @@ class MainWindow(QMainWindow):
         self._design_from_frequency_action.setText(
             self._translator.t("action.design_from_frequency")
         )
+        self._scale_frequency_action.setText(self._translator.t("action.scale_frequency"))
+        scale_help = self._translator.t("help.action.scale_frequency")
+        self._scale_frequency_action.setToolTip(scale_help)
+        self._scale_frequency_action.setWhatsThis(scale_help)
         self._apply_button.setText(self._translator.t("action.apply"))
         self._apply_button.setToolTip(self._translator.t("action.apply.tooltip"))
         self._optimize_button.setText(self._translator.t("action.optimize"))
@@ -2007,6 +2020,13 @@ class MainWindow(QMainWindow):
             estimate_hint = self._estimate_unavailable_message(parameters)
         self._estimate_button.setToolTip(estimate_hint)
         self._design_from_frequency_action.setToolTip(estimate_hint)
+        scale_supported = parameters is not None and supports_frequency_scaling(parameters)
+        self._scale_frequency_action.setEnabled(idle and has_project and scale_supported)
+        scale_hint = self._translator.t("help.action.scale_frequency")
+        if parameters is not None and not scale_supported:
+            scale_hint = self._translator.t("scale_frequency.unsupported")
+        self._scale_frequency_action.setToolTip(scale_hint)
+        self._scale_frequency_action.setWhatsThis(scale_hint)
         band_enabled = idle and has_project and self._solver is not None
         self._analyze_bands_action.setEnabled(band_enabled)
         self._analyze_bands_button.setEnabled(band_enabled)
@@ -5070,7 +5090,26 @@ class MainWindow(QMainWindow):
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return False
         self._set_project(project, project.designs[0].id, path=None, dirty=True)
+        self._sidebar_tabs.setCurrentWidget(self._design_tab)
+        self._mark_starting_dimensions_pristine(parameters)
         return True
+
+    def _mark_starting_dimensions_pristine(
+        self,
+        parameters: AntennaDesignParameters,
+    ) -> None:
+        """Mark a newly generated design as eligible for automatic resizing."""
+
+        if isinstance(parameters, QuadBeamParameters):
+            self._quad_beam_form.mark_starting_dimensions_pristine()
+        elif isinstance(parameters, HexbeamParameters):
+            self._hexbeam_form.mark_starting_dimensions_pristine()
+        elif isinstance(parameters, DisconeParameters):
+            self._discone_form.mark_starting_dimensions_pristine()
+        elif isinstance(parameters, TrapYagiParameters):
+            self._trap_yagi_form.mark_starting_dimensions_pristine()
+        elif isinstance(parameters, PhasedVerticalParameters):
+            self._phased_vertical_form.mark_starting_dimensions_pristine()
 
     def new_custom_antenna(self) -> None:
         if not self._maybe_save_changes():
@@ -5190,7 +5229,15 @@ class MainWindow(QMainWindow):
     def new_quad_beam_antenna(self) -> None:
         if not self._maybe_save_changes():
             return
-        dialog = QuadBeamDialog(self._translator, self._unit_system, self)
+        frequency_hz = None
+        if self._project is not None and self._design_id is not None:
+            frequency_hz = self._project.design_by_id(self._design_id).parameters.frequency_hz
+        dialog = QuadBeamDialog(
+            self._translator,
+            self._unit_system,
+            self,
+            frequency_hz=frequency_hz,
+        )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         self._create_project_from_parameters(
@@ -6570,6 +6617,7 @@ class MainWindow(QMainWindow):
         self._invalidate_design_result(self._design_id)
         self._dirty = True
         self._select_design(self._design_id)
+        self._mark_starting_dimensions_pristine(parameters)
         self._last_status_key = "status.design_changed"
         self._update_title()
         self._update_actions()
@@ -7335,6 +7383,7 @@ class MainWindow(QMainWindow):
         self._invalidate_design_result(self._design_id)
         self._dirty = True
         self._select_design(self._design_id)
+        self._mark_starting_dimensions_pristine(parameters)
         self._last_status_key = "status.design_estimated"
         self._update_title()
         self._update_actions()
@@ -7342,6 +7391,46 @@ class MainWindow(QMainWindow):
         refine_requested = getattr(dialog, "refine_requested", lambda: False)()
         if refine_requested and self._solver is not None and optimizer_available:
             self._open_refinement_for_current_design()
+
+    @history_action("history.scale_frequency")
+    def scale_geometry_to_frequency(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        design = self._project.design_by_id(self._design_id)
+        if not supports_frequency_scaling(design.parameters):
+            self._show_error(self._translator.t("scale_frequency.unsupported"))
+            return
+        dialog = ScaleFrequencyDialog(
+            self._translator,
+            design.parameters.frequency_hz,
+            self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            parameters = scaled_to_frequency(
+                design.parameters,
+                dialog.target_frequency_hz(),
+            )
+            updated_design = design.with_parameters(parameters)
+            self._project = self._project.with_design(updated_design, updated_at=utc_now())
+        except (UnsupportedFrequencyScaleError, ValueError, TypeError) as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        self._invalidate_design_result(self._design_id)
+        self._dirty = True
+        self._select_design(self._design_id)
+        self._last_status_key = "status.frequency_scaled"
+        self._update_title()
+        self._update_actions()
+        self._update_status_text()
 
     def _preserve_estimate_context(
         self,
@@ -7393,6 +7482,12 @@ class MainWindow(QMainWindow):
             updates.update(folded=previous.folded, gap_m=previous.gap_m)
         elif isinstance(previous, RingoParameters) and isinstance(estimated, RingoParameters):
             updates["ring_sides"] = previous.ring_sides
+        elif isinstance(previous, QuadBeamParameters) and isinstance(estimated, QuadBeamParameters):
+            updates.update(
+                reflector_scale=previous.reflector_scale,
+                director_scale=previous.director_scale,
+                transformer_ratio=previous.transformer_ratio,
+            )
         elif isinstance(previous, YagiParameters) and isinstance(estimated, YagiParameters):
             updates["driven_index"] = previous.driven_index
             updates["driven_folded"] = previous.driven_folded

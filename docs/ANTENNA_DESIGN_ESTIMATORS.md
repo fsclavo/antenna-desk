@@ -143,6 +143,24 @@ The transformer is ideal: balun loss, common-mode current, balance, and power
 handling are not modeled. The quad beam remains an experimental family; the
 starting ratio is a convenience, not a validated design claim.
 
+### Quad beam starting estimate
+
+The frequency-first estimator supports two- and three-element quad beams. It
+uses the same documented heuristic as the editor: a quarter-wave driven-loop
+side and fifth-wave reflector/director spacing at the requested frequency. The
+estimate preserves the requested height, conductor radius, material, ground,
+and azimuth, and starts with the family transformer ratio (4:1 for two
+elements, 2:1 for three). The element count is a required dialog field.
+
+The tolerance is 5% of the driven-loop side. Applying the estimate preserves
+the current element count, reflector/director scales, transformer ratio, and
+height when they differ from the generated defaults. At 144 MHz the starting
+side is about 0.494 m and the spacing about 0.416 m.
+
+This is a starting geometry, not a validated gain, front-to-back-ratio, or
+feedpoint-impedance claim. The quarter-wave side is usually short and reactive
+at the design frequency; tune it with the solver before judging the match.
+
 ### J Pole and Slim Jim starting point
 
 M0UKD's published calculator defines the J pole as 0.75 λ overall, split into a
@@ -502,8 +520,9 @@ Reference sources currently used:
   document the 800 Ω termination and 16:1 commercial transformer.
 - Application preset: Ringo proportions, the loop polygon correction, the
   end-fed transformer/counterpoise starting point, the loaded-vertical mobile
-  preset, the trap-dipole starting dimensions, and the sloper, random-wire, and
-  doublet presets. They are not universal formulas.
+  preset, the trap-dipole starting dimensions, the quad-beam quarter-wave
+  side/fifth-wave spacing heuristic, and the sloper, random-wire, and doublet
+  presets. They are not universal formulas.
 
 ## Tests
 
@@ -516,6 +535,8 @@ Reference sources currently used:
 - Explicit unsupported result for custom geometry and non-reference Yagi
   element counts.
 - Reference-scaling tests for Yagi and Moxon.
+- Quad beam element-count preload, heuristic geometry, and apply-preservation
+  tests.
 - UI tests for estimate, invalidation, and apply.
 - Snapshot tests for estimator outputs.
 
@@ -537,6 +558,8 @@ Reference sources currently used:
 - Yagi supports the DL6WU 2–32 element trimming reference; element-diameter
   and boom-mounting corrections are not applied.
 - Moxon and Ringo are scaled presets, not universal synthesis.
+- Quad beam dimensions are starting heuristics; gain, front-to-back ratio, and
+  feedpoint impedance are not independently validated.
 - End-fed matching, counterpoise, and feed-line effects are installation
   specific.
 - Loaded-vertical coil values are starting points; a mobile vehicle body is not

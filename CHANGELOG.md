@@ -23,6 +23,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   and feed-connection guidance without changing the NEC geometry; set 1.0 for
   the raw impedance. The transformer is ideal, and the family remains
   experimental.
+- **Quad beam frequency-first estimator.** **Estimate Dimensions...** now
+  supports two- and three-element quad beams with the documented quarter-wave
+  side and fifth-wave spacing heuristic. The dialog asks for the element count;
+  applying preserves the reflector/director scales, transformer ratio, and
+  installation height. At 144 MHz the starting side is about 0.494 m. The
+  estimate remains heuristic and does not claim validated gain or impedance. No
+  schema or solver change.
+- **Explicit scale-to-frequency action.** **Design → Scale Geometry to
+  Frequency...** scales an already tuned design by the old/new frequency ratio
+  for the wire dipole, folded dipole, loop, quad beam, biquad, discone, and
+  hexbeam. Installation height, conductor, ground, feed line, and matching
+  values are preserved. The action is approximate, not an optimizer, and is
+  disabled with an explanation for loaded, trapped, multiband, Yagi/Moxon, and
+  fan-dipole designs. It enters undo history; no schema or solver change.
+
+### Fixed
+
+- **Quad beam frequency-first starting dimensions.** A new or changed-template
+  quad beam now seeds its loop side and reflector/director spacing from the
+  requested design frequency instead of the 14.1 MHz default. At 144 MHz the
+  starting side is about 0.494 m instead of 5 m. The editor also exposes
+  **Load starting dimensions**; the action preserves the installation height,
+  conductor, ground, length factors, and transformer instead of resetting the
+  height to a quarter wave. No schema, solver, or numerical-model change.
+- **Frequency-first starting dimensions for the remaining generators.**
+  Hexbeam, discone, trapped Yagi, and phased-vertical generators now load
+  their published or quarter-wave starting geometry at the requested frequency
+  instead of only changing the frequency field. Each editor exposes **Load
+  starting dimensions** and preserves its installation and matching fields.
+  No schema or solver change.
+
+### Changed
+
+- **Pristine-only frequency recalculation.** The quad beam, hexbeam, discone,
+  trapped Yagi, and phased vertical now regenerate their starting dimensions
+  when the design frequency changes only while the managed geometry is still
+  the generated default. After a managed dimension is edited, the geometry is
+  preserved and the editor shows a message with the **Load starting dimensions**
+  action. Modal generators update locally; project-editor changes remain normal
+  unsaved form edits. The existing Yagi table scaling is unchanged and remains
+  a documented follow-up. No schema or solver change.
+- **Design tab after antenna creation.** A successful New Antenna creation now
+  selects the **Design** tab, including in Advanced mode where the Simulation
+  tab is normally opened. Cancelled or failed creations leave the current tab
+  unchanged. Change Template, project open, imports, and new variants are
+  unchanged. No schema or solver change.
 
 ## [0.9.0] - 2026-11-17
 

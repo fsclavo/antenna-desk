@@ -17,6 +17,7 @@ of truth before adding another planning document.
 | How do I move a project and its images between machines? | [`PROJECT_BUNDLE.md`](PROJECT_BUNDLE.md) |
 | How is the solver integrated? | [`SOLVER_ADAPTER.md`](SOLVER_ADAPTER.md) |
 | How is the construction sketch generated? | [`GEOMETRY_PRESENTATION.md`](GEOMETRY_PRESENTATION.md) |
+| How are lengths displayed in the UI and reports? | [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md) |
 | Where do the starting dimensions come from? | [`ANTENNA_DESIGN_ESTIMATORS.md`](ANTENNA_DESIGN_ESTIMATORS.md) |
 | Where do material properties come from? | [`MATERIALS_REFERENCE.md`](MATERIALS_REFERENCE.md) |
 
@@ -45,6 +46,8 @@ of truth before adding another planning document.
 - [`SOLVER_ADAPTER.md`](SOLVER_ADAPTER.md) — NEC process adapter contract.
 - [`GEOMETRY_PRESENTATION.md`](GEOMETRY_PRESENTATION.md) — sketch and dimension
   contract.
+- [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md) — adaptive length display
+  units, formatting, form/table/drawing rules, and report/export policy.
 - [`spikes/c3-log-periodic-spike.md`](spikes/c3-log-periodic-spike.md) —
   log-periodic transposed-feed validation against the published Cebik 10 m
   NEC-4 reference.
@@ -129,6 +132,15 @@ of truth before adding another planning document.
 - [ADR-0033 — Yagi folded-driven feed transformer](ADR/0033-yagi-folded-driven-transformer.md)
 - [ADR-0034 — Project current-balun record and balanced-feed note](ADR/0034-current-balun-record.md)
 - [ADR-0035 — Project BOM cost record](ADR/0035-bom-cost-record.md)
+- [ADR-0036 — Constructive feed-connection detail](ADR/0036-constructive-feed-connection.md)
+- [ADR-0037 — Bounded feedpoint common-mode choke for end-fed antennas](ADR/0037-common-mode-return-model.md)
+- [ADR-0038 — Design-specific matching network for end-fed antennas](ADR/0038-design-specific-matching-network.md)
+- [ADR-0039 — Frequency-dependent coaxial attenuation](ADR/0039-frequency-dependent-coax-attenuation.md)
+- [ADR-0040 — Feed-chain loss accounting and double-counting policy](ADR/0040-loss-accounting.md)
+- [ADR-0041 — Log-periodic family with a transposed phase line](ADR/0041-log-periodic-transposed-feed.md)
+- [ADR-0042 — Keep per-band frequency-plan execution](ADR/0042-per-band-frequency-plan.md)
+- [ADR-0043 — Design frequency versus analysis frequency](ADR/0043-design-versus-analysis-frequency.md)
+- [ADR-0044 — Adaptive length display units](ADR/0044-adaptive-length-display-units.md)
 
 ## Archive
 

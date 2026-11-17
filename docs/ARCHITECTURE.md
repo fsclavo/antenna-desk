@@ -294,8 +294,10 @@ The geometry presentation layer has no Qt dependency in `scene.py`,
 can therefore be tested headlessly and reused for future SVG/PDF/DXF export.
 
 
-The UI is bilingual through `ui/i18n.py` and supports metric or imperial
-presentation units. Project files and the domain remain in canonical units.
+The UI is bilingual through `ui/i18n.py` and supports an adaptive metric or
+imperial length display policy with a fixed-unit escape hatch. Project files
+and the domain remain in canonical units. See
+[`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md).
 
 ## Immutability and snapshots
 

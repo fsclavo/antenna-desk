@@ -10,6 +10,7 @@ from pytestqt.qtbot import QtBot
 
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.main_window import MainWindow
+from antennadesk.ui.workflow import WorkflowMode
 
 
 def test_orientation_control_updates_parameters(window: MainWindow) -> None:
@@ -580,4 +581,126 @@ def test_new_vertical_moxon_creates_a_vertical_rectangle(
     reflector = next(wire for wire in model.wires if wire.id == "reflector")
     assert reflector.start.x_m == pytest.approx(reflector.end.x_m)
     assert reflector.start.y_m == pytest.approx(reflector.end.y_m)
+    window._dirty = False
+
+
+def test_new_quad_beam_reuses_the_active_design_frequency(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from main_window_support import use_parameters
+
+    from antennadesk.domain.antennas.quad_beam import (
+        QuadBeamParameters,
+        quad_beam_parameters,
+    )
+
+    parameters = quad_beam_parameters(frequency_hz=144_000_000.0)
+    seen_frequencies: list[float | None] = []
+
+    class FakeQuadBeamDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            frequency_hz = kwargs.get("frequency_hz")
+            seen_frequencies.append(frequency_hz if isinstance(frequency_hz, float) else None)
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> QuadBeamParameters:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "QuadBeamDialog", FakeQuadBeamDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Quad", True))
+    use_parameters(window, parameters)
+
+    window.new_quad_beam_antenna()
+
+    assert seen_frequencies
+    assert seen_frequencies[0] == pytest.approx(144_000_000.0)
+    assert window._quad_beam_form._starting_state.pristine is True
+
+    window._quad_beam_form._frequency.setValue(145.0)
+
+    assert window._quad_beam_form.parameters().loop_side_m == pytest.approx(
+        0.491,
+        abs=0.002,
+    )
+    window._dirty = False
+
+
+def test_creation_selects_the_design_tab_in_advanced_mode(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.dipole import DipoleParameters
+
+    window._set_workflow_mode(WorkflowMode.ADVANCED, save=False)
+    assert window._sidebar_tabs.currentWidget() is window._simulation_tab
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Created", True))
+
+    created = window._create_project_from_parameters(
+        DipoleParameters(
+            frequency_hz=14_100_000.0,
+            total_length_m=20.0,
+            height_m=10.0,
+        ),
+        default_name="Created",
+    )
+
+    assert created is True
+    assert window._sidebar_tabs.currentWidget() is window._design_tab
+    window._dirty = False
+
+
+def test_cancelled_creation_keeps_the_current_tab(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.dipole import DipoleParameters
+
+    window._set_workflow_mode(WorkflowMode.ADVANCED, save=False)
+    assert window._sidebar_tabs.currentWidget() is window._simulation_tab
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("", False))
+
+    created = window._create_project_from_parameters(
+        DipoleParameters(
+            frequency_hz=14_100_000.0,
+            total_length_m=20.0,
+            height_m=10.0,
+        ),
+        default_name="Cancelled",
+    )
+
+    assert created is False
+    assert window._sidebar_tabs.currentWidget() is window._simulation_tab
+    window._dirty = False
+
+
+def test_failed_creation_keeps_the_current_tab(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.dipole import DipoleParameters
+
+    class FailingCreate:
+        def execute(self, command: object) -> object:
+            raise RuntimeError("creation failed")
+
+    monkeypatch.setattr(main_window_module, "CreateDipoleProject", FailingCreate)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Failed", True))
+    monkeypatch.setattr(QMessageBox, "critical", lambda *args, **kwargs: None)
+    window._set_workflow_mode(WorkflowMode.ADVANCED, save=False)
+    assert window._sidebar_tabs.currentWidget() is window._simulation_tab
+
+    created = window._create_project_from_parameters(
+        DipoleParameters(
+            frequency_hz=14_100_000.0,
+            total_length_m=20.0,
+            height_m=10.0,
+        ),
+        default_name="Failed",
+    )
+
+    assert created is False
+    assert window._sidebar_tabs.currentWidget() is window._simulation_tab
     window._dirty = False

@@ -1,6 +1,6 @@
 # AntennaDesk roadmap and backlog
 
-**Updated:** 2026-11-12
+**Updated:** 2026-11-17
 **Status:** active product roadmap after catalog, measurement, optimization,
 packaging, and the 2026-11-11 product-experience review.
 **Scope:** product direction, milestones, and the ordered antenna expansion
@@ -316,6 +316,34 @@ point; `C` is structural/experimental only.
 | 19 | Trapped / multiband Yagi | New family | L | High | B/C | **Implemented on 2026-11-08:** two-band Yagi with one ideal parallel LC trap pair per element, schema 28, inline editor, scene contract, reports, construction notes, and family optimizer. Trap loss, boom mounting, feed line, and matching remain unvalidated. |
 | 20 | Shortened loaded EFHW | EndFed variant | M | Medium | B/C | **Implemented on 2026-11-09, matching model extended 2026-11-10, inverted-L option 2026-11-11:** 80-10 m (20.35 m + 110 µH + 2.39 m) and 40-20-10 m (10.01 m + 23 µH + 1.85 m) presets with a 49:1 transformer, editable series coil, schema 33 for the matching values, schema 34 for the project design target, and schema 35 for the optional inverted-L bend, catalog entries, band plans, reports, construction notes, and optimizer variables. The optional primary 100 pF shunt and 0.198 µH leakage estimate are modeled; an optional measured 49:1 loss table from Squash Practice/AF7NX is available, and the bend uses a sharp 90° corner with an 8 m vertical starting section and no independent validation. An optional feedpoint common-mode choke accepts measured series R/X on the coax shield (ADR-0037), and an optional design-specific L-network can replace the fixed internal match (ADR-0038); shack-end choke placement, shield transfer impedance, ground, capacitor ESR, and winding capacitance are not modeled. Edited or scaled geometry is experimental. |
 
+### HexBeam follow-ups (queued 2026-11-17)
+
+These extend an existing family; they are not new antenna families. The
+single-band HexBeam in item 16 needs a geometry correction before the
+multi-band version is credible.
+
+- **HexBeam geometry correctness (M).** Rebuild the single-band G3TXQ
+  broadband wire path on the six-spreader frame: M-shaped driver across the
+  front, U-shaped reflector around the rear three sides, and 24 in tip spacers
+  near the lateral vertices, on the hexagon sides. Keep every wire point at or
+  inside the 130 in turning radius and derive the overall span from the frame
+  (~6.60 m), not from the published wire lengths. Replace the current 9.03 m
+  span and 0.67 m drawn gap with dimensions that match the published reference.
+  Add semantic geometry tests and update the scene, reports, evidence, and
+  docs. Prerequisite for the multi-band item.
+- **Multi-band HexBeam, 1-5 bands (L).** Add a selectable band set and count
+  with one shared six-spreader frame and nested driver/reflector pairs at the
+  published G3TXQ 20/17/15/12/10 m dimensions and vertical offsets. Per-band
+  geometry, feed gap, tip gap, vertical offset, and derived attachment radius;
+  band table in the editor, scene highlighting, and reports; schema migration
+  from the single-band payload. Model every driven element with ideal equal-phase
+  sources, or document a feed-harness approximation; coax jumpers, coupling,
+  the balun, spreader sag, and frame hardware remain unmodeled. Optimize one
+  selected band with the others fixed; full multi-band optimization stays out
+  of scope until a trustworthy model exists. 6 m can be added later as an
+  optional sixth band. The published dimensions are starting values (B);
+  multi-band gain, SWR, and front-to-back ratio are not validated.
+
 Items 1–7 were the immediate recommended sequence; items 8–14 are the next
 medium-sized candidates, with 8–13 done and 14 partially done. Items 15–19 are
 large or architectural and should not start until the single-feed families and
@@ -334,8 +362,10 @@ The catalog is broad enough; the next value is helping the operator choose,
 understand, build, and improve a design. This is product scope, not a second
 execution queue. UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7
 **Measure**, and 0.8 **Explore** releases are closed, and the 0.9 **Sustain**
-slice is complete. UX18–UX20 were implemented on 2026-11-12. UX21–UX24 were
-added from direct user feedback and implemented the same day.
+slice is complete. UX18–UX31 are implemented. UX32–UX38 were completed on
+2026-11-17. The UX queue is closed. The adaptive length display-units track
+(U1–U6) is queued next; the release plan decides whether it lands in 0.10.0 or
+a later release.
 
 Rules for this track:
 
@@ -377,9 +407,66 @@ Rules for this track:
 | 0.9 Sustain | UX22 | Pattern metric visibility | Metric-aware titles and a three-metric summary | S–M | n/a | done 2026-11-12 |
 | 0.9 Sustain | UX23 | Common coax catalog and feed-line presets | 16 source-backed cables with a shared feed-line selector | M | B | done 2026-11-12 |
 | post-0.9 | UX24 | Retune catalog starting frequencies | Common operating-band defaults with coherent starting geometry | S–M | B | done 2026-11-12 |
+| post-0.9 | UX25 | Stainless steel 304 conductor | Source-backed 304 preset and shared material selector | S–M | B | done 2026-11-13 |
+| post-0.9 | UX26 | Geometry and pattern in exported reports | Canonical geometry and pattern cuts in HTML/PDF | M–L | B | done 2026-11-13 |
+| post-0.9 | UX27 | Spanish ROE terminology | Use ROE consistently in the UI and reports | S–M | n/a | done 2026-11-13 |
+| post-0.9 | UX28 | Vertical radiator length terminology | Separate physical radiator length from installation height | S–M | n/a | done 2026-11-13 |
+| post-0.9 | UX29 | Constructive feed connection | Read-only feedpoint assembly and schematic | M–L | B | done 2026-11-13 |
+| post-0.9 | UX30 | Per-template material defaults | Template-appropriate material preselection | S–M | B | done 2026-11-17 |
+| post-0.9 | UX31 | Coax-as-coax feed schematic | Coax cross-section and per-interface drawings | S–M | B | done 2026-11-17 |
+| post-0.9 | UX32 | Quad beam frequency-first starting dimensions | Frequency-seeded geometry and explicit reload | S | B | done 2026-11-17 |
+| post-0.9 | UX33 | Generalize frequency-first generator seeding | Same starting behavior for four more generators | S–M | B | done 2026-11-17 |
+| post-0.9 | UX34 | Design-frequency vs analysis-frequency semantics | [ADR-0043](ADR/0043-design-versus-analysis-frequency.md) and resize policy | S | n/a | done 2026-11-17 |
+| post-0.9 | UX35 | Pristine-geometry frequency recalculation | Recalculate untouched geometry; never silently resize tuned designs | M | B | done 2026-11-17 |
+| post-0.9 | UX36 | Quad beam frequency-first estimator | Enable **Estimate Dimensions...** for quad beam | M | B | done 2026-11-17 |
+| post-0.9 | UX37 | Explicit scale-to-frequency action | Approximate scaling for tuned, allowlisted designs | M–L | B/C | done 2026-11-17 |
+| post-0.9 | UX38 | Select the Design tab after creation | Keep the new design visible after New Antenna | S | n/a | done 2026-11-17 |
 
 UX24 was added from direct user feedback after the 0.9 slice closed and was
 implemented the same day. It is part of the 0.6.0 release.
+
+### Adaptive length display units (queued 2026-11-17)
+
+The metric display currently uses meters for every length and millimeters for
+wire diameters; imperial uses feet and inches. That is readable for HF but poor
+for VHF/UHF construction: a 435 MHz Moxon gap shows `0.007 m`, and its 24.8 cm
+width rounds to `0.25 m`. The same problem exists in imperial with `0.023 ft`.
+
+The accepted policy is presentation-only and follows the magnitude, never the
+band:
+
+- Metric auto: mm below 1 cm, cm from 1 cm to below 1 m, m at 1 m and above.
+- Imperial auto: in below 1 ft, ft at 1 ft and above.
+- Scalar fields and dimension labels choose by value; editable and report
+  tables choose one unit per table and show it in the header.
+- A field or table unit is frozen while editing; it re-evaluates on model,
+  preset, optimizer, undo/redo, or preference reload.
+- The Units preference keeps an escape hatch: metric auto (default), metric
+  fixed in meters, imperial auto (default), and imperial fixed in feet.
+- Human-readable construction sheets and reports follow the policy. CSV stays
+  canonical meters/mm; DXF stays canonical meters with `$INSUNITS=6` and meter
+  dimension text.
+
+Canonical storage, the domain, the solver, and the project schema are
+unchanged. The normative rules and examples are in
+[`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md); the decision is
+[ADR-0044](ADR/0044-adaptive-length-display-units.md).
+
+| Order | Slice | Outcome | Size | Depends on | Status |
+|---:|---|---|---|---|---|
+| U0 | Spec and ADR | Closed policy, examples, test matrix, and execution slices | S | none | done 2026-11-17 |
+| U1 | Shared formatter and Units preference | Pure `DisplayUnits`, automatic/fixed metric and imperial, QSettings, help | S–M | U0 | queued |
+| U2 | Geometry scenes | Dimension labels, summaries, scale bar, insets, layout | M | U1 | queued |
+| U3 | Family forms and editable tables | Per-field ranges/steps, table headers, Moxon/hexbeam range fixes | M–L | U1 | queued |
+| U4 | Optimization, synthesis, and auxiliary dialogs | Same policy across every length surface | M | U1, U3 | queued |
+| U5 | Construction sheet and human-readable reports | Design summary, wire schedule, BOM, title block, CSV/DXF exception | M–L | U1, U2, U3 | queued |
+| U6 | Documentation, help audit, and visual QA | User guide, changelog, EN/ES help, light/dark/scaling QA | S–M | U2–U5 | queued |
+
+U1 is the foundation; U2 and U3 may proceed in parallel. U4 depends on U3, U5
+depends on U2 and U3, and U6 closes the track. The release plan decides whether
+the track lands in 0.10.0 or a later release; do not start it by adding a
+global current-units singleton, a `UnitSystem.CM` value, frequency-based
+selection, or per-cell table units.
 
 Release sequence: **0.5 Decide** is the first slice because it has the highest
 user value and the lowest modeling risk. **0.6 Build** converts a simulation into
@@ -404,9 +491,11 @@ kept at
 Product track:
 
 1. UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**,
-   and 0.8 **Explore** releases are closed. UX18–UX20 and UX21–UX24 are
-   implemented; the 0.9 **Sustain** slice is complete. The next product slice is
-   not selected yet.
+   and 0.8 **Explore** releases are closed. UX18–UX38 are implemented; the 0.9
+   **Sustain** slice is complete. The UX queue is closed. The adaptive length
+   display-units track (U1–U6) is queued next; U0 is complete. Decide whether
+   it is part of 0.10.0 or a later release before release preparation, then
+   return to evidence and validation work.
 
 Modeling track:
 
@@ -433,6 +522,9 @@ Release track:
    catalog starting frequencies. All release jobs completed successfully in CI,
    including the Windows bundle and installer QA.
 7. Add GPG/Authenticode signing in a later release if required.
+8. `v0.7.0`, `v0.8.0`, `v0.8.1`, `v0.8.2`, and `v0.9.0` were published after
+   this section was written; see [`CHANGELOG.md`](../CHANGELOG.md) and the
+   release QA records for details.
 
 Validation track:
 

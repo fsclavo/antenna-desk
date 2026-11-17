@@ -476,6 +476,68 @@ def test_design_from_frequency_preserves_loop_transformer(
     window._dirty = False
 
 
+def test_design_from_frequency_preserves_quad_beam_fields(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.quad_beam import (
+        QuadBeamParameters,
+        quad_beam_parameters,
+    )
+    from antennadesk.domain.design import Confidence, DimensionEstimate
+
+    current = quad_beam_parameters(
+        frequency_hz=144_000_000.0,
+        element_count=3,
+        loop_side_m=0.50,
+        reflector_spacing_m=0.45,
+        director_spacing_m=0.45,
+        height_m=8.0,
+        reflector_scale=1.1,
+        director_scale=0.9,
+        transformer_ratio=6.0,
+    )
+    use_parameters(window, current)
+    estimated = quad_beam_parameters(
+        frequency_hz=144_000_000.0,
+        element_count=2,
+        loop_side_m=0.49,
+        reflector_spacing_m=0.42,
+        height_m=10.0,
+    )
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def estimated_estimate(self) -> DimensionEstimate:
+            return DimensionEstimate(
+                parameters=estimated,
+                method_id="test.quad_beam",
+                confidence=Confidence.HEURISTIC,
+                tolerance_m=0.03,
+            )
+
+    monkeypatch.setattr(main_window_module, "DesignFromFrequencyDialog", FakeDialog)
+    window._dirty = False
+
+    window.design_from_frequency()
+
+    assert window._project is not None
+    design = window._project.designs[0]
+    assert isinstance(design.parameters, QuadBeamParameters)
+    assert design.parameters.loop_side_m == pytest.approx(0.49)
+    assert design.parameters.element_count == 2
+    assert design.parameters.reflector_scale == pytest.approx(1.1)
+    assert design.parameters.director_scale == pytest.approx(0.9)
+    assert design.parameters.transformer_ratio == pytest.approx(6.0)
+    assert design.parameters.height_m == pytest.approx(10.0)
+    window._dirty = False
+
+
 def test_design_from_frequency_preserves_yagi_folded_transformer(
     window: MainWindow,
     monkeypatch: pytest.MonkeyPatch,

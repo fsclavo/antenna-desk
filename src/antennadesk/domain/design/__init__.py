@@ -8,6 +8,11 @@ from .estimators import (
     UnsupportedEstimateError,
     estimate_intent,
 )
+from .frequency_scale import (
+    UnsupportedFrequencyScaleError,
+    scaled_to_frequency,
+    supports_frequency_scaling,
+)
 from .intent import DesignIntent, LoopShape, VerticalForm
 
 __all__ = [
@@ -19,6 +24,9 @@ __all__ = [
     "DimensionUnit",
     "LoopShape",
     "UnsupportedEstimateError",
+    "UnsupportedFrequencyScaleError",
     "VerticalForm",
     "estimate_intent",
+    "scaled_to_frequency",
+    "supports_frequency_scaling",
 ]

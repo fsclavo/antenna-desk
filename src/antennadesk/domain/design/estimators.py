@@ -38,6 +38,7 @@ from ..antennas.ocfd import (
     OCFDParameters,
 )
 from ..antennas.polarization import Polarization
+from ..antennas.quad_beam import ANTENNA_TYPE_QUAD_BEAM, quad_beam_parameters
 from ..antennas.ringo import ANTENNA_TYPE_RINGO, RingoParameters
 from ..antennas.t2fd import ANTENNA_TYPE_T2FD, T2FDParameters, t2fd_starting_dimensions
 from ..antennas.vertical import ANTENNA_TYPE_VERTICAL, VerticalParameters
@@ -178,6 +179,43 @@ def estimate_loop(intent: DesignIntent) -> DimensionEstimate:
             _count_row("field.sides", sides),
             _length_row("field.height", intent.height_m),
         ),
+    )
+
+
+def estimate_quad_beam(intent: DesignIntent) -> DimensionEstimate:
+    parameters = quad_beam_parameters(
+        frequency_hz=intent.frequency_hz,
+        element_count=intent.quad_beam_elements,
+        height_m=intent.height_m,
+        azimuth_deg=intent.azimuth_deg,
+        wire_radius_m=intent.wire_radius_m,
+        material=intent.material,
+        ground=intent.ground,
+    )
+    rows = [
+        _length_row("quad_beam.loop_side", parameters.loop_side_m),
+        _length_row("quad_beam.reflector_spacing", parameters.reflector_spacing_m),
+    ]
+    if parameters.element_count == 3:
+        rows.append(_length_row("quad_beam.director_spacing", parameters.director_spacing_m))
+    rows.extend(
+        (
+            _length_row("field.height", parameters.height_m),
+            _count_row("quad_beam.element_count", parameters.element_count),
+        )
+    )
+    return DimensionEstimate(
+        parameters=parameters,
+        method_id="quad_beam.quarter_wave_side_fifth_wave_spacing",
+        confidence=Confidence.HEURISTIC,
+        tolerance_m=parameters.loop_side_m * 0.05,
+        source_ids=(SOURCE_APPLICATION_PRESET,),
+        assumptions=("estimator.assumption.height_and_ground",),
+        warnings=(
+            "estimator.warning.starting_point",
+            "estimator.warning.quad_beam_tuning",
+        ),
+        rows=tuple(rows),
     )
 
 
@@ -646,6 +684,7 @@ ESTIMATORS = {
     ANTENNA_TYPE_OCFD: estimate_ocfd,
     ANTENNA_TYPE_J_POLE: estimate_j_pole,
     ANTENNA_TYPE_RINGO: estimate_ringo,
+    ANTENNA_TYPE_QUAD_BEAM: estimate_quad_beam,
     ANTENNA_TYPE_YAGI: estimate_yagi,
     ANTENNA_TYPE_MOXON: estimate_moxon,
     ANTENNA_TYPE_T2FD: estimate_t2fd,

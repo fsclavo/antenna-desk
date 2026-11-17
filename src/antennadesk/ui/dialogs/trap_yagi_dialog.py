@@ -37,6 +37,7 @@ class TrapYagiDialog(QDialog):
         self._form = TrapYagiForm(translator, unit_system, parameters, self)
         if frequency_hz is not None and parameters is None:
             self._form.set_frequency_hz(frequency_hz)
+            self._form.load_starting_dimensions()
         self.setWindowTitle(translator.t("trap_yagi.title"))
         self.resize(*scaled_dialog_size(580, 860))
 

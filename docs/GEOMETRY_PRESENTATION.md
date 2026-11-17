@@ -22,6 +22,8 @@ synthetic shape.
 4. **Dimensions are semantic and positive.**
    Every dimension must anchor to real model points or declared parameters,
    have non-zero length, and carry a value derived from the model/parameters.
+   Dimension text follows [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md);
+   the displayed value must still match the anchor distance.
    Do not label a projection extent as a physical diameter or length unless it
    is that quantity. Angular dimensions use arcs centred on a real vertex and
    the smaller included angle.

@@ -68,8 +68,11 @@ to create a project from a template and **Open Project...** to load an existing
 project is open.
 
 Create a design from the catalog, review the generated template, and press
-**Simulate** (or F5). New designs preselect the conductor material normally used
-for the template: aluminum for beam, Yagi, vertical, and wire-beam families,
+**Simulate** (or F5). After a successful creation, AntennaDesk selects the
+**Design** tab, even if Advanced mode had opened the Simulation tab; a cancelled
+or failed creation leaves the current tab unchanged. New designs preselect the
+conductor material normally used for the template: aluminum for beam, Yagi,
+vertical, and wire-beam families,
 stainless 304 for the loaded vertical, and copper for dipoles, loops, end-fed
 wires, and traps. The selector remains editable, and existing projects keep their
 stored material. The design panel on the left shows antenna type, frequency,
@@ -99,6 +102,25 @@ Ringo with a Wire Dipole. Apply the estimate, review the resulting dimensions,
 and simulate or optimize. Templates without a frequency-first estimator show
 the action disabled with an explanation; use their own starting-dimension
 controls or change the template explicitly.
+
+The frequency field is the **design frequency**. It seeds the starting
+dimensions and defines the default simulation band; it is not an
+analysis-frequency override. To evaluate the same geometry at another
+frequency, use **Simulation sweep** or **Band analysis**. For the quad beam,
+hexbeam, discone, trapped Yagi, and phased vertical, changing the design
+frequency regenerates the starting dimensions only while the managed geometry
+is still the generated default. After a managed dimension is edited, the
+geometry is preserved and the editor shows a message; use **Load starting
+dimensions** to rebuild it. In a modal generator the update is local; in the
+project editor it is a normal unsaved form edit. See ADR-0043.
+
+To move an already tuned design to another frequency, use **Design → Scale
+Geometry to Frequency...**. It scales the primary electrical geometry by the
+old/new frequency ratio and preserves installation, conductor, ground, feed
+line, and matching values. It is an approximation, not an optimizer; verify the
+result with the simulator. The action is available for the wire dipole, folded
+dipole, loop, quad beam, biquad, discone, and hexbeam, and is disabled with an
+explanation for loaded, trapped, multiband, Yagi/Moxon, and fan-dipole designs.
 
 The current template is shown read-only in the design panel. Use **Change...**
 next to it or **Design → Change Template...** (Ctrl+Shift+T) to replace it;
@@ -963,7 +985,9 @@ offset, azimuth, conductor radius, material, and ground.
 
 The defaults are the published G3TXQ 20 m reference at 14.184 MHz: 219 in
 driver half, 207 in reflector half, 24 in tip gap, and 130 in turning radius.
-**Load starting dimensions** scales those values linearly with frequency.
+The generator scales that reference to the requested frequency; **Load starting
+dimensions** reapplies the scaling after a frequency edit and keeps the
+installation height, conductor, ground, and azimuth.
 **Optimize...** searches the driver and reflector halves, turning radius, tip
 gap, height, and conductor radius jointly. The element model reconstructs the
 bent wire path; the frame, spreader sag, feed balun, and multi-band nesting are
@@ -979,10 +1003,12 @@ spacing, length factors, trap inset, trap frequency and inductance, height,
 azimuth, conductor radius, material, and ground.
 
 The traps are resonant on the high band, so the outer tips are effectively
-isolated there; on the low band they load and shorten the elements.
-**Load starting dimensions** sets the driven element to a half wave at the low
-band, the trap inset to a quarter wave at the high band, and the spacing to a
-fifth wave. **Optimize...** searches the driven length, reflector and director
+isolated there; on the low band they load and shorten the elements. The
+generator seeds the geometry at the requested low/high band; **Load starting
+dimensions** sets the driven element to a half wave at the low band, the trap
+inset to a quarter wave at the high band, and the spacing to a fifth wave,
+while keeping the trap inductance, element count, scales, height, conductor,
+ground, and azimuth. **Optimize...** searches the driven length, reflector and director
 factors and spacing, trap inset, trap inductance, height, and conductor radius
 jointly. The element count, band frequencies, azimuth, ground, and material
 remain user context.
@@ -999,11 +1025,12 @@ with a radial-wire cone and a larger top disc. The editor sets the frequency,
 cone height and base radius, disc radius, base height, feed gap, radial wire
 count, azimuth, conductor radius, material, and ground.
 
-**Load quarter-wave starting dimensions** sets the cone to a quarter-wave slant
-with a 30° half-angle and a disc radius of 0.7 times that slant. **Optimize...**
-searches cone height, cone radius, disc radius, base height, and conductor
-radius jointly. The wire count, feed gap, azimuth, ground, and material remain
-user context.
+The generator seeds the cone at the requested frequency; **Load starting
+dimensions** sets the cone to a quarter-wave slant with a 30° half-angle and a
+disc radius of 0.7 times that slant. It keeps the base height, feed gap, wire
+count, conductor, ground, and azimuth. **Optimize...** searches cone height,
+cone radius, disc radius, base height, and conductor radius jointly. The wire
+count, feed gap, azimuth, ground, and material remain user context.
 
 The discone is classified **experimental**. The cone and disc are radial wire
 approximations, not solid surfaces; the coax, mast, and feed transition are not
@@ -1021,9 +1048,15 @@ of the driven loop.
 
 The editor sets the frequency, loop count, driven loop side, reflector and
 director spacing, bottom height, reflector and director length factors, boom
-azimuth, radius, material, and ground. **Load quarter-wave starting dimensions**
-sets the driven loop side to a quarter wave, the spacing to a fifth wave, and
-the bottom height to a quarter wave. **Optimize...** searches the loop side,
+azimuth, radius, material, and ground. The frequency seeds the starting
+geometry: a new or changed-template design sets the driven loop side to a
+quarter wave and the spacing to a fifth wave at that frequency. **Load starting
+dimensions** recalculates those electrical dimensions after a frequency edit
+and preserves the current bottom height, conductor, ground, length factors, and
+transformer; the bottom height is an installation value and is not reset to a
+quarter wave. **Estimate Dimensions...** uses the same starting heuristic,
+asks for the two- or three-element variant, and preserves the reflector/director
+factors and transformer when applying. **Optimize...** searches the loop side,
 spacings, height, reflector factor, director factor when enabled, and conductor
 radius jointly. The loop count, azimuth, ground, and material remain user
 context.
@@ -1043,8 +1076,10 @@ radial screen, array azimuth, radius, material, and ground.
 
 The first vertical is the primary feed with unit amplitude and zero phase.
 Later verticals use `index × phase step` and a linear amplitude taper from 1 to
-`1 - taper`. **Load quarter-wave starting dimensions** sets the element length,
-spacing, and radial length to a quarter wave at the current frequency.
+`1 - taper`. The generator seeds the array at the requested frequency;
+**Load starting dimensions** sets the element length, spacing, and radial
+length to a quarter wave at the current frequency while keeping the base
+height, phase, taper, radial count, conductor, ground, and azimuth.
 **Optimize...** searches element length, spacing, base height, phase step,
 amplitude taper, radial length when radials are enabled, and conductor radius
 jointly.

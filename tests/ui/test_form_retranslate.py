@@ -86,6 +86,26 @@ def test_family_form_retranslates_its_labels(
 
 
 @pytest.mark.parametrize(
+    "form_type",
+    [HexbeamForm, DisconeForm, TrapYagiForm, PhasedVerticalForm],
+)
+def test_starting_dimensions_action_retranslates(
+    qtbot: QtBot,
+    form_type: type[QWidget],
+) -> None:
+    translator = Translator(Language.ENGLISH)
+    form = form_type(translator, UnitSystem.METRIC)
+    qtbot.addWidget(form)
+
+    assert form._starting.text() == "Load starting dimensions"
+
+    translator.set_language(Language.SPANISH)
+    form.retranslate()
+
+    assert form._starting.text() == "Cargar dimensiones iniciales"
+
+
+@pytest.mark.parametrize(
     ("form_type", "english", "spanish"),
     [
         (VerticalForm, "Radiator length", "Largo del radiador"),

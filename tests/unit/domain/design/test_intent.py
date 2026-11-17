@@ -51,6 +51,8 @@ def _intent(**overrides: object) -> DesignIntent:
         {"fan_bands_hz": (0.0,)},
         {"fan_bands_hz": (-1.0,)},
         {"yagi_elements": 1},
+        {"quad_beam_elements": 1},
+        {"quad_beam_elements": 4},
         {"end_height_m": -1.0},
         {"highest_frequency_hz": 0.0},
         {"highest_frequency_hz": FREQUENCY_HZ},
@@ -65,9 +67,15 @@ def test_rejects_invalid_intent_fields(overrides: dict[str, object]) -> None:
 
 
 def test_accepts_the_valid_boundaries() -> None:
-    low = _intent(radial_count=0, yagi_elements=2, included_angle_deg=0.5)
+    low = _intent(
+        radial_count=0,
+        yagi_elements=2,
+        quad_beam_elements=2,
+        included_angle_deg=0.5,
+    )
     high = _intent(
         radial_count=128,
+        quad_beam_elements=3,
         included_angle_deg=179.999,
         highest_frequency_hz=FREQUENCY_HZ + 1.0,
     )
@@ -76,6 +84,7 @@ def test_accepts_the_valid_boundaries() -> None:
     assert low.included_angle_deg == 0.5
     assert high.radial_count == 128
     assert high.yagi_elements == 5
+    assert high.quad_beam_elements == 3
 
 
 def test_normalizes_string_enums_and_fan_bands() -> None:
