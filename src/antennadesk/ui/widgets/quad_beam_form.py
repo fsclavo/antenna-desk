@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+import math
+
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QComboBox,
@@ -22,6 +24,7 @@ from ...domain.antennas.quad_beam import (
     MIN_ELEMENTS,
     QuadBeamParameters,
     quad_beam_parameters,
+    quad_beam_reference_transformer_ratio,
 )
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
@@ -108,6 +111,11 @@ class QuadBeamForm(QWidget):
         self._radius = QDoubleSpinBox(self)
         apply_radius_units(translator, unit_system, self._radius)
 
+        self._transformer = QDoubleSpinBox(self)
+        self._transformer.setRange(1.0, 100_000.0)
+        self._transformer.setDecimals(1)
+        self._transformer.setSuffix(":1")
+
         self._material = QComboBox(self)
         populate_template_material_combo(self._material, translator, "quad_beam")
 
@@ -143,6 +151,8 @@ class QuadBeamForm(QWidget):
 
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
+        self._transformer_hint = QLabel(translator.t("quad_beam.transformer_hint"), self)
+        self._transformer_hint.setWordWrap(True)
 
         form = QFormLayout()
         form.addRow(self._labels.label("field.frequency"), self._frequency)
@@ -172,11 +182,13 @@ class QuadBeamForm(QWidget):
         form.addRow(self._labels.label("field.soil_preset"), self._soil)
         form.addRow(self._labels.label("field.permittivity"), self._permittivity)
         form.addRow(self._labels.label("field.conductivity"), self._conductivity)
+        form.addRow(self._labels.label("quad_beam.transformer_ratio"), self._transformer)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         self._labels.bind_form(form)
         layout.addLayout(form)
+        layout.addWidget(self._transformer_hint)
         layout.addWidget(self._geometry)
 
         for widget in (
@@ -191,10 +203,10 @@ class QuadBeamForm(QWidget):
             self._radius,
             self._permittivity,
             self._conductivity,
+            self._transformer,
         ):
             widget.valueChanged.connect(self._emit_changed)
-        for spin in (self._element_count,):
-            spin.valueChanged.connect(self._emit_changed)
+        self._element_count.valueChanged.connect(self._element_count_changed)
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._ground_changed)
         initial = parameters or quad_beam_parameters(
@@ -205,6 +217,7 @@ class QuadBeamForm(QWidget):
                 conductivity_s_per_m=0.005,
             ),
         )
+        self._last_element_count = initial.element_count
         self.set_parameters(initial)
         self._update_ground_controls()
         self._update_geometry()
@@ -212,6 +225,7 @@ class QuadBeamForm(QWidget):
     def retranslate(self) -> None:
         self._ground_presets.retranslate()
         self._labels.retranslate()
+        self._transformer_hint.setText(self._translator.t("quad_beam.transformer_hint"))
         retranslate_material_combo(self._material, self._translator)
         retranslate_combo(
             self._ground,
@@ -225,6 +239,21 @@ class QuadBeamForm(QWidget):
             self._update_element_controls()
             self._update_geometry()
             self.changed.emit()
+
+    def _element_count_changed(self, value: int) -> None:
+        if self._updating:
+            self._last_element_count = value
+            return
+        old_reference = quad_beam_reference_transformer_ratio(self._last_element_count)
+        new_reference = quad_beam_reference_transformer_ratio(value)
+        if math.isclose(self._transformer.value(), old_reference, rel_tol=1e-9):
+            self._updating = True
+            try:
+                self._transformer.setValue(new_reference)
+            finally:
+                self._updating = False
+        self._last_element_count = value
+        self._emit_changed()
 
     def _ground_changed(self, *_args: object) -> None:
         self._update_ground_controls()
@@ -277,6 +306,7 @@ class QuadBeamForm(QWidget):
                 wire_radius_m=current.wire_radius_m,
                 material=current.material,
                 ground=current.ground,
+                transformer_ratio=current.transformer_ratio,
             )
         )
         self.changed.emit()
@@ -329,6 +359,7 @@ class QuadBeamForm(QWidget):
             self._director_scale.setValue(parameters.director_scale)
             self._azimuth.setValue(parameters.azimuth_deg)
             self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
+            self._transformer.setValue(parameters.transformer_ratio)
             material_index = self._material.findData(parameters.material)
             if material_index >= 0:
                 self._material.setCurrentIndex(material_index)
@@ -341,6 +372,7 @@ class QuadBeamForm(QWidget):
                 self._conductivity.setValue(parameters.ground.conductivity_s_per_m)
         finally:
             self._updating = False
+        self._last_element_count = parameters.element_count
         self._update_ground_controls()
         self._update_element_controls()
         self._update_geometry()
@@ -381,4 +413,5 @@ class QuadBeamForm(QWidget):
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),
             ground=self._ground_model(),
+            transformer_ratio=self._transformer.value(),
         )

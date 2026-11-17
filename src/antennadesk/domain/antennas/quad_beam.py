@@ -29,6 +29,16 @@ DRIVEN_ELEMENT_INDEX = 1
 DRIVEN_SIDE_INDEX = 3
 
 
+def quad_beam_reference_transformer_ratio(element_count: int) -> float:
+    """Return the practical starting transformer ratio for the element count."""
+
+    if element_count == 2:
+        return 4.0
+    if element_count == 3:
+        return 2.0
+    raise ValueError(f"element_count must be between {MIN_ELEMENTS} and {MAX_ELEMENTS}")
+
+
 def quad_beam_parameters(
     *,
     frequency_hz: float = 14_100_000.0,
@@ -43,6 +53,7 @@ def quad_beam_parameters(
     wire_radius_m: float = 0.001,
     material: ConductorMaterial = COPPER,
     ground: GroundModel = FREE_SPACE,
+    transformer_ratio: float | None = None,
 ) -> QuadBeamParameters:
     """Return a quarter-wave-side quad beam with fifth-wave spacing."""
 
@@ -50,6 +61,8 @@ def quad_beam_parameters(
 
     quarter = quarter_wave_length_m(frequency_hz)
     wavelength = wavelength_m(frequency_hz)
+    if transformer_ratio is None:
+        transformer_ratio = quad_beam_reference_transformer_ratio(element_count)
     return QuadBeamParameters(
         frequency_hz=frequency_hz,
         element_count=element_count,
@@ -65,6 +78,7 @@ def quad_beam_parameters(
         wire_radius_m=wire_radius_m,
         material=material,
         ground=ground,
+        transformer_ratio=transformer_ratio,
     )
 
 
@@ -77,7 +91,9 @@ class QuadBeamParameters:
     is in front. The feed is at the midpoint of the left vertical side of the
     driven loop; the family radiates mainly horizontal polarization. The
     quarter-wave side and fifth-wave spacing are starting heuristics, not
-    published gain or impedance references.
+    published gain or impedance references. ``transformer_ratio`` is an ideal
+    feed transformer ratio applied by the simulation; it does not change the
+    wire geometry.
     """
 
     frequency_hz: float
@@ -92,12 +108,14 @@ class QuadBeamParameters:
     wire_radius_m: float = 0.001
     material: ConductorMaterial = ALUMINUM
     ground: GroundModel = FREE_SPACE
+    transformer_ratio: float = 1.0
 
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
         ensure_positive(self.loop_side_m, name="loop_side_m")
         ensure_positive(self.reflector_spacing_m, name="reflector_spacing_m")
         ensure_non_negative(self.height_m, name="height_m")
+        ensure_positive(self.transformer_ratio, name="transformer_ratio")
         if not MIN_ELEMENTS <= self.element_count <= MAX_ELEMENTS:
             raise ValueError(f"element_count must be between {MIN_ELEMENTS} and {MAX_ELEMENTS}")
         if self.element_count == MAX_ELEMENTS:

@@ -22,9 +22,49 @@ def test_quad_beam_dialog_builds_the_default_beam(qtbot: QtBot) -> None:
 
     assert dialog.windowTitle() == "Quad Beam Generator"
     assert parameters.element_count == 2
+    assert parameters.transformer_ratio == pytest.approx(4.0)
     assert len(parameters.to_antenna().wires) == 8
     assert "2 loops" in dialog._form._geometry.text()
     assert dialog._form._director_spacing.isEnabled() is False
+
+
+def test_quad_beam_dialog_switches_to_the_three_element_transformer(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+
+    dialog._form._element_count.setValue(3)
+
+    assert dialog.parameters().transformer_ratio == pytest.approx(2.0)
+
+
+def test_quad_beam_dialog_preserves_a_custom_transformer(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    dialog._form._transformer.setValue(6.0)
+
+    dialog._form._element_count.setValue(3)
+
+    assert dialog.parameters().transformer_ratio == pytest.approx(6.0)
+
+
+def test_quad_beam_dialog_can_show_the_raw_impedance(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    dialog._form._transformer.setValue(1.0)
+
+    assert dialog.parameters().transformer_ratio == pytest.approx(1.0)
+
+
+def test_quad_beam_form_load_starting_keeps_the_transformer(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+    form._transformer.setValue(6.0)
+    form._loop_side.setValue(form._loop_side.value() * 1.2)
+
+    form.load_starting_dimensions()
+
+    assert form.parameters().transformer_ratio == pytest.approx(6.0)
 
 
 def test_quad_beam_dialog_enables_the_director_fields(qtbot: QtBot) -> None:

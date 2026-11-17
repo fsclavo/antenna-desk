@@ -21,6 +21,7 @@ from antennadesk.persistence.schema import (
     LoopParametersPayload,
     MagneticLoopParametersPayload,
     ProjectDocument,
+    QuadBeamParametersPayload,
     document_from_project,
     project_from_document,
 )
@@ -121,6 +122,24 @@ def test_biquad_transformer_ratio_round_trips() -> None:
 
     payload = document.project.designs[0].parameters
     assert isinstance(payload, BiquadParametersPayload)
+    assert payload.transformer_ratio == pytest.approx(6.0)
+    assert restored.designs[0].parameters == parameters
+
+
+def test_quad_beam_transformer_ratio_round_trips() -> None:
+    from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
+
+    parameters = quad_beam_parameters(
+        element_count=3,
+        transformer_ratio=6.0,
+    )
+    original = _project(parameters, "Quad beam 6:1")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    payload = document.project.designs[0].parameters
+    assert isinstance(payload, QuadBeamParametersPayload)
     assert payload.transformer_ratio == pytest.approx(6.0)
     assert restored.designs[0].parameters == parameters
 

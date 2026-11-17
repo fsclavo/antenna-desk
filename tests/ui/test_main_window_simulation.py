@@ -841,6 +841,16 @@ def test_biquad_simulation_spec_carries_the_transformer(window: MainWindow) -> N
     assert spec.feed_transformer_ratio == pytest.approx(4.0)
 
 
+def test_quad_beam_simulation_spec_carries_the_transformer(window: MainWindow) -> None:
+    from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
+
+    parameters = quad_beam_parameters(element_count=3, transformer_ratio=2.0)
+
+    spec = window._quad_beam_simulation_spec(parameters)
+
+    assert spec.feed_transformer_ratio == pytest.approx(2.0)
+
+
 def test_yagi_specs_include_the_folded_transformer(window: MainWindow) -> None:
     from antennadesk.domain.antennas.yagi import nbs_five_element
 

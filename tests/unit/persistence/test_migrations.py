@@ -1177,6 +1177,38 @@ def test_v46_migration_adds_the_endfed_return_path() -> None:
     assert "return_path" not in document["project"]["designs"][0]["parameters"]
 
 
+def test_v53_migration_adds_the_quad_beam_transformer_ratio() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 53,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "quad_beam",
+                    "parameters": {
+                        "frequency_hz": 14_100_000.0,
+                        "loop_side_m": 5.05,
+                        "reflector_spacing_m": 4.26,
+                        "height_m": 5.32,
+                    },
+                },
+                {
+                    "antenna_type": "wire_dipole",
+                    "parameters": {"total_length_m": 20.0},
+                },
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    quad, wire = migrated["project"]["designs"]
+    assert quad["parameters"]["transformer_ratio"] == 1.0
+    assert "transformer_ratio" not in wire["parameters"]
+    assert "transformer_ratio" not in document["project"]["designs"][0]["parameters"]
+
+
 def test_v52_migration_adds_the_biquad_transformer_ratio() -> None:
     document = {
         "format": "antennadesk-project",

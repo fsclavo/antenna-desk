@@ -864,21 +864,32 @@ def render_construction_sheet(
 <tr><th>Reflector spacing</th><td>{parameters.reflector_spacing_m:.4f} m</td></tr>
 <tr><th>Boom length</th><td>{parameters.boom_length_m:.4f} m</td></tr>
 <tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
+<tr><th>Feed transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
 <tr><th>Feed height above ground</th><td>{parameters.feed_height_m:.4f} m</td></tr>
 """
+        transformer_note = (
+            tr(
+                " Feed the midpoint through a {ratio}:1 transformer.",
+                ratio=f"{parameters.transformer_ratio:g}",
+            )
+            if parameters.transformer_ratio != 1.0
+            else tr(" Feed the midpoint directly; no transformer is modeled.")
+        )
         construction_note = _note(
             tr,
             "Build {count} square loops with the driven loop at {side} m per side "
             "and the reflector at {reflector} m per side. Set the reflector "
             "{spacing} m behind the driven loop.{director_note} Feed the midpoint "
             "of the driven loop's left vertical side and keep the loops square. "
-            "The boom, spreaders, mast, and matching network are not modeled; tune "
-            "the match for the installed antenna.",
+            "The boom, spreaders, mast, and any additional matching network are "
+            "not modeled; the feed transformer is ideal. Tune the match for the "
+            "installed antenna.{transformer_note}",
             count=parameters.element_count,
             side=f"{parameters.loop_side_m:.4f}",
             reflector=f"{parameters.reflector_side_m:.4f}",
             spacing=f"{parameters.reflector_spacing_m:.4f}",
             director_note=director_note,
+            transformer_note=transformer_note,
         )
     elif isinstance(parameters, PhasedVerticalParameters):
         feed_rows = f"""

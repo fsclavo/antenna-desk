@@ -775,13 +775,14 @@ REPORT_SPANISH: dict[str, str] = {
         "modelan el balun, la pérdida de línea, el stub trasero, el boom, el "
         "mástil ni las tolerancias de construcción."
     ),
-    "Build {count} square loops with the driven loop at {side} m per side and the reflector at {reflector} m per side. Set the reflector {spacing} m behind the driven loop.{director_note} Feed the midpoint of the driven loop's left vertical side and keep the loops square. The boom, spreaders, mast, and matching network are not modeled; tune the match for the installed antenna.": (  # noqa: E501
+    "Build {count} square loops with the driven loop at {side} m per side and the reflector at {reflector} m per side. Set the reflector {spacing} m behind the driven loop.{director_note} Feed the midpoint of the driven loop's left vertical side and keep the loops square. The boom, spreaders, mast, and any additional matching network are not modeled; the feed transformer is ideal. Tune the match for the installed antenna.{transformer_note}": (  # noqa: E501
         "Construí {count} lazos cuadrados con el lazo alimentado de {side} m por "
         "lado y el reflector de {reflector} m por lado. Colocá el reflector a "
         "{spacing} m detrás del lazo alimentado.{director_note} Alimentá el punto "
         "medio del lado vertical izquierdo del lazo alimentado y mantené los lazos "
-        "cuadrados. El boom, los separadores, el mástil y la red de adaptación no "
-        "están modelados; ajustá la adaptación para la antena instalada."
+        "cuadrados. El boom, los separadores, el mástil y cualquier red de "
+        "adaptación adicional no están modelados; el transformador de alimentación "
+        "es ideal. Ajustá la adaptación para la antena instalada.{transformer_note}"
     ),
     "Build {count} square loops with {side} m sides. Join them at the shared horizontal rails, starting at {base} m above ground, and feed the midpoint of the central rail at {feed_height} m. {reflector_note} The quarter-wave side and eighth-wave reflector spacing are starting dimensions; tune them for the installation.{transformer_note}": (  # noqa: E501
         "Construí {count} lazos cuadrados de {side} m por lado. Unilos en los "

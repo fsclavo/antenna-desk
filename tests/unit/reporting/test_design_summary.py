@@ -102,6 +102,7 @@ def test_quad_beam_summary_reports_loops_and_spacing() -> None:
     assert rows["Director side"] == "4.7500 m"
     assert rows["Boom length"] == "7.0000 m"
     assert rows["Feed"] == "driven loop side midpoint"
+    assert rows["Feed transformer"] == "2:1"
 
 
 def test_phased_vertical_summary_reports_the_excitation_and_radials() -> None:

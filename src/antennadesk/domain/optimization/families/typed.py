@@ -2392,6 +2392,11 @@ def quad_beam_descriptor(parameters: QuadBeamParameters) -> AntennaOptimizerDesc
             step=0.005,
         ),
         _radius(parameters.wire_radius_m),
+        _choice_ratio(
+            "transformer_ratio",
+            "quad_beam.transformer_ratio",
+            parameters.transformer_ratio,
+        ),
     ]
     if parameters.element_count == 3:
         variables.insert(
@@ -2423,6 +2428,7 @@ def quad_beam_descriptor(parameters: QuadBeamParameters) -> AntennaOptimizerDesc
         "height_m": parameters.height_m,
         "reflector_scale": parameters.reflector_scale,
         "wire_radius_m": parameters.wire_radius_m,
+        "transformer_ratio": parameters.transformer_ratio,
     }
     if parameters.element_count == 3:
         initial["director_spacing_m"] = parameters.director_spacing_m
@@ -2438,6 +2444,7 @@ def quad_beam_descriptor(parameters: QuadBeamParameters) -> AntennaOptimizerDesc
             director_spacing_m=values.get("director_spacing_m", parameters.director_spacing_m),
             director_scale=values.get("director_scale", parameters.director_scale),
             wire_radius_m=values["wire_radius_m"],
+            transformer_ratio=values["transformer_ratio"],
         )
 
     def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
@@ -2446,6 +2453,7 @@ def quad_beam_descriptor(parameters: QuadBeamParameters) -> AntennaOptimizerDesc
             positive_violation("reflector_spacing_m", values["reflector_spacing_m"]),
             non_negative_violation("height_m", values["height_m"]),
             positive_violation("wire_radius_m", values["wire_radius_m"]),
+            positive_violation("transformer_ratio", values["transformer_ratio"]),
             positive_violation(
                 "director_spacing_m",
                 values.get("director_spacing_m", parameters.director_spacing_m),
@@ -2512,6 +2520,11 @@ def quad_beam_descriptor(parameters: QuadBeamParameters) -> AntennaOptimizerDesc
         build,
         validate,
         default_objective=FamilyOptimizationObjective.MAX_GAIN,
+        context_note_key=(
+            "optimize.feed_transformer.transformer_context"
+            if parameters.transformer_ratio != 1.0
+            else None
+        ),
     )
 
 

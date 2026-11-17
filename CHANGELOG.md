@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   balance, and power handling are not modeled. The family remains experimental;
   the 4:1 starting ratio is a practical convenience, not a validated
   feedpoint-impedance claim.
+- **Quad-beam feed transformer.** New two-element beams start with an ideal
+  4:1 transformer and three-element beams with 2:1, editable in the design
+  panel and persisted in schema 54. The ratio is applied to the reported SWR
+  and feed-connection guidance without changing the NEC geometry; set 1.0 for
+  the raw impedance. The transformer is ideal, and the family remains
+  experimental.
 
 ## [0.9.0] - 2026-11-17
 

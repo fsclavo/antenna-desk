@@ -648,6 +648,8 @@ def test_quad_beam_construction_sheet_lists_the_loops(
     assert "Quad beam" in sheet
     assert "Reflector spacing" in sheet
     assert "Build 3 square loops" in sheet
+    assert "Feed transformer" in sheet
+    assert "2:1" in sheet
     assert "driven loop's left vertical" in sheet
 
 

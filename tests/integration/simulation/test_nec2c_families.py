@@ -132,6 +132,57 @@ def test_biquad_transformer_ratio_scales_the_reported_impedance(
     assert any(diagnostic.code == "transformer.applied" for diagnostic in transformed.diagnostics)
 
 
+def test_quad_beam_transformer_ratio_scales_the_reported_impedance(
+    solver: Nec2cSolver,
+) -> None:
+    from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
+
+    parameters = quad_beam_parameters(
+        element_count=2,
+        frequency_hz=14_100_000.0,
+        loop_side_m=5.40,
+        height_m=10.0,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    )
+    model = parameters.to_antenna()
+    segmentation = aligned_policy_for_model(
+        model,
+        14_100_000.0,
+        SegmentationPolicy(min_segments_per_wire=3),
+    )
+
+    def run(ratio: float) -> SimulationResult:
+        spec = SimulationSpec(
+            frequency_plan=FrequencyPlan.single(14_100_000.0),
+            segmentation=segmentation,
+            include_conductor_losses=False,
+            far_field=FarFieldRequest(enabled=False),
+            feed_transformer_ratio=ratio,
+        )
+        return solver.run(model, spec)
+
+    raw = run(1.0)
+    transformed = run(parameters.transformer_ratio)
+
+    assert raw.status is SimulationStatus.COMPLETED
+    assert transformed.status is SimulationStatus.COMPLETED
+    raw_impedance = raw.frequencies[0].impedance_ohm
+    transformed_impedance = transformed.frequencies[0].impedance_ohm
+    assert transformed_impedance.real == pytest.approx(
+        raw_impedance.real / parameters.transformer_ratio,
+        rel=1e-6,
+    )
+    assert transformed_impedance.imag == pytest.approx(
+        raw_impedance.imag / parameters.transformer_ratio,
+        rel=1e-6,
+    )
+    assert transformed.frequencies[0].swr < raw.frequencies[0].swr
+    assert any(diagnostic.code == "transformer.applied" for diagnostic in transformed.diagnostics)
+
+
 def test_vertical_generator_produces_a_usable_sweep(solver: Nec2cSolver) -> None:
     from antennadesk.domain.antennas.vertical import VerticalParameters
 

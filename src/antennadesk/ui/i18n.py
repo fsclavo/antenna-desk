@@ -3626,6 +3626,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Boom-axis spacing from the reflector to the driven loop.",
         Language.SPANISH: "Separación sobre el boom desde el reflector hasta el lazo alimentado.",
     },
+    "help.quad_beam.transformer_ratio": {
+        Language.ENGLISH: (
+            "Ideal feed transformer ratio applied to the reported SWR; it does not "
+            "change the wire geometry. 4:1 is a practical starting point for the "
+            "2-element quad and 2:1 for the 3-element quad; the feedpoint impedance "
+            "is not independently validated."
+        ),
+        Language.SPANISH: (
+            "Relación ideal del transformador aplicada a la ROE informada; no cambia "
+            "la geometría de los hilos. 4:1 es un punto de partida práctico para el "
+            "quad de 2 elementos y 2:1 para el de 3; la impedancia no está validada "
+            "independientemente."
+        ),
+    },
     "help.log_periodic.frequency_low": {
         Language.ENGLISH: (
             "Lowest design frequency. Changing it scales the element lengths and "
@@ -10907,6 +10921,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Director length factor",
         Language.SPANISH: "Factor de longitud del director",
     },
+    "quad_beam.transformer_ratio": {
+        Language.ENGLISH: "Transformer ratio",
+        Language.SPANISH: "Relación del transformador",
+    },
+    "quad_beam.transformer_hint": {
+        Language.ENGLISH: (
+            "Ideal feed transformer. New 2-element designs start at 4:1 and "
+            "3-element designs at 2:1; tune the loop side to resonance before "
+            "judging the match; set 1.0 to see the raw antenna impedance."
+        ),
+        Language.SPANISH: (
+            "Transformador de alimentación ideal. Los diseños nuevos de 2 elementos "
+            "salen con 4:1 y los de 3 con 2:1; sintonizá el lado del lazo antes de "
+            "juzgar la adaptación; poné 1.0 para ver la impedancia cruda de la antena."
+        ),
+    },
     "quad_beam.geometry": {
         Language.ENGLISH: (
             "{count} loops · driven side {side} {unit} · spacing {spacing} {unit} · "
@@ -10922,13 +10952,15 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "The reflector sits behind the driven loop and the optional director "
             "in front. The feed is the midpoint of the left vertical side of the "
             "driven loop. Loop sides and spacing are starting heuristics; the "
-            "boom, spreaders, and matching network are not modeled."
+            "boom, spreaders, and matching network are not modeled. The feed "
+            "transformer is ideal."
         ),
         Language.SPANISH: (
             "El reflector está detrás del lazo excitado y el director opcional "
             "delante. La alimentación es el punto medio del lado vertical "
             "izquierdo del lazo excitado. Los lados y la separación son heurísticas "
-            "de partida; no se modelan el boom, los separadores ni la red de ajuste."
+            "de partida; no se modelan el boom, los separadores ni la red de ajuste. "
+            "El transformador de alimentación es ideal."
         ),
     },
     "quad_beam.evidence": {
@@ -10936,15 +10968,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Experimental quad-beam model. The loops are ideal thin-wire squares "
             "over the selected ground. Gain, front-to-back ratio, feedpoint "
             "impedance, boom and mast effects, and the matching network are not "
-            "independently validated. Verify the pattern and match with the solver "
-            "or a measurement."
+            "independently validated. The feed transformer is ideal; balun loss, "
+            "common-mode current, and balance are not modeled. Verify the pattern "
+            "and match with the solver or a measurement."
         ),
         Language.SPANISH: (
             "Modelo experimental de beam cuádruple. Los lazos son cuadrados de "
             "hilo delgado ideales sobre el suelo elegido. La ganancia, la relación "
             "delante/atrás, la impedancia de alimentación, los efectos del boom y "
             "del mástil y la red de ajuste no están validadas independientemente. "
-            "Verificá el patrón y el ajuste con el solver o una medición."
+            "El transformador de alimentación es ideal; no se modelan las pérdidas "
+            "del balun, la corriente de modo común ni el balance. Verificá el patrón "
+            "y el ajuste con el solver o una medición."
         ),
     },
     "quad_beam.geometry_note": {

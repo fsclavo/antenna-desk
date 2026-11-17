@@ -99,9 +99,46 @@ def test_quad_beam_primary_dimension_scales_the_boom() -> None:
     assert scaled.loop_side_m == pytest.approx(6.0)
     assert scaled.reflector_spacing_m == pytest.approx(4.8)
     assert scaled.director_spacing_m == pytest.approx(3.6)
+    assert scaled.transformer_ratio == pytest.approx(parameters.transformer_ratio)
     assert antenna_type_for(scaled) == "quad_beam"
     assert antenna_template_id(scaled) == "quad_beam"
     assert antenna_family(scaled) is AntennaFamily.LOOP
+
+
+def test_quad_beam_starting_transformer_depends_on_element_count() -> None:
+    two = quad_beam_parameters(element_count=2)
+    three = quad_beam_parameters(element_count=3)
+
+    assert two.transformer_ratio == pytest.approx(4.0)
+    assert three.transformer_ratio == pytest.approx(2.0)
+
+
+def test_quad_beam_transformer_ratio_is_editable() -> None:
+    parameters = quad_beam_parameters(element_count=2, transformer_ratio=6.0)
+
+    assert parameters.transformer_ratio == pytest.approx(6.0)
+
+
+def test_quad_beam_defaults_to_no_transformer_when_constructed_directly() -> None:
+    parameters = QuadBeamParameters(
+        frequency_hz=14_100_000.0,
+        loop_side_m=5.0,
+        reflector_spacing_m=4.0,
+        height_m=10.0,
+    )
+
+    assert parameters.transformer_ratio == pytest.approx(1.0)
+
+
+def test_quad_beam_rejects_a_non_positive_transformer_ratio() -> None:
+    with pytest.raises(ValueError, match="transformer_ratio"):
+        QuadBeamParameters(
+            frequency_hz=14_100_000.0,
+            loop_side_m=5.0,
+            reflector_spacing_m=4.0,
+            height_m=10.0,
+            transformer_ratio=0.0,
+        )
 
 
 def test_quad_beam_rejects_invalid_scales_and_spacing() -> None:

@@ -157,6 +157,7 @@ HELP_MANIFEST = frozenset(
         "help.preferences.theme",
         "help.dipole.field.transformer_ratio",
         "help.biquad.transformer_ratio",
+        "help.quad_beam.transformer_ratio",
         "help.yagi.field.transformer_ratio",
         "help.endfed.bend_enabled",
         "help.endfed.bend_vertical",

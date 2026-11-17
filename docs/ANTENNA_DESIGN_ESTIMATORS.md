@@ -69,6 +69,7 @@ warnings, and a dimension tolerance.
 | Ringo | 0.725-wave vertical with a small horizontal matching ring, calibrated for the simplified AntennaDesk geometry | heuristic | Not a universal commercial Ringo formula |
 | Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; the editor starts at 145 MHz with the NBS five-element preset scaled from its 50.1 MHz reference; optimize for the target; horizontal or vertical polarization; a folded driven element starts with an ideal 4:1 transformer |
 | Moxon | Cebik 20 m wire reference scaled by frequency | reference scaled | The editor starts at 28.5 MHz with the Cebik reference scaled from 14.17 MHz; gap and tips are sensitive; horizontal or vertical polarization |
+| Quad beam | quarter-wave side, fifth-wave spacing; 4:1 ideal transformer for 2 elements and 2:1 for 3 | heuristic | Starting geometry; tune the loop side to resonance; feedpoint impedance is not independently validated |
 | Biquad / double biquad | loop side `0.25λ × 0.95`; reflector `0.5 × side` | heuristic | No independent numerical reference; the wire reflector and shared-rail current distribution are experimental |
 | Beverage | length `1.0λ`; height and termination from the editor | heuristic | Receiving antenna; the termination and low gain are not independently validated |
 | T2FD | span `300/F(MHz)` ft, spacing `10/F(MHz)` ft | heuristic | Broadband starting geometry; highest design frequency is required; not a resonance calculation |
@@ -120,6 +121,26 @@ feedpoint resistance, and the ratio can be optimized or changed explicitly.
 
 The transformer is ideal: balun loss, common-mode current, balance, and power
 handling are not modeled. The biquad remains an experimental family; the
+starting ratio is a convenience, not a validated design claim.
+
+### Quad beam feed transformer
+
+New quad beams start with an ideal feed transformer: 4:1 for the two-element
+beam and 2:1 for the three-element beam, stored in
+`QuadBeamParameters.transformer_ratio` and applied by
+`SimulationSpec.feed_transformer_ratio`. The ratio does not change the NEC
+geometry. It is editable because the driven-loop impedance depends on the loop
+side, reflector/director spacing, height, and ground; set 1.0 to see the raw
+antenna impedance, or use the project matching network for a different match.
+
+With the starting quarter-wave side the beam is short and highly reactive at
+the design frequency; tune the loop side to resonance before judging the
+transformer. In the 14.1 MHz model, a resonant two-element beam is around
+150 Ω and a three-element beam around 85 Ω, so the two variants do not share
+one fixed ratio.
+
+The transformer is ideal: balun loss, common-mode current, balance, and power
+handling are not modeled. The quad beam remains an experimental family; the
 starting ratio is a convenience, not a validated design claim.
 
 ### J Pole and Slim Jim starting point
