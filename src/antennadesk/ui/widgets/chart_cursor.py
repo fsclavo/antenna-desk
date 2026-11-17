@@ -172,26 +172,40 @@ class ChartCursor(QObject):
         self.clear_markers()
 
     def hide_cursor(self) -> None:
-        self._line.setVisible(False)
-        for dot in self._dots:
+        line = getattr(self, "_line", None)
+        if line is None:
+            return
+        line.setVisible(False)
+        for dot in getattr(self, "_dots", ()):
             dot.setVisible(False)
-        self._label.setVisible(False)
+        label = getattr(self, "_label", None)
+        if label is not None:
+            label.setVisible(False)
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        plot = getattr(self, "_plot", None)
+        if plot is None:
+            # Qt can deliver pending events after Python has started clearing
+            # this object during teardown. Never dereference a missing owner.
+            return False
         try:
-            if watched is self._plot.viewport() and event.type() == QEvent.Type.Leave:
+            if watched is plot.viewport() and event.type() == QEvent.Type.Leave:
                 self.hide_cursor()
         except RuntimeError:
             return False
         return super().eventFilter(watched, event)
 
     def _mouse_moved(self, event: object) -> None:
-        if not self._series:
+        series = getattr(self, "_series", ())
+        if not series:
             return
         position = event[0] if isinstance(event, tuple) else event
         if not isinstance(position, QPointF):
             return
-        plot_item = self._plot.getPlotItem()
+        plot = getattr(self, "_plot", None)
+        if plot is None:
+            return
+        plot_item = plot.getPlotItem()
         if not plot_item.vb.sceneBoundingRect().contains(position):
             self.hide_cursor()
             return

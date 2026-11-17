@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pyqtgraph as pg
+from PySide6.QtCore import QEvent, QPointF
 from PySide6.QtGui import QColor
 from pytestqt.qtbot import QtBot
 
@@ -88,3 +89,16 @@ def test_unifying_cursor_is_removed_when_plot_is_cleared(qtbot: QtBot) -> None:
 
     assert cursor._line.scene() is not None
     assert cursor._label.text()
+
+
+def test_chart_cursor_tolerates_pending_events_during_teardown(qtbot: QtBot) -> None:
+    plot = pg.PlotWidget()
+    qtbot.addWidget(plot)
+    cursor = ChartCursor(plot)
+
+    del cursor._plot
+    del cursor._series
+
+    assert cursor.eventFilter(plot.viewport(), QEvent(QEvent.Type.Leave)) is False
+    cursor._mouse_moved(QPointF(0.0, 0.0))
+    cursor.hide_cursor()
