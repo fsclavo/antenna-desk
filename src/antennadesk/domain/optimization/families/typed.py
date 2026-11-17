@@ -1538,10 +1538,18 @@ def biquad_descriptor(parameters: BiquadParameters) -> AntennaOptimizerDescripto
             )
         )
     variables.append(_radius(parameters.wire_radius_m))
+    variables.append(
+        _choice_ratio(
+            "transformer_ratio",
+            "biquad.transformer_ratio",
+            parameters.transformer_ratio,
+        )
+    )
     initial = {
         "loop_side_m": parameters.loop_side_m,
         "base_height_m": parameters.base_height_m,
         "wire_radius_m": parameters.wire_radius_m,
+        "transformer_ratio": parameters.transformer_ratio,
     }
     if parameters.reflector_enabled:
         initial["reflector_spacing_m"] = parameters.reflector_spacing_m
@@ -1556,6 +1564,7 @@ def biquad_descriptor(parameters: BiquadParameters) -> AntennaOptimizerDescripto
                 parameters.reflector_spacing_m,
             ),
             wire_radius_m=values["wire_radius_m"],
+            transformer_ratio=values["transformer_ratio"],
         )
 
     def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
@@ -1568,6 +1577,7 @@ def biquad_descriptor(parameters: BiquadParameters) -> AntennaOptimizerDescripto
             non_negative_violation("base_height_m", values["base_height_m"]),
             positive_violation("reflector_spacing_m", spacing),
             positive_violation("wire_radius_m", values["wire_radius_m"]),
+            positive_violation("transformer_ratio", values["transformer_ratio"]),
         ]
         if values["wire_radius_m"] > 0.0 and spacing <= 2.0 * values["wire_radius_m"]:
             issues.append(
@@ -1585,6 +1595,11 @@ def biquad_descriptor(parameters: BiquadParameters) -> AntennaOptimizerDescripto
         initial,
         build,
         validate,
+        context_note_key=(
+            "optimize.feed_transformer.transformer_context"
+            if parameters.transformer_ratio != 1.0
+            else None
+        ),
     )
 
 

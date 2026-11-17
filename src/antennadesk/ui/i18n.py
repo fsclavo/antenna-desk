@@ -3207,6 +3207,19 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Distance from the driven loop to the reflector loop.",
         Language.SPANISH: "Distancia desde el lazo alimentado hasta el lazo reflector.",
     },
+    "help.biquad.transformer_ratio": {
+        Language.ENGLISH: (
+            "Ideal feed transformer ratio applied to the reported SWR; it does not "
+            "change the wire geometry. 4:1 is a practical starting point for the "
+            "double biquad, but the feedpoint impedance is not independently validated."
+        ),
+        Language.SPANISH: (
+            "Relación ideal del transformador aplicada a la ROE informada; no cambia "
+            "la geometría de los hilos. 4:1 es un punto de partida práctico para el "
+            "biquad doble, pero la impedancia de alimentación no está validada "
+            "independientemente."
+        ),
+    },
     "help.discone.cone_radius": {
         Language.ENGLISH: ("Radius of the cone base; the wire cone approximates a solid skirt."),
         Language.SPANISH: (
@@ -10233,6 +10246,21 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Reflector spacing",
         Language.SPANISH: "Separación del reflector",
     },
+    "biquad.transformer_ratio": {
+        Language.ENGLISH: "Transformer ratio",
+        Language.SPANISH: "Relación del transformador",
+    },
+    "biquad.transformer_hint": {
+        Language.ENGLISH: (
+            "Ideal feed transformer. 4.0 is a practical starting point for the "
+            "double biquad; set 1.0 to see the raw antenna impedance."
+        ),
+        Language.SPANISH: (
+            "Transformador de alimentación ideal. 4.0 es un punto de partida "
+            "práctico para el biquad doble; poné 1.0 para ver la impedancia cruda "
+            "de la antena."
+        ),
+    },
     "biquad.reflector": {
         Language.ENGLISH: "Reflector",
         Language.SPANISH: "Reflector",
@@ -10270,7 +10298,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "loops share their horizontal rails and the feed sits at the midpoint "
             "of the central rail. The quarter-wave side and eighth-wave reflector "
             "spacing are starting heuristics; gain, impedance, and the reflector "
-            "model are not independently validated."
+            "model are not independently validated. The feed transformer is ideal."
         ),
         Language.SPANISH: (
             "Un biquad es una pila vertical de lazos cuadrados con un reflector de "
@@ -10279,21 +10307,24 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "el punto medio del travesaño central. El lado de cuarto de onda y la "
             "separación de octavo de onda son heurísticas iniciales; la ganancia, "
             "la impedancia y el modelo del reflector no están validados "
-            "independientemente."
+            "independientemente. El transformador de alimentación es ideal."
         ),
     },
     "biquad.evidence": {
         Language.ENGLISH: (
             "Starting geometry only. The model is a wire approximation of a "
             "biquad; it does not claim a published gain, feedpoint impedance, or "
-            "bandwidth. Measure or simulate the installed antenna before relying "
-            "on the result."
+            "bandwidth. The feed transformer is ideal; balun loss, common-mode "
+            "current, and balance are not modeled. Measure or simulate the "
+            "installed antenna before relying on the result."
         ),
         Language.SPANISH: (
             "Solo geometría inicial. El modelo es una aproximación de hilo de un "
             "biquad; no afirma una ganancia, impedancia de alimentación ni ancho de "
-            "banda publicados. Medí o simulá la antena instalada antes de confiar "
-            "en el resultado."
+            "banda publicados. El transformador de alimentación es ideal; no se "
+            "modelan las pérdidas del balun, la corriente de modo común ni el "
+            "balance. Medí o simulá la antena instalada antes de confiar en el "
+            "resultado."
         ),
     },
     "beverage.title": {

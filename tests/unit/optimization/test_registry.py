@@ -10,6 +10,7 @@ import pytest
 from antennadesk.domain.antennas.beverage import beverage_parameters
 from antennadesk.domain.antennas.biquad import (
     BiquadKind,
+    BiquadParameters,
     biquad_parameters,
 )
 from antennadesk.domain.antennas.custom import CustomAntennaParameters
@@ -281,6 +282,23 @@ def test_loop_descriptor_exposes_the_transformer_choice() -> None:
     assert rebuilt.transformer_ratio == pytest.approx(4.0)
 
 
+def test_biquad_descriptor_exposes_the_transformer_choice() -> None:
+    parameters = biquad_parameters(BiquadKind.DOUBLE)
+    availability = optimizer_availability(parameters)
+    descriptor = availability.descriptor
+    assert descriptor is not None
+
+    variable = next(item for item in descriptor.variables if item.name == "transformer_ratio")
+    assert variable.kind is VariableKind.CHOICE
+    assert variable.locked_by_default
+    assert 4.0 in variable.choices
+    assert 6.0 in variable.choices
+
+    rebuilt = descriptor.build_parameters({**descriptor.initial_values, "transformer_ratio": 6.0})
+    assert isinstance(rebuilt, BiquadParameters)
+    assert rebuilt.transformer_ratio == pytest.approx(6.0)
+
+
 def _typed_samples() -> list[AntennaDesignParameters]:
     return [
         _dipole(),
@@ -498,6 +516,7 @@ def test_biquad_without_a_reflector_does_not_optimize_its_spacing() -> None:
 
     assert "loop_side_m" in names
     assert "base_height_m" in names
+    assert "transformer_ratio" in names
     assert "reflector_spacing_m" not in names
 
 

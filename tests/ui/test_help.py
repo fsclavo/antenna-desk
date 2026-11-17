@@ -163,6 +163,17 @@ def test_yagi_form_applies_help_to_shared_fields(qtbot: QtBot) -> None:
     assert form._frequency.toolTip() == labels["field.frequency"].toolTip()
 
 
+def test_biquad_form_applies_transformer_help(qtbot: QtBot) -> None:
+    from antennadesk.ui.widgets.biquad_form import BiquadForm
+
+    form = BiquadForm(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(form)
+    form.retranslate()
+
+    assert "Ideal feed transformer" in form._transformer.toolTip()
+    assert "does not change the wire geometry" in form._transformer.toolTip()
+
+
 def test_apply_help_clears_a_missing_key_instead_of_showing_it(
     qtbot: QtBot,
 ) -> None:

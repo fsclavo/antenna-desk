@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Biquad and double-biquad feed transformer.** New designs start with an
+  ideal 4:1 feed transformer, editable in the design panel and persisted in
+  schema 53. The ratio is applied to the reported SWR and to the feed-connection
+  guidance; it does not change the NEC geometry. Set 1.0 to show the raw
+  antenna impedance. The transformer is ideal: balun loss, common-mode current,
+  balance, and power handling are not modeled. The family remains experimental;
+  the 4:1 starting ratio is a practical convenience, not a validated
+  feedpoint-impedance claim.
+
 ## [0.9.0] - 2026-11-17
 
 ### Added

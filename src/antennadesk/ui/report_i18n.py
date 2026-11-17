@@ -783,13 +783,19 @@ REPORT_SPANISH: dict[str, str] = {
         "cuadrados. El boom, los separadores, el mástil y la red de adaptación no "
         "están modelados; ajustá la adaptación para la antena instalada."
     ),
-    "Build {count} square loops with {side} m sides. Join them at the shared horizontal rails, starting at {base} m above ground, and feed the midpoint of the central rail at {feed_height} m. {reflector_note} The quarter-wave side and eighth-wave reflector spacing are starting dimensions; tune them for the installation.": (  # noqa: E501
+    "Build {count} square loops with {side} m sides. Join them at the shared horizontal rails, starting at {base} m above ground, and feed the midpoint of the central rail at {feed_height} m. {reflector_note} The quarter-wave side and eighth-wave reflector spacing are starting dimensions; tune them for the installation.{transformer_note}": (  # noqa: E501
         "Construí {count} lazos cuadrados de {side} m por lado. Unilos en los "
         "rieles horizontales compartidos, comenzando a {base} m sobre el suelo, y "
         "alimentá el punto medio del riel central a {feed_height} m. "
         "{reflector_note} El lado de cuarto de onda y la separación de reflector "
         "de octavo de onda son dimensiones de partida; ajustalos para la "
-        "instalación."
+        "instalación.{transformer_note}"
+    ),
+    " Feed the midpoint through a {ratio}:1 transformer.": (
+        " Alimentá el punto medio a través de un transformador {ratio}:1."
+    ),
+    " Feed the midpoint directly; no transformer is modeled.": (
+        " Alimentá el punto medio directamente; no se modela transformador."
     ),
     "Build {count} vertical radiators of {length} m, spaced {spacing} m along one line, with their bases at {base} m above ground. Fit {radials} radials of {radial_length} m to each base. Drive the first vertical as the primary feed and the remaining verticals with the listed phase and amplitude steps. The combining network is ideal and is not included; use an explicit feed network and verify the match.": (  # noqa: E501
         "Construí {count} radiadores verticales de {length} m, separados "

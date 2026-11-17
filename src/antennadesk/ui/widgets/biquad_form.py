@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.biquad import (
+    BIQUAD_REFERENCE_TRANSFORMER_RATIO,
     BiquadKind,
     BiquadParameters,
     biquad_parameters,
@@ -102,6 +103,12 @@ class BiquadForm(QWidget):
         self._radius = QDoubleSpinBox(self)
         apply_radius_units(translator, unit_system, self._radius)
 
+        self._transformer = QDoubleSpinBox(self)
+        self._transformer.setRange(1.0, 100_000.0)
+        self._transformer.setDecimals(1)
+        self._transformer.setSuffix(":1")
+        self._transformer.setValue(BIQUAD_REFERENCE_TRANSFORMER_RATIO)
+
         self._material = QComboBox(self)
         populate_template_material_combo(self._material, translator, "biquad")
 
@@ -136,6 +143,8 @@ class BiquadForm(QWidget):
 
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
+        self._transformer_hint = QLabel(translator.t("biquad.transformer_hint"), self)
+        self._transformer_hint.setWordWrap(True)
 
         form = QFormLayout()
         form.addRow(self._labels.label("field.frequency"), self._frequency)
@@ -151,11 +160,13 @@ class BiquadForm(QWidget):
         form.addRow(self._labels.label("field.soil_preset"), self._soil)
         form.addRow(self._labels.label("field.permittivity"), self._permittivity)
         form.addRow(self._labels.label("field.conductivity"), self._conductivity)
+        form.addRow(self._labels.label("biquad.transformer_ratio"), self._transformer)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         self._labels.bind_form(form)
         layout.addLayout(form)
+        layout.addWidget(self._transformer_hint)
         layout.addWidget(self._geometry)
 
         for widget in (
@@ -167,6 +178,7 @@ class BiquadForm(QWidget):
             self._radius,
             self._permittivity,
             self._conductivity,
+            self._transformer,
         ):
             widget.valueChanged.connect(self._emit_changed)
         for combo in (self._kind, self._material):
@@ -195,6 +207,7 @@ class BiquadForm(QWidget):
             tuple(f"biquad.kind.{kind.value}" for kind in BiquadKind),
         )
         self._reflector_enabled.setText(self._translator.t("biquad.reflector_enabled"))
+        self._transformer_hint.setText(self._translator.t("biquad.transformer_hint"))
         retranslate_material_combo(self._material, self._translator)
         retranslate_combo(
             self._ground,
@@ -264,6 +277,7 @@ class BiquadForm(QWidget):
             wire_radius_m=current.wire_radius_m,
             material=current.material,
             ground=current.ground,
+            transformer_ratio=current.transformer_ratio,
         )
         self.set_parameters(starting)
         self.changed.emit()
@@ -312,6 +326,7 @@ class BiquadForm(QWidget):
             )
             self._azimuth.setValue(parameters.azimuth_deg)
             self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
+            self._transformer.setValue(parameters.transformer_ratio)
             material_index = self._material.findData(parameters.material)
             if material_index >= 0:
                 self._material.setCurrentIndex(material_index)
@@ -370,4 +385,5 @@ class BiquadForm(QWidget):
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),
             ground=self._ground_model(),
+            transformer_ratio=self._transformer.value(),
         )

@@ -58,6 +58,46 @@ def test_biquad_starting_side_is_a_quarter_wave_and_spacing_is_half_the_side() -
     assert parameters.reflector_spacing_m == pytest.approx(expected_side / 2.0)
 
 
+def test_biquad_starting_parameters_use_the_reference_transformer() -> None:
+    from antennadesk.domain.antennas.biquad import BIQUAD_REFERENCE_TRANSFORMER_RATIO
+
+    parameters = biquad_parameters(BiquadKind.DOUBLE)
+
+    assert parameters.transformer_ratio == pytest.approx(BIQUAD_REFERENCE_TRANSFORMER_RATIO)
+    assert parameters.transformer_ratio == pytest.approx(4.0)
+
+
+def test_biquad_defaults_to_no_transformer_when_constructed_directly() -> None:
+    parameters = BiquadParameters(
+        frequency_hz=14_100_000.0,
+        loop_side_m=5.0,
+        reflector_spacing_m=2.5,
+    )
+
+    assert parameters.transformer_ratio == pytest.approx(1.0)
+
+
+def test_biquad_transformer_ratio_survives_custom_conversion() -> None:
+    parameters = biquad_parameters(BiquadKind.DOUBLE, transformer_ratio=6.0)
+
+    custom = parameters.to_custom_parameters()
+
+    assert parameters.transformer_ratio == pytest.approx(6.0)
+    assert custom.feed_transformer_ratio == pytest.approx(6.0)
+
+
+def test_biquad_rejects_a_non_positive_transformer_ratio() -> None:
+    parameters = biquad_parameters(BiquadKind.SINGLE)
+
+    with pytest.raises(ValueError, match="transformer_ratio"):
+        BiquadParameters(
+            frequency_hz=parameters.frequency_hz,
+            loop_side_m=parameters.loop_side_m,
+            reflector_spacing_m=parameters.reflector_spacing_m,
+            transformer_ratio=0.0,
+        )
+
+
 def test_biquad_can_disable_the_reflector() -> None:
     parameters = biquad_parameters(BiquadKind.SINGLE, reflector_enabled=False)
     model = parameters.to_antenna()
@@ -102,6 +142,7 @@ def test_biquad_primary_dimension_scales_the_reflector_spacing() -> None:
     assert isinstance(scaled, BiquadParameters)
     assert primary_dimension_m(scaled) == pytest.approx(parameters.loop_side_m * ratio)
     assert scaled.reflector_spacing_m == pytest.approx(parameters.reflector_spacing_m * ratio)
+    assert scaled.transformer_ratio == pytest.approx(parameters.transformer_ratio)
 
 
 def test_biquad_normalizes_the_kind_and_azimuth() -> None:

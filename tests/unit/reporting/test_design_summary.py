@@ -23,6 +23,7 @@ def test_biquad_summary_reports_the_loop_stack_and_reflector() -> None:
     assert rows["Loops"] == "4"
     assert "behind" in rows["Reflector"]
     assert rows["Loop side"] == f"{parameters.loop_side_m:.4f} m"
+    assert rows["Feed transformer"] == "4:1"
 
 
 def test_hexbeam_summary_reports_the_bent_elements() -> None:

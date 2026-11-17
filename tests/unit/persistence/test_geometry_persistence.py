@@ -8,6 +8,7 @@ from antennadesk.application.use_cases.create_dipole_project import (
     CreateDipoleProject,
     CreateDipoleProjectCommand,
 )
+from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
 from antennadesk.domain.antennas.design import AntennaDesignParameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
@@ -15,6 +16,7 @@ from antennadesk.domain.antennas.loop import LoopOrientation, LoopParameters
 from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
 from antennadesk.domain.projects.project import Project
 from antennadesk.persistence.schema import (
+    BiquadParametersPayload,
     FoldedDipoleParametersPayload,
     LoopParametersPayload,
     MagneticLoopParametersPayload,
@@ -107,6 +109,19 @@ def test_loop_transformer_ratio_round_trips() -> None:
     payload = document.project.designs[0].parameters
     assert isinstance(payload, LoopParametersPayload)
     assert payload.transformer_ratio == pytest.approx(4.0)
+    assert restored.designs[0].parameters == parameters
+
+
+def test_biquad_transformer_ratio_round_trips() -> None:
+    parameters = biquad_parameters(BiquadKind.DOUBLE, transformer_ratio=6.0)
+    original = _project(parameters, "Biquad 6:1")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    payload = document.project.designs[0].parameters
+    assert isinstance(payload, BiquadParametersPayload)
+    assert payload.transformer_ratio == pytest.approx(6.0)
     assert restored.designs[0].parameters == parameters
 
 

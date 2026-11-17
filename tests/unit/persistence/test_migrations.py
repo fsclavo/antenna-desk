@@ -1177,6 +1177,46 @@ def test_v46_migration_adds_the_endfed_return_path() -> None:
     assert "return_path" not in document["project"]["designs"][0]["parameters"]
 
 
+def test_v52_migration_adds_the_biquad_transformer_ratio() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 52,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "biquad",
+                    "parameters": {
+                        "frequency_hz": 14_100_000.0,
+                        "loop_side_m": 5.05,
+                        "reflector_spacing_m": 2.525,
+                    },
+                },
+                {
+                    "antenna_type": "double_biquad",
+                    "parameters": {
+                        "frequency_hz": 14_100_000.0,
+                        "loop_side_m": 5.05,
+                        "reflector_spacing_m": 2.525,
+                    },
+                },
+                {
+                    "antenna_type": "wire_dipole",
+                    "parameters": {"total_length_m": 20.0},
+                },
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    biquad, double, wire = migrated["project"]["designs"]
+    assert biquad["parameters"]["transformer_ratio"] == 1.0
+    assert double["parameters"]["transformer_ratio"] == 1.0
+    assert "transformer_ratio" not in wire["parameters"]
+    assert "transformer_ratio" not in document["project"]["designs"][0]["parameters"]
+
+
 def test_v50_migration_adds_feed_line_attenuation_fields() -> None:
     document = {
         "format": "antennadesk-project",

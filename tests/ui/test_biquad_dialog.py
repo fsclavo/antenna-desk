@@ -30,6 +30,7 @@ def test_biquad_dialog_builds_the_single_loop_stack(qtbot: QtBot) -> None:
     assert parameters.loop_count == 2
     assert parameters.reflector_enabled is True
     assert parameters.reflector_spacing_m == pytest.approx(parameters.loop_side_m / 2.0)
+    assert parameters.transformer_ratio == pytest.approx(4.0)
     assert len(parameters.to_antenna().wires) == 11
     assert "2 loops" in dialog._form._geometry.text()
 
@@ -84,8 +85,21 @@ def test_biquad_dialog_loads_the_quarter_wave_starting_dimensions(qtbot: QtBot) 
     qtbot.addWidget(dialog)
     form = dialog._form
     form._loop_side.setValue(form._loop_side.value() * 1.5)
+    form._transformer.setValue(6.0)
 
     form.load_starting_dimensions()
 
     parameters = form.parameters()
     assert parameters.reflector_spacing_m == pytest.approx(parameters.loop_side_m / 2.0)
+    assert parameters.transformer_ratio == pytest.approx(6.0)
+
+
+def test_biquad_dialog_can_show_the_raw_impedance(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    dialog._form._transformer.setValue(1.0)
+
+    parameters = dialog.parameters()
+
+    assert parameters.transformer_ratio == pytest.approx(1.0)
+    assert parameters.to_custom_parameters().feed_transformer_ratio == pytest.approx(1.0)

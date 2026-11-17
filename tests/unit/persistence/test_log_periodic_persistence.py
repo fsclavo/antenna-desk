@@ -15,6 +15,7 @@ from antennadesk.domain.antennas.log_periodic import (
 )
 from antennadesk.domain.antennas.transmission_line import TransmissionLine
 from antennadesk.domain.projects.project import Project
+from antennadesk.persistence.constants import SCHEMA_VERSION
 from antennadesk.persistence.migrations import migrate_document
 from antennadesk.persistence.schema import (
     LogPeriodicParametersPayload,
@@ -88,7 +89,7 @@ def test_v51_document_gains_a_false_phase_reversal_flag() -> None:
 
     migrated = migrate_document(document)
 
-    assert migrated["schema_version"] == 52
+    assert migrated["schema_version"] == SCHEMA_VERSION
     for design in migrated["project"]["designs"]:
         for line in design["antenna"]["transmission_lines"]:
             assert line["phase_reversal"] is False

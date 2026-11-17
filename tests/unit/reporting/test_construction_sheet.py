@@ -705,6 +705,8 @@ def test_biquad_construction_sheet_lists_the_loop_stack(
     assert "Loops" in sheet
     assert "Reflector" in sheet
     assert "square loops" in sheet
+    assert "Feed transformer" in sheet
+    assert "4:1" in sheet
 
 
 def test_typed_zepp_construction_sheet_lists_the_stub(

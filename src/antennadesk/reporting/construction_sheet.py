@@ -963,20 +963,30 @@ def render_construction_sheet(
 <tr><th>Feed height</th><td>{parameters.feed_height_m:.4f} m</td></tr>
 <tr><th>Reflector</th><td>{_escape(tr("{spacing:.4f} m behind", spacing=parameters.reflector_spacing_m))}</td></tr>
 <tr><th>Total conductor</th><td>{parameters.total_conductor_length_m:.4f} m</td></tr>
+<tr><th>Feed transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
 <tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
 """
+        transformer_note = (
+            tr(
+                " Feed the midpoint through a {ratio}:1 transformer.",
+                ratio=f"{parameters.transformer_ratio:g}",
+            )
+            if parameters.transformer_ratio != 1.0
+            else tr(" Feed the midpoint directly; no transformer is modeled.")
+        )
         construction_note = _note(
             tr,
             "Build {count} square loops with {side} m sides. Join them at the "
             "shared horizontal rails, starting at {base} m above ground, and feed "
             "the midpoint of the central rail at {feed_height} m. {reflector_note} "
             "The quarter-wave side and eighth-wave reflector spacing are starting "
-            "dimensions; tune them for the installation.",
+            "dimensions; tune them for the installation.{transformer_note}",
             count=parameters.loop_count,
             side=f"{parameters.loop_side_m:.4f}",
             base=f"{parameters.base_height_m:.4f}",
             feed_height=f"{feed_height_m:.4f}",
             reflector_note=reflector_note,
+            transformer_note=transformer_note,
         )
     elif isinstance(parameters, RingoParameters):
         feed_rows = f"""

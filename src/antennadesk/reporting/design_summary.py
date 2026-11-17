@@ -924,6 +924,7 @@ def design_summary_rows(
                     ),
                 ),
                 ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Feed transformer", f"{parameters.transformer_ratio:g}:1"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground, labeler)),
             ]

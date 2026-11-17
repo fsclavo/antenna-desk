@@ -757,6 +757,27 @@ def _migrate_v51_to_v52(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v52_to_v53(document: dict[str, Any]) -> dict[str, Any]:
+    """Add the biquad feed-transformer ratio."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    if not isinstance(project, dict):
+        return migrated
+    designs = project.get("designs")
+    if not isinstance(designs, list):
+        return migrated
+    for design in designs:
+        if not isinstance(design, dict):
+            continue
+        if design.get("antenna_type") not in {"biquad", "double_biquad"}:
+            continue
+        parameters = design.get("parameters")
+        if isinstance(parameters, dict):
+            parameters.setdefault("transformer_ratio", 1.0)
+    return migrated
+
+
 def _migrate_v50_to_v51(document: dict[str, Any]) -> dict[str, Any]:
     """Add optional frequency-dependent feed-line attenuation."""
 
@@ -907,6 +928,7 @@ MIGRATIONS: dict[int, Migration] = {
     49: _migrate_v49_to_v50,
     50: _migrate_v50_to_v51,
     51: _migrate_v51_to_v52,
+    52: _migrate_v52_to_v53,
 }
 
 

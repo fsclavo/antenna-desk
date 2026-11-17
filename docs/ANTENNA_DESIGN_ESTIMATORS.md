@@ -107,6 +107,21 @@ The transformer is ideal: balun loss, common-mode current, and balance are not
 modeled. A full-wave loop is a balanced antenna, so a real installation still
 needs a current balun or choke.
 
+### Biquad feed transformer
+
+New biquad and double-biquad designs start with an ideal 4:1 feed transformer,
+stored in `BiquadParameters.transformer_ratio` and applied by
+`SimulationSpec.feed_transformer_ratio`. The ratio does not change the NEC
+geometry. It is editable because 4:1 is a practical starting point for the
+roughly 200 Ω feedpoint of the modeled double biquad, not an independently
+published impedance value; set 1.0 to see the raw antenna impedance, or use the
+project matching network for a different match. The single biquad has a lower
+feedpoint resistance, and the ratio can be optimized or changed explicitly.
+
+The transformer is ideal: balun loss, common-mode current, balance, and power
+handling are not modeled. The biquad remains an experimental family; the
+starting ratio is a convenience, not a validated design claim.
+
 ### J Pole and Slim Jim starting point
 
 M0UKD's published calculator defines the J pole as 0.75 λ overall, split into a

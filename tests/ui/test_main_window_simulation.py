@@ -831,6 +831,16 @@ def test_ocfd_and_custom_specs_include_the_transformer_ratio(window: MainWindow)
     assert custom_spec.feed_transformer_ratio == pytest.approx(4.0)
 
 
+def test_biquad_simulation_spec_carries_the_transformer(window: MainWindow) -> None:
+    from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
+
+    parameters = biquad_parameters(BiquadKind.DOUBLE, transformer_ratio=4.0)
+
+    spec = window._biquad_simulation_spec(parameters)
+
+    assert spec.feed_transformer_ratio == pytest.approx(4.0)
+
+
 def test_yagi_specs_include_the_folded_transformer(window: MainWindow) -> None:
     from antennadesk.domain.antennas.yagi import nbs_five_element
 

@@ -414,6 +414,7 @@ class BiquadParametersPayload(StrictModel):
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
+    transformer_ratio: float = Field(default=1.0, gt=0.0)
 
 
 class BeverageParametersPayload(StrictModel):
@@ -1739,6 +1740,7 @@ def _biquad_parameters_from_domain(
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
+        transformer_ratio=value.transformer_ratio,
     )
 
 
@@ -3059,6 +3061,7 @@ def _biquad_parameters_to_domain(
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),
+        transformer_ratio=value.transformer_ratio,
     )
 
 

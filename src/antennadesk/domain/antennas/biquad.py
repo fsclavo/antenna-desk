@@ -7,7 +7,9 @@ reflector.  A single biquad has two loops; the double variant has four.  The
 loops share their horizontal rails, the feed sits at the midpoint of the
 central rail, and the reflector is a closed rectangle offset behind the driven
 plane.  The quarter-wave loop side and eighth-wave reflector spacing are
-starting heuristics, not validated gain or impedance claims.
+starting heuristics, not validated gain or impedance claims.  The optional
+ideal feed transformer ratio is a practical matching starting point; it does
+not change the wire geometry.
 """
 
 from __future__ import annotations
@@ -41,6 +43,9 @@ BIQUAD_REFERENCE_FREQUENCY_HZ = 14_100_000.0
 BIQUAD_DEFAULT_BASE_HEIGHT_M = 1.0
 # A quarter-wave loop side gives an eighth-wave reflector spacing.
 REFLECTOR_SPACING_FRACTION = 0.5
+# Practical starting transformer for the roughly 200 ohm double-biquad feed.
+# The transformer is ideal; it is not a validated feedpoint-impedance claim.
+BIQUAD_REFERENCE_TRANSFORMER_RATIO = 4.0
 
 
 class BiquadKind(StrEnum):
@@ -81,8 +86,9 @@ def biquad_parameters(
     wire_radius_m: float = 0.001,
     material: ConductorMaterial = COPPER,
     ground: GroundModel = FREE_SPACE,
+    transformer_ratio: float = BIQUAD_REFERENCE_TRANSFORMER_RATIO,
 ) -> BiquadParameters:
-    """Return a quarter-wave-sided starting biquad."""
+    """Return a quarter-wave-sided starting biquad with the reference transformer."""
 
     side_m = biquad_starting_side_m(frequency_hz)
     return BiquadParameters(
@@ -96,6 +102,7 @@ def biquad_parameters(
         wire_radius_m=wire_radius_m,
         material=material,
         ground=ground,
+        transformer_ratio=transformer_ratio,
     )
 
 
@@ -107,6 +114,8 @@ class BiquadParameters:
     height of the lowest rail; the feed is at the midpoint of the central rail.
     ``reflector_spacing_m`` is the distance between the driven plane and the
     reflector plane. The feed sees the driven structure as a single port.
+    ``transformer_ratio`` is an ideal feed transformer ratio applied by the
+    simulation; it does not change the wire geometry.
     """
 
     frequency_hz: float
@@ -119,6 +128,7 @@ class BiquadParameters:
     wire_radius_m: float = 0.001
     material: ConductorMaterial = ALUMINUM
     ground: GroundModel = FREE_SPACE
+    transformer_ratio: float = 1.0
 
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
@@ -127,6 +137,7 @@ class BiquadParameters:
         ensure_non_negative(self.base_height_m, name="base_height_m")
         ensure_positive(self.reflector_spacing_m, name="reflector_spacing_m")
         ensure_positive(self.wire_radius_m, name="wire_radius_m")
+        ensure_positive(self.transformer_ratio, name="transformer_ratio")
         if self.reflector_spacing_m <= 2.0 * self.wire_radius_m:
             raise ValueError("reflector_spacing_m must exceed the conductor diameter")
         object.__setattr__(
@@ -265,4 +276,5 @@ class BiquadParameters:
             ground=self.ground,
             generator_id=self.kind.antenna_type,
             generator_name=self.template_name,
+            feed_transformer_ratio=self.transformer_ratio,
         )
