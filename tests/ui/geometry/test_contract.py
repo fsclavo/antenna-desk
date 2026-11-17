@@ -758,7 +758,7 @@ def test_dimension_text_matches_its_anchor_distance(
         if value_m is None:
             continue
         anchor_m = dimension.start.distance_to(dimension.end)
-        tolerance = max(0.005, abs(value_m) * 0.01)
+        tolerance = max(0.0005, abs(value_m) * 0.01)
         assert abs(value_m - anchor_m) <= tolerance, (
             f"{case.name}:{mode.value} dimension {dimension.text!r} "
             f"does not match its {anchor_m:.4f} m anchor"

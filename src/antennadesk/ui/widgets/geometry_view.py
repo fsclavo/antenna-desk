@@ -66,9 +66,18 @@ from ..geometry.scene import GeometryScene, SceneInset, ScenePoint
 from ..geometry.views import GeometryViewMode, construction_view
 from ..i18n import Translator
 from ..theme import theme_colors
-from ..units import UnitSystem, length_from_m, length_unit_key
+from ..units import DisplayUnits, LengthPolicy, LengthUnit, UnitSystem, length_from_m
 
 __all__ = ["GeometryView", "GeometryViewMode"]
+
+
+_SCALE_CANDIDATES: dict[LengthUnit, tuple[float, ...]] = {
+    "mm": (0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0, 500.0),
+    "cm": (0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0),
+    "m": (0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0),
+    "in": (0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0),
+    "ft": (0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0),
+}
 
 
 class GeometryView(QWidget):
@@ -95,10 +104,13 @@ class GeometryView(QWidget):
         translator: Translator,
         unit_system: UnitSystem = UnitSystem.METRIC,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
-        self._unit_system = unit_system
+        self._display_units = display_units
+        self._unit_system = display_units.system if display_units is not None else unit_system
         self._model: AntennaModel | None = None
         self._parameters: object | None = None
         self._antenna_type: str | None = None
@@ -377,7 +389,7 @@ class GeometryView(QWidget):
             display_name=self._display_name,
             mode=mode,
             translator=self._translator,
-            unit_system=self._unit_system,
+            display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.FIXED),
             height_exaggeration=self._height_exaggeration,
         )
         write_dxf(
@@ -452,7 +464,20 @@ class GeometryView(QWidget):
     def set_unit_system(self, unit_system: UnitSystem) -> None:
         if unit_system is self._unit_system:
             return
+        if self._display_units is not None:
+            self._display_units = DisplayUnits(
+                unit_system,
+                self._display_units.length_policy,
+            )
         self._unit_system = unit_system
+        self._scene = None
+        self.update()
+
+    def set_display_units(self, display_units: DisplayUnits) -> None:
+        if display_units == self._display_units:
+            return
+        self._display_units = display_units
+        self._unit_system = display_units.system
         self._scene = None
         self.update()
 
@@ -611,6 +636,7 @@ class GeometryView(QWidget):
             mode=self.resolved_mode(),
             translator=self._translator,
             unit_system=self._unit_system,
+            display_units=self._display_units,
             height_exaggeration=self._height_exaggeration,
         )
         return self._scene
@@ -728,12 +754,18 @@ class GeometryView(QWidget):
         self._draw_angular_dimensions(painter, placed_angular)
         painter.restore()
         self._draw_insets(painter, scene, safe_rect, compact=compact)
+        bounds = scene.bounds()
+        extent_m = (
+            max(bounds[1].x_m - bounds[0].x_m, bounds[1].y_m - bounds[0].y_m)
+            if bounds is not None
+            else 1.0
+        )
         self._draw_scale_bar(
             painter,
             x_left=safe_rect.left() + 8.0,
             bar_y=safe_rect.bottom() - 14.0,
             scale=scale,
-            unit=self._translator.t(length_unit_key(self._unit_system)),
+            unit=self._scale_unit(extent_m),
         )
         if scene.is_plan:
             compass_size = 40.0 if compact else 54.0
@@ -1179,13 +1211,13 @@ class GeometryView(QWidget):
         min_x, max_x = min(xs), max(xs)
         min_y, max_y = min(ys), max(ys)
         max_z = max(zs)
-        unit = self._translator.t(length_unit_key(self._unit_system))
+        extent_m = max(max_x - min_x, max_y - min_y, max_z - min(zs))
         type_label_text = self._type_label()
         summary = self._translator.t(
             "geometry.3d_summary",
             type=type_label_text or self._translator.t("antenna_type.wire_dipole"),
             count=len(self._model.wires),
-            height=f"{length_from_m(max_z, self._unit_system):.2f} {unit}",
+            height=self._format_length(max_z),
         )
         self._draw_header(painter, rect, summary)
 
@@ -1297,7 +1329,7 @@ class GeometryView(QWidget):
             x_left=rect.left() + 96.0,
             bar_y=rect.bottom() - 38.0,
             scale=scale,
-            unit=unit,
+            unit=self._scale_unit(extent_m),
         )
 
     @staticmethod
@@ -1322,6 +1354,24 @@ class GeometryView(QWidget):
             self._display_name,
         )
 
+    def _format_length(self, value_m: float) -> str:
+        if self._display_units is not None:
+            return self._display_units.format_length(value_m)
+        display = length_from_m(value_m, self._unit_system)
+        decimals = 3 if abs(display) < 0.1 else 2
+        unit = "m" if self._unit_system is UnitSystem.METRIC else "ft"
+        return f"{display:.{decimals}f} {unit}"
+
+    def _scale_unit(self, extent_m: float) -> LengthUnit:
+        if self._display_units is not None:
+            return self._display_units.unit_for(extent_m)
+        return "m" if self._unit_system is UnitSystem.METRIC else "ft"
+
+    def _meters_per_unit(self, unit: LengthUnit) -> float:
+        if self._display_units is not None:
+            return self._display_units.meters_per_unit(unit)
+        return 1.0 if unit == "m" else 0.3048
+
     def _load_marks(self) -> tuple[tuple[Point3D, str, float], ...]:
         if self._model is None:
             return ()
@@ -1338,9 +1388,8 @@ class GeometryView(QWidget):
         return tuple(marks)
 
     def _installation_summary(self, height_m: float, feed_z_m: float) -> str:
-        unit = self._translator.t(length_unit_key(self._unit_system))
-        height_text = f"{length_from_m(height_m, self._unit_system):.2f} {unit}"
-        feed_text = f"{length_from_m(feed_z_m, self._unit_system):.2f} {unit}"
+        height_text = self._format_length(height_m)
+        feed_text = self._format_length(feed_z_m)
         type_label_text = self._type_label()
         if type_label_text is None:
             return self._translator.t(
@@ -1355,7 +1404,12 @@ class GeometryView(QWidget):
             feed=feed_text,
         )
 
-    def _multi_wire_plan_summary(self, width_m: float, depth_m: float, unit: str) -> str:
+    def _multi_wire_plan_summary(
+        self,
+        width_m: float,
+        depth_m: float,
+        _unit: str | None = None,
+    ) -> str:
         if self._model is None:
             return ""
         if self._antenna_type == ANTENNA_TYPE_FOLDED_DIPOLE:
@@ -1368,9 +1422,9 @@ class GeometryView(QWidget):
             total_conductor_m = 2.0 * element_m + 2.0 * spacing_m
             return self._translator.t(
                 "geometry.plan_summary_folded",
-                element=f"{length_from_m(element_m, self._unit_system):.2f} {unit}",
-                spacing=f"{length_from_m(spacing_m, self._unit_system):.2f} {unit}",
-                total=f"{length_from_m(total_conductor_m, self._unit_system):.2f} {unit}",
+                element=self._format_length(element_m),
+                spacing=self._format_length(spacing_m),
+                total=self._format_length(total_conductor_m),
             )
         if self._antenna_type == ANTENNA_TYPE_LOOP:
             circumference_m = sum(wire.length_m for wire in self._model.wires)
@@ -1382,15 +1436,15 @@ class GeometryView(QWidget):
             diameter_m = max(math.dist(first, second) for first in points for second in points)
             return self._translator.t(
                 "geometry.plan_summary_loop",
-                circumference=f"{length_from_m(circumference_m, self._unit_system):.2f} {unit}",
-                diameter=f"{length_from_m(diameter_m, self._unit_system):.2f} {unit}",
+                circumference=self._format_length(circumference_m),
+                diameter=self._format_length(diameter_m),
                 sides=len(self._model.wires),
             )
         return self._translator.t(
             "geometry.plan_summary_multi",
             count=len(self._model.wires),
-            width=f"{length_from_m(width_m, self._unit_system):.2f} {unit}",
-            depth=f"{length_from_m(depth_m, self._unit_system):.2f} {unit}",
+            width=self._format_length(width_m),
+            depth=self._format_length(depth_m),
         )
 
     def _folded_spacing_m(self) -> float:
@@ -1439,25 +1493,10 @@ class GeometryView(QWidget):
         x_left: float,
         bar_y: float,
         scale: float,
-        unit: str,
+        unit: LengthUnit,
     ) -> None:
-        px_per_display_unit = scale * (1.0 if self._unit_system is UnitSystem.METRIC else 0.3048)
-        candidates = [
-            0.01,
-            0.02,
-            0.05,
-            0.1,
-            0.2,
-            0.5,
-            1.0,
-            2.0,
-            5.0,
-            10.0,
-            20.0,
-            50.0,
-            100.0,
-            200.0,
-        ]
+        px_per_display_unit = scale * self._meters_per_unit(unit)
+        candidates = _SCALE_CANDIDATES[unit]
         max_pixels = max(self.width() * 0.35, 40.0)
         fitting = [value for value in candidates if value * px_per_display_unit <= max_pixels]
         if not fitting:

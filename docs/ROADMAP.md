@@ -456,17 +456,17 @@ unchanged. The normative rules and examples are in
 |---:|---|---|---|---|---|
 | U0 | Spec and ADR | Closed policy, examples, test matrix, and execution slices | S | none | done 2026-11-17 |
 | U1 | Shared formatter and Units preference | Pure `DisplayUnits`, automatic/fixed metric and imperial, QSettings, help | S–M | U0 | done 2026-11-17 |
-| U2 | Geometry scenes | Dimension labels, summaries, scale bar, insets, layout | M | U1 | queued |
+| U2 | Geometry scenes | Dimension labels, summaries, scale bar, insets, layout | M | U1 | done 2026-11-17 |
 | U3 | Family forms and editable tables | Per-field ranges/steps, table headers, Moxon/hexbeam range fixes | M–L | U1 | queued |
 | U4 | Optimization, synthesis, and auxiliary dialogs | Same policy across every length surface | M | U1, U3 | queued |
 | U5 | Construction sheet and human-readable reports | Design summary, wire schedule, BOM, title block, CSV/DXF exception | M–L | U1, U2, U3 | queued |
 | U6 | Documentation, help audit, and visual QA | User guide, changelog, EN/ES help, light/dark/scaling QA | S–M | U2–U5 | queued |
 
-U1 is complete and provides the pure formatter and preference. U2 and U3 may
-proceed in parallel. U4 depends on U3, U5 depends on U2 and U3, and U6 closes
-the track. The release plan decides whether the track lands in 0.10.0 or a
-later release; do not start it by adding a global current-units singleton, a
-`UnitSystem.CM` value, frequency-based selection, or per-cell table units.
+U1 and U2 are complete: the pure formatter/preference and adaptive geometry
+scenes are in place. U3 is next; U4 depends on U3, U5 depends on U2 and U3, and
+U6 closes the track. The release plan decides whether the track lands in 0.10.0
+or a later release; do not start it by adding a global current-units singleton,
+a `UnitSystem.CM` value, frequency-based selection, or per-cell table units.
 
 Release sequence: **0.5 Decide** is the first slice because it has the highest
 user value and the lowest modeling risk. **0.6 Build** converts a simulation into
@@ -493,7 +493,7 @@ Product track:
 1. UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**,
    and 0.8 **Explore** releases are closed. UX18–UX38 are implemented; the 0.9
    **Sustain** slice is complete. The UX queue is closed. The adaptive length
-   display-units track is active; U0 and U1 are complete, and U2–U6 are next.
+   display-units track is active; U0–U2 are complete, and U3–U6 are next.
    Decide whether the track is part of 0.10.0 or a later release before release
    preparation, then return to evidence and validation work.
 

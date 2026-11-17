@@ -371,7 +371,7 @@ from .preferences import (
 from .report_pdf import write_report_pdf
 from .template_identity import catalog_key_for, label_key_for
 from .theme import ThemeController
-from .units import UnitSystem, length_from_m, length_unit_key
+from .units import DisplayUnits, UnitSystem, length_from_m, length_unit_key
 from .widgets.beverage_form import BeverageForm
 from .widgets.biquad_form import BiquadForm
 from .widgets.dipole_form import DipoleForm
@@ -1248,7 +1248,11 @@ class MainWindow(QMainWindow):
         self._design_panel = design_panel
         self._update_form_panel_widths()
 
-        self._geometry = GeometryView(self._translator, self._unit_system)
+        self._geometry = GeometryView(
+            self._translator,
+            self._unit_system,
+            display_units=DisplayUnits(self._unit_system, self._length_policy),
+        )
         self._geometry.setMinimumHeight(300)
         self._hidden_dimension_texts: tuple[str, ...] = ()
         self._geometry_hidden_label = QLabel(self)
@@ -9180,7 +9184,11 @@ class MainWindow(QMainWindow):
         self._update_status_text()
 
     def _report_geometry_svg(self, design: DesignVariant) -> str | None:
-        view = GeometryView(self._translator, self._unit_system)
+        view = GeometryView(
+            self._translator,
+            self._unit_system,
+            display_units=DisplayUnits(self._unit_system, self._length_policy),
+        )
         view.set_export_theme()
         view.set_model(
             design.antenna,
@@ -9437,6 +9445,7 @@ class MainWindow(QMainWindow):
         ):
             form.set_unit_system(unit_system)
         self._geometry.set_unit_system(unit_system)
+        self._geometry.set_display_units(DisplayUnits(unit_system, self._length_policy))
         self._refresh_installation_summary()
 
     def _set_unit_system(self, unit_system: UnitSystem) -> None:

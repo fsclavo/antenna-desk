@@ -141,10 +141,12 @@ Negative:
 
 ## Implementation status
 
-U0 and U1 are implemented: the normative spec and ADR are accepted, and the
-Qt-free `DisplayUnits`/`LengthPolicy` formatter plus the four-option Units
-preference and QSettings mapping are in place. Scenes, forms, dialogs, and
-reports remain on the existing fixed presentation until U2–U5.
+U0–U2 are implemented: the normative spec and ADR are accepted, the Qt-free
+`DisplayUnits`/`LengthPolicy` formatter plus the four-option Units preference
+and QSettings mapping are in place, and geometry scenes, dimension labels,
+summaries, detail insets, and the scale bar follow the policy. Forms, dialogs,
+and human-readable reports remain on the existing fixed presentation until
+U3–U5; legacy `unit_system=` scene callers keep their fixed strings.
 
 ## References
 

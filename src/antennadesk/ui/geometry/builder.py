@@ -104,7 +104,7 @@ from ...domain.antennas.zepp import (
     parallel_wire_impedance_ohm,
 )
 from ..i18n import Translator
-from ..units import UnitSystem, length_from_m, length_unit_key
+from ..units import DisplayUnits, UnitSystem, length_from_m
 from .scene import (
     AngularDimension,
     Dimension,
@@ -241,11 +241,28 @@ def type_label(
     return translator.t(key)
 
 
-def _format_length(value_m: float, translator: Translator, unit_system: UnitSystem) -> str:
-    display = length_from_m(value_m, unit_system)
-    decimals = 3 if abs(display) < 0.1 else 2
-    unit = translator.t(length_unit_key(unit_system))
-    return f"{display:.{decimals}f} {unit}"
+@dataclass(frozen=True, slots=True)
+class _LegacyLengthFormatter:
+    """Preserve the pre-U2 fixed geometry strings for legacy callers."""
+
+    unit_system: UnitSystem
+
+    def format_length(self, value_m: float) -> str:
+        display = length_from_m(value_m, self.unit_system)
+        decimals = 3 if abs(display) < 0.1 else 2
+        unit = "m" if self.unit_system is UnitSystem.METRIC else "ft"
+        return f"{display:.{decimals}f} {unit}"
+
+
+LengthFormatter = DisplayUnits | _LegacyLengthFormatter
+
+
+def _format_length(
+    value_m: float,
+    _translator: Translator,
+    display_units: LengthFormatter,
+) -> str:
+    return display_units.format_length(value_m)
 
 
 def _wire_point(wire: Wire, ratio: float) -> Point3D:
@@ -262,7 +279,7 @@ class _Factory:
     projection: Projection
     exaggeration: float
     translator: Translator
-    unit_system: UnitSystem
+    display_units: LengthFormatter
 
     def project(self, point: Point3D) -> ScenePoint:
         x_m, y_m = self.projection.project(point)
@@ -288,7 +305,7 @@ class _Factory:
         return Dimension(
             start=self.project(first),
             end=self.project(second),
-            text=_format_length(value_m, self.translator, self.unit_system),
+            text=_format_length(value_m, self.translator, self.display_units),
             side=side,
             priority=priority,
             label=label,
@@ -308,7 +325,7 @@ class _Factory:
         return Dimension(
             start=ScenePoint(x_scene, self.y_for_z(z_start_m)),
             end=ScenePoint(x_scene, self.y_for_z(z_end_m)),
-            text=_format_length(value_m, self.translator, self.unit_system),
+            text=_format_length(value_m, self.translator, self.display_units),
             side=side,
             priority=priority,
             label=label,
@@ -328,7 +345,7 @@ class _Factory:
         return Dimension(
             start=ScenePoint(x_start_scene, y_scene),
             end=ScenePoint(x_end_scene, y_scene),
-            text=_format_length(value_m, self.translator, self.unit_system),
+            text=_format_length(value_m, self.translator, self.display_units),
             side=side,
             priority=priority,
             label=label,
@@ -347,7 +364,7 @@ class _Factory:
         return Dimension(
             start=first,
             end=second,
-            text=_format_length(value_m, self.translator, self.unit_system),
+            text=_format_length(value_m, self.translator, self.display_units),
             side=side,
             priority=priority,
             label=label,
@@ -494,11 +511,11 @@ def _add_single_wire_dimensions(
                 notes.append(
                     translator.t(
                         "geometry.projected_length_note",
-                        length=_format_length(wire.length_m, translator, factory.unit_system),
+                        length=_format_length(wire.length_m, translator, factory.display_units),
                         projected=_format_length(
                             projected_length,
                             translator,
-                            factory.unit_system,
+                            factory.display_units,
                         ),
                     )
                 )
@@ -643,7 +660,7 @@ def _add_folded_dimensions(
                             text=_format_length(
                                 spacing,
                                 translator,
-                                factory.unit_system,
+                                factory.display_units,
                             ),
                             side="below",
                             priority=90,
@@ -820,7 +837,7 @@ def _add_magnetic_loop_dimensions(
             diameter=_format_length(
                 parameters.diameter_m,
                 factory.translator,
-                factory.unit_system,
+                factory.display_units,
             ),
         )
     )
@@ -1029,7 +1046,7 @@ def _j_pole_gap_inset(
         Dimension(
             start=ScenePoint(x, gap_bottom_z),
             end=ScenePoint(x, gap_top_z),
-            text=_format_length(gap, translator, factory.unit_system),
+            text=_format_length(gap, translator, factory.display_units),
             side="right",
             priority=100,
         ),
@@ -1233,7 +1250,7 @@ def _add_biquad_dimensions(
                     spacing=_format_length(
                         parameters.reflector_spacing_m,
                         translator,
-                        factory.unit_system,
+                        factory.display_units,
                     ),
                 )
             )
@@ -1244,7 +1261,7 @@ def _add_biquad_dimensions(
         Dimension(
             start=ScenePoint(min(xs), min(ys)),
             end=ScenePoint(max(xs), min(ys)),
-            text=_format_length(max(xs) - min(xs), translator, factory.unit_system),
+            text=_format_length(max(xs) - min(xs), translator, factory.display_units),
             side="below",
             priority=85,
         )
@@ -1257,7 +1274,7 @@ def _add_biquad_dimensions(
                 text=_format_length(
                     parameters.reflector_spacing_m,
                     translator,
-                    factory.unit_system,
+                    factory.display_units,
                 ),
                 side="right",
                 priority=80,
@@ -1372,7 +1389,7 @@ def _add_loaded_dipole_dimensions(
                 offset=_format_length(
                     parameters.link_offset_m,
                     translator,
-                    factory.unit_system,
+                    factory.display_units,
                 ),
             )
         )
@@ -1544,9 +1561,9 @@ def _add_hexbeam_dimensions(
                 published=_format_length(
                     parameters.tip_gap_m,
                     translator,
-                    factory.unit_system,
+                    factory.display_units,
                 ),
-                clear=_format_length(clear_gap, translator, factory.unit_system),
+                clear=_format_length(clear_gap, translator, factory.display_units),
             )
         )
     if not factory.projection.vertical:
@@ -1653,7 +1670,7 @@ def _add_hexbeam_dimensions(
     notes.append(
         translator.t(
             "hexbeam.geometry_note",
-            radius=_format_length(parameters.turning_radius_m, translator, factory.unit_system),
+            radius=_format_length(parameters.turning_radius_m, translator, factory.display_units),
         )
     )
 
@@ -1791,7 +1808,7 @@ def _add_trap_yagi_dimensions(
     notes.append(
         translator.t(
             "trap_yagi.geometry_note",
-            inset=_format_length(parameters.trap_inset_m, translator, factory.unit_system),
+            inset=_format_length(parameters.trap_inset_m, translator, factory.display_units),
             trap=f"{parameters.trap_frequency_hz / 1_000_000.0:.3f}",
         )
     )
@@ -2013,7 +2030,7 @@ def _add_quad_beam_dimensions(
                     side=_format_length(
                         parameters.loop_side_m,
                         translator,
-                        factory.unit_system,
+                        factory.display_units,
                     ),
                 ),
                 polylines=tuple(
@@ -2030,7 +2047,7 @@ def _add_quad_beam_dimensions(
                         text=_format_length(
                             parameters.loop_side_m,
                             translator,
-                            factory.unit_system,
+                            factory.display_units,
                         ),
                         side="below",
                         priority=95,
@@ -2042,7 +2059,7 @@ def _add_quad_beam_dimensions(
                         text=_format_length(
                             parameters.loop_side_m,
                             translator,
-                            factory.unit_system,
+                            factory.display_units,
                         ),
                         side="right",
                         priority=95,
@@ -2139,7 +2156,7 @@ def _add_ringo_dimensions(
             Dimension(
                 start=ScenePoint(min(xs), min(ys)),
                 end=ScenePoint(max(xs), min(ys)),
-                text=_format_length(max(xs) - min(xs), translator, factory.unit_system),
+                text=_format_length(max(xs) - min(xs), translator, factory.display_units),
                 side="below",
                 priority=85,
             )
@@ -2199,7 +2216,7 @@ def _add_ringo_dimensions(
             Dimension(
                 start=ScenePoint(min_x, min_y),
                 end=ScenePoint(max_x, min_y),
-                text=_format_length(diameter, translator, factory.unit_system),
+                text=_format_length(diameter, translator, factory.display_units),
                 side="above",
                 priority=85,
             )
@@ -2535,12 +2552,12 @@ def _add_array_dimensions(
                         length=_format_length(
                             parameters.taper_tip_length_m,
                             translator,
-                            factory.unit_system,
+                            factory.display_units,
                         ),
                         radius=_format_length(
                             parameters.taper_tip_radius_m,
                             translator,
-                            factory.unit_system,
+                            factory.display_units,
                         ),
                     )
                 )
@@ -3096,7 +3113,7 @@ def _angular_dimensions(
 
 def _summary(
     translator: Translator,
-    unit_system: UnitSystem,
+    display_units: LengthFormatter,
     model: AntennaModel,
     parameters: object | None,
     antenna_type: str | None,
@@ -3121,9 +3138,9 @@ def _summary(
         parts.extend(
             [
                 f"{translator.t('field.circumference').lower()} "
-                f"{_format_length(circumference_m, translator, unit_system)}",
+                f"{_format_length(circumference_m, translator, display_units)}",
                 f"{translator.t('geometry.equivalent_diameter').lower()} "
-                f"{_format_length(diameter_m, translator, unit_system)}",
+                f"{_format_length(diameter_m, translator, display_units)}",
                 f"{translator.t('field.sides').lower()} {sides}",
             ]
         )
@@ -3136,27 +3153,27 @@ def _summary(
             if horizontal:
                 parts.append(
                     f"{translator.t('field.height').lower()} "
-                    f"{_format_length(parameters.height_m, translator, unit_system)}"
+                    f"{_format_length(parameters.height_m, translator, display_units)}"
                 )
             else:
                 parts.extend(
                     [
                         f"{translator.t('field.base_height').lower()} "
-                        f"{_format_length(parameters.height_m, translator, unit_system)}",
+                        f"{_format_length(parameters.height_m, translator, display_units)}",
                         f"{translator.t('geometry.top_height').lower()} "
-                        f"{_format_length(parameters.top_height_m, translator, unit_system)}",
+                        f"{_format_length(parameters.top_height_m, translator, display_units)}",
                     ]
                 )
     elif isinstance(parameters, MagneticLoopParameters):
         parts.extend(
             [
                 f"{translator.t('magnetic_loop.diameter').lower()} "
-                f"{_format_length(parameters.diameter_m, translator, unit_system)}",
+                f"{_format_length(parameters.diameter_m, translator, display_units)}",
                 f"{translator.t('field.circumference').lower()} "
-                f"{_format_length(parameters.circumference_m, translator, unit_system)}",
+                f"{_format_length(parameters.circumference_m, translator, display_units)}",
                 f"{translator.t('field.sides').lower()} {parameters.sides}",
                 f"{translator.t('magnetic_loop.gap').lower()} "
-                f"{_format_length(parameters.gap_length_m, translator, unit_system)}",
+                f"{_format_length(parameters.gap_length_m, translator, display_units)}",
                 f"{translator.t('magnetic_loop.capacitance').lower()} "
                 f"{parameters.tuning_capacitance_f * 1e12:.3f} pF",
                 f"{translator.t('magnetic_loop.esr').lower()} {parameters.capacitor_esr_ohm:.3f} Ω",
@@ -3166,11 +3183,11 @@ def _summary(
         parts.extend(
             [
                 f"{translator.t('field.element_length').lower()} "
-                f"{_format_length(parameters.total_length_m, translator, unit_system)}",
+                f"{_format_length(parameters.total_length_m, translator, display_units)}",
                 f"{translator.t('field.spacing').lower()} "
-                f"{_format_length(parameters.spacing_m, translator, unit_system)}",
+                f"{_format_length(parameters.spacing_m, translator, display_units)}",
                 f"{translator.t('geometry.total_conductor').lower()} "
-                f"{_format_length(parameters.total_conductor_length_m, translator, unit_system)}",
+                f"{_format_length(parameters.total_conductor_length_m, translator, display_units)}",
             ]
         )
     elif isinstance(parameters, JPoleParameters) or antenna_type == ANTENNA_TYPE_J_POLE:
@@ -3225,18 +3242,18 @@ def _summary(
             return translator.t(
                 "geometry.j_pole_plan",
                 template=template,
-                spacing=_format_length(spacing_m, translator, unit_system),
+                spacing=_format_length(spacing_m, translator, display_units),
             )
         key = "geometry.slim_jim_elevation" if folded else "geometry.j_pole_elevation"
         return translator.t(
             key,
             template=template,
-            radiator=_format_length(radiator_length, translator, unit_system),
-            stub=_format_length(stub_length, translator, unit_system),
-            gap=_format_length(folded_gap, translator, unit_system),
-            spacing=_format_length(spacing_m, translator, unit_system),
-            feed=_format_length(feed_offset_m, translator, unit_system),
-            base=_format_length(base_height_m, translator, unit_system),
+            radiator=_format_length(radiator_length, translator, display_units),
+            stub=_format_length(stub_length, translator, display_units),
+            gap=_format_length(folded_gap, translator, display_units),
+            spacing=_format_length(spacing_m, translator, display_units),
+            feed=_format_length(feed_offset_m, translator, display_units),
+            base=_format_length(base_height_m, translator, display_units),
         )
     elif antenna_type == ZEPP_PRESENTATION_TYPE:
         radiator = next((wire for wire in model.wires if wire.id == ZEPP_RADIATOR_ID), None)
@@ -3251,16 +3268,16 @@ def _summary(
             return translator.t(
                 "geometry.zepp_summary",
                 template=label,
-                radiator=_format_length(radiator.length_m, translator, unit_system),
-                stub=_format_length(stub.length_m, translator, unit_system),
-                spacing=_format_length(spacing_m, translator, unit_system),
+                radiator=_format_length(radiator.length_m, translator, display_units),
+                stub=_format_length(stub.length_m, translator, display_units),
+                spacing=_format_length(spacing_m, translator, display_units),
                 impedance=f"{impedance_ohm:.0f}",
             )
         parts.extend(
             [
                 f"{len(model.wires)} {translator.t('geometry.wires')}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(max_z, translator, unit_system)}",
+                f"{_format_length(max_z, translator, display_units)}",
             ]
         )
     elif isinstance(parameters, RingoParameters) or antenna_type == ANTENNA_TYPE_RINGO:
@@ -3286,11 +3303,11 @@ def _summary(
         parts.extend(
             [
                 f"{translator.t('geometry.radiator').lower()} "
-                f"{_format_length(radiator_length, translator, unit_system)}",
+                f"{_format_length(radiator_length, translator, display_units)}",
                 f"{translator.t('geometry.diameter').lower()} "
-                f"{_format_length(ring_diameter, translator, unit_system)}",
+                f"{_format_length(ring_diameter, translator, display_units)}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(ring_height, translator, unit_system)}",
+                f"{_format_length(ring_height, translator, display_units)}",
             ]
         )
     elif isinstance(parameters, ScvParameters) or antenna_type in {
@@ -3330,9 +3347,9 @@ def _summary(
         parts.extend(
             [
                 f"{translator.t('scv.horizontal_length').lower()} "
-                f"{_format_length(horizontal_length, translator, unit_system)}",
+                f"{_format_length(horizontal_length, translator, display_units)}",
                 f"{translator.t('scv.vertical_height').lower()} "
-                f"{_format_length(vertical_height, translator, unit_system)}",
+                f"{_format_length(vertical_height, translator, display_units)}",
                 f"{translator.t('scv.vertical_elements').lower()} {vertical_count}",
                 translator.t("scv.feed_top"),
             ]
@@ -3375,14 +3392,14 @@ def _summary(
             [
                 f"{translator.t('biquad.loops').lower()} {loop_count}",
                 f"{translator.t('biquad.loop_side').lower()} "
-                f"{_format_length(side, translator, unit_system)}",
+                f"{_format_length(side, translator, display_units)}",
                 f"{translator.t('biquad.height').lower()} "
-                f"{_format_length(total_height, translator, unit_system)}",
+                f"{_format_length(total_height, translator, display_units)}",
                 f"{translator.t('field.base_height').lower()} "
-                f"{_format_length(base_height, translator, unit_system)}",
+                f"{_format_length(base_height, translator, display_units)}",
                 f"{translator.t('biquad.reflector').lower()} "
                 + (
-                    _format_length(reflector_spacing, translator, unit_system)
+                    _format_length(reflector_spacing, translator, display_units)
                     if reflector_enabled
                     else translator.t("biquad.reflector_off")
                 ),
@@ -3410,9 +3427,9 @@ def _summary(
         parts.extend(
             [
                 f"{translator.t('field.length').lower()} "
-                f"{_format_length(length, translator, unit_system)}",
+                f"{_format_length(length, translator, display_units)}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(height, translator, unit_system)}",
+                f"{_format_length(height, translator, display_units)}",
                 f"{translator.t('beverage.termination').lower()} {termination}",
             ]
         )
@@ -3449,11 +3466,11 @@ def _summary(
         parts.extend(
             [
                 f"{translator.t('loaded_dipole.active_length').lower()} "
-                f"{_format_length(active_length, translator, unit_system)}",
+                f"{_format_length(active_length, translator, display_units)}",
                 f"{translator.t('loaded_dipole.full_length').lower()} "
-                f"{_format_length(total_length, translator, unit_system)}",
+                f"{_format_length(total_length, translator, display_units)}",
                 f"{translator.t('loaded_dipole.link_offset').lower()} "
-                f"{_format_length(offset, translator, unit_system)}",
+                f"{_format_length(offset, translator, display_units)}",
                 f"{translator.t('loaded_dipole.state').lower()} {state}",
             ]
         )
@@ -3482,11 +3499,11 @@ def _summary(
             [
                 f"{translator.t('phased_vertical.element_count').lower()} {element_count}",
                 f"{translator.t('phased_vertical.spacing').lower()} "
-                f"{_format_length(spacing, translator, unit_system)}",
+                f"{_format_length(spacing, translator, display_units)}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(height, translator, unit_system)}",
+                f"{_format_length(height, translator, display_units)}",
                 f"{translator.t('field.base_height').lower()} "
-                f"{_format_length(base_height, translator, unit_system)}",
+                f"{_format_length(base_height, translator, display_units)}",
                 f"{translator.t('phased_vertical.phase_step').lower()} {phase}",
                 f"{translator.t('phased_vertical.amplitude_taper').lower()} {taper}",
                 f"{translator.t('vertical.radial_count').lower()} {radial_count}",
@@ -3510,17 +3527,17 @@ def _summary(
         parts.extend(
             [
                 f"{translator.t('hexbeam.driver_half').lower()} "
-                f"{_format_length(driver_half, translator, unit_system)}",
+                f"{_format_length(driver_half, translator, display_units)}",
                 f"{translator.t('hexbeam.reflector_half').lower()} "
-                f"{_format_length(reflector_half, translator, unit_system)}",
+                f"{_format_length(reflector_half, translator, display_units)}",
                 f"{translator.t('hexbeam.turning_radius').lower()} "
-                f"{_format_length(radius, translator, unit_system)}",
+                f"{_format_length(radius, translator, display_units)}",
                 f"{translator.t('hexbeam.tip_gap').lower()} "
-                f"{_format_length(gap, translator, unit_system)}",
+                f"{_format_length(gap, translator, display_units)}",
                 f"{translator.t('geometry.span').lower()} "
-                f"{_format_length(span, translator, unit_system)}",
+                f"{_format_length(span, translator, display_units)}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(height, translator, unit_system)}",
+                f"{_format_length(height, translator, display_units)}",
             ]
         )
     elif isinstance(parameters, TrapYagiParameters) or antenna_type == ANTENNA_TYPE_TRAP_YAGI:
@@ -3543,14 +3560,14 @@ def _summary(
             [
                 f"{translator.t('geometry.elements').lower()} {count}",
                 f"{translator.t('trap_yagi.driven_length').lower()} "
-                f"{_format_length(driven, translator, unit_system)}",
+                f"{_format_length(driven, translator, display_units)}",
                 f"{translator.t('geometry.boom_length').lower()} "
-                f"{_format_length(boom, translator, unit_system)}",
+                f"{_format_length(boom, translator, display_units)}",
                 f"{translator.t('trap_yagi.trap_inset').lower()} "
-                f"{_format_length(inset, translator, unit_system)}",
+                f"{_format_length(inset, translator, display_units)}",
                 f"{translator.t('trap_yagi.trap_frequency').lower()} {trap}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(height, translator, unit_system)}",
+                f"{_format_length(height, translator, display_units)}",
             ]
         )
     elif isinstance(parameters, DisconeParameters) or antenna_type == ANTENNA_TYPE_DISCONE:
@@ -3572,15 +3589,15 @@ def _summary(
             [
                 f"{translator.t('discone.wire_count').lower()} {count}",
                 f"{translator.t('discone.cone_height').lower()} "
-                f"{_format_length(cone_height, translator, unit_system)}",
+                f"{_format_length(cone_height, translator, display_units)}",
                 f"{translator.t('discone.cone_radius').lower()} "
-                f"{_format_length(cone_radius, translator, unit_system)}",
+                f"{_format_length(cone_radius, translator, display_units)}",
                 f"{translator.t('discone.disc_radius').lower()} "
-                f"{_format_length(disc_radius, translator, unit_system)}",
+                f"{_format_length(disc_radius, translator, display_units)}",
                 f"{translator.t('field.base_height').lower()} "
-                f"{_format_length(base_height, translator, unit_system)}",
+                f"{_format_length(base_height, translator, display_units)}",
                 f"{translator.t('geometry.top_height').lower()} "
-                f"{_format_length(top_height, translator, unit_system)}",
+                f"{_format_length(top_height, translator, display_units)}",
             ]
         )
     elif isinstance(parameters, QuadBeamParameters) or antenna_type == ANTENNA_TYPE_QUAD_BEAM:
@@ -3612,19 +3629,19 @@ def _summary(
             [
                 f"{translator.t('quad_beam.element_count').lower()} {element_count}",
                 f"{translator.t('quad_beam.loop_side').lower()} "
-                f"{_format_length(driven_side, translator, unit_system)}",
+                f"{_format_length(driven_side, translator, display_units)}",
                 f"{translator.t('quad_beam.reflector_spacing').lower()} "
-                f"{_format_length(spacing, translator, unit_system)}",
+                f"{_format_length(spacing, translator, display_units)}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(height, translator, unit_system)}",
+                f"{_format_length(height, translator, display_units)}",
                 f"{translator.t('geometry.boom_length').lower()} "
-                f"{_format_length(boom, translator, unit_system)}",
+                f"{_format_length(boom, translator, display_units)}",
             ]
         )
         if element_count == 3:
             parts.append(
                 f"{translator.t('quad_beam.director_spacing').lower()} "
-                f"{_format_length(director_spacing, translator, unit_system)}"
+                f"{_format_length(director_spacing, translator, display_units)}"
             )
             parts.append(
                 f"{translator.t('quad_beam.director_scale').lower()} "
@@ -3658,10 +3675,10 @@ def _summary(
             [
                 f"{translator.t('geometry.elements').lower()} {element_count}",
                 f"{translator.t('geometry.boom_length').lower()} "
-                f"{_format_length(boom_m, translator, unit_system)}",
+                f"{_format_length(boom_m, translator, display_units)}",
                 f"{translator.t('log_periodic.length').lower()} "
-                f"{_format_length(longest_m, translator, unit_system)}"
-                f"/{_format_length(shortest_m, translator, unit_system)}",
+                f"{_format_length(longest_m, translator, display_units)}"
+                f"/{_format_length(shortest_m, translator, display_units)}",
                 f"{translator.t('log_periodic.phase_line_impedance').lower()} "
                 f"{phase_line_z0:.1f} Ω",
             ]
@@ -3684,15 +3701,15 @@ def _summary(
             [
                 f"{translator.t('geometry.elements').lower()} {element_count}",
                 f"{translator.t('geometry.boom_length').lower()} "
-                f"{_format_length(boom_m, translator, unit_system)}",
+                f"{_format_length(boom_m, translator, display_units)}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(height_m, translator, unit_system)}",
+                f"{_format_length(height_m, translator, display_units)}",
             ]
         )
         if isinstance(parameters, YagiParameters) and parameters.is_tapered:
             parts.append(
                 f"{translator.t('yagi.taper_summary').lower()} "
-                f"{_format_length(parameters.taper_tip_length_m, translator, unit_system)}"
+                f"{_format_length(parameters.taper_tip_length_m, translator, display_units)}"
             )
         if isinstance(parameters, YagiParameters):
             if parameters.polarization is Polarization.VERTICAL:
@@ -3703,30 +3720,30 @@ def _summary(
             if parameters.driven_folded:
                 parts.append(
                     f"{translator.t('yagi.folded_driven').lower()} "
-                    f"{_format_length(parameters.driven_fold_spacing_m, translator, unit_system)}"
+                    f"{_format_length(parameters.driven_fold_spacing_m, translator, display_units)}"
                 )
             if parameters.match_type is YagiMatchType.BETA_HAIRPIN:
                 parts.append(
                     f"{translator.t('yagi.match_beta_hairpin').lower()} "
-                    f"{_format_length(parameters.match_length_m, translator, unit_system)} "
-                    f"· {_format_length(parameters.match_spacing_m, translator, unit_system)}"
+                    f"{_format_length(parameters.match_length_m, translator, display_units)} "
+                    f"· {_format_length(parameters.match_spacing_m, translator, display_units)}"
                 )
     elif isinstance(parameters, MoxonParameters):
         parts.extend(
             [
                 f"{translator.t('geometry.width').lower()} "
-                f"{_format_length(parameters.width_m, translator, unit_system)}",
+                f"{_format_length(parameters.width_m, translator, display_units)}",
                 f"{translator.t('geometry.depth').lower()} "
-                f"{_format_length(parameters.depth_m, translator, unit_system)}",
+                f"{_format_length(parameters.depth_m, translator, display_units)}",
                 f"{translator.t('geometry.gap').lower()} "
-                f"{_format_length(parameters.gap_m, translator, unit_system)}",
+                f"{_format_length(parameters.gap_m, translator, display_units)}",
             ]
         )
         if parameters.polarization is Polarization.VERTICAL:
             parts.extend(
                 [
                     f"{translator.t('field.height').lower()} "
-                    f"{_format_length(parameters.height_m, translator, unit_system)}",
+                    f"{_format_length(parameters.height_m, translator, display_units)}",
                     f"{translator.t('field.polarization').lower()} "
                     f"{translator.t('orientation.vertical').lower()}",
                 ]
@@ -3735,22 +3752,22 @@ def _summary(
         parts.extend(
             [
                 f"{translator.t('inverted_l.vertical_height').lower()} "
-                f"{_format_length(parameters.vertical_height_m, translator, unit_system)}",
+                f"{_format_length(parameters.vertical_height_m, translator, display_units)}",
                 f"{translator.t('inverted_l.horizontal_length').lower()} "
-                f"{_format_length(parameters.horizontal_length_m, translator, unit_system)}",
+                f"{_format_length(parameters.horizontal_length_m, translator, display_units)}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(parameters.top_height_m, translator, unit_system)}",
+                f"{_format_length(parameters.top_height_m, translator, display_units)}",
             ]
         )
     elif isinstance(parameters, InvertedVParameters):
         parts.extend(
             [
                 f"{translator.t('geometry.leg_length').lower()} "
-                f"{_format_length(parameters.leg_length_m, translator, unit_system)}",
+                f"{_format_length(parameters.leg_length_m, translator, display_units)}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(parameters.apex_height_m, translator, unit_system)}",
+                f"{_format_length(parameters.apex_height_m, translator, display_units)}",
                 f"{translator.t('geometry.end_height').lower()} "
-                f"{_format_length(parameters.end_height_m, translator, unit_system)}",
+                f"{_format_length(parameters.end_height_m, translator, display_units)}",
                 f"{translator.t('inverted_v.included_angle').lower()} "
                 f"{parameters.included_angle_deg:.1f}°",
             ]
@@ -3762,20 +3779,20 @@ def _summary(
                 f"{translator.t('geometry.elements').lower()} {len(parameters.elements)}",
                 f"{translator.t('inverted_v.included_angle').lower()} {angles}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(parameters.apex_height_m, translator, unit_system)}",
+                f"{_format_length(parameters.apex_height_m, translator, display_units)}",
             ]
         )
     elif isinstance(parameters, TransmissionLineDoubletParameters):
         parts.extend(
             [
                 f"{translator.t('field.length').lower()} "
-                f"{_format_length(parameters.dipole_total_length_m, translator, unit_system)}",
+                f"{_format_length(parameters.dipole_total_length_m, translator, display_units)}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(parameters.height_m, translator, unit_system)}",
+                f"{_format_length(parameters.height_m, translator, display_units)}",
                 f"{translator.t('g5rv.line_impedance').lower()} "
                 f"{parameters.line_impedance_ohm:g} Ω",
                 f"{translator.t('g5rv.line_length').lower()} "
-                f"{_format_length(parameters.line_length_m, translator, unit_system)}",
+                f"{_format_length(parameters.line_length_m, translator, display_units)}",
             ]
         )
     elif antenna_type in {ANTENNA_TYPE_G5RV, ANTENNA_TYPE_ZS6BKW}:
@@ -3784,11 +3801,11 @@ def _summary(
         parts.extend(
             [
                 f"{translator.t('field.length').lower()} "
-                f"{_format_length(longest.length_m, translator, unit_system)}"
+                f"{_format_length(longest.length_m, translator, display_units)}"
                 if longest is not None
                 else f"{len(model.wires)} {translator.t('geometry.wires')}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(max_z, translator, unit_system)}",
+                f"{_format_length(max_z, translator, display_units)}",
                 f"{translator.t('g5rv.line_impedance').lower()} "
                 f"{line.characteristic_impedance_ohm:g} Ω"
                 if line is not None
@@ -3817,26 +3834,26 @@ def _summary(
         parts.extend(
             [
                 f"{translator.t('geometry.wire_length').lower()} "
-                f"{_format_length(wire_length_m, translator, unit_system)}",
+                f"{_format_length(wire_length_m, translator, display_units)}",
                 f"{translator.t('geometry.feed_height').lower()} "
-                f"{_format_length(feed_height, translator, unit_system)}",
+                f"{_format_length(feed_height, translator, display_units)}",
             ]
         )
         if isinstance(parameters, EndFedParameters) and parameters.bend_active:
             vertical_text = _format_length(
                 parameters.bend_vertical_length_m,
                 translator,
-                unit_system,
+                display_units,
             )
             horizontal_text = _format_length(
                 parameters.bend_horizontal_length_m,
                 translator,
-                unit_system,
+                display_units,
             )
             top_text = _format_length(
                 parameters.bend_top_height_m,
                 translator,
-                unit_system,
+                display_units,
             )
             parts.extend(
                 [
@@ -3848,24 +3865,24 @@ def _summary(
         else:
             parts.append(
                 f"{translator.t('geometry.end_height').lower()} "
-                f"{_format_length(end_height, translator, unit_system)}"
+                f"{_format_length(end_height, translator, display_units)}"
             )
         if isinstance(parameters, EndFedParameters) and parameters.feed_section_active:
             parts.append(
                 f"{translator.t('endfed.feed_section').lower()} "
-                f"{_format_length(parameters.feed_section_length_m, translator, unit_system)}"
+                f"{_format_length(parameters.feed_section_length_m, translator, display_units)}"
             )
         if isinstance(parameters, EndFedParameters) and parameters.installation_return_active:
             installation_return_length_m = parameters.installation_return_length_m
             parts.append(
                 f"{translator.t('endfed.installation_return').lower()} "
-                f"{_format_length(installation_return_length_m, translator, unit_system)}"
+                f"{_format_length(installation_return_length_m, translator, display_units)}"
             )
         if isinstance(parameters, EndFedParameters) and parameters.coil_active:
             parts.append(
                 f"{translator.t('endfed.loading_coil').lower()} "
                 f"{parameters.loading_coil_inductance_h * 1e6:.1f} µH @ "
-                f"{_format_length(parameters.loading_coil_offset_m, translator, unit_system)}"
+                f"{_format_length(parameters.loading_coil_offset_m, translator, display_units)}"
             )
     elif isinstance(parameters, OCFDParameters) or antenna_type == ANTENNA_TYPE_OCFD:
         if isinstance(parameters, OCFDParameters):
@@ -3882,11 +3899,11 @@ def _summary(
         parts.extend(
             [
                 f"{translator.t('field.length').lower()} "
-                f"{_format_length(length_m, translator, unit_system)}",
+                f"{_format_length(length_m, translator, display_units)}",
                 f"{translator.t('geometry.feed_offset').lower()} "
-                f"{_format_length(feed_offset, translator, unit_system)}",
+                f"{_format_length(feed_offset, translator, display_units)}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(height_m, translator, unit_system)}",
+                f"{_format_length(height_m, translator, display_units)}",
             ]
         )
     elif isinstance(parameters, VerticalParameters) or antenna_type == ANTENNA_TYPE_VERTICAL:
@@ -3908,27 +3925,27 @@ def _summary(
         parts.extend(
             [
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(height_m, translator, unit_system)}",
+                f"{_format_length(height_m, translator, display_units)}",
                 f"{translator.t('field.base_height').lower()} "
-                f"{_format_length(base_height, translator, unit_system)}",
+                f"{_format_length(base_height, translator, display_units)}",
             ]
         )
         if radial_count:
             parts.append(
                 f"{translator.t('geometry.radials').lower()} {radial_count} x "
-                f"{_format_length(radial_length, translator, unit_system)}"
+                f"{_format_length(radial_length, translator, display_units)}"
             )
         if isinstance(parameters, VerticalParameters) and parameters.loading_coil_enabled:
             parts.append(
                 f"{translator.t('vertical.loading_coil').lower()} "
                 f"{parameters.loading_coil_inductance_h * 1e6:.3f} µH @ "
-                f"{_format_length(parameters.loading_coil_offset_m, translator, unit_system)}"
+                f"{_format_length(parameters.loading_coil_offset_m, translator, display_units)}"
             )
         if isinstance(parameters, VerticalParameters) and parameters.top_hat_enabled:
             parts.append(
                 f"{translator.t('vertical.top_hat').lower()} "
                 f"{parameters.top_hat_wire_count} x "
-                f"{_format_length(parameters.top_hat_radius_m, translator, unit_system)}"
+                f"{_format_length(parameters.top_hat_radius_m, translator, display_units)}"
             )
     elif isinstance(parameters, T2FDParameters):
         height_label = (
@@ -3939,13 +3956,13 @@ def _summary(
         parts.extend(
             [
                 f"{translator.t('t2fd.length').lower()} "
-                f"{_format_length(parameters.length_m, translator, unit_system)}",
+                f"{_format_length(parameters.length_m, translator, display_units)}",
                 f"{translator.t('t2fd.spacing').lower()} "
-                f"{_format_length(parameters.spacing_m, translator, unit_system)}",
+                f"{_format_length(parameters.spacing_m, translator, display_units)}",
                 f"{translator.t('t2fd.termination').lower()} "
                 f"{parameters.termination_resistance_ohm:g} Ω",
                 f"{height_label.lower()} "
-                f"{_format_length(parameters.height_m, translator, unit_system)}",
+                f"{_format_length(parameters.height_m, translator, display_units)}",
             ]
         )
     elif isinstance(parameters, TrapDipoleParameters):
@@ -3957,12 +3974,12 @@ def _summary(
         parts.extend(
             [
                 f"{translator.t('geometry.total_length').lower()} "
-                f"{_format_length(parameters.total_length_m, translator, unit_system)}",
+                f"{_format_length(parameters.total_length_m, translator, display_units)}",
                 f"{translator.t('geometry.center').lower()} "
-                f"{_format_length(parameters.inner_length_m, translator, unit_system)}",
+                f"{_format_length(parameters.inner_length_m, translator, display_units)}",
                 f"{translator.t('geometry.traps').lower()} 2",
                 f"{height_label.lower()} "
-                f"{_format_length(parameters.height_m, translator, unit_system)}",
+                f"{_format_length(parameters.height_m, translator, display_units)}",
             ]
         )
     elif isinstance(parameters, DipoleParameters):
@@ -3972,15 +3989,15 @@ def _summary(
         parts.extend(
             [
                 f"{translator.t('field.length').lower()} "
-                f"{_format_length(parameters.total_length_m, translator, unit_system)}",
+                f"{_format_length(parameters.total_length_m, translator, display_units)}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(height_value, translator, unit_system)}",
+                f"{_format_length(height_value, translator, display_units)}",
             ]
         )
         if parameters.sag_m > 0.0:
             parts.append(
                 f"{translator.t('field.sag').lower()} "
-                f"{_format_length(parameters.sag_m, translator, unit_system)}"
+                f"{_format_length(parameters.sag_m, translator, display_units)}"
             )
             notes.append(
                 translator.t(
@@ -3993,7 +4010,7 @@ def _summary(
             [
                 f"{len(model.wires)} {translator.t('geometry.wires')}",
                 f"{translator.t('field.height').lower()} "
-                f"{_format_length(max_z, translator, unit_system)}",
+                f"{_format_length(max_z, translator, display_units)}",
             ]
         )
         if isinstance(parameters, CustomAntennaParameters):
@@ -4036,7 +4053,7 @@ def _transmission_line_polylines(
 def _plan_inset(
     model: AntennaModel,
     translator: Translator,
-    unit_system: UnitSystem,
+    display_units: LengthFormatter,
     dimensions: tuple[Dimension, ...] = (),
 ) -> SceneInset:
     polylines = tuple(
@@ -4064,11 +4081,17 @@ def build_scene(
     display_name: str | None,
     mode: GeometryViewMode,
     translator: Translator,
-    unit_system: UnitSystem,
+    unit_system: UnitSystem | None = None,
+    display_units: DisplayUnits | None = None,
     height_exaggeration: float = 1.0,
 ) -> GeometryScene:
     """Project ``model`` and attach semantic dimensions for the selected view."""
 
+    resolved_units: LengthFormatter
+    if display_units is not None:
+        resolved_units = display_units
+    else:
+        resolved_units = _LegacyLengthFormatter(unit_system or UnitSystem.METRIC)
     model = replace(
         model,
         wires=tuple(wire for wire in model.wires if not is_model_only_wire(wire.id)),
@@ -4084,7 +4107,7 @@ def build_scene(
         projection=projection,
         exaggeration=height_exaggeration if projection.vertical else 1.0,
         translator=translator,
-        unit_system=unit_system,
+        display_units=resolved_units,
     )
     polylines = tuple(
         ScenePolyline(
@@ -4334,7 +4357,7 @@ def build_scene(
                         text=_format_length(
                             parameters.radial_length_m,
                             translator,
-                            unit_system,
+                            resolved_units,
                         ),
                         side="below",
                         priority=80,
@@ -4344,7 +4367,7 @@ def build_scene(
             _plan_inset(
                 model,
                 translator,
-                unit_system,
+                resolved_units,
                 radial_dimensions,
             )
         )
@@ -4354,7 +4377,7 @@ def build_scene(
         width = max(xs) - min(xs)
         depth = max(ys) - min(ys)
         if min(width, depth) > max(width, depth, 1.0) * 0.05:
-            insets.append(_plan_inset(model, translator, unit_system))
+            insets.append(_plan_inset(model, translator, resolved_units))
     if not notes and isinstance(parameters, CustomAntennaParameters):
         notes.append(translator.t("geometry.arbitrary_geometry"))
     notes = list(dict.fromkeys(notes))
@@ -4363,7 +4386,7 @@ def build_scene(
     ]
     summary = _summary(
         translator,
-        unit_system,
+        resolved_units,
         model,
         parameters,
         effective_type,

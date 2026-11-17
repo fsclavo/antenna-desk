@@ -135,7 +135,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX38~~ | ~~Select the Design tab after creating a new antenna~~ | S | none | **Done 2026-11-17:** after a successful New Antenna creation, `_create_project_from_parameters()` selects `_design_tab`; this covers catalog templates, Antenna Advisor, and Reference Design Library. Cancelled or failed creation leaves the current tab unchanged. Advanced mode still opens Simulation when the mode is selected; Change Template, Open Project, NEC/MMANA import, and New Variant are unchanged. Advanced-mode success, cancellation, and failure tests pass; user guide and changelog updated. No schema, solver, or i18n change. |
 | ~~U0~~ | ~~Close the adaptive length display-units spec~~ | S | none | **Done 2026-11-17:** [ADR-0044](ADR/0044-adaptive-length-display-units.md) and [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md) accepted; backlog, roadmap, docs index, architecture, geometry contract, and project decisions linked. No code change. |
 | ~~U1~~ | ~~Shared adaptive length formatter and Units preference~~ | S–M | U0 | **Done 2026-11-17:** added the Qt-free `DisplayUnits`/`LengthPolicy` formatter with metric auto (mm/cm/m), imperial auto (in/ft), fixed meters/feet, fixed per-unit precision, label trimming, zero/negative handling, scale hints, and table-unit selection. The four-option Units preference now stores the system and policy in QSettings, maps legacy metric/imperial values to automatic, and has EN/ES help. Boundary, negative, table, legacy-setting, and dialog tests pass. Scenes, forms, and reports remain unchanged until U2–U5; no schema change. |
-| U2 | Adaptive units in geometry scenes | M | U1 | Pass `DisplayUnits` through `build_scene`, `_Factory`, dimension labels, summaries, scale bar, and detail insets. Cover 28.5/144/435 MHz Moxon, 20 m dipole, and 435 MHz hexbeam; update the minimum-size layout and tighten the small-dimension anchor tolerance. Acceptance: exact auto/fixed examples from the spec, unit-aware scale bar, no hidden-dimension regression, existing fixed-unit scenes and goldens preserved. No forms or reports. |
+| ~~U2~~ | ~~Adaptive units in geometry scenes~~ | M | U1 | **Done 2026-11-17:** `build_scene`/`_Factory`, dimension labels, summaries, detail insets, and the scale bar accept `DisplayUnits`. Auto scenes cover 28.5/435 MHz Moxon, 20 m dipole, and 435 MHz hexbeam; scale-bar steps are unit-aware; the small-dimension anchor tolerance is `max(0.5 mm, 1%)`. Legacy `unit_system=` callers keep fixed geometry strings and goldens. No form or report changes. |
 | U3 | Adaptive units in antenna-family forms and tables | M–L | U1 | Wire every family editor to `DisplayUnits`; add `LengthFieldSpec` ranges, steps, decimals, and suffixes; freeze a field or table unit while editing and re-evaluate on external loads. Editable tables use one unit per table with the unit in the header. Fix the Moxon height range and the hexbeam UHF gap minima, then audit every small-feature field. Acceptance: every form preserves physical values across metric/imperial and auto/fixed switches, no silent clamping, table headers and help updated, UI tests. |
 | U4 | Adaptive units in optimization, synthesis, and auxiliary dialogs | M | U1, U3 | Apply the same policy to optimization, family optimization, synthesis, parameter sweep, robustness, tolerance, design-from-frequency, feed-line, and related length surfaces. Audit `length_bounds` callers and per-field ranges; keep plot axes and budgets legible. Acceptance: dialog tests for auto/fixed and metric/imperial, no range regressions, EN/ES help, no solver change. |
 | U5 | Adaptive units in construction sheets and human-readable reports | M–L | U1, U2, U3 | Format design-summary rows, wire schedule, BOM, feed/matching rows, and report tables with `DisplayUnits`; update the title block to state auto/fixed metric or imperial. SVG/PNG/PDF figures follow the UI. CSV stays canonical meters/mm; DXF stays canonical meters with meter dimension text and `$INSUNITS=6`. Acceptance: HTML/PDF/package tests, table-header units, CSV/DXF canonical assertions, no schema. |
@@ -204,9 +204,9 @@ against the published 0.61 m. C6 corrects the topology before C7 nests bands.
 
 ## Adaptive length display units (queued 2026-11-17)
 
-**Status:** spec closed; implementation started. U0 and U1 are complete;
-U2–U6 are ready to start. The release plan decides whether the track lands in
-0.10.0 or a later release.
+**Status:** spec closed; implementation started. U0–U2 are complete; U3–U6
+are ready to start. The release plan decides whether the track lands in 0.10.0
+or a later release.
 **Decision:** [ADR-0044](ADR/0044-adaptive-length-display-units.md).
 **Normative spec:** [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md).
 
@@ -317,8 +317,8 @@ UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**, and
 frequency-first starting-dimensions, semantics, pristine-recalculation,
 quad-beam-estimator, scale-to-frequency, and creation-tab work, were completed
 on 2026-11-17. The adaptive length display-units track (U0–U6) is now active;
-U0 closed the spec and ADR, U1 added the formatter and preference, and U2–U6
-are the next implementation slices.
+U0 closed the spec and ADR, U1 added the formatter and preference, U2 wired the
+geometry scenes, and U3–U6 are the next implementation slices.
 UX21–UX24 were added from direct user feedback and completed the
 same day. UX25 and UX26 were queued on 2026-11-13 and completed the same day.
 UX27 and UX28 were added the same day from terminology feedback; UX27 and UX28
@@ -2824,12 +2824,12 @@ model and solver contract must land first.
     catalog templates, Advisor, and Reference Design Library; Advanced-mode
     semantics, Change Template, imports, variants, schema, and solver are
     unchanged. No new translation or help keys. The UX queue is now closed.
-19. **U1 is complete.** The shared `DisplayUnits` formatter, four-option Units
-    preference, QSettings migration, and EN/ES help are in place. Continue with
-    **U2** (geometry scenes) and **U3** (family forms and tables), then U4–U6.
-    The formatter is not wired into scenes/forms/reports yet; existing UI
-    behavior is unchanged until those slices land. Prepare the release after
-    the agreed display-units scope.
+19. **U1 and U2 are complete.** The shared `DisplayUnits` formatter,
+    four-option Units preference, QSettings migration, EN/ES help, adaptive
+    geometry scenes, unit-aware scale bar, and tightened anchor tolerance are in
+    place. Continue with **U3** (family forms and editable tables), then U4–U6.
+    Forms and reports still use the previous fixed presentation until their
+    slices land. Prepare the release after the agreed display-units scope.
 
 ## Technical debt pass (2026-11-08)
 
@@ -2860,7 +2860,7 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **54**.
-- Full gate: **3,407 passed, 1 skipped** on 2026-11-17 after U1, with
+- Full gate: **3,412 passed, 1 skipped** on 2026-11-17 after U2, with
   `NEC2C` and the optional `cross-engine` group; the skip is the Windows-only
   console-hiding test on Linux. Rerun without PyNEC if the environment lacks it.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`

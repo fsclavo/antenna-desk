@@ -72,9 +72,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Adaptive length display foundation.** Added the Qt-free `DisplayUnits`
   policy and a four-option Units preference: metric auto (mm/cm/m), metric
   fixed in meters, imperial auto (in/ft), and imperial fixed in feet. Existing
-  form, scene, and report rendering remains on the current fixed presentation
-  until the U2–U5 slices wire the policy. Legacy metric/imperial settings map to
+  form and report rendering remains on the current fixed presentation until the
+  remaining U3–U5 slices wire the policy. Legacy metric/imperial settings map to
   the automatic policy. No schema or solver change.
+- **Adaptive geometry scenes.** Geometry dimension labels, summaries, detail
+  insets, and the scale bar now follow the display policy. The scale-bar steps
+  are unit-aware, and the dimension-anchor tolerance tightens to `max(0.5 mm,
+  1%)` for small features. Legacy `unit_system=` scene callers keep the
+  previous fixed strings and goldens. No schema or solver change.
 
 ## [0.9.0] - 2026-11-17
 

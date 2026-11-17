@@ -3,7 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-11-17
 - **Decision:** [ADR-0044](ADR/0044-adaptive-length-display-units.md)
-- **Execution:** U0–U1 complete; U2–U6 queued in
+- **Execution:** U0–U2 complete; U3–U6 queued in
   [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md)
 
 ## Purpose
