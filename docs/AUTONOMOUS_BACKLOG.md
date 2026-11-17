@@ -2391,25 +2391,25 @@ model and solver contract must land first.
 - Full gate: **3,327 passed, 1 skipped** with `NEC2C` and the optional
   `cross-engine` group; the skip is the Windows-only console-hiding test on
   Linux. Rerun without PyNEC if the environment lacks it.
-- Release: **0.8.2** published on 2026-11-16 with the element-table header
-  sizing fix. The tag-triggered CI run
-  [`43981030614`](https://github.com/fsclavo/antenna-desk/actions/runs/43981030614)
-  completed the wheel/sdist, Linux, Windows, and publish jobs, and all six
-  published assets and checksums were verified. See
-  [`RELEASE_QA_0.8.2.md`](RELEASE_QA_0.8.2.md). **0.8.1** was published on
-  2026-11-16 with the LPDA feed-classification and dialog-scale fixes. See
-  [`RELEASE_QA_0.8.1.md`](RELEASE_QA_0.8.1.md). **0.8.1** is the previous
-  release.
+- Release: **0.9.0** candidate prepared on 2026-11-17 with the Touchstone
+  `.s1p` round-trip, coaxial feed schematic (UX31), per-template material
+  defaults (UX30), and the chart-cursor teardown fix. Local artifacts and smoke
+  tests pass; publication is pending. See
+  [`RELEASE_QA_0.9.0.md`](RELEASE_QA_0.9.0.md). **0.8.2** remains the latest
+  published release (2026-11-16, element-table header sizing fix); all six
+  assets and checksums were verified. See
+  [`RELEASE_QA_0.8.2.md`](RELEASE_QA_0.8.2.md).
 - Known CI residue: Windows Python 3.11 runs acceptance, integration, and unit
   tests only. Its UI suite is excluded because PySide6/pyqtgraph can corrupt
   the native heap during view teardown; Windows 3.12/3.13 and Linux
   3.11–3.13 run the full UI suite. See
   [`ADR/0025`](ADR/0025-pyside6-version-pin.md). Do not weaken the remaining
   gates.
-- Last commits: the Touchstone `.s1p` import/export, the chart-cursor teardown
-  guards, the font-scaling and preference test isolation, the plotted-window
-  teardown cleanup, the element-table header sizing fix, the post-0.8.0
-  stabilization and visual QA, the LPDA feed classification fix, the
+- Last commits: the per-template material defaults (UX30), the coaxial feed
+  schematic (UX31), the Touchstone `.s1p` import/export, the chart-cursor
+  teardown guards, the font-scaling and preference test isolation, the
+  plotted-window teardown cleanup, the element-table header sizing fix, the
+  post-0.8.0 stabilization and visual QA, the LPDA feed classification fix, the
   scaled-dialog screen cap, the P7/D4 benchmark decision, the 0.8.0 release
   publication and QA, the log-periodic family (C3), the automatic Pi/T matching
   synthesis (EF9), the post-0.6.0 QA pass, the 0.6.0 release publication and QA,

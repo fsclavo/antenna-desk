@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-17
+
 ### Added
 
 - **Touchstone `.s1p` measurement import and simulated export.** The VNA import
