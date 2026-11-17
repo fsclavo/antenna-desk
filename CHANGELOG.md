@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Chart cursor teardown.** The reusable chart cursor now ignores pending
+  hover and leave events after its plot or series has started tearing down,
+  instead of raising from inside the Qt event loop.
+
 ## [0.8.2] - 2026-11-16
 
 ### Fixed
