@@ -10,7 +10,10 @@ from pathlib import Path
 
 import pytest
 
-from antennadesk.domain.antennas.hexbeam import published_hexbeam_parameters
+from antennadesk.domain.antennas.hexbeam import (
+    published_hexbeam_multiband_parameters,
+    published_hexbeam_parameters,
+)
 from antennadesk.domain.environment.ground import GroundModel
 from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
@@ -56,3 +59,31 @@ def test_hexbeam_completes_a_pattern_run() -> None:
     assert point.far_field
     assert result.raw_input.count("EX 0 ") == 1
     assert len(point.source_results) == 1
+
+
+def test_multiband_hexbeam_completes_with_all_driven_bands() -> None:
+    parameters = published_hexbeam_multiband_parameters(ground=GroundModel.free_space())
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
+        segmentation=SegmentationPolicy(min_segments_per_wire=3),
+        far_field=FarFieldRequest(
+            enabled=True,
+            theta_count=5,
+            phi_count=9,
+        ),
+    )
+
+    result = Nec2cSolver(Path(os.environ["NEC2C"])).run(
+        parameters.to_antenna(),
+        spec,
+    )
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert len(result.frequencies) == 1
+    point = result.frequencies[0]
+    assert math.isfinite(point.impedance_ohm.real)
+    assert math.isfinite(point.impedance_ohm.imag)
+    assert point.currents
+    assert point.far_field
+    assert result.raw_input.count("EX 0 ") == 5
+    assert len(point.source_results) == 5

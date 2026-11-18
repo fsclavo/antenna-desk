@@ -820,7 +820,11 @@ def render_construction_sheet(
     elif isinstance(parameters, HexbeamParameters):
         band_rows = ""
         if len(parameters.bands) > 1:
-            band_rows = f"<tr><th>Bands</th><td>{len(parameters.bands)}</td></tr>" + "".join(
+            band_rows = (
+                f"<tr><th>Bands</th><td>{len(parameters.bands)}</td></tr>"
+                "<tr><th>Feed model</th><td>ideal sources; coax harness and balun "
+                "not modeled</td></tr>"
+            ) + "".join(
                 f"<tr><th>Band</th><td>{band.label}: "
                 f"driver {_length(band.driver_half_length_m, display_units)}"
                 f" · reflector {_length(band.reflector_half_length_m, display_units)}"

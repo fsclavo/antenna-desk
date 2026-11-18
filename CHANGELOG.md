@@ -26,9 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the largest band defines the shared turning radius and the lowest band sets
   the reference height. The single-band 20 m reference was reconciled from
   219/207 to 218/412 in driver/reflector dimensions. Reports include per-band
-  rows. Multi-band optimization and automatic frequency scaling remain
-  unavailable; the coax harness, inter-band coupling, and balun are not
-  modeled.
+  rows. A real NEC2C five-band run completes with five driven sources.
+  Multi-band optimization and automatic frequency scaling remain unavailable;
+  the coax harness, inter-band coupling, and balun are not modeled.
 - **Biquad and double-biquad feed transformer.** New designs start with an
   ideal 4:1 feed transformer, editable in the design panel and persisted in
   schema 53. The ratio is applied to the reported SWR and to the feed-connection

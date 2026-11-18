@@ -48,6 +48,7 @@ def test_hexbeam_multiband_summary_lists_each_band() -> None:
     values = dict(rows)
 
     assert values["Bands"] == "5"
+    assert "ideal sources" in values["Feed model"]
     band_rows = [value for label, value in rows if label == "Band"]
     assert len(band_rows) == 5
     assert band_rows[0].startswith("20m:")

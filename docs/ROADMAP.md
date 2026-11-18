@@ -333,18 +333,17 @@ version remains queued.
   report, and persistence tests cover the corrected path. No schema or solver
   change. See [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md) and
   [`spikes/c6-hexbeam-geometry.md`](spikes/c6-hexbeam-geometry.md).
-- **Multi-band HexBeam, 1-5 bands (L) — C7a/C7b implemented 2026-11-18.**
+- **Multi-band HexBeam, 1-5 bands (L) — implemented 2026-11-18.**
   One shared six-spreader frame carries nested driver/reflector pairs from the
   published G3TXQ 20/17/15/12/10 m table, with the 20 m row reconciled to
   218/412. The editor selects the band set and shows a read-only per-band
   table; the scene draws every band with the primary band emphasized, and
   reports include per-band rows. Every driven element is excited by an ideal
-  unit-amplitude, zero-phase source in the model. Coax jumpers, inter-band
-  coupling, the balun, spreader sag, and frame hardware remain unmodeled.
-  Multi-band optimization and automatic frequency scaling are explicitly
-  unavailable. C7c remains: selected-band optimizer or a final unavailable
-  decision, feed-harness limitations, and the validation/evidence audit. 6 m
-  can be added later as an optional sixth band. The published dimensions are
+  unit-amplitude, zero-phase source in the model; a real NEC2C five-band run
+  completed with five driven sources. Coax jumpers, inter-band coupling, the
+  balun, spreader sag, and frame hardware remain unmodeled. Multi-band
+  optimization and automatic frequency scaling are explicitly unavailable.
+  6 m can be added later as an optional sixth band. The published dimensions are
   starting values (B); multi-band gain, SWR, and front-to-back ratio are not
   validated.
 

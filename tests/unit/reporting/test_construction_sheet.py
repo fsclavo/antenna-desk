@@ -599,6 +599,7 @@ def test_hexbeam_multiband_construction_sheet_lists_the_bands(
     assert "Band" in sheet
     assert "20m:" in sheet
     assert "10m:" in sheet
+    assert "ideal sources" in sheet
     assert sheet.count("Band</th>") >= 5
 
 

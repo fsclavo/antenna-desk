@@ -265,6 +265,7 @@ REPORT_SPANISH: dict[str, str] = {
     "Azimuth": "Azimut",
     "Band": "Banda",
     "Bands": "Bandas",
+    "Feed model": "Modelo de alimentación",
     "Base height": "Altura de base",
     "Best SWR": "Mejor ROE",
     "Boom height": "Altura del boom",

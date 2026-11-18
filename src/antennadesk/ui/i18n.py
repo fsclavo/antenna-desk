@@ -10876,13 +10876,15 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: (
             "Select two or more published bands to build a nested stack. One "
             "selected band loads its published row; no selection edits a custom "
-            "single band. The largest band defines the shared frame."
+            "single band. The largest band defines the shared frame. The real "
+            "coax harness, inter-band coupling, and balun are not modeled."
         ),
         Language.SPANISH: (
             "Seleccioná dos o más bandas publicadas para construir una pila "
             "anidada. Una banda seleccionada carga su fila publicada; sin selección "
             "se edita una banda única personalizada. La banda más grande define el "
-            "marco compartido."
+            "marco compartido. No se modelan el arnés de coaxil real, el "
+            "acoplamiento entre bandas ni el balun."
         ),
     },
     "hexbeam.band.20m": {

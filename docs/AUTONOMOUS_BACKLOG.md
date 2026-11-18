@@ -43,10 +43,10 @@ external service and must not be invented or simulated into existence.
 | ~~C4~~ | ~~Discone~~ | L | none | **Done 2026-11-08:** radial-wire cone and disc with apex feed gap, schema 27, editor, scene, reports, construction notes, and optimizer. Evidence stays C because the wire approximation and feed transition are not validated. |
 | ~~C5~~ | ~~Trapped / multiband Yagi~~ | L | trap model reuse | **Done 2026-11-08:** two-band trapped Yagi with ideal parallel LC trap pairs on each element, schema 28, editor, scene, reports, construction notes, and optimizer. Evidence stays C because trap loss and boom mounting are not modeled. |
 | ~~C6~~ | ~~HexBeam geometry correctness~~ | M | published G3TXQ/K4KIO drawing | **Done 2026-11-18:** the single-band model now routes the M driver and rear U reflector on the six-spreader frame. Ten canonical wires, 6.604 m span, 0.6096 m tip gap, all wire points at or inside the 3.302 m turning radius, reflector midpoint at the rear, and a zero published fore-aft trim. Domain and optimizer share one frame helper; scene dimensions, golden scenes, reports, help, and docs are updated. Tests: 3,533 passed, 1 skipped; ruff/format/mypy pass; no schema or solver change. See `docs/spikes/c6-hexbeam-geometry.md`. |
-| C7 | Multi-band HexBeam (1-5 bands) | L | C6; feed-model decision; published 5-band table | Umbrella for C7a–C7c: selectable band set and count (1-5) on a shared frame with nested G3TXQ 20/17/15/12/10 pairs, per-band tip gap and vertical offset, ideal equal-phase sources, per-band editor/scene/reports, semantic and NEC2C tests, and explicit optimizer scope. 6 m optional later; multi-band performance remains unvalidated. |
+| ~~C7~~ | ~~Multi-band HexBeam (1-5 bands)~~ | L | C6; feed-model decision; published 5-band table | **Done 2026-11-18 via C7a–C7c:** selectable band set and count (1-5) on a shared frame with nested G3TXQ 20/17/15/12/10 pairs, per-band tip gap and vertical offset, ideal equal-phase sources, band editor/table, nested scene, per-band reports, and a real NEC2C five-source run. 6 m remains optional; multi-band performance is not validated. |
 | ~~C7a~~ | ~~Multi-band HexBeam domain and schema~~ | M | C6; ADR-0045 | **Done 2026-11-18:** [ADR-0045](ADR/0045-multiband-hexbeam.md) accepted. `HexbeamBand`, optional `bands`, shared frame with linear per-band radius, primary feed plus ideal sources, schema 55 with no-value-rewrite migration, optimizer and frequency-scaling unavailable reasons. Domain, persistence, migration, and registry tests pass; full gate 3,542 passed, 1 skipped at C7a; no solver change. |
 | ~~C7b~~ | ~~Multi-band HexBeam preset, editor, scene, and reports~~ | L | C7a | **Done 2026-11-18:** published 20/17/15/12/10 preset and 218/412 reconciliation; band checkboxes and read-only per-band table; nested scene rendering with the primary band emphasized and a band note; per-band summary/construction rows; EN/ES help; golden scenes updated. Multi-band optimization/scaling remain explicitly unavailable. |
-| C7c | Multi-band HexBeam validation and optimizer scope | M | C7b | Feed-harness limitations, selected-band optimizer or explicit unavailable reason, evidence audit, NEC2C multi-band smoke test, and validation documentation. |
+| ~~C7c~~ | ~~Multi-band HexBeam validation and optimizer scope~~ | M | C7b | **Done 2026-11-18:** multi-band optimization remains explicitly unavailable with a translated reason; feed-harness, inter-band coupling, and balun limitations are visible in help/evidence/report rows; a real NEC2C five-band run completed with five driven sources and a finite pattern result; validation/evidence docs updated; full gate 3,553 passed, 1 skipped. |
 | ~~E1~~ | ~~Raise the simulation timeout default to 180 s and expose an override~~ | S | none | **Done 2026-11-08:** `SimulationSpec.timeout_s` defaults to 180 s; **Advanced simulation → Solver** exposes a 10–3600 s override applied to single runs, band analysis, and family optimizations; tests cover the default and override. |
 | ~~E2~~ | ~~Parallelize independent optimizer evaluations with a bounded worker pool~~ | M–L | E1 | **Done 2026-11-08:** the engine accepts an optional batch evaluator and the command runs 1–8 bounded workers (dialog default `min(4, max(1, CPU − 1))`, sequential when 1). Candidate order and results are deterministic for a fixed configuration, cancellation reaches every in-flight solver process, and single-solve behavior is unchanged. |
 | ~~E3~~ | ~~Parallelize band analysis with the same bounded pool~~ | M | E2 | **Done 2026-11-08:** bands run in bounded batches (dialog 1–4, command 1–8, sequential default) with results and progress in selection order; cancellation reaches running bands and keeps completed results. The real `nec2c` benchmark measured **1.3–1.8×** speedup with four workers, +14 MiB parent peak RSS, and 2.4–2.8 MiB per solver child; see `docs/MULTIBAND_PERFORMANCE.md`. Re-measured after E5 on 2026-11-10: the sequential path is 10–20 % faster and the four-worker speedup is **1.2–1.5×**. |
@@ -572,7 +572,12 @@ explicit unavailable reasons for multi-band optimization and frequency scaling.
 C7b is implemented on 2026-11-18: the published 20/17/15/12/10 preset, the
 218/412 single-band reconciliation, band checkboxes, a read-only per-band table,
 nested scene rendering with primary-band emphasis, per-band report rows, and
-EN/ES help. C7c remains.
+EN/ES help.
+
+C7c is implemented on 2026-11-18: multi-band optimization remains explicitly
+unavailable, the feed-harness/inter-band-coupling/balun limitation is visible
+in help/evidence/reports, and a real NEC2C five-band run completed with five
+driven sources. C7 is complete.
 
 - `HexbeamParameters` carries a shared frame plus 1-5 per-band records; schema
   migration maps an existing single-band design to one band.
@@ -3417,8 +3422,8 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **55**.
-- Full gate: **3,552 passed, 1 skipped** on 2026-11-18 after the multi-band
-  HexBeam editor/scene/reports slice, with `NEC2C` auto-detected by the test
+- Full gate: **3,553 passed, 1 skipped** on 2026-11-18 after the multi-band
+  HexBeam validation slice, with `NEC2C` auto-detected by the test
   configuration; the skip is the Windows-only console-hiding test on Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults

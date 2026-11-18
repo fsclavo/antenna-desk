@@ -106,7 +106,11 @@ Negative:
 |---|---|---|
 | C7a | ADR, `HexbeamBand`, optional `bands`, sources, schema v55, domain/persistence/registry tests | Implemented 2026-11-18 |
 | C7b | Published 20/17/15/12/10 preset, 218/412 reconciliation, band table/editor, nested scene rendering, per-band reports | Implemented 2026-11-18 |
-| C7c | Selected-band optimizer, feed-harness limitations, validation/evidence audit | Queued |
+| C7c | Selected-band optimizer, feed-harness limitations, validation/evidence audit | Implemented 2026-11-18; multi-band optimizer remains explicitly unavailable |
+
+C7a–C7c are complete: the multi-band preset, editor, scene, reports, and
+validation are implemented; multi-band optimization and automatic frequency
+scaling remain explicit unavailable paths.
 
 ## References
 
