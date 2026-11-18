@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import pytest
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
@@ -50,3 +51,32 @@ def test_fan_dipole_add_element_uses_a_distinct_angle(qtbot: QtBot) -> None:
     angles = [element.included_angle_deg for element in parameters.elements]
     assert len(angles) == 3
     assert len(set(angles)) == len(angles)
+
+
+def test_fan_dipole_form_uses_per_field_and_per_table_units_when_auto(
+    qtbot: QtBot,
+) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.fan_dipole_form import FanDipoleForm
+
+    form = FanDipoleForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    form.set_parameters(
+        FanDipoleParameters(
+            frequency_hz=435_000_000.0,
+            elements=(
+                FanElement(length_m=0.16, included_angle_deg=120.0),
+                FanElement(length_m=0.33, included_angle_deg=90.0),
+            ),
+            apex_height_m=12.0,
+        )
+    )
+
+    assert form._table_unit == "cm"
+    assert form._apex_height_field.unit == "m"
+    assert "(cm)" in form._table.horizontalHeaderItem(0).text()
+    assert form.parameters().elements[0].length_m == pytest.approx(0.16, abs=1e-3)

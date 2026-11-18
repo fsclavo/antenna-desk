@@ -23,15 +23,16 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 
 
@@ -44,11 +45,17 @@ class OCFDForm(QWidget):
         unit_system: UnitSystem,
         parameters: OCFDParameters | None = None,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._updating = False
 
         self._frequency = QDoubleSpinBox(self)
@@ -72,6 +79,21 @@ class OCFDForm(QWidget):
         self._height.setDecimals(3)
         self._height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._height.setValue(length_from_m(10.0, unit_system))
+
+        self._length_field = LengthField(
+            self._length,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._height_field = LengthField(
+            self._height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._length_field.configure(20.0)
+        self._height_field.configure(10.0)
 
         self._azimuth = QDoubleSpinBox(self)
         self._azimuth.setRange(0.0, 360.0)
@@ -216,13 +238,13 @@ class OCFDForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
-        apply_radius_units(self._translator, unit_system, self._radius)
-        apply_length_suffixes(
-            self._translator,
+        self._display_units = DisplayUnits(
             unit_system,
-            self._length,
-            self._height,
+            self._display_units.length_policy,
         )
+        apply_radius_units(self._translator, unit_system, self._radius)
+        self._length_field.set_display_units(self._display_units)
+        self._height_field.set_display_units(self._display_units)
         if parameters is not None:
             self.set_parameters(parameters)
 
@@ -230,9 +252,9 @@ class OCFDForm(QWidget):
         self._updating = True
         try:
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
-            self._length.setValue(length_from_m(parameters.total_length_m, self._unit_system))
+            self._length_field.configure(parameters.total_length_m)
             self._feed_ratio.setValue(parameters.feed_ratio * 100.0)
-            self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
+            self._height_field.configure(parameters.height_m)
             self._azimuth.setValue(parameters.azimuth_deg)
             self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
             self._transformer.setValue(parameters.transformer_ratio)
@@ -273,9 +295,9 @@ class OCFDForm(QWidget):
     def parameters(self) -> OCFDParameters:
         return OCFDParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
-            total_length_m=length_to_m(self._length.value(), self._unit_system),
+            total_length_m=self._length_field.value_m(),
             feed_ratio=self._feed_ratio.value() / 100.0,
-            height_m=length_to_m(self._height.value(), self._unit_system),
+            height_m=self._height_field.value_m(),
             azimuth_deg=self._azimuth.value(),
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),

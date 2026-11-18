@@ -27,17 +27,18 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     height_bounds,
     length_bounds,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 
 
@@ -50,11 +51,17 @@ class BeverageForm(QWidget):
         unit_system: UnitSystem,
         parameters: BeverageParameters | None = None,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._updating = False
         minimum_length, maximum_length = length_bounds(unit_system)
         minimum_height, maximum_height = height_bounds(unit_system)
@@ -73,6 +80,19 @@ class BeverageForm(QWidget):
         self._height.setRange(minimum_height, maximum_height)
         self._height.setDecimals(3)
         self._height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+
+        self._length_field = LengthField(
+            self._length,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._height_field = LengthField(
+            self._height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
 
         self._termination_enabled = QCheckBox(
             translator.t("beverage.termination_enabled"),
@@ -253,20 +273,16 @@ class BeverageForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
-        minimum_length, maximum_length = length_bounds(unit_system)
-        minimum_height, maximum_height = height_bounds(unit_system)
+        self._display_units = DisplayUnits(
+            unit_system,
+            self._display_units.length_policy,
+        )
         previous_updating = self._updating
         self._updating = True
         try:
             apply_radius_units(self._translator, unit_system, self._radius)
-            apply_length_suffixes(
-                self._translator,
-                unit_system,
-                self._length,
-                self._height,
-            )
-            self._length.setRange(minimum_length, maximum_length)
-            self._height.setRange(minimum_height, maximum_height)
+            self._length_field.set_display_units(self._display_units)
+            self._height_field.set_display_units(self._display_units)
         finally:
             self._updating = previous_updating
         if parameters is not None:
@@ -276,8 +292,8 @@ class BeverageForm(QWidget):
         self._updating = True
         try:
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
-            self._length.setValue(length_from_m(parameters.length_m, self._unit_system))
-            self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
+            self._length_field.configure(parameters.length_m)
+            self._height_field.configure(parameters.height_m)
             self._termination_enabled.setChecked(parameters.termination_enabled)
             self._termination_resistance.setValue(parameters.termination_resistance_ohm)
             self._azimuth.setValue(parameters.azimuth_deg)
@@ -326,8 +342,8 @@ class BeverageForm(QWidget):
     def parameters(self) -> BeverageParameters:
         return BeverageParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
-            length_m=length_to_m(self._length.value(), self._unit_system),
-            height_m=length_to_m(self._height.value(), self._unit_system),
+            length_m=self._length_field.value_m(),
+            height_m=self._height_field.value_m(),
             azimuth_deg=self._azimuth.value(),
             termination_enabled=self._termination_enabled.isChecked(),
             termination_resistance_ohm=self._termination_resistance.value(),

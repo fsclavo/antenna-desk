@@ -88,3 +88,25 @@ def test_ocfd_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
     assert restored.feed_ratio == pytest.approx(0.3)
     assert restored.azimuth_deg == pytest.approx(30.0)
     assert restored.transformer_ratio == pytest.approx(1.0)
+
+
+def test_ocfd_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.ocfd_form import OCFDForm
+
+    form = OCFDForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    form.set_parameters(
+        OCFDParameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=20.0,
+            height_m=0.25,
+        )
+    )
+
+    assert form._length_field.unit == "m"
+    assert form._height_field.unit == "cm"

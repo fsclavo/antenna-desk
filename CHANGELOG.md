@@ -99,6 +99,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   automatic units keeps the correct physical geometry; a 14 MHz vertical shows
   its radiator and radials in meters and the base/top-hat details in
   centimeters.
+- **OCFD and Beverage migrations.** OCFD length/height and Beverage
+  length/height now use `LengthFieldSpec`; automatic units keep a 20 m OCFD in
+  meters while a 0.25 m height shows in centimeters.
+- **Fan-dipole migration.** Apex height uses `LengthFieldSpec`, and the editable
+  element table now chooses one length unit per table and shows it in the
+  header. A 435 MHz fan shows short elements in centimeters while the 12 m
+  apex stays in meters.
 
 ### Changed
 

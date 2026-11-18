@@ -28,16 +28,19 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
+    LengthUnit,
     UnitSystem,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
+from .table_headers import fit_header_sections
 
 
 class FanDipoleForm(QWidget):
@@ -49,11 +52,18 @@ class FanDipoleForm(QWidget):
         unit_system: UnitSystem,
         parameters: FanDipoleParameters | None = None,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
+        self._table_unit: LengthUnit = self._display_units.table_unit(())
         self._updating = False
 
         self._frequency = QDoubleSpinBox(self)
@@ -66,6 +76,13 @@ class FanDipoleForm(QWidget):
         self._apex_height.setDecimals(3)
         self._apex_height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._apex_height.setValue(length_from_m(12.0, unit_system))
+        self._apex_height_field = LengthField(
+            self._apex_height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._apex_height_field.configure(12.0)
 
         self._azimuth = QDoubleSpinBox(self)
         self._azimuth.setRange(0.0, 360.0)
@@ -109,12 +126,7 @@ class FanDipoleForm(QWidget):
         )
 
         self._table = QTableWidget(0, 2, self)
-        self._table.setHorizontalHeaderLabels(
-            [
-                translator.t("fan.length"),
-                translator.t("fan.included_angle"),
-            ]
-        )
+        self._retranslate_table_headers()
         self._table.verticalHeader().setVisible(False)
         self._table.setAlternatingRowColors(True)
         self._table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
@@ -204,7 +216,7 @@ class FanDipoleForm(QWidget):
         row = self._table.rowCount()
         self._table.insertRow(row)
         values = (
-            f"{length_from_m(element.length_m, self._unit_system):.3f}",
+            self._table_value(element.length_m),
             f"{element.included_angle_deg:.1f}",
         )
         self._updating = True
@@ -234,12 +246,7 @@ class FanDipoleForm(QWidget):
     def retranslate(self) -> None:
         self._ground_presets.retranslate()
         self._labels.retranslate()
-        self._table.setHorizontalHeaderLabels(
-            [
-                self._translator.t("fan.length"),
-                self._translator.t("fan.included_angle"),
-            ]
-        )
+        self._retranslate_table_headers()
         self._add.setText(self._translator.t("fan.add_element"))
         self._remove.setText(self._translator.t("fan.remove_element"))
         retranslate_material_combo(self._material, self._translator)
@@ -250,13 +257,33 @@ class FanDipoleForm(QWidget):
         )
         self._update_geometry()
 
+    def _retranslate_table_headers(self) -> None:
+        self._table.setHorizontalHeaderLabels(
+            [
+                f"{self._translator.t('fan.length')} ({self._table_unit})",
+                self._translator.t("fan.included_angle"),
+            ]
+        )
+        fit_header_sections(self._table)
+
+    def _table_value(self, value_m: float) -> str:
+        value = value_m / self._display_units.meters_per_unit(self._table_unit)
+        return f"{value:.{self._display_units.decimals_for(self._table_unit)}f}"
+
+    def _table_value_m(self, text: str) -> float:
+        return float(text) * self._display_units.meters_per_unit(self._table_unit)
+
+    def _set_table_unit_from_elements(self, elements: tuple[FanElement, ...]) -> None:
+        self._table_unit = self._display_units.table_unit(element.length_m for element in elements)
+        self._retranslate_table_headers()
+
     def _element_from_row(self, row: int) -> FanElement:
         def text(column: int) -> str:
             cell = self._table.item(row, column)
             return cell.text().strip() if cell is not None else ""
 
         return FanElement(
-            length_m=length_to_m(float(text(0)), self._unit_system),
+            length_m=self._table_value_m(text(0)),
             included_angle_deg=float(text(1)),
         )
 
@@ -268,12 +295,12 @@ class FanDipoleForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
-        apply_radius_units(self._translator, unit_system, self._radius)
-        apply_length_suffixes(
-            self._translator,
+        self._display_units = DisplayUnits(
             unit_system,
-            self._apex_height,
+            self._display_units.length_policy,
         )
+        apply_radius_units(self._translator, unit_system, self._radius)
+        self._apex_height_field.set_display_units(self._display_units)
         if parameters is not None:
             self.set_parameters(parameters)
 
@@ -281,7 +308,7 @@ class FanDipoleForm(QWidget):
         self._updating = True
         try:
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
-            self._apex_height.setValue(length_from_m(parameters.apex_height_m, self._unit_system))
+            self._apex_height_field.configure(parameters.apex_height_m)
             self._azimuth.setValue(parameters.azimuth_deg)
             self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
             material_index = self._material.findData(parameters.material)
@@ -295,6 +322,7 @@ class FanDipoleForm(QWidget):
             if parameters.ground.conductivity_s_per_m is not None:
                 self._conductivity.setValue(parameters.ground.conductivity_s_per_m)
             self._table.setRowCount(0)
+            self._set_table_unit_from_elements(parameters.elements)
             for element in parameters.elements:
                 self._append_element(element)
         finally:
@@ -326,7 +354,7 @@ class FanDipoleForm(QWidget):
         return FanDipoleParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
             elements=elements,
-            apex_height_m=length_to_m(self._apex_height.value(), self._unit_system),
+            apex_height_m=self._apex_height_field.value_m(),
             azimuth_deg=self._azimuth.value(),
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),

@@ -76,3 +76,20 @@ def test_beverage_dialog_scales_to_the_requested_frequency(qtbot: QtBot) -> None
         wavelength_m(3_500_000.0),
         abs=1e-3,
     )
+
+
+def test_beverage_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.beverage import beverage_parameters
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.beverage_form import BeverageForm
+
+    form = BeverageForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    form.set_parameters(beverage_parameters(frequency_hz=7_100_000.0, height_m=0.25))
+
+    assert form._length_field.unit == "m"
+    assert form._height_field.unit == "cm"
