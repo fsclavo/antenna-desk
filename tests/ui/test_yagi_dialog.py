@@ -336,3 +336,17 @@ def test_yagi_dialog_warns_about_a_frequency_mismatch(qtbot: QtBot) -> None:
     dialog._table.item(1, 2).setText("5.000")
 
     assert dialog._form._frequency_warning.isHidden() is False
+
+
+def test_yagi_table_uses_cm_at_435_mhz(qtbot: QtBot) -> None:
+    dialog = YagiDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        frequency_hz=435_000_000.0,
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._form._table_unit == "cm"
+    assert "(cm)" in dialog._table.horizontalHeaderItem(1).text()
+    assert "(cm)" in dialog._table.horizontalHeaderItem(2).text()
+    assert dialog._table.item(0, 2).text().count(".") == 1

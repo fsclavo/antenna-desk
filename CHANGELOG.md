@@ -58,6 +58,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Hexbeam UHF small features.** The tip gap, feed gap, and element separation
   fields now use a smaller minimum and four decimals, so the 435 MHz published
   geometry can be entered without clamping.
+- **Adaptive Yagi element table.** The editable element table now chooses one
+  length unit per table from its largest position/length and shows it in the
+  header: meters at 145 MHz and centimeters at 435 MHz. Radius cells remain
+  mm/in. The table unit re-evaluates on frequency, preset, and model loads.
 
 ### Changed
 

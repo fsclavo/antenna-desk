@@ -457,7 +457,7 @@ unchanged. The normative rules and examples are in
 | U0 | Spec and ADR | Closed policy, examples, test matrix, and execution slices | S | none | done 2026-11-17 |
 | U1 | Shared formatter and Units preference | Pure `DisplayUnits`, automatic/fixed metric and imperial, QSettings, help | S–M | U0 | done 2026-11-17 |
 | U2 | Geometry scenes | Dimension labels, summaries, scale bar, insets, layout | M | U1 | done 2026-11-17 |
-| U3 | Family forms and editable tables | Per-field ranges/steps, table headers, Moxon/hexbeam range fixes | M–L | U1 | partial 2026-11-17 |
+| U3 | Family forms and editable tables | Per-field ranges/steps, table headers, Moxon/hexbeam range fixes, adaptive Yagi table | M–L | U1 | partial 2026-11-17 |
 | U4 | Optimization, synthesis, and auxiliary dialogs | Same policy across every length surface | M | U1, U3 | queued |
 | U5 | Construction sheet and human-readable reports | Design summary, wire schedule, BOM, title block, CSV/DXF exception | M–L | U1, U2, U3 | queued |
 | U6 | Documentation, help audit, and visual QA | User guide, changelog, EN/ES help, light/dark/scaling QA | S–M | U2–U5 | queued |

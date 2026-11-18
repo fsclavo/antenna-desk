@@ -38,6 +38,9 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
+    LengthUnit,
     UnitSystem,
     length_from_m,
     length_to_m,
@@ -66,11 +69,18 @@ class YagiForm(QWidget):
         unit_system: UnitSystem,
         parameters: YagiParameters | None = None,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self, family="yagi")
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.AUTO,
+        )
+        self._table_unit: LengthUnit = "m" if unit_system is UnitSystem.METRIC else "ft"
         self._updating = False
 
         self._frequency = QDoubleSpinBox(self)
@@ -140,14 +150,7 @@ class YagiForm(QWidget):
         )
 
         self._table = QTableWidget(0, 4, self)
-        self._table.setHorizontalHeaderLabels(
-            [
-                translator.t("yagi.element"),
-                translator.t("yagi.position"),
-                translator.t("yagi.length"),
-                translator.t("yagi.radius"),
-            ]
-        )
+        self._retranslate_table_headers()
         self._table.verticalHeader().setVisible(False)
         self._table.setAlternatingRowColors(True)
         self._table.setMinimumHeight(140)
@@ -292,18 +295,25 @@ class YagiForm(QWidget):
             self._emit_changed()
             return
         scale = previous / value
+        scaled: dict[tuple[int, int], float] = {}
+        for row in range(self._table.rowCount()):
+            for column in (1, 2):
+                cell = self._table.item(row, column)
+                if cell is None:
+                    continue
+                try:
+                    scaled[(row, column)] = self._table_value_m(cell.text()) * scale
+                except ValueError:
+                    continue
+        if scaled:
+            self._table_unit = self._display_units.table_unit(scaled.values())
+            self._retranslate_table_headers()
         self._updating = True
         try:
-            for row in range(self._table.rowCount()):
-                for column in (1, 2):
-                    cell = self._table.item(row, column)
-                    if cell is None:
-                        continue
-                    try:
-                        current_m = length_to_m(float(cell.text()), self._unit_system)
-                    except ValueError:
-                        continue
-                    cell.setText(f"{length_from_m(current_m * scale, self._unit_system):.3f}")
+            for (row, column), value_m in scaled.items():
+                cell = self._table.item(row, column)
+                if cell is not None:
+                    cell.setText(self._table_value(value_m))
         finally:
             self._updating = False
         self._refresh_driven_values()
@@ -347,18 +357,21 @@ class YagiForm(QWidget):
     def _selected_match_type(self) -> YagiMatchType:
         return YagiMatchType(str(self._match_type.currentData()))
 
-    def retranslate(self) -> None:
-        self._ground_presets.retranslate()
-        self._labels.retranslate()
+    def _retranslate_table_headers(self) -> None:
         self._table.setHorizontalHeaderLabels(
             [
                 self._translator.t("yagi.element"),
-                self._translator.t("yagi.position"),
-                self._translator.t("yagi.length"),
+                f"{self._translator.t('yagi.position')} ({self._table_unit})",
+                f"{self._translator.t('yagi.length')} ({self._table_unit})",
                 self._translator.t("yagi.radius"),
             ]
         )
         fit_header_sections(self._table)
+
+    def retranslate(self) -> None:
+        self._ground_presets.retranslate()
+        self._labels.retranslate()
+        self._retranslate_table_headers()
         self._add.setText(self._translator.t("yagi.add_element"))
         self._remove.setText(self._translator.t("yagi.remove_element"))
         self._preset.setText(self._translator.t("yagi.nbs_preset"))
@@ -414,7 +427,7 @@ class YagiForm(QWidget):
             if cell is None:
                 continue
             try:
-                lengths.append(length_to_m(float(cell.text()), self._unit_system))
+                lengths.append(self._table_value_m(cell.text()))
             except ValueError:
                 continue
         return max(lengths, default=0.0)
@@ -438,13 +451,25 @@ class YagiForm(QWidget):
     def _radius_m(self) -> float:
         return radius_to_m(self._radius.value(), self._unit_system)
 
+    def _table_value(self, value_m: float) -> str:
+        value = value_m / self._display_units.meters_per_unit(self._table_unit)
+        return f"{value:.{self._display_units.decimals_for(self._table_unit)}f}"
+
+    def _table_value_m(self, text: str) -> float:
+        return float(text) * self._display_units.meters_per_unit(self._table_unit)
+
+    def _set_table_unit_from_elements(self, elements: tuple[YagiElement, ...]) -> None:
+        values = [value for element in elements for value in (element.position_m, element.length_m)]
+        self._table_unit = self._display_units.table_unit(values)
+        self._retranslate_table_headers()
+
     def _append_element(self, element: YagiElement) -> None:
         row = self._table.rowCount()
         self._table.insertRow(row)
         values = (
             f"element-{row + 1}",
-            f"{length_from_m(element.position_m, self._unit_system):.3f}",
-            f"{length_from_m(element.length_m, self._unit_system):.3f}",
+            self._table_value(element.position_m),
+            self._table_value(element.length_m),
             f"{radius_from_m(element.radius_m, self._unit_system):.4f}",
         )
         previous_updating = self._updating
@@ -476,6 +501,7 @@ class YagiForm(QWidget):
             self._update_clearance_warning()
             return
         self._table.setRowCount(0)
+        self._set_table_unit_from_elements(yagi.elements)
         self._updating = True
         try:
             for element in yagi.elements:
@@ -510,7 +536,7 @@ class YagiForm(QWidget):
         if self._table.rowCount():
             cell = self._table.item(self._table.rowCount() - 1, 1)
             if cell is not None:
-                last_position = length_to_m(float(cell.text()), self._unit_system)
+                last_position = self._table_value_m(cell.text())
         self._append_element(
             YagiElement(
                 position_m=last_position + 0.2 * wavelength,
@@ -531,8 +557,8 @@ class YagiForm(QWidget):
             return cell.text().strip() if cell is not None else ""
 
         return YagiElement(
-            position_m=length_to_m(float(text(1)), self._unit_system),
-            length_m=length_to_m(float(text(2)), self._unit_system),
+            position_m=self._table_value_m(text(1)),
+            length_m=self._table_value_m(text(2)),
             radius_m=radius_to_m(float(text(3)), self._unit_system),
         )
 
@@ -544,6 +570,10 @@ class YagiForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
+        self._display_units = DisplayUnits(
+            unit_system,
+            self._display_units.length_policy,
+        )
         apply_radius_units(self._translator, unit_system, self._radius)
         apply_radius_units(self._translator, unit_system, self._taper_radius)
         apply_length_suffixes(
@@ -601,6 +631,7 @@ class YagiForm(QWidget):
                 length_from_m(parameters.match_spacing_m, self._unit_system)
             )
             self._table.setRowCount(0)
+            self._set_table_unit_from_elements(parameters.elements)
             for element in parameters.elements:
                 self._append_element(element)
             index = self._driven.findData(parameters.driven_index)
