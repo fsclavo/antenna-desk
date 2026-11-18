@@ -364,8 +364,9 @@ execution queue. UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7
 **Measure**, and 0.8 **Explore** releases are closed, and the 0.9 **Sustain**
 slice is complete. UX18–UX31 are implemented. UX32–UX38 were completed on
 2026-11-17. The UX queue is closed. The adaptive length display-units track
-(U1–U6) is queued next; the release plan decides whether it lands in 0.10.0 or
-a later release.
+(U1–U6) is implemented through U5, with U6 documentation/help complete and the
+manual visual checklist remaining; the release plan decides whether it lands in
+0.10.0 or a later release.
 
 Rules for this track:
 
