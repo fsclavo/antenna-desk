@@ -174,6 +174,14 @@ published bands must be added in the HexBeam editor; it does not invent a
 frequency-first multi-band layout. The estimator does not claim validated gain,
 front-to-back ratio, impedance, feed harness, or coupling between bands.
 
+A general multi-band estimator is not provided. The G3TXQ rows are
+band-specific and a single frequency-first input does not define which bands
+are wanted or how each row should be re-optimized. The honest path is the
+band-set preset; a future optional step may load the selected published rows at
+a requested primary frequency as a uniformly scaled reference stack (C7g), with
+reference-scaled confidence, tolerance, and explicit warnings. That is a
+starting-set scaler, not a new optimized design.
+
 ### J Pole and Slim Jim starting point
 
 M0UKD's published calculator defines the J pole as 0.75 λ overall, split into a

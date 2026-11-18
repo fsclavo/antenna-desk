@@ -47,6 +47,12 @@ external service and must not be invented or simulated into existence.
 | ~~C7a~~ | ~~Multi-band HexBeam domain and schema~~ | M | C6; ADR-0045 | **Done 2026-11-18:** [ADR-0045](ADR/0045-multiband-hexbeam.md) accepted. `HexbeamBand`, optional `bands`, shared frame with linear per-band radius, one driven band at a time, schema 55 with no-value-rewrite migration, optimizer and frequency-scaling unavailable reasons. Domain, persistence, migration, and registry tests pass; full gate 3,542 passed, 1 skipped at C7a; no solver change. |
 | ~~C7b~~ | ~~Multi-band HexBeam preset, editor, scene, and reports~~ | L | C7a | **Done 2026-11-18:** published 20/17/15/12/10 preset and 218/412 reconciliation; band checkboxes and read-only per-band table; nested scene rendering with the primary band emphasized and a band note; per-band summary/construction rows; EN/ES help; golden scenes updated. Multi-band optimization/scaling remain explicitly unavailable. |
 | ~~C7c~~ | ~~Multi-band HexBeam validation and optimizer scope~~ | M | C7b | **Done 2026-11-18:** multi-band optimization remains explicitly unavailable with a translated reason; feed-harness, inter-band coupling, and balun limitations are visible in help/evidence/report rows; real NEC2C 20/15/10 m runs completed with one driven source per analysis and finite pattern results; validation/evidence docs updated; full gate 3,553 passed, 1 skipped. |
+| C7d | Selected-band HexBeam optimizer | M–L | C7c; family-optimizer ADR | Optimize one selected band's driver/reflector halves, tip gap, and height while the other bands stay fixed; enforce shared-frame fit and band-collision constraints; expose the target band in the dialog; deterministic tests and solver QA. Keep full multi-band optimization unavailable. |
+| C7e | Selectable HexBeam band dimensions and scene highlight | M | C7c | Add a transient active-band selector; dimension the selected band, emphasize it in the scene, and keep the other bands visible; update the band note, help, golden scenes, and tests. No schema change. |
+| C7f | Editable HexBeam band table and custom band sets | M | C7c | Replace the read-only published table with validated editable rows; add/remove bands within 1–5; preserve the largest-band-first rule; custom labels/frequencies; EN/ES help; no silent value migration. |
+| C7g | HexBeam band-aware starting set and scaling policy | S–M | C7c; source policy | Offer the published band set at a requested primary frequency with uniform whole-stack scaling only when the source row remains valid; label it reference-scaled, show tolerance/warnings, and do not present it as a general multiband estimator or optimizer. |
+| C7h | Optional 6 m HexBeam band | S | C7c; published 6 m row | Add the published 6 m driver/reflector/tip-spacer row and vertical offset, with the same frame-fit validation, editor option, reports, and evidence note. No performance claim. |
+| C7i | HexBeam feed harness and inter-band coupling | L | traceable harness data or measurement | Model the parallel coax feed harness/jumper lengths and inter-band coupling, or keep it explicitly unavailable; no invented values. Blocked until a source or measurement exists. |
 | ~~E1~~ | ~~Raise the simulation timeout default to 180 s and expose an override~~ | S | none | **Done 2026-11-08:** `SimulationSpec.timeout_s` defaults to 180 s; **Advanced simulation → Solver** exposes a 10–3600 s override applied to single runs, band analysis, and family optimizations; tests cover the default and override. |
 | ~~E2~~ | ~~Parallelize independent optimizer evaluations with a bounded worker pool~~ | M–L | E1 | **Done 2026-11-08:** the engine accepts an optional batch evaluator and the command runs 1–8 bounded workers (dialog default `min(4, max(1, CPU − 1))`, sequential when 1). Candidate order and results are deterministic for a fixed configuration, cancellation reaches every in-flight solver process, and single-solve behavior is unchanged. |
 | ~~E3~~ | ~~Parallelize band analysis with the same bounded pool~~ | M | E2 | **Done 2026-11-08:** bands run in bounded batches (dialog 1–4, command 1–8, sequential default) with results and progress in selection order; cancellation reaches running bands and keeps completed results. The real `nec2c` benchmark measured **1.3–1.8×** speedup with four workers, +14 MiB parent peak RSS, and 2.4–2.8 MiB per solver child; see `docs/MULTIBAND_PERFORMANCE.md`. Re-measured after E5 on 2026-11-10: the sequential path is 10–20 % faster and the four-worker speedup is **1.2–1.5×**. |
@@ -560,10 +566,37 @@ and every wire point inside the 3.302 m turning radius. C7 adds the published
   family/editor/report scaffolding remains valid.
 
 The detailed reconstruction, source reconciliation, and file-level test matrix
-are in [`spikes/c6-hexbeam-geometry.md`](spikes/c6-hexbeam-geometry.md). C6 is
-closed; C7 remains queued.
+are in [`spikes/c6-hexbeam-geometry.md`](spikes/c6-hexbeam-geometry.md). C6 and
+C7 are closed; the optional C7d-C7i follow-ups are queued.
 
-### C7 acceptance
+### C7 acceptance (implemented 2026-11-18)
+
+- `HexbeamParameters` carries a shared frame plus 1-5 per-band records; schema
+  migration maps an existing single-band design to one band.
+- An ADR records the shared-frame/band model, the per-band feed approximation,
+  and the selected-band optimizer scope.
+- The standard preset is the published G3TXQ 20/17/15/12/10 table with its
+  vertical offsets; no invented per-band values. C7b reconciled the single and
+  multi-band 20 m row to 218/412/24/130 and updated the reference library,
+  evidence, tests, and docs together.
+- The editor derives the band count from the selected set; it does not infer an
+  arbitrary prefix of the published table. It exposes **Load starting
+  dimensions** and a read-only per-band table. Editable per-band rows and
+  arbitrary custom band sets are deferred to C7f.
+- Scene draws all bands on the shared frame with the primary band emphasized and
+  a band note; selectable-band dimensions/highlight are deferred to C7e.
+  Reports and the construction sheet include per-band rows.
+- Feed model is explicit. One selected band is driven per analysis and the
+  other bands are passive; the real coax harness, coupling, and balun are
+  limitations.
+- NEC2C integration covers one driven band at a time. Multi-band optimization
+  remains unavailable with a reason; a selected-band optimizer is deferred to
+  C7d.
+- Evidence stays B for published starting dimensions; performance is not
+  claimed. Update `VALIDATION_PLAN.md`, `EVIDENCE_AUDIT.md`, user guide, and
+  `CHANGELOG.md`.
+
+### C7 implementation notes
 
 C7a is implemented on 2026-11-18: [ADR-0045](ADR/0045-multiband-hexbeam.md)
 records the shared-frame model, per-band radius, one-driven-band feed, schema
@@ -588,28 +621,28 @@ and 10 m. **Estimate Dimensions...** is enabled with a single-band
 reference-scaled starting design. Multi-band optimization remains explicitly
 unavailable.
 
-- `HexbeamParameters` carries a shared frame plus 1-5 per-band records; schema
-  migration maps an existing single-band design to one band.
-- An ADR records the shared-frame/band model, the per-band feed approximation,
-  and the selected-band optimizer scope.
-- The standard preset is the published G3TXQ 20/17/15/12/10 table with its
-  vertical offsets; no invented per-band values. C7b reconciled the single and
-  multi-band 20 m row to 218/412/24/130 and updated the reference library,
-  evidence, tests, and docs together.
-- The editor selects the actual band set, and the count follows the selection;
-  it does not infer an arbitrary prefix of the published table.
-- Editor supports add/remove bands and **Load starting dimensions**; EN/ES help
-  and the help coverage manifest include every new field and action.
-- Scene draws all bands on the shared frame, highlights the selected band, and
-  dimensions per band; reports and construction sheet include a per-band table.
-- Feed model is explicit. One selected band is driven per analysis and the
-  other bands are passive; the real coax harness, coupling, and balun are
-  limitations.
-- NEC2C integration covers multiple driven bands. The optimizer exposes the
-  selected band only; full multi-band optimization is unavailable with a reason.
-- Evidence stays B for published starting dimensions; performance is not
-  claimed. Update `VALIDATION_PLAN.md`, `EVIDENCE_AUDIT.md`, user guide, and
-  `CHANGELOG.md`.
+### Optional HexBeam follow-ups (queued 2026-11-18)
+
+- **C7d — selected-band optimizer.** Optimize one band at a time with the other
+  bands fixed; do not pretend to optimize the whole stack.
+- **C7e — active-band dimensions and scene highlight.** Add a transient band
+  selector for cotas and emphasis without changing the persisted design.
+- **C7f — editable per-band table and custom band sets.** Replace the read-only
+  published table with validated rows and add/remove support.
+- **C7g — band-aware starting set / whole-stack scaling.** A frequency-first
+  multiband start is possible only as a *scaled reference stack*, not as a new
+  optimized design. The published G3TXQ rows are band-specific; a single
+  frequency-first input does not define which bands to use or how to
+  re-optimize each row. Recommendation: keep **Estimate Dimensions** as a
+  single-band starting helper and use the band-set editor for the standard
+  stack. If a custom primary frequency is needed, scale the whole stack
+  uniformly, label it reference-scaled, show tolerance/warnings, and never
+  claim validated multiband gain/SWR/front-to-back.
+- **C7h — optional 6 m band.** Add the published 6 m row when a source-backed
+  row is carried through the same frame-fit tests.
+- **C7i — feed harness and inter-band coupling.** Blocked until a traceable
+  harness model or measurement exists; the current one-driven-band model keeps
+  the other bands passive.
 
 ## Adaptive length display units (queued 2026-11-17)
 
