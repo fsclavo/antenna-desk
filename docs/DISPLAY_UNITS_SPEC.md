@@ -3,8 +3,8 @@
 - **Status:** Accepted
 - **Date:** 2026-11-17
 - **Decision:** [ADR-0044](ADR/0044-adaptive-length-display-units.md)
-- **Execution:** U0–U2 complete; U3 partial (range fixes); U3 remainder–U6
-  queued in [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md)
+- **Execution:** U0–U5 complete; U6 documentation, help audit, and manual
+  visual QA in progress in [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md)
 
 ## Purpose
 
@@ -289,4 +289,5 @@ design has a genuine 4 cm gap, the same policy shows it as `4 cm`.
 | U6 | User guide, changelog, help audit, visual QA, full gate | U2–U5 |
 
 U2 and U3 may proceed in parallel after U1. U5 must not start until the scene
-and form policies are stable.
+and form policies are stable. All slices through U5 are implemented; U6 closes
+the track.

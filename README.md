@@ -217,7 +217,8 @@ truth for each topic, every ADR, and the archived plans.
   loads, and simulated result.
 - CSV, PNG, SVG, PDF, and layered DXF export for results, patterns, and
   geometry, plus self-contained HTML/PDF reports.
-- English and Spanish UI, plus metric and imperial presentation units.
+- English and Spanish UI, plus adaptive metric and imperial presentation units
+  with automatic or fixed policy.
 - Immutable domain model for units, geometry, conductors, feed points, ground
   models, environments, wire dipoles, folded dipoles, and regular-polygon
   loops.

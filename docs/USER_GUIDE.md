@@ -2328,9 +2328,13 @@ theme, and Normal font size.
 
 Automatic length units follow each value: mm below 1 cm, cm below 1 m, and m at
 1 m or above in metric; inches below 1 ft and feet above in imperial. Fixed
-meters or feet apply one length unit everywhere. The shared policy is being
-rolled out across forms, scenes, and reports; until that wiring lands, some
-surfaces may still show the previous fixed meters/feet presentation.
+meters or feet apply one length unit everywhere. Scalar fields choose their unit
+from the value; editable and report tables choose one unit per table and show it
+in the header; construction notes choose one unit from their largest length.
+Wire radius and diameter stay in mm/in. The policy applies to every family
+editor, generator dialog, optimization/synthesis/auxiliary dialog, geometry
+scene, construction sheet, and HTML/PDF report. CSV and project files stay in
+canonical meters/mm, and DXF keeps meter coordinates with `$INSUNITS=6`.
 
 Preferences are saved and applied at startup. **System** follows the
 operating-system palette detected at startup; **Light** and **Dark** apply a

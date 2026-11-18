@@ -64,6 +64,8 @@ of truth before adding another planning document.
   candidate.
 - [`QA_PASS_2026-11-16.md`](QA_PASS_2026-11-16.md) — post-0.8.0 stabilization,
   LPDA feed classification fix, and P7/D4 decision.
+- [`QA_PASS_2026-11-18.md`](QA_PASS_2026-11-18.md) — adaptive-units automated
+  gate and the remaining manual light/dark/scaling checklist.
 - [`RELEASE_QA_0.7.0.md`](RELEASE_QA_0.7.0.md) — 0.7.0 release checks,
   artifacts, and known limitations.
 - [`RELEASE_QA_0.7.1.md`](RELEASE_QA_0.7.1.md) — 0.7.1 Yagi table patch
