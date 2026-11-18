@@ -11,7 +11,14 @@ from ...antennas.dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
 from ..constraints import ConstraintViolation
 from ..descriptor import AntennaOptimizerDescriptor, FamilyOptimizationObjective
 from ..variables import OptimizationVariable
-from .common import around, collect, non_negative_violation, positive_violation, radius_around
+from .common import (
+    around,
+    collect,
+    non_negative_violation,
+    positive_violation,
+    radius_around,
+    relative_step,
+)
 
 _OBJECTIVES = frozenset(
     {
@@ -28,7 +35,7 @@ _OBJECTIVES = frozenset(
 
 
 def dipole_descriptor(parameters: DipoleParameters) -> AntennaOptimizerDescriptor:
-    length_low, length_high = around(parameters.total_length_m, 0.15, minimum=0.1)
+    length_low, length_high = around(parameters.total_length_m, 0.15, minimum=1e-6)
     height_low, height_high = around(parameters.height_m, 0.25, minimum=0.0)
     radius_low, radius_high = radius_around(parameters.wire_radius_m)
     variables = (
@@ -38,7 +45,7 @@ def dipole_descriptor(parameters: DipoleParameters) -> AntennaOptimizerDescripto
             group="optimize.group.geometry",
             minimum=length_low,
             maximum=length_high,
-            step=0.01,
+            step=relative_step(length_low, length_high),
         ),
         OptimizationVariable(
             name="height_m",
@@ -46,7 +53,7 @@ def dipole_descriptor(parameters: DipoleParameters) -> AntennaOptimizerDescripto
             group="optimize.group.geometry",
             minimum=height_low,
             maximum=height_high,
-            step=0.01,
+            step=relative_step(height_low, height_high),
         ),
         OptimizationVariable(
             name="wire_radius_m",

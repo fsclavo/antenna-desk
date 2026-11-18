@@ -12,7 +12,15 @@ from ...antennas.yagi import ANTENNA_TYPE_YAGI, YagiMatchType, YagiParameters
 from ..constraints import ConstraintViolation
 from ..descriptor import AntennaOptimizerDescriptor, FamilyOptimizationObjective
 from ..variables import OptimizationVariable, VariableKind
-from .common import around, collect, non_negative_violation, positive_violation, violation
+from .common import (
+    around,
+    collect,
+    conductor_floor_m,
+    non_negative_violation,
+    positive_violation,
+    relative_step,
+    violation,
+)
 
 _OBJECTIVES = frozenset(
     {
@@ -43,7 +51,11 @@ def yagi_descriptor(parameters: YagiParameters) -> AntennaOptimizerDescriptor:
     max_radius = max(element.radius_m for element in elements)
 
     for index, element in enumerate(elements):
-        low, high = around(element.length_m, 0.12, minimum=0.05)
+        low, high = around(
+            element.length_m,
+            0.12,
+            minimum=conductor_floor_m(max_radius, factor=4.0),
+        )
         name = f"length_{index}"
         variables.append(
             OptimizationVariable(
@@ -52,12 +64,12 @@ def yagi_descriptor(parameters: YagiParameters) -> AntennaOptimizerDescriptor:
                 "optimize.group.geometry",
                 low,
                 high,
-                step=0.01,
+                step=relative_step(low, high),
             )
         )
         initial[name] = element.length_m
 
-    min_gap = max(4.0 * max_radius, 0.001)
+    min_gap = conductor_floor_m(max_radius, factor=4.0)
     for index in range(1, len(elements)):
         current_gap = elements[index].position_m - elements[index - 1].position_m
         low, high = around(current_gap, 0.3, minimum=min_gap)
@@ -69,12 +81,12 @@ def yagi_descriptor(parameters: YagiParameters) -> AntennaOptimizerDescriptor:
                 "optimize.group.geometry",
                 low,
                 high,
-                step=0.01,
+                step=relative_step(low, high),
             )
         )
         initial[name] = current_gap
 
-    height_low, height_high = around(parameters.height_m, 0.3, minimum=0.1)
+    height_low, height_high = around(parameters.height_m, 0.3, minimum=0.0)
     variables.append(
         OptimizationVariable(
             "height_m",
@@ -82,7 +94,7 @@ def yagi_descriptor(parameters: YagiParameters) -> AntennaOptimizerDescriptor:
             "optimize.group.geometry",
             height_low,
             height_high,
-            step=0.01,
+            step=relative_step(height_low, height_high),
         )
     )
     initial["height_m"] = parameters.height_m
@@ -100,7 +112,7 @@ def yagi_descriptor(parameters: YagiParameters) -> AntennaOptimizerDescriptor:
                 "optimize.group.geometry",
                 fold_low,
                 fold_high,
-                step=0.001,
+                step=relative_step(fold_low, fold_high),
             )
         )
         initial["driven_fold_spacing_m"] = parameters.driven_fold_spacing_m
@@ -133,7 +145,7 @@ def yagi_descriptor(parameters: YagiParameters) -> AntennaOptimizerDescriptor:
                 "optimize.group.loads",
                 length_low,
                 length_high,
-                step=0.001,
+                step=relative_step(length_low, length_high),
             )
         )
         initial["match_length_m"] = parameters.match_length_m
@@ -149,7 +161,7 @@ def yagi_descriptor(parameters: YagiParameters) -> AntennaOptimizerDescriptor:
                 "optimize.group.loads",
                 spacing_low,
                 spacing_high,
-                step=0.001,
+                step=relative_step(spacing_low, spacing_high),
             )
         )
         initial["match_spacing_m"] = parameters.match_spacing_m

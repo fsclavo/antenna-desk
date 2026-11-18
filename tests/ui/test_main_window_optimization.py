@@ -161,7 +161,7 @@ def test_optimize_biquad_applies_to_the_biquad_form(
     window._dirty = False
 
 
-def test_optimize_tooltip_explains_an_out_of_bounds_hf_design(
+def test_optimize_tooltip_explains_a_physical_bound_violation(
     window: MainWindow,
 ) -> None:
     from antennadesk.domain.antennas.moxon import MoxonParameters
@@ -172,17 +172,17 @@ def test_optimize_tooltip_explains_an_out_of_bounds_hf_design(
         frequency_hz=2_400_000_000.0,
         width_m=25.0 * foot * scale,
         depth_m=9.57 * foot * scale,
-        reflector_tip_m=4.85 * foot * scale,
-        driven_tip_m=4.00 * foot * scale,
+        reflector_tip_m=0.0002,
+        driven_tip_m=0.0002,
         height_m=1.0,
-        wire_radius_m=0.0005,
+        wire_radius_m=0.001,
     )
     use_parameters(window, parameters)
 
     assert window._optimize_action.isEnabled() is False
     tooltip = window._optimize_action.toolTip()
     assert "outside" in tooltip.lower()
-    assert "width_m" in tooltip
+    assert "reflector_tip_m" in tooltip
     window._dirty = False
 
 

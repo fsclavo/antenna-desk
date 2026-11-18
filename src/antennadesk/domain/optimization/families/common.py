@@ -30,7 +30,14 @@ def around(
     minimum: float = 0.0,
     maximum: float | None = None,
 ) -> tuple[float, float]:
-    """Return a practical search interval around the current value."""
+    """Return a search interval relative to the current value.
+
+    The current value carries the family's frequency scaling, so a fixed
+    metre floor must not move a valid VHF/UHF design. ``minimum`` is reserved
+    for a genuine physical or numerical floor; if the current value is below
+    it, the descriptor invariant reports the design as unsupported instead of
+    clamping the search to a different antenna.
+    """
 
     low = max(minimum, value * (1.0 - fraction))
     high = value * (1.0 + fraction)
@@ -43,6 +50,28 @@ def around(
 
 def radius_around(value: float) -> tuple[float, float]:
     return around(value, 0.5, minimum=1e-4, maximum=0.02)
+
+
+def conductor_floor_m(wire_radius_m: float, *, factor: float = 2.0) -> float:
+    """Return a positive conductor-clearance floor for a gap or spacing.
+
+    The 1 µm term is a numerical floor, not a construction reference. The
+    ``factor`` is the number of radii the gap must clear; the default is one
+    conductor diameter.
+    """
+
+    return max(factor * abs(wire_radius_m) + 1e-9, 1e-6)
+
+
+def relative_step(low: float, high: float) -> float:
+    """Return a numerical step scaled to the search span.
+
+    A fixed 10 mm step is meaningless for a 20 mm UHF element and unnecessarily
+    fine for a 20 m dipole. The local search uses the same span-normalized step
+    that the optimizer table displays.
+    """
+
+    return max((high - low) / 100.0, 1e-6)
 
 
 def violation(name: str, amount: float, message_key: str) -> ConstraintViolation:

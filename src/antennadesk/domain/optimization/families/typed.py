@@ -56,9 +56,11 @@ from .common import (
     COMMON_OBJECTIVES,
     around,
     collect,
+    conductor_floor_m,
     non_negative_violation,
     positive_violation,
     radius_around,
+    relative_step,
     violation,
 )
 
@@ -69,10 +71,17 @@ def _length(
     group: str,
     value: float,
     fraction: float = 0.2,
-    minimum: float = 0.1,
+    minimum: float = 1e-6,
 ) -> OptimizationVariable:
     low, high = around(value, fraction, minimum=minimum)
-    return OptimizationVariable(name, label_key, group, low, high, step=0.01)
+    return OptimizationVariable(
+        name,
+        label_key,
+        group,
+        low,
+        high,
+        step=relative_step(low, high),
+    )
 
 
 def _radius(value: float) -> OptimizationVariable:
@@ -248,7 +257,12 @@ def folded_dipole_descriptor(parameters: FoldedDipoleParameters) -> AntennaOptim
             "height_m", "field.height", "optimize.group.geometry", parameters.height_m, 0.25, 0.0
         ),
         _length(
-            "spacing_m", "field.spacing", "optimize.group.geometry", parameters.spacing_m, 0.5, 0.01
+            "spacing_m",
+            "field.spacing",
+            "optimize.group.geometry",
+            parameters.spacing_m,
+            0.5,
+            conductor_floor_m(parameters.wire_radius_m),
         ),
         _radius(parameters.wire_radius_m),
         _choice_ratio(
@@ -372,7 +386,7 @@ def inverted_v_descriptor(parameters: InvertedVParameters) -> AntennaOptimizerDe
             "optimize.group.geometry",
             parameters.apex_height_m,
             0.25,
-            0.1,
+            0.0,
         ),
         OptimizationVariable(
             "included_angle_deg",
@@ -494,7 +508,7 @@ def j_pole_descriptor(parameters: JPoleParameters) -> AntennaOptimizerDescriptor
             "optimize.group.geometry",
             parameters.spacing_m,
             0.5,
-            0.01,
+            conductor_floor_m(parameters.wire_radius_m),
         ),
         _length(
             "feed_offset_m",
@@ -510,13 +524,20 @@ def j_pole_descriptor(parameters: JPoleParameters) -> AntennaOptimizerDescriptor
             "optimize.group.geometry",
             parameters.base_height_m,
             0.5,
-            0.01,
+            0.0,
         ),
         _radius(parameters.wire_radius_m),
     ]
     if parameters.folded:
         variables.append(
-            _length("gap_m", "j_pole.gap", "optimize.group.geometry", parameters.gap_m, 0.5, 0.001)
+            _length(
+                "gap_m",
+                "j_pole.gap",
+                "optimize.group.geometry",
+                parameters.gap_m,
+                0.5,
+                conductor_floor_m(parameters.wire_radius_m),
+            )
         )
     initial = {
         "radiator_height_m": parameters.radiator_height_m,
@@ -588,7 +609,6 @@ def ringo_descriptor(parameters: RingoParameters) -> AntennaOptimizerDescriptor:
             "optimize.group.geometry",
             parameters.ring_diameter_m,
             0.5,
-            0.01,
         ),
         _length(
             "ring_height_m",
@@ -596,7 +616,6 @@ def ringo_descriptor(parameters: RingoParameters) -> AntennaOptimizerDescriptor:
             "optimize.group.geometry",
             parameters.ring_height_m,
             0.5,
-            0.01,
         ),
         _radius(parameters.wire_radius_m),
     )
@@ -703,7 +722,7 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
                 "optimize.group.geometry",
                 parameters.bend_vertical_length_m,
                 0.15,
-                minimum=max(parameters.feed_section_length_m + 0.01, 0.1),
+                minimum=parameters.feed_section_length_m + 0.01,
             )
         )
     else:
@@ -741,7 +760,7 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
         low, high = around(
             parameters.loading_coil_offset_m,
             0.15,
-            minimum=0.1,
+            minimum=0.0,
         )
         variables.append(
             OptimizationVariable(
@@ -750,7 +769,7 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
                 "optimize.group.loads",
                 low,
                 high,
-                step=0.01,
+                step=relative_step(low, high),
             )
         )
         initial["loading_coil_offset_m"] = parameters.loading_coil_offset_m
@@ -811,7 +830,7 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
             )
             initial[name] = value
     if parameters.counterpoise_active or parameters.coax_shield_active:
-        low, high = around(parameters.counterpoise_length_m, 0.3, minimum=0.1)
+        low, high = around(parameters.counterpoise_length_m, 0.3, minimum=1e-6)
         variables.append(
             OptimizationVariable(
                 "counterpoise_length_m",
@@ -823,7 +842,7 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
                 "optimize.group.loads",
                 low,
                 high,
-                step=0.01,
+                step=relative_step(low, high),
             )
         )
         initial["counterpoise_length_m"] = parameters.counterpoise_length_m
@@ -836,7 +855,7 @@ def endfed_descriptor(parameters: EndFedParameters) -> AntennaOptimizerDescripto
                     "optimize.group.loads",
                     low,
                     high,
-                    step=0.01,
+                    step=relative_step(low, high),
                 )
             )
             initial["counterpoise_height_m"] = parameters.counterpoise_height_m
@@ -1093,7 +1112,7 @@ def fan_dipole_descriptor(parameters: FanDipoleParameters) -> AntennaOptimizerDe
     variables: list[OptimizationVariable] = []
     initial: dict[str, float] = {}
     for index, element in enumerate(parameters.elements):
-        length_low, length_high = around(element.length_m, 0.15, minimum=0.1)
+        length_low, length_high = around(element.length_m, 0.15, minimum=1e-6)
         variables.append(
             OptimizationVariable(
                 f"length_{index}",
@@ -1101,7 +1120,7 @@ def fan_dipole_descriptor(parameters: FanDipoleParameters) -> AntennaOptimizerDe
                 "optimize.group.geometry",
                 length_low,
                 length_high,
-                step=0.01,
+                step=relative_step(length_low, length_high),
             )
         )
         initial[f"length_{index}"] = element.length_m
@@ -1119,7 +1138,7 @@ def fan_dipole_descriptor(parameters: FanDipoleParameters) -> AntennaOptimizerDe
             )
         )
         initial[f"angle_{index}"] = element.included_angle_deg
-    apex_low, apex_high = around(parameters.apex_height_m, 0.25, minimum=0.5)
+    apex_low, apex_high = around(parameters.apex_height_m, 0.25, minimum=0.0)
     variables.append(
         OptimizationVariable(
             "apex_height_m",
@@ -1127,7 +1146,7 @@ def fan_dipole_descriptor(parameters: FanDipoleParameters) -> AntennaOptimizerDe
             "optimize.group.geometry",
             apex_low,
             apex_high,
-            step=0.01,
+            step=relative_step(apex_low, apex_high),
         )
     )
     initial["apex_height_m"] = parameters.apex_height_m
@@ -1270,7 +1289,12 @@ def t2fd_descriptor(parameters: T2FDParameters) -> AntennaOptimizerDescriptor:
     variables = (
         _length("length_m", "t2fd.length", "optimize.group.geometry", parameters.length_m, 0.15),
         _length(
-            "spacing_m", "t2fd.spacing", "optimize.group.geometry", parameters.spacing_m, 0.3, 0.01
+            "spacing_m",
+            "t2fd.spacing",
+            "optimize.group.geometry",
+            parameters.spacing_m,
+            0.3,
+            conductor_floor_m(parameters.wire_radius_m),
         ),
         _length(
             "height_m", "field.height", "optimize.group.geometry", parameters.height_m, 0.25, 0.0
@@ -1386,7 +1410,6 @@ def transmission_line_doublet_descriptor(
             "optimize.group.loads",
             parameters.line_length_m,
             0.25,
-            0.1,
         ),
         OptimizationVariable(
             "line_velocity_factor",
@@ -1464,7 +1487,7 @@ def zepp_descriptor(parameters: ZeppParameters) -> AntennaOptimizerDescriptor:
             "optimize.group.geometry",
             parameters.spacing_m,
             0.5,
-            max(0.002, 2.0 * parameters.wire_radius_m + 0.001),
+            conductor_floor_m(parameters.wire_radius_m),
         ),
         _length(
             "base_height_m",
@@ -1472,7 +1495,7 @@ def zepp_descriptor(parameters: ZeppParameters) -> AntennaOptimizerDescriptor:
             "optimize.group.geometry",
             parameters.base_height_m,
             0.5,
-            0.01,
+            0.0,
         ),
         _radius(parameters.wire_radius_m),
     )
@@ -1617,7 +1640,6 @@ def beverage_descriptor(parameters: BeverageParameters) -> AntennaOptimizerDescr
             "optimize.group.geometry",
             parameters.length_m,
             0.2,
-            0.1,
         ),
         _length(
             "height_m",
@@ -1625,7 +1647,6 @@ def beverage_descriptor(parameters: BeverageParameters) -> AntennaOptimizerDescr
             "optimize.group.geometry",
             parameters.height_m,
             0.5,
-            0.1,
         ),
     ]
     if parameters.termination_enabled:
@@ -1699,7 +1720,6 @@ def loaded_dipole_descriptor(
                 "optimize.group.geometry",
                 parameters.total_length_m,
                 0.15,
-                0.1,
             )
         )
     variables.extend(
@@ -1710,7 +1730,7 @@ def loaded_dipole_descriptor(
                 "optimize.group.geometry",
                 parameters.link_offset_m,
                 0.5,
-                0.01,
+                0.0,
             ),
             _length(
                 "height_m",
@@ -1718,7 +1738,7 @@ def loaded_dipole_descriptor(
                 "optimize.group.geometry",
                 parameters.height_m,
                 0.5,
-                0.1,
+                0.0,
             ),
         ]
     )
@@ -1839,7 +1859,6 @@ def phased_vertical_descriptor(
             "optimize.group.geometry",
             parameters.height_m,
             0.25,
-            0.5,
         ),
         _length(
             "spacing_m",
@@ -1847,7 +1866,7 @@ def phased_vertical_descriptor(
             "optimize.group.geometry",
             parameters.spacing_m,
             0.5,
-            0.05,
+            conductor_floor_m(parameters.wire_radius_m),
         ),
         _length(
             "base_height_m",
@@ -1884,7 +1903,6 @@ def phased_vertical_descriptor(
                 "optimize.group.geometry",
                 parameters.radial_length_m,
                 0.5,
-                0.1,
             )
         )
     variables.append(_radius(parameters.wire_radius_m))
@@ -1971,7 +1989,7 @@ def discone_descriptor(parameters: DisconeParameters) -> AntennaOptimizerDescrip
             "optimize.group.geometry",
             parameters.cone_height_m,
             0.3,
-            0.05,
+            conductor_floor_m(parameters.wire_radius_m),
         ),
         _length(
             "cone_radius_m",
@@ -1979,7 +1997,7 @@ def discone_descriptor(parameters: DisconeParameters) -> AntennaOptimizerDescrip
             "optimize.group.geometry",
             parameters.cone_radius_m,
             0.3,
-            0.05,
+            conductor_floor_m(parameters.wire_radius_m),
         ),
         _length(
             "disc_radius_m",
@@ -1987,7 +2005,7 @@ def discone_descriptor(parameters: DisconeParameters) -> AntennaOptimizerDescrip
             "optimize.group.geometry",
             parameters.disc_radius_m,
             0.3,
-            0.05,
+            conductor_floor_m(parameters.wire_radius_m),
         ),
         _length(
             "base_height_m",
@@ -2063,7 +2081,6 @@ def hexbeam_descriptor(parameters: HexbeamParameters) -> AntennaOptimizerDescrip
             "optimize.group.geometry",
             parameters.driver_half_length_m,
             0.12,
-            0.05,
         ),
         _length(
             "reflector_half_length_m",
@@ -2071,7 +2088,6 @@ def hexbeam_descriptor(parameters: HexbeamParameters) -> AntennaOptimizerDescrip
             "optimize.group.geometry",
             parameters.reflector_half_length_m,
             0.12,
-            0.05,
         ),
         _length(
             "turning_radius_m",
@@ -2079,7 +2095,6 @@ def hexbeam_descriptor(parameters: HexbeamParameters) -> AntennaOptimizerDescrip
             "optimize.group.geometry",
             parameters.turning_radius_m,
             0.2,
-            0.05,
         ),
         _length(
             "tip_gap_m",
@@ -2087,7 +2102,7 @@ def hexbeam_descriptor(parameters: HexbeamParameters) -> AntennaOptimizerDescrip
             "optimize.group.geometry",
             parameters.tip_gap_m,
             0.3,
-            0.01,
+            conductor_floor_m(parameters.wire_radius_m),
         ),
         _length(
             "height_m",
@@ -2226,7 +2241,6 @@ def hexbeam_band_descriptor(
             "optimize.group.geometry",
             band.driver_half_length_m,
             0.12,
-            0.05,
         ),
         _length(
             "reflector_half_length_m",
@@ -2234,7 +2248,6 @@ def hexbeam_band_descriptor(
             "optimize.group.geometry",
             band.reflector_half_length_m,
             0.12,
-            0.05,
         ),
         _length(
             "tip_gap_m",
@@ -2242,7 +2255,7 @@ def hexbeam_band_descriptor(
             "optimize.group.geometry",
             band.tip_gap_m,
             0.3,
-            0.01,
+            conductor_floor_m(parameters.wire_radius_m),
         ),
         _length(
             "height_m",
@@ -2359,7 +2372,6 @@ def trap_yagi_descriptor(parameters: TrapYagiParameters) -> AntennaOptimizerDesc
             "optimize.group.geometry",
             parameters.driven_length_m,
             0.15,
-            0.1,
         ),
         OptimizationVariable(
             "reflector_scale",
@@ -2376,7 +2388,7 @@ def trap_yagi_descriptor(parameters: TrapYagiParameters) -> AntennaOptimizerDesc
             "optimize.group.geometry",
             parameters.reflector_spacing_m,
             0.3,
-            0.05,
+            conductor_floor_m(parameters.wire_radius_m),
         ),
         _length(
             "trap_inset_m",
@@ -2384,7 +2396,6 @@ def trap_yagi_descriptor(parameters: TrapYagiParameters) -> AntennaOptimizerDesc
             "optimize.group.loads",
             parameters.trap_inset_m,
             0.2,
-            0.05,
         ),
         OptimizationVariable(
             "trap_inductance_h",
@@ -2426,7 +2437,7 @@ def trap_yagi_descriptor(parameters: TrapYagiParameters) -> AntennaOptimizerDesc
                 "optimize.group.geometry",
                 parameters.director_spacing_m,
                 0.3,
-                0.05,
+                conductor_floor_m(parameters.wire_radius_m),
             ),
         )
     initial = {
@@ -2554,7 +2565,6 @@ def quad_beam_descriptor(parameters: QuadBeamParameters) -> AntennaOptimizerDesc
             "optimize.group.geometry",
             parameters.loop_side_m,
             0.15,
-            0.1,
         ),
         _length(
             "reflector_spacing_m",
@@ -2562,7 +2572,7 @@ def quad_beam_descriptor(parameters: QuadBeamParameters) -> AntennaOptimizerDesc
             "optimize.group.geometry",
             parameters.reflector_spacing_m,
             0.3,
-            0.05,
+            conductor_floor_m(parameters.wire_radius_m),
         ),
         _length(
             "height_m",
@@ -2597,7 +2607,7 @@ def quad_beam_descriptor(parameters: QuadBeamParameters) -> AntennaOptimizerDesc
                 "optimize.group.geometry",
                 parameters.director_spacing_m,
                 0.3,
-                0.05,
+                conductor_floor_m(parameters.wire_radius_m),
             ),
         )
         variables.insert(
@@ -2728,7 +2738,7 @@ def moxon_descriptor(parameters: MoxonParameters) -> AntennaOptimizerDescriptor:
             "optimize.group.geometry",
             parameters.reflector_tip_m,
             0.5,
-            0.001,
+            conductor_floor_m(parameters.wire_radius_m),
         ),
         _length(
             "driven_tip_m",
@@ -2736,10 +2746,10 @@ def moxon_descriptor(parameters: MoxonParameters) -> AntennaOptimizerDescriptor:
             "optimize.group.geometry",
             parameters.driven_tip_m,
             0.5,
-            0.001,
+            conductor_floor_m(parameters.wire_radius_m),
         ),
         _length(
-            "height_m", "field.height", "optimize.group.geometry", parameters.height_m, 0.25, 0.1
+            "height_m", "field.height", "optimize.group.geometry", parameters.height_m, 0.25, 0.0
         ),
         _radius(parameters.wire_radius_m),
     )

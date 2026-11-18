@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from antennadesk.domain.antennas.dipole import DipoleParameters
@@ -89,26 +91,36 @@ def _simple_descriptor(
 
 
 @pytest.mark.parametrize(
-    ("parameters", "family", "variable"),
-    [
-        (_moxon_2_4(), "moxon", "width_m"),
-        (_vertical_2_4(), "vertical", "height_m"),
-        (_yagi_5_8(), "yagi", "length_0"),
-    ],
+    "parameters",
+    [_moxon_2_4(), _vertical_2_4(), _yagi_5_8()],
+    ids=["moxon_2_4", "vertical_2_4", "yagi_5_8"],
 )
-def test_high_frequency_designs_report_out_of_bounds(
-    parameters: object,
-    family: str,
-    variable: str,
-) -> None:
+def test_high_frequency_designs_get_relative_bounds(parameters: object) -> None:
     availability = optimizer_availability(parameters)  # type: ignore[arg-type]
+
+    assert availability.available is True
+    assert availability.descriptor is not None
+    descriptor = availability.descriptor
+    for variable in descriptor.variables:
+        value = descriptor.initial_values[variable.name]
+        assert variable.minimum <= value <= variable.maximum, variable.name
+        assert variable.maximum > variable.minimum, variable.name
+        assert variable.step <= variable.maximum - variable.minimum, variable.name
+
+
+def test_a_genuine_conductor_floor_still_reports_out_of_bounds() -> None:
+    parameters = replace(
+        _moxon_2_4(),
+        reflector_tip_m=0.0002,
+        driven_tip_m=0.0002,
+    )
+
+    availability = optimizer_availability(parameters)
 
     assert availability.available is False
     assert availability.reason_key == "optimize.unavailable.bounds.outside"
-    assert availability.reason_values["family"] == family
-    assert availability.reason_values["variable"] == variable
-    assert availability.reason_values["minimum"] <= availability.reason_values["maximum"]
-    assert availability.reason_values["value"] < availability.reason_values["minimum"]
+    assert availability.reason_values["family"] == "moxon"
+    assert availability.reason_values["variable"] in {"reflector_tip_m", "driven_tip_m"}
 
 
 def test_valid_hf_moxon_remains_available() -> None:

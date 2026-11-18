@@ -17,6 +17,7 @@ from .common import (
     non_negative_violation,
     positive_violation,
     radius_around,
+    relative_step,
     violation,
 )
 
@@ -35,8 +36,8 @@ _OBJECTIVES = frozenset(
 
 
 def scv_descriptor(parameters: ScvParameters) -> AntennaOptimizerDescriptor:
-    horizontal_low, horizontal_high = around(parameters.horizontal_length_m, 0.2, minimum=0.5)
-    vertical_low, vertical_high = around(parameters.vertical_height_m, 0.2, minimum=0.5)
+    horizontal_low, horizontal_high = around(parameters.horizontal_length_m, 0.2, minimum=1e-6)
+    vertical_low, vertical_high = around(parameters.vertical_height_m, 0.2, minimum=1e-6)
     base_low, base_high = around(parameters.base_height_m, 0.5, minimum=0.0)
     feed_high = max(0.01, parameters.vertical_height_m * 0.95)
     radius_low, radius_high = radius_around(parameters.wire_radius_m)
@@ -47,7 +48,7 @@ def scv_descriptor(parameters: ScvParameters) -> AntennaOptimizerDescriptor:
             "optimize.group.geometry",
             horizontal_low,
             horizontal_high,
-            step=0.01,
+            step=relative_step(horizontal_low, horizontal_high),
         ),
         OptimizationVariable(
             "vertical_height_m",
@@ -55,7 +56,7 @@ def scv_descriptor(parameters: ScvParameters) -> AntennaOptimizerDescriptor:
             "optimize.group.geometry",
             vertical_low,
             vertical_high,
-            step=0.01,
+            step=relative_step(vertical_low, vertical_high),
         ),
         OptimizationVariable(
             "base_height_m",
@@ -63,7 +64,7 @@ def scv_descriptor(parameters: ScvParameters) -> AntennaOptimizerDescriptor:
             "optimize.group.geometry",
             base_low,
             base_high,
-            step=0.01,
+            step=relative_step(base_low, base_high),
         ),
         OptimizationVariable(
             "feed_offset_m",
@@ -71,7 +72,7 @@ def scv_descriptor(parameters: ScvParameters) -> AntennaOptimizerDescriptor:
             "optimize.group.feed",
             0.0,
             feed_high,
-            step=0.01,
+            step=relative_step(0.0, feed_high),
         ),
         OptimizationVariable(
             "wire_radius_m",

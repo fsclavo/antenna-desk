@@ -164,7 +164,7 @@ external service and must not be invented or simulated into existence.
 | EF9 | Design-specific matching-network optimization | L | EF7b, EF8, ADR | **Done 2026-11-14; automatic Pi/T added 2026-11-16.** ADR-0038 implements an optional design-specific L/Pi/T network owned by `EndFedParameters`, with precedence **project network > design-specific network > internal fixed unit**, schema 50, bounded optimizer variables, UI, reports, and regression coverage. The project matching dialog and the design-specific end-fed action now synthesize L, Pi, or T from the current primary-side feed impedance, fill the editor, and wait for explicit user review. Pi/T use a visible total design Q (0 = auto above the minimum); a Q below the minimum returns no solution. The synthesis is lossless; component Q remains a separate loss model. Do not add loose C/L variables to the fixed input-shunt network. |
 | ~~HF1~~ | ~~Frequency-aware optimizer-bound contract and ADR~~ | S | none | **Done 2026-11-18:** [ADR-0046](ADR/0046-frequency-aware-optimizer-bounds.md) accepted. It separates physical construction floors from per-run search bounds, requires λ/current-relative normalization, defines the initial-in-bounds and non-degenerate-span invariants, forbids silent initial clamping, records explicit-unavailable behavior, makes the Moxon gap a first-class contract, and forbids invented high-frequency reference values. No behavior change. |
 | ~~HF2~~ | ~~Enforce descriptor bounds and remove silent initial clamping~~ | M | HF1 | **Done 2026-11-18:** descriptors validate every default-active initial value and reject outside bounds, non-finite values, degenerate spans, and unrepresentable integer/choice values. Availability returns a translated reason with family, variable, value, and bounds; unlocking a bad variable is blocked in the dialog before the solver starts; the engine returns `ERROR` instead of clamping. Locked variables stay context. Tests cover Moxon 2.4 GHz, vertical 2.4 GHz, Yagi 5.8 GHz, a valid Cebik 20 m Moxon, engine/use-case guards, and the UI message. |
-| HF3 | Replace absolute length floors with frequency-aware bounds | L | HF1, HF2 | **Queued 2026-11-18:** migrate every `_length`/`around` minimum and explicit 0.1/0.5/0.05 m floor to a shared frequency-aware helper; keep a separate documented construction floor; return an explicit optimizer-unavailable reason when the family is outside its supported envelope; cover every registry family and the 1.8–5800 MHz matrix; keep the biquad small-feature minima as the reference pattern. |
+| ~~HF3~~ | ~~Replace absolute length floors with frequency-aware bounds~~ | L | HF1, HF2 | **Done 2026-11-18:** `_length`/`around` now use relative bounds around the current frequency-scaled design; the old 0.1/0.5/0.05 m practical floors were removed. Remaining absolute floors are genuine: zero for heights/base planes, conductor clearance for gaps/spacings/tips, the end-fed feed-section structure, electrical component minima, and the biquad small-feature reference. Variable steps are span-normalized. A 1.8–5800 MHz matrix covers all supported optimizer families; a genuine conductor-floor violation still returns an explicit HF2 unavailable reason. No universal frequency cutoff was invented. |
 | HF4 | Moxon geometry contract, gap variable, and constraints | M–L | HF1–HF3 | **Queued 2026-11-18:** expose or derive the gap explicitly; constrain gap/λ, gap/radius, and gap/depth/width; keep the Cebik 14.17 MHz dimensions exact; reject 0.67λ gaps; test 14.17/28.5/144/435/1500/2400 MHz; no schema change unless justified. |
 | HF5 | Yagi wavelength-relative bounds and high-element-count QA | M | HF1–HF3 | **Queued 2026-11-18:** remove the absolute 0.05 m element floor; normalize lengths, gaps, height, and steps by λ; keep the DL6WU taper constraints; verify 5/10/15/20/32 elements at 1.5/2.4/5.8 GHz start inside bounds; add NEC2C smoke coverage; no performance claims. |
 | HF6 | Moxon high-frequency estimator, radius, and confidence policy | M | HF1, HF4 | **Queued 2026-11-18:** document the valid linear-scaling envelope; make the starting gap radius-aware; downgrade confidence and tolerance outside the envelope; add a strong warning and EN/ES help; keep 14.17 MHz exact; do not invent a high-frequency reference. |
@@ -179,9 +179,9 @@ external service and must not be invented or simulated into existence.
 
 ## High-frequency optimizer bounds and Moxon gap (design note, 2026-11-18)
 
-**Status:** HF1 and HF2 are implemented on 2026-11-18;
+**Status:** HF1–HF3 are implemented on 2026-11-18;
 [ADR-0046](ADR/0046-frequency-aware-optimizer-bounds.md) is the accepted
-contract. HF3–HF10 are queued; HF3–HF5 are the remaining P0 correctness slice,
+contract. HF4–HF10 are queued; HF4–HF5 are the remaining P0 correctness slice,
 HF6–HF8 are the high-frequency fidelity slice, and HF9 closes the track.
 
 **Related:** [ADR-0026](ADR/0026-family-optimizer-architecture.md),
@@ -284,8 +284,19 @@ Implementation requirements:
 
 ### HF3 — Frequency-aware bounds across families
 
-Replace the absolute length-floor pattern in every descriptor, not only
-Moxon/Yagi. At minimum:
+**Implemented 2026-11-18.** The shared `around()` keeps the interval relative to
+the current value; `_length()` defaults to a 1 µm numerical floor and computes
+its step from the search span. Practical 0.1/0.5/0.05 m floors were removed from
+the descriptors. Gaps, spacings, tips, and discone dimensions use a
+conductor-clearance floor; heights/base planes use zero; the end-fed
+feed-section structure and the biquad small-feature minima remain. A matrix at
+1.8/14/144/2400/5800 MHz covers every supported optimizer family and verifies
+that initial values stay inside their bounds and that steps do not exceed the
+span. Genuine physical-floor
+violations still return the HF2 unavailable reason; no family-specific
+frequency envelope was invented without evidence.
+
+At minimum:
 
 - `_length()` and `around()` gain an explicit, tested policy for a physical
   floor versus a search interval.
@@ -3681,9 +3692,9 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **55**.
-- Full gate: **3,601 passed, 1 skipped** on 2026-11-18 after the HF2
-  descriptor-bound invariant, with `NEC2C` auto-detected by the test
-  configuration; the skip is the Windows-only console-hiding test on Linux.
+- Full gate: **3,729 passed, 1 skipped** on 2026-11-18 after the HF3
+  frequency-aware bounds, with `NEC2C` auto-detected by the test configuration;
+  the skip is the Windows-only console-hiding test on Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run

@@ -218,7 +218,7 @@ The implementation is sliced in
 |---|---|---|
 | HF1 | This ADR and the bound contract | Implemented 2026-11-18 |
 | HF2 | Descriptor invariant and no silent initial clamp | Implemented 2026-11-18 |
-| HF3 | Frequency-aware bounds across all families | Queued |
+| HF3 | Frequency-aware bounds across all families | Implemented 2026-11-18 |
 | HF4 | Moxon geometry contract, gap variable, and constraints | Queued |
 | HF5 | Yagi wavelength-relative bounds and high-element-count QA | Queued |
 | HF6 | Moxon high-frequency estimator, radius, and confidence | Queued |
@@ -242,6 +242,23 @@ an out-of-bounds active initial value or start point with
 The span floor is 1 µm for length/radius units and a smaller unit-relative floor
 for capacitance, inductance, ratios, angles, and counts; a blanket metre floor
 would falsely reject valid picofarad and nanohenry variables.
+
+### HF3 implementation note
+
+`around()` is relative to the current design, which already carries the
+generator's frequency scaling. `_length()` uses a 1 µm numerical floor by
+default and a span-normalized step. Practical 0.1/0.5/0.05 m floors were removed;
+the remaining hard floors are genuine construction/model limits: zero for
+heights and base planes, conductor clearance for gaps/spacings/tips, the fixed
+end-fed feed section, electrical component minima, and the biquad small-feature
+reference. A matrix at 1.8/14/144/2400/5800 MHz covering every supported
+optimizer family checks that initial values are inside their bounds and that
+every step is no larger than its span.
+
+No universal frequency cutoff or invented family envelope was added. A family
+that violates a genuine physical floor remains available at the registry level
+but returns the HF2 translated bound reason for that design; a family-specific
+envelope can be added later only from traceable evidence.
 
 ## Test contract
 

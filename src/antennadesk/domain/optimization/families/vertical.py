@@ -22,6 +22,7 @@ from .common import (
     non_negative_violation,
     positive_violation,
     radius_around,
+    relative_step,
     violation,
 )
 
@@ -41,7 +42,7 @@ _OBJECTIVES = frozenset(
 def vertical_descriptor(parameters: VerticalParameters) -> AntennaOptimizerDescriptor:
     variables: list[OptimizationVariable] = []
     initial: dict[str, float] = {}
-    height_low, height_high = around(parameters.height_m, 0.25, minimum=0.5)
+    height_low, height_high = around(parameters.height_m, 0.25, minimum=1e-6)
     variables.append(
         OptimizationVariable(
             "height_m",
@@ -49,7 +50,7 @@ def vertical_descriptor(parameters: VerticalParameters) -> AntennaOptimizerDescr
             "optimize.group.geometry",
             height_low,
             height_high,
-            step=0.01,
+            step=relative_step(height_low, height_high),
         )
     )
     initial["height_m"] = parameters.height_m
@@ -61,13 +62,13 @@ def vertical_descriptor(parameters: VerticalParameters) -> AntennaOptimizerDescr
             "optimize.group.geometry",
             base_low,
             base_high,
-            step=0.01,
+            step=relative_step(base_low, base_high),
         )
     )
     initial["base_height_m"] = parameters.base_height_m
 
     if parameters.radial_count > 0:
-        radial_low, radial_high = around(parameters.radial_length_m, 0.3, minimum=0.1)
+        radial_low, radial_high = around(parameters.radial_length_m, 0.3, minimum=1e-6)
         variables.append(
             OptimizationVariable(
                 "radial_length_m",
@@ -75,7 +76,7 @@ def vertical_descriptor(parameters: VerticalParameters) -> AntennaOptimizerDescr
                 "optimize.group.loads",
                 radial_low,
                 radial_high,
-                step=0.01,
+                step=relative_step(radial_low, radial_high),
             )
         )
         initial["radial_length_m"] = parameters.radial_length_m
@@ -136,13 +137,13 @@ def vertical_descriptor(parameters: VerticalParameters) -> AntennaOptimizerDescr
                 "optimize.group.loads",
                 0.0,
                 offset_high,
-                step=0.01,
+                step=relative_step(0.0, offset_high),
             )
         )
         initial["loading_coil_offset_m"] = parameters.loading_coil_offset_m
 
     if parameters.top_hat_enabled:
-        hat_low, hat_high = around(parameters.top_hat_radius_m, 0.5, minimum=0.05)
+        hat_low, hat_high = around(parameters.top_hat_radius_m, 0.5, minimum=1e-6)
         variables.append(
             OptimizationVariable(
                 "top_hat_radius_m",
@@ -150,7 +151,7 @@ def vertical_descriptor(parameters: VerticalParameters) -> AntennaOptimizerDescr
                 "optimize.group.loads",
                 hat_low,
                 hat_high,
-                step=0.01,
+                step=relative_step(hat_low, hat_high),
             )
         )
         initial["top_hat_radius_m"] = parameters.top_hat_radius_m

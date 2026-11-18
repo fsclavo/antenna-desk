@@ -37,6 +37,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   cells keep their exact canonical values, custom labels and frequencies are
   allowed, and custom sets are marked in the editor and in reports. Switching
   to a published preset asks before discarding custom or reference-scaled rows.
+- **Frequency-aware optimizer bounds.** Family search ranges are now relative to
+  the current design instead of using fixed 0.1/0.5/0.05 m floors. This restores
+  sensible Moxon, vertical, Yagi, quad, discone, hexbeam, J-pole, Ringo, and
+  other VHF/UHF searches without clamping the starting antenna. Remaining hard
+  floors are physical: zero height/base planes, conductor clearance for gaps and
+  spacings, the end-fed feed section, electrical component minima, and the
+  biquad small-feature reference. Optimizer steps scale with the search span.
 - **No silent optimizer clamping at VHF/UHF.** Family optimizer descriptors now
   reject a current design whose active variables are outside their search
   bounds, non-finite, represented by a degenerate span, or unrepresentable for

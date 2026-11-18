@@ -1985,13 +1985,14 @@ driven by an explicit optimizer descriptor for the current family. There is no
 generic dipole fallback: a family either has its own descriptor or the action is
 disabled with an explanation.
 
-Optimization starts from the exact current design. If an active variable is
-outside its search bounds, the action is disabled and the message names the
-family, variable, current value, and bounds. Unlocking a default-locked
-variable with the same problem is blocked before the solver starts. The app
-never silently clamps the current design to a different antenna. This can
-happen when an HF starting geometry is scaled to VHF or UHF before
-frequency-aware bounds are provided for that family.
+Optimization starts from the exact current design. Search ranges are relative
+to the current dimensions, so a VHF or UHF design is not forced into a fixed
+0.1 m or 0.5 m box. A genuine physical-floor violation (for example conductor
+clearance, the fixed end-fed feed section, or the biquad small-feature
+minimum) disables the action and names the family, variable, current value, and
+bounds. Unlocking a default-locked variable with the same problem is blocked
+before the solver starts. The app never silently clamps the current design to a
+different antenna.
 
 While a run is active, the dialog shows a determinate progress bar with the
 completed evaluations and the estimated total. The estimate is an upper bound:
