@@ -26,15 +26,16 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 
 DEFAULT_LOW_BAND_HZ = 7_100_000.0
@@ -51,11 +52,17 @@ class TrapDipoleForm(QWidget):
         unit_system: UnitSystem,
         parameters: TrapDipoleParameters | None = None,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._updating = False
 
         self._frequency = QDoubleSpinBox(self)
@@ -99,6 +106,28 @@ class TrapDipoleForm(QWidget):
         self._height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._height.setValue(length_from_m(10.0, unit_system))
         self._height_label = QLabel(translator.t("field.height"), self)
+
+        self._inner_length_field = LengthField(
+            self._inner_length,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._outer_length_field = LengthField(
+            self._outer_length,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._height_field = LengthField(
+            self._height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._inner_length_field.configure(0.0)
+        self._outer_length_field.configure(0.0)
+        self._height_field.configure(10.0)
 
         self._orientation = QComboBox(self)
         self._orientation.addItem(
@@ -274,8 +303,8 @@ class TrapDipoleForm(QWidget):
         inner = half_wave_length_m(high_hz)
         total = half_wave_length_m(low_hz)
         outer = max((total - inner) / 2.0, 0.01)
-        self._inner_length.setValue(length_from_m(inner, self._unit_system))
-        self._outer_length.setValue(length_from_m(outer, self._unit_system))
+        self._inner_length_field.configure(inner)
+        self._outer_length_field.configure(outer)
         self._trap_frequency.setValue(high_hz / 1_000_000.0)
 
     def _apply_starting_dimensions(self) -> None:
@@ -314,14 +343,14 @@ class TrapDipoleForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
-        apply_radius_units(self._translator, unit_system, self._radius)
-        apply_length_suffixes(
-            self._translator,
+        self._display_units = DisplayUnits(
             unit_system,
-            self._inner_length,
-            self._outer_length,
-            self._height,
+            self._display_units.length_policy,
         )
+        apply_radius_units(self._translator, unit_system, self._radius)
+        self._inner_length_field.set_display_units(self._display_units)
+        self._outer_length_field.set_display_units(self._display_units)
+        self._height_field.set_display_units(self._display_units)
         if parameters is not None:
             self.set_parameters(parameters)
 
@@ -330,11 +359,11 @@ class TrapDipoleForm(QWidget):
         try:
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
             self._high_band.setValue(parameters.high_band_frequency_hz / 1_000_000.0)
-            self._inner_length.setValue(length_from_m(parameters.inner_length_m, self._unit_system))
-            self._outer_length.setValue(length_from_m(parameters.outer_length_m, self._unit_system))
+            self._inner_length_field.configure(parameters.inner_length_m)
+            self._outer_length_field.configure(parameters.outer_length_m)
             self._trap_frequency.setValue(parameters.trap_frequency_hz / 1_000_000.0)
             self._trap_inductance.setValue(parameters.trap_inductance_h * 1e6)
-            self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
+            self._height_field.configure(parameters.height_m)
             orientation_index = self._orientation.findData(parameters.orientation.value)
             if orientation_index >= 0:
                 self._orientation.setCurrentIndex(orientation_index)
@@ -388,11 +417,11 @@ class TrapDipoleForm(QWidget):
         return TrapDipoleParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
             high_band_frequency_hz=self._high_band.value() * 1_000_000.0,
-            inner_length_m=length_to_m(self._inner_length.value(), self._unit_system),
-            outer_length_m=length_to_m(self._outer_length.value(), self._unit_system),
+            inner_length_m=self._inner_length_field.value_m(),
+            outer_length_m=self._outer_length_field.value_m(),
             trap_frequency_hz=self._trap_frequency.value() * 1_000_000.0,
             trap_inductance_h=self._trap_inductance.value() * 1e-6,
-            height_m=length_to_m(self._height.value(), self._unit_system),
+            height_m=self._height_field.value_m(),
             orientation=self._selected_orientation(),
             azimuth_deg=self._azimuth.value(),
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),

@@ -100,3 +100,31 @@ def test_trap_dipole_dialog_warns_when_trap_is_below_the_high_band(
     dialog._trap_frequency.setValue(10.0)
 
     assert "below the high band" in dialog._form._trap_warning.text()
+
+
+def test_trap_dipole_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.trap_dipole_form import TrapDipoleForm
+
+    form = TrapDipoleForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    form.set_parameters(
+        TrapDipoleParameters(
+            frequency_hz=435_000_000.0,
+            high_band_frequency_hz=870_000_000.0,
+            inner_length_m=0.33,
+            outer_length_m=0.2,
+            trap_frequency_hz=870_000_000.0,
+            trap_inductance_h=10e-6,
+            height_m=10.0,
+        )
+    )
+
+    assert form._inner_length_field.unit == "cm"
+    assert form._outer_length_field.unit == "cm"
+    assert form._height_field.unit == "m"

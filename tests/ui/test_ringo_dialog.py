@@ -57,3 +57,19 @@ def test_ringo_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
     qtbot.addWidget(dialog)
 
     assert dialog.parameters() == original
+
+
+def test_ringo_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.ringo_form import RingoForm
+
+    form = RingoForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+
+    assert form._radiator_height_field.unit == "m"
+    assert form._ring_diameter_field.unit == "cm"
+    assert form._ring_height_field.unit == "cm"

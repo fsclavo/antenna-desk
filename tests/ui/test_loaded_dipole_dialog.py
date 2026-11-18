@@ -60,3 +60,28 @@ def test_loaded_dipole_dialog_sets_the_requested_frequency(qtbot: QtBot) -> None
     qtbot.addWidget(dialog)
 
     assert dialog.parameters().frequency_hz == pytest.approx(3_500_000.0)
+
+
+def test_loaded_dipole_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.loaded_dipole import LoadedDipoleParameters
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.loaded_dipole_form import LoadedDipoleForm
+
+    form = LoadedDipoleForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    form.set_parameters(
+        LoadedDipoleParameters(
+            frequency_hz=435_000_000.0,
+            total_length_m=0.33,
+            height_m=10.0,
+            link_offset_m=0.08,
+        )
+    )
+
+    assert form._total_length_field.unit == "cm"
+    assert form._link_offset_field.unit == "cm"
+    assert form._height_field.unit == "m"

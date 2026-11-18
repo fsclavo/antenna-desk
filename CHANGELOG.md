@@ -113,6 +113,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Magnetic-loop migration.** Loop diameter, height, and gap now use
   `LengthFieldSpec`; automatic units keep the 1 m loop in meters and show the
   5 cm gap in centimeters.
+- **Biquad and Ringo migrations.** Biquad loop side/reflector spacing/base and
+  Ringo radiator/ring diameter/ring height now use `LengthFieldSpec`; automatic
+  units keep the Ringo radiator in meters while its 0.33 m ring shows in
+  centimeters.
+- **Trap and loaded dipole migrations.** Trap-dipole inner/outer lengths/height
+  and loaded-dipole total length/height/link offset now use `LengthFieldSpec`;
+  automatic units show UHF dipole sections in centimeters while the 10 m
+  installation height stays in meters.
 
 ### Changed
 

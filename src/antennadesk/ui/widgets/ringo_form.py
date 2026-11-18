@@ -32,15 +32,16 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 
 
@@ -53,11 +54,17 @@ class RingoForm(QWidget):
         unit_system: UnitSystem,
         parameters: RingoParameters | None = None,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._updating = False
 
         self._frequency = QDoubleSpinBox(self)
@@ -80,6 +87,28 @@ class RingoForm(QWidget):
         self._ring_height.setDecimals(3)
         self._ring_height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._ring_height.setValue(length_from_m(0.25, unit_system))
+
+        self._radiator_height_field = LengthField(
+            self._radiator_height,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._ring_diameter_field = LengthField(
+            self._ring_diameter,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._ring_height_field = LengthField(
+            self._ring_height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._radiator_height_field.configure(3.0)
+        self._ring_diameter_field.configure(0.33)
+        self._ring_height_field.configure(0.25)
 
         self._ring_sides = QSpinBox(self)
         self._ring_sides.setRange(MIN_RING_SIDES, MAX_RING_SIDES)
@@ -209,24 +238,9 @@ class RingoForm(QWidget):
         self._updating = True
         try:
             self._frequency.setValue(CUSHCRAFT_AR6_FREQUENCY_HZ / 1_000_000.0)
-            self._radiator_height.setValue(
-                length_from_m(
-                    CUSHCRAFT_AR6_RADIATOR_HEIGHT_M,
-                    self._unit_system,
-                )
-            )
-            self._ring_diameter.setValue(
-                length_from_m(
-                    CUSHCRAFT_AR6_RING_DIAMETER_M,
-                    self._unit_system,
-                )
-            )
-            self._ring_height.setValue(
-                length_from_m(
-                    CUSHCRAFT_AR6_RING_HEIGHT_M,
-                    self._unit_system,
-                )
-            )
+            self._radiator_height_field.configure(CUSHCRAFT_AR6_RADIATOR_HEIGHT_M)
+            self._ring_diameter_field.configure(CUSHCRAFT_AR6_RING_DIAMETER_M)
+            self._ring_height_field.configure(CUSHCRAFT_AR6_RING_HEIGHT_M)
             self._ring_sides.setValue(16)
         finally:
             self._updating = False
@@ -241,14 +255,14 @@ class RingoForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
-        apply_radius_units(self._translator, unit_system, self._radius)
-        apply_length_suffixes(
-            self._translator,
+        self._display_units = DisplayUnits(
             unit_system,
-            self._radiator_height,
-            self._ring_diameter,
-            self._ring_height,
+            self._display_units.length_policy,
         )
+        apply_radius_units(self._translator, unit_system, self._radius)
+        self._radiator_height_field.set_display_units(self._display_units)
+        self._ring_diameter_field.set_display_units(self._display_units)
+        self._ring_height_field.set_display_units(self._display_units)
         if parameters is not None:
             self.set_parameters(parameters)
 
@@ -256,13 +270,9 @@ class RingoForm(QWidget):
         self._updating = True
         try:
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
-            self._radiator_height.setValue(
-                length_from_m(parameters.radiator_height_m, self._unit_system)
-            )
-            self._ring_diameter.setValue(
-                length_from_m(parameters.ring_diameter_m, self._unit_system)
-            )
-            self._ring_height.setValue(length_from_m(parameters.ring_height_m, self._unit_system))
+            self._radiator_height_field.configure(parameters.radiator_height_m)
+            self._ring_diameter_field.configure(parameters.ring_diameter_m)
+            self._ring_height_field.configure(parameters.ring_height_m)
             self._ring_sides.setValue(parameters.ring_sides)
             self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
             material_index = self._material.findData(parameters.material)
@@ -302,9 +312,9 @@ class RingoForm(QWidget):
     def parameters(self) -> RingoParameters:
         return RingoParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
-            radiator_height_m=length_to_m(self._radiator_height.value(), self._unit_system),
-            ring_diameter_m=length_to_m(self._ring_diameter.value(), self._unit_system),
-            ring_height_m=length_to_m(self._ring_height.value(), self._unit_system),
+            radiator_height_m=self._radiator_height_field.value_m(),
+            ring_diameter_m=self._ring_diameter_field.value_m(),
+            ring_height_m=self._ring_height_field.value_m(),
             ring_sides=self._ring_sides.value(),
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),

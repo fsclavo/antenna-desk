@@ -28,17 +28,18 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     height_bounds,
     length_bounds,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 
 
@@ -51,11 +52,17 @@ class LoadedDipoleForm(QWidget):
         unit_system: UnitSystem,
         parameters: LoadedDipoleParameters | None = None,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._updating = False
         minimum_length, maximum_length = length_bounds(unit_system)
         minimum_height, maximum_height = height_bounds(unit_system)
@@ -84,6 +91,25 @@ class LoadedDipoleForm(QWidget):
         self._link_offset.setRange(minimum_length, maximum_length)
         self._link_offset.setDecimals(3)
         self._link_offset.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+
+        self._total_length_field = LengthField(
+            self._total_length,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._height_field = LengthField(
+            self._height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._link_offset_field = LengthField(
+            self._link_offset,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
 
         self._coil_enabled = QCheckBox(
             translator.t("loaded_dipole.coil_enabled"),
@@ -263,22 +289,17 @@ class LoadedDipoleForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
-        minimum_length, maximum_length = length_bounds(unit_system)
-        minimum_height, maximum_height = height_bounds(unit_system)
+        self._display_units = DisplayUnits(
+            unit_system,
+            self._display_units.length_policy,
+        )
         previous_updating = self._updating
         self._updating = True
         try:
             apply_radius_units(self._translator, unit_system, self._radius)
-            apply_length_suffixes(
-                self._translator,
-                unit_system,
-                self._total_length,
-                self._height,
-                self._link_offset,
-            )
-            for box in (self._total_length, self._link_offset):
-                box.setRange(minimum_length, maximum_length)
-            self._height.setRange(minimum_height, maximum_height)
+            self._total_length_field.set_display_units(self._display_units)
+            self._height_field.set_display_units(self._display_units)
+            self._link_offset_field.set_display_units(self._display_units)
         finally:
             self._updating = previous_updating
         if parameters is not None:
@@ -291,10 +312,10 @@ class LoadedDipoleForm(QWidget):
             orientation_index = self._orientation.findData(parameters.orientation.value)
             if orientation_index >= 0:
                 self._orientation.setCurrentIndex(orientation_index)
-            self._total_length.setValue(length_from_m(parameters.total_length_m, self._unit_system))
-            self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
+            self._total_length_field.configure(parameters.total_length_m)
+            self._height_field.configure(parameters.height_m)
             self._link_open.setChecked(parameters.link_open)
-            self._link_offset.setValue(length_from_m(parameters.link_offset_m, self._unit_system))
+            self._link_offset_field.configure(parameters.link_offset_m)
             self._coil_enabled.setChecked(parameters.loading_coil_enabled)
             self._inductance.setValue(parameters.loading_coil_inductance_h * 1e6)
             self._coil_resistance.setValue(parameters.loading_coil_resistance_ohm)
@@ -351,15 +372,9 @@ class LoadedDipoleForm(QWidget):
     def parameters(self) -> LoadedDipoleParameters:
         return LoadedDipoleParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
-            total_length_m=length_to_m(
-                self._total_length.value(),
-                self._unit_system,
-            ),
-            height_m=length_to_m(self._height.value(), self._unit_system),
-            link_offset_m=length_to_m(
-                self._link_offset.value(),
-                self._unit_system,
-            ),
+            total_length_m=self._total_length_field.value_m(),
+            height_m=self._height_field.value_m(),
+            link_offset_m=self._link_offset_field.value_m(),
             link_open=self._link_open.isChecked(),
             loading_coil_enabled=self._coil_enabled.isChecked(),
             loading_coil_inductance_h=self._inductance.value() * 1e-6,

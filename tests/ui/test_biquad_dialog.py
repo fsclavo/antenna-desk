@@ -103,3 +103,28 @@ def test_biquad_dialog_can_show_the_raw_impedance(qtbot: QtBot) -> None:
 
     assert parameters.transformer_ratio == pytest.approx(1.0)
     assert parameters.to_custom_parameters().feed_transformer_ratio == pytest.approx(1.0)
+
+
+def test_biquad_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.biquad_form import BiquadForm
+
+    form = BiquadForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    form.set_parameters(
+        replace(
+            biquad_parameters(BiquadKind.SINGLE, frequency_hz=14_100_000.0),
+            base_height_m=0.25,
+        )
+    )
+
+    assert form._loop_side_field.unit == "m"
+    assert form._reflector_spacing_field.unit == "m"
+    assert form._base_height_field.unit == "cm"
