@@ -50,7 +50,11 @@ from ..domain.antennas.folded_dipole import (
     FoldedDipoleParameters,
 )
 from ..domain.antennas.geometry import Point3D
-from ..domain.antennas.hexbeam import ANTENNA_TYPE_HEXBEAM, HexbeamParameters
+from ..domain.antennas.hexbeam import (
+    ANTENNA_TYPE_HEXBEAM,
+    HexbeamBand,
+    HexbeamParameters,
+)
 from ..domain.antennas.inverted_l import ANTENNA_TYPE_INVERTED_L, InvertedLParameters
 from ..domain.antennas.inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
 from ..domain.antennas.j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
@@ -518,6 +522,16 @@ class ZeppParametersPayload(StrictModel):
     ground: GroundPayload
 
 
+class HexbeamBandPayload(StrictModel):
+    label: str = Field(min_length=1)
+    frequency_hz: float = Field(gt=0.0)
+    driver_half_length_m: float = Field(gt=0.0)
+    reflector_half_length_m: float = Field(gt=0.0)
+    tip_gap_m: float = Field(gt=0.0)
+    feed_gap_m: float = Field(default=0.03175, gt=0.0)
+    vertical_offset_m: float = Field(default=0.0, ge=0.0)
+
+
 class HexbeamParametersPayload(StrictModel):
     frequency_hz: float = Field(gt=0.0)
     driver_half_length_m: float = Field(gt=0.0)
@@ -526,11 +540,12 @@ class HexbeamParametersPayload(StrictModel):
     tip_gap_m: float = Field(gt=0.0)
     height_m: float = Field(default=10.0, ge=0.0)
     feed_gap_m: float = Field(default=0.03175, gt=0.0)
-    element_separation_m: float = Field(default=0.05, ge=0.0)
+    element_separation_m: float = Field(default=0.0, ge=0.0)
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
+    bands: list[HexbeamBandPayload] = Field(default_factory=list)
 
 
 class DisconeParametersPayload(StrictModel):
@@ -1909,6 +1924,18 @@ def _hexbeam_parameters_from_domain(
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
+        bands=[
+            HexbeamBandPayload(
+                label=band.label,
+                frequency_hz=band.frequency_hz,
+                driver_half_length_m=band.driver_half_length_m,
+                reflector_half_length_m=band.reflector_half_length_m,
+                tip_gap_m=band.tip_gap_m,
+                feed_gap_m=band.feed_gap_m,
+                vertical_offset_m=band.vertical_offset_m,
+            )
+            for band in value.bands
+        ],
     )
 
 
@@ -3231,6 +3258,18 @@ def _hexbeam_parameters_to_domain(
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),
+        bands=tuple(
+            HexbeamBand(
+                label=band.label,
+                frequency_hz=band.frequency_hz,
+                driver_half_length_m=band.driver_half_length_m,
+                reflector_half_length_m=band.reflector_half_length_m,
+                tip_gap_m=band.tip_gap_m,
+                feed_gap_m=band.feed_gap_m,
+                vertical_offset_m=band.vertical_offset_m,
+            )
+            for band in value.bands
+        ),
     )
 
 

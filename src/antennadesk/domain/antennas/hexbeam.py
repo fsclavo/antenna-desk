@@ -12,7 +12,7 @@ from ..common.units import ensure_non_negative, ensure_positive
 from ..environment.environment import Environment
 from ..environment.ground import FREE_SPACE, GroundModel
 from .antenna import AntennaModel
-from .feed import FeedPoint
+from .feed import FeedPoint, Source
 from .geometry import Point3D
 from .materials import ALUMINUM, COPPER, ConductorMaterial
 from .wire import Wire
@@ -156,6 +156,29 @@ def hexbeam_frame_geometry(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class HexbeamBand:
+    """One nested driver/reflector pair on the shared six-spreader frame."""
+
+    label: str
+    frequency_hz: float
+    driver_half_length_m: float
+    reflector_half_length_m: float
+    tip_gap_m: float
+    feed_gap_m: float = DEFAULT_FEED_GAP_M
+    vertical_offset_m: float = 0.0
+
+    def __post_init__(self) -> None:
+        if not self.label.strip():
+            raise ValueError("HexbeamBand.label must not be empty")
+        ensure_positive(self.frequency_hz, name="frequency_hz")
+        ensure_positive(self.driver_half_length_m, name="driver_half_length_m")
+        ensure_positive(self.reflector_half_length_m, name="reflector_half_length_m")
+        ensure_positive(self.tip_gap_m, name="tip_gap_m")
+        ensure_positive(self.feed_gap_m, name="feed_gap_m")
+        ensure_non_negative(self.vertical_offset_m, name="vertical_offset_m")
+
+
 def published_hexbeam_parameters(
     *,
     frequency_hz: float = PUBLISHED_HEXBEAM_FREQUENCY_HZ,
@@ -199,8 +222,14 @@ class HexbeamParameters:
     reflector end. ``element_separation_m`` is a small rearward fore-aft trim
     of the reflector, not a center-to-center element spacing.
 
-    The model is a wire approximation of a single band. The support frame,
-    spreader sag, feed balun, and multi-band nesting are not modeled.
+    ``bands`` optionally carries one to five nested pairs. The first band is the
+    largest/lowest-frequency element, defines the shared turning radius, and
+    must match the scalar fields. ``height_m`` is the reference plane of the
+    lowest band; each band adds its vertical offset. Additional bands are
+    excited by ideal unit-amplitude, zero-phase sources.
+
+    The model is a wire approximation. The support frame, spreader sag, feed
+    harness, balun, and inter-band coupling are not modeled.
     """
 
     frequency_hz: float
@@ -215,6 +244,7 @@ class HexbeamParameters:
     wire_radius_m: float = 0.001
     material: ConductorMaterial = ALUMINUM
     ground: GroundModel = FREE_SPACE
+    bands: tuple[HexbeamBand, ...] = ()
 
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
@@ -234,6 +264,40 @@ class HexbeamParameters:
             reflector_half_length_m=self.reflector_half_length_m,
             tip_gap_m=self.tip_gap_m,
         )
+        if self.bands:
+            if len(self.bands) > 5:
+                raise ValueError("HexbeamParameters supports at most 5 bands")
+            labels = [band.label.casefold() for band in self.bands]
+            if len(set(labels)) != len(labels):
+                raise ValueError("Hexbeam band labels must be unique")
+            frequencies = [band.frequency_hz for band in self.bands]
+            if len(set(frequencies)) != len(frequencies):
+                raise ValueError("Hexbeam band frequencies must be unique")
+            primary = self.bands[0]
+            if any(band.frequency_hz < primary.frequency_hz for band in self.bands):
+                raise ValueError(
+                    "the first hexbeam band must be the lowest frequency (largest element)"
+                )
+            for band in self.bands:
+                hexbeam_frame_geometry(
+                    turning_radius_m=self.band_radius_m(band),
+                    driver_half_length_m=band.driver_half_length_m,
+                    reflector_half_length_m=band.reflector_half_length_m,
+                    tip_gap_m=band.tip_gap_m,
+                )
+            for name, scalar, band_value in (
+                ("frequency_hz", self.frequency_hz, primary.frequency_hz),
+                ("driver_half_length_m", self.driver_half_length_m, primary.driver_half_length_m),
+                (
+                    "reflector_half_length_m",
+                    self.reflector_half_length_m,
+                    primary.reflector_half_length_m,
+                ),
+                ("tip_gap_m", self.tip_gap_m, primary.tip_gap_m),
+                ("feed_gap_m", self.feed_gap_m, primary.feed_gap_m),
+            ):
+                if not math.isclose(scalar, band_value, rel_tol=1e-9, abs_tol=1e-12):
+                    raise ValueError(f"{name} must match the primary hexbeam band")
         object.__setattr__(
             self,
             "azimuth_deg",
@@ -245,12 +309,45 @@ class HexbeamParameters:
         return "Hexbeam"
 
     @property
-    def frame(self) -> HexbeamFrameGeometry:
+    def reference_frequency_hz(self) -> float:
+        return self.resolved_bands[0].frequency_hz
+
+    def band_radius_m(self, band: HexbeamBand) -> float:
+        """Return the band's effective spreader radius.
+
+        The largest band defines the shared turning radius. Higher bands use the
+        same linear frequency-scaling rule as the published single-band
+        reference, so their paths stay nested inside the frame.
+        """
+
+        return self.turning_radius_m * self.reference_frequency_hz / band.frequency_hz
+
+    def band_frame(self, band: HexbeamBand) -> HexbeamFrameGeometry:
         return hexbeam_frame_geometry(
-            turning_radius_m=self.turning_radius_m,
-            driver_half_length_m=self.driver_half_length_m,
-            reflector_half_length_m=self.reflector_half_length_m,
-            tip_gap_m=self.tip_gap_m,
+            turning_radius_m=self.band_radius_m(band),
+            driver_half_length_m=band.driver_half_length_m,
+            reflector_half_length_m=band.reflector_half_length_m,
+            tip_gap_m=band.tip_gap_m,
+        )
+
+    @property
+    def frame(self) -> HexbeamFrameGeometry:
+        return self.band_frame(self.resolved_bands[0])
+
+    @property
+    def resolved_bands(self) -> tuple[HexbeamBand, ...]:
+        if self.bands:
+            return self.bands
+        return (
+            HexbeamBand(
+                label="primary",
+                frequency_hz=self.frequency_hz,
+                driver_half_length_m=self.driver_half_length_m,
+                reflector_half_length_m=self.reflector_half_length_m,
+                tip_gap_m=self.tip_gap_m,
+                feed_gap_m=self.feed_gap_m,
+                vertical_offset_m=0.0,
+            ),
         )
 
     @property
@@ -271,116 +368,139 @@ class HexbeamParameters:
 
     @property
     def total_conductor_length_m(self) -> float:
-        return 2.0 * (self.driver_half_length_m + self.reflector_half_length_m) + self.feed_gap_m
+        return sum(
+            2.0 * (band.driver_half_length_m + band.reflector_half_length_m) + band.feed_gap_m
+            for band in self.resolved_bands
+        )
 
     def to_antenna(self, *, name: str | None = None) -> AntennaModel:
         angle = units.degrees_to_radians(self.azimuth_deg)
         cos_angle = math.cos(angle)
         sin_angle = math.sin(angle)
-        frame = self.frame
         trim = self.element_separation_m
+        wires: list[Wire] = []
+        sources: list[Source] = []
+        primary_feed_id = HEXBEAM_FEED_ID
+        primary_feed_offset = self.feed_gap_m / 2.0
 
-        def point(local_x_m: float, local_y_m: float) -> Point3D:
-            return Point3D(
-                x_m=local_x_m * cos_angle - local_y_m * sin_angle,
-                y_m=local_x_m * sin_angle + local_y_m * cos_angle,
-                z_m=self.height_m,
-            )
+        for index, band in enumerate(self.resolved_bands):
+            prefix = "hexbeam-" if index == 0 else f"hexbeam-band{index + 1}-"
+            feed_id = f"{prefix}feed"
+            z_m = self.height_m + band.vertical_offset_m
+            frame = self.band_frame(band)
 
-        def mirror(local_y_m: float) -> float:
-            return -local_y_m
+            def point(
+                local_x_m: float,
+                local_y_m: float,
+                band_z_m: float = z_m,
+            ) -> Point3D:
+                return Point3D(
+                    x_m=local_x_m * cos_angle - local_y_m * sin_angle,
+                    y_m=local_x_m * sin_angle + local_y_m * cos_angle,
+                    z_m=band_z_m,
+                )
 
-        def reflector_point(local_x_m: float, local_y_m: float) -> Point3D:
-            return point(local_x_m - trim, local_y_m)
+            def mirror(local_y_m: float) -> float:
+                return -local_y_m
 
-        driver_center_left = point(-self.feed_gap_m / 2.0, 0.0)
-        driver_center_right = point(self.feed_gap_m / 2.0, 0.0)
-        knee_left = frame.driver_knee
-        knee_right = (knee_left[0], mirror(knee_left[1]))
-        tip_left = frame.driver_tip
-        tip_right = (tip_left[0], mirror(tip_left[1]))
-        lateral_left = frame.lateral_vertex
-        lateral_right = (lateral_left[0], mirror(lateral_left[1]))
-        rear_left = frame.rear_vertex
-        rear_right = (rear_left[0], mirror(rear_left[1]))
-        end_left = frame.reflector_end
-        end_right = (end_left[0], mirror(end_left[1]))
+            def reflector_point(local_x_m: float, local_y_m: float) -> Point3D:
+                return point(local_x_m - trim, local_y_m)
 
-        wires: list[Wire] = [
-            Wire(
-                id=HEXBEAM_FEED_ID,
-                start=driver_center_left,
-                end=driver_center_right,
-                radius_m=self.wire_radius_m,
-                material=self.material,
-            )
-        ]
-        for side, center, knee, tip in (
-            ("left", driver_center_left, knee_left, tip_left),
-            ("right", driver_center_right, knee_right, tip_right),
-        ):
+            driver_center_left = point(-band.feed_gap_m / 2.0, 0.0)
+            driver_center_right = point(band.feed_gap_m / 2.0, 0.0)
+            knee_left = frame.driver_knee
+            knee_right = (knee_left[0], mirror(knee_left[1]))
+            tip_left = frame.driver_tip
+            tip_right = (tip_left[0], mirror(tip_left[1]))
+            lateral_left = frame.lateral_vertex
+            lateral_right = (lateral_left[0], mirror(lateral_left[1]))
+            rear_left = frame.rear_vertex
+            rear_right = (rear_left[0], mirror(rear_left[1]))
+            end_left = frame.reflector_end
+            end_right = (end_left[0], mirror(end_left[1]))
+
             wires.append(
                 Wire(
-                    id=f"{HEXBEAM_DRIVER_ID_PREFIX}{side}-inner",
-                    start=center,
-                    end=point(knee[0], knee[1]),
+                    id=feed_id,
+                    start=driver_center_left,
+                    end=driver_center_right,
                     radius_m=self.wire_radius_m,
                     material=self.material,
                 )
             )
-            wires.append(
-                Wire(
-                    id=f"{HEXBEAM_DRIVER_ID_PREFIX}{side}-tip",
-                    start=point(knee[0], knee[1]),
-                    end=point(tip[0], tip[1]),
-                    radius_m=self.wire_radius_m,
-                    material=self.material,
+            for side, center, knee, tip in (
+                ("left", driver_center_left, knee_left, tip_left),
+                ("right", driver_center_right, knee_right, tip_right),
+            ):
+                wires.append(
+                    Wire(
+                        id=f"{prefix}driver-{side}-inner",
+                        start=center,
+                        end=point(knee[0], knee[1]),
+                        radius_m=self.wire_radius_m,
+                        material=self.material,
+                    )
                 )
-            )
+                wires.append(
+                    Wire(
+                        id=f"{prefix}driver-{side}-tip",
+                        start=point(knee[0], knee[1]),
+                        end=point(tip[0], tip[1]),
+                        radius_m=self.wire_radius_m,
+                        material=self.material,
+                    )
+                )
 
-        wires.extend(
-            [
-                Wire(
-                    id=f"{HEXBEAM_REFLECTOR_ID_PREFIX}left-tip",
-                    start=reflector_point(end_left[0], end_left[1]),
-                    end=reflector_point(lateral_left[0], lateral_left[1]),
-                    radius_m=self.wire_radius_m,
-                    material=self.material,
-                ),
-                Wire(
-                    id=f"{HEXBEAM_REFLECTOR_ID_PREFIX}left-inner",
-                    start=reflector_point(lateral_left[0], lateral_left[1]),
-                    end=reflector_point(rear_left[0], rear_left[1]),
-                    radius_m=self.wire_radius_m,
-                    material=self.material,
-                ),
-                Wire(
-                    id=HEXBEAM_REFLECTOR_REAR_ID,
-                    start=reflector_point(rear_left[0], rear_left[1]),
-                    end=reflector_point(rear_right[0], rear_right[1]),
-                    radius_m=self.wire_radius_m,
-                    material=self.material,
-                ),
-                Wire(
-                    id=f"{HEXBEAM_REFLECTOR_ID_PREFIX}right-inner",
-                    start=reflector_point(lateral_right[0], lateral_right[1]),
-                    end=reflector_point(rear_right[0], rear_right[1]),
-                    radius_m=self.wire_radius_m,
-                    material=self.material,
-                ),
-                Wire(
-                    id=f"{HEXBEAM_REFLECTOR_ID_PREFIX}right-tip",
-                    start=reflector_point(end_right[0], end_right[1]),
-                    end=reflector_point(lateral_right[0], lateral_right[1]),
-                    radius_m=self.wire_radius_m,
-                    material=self.material,
-                ),
-            ]
-        )
+            wires.extend(
+                [
+                    Wire(
+                        id=f"{prefix}reflector-left-tip",
+                        start=reflector_point(end_left[0], end_left[1]),
+                        end=reflector_point(lateral_left[0], lateral_left[1]),
+                        radius_m=self.wire_radius_m,
+                        material=self.material,
+                    ),
+                    Wire(
+                        id=f"{prefix}reflector-left-inner",
+                        start=reflector_point(lateral_left[0], lateral_left[1]),
+                        end=reflector_point(rear_left[0], rear_left[1]),
+                        radius_m=self.wire_radius_m,
+                        material=self.material,
+                    ),
+                    Wire(
+                        id=f"{prefix}reflector-rear",
+                        start=reflector_point(rear_left[0], rear_left[1]),
+                        end=reflector_point(rear_right[0], rear_right[1]),
+                        radius_m=self.wire_radius_m,
+                        material=self.material,
+                    ),
+                    Wire(
+                        id=f"{prefix}reflector-right-inner",
+                        start=reflector_point(lateral_right[0], lateral_right[1]),
+                        end=reflector_point(rear_right[0], rear_right[1]),
+                        radius_m=self.wire_radius_m,
+                        material=self.material,
+                    ),
+                    Wire(
+                        id=f"{prefix}reflector-right-tip",
+                        start=reflector_point(end_right[0], end_right[1]),
+                        end=reflector_point(lateral_right[0], lateral_right[1]),
+                        radius_m=self.wire_radius_m,
+                        material=self.material,
+                    ),
+                ]
+            )
+            if index == 0:
+                primary_feed_id = feed_id
+                primary_feed_offset = band.feed_gap_m / 2.0
+            else:
+                sources.append(Source(feed_id, band.feed_gap_m / 2.0))
+
         return AntennaModel(
             name=name or self.template_name,
             design_frequency_hz=self.frequency_hz,
             wires=tuple(wires),
-            feed=FeedPoint(HEXBEAM_FEED_ID, self.feed_gap_m / 2.0),
+            feed=FeedPoint(primary_feed_id, primary_feed_offset),
             environment=Environment(ground=self.ground),
+            sources=tuple(sources),
         )

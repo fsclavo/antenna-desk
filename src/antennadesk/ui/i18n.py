@@ -15174,6 +15174,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Arbitrary custom geometry has no parameterized topology to optimize.",
         Language.SPANISH: "La geometría personalizada arbitraria no tiene una topología parametrizada para optimizar.",
     },
+    "optimize.unavailable.hexbeam_multiband": {
+        Language.ENGLISH: (
+            "Multi-band HexBeam optimization is not available yet; optimize a "
+            "single-band design or run a solver sweep."
+        ),
+        Language.SPANISH: (
+            "La optimización del HexBeam multibanda aún no está disponible; "
+            "optimizá un diseño de una sola banda o usá un barrido del solver."
+        ),
+    },
     "optimize.unavailable.unsupported": {
         Language.ENGLISH: "This antenna type has no registered optimizer.",
         Language.SPANISH: "Este tipo de antena no tiene un optimizador registrado.",

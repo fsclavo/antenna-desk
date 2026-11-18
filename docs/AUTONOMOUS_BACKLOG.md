@@ -43,7 +43,10 @@ external service and must not be invented or simulated into existence.
 | ~~C4~~ | ~~Discone~~ | L | none | **Done 2026-11-08:** radial-wire cone and disc with apex feed gap, schema 27, editor, scene, reports, construction notes, and optimizer. Evidence stays C because the wire approximation and feed transition are not validated. |
 | ~~C5~~ | ~~Trapped / multiband Yagi~~ | L | trap model reuse | **Done 2026-11-08:** two-band trapped Yagi with ideal parallel LC trap pairs on each element, schema 28, editor, scene, reports, construction notes, and optimizer. Evidence stays C because trap loss and boom mounting are not modeled. |
 | ~~C6~~ | ~~HexBeam geometry correctness~~ | M | published G3TXQ/K4KIO drawing | **Done 2026-11-18:** the single-band model now routes the M driver and rear U reflector on the six-spreader frame. Ten canonical wires, 6.604 m span, 0.6096 m tip gap, all wire points at or inside the 3.302 m turning radius, reflector midpoint at the rear, and a zero published fore-aft trim. Domain and optimizer share one frame helper; scene dimensions, golden scenes, reports, help, and docs are updated. Tests: 3,533 passed, 1 skipped; ruff/format/mypy pass; no schema or solver change. See `docs/spikes/c6-hexbeam-geometry.md`. |
-| C7 | Multi-band HexBeam (1-5 bands) | L | C6; feed-model decision; published 5-band table | Selectable band set and count (1-5) on a shared frame with nested G3TXQ 20/17/15/12/10 pairs, per-band tip gap and vertical offset, ideal equal-phase sources or a documented harness approximation, schema migration, per-band editor/scene/reports, semantic and NEC2C tests, and single-band optimizer scope. 6 m optional later; multi-band performance remains unvalidated. |
+| C7 | Multi-band HexBeam (1-5 bands) | L | C6; feed-model decision; published 5-band table | Umbrella for C7a–C7c: selectable band set and count (1-5) on a shared frame with nested G3TXQ 20/17/15/12/10 pairs, per-band tip gap and vertical offset, ideal equal-phase sources, per-band editor/scene/reports, semantic and NEC2C tests, and explicit optimizer scope. 6 m optional later; multi-band performance remains unvalidated. |
+| ~~C7a~~ | ~~Multi-band HexBeam domain and schema~~ | M | C6; ADR-0045 | **Done 2026-11-18:** [ADR-0045](ADR/0045-multiband-hexbeam.md) accepted. `HexbeamBand`, optional `bands`, shared frame with linear per-band radius, primary feed plus ideal sources, schema 55 with no-value-rewrite migration, optimizer and frequency-scaling unavailable reasons. Domain, persistence, migration, and registry tests pass; full gate 3,542 passed, 1 skipped; no solver change. |
+| C7b | Multi-band HexBeam preset, editor, scene, and reports | L | C7a | Published 20/17/15/12/10 preset, 218/412 20 m reconciliation, band set/count editor, per-band table, scene highlight, per-band reports, EN/ES help, and golden-scene updates. |
+| C7c | Multi-band HexBeam validation and optimizer scope | M | C7b | Feed-harness limitations, selected-band optimizer or explicit unavailable reason, evidence audit, NEC2C multi-band smoke test, and validation documentation. |
 | ~~E1~~ | ~~Raise the simulation timeout default to 180 s and expose an override~~ | S | none | **Done 2026-11-08:** `SimulationSpec.timeout_s` defaults to 180 s; **Advanced simulation → Solver** exposes a 10–3600 s override applied to single runs, band analysis, and family optimizations; tests cover the default and override. |
 | ~~E2~~ | ~~Parallelize independent optimizer evaluations with a bounded worker pool~~ | M–L | E1 | **Done 2026-11-08:** the engine accepts an optional batch evaluator and the command runs 1–8 bounded workers (dialog default `min(4, max(1, CPU − 1))`, sequential when 1). Candidate order and results are deterministic for a fixed configuration, cancellation reaches every in-flight solver process, and single-solve behavior is unchanged. |
 | ~~E3~~ | ~~Parallelize band analysis with the same bounded pool~~ | M | E2 | **Done 2026-11-08:** bands run in bounded batches (dialog 1–4, command 1–8, sequential default) with results and progress in selection order; cancellation reaches running bands and keeps completed results. The real `nec2c` benchmark measured **1.3–1.8×** speedup with four workers, +14 MiB parent peak RSS, and 2.4–2.8 MiB per solver child; see `docs/MULTIBAND_PERFORMANCE.md`. Re-measured after E5 on 2026-11-10: the sequential path is 10–20 % faster and the four-worker speedup is **1.2–1.5×**. |
@@ -152,7 +155,7 @@ external service and must not be invented or simulated into existence.
 | ~~EF8a~~ | ~~User-selectable end-fed return path~~ | M | EF3 | **Done 2026-11-13:** added `EndFedReturnPath` (`auto`, `installation_proxy`, `counterpoise`, `coax_shield`) and persisted it in schema 47. `auto` preserves the legacy counterpoise-or-proxy behavior; counterpoise and coax shield use the existing return length/height/azimuth fields, with the shield as a model-only straight-wire approximation. The optimizer searches the return length for counterpoise/coax and keeps the height variable only for a physical counterpoise. The editor, reports, construction sheet, scene note, and EN/ES help state that the shield is a wire approximation. EF8 later added an optional feedpoint choke; shack-end placement and shield transfer impedance remain unmodeled. No solver change for other families at EF8a. |
 | ~~EF8~~ | ~~Common-mode return / coax-shield model for end-fed antennas~~ | L | measurement or validated common-mode model | **Done 2026-11-13 with explicit limits:** EF8a added the selectable return path and the coax-shield wire approximation. EF8 adds an optional **feedpoint** common-mode choke as a measured series R/X load on the shield, with a required source, a 49:1-compatible coax-shield return, a frequency-mismatch warning, and a predominantly-reactive warning. Positive X becomes a series L and negative X a series C; R is held constant. ADR-0037 records the model. Shack-end choke placement, frequency-interpolated `Zcm(f)`, shield transfer impedance, the real cable route, and absolute common-mode-current prediction remain unmodeled; no universal choke preset was invented. Do not optimize the installation proxy as a physical radial. |
 | EF9 | Design-specific matching-network optimization | L | EF7b, EF8, ADR | **Done 2026-11-14; automatic Pi/T added 2026-11-16.** ADR-0038 implements an optional design-specific L/Pi/T network owned by `EndFedParameters`, with precedence **project network > design-specific network > internal fixed unit**, schema 50, bounded optimizer variables, UI, reports, and regression coverage. The project matching dialog and the design-specific end-fed action now synthesize L, Pi, or T from the current primary-side feed impedance, fill the editor, and wait for explicit user review. Pi/T use a visible total design Q (0 = auto above the minimum); a Q below the minimum returns no solution. The synthesis is lossless; component Q remains a separate loss model. Do not add loose C/L variables to the fixed input-shunt network. |
-| HF1 | Frequency-aware optimizer-bound contract and ADR | S | none | **Queued 2026-11-18:** write ADR-0045 defining the separation between physical construction floors and per-run search bounds, λ/current-relative normalization, the initial-in-bounds and non-degenerate-span invariants, fail-fast versus explicit-unavailable behavior, Moxon gap parameterization, high-frequency validity, and the no-invented-reference rule. No behavior change. |
+| HF1 | Frequency-aware optimizer-bound contract and ADR | S | none | **Queued 2026-11-18:** write ADR-0046 defining the separation between physical construction floors and per-run search bounds, λ/current-relative normalization, the initial-in-bounds and non-degenerate-span invariants, fail-fast versus explicit-unavailable behavior, Moxon gap parameterization, high-frequency validity, and the no-invented-reference rule. No behavior change. |
 | HF2 | Enforce descriptor bounds and remove silent initial clamping | M | HF1 | **Queued 2026-11-18:** descriptors reject or report unavailable when an initial value is outside its bounds or a span is degenerate; the optimizer never starts from a silently clamped design; a typed error/reason and UI message identify the family, variable, value, and bounds; tests cover Moxon 2.4 GHz, vertical 2.4 GHz, Yagi 5.8 GHz, and valid HF designs. |
 | HF3 | Replace absolute length floors with frequency-aware bounds | L | HF1, HF2 | **Queued 2026-11-18:** migrate every `_length`/`around` minimum and explicit 0.1/0.5/0.05 m floor to a shared frequency-aware helper; keep a separate documented construction floor; return an explicit optimizer-unavailable reason when the family is outside its supported envelope; cover every registry family and the 1.8–5800 MHz matrix; keep the biquad small-feature minima as the reference pattern. |
 | HF4 | Moxon geometry contract, gap variable, and constraints | M–L | HF1–HF3 | **Queued 2026-11-18:** expose or derive the gap explicitly; constrain gap/λ, gap/radius, and gap/depth/width; keep the Cebik 14.17 MHz dimensions exact; reject 0.67λ gaps; test 14.17/28.5/144/435/1500/2400 MHz; no schema change unless justified. |
@@ -212,7 +215,7 @@ The root cause is the absolute length policy in the descriptors:
 
 ### HF1 — Bound contract (required decision)
 
-Write `docs/ADR/0045-frequency-aware-optimizer-bounds.md` before changing
+Write `docs/ADR/0046-frequency-aware-optimizer-bounds.md` before changing
 behavior. The ADR must define:
 
 - the difference between a **physical/construction floor** (a real minimum for
@@ -423,7 +426,7 @@ performance reference; it asserts the bound and geometry invariants.
 
 Documentation:
 
-- ADR-0045 and the estimator guide record the bound contract, the Moxon
+- ADR-0046 and the estimator guide record the bound contract, the Moxon
   high-frequency validity, the thin-wire policy, and the confidence downgrade.
 - The user guide explains why a high-frequency Moxon/Yagi may be marked
   experimental or unsupported, and how to rebuild a valid starting design.
@@ -465,7 +468,7 @@ Documentation:
 - `src/antennadesk/ui/main_window.py`
 - `src/antennadesk/ui/i18n.py`
 - `tests/unit/optimization/`, `tests/integration/simulation/`, `tests/ui/`
-- `docs/ADR/0045-frequency-aware-optimizer-bounds.md`
+- `docs/ADR/0046-frequency-aware-optimizer-bounds.md`
 - `docs/ANTENNA_DESIGN_ESTIMATORS.md`, `docs/USER_GUIDE.md`,
   `docs/VALIDATION_PLAN.md` (only if evidence changes), `CHANGELOG.md`
 
@@ -557,6 +560,13 @@ are in [`spikes/c6-hexbeam-geometry.md`](spikes/c6-hexbeam-geometry.md). C6 is
 closed; C7 remains queued.
 
 ### C7 acceptance
+
+C7a is implemented on 2026-11-18: [ADR-0045](ADR/0045-multiband-hexbeam.md)
+records the shared-frame model, per-band radius, ideal-source feed, schema 55,
+and optimizer/scaling limits. The domain accepts 1-5 bands, builds ten wires per
+band, derives each band's nested radius from the largest band, and exposes
+explicit unavailable reasons for multi-band optimization and frequency scaling.
+C7b and C7c remain.
 
 - `HexbeamParameters` carries a shared frame plus 1-5 per-band records; schema
   migration maps an existing single-band design to one band.
@@ -3400,10 +3410,10 @@ model and solver contract must land first.
 
 ## Current baseline
 
-- Schema: **54**.
-- Full gate: **3,533 passed, 1 skipped** on 2026-11-18 after the HexBeam
-  geometry correction, with `NEC2C` auto-detected by the test configuration; the
-  skip is the Windows-only console-hiding test on Linux.
+- Schema: **55**.
+- Full gate: **3,542 passed, 1 skipped** on 2026-11-18 after the multi-band
+  HexBeam domain/schema slice, with `NEC2C` auto-detected by the test
+  configuration; the skip is the Windows-only console-hiding test on Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run

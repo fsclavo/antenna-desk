@@ -208,7 +208,7 @@ The second slice adds two multi-wire templates:
 `AntennaDesignParameters` is the union of the supported parameter types.
 `DesignVariant` stores the union and validates that `antenna_type` matches the
 parameters. The canonical model remains the shared `AntennaModel`, so the
-solver adapter does not need geometry-specific branches. Schema version 54 is
+solver adapter does not need geometry-specific branches. Schema version 55 is
 current: parameter payloads are additive, and old `wire_dipole` documents are
 unchanged. A design may also store an optional analysis band plan; it is
 intent metadata and never changes the canonical geometry. Series RLC loads are
@@ -342,7 +342,8 @@ folded-driven transformer ratio, version 44 adds the project current-balun
 record, version 45 adds optional manual BOM costs, version 52 adds the
 log-periodic design type and the generic transmission-line phase-reversal flag,
 version 53 adds the biquad feed-transformer ratio, version 54 adds the
-quad-beam feed-transformer ratio, and older documents are migrated explicitly.
+quad-beam feed-transformer ratio, version 55 adds the optional multi-band
+HexBeam list, and older documents are migrated explicitly.
 
 Simulation runs are persisted in schema version 30. Raw solver text is stored
 with the normalized result. Project files are compact JSON compressed with

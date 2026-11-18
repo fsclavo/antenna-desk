@@ -333,8 +333,10 @@ version remains queued.
   report, and persistence tests cover the corrected path. No schema or solver
   change. See [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md) and
   [`spikes/c6-hexbeam-geometry.md`](spikes/c6-hexbeam-geometry.md).
-- **Multi-band HexBeam, 1-5 bands (L).** Add a selectable band set and count
-  with one shared six-spreader frame and nested driver/reflector pairs at the
+- **Multi-band HexBeam, 1-5 bands (L).** C7a domain/schema is implemented
+  (2026-11-18, [ADR-0045](ADR/0045-multiband-hexbeam.md)); C7b editor/scene/
+  reports and C7c validation remain. Add a selectable band set and count with
+  one shared six-spreader frame and nested driver/reflector pairs at the
   published G3TXQ 20/17/15/12/10 m dimensions and vertical offsets. Per-band
   geometry, feed gap, tip gap, vertical offset, and derived attachment radius;
   band table in the editor, scene highlighting, and reports; schema migration

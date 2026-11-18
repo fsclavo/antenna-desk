@@ -23,6 +23,7 @@ from antennadesk.domain.antennas.hexbeam import (
     PUBLISHED_REFLECTOR_HALF_M,
     PUBLISHED_TIP_GAP_M,
     PUBLISHED_TURNING_RADIUS_M,
+    HexbeamBand,
     HexbeamGeometryError,
     HexbeamParameters,
     hexbeam_frame_geometry,
@@ -32,6 +33,32 @@ from antennadesk.domain.antennas.hexbeam import (
 
 def _wire(model, wire_id: str):  # type: ignore[no-untyped-def]
     return next(wire for wire in model.wires if wire.id == wire_id)
+
+
+def _published_multiband():  # type: ignore[no-untyped-def]
+    primary = published_hexbeam_parameters()
+    table = (
+        ("20m", 14_184_000.0, 0.9652),
+        ("17m", 18_118_000.0, 0.3810),
+        ("15m", 21_200_000.0, 0.2286),
+        ("12m", 24_940_000.0, 0.1270),
+        ("10m", 28_500_000.0, 0.0),
+    )
+    bands = []
+    for label, frequency_hz, vertical_offset_m in table:
+        band = published_hexbeam_parameters(frequency_hz=frequency_hz)
+        bands.append(
+            HexbeamBand(
+                label=label,
+                frequency_hz=band.frequency_hz,
+                driver_half_length_m=band.driver_half_length_m,
+                reflector_half_length_m=band.reflector_half_length_m,
+                tip_gap_m=band.tip_gap_m,
+                feed_gap_m=band.feed_gap_m,
+                vertical_offset_m=vertical_offset_m,
+            )
+        )
+    return replace(primary, bands=tuple(bands))
 
 
 def test_published_hexbeam_reference_dimensions() -> None:
@@ -279,6 +306,112 @@ def test_hexbeam_both_published_20m_rows_fit(driver_in: float, reflector_in: flo
         for point in (wire.start, wire.end)
     )
     assert parameters.overall_span_m == pytest.approx(2.0 * radius)
+
+
+def test_hexbeam_multiband_builds_nested_bands_and_sources() -> None:
+    parameters = _published_multiband()
+    model = parameters.to_antenna()
+
+    assert len(parameters.resolved_bands) == 5
+    assert len(model.wires) == 50
+    assert len(model.sources) == 4
+    assert model.feed.wire_id == "hexbeam-feed"
+    assert {source.wire_id for source in model.sources} == {
+        "hexbeam-band2-feed",
+        "hexbeam-band3-feed",
+        "hexbeam-band4-feed",
+        "hexbeam-band5-feed",
+    }
+
+    expected_offsets = (0.9652, 0.3810, 0.2286, 0.1270, 0.0)
+    band_z = tuple(
+        sorted(
+            {round(wire.start.z_m, 6) for wire in model.wires if "feed" in wire.id},
+            reverse=True,
+        )
+    )
+    assert band_z == pytest.approx(tuple(10.0 + offset for offset in expected_offsets))
+
+    for index, band in enumerate(parameters.resolved_bands):
+        if index == 0:
+            band_wires = [
+                wire
+                for wire in model.wires
+                if wire.id.startswith("hexbeam-") and not wire.id.startswith("hexbeam-band")
+            ]
+        else:
+            band_wires = [
+                wire for wire in model.wires if wire.id.startswith(f"hexbeam-band{index + 1}-")
+            ]
+        band_radius = parameters.band_radius_m(band)
+        assert len(band_wires) == 10
+        band_max_radius = max(
+            math.hypot(point.x_m, point.y_m)
+            for wire in band_wires
+            for point in (wire.start, wire.end)
+        )
+        assert band_max_radius == pytest.approx(band_radius)
+        assert band_radius <= parameters.turning_radius_m
+
+    max_radius = max(
+        math.hypot(point.x_m, point.y_m) for wire in model.wires for point in (wire.start, wire.end)
+    )
+    assert max_radius == pytest.approx(parameters.turning_radius_m)
+
+
+def test_hexbeam_multiband_total_conductor_sums_every_band() -> None:
+    parameters = _published_multiband()
+    model = parameters.to_antenna()
+
+    expected = sum(
+        2.0 * (band.driver_half_length_m + band.reflector_half_length_m) + band.feed_gap_m
+        for band in parameters.resolved_bands
+    )
+
+    assert parameters.total_conductor_length_m == pytest.approx(expected)
+    assert sum(wire.length_m for wire in model.wires) == pytest.approx(expected, abs=1e-3)
+
+
+def test_hexbeam_multiband_requires_the_largest_band_first() -> None:
+    parameters = _published_multiband()
+
+    with pytest.raises(ValueError, match="lowest frequency"):
+        replace(parameters, bands=tuple(reversed(parameters.bands)))
+
+
+def test_hexbeam_multiband_validates_unique_labels_and_frequencies() -> None:
+    parameters = _published_multiband()
+    duplicate_label = replace(parameters.bands[1], label=parameters.bands[0].label)
+
+    with pytest.raises(ValueError, match="labels must be unique"):
+        replace(parameters, bands=(parameters.bands[0], duplicate_label))
+
+    duplicate_frequency = replace(
+        parameters.bands[1],
+        frequency_hz=parameters.bands[0].frequency_hz,
+    )
+    with pytest.raises(ValueError, match="frequencies must be unique"):
+        replace(parameters, bands=(parameters.bands[0], duplicate_frequency))
+
+
+def test_hexbeam_multiband_scales_all_bands_with_the_primary_dimension() -> None:
+    parameters = _published_multiband()
+
+    scaled = with_primary_dimension(
+        parameters,
+        parameters.driver_half_length_m * 1.1,
+    )
+
+    assert isinstance(scaled, HexbeamParameters)
+    assert len(scaled.bands) == 5
+    assert scaled.driver_half_length_m == pytest.approx(parameters.driver_half_length_m * 1.1)
+    for original, changed in zip(parameters.bands, scaled.bands, strict=True):
+        assert changed.label == original.label
+        assert changed.driver_half_length_m == pytest.approx(original.driver_half_length_m * 1.1)
+        assert changed.reflector_half_length_m == pytest.approx(
+            original.reflector_half_length_m * 1.1
+        )
+        assert changed.vertical_offset_m == pytest.approx(original.vertical_offset_m * 1.1)
 
 
 def test_hexbeam_scales_with_frequency() -> None:

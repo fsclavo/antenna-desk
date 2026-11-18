@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Multi-band HexBeam domain and schema.** `HexbeamParameters` now accepts an
+  optional tuple of `HexbeamBand` records for one to five nested bands on the
+  shared six-spreader frame. The largest band defines the turning radius; each
+  higher band uses a linearly scaled nested radius. Each band adds its own
+  driver/reflector halves, tip gap, feed gap, and vertical offset; additional
+  bands are excited by ideal unit-amplitude, zero-phase sources. Schema 55 adds
+  the optional band list without rewriting existing single-band values. The
+  editor, published five-band preset, scene highlight, and per-band reports
+  remain queued for C7b; multi-band optimizer and frequency scaling are
+  explicitly unavailable. The real coax harness, coupling, and balun are not
+  modeled.
 - **Biquad and double-biquad feed transformer.** New designs start with an
   ideal 4:1 feed transformer, editable in the design panel and persisted in
   schema 53. The ratio is applied to the reported SWR and to the feed-connection

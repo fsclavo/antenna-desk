@@ -235,6 +235,17 @@ def with_primary_dimension(
         )
     if isinstance(parameters, HexbeamParameters):
         ratio = dimension_m / parameters.driver_half_length_m
+        bands = tuple(
+            replace(
+                band,
+                driver_half_length_m=band.driver_half_length_m * ratio,
+                reflector_half_length_m=band.reflector_half_length_m * ratio,
+                tip_gap_m=band.tip_gap_m * ratio,
+                feed_gap_m=band.feed_gap_m * ratio,
+                vertical_offset_m=band.vertical_offset_m * ratio,
+            )
+            for band in parameters.bands
+        )
         return replace(
             parameters,
             driver_half_length_m=dimension_m,
@@ -243,6 +254,7 @@ def with_primary_dimension(
             tip_gap_m=parameters.tip_gap_m * ratio,
             feed_gap_m=parameters.feed_gap_m * ratio,
             element_separation_m=parameters.element_separation_m * ratio,
+            bands=bands,
         )
     if isinstance(parameters, FoldedDipoleParameters):
         return replace(parameters, total_length_m=dimension_m)

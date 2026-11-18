@@ -468,6 +468,30 @@ def test_v29_migration_introduces_the_hexbeam_design_type() -> None:
     assert migrated["project"]["designs"][0] == document["project"]["designs"][0]
 
 
+def test_v54_migration_adds_the_empty_hexbeam_band_list() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 54,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "hexbeam",
+                    "parameters": {
+                        "frequency_hz": 14_184_000.0,
+                        "driver_half_length_m": 5.5626,
+                    },
+                }
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    assert migrated["project"]["designs"][0]["parameters"]["bands"] == []
+    assert migrated["project"]["designs"][0]["parameters"]["driver_half_length_m"] == 5.5626
+
+
 def test_v28_migration_introduces_per_source_results() -> None:
     document = {
         "format": "antennadesk-project",

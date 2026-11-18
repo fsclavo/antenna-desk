@@ -527,6 +527,18 @@ wires represent the feed, four driver segments, and five reflector segments.
 The frame, spreader sag, feed balun, and multi-band nesting are not modeled.
 Gain, front-to-back ratio, and impedance are not independently validated.
 
+An optional tuple of `HexbeamBand` records represents two to five nested
+G3TXQ bands on the same frame. The first band is the largest/lowest-frequency
+element and defines the shared turning radius; each higher band uses
+`turning_radius × f_first / f_band` as its effective nested radius. The scalar
+parameters mirror `bands[0]` for backward compatibility. `height_m` is the
+reference plane of the lowest band, and each band adds its vertical offset. The
+first band's feed wire is the primary `FeedPoint`; additional bands use ideal
+unit-amplitude, zero-phase `Source` records. The coax harness, jumper lengths,
+inter-band coupling, and balun are not modeled. Schema 55 adds the optional
+band list; old single-band documents migrate with an empty list and keep their
+stored scalar values.
+
 ### TrapYagiParameters
 
 `TrapYagiParameters` stores the low- and high-band frequencies, element count

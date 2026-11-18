@@ -77,6 +77,7 @@ _REASON_LOG_PERIODIC = "optimize.unavailable.log_periodic"
 _REASON_RANDOM_WIRE = "optimize.unavailable.random_wire"
 _REASON_CUSTOM_GENERATOR = "optimize.unavailable.custom_generator"
 _REASON_CUSTOM_GEOMETRY = "optimize.unavailable.custom_geometry"
+_REASON_HEXBEAM_MULTIBAND = "optimize.unavailable.hexbeam_multiband"
 _REASON_UNSUPPORTED = "optimize.unavailable.unsupported"
 
 
@@ -142,6 +143,8 @@ def optimizer_availability(
     if isinstance(parameters, TrapYagiParameters):
         return OptimizerAvailability(descriptor=trap_yagi_descriptor(parameters))
     if isinstance(parameters, HexbeamParameters):
+        if parameters.bands:
+            return OptimizerAvailability(reason_key=_REASON_HEXBEAM_MULTIBAND)
         return OptimizerAvailability(descriptor=hexbeam_descriptor(parameters))
     if isinstance(parameters, T2FDParameters):
         return OptimizerAvailability(descriptor=t2fd_descriptor(parameters))
@@ -212,6 +215,7 @@ OPTIMIZER_REASON_KEYS = frozenset(
         _REASON_RANDOM_WIRE,
         _REASON_CUSTOM_GENERATOR,
         _REASON_CUSTOM_GEOMETRY,
+        _REASON_HEXBEAM_MULTIBAND,
         _REASON_UNSUPPORTED,
     }
 )

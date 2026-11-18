@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from antennadesk.domain.antennas.biquad import BiquadParameters
@@ -11,6 +13,7 @@ from antennadesk.domain.antennas.discone import DisconeParameters, discone_param
 from antennadesk.domain.antennas.endfed import efhw_parameters
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.hexbeam import (
+    HexbeamBand,
     HexbeamParameters,
     published_hexbeam_parameters,
 )
@@ -150,6 +153,38 @@ def test_hexbeam_scales_reference_geometry_and_preserves_installation() -> None:
     assert scaled.driver_half_length_m == pytest.approx(parameters.driver_half_length_m / 2.0)
     assert scaled.turning_radius_m == pytest.approx(parameters.turning_radius_m / 2.0)
     assert scaled.height_m == pytest.approx(10.0)
+
+
+def test_multiband_hexbeam_frequency_scaling_is_explicitly_unsupported() -> None:
+    primary = published_hexbeam_parameters()
+    secondary = published_hexbeam_parameters(frequency_hz=21_200_000.0)
+    parameters = replace(
+        primary,
+        bands=(
+            HexbeamBand(
+                label="20m",
+                frequency_hz=primary.frequency_hz,
+                driver_half_length_m=primary.driver_half_length_m,
+                reflector_half_length_m=primary.reflector_half_length_m,
+                tip_gap_m=primary.tip_gap_m,
+                feed_gap_m=primary.feed_gap_m,
+                vertical_offset_m=0.0,
+            ),
+            HexbeamBand(
+                label="15m",
+                frequency_hz=secondary.frequency_hz,
+                driver_half_length_m=secondary.driver_half_length_m,
+                reflector_half_length_m=secondary.reflector_half_length_m,
+                tip_gap_m=secondary.tip_gap_m,
+                feed_gap_m=secondary.feed_gap_m,
+                vertical_offset_m=0.2286,
+            ),
+        ),
+    )
+
+    assert not supports_frequency_scaling(parameters)
+    with pytest.raises(UnsupportedFrequencyScaleError):
+        scaled_to_frequency(parameters, 28_368_000.0)
 
 
 def test_unsupported_families_raise_a_clear_error() -> None:

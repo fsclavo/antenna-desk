@@ -26,8 +26,9 @@ class UnsupportedFrequencyScaleError(ValueError):
 
 
 # These families have a single primary electrical dimension and a deterministic
-# derived geometry. Do not add loaded, trapped, multiband, Yagi/Moxon, fan, or
-# transmission-line families without a family-specific rule.
+# derived geometry. Multi-band HexBeams are excluded dynamically below until a
+# family-specific band-scaling rule exists. Do not add loaded, trapped,
+# Yagi/Moxon, fan, or transmission-line families without a family-specific rule.
 _SCALABLE_TYPES = (
     DipoleParameters,
     FoldedDipoleParameters,
@@ -40,6 +41,8 @@ _SCALABLE_TYPES = (
 
 
 def supports_frequency_scaling(parameters: AntennaDesignParameters) -> bool:
+    if isinstance(parameters, HexbeamParameters) and parameters.bands:
+        return False
     return isinstance(parameters, _SCALABLE_TYPES)
 
 

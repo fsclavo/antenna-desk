@@ -26,7 +26,10 @@ from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanEleme
 from antennadesk.domain.antennas.feed import FeedPoint
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.geometry import Point3D
-from antennadesk.domain.antennas.hexbeam import published_hexbeam_parameters
+from antennadesk.domain.antennas.hexbeam import (
+    HexbeamBand,
+    published_hexbeam_parameters,
+)
 from antennadesk.domain.antennas.inverted_l import InvertedLParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.j_pole import JPoleParameters
@@ -461,6 +464,7 @@ _CONTEXT_FIELDS = {
     "trap_frequency_hz",
     "feed_gap_m",
     "element_separation_m",
+    "bands",
     "feed_section_length_m",
     "installation_return_length_m",
     "matching_capacitance_f",
@@ -601,6 +605,39 @@ def test_hexbeam_optimizes_the_bent_wire_path() -> None:
         violation.name == "tip_gap_m" and violation.message_key == "hexbeam.constraint.tip_gap"
         for violation in descriptor.validate(tip_past_spreader)
     )
+
+
+def test_multiband_hexbeam_optimizer_is_explicitly_unavailable() -> None:
+    primary = published_hexbeam_parameters()
+    secondary = published_hexbeam_parameters(frequency_hz=21_200_000.0)
+    parameters = replace(
+        primary,
+        bands=(
+            HexbeamBand(
+                label="20m",
+                frequency_hz=primary.frequency_hz,
+                driver_half_length_m=primary.driver_half_length_m,
+                reflector_half_length_m=primary.reflector_half_length_m,
+                tip_gap_m=primary.tip_gap_m,
+                feed_gap_m=primary.feed_gap_m,
+                vertical_offset_m=0.0,
+            ),
+            HexbeamBand(
+                label="15m",
+                frequency_hz=secondary.frequency_hz,
+                driver_half_length_m=secondary.driver_half_length_m,
+                reflector_half_length_m=secondary.reflector_half_length_m,
+                tip_gap_m=secondary.tip_gap_m,
+                feed_gap_m=secondary.feed_gap_m,
+                vertical_offset_m=0.2286,
+            ),
+        ),
+    )
+
+    availability = optimizer_availability(parameters)
+
+    assert availability.available is False
+    assert availability.reason_key == "optimize.unavailable.hexbeam_multiband"
 
 
 def test_trap_yagi_optimizes_the_trap_positions() -> None:

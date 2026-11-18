@@ -863,6 +863,55 @@ def test_hexbeam_round_trips_through_the_schema() -> None:
     assert restored.designs[0].antenna_type == "hexbeam"
 
 
+def test_multiband_hexbeam_round_trips_through_the_schema() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.hexbeam import (
+        HexbeamBand,
+        published_hexbeam_parameters,
+    )
+
+    primary = published_hexbeam_parameters(
+        frequency_hz=14_184_000.0,
+        height_m=12.0,
+        azimuth_deg=25.0,
+    )
+    secondary = published_hexbeam_parameters(frequency_hz=21_200_000.0)
+    parameters = replace(
+        primary,
+        bands=(
+            HexbeamBand(
+                label="20m",
+                frequency_hz=primary.frequency_hz,
+                driver_half_length_m=primary.driver_half_length_m,
+                reflector_half_length_m=primary.reflector_half_length_m,
+                tip_gap_m=primary.tip_gap_m,
+                feed_gap_m=primary.feed_gap_m,
+                vertical_offset_m=0.0,
+            ),
+            HexbeamBand(
+                label="15m",
+                frequency_hz=secondary.frequency_hz,
+                driver_half_length_m=secondary.driver_half_length_m,
+                reflector_half_length_m=secondary.reflector_half_length_m,
+                tip_gap_m=secondary.tip_gap_m,
+                feed_gap_m=secondary.feed_gap_m,
+                vertical_offset_m=0.2286,
+            ),
+        ),
+    )
+    original = _project(parameters, "Hexbeam")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna == original.designs[0].antenna
+    assert restored.designs[0].antenna_type == "hexbeam"
+    assert len(restored.designs[0].antenna.wires) == 20
+    assert len(restored.designs[0].antenna.sources) == 1
+
+
 def test_trap_yagi_round_trips_through_the_schema() -> None:
     from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
 
